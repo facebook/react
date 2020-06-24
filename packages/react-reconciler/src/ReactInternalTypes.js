@@ -226,6 +226,9 @@ type BaseFiberRootProperties = {|
 
   entangledLanes: Lanes,
   entanglements: LaneMap<Lanes>,
+
+  DEBUG_FINISHED_LANES: boolean,
+  DEBUG_COMMIT_COUNT: number,
 |};
 
 // The following attributes are only used by interaction tracing builds.

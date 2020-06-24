@@ -1819,14 +1819,11 @@ function commitRoot(root) {
   return null;
 }
 
-export let DEBUG_FINISHED_LANES = false;
-export let DEBUG_COMMIT_COUNT = 0;
-
 function commitRootImpl(root, renderPriorityLevel) {
   const finishedWorkBefore = root.finishedWork;
   const lanesBefore = root.finishedLanes;
-  DEBUG_FINISHED_LANES = true;
-  DEBUG_COMMIT_COUNT++;
+  root.DEBUG_FINISHED_LANES = true;
+  root.DEBUG_COMMIT_COUNT++;
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
     // means `flushPassiveEffects` will sometimes result in additional
@@ -1837,20 +1834,23 @@ function commitRootImpl(root, renderPriorityLevel) {
     flushPassiveEffects();
   } while (rootWithPendingPassiveEffects !== null);
   flushRenderPhaseStrictModeWarningsInDEV();
-  DEBUG_FINISHED_LANES = false;
+  root.DEBUG_FINISHED_LANES = false;
 
   invariant(
     (executionContext & (RenderContext | CommitContext)) === NoContext,
     'Should not already be working.',
   );
 
+  // TODO Don't do this.
   const finishedWork = root.finishedWork;
   const lanes = root.finishedLanes;
 
   if (lanesBefore !== lanes) {
     // eslint-disable-next-line react-internal/no-production-logging
     console.log(
-      `🔥🔥🔥 performConcurrentWorkOnRoot() changing lanes in commit ${DEBUG_COMMIT_COUNT} (${(lanesBefore: any)
+      `🔥🔥🔥 performConcurrentWorkOnRoot() changing lanes in commit ${
+        root.DEBUG_COMMIT_COUNT
+      } (${(lanesBefore: any)
         .toString(2)
         .padStart(31, '0')} => ${(lanes: any).toString(2).padStart(31, '0')})`,
     );
@@ -1859,7 +1859,7 @@ function commitRootImpl(root, renderPriorityLevel) {
   if (finishedWorkBefore !== finishedWork) {
     // eslint-disable-next-line react-internal/no-production-logging
     console.log(
-      `🔥🔥🔥 performConcurrentWorkOnRoot() changing finishedWork in commit ${DEBUG_COMMIT_COUNT}`,
+      `🔥🔥🔥 performConcurrentWorkOnRoot() changing finishedWork in commit ${root.DEBUG_COMMIT_COUNT}`,
     );
   }
 
