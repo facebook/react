@@ -114,7 +114,7 @@ function main() {
   );
 
   // Print the config we're running for quick confirmation.
-  console.log(chalk.blue(`\nRunning test for ${argv.config}...`));
+  console.log(chalk.blue(`\nRunning tests for ${argv.config}...`));
 
   // Print a message that the debugger is starting just
   // for some extra feedback when running the debugger.
