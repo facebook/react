@@ -50,7 +50,7 @@ const argv = yargs
     env: {
       alias: 'e',
       describe: 'Run with the given node environment.',
-      requiresArg: true ,
+      requiresArg: true,
       type: 'string',
       choices: ['development', 'production'],
     },
@@ -99,11 +99,16 @@ function logError(message) {
   console.error(chalk.red(`\n${message}`));
 }
 function isWWWConfig() {
-  return argv.releaseChannel === 'www-classic' || argv.releaseChannel === 'www-modern';
+  return (
+    argv.releaseChannel === 'www-classic' ||
+    argv.releaseChannel === 'www-modern'
+  );
 }
 
 function isOSSConfig() {
-  return argv.releaseChannel === 'stable' || argv.releaseChannel === 'experimental';
+  return (
+    argv.releaseChannel === 'stable' || argv.releaseChannel === 'experimental'
+  );
 }
 
 function validateOptions() {
@@ -111,12 +116,16 @@ function validateOptions() {
 
   if (argv.project === 'devtools') {
     if (argv.prod) {
-      logError('DevTool tests do not support --prod. Remove this option to continue.');
+      logError(
+        'DevTool tests do not support --prod. Remove this option to continue.'
+      );
       success = false;
     }
 
     if (argv.dev) {
-      logError('DevTool tests do not support --dev. Remove this option to continue.');
+      logError(
+        'DevTool tests do not support --dev. Remove this option to continue.'
+      );
       success = false;
     }
 
@@ -142,9 +151,7 @@ function validateOptions() {
     }
 
     if (!argv.build) {
-      logError(
-        'DevTool tests require --build.'
-      );
+      logError('DevTool tests require --build.');
       success = false;
     }
   }
@@ -259,7 +266,9 @@ function getCommandArgs() {
 function getEnvars() {
   const envars = {
     NODE_ENV: argv.env || 'development',
-    RELEASE_CHANNEL: argv.releaseChannel.match(/modern|experimental/) ? 'experimental' : 'stable',
+    RELEASE_CHANNEL: argv.releaseChannel.match(/modern|experimental/)
+      ? 'experimental'
+      : 'stable',
   };
 
   if (argv.prod) {
