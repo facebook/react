@@ -97,7 +97,7 @@ jobs:
       - checkout
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test --release-channel=stable --ci
+        - run: yarn test --release-channel=stable --ci
 
   yarn_test:
     docker: *docker
@@ -115,7 +115,7 @@ jobs:
       - checkout
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test --project=www --release-channel=stable --ci
+      - run: yarn test --release-channel=www-classic --ci
 
   RELEASE_CHANNEL_stable_yarn_test_www_variant:
     docker: *docker
@@ -124,7 +124,7 @@ jobs:
       - checkout
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test --project=www --release-channel=stable --variant --ci
+      - run: yarn test --release-channel=www-classic --variant --ci
 
   RELEASE_CHANNEL_stable_yarn_test_prod_www:
     docker: *docker
@@ -133,7 +133,7 @@ jobs:
       - checkout
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test --project=www --release-channel=stable --prod --ci
+      - run: yarn test --release-channel=www-classic --prod --ci
 
   RELEASE_CHANNEL_stable_yarn_test_prod_www_variant:
     docker: *docker
@@ -142,7 +142,7 @@ jobs:
       - checkout
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test --project=www --release-channel=stable --prod --variant --ci
+      - run: yarn test --release-channel=www-classic --prod --variant --ci
 
   yarn_test_www:
     docker: *docker
@@ -151,7 +151,7 @@ jobs:
       - checkout
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test --project=www --ci
+      - run: yarn test --release-channel=www-modern --ci
 
   yarn_test_www_variant:
     docker: *docker
@@ -160,7 +160,7 @@ jobs:
       - checkout
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test --project=www --variant --ci
+      - run: yarn test --release-channel=www-modern --variant --ci
 
   yarn_test_prod_www:
     docker: *docker
@@ -169,7 +169,7 @@ jobs:
       - checkout
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test --project=www --prod --ci
+      - run: yarn test --release-channel=www-modern --prod --ci
 
   yarn_test_prod_www_variant:
     docker: *docker
@@ -178,7 +178,7 @@ jobs:
       - checkout
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test --project=www --prod --variant --ci
+      - run: yarn test --release-channel=www-modern --prod --variant --ci
 
   RELEASE_CHANNEL_stable_yarn_test_persistent:
     docker: *docker
@@ -359,7 +359,7 @@ jobs:
       - attach_workspace: *attach_workspace
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test --build --ci
+      - run: yarn test --release-channel=experimental --build --ci
 
   yarn_test_build_devtools:
     docker: *docker
@@ -419,7 +419,7 @@ jobs:
       - attach_workspace: *attach_workspace
       - *restore_yarn_cache
       - *run_yarn
-      - run: yarn test --build --prod --ci
+      - run: yarn test --release-channel=experimental --build --prod --ci
 
 workflows:
   version: 2
