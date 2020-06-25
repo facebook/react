@@ -167,7 +167,6 @@ function CommitRanked({chartData, commitTree, height, width}: Props) {
         width={width}>
         {CommitRankedListItem}
       </FixedSizeList>
-      >
     </Tooltip>
   );
 }
