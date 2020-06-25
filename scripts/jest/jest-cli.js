@@ -108,12 +108,6 @@ function isOSSConfig() {
 
 function validateOptions() {
   let success = true;
-  if (argv.variant && isWWWConfig()) {
-    logError(
-      'Variant is only supported for the www release channels. Update these options to continue.'
-    );
-    success = false;
-  }
 
   if (argv.project === 'devtools') {
     if (argv.prod) {
@@ -153,6 +147,13 @@ function validateOptions() {
       );
       success = false;
     }
+  }
+
+  if (argv.variant && !isWWWConfig()) {
+    logError(
+      'Variant is only supported for the www release channels. Update these options to continue.'
+    );
+    success = false;
   }
 
   if (argv.build && argv.persistent) {
