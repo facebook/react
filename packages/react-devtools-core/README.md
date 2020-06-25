@@ -38,6 +38,22 @@ require("react-devtools-core/standalone")
   .startServer(port);
 ```
 
+Renders DevTools interface into a DOM node over SSL.
+
+```js
+const options = {
+  key: fs.readFileSync('test/fixtures/keys/agent2-key.pem'),
+  cert: fs.readFileSync('test/fixtures/keys/agent2-cert.pem')
+};
+
+require("react-devtools-core/standalone")
+  .setContentDOMNode(document.getElementById("container"))
+  .setStatusListener(status => {
+    // This callback is optional...
+  })
+  .startServer(port, options);
+```
+
 Reference the `react-devtools` package for a complete integration example.
 
 ## Development
