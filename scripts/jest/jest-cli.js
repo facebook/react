@@ -3,12 +3,12 @@
 const {spawn} = require('child_process');
 const chalk = require('chalk');
 const yargs = require('yargs');
+const fs = require('fs');
+const path = require('path');
 
-const configMap = {
-  oss: './scripts/jest/config.source.js',
-  www: './scripts/jest/config.source-www.js',
-  devtools: './scripts/jest/config.build-devtools.js',
-};
+const ossConfig = './scripts/jest/config.source.js';
+const wwwConfig = './scripts/jest/config.source-www.js';
+const devToolsConfig = './scripts/jest/config.build-devtools.js';
 
 // TODO: These configs are separate but should be rolled into the configs above
 // so that the CLI can provide them as options for any of the configs.
@@ -34,23 +34,23 @@ const argv = yargs
     project: {
       alias: 'p',
       describe: 'Run the given project.',
-      requiresArg: false,
+      requiresArg: true,
       type: 'string',
-      default: 'oss',
-      choices: Object.keys(configMap),
+      default: 'default',
+      choices: ['default', 'devtools'],
     },
     releaseChannel: {
       alias: 'r',
       describe: 'Run with the given release channel.',
-      requiresArg: false,
+      requiresArg: true,
       type: 'string',
       default: 'experimental',
-      choices: ['experimental', 'stable'],
+      choices: ['experimental', 'stable', 'www-classic', 'www-modern'],
     },
     env: {
       alias: 'e',
       describe: 'Run with the given node environment.',
-      requiresArg: false,
+      requiresArg: true ,
       type: 'string',
       choices: ['development', 'production'],
     },
@@ -98,25 +98,61 @@ const argv = yargs
 function logError(message) {
   console.error(chalk.red(`\n${message}`));
 }
+function isWWWConfig() {
+  return argv.releaseChannel === 'www-classic' || argv.releaseChannel === 'www-modern';
+}
+
+function isOSSConfig() {
+  return argv.releaseChannel === 'stable' || argv.releaseChannel === 'experimental';
+}
+
 function validateOptions() {
   let success = true;
-  if (argv.variant && argv.project !== 'www') {
+  if (argv.variant && isWWWConfig()) {
     logError(
-      'Variant is only supported for the www config. Update these options to continue.'
+      'Variant is only supported for the www release channels. Update these options to continue.'
     );
     success = false;
   }
 
-  if (argv.prod && argv.project === 'devtools') {
-    logError('DevTools do not support --prod. Remove this option to continue.');
-    success = false;
-  }
+  if (argv.project === 'devtools') {
+    if (argv.prod) {
+      logError('DevTool tests do not support --prod. Remove this option to continue.');
+      success = false;
+    }
 
-  if (argv.env === 'production' && argv.project === 'devtools') {
-    logError(
-      'DevTools do not support --env=production. Remove this option to continue.'
-    );
-    success = false;
+    if (argv.dev) {
+      logError('DevTool tests do not support --dev. Remove this option to continue.');
+      success = false;
+    }
+
+    if (argv.env) {
+      logError(
+        'DevTool tests do not support --env. Remove this option to continue.'
+      );
+      success = false;
+    }
+
+    if (argv.persistent) {
+      logError(
+        'DevTool tests do not support --persistent. Remove this option to continue.'
+      );
+      success = false;
+    }
+
+    if (argv.variant) {
+      logError(
+        'DevTool tests do not support --variant. Remove this option to continue.'
+      );
+      success = false;
+    }
+
+    if (!argv.build) {
+      logError(
+        'DevTool tests require --build.'
+      );
+      success = false;
+    }
   }
 
   if (argv.build && argv.persistent) {
@@ -126,23 +162,16 @@ function validateOptions() {
     success = false;
   }
 
-  if (argv.project !== 'oss' && argv.persistent) {
+  if (isOSSConfig() && argv.persistent) {
     logError(
-      'Persistence only supported for oss configs. Update these options to continue.'
+      'Persistence only supported for oss release channels. Update these options to continue.'
     );
     success = false;
   }
 
-  if (argv.build && argv.project !== 'oss' && argv.project !== 'devtools') {
+  if (argv.build && isWWWConfig()) {
     logError(
-      'Build targets are only supported for oss and devtools configs. Update these options to continue.'
-    );
-    success = false;
-  }
-
-  if (!argv.build && argv.project === 'devtools') {
-    logError(
-      'Source target is not supported devtools. Remove this option to continue.'
+      'Build targets are only not supported for www release channels. Update these options to continue.'
     );
     success = false;
   }
@@ -168,6 +197,21 @@ function validateOptions() {
     success = false;
   }
 
+  if (argv.build && argv.project !== 'devtools') {
+    // TODO: We could build this if it hasn't been built yet.
+    const buildDir = path.resolve('./build');
+    if (!fs.existsSync(buildDir)) {
+      logError(
+        'Build directory does not exist, please run `yarn build` or remove the --build option.'
+      );
+      success = false;
+    } else if (Date.now() - fs.statSync(buildDir).mtimeMs > 1000 * 60 * 15) {
+      logError(
+        'Warning: Running a build test with a build directory older than 15 minutes.\nPlease remember to run `yarn build` when using --build.'
+      );
+    }
+  }
+
   if (!success) {
     console.log(''); // Extra newline.
     process.exit(1);
@@ -181,15 +225,16 @@ function getCommandArgs() {
     args.push(buildConfig);
   } else if (argv.persistent) {
     args.push(persistentConfig);
+  } else if (argv.project === 'devtools') {
+    args.push(devToolsConfig);
+  } else if (isWWWConfig()) {
+    args.push(wwwConfig);
+  } else if (isOSSConfig()) {
+    args.push(ossConfig);
   } else {
-    args.push(configMap[argv.project]);
-  }
-
-  if (argv.build) {
-    // TODO: We could build this if it hasn't been built yet.
-    console.log(
-      'Running build tests, please remember to run `yarn build` first.'
-    );
+    // We should not get here.
+    logError('Unrecognized release channel');
+    process.exit(1);
   }
 
   // Set the debug options, if necessary.
@@ -213,7 +258,7 @@ function getCommandArgs() {
 function getEnvars() {
   const envars = {
     NODE_ENV: argv.env || 'development',
-    RELEASE_CHANNEL: argv.releaseChannel,
+    RELEASE_CHANNEL: argv.releaseChannel.match(/modern|experimental/) ? 'experimental' : 'stable',
   };
 
   if (argv.prod) {
