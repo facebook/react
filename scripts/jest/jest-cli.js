@@ -205,7 +205,7 @@ function validateOptions() {
     success = false;
   }
 
-  if (argv.build && argv.project !== 'devtools') {
+  if (argv.build) {
     // TODO: We could build this if it hasn't been built yet.
     const buildDir = path.resolve('./build');
     if (!fs.existsSync(buildDir)) {
