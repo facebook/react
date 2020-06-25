@@ -24,6 +24,7 @@ type ConnectOptions = {
   host?: string,
   nativeStyleEditorValidAttributes?: $ReadOnlyArray<string>,
   port?: number,
+  secure?: boolean,
   resolveRNStyle?: ResolveNativeStyle,
   isAppActive?: () => boolean,
   websocket?: ?WebSocket,

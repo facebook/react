@@ -242,11 +242,16 @@ function connectToSocket(socket: WebSocket) {
   };
 }
 
+type ServerOptions = {
+  key?: string,
+  cert?: string
+};
+
 function startServer(
   port?: number = 8097,
   host?: string = 'localhost',
   secure?: boolean = false,
-  httpsOptions?: object,
+  httpsOptions?: ServerOptions,
 ) {
   const httpServer = secure
     ? require('https').createServer(httpsOptions)
@@ -305,7 +310,7 @@ function startServer(
         '\n;' +
         backendFile.toString() +
         '\n;' +
-        `ReactDevToolsBackend.connectToDevTools({port: ${port}, host: '${host}', secure: ${secure}});`,
+        `ReactDevToolsBackend.connectToDevTools({port: ${port}, host: '${host}', secure: ${secure? 'true' : 'false'});`,
     );
   });
 
