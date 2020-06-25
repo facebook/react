@@ -163,7 +163,7 @@ function validateOptions() {
     success = false;
   }
 
-  if (isOSSConfig() && argv.persistent) {
+  if (!isOSSConfig() && argv.persistent) {
     logError(
       'Persistence only supported for oss release channels. Update these options to continue.'
     );
