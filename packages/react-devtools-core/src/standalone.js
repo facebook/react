@@ -244,7 +244,7 @@ function connectToSocket(socket: WebSocket) {
 
 type ServerOptions = {
   key?: string,
-  cert?: string
+  cert?: string,
 };
 
 function startServer(
@@ -310,7 +310,9 @@ function startServer(
         '\n;' +
         backendFile.toString() +
         '\n;' +
-        `ReactDevToolsBackend.connectToDevTools({port: ${port}, host: '${host}', secure: ${secure? 'true' : 'false'});`,
+        `ReactDevToolsBackend.connectToDevTools({port: ${port}, host: '${host}', secure: ${
+          secure ? 'true' : 'false'
+        });`,
     );
   });
 
