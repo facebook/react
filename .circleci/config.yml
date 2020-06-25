@@ -97,7 +97,7 @@ jobs:
       - checkout
       - *restore_yarn_cache
       - *run_yarn
-        - run: yarn test --release-channel=stable --ci
+      - run: yarn test --release-channel=stable --ci
 
   yarn_test:
     docker: *docker
