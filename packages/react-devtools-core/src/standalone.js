@@ -242,10 +242,15 @@ function connectToSocket(socket: WebSocket) {
   };
 }
 
-function startServer(port?: number = 8097, host?: string = 'localhost', secure?: boolean = false, httpsOptions?: object) {
-  const httpServer = secure ?
-    require('https').createServer(httpsOptions) :
-    require('http').createServer();
+function startServer(
+  port?: number = 8097,
+  host?: string = 'localhost',
+  secure?: boolean = false,
+  httpsOptions?: object,
+) {
+  const httpServer = secure
+    ? require('https').createServer(httpsOptions)
+    : require('http').createServer();
   const server = new Server({server: httpServer});
   let connected: WebSocket | null = null;
   server.on('connection', (socket: WebSocket) => {
