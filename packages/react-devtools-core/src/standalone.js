@@ -246,7 +246,6 @@ function startServer(port?: number = 8097, host?: string = 'localhost', secure?:
   const httpServer = secure ?
     require('https').createServer(httpsOptions) :
     require('http').createServer();
-  const wsProtocol = secure ? 'wss' : 'ws';
   const server = new Server({server: httpServer});
   let connected: WebSocket | null = null;
   server.on('connection', (socket: WebSocket) => {
@@ -301,7 +300,7 @@ function startServer(port?: number = 8097, host?: string = 'localhost', secure?:
         '\n;' +
         backendFile.toString() +
         '\n;' +
-        `ReactDevToolsBackend.connectToDevTools({port: ${port}, host: '${host}', protocol: '${wsProtocol}'});`,
+        `ReactDevToolsBackend.connectToDevTools({port: ${port}, host: '${host}', secure: ${secure}});`,
     );
   });
 
