@@ -1889,6 +1889,10 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
   }
 
+  if (enableSchedulingProfiling) {
+    markCommitStarted(lanes);
+  }
+
   if (finishedWork === null) {
     if (__DEV__) {
       if (enableDebugTracing) {
