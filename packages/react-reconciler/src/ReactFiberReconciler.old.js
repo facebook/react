@@ -84,7 +84,8 @@ import {
   getHighestPriorityPendingLanes,
   higherPriorityLane,
   getCurrentUpdateLanePriority,
-  setCurrentUpdateLanePriority, schedulerPriorityToLanePriority,
+  setCurrentUpdateLanePriority,
+  schedulerPriorityToLanePriority,
 } from './ReactFiberLane';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {

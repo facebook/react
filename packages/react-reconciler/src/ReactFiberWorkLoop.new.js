@@ -434,7 +434,10 @@ export function requestUpdateLane(
       getCurrentUpdateLanePriority(),
     );
 
-    if (schedulerPriority !== updateLaneSchedulerPriority && updateLaneSchedulerPriority !== NoSchedulerPriority) {
+    if (
+      schedulerPriority !== updateLaneSchedulerPriority &&
+      updateLaneSchedulerPriority !== NoSchedulerPriority
+    ) {
       if (__DEV__) {
         console.error(
           'Expected current update lane priority %s to match current scheduler priority %s',
