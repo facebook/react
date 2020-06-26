@@ -21,7 +21,6 @@ import {
   enableDeprecatedFlareAPI,
   enableSelectiveHydration,
   enableModernEventSystem,
-  decoupleUpdatePriorityFromScheduler,
 } from 'shared/ReactFeatureFlags';
 import {
   unstable_runWithPriority as runWithPriority,

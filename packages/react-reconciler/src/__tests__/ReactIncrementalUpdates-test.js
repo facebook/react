@@ -11,7 +11,6 @@
 'use strict';
 
 let React;
-let ReactDOM;
 let ReactNoop;
 let Scheduler;
 
@@ -21,7 +20,6 @@ describe('ReactIncrementalUpdates', () => {
 
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
   });
 
@@ -519,7 +517,7 @@ describe('ReactIncrementalUpdates', () => {
         if (log === 'B') {
           // Right after B commits, schedule additional updates.
           // TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
-          ReactDOM.unstable_runWithPriority(
+          ReactNoop.unstable_runWithPriority(
             Scheduler.unstable_UserBlockingPriority,
             () =>
               Scheduler.unstable_runWithPriority(
@@ -547,7 +545,7 @@ describe('ReactIncrementalUpdates', () => {
       pushToLog('A');
 
       // TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
-      ReactDOM.unstable_runWithPriority(
+      ReactNoop.unstable_runWithPriority(
         Scheduler.unstable_UserBlockingPriority,
         () =>
           Scheduler.unstable_runWithPriority(
@@ -588,7 +586,7 @@ describe('ReactIncrementalUpdates', () => {
         if (this.state.log === 'B') {
           // Right after B commits, schedule additional updates.
           // TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
-          ReactDOM.unstable_runWithPriority(
+          ReactNoop.unstable_runWithPriority(
             Scheduler.unstable_UserBlockingPriority,
             () =>
               Scheduler.unstable_runWithPriority(
@@ -617,7 +615,7 @@ describe('ReactIncrementalUpdates', () => {
     await ReactNoop.act(async () => {
       pushToLog('A');
       // TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
-      ReactDOM.unstable_runWithPriority(
+      ReactNoop.unstable_runWithPriority(
         Scheduler.unstable_UserBlockingPriority,
         () =>
           Scheduler.unstable_runWithPriority(
