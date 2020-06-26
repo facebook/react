@@ -146,7 +146,7 @@
     </div>
     <script>
       const fs = require('fs');
-      let options = {};
+      let options;
       let useHttps = false;
 
       try {
@@ -156,8 +156,8 @@
           useHttps = true;
         }
       } catch (err) {
-        console.error('Failed to process SSL options - ',err);
-        options = {};
+        console.error('Failed to process SSL options - ', err);
+        options = undefined;
       }
 
       const {clipboard} = require("electron");
