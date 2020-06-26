@@ -122,4 +122,4 @@ export const enableLegacyFBSupport = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
 
 // Replacement for runWithPriority in React internals.
-export const enableCurrentUpdateLanePriority = false;
+export const decoupleUpdatePriorityFromScheduler = false;

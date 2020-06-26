@@ -26,7 +26,7 @@ import {
   enableSchedulerTracing,
   warnAboutUnmockedScheduler,
   deferRenderPhaseUpdateToNextBatch,
-  enableCurrentUpdateLanePriority,
+  decoupleUpdatePriorityFromScheduler,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -436,7 +436,7 @@ export function requestUpdateLane(
   // To do that, we're replacing it with an update lane priority.
   const schedulerPriority = getCurrentPriorityLevel();
 
-  if (enableCurrentUpdateLanePriority) {
+  if (decoupleUpdatePriorityFromScheduler) {
     // In the new strategy, we will track the current update lane priority
     // inside React and use that priority to select a lane for this update.
     const currentUpdateLanePriority = getCurrentUpdateLanePriority();
