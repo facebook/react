@@ -1,6 +1,6 @@
 // @flow
 
-import { useLayoutEffect, useRef } from 'react';
+import {useLayoutEffect, useRef} from 'react';
 
 const TOOLTIP_OFFSET = 4;
 

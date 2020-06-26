@@ -7,8 +7,8 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { createPortal } from 'react-dom';
-import { RegistryContext } from './Contexts';
+import {createPortal} from 'react-dom';
+import {RegistryContext} from './Contexts';
 
 import styles from './ContextMenu.css';
 
@@ -49,8 +49,8 @@ type Props = {|
   id: string,
 |};
 
-export default function ContextMenu({ children, id }: Props) {
-  const { hideMenu, registerMenu } = useContext(RegistryContext);
+export default function ContextMenu({children, id}: Props) {
+  const {hideMenu, registerMenu} = useContext(RegistryContext);
 
   const [state, setState] = useState(HIDDEN_STATE);
 
@@ -75,8 +75,8 @@ export default function ContextMenu({ children, id }: Props) {
   }, [bodyAccessorRef, containerRef]);
 
   useEffect(() => {
-    const showMenu = ({ data, pageX, pageY }) => {
-      setState({ data, isVisible: true, pageX, pageY });
+    const showMenu = ({data, pageX, pageY}) => {
+      setState({data, isVisible: true, pageX, pageY});
     };
     const hideMenu = () => setState(HIDDEN_STATE);
     return registerMenu(id, showMenu, hideMenu);
@@ -126,7 +126,7 @@ export default function ContextMenu({ children, id }: Props) {
       <div ref={menuRef} className={styles.ContextMenu}>
         {children(state.data)}
       </div>,
-      containerRef.current
+      containerRef.current,
     );
   }
 }

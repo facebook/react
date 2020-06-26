@@ -5,7 +5,7 @@ import type {
   FlamechartData,
   ReactHoverContextInfo,
 } from '../types';
-import type { PanAndZoomState } from '../util/usePanAndZoom';
+import type {PanAndZoomState} from '../util/usePanAndZoom';
 
 import React from 'react';
 import memoize from 'memoize-one';
@@ -89,8 +89,8 @@ export const renderReact = ({
   showHoverHighlight,
   state,
 }) => {
-  const { timestamp, type } = eventOrMeasure;
-  const { offsetY } = state;
+  const {timestamp, type} = eventOrMeasure;
+  const {offsetY} = state;
 
   let fillStyle = null;
   let hoveredFillStyle = null;
@@ -103,7 +103,7 @@ export const renderReact = ({
     case 'render':
     case 'layout-effects':
     case 'passive-effects':
-      const { depth, duration } = ((eventOrMeasure: any): ReactMeasure);
+      const {depth, duration} = ((eventOrMeasure: any): ReactMeasure);
 
       // We could change the max to 0 and just skip over rendering anything that small,
       // but this has the effect of making the chart look very empty when zoomed out.
@@ -166,13 +166,13 @@ export const renderReact = ({
         Math.floor(x),
         Math.floor(y),
         Math.floor(width),
-        REACT_WORK_SIZE
+        REACT_WORK_SIZE,
       );
       break;
     case 'schedule-render':
     case 'schedule-state-update':
     case 'suspend':
-      const { isCascading } = ((eventOrMeasure: any): ReactEvent);
+      const {isCascading} = ((eventOrMeasure: any): ReactEvent);
 
       x = timestampToPosition(timestamp, state);
       if (x + EVENT_SIZE / 2 < 0 || canvasWidth < x) {
@@ -228,9 +228,9 @@ export const renderCanvas = memoize(
     canvasHeight: number,
     schedulerCanvasHeight: number,
     state: PanAndZoomState,
-    hoveredEvent: ReactHoverContextInfo | null
+    hoveredEvent: ReactHoverContextInfo | null,
   ) => {
-    const { offsetX, offsetY, zoomLevel } = state;
+    const {offsetX, offsetY, zoomLevel} = state;
 
     const context = getCanvasContext(canvas, canvasHeight, canvasWidth, true);
 
@@ -333,7 +333,7 @@ export const renderCanvas = memoize(
           HEADER_HEIGHT_FIXED +
             schedulerCanvasHeight +
             i * FLAMECHART_FRAME_HEIGHT -
-            offsetY
+            offsetY,
         );
         if (
           y + FLAMECHART_FRAME_HEIGHT < HEADER_HEIGHT_FIXED ||
@@ -343,8 +343,8 @@ export const renderCanvas = memoize(
         }
 
         for (let j = 0; j < nodes.length; j++) {
-          const { end, node, start } = nodes[j];
-          const { name } = node.frame;
+          const {end, node, start} = nodes[j];
+          const {name} = node.frame;
 
           let showHoverHighlight =
             hoveredEvent && hoveredEvent.flamechartNode === nodes[j];
@@ -367,21 +367,21 @@ export const renderCanvas = memoize(
             x,
             y,
             Math.floor(width - REACT_PRIORITY_BORDER_SIZE),
-            Math.floor(FLAMECHART_FRAME_HEIGHT - REACT_PRIORITY_BORDER_SIZE)
+            Math.floor(FLAMECHART_FRAME_HEIGHT - REACT_PRIORITY_BORDER_SIZE),
           );
 
           if (width > FLAMECHART_TEXT_PADDING * 2) {
             const trimmedName = trimFlamegraphText(
               context,
               name,
-              width - FLAMECHART_TEXT_PADDING * 2 + (x < 0 ? x : 0)
+              width - FLAMECHART_TEXT_PADDING * 2 + (x < 0 ? x : 0),
             );
             if (trimmedName !== null) {
               context.fillStyle = COLORS.PRIORITY_LABEL;
               context.fillText(
                 trimmedName,
                 x + FLAMECHART_TEXT_PADDING - (x < 0 ? x : 0),
-                y + FLAMECHART_FRAME_HEIGHT / 2
+                y + FLAMECHART_FRAME_HEIGHT / 2,
               );
             }
           }
@@ -406,7 +406,7 @@ export const renderCanvas = memoize(
         0,
         Math.floor(y),
         Math.floor(LABEL_FIXED_WIDTH),
-        priorityHeight
+        priorityHeight,
       );
 
       context.fillStyle = COLORS.PRIORITY_BORDER;
@@ -414,7 +414,7 @@ export const renderCanvas = memoize(
         0,
         Math.floor(y + priorityHeight),
         canvasWidth,
-        REACT_PRIORITY_BORDER_SIZE
+        REACT_PRIORITY_BORDER_SIZE,
       );
 
       context.fillStyle = COLORS.PRIORITY_BORDER;
@@ -422,7 +422,7 @@ export const renderCanvas = memoize(
         Math.floor(LABEL_FIXED_WIDTH) - REACT_PRIORITY_BORDER_SIZE,
         Math.floor(y),
         REACT_PRIORITY_BORDER_SIZE,
-        priorityHeight
+        priorityHeight,
       );
 
       context.fillStyle = COLORS.PRIORITY_LABEL;
@@ -454,7 +454,7 @@ export const renderCanvas = memoize(
       if (i > 0) {
         const markerTimestamp = positionToTimestamp(
           i + LABEL_FIXED_WIDTH,
-          state
+          state,
         );
         const markerLabel = Math.round(markerTimestamp);
 
@@ -465,7 +465,7 @@ export const renderCanvas = memoize(
           x,
           MARKER_HEIGHT - MARKER_TICK_HEIGHT,
           REACT_PRIORITY_BORDER_SIZE,
-          MARKER_TICK_HEIGHT
+          MARKER_TICK_HEIGHT,
         );
 
         context.fillStyle = COLORS.TIME_MARKER_LABEL;
@@ -475,9 +475,9 @@ export const renderCanvas = memoize(
         context.fillText(
           `${markerLabel}ms`,
           x - MARKER_TEXT_PADDING,
-          MARKER_HEIGHT / 2
+          MARKER_HEIGHT / 2,
         );
       }
     }
-  }
+  },
 );

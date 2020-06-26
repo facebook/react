@@ -1,7 +1,7 @@
 // @flow
 
-import { useEffect, useReducer } from 'react';
-import { getCanvasMousePos } from '../canvas/canvasUtils';
+import {useEffect, useReducer} from 'react';
+import {getCanvasMousePos} from '../canvas/canvasUtils';
 import {
   BAR_HORIZONTAL_SPACING,
   MAX_ZOOM_LEVEL,
@@ -58,7 +58,7 @@ export function timestampToPosition(timestamp: number, state: PanAndZoomState) {
 export function durationToWidth(duration: number, state: PanAndZoomState) {
   return Math.max(
     duration * state.zoomLevel - BAR_HORIZONTAL_SPACING,
-    MIN_BAR_WIDTH
+    MIN_BAR_WIDTH,
   );
 }
 
@@ -116,11 +116,11 @@ function reducer(
     | MouseMoveAction
     | MouseUpAction
     | WheelAction
-    | ZoomToAction
+    | ZoomToAction,
 ): PanAndZoomState {
   switch (action.type) {
     case 'initialize': {
-      const { payload } = action;
+      const {payload} = action;
       return ({
         ...state,
         canvasHeight: payload.canvasHeight,
@@ -142,10 +142,10 @@ function reducer(
       };
     }
     case 'mouse-move': {
-      const { payload } = action;
-      const { canvasMouseX, canvasMouseY } = getCanvasMousePos(
+      const {payload} = action;
+      const {canvasMouseX, canvasMouseY} = getCanvasMousePos(
         payload.canvas,
-        payload.event
+        payload.event,
       );
 
       if (state.isDragging) {
@@ -156,12 +156,12 @@ function reducer(
           offsetX: clamp(
             0,
             getMaxOffsetX(state),
-            state.offsetX - payload.event.movementX
+            state.offsetX - payload.event.movementX,
           ),
           offsetY: clamp(
             0,
             getMaxOffsetY(state),
-            state.offsetY + payload.event.movementY
+            state.offsetY + payload.event.movementY,
           ),
         };
       } else {
@@ -179,9 +179,9 @@ function reducer(
       };
     }
     case 'wheel': {
-      const { payload } = action;
-      const { canvas, event } = payload;
-      const { deltaX, deltaY } = event;
+      const {payload} = action;
+      const {canvas, event} = payload;
+      const {deltaX, deltaY} = event;
       const {
         minZoomLevel,
         offsetX,
@@ -204,14 +204,14 @@ function reducer(
       } else {
         if (event.shiftKey || event.ctrlKey || event.metaKey) {
           if (absDeltaY > ZOOM_WHEEL_DELTA_THRESHOLD) {
-            const { canvasMouseX } = getCanvasMousePos(canvas, event);
+            const {canvasMouseX} = getCanvasMousePos(canvas, event);
 
             const nextState = {
               ...state,
               zoomLevel: clamp(
                 minZoomLevel,
                 MAX_ZOOM_LEVEL,
-                zoomLevel * (1 + 0.005 * -deltaY)
+                zoomLevel * (1 + 0.005 * -deltaY),
               ),
             };
 
@@ -219,17 +219,17 @@ function reducer(
             // and adjust the offset so that point stays centered after zooming.
             const timestampAtCurrentZoomLevel = positionToTimestamp(
               canvasMouseX,
-              state
+              state,
             );
             const positionAtNewZoom = timestampToPosition(
               timestampAtCurrentZoomLevel,
-              nextState
+              nextState,
             );
 
             nextState.offsetX = clamp(
               0,
               getMaxOffsetX(nextState),
-              offsetX + positionAtNewZoom - canvasMouseX
+              offsetX + positionAtNewZoom - canvasMouseX,
             );
 
             if (nextState.zoomLevel !== zoomLevel) {
@@ -248,9 +248,9 @@ function reducer(
       break;
     }
     case 'zoom-to': {
-      const { payload } = action;
-      const { startTime, stopTime } = payload;
-      const { canvasWidth, fixedColumnWidth } = state;
+      const {payload} = action;
+      const {startTime, stopTime} = payload;
+      const {canvasWidth, fixedColumnWidth} = state;
 
       const availableWidth = canvasWidth - fixedColumnWidth;
       const newZoomLevel = availableWidth / (stopTime - startTime);
@@ -276,7 +276,7 @@ function clamp(min: number, max: number, value: number): number {
 }
 
 type Props = {|
-  canvasRef: {| current: HTMLCanvasElement | null |},
+  canvasRef: {|current: HTMLCanvasElement | null|},
   canvasHeight: number,
   canvasWidth: number,
   fixedColumnWidth: number,
@@ -314,7 +314,7 @@ export default function usePanAndZoom({
     const initialZoomLevel = clamp(
       MIN_ZOOM_LEVEL,
       MAX_ZOOM_LEVEL,
-      (width - fixedColumnWidth) / unscaledContentWidth
+      (width - fixedColumnWidth) / unscaledContentWidth,
     );
 
     dispatch({
@@ -348,7 +348,7 @@ export default function usePanAndZoom({
     }
 
     const onCanvasMouseDown: MouseEventHandler = event => {
-      dispatch({ type: 'mouse-down' });
+      dispatch({type: 'mouse-down'});
     };
 
     const onCanvasMouseMove: MouseEventHandler = event => {
@@ -362,7 +362,7 @@ export default function usePanAndZoom({
     };
 
     const onDocumentMouseUp: MouseEventHandler = event => {
-      dispatch({ type: 'mouse-up' });
+      dispatch({type: 'mouse-up'});
     };
 
     const onCanvasWheel: WheelEventHandler = event => {

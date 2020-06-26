@@ -1,6 +1,6 @@
 // @flow
 
-import { useDebugValue, useEffect, useState } from 'react';
+import {useDebugValue, useEffect, useState} from 'react';
 
 // Below copied from https://usehooks.com/
 export default function useDebounce<T>(value: T, delay: number): T {
@@ -24,7 +24,7 @@ export default function useDebounce<T>(value: T, delay: number): T {
         clearTimeout(handler);
       };
     },
-    [value, delay] // Only re-call effect if value or delay changes
+    [value, delay], // Only re-call effect if value or delay changes
   );
 
   return debouncedValue;

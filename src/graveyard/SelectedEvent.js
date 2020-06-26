@@ -1,12 +1,12 @@
 import React from 'react';
 import styles from './SelectedEvent.module.css';
 
-export default function SelectedEvent({ selectedEvent, width }) {
+export default function SelectedEvent({selectedEvent, width}) {
   if (selectedEvent == null) {
     return null;
   }
 
-  const { componentStack, duration, timestamp, type } = selectedEvent;
+  const {componentStack, duration, timestamp, type} = selectedEvent;
 
   let label = null;
   switch (type) {
@@ -36,7 +36,7 @@ export default function SelectedEvent({ selectedEvent, width }) {
   }
 
   return (
-    <div className={styles.SelectedEvent} style={{ width }}>
+    <div className={styles.SelectedEvent} style={{width}}>
       {label} {duration !== undefined ? `for ${duration}ms` : ''} at {timestamp}
       ms
       {componentStack && (

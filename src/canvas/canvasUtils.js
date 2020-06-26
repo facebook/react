@@ -7,7 +7,7 @@ import type {
   ReactHoverContextInfo,
   ReactPriority,
 } from '../types';
-import type { PanAndZoomState } from '../util/usePanAndZoom';
+import type {PanAndZoomState} from '../util/usePanAndZoom';
 
 import memoize from 'memoize-one';
 import {
@@ -32,7 +32,7 @@ import usePanAndZoom, {
 export function configureRetinaCanvas(
   canvas: HTMLCanvasElement,
   height: number,
-  width: number
+  width: number,
 ): number {
   const dpr: number = window.devicePixelRatio || 1;
   canvas.width = width * dpr;
@@ -47,30 +47,30 @@ export const getCanvasContext = memoize(
     canvas: HTMLCanvasElement,
     height: number,
     width: number,
-    scaleCanvas: boolean = true
+    scaleCanvas: boolean = true,
   ): CanvasRenderingContext2D => {
-    const context = canvas.getContext('2d', { alpha: false });
+    const context = canvas.getContext('2d', {alpha: false});
     if (scaleCanvas) {
       const dpr = configureRetinaCanvas(canvas, height, width);
       // Scale all drawing operations by the dpr, so you don't have to worry about the difference.
       context.scale(dpr, dpr);
     }
     return context;
-  }
+  },
 );
 
 export function getCanvasMousePos(
   canvas: HTMLCanvasElement,
-  mouseEvent: MouseEvent
+  mouseEvent: MouseEvent,
 ) {
   const rect =
     canvas instanceof HTMLCanvasElement
       ? canvas.getBoundingClientRect()
-      : { left: 0, top: 0 };
+      : {left: 0, top: 0};
   const canvasMouseX = mouseEvent.clientX - rect.left;
   const canvasMouseY = mouseEvent.clientY - rect.top;
 
-  return { canvasMouseX, canvasMouseY };
+  return {canvasMouseX, canvasMouseY};
 }
 
 // Time mark intervals vary based on the current zoom range and the time it represents.
@@ -93,7 +93,7 @@ export const cachedFlamegraphTextWidths = new Map();
 export const trimFlamegraphText = (
   context: CanvasRenderingContext2D,
   text: string,
-  width: number
+  width: number,
 ) => {
   for (let i = text.length - 1; i >= 0; i--) {
     const trimmedText = i === text.length - 1 ? text : text.substr(0, i) + '…';
@@ -116,9 +116,9 @@ export function getHoveredEvent(
   schedulerCanvasHeight: number,
   data: ReactProfilerData | null,
   flamechart: FlamechartData | null,
-  state: PanAndZoomState
+  state: PanAndZoomState,
 ): ReactHoverContextInfo | null {
-  const { canvasMouseX, canvasMouseY, offsetY } = state;
+  const {canvasMouseX, canvasMouseY, offsetY} = state;
 
   if (canvasMouseX < LABEL_FIXED_WIDTH || canvasMouseY < HEADER_HEIGHT_FIXED) {
     return null;
@@ -165,7 +165,7 @@ export function getHoveredEvent(
       if (events !== null) {
         for (let index = events.length - 1; index >= 0; index--) {
           const event = events[index];
-          const { timestamp } = event;
+          const {timestamp} = event;
 
           const eventX = timestampToPosition(timestamp, state);
           const startX = eventX - REACT_EVENT_SIZE / 2;
@@ -185,7 +185,7 @@ export function getHoveredEvent(
         // This will always be the one on "top" (the one the user is hovering over).
         for (let index = measures.length - 1; index >= 0; index--) {
           const measure = measures[index];
-          const { duration, timestamp } = measure;
+          const {duration, timestamp} = measure;
 
           const pointerTime = positionToTimestamp(canvasMouseX, state);
 
@@ -205,7 +205,7 @@ export function getHoveredEvent(
     if (flamechart !== null) {
       const layerIndex = Math.floor(
         (canvasMouseY + offsetY - HEADER_HEIGHT_FIXED - schedulerCanvasHeight) /
-          FLAMECHART_FRAME_HEIGHT
+          FLAMECHART_FRAME_HEIGHT,
       );
       const layer = flamechart.layers[layerIndex];
 
@@ -216,7 +216,7 @@ export function getHoveredEvent(
           const currentIndex = Math.floor((startIndex + stopIndex) / 2);
           const flamechartNode = layer[currentIndex];
 
-          const { end, start } = flamechartNode;
+          const {end, start} = flamechartNode;
 
           const width = durationToWidth((end - start) / 1000, state);
           const x = Math.floor(timestampToPosition(start / 1000, state));
@@ -247,7 +247,7 @@ export function getHoveredEvent(
 const cachedPriorityHeights = new Map();
 export const getPriorityHeight = (
   data: ReactProfilerData,
-  priority: ReactPriority
+  priority: ReactPriority,
 ): number => {
   if (cachedPriorityHeights.has(priority)) {
     // We know the value must be present because we've just checked.

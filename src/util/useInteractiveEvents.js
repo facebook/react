@@ -1,11 +1,11 @@
 // @flow
 
-import { useEffect, useRef, useState } from 'react';
-import { durationToWidth, timestampToPosition } from './usePanAndZoom';
-import { EVENT_SIZE } from '../constants';
+import {useEffect, useRef, useState} from 'react';
+import {durationToWidth, timestampToPosition} from './usePanAndZoom';
+import {EVENT_SIZE} from '../constants';
 
 function doesEventIntersectPosition(position, state, event) {
-  const { duration, timestamp } = event;
+  const {duration, timestamp} = event;
 
   // Although it would be intuitive to search by time,
   // that can result in a confusing user experience for events of 0ms duration-
@@ -65,7 +65,7 @@ export default function useInteractiveEvents({
 
   useEffect(() => {
     const onClick = () => {
-      const { hoveredEvent, selectedEvent } = lastResultRef.current;
+      const {hoveredEvent, selectedEvent} = lastResultRef.current;
       setSelectedEvent(hoveredEvent === selectedEvent ? null : hoveredEvent);
     };
     const canvas = canvasRef.current;

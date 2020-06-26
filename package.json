@@ -32,6 +32,6 @@
     "jest": "^26.0.1",
     "parcel": "2.0.0-alpha.3.2",
     "postcss-modules": "^2.0.0",
-    "prettier": "^1.19.1"
+    "prettier": "1.19.1"
   }
 }

@@ -1,7 +1,7 @@
 // @flow
 
-import type { PanAndZoomState } from './util/usePanAndZoom';
-import type { FlamechartFrame } from './speedscope/lib/flamechart';
+import type {PanAndZoomState} from './util/usePanAndZoom';
+import type {FlamechartFrame} from './speedscope/lib/flamechart';
 import type {
   ReactEvent,
   ReactMeasure,
@@ -11,9 +11,9 @@ import type {
 } from './types';
 
 import prettyMilliseconds from 'pretty-ms';
-import React, { Fragment, useLayoutEffect, useRef } from 'react';
-import { COLORS } from './canvas/constants';
-import { getBatchRange } from './util/getBatchRange';
+import React, {Fragment, useLayoutEffect, useRef} from 'react';
+import {COLORS} from './canvas/constants';
+import {getBatchRange} from './util/getBatchRange';
 import useSmartTooltip from './util/useSmartTooltip';
 import styles from './EventTooltip.css';
 
@@ -25,8 +25,8 @@ type Props = {|
   state: PanAndZoomState,
 |};
 
-export default function EventTooltip({ data, hoveredEvent, state }: Props) {
-  const { canvasMouseY, canvasMouseX } = state;
+export default function EventTooltip({data, hoveredEvent, state}: Props) {
+  const {canvasMouseY, canvasMouseX} = state;
 
   const tooltipRef = useSmartTooltip({
     mouseX: canvasMouseX,
@@ -37,7 +37,7 @@ export default function EventTooltip({ data, hoveredEvent, state }: Props) {
     return null;
   }
 
-  const { event, flamechartNode, measure } = hoveredEvent;
+  const {event, flamechartNode, measure} = hoveredEvent;
 
   if (event !== null) {
     switch (event.type) {
@@ -130,8 +130,8 @@ const TooltipFlamechartNode = ({
   flamechartNode: FlamechartFrame,
   tooltipRef: Return<typeof useRef>,
 }) => {
-  const { end, node, start } = flamechartNode;
-  const { col, file, line, name } = node.frame;
+  const {end, node, start} = flamechartNode;
+  const {col, file, line, name} = node.frame;
   return (
     <div
       className={styles.Tooltip}
@@ -139,8 +139,7 @@ const TooltipFlamechartNode = ({
         backgroundColor: COLORS.TOOLTIP_BG,
         color: COLORS.TOOLTIP,
       }}
-      ref={tooltipRef}
-    >
+      ref={tooltipRef}>
       {prettyMilliseconds((end - start) / 1000)} {name}
       <div className={styles.DetailsGrid}>
         <div className={styles.DetailsGridLabel}>Script URL:</div> {file}
@@ -162,7 +161,7 @@ const TooltipReactEvent = ({
   event: ReactEvent,
   tooltipRef: Return<typeof useRef>,
 }) => {
-  const { componentName, componentStack, timestamp, type } = event;
+  const {componentName, componentStack, timestamp, type} = event;
 
   let label = null;
   switch (type) {
@@ -186,10 +185,9 @@ const TooltipReactEvent = ({
         backgroundColor: COLORS.TOOLTIP_BG,
         color: COLORS.TOOLTIP,
       }}
-      ref={tooltipRef}
-    >
+      ref={tooltipRef}>
       {componentName && (
-        <span className={styles.ComponentName} style={{ color }}>
+        <span className={styles.ComponentName} style={{color}}>
           {componentName}
         </span>
       )}{' '}
@@ -220,7 +218,7 @@ const TooltipReactMeasure = ({
   measure: ReactMeasure,
   tooltipRef: Return<typeof useRef>,
 }) => {
-  const { batchUID, duration, priority, timestamp, type } = measure;
+  const {batchUID, duration, priority, timestamp, type} = measure;
 
   let label = null;
   switch (type) {
@@ -253,8 +251,7 @@ const TooltipReactMeasure = ({
         backgroundColor: COLORS.TOOLTIP_BG,
         color: COLORS.TOOLTIP,
       }}
-      ref={tooltipRef}
-    >
+      ref={tooltipRef}>
       {prettyMilliseconds(duration)} {label}
       <div className={styles.Divider} />
       <div className={styles.DetailsGrid}>

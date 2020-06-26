@@ -1,9 +1,9 @@
 // @flow
 
-import type { TimelineEvent } from './speedscope/import/chrome';
-import type { PanAndZoomState } from './util/usePanAndZoom';
+import type {TimelineEvent} from './speedscope/import/chrome';
+import type {PanAndZoomState} from './util/usePanAndZoom';
 
-import { copy } from 'clipboard-js';
+import {copy} from 'clipboard-js';
 import React, {
   Fragment,
   useEffect,
@@ -11,15 +11,15 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import { unstable_batchedUpdates } from 'react-dom';
+import {unstable_batchedUpdates} from 'react-dom';
 import memoize from 'memoize-one';
 import usePanAndZoom from './util/usePanAndZoom';
 
-import { getHoveredEvent, getPriorityHeight } from './canvas/canvasUtils';
-import { renderCanvas } from './canvas/renderCanvas';
+import {getHoveredEvent, getPriorityHeight} from './canvas/canvasUtils';
+import {renderCanvas} from './canvas/renderCanvas';
 
 import prettyMilliseconds from 'pretty-ms';
-import { getBatchRange } from './util/getBatchRange';
+import {getBatchRange} from './util/getBatchRange';
 import EventTooltip from './EventTooltip';
 import preprocessData from './util/preprocessData';
 import preprocessFlamechart from './util/preprocessFlamechart';
@@ -33,7 +33,7 @@ import {
   HEADER_HEIGHT_FIXED,
 } from './canvas/constants';
 
-import { ContextMenu, ContextMenuItem, useContextMenu } from './context';
+import {ContextMenu, ContextMenuItem, useContextMenu} from './context';
 
 // TODO: Add import button but keep a static path until canvas layout is ready
 import JSON_PATH from 'url:../static/small-devtools.json';
@@ -91,9 +91,9 @@ function App() {
   }, []);
 
   return (
-    <div className={styles.App} style={{ backgroundColor: COLORS.PAGE_BG }}>
+    <div className={styles.App} style={{backgroundColor: COLORS.PAGE_BG}}>
       <AutoSizer>
-        {({ height, width }: { height: number, width: number }) => (
+        {({height, width}: {height: number, width: number}) => (
           <AutoSizedCanvas
             data={data}
             flamechart={flamechart}
@@ -108,7 +108,7 @@ function App() {
 }
 
 const copySummary = (data: ReactProfilerData | null, measure: ReactMeasure) => {
-  const { batchUID, duration, priority, timestamp, type } = measure;
+  const {batchUID, duration, priority, timestamp, type} = measure;
 
   const [startTime, stopTime] = getBatchRange(batchUID, priority, data);
 
@@ -118,20 +118,20 @@ const copySummary = (data: ReactProfilerData | null, measure: ReactMeasure) => {
       timestamp: prettyMilliseconds(timestamp),
       duration: prettyMilliseconds(duration),
       batchDuration: prettyMilliseconds(stopTime - startTime),
-    })
+    }),
   );
 };
 
 const zoomToBatch = (
   data: ReactProfilerData | null,
   measure: ReactMeasure,
-  state: PanAndZoomState
+  state: PanAndZoomState,
 ) => {
-  const { zoomTo } = state;
+  const {zoomTo} = state;
   if (!data || !zoomTo) {
     return;
   }
-  const { batchUID, priority } = measure;
+  const {batchUID, priority} = measure;
   const [startTime, stopTime] = getBatchRange(batchUID, priority, data);
   zoomTo(startTime, stopTime);
 };
@@ -171,7 +171,7 @@ function AutoSizedCanvas({
     schedulerCanvasHeight,
     data,
     flamechart,
-    state
+    state,
   );
   const [isContextMenuShown, setIsContextMenuShown] = useState<boolean>(false);
 
@@ -197,7 +197,7 @@ function AutoSizedCanvas({
         height,
         schedulerCanvasHeight,
         state,
-        hoveredEvent
+        hoveredEvent,
       );
     }
   });
@@ -211,50 +211,45 @@ function AutoSizedCanvas({
         width={width}
       />
       <ContextMenu id={CONTEXT_MENU_ID}>
-        {({ data, hoveredEvent }: ContextMenuContextData) => {
+        {({data, hoveredEvent}: ContextMenuContextData) => {
           if (hoveredEvent == null) {
             return null;
           }
-          const { event, flamechartNode, measure } = hoveredEvent;
+          const {event, flamechartNode, measure} = hoveredEvent;
           return (
             <Fragment>
               {event !== null && (
                 <ContextMenuItem
                   onClick={() => copy(event.componentName)}
-                  title="Copy component name"
-                >
+                  title="Copy component name">
                   Copy component name
                 </ContextMenuItem>
               )}
               {event !== null && (
                 <ContextMenuItem
                   onClick={() => copy(event.componentStack)}
-                  title="Copy component stack"
-                >
+                  title="Copy component stack">
                   Copy component stack
                 </ContextMenuItem>
               )}
               {measure !== null && (
                 <ContextMenuItem
                   onClick={() => zoomToBatch(data, measure, state)}
-                  title="Zoom to batch"
-                >
+                  title="Zoom to batch">
                   Zoom to batch
                 </ContextMenuItem>
               )}
               {measure !== null && (
                 <ContextMenuItem
                   onClick={() => copySummary(data, measure)}
-                  title="Copy summary"
-                >
+                  title="Copy summary">
                   Copy summary
                 </ContextMenuItem>
               )}
               {flamechartNode !== null && (
                 <ContextMenuItem
                   onClick={() => copy(flamechartNode.node.frame.file)}
-                  title="Copy file path"
-                >
+                  title="Copy file path">
                   Copy file path
                 </ContextMenuItem>
               )}
@@ -262,11 +257,10 @@ function AutoSizedCanvas({
                 <ContextMenuItem
                   onClick={() =>
                     copy(
-                      `line ${flamechartNode.node.frame.line}, column ${flamechartNode.node.frame.col}`
+                      `line ${flamechartNode.node.frame.line}, column ${flamechartNode.node.frame.col}`,
                     )
                   }
-                  title="Copy location"
-                >
+                  title="Copy location">
                   Copy location
                 </ContextMenuItem>
               )}

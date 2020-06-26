@@ -1,6 +1,6 @@
 // @flow
 
-import type { TimelineEvent } from './speedscope/import/chrome';
+import type {TimelineEvent} from './speedscope/import/chrome';
 
 import type {
   Milliseconds,
@@ -30,7 +30,7 @@ type Metadata = {|
 |};
 
 export default function reactProfilerProcessor(
-  rawData: TimelineEvent[]
+  rawData: TimelineEvent[],
 ): ReactProfilerData {
   const reactProfilerData = {
     startTime: rawData[0].ts,
@@ -62,7 +62,7 @@ export default function reactProfilerProcessor(
   let currentProfilerDataGroup: ReactProfilerDataPriority | null = null;
   let uidCounter = 0;
 
-  const metadata: {| [priority: ReactPriority]: Metadata |} = {
+  const metadata: {|[priority: ReactPriority]: Metadata|} = {
     high: {
       batchUID: 0,
       nextRenderShouldGenerateNewBatchID: true,
@@ -89,9 +89,9 @@ export default function reactProfilerProcessor(
     if (!currentMetadata) {
       return null;
     }
-    const { stack } = currentMetadata;
+    const {stack} = currentMetadata;
     if (stack.length > 0) {
-      const { type } = stack[stack.length - 1];
+      const {type} = stack[stack.length - 1];
       return type;
     }
     return null;
@@ -101,9 +101,9 @@ export default function reactProfilerProcessor(
     if (!currentMetadata) {
       return 0;
     }
-    const { stack } = currentMetadata;
+    const {stack} = currentMetadata;
     if (stack.length > 0) {
-      const { depth, type } = (stack[stack.length - 1]: StackElement);
+      const {depth, type} = (stack[stack.length - 1]: StackElement);
       return type === 'render-idle' ? depth : depth + 1;
     }
     return 0;
@@ -111,30 +111,30 @@ export default function reactProfilerProcessor(
 
   const markWorkCompleted = (
     type: ReactMeasureType,
-    stopTime: Milliseconds
+    stopTime: Milliseconds,
   ) => {
     if (!currentMetadata) {
       return;
     }
-    const { stack } = currentMetadata;
+    const {stack} = currentMetadata;
     if (stack.length === 0) {
       console.error(
-        `Unexpected type "${type}" completed while stack is empty.`
+        `Unexpected type "${type}" completed while stack is empty.`,
       );
     } else {
       const last = stack[stack.length - 1];
       if (last.type !== type) {
         console.error(
-          `Unexpected type "${type}" completed before "${last.type}" completed.`
+          `Unexpected type "${type}" completed before "${last.type}" completed.`,
         );
       } else {
-        const { index, startTime } = stack.pop();
+        const {index, startTime} = stack.pop();
 
         if (currentProfilerDataGroup) {
           const measure = currentProfilerDataGroup.measures[index];
           if (!measure) {
             console.error(
-              `Could not find matching measure for type "${type}".`
+              `Could not find matching measure for type "${type}".`,
             );
           } else {
             // $FlowFixMe This property should not be writable outside of this function.
@@ -149,14 +149,14 @@ export default function reactProfilerProcessor(
     if (!currentMetadata || !currentProfilerDataGroup) {
       return;
     }
-    const { batchUID, stack } = currentMetadata;
+    const {batchUID, stack} = currentMetadata;
 
     const index = currentProfilerDataGroup.measures.length;
     const depth = getDepth();
 
     currentProfilerDataGroup.maxNestedMeasures = Math.max(
       currentProfilerDataGroup.maxNestedMeasures,
-      depth + 1
+      depth + 1,
     );
 
     stack.push({
@@ -180,13 +180,13 @@ export default function reactProfilerProcessor(
     if (!currentMetadata) {
       return;
     }
-    const { stack } = currentMetadata;
+    const {stack} = currentMetadata;
     const lastIndex = stack.length - 1;
     if (lastIndex >= 0) {
       const last = stack[lastIndex];
       if (last.stopTime === undefined && last.type === type) {
         throw new Error(
-          `Unexpected type "${type}" started before "${last.type}" completed.`
+          `Unexpected type "${type}" started before "${last.type}" completed.`,
         );
       }
     }
@@ -195,7 +195,7 @@ export default function reactProfilerProcessor(
   for (let i = 0; i < rawData.length; i++) {
     const currentEvent = rawData[i];
 
-    const { cat, name, ts } = currentEvent;
+    const {cat, name, ts} = currentEvent;
 
     if (cat !== 'blink.user_timing' || !name.startsWith('--')) {
       continue;
@@ -217,7 +217,7 @@ export default function reactProfilerProcessor(
     if (name.startsWith('--scheduler-start-')) {
       if (currentPriority !== 'unscheduled') {
         console.error(
-          `Unexpected scheduler start: "${name}" with current priority: "${currentPriority}"`
+          `Unexpected scheduler start: "${name}" with current priority: "${currentPriority}"`,
         );
         continue; // TODO Should we throw? Will this corrupt our data?
       }
@@ -229,7 +229,7 @@ export default function reactProfilerProcessor(
         currentPriority !== name.substr(17)
       ) {
         console.error(
-          `Unexpected scheduler stop: "${name}" with current priority: "${currentPriority}"`
+          `Unexpected scheduler stop: "${name}" with current priority: "${currentPriority}"`,
         );
         continue; // TODO Should we throw? Will this corrupt our data?
       }
@@ -284,7 +284,7 @@ export default function reactProfilerProcessor(
     } else if (name.startsWith('--schedule-state-update-')) {
       const [componentName, componentStack] = name.substr(24).split('-');
       const isCascading = !!currentMetadata.stack.find(
-        ({ type }) => type === 'commit'
+        ({type}) => type === 'commit',
       );
       currentProfilerDataGroup.events.push({
         type: 'schedule-state-update',
@@ -307,29 +307,29 @@ export default function reactProfilerProcessor(
   }
 
   Object.entries(metadata).forEach(([priority, metadata]) => {
-    const { stack } = ((metadata: any): Metadata);
+    const {stack} = ((metadata: any): Metadata);
     if (stack.length > 0) {
       console.error(
         `Incomplete events or measures for priority ${priority}`,
-        stack
+        stack,
       );
     }
   });
 
   ['unscheduled', 'high', 'normal', 'low'].forEach(priority => {
-    const { events, measures } = reactProfilerData[priority];
+    const {events, measures} = reactProfilerData[priority];
     if (events.length > 0) {
-      const { timestamp } = (events[events.length - 1]: ReactEvent);
+      const {timestamp} = (events[events.length - 1]: ReactEvent);
       reactProfilerData.duration = Math.max(
         reactProfilerData.duration,
-        timestamp
+        timestamp,
       );
     }
     if (measures.length > 0) {
-      const { duration, timestamp } = measures[measures.length - 1];
+      const {duration, timestamp} = measures[measures.length - 1];
       reactProfilerData.duration = Math.max(
         reactProfilerData.duration,
-        timestamp + duration
+        timestamp + duration,
       );
     }
   });

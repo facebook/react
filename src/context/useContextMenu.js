@@ -1,11 +1,11 @@
 // @flow
 
-import { useContext, useEffect, useRef } from 'react';
-import { RegistryContext } from './Contexts';
+import {useContext, useEffect, useRef} from 'react';
+import {RegistryContext} from './Contexts';
 
-import type { ElementRef } from 'react';
-import type { OnChangeFn } from './Contexts';
-import type { Return } from '../types';
+import type {ElementRef} from 'react';
+import type {OnChangeFn} from './Contexts';
+import type {Return} from '../types';
 
 export default function useContextMenu<T>({
   data,
@@ -18,7 +18,7 @@ export default function useContextMenu<T>({
   onChange: OnChangeFn,
   ref: Return<typeof useRef>,
 |}) {
-  const { showMenu } = useContext(RegistryContext);
+  const {showMenu} = useContext(RegistryContext);
 
   useEffect(() => {
     if (ref.current !== null) {
@@ -31,7 +31,7 @@ export default function useContextMenu<T>({
         const pageY: number =
           event.pageY || (event.touches && event.touches[0].pageY);
 
-        showMenu({ data, id, onChange, pageX, pageY });
+        showMenu({data, id, onChange, pageX, pageY});
       };
 
       const trigger = ref.current;

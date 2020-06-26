@@ -6,3 +6,5 @@ dist/*
 static/*
 src/speedscope/*
 src/tracerbench/*
+coverage
+.vscode

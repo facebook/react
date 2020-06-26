@@ -15,9 +15,9 @@ import type {
 function unmemoizedGetBatchRange(
   batchUID: BatchUID,
   priority: ReactPriority,
-  data: ReactProfilerData
+  data: ReactProfilerData,
 ): [Milliseconds, Milliseconds] {
-  const { measures } = data[priority];
+  const {measures} = data[priority];
 
   let startTime = 0;
   let stopTime = Infinity;
