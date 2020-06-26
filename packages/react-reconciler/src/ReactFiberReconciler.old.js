@@ -7,7 +7,11 @@
  * @flow
  */
 
-import type {Fiber, SuspenseHydrationCallbacks} from './ReactInternalTypes';
+import type {
+  Fiber,
+  ReactPriorityLevel,
+  SuspenseHydrationCallbacks,
+} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {
@@ -79,6 +83,8 @@ import {
   NoTimestamp,
   getHighestPriorityPendingLanes,
   higherPriorityLane,
+  getCurrentUpdateLanePriority,
+  setCurrentUpdateLanePriority, schedulerPriorityToLanePriority,
 } from './ReactFiberLane';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
@@ -422,6 +428,16 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
   const lane = requestUpdateLane(fiber, null);
   scheduleUpdateOnFiber(fiber, lane, eventTime);
   markRetryLaneIfNotHydrated(fiber, lane);
+}
+
+export function runWithPriority<T>(priority: ReactPriorityLevel, fn: () => T) {
+  const previousPriority = getCurrentUpdateLanePriority();
+  try {
+    setCurrentUpdateLanePriority(schedulerPriorityToLanePriority(priority));
+    return fn();
+  } finally {
+    setCurrentUpdateLanePriority(previousPriority);
+  }
 }
 
 export {findHostInstance};
