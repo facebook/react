@@ -21,7 +21,7 @@ import {
   enableDeprecatedFlareAPI,
   enableSelectiveHydration,
   enableModernEventSystem,
-  enableCurrentUpdateLanePriority,
+  decoupleUpdatePriorityFromScheduler,
 } from 'shared/ReactFeatureFlags';
 import {
   unstable_runWithPriority as runWithPriority,
@@ -580,23 +580,9 @@ export function queueExplicitHydrationTarget(target: Node): void {
       lanePriority: updateLanePriority,
     };
     let i = 0;
-    if (enableCurrentUpdateLanePriority) {
-      for (; i < queuedExplicitHydrationTargets.length; i++) {
-        const queuedLanePriority =
-          queuedExplicitHydrationTargets[i].lanePriority;
-        if (
-          higherLanePriority(updateLanePriority, queuedLanePriority) ===
-          queuedLanePriority
-        ) {
-          break;
-        }
-      }
-    } else {
-      // TODO: Remove after we switch to use the update lane priority.
-      for (; i < queuedExplicitHydrationTargets.length; i++) {
-        if (schedulerPriority <= queuedExplicitHydrationTargets[i].priority) {
-          break;
-        }
+    for (; i < queuedExplicitHydrationTargets.length; i++) {
+      if (schedulerPriority <= queuedExplicitHydrationTargets[i].priority) {
+        break;
       }
     }
     queuedExplicitHydrationTargets.splice(i, 0, queuedTarget);
