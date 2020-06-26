@@ -67,7 +67,6 @@ import {
   markRenderStarted,
   markRenderYielded,
   markRenderStopped,
-  markRenderAbandoned,
 } from './SchedulingProfiling';
 
 // The scheduler is imported here *only* to detect whether it's been mocked
@@ -473,18 +472,6 @@ export function scheduleUpdateOnFiber(
   if (root === null) {
     warnAboutUpdateOnUnmountedFiberInDEV(fiber);
     return null;
-  }
-
-  if (enableSchedulingProfiling) {
-    if (
-      workInProgressRoot !== null &&
-      // TODO: Confirm that this makes sense
-      !includesSomeLane(workInProgressRootRenderLanes, lane)
-      // Original criterion: expirationTime > renderExpirationTime
-      // Location: https://github.com/bvaughn/react/blob/root-event-marks/packages/react-reconciler/src/ReactFiberWorkLoop.js#L2846
-    ) {
-      markRenderAbandoned();
-    }
   }
 
   // TODO: requestUpdateLanePriority also reads the priority. Pass the

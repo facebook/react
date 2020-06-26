@@ -351,11 +351,8 @@ describe('SchedulingProfiling', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    expect(marks.map(normalizeCodeLocInfo)).toEqual(
-      expect.arrayContaining([
-        '--render-cancel',
-        '--schedule-state-update-Example-1024-\n    in Example (at **)',
-      ]),
+    expect(marks.map(normalizeCodeLocInfo)).toContain(
+      '--schedule-state-update-Example-1024-\n    in Example (at **)',
     );
   });
 
@@ -381,11 +378,8 @@ describe('SchedulingProfiling', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    expect(marks.map(normalizeCodeLocInfo)).toEqual(
-      expect.arrayContaining([
-        '--render-cancel',
-        '--schedule-forced-update-Example-1024-\n    in Example (at **)',
-      ]),
+    expect(marks.map(normalizeCodeLocInfo)).toContain(
+      '--schedule-forced-update-Example-1024-\n    in Example (at **)',
     );
   });
 

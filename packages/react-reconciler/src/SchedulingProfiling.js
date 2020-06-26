@@ -118,14 +118,6 @@ export function markRenderStarted(lanes: Lanes): void {
   }
 }
 
-export function markRenderAbandoned(): void {
-  if (enableSchedulingProfiling) {
-    if (supportsUserTiming) {
-      performance.mark('--render-cancel');
-    }
-  }
-}
-
 export function markRenderYielded(): void {
   if (enableSchedulingProfiling) {
     if (supportsUserTiming) {
