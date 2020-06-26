@@ -12,7 +12,6 @@ import React, {
   useState,
 } from 'react';
 import {unstable_batchedUpdates} from 'react-dom';
-import memoize from 'memoize-one';
 import usePanAndZoom from './util/usePanAndZoom';
 
 import {getHoveredEvent, getPriorityHeight} from './canvas/canvasUtils';
@@ -42,10 +41,8 @@ const CONTEXT_MENU_ID = 'canvas';
 
 import type {
   FlamechartData,
-  ReactEvent,
   ReactHoverContextInfo,
   ReactMeasure,
-  ReactPriority,
   ReactProfilerData,
 } from './types';
 
@@ -63,20 +60,19 @@ function App() {
 
   useEffect(() => {
     fetch(JSON_PATH)
-      .then(data => data.json())
-      .then((data: TimelineEvent[]) => {
+      .then(res => res.json())
+      .then((events: TimelineEvent[]) => {
         // Filter null entries and sort by timestamp.
         // I would not expect to have to do either of this,
         // but some of the data being passed in requires it.
-        data = data.filter(Boolean).sort((a, b) => (a.ts > b.ts ? 1 : -1));
+        events = events.filter(Boolean).sort((a, b) => (a.ts > b.ts ? 1 : -1));
 
-        if (data.length > 0) {
+        if (events.length > 0) {
           unstable_batchedUpdates(() => {
-            const processedData = preprocessData(data);
+            const processedData = preprocessData(events);
             setData(processedData);
 
-            const flamechart = preprocessFlamechart(data);
-            setFlamechart(flamechart);
+            setFlamechart(preprocessFlamechart(events));
 
             let height = 0;
 
@@ -211,11 +207,11 @@ function AutoSizedCanvas({
         width={width}
       />
       <ContextMenu id={CONTEXT_MENU_ID}>
-        {({data, hoveredEvent}: ContextMenuContextData) => {
-          if (hoveredEvent == null) {
+        {(contextData: ContextMenuContextData) => {
+          if (contextData.hoveredEvent == null) {
             return null;
           }
-          const {event, flamechartNode, measure} = hoveredEvent;
+          const {event, flamechartNode, measure} = contextData.hoveredEvent;
           return (
             <Fragment>
               {event !== null && (
@@ -234,14 +230,14 @@ function AutoSizedCanvas({
               )}
               {measure !== null && (
                 <ContextMenuItem
-                  onClick={() => zoomToBatch(data, measure, state)}
+                  onClick={() => zoomToBatch(contextData.data, measure, state)}
                   title="Zoom to batch">
                   Zoom to batch
                 </ContextMenuItem>
               )}
               {measure !== null && (
                 <ContextMenuItem
-                  onClick={() => copySummary(data, measure)}
+                  onClick={() => copySummary(contextData.data, measure)}
                   title="Copy summary">
                   Copy summary
                 </ContextMenuItem>

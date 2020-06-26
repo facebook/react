@@ -22,7 +22,7 @@ import {
   REACT_PRIORITY_BORDER_SIZE,
   FLAMECHART_FRAME_HEIGHT,
 } from './constants';
-import usePanAndZoom, {
+import {
   durationToWidth,
   positionToTimestamp,
   timestampToPosition,
@@ -126,7 +126,7 @@ export function getHoveredEvent(
 
   if (canvasMouseY + offsetY < schedulerCanvasHeight) {
     if (data != null) {
-      let adjustedCanvasMouseY = canvasMouseY - HEADER_HEIGHT_FIXED + offsetY;
+      const adjustedCanvasMouseY = canvasMouseY - HEADER_HEIGHT_FIXED + offsetY;
       let priorityMinY = HEADER_HEIGHT_FIXED;
       let priorityIndex = null;
       let priority: ReactPriority = 'unscheduled';
@@ -154,8 +154,8 @@ export function getHoveredEvent(
       const measureMinY = eventMaxY;
       const measureMaxY = measureMinY + REACT_WORK_SIZE + REACT_GUTTER_SIZE;
 
-      let events = null,
-        measures = null;
+      let events = null;
+      let measures = null;
       if (canvasMouseY >= eventMinY && canvasMouseY <= eventMaxY) {
         events = data[priority].events;
       } else if (canvasMouseY >= measureMinY && canvasMouseY <= measureMaxY) {

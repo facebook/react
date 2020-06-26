@@ -75,11 +75,11 @@ export default function ContextMenu({children, id}: Props) {
   }, [bodyAccessorRef, containerRef]);
 
   useEffect(() => {
-    const showMenu = ({data, pageX, pageY}) => {
+    const showMenuFn = ({data, pageX, pageY}) => {
       setState({data, isVisible: true, pageX, pageY});
     };
-    const hideMenu = () => setState(HIDDEN_STATE);
-    return registerMenu(id, showMenu, hideMenu);
+    const hideMenuFn = () => setState(HIDDEN_STATE);
+    return registerMenu(id, showMenuFn, hideMenuFn);
   }, [id]);
 
   useLayoutEffect(() => {

@@ -3,7 +3,6 @@
 import {useContext, useEffect, useRef} from 'react';
 import {RegistryContext} from './Contexts';
 
-import type {ElementRef} from 'react';
 import type {OnChangeFn} from './Contexts';
 import type {Return} from '../types';
 

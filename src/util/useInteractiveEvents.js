@@ -42,7 +42,6 @@ export default function useInteractiveEvents({
     canvasMouseY,
     fixedColumnWidth,
     fixedHeaderHeight,
-    zoomLevel,
   } = state;
 
   let hoveredEvent = null;
@@ -65,8 +64,12 @@ export default function useInteractiveEvents({
 
   useEffect(() => {
     const onClick = () => {
-      const {hoveredEvent, selectedEvent} = lastResultRef.current;
-      setSelectedEvent(hoveredEvent === selectedEvent ? null : hoveredEvent);
+      setSelectedEvent(
+        lastResultRef.current.hoveredEvent ===
+          lastResultRef.current.selectedEvent
+          ? null
+          : lastResultRef.current.hoveredEvent,
+      );
     };
     const canvas = canvasRef.current;
     canvas.addEventListener('click', onClick);

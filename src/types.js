@@ -5,6 +5,7 @@ import type {Flamechart, FlamechartFrame} from './speedscope/lib/flamechart';
 // Type utilities
 
 // Source: https://github.com/facebook/flow/issues/4002#issuecomment-323612798
+// eslint-disable-next-line no-unused-vars
 type Return_<R, F: (...args: Array<any>) => R> = R;
 /** Get return type of a function. */
 export type Return<T> = Return_<*, T>;

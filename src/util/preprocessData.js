@@ -306,8 +306,8 @@ export default function reactProfilerProcessor(
     }
   }
 
-  Object.entries(metadata).forEach(([priority, metadata]) => {
-    const {stack} = ((metadata: any): Metadata);
+  Object.entries(metadata).forEach(([priority, metadataForPriority]) => {
+    const {stack} = ((metadataForPriority: any): Metadata);
     if (stack.length > 0) {
       console.error(
         `Incomplete events or measures for priority ${priority}`,

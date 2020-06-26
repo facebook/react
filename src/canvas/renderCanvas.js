@@ -7,10 +7,9 @@ import type {
 } from '../types';
 import type {PanAndZoomState} from '../util/usePanAndZoom';
 
-import React from 'react';
 import memoize from 'memoize-one';
 
-import usePanAndZoom, {
+import {
   durationToWidth,
   positionToTimestamp,
   timestampToPosition,
@@ -35,7 +34,6 @@ import {
   REACT_GUTTER_SIZE,
   REACT_EVENT_SIZE,
   REACT_WORK_SIZE,
-  REACT_EVENT_BORDER_SIZE,
   REACT_PRIORITY_BORDER_SIZE,
   FLAMECHART_FONT_SIZE,
   FLAMECHART_FRAME_HEIGHT,
@@ -153,8 +151,6 @@ export const renderReact = ({
       }
 
       y = baseY + REACT_WORK_SIZE * depth + REACT_GUTTER_SIZE * depth - offsetY;
-
-      const lineWidth = Math.floor(REACT_EVENT_BORDER_SIZE);
 
       // $FlowFixMe We know these won't be null
       context.fillStyle = showHoverHighlight
@@ -329,15 +325,15 @@ export const renderCanvas = memoize(
       for (let i = 0; i < flamechart.layers.length; i++) {
         const nodes = flamechart.layers[i];
 
-        const y = Math.floor(
+        const layerY = Math.floor(
           HEADER_HEIGHT_FIXED +
             schedulerCanvasHeight +
             i * FLAMECHART_FRAME_HEIGHT -
             offsetY,
         );
         if (
-          y + FLAMECHART_FRAME_HEIGHT < HEADER_HEIGHT_FIXED ||
-          canvasHeight < y
+          layerY + FLAMECHART_FRAME_HEIGHT < HEADER_HEIGHT_FIXED ||
+          canvasHeight < layerY
         ) {
           continue; // Not in view
         }
@@ -346,7 +342,7 @@ export const renderCanvas = memoize(
           const {end, node, start} = nodes[j];
           const {name} = node.frame;
 
-          let showHoverHighlight =
+          const showHoverHighlight =
             hoveredEvent && hoveredEvent.flamechartNode === nodes[j];
 
           const width = durationToWidth((end - start) / 1000, state);
@@ -365,7 +361,7 @@ export const renderCanvas = memoize(
 
           context.fillRect(
             x,
-            y,
+            layerY,
             Math.floor(width - REACT_PRIORITY_BORDER_SIZE),
             Math.floor(FLAMECHART_FRAME_HEIGHT - REACT_PRIORITY_BORDER_SIZE),
           );
@@ -381,7 +377,7 @@ export const renderCanvas = memoize(
               context.fillText(
                 trimmedName,
                 x + FLAMECHART_TEXT_PADDING - (x < 0 ? x : 0),
-                y + FLAMECHART_FRAME_HEIGHT / 2,
+                layerY + FLAMECHART_FRAME_HEIGHT / 2,
               );
             }
           }

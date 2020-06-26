@@ -182,14 +182,7 @@ function reducer(
       const {payload} = action;
       const {canvas, event} = payload;
       const {deltaX, deltaY} = event;
-      const {
-        minZoomLevel,
-        offsetX,
-        offsetY,
-        unscaledContentHeight,
-        unscaledContentWidth,
-        zoomLevel,
-      } = state;
+      const {minZoomLevel, offsetX, offsetY, zoomLevel} = state;
 
       const absDeltaX = Math.abs(deltaX);
       const absDeltaY = Math.abs(deltaY);
@@ -270,7 +263,9 @@ function reducer(
 
 function clamp(min: number, max: number, value: number): number {
   if (Number.isNaN(min) || Number.isNaN(max) || Number.isNaN(value)) {
-    debugger;
+    throw new Error(
+      `Clamp was called with NaN. Args: min: ${min}, max: ${max}, value: ${value}.`,
+    );
   }
   return Math.max(min, Math.min(max, value));
 }

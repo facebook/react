@@ -11,13 +11,11 @@ import type {
 } from './types';
 
 import prettyMilliseconds from 'pretty-ms';
-import React, {Fragment, useLayoutEffect, useRef} from 'react';
+import React, {Fragment, useRef} from 'react';
 import {COLORS} from './canvas/constants';
 import {getBatchRange} from './util/getBatchRange';
 import useSmartTooltip from './util/useSmartTooltip';
 import styles from './EventTooltip.css';
-
-const TOOLTIP_OFFSET = 4;
 
 type Props = {|
   data: ReactProfilerData | null,
@@ -105,13 +103,7 @@ export default function EventTooltip({data, hoveredEvent, state}: Props) {
   return null;
 }
 
-declare function formatComponentStack(componentStack: null): null;
-declare function formatComponentStack(componentStack: string): string;
-function formatComponentStack(componentStack: string | null): string | null {
-  if (componentStack == null) {
-    return null;
-  }
-
+function formatComponentStack(componentStack: string): string {
   const lines = componentStack.split('\n').map(line => line.trim());
   lines.shift();
 
