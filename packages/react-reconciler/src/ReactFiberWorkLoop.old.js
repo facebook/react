@@ -1864,19 +1864,6 @@ function commitRoot(root) {
 }
 
 function commitRootImpl(root, renderPriorityLevel) {
-  const finishedWork = root.finishedWork;
-  const lanes = root.finishedLanes;
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logCommitStarted(lanes);
-    }
-  }
-
-  if (enableSchedulingProfiling) {
-    markCommitStarted(lanes);
-  }
-
   do {
     // `flushPassiveEffects` will call `flushSyncUpdateQueue` at the end, which
     // means `flushPassiveEffects` will sometimes result in additional
@@ -1892,6 +1879,15 @@ function commitRootImpl(root, renderPriorityLevel) {
     (executionContext & (RenderContext | CommitContext)) === NoContext,
     'Should not already be working.',
   );
+
+  const finishedWork = root.finishedWork;
+  const lanes = root.finishedLanes;
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      logCommitStarted(lanes);
+    }
+  }
 
   if (finishedWork === null) {
     if (__DEV__) {
