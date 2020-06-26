@@ -42,7 +42,6 @@ Renders DevTools interface into a DOM node over SSL using a custom host name (De
 
 ```js
 const host = 'dev.server.com';
-const secure = true;
 const options = {
   key: fs.readFileSync('test/fixtures/keys/agent2-key.pem'),
   cert: fs.readFileSync('test/fixtures/keys/agent2-cert.pem')
@@ -54,7 +53,7 @@ require("react-devtools-core/standalone")
   .setStatusListener(status => {
     // This callback is optional...
   })
-  .startServer(port, host, secure, options);
+  .startServer(port, host, options);
 ```
 
 Reference the `react-devtools` package for a complete integration example.

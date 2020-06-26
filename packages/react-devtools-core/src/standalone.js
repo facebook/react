@@ -250,10 +250,10 @@ type ServerOptions = {
 function startServer(
   port?: number = 8097,
   host?: string = 'localhost',
-  secure?: boolean = false,
   httpsOptions?: ServerOptions,
 ) {
-  const httpServer = secure
+  const useHttps = !!httpsOptions;
+  const httpServer = useHttps
     ? require('https').createServer(httpsOptions)
     : require('http').createServer();
   const server = new Server({server: httpServer});
@@ -310,9 +310,9 @@ function startServer(
         '\n;' +
         backendFile.toString() +
         '\n;' +
-        `ReactDevToolsBackend.connectToDevTools({port: ${port}, host: '${host}', secure: ${
-          secure ? 'true' : 'false'
-        });`,
+        `ReactDevToolsBackend.connectToDevTools({port: ${port}, host: '${host}', useHttps: ${
+          useHttps ? 'true' : 'false'
+        }});`,
     );
   });
 

@@ -24,7 +24,7 @@ type ConnectOptions = {
   host?: string,
   nativeStyleEditorValidAttributes?: $ReadOnlyArray<string>,
   port?: number,
-  secure?: boolean,
+  useHttps?: boolean,
   resolveRNStyle?: ResolveNativeStyle,
   isAppActive?: () => boolean,
   websocket?: ?WebSocket,
@@ -56,14 +56,14 @@ export function connectToDevTools(options: ?ConnectOptions) {
   const {
     host = 'localhost',
     nativeStyleEditorValidAttributes,
-    secure = false,
+    useHttps = false,
     port = 8097,
     websocket,
     resolveRNStyle = null,
     isAppActive = () => true,
   } = options || {};
 
-  const protocol = secure ? 'wss' : 'ws';
+  const protocol = useHttps ? 'wss' : 'ws';
   let retryTimeoutID: TimeoutID | null = null;
 
   function scheduleRetry() {
