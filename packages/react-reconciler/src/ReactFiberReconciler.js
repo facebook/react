@@ -89,7 +89,7 @@ import {
   focusWithin as focusWithin_new,
   observeVisibleRects as observeVisibleRects_new,
   registerMutableSourceForHydration as registerMutableSourceForHydration_new,
-  runWithPriority as runWithPriority_new
+  runWithPriority as runWithPriority_new,
 } from './ReactFiberReconciler.new';
 
 export const createContainer = enableNewReconciler
