@@ -360,10 +360,10 @@ describe('ReactElement', () => {
 
   // NOTE: We're explicitly not using JSX here. This is intended to test
   // classic JS without JSX.
-  it('should display a warning when mapping key to a default prop', () => {
+  it('should display a warning when mapping a key to a default prop', () => {
     class Component extends React.Component {
       render() {
-        return React.createElement('div', null, this.props.key);
+        return React.createElement('div', null);
       }
     }
 
@@ -373,9 +373,8 @@ describe('ReactElement', () => {
     expect(() =>
       ReactDOM.render(React.createElement(Component), container),
     ).toErrorDev(
-      'Component: key is not a valid default prop to set. ' +
-        'Please remove this from your default props definition. ' +
-        'Note: the value is still being set, but this behavior will most likely be deprecated in future releases.',
+      'Component: `key` is not a valid default prop name. ' +
+        'Please remove this from your default props definition. ',
       {withoutStack: true},
     );
   });

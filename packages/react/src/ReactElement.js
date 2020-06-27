@@ -409,9 +409,8 @@ export function createElement(type, config, children) {
       if (__DEV__) {
         if (propName === 'ref' || propName === 'key') {
           console.error(
-            '%s: %s is not a valid default prop to set. ' +
-              'Please remove this from your default props definition. ' +
-              'Note: the value is still being set, but this behavior will most likely be deprecated in future releases.',
+            '%s: `%s` is not a valid default prop name. ' +
+              'Please remove this from your default props definition. ',
             type.displayName || type.name || 'Unkown',
             propName,
           );
