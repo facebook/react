@@ -29,11 +29,7 @@ import {
 } from '../util/usePanAndZoom';
 
 // hidpi canvas: https://www.html5rocks.com/en/tutorials/canvas/hidpi/
-export function configureRetinaCanvas(
-  canvas: HTMLCanvasElement,
-  height: number,
-  width: number,
-): number {
+function configureRetinaCanvas(canvas, height, width) {
   const dpr: number = window.devicePixelRatio || 1;
   canvas.width = width * dpr;
   canvas.height = height * dpr;
@@ -89,7 +85,7 @@ export function getTimeTickInterval(zoomLevel: number) {
   return interval;
 }
 
-export const cachedFlamegraphTextWidths = new Map();
+const cachedFlamegraphTextWidths = new Map();
 export const trimFlamegraphText = (
   context: CanvasRenderingContext2D,
   text: string,
@@ -114,8 +110,8 @@ export const trimFlamegraphText = (
 
 export function getHoveredEvent(
   schedulerCanvasHeight: number,
-  data: ReactProfilerData | null,
-  flamechart: FlamechartData | null,
+  data: ReactProfilerData,
+  flamechart: FlamechartData,
   state: PanAndZoomState,
 ): ReactHoverContextInfo | null {
   const {canvasMouseX, canvasMouseY, offsetY} = state;
@@ -125,117 +121,113 @@ export function getHoveredEvent(
   }
 
   if (canvasMouseY + offsetY < schedulerCanvasHeight) {
-    if (data != null) {
-      const adjustedCanvasMouseY = canvasMouseY - HEADER_HEIGHT_FIXED + offsetY;
-      let priorityMinY = HEADER_HEIGHT_FIXED;
-      let priorityIndex = null;
-      let priority: ReactPriority = 'unscheduled';
-      for (let index = 0; index < REACT_PRIORITIES.length; index++) {
-        priority = REACT_PRIORITIES[index];
+    const adjustedCanvasMouseY = canvasMouseY - HEADER_HEIGHT_FIXED + offsetY;
+    let priorityMinY = HEADER_HEIGHT_FIXED;
+    let priorityIndex = null;
+    let priority: ReactPriority = 'unscheduled';
+    for (let index = 0; index < REACT_PRIORITIES.length; index++) {
+      priority = REACT_PRIORITIES[index];
 
-        const priorityHeight = getPriorityHeight(data, priority);
-        if (
-          adjustedCanvasMouseY >= priorityMinY &&
-          adjustedCanvasMouseY <= priorityMinY + priorityHeight
-        ) {
-          priorityIndex = index;
-          break;
+      const priorityHeight = getPriorityHeight(data, priority);
+      if (
+        adjustedCanvasMouseY >= priorityMinY &&
+        adjustedCanvasMouseY <= priorityMinY + priorityHeight
+      ) {
+        priorityIndex = index;
+        break;
+      }
+      priorityMinY += priorityHeight;
+    }
+
+    if (priorityIndex === null) {
+      return null;
+    }
+
+    const baseY = priorityMinY - offsetY;
+    const eventMinY = baseY + REACT_GUTTER_SIZE / 2;
+    const eventMaxY = eventMinY + REACT_EVENT_SIZE + REACT_GUTTER_SIZE;
+    const measureMinY = eventMaxY;
+    const measureMaxY = measureMinY + REACT_WORK_SIZE + REACT_GUTTER_SIZE;
+
+    let events = null;
+    let measures = null;
+    if (canvasMouseY >= eventMinY && canvasMouseY <= eventMaxY) {
+      events = data[priority].events;
+    } else if (canvasMouseY >= measureMinY && canvasMouseY <= measureMaxY) {
+      measures = data[priority].measures;
+    }
+
+    if (events !== null) {
+      for (let index = events.length - 1; index >= 0; index--) {
+        const event = events[index];
+        const {timestamp} = event;
+
+        const eventX = timestampToPosition(timestamp, state);
+        const startX = eventX - REACT_EVENT_SIZE / 2;
+        const stopX = eventX + REACT_EVENT_SIZE / 2;
+        if (canvasMouseX >= startX && canvasMouseX <= stopX) {
+          return {
+            event,
+            flamechartNode: null,
+            measure: null,
+            priorityIndex,
+            data,
+          };
         }
-        priorityMinY += priorityHeight;
       }
+    } else if (measures !== null) {
+      // Because data ranges may overlap, we want to find the last intersecting item.
+      // This will always be the one on "top" (the one the user is hovering over).
+      for (let index = measures.length - 1; index >= 0; index--) {
+        const measure = measures[index];
+        const {duration, timestamp} = measure;
 
-      if (priorityIndex === null) {
-        return null;
-      }
+        const pointerTime = positionToTimestamp(canvasMouseX, state);
 
-      const baseY = priorityMinY - offsetY;
-      const eventMinY = baseY + REACT_GUTTER_SIZE / 2;
-      const eventMaxY = eventMinY + REACT_EVENT_SIZE + REACT_GUTTER_SIZE;
-      const measureMinY = eventMaxY;
-      const measureMaxY = measureMinY + REACT_WORK_SIZE + REACT_GUTTER_SIZE;
-
-      let events = null;
-      let measures = null;
-      if (canvasMouseY >= eventMinY && canvasMouseY <= eventMaxY) {
-        events = data[priority].events;
-      } else if (canvasMouseY >= measureMinY && canvasMouseY <= measureMaxY) {
-        measures = data[priority].measures;
-      }
-
-      if (events !== null) {
-        for (let index = events.length - 1; index >= 0; index--) {
-          const event = events[index];
-          const {timestamp} = event;
-
-          const eventX = timestampToPosition(timestamp, state);
-          const startX = eventX - REACT_EVENT_SIZE / 2;
-          const stopX = eventX + REACT_EVENT_SIZE / 2;
-          if (canvasMouseX >= startX && canvasMouseX <= stopX) {
-            return {
-              event,
-              flamechartNode: null,
-              measure: null,
-              priorityIndex,
-              data,
-            };
-          }
-        }
-      } else if (measures !== null) {
-        // Because data ranges may overlap, we want to find the last intersecting item.
-        // This will always be the one on "top" (the one the user is hovering over).
-        for (let index = measures.length - 1; index >= 0; index--) {
-          const measure = measures[index];
-          const {duration, timestamp} = measure;
-
-          const pointerTime = positionToTimestamp(canvasMouseX, state);
-
-          if (pointerTime >= timestamp && pointerTime <= timestamp + duration) {
-            return {
-              event: null,
-              flamechartNode: null,
-              measure,
-              priorityIndex,
-              data,
-            };
-          }
+        if (pointerTime >= timestamp && pointerTime <= timestamp + duration) {
+          return {
+            event: null,
+            flamechartNode: null,
+            measure,
+            priorityIndex,
+            data,
+          };
         }
       }
     }
   } else {
-    if (flamechart !== null) {
-      const layerIndex = Math.floor(
-        (canvasMouseY + offsetY - HEADER_HEIGHT_FIXED - schedulerCanvasHeight) /
-          FLAMECHART_FRAME_HEIGHT,
-      );
-      const layer = flamechart.layers[layerIndex];
+    const layerIndex = Math.floor(
+      (canvasMouseY + offsetY - HEADER_HEIGHT_FIXED - schedulerCanvasHeight) /
+        FLAMECHART_FRAME_HEIGHT,
+    );
+    const layer = flamechart.layers[layerIndex];
 
-      if (layer != null) {
-        let startIndex = 0;
-        let stopIndex = layer.length - 1;
-        while (startIndex <= stopIndex) {
-          const currentIndex = Math.floor((startIndex + stopIndex) / 2);
-          const flamechartNode = layer[currentIndex];
+    if (layer != null) {
+      let startIndex = 0;
+      let stopIndex = layer.length - 1;
+      while (startIndex <= stopIndex) {
+        const currentIndex = Math.floor((startIndex + stopIndex) / 2);
+        const flamechartNode = layer[currentIndex];
 
-          const {end, start} = flamechartNode;
+        const {end, start} = flamechartNode;
 
-          const width = durationToWidth((end - start) / 1000, state);
-          const x = Math.floor(timestampToPosition(start / 1000, state));
+        const width = durationToWidth((end - start) / 1000, state);
+        const x = Math.floor(timestampToPosition(start / 1000, state));
 
-          if (x <= canvasMouseX && x + width >= canvasMouseX) {
-            return {
-              event: null,
-              flamechartNode,
-              measure: null,
-              priorityIndex: null,
-              data,
-            };
-          }
+        if (x <= canvasMouseX && x + width >= canvasMouseX) {
+          return {
+            event: null,
+            flamechartNode,
+            measure: null,
+            priorityIndex: null,
+            data,
+          };
+        }
 
-          if (x > canvasMouseX) {
-            stopIndex = currentIndex - 1;
-          } else {
-            startIndex = currentIndex + 1;
-          }
+        if (x > canvasMouseX) {
+          stopIndex = currentIndex - 1;
+        } else {
+          startIndex = currentIndex + 1;
         }
       }
     }

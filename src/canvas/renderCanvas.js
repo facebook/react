@@ -77,7 +77,7 @@ import {
 //                  '──────────────────────────
 //
 
-export const renderReact = ({
+const renderReact = ({
   baseY,
   canvasWidth,
   context,

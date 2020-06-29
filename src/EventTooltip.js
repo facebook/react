@@ -18,7 +18,7 @@ import useSmartTooltip from './util/useSmartTooltip';
 import styles from './EventTooltip.css';
 
 type Props = {|
-  data: ReactProfilerData | null,
+  data: ReactProfilerData,
   hoveredEvent: ReactHoverContextInfo | null,
   state: PanAndZoomState,
 |};
@@ -118,7 +118,7 @@ const TooltipFlamechartNode = ({
   flamechartNode,
   tooltipRef,
 }: {
-  data: ReactProfilerData | null,
+  data: ReactProfilerData,
   flamechartNode: FlamechartFrame,
   tooltipRef: Return<typeof useRef>,
 }) => {
@@ -149,7 +149,7 @@ const TooltipReactEvent = ({
   tooltipRef,
 }: {
   color: string,
-  data: ReactProfilerData | null,
+  data: ReactProfilerData,
   event: ReactEvent,
   tooltipRef: Return<typeof useRef>,
 }) => {
@@ -206,7 +206,7 @@ const TooltipReactMeasure = ({
   measure,
   tooltipRef,
 }: {
-  data: ReactProfilerData | null,
+  data: ReactProfilerData,
   measure: ReactMeasure,
   tooltipRef: Return<typeof useRef>,
 }) => {
