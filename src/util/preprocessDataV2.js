@@ -1,16 +1,15 @@
 // @flow
 
-import type { TimelineEvent } from '../speedscope/import/chrome';
+import type {TimelineEvent} from '../speedscope/import/chrome';
 import type {
   Milliseconds,
   BatchUID,
-  ReactEventV2,
   ReactLane,
   ReactMeasureType,
   ReactProfilerDataV2,
 } from '../types';
 
-import { REACT_TOTAL_NUM_LANES } from '../constants';
+import {REACT_TOTAL_NUM_LANES} from '../constants';
 
 type MeasureStackElement = {|
   type: ReactMeasureType,
@@ -27,16 +26,11 @@ type ProcessorState = {|
   measureStack: MeasureStackElement[],
 |};
 
-/**
- * Create an array containing the numbers 0 through `n`.
- */
-const range = (n: number): number[] => Array.from(Array(n).keys());
-
 // Exported for tests
 export function getLanesFromTransportDecimalBitmask(
-  laneBitmaskString: string
+  laneBitmaskString: string,
 ): ReactLane[] {
-  const laneBitmask = parseInt(laneBitmaskString);
+  const laneBitmask = parseInt(laneBitmaskString, 10);
 
   // As negative numbers are stored in two's complement format, our bitmask
   // checks will be thrown off by them.
@@ -44,7 +38,7 @@ export function getLanesFromTransportDecimalBitmask(
     return [];
   }
 
-  let lanes = [];
+  const lanes = [];
   let powersOfTwo = 0;
   while (powersOfTwo <= REACT_TOTAL_NUM_LANES) {
     if ((1 << powersOfTwo) & laneBitmask) {
@@ -57,7 +51,7 @@ export function getLanesFromTransportDecimalBitmask(
 
 function getLastType(stack: $PropertyType<ProcessorState, 'measureStack'>) {
   if (stack.length > 0) {
-    const { type } = stack[stack.length - 1];
+    const {type} = stack[stack.length - 1];
     return type;
   }
   return null;
@@ -65,7 +59,7 @@ function getLastType(stack: $PropertyType<ProcessorState, 'measureStack'>) {
 
 function getDepth(stack: $PropertyType<ProcessorState, 'measureStack'>) {
   if (stack.length > 0) {
-    const { depth, type } = stack[stack.length - 1];
+    const {depth, type} = stack[stack.length - 1];
     return type === 'render-idle' ? depth : depth + 1;
   }
   return 0;
@@ -76,13 +70,13 @@ function markWorkStarted(
   startTime: Milliseconds,
   lanes: ReactLane[],
   currentProfilerData: ReactProfilerDataV2,
-  state: ProcessorState
+  state: ProcessorState,
 ) {
-  const { batchUID, measureStack } = state;
+  const {batchUID, measureStack} = state;
   const index = currentProfilerData.measures.length;
   const depth = getDepth(measureStack);
 
-  state.measureStack.push({ depth, index, startTime, type });
+  state.measureStack.push({depth, index, startTime, type});
 
   currentProfilerData.measures.push({
     type,
@@ -98,11 +92,11 @@ function markWorkCompleted(
   type: ReactMeasureType,
   stopTime: Milliseconds,
   currentProfilerData: ReactProfilerDataV2,
-  stack: $PropertyType<ProcessorState, 'measureStack'>
+  stack: $PropertyType<ProcessorState, 'measureStack'>,
 ) {
   if (stack.length === 0) {
     console.error(
-      `Unexpected type "${type}" completed at ${stopTime}ms while stack is empty.`
+      `Unexpected type "${type}" completed at ${stopTime}ms while stack is empty.`,
     );
     // Ignore work "completion" user timing mark that doesn't complete anything
     return;
@@ -111,11 +105,11 @@ function markWorkCompleted(
   const last = stack[stack.length - 1];
   if (last.type !== type) {
     console.error(
-      `Unexpected type "${type}" completed at ${stopTime}ms before "${last.type}" completed.`
+      `Unexpected type "${type}" completed at ${stopTime}ms before "${last.type}" completed.`,
     );
   }
 
-  const { index, startTime } = stack.pop();
+  const {index, startTime} = stack.pop();
   const measure = currentProfilerData.measures[index];
   if (!measure) {
     console.error(`Could not find matching measure for type "${type}".`);
@@ -127,14 +121,14 @@ function markWorkCompleted(
 
 function throwIfIncomplete(
   type: ReactMeasureType,
-  stack: $PropertyType<ProcessorState, 'measureStack'>
+  stack: $PropertyType<ProcessorState, 'measureStack'>,
 ) {
   const lastIndex = stack.length - 1;
   if (lastIndex >= 0) {
     const last = stack[lastIndex];
     if (last.stopTime === undefined && last.type === type) {
       throw new Error(
-        `Unexpected type "${type}" started before "${last.type}" completed.`
+        `Unexpected type "${type}" started before "${last.type}" completed.`,
       );
     }
   }
@@ -145,9 +139,9 @@ function processTimelineEvent(
   /** Finalized profiler data up to `event`. May be mutated. */
   currentProfilerData: ReactProfilerDataV2,
   /** Intermediate processor state. May be mutated. */
-  state: ProcessorState
+  state: ProcessorState,
 ) {
-  const { cat, name, ts } = event;
+  const {cat, name, ts} = event;
   if (cat !== 'blink.user_timing' || !name.startsWith('--')) {
     return;
   }
@@ -175,7 +169,7 @@ function processTimelineEvent(
       ...splitComponentStack
     ] = name.substr(25).split('-');
     const isCascading = !!state.measureStack.find(
-      ({ type }) => type === 'commit'
+      ({type}) => type === 'commit',
     );
     currentProfilerData.events.push({
       type: 'schedule-force-update',
@@ -192,7 +186,7 @@ function processTimelineEvent(
       ...splitComponentStack
     ] = name.substr(24).split('-');
     const isCascading = !!state.measureStack.find(
-      ({ type }) => type === 'commit'
+      ({type}) => type === 'commit',
     );
     currentProfilerData.events.push({
       type: 'schedule-state-update',
@@ -202,7 +196,7 @@ function processTimelineEvent(
       timestamp: startTime,
       isCascading,
     });
-  }
+  } // eslint-disable-line brace-style
 
   // React Events - suspense
   else if (name.startsWith('--suspense-suspend-')) {
@@ -238,7 +232,7 @@ function processTimelineEvent(
       componentStack: splitComponentStack.join('-'),
       timestamp: startTime,
     });
-  }
+  } // eslint-disable-line brace-style
 
   // React Measures - render
   else if (name.startsWith('--render-start-')) {
@@ -255,7 +249,7 @@ function processTimelineEvent(
         startTime,
         lanes,
         currentProfilerData,
-        state
+        state,
       );
     }
     markWorkStarted('render', startTime, lanes, currentProfilerData, state);
@@ -267,7 +261,7 @@ function processTimelineEvent(
       'render',
       startTime,
       currentProfilerData,
-      state.measureStack
+      state.measureStack,
     );
   } else if (name.startsWith('--render-cancel')) {
     state.nextRenderShouldGenerateNewBatchID = true;
@@ -275,15 +269,15 @@ function processTimelineEvent(
       'render',
       startTime,
       currentProfilerData,
-      state.measureStack
+      state.measureStack,
     );
     markWorkCompleted(
       'render-idle',
       startTime,
       currentProfilerData,
-      state.measureStack
+      state.measureStack,
     );
-  }
+  } // eslint-disable-line brace-style
 
   // React Measures - commits
   else if (name.startsWith('--commit-start-')) {
@@ -296,15 +290,15 @@ function processTimelineEvent(
       'commit',
       startTime,
       currentProfilerData,
-      state.measureStack
+      state.measureStack,
     );
     markWorkCompleted(
       'render-idle',
       startTime,
       currentProfilerData,
-      state.measureStack
+      state.measureStack,
     );
-  }
+  } // eslint-disable-line brace-style
 
   // React Measures - layout effects
   else if (name.startsWith('--layout-effects-start-')) {
@@ -315,16 +309,16 @@ function processTimelineEvent(
       startTime,
       lanes,
       currentProfilerData,
-      state
+      state,
     );
   } else if (name.startsWith('--layout-effects-stop')) {
     markWorkCompleted(
       'layout-effects',
       startTime,
       currentProfilerData,
-      state.measureStack
+      state.measureStack,
     );
-  }
+  } // eslint-disable-line brace-style
 
   // React Measures - passive effects
   else if (name.startsWith('--passive-effects-start-')) {
@@ -335,27 +329,27 @@ function processTimelineEvent(
       startTime,
       lanes,
       currentProfilerData,
-      state
+      state,
     );
   } else if (name.startsWith('--passive-effects-stop')) {
     markWorkCompleted(
       'passive-effects',
       startTime,
       currentProfilerData,
-      state.measureStack
+      state.measureStack,
     );
-  }
+  } // eslint-disable-line brace-style
 
   // Unrecognized event
   else {
     throw new Error(
-      `Unrecognized event ${name}! This is likely a bug in this profiler tool.`
+      `Unrecognized event ${name}! This is likely a bug in this profiler tool.`,
     );
   }
 }
 
 export default function preprocessData(
-  timeline: TimelineEvent[]
+  timeline: TimelineEvent[],
 ): ReactProfilerDataV2 {
   const profilerData = {
     startTime: 0,
@@ -377,27 +371,25 @@ export default function preprocessData(
     measureStack: [],
   };
 
-  for (const event of timeline) {
-    processTimelineEvent(event, profilerData, state);
-  }
+  timeline.forEach(event => processTimelineEvent(event, profilerData, state));
 
   // Validate that all events and measures are complete
-  const { measureStack } = state;
+  const {measureStack} = state;
   if (measureStack.length > 0) {
     console.error(`Incomplete events or measures`, measureStack);
   }
 
   // Compute profilerData.duration
-  const { events, measures } = profilerData;
+  const {events, measures} = profilerData;
   if (events.length > 0) {
-    const { timestamp } = events[events.length - 1];
+    const {timestamp} = events[events.length - 1];
     profilerData.duration = Math.max(profilerData.duration, timestamp);
   }
   if (measures.length > 0) {
-    const { duration, timestamp } = measures[measures.length - 1];
+    const {duration, timestamp} = measures[measures.length - 1];
     profilerData.duration = Math.max(
       profilerData.duration,
-      timestamp + duration
+      timestamp + duration,
     );
   }
 

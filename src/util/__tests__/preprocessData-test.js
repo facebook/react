@@ -3,7 +3,11 @@
 import preprocessData, {
   getLanesFromTransportDecimalBitmask,
 } from '../preprocessDataV2';
-import { REACT_TOTAL_NUM_LANES } from '../../constants';
+import {REACT_TOTAL_NUM_LANES} from '../../constants';
+
+// Disable quotes rule in the whole file as we paste raw JSON as test inputs and
+// Prettier will already format the remaining quotes.
+/* eslint-disable quotes */
 
 describe(getLanesFromTransportDecimalBitmask, () => {
   it('should return array of lane numbers from bitmask string', () => {
@@ -18,10 +22,10 @@ describe(getLanesFromTransportDecimalBitmask, () => {
       10,
     ]); // 2 + 16 + 64 + 128 + 1024
     expect(
-      getLanesFromTransportDecimalBitmask('1073741824') // 0b1000000000000000000000000000000
+      getLanesFromTransportDecimalBitmask('1073741824'), // 0b1000000000000000000000000000000
     ).toEqual([30]);
     expect(
-      getLanesFromTransportDecimalBitmask('2147483647') // 0b1111111111111111111111111111111
+      getLanesFromTransportDecimalBitmask('2147483647'), // 0b1111111111111111111111111111111
     ).toEqual(Array.from(Array(31).keys()));
   });
 
@@ -39,15 +43,14 @@ describe(getLanesFromTransportDecimalBitmask, () => {
 
     expect(
       getLanesFromTransportDecimalBitmask(
-        '4294967297' // 2^32 + 1
-      )
+        '4294967297', // 2^32 + 1
+      ),
     ).toEqual([0]);
   });
 });
 
 describe(preprocessData, () => {
   it('should return empty data given an empty timeline', () => {
-    const input = [];
     expect(preprocessData([])).toEqual({
       startTime: 0,
       duration: 0,
@@ -57,17 +60,17 @@ describe(preprocessData, () => {
   });
 
   it('should return empty data given a timeline with no React scheduling profiling marks', () => {
-    // prettier-ignore
-    const input = [
-      {"pid":57632,"tid":38659,"ts":874860756135,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":18,"tdur":19,"tts":8700284918,"args":{}},
-      {"pid":57632,"tid":38659,"ts":874860756158,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":30,"tdur":30,"tts":8700284941,"args":{}},
-      {"pid":57632,"tid":38659,"ts":874860756192,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":21,"tdur":20,"tts":8700284976,"args":{}},
-      {"pid":57632,"tid":38659,"ts":874860756216,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":6,"tdur":5,"tts":8700285000,"args":{}},
-      {"pid":57632,"tid":38659,"ts":874860756224,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":7,"tdur":6,"tts":8700285008,"args":{}},
-      {"pid":57632,"tid":38659,"ts":874860756233,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":5,"tdur":4,"tts":8700285017,"args":{}},
-    ]
-
-    expect(preprocessData(input)).toEqual({
+    expect(
+      // prettier-ignore
+      preprocessData([
+        {"pid":57632,"tid":38659,"ts":874860756135,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":18,"tdur":19,"tts":8700284918,"args":{}},
+        {"pid":57632,"tid":38659,"ts":874860756158,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":30,"tdur":30,"tts":8700284941,"args":{}},
+        {"pid":57632,"tid":38659,"ts":874860756192,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":21,"tdur":20,"tts":8700284976,"args":{}},
+        {"pid":57632,"tid":38659,"ts":874860756216,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":6,"tdur":5,"tts":8700285000,"args":{}},
+        {"pid":57632,"tid":38659,"ts":874860756224,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":7,"tdur":6,"tts":8700285008,"args":{}},
+        {"pid":57632,"tid":38659,"ts":874860756233,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":5,"tdur":4,"tts":8700285017,"args":{}},
+      ]),
+    ).toEqual({
       startTime: 874860756135,
       duration: 0,
       events: [],
@@ -80,7 +83,7 @@ describe(preprocessData, () => {
       preprocessData([
         // prettier-ignore
         {"args":{"data":{"navigationId":"E082C30FBDA3ACEE0E7B5FD75F8B7F0D"}},"cat":"blink.user_timing","name":"--there-are-four-lights","ph":"R","pid":17232,"tid":13628,"ts":264686513020,"tts":4082554},
-      ])
+      ]),
     ).toThrow();
   });
 
@@ -292,7 +295,7 @@ describe(preprocessData, () => {
         {"args":{"data":{"navigationId":"43BC238A4FB7548146D3CD739C9C9434"}},"cat":"blink.user_timing","name":"--layout-effects-start-16384","ph":"R","pid":9312,"tid":10252,"ts":8996364618,"tts":2273869},
         {"args":{"data":{"navigationId":"43BC238A4FB7548146D3CD739C9C9434"}},"cat":"blink.user_timing","name":"--layout-effects-stop","ph":"R","pid":9312,"tid":10252,"ts":8996364645,"tts":2273895},
         {"args":{"data":{"navigationId":"43BC238A4FB7548146D3CD739C9C9434"}},"cat":"blink.user_timing","name":"--commit-stop","ph":"R","pid":9312,"tid":10252,"ts":8996365391,"tts":2274547},
-      ])
+      ]),
     ).toMatchSnapshot();
   });
 
@@ -307,7 +310,7 @@ describe(preprocessData, () => {
         {"args":{"data":{"navigationId":"1065756F5FDAD64BE45CA86B0BBC1F8B"}},"cat":"blink.user_timing","name":"--layout-effects-start-16","ph":"R","pid":1852,"tid":12484,"ts":40806992201,"tts":1040023},
         {"args":{"data":{"navigationId":"1065756F5FDAD64BE45CA86B0BBC1F8B"}},"cat":"blink.user_timing","name":"--layout-effects-stop","ph":"R","pid":1852,"tid":12484,"ts":40806992219,"tts":1040041},
         {"args":{"data":{"navigationId":"1065756F5FDAD64BE45CA86B0BBC1F8B"}},"cat":"blink.user_timing","name":"--commit-stop","ph":"R","pid":1852,"tid":12484,"ts":40806992337,"tts":1040149},
-      ])
+      ]),
     ).toMatchSnapshot();
   });
 });
