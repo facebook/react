@@ -1,0 +1,1324 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`preprocessData should process complete set of events (page load sample data) 1`] = `
+Object {
+  "duration": 2615.506,
+  "events": Array [
+    Object {
+      "componentName": "Unknown",
+      "componentStack": "",
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 307.43,
+      "type": "schedule-render",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "0",
+      "timestamp": 687.702,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "1",
+      "timestamp": 690.096,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "2",
+      "timestamp": 691.911,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "3",
+      "timestamp": 692.812,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "4",
+      "timestamp": 693.559,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "0",
+      "timestamp": 696.037,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "1",
+      "timestamp": 696.558,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "2",
+      "timestamp": 697.097,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "3",
+      "timestamp": 697.639,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "4",
+      "timestamp": 698.205,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at SuspenseList
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "0",
+      "timestamp": 700.692,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ForceUpdateDemo_ForceUpdateDemo",
+      "componentStack": "
+    at ForceUpdateDemo_ForceUpdateDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:18:98)
+    at App",
+      "isCascading": true,
+      "lanes": Array [
+        0,
+      ],
+      "timestamp": 708.795,
+      "type": "schedule-state-update",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "1",
+      "timestamp": 1824.279,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "1",
+      "timestamp": 1824.731,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "0",
+      "timestamp": 1826.523,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "2",
+      "timestamp": 1827.168,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "3",
+      "timestamp": 1827.52,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "4",
+      "timestamp": 1827.862,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "2",
+      "timestamp": 1895.606,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "2",
+      "timestamp": 1895.899,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "2",
+      "timestamp": 1896.215,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "0",
+      "timestamp": 1897.173,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "3",
+      "timestamp": 1897.995,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "4",
+      "timestamp": 1898.323,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "3",
+      "timestamp": 2009.63,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "3",
+      "timestamp": 2009.879,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "3",
+      "timestamp": 2010.303,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "3",
+      "timestamp": 2010.521,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "0",
+      "timestamp": 2011.436,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "4",
+      "timestamp": 2012.527,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "4",
+      "timestamp": 2408.944,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "4",
+      "timestamp": 2409.252,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "4",
+      "timestamp": 2409.599,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "4",
+      "timestamp": 2409.844,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "4",
+      "timestamp": 2410.092,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "0",
+      "timestamp": 2411.129,
+      "type": "suspense-suspend",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "0",
+      "timestamp": 2608.543,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "0",
+      "timestamp": 2608.844,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at SuspenseList
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "0",
+      "timestamp": 2609.092,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "0",
+      "timestamp": 2609.399,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "0",
+      "timestamp": 2609.647,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "0",
+      "timestamp": 2609.903,
+      "type": "suspense-resolved",
+    },
+    Object {
+      "componentName": "ResourceButton",
+      "componentStack": "
+    at ResourceButton (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:295)
+    at Suspense
+    at div
+    at div
+    at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
+    at App",
+      "id": "0",
+      "timestamp": 2610.157,
+      "type": "suspense-resolved",
+    },
+  ],
+  "measures": Array [
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 402.58299999999997,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 314.65,
+      "type": "render-idle",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 5.235000000000014,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 314.65,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 8.168000000000006,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 327.065,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 4.988999999999976,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 339.814,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 6.46999999999997,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 387.124,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 6.632999999999981,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 400.843,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 9.890000000000043,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 414.407,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.859000000000037,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 427.417,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.260999999999967,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 436.023,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.701000000000022,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 443.575,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.793000000000006,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 451.498,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.7070000000000505,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 459.542,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.406999999999982,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 468.909,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.649000000000001,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 476.651,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.73599999999999,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 484.572,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.696000000000026,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 492.616,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.701000000000022,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 500.604,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.555000000000007,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 508.719,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.789999999999964,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 516.552,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.616999999999962,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 524.711,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.241999999999962,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 533.063,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.819000000000074,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 542.463,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 9.269999999999982,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 551.024,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.7579999999999245,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 560.542,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.7349999999999,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 568.57,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.7299999999999045,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 576.58,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.697000000000003,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 584.591,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.714999999999918,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 592.589,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.761000000000081,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 600.569,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.617999999999938,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 608.681,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.738000000000056,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 616.558,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.738999999999919,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 624.566,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.731999999999971,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 632.551,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.713000000000079,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 640.569,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.3700000000000045,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 648.931,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.73599999999999,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 656.545,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.729000000000042,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 664.55,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.908999999999992,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 672.563,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 7.6159999999999854,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 680.696,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 5.334999999999923,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 688.802,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 5.5890000000000555,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 694.309,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 1.58400000000006,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 700.141,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 14.551999999999907,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 702.681,
+      "type": "commit",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 1,
+      "duration": 2.689000000000078,
+      "lanes": Array [
+        9,
+      ],
+      "timestamp": 706.593,
+      "type": "layout-effects",
+    },
+    Object {
+      "batchUID": 1,
+      "depth": 1,
+      "duration": 3.55600000000004,
+      "lanes": Array [
+        0,
+      ],
+      "timestamp": 713.461,
+      "type": "render-idle",
+    },
+    Object {
+      "batchUID": 1,
+      "depth": 1,
+      "duration": 2.2169999999999845,
+      "lanes": Array [
+        0,
+      ],
+      "timestamp": 713.461,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 1,
+      "depth": 1,
+      "duration": 1.3120000000000118,
+      "lanes": Array [
+        0,
+      ],
+      "timestamp": 715.705,
+      "type": "commit",
+    },
+    Object {
+      "batchUID": 1,
+      "depth": 2,
+      "duration": 0.020999999999958163,
+      "lanes": Array [
+        0,
+      ],
+      "timestamp": 716.624,
+      "type": "layout-effects",
+    },
+    Object {
+      "batchUID": 2,
+      "depth": 0,
+      "duration": 6.119000000000142,
+      "lanes": Array [
+        10,
+      ],
+      "timestamp": 1825.399,
+      "type": "render-idle",
+    },
+    Object {
+      "batchUID": 2,
+      "depth": 0,
+      "duration": 3.43300000000022,
+      "lanes": Array [
+        10,
+      ],
+      "timestamp": 1825.399,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 2,
+      "depth": 0,
+      "duration": 2.588999999999942,
+      "lanes": Array [
+        10,
+      ],
+      "timestamp": 1828.929,
+      "type": "commit",
+    },
+    Object {
+      "batchUID": 2,
+      "depth": 1,
+      "duration": 0.020999999999958163,
+      "lanes": Array [
+        10,
+      ],
+      "timestamp": 1830.962,
+      "type": "layout-effects",
+    },
+    Object {
+      "batchUID": 3,
+      "depth": 0,
+      "duration": 4.116999999999962,
+      "lanes": Array [
+        11,
+      ],
+      "timestamp": 1896.355,
+      "type": "render-idle",
+    },
+    Object {
+      "batchUID": 3,
+      "depth": 0,
+      "duration": 2.6679999999998927,
+      "lanes": Array [
+        11,
+      ],
+      "timestamp": 1896.355,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 3,
+      "depth": 0,
+      "duration": 1.4200000000000728,
+      "lanes": Array [
+        11,
+      ],
+      "timestamp": 1899.052,
+      "type": "commit",
+    },
+    Object {
+      "batchUID": 3,
+      "depth": 1,
+      "duration": 0.01999999999998181,
+      "lanes": Array [
+        11,
+      ],
+      "timestamp": 1900.121,
+      "type": "layout-effects",
+    },
+    Object {
+      "batchUID": 4,
+      "depth": 0,
+      "duration": 3.768000000000029,
+      "lanes": Array [
+        12,
+      ],
+      "timestamp": 2010.718,
+      "type": "render-idle",
+    },
+    Object {
+      "batchUID": 4,
+      "depth": 0,
+      "duration": 2.438999999999851,
+      "lanes": Array [
+        12,
+      ],
+      "timestamp": 2010.718,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 4,
+      "depth": 0,
+      "duration": 1.2580000000000382,
+      "lanes": Array [
+        12,
+      ],
+      "timestamp": 2013.228,
+      "type": "commit",
+    },
+    Object {
+      "batchUID": 4,
+      "depth": 1,
+      "duration": 0.027000000000043656,
+      "lanes": Array [
+        12,
+      ],
+      "timestamp": 2014.288,
+      "type": "layout-effects",
+    },
+    Object {
+      "batchUID": 5,
+      "depth": 0,
+      "duration": 3.8899999999998727,
+      "lanes": Array [
+        13,
+      ],
+      "timestamp": 2410.326,
+      "type": "render-idle",
+    },
+    Object {
+      "batchUID": 5,
+      "depth": 0,
+      "duration": 2.3099999999999454,
+      "lanes": Array [
+        13,
+      ],
+      "timestamp": 2410.326,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 5,
+      "depth": 0,
+      "duration": 1.5209999999997308,
+      "lanes": Array [
+        13,
+      ],
+      "timestamp": 2412.695,
+      "type": "commit",
+    },
+    Object {
+      "batchUID": 5,
+      "depth": 1,
+      "duration": 0.01999999999998181,
+      "lanes": Array [
+        13,
+      ],
+      "timestamp": 2413.892,
+      "type": "layout-effects",
+    },
+    Object {
+      "batchUID": 6,
+      "depth": 0,
+      "duration": 5.942999999999756,
+      "lanes": Array [
+        14,
+      ],
+      "timestamp": 2610.309,
+      "type": "render-idle",
+    },
+    Object {
+      "batchUID": 6,
+      "depth": 0,
+      "duration": 3.424999999999727,
+      "lanes": Array [
+        14,
+      ],
+      "timestamp": 2610.309,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 6,
+      "depth": 0,
+      "duration": 2.4470000000001164,
+      "lanes": Array [
+        14,
+      ],
+      "timestamp": 2613.805,
+      "type": "commit",
+    },
+    Object {
+      "batchUID": 6,
+      "depth": 1,
+      "duration": 0.027000000000043656,
+      "lanes": Array [
+        14,
+      ],
+      "timestamp": 2615.479,
+      "type": "layout-effects",
+    },
+  ],
+  "startTime": 8993749139,
+}
+`;
+
+exports[`preprocessData should process forced update event 1`] = `
+Object {
+  "duration": 3.988,
+  "events": Array [
+    Object {
+      "componentName": "ForceUpdateDemo_ForceUpdateDemo",
+      "componentStack": "
+    at ForceUpdateDemo_ForceUpdateDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:18:98)
+    at App",
+      "isCascading": false,
+      "lanes": Array [
+        4,
+      ],
+      "timestamp": 0,
+      "type": "schedule-force-update",
+    },
+  ],
+  "measures": Array [
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 2.191,
+      "lanes": Array [
+        4,
+      ],
+      "timestamp": 1.915,
+      "type": "render-idle",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 0.9769999999999999,
+      "lanes": Array [
+        4,
+      ],
+      "timestamp": 1.915,
+      "type": "render",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 0,
+      "duration": 1.1669999999999998,
+      "lanes": Array [
+        4,
+      ],
+      "timestamp": 2.939,
+      "type": "commit",
+    },
+    Object {
+      "batchUID": 0,
+      "depth": 1,
+      "duration": 0.017999999999999794,
+      "lanes": Array [
+        4,
+      ],
+      "timestamp": 3.97,
+      "type": "layout-effects",
+    },
+  ],
+  "startTime": 40806988231,
+}
+`;
