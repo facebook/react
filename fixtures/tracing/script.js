@@ -1,14 +1,3 @@
-function runTest(listItem, callback) {
-  try {
-    callback();
-    listItem.className = 'correct';
-    listItem.setAttribute('data-value', 'All checks pass');
-  } catch (error) {
-    listItem.className = 'incorrect';
-    listItem.setAttribute('data-value', error);
-  }
-}
-
 function runAllTests() {
   try {
     checkSchedulerAPI();
@@ -203,4 +192,15 @@ function checkEndToEndIntegration() {
       throw 'End to end integration is broken';
     }
   });
+}
+
+function runTest(listItem, callback) {
+  try {
+    callback();
+    listItem.className = 'correct';
+    listItem.setAttribute('data-value', 'All checks pass');
+  } catch (error) {
+    listItem.className = 'incorrect';
+    listItem.setAttribute('data-value', error);
+  }
 }
