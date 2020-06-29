@@ -258,7 +258,7 @@ function getCommandArgs() {
 
   // Push the remaining args onto the command.
   // This will send args like `--watch` to Jest.
-  args.push(argv._);
+  args.push(...argv._);
 
   return args;
 }
