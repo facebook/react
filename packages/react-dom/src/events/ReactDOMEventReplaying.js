@@ -41,11 +41,6 @@ import {
 } from '../client/ReactDOMComponentTree';
 import {unsafeCastDOMTopLevelTypeToString} from '../events/TopLevelEventTypes';
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
-import {
-  getCurrentUpdateLanePriority,
-  setCurrentUpdateLanePriority,
-} from 'react-reconciler/src/ReactFiberLane';
-import type {LanePriority} from 'react-reconciler/src/ReactFiberLane';
 
 let attemptSynchronousHydration: (fiber: Object) => void;
 
@@ -173,7 +168,7 @@ type QueuedHydrationTarget = {|
   blockedOn: null | Container | SuspenseInstance,
   target: Node,
   priority: number,
-  lanePriority: LanePriority,
+  lanePriority: ReactPriorityLevel,
 |};
 const queuedExplicitHydrationTargets: Array<QueuedHydrationTarget> = [];
 
@@ -535,17 +530,11 @@ function attemptExplicitHydrationTarget(
           // We're blocked on hydrating this boundary.
           // Increase its priority.
           queuedTarget.blockedOn = instance;
-          const previousLanePriority = getCurrentUpdateLanePriority();
-          try {
-            setCurrentUpdateLanePriority(queuedTarget.lanePriority);
-
-            // TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
+          attemptHydrationAtPriority(queuedTarget.lanePriority, () => {
             runWithPriority(queuedTarget.priority, () => {
               attemptHydrationAtCurrentPriority(nearestMounted);
             });
-          } finally {
-            setCurrentUpdateLanePriority(previousLanePriority);
-          }
+          });
 
           return;
         }
@@ -566,7 +555,7 @@ function attemptExplicitHydrationTarget(
 export function queueExplicitHydrationTarget(target: Node): void {
   if (enableSelectiveHydration) {
     const schedulerPriority = getCurrentPriorityLevel();
-    const updateLanePriority = getCurrentUpdateLanePriority();
+    const updateLanePriority = getCurrentUpdatePriority();
     const queuedTarget: QueuedHydrationTarget = {
       blockedOn: null,
       target: target,

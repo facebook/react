@@ -86,6 +86,7 @@ import {
   getCurrentUpdateLanePriority,
   setCurrentUpdateLanePriority,
   schedulerPriorityToLanePriority,
+  lanePriorityToSchedulerPriority,
 } from './ReactFiberLane';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
@@ -439,6 +440,10 @@ export function runWithPriority<T>(priority: ReactPriorityLevel, fn: () => T) {
   } finally {
     setCurrentUpdateLanePriority(previousPriority);
   }
+}
+
+export function getCurrentUpdatePriority(): ReactPriorityLevel {
+  return lanePriorityToSchedulerPriority(getCurrentUpdateLanePriority());
 }
 
 export {findHostInstance};
