@@ -51,6 +51,7 @@ import {
   observeVisibleRects as observeVisibleRects_old,
   registerMutableSourceForHydration as registerMutableSourceForHydration_old,
   runWithPriority as runWithPriority_old,
+  getCurrentUpdatePriority as getCurrentUpdatePriority_old,
 } from './ReactFiberReconciler.old';
 
 import {
@@ -90,6 +91,7 @@ import {
   observeVisibleRects as observeVisibleRects_new,
   registerMutableSourceForHydration as registerMutableSourceForHydration_new,
   runWithPriority as runWithPriority_new,
+  getCurrentUpdatePriority as getCurrentUpdatePriority_new,
 } from './ReactFiberReconciler.new';
 
 export const createContainer = enableNewReconciler
@@ -141,6 +143,9 @@ export const attemptContinuousHydration = enableNewReconciler
 export const attemptHydrationAtCurrentPriority = enableNewReconciler
   ? attemptHydrationAtCurrentPriority_new
   : attemptHydrationAtCurrentPriority_old;
+export const getCurrentUpdatePriority = enableNewReconciler
+  ? getCurrentUpdatePriority_new
+  : getCurrentUpdatePriority_old;
 export const findHostInstance = enableNewReconciler
   ? findHostInstance_new
   : findHostInstance_old;
