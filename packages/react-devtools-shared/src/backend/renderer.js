@@ -248,12 +248,12 @@ export function getInternalReactConstants(
   // End of copied code.
   // **********************************************************
 
-  let versionFlags: VersionFlags = {
+  const versionFlags: VersionFlags = {
     enableLegacyContext: true,
   };
 
   if (gte(version, '17.0.0')) {
-    versionFlags['enableLegacyContext'] = false;
+    versionFlags.enableLegacyContext = false;
   }
 
   function getTypeSymbol(type: any): Symbol | number {
