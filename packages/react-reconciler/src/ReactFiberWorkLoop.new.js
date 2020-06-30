@@ -426,28 +426,6 @@ export function requestUpdateLane(
   // To do that, we're replacing it with an update lane priority.
   const schedulerPriority = getCurrentPriorityLevel();
 
-  if (decoupleUpdatePriorityFromScheduler) {
-    // In the new strategy, we will track the current update lane priority
-    // inside React and use that priority to select a lane for this update.
-    // For now, we're just logging when they're different so we can assess.
-    const updateLaneSchedulerPriority = lanePriorityToSchedulerPriority(
-      getCurrentUpdateLanePriority(),
-    );
-
-    if (
-      schedulerPriority !== updateLaneSchedulerPriority &&
-      updateLaneSchedulerPriority !== NoSchedulerPriority
-    ) {
-      if (__DEV__) {
-        console.error(
-          'Expected current update lane priority %s to match current scheduler priority %s',
-          updateLaneSchedulerPriority,
-          schedulerPriority,
-        );
-      }
-    }
-  }
-
   // The old behavior was using the priority level of the Scheduler.
   // This couples React to the Scheduler internals, so we're replacing it
   // with the currentUpdateLanePriority above. As an example of how this
@@ -462,8 +440,31 @@ export function requestUpdateLane(
   ) {
     lane = findUpdateLane(InputDiscreteLanePriority, currentEventWipLanes);
   } else {
-    const lanePriority = schedulerPriorityToLanePriority(schedulerPriority);
-    lane = findUpdateLane(lanePriority, currentEventWipLanes);
+    const schedulerLanePriority = schedulerPriorityToLanePriority(
+      schedulerPriority,
+    );
+
+    if (decoupleUpdatePriorityFromScheduler) {
+      // In the new strategy, we will track the current update lane priority
+      // inside React and use that priority to select a lane for this update.
+      // For now, we're just logging when they're different so we can assess.
+      const currentUpdateLanePriority = getCurrentUpdateLanePriority();
+
+      if (
+        schedulerLanePriority !== currentUpdateLanePriority &&
+        currentUpdateLanePriority !== NoLanePriority
+      ) {
+        if (__DEV__) {
+          console.error(
+            'Expected current scheduler lane priority %s to match current update lane priority %s',
+            schedulerLanePriority,
+            currentUpdateLanePriority,
+          );
+        }
+      }
+    }
+
+    lane = findUpdateLane(schedulerLanePriority, currentEventWipLanes);
   }
 
   return lane;

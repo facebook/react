@@ -33,8 +33,6 @@ import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   NoLane,
   NoLanes,
-  TransitionShortLanePriority,
-  TransitionLongLanePriority,
   InputContinuousLanePriority,
   isSubsetOfLanes,
   mergeLanes,
@@ -44,6 +42,7 @@ import {
   getCurrentUpdateLanePriority,
   setCurrentUpdateLanePriority,
   higherLanePriority,
+  DefaultLanePriority,
 } from './ReactFiberLane';
 import {readContext} from './ReactFiberNewContext.old';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.old';
@@ -1519,13 +1518,9 @@ function startTransition(setPending, config, callback) {
     },
   );
 
-  setCurrentUpdateLanePriority(
-    config == null ||
-      config.timeoutMs === undefined ||
-      (config.timeoutMs | 0) < 10000
-      ? TransitionShortLanePriority
-      : TransitionLongLanePriority,
-  );
+  // If there's no SuspenseConfig set, we'll use the DefaultLanePriority for this transition.
+  setCurrentUpdateLanePriority(DefaultLanePriority);
+
   runWithPriority(
     priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
     () => {
