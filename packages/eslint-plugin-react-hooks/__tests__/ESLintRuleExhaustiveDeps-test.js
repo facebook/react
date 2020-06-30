@@ -291,6 +291,24 @@ const tests = {
     },
     {
       code: normalizeIndent`
+        function MyComponent(props) {
+          useMemo(() => {
+            console.log(props.foo?.toString());
+          }, [props.foo]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCallback(() => {
+            console.log(props.foo?.toString());
+          }, [props.foo]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
         function MyComponent() {
           const myEffect = () => {
             // Doesn't use anything
@@ -1235,6 +1253,35 @@ const tests = {
     },
   ],
   invalid: [
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCallback(() => {
+            console.log(props.foo?.toString());
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useCallback has a missing dependency: 'props.foo?.toString'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc:
+                'Update the dependencies array to be: [props.foo?.toString]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useCallback(() => {
+                    console.log(props.foo?.toString());
+                  }, [props.foo?.toString]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
     {
       code: normalizeIndent`
         function MyComponent() {
