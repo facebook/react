@@ -2714,28 +2714,23 @@ describe('ReactDOMComponent', () => {
 
       innerRef.current.click();
 
-      // The order we receive here is not ideal since it is expected that the
-      // capture listener fire before all bubble listeners. Other React apps
-      // might depend on this.
-      //
-      // @see https://github.com/facebook/react/pull/12919#issuecomment-395224674
       if (ReactFeatureFlags.enableLegacyFBSupport) {
         // The order will change here, as the legacy FB support adds
         // the event listener onto the document after the one above has.
         expect(eventOrder).toEqual([
           'document capture',
-          'document bubble',
-          'inner capture',
-          'inner bubble',
           'outer capture',
+          'inner capture',
+          'document bubble',
+          'inner bubble',
           'outer bubble',
         ]);
       } else {
         expect(eventOrder).toEqual([
           'document capture',
+          'outer capture',
           'inner capture',
           'inner bubble',
-          'outer capture',
           'outer bubble',
           'document bubble',
         ]);

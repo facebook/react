@@ -108,6 +108,40 @@ describe('SelectEventPlugin', () => {
     expect(select).toHaveBeenCalledTimes(1);
   });
 
+  it('should fire `onSelectCapture` when a listener is present', () => {
+    const select = jest.fn();
+    const onSelectCapture = event => {
+      expect(typeof event).toBe('object');
+      expect(event.type).toBe('select');
+      expect(event.target).toBe(node);
+      select(event.currentTarget);
+    };
+
+    const node = ReactDOM.render(
+      <input type="text" onSelectCapture={onSelectCapture} />,
+      container,
+    );
+    node.focus();
+
+    let nativeEvent = new MouseEvent('focus', {
+      bubbles: true,
+      cancelable: true,
+    });
+    node.dispatchEvent(nativeEvent);
+    expect(select).toHaveBeenCalledTimes(0);
+
+    nativeEvent = new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true,
+    });
+    node.dispatchEvent(nativeEvent);
+    expect(select).toHaveBeenCalledTimes(0);
+
+    nativeEvent = new MouseEvent('mouseup', {bubbles: true, cancelable: true});
+    node.dispatchEvent(nativeEvent);
+    expect(select).toHaveBeenCalledTimes(1);
+  });
+
   // Regression test for https://github.com/facebook/react/issues/11379
   it('should not wait for `mouseup` after receiving `dragend`', () => {
     const select = jest.fn();

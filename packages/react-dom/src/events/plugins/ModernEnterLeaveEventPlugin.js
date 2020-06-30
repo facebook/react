@@ -19,7 +19,7 @@ import {
   getClosestInstanceFromNode,
   getNodeFromInstance,
 } from '../../client/ReactDOMComponentTree';
-import {accumulateEnterLeaveListeners} from '../DOMModernPluginEventSystem';
+import {accumulateEnterLeaveTwoPhaseListeners} from '../DOMModernPluginEventSystem';
 
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';
@@ -159,7 +159,7 @@ function extractEvents(
     enter = null;
   }
 
-  accumulateEnterLeaveListeners(dispatchQueue, leave, enter, from, to);
+  accumulateEnterLeaveTwoPhaseListeners(dispatchQueue, leave, enter, from, to);
 }
 
 export {registerEvents, extractEvents};

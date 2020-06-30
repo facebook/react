@@ -98,6 +98,30 @@ describe('ChangeEventPlugin', () => {
     }
   });
 
+  it('should consider initial text value to be current (capture)', () => {
+    let called = 0;
+
+    function cb(e) {
+      called++;
+      expect(e.type).toBe('change');
+    }
+
+    const node = ReactDOM.render(
+      <input type="text" onChangeCapture={cb} defaultValue="foo" />,
+      container,
+    );
+    node.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
+    node.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
+
+    if (ReactFeatureFlags.disableInputAttributeSyncing) {
+      // TODO: figure out why. This might be a bug.
+      expect(called).toBe(1);
+    } else {
+      // There should be no React change events because the value stayed the same.
+      expect(called).toBe(0);
+    }
+  });
+
   it('should consider initial checkbox checked=true to be current', () => {
     let called = 0;
 

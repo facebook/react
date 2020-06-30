@@ -189,9 +189,9 @@ describe('DOMModernPluginEventSystem', () => {
           dispatchClickEvent(divElement);
           expect(onClick).toHaveBeenCalledTimes(3);
           expect(onClickCapture).toHaveBeenCalledTimes(3);
-          expect(log[2]).toEqual(['capture', divElement]);
-          expect(log[3]).toEqual(['bubble', divElement]);
-          expect(log[4]).toEqual(['capture', buttonElement]);
+          expect(log[2]).toEqual(['capture', buttonElement]);
+          expect(log[3]).toEqual(['capture', divElement]);
+          expect(log[4]).toEqual(['bubble', divElement]);
           expect(log[5]).toEqual(['bubble', buttonElement]);
         });
 
@@ -241,9 +241,9 @@ describe('DOMModernPluginEventSystem', () => {
           dispatchClickEvent(divElement);
           expect(onClick).toHaveBeenCalledTimes(3);
           expect(onClickCapture).toHaveBeenCalledTimes(3);
-          expect(log[2]).toEqual(['capture', divElement]);
-          expect(log[3]).toEqual(['bubble', divElement]);
-          expect(log[4]).toEqual(['capture', buttonElement]);
+          expect(log[2]).toEqual(['capture', buttonElement]);
+          expect(log[3]).toEqual(['capture', divElement]);
+          expect(log[4]).toEqual(['bubble', divElement]);
           expect(log[5]).toEqual(['bubble', buttonElement]);
         });
 
@@ -320,9 +320,9 @@ describe('DOMModernPluginEventSystem', () => {
           dispatchClickEvent(divElement);
           expect(onClick).toHaveBeenCalledTimes(3);
           expect(onClickCapture).toHaveBeenCalledTimes(3);
-          expect(log[2]).toEqual(['capture', divElement]);
-          expect(log[3]).toEqual(['bubble', divElement]);
-          expect(log[4]).toEqual(['capture', buttonElement]);
+          expect(log[2]).toEqual(['capture', buttonElement]);
+          expect(log[3]).toEqual(['capture', divElement]);
+          expect(log[4]).toEqual(['bubble', divElement]);
           expect(log[5]).toEqual(['bubble', buttonElement]);
 
           // Inside <Parent />
@@ -330,9 +330,9 @@ describe('DOMModernPluginEventSystem', () => {
           dispatchClickEvent(buttonElement2);
           expect(onClick).toHaveBeenCalledTimes(5);
           expect(onClickCapture).toHaveBeenCalledTimes(5);
-          expect(log[6]).toEqual(['capture', buttonElement2]);
-          expect(log[7]).toEqual(['bubble', buttonElement2]);
-          expect(log[8]).toEqual(['capture', buttonElement]);
+          expect(log[6]).toEqual(['capture', buttonElement]);
+          expect(log[7]).toEqual(['capture', buttonElement2]);
+          expect(log[8]).toEqual(['bubble', buttonElement2]);
           expect(log[9]).toEqual(['bubble', buttonElement]);
         });
 
@@ -385,9 +385,9 @@ describe('DOMModernPluginEventSystem', () => {
           dispatchClickEvent(divElement);
           expect(onClick).toHaveBeenCalledTimes(3);
           expect(onClickCapture).toHaveBeenCalledTimes(3);
-          expect(log[2]).toEqual(['capture', divElement]);
-          expect(log[3]).toEqual(['bubble', divElement]);
-          expect(log[4]).toEqual(['capture', buttonElement]);
+          expect(log[2]).toEqual(['capture', buttonElement]);
+          expect(log[3]).toEqual(['capture', divElement]);
+          expect(log[4]).toEqual(['bubble', divElement]);
           expect(log[5]).toEqual(['bubble', buttonElement]);
         });
 
@@ -442,9 +442,9 @@ describe('DOMModernPluginEventSystem', () => {
           dispatchClickEvent(divElement);
           expect(onClick).toHaveBeenCalledTimes(3);
           expect(onClickCapture).toHaveBeenCalledTimes(3);
-          expect(log[2]).toEqual(['capture', divElement]);
-          expect(log[3]).toEqual(['bubble', divElement]);
-          expect(log[4]).toEqual(['capture', buttonElement]);
+          expect(log[2]).toEqual(['capture', buttonElement]);
+          expect(log[3]).toEqual(['capture', divElement]);
+          expect(log[4]).toEqual(['bubble', divElement]);
           expect(log[5]).toEqual(['bubble', buttonElement]);
         });
 
@@ -757,7 +757,7 @@ describe('DOMModernPluginEventSystem', () => {
           const divElement = divRef.current;
           dispatchClickEvent(divElement);
           expect(onClick).toHaveBeenCalledTimes(1);
-          expect(onClickCapture).toHaveBeenCalledTimes(1);
+          expect(onClickCapture).toHaveBeenCalledTimes(3);
 
           document.body.removeChild(portalElement);
         });
@@ -1179,7 +1179,7 @@ describe('DOMModernPluginEventSystem', () => {
           if (enableLegacyFBSupport) {
             // We aren't using roots with legacyFBSupport, we put clicks on the document, so we exbit the previous
             // behavior.
-            expect(log).toEqual([]);
+            expect(log).toEqual(['capture root', 'capture portal']);
           } else {
             expect(log).toEqual([
               // The events on root probably shouldn't fire if a non-React intermediated. but current behavior is that they do.
@@ -2288,8 +2288,8 @@ describe('DOMModernPluginEventSystem', () => {
             if (enableLegacyFBSupport) {
               expect(log[0]).toEqual(['capture', window]);
               expect(log[1]).toEqual(['capture', document]);
-              expect(log[2]).toEqual(['bubble', document]);
-              expect(log[3]).toEqual(['capture', buttonElement]);
+              expect(log[2]).toEqual(['capture', buttonElement]);
+              expect(log[3]).toEqual(['bubble', document]);
               expect(log[4]).toEqual(['bubble', buttonElement]);
               expect(log[5]).toEqual(['bubble', window]);
             } else {
@@ -2313,9 +2313,9 @@ describe('DOMModernPluginEventSystem', () => {
             if (enableLegacyFBSupport) {
               expect(log[0]).toEqual(['capture', window]);
               expect(log[1]).toEqual(['capture', document]);
-              expect(log[2]).toEqual(['bubble', document]);
-              expect(log[3]).toEqual(['capture', buttonElement]);
-              expect(log[4]).toEqual(['capture', divElement]);
+              expect(log[2]).toEqual(['capture', buttonElement]);
+              expect(log[3]).toEqual(['capture', divElement]);
+              expect(log[4]).toEqual(['bubble', document]);
               expect(log[5]).toEqual(['bubble', divElement]);
               expect(log[6]).toEqual(['bubble', buttonElement]);
               expect(log[7]).toEqual(['bubble', window]);
