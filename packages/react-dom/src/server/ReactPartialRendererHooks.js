@@ -172,12 +172,12 @@ export function prepareToUseHooks(componentIdentity: Object): void {
     isInHookUserCodeInDev = false;
   }
 
-  // The following should have already been reset
-  // didScheduleRenderPhaseUpdate = false;
-  // firstWorkInProgressHook = null;
-  // numberOfReRenders = 0;
-  // renderPhaseUpdates = null;
-  // workInProgressHook = null;
+  // Reset the internal hooks state before rendering a component
+  didScheduleRenderPhaseUpdate = false;
+  firstWorkInProgressHook = null;
+  numberOfReRenders = 0;
+  renderPhaseUpdates = null;
+  workInProgressHook = null;
 }
 
 export function finishHooks(
@@ -202,22 +202,10 @@ export function finishHooks(
 
     children = Component(props, refOrContext);
   }
-  currentlyRenderingComponent = null;
-  firstWorkInProgressHook = null;
-  numberOfReRenders = 0;
-  renderPhaseUpdates = null;
-  workInProgressHook = null;
+
   if (__DEV__) {
     isInHookUserCodeInDev = false;
   }
-
-  // These were reset above
-  // currentlyRenderingComponent = null;
-  // didScheduleRenderPhaseUpdate = false;
-  // firstWorkInProgressHook = null;
-  // numberOfReRenders = 0;
-  // renderPhaseUpdates = null;
-  // workInProgressHook = null;
 
   return children;
 }
