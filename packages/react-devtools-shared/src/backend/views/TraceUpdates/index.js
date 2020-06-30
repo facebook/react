@@ -24,7 +24,7 @@ const MAX_DISPLAY_DURATION = 3000;
 // How long should a rect be considered valid for?
 const REMEASUREMENT_AFTER_DURATION = 250;
 
-// Some environments (e.g. React Native / Hermes) don't support the performace API yet.
+// Some environments (e.g. React Native / Hermes) don't support the performance API yet.
 const getCurrentTime =
   typeof performance === 'object' && typeof performance.now === 'function'
     ? () => performance.now()

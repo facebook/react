@@ -422,17 +422,8 @@ describe('ReactSuspensePlaceholder', () => {
         expect(ReactNoop).toMatchRenderedOutput('Loading...');
         expect(onRender).toHaveBeenCalledTimes(3);
 
-        if (gate(flags => flags.new)) {
-          expect(onRender.mock.calls[1][2]).toBe(18);
-          expect(onRender.mock.calls[1][3]).toBe(10);
-        } else {
-          // If we force another update while still timed out,
-          // but this time the Text component took 1ms longer to render.
-          // This should impact both actualDuration and treeBaseDuration.
-          expect(onRender.mock.calls[2][2]).toBe(19);
-          expect(onRender.mock.calls[2][3]).toBe(10);
-        }
-
+        expect(onRender.mock.calls[1][2]).toBe(18);
+        expect(onRender.mock.calls[1][3]).toBe(10);
         jest.advanceTimersByTime(1000);
 
         expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);

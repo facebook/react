@@ -13,11 +13,11 @@
 //
 // Changes to search state may impact tree state.
 // For example, updating the selected search result also updates the tree's selected value.
-// Search does not fundamanetally change the tree though.
+// Search does not fundamentally change the tree though.
 // It is also possible to update the selected tree value independently.
 //
 // Changes to owners state mask search and tree values.
-// When owners statck is not empty, search is temporarily disabnled,
+// When owners stack is not empty, search is temporarily disabled,
 // and tree values (e.g. num elements, selected element) are masked.
 // Both tree and search values are restored when the owners stack is cleared.
 //

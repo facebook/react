@@ -43,7 +43,7 @@ If you're using React Native 0.43 or higher, it should connect to your simulator
 
 You can open the [in-app developer menu](https://reactnative.dev/docs/debugging.html#accessing-the-in-app-developer-menu) and choose "Show Inspector". It will bring up an overlay that lets you tap on any UI element and see information about it:
 
-![React Native Inspector](http://i.imgur.com/ReFhREb.gif)
+![React Native Inspector](https://i.imgur.com/ReFhREb.gif)
 
 However, when `react-devtools` is running, Inspector will enter a special collapsed mode, and instead use the DevTools as primary UI. In this mode, clicking on something in the simulator will bring up the relevant components in the DevTools:
 

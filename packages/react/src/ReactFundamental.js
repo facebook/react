@@ -22,12 +22,12 @@ export function createFundamental<C, H>(
   if (__DEV__ && !hasBadMapPolyfill) {
     Object.freeze(impl);
   }
-  const fundamantalComponent = {
+  const fundamentalComponent = {
     $$typeof: REACT_FUNDAMENTAL_TYPE,
     impl,
   };
   if (__DEV__) {
-    Object.freeze(fundamantalComponent);
+    Object.freeze(fundamentalComponent);
   }
-  return fundamantalComponent;
+  return fundamentalComponent;
 }

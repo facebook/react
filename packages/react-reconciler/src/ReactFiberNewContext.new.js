@@ -194,7 +194,7 @@ export function propagateContextChange(
     let nextFiber;
 
     // Visit this fiber.
-    const list = fiber.dependencies_new;
+    const list = fiber.dependencies;
     if (list !== null) {
       nextFiber = fiber.child;
 
@@ -244,7 +244,7 @@ export function propagateContextChange(
       enableSuspenseServerRenderer &&
       fiber.tag === DehydratedFragment
     ) {
-      // If a dehydrated suspense bounudary is in this subtree, we don't know
+      // If a dehydrated suspense boundary is in this subtree, we don't know
       // if it will have any context consumers in it. The best we can do is
       // mark it as having updates.
       const parentSuspense = fiber.return;
@@ -303,7 +303,7 @@ export function prepareToReadContext(
   lastContextDependency = null;
   lastContextWithAllBitsObserved = null;
 
-  const dependencies = workInProgress.dependencies_new;
+  const dependencies = workInProgress.dependencies;
   if (dependencies !== null) {
     const firstContext = dependencies.firstContext;
     if (firstContext !== null) {
@@ -368,7 +368,7 @@ export function readContext<T>(
 
       // This is the first dependency for this component. Create a new list.
       lastContextDependency = contextItem;
-      currentlyRenderingFiber.dependencies_new = {
+      currentlyRenderingFiber.dependencies = {
         lanes: NoLanes,
         firstContext: contextItem,
         responders: null,

@@ -181,7 +181,7 @@
   "178": "Should have next effect. This error is likely caused by a bug in React. Please file an issue.",
   "179": "Should have a pending commit. This error is likely caused by a bug in React. Please file an issue.",
   "180": "Commit phase errors should be scheduled to recover with task priority. This error is likely caused by a bug in React. Please file an issue.",
-  "181": "Switch statement should be exhuastive. This error is likely caused by a bug in React. Please file an issue.",
+  "181": "Switch statement should be exhaustive. This error is likely caused by a bug in React. Please file an issue.",
   "182": "performWork was called recursively. This error is likely caused by a bug in React. Please file an issue.",
   "183": "Should have found an error boundary. This error is likely caused by a bug in React. Please file an issue.",
   "184": "No error for given unit of work. This error is likely caused by a bug in React. Please file an issue.",
@@ -255,7 +255,7 @@
   "253": "work.commit(): Cannot commit while already rendering. This likely means you attempted to commit from inside a lifecycle method.",
   "254": "Element ref was specified as a string (%s) but no owner was set. This could happen for one of the following reasons:\n1. You may be adding a ref to a functional component\n2. You may be adding a ref to a component that was not created inside a component's render method\n3. You have multiple copies of React loaded\nSee https://fb.me/react-refs-must-have-owner for more information.",
   "255": "Expected ReactFbErrorUtils.invokeGuardedCallback to be a function.",
-  "256": "Expected ReactFiberErrorDialog.showErrorDialog to existbe a function.",
+  "256": "Expected ReactFiberErrorDialog.showErrorDialog to be a function.",
   "257": "Portals are not currently supported by the server renderer. Render them conditionally so that they only appear on the client render.",
   "258": "Unknown element-like object type: %s. This is likely a bug in React. Please file an issue.",
   "259": "The experimental Call and Return types are not currently supported by the server renderer.",
@@ -271,7 +271,7 @@
   "269": "Profiler must specify an \"id\" string and \"onRender\" function as props",
   "270": "The current renderer does not support persistence. This error is likely caused by a bug in React. Please file an issue.",
   "271": "Failed to replay rendering after an error. This is likely caused by a bug in React. Please file an issue with a reproducing case to help us find it.",
-  "272": "The current renderer does not support hyration. This error is likely caused by a bug in React. Please file an issue.",
+  "272": "The current renderer does not support hydration. This error is likely caused by a bug in React. Please file an issue.",
   "273": "Nesting of <View> within <Text> is not currently supported.",
   "274": "Text strings must be rendered within a <Text> component.",
   "275": "The current renderer does not support mutation. This error is likely caused by a bug in React. Please file an issue.",
@@ -366,5 +366,5 @@
   "365": "Invalid selector type %s specified.",
   "366": "ReactDOM.createEventHandle: setListener called on an target that did not have a corresponding root. This is likely a bug in React.",
   "367": "ReactDOM.createEventHandle: setListener called on an element target that is not managed by React. Ensure React rendered the DOM element.",
-  "368": "ReactDOM.createEventHandle: setListener called on an invalid target. Provide a vaid EventTarget or an element managed by React."
+  "368": "ReactDOM.createEventHandle: setListener called on an invalid target. Provide a valid EventTarget or an element managed by React."
 }

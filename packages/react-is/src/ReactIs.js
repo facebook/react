@@ -84,7 +84,7 @@ export function isAsyncMode(object: any) {
       // Using console['warn'] to evade Babel and ESLint
       console['warn'](
         'The ReactIs.isAsyncMode() alias has been deprecated, ' +
-          'and will be removed in React 17+.',
+          'and will be removed in React 18+.',
       );
     }
   }
@@ -97,7 +97,7 @@ export function isConcurrentMode(object: any) {
       // Using console['warn'] to evade Babel and ESLint
       console['warn'](
         'The ReactIs.isConcurrentMode() alias has been deprecated, ' +
-          'and will be removed in React 17+.',
+          'and will be removed in React 18+.',
       );
     }
   }

@@ -12,7 +12,7 @@
   6. If you need a debugger, run `yarn debug-test --watch TestName`, open `chrome://inspect`, and press "Inspect".
   7. Format your code with [prettier](https://github.com/prettier/prettier) (`yarn prettier`).
   8. Make sure your code lints (`yarn lint`). Tip: `yarn linc` to only check changed files.
-  9. Run the [Flow](https://flowtype.org/) typechecks (`yarn flow`).
+  9. Run the [Flow](https://flowtype.org/) type checks (`yarn flow`).
   10. If you haven't already, complete the CLA.
 
   Learn more about contributing: https://reactjs.org/docs/how-to-contribute.html

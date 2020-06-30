@@ -432,7 +432,7 @@ function InnerElementType({children, style, ...rest}) {
 
   // This ref tracks the current indentation size.
   // We decrease indentation to fit wider/deeper trees.
-  // We indentionally do not increase it again afterward, to avoid the perception of content "jumping"
+  // We intentionally do not increase it again afterward, to avoid the perception of content "jumping"
   // e.g. clicking to toggle/collapse a row might otherwise jump horizontally beneath your cursor,
   // e.g. scrolling a wide row off screen could cause narrower rows to jump to the right some.
   //

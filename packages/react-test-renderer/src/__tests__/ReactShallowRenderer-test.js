@@ -1497,7 +1497,7 @@ describe('ReactShallowRenderer', () => {
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<Foo foo={1} bar={1} />);
     expect(renderCount).toBe(1);
-    // Change a prop that the comparison funciton ignores
+    // Change a prop that the comparison function ignores
     shallowRenderer.render(<Foo foo={1} bar={2} />);
     expect(renderCount).toBe(1);
     shallowRenderer.render(<Foo foo={2} bar={2} />);

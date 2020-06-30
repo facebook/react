@@ -208,6 +208,7 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
       return_updateRangeEnd = IdleUpdateRangeStart;
       return IdleHydrationLane;
     } else {
+      return_highestLanePriority = IdleLanePriority;
       return_updateRangeEnd = IdleUpdateRangeEnd;
       return idleLanes;
     }
@@ -527,7 +528,7 @@ export function findUpdateLane(
       // Should be handled by findTransitionLane instead
       break;
     case IdleLanePriority:
-      let lane = findLane(IdleUpdateRangeStart, IdleUpdateRangeEnd, IdleLanes);
+      let lane = findLane(IdleUpdateRangeStart, IdleUpdateRangeEnd, wipLanes);
       if (lane === NoLane) {
         lane = IdleHydrationLane;
       }
@@ -736,7 +737,7 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
     const lane = 1 << index;
 
     // Clear the expiration time
-    expirationTimes[index] = -1;
+    expirationTimes[index] = NoTimestamp;
 
     lanes &= ~lane;
   }

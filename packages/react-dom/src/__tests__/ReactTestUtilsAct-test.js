@@ -223,7 +223,7 @@ function runActTests(label, render, unmount, rerender) {
         expect(button.innerHTML).toBe('5');
       });
 
-      it("should keep flushing effects until the're done", () => {
+      it("should keep flushing effects until they're done", () => {
         function App() {
           const [ctr, setCtr] = React.useState(0);
           React.useEffect(() => {

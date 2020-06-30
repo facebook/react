@@ -145,7 +145,7 @@ export default {
           if (
             declaredDependenciesNode.elements &&
             declaredDependenciesNode.elements.some(
-              el => el.type === 'Identifier' && el.name === callback.name,
+              el => el && el.type === 'Identifier' && el.name === callback.name,
             )
           ) {
             // If it's already in the list of deps, we don't care because
@@ -1238,7 +1238,7 @@ function collectRecommendations({
     const keys = path.split('.');
     let node = rootNode;
     for (const key of keys) {
-      let child = node.children.get(key);
+      let child = getChildByKey(node, key);
       if (!child) {
         child = createDepTree();
         node.children.set(key, child);
@@ -1251,13 +1251,28 @@ function collectRecommendations({
     const keys = path.split('.');
     let node = rootNode;
     for (const key of keys) {
-      const child = node.children.get(key);
+      const child = getChildByKey(node, key);
       if (!child) {
         return;
       }
       fn(child);
       node = child;
     }
+  }
+
+  /**
+   * Match key with optional chaining
+   * key -> key
+   * key? -> key
+   * key -> key?
+   * Otherwise undefined.
+   */
+  function getChildByKey(node, key) {
+    return (
+      node.children.get(key) ||
+      node.children.get(key.split('?')[0]) ||
+      node.children.get(key + '?')
+    );
   }
 
   // Now we can learn which dependencies are missing or necessary.
@@ -1272,10 +1287,13 @@ function collectRecommendations({
   function scanTreeRecursively(node, missingPaths, satisfyingPaths, keyToPath) {
     node.children.forEach((child, key) => {
       const path = keyToPath(key);
+      // For analyzing dependencies, we want the "normalized" path, without any optional chaining ("?.") operator
+      // foo?.bar -> foo.bar
+      const normalizedPath = path.replace(/\?$/, '');
       if (child.isSatisfiedRecursively) {
         if (child.hasRequiredNodesBelow) {
           // Remember this dep actually satisfied something.
-          satisfyingPaths.add(path);
+          satisfyingPaths.add(normalizedPath);
         }
         // It doesn't matter if there's something deeper.
         // It would be transitively satisfied since we assume immutability.
@@ -1284,7 +1302,7 @@ function collectRecommendations({
       }
       if (child.isRequired) {
         // Remember that no declared deps satisfied this node.
-        missingPaths.add(path);
+        missingPaths.add(normalizedPath);
         // If we got here, nothing in its subtree was satisfied.
         // No need to search further.
         return;
@@ -1510,9 +1528,7 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
       // useImperativeHandle(ref, fn)
       return 1;
     default:
-      if (node === calleeNode && node.name.match(/^use.+Effect$/)) {
-        return 0;
-      } else if (node === calleeNode && options && options.additionalHooks) {
+      if (node === calleeNode && options && options.additionalHooks) {
         // Allow the user to provide a regular expression which enables the lint to
         // target custom reactive hooks.
         let name;

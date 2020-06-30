@@ -371,12 +371,6 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   );
 }
 
-export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
-  // This is obnoxiously specific so that nobody uses it, but we can still opt
-  // in via an infra-level userspace abstraction.
-  return props.hidden === 'unstable-do-not-use-legacy-hidden';
-}
-
 export function createTextInstance(
   text: string,
   rootContainerInstance: Container,
@@ -514,15 +508,15 @@ export function insertInContainerBefore(
   }
 }
 
-function createEvent(type: TopLevelType): Event {
+function createEvent(type: TopLevelType, bubbles: boolean): Event {
   const event = document.createEvent('Event');
-  event.initEvent(((type: any): string), false, false);
+  event.initEvent(((type: any): string), bubbles, false);
   return event;
 }
 
 function dispatchBeforeDetachedBlur(target: HTMLElement): void {
   if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
-    const event = createEvent(TOP_BEFORE_BLUR);
+    const event = createEvent(TOP_BEFORE_BLUR, true);
     // Dispatch "beforeblur" directly on the target,
     // so it gets picked up by the event system and
     // can propagate through the React internal tree.
@@ -532,7 +526,7 @@ function dispatchBeforeDetachedBlur(target: HTMLElement): void {
 
 function dispatchAfterDetachedBlur(target: HTMLElement): void {
   if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
-    const event = createEvent(TOP_AFTER_BLUR);
+    const event = createEvent(TOP_AFTER_BLUR, false);
     // So we know what was detached, make the relatedTarget the
     // detached target on the "afterblur" event.
     (event: any).relatedTarget = target;
@@ -957,7 +951,7 @@ export function didNotFindHydratableContainerSuspenseInstance(
   parentContainer: Container,
 ) {
   if (__DEV__) {
-    // TODO: warnForInsertedHydratedSupsense(parentContainer);
+    // TODO: warnForInsertedHydratedSuspense(parentContainer);
   }
 }
 

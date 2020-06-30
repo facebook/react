@@ -1042,7 +1042,7 @@ describe('ReactDOMServerHooks', () => {
 
           return (
             <div>
-              <div aria-labelledby={id}>Chid One</div>
+              <div aria-labelledby={id}>Child One</div>
               <ChildTwo id={id} />
               <div aria-labelledby={idTwo}>Child Three</div>
               <div id={idTwo}>Child Four</div>
@@ -1336,7 +1336,7 @@ describe('ReactDOMServerHooks', () => {
         ).not.toBeNull();
       });
 
-      it('useOpaqueIdentifierr: flushSync', async () => {
+      it('useOpaqueIdentifier: flushSync', async () => {
         let _setShow;
         function App() {
           const id = useOpaqueIdentifier();
@@ -1808,7 +1808,7 @@ describe('ReactDOMServerHooks', () => {
           <App />,
         );
 
-        if (gate(flags => !flags.new)) {
+        if (gate(flags => flags.deferRenderPhaseUpdateToNextBatch)) {
           expect(() => Scheduler.unstable_flushAll()).toErrorDev([
             'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
               'Do not read the value directly.',
@@ -1852,7 +1852,7 @@ describe('ReactDOMServerHooks', () => {
           <App />,
         );
 
-        if (gate(flags => !flags.new)) {
+        if (gate(flags => flags.deferRenderPhaseUpdateToNextBatch)) {
           expect(() => Scheduler.unstable_flushAll()).toErrorDev([
             'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
               'Do not read the value directly.',

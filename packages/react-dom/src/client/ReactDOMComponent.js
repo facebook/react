@@ -317,7 +317,7 @@ export function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // non-interactive elements, which means delegated click listeners do not
   // fire. The workaround for this bug involves attaching an empty click
   // listener on the target node.
-  // http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
+  // https://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
   // Just set it using the onclick property so that we don't have to manage any
   // bookkeeping for it. Not sure if we need to clear it when the listener is
   // removed.
@@ -430,13 +430,11 @@ export function createElement(
     namespaceURI = getIntrinsicNamespace(type);
   }
   if (namespaceURI === HTML_NAMESPACE) {
-    const lowerCaseType = type.toLowerCase();
-
     if (__DEV__) {
       isCustomComponentTag = isCustomComponent(type, props);
       // Should this check be gated by parent namespace? Not sure we want to
       // allow <SVG> or <mATH>.
-      if (!isCustomComponentTag && type !== lowerCaseType) {
+      if (!isCustomComponentTag && type !== type.toLowerCase()) {
         console.error(
           '<%s /> is using incorrect casing. ' +
             'Use PascalCase for React components, ' +
@@ -446,7 +444,7 @@ export function createElement(
       }
     }
 
-    if (lowerCaseType === 'script') {
+    if (type === 'script') {
       // Create the script via .innerHTML so its "parser-inserted" flag is
       // set to true and it does not execute
       const div = ownerDocument.createElement('div');
@@ -757,7 +755,7 @@ export function diffProperties(
       }
     } else {
       // For all other deleted properties we add it to the queue. We use
-      // the whitelist in the commit phase instead.
+      // the allowed property list in the commit phase instead.
       (updatePayload = updatePayload || []).push(propKey, null);
     }
   }
@@ -860,7 +858,7 @@ export function diffProperties(
       nextProp.toString();
     } else {
       // For any other property we always add it to the queue and then we
-      // filter it out using the whitelist during the commit.
+      // filter it out using the allowed property list during the commit.
       (updatePayload = updatePayload || []).push(propKey, nextProp);
     }
   }
@@ -1031,7 +1029,7 @@ export function diffHydratedProperties(
     for (let i = 0; i < attributes.length; i++) {
       const name = attributes[i].name.toLowerCase();
       switch (name) {
-        // Built-in SSR attribute is whitelisted
+        // Built-in SSR attribute is allowed
         case 'data-reactroot':
           break;
         // Controlled attributes are not validated

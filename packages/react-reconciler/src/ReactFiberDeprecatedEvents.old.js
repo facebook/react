@@ -19,7 +19,7 @@ import {
   DEPRECATED_mountResponderInstance,
   DEPRECATED_unmountResponderInstance,
 } from './ReactFiberHostConfig';
-import {NoWork} from './ReactFiberExpirationTime.old';
+import {NoLanes} from './ReactFiberLane';
 
 import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 
@@ -94,7 +94,7 @@ function mountEventResponder(
 function updateEventListener(
   listener: ReactEventResponderListener<any, any>,
   fiber: Fiber,
-  visistedResponders: Set<ReactEventResponder<any, any>>,
+  visitedResponders: Set<ReactEventResponder<any, any>>,
   respondersMap: Map<
     ReactEventResponder<any, any>,
     ReactEventResponderInstance<any, any>,
@@ -114,7 +114,7 @@ function updateEventListener(
       'listeners created via React.unstable_useResponder().',
   );
   const listenerProps = ((props: any): Object);
-  if (visistedResponders.has(responder)) {
+  if (visitedResponders.has(responder)) {
     // show warning
     if (__DEV__) {
       console.error(
@@ -125,7 +125,7 @@ function updateEventListener(
     }
     return;
   }
-  visistedResponders.add(responder);
+  visitedResponders.add(responder);
   const responderInstance = respondersMap.get(responder);
 
   if (responderInstance === undefined) {
@@ -149,12 +149,12 @@ export function updateDeprecatedEventListeners(
   fiber: Fiber,
   rootContainerInstance: null | Container,
 ): void {
-  const visistedResponders = new Set();
-  let dependencies = fiber.dependencies_old;
+  const visitedResponders = new Set();
+  let dependencies = fiber.dependencies;
   if (listeners != null) {
     if (dependencies === null) {
-      dependencies = fiber.dependencies_old = {
-        expirationTime: NoWork,
+      dependencies = fiber.dependencies = {
+        lanes: NoLanes,
         firstContext: null,
         responders: new Map(),
       };
@@ -169,7 +169,7 @@ export function updateDeprecatedEventListeners(
         updateEventListener(
           listener,
           fiber,
-          visistedResponders,
+          visitedResponders,
           respondersMap,
           rootContainerInstance,
         );
@@ -178,7 +178,7 @@ export function updateDeprecatedEventListeners(
       updateEventListener(
         listeners,
         fiber,
-        visistedResponders,
+        visitedResponders,
         respondersMap,
         rootContainerInstance,
       );
@@ -191,7 +191,7 @@ export function updateDeprecatedEventListeners(
       const mountedResponders = Array.from(respondersMap.keys());
       for (let i = 0, length = mountedResponders.length; i < length; i++) {
         const mountedResponder = mountedResponders[i];
-        if (!visistedResponders.has(mountedResponder)) {
+        if (!visitedResponders.has(mountedResponder)) {
           const responderInstance = ((respondersMap.get(
             mountedResponder,
           ): any): ReactEventResponderInstance<any, any>);
@@ -218,7 +218,7 @@ export function createDeprecatedResponderListener(
 }
 
 export function unmountDeprecatedResponderListeners(fiber: Fiber) {
-  const dependencies = fiber.dependencies_old;
+  const dependencies = fiber.dependencies;
 
   if (dependencies !== null) {
     const respondersMap = dependencies.responders;

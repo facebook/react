@@ -1,3 +1,6 @@
+## 4.0.3
+* Remove the heuristic that checks all Hooks ending with `Effect` due to too many false positives. ([@gaearon](https://github.com/gaearon) in [#19004](https://github.com/facebook/react/pull/19004))
+
 ## 4.0.2
 * Prevent Hooks that have `Effect` in the middle from being considered effects. ([@surgeboris](https://github.com/surgeboris) in [#18907](https://github.com/facebook/react/pull/18907))
 

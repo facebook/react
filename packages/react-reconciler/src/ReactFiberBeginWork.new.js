@@ -167,7 +167,6 @@ import {
   reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,
   tryToClaimNextHydratableInstance,
-  getIsHydrating,
   warnIfHydrating,
 } from './ReactFiberHydrationContext.new';
 import {
@@ -584,13 +583,7 @@ function updateOffscreenComponent(
       };
       workInProgress.memoizedState = nextState;
       pushRenderLanes(workInProgress, renderLanes);
-    } else if (
-      !includesSomeLane(renderLanes, (OffscreenLane: Lane)) ||
-      // Server renderer does not render hidden subtrees, so if we're hydrating
-      // we should always bail out and schedule a subsequent render pass, to
-      // force a client render. Even if we're already at Offscreen priority.
-      (current === null && getIsHydrating())
-    ) {
+    } else if (!includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
       let nextBaseLanes;
       if (prevState !== null) {
         const prevBaseLanes = prevState.baseLanes;
@@ -2089,9 +2082,18 @@ function updateSuspenseFallbackChildren(
   };
 
   let primaryChildFragment;
-  if ((mode & BlockingMode) === NoMode) {
+  if (
     // In legacy mode, we commit the primary tree as if it successfully
     // completed, even though it's in an inconsistent state.
+    (mode & BlockingMode) === NoMode &&
+    // Make sure we're on the second pass, i.e. the primary child fragment was
+    // already cloned. In legacy mode, the only case where this isn't true is
+    // when DevTools forces us to display a fallback; we skip the first render
+    // pass entirely and go straight to rendering the fallback. (In Concurrent
+    // Mode, SuspenseList can also trigger this scenario, but this is a legacy-
+    // only codepath.)
+    workInProgress.child !== currentPrimaryChildFragment
+  ) {
     const progressedPrimaryFragment: Fiber = (workInProgress.child: any);
     primaryChildFragment = progressedPrimaryFragment;
     primaryChildFragment.childLanes = NoLanes;
@@ -2948,7 +2950,7 @@ function bailoutOnAlreadyFinishedWork(
 ): Fiber | null {
   if (current !== null) {
     // Reuse previous dependencies
-    workInProgress.dependencies_new = current.dependencies_new;
+    workInProgress.dependencies = current.dependencies;
   }
 
   if (enableProfilerTimer) {

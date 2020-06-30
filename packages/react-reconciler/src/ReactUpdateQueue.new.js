@@ -521,7 +521,7 @@ export function processUpdateQueue<State>(
 
         // Mark the event time of this update as relevant to this render pass.
         // TODO: This should ideally use the true event time of this update rather than
-        // its priority which is a derived and not reverseable value.
+        // its priority which is a derived and not reversible value.
         // TODO: We should skip this update if it was already committed but currently
         // we have no way of detecting the difference between a committed and suspended
         // update here.

@@ -189,8 +189,8 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       expect(onTapCancel).toHaveBeenCalledTimes(0);
     });
 
-    // TODO: Get rid of this condition somehow. Perhaps with a dynamic verion of
-    // the @gate pragma.
+    // TODO: Get rid of this condition somehow. Perhaps with a dynamic version
+    // of the @gate pragma.
     if (__EXPERIMENTAL__) {
       testWithPointerType('below threshold', pointerType => {
         componentInit();
@@ -265,8 +265,8 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       document.elementFromPoint = () => ref.current;
     };
 
-    // TODO: Get rid of this condition somehow. Perhaps with a dynamic verion of
-    // the @gate pragma.
+    // TODO: Get rid of this condition somehow. Perhaps with a dynamic version
+    // of the @gate pragma.
     if (__EXPERIMENTAL__) {
       testWithPointerType('pointer down', pointerType => {
         componentInit();
@@ -328,8 +328,8 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       expect(onTapStart).toHaveBeenCalledTimes(1);
     });
 
-    // TODO: Get rid of this condition somehow. Perhaps with a dynamic verion of
-    // the @gate pragma.
+    // TODO: Get rid of this condition somehow. Perhaps with a dynamic version
+    // of the @gate pragma.
     if (__EXPERIMENTAL__) {
       testWithPointerType('ignored buttons and modifiers', pointerType => {
         componentInit();
@@ -416,8 +416,8 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       document.elementFromPoint = () => ref.current;
     };
 
-    // TODO: Get rid of this condition somehow. Perhaps with a dynamic verion of
-    // the @gate pragma.
+    // TODO: Get rid of this condition somehow. Perhaps with a dynamic version
+    // of the @gate pragma.
     if (__EXPERIMENTAL__) {
       testWithPointerType('pointer up', pointerType => {
         componentInit();
@@ -602,8 +602,8 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       document.elementFromPoint = () => ref.current;
     };
 
-    // TODO: Get rid of this condition somehow. Perhaps with a dynamic verion of
-    // the @gate pragma.
+    // TODO: Get rid of this condition somehow. Perhaps with a dynamic version
+    // of the @gate pragma.
     if (__EXPERIMENTAL__) {
       testWithPointerType('requires activation', pointerType => {
         componentInit();
@@ -726,8 +726,8 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       document.elementFromPoint = () => ref.current;
     };
 
-    // TODO: Get rid of this condition somehow. Perhaps with a dynamic verion of
-    // the @gate pragma.
+    // TODO: Get rid of this condition somehow. Perhaps with a dynamic version
+    // of the @gate pragma.
     if (__EXPERIMENTAL__) {
       testWithPointerType('pointer down/up', pointerType => {
         componentInit();
@@ -789,8 +789,8 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       ReactDOM.render(<Component />, container);
     };
 
-    // TODO: Get rid of this condition somehow. Perhaps with a dynamic verion of
-    // the @gate pragma.
+    // TODO: Get rid of this condition somehow. Perhaps with a dynamic version
+    // of the @gate pragma.
     if (__EXPERIMENTAL__) {
       testWithPointerType('pointer cancel', pointerType => {
         componentInit();
@@ -855,8 +855,8 @@ describeWithPointerEvent('Tap responder', hasPointerEvents => {
       });
     }
 
-    // TODO: Get rid of this condition somehow. Perhaps with a dynamic verion of
-    // the @gate pragma.
+    // TODO: Get rid of this condition somehow. Perhaps with a dynamic version
+    // of the @gate pragma.
     if (__EXPERIMENTAL__) {
       testWithPointerType('pointer move outside target', pointerType => {
         componentInit();

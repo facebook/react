@@ -133,7 +133,7 @@ export type ProfilingDataForRootExport = {|
   snapshots: Array<[number, SnapshotNode]>,
 |};
 
-// Serializable vefrsion of ProfilingDataFrontend data.
+// Serializable version of ProfilingDataFrontend data.
 export type ProfilingDataExport = {|
   version: 4,
   dataForRoots: Array<ProfilingDataForRootExport>,

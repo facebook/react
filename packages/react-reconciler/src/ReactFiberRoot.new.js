@@ -39,7 +39,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.hydrate = hydrate;
   this.callbackNode = null;
   this.callbackId = NoLanes;
-  this.callbackPriority_new = NoLanePriority;
+  this.callbackPriority = NoLanePriority;
   this.expirationTimes = createLaneMap(NoTimestamp);
 
   this.pendingLanes = NoLanes;
@@ -59,7 +59,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   if (enableSchedulerTracing) {
     this.interactionThreadID = unstable_getThreadID();
     this.memoizedInteractions = new Set();
-    this.pendingInteractionMap_new = new Map();
+    this.pendingInteractionMap = new Map();
   }
   if (enableSuspenseCallback) {
     this.hydrationCallbacks = null;

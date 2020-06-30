@@ -310,7 +310,7 @@ export function dispatchEventForLegacyPluginEventSystem(
  * top-level listeners to the document object only, at least for these
  * movement types of events and possibly all events.
  *
- * @see http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
+ * @see https://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
  *
  * Also, `keyup`/`keypress`/`keydown` do not bubble to the window on IE, but
  * they bubble to document.

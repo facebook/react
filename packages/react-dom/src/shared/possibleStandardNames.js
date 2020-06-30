@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// When adding attributes to the HTML or SVG whitelist, be sure to
+// When adding attributes to the HTML or SVG allowed attribute list, be sure to
 // also add them to this module to ensure casing and incorrect name
 // warnings.
 const possibleStandardNames = {

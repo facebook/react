@@ -163,7 +163,7 @@ describe('mixing responders with the heritage event system', () => {
     },
   );
 
-  describe('mixing the Input and Press repsonders', () => {
+  describe('mixing the Input and Press responders', () => {
     // @gate experimental
     it('is async for non-input events', () => {
       const useTap = require('react-interactions/events/tap').useTap;

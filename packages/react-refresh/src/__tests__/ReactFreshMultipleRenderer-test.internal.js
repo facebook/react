@@ -41,7 +41,7 @@ describe('ReactFresh', () => {
     }
   });
 
-  it('can update components managd by different renderers independently', () => {
+  it('can update components managed by different renderers independently', () => {
     if (__DEV__) {
       const InnerV1 = function() {
         return <ReactART.Shape fill="blue" />;

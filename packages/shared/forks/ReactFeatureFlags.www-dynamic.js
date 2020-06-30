@@ -14,10 +14,8 @@
 // with the __VARIANT__ set to `true`, and once set to `false`.
 
 export const warnAboutSpreadingKeyToJSX = __VARIANT__;
-export const enableComponentStackLocations = __VARIANT__;
 export const disableInputAttributeSyncing = __VARIANT__;
 export const enableFilterEmptyStringAttributesDOM = __VARIANT__;
-export const enableModernEventSystem = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
 export const enableDebugTracing = !__VARIANT__;
 
