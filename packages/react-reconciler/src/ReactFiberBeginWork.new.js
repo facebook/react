@@ -63,6 +63,7 @@ import {
   Update,
   Ref,
   Deletion,
+  ForceUpdateForLegacySuspense,
 } from './ReactSideEffectTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -548,6 +549,13 @@ function updateSimpleMemoComponent(
           workInProgress,
           renderLanes,
         );
+      } else if (
+        (current.effectTag & ForceUpdateForLegacySuspense) !==
+        NoEffect
+      ) {
+        // This is a special case that only exists for legacy mode.
+        // See https://github.com/facebook/react/pull/19216.
+        didReceiveUpdate = true;
       }
     }
   }
@@ -3263,11 +3271,17 @@ function beginWork(
       }
       return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
     } else {
-      // An update was scheduled on this fiber, but there are no new props
-      // nor legacy context. Set this to false. If an update queue or context
-      // consumer produces a changed value, it will set this to true. Otherwise,
-      // the component will assume the children have not changed and bail out.
-      didReceiveUpdate = false;
+      if ((current.effectTag & ForceUpdateForLegacySuspense) !== NoEffect) {
+        // This is a special case that only exists for legacy mode.
+        // See https://github.com/facebook/react/pull/19216.
+        didReceiveUpdate = true;
+      } else {
+        // An update was scheduled on this fiber, but there are no new props
+        // nor legacy context. Set this to false. If an update queue or context
+        // consumer produces a changed value, it will set this to true. Otherwise,
+        // the component will assume the children have not changed and bail out.
+        didReceiveUpdate = false;
+      }
     }
   } else {
     didReceiveUpdate = false;
