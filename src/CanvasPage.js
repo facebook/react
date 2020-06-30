@@ -30,17 +30,19 @@ import type {
   ReactHoverContextInfo,
   ReactMeasure,
   ReactProfilerData,
+  ReactProfilerDataV2,
 } from './types';
 
 type ContextMenuContextData = {|
   data: ReactProfilerData,
+  dataV2: ReactProfilerDataV2,
   flamechart: FlamechartData,
   hoveredEvent: ReactHoverContextInfo | null,
   state: PanAndZoomState,
 |};
 
 type Props = {|
-  profilerData: ReactProfilerData,
+  profilerData: ReactProfilerDataV2,
   flamechart: FlamechartData,
   schedulerCanvasHeight: number,
 |};
@@ -96,6 +98,7 @@ const zoomToBatch = (
 
 type AutoSizedCanvasProps = {|
   data: ReactProfilerData,
+  dataV2: ReactProfilerDataV2,
   flamechart: FlamechartData,
   height: number,
   schedulerCanvasHeight: number,
@@ -104,6 +107,7 @@ type AutoSizedCanvasProps = {|
 
 function AutoSizedCanvas({
   data,
+  dataV2,
   flamechart,
   height,
   schedulerCanvasHeight,

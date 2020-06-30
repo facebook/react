@@ -1,6 +1,6 @@
 // @flow
 
-import type {FlamechartData, ReactProfilerData} from './types';
+import type {FlamechartData, ReactProfilerDataV2} from './types';
 
 import React, {useState, useCallback} from 'react';
 import {unstable_batchedUpdates} from 'react-dom';
@@ -11,7 +11,7 @@ import ImportPage from './ImportPage';
 import CanvasPage from './CanvasPage';
 
 export default function App() {
-  const [profilerData, setProfilerData] = useState<ReactProfilerData | null>(
+  const [profilerData, setProfilerData] = useState<ReactProfilerDataV2 | null>(
     null,
   );
   const [flamechart, setFlamechart] = useState<FlamechartData | null>(null);
@@ -19,7 +19,7 @@ export default function App() {
 
   const handleDataImported = useCallback(
     (
-      importedProfilerData: ReactProfilerData,
+      importedProfilerData: ReactProfilerDataV2,
       importedFlamechart: FlamechartData,
     ) => {
       unstable_batchedUpdates(() => {
