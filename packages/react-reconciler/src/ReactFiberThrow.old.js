@@ -28,6 +28,7 @@ import {
   NoEffect,
   ShouldCapture,
   LifecycleEffectMask,
+  ForceUpdateForLegacySuspense,
 } from './ReactSideEffectTags';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.old';
 import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
@@ -249,6 +250,7 @@ function throwException(
         // should *not* suspend the commit.
         if ((workInProgress.mode & BlockingMode) === NoMode) {
           workInProgress.effectTag |= DidCapture;
+          sourceFiber.effectTag |= ForceUpdateForLegacySuspense;
 
           // We're going to commit this fiber even though it didn't complete.
           // But we shouldn't call any lifecycle methods or callbacks. Remove

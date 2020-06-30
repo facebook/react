@@ -803,7 +803,7 @@ describe('ReactSuspense', () => {
 
     const ValueContext = createContext(null);
 
-    let MemoizedChild = forwardRef(() => {
+    const MemoizedChild = forwardRef(() => {
       const text = useContext(ValueContext);
       try {
         TextResource.read([text, 1000]);
