@@ -3314,44 +3314,4 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
     expect(ReactNoop).toMatchRenderedOutput('ABC');
   });
-
-  it('keeps intermediate state updates (issue #18497)', () => {
-    let _dispatch;
-    function Counter() {
-      const [list, dispatch] = React.useReducer((l, c) => l.concat([c]), []);
-      _dispatch = dispatch;
-
-      const json = JSON.stringify(list);
-      Scheduler.unstable_yieldValue('Render ' + json);
-      useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue('Commit ' + json);
-      });
-
-      return json;
-    }
-
-    act(() => {
-      ReactNoop.render(<Counter />);
-      expect(Scheduler).toFlushAndYieldThrough(['Render []', 'Commit []']);
-      expect(ReactNoop).toMatchRenderedOutput('[]');
-    });
-
-    act(() => {
-      _dispatch(1);
-      expect(Scheduler).toFlushAndYieldThrough(['Render [1]']);
-
-      _dispatch(2);
-      expect(Scheduler).toFlushAndYieldThrough(['Commit [1]']);
-      expect(ReactNoop).toMatchRenderedOutput('[1]');
-
-      expect(Scheduler).toFlushAndYieldThrough(['Render [1,2]']);
-      _dispatch(3);
-
-      expect(Scheduler).toFlushAndYieldThrough([
-        'Render [1,2,3]',
-        'Commit [1,2,3]',
-      ]);
-      expect(ReactNoop).toMatchRenderedOutput('[1,2,3]');
-    });
-  });
 });
