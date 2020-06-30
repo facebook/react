@@ -41,6 +41,11 @@ import {
 } from '../client/ReactDOMComponentTree';
 import {unsafeCastDOMTopLevelTypeToString} from '../events/TopLevelEventTypes';
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
+import {
+  getCurrentUpdateLanePriority,
+  setCurrentUpdateLanePriority,
+} from 'react-reconciler/src/ReactFiberLane';
+import type {LanePriority} from 'react-reconciler/src/ReactFiberLane';
 
 let attemptSynchronousHydration: (fiber: Object) => void;
 
@@ -138,13 +143,6 @@ import {
 import {IS_REPLAYED, PLUGIN_EVENT_SYSTEM} from './EventSystemFlags';
 import {listenToTopLevelEvent} from './DOMModernPluginEventSystem';
 import {addResponderEventSystemEvent} from './DeprecatedDOMEventResponderSystem';
-import {
-  DefaultLanePriority,
-  getCurrentUpdateLanePriority,
-  higherLanePriority,
-  setCurrentUpdateLanePriority,
-} from 'react-reconciler/src/ReactFiberLane';
-import type {LanePriority} from 'react-reconciler/src/ReactFiberLane';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
@@ -568,10 +566,7 @@ function attemptExplicitHydrationTarget(
 export function queueExplicitHydrationTarget(target: Node): void {
   if (enableSelectiveHydration) {
     const schedulerPriority = getCurrentPriorityLevel();
-    const updateLanePriority = higherLanePriority(
-      getCurrentUpdateLanePriority(),
-      DefaultLanePriority,
-    );
+    const updateLanePriority = getCurrentUpdateLanePriority();
     const queuedTarget: QueuedHydrationTarget = {
       blockedOn: null,
       target: target,
