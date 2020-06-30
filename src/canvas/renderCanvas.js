@@ -4,6 +4,8 @@ import type {
   ReactProfilerData,
   FlamechartData,
   ReactHoverContextInfo,
+  ReactEvent,
+  ReactMeasure,
 } from '../types';
 import type {PanAndZoomState} from '../util/usePanAndZoom';
 
@@ -77,7 +79,90 @@ import {
 //                  '──────────────────────────
 //
 
-const renderReact = ({
+function renderBackgroundFills(context, canvasWidth, canvasHeight) {
+  // Fill the canvas with the background color
+  context.fillStyle = COLORS.BACKGROUND;
+  context.fillRect(0, 0, canvasWidth, canvasHeight);
+}
+
+/**
+ * Render all charting data (once it's loaded and processed) within the
+ * "scrollable" region.
+ */
+// TODO (windowing) We can avoid rendering all of this if we've scrolled some of it off screen.
+function renderReactMarksAndMeasures(
+  context,
+  data,
+  state,
+  hoveredEvent,
+  canvasWidth,
+  canvasHeight,
+  canvasStartY,
+) {
+  let priorityMinY = canvasStartY;
+
+  REACT_PRIORITIES.forEach((priority, priorityIndex) => {
+    const currentPriority = data[priority];
+
+    let baseY = priorityMinY + REACT_GUTTER_SIZE;
+
+    if (currentPriority.events.length > 0) {
+      currentPriority.events.forEach(event => {
+        const showHoverHighlight = hoveredEvent && hoveredEvent.event === event;
+        renderSingleReactMarkOrMeasure({
+          baseY,
+          canvasWidth,
+          context,
+          eventOrMeasure: event,
+          showGroupHighlight: false,
+          showHoverHighlight,
+          priorityIndex,
+          state,
+        });
+      });
+
+      // Draw the hovered and/or selected items on top so they stand out.
+      // This is helpful if there are multiple (overlapping) items close to each other.
+      if (hoveredEvent !== null && hoveredEvent.event !== null) {
+        renderSingleReactMarkOrMeasure({
+          baseY,
+          canvasWidth,
+          context,
+          eventOrMeasure: hoveredEvent.event,
+          showGroupHighlight: false,
+          showHoverHighlight: true,
+          priorityIndex: hoveredEvent.priorityIndex,
+          state,
+        });
+      }
+
+      baseY += REACT_EVENT_SIZE + REACT_GUTTER_SIZE;
+    }
+
+    currentPriority.measures.forEach(measure => {
+      const showHoverHighlight =
+        hoveredEvent && hoveredEvent.measure === measure;
+      const showGroupHighlight =
+        hoveredEvent &&
+        hoveredEvent.measure !== null &&
+        hoveredEvent.measure.batchUID === measure.batchUID;
+      renderSingleReactMarkOrMeasure({
+        baseY,
+        canvasWidth,
+        context,
+        eventOrMeasure: measure,
+        priorityIndex,
+        showGroupHighlight,
+        showHoverHighlight,
+        state,
+      });
+    });
+
+    priorityMinY += getPriorityHeight(data, priority);
+  });
+}
+
+function renderSingleReactMarkOrMeasure({
   baseY,
   canvasWidth,
   context,
@@ -86,7 +171,7 @@ const renderReact = ({
   showGroupHighlight,
   showHoverHighlight,
   state,
-}) => {
+}) {
   const {timestamp, type} = eventOrMeasure;
   const {offsetY} = state;
 
@@ -212,268 +297,234 @@ const renderReact = ({
       console.warn(`Unexpected event or measure type "${type}"`);
       break;
   }
-};
+}
+
+function renderFlamechart(
+  context,
+  flamechart,
+  state,
+  hoveredEvent,
+  canvasWidth,
+  canvasHeight,
+  /** y coord on canvas to start painting at */
+  canvasStartY,
+) {
+  context.textAlign = 'left';
+  context.textBaseline = 'middle';
+  context.font = `${FLAMECHART_FONT_SIZE}px sans-serif`;
+
+  for (let i = 0; i < flamechart.layers.length; i++) {
+    const nodes = flamechart.layers[i];
+
+    const layerY = Math.floor(canvasStartY + i * FLAMECHART_FRAME_HEIGHT);
+    if (
+      layerY + FLAMECHART_FRAME_HEIGHT < HEADER_HEIGHT_FIXED ||
+      canvasHeight < layerY
+    ) {
+      continue; // Not in view
+    }
+
+    for (let j = 0; j < nodes.length; j++) {
+      const {end, node, start} = nodes[j];
+      const {name} = node.frame;
+
+      const showHoverHighlight =
+        hoveredEvent && hoveredEvent.flamechartNode === nodes[j];
+
+      const width = durationToWidth((end - start) / 1000, state);
+      if (width <= 0) {
+        return; // Too small to render at this zoom level
+      }
+
+      const x = Math.floor(timestampToPosition(start / 1000, state));
+      if (x + width < 0 || canvasWidth < x) {
+        continue; // Not in view
+      }
+
+      context.fillStyle = showHoverHighlight
+        ? COLORS.FLAME_GRAPH_HOVER
+        : COLORS.FLAME_GRAPH;
+
+      context.fillRect(
+        x,
+        layerY,
+        Math.floor(width - REACT_PRIORITY_BORDER_SIZE),
+        Math.floor(FLAMECHART_FRAME_HEIGHT - REACT_PRIORITY_BORDER_SIZE),
+      );
+
+      if (width > FLAMECHART_TEXT_PADDING * 2) {
+        const trimmedName = trimFlamegraphText(
+          context,
+          name,
+          width - FLAMECHART_TEXT_PADDING * 2 + (x < 0 ? x : 0),
+        );
+        if (trimmedName !== null) {
+          context.fillStyle = COLORS.PRIORITY_LABEL;
+          context.fillText(
+            trimmedName,
+            x + FLAMECHART_TEXT_PADDING - (x < 0 ? x : 0),
+            layerY + FLAMECHART_FRAME_HEIGHT / 2,
+          );
+        }
+      }
+    }
+  }
+}
+
+function renderPriorityLabels(context, data, canvasWidth, canvasStartY) {
+  let y = canvasStartY;
+
+  REACT_PRIORITIES.forEach((priority, priorityIndex) => {
+    const priorityHeight = getPriorityHeight(data, priority);
+
+    if (priorityHeight === 0) {
+      return;
+    }
+
+    context.fillStyle = COLORS.PRIORITY_BACKGROUND;
+    context.fillRect(
+      0,
+      Math.floor(y),
+      Math.floor(LABEL_FIXED_WIDTH),
+      priorityHeight,
+    );
+
+    context.fillStyle = COLORS.PRIORITY_BORDER;
+    context.fillRect(
+      0,
+      Math.floor(y + priorityHeight),
+      canvasWidth,
+      REACT_PRIORITY_BORDER_SIZE,
+    );
+
+    context.fillStyle = COLORS.PRIORITY_BORDER;
+    context.fillRect(
+      Math.floor(LABEL_FIXED_WIDTH) - REACT_PRIORITY_BORDER_SIZE,
+      Math.floor(y),
+      REACT_PRIORITY_BORDER_SIZE,
+      priorityHeight,
+    );
+
+    context.fillStyle = COLORS.PRIORITY_LABEL;
+    context.textAlign = 'left';
+    context.textBaseline = 'middle';
+    context.font = `${LABEL_FONT_SIZE}px sans-serif`;
+    context.fillText(priority, 4, y + priorityHeight / 2);
+
+    y += priorityHeight + REACT_PRIORITY_BORDER_SIZE;
+  });
+}
+
+function renderAxisMarkers(
+  context,
+  state,
+  canvasWidth,
+  panOffsetX,
+  panZoomLevel,
+) {
+  context.fillStyle = COLORS.BACKGROUND;
+  context.fillRect(0, 0, canvasWidth, HEADER_HEIGHT_FIXED);
+
+  context.fillStyle = COLORS.PRIORITY_BORDER;
+  context.fillRect(0, MARKER_HEIGHT, canvasWidth, REACT_PRIORITY_BORDER_SIZE);
+
+  // Charting data renders within this region of pixels as "scrollable" content.
+  // Time markers (top) and priority labels (left) are fixed content.
+  const scrollableCanvasWidth = canvasWidth - LABEL_FIXED_WIDTH;
+
+  const interval = getTimeTickInterval(panZoomLevel);
+  const intervalSize = interval * panZoomLevel;
+  const firstIntervalPosition =
+    0 - panOffsetX + Math.floor(panOffsetX / intervalSize) * intervalSize;
+
+  for (
+    let i = firstIntervalPosition;
+    i < scrollableCanvasWidth;
+    i += intervalSize
+  ) {
+    if (i > 0) {
+      const markerTimestamp = positionToTimestamp(i + LABEL_FIXED_WIDTH, state);
+      const markerLabel = Math.round(markerTimestamp);
+
+      const x = LABEL_FIXED_WIDTH + i;
+
+      context.fillStyle = COLORS.PRIORITY_BORDER;
+      context.fillRect(
+        x,
+        MARKER_HEIGHT - MARKER_TICK_HEIGHT,
+        REACT_PRIORITY_BORDER_SIZE,
+        MARKER_TICK_HEIGHT,
+      );
+
+      context.fillStyle = COLORS.TIME_MARKER_LABEL;
+      context.textAlign = 'right';
+      context.textBaseline = 'middle';
+      context.font = `${MARKER_FONT_SIZE}px sans-serif`;
+      context.fillText(
+        `${markerLabel}ms`,
+        x - MARKER_TEXT_PADDING,
+        MARKER_HEIGHT / 2,
+      );
+    }
+  }
+}
 
 // TODO Passing "state" directly breaks memoization for e.g. mouse moves
 export const renderCanvas = memoize(
   (
-    data: ReactProfilerData,
-    flamechart: FlamechartData | null,
-    canvas: HTMLCanvasElement | null,
+    data: $ReadOnly<ReactProfilerData>,
+    flamechart: $ReadOnly<FlamechartData>,
+    canvas: HTMLCanvasElement,
     canvasWidth: number,
     canvasHeight: number,
-    schedulerCanvasHeight: number,
-    state: PanAndZoomState,
-    hoveredEvent: ReactHoverContextInfo | null,
+    /** Precomputed height of marks and measures canvas section */
+    schedulerCanvasHeight: number, // TODO: Figure out why this can't be calculated here
+    state: $ReadOnly<PanAndZoomState>,
+    hoveredEvent: $ReadOnly<ReactHoverContextInfo> | null,
   ) => {
     const {offsetX, offsetY, zoomLevel} = state;
 
     const context = getCanvasContext(canvas, canvasHeight, canvasWidth, true);
 
-    // Fill the canvas with the background color
-    context.fillStyle = COLORS.BACKGROUND;
-    context.fillRect(0, 0, canvasWidth, canvasHeight);
+    renderBackgroundFills(context, canvasWidth, canvasHeight);
 
-    // Charting data renders within this region of pixels as "scrollable" content.
-    // Time markers (top) and priority labels (left) are fixed content.
-    const scrollableCanvasWidth = canvasWidth - LABEL_FIXED_WIDTH;
-
-    let y = 0;
-
-    const interval = getTimeTickInterval(zoomLevel);
-    const intervalSize = interval * zoomLevel;
-    const firstIntervalPosition =
-      0 - offsetX + Math.floor(offsetX / intervalSize) * intervalSize;
-
-    // Render all charting data (once it's loaded and processed) within the "scrollable" region.
-    // TODO (windowing) We can avoid rendering all of this if we've scrolled some of it off screen.
-    if (data != null) {
-      // Time markers do not scroll off screen; they are always rendered at a fixed vertical position.
-      y = HEADER_HEIGHT_FIXED - offsetY;
-
-      let priorityMinY = HEADER_HEIGHT_FIXED;
-
-      REACT_PRIORITIES.forEach((priority, priorityIndex) => {
-        const currentPriority = data[priority];
-
-        let baseY = priorityMinY + REACT_GUTTER_SIZE;
-
-        if (currentPriority.events.length > 0) {
-          currentPriority.events.forEach(event => {
-            const showHoverHighlight =
-              hoveredEvent && hoveredEvent.event === event;
-            renderReact({
-              baseY,
-              canvasWidth,
-              context,
-              eventOrMeasure: event,
-              showGroupHighlight: false,
-              showHoverHighlight,
-              priorityIndex,
-              state,
-            });
-          });
-
-          // Draw the hovered and/or selected items on top so they stand out.
-          // This is helpful if there are multiple (overlapping) items close to each other.
-          if (hoveredEvent !== null && hoveredEvent.event !== null) {
-            renderReact({
-              baseY,
-              canvasWidth,
-              context,
-              eventOrMeasure: hoveredEvent.event,
-              showGroupHighlight: false,
-              showHoverHighlight: true,
-              priorityIndex: hoveredEvent.priorityIndex,
-              state,
-            });
-          }
-
-          baseY += REACT_EVENT_SIZE + REACT_GUTTER_SIZE;
-        }
-
-        currentPriority.measures.forEach(measure => {
-          const showHoverHighlight =
-            hoveredEvent && hoveredEvent.measure === measure;
-          const showGroupHighlight =
-            hoveredEvent &&
-            hoveredEvent.measure !== null &&
-            hoveredEvent.measure.batchUID === measure.batchUID;
-          renderReact({
-            baseY,
-            canvasWidth,
-            context,
-            eventOrMeasure: measure,
-            priorityIndex,
-            showGroupHighlight,
-            showHoverHighlight,
-            state,
-          });
-        });
-
-        priorityMinY += getPriorityHeight(data, priority);
-      });
-    }
+    renderReactMarksAndMeasures(
+      context,
+      data,
+      state,
+      hoveredEvent,
+      canvasWidth,
+      canvasHeight,
+      // Time markers do not scroll off screen; they are always rendered at a
+      // fixed vertical position.
+      HEADER_HEIGHT_FIXED,
+    );
 
     // Flame graph data renders below the prioritized React data.
     // TODO Timestamp alignment is off by a few hundred me from our user timing marks; why?
-    if (flamechart !== null) {
-      context.textAlign = 'left';
-      context.textBaseline = 'middle';
-      context.font = `${FLAMECHART_FONT_SIZE}px sans-serif`;
-
-      for (let i = 0; i < flamechart.layers.length; i++) {
-        const nodes = flamechart.layers[i];
-
-        const layerY = Math.floor(
-          HEADER_HEIGHT_FIXED +
-            schedulerCanvasHeight +
-            i * FLAMECHART_FRAME_HEIGHT -
-            offsetY,
-        );
-        if (
-          layerY + FLAMECHART_FRAME_HEIGHT < HEADER_HEIGHT_FIXED ||
-          canvasHeight < layerY
-        ) {
-          continue; // Not in view
-        }
-
-        for (let j = 0; j < nodes.length; j++) {
-          const {end, node, start} = nodes[j];
-          const {name} = node.frame;
-
-          const showHoverHighlight =
-            hoveredEvent && hoveredEvent.flamechartNode === nodes[j];
-
-          const width = durationToWidth((end - start) / 1000, state);
-          if (width <= 0) {
-            return; // Too small to render at this zoom level
-          }
-
-          const x = Math.floor(timestampToPosition(start / 1000, state));
-          if (x + width < 0 || canvasWidth < x) {
-            continue; // Not in view
-          }
-
-          context.fillStyle = showHoverHighlight
-            ? COLORS.FLAME_GRAPH_HOVER
-            : COLORS.FLAME_GRAPH;
-
-          context.fillRect(
-            x,
-            layerY,
-            Math.floor(width - REACT_PRIORITY_BORDER_SIZE),
-            Math.floor(FLAMECHART_FRAME_HEIGHT - REACT_PRIORITY_BORDER_SIZE),
-          );
-
-          if (width > FLAMECHART_TEXT_PADDING * 2) {
-            const trimmedName = trimFlamegraphText(
-              context,
-              name,
-              width - FLAMECHART_TEXT_PADDING * 2 + (x < 0 ? x : 0),
-            );
-            if (trimmedName !== null) {
-              context.fillStyle = COLORS.PRIORITY_LABEL;
-              context.fillText(
-                trimmedName,
-                x + FLAMECHART_TEXT_PADDING - (x < 0 ? x : 0),
-                layerY + FLAMECHART_FRAME_HEIGHT / 2,
-              );
-            }
-          }
-        }
-      }
-    }
+    renderFlamechart(
+      context,
+      flamechart,
+      state,
+      hoveredEvent,
+      canvasWidth,
+      canvasHeight,
+      HEADER_HEIGHT_FIXED + schedulerCanvasHeight - offsetY,
+    );
 
     // LEFT: Priority labels
-    // Priority labels do not scroll off screen; they are always rendered at a fixed horizontal position.
     // Render them last, on top of everything else, to account for things scrolled beneath them.
-    y = HEADER_HEIGHT_FIXED - offsetY;
-
-    REACT_PRIORITIES.forEach((priority, priorityIndex) => {
-      const priorityHeight = getPriorityHeight(data, priority);
-
-      if (priorityHeight === 0) {
-        return;
-      }
-
-      context.fillStyle = COLORS.PRIORITY_BACKGROUND;
-      context.fillRect(
-        0,
-        Math.floor(y),
-        Math.floor(LABEL_FIXED_WIDTH),
-        priorityHeight,
-      );
-
-      context.fillStyle = COLORS.PRIORITY_BORDER;
-      context.fillRect(
-        0,
-        Math.floor(y + priorityHeight),
-        canvasWidth,
-        REACT_PRIORITY_BORDER_SIZE,
-      );
-
-      context.fillStyle = COLORS.PRIORITY_BORDER;
-      context.fillRect(
-        Math.floor(LABEL_FIXED_WIDTH) - REACT_PRIORITY_BORDER_SIZE,
-        Math.floor(y),
-        REACT_PRIORITY_BORDER_SIZE,
-        priorityHeight,
-      );
-
-      context.fillStyle = COLORS.PRIORITY_LABEL;
-      context.textAlign = 'left';
-      context.textBaseline = 'middle';
-      context.font = `${LABEL_FONT_SIZE}px sans-serif`;
-      context.fillText(priority, 4, y + priorityHeight / 2);
-
-      y += priorityHeight + REACT_PRIORITY_BORDER_SIZE;
-    });
+    renderPriorityLabels(
+      context,
+      data,
+      canvasWidth,
+      HEADER_HEIGHT_FIXED - offsetY,
+    );
 
     // TOP: Time markers
     // Time markers do not scroll off screen; they are always rendered at a fixed vertical position.
     // Render them last, on top of everything else, to account for things scrolled beneath them.
-    y = 0;
-
-    context.fillStyle = COLORS.BACKGROUND;
-    context.fillRect(0, 0, canvasWidth, HEADER_HEIGHT_FIXED);
-
-    context.fillStyle = COLORS.PRIORITY_BORDER;
-    context.fillRect(0, MARKER_HEIGHT, canvasWidth, REACT_PRIORITY_BORDER_SIZE);
-
     // Draw time marker text on top of the priority groupings
-    for (
-      let i = firstIntervalPosition;
-      i < scrollableCanvasWidth;
-      i += intervalSize
-    ) {
-      if (i > 0) {
-        const markerTimestamp = positionToTimestamp(
-          i + LABEL_FIXED_WIDTH,
-          state,
-        );
-        const markerLabel = Math.round(markerTimestamp);
-
-        const x = LABEL_FIXED_WIDTH + i;
-
-        context.fillStyle = COLORS.PRIORITY_BORDER;
-        context.fillRect(
-          x,
-          MARKER_HEIGHT - MARKER_TICK_HEIGHT,
-          REACT_PRIORITY_BORDER_SIZE,
-          MARKER_TICK_HEIGHT,
-        );
-
-        context.fillStyle = COLORS.TIME_MARKER_LABEL;
-        context.textAlign = 'right';
-        context.textBaseline = 'middle';
-        context.font = `${MARKER_FONT_SIZE}px sans-serif`;
-        context.fillText(
-          `${markerLabel}ms`,
-          x - MARKER_TEXT_PADDING,
-          MARKER_HEIGHT / 2,
-        );
-      }
-    }
+    renderAxisMarkers(context, state, canvasWidth, offsetX, zoomLevel);
   },
 );

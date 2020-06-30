@@ -79,7 +79,7 @@ export type ReactHoverContextInfo = {|
   /** @deprecated */
   priorityIndex: number | null,
   /** @deprecated */
-  data: ReactProfilerData | null,
+  data: $ReadOnly<ReactProfilerData> | null,
   flamechartNode: FlamechartFrame | null,
 |};
 

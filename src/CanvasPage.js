@@ -144,7 +144,7 @@ function AutoSizedCanvas({
   });
 
   useLayoutEffect(() => {
-    if (data !== null) {
+    if (canvasRef.current !== null) {
       renderCanvas(
         data,
         flamechart,

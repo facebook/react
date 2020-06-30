@@ -46,23 +46,32 @@ const initialState: PanAndZoomState = {
 };
 
 // TODO Account for fixed label width
-export function positionToTimestamp(position: number, state: PanAndZoomState) {
+export function positionToTimestamp(
+  position: number,
+  state: $ReadOnly<PanAndZoomState>,
+) {
   return (position - state.fixedColumnWidth + state.offsetX) / state.zoomLevel;
 }
 
 // TODO Account for fixed label width
-export function timestampToPosition(timestamp: number, state: PanAndZoomState) {
+export function timestampToPosition(
+  timestamp: number,
+  state: $ReadOnly<PanAndZoomState>,
+) {
   return timestamp * state.zoomLevel + state.fixedColumnWidth - state.offsetX;
 }
 
-export function durationToWidth(duration: number, state: PanAndZoomState) {
+export function durationToWidth(
+  duration: number,
+  state: $ReadOnly<PanAndZoomState>,
+) {
   return Math.max(
     duration * state.zoomLevel - BAR_HORIZONTAL_SPACING,
     MIN_BAR_WIDTH,
   );
 }
 
-function getMaxOffsetX(state: PanAndZoomState) {
+function getMaxOffsetX(state: $ReadOnly<PanAndZoomState>) {
   return (
     state.unscaledContentWidth * state.zoomLevel -
     state.canvasWidth +
@@ -70,7 +79,7 @@ function getMaxOffsetX(state: PanAndZoomState) {
   );
 }
 
-function getMaxOffsetY(state: PanAndZoomState) {
+function getMaxOffsetY(state: $ReadOnly<PanAndZoomState>) {
   return (
     state.unscaledContentHeight - state.canvasHeight + state.fixedHeaderHeight
   );
@@ -78,7 +87,7 @@ function getMaxOffsetY(state: PanAndZoomState) {
 
 type InitializeAction = {|
   type: 'initialize',
-  payload: $Shape<State>,
+  payload: $Shape<PanAndZoomState>,
 |};
 type MouseDownAction = {|
   type: 'mouse-down',
@@ -133,7 +142,7 @@ function reducer(
         zoomLevel: payload.zoomLevel,
         offsetX: clamp(0, getMaxOffsetX(state), state.offsetX),
         offsetY: clamp(0, getMaxOffsetY(state), state.offsetY),
-      }: State);
+      }: PanAndZoomState);
     }
     case 'mouse-down': {
       return {
@@ -199,7 +208,7 @@ function reducer(
           if (absDeltaY > ZOOM_WHEEL_DELTA_THRESHOLD) {
             const {canvasMouseX} = getCanvasMousePos(canvas, event);
 
-            const nextState = {
+            const nextState: PanAndZoomState = {
               ...state,
               zoomLevel: clamp(
                 minZoomLevel,

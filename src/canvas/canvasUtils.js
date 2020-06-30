@@ -110,8 +110,8 @@ export const trimFlamegraphText = (
 
 export function getHoveredEvent(
   schedulerCanvasHeight: number,
-  data: ReactProfilerData,
-  flamechart: FlamechartData,
+  data: $ReadOnly<ReactProfilerData>,
+  flamechart: $ReadOnly<FlamechartData>,
   state: PanAndZoomState,
 ): ReactHoverContextInfo | null {
   const {canvasMouseX, canvasMouseY, offsetY} = state;
@@ -238,7 +238,7 @@ export function getHoveredEvent(
 
 const cachedPriorityHeights = new Map();
 export const getPriorityHeight = (
-  data: ReactProfilerData,
+  data: $ReadOnly<ReactProfilerData>,
   priority: ReactPriority,
 ): number => {
   if (cachedPriorityHeights.has(priority)) {
