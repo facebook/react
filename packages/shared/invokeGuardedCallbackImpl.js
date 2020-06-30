@@ -116,12 +116,7 @@ if (__DEV__) {
         'event',
       );
 
-      // Create an event handler for our fake event. We will synchronously
-      // dispatch our fake event using `dispatchEvent`. Inside the handler, we
-      // call the user-provided callback.
-      const funcArgs = Array.prototype.slice.call(arguments, 3);
-      function callCallback() {
-        didCall = true;
+      function restoreAfterDispatch() {
         // We immediately remove the callback from event listeners so that
         // nested `invokeGuardedCallback` calls do not clash. Otherwise, a
         // nested call would trigger the fake event handlers of any call higher
@@ -138,7 +133,15 @@ if (__DEV__) {
         ) {
           window.event = windowEvent;
         }
+      }
 
+      // Create an event handler for our fake event. We will synchronously
+      // dispatch our fake event using `dispatchEvent`. Inside the handler, we
+      // call the user-provided callback.
+      const funcArgs = Array.prototype.slice.call(arguments, 3);
+      function callCallback() {
+        didCall = true;
+        restoreAfterDispatch();
         func.apply(context, funcArgs);
         didError = false;
       }
@@ -195,7 +198,7 @@ if (__DEV__) {
         Object.defineProperty(window, 'event', windowEventDescriptor);
       }
 
-      if (didError) {
+      if (didCall && didError) {
         if (!didSetError) {
           // The callback errored, but the error event never fired.
           error = new Error(
@@ -226,6 +229,7 @@ if (__DEV__) {
         // https://github.com/facebook/react/issues/16734
         // https://github.com/facebook/react/issues/16585
         // Fall back to the production implementation.
+        restoreAfterDispatch();
         return invokeGuardedCallbackProd.apply(this, arguments);
       }
     };
