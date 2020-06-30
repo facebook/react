@@ -20,7 +20,9 @@ function assertYieldsWereCleared(Scheduler) {
   const actualYields = Scheduler.unstable_clearYields();
   if (actualYields.length !== 0) {
     throw new Error(
-      'Log of yielded values is not empty. ' +
+      'Log of yielded values is not empty: ' +
+        JSON.stringify(actualYields) +
+        '. ' +
         'Call expect(Scheduler).toHaveYielded(...) first.'
     );
   }
