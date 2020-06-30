@@ -436,47 +436,6 @@ export function requestUpdateLane(
   // To do that, we're replacing it with an update lane priority.
   const schedulerPriority = getCurrentPriorityLevel();
 
-  if (decoupleUpdatePriorityFromScheduler) {
-    // In the new strategy, we will track the current update lane priority
-    // inside React and use that priority to select a lane for this update.
-    const currentUpdateLanePriority = getCurrentUpdateLanePriority();
-
-    // The update lane priority will conflict with any callsites using
-    // Scheduler methods like `runWithPriority` or `next`. Until those
-    // callsites are migrated, we need to check that the priorities match
-    // before using the new update lane priority.
-    const laneSchedulerPriority = lanePriorityToSchedulerPriority(
-      currentUpdateLanePriority,
-    );
-    if (schedulerPriority === laneSchedulerPriority) {
-      let lane;
-      if (
-        currentUpdateLanePriority === TransitionShortLanePriority ||
-        currentUpdateLanePriority === TransitionLongLanePriority
-      ) {
-        lane = findTransitionLane(
-          currentUpdateLanePriority,
-          currentEventWipLanes,
-          NoLanes,
-        );
-      } else {
-        lane = findUpdateLane(currentUpdateLanePriority, currentEventWipLanes);
-      }
-
-      return lane;
-    } else if (currentUpdateLanePriority !== NoLanePriority) {
-      // If the priorities don't match, log it so we can fix it. Once this
-      // error stops firing, we can use only the currentUpdateLanePriority.
-      if (__DEV__) {
-        console.error(
-          'Expected current update lane priority %s to match current scheduler priority %s',
-          lanePriorityToSchedulerPriority(currentUpdateLanePriority),
-          schedulerPriority,
-        );
-      }
-    }
-  }
-
   // The old behavior was using the priority level of the Scheduler.
   // This couples React to the Scheduler internals, so we're replacing it
   // with the currentUpdateLanePriority above. As an example of how this
@@ -491,8 +450,31 @@ export function requestUpdateLane(
   ) {
     lane = findUpdateLane(InputDiscreteLanePriority, currentEventWipLanes);
   } else {
-    const lanePriority = schedulerPriorityToLanePriority(schedulerPriority);
-    lane = findUpdateLane(lanePriority, currentEventWipLanes);
+    const schedulerLanePriority = schedulerPriorityToLanePriority(
+      schedulerPriority,
+    );
+
+    if (decoupleUpdatePriorityFromScheduler) {
+      // In the new strategy, we will track the current update lane priority
+      // inside React and use that priority to select a lane for this update.
+      // For now, we're just logging when they're different so we can assess.
+      const currentUpdateLanePriority = getCurrentUpdateLanePriority();
+
+      if (
+        schedulerLanePriority !== currentUpdateLanePriority &&
+        currentUpdateLanePriority !== NoLanePriority
+      ) {
+        if (__DEV__) {
+          console.error(
+            'Expected current scheduler lane priority %s to match current update lane priority %s',
+            schedulerLanePriority,
+            currentUpdateLanePriority,
+          );
+        }
+      }
+    }
+
+    lane = findUpdateLane(schedulerLanePriority, currentEventWipLanes);
   }
 
   return lane;
