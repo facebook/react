@@ -2812,7 +2812,7 @@ function updateContextProvider(
       if (!hasWarnedAboutUsingNoValuePropOnContextProvider) {
         hasWarnedAboutUsingNoValuePropOnContextProvider = true;
         console.error(
-          'The prop `value` is required in `Context.Provider`, have you misspelled it',
+          'The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?',
         );
       }
     }
