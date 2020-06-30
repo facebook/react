@@ -358,11 +358,22 @@ export default function preprocessData(
     measures: [],
   };
 
-  if (timeline.length === 0) {
+  // TODO: Sort `timeline`. JSON Array Format trace events need not be ordered. See:
+  // https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview#heading=h.f2f0yd51wi15
+
+  const indexOfFirstEventWithTs = timeline.findIndex(event => !!event.ts);
+
+  // Our user timing events are Complete Events (i.e. ph === 'X') and will
+  // always have ts. If there are no ts events, we can safely abort, knowing
+  // that there are no events to process.
+  // See: https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview#heading=h.lpfof2aylapb
+  if (indexOfFirstEventWithTs === -1) {
     return profilerData;
   }
 
-  profilerData.startTime = timeline[0].ts; // TODO: Confirm with trace events doc if this is legit -- the events may not have to be ordered
+  // `profilerData.startTime` cannot be 0 or undefined, otherwise the final
+  // computed React measures will have enormous `timestamp` values.
+  profilerData.startTime = timeline[indexOfFirstEventWithTs].ts;
 
   const state: ProcessorState = {
     batchUID: 0,
