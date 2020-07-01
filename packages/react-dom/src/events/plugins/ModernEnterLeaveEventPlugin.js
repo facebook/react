@@ -126,16 +126,16 @@ function extractEvents(
 
   if (topLevelType === TOP_MOUSE_OUT || topLevelType === TOP_MOUSE_OVER) {
     eventInterface = SyntheticMouseEvent;
-    leaveEventType = eventTypes.mouseLeave;
-    enterEventType = eventTypes.mouseEnter;
+    leaveEventType = 'onMouseLeave';
+    enterEventType = 'onMouseEnter';
     eventTypePrefix = 'mouse';
   } else if (
     topLevelType === TOP_POINTER_OUT ||
     topLevelType === TOP_POINTER_OVER
   ) {
     eventInterface = SyntheticPointerEvent;
-    leaveEventType = eventTypes.pointerLeave;
-    enterEventType = eventTypes.pointerEnter;
+    leaveEventType = 'onPointerLeave';
+    enterEventType = 'onPointerEnter';
     eventTypePrefix = 'pointer';
   }
 

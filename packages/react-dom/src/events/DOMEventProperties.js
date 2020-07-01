@@ -13,10 +13,6 @@ import type {
   DOMTopLevelEventType,
 } from '../events/TopLevelEventTypes';
 import type {EventTypes} from '../events/PluginModuleType';
-import type {
-  DispatchConfig,
-  CustomDispatchConfig,
-} from '../events/ReactSyntheticEventType';
 
 import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
 import {
@@ -35,9 +31,9 @@ import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 // update the below line.
 export const simpleEventPluginEventTypes: EventTypes = {};
 
-export const topLevelEventsToDispatchConfig: Map<
+export const topLevelEventsToReactNames: Map<
   TopLevelType,
-  DispatchConfig | CustomDispatchConfig,
+  string | null,
 > = new Map();
 
 const eventPriorities = new Map();
@@ -167,8 +163,8 @@ const continuousPairsForSimpleEventPlugin = [
  *   },
  *   ...
  * };
- * topLevelEventsToDispatchConfig = new Map([
- *   [TOP_ABORT, { sameConfig }],
+ * topLevelEventsToReactNames = new Map([
+ *   [TOP_ABORT, 'onAbort'],
  * ]);
  */
 
@@ -197,7 +193,7 @@ function processSimpleEventPluginPairsByPriority(
       eventPriority: priority,
     };
     eventPriorities.set(topEvent, priority);
-    topLevelEventsToDispatchConfig.set(topEvent, config);
+    topLevelEventsToReactNames.set(topEvent, onEvent);
     simpleEventPluginEventTypes[event] = config;
   }
 }

@@ -16,10 +16,7 @@ import type {
   DispatchQueueItemPhase,
   DispatchQueueItemPhaseEntry,
 } from './PluginModuleType';
-import type {
-  ReactSyntheticEvent,
-  CustomDispatchConfig,
-} from './ReactSyntheticEventType';
+import type {ReactSyntheticEvent} from './ReactSyntheticEventType';
 import type {
   ElementListenerMap,
   ElementListenerMapEntry,
@@ -113,7 +110,7 @@ import {
   addEventCaptureListenerWithPassiveFlag,
 } from './EventListener';
 import {removeTrappedEventListener} from './DeprecatedDOMEventResponderSystem';
-import {topLevelEventsToDispatchConfig} from './DOMEventProperties';
+import {topLevelEventsToReactNames} from './DOMEventProperties';
 import * as ModernBeforeInputEventPlugin from './plugins/ModernBeforeInputEventPlugin';
 import * as ModernChangeEventPlugin from './plugins/ModernChangeEventPlugin';
 import * as ModernEnterLeaveEventPlugin from './plugins/ModernEnterLeaveEventPlugin';
@@ -222,14 +219,6 @@ export const capturePhaseEvents: Set<DOMTopLevelEventType> = new Set([
 if (enableCreateEventHandleAPI) {
   capturePhaseEvents.add(TOP_AFTER_BLUR);
 }
-
-const emptyDispatchConfigForCustomEvents: CustomDispatchConfig = {
-  customEvent: true,
-  phasedRegistrationNames: {
-    bubbled: null,
-    captured: null,
-  },
-};
 
 function executeDispatch(
   event: ReactSyntheticEvent,
@@ -639,11 +628,11 @@ export function accumulateTwoPhaseListeners(
   event: ReactSyntheticEvent,
   accumulateEventHandleListeners?: boolean,
 ): void {
-  const phasedRegistrationNames = event.dispatchConfig.phasedRegistrationNames;
+  const bubbled = event._reactName;
+  const captured = bubbled !== null ? bubbled + 'Capture' : null;
   const capturePhase: DispatchQueueItemPhase = [];
   const bubblePhase: DispatchQueueItemPhase = [];
 
-  const {bubbled, captured} = phasedRegistrationNames;
   // If we are not handling EventTarget only phase, then we're doing the
   // usual two phase accumulation using the React fiber tree to pick up
   // all relevant useEvent and on* prop events.
@@ -826,7 +815,7 @@ function accumulateEnterLeaveListenersForEvent(
   common: Fiber | null,
   capture: boolean,
 ): void {
-  const registrationName = event.dispatchConfig.registrationName;
+  const registrationName = event._reactName;
   if (registrationName === undefined) {
     return;
   }
@@ -944,17 +933,14 @@ export function accumulateEventTargetListeners(
 }
 
 export function addEventTypeToDispatchConfig(type: DOMTopLevelEventType): void {
-  const dispatchConfig = topLevelEventsToDispatchConfig.get(type);
-  // If we don't have a dispatchConfig, then we're dealing with
+  const reactName = topLevelEventsToReactNames.get(type);
+  // If we don't have a reactName, then we're dealing with
   // an event type that React does not know about (i.e. a custom event).
   // We need to register an event config for this or the SimpleEventPlugin
   // will not appropriately provide a SyntheticEvent, so we use out empty
   // dispatch config for custom events.
-  if (dispatchConfig === undefined) {
-    topLevelEventsToDispatchConfig.set(
-      type,
-      emptyDispatchConfigForCustomEvents,
-    );
+  if (reactName === undefined) {
+    topLevelEventsToReactNames.set(type, null);
   }
 }
 

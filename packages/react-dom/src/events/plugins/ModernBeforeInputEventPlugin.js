@@ -140,11 +140,11 @@ function isKeypressCommand(nativeEvent) {
 function getCompositionEventType(topLevelType) {
   switch (topLevelType) {
     case TOP_COMPOSITION_START:
-      return eventTypes.compositionStart;
+      return 'onCompositionStart';
     case TOP_COMPOSITION_END:
-      return eventTypes.compositionEnd;
+      return 'onCompositionEnd';
     case TOP_COMPOSITION_UPDATE:
-      return eventTypes.compositionUpdate;
+      return 'onCompositionUpdate';
   }
 }
 
@@ -237,10 +237,10 @@ function extractCompositionEvent(
     eventType = getCompositionEventType(topLevelType);
   } else if (!isComposing) {
     if (isFallbackCompositionStart(topLevelType, nativeEvent)) {
-      eventType = eventTypes.compositionStart;
+      eventType = 'onCompositionStart';
     }
   } else if (isFallbackCompositionEnd(topLevelType, nativeEvent)) {
-    eventType = eventTypes.compositionEnd;
+    eventType = 'onCompositionEnd';
   }
 
   if (!eventType) {
@@ -250,9 +250,9 @@ function extractCompositionEvent(
   if (useFallbackCompositionData && !isUsingKoreanIME(nativeEvent)) {
     // The current composition is stored statically and must not be
     // overwritten while composition continues.
-    if (!isComposing && eventType === eventTypes.compositionStart) {
+    if (!isComposing && eventType === 'onCompositionStart') {
       isComposing = FallbackCompositionStateInitialize(nativeEventTarget);
-    } else if (eventType === eventTypes.compositionEnd) {
+    } else if (eventType === 'onCompositionEnd') {
       if (isComposing) {
         fallbackData = FallbackCompositionStateGetData();
       }
@@ -430,7 +430,7 @@ function extractBeforeInputEvent(
   }
 
   const event = new SyntheticInputEvent(
-    eventTypes.beforeInput,
+    'onBeforeInput',
     null,
     nativeEvent,
     nativeEventTarget,
