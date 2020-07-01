@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import {registerDirectEvent} from '../EventRegistry';
 import {
   TOP_MOUSE_OUT,
   TOP_MOUSE_OVER,
@@ -23,24 +24,12 @@ import {accumulateEnterLeaveListeners} from '../DOMModernPluginEventSystem';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';
 
-const eventTypes: EventTypes = {
-  mouseEnter: {
-    registrationName: 'onMouseEnter',
-    dependencies: [TOP_MOUSE_OUT, TOP_MOUSE_OVER],
-  },
-  mouseLeave: {
-    registrationName: 'onMouseLeave',
-    dependencies: [TOP_MOUSE_OUT, TOP_MOUSE_OVER],
-  },
-  pointerEnter: {
-    registrationName: 'onPointerEnter',
-    dependencies: [TOP_POINTER_OUT, TOP_POINTER_OVER],
-  },
-  pointerLeave: {
-    registrationName: 'onPointerLeave',
-    dependencies: [TOP_POINTER_OUT, TOP_POINTER_OVER],
-  },
-};
+function registerEvents() {
+  registerDirectEvent('onMouseEnter', [TOP_MOUSE_OUT, TOP_MOUSE_OVER]);
+  registerDirectEvent('onMouseLeave', [TOP_MOUSE_OUT, TOP_MOUSE_OVER]);
+  registerDirectEvent('onPointerEnter', [TOP_POINTER_OUT, TOP_POINTER_OVER]);
+  registerDirectEvent('onPointerLeave', [TOP_POINTER_OUT, TOP_POINTER_OVER]);
+}
 
 /**
  * For almost every interaction we care about, there will be both a top-level
@@ -173,4 +162,4 @@ function extractEvents(
   accumulateEnterLeaveListeners(dispatchQueue, leave, enter, from, to);
 }
 
-export {eventTypes, extractEvents};
+export {registerEvents, extractEvents};

@@ -9,6 +9,7 @@ import type {TopLevelType} from '../../events/TopLevelEventTypes';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
+import {registerTwoPhaseEvent} from '../EventRegistry';
 import {
   TOP_BLUR,
   TOP_COMPOSITION_START,
@@ -57,63 +58,38 @@ const useFallbackCompositionData =
 const SPACEBAR_CODE = 32;
 const SPACEBAR_CHAR = String.fromCharCode(SPACEBAR_CODE);
 
-// Events and their corresponding property names.
-const eventTypes: EventTypes = {
-  beforeInput: {
-    phasedRegistrationNames: {
-      bubbled: 'onBeforeInput',
-      captured: 'onBeforeInputCapture',
-    },
-    dependencies: [
-      TOP_COMPOSITION_END,
-      TOP_KEY_PRESS,
-      TOP_TEXT_INPUT,
-      TOP_PASTE,
-    ],
-  },
-  compositionEnd: {
-    phasedRegistrationNames: {
-      bubbled: 'onCompositionEnd',
-      captured: 'onCompositionEndCapture',
-    },
-    dependencies: [
-      TOP_BLUR,
-      TOP_COMPOSITION_END,
-      TOP_KEY_DOWN,
-      TOP_KEY_PRESS,
-      TOP_KEY_UP,
-      TOP_MOUSE_DOWN,
-    ],
-  },
-  compositionStart: {
-    phasedRegistrationNames: {
-      bubbled: 'onCompositionStart',
-      captured: 'onCompositionStartCapture',
-    },
-    dependencies: [
-      TOP_BLUR,
-      TOP_COMPOSITION_START,
-      TOP_KEY_DOWN,
-      TOP_KEY_PRESS,
-      TOP_KEY_UP,
-      TOP_MOUSE_DOWN,
-    ],
-  },
-  compositionUpdate: {
-    phasedRegistrationNames: {
-      bubbled: 'onCompositionUpdate',
-      captured: 'onCompositionUpdateCapture',
-    },
-    dependencies: [
-      TOP_BLUR,
-      TOP_COMPOSITION_UPDATE,
-      TOP_KEY_DOWN,
-      TOP_KEY_PRESS,
-      TOP_KEY_UP,
-      TOP_MOUSE_DOWN,
-    ],
-  },
-};
+function registerEvents() {
+  registerTwoPhaseEvent('onBeforeInput', [
+    TOP_COMPOSITION_END,
+    TOP_KEY_PRESS,
+    TOP_TEXT_INPUT,
+    TOP_PASTE,
+  ]);
+  registerTwoPhaseEvent('onCompositionEnd', [
+    TOP_BLUR,
+    TOP_COMPOSITION_END,
+    TOP_KEY_DOWN,
+    TOP_KEY_PRESS,
+    TOP_KEY_UP,
+    TOP_MOUSE_DOWN,
+  ]);
+  registerTwoPhaseEvent('onCompositionStart', [
+    TOP_BLUR,
+    TOP_COMPOSITION_START,
+    TOP_KEY_DOWN,
+    TOP_KEY_PRESS,
+    TOP_KEY_UP,
+    TOP_MOUSE_DOWN,
+  ]);
+  registerTwoPhaseEvent('onCompositionUpdate', [
+    TOP_BLUR,
+    TOP_COMPOSITION_UPDATE,
+    TOP_KEY_DOWN,
+    TOP_KEY_PRESS,
+    TOP_KEY_UP,
+    TOP_MOUSE_DOWN,
+  ]);
+}
 
 // Track whether we've ever handled a keypress on the space key.
 let hasSpaceKeypress = false;
@@ -482,4 +458,4 @@ function extractEvents(
   );
 }
 
-export {eventTypes, extractEvents};
+export {registerEvents, extractEvents};

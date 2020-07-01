@@ -8,12 +8,7 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {
-  DispatchConfig,
-  ReactSyntheticEvent,
-} from './ReactSyntheticEventType';
-
-export type EventTypes = {[key: string]: DispatchConfig, ...};
+import type {ReactSyntheticEvent} from './ReactSyntheticEventType';
 
 export type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | TouchEvent;
 

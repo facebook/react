@@ -12,8 +12,8 @@ import type {
   TopLevelType,
   DOMTopLevelEventType,
 } from '../events/TopLevelEventTypes';
-import type {EventTypes} from '../events/PluginModuleType';
 
+import {registerTwoPhaseEvent} from './EventRegistry';
 import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
 import {
   DiscreteEvent,
@@ -22,14 +22,6 @@ import {
 } from 'shared/ReactTypes';
 
 import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
-
-// Needed for SimpleEventPlugin, rather than
-// do it in two places, which duplicates logic
-// and increases the bundle size, we do it all
-// here once. If we remove or refactor the
-// SimpleEventPlugin, we should also remove or
-// update the below line.
-export const simpleEventPluginEventTypes: EventTypes = {};
 
 export const topLevelEventsToReactNames: Map<
   TopLevelType,
@@ -152,23 +144,16 @@ const continuousPairsForSimpleEventPlugin = [
 /**
  * Turns
  * ['abort', ...]
+ *
  * into
- * eventTypes = {
- *   'abort': {
- *     phasedRegistrationNames: {
- *       bubbled: 'onAbort',
- *       captured: 'onAbortCapture',
- *     },
- *     dependencies: [TOP_ABORT],
- *   },
- *   ...
- * };
+ *
  * topLevelEventsToReactNames = new Map([
  *   [TOP_ABORT, 'onAbort'],
  * ]);
+ *
+ * and registers them.
  */
-
-function processSimpleEventPluginPairsByPriority(
+function registerSimplePluginEventsAndSetTheirPriorities(
   eventTypes: Array<DOMTopLevelEventType | string>,
   priority: EventPriority,
 ): void {
@@ -182,23 +167,14 @@ function processSimpleEventPluginPairsByPriority(
     const topEvent = ((eventTypes[i]: any): DOMTopLevelEventType);
     const event = ((eventTypes[i + 1]: any): string);
     const capitalizedEvent = event[0].toUpperCase() + event.slice(1);
-    const onEvent = 'on' + capitalizedEvent;
-
-    const config = {
-      phasedRegistrationNames: {
-        bubbled: onEvent,
-        captured: onEvent + 'Capture',
-      },
-      dependencies: [topEvent],
-      eventPriority: priority,
-    };
+    const reactName = 'on' + capitalizedEvent;
     eventPriorities.set(topEvent, priority);
-    topLevelEventsToReactNames.set(topEvent, onEvent);
-    simpleEventPluginEventTypes[event] = config;
+    topLevelEventsToReactNames.set(topEvent, reactName);
+    registerTwoPhaseEvent(reactName, [topEvent]);
   }
 }
 
-function processTopEventPairsByPriority(
+function setEventPriorities(
   eventTypes: Array<DOMTopLevelEventType | string>,
   priority: EventPriority,
 ): void {
@@ -206,22 +182,6 @@ function processTopEventPairsByPriority(
     eventPriorities.set(eventTypes[i], priority);
   }
 }
-
-// SimpleEventPlugin
-processSimpleEventPluginPairsByPriority(
-  discreteEventPairsForSimpleEventPlugin,
-  DiscreteEvent,
-);
-processSimpleEventPluginPairsByPriority(
-  userBlockingPairsForSimpleEventPlugin,
-  UserBlockingEvent,
-);
-processSimpleEventPluginPairsByPriority(
-  continuousPairsForSimpleEventPlugin,
-  ContinuousEvent,
-);
-// Not used by SimpleEventPlugin
-processTopEventPairsByPriority(otherDiscreteEvents, DiscreteEvent);
 
 export function getEventPriorityForPluginSystem(
   topLevelType: TopLevelType,
@@ -247,4 +207,20 @@ export function getEventPriorityForListenerSystem(
     );
   }
   return ContinuousEvent;
+}
+
+export function registerSimpleEvents() {
+  registerSimplePluginEventsAndSetTheirPriorities(
+    discreteEventPairsForSimpleEventPlugin,
+    DiscreteEvent,
+  );
+  registerSimplePluginEventsAndSetTheirPriorities(
+    userBlockingPairsForSimpleEventPlugin,
+    UserBlockingEvent,
+  );
+  registerSimplePluginEventsAndSetTheirPriorities(
+    continuousPairsForSimpleEventPlugin,
+    ContinuousEvent,
+  );
+  setEventPriorities(otherDiscreteEvents, DiscreteEvent);
 }

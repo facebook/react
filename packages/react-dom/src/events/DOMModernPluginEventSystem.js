@@ -24,10 +24,7 @@ import type {
 import type {EventPriority, ReactScopeInstance} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
-import {
-  injectEventPlugin,
-  registrationNameDependencies,
-} from './EventPluginRegistry';
+import {registrationNameDependencies} from './EventRegistry';
 import {
   PLUGIN_EVENT_SYSTEM,
   LEGACY_FB_SUPPORT,
@@ -118,11 +115,11 @@ import * as ModernSelectEventPlugin from './plugins/ModernSelectEventPlugin';
 import * as ModernSimpleEventPlugin from './plugins/ModernSimpleEventPlugin';
 
 // TODO: remove top-level side effect.
-injectEventPlugin(ModernSimpleEventPlugin.eventTypes);
-injectEventPlugin(ModernEnterLeaveEventPlugin.eventTypes);
-injectEventPlugin(ModernChangeEventPlugin.eventTypes);
-injectEventPlugin(ModernSelectEventPlugin.eventTypes);
-injectEventPlugin(ModernBeforeInputEventPlugin.eventTypes);
+ModernSimpleEventPlugin.registerEvents();
+ModernEnterLeaveEventPlugin.registerEvents();
+ModernChangeEventPlugin.registerEvents();
+ModernSelectEventPlugin.registerEvents();
+ModernBeforeInputEventPlugin.registerEvents();
 
 function extractEvents(
   dispatchQueue: DispatchQueue,
