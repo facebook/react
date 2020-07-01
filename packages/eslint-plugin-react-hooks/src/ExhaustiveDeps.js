@@ -1287,10 +1287,13 @@ function collectRecommendations({
   function scanTreeRecursively(node, missingPaths, satisfyingPaths, keyToPath) {
     node.children.forEach((child, key) => {
       const path = keyToPath(key);
+      // For analyzing dependencies, we want the "normalized" path, without any optional chaining ("?.") operator
+      // foo?.bar -> foo.bar
+      const normalizedPath = path.replace(/\?$/, '');
       if (child.isSatisfiedRecursively) {
         if (child.hasRequiredNodesBelow) {
           // Remember this dep actually satisfied something.
-          satisfyingPaths.add(path);
+          satisfyingPaths.add(normalizedPath);
         }
         // It doesn't matter if there's something deeper.
         // It would be transitively satisfied since we assume immutability.
@@ -1299,7 +1302,7 @@ function collectRecommendations({
       }
       if (child.isRequired) {
         // Remember that no declared deps satisfied this node.
-        missingPaths.add(path);
+        missingPaths.add(normalizedPath);
         // If we got here, nothing in its subtree was satisfied.
         // No need to search further.
         return;

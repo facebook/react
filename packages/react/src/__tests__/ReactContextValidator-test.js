@@ -263,7 +263,7 @@ describe('ReactContextValidator', () => {
 
     class Component extends React.Component {
       render() {
-        return <TestContext.Provider />;
+        return <TestContext.Provider value={undefined} />;
       }
     }
 
