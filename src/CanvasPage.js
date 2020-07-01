@@ -35,19 +35,24 @@ import type {
 
 type ContextMenuContextData = {|
   data: ReactProfilerData,
-  dataV2: ReactProfilerDataV2,
   flamechart: FlamechartData,
   hoveredEvent: ReactHoverContextInfo | null,
   state: PanAndZoomState,
 |};
 
 type Props = {|
-  profilerData: ReactProfilerDataV2,
+  profilerData: ReactProfilerData,
+  profilerDataV2: ReactProfilerDataV2,
   flamechart: FlamechartData,
   schedulerCanvasHeight: number,
 |};
 
-function CanvasPage({profilerData, flamechart, schedulerCanvasHeight}: Props) {
+function CanvasPage({
+  profilerData,
+  profilerDataV2,
+  flamechart,
+  schedulerCanvasHeight,
+}: Props) {
   return (
     <div
       className={styles.CanvasPage}
@@ -56,6 +61,7 @@ function CanvasPage({profilerData, flamechart, schedulerCanvasHeight}: Props) {
         {({height, width}: {height: number, width: number}) => (
           <AutoSizedCanvas
             data={profilerData}
+            dataV2={profilerDataV2}
             flamechart={flamechart}
             height={height}
             schedulerCanvasHeight={schedulerCanvasHeight}
@@ -121,7 +127,7 @@ function AutoSizedCanvas({
     canvasWidth: width,
     fixedColumnWidth: LABEL_FIXED_WIDTH,
     fixedHeaderHeight: HEADER_HEIGHT_FIXED,
-    unscaledContentWidth: data.duration,
+    unscaledContentWidth: dataV2.duration,
     unscaledContentHeight:
       schedulerCanvasHeight +
       flamechart.layers.length * FLAMECHART_FRAME_HEIGHT,
