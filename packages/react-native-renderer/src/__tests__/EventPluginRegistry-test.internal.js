@@ -19,7 +19,7 @@ describe('EventPluginRegistry', () => {
     // The public API surface of this is covered by other tests so
     // if `EventPluginRegistry` is ever deleted, these tests should be
     // safe to remove too.
-    EventPluginRegistry = require('legacy-events/EventPluginRegistry');
+    EventPluginRegistry = require('react-native-renderer/src/legacy-events/EventPluginRegistry');
 
     createPlugin = function(properties) {
       return Object.assign({extractEvents: function() {}}, properties);

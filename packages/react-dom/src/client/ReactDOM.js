@@ -42,7 +42,7 @@ import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {
   eventNameDispatchConfigs,
   injectEventPluginsByName,
-} from 'legacy-events/EventPluginRegistry';
+} from '../legacy-events/EventPluginRegistry';
 import ReactVersion from 'shared/ReactVersion';
 import invariant from 'shared/invariant';
 import {

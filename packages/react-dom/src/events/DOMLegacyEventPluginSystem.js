@@ -7,15 +7,15 @@
  * @flow
  */
 
-import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
+import type {AnyNativeEvent} from '../legacy-events/PluginModuleType';
+import type {DOMTopLevelEventType} from '../legacy-events/TopLevelEventTypes';
 import type {ElementListenerMap} from '../client/ReactDOMComponentTree';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {LegacyPluginModule} from 'legacy-events/PluginModuleType';
-import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
-import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
-import forEachAccumulated from 'legacy-events/forEachAccumulated';
+import type {LegacyPluginModule} from '../legacy-events/PluginModuleType';
+import type {ReactSyntheticEvent} from '../legacy-events/ReactSyntheticEventType';
+import type {TopLevelType} from '../legacy-events/TopLevelEventTypes';
+import forEachAccumulated from '../legacy-events/forEachAccumulated';
 
 import {
   HostRoot,
@@ -23,10 +23,10 @@ import {
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
 import {IS_FIRST_ANCESTOR, PLUGIN_EVENT_SYSTEM} from './EventSystemFlags';
-import {runEventsInBatch} from 'legacy-events/EventBatching';
-import {plugins} from 'legacy-events/EventPluginRegistry';
-import accumulateInto from 'legacy-events/accumulateInto';
-import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
+import {runEventsInBatch} from '../legacy-events/EventBatching';
+import {plugins} from '../legacy-events/EventPluginRegistry';
+import accumulateInto from '../legacy-events/accumulateInto';
+import {registrationNameDependencies} from '../legacy-events/EventPluginRegistry';
 
 import getEventTarget from './getEventTarget';
 import {

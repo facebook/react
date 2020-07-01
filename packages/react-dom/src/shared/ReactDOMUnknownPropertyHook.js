@@ -8,7 +8,7 @@
 import {
   registrationNameModules,
   possibleRegistrationNames,
-} from 'legacy-events/EventPluginRegistry';
+} from '../legacy-events/EventPluginRegistry';
 
 import {
   ATTRIBUTE_NAME_CHAR,

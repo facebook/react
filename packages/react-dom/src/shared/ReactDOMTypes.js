@@ -14,7 +14,7 @@ import type {
   EventPriority,
   ReactScopeInstance,
 } from 'shared/ReactTypes';
-import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
+import type {DOMTopLevelEventType} from '../legacy-events/TopLevelEventTypes';
 
 type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
 

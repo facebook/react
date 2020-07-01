@@ -15,13 +15,13 @@ import {
   HostComponent,
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
-import SyntheticEvent from 'legacy-events/SyntheticEvent';
+import SyntheticEvent from '../legacy-events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
 import act from './ReactTestUtilsAct';
-import forEachAccumulated from 'legacy-events/forEachAccumulated';
-import accumulateInto from 'legacy-events/accumulateInto';
+import forEachAccumulated from '../legacy-events/forEachAccumulated';
+import accumulateInto from '../legacy-events/accumulateInto';
 import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
 import {
   rethrowCaughtError,

@@ -17,7 +17,7 @@ import type {
   SuspenseInstance,
   Props,
 } from './ReactDOMHostConfig';
-import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
+import type {DOMTopLevelEventType} from '../legacy-events/TopLevelEventTypes';
 
 import {
   HostComponent,

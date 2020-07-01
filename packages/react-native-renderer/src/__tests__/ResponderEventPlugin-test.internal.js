@@ -407,9 +407,9 @@ describe('ResponderEventPlugin', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    EventBatching = require('legacy-events/EventBatching');
-    EventPluginUtils = require('legacy-events/EventPluginUtils');
-    ResponderEventPlugin = require('legacy-events/ResponderEventPlugin')
+    EventBatching = require('react-native-renderer/src/legacy-events/EventBatching');
+    EventPluginUtils = require('react-native-renderer/src/legacy-events/EventPluginUtils');
+    ResponderEventPlugin = require('react-native-renderer/src/legacy-events/ResponderEventPlugin')
       .default;
 
     deleteAllListeners(GRANDPARENT_INST);
@@ -1380,8 +1380,9 @@ describe('ResponderEventPlugin', () => {
     // ResponderEventPlugin uses `getLowestCommonAncestor`
     const React = require('react');
     const ReactTestUtils = require('react-dom/test-utils');
-    const getLowestCommonAncestor = require('legacy-events/ResponderEventPlugin')
+    const getLowestCommonAncestor = require('react-native-renderer/src/legacy-events/ResponderEventPlugin')
       .getLowestCommonAncestor;
+    // This works by accident and will likely break in the future.
     const ReactDOMComponentTree = require('react-dom/src/client/ReactDOMComponentTree');
 
     class ChildComponent extends React.Component {
