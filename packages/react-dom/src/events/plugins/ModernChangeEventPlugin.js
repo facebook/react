@@ -3,9 +3,15 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
-import SyntheticEvent from '../../events/SyntheticEvent';
+import type {TopLevelType} from '../TopLevelEventTypes';
+import type {DispatchQueue} from '../PluginModuleType';
+import type {EventSystemFlags} from '../EventSystemFlags';
+
+import SyntheticEvent from '../SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
@@ -66,9 +72,8 @@ function createAndAccumulateChangeEvent(
   );
   event.type = 'change';
   // Flag this event loop as needing state restore.
-  enqueueStateRestore(target);
+  enqueueStateRestore(((target: any): Node));
   accumulateTwoPhaseListeners(inst, dispatchQueue, event);
-  return event;
 }
 /**
  * For IE shims
@@ -82,12 +87,15 @@ let activeElementInst = null;
 function shouldUseChangeEvent(elem) {
   const nodeName = elem.nodeName && elem.nodeName.toLowerCase();
   return (
-    nodeName === 'select' || (nodeName === 'input' && elem.type === 'file')
+    nodeName === 'select' ||
+    (nodeName === 'input' && (elem: any).type === 'file')
   );
 }
 
 function manualDispatchChangeEvent(nativeEvent) {
-  const event = createAndAccumulateChangeEvent(
+  const dispatchQueue = [];
+  createAndAccumulateChangeEvent(
+    dispatchQueue,
     activeElementInst,
     nativeEvent,
     getEventTarget(nativeEvent),
@@ -104,16 +112,16 @@ function manualDispatchChangeEvent(nativeEvent) {
   // components don't work properly in conjunction with event bubbling because
   // the component is rerendered and the value reverted before all the event
   // handlers can run. See https://github.com/facebook/react/issues/708.
-  batchedUpdates(runEventInBatch, event);
+  batchedUpdates(runEventInBatch, dispatchQueue);
 }
 
-function runEventInBatch(event) {
-  dispatchEventsInBatch([event]);
+function runEventInBatch(dispatchQueue) {
+  dispatchEventsInBatch(dispatchQueue);
 }
 
-function getInstIfValueChanged(targetInst) {
+function getInstIfValueChanged(targetInst: Object) {
   const targetNode = getNodeFromInstance(targetInst);
-  if (updateValueIfChanged(targetNode)) {
+  if (updateValueIfChanged(((targetNode: any): HTMLInputElement))) {
     return targetInst;
   }
 }
@@ -144,7 +152,7 @@ if (canUseDOM) {
 function startWatchingForValueChange(target, targetInst) {
   activeElement = target;
   activeElementInst = targetInst;
-  activeElement.attachEvent('onpropertychange', handlePropertyChange);
+  (activeElement: any).attachEvent('onpropertychange', handlePropertyChange);
 }
 
 /**
@@ -155,7 +163,7 @@ function stopWatchingForValueChange() {
   if (!activeElement) {
     return;
   }
-  activeElement.detachEvent('onpropertychange', handlePropertyChange);
+  (activeElement: any).detachEvent('onpropertychange', handlePropertyChange);
   activeElement = null;
   activeElementInst = null;
 }
@@ -240,8 +248,8 @@ function getTargetInstForInputOrChangeEvent(topLevelType, targetInst) {
   }
 }
 
-function handleControlledInputBlur(node) {
-  const state = node._wrapperState;
+function handleControlledInputBlur(node: HTMLInputElement) {
+  const state = (node: any)._wrapperState;
 
   if (!state || !state.controlled || node.type !== 'number') {
     return;
@@ -249,7 +257,7 @@ function handleControlledInputBlur(node) {
 
   if (!disableInputAttributeSyncing) {
     // If controlled, assign the value attribute to the current value on blur
-    setDefaultValue(node, 'number', node.value);
+    setDefaultValue((node: any), 'number', (node: any).value);
   }
 }
 
@@ -269,20 +277,20 @@ const ChangeEventPlugin = {
   _isInputEventSupported: isInputEventSupported,
 
   extractEvents: function(
-    dispatchQueue,
-    topLevelType,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget,
-    eventSystemFlags,
-    container,
+    dispatchQueue: DispatchQueue,
+    topLevelType: TopLevelType,
+    targetInst: null | Fiber,
+    nativeEvent: MouseEvent,
+    nativeEventTarget: null | EventTarget,
+    eventSystemFlags: EventSystemFlags,
+    targetContainer: null | EventTarget,
   ) {
     const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
     let getTargetInstFunc, handleEventFunc;
     if (shouldUseChangeEvent(targetNode)) {
       getTargetInstFunc = getTargetInstForChangeEvent;
-    } else if (isTextInputElement(targetNode)) {
+    } else if (isTextInputElement(((targetNode: any): HTMLElement))) {
       if (isInputEventSupported) {
         getTargetInstFunc = getTargetInstForInputOrChangeEvent;
       } else {
@@ -312,7 +320,7 @@ const ChangeEventPlugin = {
 
     // When blurring, set the value attribute for number inputs
     if (topLevelType === TOP_BLUR) {
-      handleControlledInputBlur(targetNode);
+      handleControlledInputBlur(((targetNode: any): HTMLInputElement));
     }
   },
 };
