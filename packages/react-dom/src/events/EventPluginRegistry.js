@@ -30,10 +30,7 @@ import invariant from 'shared/invariant';
  * @private
  */
 function publishEventForPlugin(
-  dispatchConfig: DispatchConfig,
-  pluginModule:
-    | LegacyPluginModule<AnyNativeEvent>
-    | ModernPluginModule<AnyNativeEvent>,
+  eventTypes: any, // TODO
   eventName: string,
 ): boolean {
   invariant(
@@ -42,6 +39,7 @@ function publishEventForPlugin(
       'event name, `%s`.',
     eventName,
   );
+  const dispatchConfig = eventTypes[eventName];
   eventNameDispatchConfigs[eventName] = dispatchConfig;
 
   const phasedRegistrationNames = dispatchConfig.phasedRegistrationNames;
@@ -49,18 +47,14 @@ function publishEventForPlugin(
     for (const phaseName in phasedRegistrationNames) {
       if (phasedRegistrationNames.hasOwnProperty(phaseName)) {
         const phasedRegistrationName = phasedRegistrationNames[phaseName];
-        publishRegistrationName(
-          phasedRegistrationName,
-          pluginModule,
-          eventName,
-        );
+        publishRegistrationName(phasedRegistrationName, eventTypes, eventName);
       }
     }
     return true;
   } else if (dispatchConfig.registrationName) {
     publishRegistrationName(
       dispatchConfig.registrationName,
-      pluginModule,
+      eventTypes,
       eventName,
     );
     return true;
@@ -68,29 +62,20 @@ function publishEventForPlugin(
   return false;
 }
 
-/**
- * Publishes a registration name that is used to identify dispatched events.
- *
- * @param {string} registrationName Registration name to add.
- * @param {object} PluginModule Plugin publishing the event.
- * @private
- */
 function publishRegistrationName(
   registrationName: string,
-  pluginModule:
-    | LegacyPluginModule<AnyNativeEvent>
-    | ModernPluginModule<AnyNativeEvent>,
+  eventTypes: any, // TODO
   eventName: string,
 ): void {
   invariant(
-    !registrationNameModules[registrationName],
+    !registrationNames[registrationName],
     'EventPluginRegistry: More than one plugin attempted to publish the same ' +
       'registration name, `%s`.',
     registrationName,
   );
-  registrationNameModules[registrationName] = pluginModule;
+  registrationNames[registrationName] = true;
   registrationNameDependencies[registrationName] =
-    pluginModule.eventTypes[eventName].dependencies;
+    eventTypes[eventName].dependencies;
 
   if (__DEV__) {
     const lowerCasedName = registrationName.toLowerCase();
@@ -110,7 +95,7 @@ export const eventNameDispatchConfigs = {};
 /**
  * Mapping from registration name to plugin module
  */
-export const registrationNameModules = {};
+export const registrationNames = {};
 
 /**
  * Mapping from registration name to event name
@@ -126,10 +111,9 @@ export const registrationNameDependencies = {};
 export const possibleRegistrationNames = __DEV__ ? {} : (null: any);
 // Trust the developer to only use possibleRegistrationNames in __DEV__
 
-function injectEventPlugin(pluginModule: ModernPluginModule<any>): void {
-  const publishedEvents = pluginModule.eventTypes;
-  for (const eventName in publishedEvents) {
-    publishEventForPlugin(publishedEvents[eventName], pluginModule, eventName);
+function injectEventPlugin(eventTypes): void {
+  for (const eventName in eventTypes) {
+    publishEventForPlugin(eventTypes, eventName);
   }
 }
 
@@ -190,8 +174,8 @@ export function extractEvents(
 }
 
 // TODO: remove top-level side effect.
-injectEventPlugin(ModernSimpleEventPlugin);
-injectEventPlugin(ModernEnterLeaveEventPlugin);
-injectEventPlugin(ModernChangeEventPlugin);
-injectEventPlugin(ModernSelectEventPlugin);
-injectEventPlugin(ModernBeforeInputEventPlugin);
+injectEventPlugin(ModernSimpleEventPlugin.eventTypes);
+injectEventPlugin(ModernEnterLeaveEventPlugin.eventTypes);
+injectEventPlugin(ModernChangeEventPlugin.eventTypes);
+injectEventPlugin(ModernSelectEventPlugin.eventTypes);
+injectEventPlugin(ModernBeforeInputEventPlugin.eventTypes);
