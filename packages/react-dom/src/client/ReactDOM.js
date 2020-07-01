@@ -38,7 +38,6 @@ import {
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import {eventNameDispatchConfigs} from '../events/EventPluginRegistry';
 import ReactVersion from 'shared/ReactVersion';
 import invariant from 'shared/invariant';
 import {
@@ -175,7 +174,6 @@ const Internals = {
     getInstanceFromNode,
     getNodeFromInstance,
     getFiberCurrentPropsFromNode,
-    eventNameDispatchConfigs,
     enqueueStateRestore,
     restoreStateIfNeeded,
     flushPassiveEffects,
