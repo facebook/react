@@ -13,11 +13,11 @@ import type {
   LegacyPluginModule,
   ModernPluginModule,
 } from './PluginModuleType';
-import ModernBeforeInputEventPlugin from '../events/plugins/ModernBeforeInputEventPlugin';
-import ModernChangeEventPlugin from '../events/plugins/ModernChangeEventPlugin';
-import ModernEnterLeaveEventPlugin from '../events/plugins/ModernEnterLeaveEventPlugin';
-import ModernSelectEventPlugin from '../events/plugins/ModernSelectEventPlugin';
-import ModernSimpleEventPlugin from '../events/plugins/ModernSimpleEventPlugin';
+import * as ModernBeforeInputEventPlugin from '../events/plugins/ModernBeforeInputEventPlugin';
+import * as ModernChangeEventPlugin from '../events/plugins/ModernChangeEventPlugin';
+import * as ModernEnterLeaveEventPlugin from '../events/plugins/ModernEnterLeaveEventPlugin';
+import * as ModernSelectEventPlugin from '../events/plugins/ModernSelectEventPlugin';
+import * as ModernSimpleEventPlugin from '../events/plugins/ModernSimpleEventPlugin';
 
 import invariant from 'shared/invariant';
 

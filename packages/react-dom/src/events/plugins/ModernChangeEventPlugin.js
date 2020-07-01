@@ -253,6 +253,54 @@ function handleControlledInputBlur(node) {
   }
 }
 
+function extractEvents(
+  dispatchQueue,
+  topLevelType,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+  eventSystemFlags,
+  container,
+) {
+  const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
+
+  let getTargetInstFunc, handleEventFunc;
+  if (shouldUseChangeEvent(targetNode)) {
+    getTargetInstFunc = getTargetInstForChangeEvent;
+  } else if (isTextInputElement(targetNode)) {
+    if (isInputEventSupported) {
+      getTargetInstFunc = getTargetInstForInputOrChangeEvent;
+    } else {
+      getTargetInstFunc = getTargetInstForInputEventPolyfill;
+      handleEventFunc = handleEventsForInputEventPolyfill;
+    }
+  } else if (shouldUseClickEvent(targetNode)) {
+    getTargetInstFunc = getTargetInstForClickEvent;
+  }
+
+  if (getTargetInstFunc) {
+    const inst = getTargetInstFunc(topLevelType, targetInst);
+    if (inst) {
+      createAndAccumulateChangeEvent(
+        dispatchQueue,
+        inst,
+        nativeEvent,
+        nativeEventTarget,
+      );
+      return;
+    }
+  }
+
+  if (handleEventFunc) {
+    handleEventFunc(topLevelType, targetNode, targetInst);
+  }
+
+  // When blurring, set the value attribute for number inputs
+  if (topLevelType === TOP_BLUR) {
+    handleControlledInputBlur(targetNode);
+  }
+}
+
 /**
  * This plugin creates an `onChange` event that normalizes change events
  * across form elements. This event fires at a time when it's possible to
@@ -263,58 +311,4 @@ function handleControlledInputBlur(node) {
  * - textarea
  * - select
  */
-const ChangeEventPlugin = {
-  eventTypes: eventTypes,
-
-  _isInputEventSupported: isInputEventSupported,
-
-  extractEvents: function(
-    dispatchQueue,
-    topLevelType,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget,
-    eventSystemFlags,
-    container,
-  ) {
-    const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
-
-    let getTargetInstFunc, handleEventFunc;
-    if (shouldUseChangeEvent(targetNode)) {
-      getTargetInstFunc = getTargetInstForChangeEvent;
-    } else if (isTextInputElement(targetNode)) {
-      if (isInputEventSupported) {
-        getTargetInstFunc = getTargetInstForInputOrChangeEvent;
-      } else {
-        getTargetInstFunc = getTargetInstForInputEventPolyfill;
-        handleEventFunc = handleEventsForInputEventPolyfill;
-      }
-    } else if (shouldUseClickEvent(targetNode)) {
-      getTargetInstFunc = getTargetInstForClickEvent;
-    }
-
-    if (getTargetInstFunc) {
-      const inst = getTargetInstFunc(topLevelType, targetInst);
-      if (inst) {
-        createAndAccumulateChangeEvent(
-          dispatchQueue,
-          inst,
-          nativeEvent,
-          nativeEventTarget,
-        );
-        return;
-      }
-    }
-
-    if (handleEventFunc) {
-      handleEventFunc(topLevelType, targetNode, targetInst);
-    }
-
-    // When blurring, set the value attribute for number inputs
-    if (topLevelType === TOP_BLUR) {
-      handleControlledInputBlur(targetNode);
-    }
-  },
-};
-
-export default ChangeEventPlugin;
+export {eventTypes, extractEvents};
