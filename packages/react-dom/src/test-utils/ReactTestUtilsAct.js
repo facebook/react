@@ -20,7 +20,6 @@ const [
   getInstanceFromNode,
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
-  eventNameDispatchConfigs,
   enqueueStateRestore,
   restoreStateIfNeeded,
   /* eslint-enable no-unused-vars */

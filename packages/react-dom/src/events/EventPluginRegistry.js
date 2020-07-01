@@ -13,11 +13,6 @@ import type {EventTypes} from './PluginModuleType';
 import invariant from 'shared/invariant';
 
 /**
- * Mapping from event name to dispatch config
- */
-export const eventNameDispatchConfigs = {};
-
-/**
  * Mapping from registration name to plugin module
  */
 export const registrationNames = {};
@@ -40,15 +35,7 @@ function publishEventForPlugin(
   eventTypes: EventTypes,
   eventName: string,
 ): boolean {
-  invariant(
-    !eventNameDispatchConfigs.hasOwnProperty(eventName),
-    'EventPluginRegistry: More than one plugin attempted to publish the same ' +
-      'event name, `%s`.',
-    eventName,
-  );
   const dispatchConfig = eventTypes[eventName];
-  eventNameDispatchConfigs[eventName] = dispatchConfig;
-
   const phasedRegistrationNames = dispatchConfig.phasedRegistrationNames;
   if (phasedRegistrationNames) {
     for (const phaseName in phasedRegistrationNames) {
