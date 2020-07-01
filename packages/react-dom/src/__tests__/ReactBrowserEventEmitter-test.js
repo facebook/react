@@ -9,15 +9,9 @@
 
 'use strict';
 
-let EventPluginGetListener;
-let EventPluginRegistry;
 let React;
 let ReactDOM;
-let ReactDOMComponentTree;
-let listenToEvent;
-let ReactDOMEventListener;
 let ReactTestUtils;
-let ReactFeatureFlags;
 
 let idCallOrder;
 const recordID = function(id) {
@@ -33,7 +27,6 @@ const recordIDAndReturnFalse = function(id, event) {
 };
 const LISTENER = jest.fn();
 const ON_CLICK_KEY = 'onClick';
-const ON_CHANGE_KEY = 'onChange';
 const ON_MOUSE_ENTER_KEY = 'onMouseEnter';
 
 let GRANDPARENT;
@@ -41,42 +34,20 @@ let PARENT;
 let CHILD;
 let BUTTON;
 
-let getListener;
 let putListener;
 let deleteAllListeners;
 
 let container;
 
-function registerSimpleTestHandler() {
-  putListener(CHILD, ON_CLICK_KEY, LISTENER);
-  const listener = getListener(CHILD, ON_CLICK_KEY);
-  expect(listener).toEqual(LISTENER);
-  return getListener(CHILD, ON_CLICK_KEY);
-}
-
-// We should probably remove this file at some point, it's just full of
-// internal API usage.
+// This test is written in a bizarre way because it was previously using internals.
+// It should probably be rewritten but we're keeping it for some extra coverage.
 describe('ReactBrowserEventEmitter', () => {
   beforeEach(() => {
     jest.resetModules();
     LISTENER.mockClear();
 
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    EventPluginGetListener = require('react-dom/src/events/getListener')
-      .default;
-    EventPluginRegistry = require('legacy-events/EventPluginRegistry');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
-    if (ReactFeatureFlags.enableModernEventSystem) {
-      listenToEvent = require('../events/DOMModernPluginEventSystem')
-        .listenToEvent;
-    } else {
-      listenToEvent = require('../events/DOMLegacyEventPluginSystem')
-        .legacyListenToEvent;
-    }
-
-    ReactDOMEventListener = require('../events/ReactDOMEventListener');
     ReactTestUtils = require('react-dom/test-utils');
 
     container = document.createElement('div');
@@ -111,10 +82,6 @@ describe('ReactBrowserEventEmitter', () => {
 
     renderTree();
 
-    getListener = function(node, eventName) {
-      const inst = ReactDOMComponentTree.getInstanceFromNode(node);
-      return EventPluginGetListener(inst, eventName);
-    };
     putListener = function(node, eventName, listener) {
       switch (node) {
         case CHILD:
@@ -157,47 +124,6 @@ describe('ReactBrowserEventEmitter', () => {
   afterEach(() => {
     document.body.removeChild(container);
     container = null;
-  });
-
-  it('should store a listener correctly', () => {
-    registerSimpleTestHandler();
-    const listener = getListener(CHILD, ON_CLICK_KEY);
-    expect(listener).toBe(LISTENER);
-  });
-
-  it('should retrieve a listener correctly', () => {
-    registerSimpleTestHandler();
-    const listener = getListener(CHILD, ON_CLICK_KEY);
-    expect(listener).toEqual(LISTENER);
-  });
-
-  it('should not retrieve listeners on a disabled interactive element', () => {
-    putListener(BUTTON, ON_MOUSE_ENTER_KEY, recordID.bind(null, BUTTON));
-    const listener = getListener(BUTTON, ON_MOUSE_ENTER_KEY);
-    expect(listener).toBe(null);
-  });
-
-  it('should clear all handlers when asked to', () => {
-    registerSimpleTestHandler();
-    deleteAllListeners(CHILD);
-    const listener = getListener(CHILD, ON_CLICK_KEY);
-    expect(listener).toBe(undefined);
-  });
-
-  it('should invoke a simple handler registered on a node', () => {
-    registerSimpleTestHandler();
-    CHILD.click();
-    expect(LISTENER).toHaveBeenCalledTimes(1);
-  });
-
-  it('should not invoke handlers if ReactDOMEventListener is disabled', () => {
-    registerSimpleTestHandler();
-    ReactDOMEventListener.setEnabled(false);
-    CHILD.click();
-    expect(LISTENER).toHaveBeenCalledTimes(0);
-    ReactDOMEventListener.setEnabled(true);
-    CHILD.click();
-    expect(LISTENER).toHaveBeenCalledTimes(1);
   });
 
   it('should bubble simply', () => {
@@ -355,42 +281,5 @@ describe('ReactBrowserEventEmitter', () => {
     ReactTestUtils.Simulate.mouseEnter(CHILD);
     expect(idCallOrder.length).toBe(1);
     expect(idCallOrder[0]).toBe(CHILD);
-  });
-
-  it('should listen to events only once', () => {
-    spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-    listenToEvent(ON_CLICK_KEY, document);
-    listenToEvent(ON_CLICK_KEY, document);
-    expect(EventTarget.prototype.addEventListener).toHaveBeenCalledTimes(1);
-  });
-
-  it('should work with event plugins without dependencies', () => {
-    spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-
-    listenToEvent(ON_CLICK_KEY, document);
-
-    expect(EventTarget.prototype.addEventListener.calls.argsFor(0)[0]).toBe(
-      'click',
-    );
-  });
-
-  it('should work with event plugins with dependencies', () => {
-    spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-
-    listenToEvent(ON_CHANGE_KEY, document);
-
-    const setEventListeners = [];
-    const listenCalls = EventTarget.prototype.addEventListener.calls.allArgs();
-    for (let i = 0; i < listenCalls.length; i++) {
-      setEventListeners.push(listenCalls[i][1]);
-    }
-
-    const module = EventPluginRegistry.registrationNameModules[ON_CHANGE_KEY];
-    const dependencies = module.eventTypes.change.dependencies;
-    expect(setEventListeners.length).toEqual(dependencies.length);
-
-    for (let i = 0; i < setEventListeners.length; i++) {
-      expect(dependencies.indexOf(setEventListeners[i])).toBeTruthy();
-    }
   });
 });
