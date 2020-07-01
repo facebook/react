@@ -75,7 +75,6 @@ import {
   enableSuspenseServerRenderer,
   enableDeprecatedFlareAPI,
   enableFundamentalAPI,
-  enableModernEventSystem,
   enableCreateEventHandleAPI,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
@@ -1123,9 +1122,7 @@ export function makeOpaqueHydratingObject(
 }
 
 export function preparePortalMount(portalInstance: Instance): void {
-  if (enableModernEventSystem) {
-    listenToEvent('onMouseEnter', portalInstance);
-  }
+  listenToEvent('onMouseEnter', portalInstance);
 }
 
 export function prepareScopeUpdate(

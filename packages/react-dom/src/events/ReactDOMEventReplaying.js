@@ -17,7 +17,6 @@ import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import {
   enableDeprecatedFlareAPI,
   enableSelectiveHydration,
-  enableModernEventSystem,
 } from 'shared/ReactFeatureFlags';
 import {
   unstable_runWithPriority as runWithPriority,
@@ -116,7 +115,6 @@ import {
   TOP_BLUR,
 } from './DOMTopLevelEventTypes';
 import {IS_REPLAYED, PLUGIN_EVENT_SYSTEM} from './EventSystemFlags';
-import {legacyListenToTopLevelEvent} from './DOMLegacyEventPluginSystem';
 import {listenToTopLevelEvent} from './DOMModernPluginEventSystem';
 import {addResponderEventSystemEvent} from './DeprecatedDOMEventResponderSystem';
 
@@ -230,9 +228,6 @@ function trapReplayableEventForDocument(
   document: Document,
   listenerMap: ElementListenerMap,
 ) {
-  if (!enableModernEventSystem) {
-    legacyListenToTopLevelEvent(topLevelType, document, listenerMap);
-  }
   if (enableDeprecatedFlareAPI) {
     // Trap events for the responder system.
     const topLevelTypeString = unsafeCastDOMTopLevelTypeToString(topLevelType);
@@ -257,30 +252,23 @@ export function eagerlyTrapReplayableEvents(
   document: Document,
 ) {
   const listenerMapForDoc = getEventListenerMap(document);
-  let listenerMapForContainer;
-  if (enableModernEventSystem) {
-    listenerMapForContainer = getEventListenerMap(container);
-  }
+  const listenerMapForContainer = getEventListenerMap(container);
   // Discrete
   discreteReplayableEvents.forEach(topLevelType => {
-    if (enableModernEventSystem) {
-      trapReplayableEventForContainer(
-        topLevelType,
-        container,
-        listenerMapForContainer,
-      );
-    }
+    trapReplayableEventForContainer(
+      topLevelType,
+      container,
+      listenerMapForContainer,
+    );
     trapReplayableEventForDocument(topLevelType, document, listenerMapForDoc);
   });
   // Continuous
   continuousReplayableEvents.forEach(topLevelType => {
-    if (enableModernEventSystem) {
-      trapReplayableEventForContainer(
-        topLevelType,
-        container,
-        listenerMapForContainer,
-      );
-    }
+    trapReplayableEventForContainer(
+      topLevelType,
+      container,
+      listenerMapForContainer,
+    );
     trapReplayableEventForDocument(topLevelType, document, listenerMapForDoc);
   });
 }

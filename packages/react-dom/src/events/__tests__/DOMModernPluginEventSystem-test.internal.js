@@ -60,7 +60,6 @@ describe('DOMModernPluginEventSystem', () => {
         beforeEach(() => {
           jest.resetModules();
           ReactFeatureFlags = require('shared/ReactFeatureFlags');
-          ReactFeatureFlags.enableModernEventSystem = true;
           ReactFeatureFlags.enableLegacyFBSupport = enableLegacyFBSupport;
 
           React = require('react');
@@ -1197,7 +1196,6 @@ describe('DOMModernPluginEventSystem', () => {
             jest.resetModules();
             ReactFeatureFlags = require('shared/ReactFeatureFlags');
             ReactFeatureFlags.enableLegacyFBSupport = enableLegacyFBSupport;
-            ReactFeatureFlags.enableModernEventSystem = true;
             ReactFeatureFlags.enableCreateEventHandleAPI = true;
 
             React = require('react');
@@ -2555,7 +2553,6 @@ describe('DOMModernPluginEventSystem', () => {
             beforeEach(() => {
               jest.resetModules();
               ReactFeatureFlags = require('shared/ReactFeatureFlags');
-              ReactFeatureFlags.enableModernEventSystem = true;
               ReactFeatureFlags.enableCreateEventHandleAPI = true;
               ReactFeatureFlags.enableScopeAPI = true;
 

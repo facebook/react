@@ -18,17 +18,14 @@ import {
 import SyntheticEvent from '../legacy-events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
-import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
 import act from './ReactTestUtilsAct';
 import forEachAccumulated from '../legacy-events/forEachAccumulated';
 import accumulateInto from '../legacy-events/accumulateInto';
-import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
 import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,
 } from 'shared/ReactErrorUtils';
 
-const {findDOMNode} = ReactDOM;
 // Keep in sync with ReactDOM.js, and ReactTestUtilsAct.js:
 const [
   getInstanceFromNode,
@@ -39,10 +36,9 @@ const [
   /* eslint-enable no-unused-vars */
   eventNameDispatchConfigs,
   enqueueStateRestore,
-  restoreStateIfNeeded,
-  dispatchEvent,
-  /* eslint-disable no-unused-vars */
-  flushPassiveEffects,
+  restoreStateIfNeeded /* eslint-disable no-unused-vars */, // TODO: remove.
+  ,
+  /* dispatchEvent */ flushPassiveEffects,
   IsThisRendererActing,
   /* eslint-enable no-unused-vars */
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
@@ -50,7 +46,6 @@ const [
 function Event(suffix) {}
 
 let hasWarnedAboutDeprecatedMockComponent = false;
-let didWarnSimulateNativeDeprecated = false;
 
 /**
  * @class ReactTestUtils
@@ -666,171 +661,6 @@ function buildSimulators() {
 }
 
 buildSimulators();
-
-if (!enableModernEventSystem) {
-  SimulateNative = {};
-
-  /**
-   * Simulates a top level event being dispatched from a raw event that occurred
-   * on an `Element` node.
-   * @param {number} topLevelType A number from `TopLevelEventTypes`
-   * @param {!Element} node The dom to simulate an event occurring on.
-   * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
-   */
-  const simulateNativeEventOnNode = function(
-    topLevelType,
-    node,
-    fakeNativeEvent,
-  ) {
-    fakeNativeEvent.target = node;
-    const PLUGIN_EVENT_SYSTEM = 1;
-    dispatchEvent(topLevelType, PLUGIN_EVENT_SYSTEM, null, fakeNativeEvent);
-  };
-
-  /**
-   * Simulates a top level event being dispatched from a raw event that occurred
-   * on the `ReactDOMComponent` `comp`.
-   * @param {Object} topLevelType A type from `BrowserEventConstants.topLevelTypes`.
-   * @param {!ReactDOMComponent} comp
-   * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
-   */
-  const simulateNativeEventOnDOMComponent = function(
-    topLevelType,
-    comp,
-    fakeNativeEvent,
-  ) {
-    simulateNativeEventOnNode(topLevelType, findDOMNode(comp), fakeNativeEvent);
-  };
-
-  /**
-   * Exports:
-   *
-   * - `SimulateNative.click(Element/ReactDOMComponent)`
-   * - `SimulateNative.mouseMove(Element/ReactDOMComponent)`
-   * - `SimulateNative.mouseIn/ReactDOMComponent)`
-   * - `SimulateNative.mouseOut(Element/ReactDOMComponent)`
-   * - ... (All keys from `BrowserEventConstants.topLevelTypes`)
-   *
-   * Note: Top level event types are a subset of the entire set of handler types
-   * (which include a broader set of "synthetic" events). For example, onDragDone
-   * is a synthetic event. Except when testing an event plugin or React's event
-   * handling code specifically, you probably want to use Simulate
-   * to dispatch synthetic events.
-   */
-
-  const makeNativeSimulator = function(eventType, topLevelType) {
-    return function(domComponentOrNode, nativeEventData) {
-      if (__DEV__) {
-        if (!didWarnSimulateNativeDeprecated) {
-          didWarnSimulateNativeDeprecated = true;
-          console.warn(
-            'ReactTestUtils.SimulateNative is an undocumented API that does not match ' +
-              'how the browser dispatches events, and will be removed in a future major ' +
-              'version of React. If you rely on it for testing, consider attaching the root ' +
-              'DOM container to the document during the test, and then dispatching native browser ' +
-              'events by calling `node.dispatchEvent()` on the DOM nodes. Make sure to set ' +
-              'the `bubbles` flag to `true` when creating the native browser event.',
-          );
-        }
-      }
-
-      const fakeNativeEvent = new Event(eventType);
-      Object.assign(fakeNativeEvent, nativeEventData);
-      if (isDOMComponent(domComponentOrNode)) {
-        simulateNativeEventOnDOMComponent(
-          topLevelType,
-          domComponentOrNode,
-          fakeNativeEvent,
-        );
-      } else if (domComponentOrNode.tagName) {
-        // Will allow on actual dom nodes.
-        simulateNativeEventOnNode(
-          topLevelType,
-          domComponentOrNode,
-          fakeNativeEvent,
-        );
-      }
-    };
-  };
-
-  [
-    [DOMTopLevelEventTypes.TOP_ABORT, 'abort'],
-    [DOMTopLevelEventTypes.TOP_ANIMATION_END, 'animationEnd'],
-    [DOMTopLevelEventTypes.TOP_ANIMATION_ITERATION, 'animationIteration'],
-    [DOMTopLevelEventTypes.TOP_ANIMATION_START, 'animationStart'],
-    [DOMTopLevelEventTypes.TOP_BLUR, 'blur'],
-    [DOMTopLevelEventTypes.TOP_CAN_PLAY_THROUGH, 'canPlayThrough'],
-    [DOMTopLevelEventTypes.TOP_CAN_PLAY, 'canPlay'],
-    [DOMTopLevelEventTypes.TOP_CANCEL, 'cancel'],
-    [DOMTopLevelEventTypes.TOP_CHANGE, 'change'],
-    [DOMTopLevelEventTypes.TOP_CLICK, 'click'],
-    [DOMTopLevelEventTypes.TOP_CLOSE, 'close'],
-    [DOMTopLevelEventTypes.TOP_COMPOSITION_END, 'compositionEnd'],
-    [DOMTopLevelEventTypes.TOP_COMPOSITION_START, 'compositionStart'],
-    [DOMTopLevelEventTypes.TOP_COMPOSITION_UPDATE, 'compositionUpdate'],
-    [DOMTopLevelEventTypes.TOP_CONTEXT_MENU, 'contextMenu'],
-    [DOMTopLevelEventTypes.TOP_COPY, 'copy'],
-    [DOMTopLevelEventTypes.TOP_CUT, 'cut'],
-    [DOMTopLevelEventTypes.TOP_DOUBLE_CLICK, 'doubleClick'],
-    [DOMTopLevelEventTypes.TOP_DRAG_END, 'dragEnd'],
-    [DOMTopLevelEventTypes.TOP_DRAG_ENTER, 'dragEnter'],
-    [DOMTopLevelEventTypes.TOP_DRAG_EXIT, 'dragExit'],
-    [DOMTopLevelEventTypes.TOP_DRAG_LEAVE, 'dragLeave'],
-    [DOMTopLevelEventTypes.TOP_DRAG_OVER, 'dragOver'],
-    [DOMTopLevelEventTypes.TOP_DRAG_START, 'dragStart'],
-    [DOMTopLevelEventTypes.TOP_DRAG, 'drag'],
-    [DOMTopLevelEventTypes.TOP_DROP, 'drop'],
-    [DOMTopLevelEventTypes.TOP_DURATION_CHANGE, 'durationChange'],
-    [DOMTopLevelEventTypes.TOP_EMPTIED, 'emptied'],
-    [DOMTopLevelEventTypes.TOP_ENCRYPTED, 'encrypted'],
-    [DOMTopLevelEventTypes.TOP_ENDED, 'ended'],
-    [DOMTopLevelEventTypes.TOP_ERROR, 'error'],
-    [DOMTopLevelEventTypes.TOP_FOCUS, 'focus'],
-    [DOMTopLevelEventTypes.TOP_INPUT, 'input'],
-    [DOMTopLevelEventTypes.TOP_KEY_DOWN, 'keyDown'],
-    [DOMTopLevelEventTypes.TOP_KEY_PRESS, 'keyPress'],
-    [DOMTopLevelEventTypes.TOP_KEY_UP, 'keyUp'],
-    [DOMTopLevelEventTypes.TOP_LOAD_START, 'loadStart'],
-    [DOMTopLevelEventTypes.TOP_LOAD_START, 'loadStart'],
-    [DOMTopLevelEventTypes.TOP_LOAD, 'load'],
-    [DOMTopLevelEventTypes.TOP_LOADED_DATA, 'loadedData'],
-    [DOMTopLevelEventTypes.TOP_LOADED_METADATA, 'loadedMetadata'],
-    [DOMTopLevelEventTypes.TOP_MOUSE_DOWN, 'mouseDown'],
-    [DOMTopLevelEventTypes.TOP_MOUSE_MOVE, 'mouseMove'],
-    [DOMTopLevelEventTypes.TOP_MOUSE_OUT, 'mouseOut'],
-    [DOMTopLevelEventTypes.TOP_MOUSE_OVER, 'mouseOver'],
-    [DOMTopLevelEventTypes.TOP_MOUSE_UP, 'mouseUp'],
-    [DOMTopLevelEventTypes.TOP_PASTE, 'paste'],
-    [DOMTopLevelEventTypes.TOP_PAUSE, 'pause'],
-    [DOMTopLevelEventTypes.TOP_PLAY, 'play'],
-    [DOMTopLevelEventTypes.TOP_PLAYING, 'playing'],
-    [DOMTopLevelEventTypes.TOP_PROGRESS, 'progress'],
-    [DOMTopLevelEventTypes.TOP_RATE_CHANGE, 'rateChange'],
-    [DOMTopLevelEventTypes.TOP_SCROLL, 'scroll'],
-    [DOMTopLevelEventTypes.TOP_SEEKED, 'seeked'],
-    [DOMTopLevelEventTypes.TOP_SEEKING, 'seeking'],
-    [DOMTopLevelEventTypes.TOP_SELECTION_CHANGE, 'selectionChange'],
-    [DOMTopLevelEventTypes.TOP_STALLED, 'stalled'],
-    [DOMTopLevelEventTypes.TOP_SUSPEND, 'suspend'],
-    [DOMTopLevelEventTypes.TOP_TEXT_INPUT, 'textInput'],
-    [DOMTopLevelEventTypes.TOP_TIME_UPDATE, 'timeUpdate'],
-    [DOMTopLevelEventTypes.TOP_TOGGLE, 'toggle'],
-    [DOMTopLevelEventTypes.TOP_TOUCH_CANCEL, 'touchCancel'],
-    [DOMTopLevelEventTypes.TOP_TOUCH_END, 'touchEnd'],
-    [DOMTopLevelEventTypes.TOP_TOUCH_MOVE, 'touchMove'],
-    [DOMTopLevelEventTypes.TOP_TOUCH_START, 'touchStart'],
-    [DOMTopLevelEventTypes.TOP_TRANSITION_END, 'transitionEnd'],
-    [DOMTopLevelEventTypes.TOP_VOLUME_CHANGE, 'volumeChange'],
-    [DOMTopLevelEventTypes.TOP_WAITING, 'waiting'],
-    [DOMTopLevelEventTypes.TOP_WHEEL, 'wheel'],
-  ].forEach(([topLevelType, eventType]) => {
-    /**
-     * @param {!Element|ReactDOMComponent} domComponentOrNode
-     * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.
-     */
-    SimulateNative[eventType] = makeNativeSimulator(eventType, topLevelType);
-  });
-}
 
 export {
   renderIntoDocument,

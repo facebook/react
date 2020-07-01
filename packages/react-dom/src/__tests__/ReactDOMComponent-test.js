@@ -2719,10 +2719,7 @@ describe('ReactDOMComponent', () => {
       // might depend on this.
       //
       // @see https://github.com/facebook/react/pull/12919#issuecomment-395224674
-      if (
-        ReactFeatureFlags.enableModernEventSystem &
-        ReactFeatureFlags.enableLegacyFBSupport
-      ) {
+      if (ReactFeatureFlags.enableLegacyFBSupport) {
         // The order will change here, as the legacy FB support adds
         // the event listener onto the document after the one above has.
         expect(eventOrder).toEqual([
