@@ -14,9 +14,9 @@ import {
   getInstanceFromNode,
   getNodeFromInstance,
 } from './ReactFabricComponentTree';
-import {setComponentTree} from 'legacy-events/EventPluginUtils';
+import {setComponentTree} from './legacy-events/EventPluginUtils';
 import ReactFabricGlobalResponderHandler from './ReactFabricGlobalResponderHandler';
-import ResponderEventPlugin from 'legacy-events/ResponderEventPlugin';
+import ResponderEventPlugin from './legacy-events/ResponderEventPlugin';
 
 setComponentTree(
   getFiberCurrentPropsFromNode,

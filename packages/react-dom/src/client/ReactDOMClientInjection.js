@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {setComponentTree} from 'legacy-events/EventPluginUtils';
+import {setComponentTree} from '../legacy-events/EventPluginUtils';
 
 import {
   getFiberCurrentPropsFromNode,
@@ -29,7 +29,7 @@ import {
   injectEventPluginOrder,
   injectEventPluginsByName,
   injectEventPlugins,
-} from 'legacy-events/EventPluginRegistry';
+} from '../legacy-events/EventPluginRegistry';
 import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
 
 if (enableModernEventSystem) {

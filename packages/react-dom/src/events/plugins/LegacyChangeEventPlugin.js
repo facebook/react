@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {runEventsInBatch} from 'legacy-events/EventBatching';
-import SyntheticEvent from 'legacy-events/SyntheticEvent';
+import {runEventsInBatch} from '../../legacy-events/EventBatching';
+import SyntheticEvent from '../../legacy-events/SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 

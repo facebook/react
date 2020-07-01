@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
+import {registrationNameModules} from '../legacy-events/EventPluginRegistry';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import invariant from 'shared/invariant';
 import {

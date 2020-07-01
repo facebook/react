@@ -6,7 +6,7 @@
  */
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import SyntheticEvent from 'legacy-events/SyntheticEvent';
+import SyntheticEvent from '../../legacy-events/SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
 import shallowEqual from 'shared/shallowEqual';
 
@@ -30,7 +30,7 @@ import {hasSelectionCapabilities} from '../../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../../shared/HTMLNodeType';
 import {accumulateTwoPhaseDispatches} from '../DOMLegacyEventPluginSystem';
 
-import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
+import {registrationNameDependencies} from '../../legacy-events/EventPluginRegistry';
 
 const skipSelectionChangeEvent =
   canUseDOM && 'documentMode' in document && document.documentMode <= 11;

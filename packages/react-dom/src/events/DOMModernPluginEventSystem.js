@@ -7,8 +7,8 @@
  * @flow
  */
 
-import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
+import type {AnyNativeEvent} from '../legacy-events/PluginModuleType';
+import type {DOMTopLevelEventType} from '../legacy-events/TopLevelEventTypes';
 import type {
   ElementListenerMap,
   ElementListenerMapEntry,
@@ -22,14 +22,14 @@ import type {
   DispatchQueueItem,
   DispatchQueueItemPhase,
   DispatchQueueItemPhaseEntry,
-} from 'legacy-events/PluginModuleType';
+} from '../legacy-events/PluginModuleType';
 import type {
   ReactSyntheticEvent,
   CustomDispatchConfig,
-} from 'legacy-events/ReactSyntheticEventType';
+} from '../legacy-events/ReactSyntheticEventType';
 
-import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
-import {plugins} from 'legacy-events/EventPluginRegistry';
+import {registrationNameDependencies} from '../legacy-events/EventPluginRegistry';
+import {plugins} from '../legacy-events/EventPluginRegistry';
 import {
   PLUGIN_EVENT_SYSTEM,
   LEGACY_FB_SUPPORT,

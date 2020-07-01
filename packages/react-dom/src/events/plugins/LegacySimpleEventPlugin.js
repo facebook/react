@@ -10,12 +10,12 @@
 import type {
   TopLevelType,
   DOMTopLevelEventType,
-} from 'legacy-events/TopLevelEventTypes';
-import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
+} from '../../legacy-events/TopLevelEventTypes';
+import type {ReactSyntheticEvent} from '../../legacy-events/ReactSyntheticEventType';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {LegacyPluginModule} from 'legacy-events/PluginModuleType';
+import type {LegacyPluginModule} from '../../legacy-events/PluginModuleType';
 
-import SyntheticEvent from 'legacy-events/SyntheticEvent';
+import SyntheticEvent from '../../legacy-events/SyntheticEvent';
 
 import * as DOMTopLevelEventTypes from '../DOMTopLevelEventTypes';
 import {

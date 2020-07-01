@@ -10,15 +10,15 @@
 import type {
   TopLevelType,
   DOMTopLevelEventType,
-} from 'legacy-events/TopLevelEventTypes';
+} from '../../legacy-events/TopLevelEventTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ModernPluginModule,
   DispatchQueue,
-} from 'legacy-events/PluginModuleType';
+} from '../../legacy-events/PluginModuleType';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
-import SyntheticEvent from 'legacy-events/SyntheticEvent';
+import SyntheticEvent from '../../legacy-events/SyntheticEvent';
 
 import * as DOMTopLevelEventTypes from '../DOMTopLevelEventTypes';
 import {

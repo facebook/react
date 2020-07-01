@@ -6,7 +6,7 @@
  */
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import SyntheticEvent from 'legacy-events/SyntheticEvent';
+import SyntheticEvent from '../../legacy-events/SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
 import shallowEqual from 'shared/shallowEqual';
 
