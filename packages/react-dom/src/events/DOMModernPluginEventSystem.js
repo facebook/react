@@ -28,8 +28,10 @@ import type {
   CustomDispatchConfig,
 } from '../events/ReactSyntheticEventType';
 
-import {registrationNameDependencies} from '../events/EventPluginRegistry';
-import {plugins} from '../events/EventPluginRegistry';
+import {
+  extractEvents,
+  registrationNameDependencies,
+} from '../events/EventPluginRegistry';
 import {
   PLUGIN_EVENT_SYSTEM,
   LEGACY_FB_SUPPORT,
@@ -218,22 +220,17 @@ function dispatchEventsForPlugins(
   targetInst: null | Fiber,
   targetContainer: EventTarget,
 ): void {
-  const modernPlugins = ((plugins: any): Array<ModernPluginModule<Event>>);
   const nativeEventTarget = getEventTarget(nativeEvent);
   const dispatchQueue: DispatchQueue = [];
-
-  for (let i = 0; i < modernPlugins.length; i++) {
-    const plugin = modernPlugins[i];
-    plugin.extractEvents(
-      dispatchQueue,
-      topLevelType,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget,
-      eventSystemFlags,
-      targetContainer,
-    );
-  }
+  extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
   dispatchEventsInBatch(dispatchQueue);
 }
 

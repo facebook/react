@@ -103,15 +103,6 @@ function publishRegistrationName(
 }
 
 /**
- * Registers plugins so that they can extract and dispatch events.
- */
-
-/**
- * Ordered list of injected plugins.
- */
-export const plugins = [];
-
-/**
  * Mapping from event name to dispatch config
  */
 export const eventNameDispatchConfigs = {};
@@ -136,11 +127,66 @@ export const possibleRegistrationNames = __DEV__ ? {} : (null: any);
 // Trust the developer to only use possibleRegistrationNames in __DEV__
 
 function injectEventPlugin(pluginModule: ModernPluginModule<any>): void {
-  plugins.push(pluginModule);
   const publishedEvents = pluginModule.eventTypes;
   for (const eventName in publishedEvents) {
     publishEventForPlugin(publishedEvents[eventName], pluginModule, eventName);
   }
+}
+
+export function extractEvents(
+  dispatchQueue,
+  topLevelType,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+  eventSystemFlags,
+  targetContainer,
+) {
+  ModernSimpleEventPlugin.extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
+  ModernEnterLeaveEventPlugin.extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
+  ModernChangeEventPlugin.extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
+  ModernSelectEventPlugin.extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
+  ModernBeforeInputEventPlugin.extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
 }
 
 // TODO: remove top-level side effect.
