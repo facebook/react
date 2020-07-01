@@ -24,7 +24,6 @@ const knownGlobals = Object.freeze({
   react: 'React',
   'react-dom': 'ReactDOM',
   'react-dom/server': 'ReactDOMServer',
-  'react-interactions/events/keyboard': 'ReactEventsKeyboard',
   'react-interactions/events/tap': 'ReactEventsTap',
   scheduler: 'Scheduler',
   'scheduler/tracing': 'SchedulerTracing',

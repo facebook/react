@@ -9,8 +9,6 @@
 
 'use strict';
 
-import {createEventTarget} from 'dom-event-testing-library';
-
 let React;
 let ReactFeatureFlags;
 let ReactDOMServer;
@@ -238,49 +236,6 @@ describe('ReactScope', () => {
       const testScopeQuery = (type, props) => true;
       const nodes = scopeRef.current.DO_NOT_USE_queryAllNodes(testScopeQuery);
       expect(nodes).toEqual([divRef.current, spanRef.current, aRef.current]);
-    });
-
-    // @gate experimental
-    it('event responders can be attached to scopes', () => {
-      let onKeyDown = jest.fn();
-      const TestScope = React.unstable_createScope();
-      const ref = React.createRef();
-      const useKeyboard = require('react-interactions/events/keyboard')
-        .useKeyboard;
-      let Component = () => {
-        const listener = useKeyboard({
-          onKeyDown,
-        });
-        return (
-          <TestScope DEPRECATED_flareListeners={listener}>
-            <div ref={ref} />
-          </TestScope>
-        );
-      };
-      ReactDOM.render(<Component />, container);
-
-      let target = createEventTarget(ref.current);
-      target.keydown({key: 'Q'});
-      expect(onKeyDown).toHaveBeenCalledTimes(1);
-
-      onKeyDown = jest.fn();
-      Component = () => {
-        const listener = useKeyboard({
-          onKeyDown,
-        });
-        return (
-          <div>
-            <TestScope DEPRECATED_flareListeners={listener}>
-              <div ref={ref} />
-            </TestScope>
-          </div>
-        );
-      };
-      ReactDOM.render(<Component />, container);
-
-      target = createEventTarget(ref.current);
-      target.keydown({key: 'Q'});
-      expect(onKeyDown).toHaveBeenCalledTimes(1);
     });
 
     // @gate experimental
