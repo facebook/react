@@ -114,7 +114,7 @@ if (__DEV__) {
   validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
-    validateUnknownProperties(type, props, /* canUseEventSystem */ false);
+    validateUnknownProperties(type, props, null);
   };
 
   describeStackFrame = function(element): string {
