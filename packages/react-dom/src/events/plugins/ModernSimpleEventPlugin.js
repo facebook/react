@@ -20,7 +20,7 @@ import SyntheticEvent from '../../events/SyntheticEvent';
 import * as DOMTopLevelEventTypes from '../DOMTopLevelEventTypes';
 import {
   topLevelEventsToReactNames,
-  simpleEventPluginEventTypes,
+  registerSimpleEvents,
 } from '../DOMEventProperties';
 import {
   accumulateTwoPhaseListeners,
@@ -165,9 +165,4 @@ function extractEvents(
   return event;
 }
 
-export {
-  // simpleEventPluginEventTypes gets populated from
-  // the DOMEventProperties module.
-  simpleEventPluginEventTypes as eventTypes,
-  extractEvents,
-};
+export {registerSimpleEvents as registerEvents, extractEvents};

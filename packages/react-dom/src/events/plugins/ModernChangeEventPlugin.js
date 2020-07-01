@@ -6,11 +6,12 @@
  *
  * @flow
  */
-import type {AnyNativeEvent, EventTypes} from '../PluginModuleType';
+import type {AnyNativeEvent} from '../PluginModuleType';
 import type {TopLevelType} from '../TopLevelEventTypes';
 import type {DispatchQueue} from '../PluginModuleType';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
+import {registerTwoPhaseEvent} from '../EventRegistry';
 import SyntheticEvent from '../SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -39,24 +40,18 @@ import {
   accumulateTwoPhaseListeners,
 } from '../DOMModernPluginEventSystem';
 
-const eventTypes: EventTypes = {
-  change: {
-    phasedRegistrationNames: {
-      bubbled: 'onChange',
-      captured: 'onChangeCapture',
-    },
-    dependencies: [
-      TOP_BLUR,
-      TOP_CHANGE,
-      TOP_CLICK,
-      TOP_FOCUS,
-      TOP_INPUT,
-      TOP_KEY_DOWN,
-      TOP_KEY_UP,
-      TOP_SELECTION_CHANGE,
-    ],
-  },
-};
+function registerEvents() {
+  registerTwoPhaseEvent('onChange', [
+    TOP_BLUR,
+    TOP_CHANGE,
+    TOP_CLICK,
+    TOP_FOCUS,
+    TOP_INPUT,
+    TOP_KEY_DOWN,
+    TOP_KEY_UP,
+    TOP_SELECTION_CHANGE,
+  ]);
+}
 
 function createAndAccumulateChangeEvent(
   dispatchQueue,
@@ -314,4 +309,4 @@ function extractEvents(
   }
 }
 
-export {eventTypes, extractEvents};
+export {registerEvents, extractEvents};

@@ -10,6 +10,7 @@ import SyntheticEvent from '../../events/SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
 import shallowEqual from 'shared/shallowEqual';
 
+import {registerTwoPhaseEvent} from '../EventRegistry';
 import {
   TOP_BLUR,
   TOP_CONTEXT_MENU,
@@ -48,15 +49,12 @@ const rootTargetDependencies = [
   TOP_MOUSE_UP,
 ];
 
-const eventTypes: EventTypes = {
-  select: {
-    phasedRegistrationNames: {
-      bubbled: 'onSelect',
-      captured: 'onSelectCapture',
-    },
-    dependencies: [...rootTargetDependencies, TOP_SELECTION_CHANGE],
-  },
-};
+function registerEvents() {
+  registerTwoPhaseEvent('onSelect', [
+    ...rootTargetDependencies,
+    TOP_SELECTION_CHANGE,
+  ]);
+}
 
 let activeElement = null;
 let activeElementInst = null;
@@ -176,6 +174,20 @@ function isListeningToEvent(
   return listenerMap.has(listenerMapKey);
 }
 
+/**
+ * This plugin creates an `onSelect` event that normalizes select events
+ * across form elements.
+ *
+ * Supported elements are:
+ * - input (see `isTextInputElement`)
+ * - textarea
+ * - contentEditable
+ *
+ * This differs from native browser implementations in the following ways:
+ * - Fires on contentEditable fields as well as inputs.
+ * - Fires for collapsed selection.
+ * - Fires after user input.
+ */
 function extractEvents(
   dispatchQueue,
   topLevelType,
@@ -254,18 +266,4 @@ function extractEvents(
   return;
 }
 
-/**
- * This plugin creates an `onSelect` event that normalizes select events
- * across form elements.
- *
- * Supported elements are:
- * - input (see `isTextInputElement`)
- * - textarea
- * - contentEditable
- *
- * This differs from native browser implementations in the following ways:
- * - Fires on contentEditable fields as well as inputs.
- * - Fires for collapsed selection.
- * - Fires after user input.
- */
-export {eventTypes, extractEvents};
+export {registerEvents, extractEvents};

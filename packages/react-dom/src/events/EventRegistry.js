@@ -8,7 +8,6 @@
  */
 
 import type {TopLevelType} from './TopLevelEventTypes';
-import type {EventTypes} from './PluginModuleType';
 
 /**
  * Mapping from registration name to event name
@@ -24,41 +23,22 @@ export const registrationNameDependencies = {};
 export const possibleRegistrationNames = __DEV__ ? {} : (null: any);
 // Trust the developer to only use possibleRegistrationNames in __DEV__
 
-function publishEventForPlugin(
-  eventTypes: EventTypes,
-  eventName: string,
-): boolean {
-  const dispatchConfig = eventTypes[eventName];
-  const phasedRegistrationNames = dispatchConfig.phasedRegistrationNames;
-  if (phasedRegistrationNames) {
-    for (const phaseName in phasedRegistrationNames) {
-      if (phasedRegistrationNames.hasOwnProperty(phaseName)) {
-        const phasedRegistrationName = phasedRegistrationNames[phaseName];
-        publishRegistrationName(
-          phasedRegistrationName,
-          eventTypes[eventName].dependencies,
-        );
-      }
-    }
-    return true;
-  } else if (dispatchConfig.registrationName) {
-    publishRegistrationName(
-      dispatchConfig.registrationName,
-      eventTypes[eventName].dependencies,
-    );
-    return true;
-  }
-  return false;
-}
-
-function publishRegistrationName(
+export function registerTwoPhaseEvent(
   registrationName: string,
   dependencies: ?Array<TopLevelType>,
 ): void {
+  registerDirectEvent(registrationName, dependencies);
+  registerDirectEvent(registrationName + 'Capture', dependencies);
+}
+
+export function registerDirectEvent(
+  registrationName: string,
+  dependencies: ?Array<TopLevelType>,
+) {
   if (__DEV__) {
     if (registrationNameDependencies[registrationName]) {
       console.error(
-        'EventPluginRegistry: More than one plugin attempted to publish the same ' +
+        'EventRegistry: More than one plugin attempted to publish the same ' +
           'registration name, `%s`.',
         registrationName,
       );
@@ -74,11 +54,5 @@ function publishRegistrationName(
     if (registrationName === 'onDoubleClick') {
       possibleRegistrationNames.ondblclick = registrationName;
     }
-  }
-}
-
-export function injectEventPlugin(eventTypes: EventTypes): void {
-  for (const eventName in eventTypes) {
-    publishEventForPlugin(eventTypes, eventName);
   }
 }
