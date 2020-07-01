@@ -6,7 +6,7 @@
  *
  * @flow
  */
-import type {EventTypes} from '../PluginModuleType';
+import type {AnyNativeEvent, EventTypes} from '../PluginModuleType';
 import type {TopLevelType} from '../TopLevelEventTypes';
 import type {DispatchQueue} from '../PluginModuleType';
 import type {EventSystemFlags} from '../EventSystemFlags';
@@ -275,7 +275,7 @@ function extractEvents(
   dispatchQueue: DispatchQueue,
   topLevelType: TopLevelType,
   targetInst: null | Fiber,
-  nativeEvent: MouseEvent,
+  nativeEvent: AnyNativeEvent,
   nativeEventTarget: null | EventTarget,
   eventSystemFlags: EventSystemFlags,
   targetContainer: null | EventTarget,
