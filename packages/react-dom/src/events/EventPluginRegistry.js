@@ -8,76 +8,9 @@
  */
 
 import type {TopLevelType} from './TopLevelEventTypes';
-import type {DispatchQueue} from './PluginModuleType';
-import type {EventSystemFlags} from './EventSystemFlags';
-import type {AnyNativeEvent, EventTypes} from './PluginModuleType';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-
-import * as ModernBeforeInputEventPlugin from '../events/plugins/ModernBeforeInputEventPlugin';
-import * as ModernChangeEventPlugin from '../events/plugins/ModernChangeEventPlugin';
-import * as ModernEnterLeaveEventPlugin from '../events/plugins/ModernEnterLeaveEventPlugin';
-import * as ModernSelectEventPlugin from '../events/plugins/ModernSelectEventPlugin';
-import * as ModernSimpleEventPlugin from '../events/plugins/ModernSimpleEventPlugin';
+import type {EventTypes} from './PluginModuleType';
 
 import invariant from 'shared/invariant';
-
-function publishEventForPlugin(
-  eventTypes: EventTypes,
-  eventName: string,
-): boolean {
-  invariant(
-    !eventNameDispatchConfigs.hasOwnProperty(eventName),
-    'EventPluginRegistry: More than one plugin attempted to publish the same ' +
-      'event name, `%s`.',
-    eventName,
-  );
-  const dispatchConfig = eventTypes[eventName];
-  eventNameDispatchConfigs[eventName] = dispatchConfig;
-
-  const phasedRegistrationNames = dispatchConfig.phasedRegistrationNames;
-  if (phasedRegistrationNames) {
-    for (const phaseName in phasedRegistrationNames) {
-      if (phasedRegistrationNames.hasOwnProperty(phaseName)) {
-        const phasedRegistrationName = phasedRegistrationNames[phaseName];
-        publishRegistrationName(phasedRegistrationName, eventTypes, eventName);
-      }
-    }
-    return true;
-  } else if (dispatchConfig.registrationName) {
-    publishRegistrationName(
-      dispatchConfig.registrationName,
-      eventTypes,
-      eventName,
-    );
-    return true;
-  }
-  return false;
-}
-
-function publishRegistrationName(
-  registrationName: string,
-  eventTypes: EventTypes,
-  eventName: string,
-): void {
-  invariant(
-    !registrationNames[registrationName],
-    'EventPluginRegistry: More than one plugin attempted to publish the same ' +
-      'registration name, `%s`.',
-    registrationName,
-  );
-  registrationNames[registrationName] = true;
-  registrationNameDependencies[registrationName] =
-    eventTypes[eventName].dependencies;
-
-  if (__DEV__) {
-    const lowerCasedName = registrationName.toLowerCase();
-    possibleRegistrationNames[lowerCasedName] = registrationName;
-
-    if (registrationName === 'onDoubleClick') {
-      possibleRegistrationNames.ondblclick = registrationName;
-    }
-  }
-}
 
 /**
  * Mapping from event name to dispatch config
@@ -103,71 +36,66 @@ export const registrationNameDependencies = {};
 export const possibleRegistrationNames = __DEV__ ? {} : (null: any);
 // Trust the developer to only use possibleRegistrationNames in __DEV__
 
-function injectEventPlugin(eventTypes: EventTypes): void {
+function publishEventForPlugin(
+  eventTypes: EventTypes,
+  eventName: string,
+): boolean {
+  invariant(
+    !eventNameDispatchConfigs.hasOwnProperty(eventName),
+    'EventPluginRegistry: More than one plugin attempted to publish the same ' +
+      'event name, `%s`.',
+    eventName,
+  );
+  const dispatchConfig = eventTypes[eventName];
+  eventNameDispatchConfigs[eventName] = dispatchConfig;
+
+  const phasedRegistrationNames = dispatchConfig.phasedRegistrationNames;
+  if (phasedRegistrationNames) {
+    for (const phaseName in phasedRegistrationNames) {
+      if (phasedRegistrationNames.hasOwnProperty(phaseName)) {
+        const phasedRegistrationName = phasedRegistrationNames[phaseName];
+        publishRegistrationName(
+          phasedRegistrationName,
+          eventTypes[eventName].dependencies,
+        );
+      }
+    }
+    return true;
+  } else if (dispatchConfig.registrationName) {
+    publishRegistrationName(
+      dispatchConfig.registrationName,
+      eventTypes[eventName].dependencies,
+    );
+    return true;
+  }
+  return false;
+}
+
+function publishRegistrationName(
+  registrationName: string,
+  dependencies: ?Array<TopLevelType>,
+): void {
+  invariant(
+    !registrationNames[registrationName],
+    'EventPluginRegistry: More than one plugin attempted to publish the same ' +
+      'registration name, `%s`.',
+    registrationName,
+  );
+  registrationNames[registrationName] = true;
+  registrationNameDependencies[registrationName] = dependencies;
+
+  if (__DEV__) {
+    const lowerCasedName = registrationName.toLowerCase();
+    possibleRegistrationNames[lowerCasedName] = registrationName;
+
+    if (registrationName === 'onDoubleClick') {
+      possibleRegistrationNames.ondblclick = registrationName;
+    }
+  }
+}
+
+export function injectEventPlugin(eventTypes: EventTypes): void {
   for (const eventName in eventTypes) {
     publishEventForPlugin(eventTypes, eventName);
   }
 }
-
-export function extractEvents(
-  dispatchQueue: DispatchQueue,
-  topLevelType: TopLevelType,
-  targetInst: null | Fiber,
-  nativeEvent: AnyNativeEvent,
-  nativeEventTarget: null | EventTarget,
-  eventSystemFlags: EventSystemFlags,
-  targetContainer: null | EventTarget,
-) {
-  ModernSimpleEventPlugin.extractEvents(
-    dispatchQueue,
-    topLevelType,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget,
-    eventSystemFlags,
-    targetContainer,
-  );
-  ModernEnterLeaveEventPlugin.extractEvents(
-    dispatchQueue,
-    topLevelType,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget,
-    eventSystemFlags,
-    targetContainer,
-  );
-  ModernChangeEventPlugin.extractEvents(
-    dispatchQueue,
-    topLevelType,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget,
-    eventSystemFlags,
-    targetContainer,
-  );
-  ModernSelectEventPlugin.extractEvents(
-    dispatchQueue,
-    topLevelType,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget,
-    eventSystemFlags,
-    targetContainer,
-  );
-  ModernBeforeInputEventPlugin.extractEvents(
-    dispatchQueue,
-    topLevelType,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget,
-    eventSystemFlags,
-    targetContainer,
-  );
-}
-
-// TODO: remove top-level side effect.
-injectEventPlugin(ModernSimpleEventPlugin.eventTypes);
-injectEventPlugin(ModernEnterLeaveEventPlugin.eventTypes);
-injectEventPlugin(ModernChangeEventPlugin.eventTypes);
-injectEventPlugin(ModernSelectEventPlugin.eventTypes);
-injectEventPlugin(ModernBeforeInputEventPlugin.eventTypes);
