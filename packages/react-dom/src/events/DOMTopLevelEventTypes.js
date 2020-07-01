@@ -7,12 +7,12 @@
  * @flow
  */
 
-import type {DOMTopLevelEventType} from '../legacy-events/TopLevelEventTypes';
+import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
 
 import {
   unsafeCastStringToDOMTopLevelType,
   unsafeCastDOMTopLevelTypeToString,
-} from '../legacy-events/TopLevelEventTypes';
+} from '../events/TopLevelEventTypes';
 import getVendorPrefixedEventName from './getVendorPrefixedEventName';
 
 /**

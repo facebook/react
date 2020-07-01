@@ -15,12 +15,10 @@ import {
   HostComponent,
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
-import SyntheticEvent from '../legacy-events/SyntheticEvent';
+import SyntheticEvent from '../events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import act from './ReactTestUtilsAct';
-import forEachAccumulated from '../legacy-events/forEachAccumulated';
-import accumulateInto from '../legacy-events/accumulateInto';
 import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,
@@ -32,13 +30,12 @@ const [
   /* eslint-disable no-unused-vars */
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
-  injectEventPluginsByName,
   /* eslint-enable no-unused-vars */
   eventNameDispatchConfigs,
   enqueueStateRestore,
-  restoreStateIfNeeded /* eslint-disable no-unused-vars */, // TODO: remove.
-  ,
-  /* dispatchEvent */ flushPassiveEffects,
+  restoreStateIfNeeded,
+  /* eslint-disable no-unused-vars */
+  flushPassiveEffects,
   IsThisRendererActing,
   /* eslint-enable no-unused-vars */
 ] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
@@ -387,12 +384,6 @@ function executeDispatchesInOrder(event) {
 }
 
 /**
- * Internal queue of events that have accumulated their dispatches and are
- * waiting to have their dispatches executed.
- */
-let eventQueue: ?(Array<ReactSyntheticEvent> | ReactSyntheticEvent) = null;
-
-/**
  * Dispatches an event and releases it back into the pool, unless persistent.
  *
  * @param {?object} event Synthetic event to be dispatched.
@@ -407,36 +398,6 @@ const executeDispatchesAndRelease = function(event: ReactSyntheticEvent) {
     }
   }
 };
-
-const executeDispatchesAndReleaseTopLevel = function(e) {
-  return executeDispatchesAndRelease(e);
-};
-
-function runEventsInBatch(
-  events: Array<ReactSyntheticEvent> | ReactSyntheticEvent | null,
-) {
-  if (events !== null) {
-    eventQueue = accumulateInto(eventQueue, events);
-  }
-
-  // Set `eventQueue` to null before processing it so that we can tell if more
-  // events get enqueued while processing.
-  const processingEventQueue = eventQueue;
-  eventQueue = null;
-
-  if (!processingEventQueue) {
-    return;
-  }
-
-  forEachAccumulated(processingEventQueue, executeDispatchesAndReleaseTopLevel);
-  invariant(
-    !eventQueue,
-    'processEventQueue(): Additional events were enqueued while processing ' +
-      'an event queue. Support for this has not yet been implemented.',
-  );
-  // This would be a good time to rethrow if any of the event handlers threw.
-  rethrowCaughtError();
-}
 
 function isInteractive(tag) {
   return (
@@ -541,11 +502,14 @@ function accumulateDispatches(inst, ignoredDirection, event) {
     const registrationName = event.dispatchConfig.registrationName;
     const listener = getListener(inst, registrationName);
     if (listener) {
-      event._dispatchListeners = accumulateInto(
-        event._dispatchListeners,
-        listener,
-      );
-      event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+      if (event._dispatchListeners == null) {
+        event._dispatchListeners = [];
+      }
+      if (event._dispatchInstances == null) {
+        event._dispatchInstances = [];
+      }
+      event._dispatchListeners.push(listener);
+      event._dispatchInstances.push(inst);
     }
   }
 }
@@ -558,11 +522,14 @@ function accumulateDirectionalDispatches(inst, phase, event) {
   }
   const listener = listenerAtPhase(inst, event, phase);
   if (listener) {
-    event._dispatchListeners = accumulateInto(
-      event._dispatchListeners,
-      listener,
-    );
-    event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+    if (event._dispatchListeners == null) {
+      event._dispatchListeners = [];
+    }
+    if (event._dispatchInstances == null) {
+      event._dispatchInstances = [];
+    }
+    event._dispatchListeners.push(listener);
+    event._dispatchInstances.push(inst);
   }
 }
 
@@ -572,23 +539,15 @@ function accumulateDirectDispatchesSingle(event) {
   }
 }
 
-function accumulateDirectDispatches(events) {
-  forEachAccumulated(events, accumulateDirectDispatchesSingle);
-}
-
 function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
     traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
   }
 }
 
-function accumulateTwoPhaseDispatches(events) {
-  forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
-}
 // End of inline
 
 const Simulate = {};
-let SimulateNative;
 
 /**
  * Exports:
@@ -618,8 +577,6 @@ function makeSimulator(eventType) {
     fakeNativeEvent.target = domNode;
     fakeNativeEvent.type = eventType.toLowerCase();
 
-    // We don't use SyntheticEvent.getPooled in order to not have to worry about
-    // properly destroying any properties assigned from `eventData` upon release
     const targetInst = getInstanceFromNode(domNode);
     const event = new SyntheticEvent(
       dispatchConfig,
@@ -634,16 +591,17 @@ function makeSimulator(eventType) {
     Object.assign(event, eventData);
 
     if (dispatchConfig.phasedRegistrationNames) {
-      accumulateTwoPhaseDispatches(event);
+      accumulateTwoPhaseDispatchesSingle(event);
     } else {
-      accumulateDirectDispatches(event);
+      accumulateDirectDispatchesSingle(event);
     }
 
     ReactDOM.unstable_batchedUpdates(function() {
       // Normally extractEvent enqueues a state restore, but we'll just always
       // do that since we're by-passing it here.
       enqueueStateRestore(domNode);
-      runEventsInBatch(event);
+      executeDispatchesAndRelease(event);
+      rethrowCaughtError();
     });
     restoreStateIfNeeded();
   };
@@ -680,6 +638,5 @@ export {
   mockComponent,
   nativeTouchData,
   Simulate,
-  SimulateNative,
   act,
 };

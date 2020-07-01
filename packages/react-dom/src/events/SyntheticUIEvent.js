@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import SyntheticEvent from '../legacy-events/SyntheticEvent';
+import SyntheticEvent from '../events/SyntheticEvent';
 
 const SyntheticUIEvent = SyntheticEvent.extend({
   view: null,

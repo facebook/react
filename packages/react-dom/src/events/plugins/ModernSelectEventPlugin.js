@@ -6,7 +6,7 @@
  */
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import SyntheticEvent from '../../legacy-events/SyntheticEvent';
+import SyntheticEvent from '../../events/SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
 import shallowEqual from 'shared/shallowEqual';
 
@@ -132,7 +132,7 @@ function constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget) {
   if (!lastSelection || !shallowEqual(lastSelection, currentSelection)) {
     lastSelection = currentSelection;
 
-    const syntheticEvent = SyntheticEvent.getPooled(
+    const syntheticEvent = new SyntheticEvent(
       eventTypes.select,
       null,
       nativeEvent,

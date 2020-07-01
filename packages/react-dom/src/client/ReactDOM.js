@@ -11,7 +11,6 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Container} from './ReactDOMHostConfig';
 
 import '../shared/checkReact';
-import './ReactDOMClientInjection';
 import {
   findDOMNode,
   render,
@@ -39,10 +38,7 @@ import {
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import {
-  eventNameDispatchConfigs,
-  injectEventPluginsByName,
-} from '../legacy-events/EventPluginRegistry';
+import {eventNameDispatchConfigs} from '../events/EventPluginRegistry';
 import ReactVersion from 'shared/ReactVersion';
 import invariant from 'shared/invariant';
 import {
@@ -57,7 +53,6 @@ import {
   getClosestInstanceFromNode,
 } from './ReactDOMComponentTree';
 import {restoreControlledState} from './ReactDOMComponent';
-import {dispatchEvent} from '../events/ReactDOMEventListener';
 import {
   setAttemptSynchronousHydration,
   setAttemptUserBlockingHydration,
@@ -180,11 +175,9 @@ const Internals = {
     getInstanceFromNode,
     getNodeFromInstance,
     getFiberCurrentPropsFromNode,
-    injectEventPluginsByName,
     eventNameDispatchConfigs,
     enqueueStateRestore,
     restoreStateIfNeeded,
-    dispatchEvent,
     flushPassiveEffects,
     IsThisRendererActing,
   ],
