@@ -31,7 +31,6 @@ const [
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
   /* eslint-enable no-unused-vars */
-  eventNameDispatchConfigs,
   enqueueStateRestore,
   restoreStateIfNeeded,
   /* eslint-disable no-unused-vars */
@@ -549,6 +548,13 @@ function accumulateTwoPhaseDispatchesSingle(event) {
 
 const Simulate = {};
 
+const directDispatchEventTypes = new Set([
+  'mouseEnter',
+  'mouseLeave',
+  'pointerEnter',
+  'pointerLeave',
+]);
+
 /**
  * Exports:
  *
@@ -571,7 +577,19 @@ function makeSimulator(eventType) {
         'a component instance. Pass the DOM node you wish to simulate the event on instead.',
     );
 
-    const dispatchConfig = eventNameDispatchConfigs[eventType];
+    // Reconstruct more or less what the original event system produced.
+    // We could remove this indirection here but we also don't plan to invest in Simulate anyway.
+    const dispatchConfig = {};
+    if (directDispatchEventTypes.has(eventType)) {
+      dispatchConfig.registrationName =
+        'on' + eventType[0].toUpperCase() + eventType.slice(1);
+    } else {
+      dispatchConfig.phasedRegistrationNames = {
+        bubbled: 'on' + eventType[0].toUpperCase() + eventType.slice(1),
+        captured:
+          'on' + eventType[0].toUpperCase() + eventType.slice(1) + 'Capture',
+      };
+    }
 
     const fakeNativeEvent = new Event();
     fakeNativeEvent.target = domNode;
@@ -607,17 +625,98 @@ function makeSimulator(eventType) {
   };
 }
 
+// A one-time snapshot with no plans to update. We'll probably want to deprecate Simulate API.
+const simulatedEventTypes = [
+  'blur',
+  'cancel',
+  'click',
+  'close',
+  'contextMenu',
+  'copy',
+  'cut',
+  'auxClick',
+  'doubleClick',
+  'dragEnd',
+  'dragStart',
+  'drop',
+  'focus',
+  'input',
+  'invalid',
+  'keyDown',
+  'keyPress',
+  'keyUp',
+  'mouseDown',
+  'mouseUp',
+  'paste',
+  'pause',
+  'play',
+  'pointerCancel',
+  'pointerDown',
+  'pointerUp',
+  'rateChange',
+  'reset',
+  'seeked',
+  'submit',
+  'touchCancel',
+  'touchEnd',
+  'touchStart',
+  'volumeChange',
+  'drag',
+  'dragEnter',
+  'dragExit',
+  'dragLeave',
+  'dragOver',
+  'mouseMove',
+  'mouseOut',
+  'mouseOver',
+  'pointerMove',
+  'pointerOut',
+  'pointerOver',
+  'scroll',
+  'toggle',
+  'touchMove',
+  'wheel',
+  'abort',
+  'animationEnd',
+  'animationIteration',
+  'animationStart',
+  'canPlay',
+  'canPlayThrough',
+  'durationChange',
+  'emptied',
+  'encrypted',
+  'ended',
+  'error',
+  'gotPointerCapture',
+  'load',
+  'loadedData',
+  'loadedMetadata',
+  'loadStart',
+  'lostPointerCapture',
+  'playing',
+  'progress',
+  'seeking',
+  'stalled',
+  'suspend',
+  'timeUpdate',
+  'transitionEnd',
+  'waiting',
+  'mouseEnter',
+  'mouseLeave',
+  'pointerEnter',
+  'pointerLeave',
+  'change',
+  'select',
+  'beforeInput',
+  'compositionEnd',
+  'compositionStart',
+  'compositionUpdate',
+];
 function buildSimulators() {
-  let eventType;
-  for (eventType in eventNameDispatchConfigs) {
-    /**
-     * @param {!Element|ReactDOMComponent} domComponentOrNode
-     * @param {?object} eventData Fake event data to use in SyntheticEvent.
-     */
+  simulatedEventTypes.forEach(eventType => {
     Simulate[eventType] = makeSimulator(eventType);
-  }
+  });
 }
-
 buildSimulators();
 
 export {
