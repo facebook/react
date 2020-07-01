@@ -7,17 +7,6 @@
  * @flow
  */
 
-export type RNTopLevelEventType =
-  | 'topMouseDown'
-  | 'topMouseMove'
-  | 'topMouseUp'
-  | 'topScroll'
-  | 'topSelectionChange'
-  | 'topTouchCancel'
-  | 'topTouchEnd'
-  | 'topTouchMove'
-  | 'topTouchStart';
-
 export opaque type DOMTopLevelEventType = string;
 
 // Do not use the below two methods directly!
@@ -36,4 +25,4 @@ export function unsafeCastDOMTopLevelTypeToString(
   return topLevelType;
 }
 
-export type TopLevelType = DOMTopLevelEventType | RNTopLevelEventType;
+export type TopLevelType = DOMTopLevelEventType;

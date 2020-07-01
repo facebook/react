@@ -60,15 +60,6 @@ function SyntheticEvent(
   nativeEvent,
   nativeEventTarget,
 ) {
-  if (__DEV__) {
-    // these have a getter/setter for warnings
-    delete this.nativeEvent;
-    delete this.preventDefault;
-    delete this.stopPropagation;
-    delete this.isDefaultPrevented;
-    delete this.isPropagationStopped;
-  }
-
   this.dispatchConfig = dispatchConfig;
   this._targetInst = targetInst;
   this.nativeEvent = nativeEvent;
@@ -77,9 +68,6 @@ function SyntheticEvent(
   for (const propName in Interface) {
     if (!Interface.hasOwnProperty(propName)) {
       continue;
-    }
-    if (__DEV__) {
-      delete this[propName]; // this has a getter/setter for warnings
     }
     const normalize = Interface[propName];
     if (normalize) {
@@ -157,14 +145,6 @@ Object.assign(SyntheticEvent.prototype, {
    * @return {boolean} True if this should not be released, false otherwise.
    */
   isPersistent: functionThatReturnsTrue,
-
-  /**
-   * `PooledClass` looks for `destructor` on each instance it releases.
-   */
-  destructor: function() {
-    // Modern event system doesn't use pooling.
-    // TODO: remove calls to this.
-  },
 });
 
 SyntheticEvent.Interface = EventInterface;
@@ -188,34 +168,8 @@ SyntheticEvent.extend = function(Interface) {
 
   Class.Interface = Object.assign({}, Super.Interface, Interface);
   Class.extend = Super.extend;
-  addEventPoolingTo(Class);
 
   return Class;
 };
-
-addEventPoolingTo(SyntheticEvent);
-
-function createOrGetPooledEvent(
-  dispatchConfig,
-  targetInst,
-  nativeEvent,
-  nativeInst,
-) {
-  const EventConstructor = this;
-  // Modern event system doesn't use pooling.
-  // TODO: remove this indirection.
-  return new EventConstructor(
-    dispatchConfig,
-    targetInst,
-    nativeEvent,
-    nativeInst,
-  );
-}
-
-function addEventPoolingTo(EventConstructor) {
-  EventConstructor.getPooled = createOrGetPooledEvent;
-  // Modern event system doesn't use pooling.
-  // TODO: remove calls to this.
-}
 
 export default SyntheticEvent;

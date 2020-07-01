@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import SyntheticEvent from '../../legacy-events/SyntheticEvent';
+import SyntheticEvent from '../../events/SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
@@ -58,7 +58,7 @@ function createAndAccumulateChangeEvent(
   nativeEvent,
   target,
 ) {
-  const event = SyntheticEvent.getPooled(
+  const event = new SyntheticEvent(
     eventTypes.change,
     null,
     nativeEvent,

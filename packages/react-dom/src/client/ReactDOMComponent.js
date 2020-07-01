@@ -7,7 +7,10 @@
  * @flow
  */
 
-import {registrationNameModules} from '../legacy-events/EventPluginRegistry';
+import {
+  registrationNameModules,
+  possibleRegistrationNames,
+} from '../events/EventPluginRegistry';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import invariant from 'shared/invariant';
 import {
@@ -129,7 +132,10 @@ if (__DEV__) {
   validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
-    validateUnknownProperties(type, props, /* canUseEventSystem */ true);
+    validateUnknownProperties(type, props, {
+      registrationNameModules,
+      possibleRegistrationNames,
+    });
   };
 
   // IE 11 parses & normalizes the style attribute as opposed to other

@@ -33,12 +33,6 @@ export type CustomDispatchConfig = {|
 
 export type ReactSyntheticEvent = {|
   dispatchConfig: DispatchConfig | CustomDispatchConfig,
-  getPooled: (
-    dispatchConfig: DispatchConfig | CustomDispatchConfig,
-    targetInst: Fiber,
-    nativeTarget: Event,
-    nativeEventTarget: EventTarget,
-  ) => ReactSyntheticEvent,
   isPersistent: () => boolean,
   isPropagationStopped: () => boolean,
   _dispatchInstances?: null | Array<Fiber | null> | Fiber,

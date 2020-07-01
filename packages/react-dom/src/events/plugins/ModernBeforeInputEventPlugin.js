@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type {TopLevelType} from '../../legacy-events/TopLevelEventTypes';
+import type {TopLevelType} from '../../events/TopLevelEventTypes';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
@@ -259,7 +259,7 @@ function extractCompositionEvent(
     }
   }
 
-  const event = SyntheticCompositionEvent.getPooled(
+  const event = new SyntheticCompositionEvent(
     eventType,
     null,
     nativeEvent,
@@ -429,7 +429,7 @@ function extractBeforeInputEvent(
     return null;
   }
 
-  const event = SyntheticInputEvent.getPooled(
+  const event = new SyntheticInputEvent(
     eventTypes.beforeInput,
     null,
     nativeEvent,

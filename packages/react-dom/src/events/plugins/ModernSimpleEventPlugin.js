@@ -10,15 +10,15 @@
 import type {
   TopLevelType,
   DOMTopLevelEventType,
-} from '../../legacy-events/TopLevelEventTypes';
+} from '../../events/TopLevelEventTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ModernPluginModule,
   DispatchQueue,
-} from '../../legacy-events/PluginModuleType';
+} from '../../events/PluginModuleType';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
-import SyntheticEvent from '../../legacy-events/SyntheticEvent';
+import SyntheticEvent from '../../events/SyntheticEvent';
 
 import * as DOMTopLevelEventTypes from '../DOMTopLevelEventTypes';
 import {
@@ -200,7 +200,7 @@ const SimpleEventPlugin: ModernPluginModule<MouseEvent> = {
         EventConstructor = SyntheticEvent;
         break;
     }
-    const event = EventConstructor.getPooled(
+    const event = new EventConstructor(
       dispatchConfig,
       null,
       nativeEvent,

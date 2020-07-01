@@ -12,7 +12,7 @@ import {
   PASSIVE_NOT_SUPPORTED,
   RESPONDER_EVENT_SYSTEM,
 } from './EventSystemFlags';
-import type {AnyNativeEvent} from '../legacy-events/PluginModuleType';
+import type {AnyNativeEvent} from '../events/PluginModuleType';
 import {
   HostComponent,
   ScopeComponent,
@@ -25,7 +25,7 @@ import type {
   ReactDOMResponderContext,
   ReactDOMResponderEvent,
 } from '../shared/ReactDOMTypes';
-import type {DOMTopLevelEventType} from '../legacy-events/TopLevelEventTypes';
+import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
 import {
   batchedEventUpdates,
   discreteUpdates,

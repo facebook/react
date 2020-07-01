@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {DOMTopLevelEventType} from '../legacy-events/TopLevelEventTypes';
+import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
 import type {EventPriority, ReactScopeInstance} from 'shared/ReactTypes';
 import type {
   ReactDOMEventHandle,

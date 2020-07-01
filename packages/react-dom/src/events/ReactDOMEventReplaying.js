@@ -7,9 +7,9 @@
  * @flow
  */
 
-import type {AnyNativeEvent} from '../legacy-events/PluginModuleType';
+import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
-import type {DOMTopLevelEventType} from '../legacy-events/TopLevelEventTypes';
+import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
 import type {ElementListenerMap} from '../client/ReactDOMComponentTree';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
@@ -35,7 +35,7 @@ import {
   getClosestInstanceFromNode,
   getEventListenerMap,
 } from '../client/ReactDOMComponentTree';
-import {unsafeCastDOMTopLevelTypeToString} from '../legacy-events/TopLevelEventTypes';
+import {unsafeCastDOMTopLevelTypeToString} from '../events/TopLevelEventTypes';
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
 
 let attemptSynchronousHydration: (fiber: Object) => void;

@@ -11,11 +11,11 @@ import type {EventPriority} from 'shared/ReactTypes';
 import type {
   TopLevelType,
   DOMTopLevelEventType,
-} from '../legacy-events/TopLevelEventTypes';
+} from '../events/TopLevelEventTypes';
 import type {
   DispatchConfig,
   CustomDispatchConfig,
-} from '../legacy-events/ReactSyntheticEventType';
+} from '../events/ReactSyntheticEventType';
 
 import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
 import {

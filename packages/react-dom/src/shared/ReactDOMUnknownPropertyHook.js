@@ -6,11 +6,6 @@
  */
 
 import {
-  registrationNameModules,
-  possibleRegistrationNames,
-} from '../legacy-events/EventPluginRegistry';
-
-import {
   ATTRIBUTE_NAME_CHAR,
   BOOLEAN,
   RESERVED,
@@ -30,7 +25,7 @@ if (__DEV__) {
   const rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');
   const rARIACamel = new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$');
 
-  validateProperty = function(tagName, name, value, canUseEventSystem) {
+  validateProperty = function(tagName, name, value, eventRegistry) {
     if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
       return true;
     }
@@ -47,7 +42,11 @@ if (__DEV__) {
     }
 
     // We can't rely on the event system being injected on the server.
-    if (canUseEventSystem) {
+    if (eventRegistry != null) {
+      const {
+        registrationNameModules,
+        possibleRegistrationNames,
+      } = eventRegistry;
       if (registrationNameModules.hasOwnProperty(name)) {
         return true;
       }
@@ -240,16 +239,11 @@ if (__DEV__) {
   };
 }
 
-const warnUnknownProperties = function(type, props, canUseEventSystem) {
+const warnUnknownProperties = function(type, props, eventRegistry) {
   if (__DEV__) {
     const unknownProps = [];
     for (const key in props) {
-      const isValid = validateProperty(
-        type,
-        key,
-        props[key],
-        canUseEventSystem,
-      );
+      const isValid = validateProperty(type, key, props[key], eventRegistry);
       if (!isValid) {
         unknownProps.push(key);
       }
@@ -278,9 +272,9 @@ const warnUnknownProperties = function(type, props, canUseEventSystem) {
   }
 };
 
-export function validateProperties(type, props, canUseEventSystem) {
+export function validateProperties(type, props, eventRegistry) {
   if (isCustomComponent(type, props)) {
     return;
   }
-  warnUnknownProperties(type, props, canUseEventSystem);
+  warnUnknownProperties(type, props, eventRegistry);
 }
