@@ -6,7 +6,7 @@
  *
  * @flow
  */
-
+import type {AnyNativeEvent, EventTypes} from '../PluginModuleType';
 import type {TopLevelType} from '../TopLevelEventTypes';
 import type {DispatchQueue} from '../PluginModuleType';
 import type {EventSystemFlags} from '../EventSystemFlags';
@@ -39,7 +39,7 @@ import {
   accumulateTwoPhaseListeners,
 } from '../DOMModernPluginEventSystem';
 
-const eventTypes = {
+const eventTypes: EventTypes = {
   change: {
     phasedRegistrationNames: {
       bubbled: 'onChange',
@@ -271,58 +271,52 @@ function handleControlledInputBlur(node: HTMLInputElement) {
  * - textarea
  * - select
  */
-const ChangeEventPlugin = {
-  eventTypes: eventTypes,
+function extractEvents(
+  dispatchQueue: DispatchQueue,
+  topLevelType: TopLevelType,
+  targetInst: null | Fiber,
+  nativeEvent: AnyNativeEvent,
+  nativeEventTarget: null | EventTarget,
+  eventSystemFlags: EventSystemFlags,
+  targetContainer: null | EventTarget,
+) {
+  const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
-  _isInputEventSupported: isInputEventSupported,
-
-  extractEvents: function(
-    dispatchQueue: DispatchQueue,
-    topLevelType: TopLevelType,
-    targetInst: null | Fiber,
-    nativeEvent: MouseEvent,
-    nativeEventTarget: null | EventTarget,
-    eventSystemFlags: EventSystemFlags,
-    targetContainer: null | EventTarget,
-  ) {
-    const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
-
-    let getTargetInstFunc, handleEventFunc;
-    if (shouldUseChangeEvent(targetNode)) {
-      getTargetInstFunc = getTargetInstForChangeEvent;
-    } else if (isTextInputElement(((targetNode: any): HTMLElement))) {
-      if (isInputEventSupported) {
-        getTargetInstFunc = getTargetInstForInputOrChangeEvent;
-      } else {
-        getTargetInstFunc = getTargetInstForInputEventPolyfill;
-        handleEventFunc = handleEventsForInputEventPolyfill;
-      }
-    } else if (shouldUseClickEvent(targetNode)) {
-      getTargetInstFunc = getTargetInstForClickEvent;
+  let getTargetInstFunc, handleEventFunc;
+  if (shouldUseChangeEvent(targetNode)) {
+    getTargetInstFunc = getTargetInstForChangeEvent;
+  } else if (isTextInputElement(((targetNode: any): HTMLElement))) {
+    if (isInputEventSupported) {
+      getTargetInstFunc = getTargetInstForInputOrChangeEvent;
+    } else {
+      getTargetInstFunc = getTargetInstForInputEventPolyfill;
+      handleEventFunc = handleEventsForInputEventPolyfill;
     }
+  } else if (shouldUseClickEvent(targetNode)) {
+    getTargetInstFunc = getTargetInstForClickEvent;
+  }
 
-    if (getTargetInstFunc) {
-      const inst = getTargetInstFunc(topLevelType, targetInst);
-      if (inst) {
-        createAndAccumulateChangeEvent(
-          dispatchQueue,
-          inst,
-          nativeEvent,
-          nativeEventTarget,
-        );
-        return;
-      }
+  if (getTargetInstFunc) {
+    const inst = getTargetInstFunc(topLevelType, targetInst);
+    if (inst) {
+      createAndAccumulateChangeEvent(
+        dispatchQueue,
+        inst,
+        nativeEvent,
+        nativeEventTarget,
+      );
+      return;
     }
+  }
 
-    if (handleEventFunc) {
-      handleEventFunc(topLevelType, targetNode, targetInst);
-    }
+  if (handleEventFunc) {
+    handleEventFunc(topLevelType, targetNode, targetInst);
+  }
 
-    // When blurring, set the value attribute for number inputs
-    if (topLevelType === TOP_BLUR) {
-      handleControlledInputBlur(((targetNode: any): HTMLInputElement));
-    }
-  },
-};
+  // When blurring, set the value attribute for number inputs
+  if (topLevelType === TOP_BLUR) {
+    handleControlledInputBlur(((targetNode: any): HTMLInputElement));
+  }
+}
 
-export default ChangeEventPlugin;
+export {eventTypes, extractEvents};

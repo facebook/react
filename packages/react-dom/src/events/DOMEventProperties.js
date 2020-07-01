@@ -12,6 +12,7 @@ import type {
   TopLevelType,
   DOMTopLevelEventType,
 } from '../events/TopLevelEventTypes';
+import type {EventTypes} from '../events/PluginModuleType';
 import type {
   DispatchConfig,
   CustomDispatchConfig,
@@ -32,7 +33,7 @@ import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 // here once. If we remove or refactor the
 // SimpleEventPlugin, we should also remove or
 // update the below line.
-export const simpleEventPluginEventTypes = {};
+export const simpleEventPluginEventTypes: EventTypes = {};
 
 export const topLevelEventsToDispatchConfig: Map<
   TopLevelType,

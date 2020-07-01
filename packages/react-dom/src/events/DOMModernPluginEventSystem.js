@@ -7,29 +7,30 @@
  * @flow
  */
 
-import type {AnyNativeEvent} from '../events/PluginModuleType';
-import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
-import type {
-  ElementListenerMap,
-  ElementListenerMapEntry,
-} from '../client/ReactDOMComponentTree';
+import type {TopLevelType, DOMTopLevelEventType} from './TopLevelEventTypes';
 import type {EventSystemFlags} from './EventSystemFlags';
-import type {EventPriority, ReactScopeInstance} from 'shared/ReactTypes';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
-  ModernPluginModule,
+  AnyNativeEvent,
   DispatchQueue,
   DispatchQueueItem,
   DispatchQueueItemPhase,
   DispatchQueueItemPhaseEntry,
-} from '../events/PluginModuleType';
+} from './PluginModuleType';
 import type {
   ReactSyntheticEvent,
   CustomDispatchConfig,
-} from '../events/ReactSyntheticEventType';
+} from './ReactSyntheticEventType';
+import type {
+  ElementListenerMap,
+  ElementListenerMapEntry,
+} from '../client/ReactDOMComponentTree';
+import type {EventPriority, ReactScopeInstance} from 'shared/ReactTypes';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
-import {registrationNameDependencies} from '../events/EventPluginRegistry';
-import {plugins} from '../events/EventPluginRegistry';
+import {
+  injectEventPlugin,
+  registrationNameDependencies,
+} from './EventPluginRegistry';
 import {
   PLUGIN_EVENT_SYSTEM,
   LEGACY_FB_SUPPORT,
@@ -113,6 +114,74 @@ import {
 } from './EventListener';
 import {removeTrappedEventListener} from './DeprecatedDOMEventResponderSystem';
 import {topLevelEventsToDispatchConfig} from './DOMEventProperties';
+import * as ModernBeforeInputEventPlugin from './plugins/ModernBeforeInputEventPlugin';
+import * as ModernChangeEventPlugin from './plugins/ModernChangeEventPlugin';
+import * as ModernEnterLeaveEventPlugin from './plugins/ModernEnterLeaveEventPlugin';
+import * as ModernSelectEventPlugin from './plugins/ModernSelectEventPlugin';
+import * as ModernSimpleEventPlugin from './plugins/ModernSimpleEventPlugin';
+
+// TODO: remove top-level side effect.
+injectEventPlugin(ModernSimpleEventPlugin.eventTypes);
+injectEventPlugin(ModernEnterLeaveEventPlugin.eventTypes);
+injectEventPlugin(ModernChangeEventPlugin.eventTypes);
+injectEventPlugin(ModernSelectEventPlugin.eventTypes);
+injectEventPlugin(ModernBeforeInputEventPlugin.eventTypes);
+
+function extractEvents(
+  dispatchQueue: DispatchQueue,
+  topLevelType: TopLevelType,
+  targetInst: null | Fiber,
+  nativeEvent: AnyNativeEvent,
+  nativeEventTarget: null | EventTarget,
+  eventSystemFlags: EventSystemFlags,
+  targetContainer: null | EventTarget,
+) {
+  ModernSimpleEventPlugin.extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
+  ModernEnterLeaveEventPlugin.extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
+  ModernChangeEventPlugin.extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
+  ModernSelectEventPlugin.extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
+  ModernBeforeInputEventPlugin.extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
+}
 
 export const capturePhaseEvents: Set<DOMTopLevelEventType> = new Set([
   TOP_FOCUS,
@@ -218,22 +287,17 @@ function dispatchEventsForPlugins(
   targetInst: null | Fiber,
   targetContainer: EventTarget,
 ): void {
-  const modernPlugins = ((plugins: any): Array<ModernPluginModule<Event>>);
   const nativeEventTarget = getEventTarget(nativeEvent);
   const dispatchQueue: DispatchQueue = [];
-
-  for (let i = 0; i < modernPlugins.length; i++) {
-    const plugin = modernPlugins[i];
-    plugin.extractEvents(
-      dispatchQueue,
-      topLevelType,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget,
-      eventSystemFlags,
-      targetContainer,
-    );
-  }
+  extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
   dispatchEventsInBatch(dispatchQueue);
 }
 

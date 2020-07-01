@@ -13,7 +13,7 @@ import type {
 } from '../../events/TopLevelEventTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
-  ModernPluginModule,
+  AnyNativeEvent,
   DispatchQueue,
 } from '../../events/PluginModuleType';
 import type {EventSystemFlags} from '../EventSystemFlags';
@@ -81,144 +81,144 @@ const knownHTMLTopLevelTypes: Array<DOMTopLevelEventType> = [
   DOMTopLevelEventTypes.TOP_WAITING,
 ];
 
-const SimpleEventPlugin: ModernPluginModule<MouseEvent> = {
+function extractEvents(
+  dispatchQueue: DispatchQueue,
+  topLevelType: TopLevelType,
+  targetInst: null | Fiber,
+  nativeEvent: AnyNativeEvent,
+  nativeEventTarget: null | EventTarget,
+  eventSystemFlags: EventSystemFlags,
+  targetContainer: null | EventTarget,
+): void {
+  const dispatchConfig = topLevelEventsToDispatchConfig.get(topLevelType);
+  if (!dispatchConfig) {
+    return;
+  }
+  let EventConstructor;
+  switch (topLevelType) {
+    case DOMTopLevelEventTypes.TOP_KEY_PRESS:
+      // Firefox creates a keypress event for function keys too. This removes
+      // the unwanted keypress events. Enter is however both printable and
+      // non-printable. One would expect Tab to be as well (but it isn't).
+      if (getEventCharCode(nativeEvent) === 0) {
+        return;
+      }
+    /* falls through */
+    case DOMTopLevelEventTypes.TOP_KEY_DOWN:
+    case DOMTopLevelEventTypes.TOP_KEY_UP:
+      EventConstructor = SyntheticKeyboardEvent;
+      break;
+    case DOMTopLevelEventTypes.TOP_BLUR:
+    case DOMTopLevelEventTypes.TOP_FOCUS:
+    case DOMTopLevelEventTypes.TOP_BEFORE_BLUR:
+    case DOMTopLevelEventTypes.TOP_AFTER_BLUR:
+      EventConstructor = SyntheticFocusEvent;
+      break;
+    case DOMTopLevelEventTypes.TOP_CLICK:
+      // Firefox creates a click event on right mouse clicks. This removes the
+      // unwanted click events.
+      if (nativeEvent.button === 2) {
+        return;
+      }
+    /* falls through */
+    case DOMTopLevelEventTypes.TOP_AUX_CLICK:
+    case DOMTopLevelEventTypes.TOP_DOUBLE_CLICK:
+    case DOMTopLevelEventTypes.TOP_MOUSE_DOWN:
+    case DOMTopLevelEventTypes.TOP_MOUSE_MOVE:
+    case DOMTopLevelEventTypes.TOP_MOUSE_UP:
+    // TODO: Disabled elements should not respond to mouse events
+    /* falls through */
+    case DOMTopLevelEventTypes.TOP_MOUSE_OUT:
+    case DOMTopLevelEventTypes.TOP_MOUSE_OVER:
+    case DOMTopLevelEventTypes.TOP_CONTEXT_MENU:
+      EventConstructor = SyntheticMouseEvent;
+      break;
+    case DOMTopLevelEventTypes.TOP_DRAG:
+    case DOMTopLevelEventTypes.TOP_DRAG_END:
+    case DOMTopLevelEventTypes.TOP_DRAG_ENTER:
+    case DOMTopLevelEventTypes.TOP_DRAG_EXIT:
+    case DOMTopLevelEventTypes.TOP_DRAG_LEAVE:
+    case DOMTopLevelEventTypes.TOP_DRAG_OVER:
+    case DOMTopLevelEventTypes.TOP_DRAG_START:
+    case DOMTopLevelEventTypes.TOP_DROP:
+      EventConstructor = SyntheticDragEvent;
+      break;
+    case DOMTopLevelEventTypes.TOP_TOUCH_CANCEL:
+    case DOMTopLevelEventTypes.TOP_TOUCH_END:
+    case DOMTopLevelEventTypes.TOP_TOUCH_MOVE:
+    case DOMTopLevelEventTypes.TOP_TOUCH_START:
+      EventConstructor = SyntheticTouchEvent;
+      break;
+    case DOMTopLevelEventTypes.TOP_ANIMATION_END:
+    case DOMTopLevelEventTypes.TOP_ANIMATION_ITERATION:
+    case DOMTopLevelEventTypes.TOP_ANIMATION_START:
+      EventConstructor = SyntheticAnimationEvent;
+      break;
+    case DOMTopLevelEventTypes.TOP_TRANSITION_END:
+      EventConstructor = SyntheticTransitionEvent;
+      break;
+    case DOMTopLevelEventTypes.TOP_SCROLL:
+      EventConstructor = SyntheticUIEvent;
+      break;
+    case DOMTopLevelEventTypes.TOP_WHEEL:
+      EventConstructor = SyntheticWheelEvent;
+      break;
+    case DOMTopLevelEventTypes.TOP_COPY:
+    case DOMTopLevelEventTypes.TOP_CUT:
+    case DOMTopLevelEventTypes.TOP_PASTE:
+      EventConstructor = SyntheticClipboardEvent;
+      break;
+    case DOMTopLevelEventTypes.TOP_GOT_POINTER_CAPTURE:
+    case DOMTopLevelEventTypes.TOP_LOST_POINTER_CAPTURE:
+    case DOMTopLevelEventTypes.TOP_POINTER_CANCEL:
+    case DOMTopLevelEventTypes.TOP_POINTER_DOWN:
+    case DOMTopLevelEventTypes.TOP_POINTER_MOVE:
+    case DOMTopLevelEventTypes.TOP_POINTER_OUT:
+    case DOMTopLevelEventTypes.TOP_POINTER_OVER:
+    case DOMTopLevelEventTypes.TOP_POINTER_UP:
+      EventConstructor = SyntheticPointerEvent;
+      break;
+    default:
+      if (__DEV__) {
+        if (
+          knownHTMLTopLevelTypes.indexOf(topLevelType) === -1 &&
+          dispatchConfig.customEvent !== true
+        ) {
+          console.error(
+            'SimpleEventPlugin: Unhandled event type, `%s`. This warning ' +
+              'is likely caused by a bug in React. Please file an issue.',
+            topLevelType,
+          );
+        }
+      }
+      // HTML Events
+      // @see http://www.w3.org/TR/html5/index.html#events-0
+      EventConstructor = SyntheticEvent;
+      break;
+  }
+  const event = new EventConstructor(
+    dispatchConfig,
+    null,
+    nativeEvent,
+    nativeEventTarget,
+  );
+
+  if (
+    enableCreateEventHandleAPI &&
+    eventSystemFlags !== undefined &&
+    eventSystemFlags & IS_TARGET_PHASE_ONLY &&
+    targetContainer != null
+  ) {
+    accumulateEventTargetListeners(dispatchQueue, event, targetContainer);
+  } else {
+    accumulateTwoPhaseListeners(targetInst, dispatchQueue, event, true);
+  }
+  return event;
+}
+
+export {
   // simpleEventPluginEventTypes gets populated from
   // the DOMEventProperties module.
-  eventTypes: simpleEventPluginEventTypes,
-  extractEvents: function(
-    dispatchQueue: DispatchQueue,
-    topLevelType: TopLevelType,
-    targetInst: null | Fiber,
-    nativeEvent: MouseEvent,
-    nativeEventTarget: null | EventTarget,
-    eventSystemFlags: EventSystemFlags,
-    targetContainer: null | EventTarget,
-  ): void {
-    const dispatchConfig = topLevelEventsToDispatchConfig.get(topLevelType);
-    if (!dispatchConfig) {
-      return;
-    }
-    let EventConstructor;
-    switch (topLevelType) {
-      case DOMTopLevelEventTypes.TOP_KEY_PRESS:
-        // Firefox creates a keypress event for function keys too. This removes
-        // the unwanted keypress events. Enter is however both printable and
-        // non-printable. One would expect Tab to be as well (but it isn't).
-        if (getEventCharCode(nativeEvent) === 0) {
-          return;
-        }
-      /* falls through */
-      case DOMTopLevelEventTypes.TOP_KEY_DOWN:
-      case DOMTopLevelEventTypes.TOP_KEY_UP:
-        EventConstructor = SyntheticKeyboardEvent;
-        break;
-      case DOMTopLevelEventTypes.TOP_BLUR:
-      case DOMTopLevelEventTypes.TOP_FOCUS:
-      case DOMTopLevelEventTypes.TOP_BEFORE_BLUR:
-      case DOMTopLevelEventTypes.TOP_AFTER_BLUR:
-        EventConstructor = SyntheticFocusEvent;
-        break;
-      case DOMTopLevelEventTypes.TOP_CLICK:
-        // Firefox creates a click event on right mouse clicks. This removes the
-        // unwanted click events.
-        if (nativeEvent.button === 2) {
-          return;
-        }
-      /* falls through */
-      case DOMTopLevelEventTypes.TOP_AUX_CLICK:
-      case DOMTopLevelEventTypes.TOP_DOUBLE_CLICK:
-      case DOMTopLevelEventTypes.TOP_MOUSE_DOWN:
-      case DOMTopLevelEventTypes.TOP_MOUSE_MOVE:
-      case DOMTopLevelEventTypes.TOP_MOUSE_UP:
-      // TODO: Disabled elements should not respond to mouse events
-      /* falls through */
-      case DOMTopLevelEventTypes.TOP_MOUSE_OUT:
-      case DOMTopLevelEventTypes.TOP_MOUSE_OVER:
-      case DOMTopLevelEventTypes.TOP_CONTEXT_MENU:
-        EventConstructor = SyntheticMouseEvent;
-        break;
-      case DOMTopLevelEventTypes.TOP_DRAG:
-      case DOMTopLevelEventTypes.TOP_DRAG_END:
-      case DOMTopLevelEventTypes.TOP_DRAG_ENTER:
-      case DOMTopLevelEventTypes.TOP_DRAG_EXIT:
-      case DOMTopLevelEventTypes.TOP_DRAG_LEAVE:
-      case DOMTopLevelEventTypes.TOP_DRAG_OVER:
-      case DOMTopLevelEventTypes.TOP_DRAG_START:
-      case DOMTopLevelEventTypes.TOP_DROP:
-        EventConstructor = SyntheticDragEvent;
-        break;
-      case DOMTopLevelEventTypes.TOP_TOUCH_CANCEL:
-      case DOMTopLevelEventTypes.TOP_TOUCH_END:
-      case DOMTopLevelEventTypes.TOP_TOUCH_MOVE:
-      case DOMTopLevelEventTypes.TOP_TOUCH_START:
-        EventConstructor = SyntheticTouchEvent;
-        break;
-      case DOMTopLevelEventTypes.TOP_ANIMATION_END:
-      case DOMTopLevelEventTypes.TOP_ANIMATION_ITERATION:
-      case DOMTopLevelEventTypes.TOP_ANIMATION_START:
-        EventConstructor = SyntheticAnimationEvent;
-        break;
-      case DOMTopLevelEventTypes.TOP_TRANSITION_END:
-        EventConstructor = SyntheticTransitionEvent;
-        break;
-      case DOMTopLevelEventTypes.TOP_SCROLL:
-        EventConstructor = SyntheticUIEvent;
-        break;
-      case DOMTopLevelEventTypes.TOP_WHEEL:
-        EventConstructor = SyntheticWheelEvent;
-        break;
-      case DOMTopLevelEventTypes.TOP_COPY:
-      case DOMTopLevelEventTypes.TOP_CUT:
-      case DOMTopLevelEventTypes.TOP_PASTE:
-        EventConstructor = SyntheticClipboardEvent;
-        break;
-      case DOMTopLevelEventTypes.TOP_GOT_POINTER_CAPTURE:
-      case DOMTopLevelEventTypes.TOP_LOST_POINTER_CAPTURE:
-      case DOMTopLevelEventTypes.TOP_POINTER_CANCEL:
-      case DOMTopLevelEventTypes.TOP_POINTER_DOWN:
-      case DOMTopLevelEventTypes.TOP_POINTER_MOVE:
-      case DOMTopLevelEventTypes.TOP_POINTER_OUT:
-      case DOMTopLevelEventTypes.TOP_POINTER_OVER:
-      case DOMTopLevelEventTypes.TOP_POINTER_UP:
-        EventConstructor = SyntheticPointerEvent;
-        break;
-      default:
-        if (__DEV__) {
-          if (
-            knownHTMLTopLevelTypes.indexOf(topLevelType) === -1 &&
-            dispatchConfig.customEvent !== true
-          ) {
-            console.error(
-              'SimpleEventPlugin: Unhandled event type, `%s`. This warning ' +
-                'is likely caused by a bug in React. Please file an issue.',
-              topLevelType,
-            );
-          }
-        }
-        // HTML Events
-        // @see http://www.w3.org/TR/html5/index.html#events-0
-        EventConstructor = SyntheticEvent;
-        break;
-    }
-    const event = new EventConstructor(
-      dispatchConfig,
-      null,
-      nativeEvent,
-      nativeEventTarget,
-    );
-
-    if (
-      enableCreateEventHandleAPI &&
-      eventSystemFlags !== undefined &&
-      eventSystemFlags & IS_TARGET_PHASE_ONLY &&
-      targetContainer != null
-    ) {
-      accumulateEventTargetListeners(dispatchQueue, event, targetContainer);
-    } else {
-      accumulateTwoPhaseListeners(targetInst, dispatchQueue, event, true);
-    }
-    return event;
-  },
+  simpleEventPluginEventTypes as eventTypes,
+  extractEvents,
 };
-
-export default SimpleEventPlugin;

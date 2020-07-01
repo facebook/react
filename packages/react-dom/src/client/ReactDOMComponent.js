@@ -8,7 +8,7 @@
  */
 
 import {
-  registrationNameModules,
+  registrationNames,
   possibleRegistrationNames,
 } from '../events/EventPluginRegistry';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -133,7 +133,7 @@ if (__DEV__) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
     validateUnknownProperties(type, props, {
-      registrationNameModules,
+      registrationNames,
       possibleRegistrationNames,
     });
   };
@@ -356,7 +356,7 @@ function setInitialDOMProperties(
       // We could have excluded it in the property list instead of
       // adding a special case here, but then it wouldn't be emitted
       // on server rendering (but we *do* want to emit it in SSR).
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+    } else if (registrationNames.hasOwnProperty(propKey)) {
       if (nextProp != null) {
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
@@ -694,7 +694,7 @@ export function diffProperties(
       // Noop
     } else if (propKey === AUTOFOCUS) {
       // Noop. It doesn't work on updates anyway.
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+    } else if (registrationNames.hasOwnProperty(propKey)) {
       // This is a special case. If any listener updates we need to ensure
       // that the "current" fiber pointer gets updated so we need a commit
       // to update this element.
@@ -781,7 +781,7 @@ export function diffProperties(
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
       // Noop
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+    } else if (registrationNames.hasOwnProperty(propKey)) {
       if (nextProp != null) {
         // We eagerly listen to this even though we haven't committed yet.
         if (__DEV__ && typeof nextProp !== 'function') {
@@ -978,7 +978,7 @@ export function diffHydratedProperties(
           updatePayload = [CHILDREN, '' + nextProp];
         }
       }
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+    } else if (registrationNames.hasOwnProperty(propKey)) {
       if (nextProp != null) {
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
