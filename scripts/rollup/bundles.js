@@ -758,21 +758,6 @@ const bundles = [
       FB_WWW_PROD,
     ],
     moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/keyboard',
-    global: 'ReactEventsKeyboard',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
     entry: 'react-interactions/events/press-legacy',
     global: 'ReactEventsPressLegacy',
     externals: ['react'],
@@ -781,7 +766,6 @@ const bundles = [
 
 const fbBundleExternalsMap = {
   'react-interactions/events/focus': 'ReactEventsFocus',
-  'react-interactions/events/keyboard': 'ReactEventsKeyboard',
   'react-interactions/events/tap': 'ReactEventsTap',
 };
 
