@@ -10,13 +10,6 @@
 import type {TopLevelType} from './TopLevelEventTypes';
 import type {EventTypes} from './PluginModuleType';
 
-import invariant from 'shared/invariant';
-
-/**
- * Mapping from registration name to plugin module
- */
-export const registrationNames = {};
-
 /**
  * Mapping from registration name to event name
  */
@@ -62,13 +55,16 @@ function publishRegistrationName(
   registrationName: string,
   dependencies: ?Array<TopLevelType>,
 ): void {
-  invariant(
-    !registrationNames[registrationName],
-    'EventPluginRegistry: More than one plugin attempted to publish the same ' +
-      'registration name, `%s`.',
-    registrationName,
-  );
-  registrationNames[registrationName] = true;
+  if (__DEV__) {
+    if (registrationNameDependencies[registrationName]) {
+      console.error(
+        'EventPluginRegistry: More than one plugin attempted to publish the same ' +
+          'registration name, `%s`.',
+        registrationName,
+      );
+    }
+  }
+
   registrationNameDependencies[registrationName] = dependencies;
 
   if (__DEV__) {

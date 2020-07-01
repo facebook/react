@@ -43,8 +43,11 @@ if (__DEV__) {
 
     // We can't rely on the event system being injected on the server.
     if (eventRegistry != null) {
-      const {registrationNames, possibleRegistrationNames} = eventRegistry;
-      if (registrationNames.hasOwnProperty(name)) {
+      const {
+        registrationNameDependencies,
+        possibleRegistrationNames,
+      } = eventRegistry;
+      if (registrationNameDependencies.hasOwnProperty(name)) {
         return true;
       }
       const registrationName = possibleRegistrationNames.hasOwnProperty(
