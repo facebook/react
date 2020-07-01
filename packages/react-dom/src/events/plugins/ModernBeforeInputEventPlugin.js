@@ -58,7 +58,7 @@ const SPACEBAR_CODE = 32;
 const SPACEBAR_CHAR = String.fromCharCode(SPACEBAR_CODE);
 
 // Events and their corresponding property names.
-const eventTypes = {
+const eventTypes: EventTypes = {
   beforeInput: {
     phasedRegistrationNames: {
       bubbled: 'onBeforeInput',
@@ -439,31 +439,6 @@ function extractBeforeInputEvent(
   event.data = chars;
 }
 
-function extractEvents(
-  dispatchQueue,
-  topLevelType,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-  eventSystemFlags,
-  container,
-) {
-  extractCompositionEvent(
-    dispatchQueue,
-    topLevelType,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget,
-  );
-  extractBeforeInputEvent(
-    dispatchQueue,
-    topLevelType,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget,
-  );
-}
-
 /**
  * Create an `onBeforeInput` event to match
  * http://www.w3.org/TR/2013/WD-DOM-Level-3-Events-20131105/#events-inputevents.
@@ -482,4 +457,29 @@ function extractEvents(
  * allowing us to share composition fallback code for both `beforeInput` and
  * `composition` event types.
  */
+function extractEvents(
+  dispatchQueue,
+  topLevelType,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+  eventSystemFlags,
+  targetContainer,
+) {
+  extractCompositionEvent(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+  );
+  extractBeforeInputEvent(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+  );
+}
+
 export {eventTypes, extractEvents};

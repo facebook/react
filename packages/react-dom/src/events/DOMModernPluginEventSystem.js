@@ -17,7 +17,6 @@ import type {EventSystemFlags} from './EventSystemFlags';
 import type {EventPriority, ReactScopeInstance} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
-  ModernPluginModule,
   DispatchQueue,
   DispatchQueueItem,
   DispatchQueueItemPhase,

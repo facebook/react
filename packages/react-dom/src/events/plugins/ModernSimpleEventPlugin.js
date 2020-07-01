@@ -13,7 +13,7 @@ import type {
 } from '../../events/TopLevelEventTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
-  ModernPluginModule,
+  AnyNativeEvent,
   DispatchQueue,
 } from '../../events/PluginModuleType';
 import type {EventSystemFlags} from '../EventSystemFlags';
@@ -85,7 +85,7 @@ function extractEvents(
   dispatchQueue: DispatchQueue,
   topLevelType: TopLevelType,
   targetInst: null | Fiber,
-  nativeEvent: MouseEvent,
+  nativeEvent: AnyNativeEvent,
   nativeEventTarget: null | EventTarget,
   eventSystemFlags: EventSystemFlags,
   targetContainer: null | EventTarget,

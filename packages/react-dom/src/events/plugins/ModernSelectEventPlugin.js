@@ -48,7 +48,7 @@ const rootTargetDependencies = [
   TOP_MOUSE_UP,
 ];
 
-const eventTypes = {
+const eventTypes: EventTypes = {
   select: {
     phasedRegistrationNames: {
       bubbled: 'onSelect',
@@ -183,7 +183,7 @@ function extractEvents(
   nativeEvent,
   nativeEventTarget,
   eventSystemFlags,
-  container,
+  targetContainer,
 ) {
   const doc = getEventTargetDocument(nativeEventTarget);
   // Track whether all listeners exists for this plugin. If none exist, we do
@@ -197,7 +197,7 @@ function extractEvents(
     // event attached from the onChange plugin and we don't expose an
     // onSelectionChange event from React.
     (topLevelType !== TOP_SELECTION_CHANGE &&
-      !isListeningToEvents(rootTargetDependencies, container))
+      !isListeningToEvents(rootTargetDependencies, targetContainer))
   ) {
     return;
   }

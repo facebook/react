@@ -23,7 +23,7 @@ import {accumulateEnterLeaveListeners} from '../DOMModernPluginEventSystem';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';
 
-const eventTypes = {
+const eventTypes: EventTypes = {
   mouseEnter: {
     registrationName: 'onMouseEnter',
     dependencies: [TOP_MOUSE_OUT, TOP_MOUSE_OVER],
@@ -56,7 +56,7 @@ function extractEvents(
   nativeEvent,
   nativeEventTarget,
   eventSystemFlags,
-  container,
+  targetContainer,
 ) {
   const isOverEvent =
     topLevelType === TOP_MOUSE_OVER || topLevelType === TOP_POINTER_OVER;

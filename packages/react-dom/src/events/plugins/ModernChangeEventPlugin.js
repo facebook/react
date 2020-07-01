@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import type {EventTypes} from '../PluginModuleType';
+
 import SyntheticEvent from '../../events/SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -33,7 +35,7 @@ import {
   accumulateTwoPhaseListeners,
 } from '../DOMModernPluginEventSystem';
 
-const eventTypes = {
+const eventTypes: EventTypes = {
   change: {
     phasedRegistrationNames: {
       bubbled: 'onChange',
@@ -253,6 +255,16 @@ function handleControlledInputBlur(node) {
   }
 }
 
+/**
+ * This plugin creates an `onChange` event that normalizes change events
+ * across form elements. This event fires at a time when it's possible to
+ * change the element's value without seeing a flicker.
+ *
+ * Supported elements are:
+ * - input (see `isTextInputElement`)
+ * - textarea
+ * - select
+ */
 function extractEvents(
   dispatchQueue,
   topLevelType,
@@ -260,7 +272,7 @@ function extractEvents(
   nativeEvent,
   nativeEventTarget,
   eventSystemFlags,
-  container,
+  targetContainer,
 ) {
   const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
@@ -301,14 +313,4 @@ function extractEvents(
   }
 }
 
-/**
- * This plugin creates an `onChange` event that normalizes change events
- * across form elements. This event fires at a time when it's possible to
- * change the element's value without seeing a flicker.
- *
- * Supported elements are:
- * - input (see `isTextInputElement`)
- * - textarea
- * - select
- */
 export {eventTypes, extractEvents};
