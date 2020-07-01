@@ -48,19 +48,9 @@ function functionThatReturnsFalse() {
  * Synthetic events (and subclasses) implement the DOM Level 3 Events API by
  * normalizing browser quirks. Subclasses do not necessarily have to implement a
  * DOM interface; custom application-specific events can also subclass this.
- *
- * @param {object} dispatchConfig Configuration used to dispatch this event.
- * @param {*} targetInst Marker identifying the event target.
- * @param {object} nativeEvent Native browser event.
- * @param {DOMEventTarget} nativeEventTarget Target node.
  */
-function SyntheticEvent(
-  dispatchConfig,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-) {
-  this.dispatchConfig = dispatchConfig;
+function SyntheticEvent(reactName, targetInst, nativeEvent, nativeEventTarget) {
+  this._reactName = reactName;
   this._targetInst = targetInst;
   this.nativeEvent = nativeEvent;
 

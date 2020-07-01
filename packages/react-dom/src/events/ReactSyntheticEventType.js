@@ -22,21 +22,12 @@ export type DispatchConfig = {|
   eventPriority?: EventPriority,
 |};
 
-export type CustomDispatchConfig = {|
-  phasedRegistrationNames: {|
-    bubbled: null,
-    captured: null,
-  |},
-  registrationName?: string,
-  customEvent: true,
-|};
-
 export type ReactSyntheticEvent = {|
-  dispatchConfig: DispatchConfig | CustomDispatchConfig,
   isPersistent: () => boolean,
   isPropagationStopped: () => boolean,
   _dispatchInstances?: null | Array<Fiber | null> | Fiber,
   _dispatchListeners?: null | Array<Function> | Function,
+  _reactName: string,
   _targetInst: Fiber,
   type: string,
   currentTarget: null | EventTarget,

@@ -7,10 +7,7 @@
  * @flow
  */
 
-import type {
-  TopLevelType,
-  DOMTopLevelEventType,
-} from '../../events/TopLevelEventTypes';
+import type {TopLevelType} from '../../events/TopLevelEventTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   AnyNativeEvent,
@@ -22,7 +19,7 @@ import SyntheticEvent from '../../events/SyntheticEvent';
 
 import * as DOMTopLevelEventTypes from '../DOMTopLevelEventTypes';
 import {
-  topLevelEventsToDispatchConfig,
+  topLevelEventsToReactNames,
   simpleEventPluginEventTypes,
 } from '../DOMEventProperties';
 import {
@@ -46,41 +43,6 @@ import getEventCharCode from '../getEventCharCode';
 
 import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 
-// Only used in DEV for exhaustiveness validation.
-const knownHTMLTopLevelTypes: Array<DOMTopLevelEventType> = [
-  DOMTopLevelEventTypes.TOP_ABORT,
-  DOMTopLevelEventTypes.TOP_CANCEL,
-  DOMTopLevelEventTypes.TOP_CAN_PLAY,
-  DOMTopLevelEventTypes.TOP_CAN_PLAY_THROUGH,
-  DOMTopLevelEventTypes.TOP_CLOSE,
-  DOMTopLevelEventTypes.TOP_DURATION_CHANGE,
-  DOMTopLevelEventTypes.TOP_EMPTIED,
-  DOMTopLevelEventTypes.TOP_ENCRYPTED,
-  DOMTopLevelEventTypes.TOP_ENDED,
-  DOMTopLevelEventTypes.TOP_ERROR,
-  DOMTopLevelEventTypes.TOP_INPUT,
-  DOMTopLevelEventTypes.TOP_INVALID,
-  DOMTopLevelEventTypes.TOP_LOAD,
-  DOMTopLevelEventTypes.TOP_LOADED_DATA,
-  DOMTopLevelEventTypes.TOP_LOADED_METADATA,
-  DOMTopLevelEventTypes.TOP_LOAD_START,
-  DOMTopLevelEventTypes.TOP_PAUSE,
-  DOMTopLevelEventTypes.TOP_PLAY,
-  DOMTopLevelEventTypes.TOP_PLAYING,
-  DOMTopLevelEventTypes.TOP_PROGRESS,
-  DOMTopLevelEventTypes.TOP_RATE_CHANGE,
-  DOMTopLevelEventTypes.TOP_RESET,
-  DOMTopLevelEventTypes.TOP_SEEKED,
-  DOMTopLevelEventTypes.TOP_SEEKING,
-  DOMTopLevelEventTypes.TOP_STALLED,
-  DOMTopLevelEventTypes.TOP_SUBMIT,
-  DOMTopLevelEventTypes.TOP_SUSPEND,
-  DOMTopLevelEventTypes.TOP_TIME_UPDATE,
-  DOMTopLevelEventTypes.TOP_TOGGLE,
-  DOMTopLevelEventTypes.TOP_VOLUME_CHANGE,
-  DOMTopLevelEventTypes.TOP_WAITING,
-];
-
 function extractEvents(
   dispatchQueue: DispatchQueue,
   topLevelType: TopLevelType,
@@ -90,8 +52,8 @@ function extractEvents(
   eventSystemFlags: EventSystemFlags,
   targetContainer: null | EventTarget,
 ): void {
-  const dispatchConfig = topLevelEventsToDispatchConfig.get(topLevelType);
-  if (!dispatchConfig) {
+  const reactName = topLevelEventsToReactNames.get(topLevelType);
+  if (reactName === undefined) {
     return;
   }
   let EventConstructor;
@@ -179,25 +141,12 @@ function extractEvents(
       EventConstructor = SyntheticPointerEvent;
       break;
     default:
-      if (__DEV__) {
-        if (
-          knownHTMLTopLevelTypes.indexOf(topLevelType) === -1 &&
-          dispatchConfig.customEvent !== true
-        ) {
-          console.error(
-            'SimpleEventPlugin: Unhandled event type, `%s`. This warning ' +
-              'is likely caused by a bug in React. Please file an issue.',
-            topLevelType,
-          );
-        }
-      }
-      // HTML Events
-      // @see http://www.w3.org/TR/html5/index.html#events-0
+      // Unknown event. This is used by createEventHandle.
       EventConstructor = SyntheticEvent;
       break;
   }
   const event = new EventConstructor(
-    dispatchConfig,
+    reactName,
     null,
     nativeEvent,
     nativeEventTarget,

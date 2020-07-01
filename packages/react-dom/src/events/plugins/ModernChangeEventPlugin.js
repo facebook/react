@@ -64,12 +64,7 @@ function createAndAccumulateChangeEvent(
   nativeEvent,
   target,
 ) {
-  const event = new SyntheticEvent(
-    eventTypes.change,
-    null,
-    nativeEvent,
-    target,
-  );
+  const event = new SyntheticEvent('onChange', null, nativeEvent, target);
   event.type = 'change';
   // Flag this event loop as needing state restore.
   enqueueStateRestore(((target: any): Node));

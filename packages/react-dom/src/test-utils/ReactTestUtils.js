@@ -491,14 +491,16 @@ function getListener(inst: Fiber, registrationName: string) {
 }
 
 function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
-  const registrationName =
-    event.dispatchConfig.phasedRegistrationNames[propagationPhase];
+  let registrationName = event._reactName;
+  if (propagationPhase === 'captured') {
+    registrationName += 'Capture';
+  }
   return getListener(inst, registrationName);
 }
 
 function accumulateDispatches(inst, ignoredDirection, event) {
-  if (inst && event && event.dispatchConfig.registrationName) {
-    const registrationName = event.dispatchConfig.registrationName;
+  if (inst && event && event._reactName) {
+    const registrationName = event._reactName;
     const listener = getListener(inst, registrationName);
     if (listener) {
       if (event._dispatchListeners == null) {
@@ -533,13 +535,13 @@ function accumulateDirectionalDispatches(inst, phase, event) {
 }
 
 function accumulateDirectDispatchesSingle(event) {
-  if (event && event.dispatchConfig.registrationName) {
+  if (event && event._reactName) {
     accumulateDispatches(event._targetInst, null, event);
   }
 }
 
 function accumulateTwoPhaseDispatchesSingle(event) {
-  if (event && event.dispatchConfig.phasedRegistrationNames) {
+  if (event && event._reactName) {
     traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
   }
 }
@@ -577,27 +579,14 @@ function makeSimulator(eventType) {
         'a component instance. Pass the DOM node you wish to simulate the event on instead.',
     );
 
-    // Reconstruct more or less what the original event system produced.
-    // We could remove this indirection here but we also don't plan to invest in Simulate anyway.
-    const dispatchConfig = {};
-    if (directDispatchEventTypes.has(eventType)) {
-      dispatchConfig.registrationName =
-        'on' + eventType[0].toUpperCase() + eventType.slice(1);
-    } else {
-      dispatchConfig.phasedRegistrationNames = {
-        bubbled: 'on' + eventType[0].toUpperCase() + eventType.slice(1),
-        captured:
-          'on' + eventType[0].toUpperCase() + eventType.slice(1) + 'Capture',
-      };
-    }
-
+    const reactName = 'on' + eventType[0].toUpperCase() + eventType.slice(1);
     const fakeNativeEvent = new Event();
     fakeNativeEvent.target = domNode;
     fakeNativeEvent.type = eventType.toLowerCase();
 
     const targetInst = getInstanceFromNode(domNode);
     const event = new SyntheticEvent(
-      dispatchConfig,
+      reactName,
       targetInst,
       fakeNativeEvent,
       domNode,
@@ -608,10 +597,10 @@ function makeSimulator(eventType) {
     event.persist();
     Object.assign(event, eventData);
 
-    if (dispatchConfig.phasedRegistrationNames) {
-      accumulateTwoPhaseDispatchesSingle(event);
-    } else {
+    if (directDispatchEventTypes.has(eventType)) {
       accumulateDirectDispatchesSingle(event);
+    } else {
+      accumulateTwoPhaseDispatchesSingle(event);
     }
 
     ReactDOM.unstable_batchedUpdates(function() {
