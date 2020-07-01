@@ -11,7 +11,6 @@
 
 let React;
 let ReactDOM;
-const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 const ChildComponent = ({id, eventHandler}) => (
   <div
@@ -204,89 +203,44 @@ describe('ReactTreeTraversal', () => {
       expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
 
-    // This will not work with the modern event system that
-    // attaches event listeners to roots as the event below
-    // is being triggered on a node that React does not listen
+    // The modern event system attaches event listeners to roots so the
+    // event below is being triggered on a node that React does not listen
     // to any more. Instead we should fire mouseover.
-    if (ReactFeatureFlags.enableModernEventSystem) {
-      it('should enter from the window', () => {
-        const enterNode = document.getElementById('P_P1_C1__DIV');
+    it('should enter from the window', () => {
+      const enterNode = document.getElementById('P_P1_C1__DIV');
 
-        const expectedCalls = [
-          ['P', 'mouseenter'],
-          ['P_P1', 'mouseenter'],
-          ['P_P1_C1__DIV', 'mouseenter'],
-        ];
+      const expectedCalls = [
+        ['P', 'mouseenter'],
+        ['P_P1', 'mouseenter'],
+        ['P_P1_C1__DIV', 'mouseenter'],
+      ];
 
-        enterNode.dispatchEvent(
-          new MouseEvent('mouseover', {
-            bubbles: true,
-            cancelable: true,
-            relatedTarget: outerNode1,
-          }),
-        );
+      enterNode.dispatchEvent(
+        new MouseEvent('mouseover', {
+          bubbles: true,
+          cancelable: true,
+          relatedTarget: outerNode1,
+        }),
+      );
 
-        expect(mockFn.mock.calls).toEqual(expectedCalls);
-      });
-    } else {
-      it('should enter from the window', () => {
-        const enterNode = document.getElementById('P_P1_C1__DIV');
+      expect(mockFn.mock.calls).toEqual(expectedCalls);
+    });
 
-        const expectedCalls = [
-          ['P', 'mouseenter'],
-          ['P_P1', 'mouseenter'],
-          ['P_P1_C1__DIV', 'mouseenter'],
-        ];
+    it('should enter from the window to the shallowest', () => {
+      const enterNode = document.getElementById('P');
 
-        outerNode1.dispatchEvent(
-          new MouseEvent('mouseout', {
-            bubbles: true,
-            cancelable: true,
-            relatedTarget: enterNode,
-          }),
-        );
+      const expectedCalls = [['P', 'mouseenter']];
 
-        expect(mockFn.mock.calls).toEqual(expectedCalls);
-      });
-    }
+      enterNode.dispatchEvent(
+        new MouseEvent('mouseover', {
+          bubbles: true,
+          cancelable: true,
+          relatedTarget: outerNode1,
+        }),
+      );
 
-    // This will not work with the modern event system that
-    // attaches event listeners to roots as the event below
-    // is being triggered on a node that React does not listen
-    // to any more. Instead we should fire mouseover.
-    if (ReactFeatureFlags.enableModernEventSystem) {
-      it('should enter from the window to the shallowest', () => {
-        const enterNode = document.getElementById('P');
-
-        const expectedCalls = [['P', 'mouseenter']];
-
-        enterNode.dispatchEvent(
-          new MouseEvent('mouseover', {
-            bubbles: true,
-            cancelable: true,
-            relatedTarget: outerNode1,
-          }),
-        );
-
-        expect(mockFn.mock.calls).toEqual(expectedCalls);
-      });
-    } else {
-      it('should enter from the window to the shallowest', () => {
-        const enterNode = document.getElementById('P');
-
-        const expectedCalls = [['P', 'mouseenter']];
-
-        outerNode1.dispatchEvent(
-          new MouseEvent('mouseout', {
-            bubbles: true,
-            cancelable: true,
-            relatedTarget: enterNode,
-          }),
-        );
-
-        expect(mockFn.mock.calls).toEqual(expectedCalls);
-      });
-    }
+      expect(mockFn.mock.calls).toEqual(expectedCalls);
+    });
 
     it('should leave to the window', () => {
       const leaveNode = document.getElementById('P_P1_C1__DIV');

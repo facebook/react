@@ -38,7 +38,6 @@ export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = __EXPERIMENTAL__;
 export const disableModulePatternComponents = true;
 export const warnUnstableRenderSubtreeIntoContainer = false;
-export const enableModernEventSystem = false;
 export const warnAboutSpreadingKeyToJSX = false;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = !__EXPERIMENTAL__;

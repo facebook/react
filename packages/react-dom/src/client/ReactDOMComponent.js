@@ -52,15 +52,6 @@ import {track} from './inputValueTracking';
 import setInnerHTML from './setInnerHTML';
 import setTextContent from './setTextContent';
 import {
-  TOP_ERROR,
-  TOP_INVALID,
-  TOP_LOAD,
-  TOP_RESET,
-  TOP_SUBMIT,
-  TOP_TOGGLE,
-} from '../events/DOMTopLevelEventTypes';
-import {mediaEventTypes} from '../events/DOMTopLevelEventTypes';
-import {
   createDangerousStringForStyles,
   setValueForStyles,
   validateShorthandPropertyCollisionInDev,
@@ -74,7 +65,6 @@ import {
 import assertValidProps from '../shared/assertValidProps';
 import {
   DOCUMENT_NODE,
-  DOCUMENT_FRAGMENT_NODE,
   ELEMENT_NODE,
   COMMENT_NODE,
 } from '../shared/HTMLNodeType';
@@ -88,12 +78,7 @@ import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 import {
   enableDeprecatedFlareAPI,
   enableTrustedTypesIntegration,
-  enableModernEventSystem,
 } from 'shared/ReactFeatureFlags';
-import {
-  legacyListenToEvent,
-  legacyTrapBubbledEvent,
-} from '../events/DOMLegacyEventPluginSystem';
 import {listenToEvent} from '../events/DOMModernPluginEventSystem';
 import {getEventListenerMap} from './ReactDOMComponentTree';
 
@@ -273,33 +258,22 @@ export function ensureListeningTo(
   rootContainerInstance: Element | Node,
   registrationName: string,
 ): void {
-  if (enableModernEventSystem) {
-    // If we have a comment node, then use the parent node,
-    // which should be an element.
-    const rootContainerElement =
-      rootContainerInstance.nodeType === COMMENT_NODE
-        ? rootContainerInstance.parentNode
-        : rootContainerInstance;
-    // Containers should only ever be element nodes. We do not
-    // want to register events to document fragments or documents
-    // with the modern plugin event system.
-    invariant(
-      rootContainerElement != null &&
-        rootContainerElement.nodeType === ELEMENT_NODE,
-      'ensureListeningTo(): received a container that was not an element node. ' +
-        'This is likely a bug in React.',
-    );
-    listenToEvent(registrationName, ((rootContainerElement: any): Element));
-  } else {
-    // Legacy plugin event system path
-    const isDocumentOrFragment =
-      rootContainerInstance.nodeType === DOCUMENT_NODE ||
-      rootContainerInstance.nodeType === DOCUMENT_FRAGMENT_NODE;
-    const doc = isDocumentOrFragment
-      ? rootContainerInstance
-      : rootContainerInstance.ownerDocument;
-    legacyListenToEvent(registrationName, ((doc: any): Document));
-  }
+  // If we have a comment node, then use the parent node,
+  // which should be an element.
+  const rootContainerElement =
+    rootContainerInstance.nodeType === COMMENT_NODE
+      ? rootContainerInstance.parentNode
+      : rootContainerInstance;
+  // Containers should only ever be element nodes. We do not
+  // want to register events to document fragments or documents
+  // with the modern plugin event system.
+  invariant(
+    rootContainerElement != null &&
+      rootContainerElement.nodeType === ELEMENT_NODE,
+    'ensureListeningTo(): received a container that was not an element node. ' +
+      'This is likely a bug in React.',
+  );
+  listenToEvent(registrationName, ((rootContainerElement: any): Element));
 }
 
 function getOwnerDocumentFromRootContainer(
@@ -544,55 +518,29 @@ export function setInitialProperties(
     case 'iframe':
     case 'object':
     case 'embed':
-      if (!enableModernEventSystem) {
-        legacyTrapBubbledEvent(TOP_LOAD, domElement);
-      }
       props = rawProps;
       break;
     case 'video':
     case 'audio':
-      if (!enableModernEventSystem) {
-        // Create listener for each media event
-        for (let i = 0; i < mediaEventTypes.length; i++) {
-          legacyTrapBubbledEvent(mediaEventTypes[i], domElement);
-        }
-      }
       props = rawProps;
       break;
     case 'source':
-      if (!enableModernEventSystem) {
-        legacyTrapBubbledEvent(TOP_ERROR, domElement);
-      }
       props = rawProps;
       break;
     case 'img':
     case 'image':
     case 'link':
-      if (!enableModernEventSystem) {
-        legacyTrapBubbledEvent(TOP_ERROR, domElement);
-        legacyTrapBubbledEvent(TOP_LOAD, domElement);
-      }
       props = rawProps;
       break;
     case 'form':
-      if (!enableModernEventSystem) {
-        legacyTrapBubbledEvent(TOP_RESET, domElement);
-        legacyTrapBubbledEvent(TOP_SUBMIT, domElement);
-      }
       props = rawProps;
       break;
     case 'details':
-      if (!enableModernEventSystem) {
-        legacyTrapBubbledEvent(TOP_TOGGLE, domElement);
-      }
       props = rawProps;
       break;
     case 'input':
       ReactDOMInputInitWrapperState(domElement, rawProps);
       props = ReactDOMInputGetHostProps(domElement, rawProps);
-      if (!enableModernEventSystem) {
-        legacyTrapBubbledEvent(TOP_INVALID, domElement);
-      }
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
@@ -604,9 +552,6 @@ export function setInitialProperties(
     case 'select':
       ReactDOMSelectInitWrapperState(domElement, rawProps);
       props = ReactDOMSelectGetHostProps(domElement, rawProps);
-      if (!enableModernEventSystem) {
-        legacyTrapBubbledEvent(TOP_INVALID, domElement);
-      }
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
@@ -614,9 +559,6 @@ export function setInitialProperties(
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
       props = ReactDOMTextareaGetHostProps(domElement, rawProps);
-      if (!enableModernEventSystem) {
-        legacyTrapBubbledEvent(TOP_INVALID, domElement);
-      }
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
@@ -949,51 +891,8 @@ export function diffHydratedProperties(
 
   // TODO: Make sure that we check isMounted before firing any of these events.
   switch (tag) {
-    case 'iframe':
-    case 'object':
-    case 'embed':
-      if (!enableModernEventSystem) {
-        legacyTrapBubbledEvent(TOP_LOAD, domElement);
-      }
-      break;
-    case 'video':
-    case 'audio':
-      if (!enableModernEventSystem) {
-        // Create listener for each media event
-        for (let i = 0; i < mediaEventTypes.length; i++) {
-          legacyTrapBubbledEvent(mediaEventTypes[i], domElement);
-        }
-      }
-      break;
-    case 'source':
-      if (!enableModernEventSystem) {
-        legacyTrapBubbledEvent(TOP_ERROR, domElement);
-      }
-      break;
-    case 'img':
-    case 'image':
-    case 'link':
-      if (!enableModernEventSystem) {
-        legacyTrapBubbledEvent(TOP_ERROR, domElement);
-        legacyTrapBubbledEvent(TOP_LOAD, domElement);
-      }
-      break;
-    case 'form':
-      if (!enableModernEventSystem) {
-        legacyTrapBubbledEvent(TOP_RESET, domElement);
-        legacyTrapBubbledEvent(TOP_SUBMIT, domElement);
-      }
-      break;
-    case 'details':
-      if (!enableModernEventSystem) {
-        legacyTrapBubbledEvent(TOP_TOGGLE, domElement);
-      }
-      break;
     case 'input':
       ReactDOMInputInitWrapperState(domElement, rawProps);
-      if (!enableModernEventSystem) {
-        legacyTrapBubbledEvent(TOP_INVALID, domElement);
-      }
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
@@ -1003,18 +902,12 @@ export function diffHydratedProperties(
       break;
     case 'select':
       ReactDOMSelectInitWrapperState(domElement, rawProps);
-      if (!enableModernEventSystem) {
-        legacyTrapBubbledEvent(TOP_INVALID, domElement);
-      }
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');
       break;
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
-      if (!enableModernEventSystem) {
-        legacyTrapBubbledEvent(TOP_INVALID, domElement);
-      }
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
       ensureListeningTo(rootContainerElement, 'onChange');

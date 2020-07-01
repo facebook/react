@@ -43,7 +43,6 @@ import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
 import {
   enableDeprecatedFlareAPI,
-  enableModernEventSystem,
   enableLegacyFBSupport,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -52,7 +51,6 @@ import {
   DiscreteEvent,
 } from 'shared/ReactTypes';
 import {getEventPriorityForPluginSystem} from './DOMEventProperties';
-import {dispatchEventForLegacyPluginEventSystem} from './DOMLegacyEventPluginSystem';
 import {dispatchEventForPluginEventSystem} from './DOMModernPluginEventSystem';
 import {
   flushDiscreteUpdatesIfNeeded,
@@ -230,22 +228,13 @@ export function dispatchEvent(
   // in case the event system needs to trace it.
   if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
-      if (enableModernEventSystem) {
-        dispatchEventForPluginEventSystem(
-          topLevelType,
-          eventSystemFlags,
-          nativeEvent,
-          null,
-          targetContainer,
-        );
-      } else {
-        dispatchEventForLegacyPluginEventSystem(
-          topLevelType,
-          eventSystemFlags,
-          nativeEvent,
-          null,
-        );
-      }
+      dispatchEventForPluginEventSystem(
+        topLevelType,
+        eventSystemFlags,
+        nativeEvent,
+        null,
+        targetContainer,
+      );
     }
     if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
@@ -258,22 +247,13 @@ export function dispatchEvent(
       );
     }
   } else {
-    if (enableModernEventSystem) {
-      dispatchEventForPluginEventSystem(
-        topLevelType,
-        eventSystemFlags,
-        nativeEvent,
-        null,
-        targetContainer,
-      );
-    } else {
-      dispatchEventForLegacyPluginEventSystem(
-        topLevelType,
-        eventSystemFlags,
-        nativeEvent,
-        null,
-      );
-    }
+    dispatchEventForPluginEventSystem(
+      topLevelType,
+      eventSystemFlags,
+      nativeEvent,
+      null,
+      targetContainer,
+    );
   }
 }
 
@@ -329,22 +309,13 @@ export function attemptToDispatchEvent(
 
   if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
-      if (enableModernEventSystem) {
-        dispatchEventForPluginEventSystem(
-          topLevelType,
-          eventSystemFlags,
-          nativeEvent,
-          targetInst,
-          targetContainer,
-        );
-      } else {
-        dispatchEventForLegacyPluginEventSystem(
-          topLevelType,
-          eventSystemFlags,
-          nativeEvent,
-          targetInst,
-        );
-      }
+      dispatchEventForPluginEventSystem(
+        topLevelType,
+        eventSystemFlags,
+        nativeEvent,
+        targetInst,
+        targetContainer,
+      );
     }
     if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
@@ -357,22 +328,13 @@ export function attemptToDispatchEvent(
       );
     }
   } else {
-    if (enableModernEventSystem) {
-      dispatchEventForPluginEventSystem(
-        topLevelType,
-        eventSystemFlags,
-        nativeEvent,
-        targetInst,
-        targetContainer,
-      );
-    } else {
-      dispatchEventForLegacyPluginEventSystem(
-        topLevelType,
-        eventSystemFlags,
-        nativeEvent,
-        targetInst,
-      );
-    }
+    dispatchEventForPluginEventSystem(
+      topLevelType,
+      eventSystemFlags,
+      nativeEvent,
+      targetInst,
+      targetContainer,
+    );
   }
   // We're not blocked on anything.
   return null;
