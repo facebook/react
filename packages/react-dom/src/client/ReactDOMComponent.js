@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ElementListenerMapEntry} from '../client/ReactDOMComponentTree';
+
 import {
   registrationNameDependencies,
   possibleRegistrationNames,
@@ -82,7 +84,7 @@ import {
   enableDeprecatedFlareAPI,
   enableTrustedTypesIntegration,
 } from 'shared/ReactFeatureFlags';
-import {listenToEvent} from '../events/DOMModernPluginEventSystem';
+import {listenToReactPropEvent} from '../events/DOMModernPluginEventSystem';
 import {getEventListenerMap} from './ReactDOMComponentTree';
 
 let didWarnInvalidHydration = false;
@@ -262,7 +264,7 @@ if (__DEV__) {
 
 export function ensureListeningTo(
   rootContainerInstance: Element | Node,
-  registrationName: string,
+  reactPropEvent: string,
 ): void {
   // If we have a comment node, then use the parent node,
   // which should be an element.
@@ -279,7 +281,10 @@ export function ensureListeningTo(
     'ensureListeningTo(): received a container that was not an element node. ' +
       'This is likely a bug in React.',
   );
-  listenToEvent(registrationName, ((rootContainerElement: any): Element));
+  listenToReactPropEvent(
+    reactPropEvent,
+    ((rootContainerElement: any): Element),
+  );
 }
 
 function getOwnerDocumentFromRootContainer(
@@ -1267,7 +1272,9 @@ export function listenToEventResponderEventTypes(
           // existing passive event listener before we add the
           // active event listener.
           const passiveKey = targetEventType + '_passive';
-          const passiveItem = listenerMap.get(passiveKey);
+          const passiveItem = ((listenerMap.get(
+            passiveKey,
+          ): any): ElementListenerMapEntry | void);
           if (passiveItem !== undefined) {
             removeTrappedEventListener(
               document,

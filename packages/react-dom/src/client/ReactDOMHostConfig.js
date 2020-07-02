@@ -81,7 +81,7 @@ import {
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
 import {
-  listenToEvent,
+  listenToReactPropEvent,
   clearEventHandleListenersForTarget,
 } from '../events/DOMModernPluginEventSystem';
 
@@ -1122,7 +1122,7 @@ export function makeOpaqueHydratingObject(
 }
 
 export function preparePortalMount(portalInstance: Instance): void {
-  listenToEvent('onMouseEnter', portalInstance);
+  listenToReactPropEvent('onMouseEnter', portalInstance);
 }
 
 export function prepareScopeUpdate(

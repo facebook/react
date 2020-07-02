@@ -23,11 +23,10 @@ import {
   registerSimpleEvents,
 } from '../DOMEventProperties';
 import {
-  accumulateTwoPhaseListeners,
+  accumulatePhaseListeners,
   accumulateEventTargetListeners,
 } from '../DOMModernPluginEventSystem';
 import {IS_TARGET_PHASE_ONLY} from '../EventSystemFlags';
-
 import SyntheticAnimationEvent from '../SyntheticAnimationEvent';
 import SyntheticClipboardEvent from '../SyntheticClipboardEvent';
 import SyntheticFocusEvent from '../SyntheticFocusEvent';
@@ -40,6 +39,7 @@ import SyntheticTransitionEvent from '../SyntheticTransitionEvent';
 import SyntheticUIEvent from '../SyntheticUIEvent';
 import SyntheticWheelEvent from '../SyntheticWheelEvent';
 import getEventCharCode from '../getEventCharCode';
+import {IS_CAPTURE_PHASE} from '../EventSystemFlags';
 
 import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 
@@ -158,9 +158,15 @@ function extractEvents(
     eventSystemFlags & IS_TARGET_PHASE_ONLY &&
     targetContainer != null
   ) {
-    accumulateEventTargetListeners(dispatchQueue, event, targetContainer);
+    const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
+    accumulateEventTargetListeners(
+      dispatchQueue,
+      event,
+      targetContainer,
+      inCapturePhase,
+    );
   } else {
-    accumulateTwoPhaseListeners(targetInst, dispatchQueue, event, true);
+    accumulatePhaseListeners(targetInst, dispatchQueue, event, true);
   }
   return event;
 }

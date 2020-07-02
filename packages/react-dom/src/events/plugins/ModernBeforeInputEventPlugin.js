@@ -29,7 +29,7 @@ import {
 } from '../FallbackCompositionState';
 import SyntheticCompositionEvent from '../SyntheticCompositionEvent';
 import SyntheticInputEvent from '../SyntheticInputEvent';
-import {accumulateTwoPhaseListeners} from '../DOMModernPluginEventSystem';
+import {accumulatePhaseListeners} from '../DOMModernPluginEventSystem';
 
 const END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
 const START_KEYCODE = 229;
@@ -241,7 +241,7 @@ function extractCompositionEvent(
     nativeEvent,
     nativeEventTarget,
   );
-  accumulateTwoPhaseListeners(targetInst, dispatchQueue, event);
+  accumulatePhaseListeners(targetInst, dispatchQueue, event);
 
   if (fallbackData) {
     // Inject data generated from fallback path into the synthetic event.
@@ -411,7 +411,7 @@ function extractBeforeInputEvent(
     nativeEvent,
     nativeEventTarget,
   );
-  accumulateTwoPhaseListeners(targetInst, dispatchQueue, event);
+  accumulatePhaseListeners(targetInst, dispatchQueue, event);
   event.data = chars;
 }
 

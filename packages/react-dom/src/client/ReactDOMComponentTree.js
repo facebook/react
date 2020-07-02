@@ -42,7 +42,7 @@ const internalEventHandlerListenersKey = '__reactListeners$' + randomKey;
 
 export type ElementListenerMap = Map<
   DOMTopLevelEventType | string,
-  ElementListenerMapEntry,
+  ElementListenerMapEntry | null,
 >;
 
 export type ElementListenerMapEntry = {
