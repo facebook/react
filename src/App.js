@@ -49,11 +49,6 @@ export default function App() {
       importedFlamechart: FlamechartData,
     ) => {
       unstable_batchedUpdates(() => {
-        setSchedulerCanvasHeight(
-          REACT_PRIORITIES.reduce((height, priority) => {
-            return height + getPriorityHeight(importedProfilerData, priority);
-          }, 0),
-        );
         setProfilerDataV2(importedProfilerData);
         setFlamechart(importedFlamechart);
       });
