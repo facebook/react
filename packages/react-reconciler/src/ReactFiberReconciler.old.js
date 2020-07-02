@@ -88,7 +88,7 @@ import {
   setRefreshHandler,
   findHostInstancesForRefresh,
 } from './ReactFiberHotReloading.old';
-import {markRenderScheduled} from './SchedulingProfiling';
+import {markRenderScheduled} from './SchedulingProfiler';
 
 export {registerMutableSourceForHydration} from './ReactMutableSource.new';
 export {createPortal} from './ReactPortal';

@@ -19,7 +19,7 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
-describe('SchedulingProfiling', () => {
+describe('SchedulingProfiler', () => {
   let React;
   let ReactTestRenderer;
   let ReactNoop;

@@ -63,7 +63,7 @@ import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 import {
   markForceUpdateScheduled,
   markStateUpdateScheduled,
-} from './SchedulingProfiling';
+} from './SchedulingProfiler';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;

@@ -88,7 +88,7 @@ import {
 } from './ReactMutableSource.old';
 import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
-import {markStateUpdateScheduled} from './SchedulingProfiling';
+import {markStateUpdateScheduled} from './SchedulingProfiler';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 

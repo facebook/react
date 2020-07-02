@@ -59,7 +59,7 @@ import {
 } from './ReactFiberWorkLoop.old';
 import {logCapturedError} from './ReactFiberErrorLogger';
 import {logComponentSuspended} from './DebugTracing';
-import {markComponentSuspended} from './SchedulingProfiling';
+import {markComponentSuspended} from './SchedulingProfiler';
 
 import {
   SyncLane,

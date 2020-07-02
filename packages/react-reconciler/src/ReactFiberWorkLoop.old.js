@@ -67,7 +67,7 @@ import {
   markRenderStarted,
   markRenderYielded,
   markRenderStopped,
-} from './SchedulingProfiling';
+} from './SchedulingProfiler';
 
 // The scheduler is imported here *only* to detect whether it's been mocked
 import * as Scheduler from 'scheduler';
