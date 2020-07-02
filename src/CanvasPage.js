@@ -30,6 +30,7 @@ import type {
   ReactHoverContextInfo,
   ReactMeasure,
   ReactProfilerData,
+  ReactProfilerDataV2,
 } from './types';
 
 type ContextMenuContextData = {|
@@ -41,11 +42,17 @@ type ContextMenuContextData = {|
 
 type Props = {|
   profilerData: ReactProfilerData,
+  profilerDataV2: ReactProfilerDataV2,
   flamechart: FlamechartData,
   schedulerCanvasHeight: number,
 |};
 
-function CanvasPage({profilerData, flamechart, schedulerCanvasHeight}: Props) {
+function CanvasPage({
+  profilerData,
+  profilerDataV2,
+  flamechart,
+  schedulerCanvasHeight,
+}: Props) {
   return (
     <div
       className={styles.CanvasPage}
@@ -54,6 +61,7 @@ function CanvasPage({profilerData, flamechart, schedulerCanvasHeight}: Props) {
         {({height, width}: {height: number, width: number}) => (
           <AutoSizedCanvas
             data={profilerData}
+            dataV2={profilerDataV2}
             flamechart={flamechart}
             height={height}
             schedulerCanvasHeight={schedulerCanvasHeight}
@@ -96,6 +104,7 @@ const zoomToBatch = (
 
 type AutoSizedCanvasProps = {|
   data: ReactProfilerData,
+  dataV2: ReactProfilerDataV2,
   flamechart: FlamechartData,
   height: number,
   schedulerCanvasHeight: number,
@@ -104,6 +113,7 @@ type AutoSizedCanvasProps = {|
 
 function AutoSizedCanvas({
   data,
+  dataV2,
   flamechart,
   height,
   schedulerCanvasHeight,
@@ -117,7 +127,7 @@ function AutoSizedCanvas({
     canvasWidth: width,
     fixedColumnWidth: LABEL_FIXED_WIDTH,
     fixedHeaderHeight: HEADER_HEIGHT_FIXED,
-    unscaledContentWidth: data.duration,
+    unscaledContentWidth: dataV2.duration,
     unscaledContentHeight:
       schedulerCanvasHeight +
       flamechart.layers.length * FLAMECHART_FRAME_HEIGHT,
