@@ -11,6 +11,7 @@ import type {Lane, Lanes} from './ReactFiberLane';
 import type {Fiber} from './ReactInternalTypes';
 
 import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
+import getComponentName from 'shared/getComponentName';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 
 /**
@@ -51,13 +52,10 @@ function getWakeableID(wakeable: Wakeable): number {
   return ((wakeableIDs.get(wakeable): any): number);
 }
 
-export function markComponentSuspended(
-  componentName: string,
-  fiber: Fiber,
-  wakeable: Wakeable,
-): void {
+export function markComponentSuspended(fiber: Fiber, wakeable: Wakeable): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
+      const componentName = getComponentName(fiber.type) || 'Unknown';
       const id = getWakeableID(wakeable);
       const componentStack = getStackByFiberInDevAndProd(fiber) || '';
       // TODO (brian) Generate and store temporary ID so DevTools can match up a component stack later.
@@ -146,13 +144,10 @@ export function markRenderScheduled(fiber: Fiber, lane: Lane): void {
   }
 }
 
-export function markForceUpdateScheduled(
-  componentName: string,
-  fiber: Fiber,
-  lane: Lane,
-): void {
+export function markForceUpdateScheduled(fiber: Fiber, lane: Lane): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
+      const componentName = getComponentName(fiber.type) || 'Unknown';
       const componentStack = getStackByFiberInDevAndProd(fiber) || '';
       // TODO (brian) Generate and store temporary ID so DevTools can match up a component stack later.
       performance.mark(
@@ -164,13 +159,10 @@ export function markForceUpdateScheduled(
   }
 }
 
-export function markStateUpdateScheduled(
-  componentName: string,
-  fiber: Fiber,
-  lane: Lane,
-): void {
+export function markStateUpdateScheduled(fiber: Fiber, lane: Lane): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
+      const componentName = getComponentName(fiber.type) || 'Unknown';
       const componentStack = getStackByFiberInDevAndProd(fiber) || '';
       // TODO (brian) Generate and store temporary ID so DevTools can match up a component stack later.
       performance.mark(

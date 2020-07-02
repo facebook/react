@@ -206,8 +206,7 @@ function throwException(
     }
 
     if (enableSchedulingProfiler) {
-      const name = getComponentName(sourceFiber.type) || 'Unknown';
-      markComponentSuspended(name, sourceFiber, wakeable);
+      markComponentSuspended(sourceFiber, wakeable);
     }
 
     if ((sourceFiber.mode & BlockingMode) === NoMode) {

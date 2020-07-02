@@ -1754,8 +1754,7 @@ function dispatchAction<S, A>(
   }
 
   if (enableSchedulingProfiler) {
-    const name = getComponentName(fiber.type) || 'Unknown';
-    markStateUpdateScheduled(name, fiber, lane);
+    markStateUpdateScheduled(fiber, lane);
   }
 }
 

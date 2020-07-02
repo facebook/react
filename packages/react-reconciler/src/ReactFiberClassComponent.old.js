@@ -221,8 +221,7 @@ const classComponentUpdater = {
     }
 
     if (enableSchedulingProfiler) {
-      const name = getComponentName(fiber.type) || 'Unknown';
-      markStateUpdateScheduled(name, fiber, lane);
+      markStateUpdateScheduled(fiber, lane);
     }
   },
   enqueueReplaceState(inst, payload, callback) {
@@ -255,8 +254,7 @@ const classComponentUpdater = {
     }
 
     if (enableSchedulingProfiler) {
-      const name = getComponentName(fiber.type) || 'Unknown';
-      markStateUpdateScheduled(name, fiber, lane);
+      markStateUpdateScheduled(fiber, lane);
     }
   },
   enqueueForceUpdate(inst, callback) {
@@ -288,8 +286,7 @@ const classComponentUpdater = {
     }
 
     if (enableSchedulingProfiler) {
-      const name = getComponentName(fiber.type) || 'Unknown';
-      markForceUpdateScheduled(name, fiber, lane);
+      markForceUpdateScheduled(fiber, lane);
     }
   },
 };
