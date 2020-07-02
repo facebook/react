@@ -37,7 +37,7 @@ export function markCommitStarted(lanes: Lanes): void {
 export function markCommitStopped(): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
-      performance.mark(`--commit-stop`);
+      performance.mark('--commit-stop');
     }
   }
 }
