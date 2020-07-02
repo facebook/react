@@ -43,6 +43,7 @@ export function markCommitStopped(): void {
 }
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
+
 // $FlowFixMe: Flow cannot handle polymorphic WeakMaps
 const wakeableIDs: WeakMap<Wakeable, number> = new PossiblyWeakMap();
 let wakeableID: number = 0;
@@ -53,13 +54,22 @@ function getWakeableID(wakeable: Wakeable): number {
   return ((wakeableIDs.get(wakeable): any): number);
 }
 
+// $FlowFixMe: Flow cannot handle polymorphic WeakMaps
+const cachedFiberStacks: WeakMap<Fiber, string> = new PossiblyWeakMap();
+function cacheFirstGetComponentStackByFiber(workInProgress: Fiber): string {
+  if (!cachedFiberStacks.has(workInProgress)) {
+    const componentStack = getStackByFiberInDevAndProd(workInProgress) || '';
+    cachedFiberStacks.set(workInProgress, componentStack);
+  }
+  return ((cachedFiberStacks.get(workInProgress): any): string);
+}
+
 export function markComponentSuspended(fiber: Fiber, wakeable: Wakeable): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       const componentName = getComponentName(fiber.type) || 'Unknown';
       const id = getWakeableID(wakeable);
-      const componentStack = getStackByFiberInDevAndProd(fiber) || '';
-      // TODO (brian) Generate and store temporary ID so DevTools can match up a component stack later.
+      const componentStack = cacheFirstGetComponentStackByFiber(fiber) || '';
       performance.mark(
         `--suspense-suspend-${componentName}-${id}-${componentStack}`,
       );
@@ -145,8 +155,7 @@ export function markForceUpdateScheduled(fiber: Fiber, lane: Lane): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       const componentName = getComponentName(fiber.type) || 'Unknown';
-      const componentStack = getStackByFiberInDevAndProd(fiber) || '';
-      // TODO (brian) Generate and store temporary ID so DevTools can match up a component stack later.
+      const componentStack = cacheFirstGetComponentStackByFiber(fiber) || '';
       performance.mark(
         `--schedule-forced-update-${formatLanes(
           lane,
@@ -160,8 +169,7 @@ export function markStateUpdateScheduled(fiber: Fiber, lane: Lane): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       const componentName = getComponentName(fiber.type) || 'Unknown';
-      const componentStack = getStackByFiberInDevAndProd(fiber) || '';
-      // TODO (brian) Generate and store temporary ID so DevTools can match up a component stack later.
+      const componentStack = cacheFirstGetComponentStackByFiber(fiber) || '';
       performance.mark(
         `--schedule-state-update-${formatLanes(
           lane,
