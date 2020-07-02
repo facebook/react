@@ -35,7 +35,7 @@ import {
 } from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import {enableSchedulingProfiling} from 'shared/ReactFeatureFlags';
+import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
@@ -267,7 +267,7 @@ export function updateContainer(
   const suspenseConfig = requestCurrentSuspenseConfig();
   const lane = requestUpdateLane(current, suspenseConfig);
 
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     let componentName = 'Unknown';
     if (ReactCurrentFiberCurrent !== null) {
       componentName =

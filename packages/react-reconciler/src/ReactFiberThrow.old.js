@@ -34,7 +34,7 @@ import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.old';
 import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   enableDebugTracing,
-  enableSchedulingProfiling,
+  enableSchedulingProfiler,
 } from 'shared/ReactFeatureFlags';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -205,7 +205,7 @@ function throwException(
       }
     }
 
-    if (enableSchedulingProfiling) {
+    if (enableSchedulingProfiler) {
       const name = getComponentName(sourceFiber.type) || 'Unknown';
       markComponentSuspended(name, sourceFiber, wakeable);
     }

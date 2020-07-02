@@ -17,7 +17,7 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
   enableDebugTracing,
-  enableSchedulingProfiling,
+  enableSchedulingProfiler,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
@@ -220,7 +220,7 @@ const classComponentUpdater = {
       }
     }
 
-    if (enableSchedulingProfiling) {
+    if (enableSchedulingProfiler) {
       const name = getComponentName(fiber.type) || 'Unknown';
       markStateUpdateScheduled(name, fiber, lane);
     }
@@ -254,7 +254,7 @@ const classComponentUpdater = {
       }
     }
 
-    if (enableSchedulingProfiling) {
+    if (enableSchedulingProfiler) {
       const name = getComponentName(fiber.type) || 'Unknown';
       markStateUpdateScheduled(name, fiber, lane);
     }
@@ -287,7 +287,7 @@ const classComponentUpdater = {
       }
     }
 
-    if (enableSchedulingProfiling) {
+    if (enableSchedulingProfiler) {
       const name = getComponentName(fiber.type) || 'Unknown';
       markForceUpdateScheduled(name, fiber, lane);
     }

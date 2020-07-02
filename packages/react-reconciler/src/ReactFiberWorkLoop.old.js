@@ -27,7 +27,7 @@ import {
   warnAboutUnmockedScheduler,
   deferRenderPhaseUpdateToNextBatch,
   enableDebugTracing,
-  enableSchedulingProfiling,
+  enableSchedulingProfiler,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -1473,7 +1473,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
     }
   }
 
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     markRenderStarted(lanes);
   }
 
@@ -1508,7 +1508,7 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
     }
   }
 
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     markRenderStopped();
   }
 
@@ -1548,7 +1548,7 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     }
   }
 
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     markRenderStarted(lanes);
   }
 
@@ -1577,13 +1577,13 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
   // Check if the tree has completed.
   if (workInProgress !== null) {
     // Still work remaining.
-    if (enableSchedulingProfiling) {
+    if (enableSchedulingProfiler) {
       markRenderYielded();
     }
     return RootIncomplete;
   } else {
     // Completed the tree.
-    if (enableSchedulingProfiling) {
+    if (enableSchedulingProfiler) {
       markRenderStopped();
     }
 
@@ -1876,7 +1876,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
   }
 
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     markCommitStarted(lanes);
   }
 
@@ -1887,7 +1887,7 @@ function commitRootImpl(root, renderPriorityLevel) {
       }
     }
 
-    if (enableSchedulingProfiling) {
+    if (enableSchedulingProfiler) {
       markCommitStopped();
     }
 
@@ -2181,7 +2181,7 @@ function commitRootImpl(root, renderPriorityLevel) {
       }
     }
 
-    if (enableSchedulingProfiling) {
+    if (enableSchedulingProfiler) {
       markCommitStopped();
     }
 
@@ -2201,7 +2201,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
   }
 
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     markCommitStopped();
   }
 
@@ -2335,7 +2335,7 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
     }
   }
 
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     markLayoutEffectsStarted(committedLanes);
   }
 
@@ -2364,7 +2364,7 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
     }
   }
 
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     markLayoutEffectsStopped();
   }
 }
@@ -2454,7 +2454,7 @@ function flushPassiveEffectsImpl() {
     }
   }
 
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     markPassiveEffectsStarted(lanes);
   }
 
@@ -2620,7 +2620,7 @@ function flushPassiveEffectsImpl() {
     }
   }
 
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     markPassiveEffectsStopped();
   }
 

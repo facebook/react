@@ -10,7 +10,7 @@
 import type {Lane, Lanes} from './ReactFiberLane';
 import type {Fiber} from './ReactInternalTypes';
 
-import {enableSchedulingProfiling} from 'shared/ReactFeatureFlags';
+import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 
 /**
@@ -25,7 +25,7 @@ function formatLanes(laneOrLanes: Lane | Lanes): string {
 }
 
 export function markCommitStarted(lanes: Lanes): void {
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       performance.mark(`--commit-start-${formatLanes(lanes)}`);
     }
@@ -33,7 +33,7 @@ export function markCommitStarted(lanes: Lanes): void {
 }
 
 export function markCommitStopped(): void {
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       performance.mark(`--commit-stop`);
     }
@@ -56,7 +56,7 @@ export function markComponentSuspended(
   fiber: Fiber,
   wakeable: Wakeable,
 ): void {
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       const id = getWakeableID(wakeable);
       const componentStack = getStackByFiberInDevAndProd(fiber) || '';
@@ -79,7 +79,7 @@ export function markComponentSuspended(
 }
 
 export function markLayoutEffectsStarted(lanes: Lanes): void {
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       performance.mark(`--layout-effects-start-${formatLanes(lanes)}`);
     }
@@ -87,7 +87,7 @@ export function markLayoutEffectsStarted(lanes: Lanes): void {
 }
 
 export function markLayoutEffectsStopped(): void {
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       performance.mark('--layout-effects-stop');
     }
@@ -95,7 +95,7 @@ export function markLayoutEffectsStopped(): void {
 }
 
 export function markPassiveEffectsStarted(lanes: Lanes): void {
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       performance.mark(`--passive-effects-start-${formatLanes(lanes)}`);
     }
@@ -103,7 +103,7 @@ export function markPassiveEffectsStarted(lanes: Lanes): void {
 }
 
 export function markPassiveEffectsStopped(): void {
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       performance.mark('--passive-effects-stop');
     }
@@ -111,7 +111,7 @@ export function markPassiveEffectsStopped(): void {
 }
 
 export function markRenderStarted(lanes: Lanes): void {
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       performance.mark(`--render-start-${formatLanes(lanes)}`);
     }
@@ -119,7 +119,7 @@ export function markRenderStarted(lanes: Lanes): void {
 }
 
 export function markRenderYielded(): void {
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       performance.mark('--render-yield');
     }
@@ -127,7 +127,7 @@ export function markRenderYielded(): void {
 }
 
 export function markRenderStopped(): void {
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       performance.mark('--render-stop');
     }
@@ -139,7 +139,7 @@ export function markRenderScheduled(
   fiber: Fiber,
   lane: Lane,
 ): void {
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       const componentStack = getStackByFiberInDevAndProd(fiber) || '';
       // TODO (brian) Generate and store temporary ID so DevTools can match up a component stack later.
@@ -157,7 +157,7 @@ export function markForceUpdateScheduled(
   fiber: Fiber,
   lane: Lane,
 ): void {
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       const componentStack = getStackByFiberInDevAndProd(fiber) || '';
       // TODO (brian) Generate and store temporary ID so DevTools can match up a component stack later.
@@ -175,7 +175,7 @@ export function markStateUpdateScheduled(
   fiber: Fiber,
   lane: Lane,
 ): void {
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       const componentStack = getStackByFiberInDevAndProd(fiber) || '';
       // TODO (brian) Generate and store temporary ID so DevTools can match up a component stack later.

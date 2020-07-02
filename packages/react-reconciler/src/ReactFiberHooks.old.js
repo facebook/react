@@ -26,7 +26,7 @@ import type {OpaqueIDType} from './ReactFiberHostConfig';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   enableDebugTracing,
-  enableSchedulingProfiling,
+  enableSchedulingProfiler,
   enableNewReconciler,
 } from 'shared/ReactFeatureFlags';
 
@@ -1753,7 +1753,7 @@ function dispatchAction<S, A>(
     }
   }
 
-  if (enableSchedulingProfiling) {
+  if (enableSchedulingProfiler) {
     const name = getComponentName(fiber.type) || 'Unknown';
     markStateUpdateScheduled(name, fiber, lane);
   }
