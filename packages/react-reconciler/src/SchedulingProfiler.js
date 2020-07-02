@@ -73,20 +73,20 @@ function cacheFirstGetComponentStackByFiber(fiber: Fiber): string {
 export function markComponentSuspended(fiber: Fiber, wakeable: Wakeable): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
-      const componentName = getComponentName(fiber.type) || 'Unknown';
       const id = getWakeableID(wakeable);
+      const componentName = getComponentName(fiber.type) || 'Unknown';
       const componentStack = cacheFirstGetComponentStackByFiber(fiber);
       performance.mark(
-        `--suspense-suspend-${componentName}-${id}-${componentStack}`,
+        `--suspense-suspend-${id}-${componentName}-${componentStack}`,
       );
       wakeable.then(
         () =>
           performance.mark(
-            `--suspense-resolved-${componentName}-${id}-${componentStack}`,
+            `--suspense-resolved-${id}-${componentName}-${componentStack}`,
           ),
         () =>
           performance.mark(
-            `--suspense-rejected-${componentName}-${id}-${componentStack}`,
+            `--suspense-rejected-${id}-${componentName}-${componentStack}`,
           ),
       );
     }

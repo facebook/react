@@ -136,7 +136,7 @@ describe('SchedulingProfiler', () => {
     expect(marks).toEqual([
       '--schedule-render-1',
       '--render-start-1',
-      '--suspense-suspend-Example-0-\n    at Example\n    at Suspense',
+      '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
       '--render-stop',
       '--commit-start-1',
       '--layout-effects-start-1',
@@ -148,7 +148,7 @@ describe('SchedulingProfiler', () => {
 
     await fakeSuspensePromise;
     expect(marks).toEqual([
-      '--suspense-resolved-Example-0-\n    at Example\n    at Suspense',
+      '--suspense-resolved-0-Example-\n    at Example\n    at Suspense',
     ]);
   });
 
@@ -168,7 +168,7 @@ describe('SchedulingProfiler', () => {
     expect(marks).toEqual([
       '--schedule-render-1',
       '--render-start-1',
-      '--suspense-suspend-Example-0-\n    at Example\n    at Suspense',
+      '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
       '--render-stop',
       '--commit-start-1',
       '--layout-effects-start-1',
@@ -180,7 +180,7 @@ describe('SchedulingProfiler', () => {
 
     await expect(fakeSuspensePromise).rejects.toThrow();
     expect(marks).toEqual([
-      '--suspense-rejected-Example-0-\n    at Example\n    at Suspense',
+      '--suspense-rejected-0-Example-\n    at Example\n    at Suspense',
     ]);
   });
 
@@ -206,7 +206,7 @@ describe('SchedulingProfiler', () => {
 
     expect(marks).toEqual([
       '--render-start-512',
-      '--suspense-suspend-Example-0-\n    at Example\n    at Suspense',
+      '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
       '--render-stop',
       '--commit-start-512',
       '--layout-effects-start-512',
@@ -218,7 +218,7 @@ describe('SchedulingProfiler', () => {
 
     await fakeSuspensePromise;
     expect(marks).toEqual([
-      '--suspense-resolved-Example-0-\n    at Example\n    at Suspense',
+      '--suspense-resolved-0-Example-\n    at Example\n    at Suspense',
     ]);
   });
 
@@ -244,7 +244,7 @@ describe('SchedulingProfiler', () => {
 
     expect(marks).toEqual([
       '--render-start-512',
-      '--suspense-suspend-Example-0-\n    at Example\n    at Suspense',
+      '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
       '--render-stop',
       '--commit-start-512',
       '--layout-effects-start-512',
@@ -256,7 +256,7 @@ describe('SchedulingProfiler', () => {
 
     await expect(fakeSuspensePromise).rejects.toThrow();
     expect(marks).toEqual([
-      '--suspense-rejected-Example-0-\n    at Example\n    at Suspense',
+      '--suspense-rejected-0-Example-\n    at Example\n    at Suspense',
     ]);
   });
 
