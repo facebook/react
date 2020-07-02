@@ -151,9 +151,9 @@ export function markForceUpdateScheduled(fiber: Fiber, lane: Lane): void {
       const componentStack = getStackByFiberInDevAndProd(fiber) || '';
       // TODO (brian) Generate and store temporary ID so DevTools can match up a component stack later.
       performance.mark(
-        `--schedule-forced-update-${componentName}-${formatLanes(
+        `--schedule-forced-update-${formatLanes(
           lane,
-        )}-${componentStack}`,
+        )}-${componentName}-${componentStack}`,
       );
     }
   }
@@ -166,9 +166,9 @@ export function markStateUpdateScheduled(fiber: Fiber, lane: Lane): void {
       const componentStack = getStackByFiberInDevAndProd(fiber) || '';
       // TODO (brian) Generate and store temporary ID so DevTools can match up a component stack later.
       performance.mark(
-        `--schedule-state-update-${componentName}-${formatLanes(
+        `--schedule-state-update-${formatLanes(
           lane,
-        )}-${componentStack}`,
+        )}-${componentName}-${componentStack}`,
       );
     }
   }

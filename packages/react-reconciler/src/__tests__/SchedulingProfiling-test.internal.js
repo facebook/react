@@ -285,7 +285,7 @@ describe('SchedulingProfiling', () => {
       '--render-stop',
       '--commit-start-512',
       '--layout-effects-start-512',
-      '--schedule-state-update-Example-1-\n    in Example (at **)',
+      '--schedule-state-update-1-Example-\n    in Example (at **)',
       '--layout-effects-stop',
       '--render-start-1',
       '--render-stop',
@@ -319,7 +319,7 @@ describe('SchedulingProfiling', () => {
       '--render-stop',
       '--commit-start-512',
       '--layout-effects-start-512',
-      '--schedule-forced-update-Example-1-\n    in Example (at **)',
+      '--schedule-forced-update-1-Example-\n    in Example (at **)',
       '--layout-effects-stop',
       '--render-start-1',
       '--render-stop',
@@ -352,7 +352,7 @@ describe('SchedulingProfiling', () => {
     }).toErrorDev('Cannot update during an existing state transition');
 
     expect(marks.map(normalizeCodeLocInfo)).toContain(
-      '--schedule-state-update-Example-1024-\n    in Example (at **)',
+      '--schedule-state-update-1024-Example-\n    in Example (at **)',
     );
   });
 
@@ -379,7 +379,7 @@ describe('SchedulingProfiling', () => {
     }).toErrorDev('Cannot update during an existing state transition');
 
     expect(marks.map(normalizeCodeLocInfo)).toContain(
-      '--schedule-forced-update-Example-1024-\n    in Example (at **)',
+      '--schedule-forced-update-1024-Example-\n    in Example (at **)',
     );
   });
 
@@ -406,7 +406,7 @@ describe('SchedulingProfiling', () => {
       '--render-stop',
       '--commit-start-512',
       '--layout-effects-start-512',
-      '--schedule-state-update-Example-1-\n    in Example (at **)',
+      '--schedule-state-update-1-Example-\n    in Example (at **)',
       '--layout-effects-stop',
       '--render-start-1',
       '--render-stop',
@@ -438,7 +438,7 @@ describe('SchedulingProfiling', () => {
       '--layout-effects-stop',
       '--commit-stop',
       '--passive-effects-start-512',
-      '--schedule-state-update-Example-1024-\n    in Example (at **)',
+      '--schedule-state-update-1024-Example-\n    in Example (at **)',
       '--passive-effects-stop',
       '--render-start-1024',
       '--render-stop',
@@ -462,7 +462,7 @@ describe('SchedulingProfiling', () => {
     });
 
     expect(marks.map(normalizeCodeLocInfo)).toContain(
-      '--schedule-state-update-Example-1024-\n    in Example (at **)',
+      '--schedule-state-update-1024-Example-\n    in Example (at **)',
     );
   });
 });
