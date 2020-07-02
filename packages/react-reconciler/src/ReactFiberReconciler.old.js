@@ -268,12 +268,7 @@ export function updateContainer(
   const lane = requestUpdateLane(current, suspenseConfig);
 
   if (enableSchedulingProfiler) {
-    let componentName = 'Unknown';
-    if (ReactCurrentFiberCurrent !== null) {
-      componentName =
-        getComponentName(ReactCurrentFiberCurrent.type) || componentName;
-    }
-    markRenderScheduled(componentName, current, lane);
+    markRenderScheduled(current, lane);
   }
 
   const context = getContextForSubtree(parentComponent);

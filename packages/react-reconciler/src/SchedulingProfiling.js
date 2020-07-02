@@ -134,19 +134,13 @@ export function markRenderStopped(): void {
   }
 }
 
-export function markRenderScheduled(
-  componentName: string,
-  fiber: Fiber,
-  lane: Lane,
-): void {
+export function markRenderScheduled(fiber: Fiber, lane: Lane): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       const componentStack = getStackByFiberInDevAndProd(fiber) || '';
       // TODO (brian) Generate and store temporary ID so DevTools can match up a component stack later.
       performance.mark(
-        `--schedule-render-${componentName}-${formatLanes(
-          lane,
-        )}-${componentStack}`,
+        `--schedule-render-${formatLanes(lane)}-${componentStack}`,
       );
     }
   }

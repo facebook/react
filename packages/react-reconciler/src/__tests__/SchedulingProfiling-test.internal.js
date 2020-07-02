@@ -67,7 +67,7 @@ describe('SchedulingProfiling', () => {
     ReactTestRenderer.create(<div />);
 
     expect(marks).toEqual([
-      '--schedule-render-Unknown-1-',
+      '--schedule-render-1-',
       '--render-start-1',
       '--render-stop',
       '--commit-start-1',
@@ -81,7 +81,7 @@ describe('SchedulingProfiling', () => {
   it('should mark concurrent render without suspends or state updates', () => {
     ReactTestRenderer.create(<div />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-Unknown-512-']);
+    expect(marks).toEqual(['--schedule-render-512-']);
 
     marks.splice(0);
 
@@ -114,7 +114,7 @@ describe('SchedulingProfiling', () => {
     expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
 
     expect(marks).toEqual([
-      '--schedule-render-Unknown-512-',
+      '--schedule-render-512-',
       '--render-start-512',
       '--render-yield',
     ]);
@@ -134,7 +134,7 @@ describe('SchedulingProfiling', () => {
     );
 
     expect(marks).toEqual([
-      '--schedule-render-Unknown-1-',
+      '--schedule-render-1-',
       '--render-start-1',
       '--suspense-suspend-Example-0-\n    at Example\n    at Suspense',
       '--render-stop',
@@ -166,7 +166,7 @@ describe('SchedulingProfiling', () => {
     );
 
     expect(marks).toEqual([
-      '--schedule-render-Unknown-1-',
+      '--schedule-render-1-',
       '--render-start-1',
       '--suspense-suspend-Example-0-\n    at Example\n    at Suspense',
       '--render-stop',
@@ -198,7 +198,7 @@ describe('SchedulingProfiling', () => {
       {unstable_isConcurrent: true},
     );
 
-    expect(marks).toEqual(['--schedule-render-Unknown-512-']);
+    expect(marks).toEqual(['--schedule-render-512-']);
 
     marks.splice(0);
 
@@ -236,7 +236,7 @@ describe('SchedulingProfiling', () => {
       {unstable_isConcurrent: true},
     );
 
-    expect(marks).toEqual(['--schedule-render-Unknown-512-']);
+    expect(marks).toEqual(['--schedule-render-512-']);
 
     marks.splice(0);
 
@@ -274,7 +274,7 @@ describe('SchedulingProfiling', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-Unknown-512-']);
+    expect(marks).toEqual(['--schedule-render-512-']);
 
     marks.splice(0);
 
@@ -308,7 +308,7 @@ describe('SchedulingProfiling', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-Unknown-512-']);
+    expect(marks).toEqual(['--schedule-render-512-']);
 
     marks.splice(0);
 
@@ -343,7 +343,7 @@ describe('SchedulingProfiling', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-Unknown-512-']);
+    expect(marks).toEqual(['--schedule-render-512-']);
 
     marks.splice(0);
 
@@ -370,7 +370,7 @@ describe('SchedulingProfiling', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-Unknown-512-']);
+    expect(marks).toEqual(['--schedule-render-512-']);
 
     marks.splice(0);
 
@@ -395,7 +395,7 @@ describe('SchedulingProfiling', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-Unknown-512-']);
+    expect(marks).toEqual(['--schedule-render-512-']);
 
     marks.splice(0);
 
@@ -430,7 +430,7 @@ describe('SchedulingProfiling', () => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
     expect(marks.map(normalizeCodeLocInfo)).toEqual([
-      '--schedule-render-Unknown-512-',
+      '--schedule-render-512-',
       '--render-start-512',
       '--render-stop',
       '--commit-start-512',
