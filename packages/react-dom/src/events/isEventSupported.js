@@ -33,7 +33,7 @@ function isEventSupported(eventNameSuffix: string): boolean {
   if (!isSupported) {
     const element = document.createElement('div');
     element.setAttribute(eventName, 'return;');
-    isSupported = typeof element[eventName] === 'function';
+    isSupported = typeof (element: any)[eventName] === 'function';
   }
 
   return isSupported;

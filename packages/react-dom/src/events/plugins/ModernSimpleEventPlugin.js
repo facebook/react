@@ -62,7 +62,7 @@ function extractEvents(
       // Firefox creates a keypress event for function keys too. This removes
       // the unwanted keypress events. Enter is however both printable and
       // non-printable. One would expect Tab to be as well (but it isn't).
-      if (getEventCharCode(nativeEvent) === 0) {
+      if (getEventCharCode(((nativeEvent: any): KeyboardEvent)) === 0) {
         return;
       }
     /* falls through */
