@@ -56,12 +56,18 @@ function getWakeableID(wakeable: Wakeable): number {
 
 // $FlowFixMe: Flow cannot handle polymorphic WeakMaps
 const cachedFiberStacks: WeakMap<Fiber, string> = new PossiblyWeakMap();
-function cacheFirstGetComponentStackByFiber(workInProgress: Fiber): string {
-  if (!cachedFiberStacks.has(workInProgress)) {
-    const componentStack = getStackByFiberInDevAndProd(workInProgress) || '';
-    cachedFiberStacks.set(workInProgress, componentStack);
+function cacheFirstGetComponentStackByFiber(fiber: Fiber): string {
+  if (cachedFiberStacks.has(fiber)) {
+    return ((cachedFiberStacks.get(fiber): any): string);
+  } else {
+    const alternate = fiber.alternate;
+    if (alternate !== null && cachedFiberStacks.has(alternate)) {
+      return ((cachedFiberStacks.get(alternate): any): string);
+    }
   }
-  return ((cachedFiberStacks.get(workInProgress): any): string);
+  const componentStack = getStackByFiberInDevAndProd(fiber) || '';
+  cachedFiberStacks.set(fiber, componentStack);
+  return componentStack;
 }
 
 export function markComponentSuspended(fiber: Fiber, wakeable: Wakeable): void {
