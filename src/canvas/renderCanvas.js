@@ -40,6 +40,7 @@ import {
   REACT_EVENT_SIZE,
   EVENT_SIZE,
   REACT_EVENT_ROW_PADDING,
+  EVENT_ROW_HEIGHT_FIXED,
 } from './constants';
 import {REACT_TOTAL_NUM_LANES} from '../constants';
 
@@ -137,19 +138,21 @@ function renderReactEventRow(
     );
   }
 
-  const rowHeight =
-    REACT_EVENT_ROW_PADDING + REACT_EVENT_SIZE + REACT_EVENT_ROW_PADDING;
-
   // Render bottom border
   context.fillStyle = COLORS.PRIORITY_BORDER;
   context.fillRect(
     0,
-    Math.floor(canvasStartY + rowHeight - offsetY - REACT_PRIORITY_BORDER_SIZE),
+    Math.floor(
+      canvasStartY +
+        EVENT_ROW_HEIGHT_FIXED -
+        offsetY -
+        REACT_PRIORITY_BORDER_SIZE,
+    ),
     canvasWidth,
     REACT_PRIORITY_BORDER_SIZE,
   );
 
-  return canvasStartY + rowHeight;
+  return canvasStartY + EVENT_ROW_HEIGHT_FIXED;
 }
 
 /**

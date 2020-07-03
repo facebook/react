@@ -72,14 +72,10 @@ export type ReactProfilerData = {|
 |};
 
 export type ReactHoverContextInfo = {|
-  /** @deprecated */
-  event: ReactEvent | null,
-  /** @deprecated */
-  measure: ReactMeasure | null,
-  /** @deprecated */
-  priorityIndex: number | null,
-  /** @deprecated */
-  data: $ReadOnly<ReactProfilerData> | null,
+  event: ReactEventV2 | null,
+  measure: ReactMeasureV2 | null,
+  lane: ReactLane | null,
+  data: $ReadOnly<ReactProfilerDataV2> | null,
   flamechartNode: FlamechartFrame | null,
 |};
 

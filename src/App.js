@@ -2,6 +2,7 @@
 
 import type {
   FlamechartData,
+  ReactLane,
   ReactProfilerData,
   ReactProfilerDataV2,
 } from './types';
@@ -9,8 +10,8 @@ import type {
 import React, {useState, useCallback} from 'react';
 import {unstable_batchedUpdates} from 'react-dom';
 
-import {getPriorityHeight} from './canvas/canvasUtils';
-import {REACT_PRIORITIES} from './canvas/constants';
+import {getLaneHeight} from './canvas/canvasUtils';
+import {REACT_TOTAL_NUM_LANES} from './constants';
 import ImportPage from './ImportPage';
 import CanvasPage from './CanvasPage';
 
@@ -26,19 +27,8 @@ export default function App() {
   const [schedulerCanvasHeight, setSchedulerCanvasHeight] = useState<number>(0);
 
   const handleDataImported = useCallback(
-    (
-      importedProfilerData: ReactProfilerData,
-      importedFlamechart: FlamechartData,
-    ) => {
-      unstable_batchedUpdates(() => {
-        setSchedulerCanvasHeight(
-          REACT_PRIORITIES.reduce((height, priority) => {
-            return height + getPriorityHeight(importedProfilerData, priority);
-          }, 0),
-        );
-        setProfilerData(importedProfilerData);
-        setFlamechart(importedFlamechart);
-      });
+    (importedProfilerData: ReactProfilerData) => {
+      setProfilerData(importedProfilerData);
     },
   );
 
@@ -51,6 +41,16 @@ export default function App() {
       unstable_batchedUpdates(() => {
         setProfilerDataV2(importedProfilerData);
         setFlamechart(importedFlamechart);
+
+        const lanesToRender: ReactLane[] = Array.from(
+          Array(REACT_TOTAL_NUM_LANES).keys(),
+        );
+        // TODO: Figure out if this is necessary
+        setSchedulerCanvasHeight(
+          lanesToRender.reduce((height, lane) => {
+            return height + getLaneHeight(importedProfilerData, lane);
+          }, 0),
+        );
       });
     },
   );

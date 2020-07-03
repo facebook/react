@@ -3,9 +3,9 @@
 import type {PanAndZoomState} from './util/usePanAndZoom';
 import type {FlamechartFrame} from './speedscope/lib/flamechart';
 import type {
-  ReactEvent,
-  ReactMeasure,
-  ReactProfilerData,
+  ReactEventV2,
+  ReactMeasureV2,
+  ReactProfilerDataV2,
   ReactHoverContextInfo,
   Return,
 } from './types';
@@ -18,7 +18,7 @@ import useSmartTooltip from './util/useSmartTooltip';
 import styles from './EventTooltip.css';
 
 type Props = {|
-  data: ReactProfilerData,
+  data: ReactProfilerDataV2,
   hoveredEvent: ReactHoverContextInfo | null,
   state: PanAndZoomState,
 |};
@@ -49,6 +49,7 @@ export default function EventTooltip({data, hoveredEvent, state}: Props) {
           />
         );
       case 'schedule-state-update': // eslint-disable-line no-case-declarations
+      case 'schedule-force-update':
         const color = event.isCascading
           ? COLORS.REACT_SCHEDULE_CASCADING_HOVER
           : COLORS.REACT_SCHEDULE_HOVER;
@@ -60,7 +61,9 @@ export default function EventTooltip({data, hoveredEvent, state}: Props) {
             tooltipRef={tooltipRef}
           />
         );
-      case 'suspend':
+      case 'suspense-suspend':
+      case 'suspense-resolved':
+      case 'suspense-rejected':
         return (
           <TooltipReactEvent
             color={COLORS.REACT_SUSPEND_HOVER}
@@ -94,7 +97,6 @@ export default function EventTooltip({data, hoveredEvent, state}: Props) {
   } else if (flamechartNode !== null) {
     return (
       <TooltipFlamechartNode
-        data={data}
         flamechartNode={flamechartNode}
         tooltipRef={tooltipRef}
       />
@@ -114,11 +116,9 @@ function formatComponentStack(componentStack: string): string {
 }
 
 const TooltipFlamechartNode = ({
-  data,
   flamechartNode,
   tooltipRef,
 }: {
-  data: ReactProfilerData,
   flamechartNode: FlamechartFrame,
   tooltipRef: Return<typeof useRef>,
 }) => {
@@ -144,13 +144,11 @@ const TooltipFlamechartNode = ({
 
 const TooltipReactEvent = ({
   color,
-  data,
   event,
   tooltipRef,
 }: {
   color: string,
-  data: ReactProfilerData,
-  event: ReactEvent,
+  event: ReactEventV2,
   tooltipRef: Return<typeof useRef>,
 }) => {
   const {componentName, componentStack, timestamp, type} = event;
@@ -163,8 +161,17 @@ const TooltipReactEvent = ({
     case 'schedule-state-update':
       label = 'state update scheduled';
       break;
-    case 'suspend':
+    case 'schedule-force-update':
+      label = 'force update scheduled';
+      break;
+    case 'suspense-suspend':
       label = 'suspended';
+      break;
+    case 'suspense-resolved':
+      label = 'suspense resolved';
+      break;
+    case 'suspense-rejected':
+      label = 'suspense rejected';
       break;
     default:
       break;
@@ -206,11 +213,11 @@ const TooltipReactMeasure = ({
   measure,
   tooltipRef,
 }: {
-  data: ReactProfilerData,
-  measure: ReactMeasure,
+  data: ReactProfilerDataV2,
+  measure: ReactMeasureV2,
   tooltipRef: Return<typeof useRef>,
 }) => {
-  const {batchUID, duration, priority, timestamp, type} = measure;
+  const {batchUID, duration, timestamp, type} = measure;
 
   let label = null;
   switch (type) {
@@ -233,7 +240,7 @@ const TooltipReactMeasure = ({
       break;
   }
 
-  const [startTime, stopTime] = getBatchRange(batchUID, priority, data);
+  const [startTime, stopTime] = getBatchRange(batchUID, data);
 
   return (
     <div

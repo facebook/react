@@ -28,13 +28,12 @@ const CONTEXT_MENU_ID = 'canvas';
 import type {
   FlamechartData,
   ReactHoverContextInfo,
-  ReactMeasure,
   ReactProfilerData,
   ReactProfilerDataV2,
 } from './types';
 
 type ContextMenuContextData = {|
-  data: ReactProfilerData,
+  data: ReactProfilerDataV2,
   flamechart: FlamechartData,
   hoveredEvent: ReactHoverContextInfo | null,
   state: PanAndZoomState,
@@ -73,10 +72,10 @@ function CanvasPage({
   );
 }
 
-const copySummary = (data: ReactProfilerData, measure: ReactMeasure) => {
-  const {batchUID, duration, priority, timestamp, type} = measure;
+const copySummary = (data, measure) => {
+  const {batchUID, duration, timestamp, type} = measure;
 
-  const [startTime, stopTime] = getBatchRange(batchUID, priority, data);
+  const [startTime, stopTime] = getBatchRange(batchUID, data);
 
   copy(
     JSON.stringify({
@@ -88,17 +87,13 @@ const copySummary = (data: ReactProfilerData, measure: ReactMeasure) => {
   );
 };
 
-const zoomToBatch = (
-  data: ReactProfilerData,
-  measure: ReactMeasure,
-  state: PanAndZoomState,
-) => {
+const zoomToBatch = (data, measure, state) => {
   const {zoomTo} = state;
   if (!zoomTo) {
     return;
   }
-  const {batchUID, priority} = measure;
-  const [startTime, stopTime] = getBatchRange(batchUID, priority, data);
+  const {batchUID} = measure;
+  const [startTime, stopTime] = getBatchRange(batchUID, data);
   zoomTo(startTime, stopTime);
 };
 
@@ -135,7 +130,7 @@ function AutoSizedCanvas({
 
   const hoveredEvent = getHoveredEvent(
     schedulerCanvasHeight,
-    data,
+    dataV2,
     flamechart,
     state,
   );
@@ -143,7 +138,7 @@ function AutoSizedCanvas({
 
   useContextMenu<ContextMenuContextData>({
     data: {
-      data,
+      data: dataV2,
       flamechart,
       hoveredEvent,
       state,
@@ -229,7 +224,7 @@ function AutoSizedCanvas({
         }}
       </ContextMenu>
       {!isContextMenuShown && (
-        <EventTooltip data={data} hoveredEvent={hoveredEvent} state={state} />
+        <EventTooltip data={dataV2} hoveredEvent={hoveredEvent} state={state} />
       )}
     </Fragment>
   );
