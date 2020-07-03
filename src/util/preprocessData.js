@@ -1,21 +1,17 @@
 // @flow
 
-import type {TimelineEvent} from './speedscope/import/chrome';
-
+import type {TimelineEvent} from '../speedscope/import/chrome';
 import type {
   Milliseconds,
   BatchUID,
-  ReactEvent,
+  ReactLane,
   ReactMeasureType,
-  ReactPriority,
   ReactProfilerData,
-  ReactProfilerDataPriority,
-} from './types';
+} from '../types';
 
-// TODO Combine yields/starts that are closer than some threshold with the previous event to reduce renders.
+import {REACT_TOTAL_NUM_LANES} from '../constants';
 
-// TODO: Figure out what this is
-type StackElement = {|
+type MeasureStackElement = {|
   type: ReactMeasureType,
   depth: number,
   index: number,
@@ -23,316 +19,390 @@ type StackElement = {|
   stopTime?: Milliseconds,
 |};
 
-type Metadata = {|
+type ProcessorState = {|
   nextRenderShouldGenerateNewBatchID: boolean,
   batchUID: BatchUID,
-  +stack: StackElement[],
+  uidCounter: BatchUID,
+  measureStack: MeasureStackElement[],
 |};
 
-export default function reactProfilerProcessor(
-  rawData: TimelineEvent[],
-): ReactProfilerData {
-  const reactProfilerData = {
-    startTime: rawData[0].ts,
-    duration: 0,
-    high: {
-      events: [],
-      measures: [],
-      maxNestedMeasures: 0,
-    },
-    normal: {
-      events: [],
-      measures: [],
-      maxNestedMeasures: 0,
-    },
-    low: {
-      events: [],
-      measures: [],
-      maxNestedMeasures: 0,
-    },
-    unscheduled: {
-      events: [],
-      measures: [],
-      maxNestedMeasures: 0,
-    },
-  };
+// Exported for tests
+export function getLanesFromTransportDecimalBitmask(
+  laneBitmaskString: string,
+): ReactLane[] {
+  const laneBitmask = parseInt(laneBitmaskString, 10);
 
-  let currentMetadata: Metadata | null = null;
-  let currentPriority: ReactPriority = 'unscheduled';
-  let currentProfilerDataGroup: ReactProfilerDataPriority | null = null;
-  let uidCounter = 0;
-
-  const metadata: {|[priority: ReactPriority]: Metadata|} = {
-    high: {
-      batchUID: 0,
-      nextRenderShouldGenerateNewBatchID: true,
-      stack: [],
-    },
-    normal: {
-      batchUID: 0,
-      nextRenderShouldGenerateNewBatchID: true,
-      stack: [],
-    },
-    low: {
-      batchUID: 0,
-      nextRenderShouldGenerateNewBatchID: true,
-      stack: [],
-    },
-    unscheduled: {
-      batchUID: 0,
-      nextRenderShouldGenerateNewBatchID: true,
-      stack: [],
-    },
-  };
-
-  const getLastType = () => {
-    if (!currentMetadata) {
-      return null;
-    }
-    const {stack} = currentMetadata;
-    if (stack.length > 0) {
-      const {type} = stack[stack.length - 1];
-      return type;
-    }
-    return null;
-  };
-
-  const getDepth = () => {
-    if (!currentMetadata) {
-      return 0;
-    }
-    const {stack} = currentMetadata;
-    if (stack.length > 0) {
-      const {depth, type} = (stack[stack.length - 1]: StackElement);
-      return type === 'render-idle' ? depth : depth + 1;
-    }
-    return 0;
-  };
-
-  const markWorkCompleted = (
-    type: ReactMeasureType,
-    stopTime: Milliseconds,
-  ) => {
-    if (!currentMetadata) {
-      return;
-    }
-    const {stack} = currentMetadata;
-    if (stack.length === 0) {
-      console.error(
-        `Unexpected type "${type}" completed while stack is empty.`,
-      );
-    } else {
-      const last = stack[stack.length - 1];
-      if (last.type !== type) {
-        console.error(
-          `Unexpected type "${type}" completed before "${last.type}" completed.`,
-        );
-      } else {
-        const {index, startTime} = stack.pop();
-
-        if (currentProfilerDataGroup) {
-          const measure = currentProfilerDataGroup.measures[index];
-          if (!measure) {
-            console.error(
-              `Could not find matching measure for type "${type}".`,
-            );
-          } else {
-            // $FlowFixMe This property should not be writable outside of this function.
-            measure.duration = stopTime - startTime;
-          }
-        }
-      }
-    }
-  };
-
-  const markWorkStarted = (type: ReactMeasureType, startTime: Milliseconds) => {
-    if (!currentMetadata || !currentProfilerDataGroup) {
-      return;
-    }
-    const {batchUID, stack} = currentMetadata;
-
-    const index = currentProfilerDataGroup.measures.length;
-    const depth = getDepth();
-
-    currentProfilerDataGroup.maxNestedMeasures = Math.max(
-      currentProfilerDataGroup.maxNestedMeasures,
-      depth + 1,
-    );
-
-    stack.push({
-      depth,
-      index,
-      startTime,
-      type,
-    });
-
-    currentProfilerDataGroup.measures.push({
-      type,
-      batchUID,
-      depth,
-      priority: currentPriority,
-      timestamp: startTime,
-      duration: 0,
-    });
-  };
-
-  const throwIfIncomplete = type => {
-    if (!currentMetadata) {
-      return;
-    }
-    const {stack} = currentMetadata;
-    const lastIndex = stack.length - 1;
-    if (lastIndex >= 0) {
-      const last = stack[lastIndex];
-      if (last.stopTime === undefined && last.type === type) {
-        throw new Error(
-          `Unexpected type "${type}" started before "${last.type}" completed.`,
-        );
-      }
-    }
-  };
-
-  for (let i = 0; i < rawData.length; i++) {
-    const currentEvent = rawData[i];
-
-    const {cat, name, ts} = currentEvent;
-
-    if (cat !== 'blink.user_timing' || !name.startsWith('--')) {
-      continue;
-    }
-
-    currentMetadata = metadata[currentPriority] || metadata.unscheduled;
-    if (!currentMetadata) {
-      console.error('Unexpected priority', currentPriority);
-    }
-
-    currentProfilerDataGroup =
-      reactProfilerData[currentPriority || 'unscheduled'];
-    if (!currentProfilerDataGroup) {
-      console.error('Unexpected priority', currentPriority);
-    }
-
-    const startTime = (ts - reactProfilerData.startTime) / 1000;
-
-    if (name.startsWith('--scheduler-start-')) {
-      if (currentPriority !== 'unscheduled') {
-        console.error(
-          `Unexpected scheduler start: "${name}" with current priority: "${currentPriority}"`,
-        );
-        continue; // TODO Should we throw? Will this corrupt our data?
-      }
-
-      currentPriority = ((name.substr(18): any): ReactPriority);
-    } else if (name.startsWith('--scheduler-stop-')) {
-      if (
-        currentPriority === 'unscheduled' ||
-        currentPriority !== name.substr(17)
-      ) {
-        console.error(
-          `Unexpected scheduler stop: "${name}" with current priority: "${currentPriority}"`,
-        );
-        continue; // TODO Should we throw? Will this corrupt our data?
-      }
-
-      currentPriority = 'unscheduled';
-    } else if (name === '--render-start') {
-      if (currentMetadata.nextRenderShouldGenerateNewBatchID) {
-        currentMetadata.nextRenderShouldGenerateNewBatchID = false;
-        currentMetadata.batchUID = ((uidCounter++: any): BatchUID);
-      }
-      throwIfIncomplete('render');
-      if (getLastType() !== 'render-idle') {
-        markWorkStarted('render-idle', startTime);
-      }
-      markWorkStarted('render', startTime);
-    } else if (name === '--render-stop') {
-      markWorkCompleted('render', startTime);
-    } else if (name === '--render-yield') {
-      markWorkCompleted('render', startTime);
-    } else if (name === '--render-cancel') {
-      currentMetadata.nextRenderShouldGenerateNewBatchID = true;
-      markWorkCompleted('render', startTime);
-      markWorkCompleted('render-idle', startTime);
-    } else if (name === '--commit-start') {
-      currentMetadata.nextRenderShouldGenerateNewBatchID = true;
-      markWorkStarted('commit', startTime);
-    } else if (name === '--commit-stop') {
-      markWorkCompleted('commit', startTime);
-      markWorkCompleted('render-idle', startTime);
-    } else if (
-      name === '--layout-effects-start' ||
-      name === '--passive-effects-start'
-    ) {
-      const type =
-        name === '--layout-effects-start'
-          ? 'layout-effects'
-          : 'passive-effects';
-      markWorkStarted(type, startTime);
-    } else if (
-      name === '--layout-effects-stop' ||
-      name === '--passive-effects-stop'
-    ) {
-      const type =
-        name === '--layout-effects-stop' ? 'layout-effects' : 'passive-effects';
-      markWorkCompleted(type, startTime);
-    } else if (name.startsWith('--schedule-render')) {
-      currentProfilerDataGroup.events.push({
-        type: 'schedule-render',
-        priority: currentPriority, // TODO Change to target priority
-        timestamp: startTime,
-      });
-    } else if (name.startsWith('--schedule-state-update-')) {
-      const [componentName, componentStack] = name.substr(24).split('-');
-      const isCascading = !!currentMetadata.stack.find(
-        ({type}) => type === 'commit',
-      );
-      currentProfilerDataGroup.events.push({
-        type: 'schedule-state-update',
-        priority: currentPriority, // TODO Change to target priority
-        isCascading,
-        timestamp: startTime,
-        componentName,
-        componentStack,
-      });
-    } else if (name.startsWith('--suspend-')) {
-      const [componentName, componentStack] = name.substr(10).split('-');
-      currentProfilerDataGroup.events.push({
-        type: 'suspend',
-        priority: currentPriority, // TODO Change to target priority
-        timestamp: startTime,
-        componentName,
-        componentStack,
-      });
-    }
+  // As negative numbers are stored in two's complement format, our bitmask
+  // checks will be thrown off by them.
+  if (laneBitmask < 0) {
+    return [];
   }
 
-  Object.entries(metadata).forEach(([priority, metadataForPriority]) => {
-    const {stack} = ((metadataForPriority: any): Metadata);
-    if (stack.length > 0) {
-      console.error(
-        `Incomplete events or measures for priority ${priority}`,
-        stack,
-      );
+  const lanes = [];
+  let powersOfTwo = 0;
+  while (powersOfTwo <= REACT_TOTAL_NUM_LANES) {
+    if ((1 << powersOfTwo) & laneBitmask) {
+      lanes.push(powersOfTwo);
     }
-  });
+    powersOfTwo++;
+  }
+  return lanes;
+}
 
-  ['unscheduled', 'high', 'normal', 'low'].forEach(priority => {
-    const {events, measures} = reactProfilerData[priority];
-    if (events.length > 0) {
-      const {timestamp} = (events[events.length - 1]: ReactEvent);
-      reactProfilerData.duration = Math.max(
-        reactProfilerData.duration,
-        timestamp,
-      );
-    }
-    if (measures.length > 0) {
-      const {duration, timestamp} = measures[measures.length - 1];
-      reactProfilerData.duration = Math.max(
-        reactProfilerData.duration,
-        timestamp + duration,
-      );
-    }
-  });
+function getLastType(stack: $PropertyType<ProcessorState, 'measureStack'>) {
+  if (stack.length > 0) {
+    const {type} = stack[stack.length - 1];
+    return type;
+  }
+  return null;
+}
 
-  return reactProfilerData;
+function getDepth(stack: $PropertyType<ProcessorState, 'measureStack'>) {
+  if (stack.length > 0) {
+    const {depth, type} = stack[stack.length - 1];
+    return type === 'render-idle' ? depth : depth + 1;
+  }
+  return 0;
+}
+
+function markWorkStarted(
+  type: ReactMeasureType,
+  startTime: Milliseconds,
+  lanes: ReactLane[],
+  currentProfilerData: ReactProfilerData,
+  state: ProcessorState,
+) {
+  const {batchUID, measureStack} = state;
+  const index = currentProfilerData.measures.length;
+  const depth = getDepth(measureStack);
+
+  state.measureStack.push({depth, index, startTime, type});
+
+  currentProfilerData.measures.push({
+    type,
+    batchUID,
+    depth,
+    lanes,
+    timestamp: startTime,
+    duration: 0,
+  });
+}
+
+function markWorkCompleted(
+  type: ReactMeasureType,
+  stopTime: Milliseconds,
+  currentProfilerData: ReactProfilerData,
+  stack: $PropertyType<ProcessorState, 'measureStack'>,
+) {
+  if (stack.length === 0) {
+    console.error(
+      `Unexpected type "${type}" completed at ${stopTime}ms while stack is empty.`,
+    );
+    // Ignore work "completion" user timing mark that doesn't complete anything
+    return;
+  }
+
+  const last = stack[stack.length - 1];
+  if (last.type !== type) {
+    console.error(
+      `Unexpected type "${type}" completed at ${stopTime}ms before "${last.type}" completed.`,
+    );
+  }
+
+  const {index, startTime} = stack.pop();
+  const measure = currentProfilerData.measures[index];
+  if (!measure) {
+    console.error(`Could not find matching measure for type "${type}".`);
+  }
+
+  // $FlowFixMe This property should not be writable outside of this function.
+  measure.duration = stopTime - startTime;
+}
+
+function throwIfIncomplete(
+  type: ReactMeasureType,
+  stack: $PropertyType<ProcessorState, 'measureStack'>,
+) {
+  const lastIndex = stack.length - 1;
+  if (lastIndex >= 0) {
+    const last = stack[lastIndex];
+    if (last.stopTime === undefined && last.type === type) {
+      throw new Error(
+        `Unexpected type "${type}" started before "${last.type}" completed.`,
+      );
+    }
+  }
+}
+
+function processTimelineEvent(
+  event: TimelineEvent,
+  /** Finalized profiler data up to `event`. May be mutated. */
+  currentProfilerData: ReactProfilerData,
+  /** Intermediate processor state. May be mutated. */
+  state: ProcessorState,
+) {
+  const {cat, name, ts} = event;
+  if (cat !== 'blink.user_timing' || !name.startsWith('--')) {
+    return;
+  }
+
+  const startTime = (ts - currentProfilerData.startTime) / 1000;
+
+  // React Events - schedule
+  if (name.startsWith('--schedule-render-')) {
+    const [
+      componentName,
+      laneBitmaskString,
+      ...splitComponentStack
+    ] = name.substr(18).split('-');
+    currentProfilerData.events.push({
+      type: 'schedule-render',
+      lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
+      componentName,
+      componentStack: splitComponentStack.join('-'),
+      timestamp: startTime,
+    });
+  } else if (name.startsWith('--schedule-forced-update-')) {
+    const [
+      componentName,
+      laneBitmaskString,
+      ...splitComponentStack
+    ] = name.substr(25).split('-');
+    const isCascading = !!state.measureStack.find(
+      ({type}) => type === 'commit',
+    );
+    currentProfilerData.events.push({
+      type: 'schedule-force-update',
+      lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
+      componentName,
+      componentStack: splitComponentStack.join('-'),
+      timestamp: startTime,
+      isCascading,
+    });
+  } else if (name.startsWith('--schedule-state-update-')) {
+    const [
+      componentName,
+      laneBitmaskString,
+      ...splitComponentStack
+    ] = name.substr(24).split('-');
+    const isCascading = !!state.measureStack.find(
+      ({type}) => type === 'commit',
+    );
+    currentProfilerData.events.push({
+      type: 'schedule-state-update',
+      lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
+      componentName,
+      componentStack: splitComponentStack.join('-'),
+      timestamp: startTime,
+      isCascading,
+    });
+  } // eslint-disable-line brace-style
+
+  // React Events - suspense
+  else if (name.startsWith('--suspense-suspend-')) {
+    const [componentName, id, ...splitComponentStack] = name
+      .substr(19)
+      .split('-');
+    currentProfilerData.events.push({
+      type: 'suspense-suspend',
+      id,
+      componentName,
+      componentStack: splitComponentStack.join('-'),
+      timestamp: startTime,
+    });
+  } else if (name.startsWith('--suspense-resolved-')) {
+    const [componentName, id, ...splitComponentStack] = name
+      .substr(20)
+      .split('-');
+    currentProfilerData.events.push({
+      type: 'suspense-resolved',
+      id,
+      componentName,
+      componentStack: splitComponentStack.join('-'),
+      timestamp: startTime,
+    });
+  } else if (name.startsWith('--suspense-rejected-')) {
+    const [componentName, id, ...splitComponentStack] = name
+      .substr(20)
+      .split('-');
+    currentProfilerData.events.push({
+      type: 'suspense-rejected',
+      id,
+      componentName,
+      componentStack: splitComponentStack.join('-'),
+      timestamp: startTime,
+    });
+  } // eslint-disable-line brace-style
+
+  // React Measures - render
+  else if (name.startsWith('--render-start-')) {
+    if (state.nextRenderShouldGenerateNewBatchID) {
+      state.nextRenderShouldGenerateNewBatchID = false;
+      state.batchUID = ((state.uidCounter++: any): BatchUID);
+    }
+    const laneBitmaskString = name.substr(15);
+    const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
+    throwIfIncomplete('render', state.measureStack);
+    if (getLastType(state.measureStack) !== 'render-idle') {
+      markWorkStarted(
+        'render-idle',
+        startTime,
+        lanes,
+        currentProfilerData,
+        state,
+      );
+    }
+    markWorkStarted('render', startTime, lanes, currentProfilerData, state);
+  } else if (
+    name.startsWith('--render-stop') ||
+    name.startsWith('--render-yield')
+  ) {
+    markWorkCompleted(
+      'render',
+      startTime,
+      currentProfilerData,
+      state.measureStack,
+    );
+  } else if (name.startsWith('--render-cancel')) {
+    state.nextRenderShouldGenerateNewBatchID = true;
+    markWorkCompleted(
+      'render',
+      startTime,
+      currentProfilerData,
+      state.measureStack,
+    );
+    markWorkCompleted(
+      'render-idle',
+      startTime,
+      currentProfilerData,
+      state.measureStack,
+    );
+  } // eslint-disable-line brace-style
+
+  // React Measures - commits
+  else if (name.startsWith('--commit-start-')) {
+    state.nextRenderShouldGenerateNewBatchID = true;
+    const laneBitmaskString = name.substr(15);
+    const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
+    markWorkStarted('commit', startTime, lanes, currentProfilerData, state);
+  } else if (name.startsWith('--commit-stop')) {
+    markWorkCompleted(
+      'commit',
+      startTime,
+      currentProfilerData,
+      state.measureStack,
+    );
+    markWorkCompleted(
+      'render-idle',
+      startTime,
+      currentProfilerData,
+      state.measureStack,
+    );
+  } // eslint-disable-line brace-style
+
+  // React Measures - layout effects
+  else if (name.startsWith('--layout-effects-start-')) {
+    const laneBitmaskString = name.substr(23);
+    const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
+    markWorkStarted(
+      'layout-effects',
+      startTime,
+      lanes,
+      currentProfilerData,
+      state,
+    );
+  } else if (name.startsWith('--layout-effects-stop')) {
+    markWorkCompleted(
+      'layout-effects',
+      startTime,
+      currentProfilerData,
+      state.measureStack,
+    );
+  } // eslint-disable-line brace-style
+
+  // React Measures - passive effects
+  else if (name.startsWith('--passive-effects-start-')) {
+    const laneBitmaskString = name.substr(24);
+    const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
+    markWorkStarted(
+      'passive-effects',
+      startTime,
+      lanes,
+      currentProfilerData,
+      state,
+    );
+  } else if (name.startsWith('--passive-effects-stop')) {
+    markWorkCompleted(
+      'passive-effects',
+      startTime,
+      currentProfilerData,
+      state.measureStack,
+    );
+  } // eslint-disable-line brace-style
+
+  // Unrecognized event
+  else {
+    throw new Error(
+      `Unrecognized event ${name}! This is likely a bug in this profiler tool.`,
+    );
+  }
+}
+
+export default function preprocessData(
+  timeline: TimelineEvent[],
+): ReactProfilerData {
+  const profilerData = {
+    startTime: 0,
+    duration: 0,
+    events: [],
+    measures: [],
+  };
+
+  // TODO: Sort `timeline`. JSON Array Format trace events need not be ordered. See:
+  // https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview#heading=h.f2f0yd51wi15
+
+  const indexOfFirstEventWithTs = timeline.findIndex(event => !!event.ts);
+
+  // Our user timing events are Complete Events (i.e. ph === 'X') and will
+  // always have ts. If there are no ts events, we can safely abort, knowing
+  // that there are no events to process.
+  // See: https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview#heading=h.lpfof2aylapb
+  if (indexOfFirstEventWithTs === -1) {
+    return profilerData;
+  }
+
+  // `profilerData.startTime` cannot be 0 or undefined, otherwise the final
+  // computed React measures will have enormous `timestamp` values.
+  profilerData.startTime = timeline[indexOfFirstEventWithTs].ts;
+
+  const state: ProcessorState = {
+    batchUID: 0,
+    uidCounter: 0,
+    nextRenderShouldGenerateNewBatchID: true,
+    measureStack: [],
+  };
+
+  timeline.forEach(event => processTimelineEvent(event, profilerData, state));
+
+  // Validate that all events and measures are complete
+  const {measureStack} = state;
+  if (measureStack.length > 0) {
+    console.error(`Incomplete events or measures`, measureStack);
+  }
+
+  // Compute profilerData.duration
+  const {events, measures} = profilerData;
+  if (events.length > 0) {
+    const {timestamp} = events[events.length - 1];
+    profilerData.duration = Math.max(profilerData.duration, timestamp);
+  }
+  if (measures.length > 0) {
+    const {duration, timestamp} = measures[measures.length - 1];
+    profilerData.duration = Math.max(
+      profilerData.duration,
+      timestamp + duration,
+    );
+  }
+
+  return profilerData;
 }

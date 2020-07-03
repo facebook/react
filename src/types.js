@@ -14,73 +14,6 @@ export type Return<T> = Return_<*, T>;
 
 export type Milliseconds = number;
 
-/** @deprecated */
-export type ReactPriority = 'unscheduled' | 'high' | 'normal' | 'low';
-
-/** @deprecated */
-export type ReactEventType =
-  | 'schedule-render'
-  | 'schedule-state-update'
-  | 'suspend';
-
-export type ReactMeasureType =
-  | 'commit'
-  // render-idle: A measure spanning the time when a render starts, through all
-  // yields and restarts, and ends when commit stops OR render is cancelled.
-  | 'render-idle'
-  | 'render'
-  | 'layout-effects'
-  | 'passive-effects';
-
-/** @deprecated */
-export type ReactEvent = {|
-  +type: ReactEventType,
-  +priority: ReactPriority,
-  +timestamp: Milliseconds,
-  +componentName?: string,
-  +componentStack?: string,
-  +isCascading?: boolean,
-|};
-
-export type BatchUID = number;
-
-/** @deprecated */
-export type ReactMeasure = {|
-  +type: ReactMeasureType,
-  +priority: ReactPriority,
-  +timestamp: Milliseconds,
-  +duration: Milliseconds,
-  +batchUID: BatchUID,
-  +depth: number,
-|};
-
-/** @deprecated */
-export type ReactProfilerDataPriority = {|
-  events: Array<ReactEvent>,
-  measures: Array<ReactMeasure>,
-  maxNestedMeasures: number,
-|};
-
-/** @deprecated */
-export type ReactProfilerData = {|
-  startTime: number,
-  duration: number,
-  unscheduled: ReactProfilerDataPriority,
-  high: ReactProfilerDataPriority,
-  normal: ReactProfilerDataPriority,
-  low: ReactProfilerDataPriority,
-|};
-
-export type ReactHoverContextInfo = {|
-  event: ReactEventV2 | null,
-  measure: ReactMeasureV2 | null,
-  lane: ReactLane | null,
-  data: $ReadOnly<ReactProfilerDataV2> | null,
-  flamechartNode: FlamechartFrame | null,
-|};
-
-export type FlamechartData = Flamechart;
-
 export type ReactLane = number;
 
 type BaseReactEvent = {|
@@ -125,16 +58,27 @@ export type ReactSuspenseRejectedEvent = {|
   type: 'suspense-rejected',
 |};
 
-export type ReactEventV2 =
+export type ReactEvent =
   | ReactScheduleRenderEvent
   | ReactScheduleStateUpdateEvent
   | ReactScheduleForceUpdateEvent
   | ReactSuspenseSuspendEvent
   | ReactSuspenseResolvedEvent
   | ReactSuspenseRejectedEvent;
-export type ReactEventTypeV2 = $PropertyType<ReactEventV2, 'type'>;
+export type ReactEventType = $PropertyType<ReactEvent, 'type'>;
 
-export type ReactMeasureV2 = {|
+export type ReactMeasureType =
+  | 'commit'
+  // render-idle: A measure spanning the time when a render starts, through all
+  // yields and restarts, and ends when commit stops OR render is cancelled.
+  | 'render-idle'
+  | 'render'
+  | 'layout-effects'
+  | 'passive-effects';
+
+export type BatchUID = number;
+
+export type ReactMeasure = {|
   +type: ReactMeasureType,
   +lanes: ReactLane[],
   +timestamp: Milliseconds,
@@ -143,9 +87,19 @@ export type ReactMeasureV2 = {|
   +depth: number,
 |};
 
-export type ReactProfilerDataV2 = {|
+export type ReactProfilerData = {|
   startTime: number,
   duration: number,
-  events: ReactEventV2[],
-  measures: ReactMeasureV2[],
+  events: ReactEvent[],
+  measures: ReactMeasure[],
 |};
+
+export type ReactHoverContextInfo = {|
+  event: ReactEvent | null,
+  measure: ReactMeasure | null,
+  lane: ReactLane | null,
+  data: $ReadOnly<ReactProfilerData> | null,
+  flamechartNode: FlamechartFrame | null,
+|};
+
+export type FlamechartData = Flamechart;

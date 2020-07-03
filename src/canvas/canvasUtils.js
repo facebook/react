@@ -5,9 +5,7 @@ import type {
   FlamechartData,
   ReactHoverContextInfo,
   ReactLane,
-  ReactPriority,
   ReactProfilerData,
-  ReactProfilerDataV2,
 } from '../types';
 import type {PanAndZoomState} from '../util/usePanAndZoom';
 
@@ -112,7 +110,7 @@ export const trimFlamegraphText = (
 
 export function getHoveredEvent(
   schedulerCanvasHeight: number,
-  data: $ReadOnly<ReactProfilerDataV2>,
+  data: $ReadOnly<ReactProfilerData>,
   flamechart: $ReadOnly<FlamechartData>,
   state: PanAndZoomState,
 ): ReactHoverContextInfo | null {
@@ -244,48 +242,8 @@ export function getHoveredEvent(
   return null;
 }
 
-const cachedPriorityHeights = new Map();
-export const getPriorityHeight = (
-  data: $ReadOnly<ReactProfilerData>,
-  priority: ReactPriority,
-): number => {
-  if (cachedPriorityHeights.has(priority)) {
-    // We know the value must be present because we've just checked.
-    return ((cachedPriorityHeights.get(priority): any): number);
-  } else {
-    const numMeasures = data[priority].maxNestedMeasures;
-    const events = data[priority].events;
-
-    let priorityHeight = 0;
-    if (numMeasures > 0 && events.length > 0) {
-      priorityHeight =
-        REACT_GUTTER_SIZE +
-        REACT_EVENT_SIZE +
-        REACT_WORK_SIZE * numMeasures +
-        REACT_GUTTER_SIZE * numMeasures +
-        REACT_PRIORITY_BORDER_SIZE;
-    } else if (numMeasures > 0) {
-      priorityHeight =
-        REACT_GUTTER_SIZE +
-        REACT_WORK_SIZE * numMeasures +
-        REACT_GUTTER_SIZE * numMeasures +
-        REACT_PRIORITY_BORDER_SIZE;
-    } else if (events.length > 0) {
-      priorityHeight =
-        REACT_GUTTER_SIZE +
-        REACT_EVENT_SIZE +
-        REACT_GUTTER_SIZE +
-        REACT_PRIORITY_BORDER_SIZE;
-    }
-
-    cachedPriorityHeights.set(priority, priorityHeight);
-
-    return priorityHeight;
-  }
-};
-
 export const getLaneHeight = (
-  data: $ReadOnly<ReactProfilerDataV2>,
+  data: $ReadOnly<ReactProfilerData>,
   lane: ReactLane,
 ): number => {
   // TODO: Return 0 if data has no data for lane
