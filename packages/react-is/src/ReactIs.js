@@ -110,11 +110,7 @@ export function isContextProvider(object: any) {
   return typeOf(object) === REACT_PROVIDER_TYPE;
 }
 export function isElement(object: any) {
-  return (
-    typeof object === 'object' &&
-    object !== null &&
-    object.$$typeof === REACT_ELEMENT_TYPE
-  );
+  return (object || {}).$$typeof === REACT_ELEMENT_TYPE;
 }
 export function isForwardRef(object: any) {
   return typeOf(object) === REACT_FORWARD_REF_TYPE;
