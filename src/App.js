@@ -1,11 +1,6 @@
 // @flow
 
-import type {
-  FlamechartData,
-  ReactLane,
-  ReactProfilerData,
-  ReactProfilerDataV2,
-} from './types';
+import type {FlamechartData, ReactLane, ReactProfilerDataV2} from './types';
 
 import React, {useState, useCallback} from 'react';
 import {unstable_batchedUpdates} from 'react-dom';
@@ -16,9 +11,6 @@ import ImportPage from './ImportPage';
 import CanvasPage from './CanvasPage';
 
 export default function App() {
-  const [profilerData, setProfilerData] = useState<ReactProfilerData | null>(
-    null,
-  );
   const [
     profilerDataV2,
     setProfilerDataV2,
@@ -26,13 +18,6 @@ export default function App() {
   const [flamechart, setFlamechart] = useState<FlamechartData | null>(null);
   const [schedulerCanvasHeight, setSchedulerCanvasHeight] = useState<number>(0);
 
-  const handleDataImported = useCallback(
-    (importedProfilerData: ReactProfilerData) => {
-      setProfilerData(importedProfilerData);
-    },
-  );
-
-  // TODO: Migrate and completely remove V2 stuff
   const handleDataImportedV2 = useCallback(
     (
       importedProfilerData: ReactProfilerDataV2,
@@ -55,21 +40,15 @@ export default function App() {
     },
   );
 
-  if (profilerData && profilerDataV2 && flamechart) {
+  if (profilerDataV2 && flamechart) {
     return (
       <CanvasPage
-        profilerData={profilerData}
         profilerDataV2={profilerDataV2}
         flamechart={flamechart}
         schedulerCanvasHeight={schedulerCanvasHeight}
       />
     );
   } else {
-    return (
-      <ImportPage
-        onDataImported={handleDataImported}
-        onDataImportedV2={handleDataImportedV2}
-      />
-    );
+    return <ImportPage onDataImportedV2={handleDataImportedV2} />;
   }
 }

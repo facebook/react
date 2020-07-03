@@ -28,7 +28,6 @@ const CONTEXT_MENU_ID = 'canvas';
 import type {
   FlamechartData,
   ReactHoverContextInfo,
-  ReactProfilerData,
   ReactProfilerDataV2,
 } from './types';
 
@@ -40,14 +39,12 @@ type ContextMenuContextData = {|
 |};
 
 type Props = {|
-  profilerData: ReactProfilerData,
   profilerDataV2: ReactProfilerDataV2,
   flamechart: FlamechartData,
   schedulerCanvasHeight: number,
 |};
 
 function CanvasPage({
-  profilerData,
   profilerDataV2,
   flamechart,
   schedulerCanvasHeight,
@@ -59,7 +56,6 @@ function CanvasPage({
       <AutoSizer>
         {({height, width}: {height: number, width: number}) => (
           <AutoSizedCanvas
-            data={profilerData}
             dataV2={profilerDataV2}
             flamechart={flamechart}
             height={height}
@@ -98,7 +94,6 @@ const zoomToBatch = (data, measure, state) => {
 };
 
 type AutoSizedCanvasProps = {|
-  data: ReactProfilerData,
   dataV2: ReactProfilerDataV2,
   flamechart: FlamechartData,
   height: number,
@@ -107,7 +102,6 @@ type AutoSizedCanvasProps = {|
 |};
 
 function AutoSizedCanvas({
-  data,
   dataV2,
   flamechart,
   height,
