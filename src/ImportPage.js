@@ -1,26 +1,26 @@
 // @flow
 
 import type {TimelineEvent} from './speedscope/import/chrome';
-import type {FlamechartData, ReactProfilerDataV2} from './types';
+import type {FlamechartData, ReactProfilerData} from './types';
 
 import React, {useEffect} from 'react';
 
-import preprocessDataV2 from './util/preprocessDataV2';
+import preprocessData from './util/preprocessData';
 import preprocessFlamechart from './util/preprocessFlamechart';
 
 // TODO: Add import button but keep a static path until canvas layout is ready
-import JSON_PATHV2 from 'url:../static/Profile-20200625T133129.json';
+import JSON_PATH from 'url:../static/Profile-20200625T133129.json';
 
 type Props = {|
-  onDataImportedV2: (
-    profilerData: ReactProfilerDataV2,
+  onDataImported: (
+    profilerData: ReactProfilerData,
     flamechart: FlamechartData,
   ) => void,
 |};
 
-export default function ImportPage({onDataImportedV2}: Props) {
+export default function ImportPage({onDataImported}: Props) {
   useEffect(() => {
-    fetch(JSON_PATHV2)
+    fetch(JSON_PATH)
       .then(res => res.json())
       .then((events: TimelineEvent[]) => {
         // Filter null entries and sort by timestamp.
@@ -29,9 +29,9 @@ export default function ImportPage({onDataImportedV2}: Props) {
         events = events.filter(Boolean).sort((a, b) => (a.ts > b.ts ? 1 : -1));
 
         if (events.length > 0) {
-          const processedData = preprocessDataV2(events);
+          const processedData = preprocessData(events);
           const processedFlamechart = preprocessFlamechart(events);
-          onDataImportedV2(processedData, processedFlamechart);
+          onDataImported(processedData, processedFlamechart);
         }
       });
   }, []);

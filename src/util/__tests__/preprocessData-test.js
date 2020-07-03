@@ -2,7 +2,7 @@
 
 import preprocessData, {
   getLanesFromTransportDecimalBitmask,
-} from '../preprocessDataV2';
+} from '../preprocessData';
 import {REACT_TOTAL_NUM_LANES} from '../../constants';
 
 // Disable quotes rule in the whole file as we paste raw JSON as test inputs and

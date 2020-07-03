@@ -58,14 +58,14 @@ export type ReactSuspenseRejectedEvent = {|
   type: 'suspense-rejected',
 |};
 
-export type ReactEventV2 =
+export type ReactEvent =
   | ReactScheduleRenderEvent
   | ReactScheduleStateUpdateEvent
   | ReactScheduleForceUpdateEvent
   | ReactSuspenseSuspendEvent
   | ReactSuspenseResolvedEvent
   | ReactSuspenseRejectedEvent;
-export type ReactEventTypeV2 = $PropertyType<ReactEventV2, 'type'>;
+export type ReactEventType = $PropertyType<ReactEvent, 'type'>;
 
 export type ReactMeasureType =
   | 'commit'
@@ -78,7 +78,7 @@ export type ReactMeasureType =
 
 export type BatchUID = number;
 
-export type ReactMeasureV2 = {|
+export type ReactMeasure = {|
   +type: ReactMeasureType,
   +lanes: ReactLane[],
   +timestamp: Milliseconds,
@@ -87,18 +87,18 @@ export type ReactMeasureV2 = {|
   +depth: number,
 |};
 
-export type ReactProfilerDataV2 = {|
+export type ReactProfilerData = {|
   startTime: number,
   duration: number,
-  events: ReactEventV2[],
-  measures: ReactMeasureV2[],
+  events: ReactEvent[],
+  measures: ReactMeasure[],
 |};
 
 export type ReactHoverContextInfo = {|
-  event: ReactEventV2 | null,
-  measure: ReactMeasureV2 | null,
+  event: ReactEvent | null,
+  measure: ReactMeasure | null,
   lane: ReactLane | null,
-  data: $ReadOnly<ReactProfilerDataV2> | null,
+  data: $ReadOnly<ReactProfilerData> | null,
   flamechartNode: FlamechartFrame | null,
 |};
 

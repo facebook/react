@@ -4,7 +4,7 @@ import type {
   FlamechartData,
   ReactHoverContextInfo,
   ReactLane,
-  ReactProfilerDataV2,
+  ReactProfilerData,
 } from '../types';
 import type {PanAndZoomState} from '../util/usePanAndZoom';
 
@@ -507,7 +507,7 @@ function renderAxisMarkers(
 // TODO Passing "state" directly breaks memoization for e.g. mouse moves
 export const renderCanvas = memoize(
   (
-    data: $ReadOnly<ReactProfilerDataV2>,
+    data: $ReadOnly<ReactProfilerData>,
     flamechart: $ReadOnly<FlamechartData>,
     canvas: HTMLCanvasElement,
     canvasWidth: number,

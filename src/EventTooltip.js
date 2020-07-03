@@ -3,9 +3,9 @@
 import type {PanAndZoomState} from './util/usePanAndZoom';
 import type {FlamechartFrame} from './speedscope/lib/flamechart';
 import type {
-  ReactEventV2,
-  ReactMeasureV2,
-  ReactProfilerDataV2,
+  ReactEvent,
+  ReactMeasure,
+  ReactProfilerData,
   ReactHoverContextInfo,
   Return,
 } from './types';
@@ -18,7 +18,7 @@ import useSmartTooltip from './util/useSmartTooltip';
 import styles from './EventTooltip.css';
 
 type Props = {|
-  data: ReactProfilerDataV2,
+  data: ReactProfilerData,
   hoveredEvent: ReactHoverContextInfo | null,
   state: PanAndZoomState,
 |};
@@ -148,7 +148,7 @@ const TooltipReactEvent = ({
   tooltipRef,
 }: {
   color: string,
-  event: ReactEventV2,
+  event: ReactEvent,
   tooltipRef: Return<typeof useRef>,
 }) => {
   const {componentName, componentStack, timestamp, type} = event;
@@ -213,8 +213,8 @@ const TooltipReactMeasure = ({
   measure,
   tooltipRef,
 }: {
-  data: ReactProfilerDataV2,
-  measure: ReactMeasureV2,
+  data: ReactProfilerData,
+  measure: ReactMeasure,
   tooltipRef: Return<typeof useRef>,
 }) => {
   const {batchUID, duration, timestamp, type} = measure;

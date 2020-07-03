@@ -1,6 +1,6 @@
 // @flow
 
-import type {FlamechartData, ReactLane, ReactProfilerDataV2} from './types';
+import type {FlamechartData, ReactLane, ReactProfilerData} from './types';
 
 import React, {useState, useCallback} from 'react';
 import {unstable_batchedUpdates} from 'react-dom';
@@ -11,20 +11,19 @@ import ImportPage from './ImportPage';
 import CanvasPage from './CanvasPage';
 
 export default function App() {
-  const [
-    profilerDataV2,
-    setProfilerDataV2,
-  ] = useState<ReactProfilerDataV2 | null>(null);
+  const [profilerData, setProfilerData] = useState<ReactProfilerData | null>(
+    null,
+  );
   const [flamechart, setFlamechart] = useState<FlamechartData | null>(null);
   const [schedulerCanvasHeight, setSchedulerCanvasHeight] = useState<number>(0);
 
-  const handleDataImportedV2 = useCallback(
+  const handleDataImported = useCallback(
     (
-      importedProfilerData: ReactProfilerDataV2,
+      importedProfilerData: ReactProfilerData,
       importedFlamechart: FlamechartData,
     ) => {
       unstable_batchedUpdates(() => {
-        setProfilerDataV2(importedProfilerData);
+        setProfilerData(importedProfilerData);
         setFlamechart(importedFlamechart);
 
         const lanesToRender: ReactLane[] = Array.from(
@@ -40,15 +39,15 @@ export default function App() {
     },
   );
 
-  if (profilerDataV2 && flamechart) {
+  if (profilerData && flamechart) {
     return (
       <CanvasPage
-        profilerDataV2={profilerDataV2}
+        profilerData={profilerData}
         flamechart={flamechart}
         schedulerCanvasHeight={schedulerCanvasHeight}
       />
     );
   } else {
-    return <ImportPage onDataImportedV2={handleDataImportedV2} />;
+    return <ImportPage onDataImported={handleDataImported} />;
   }
 }

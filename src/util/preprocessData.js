@@ -6,7 +6,7 @@ import type {
   BatchUID,
   ReactLane,
   ReactMeasureType,
-  ReactProfilerDataV2,
+  ReactProfilerData,
 } from '../types';
 
 import {REACT_TOTAL_NUM_LANES} from '../constants';
@@ -69,7 +69,7 @@ function markWorkStarted(
   type: ReactMeasureType,
   startTime: Milliseconds,
   lanes: ReactLane[],
-  currentProfilerData: ReactProfilerDataV2,
+  currentProfilerData: ReactProfilerData,
   state: ProcessorState,
 ) {
   const {batchUID, measureStack} = state;
@@ -91,7 +91,7 @@ function markWorkStarted(
 function markWorkCompleted(
   type: ReactMeasureType,
   stopTime: Milliseconds,
-  currentProfilerData: ReactProfilerDataV2,
+  currentProfilerData: ReactProfilerData,
   stack: $PropertyType<ProcessorState, 'measureStack'>,
 ) {
   if (stack.length === 0) {
@@ -137,7 +137,7 @@ function throwIfIncomplete(
 function processTimelineEvent(
   event: TimelineEvent,
   /** Finalized profiler data up to `event`. May be mutated. */
-  currentProfilerData: ReactProfilerDataV2,
+  currentProfilerData: ReactProfilerData,
   /** Intermediate processor state. May be mutated. */
   state: ProcessorState,
 ) {
@@ -350,7 +350,7 @@ function processTimelineEvent(
 
 export default function preprocessData(
   timeline: TimelineEvent[],
-): ReactProfilerDataV2 {
+): ReactProfilerData {
   const profilerData = {
     startTime: 0,
     duration: 0,

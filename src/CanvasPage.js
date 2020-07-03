@@ -28,27 +28,23 @@ const CONTEXT_MENU_ID = 'canvas';
 import type {
   FlamechartData,
   ReactHoverContextInfo,
-  ReactProfilerDataV2,
+  ReactProfilerData,
 } from './types';
 
 type ContextMenuContextData = {|
-  data: ReactProfilerDataV2,
+  data: ReactProfilerData,
   flamechart: FlamechartData,
   hoveredEvent: ReactHoverContextInfo | null,
   state: PanAndZoomState,
 |};
 
 type Props = {|
-  profilerDataV2: ReactProfilerDataV2,
+  profilerData: ReactProfilerData,
   flamechart: FlamechartData,
   schedulerCanvasHeight: number,
 |};
 
-function CanvasPage({
-  profilerDataV2,
-  flamechart,
-  schedulerCanvasHeight,
-}: Props) {
+function CanvasPage({profilerData, flamechart, schedulerCanvasHeight}: Props) {
   return (
     <div
       className={styles.CanvasPage}
@@ -56,7 +52,7 @@ function CanvasPage({
       <AutoSizer>
         {({height, width}: {height: number, width: number}) => (
           <AutoSizedCanvas
-            dataV2={profilerDataV2}
+            data={profilerData}
             flamechart={flamechart}
             height={height}
             schedulerCanvasHeight={schedulerCanvasHeight}
@@ -94,7 +90,7 @@ const zoomToBatch = (data, measure, state) => {
 };
 
 type AutoSizedCanvasProps = {|
-  dataV2: ReactProfilerDataV2,
+  data: ReactProfilerData,
   flamechart: FlamechartData,
   height: number,
   schedulerCanvasHeight: number,
@@ -102,7 +98,7 @@ type AutoSizedCanvasProps = {|
 |};
 
 function AutoSizedCanvas({
-  dataV2,
+  data,
   flamechart,
   height,
   schedulerCanvasHeight,
@@ -116,7 +112,7 @@ function AutoSizedCanvas({
     canvasWidth: width,
     fixedColumnWidth: LABEL_FIXED_WIDTH,
     fixedHeaderHeight: HEADER_HEIGHT_FIXED,
-    unscaledContentWidth: dataV2.duration,
+    unscaledContentWidth: data.duration,
     unscaledContentHeight:
       schedulerCanvasHeight +
       flamechart.layers.length * FLAMECHART_FRAME_HEIGHT,
@@ -124,7 +120,7 @@ function AutoSizedCanvas({
 
   const hoveredEvent = getHoveredEvent(
     schedulerCanvasHeight,
-    dataV2,
+    data,
     flamechart,
     state,
   );
@@ -132,7 +128,7 @@ function AutoSizedCanvas({
 
   useContextMenu<ContextMenuContextData>({
     data: {
-      data: dataV2,
+      data,
       flamechart,
       hoveredEvent,
       state,
@@ -145,7 +141,7 @@ function AutoSizedCanvas({
   useLayoutEffect(() => {
     if (canvasRef.current !== null) {
       renderCanvas(
-        dataV2,
+        data,
         flamechart,
         canvasRef.current,
         width,
@@ -218,7 +214,7 @@ function AutoSizedCanvas({
         }}
       </ContextMenu>
       {!isContextMenuShown && (
-        <EventTooltip data={dataV2} hoveredEvent={hoveredEvent} state={state} />
+        <EventTooltip data={data} hoveredEvent={hoveredEvent} state={state} />
       )}
     </Fragment>
   );

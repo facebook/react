@@ -5,7 +5,7 @@ import type {
   FlamechartData,
   ReactHoverContextInfo,
   ReactLane,
-  ReactProfilerDataV2,
+  ReactProfilerData,
 } from '../types';
 import type {PanAndZoomState} from '../util/usePanAndZoom';
 
@@ -110,7 +110,7 @@ export const trimFlamegraphText = (
 
 export function getHoveredEvent(
   schedulerCanvasHeight: number,
-  data: $ReadOnly<ReactProfilerDataV2>,
+  data: $ReadOnly<ReactProfilerData>,
   flamechart: $ReadOnly<FlamechartData>,
   state: PanAndZoomState,
 ): ReactHoverContextInfo | null {
@@ -243,7 +243,7 @@ export function getHoveredEvent(
 }
 
 export const getLaneHeight = (
-  data: $ReadOnly<ReactProfilerDataV2>,
+  data: $ReadOnly<ReactProfilerData>,
   lane: ReactLane,
 ): number => {
   // TODO: Return 0 if data has no data for lane
