@@ -29,6 +29,8 @@ import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFr
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
+import {isElement} from 'react-is';
+
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
@@ -65,11 +67,7 @@ const hasOwnProperty = Object.prototype.hasOwnProperty;
  */
 export function isValidElement(object) {
   if (__DEV__) {
-    return (
-      typeof object === 'object' &&
-      object !== null &&
-      object.$$typeof === REACT_ELEMENT_TYPE
-    );
+    return isElement(object);
   }
 }
 
