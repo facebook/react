@@ -59,7 +59,6 @@ function describeFiber(fiber: Fiber): string {
 }
 
 export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
-  // TODO (brian) Generate and store temporary ID so DevTools can match up a component stack later.
   try {
     let info = '';
     let node = workInProgress;

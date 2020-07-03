@@ -65,6 +65,7 @@ function cacheFirstGetComponentStackByFiber(fiber: Fiber): string {
       return ((cachedFiberStacks.get(alternate): any): string);
     }
   }
+  // TODO (brian) Generate and store temporary ID so DevTools can match up a component stack later.
   const componentStack = getStackByFiberInDevAndProd(fiber) || '';
   cachedFiberStacks.set(fiber, componentStack);
   return componentStack;
