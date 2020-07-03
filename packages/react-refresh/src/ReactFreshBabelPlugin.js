@@ -212,31 +212,30 @@ export default function(babel, opts = {}) {
   }
 
   function isBuiltinHook(hookName) {
-    switch (hookName) {
-      case 'useState':
-      case 'React.useState':
-      case 'useReducer':
-      case 'React.useReducer':
-      case 'useEffect':
-      case 'React.useEffect':
-      case 'useLayoutEffect':
-      case 'React.useLayoutEffect':
-      case 'useMemo':
-      case 'React.useMemo':
-      case 'useCallback':
-      case 'React.useCallback':
-      case 'useRef':
-      case 'React.useRef':
-      case 'useContext':
-      case 'React.useContext':
-      case 'useImperativeMethods':
-      case 'React.useImperativeMethods':
-      case 'useDebugValue':
-      case 'React.useDebugValue':
-        return true;
-      default:
-        return false;
-    }
+    return (
+      [
+        'useState',
+        'React.useState',
+        'useReducer',
+        'React.useReducer',
+        'useEffect',
+        'React.useEffect',
+        'useLayoutEffect',
+        'React.useLayoutEffect',
+        'useMemo',
+        'React.useMemo',
+        'useCallback',
+        'React.useCallback',
+        'useRef',
+        'React.useRef',
+        'useContext',
+        'React.useContext',
+        'useImperativeMethods',
+        'React.useImperativeMethods',
+        'useDebugValue',
+        'React.useDebugValue',
+      ].indexOf(hookName) !== -1
+    );
   }
 
   function getHookCallsSignature(functionNode) {
