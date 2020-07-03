@@ -6,7 +6,7 @@ import {copy} from 'clipboard-js';
 import React, {Fragment, useLayoutEffect, useRef, useState} from 'react';
 import usePanAndZoom from './util/usePanAndZoom';
 
-import {getHoveredEvent} from './canvas/canvasUtils';
+import {getHoveredEvent} from './canvas/getHoveredEvent';
 import {renderCanvas} from './canvas/renderCanvas';
 
 import prettyMilliseconds from 'pretty-ms';

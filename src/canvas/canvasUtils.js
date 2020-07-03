@@ -1,32 +1,16 @@
 // @flow
 // Contains helper functions for rendering canvas elements
 
-import type {
-  FlamechartData,
-  ReactHoverContextInfo,
-  ReactLane,
-  ReactProfilerData,
-} from '../types';
-import type {PanAndZoomState} from '../util/usePanAndZoom';
+import type {ReactLane, ReactProfilerData} from '../types';
 
 import memoize from 'memoize-one';
 import {
   INTERVAL_TIMES,
   MAX_INTERVAL_SIZE_PX,
-  HEADER_HEIGHT_FIXED,
   REACT_GUTTER_SIZE,
-  REACT_EVENT_SIZE,
   REACT_WORK_SIZE,
   REACT_PRIORITY_BORDER_SIZE,
-  FLAMECHART_FRAME_HEIGHT,
-  EVENT_ROW_HEIGHT_FIXED,
 } from './constants';
-import {
-  durationToWidth,
-  positionToTimestamp,
-  timestampToPosition,
-} from '../util/usePanAndZoom';
-import {REACT_TOTAL_NUM_LANES} from '../constants';
 
 // hidpi canvas: https://www.html5rocks.com/en/tutorials/canvas/hidpi/
 function configureRetinaCanvas(canvas, height, width) {
@@ -107,140 +91,6 @@ export const trimFlamegraphText = (
 
   return null;
 };
-
-export function getHoveredEvent(
-  schedulerCanvasHeight: number,
-  data: $ReadOnly<ReactProfilerData>,
-  flamechart: $ReadOnly<FlamechartData>,
-  state: PanAndZoomState,
-): ReactHoverContextInfo | null {
-  const {canvasMouseX, canvasMouseY, offsetY} = state;
-
-  if (canvasMouseY < HEADER_HEIGHT_FIXED) {
-    return null;
-  }
-
-  if (canvasMouseY + offsetY < HEADER_HEIGHT_FIXED + EVENT_ROW_HEIGHT_FIXED) {
-    // Find hovered React event
-
-    const {events} = data;
-
-    // Because data ranges may overlap, we want to find the last intersecting item.
-    // This will always be the one on "top" (the one the user is hovering over).
-    for (let index = events.length - 1; index >= 0; index--) {
-      const event = events[index];
-      const {timestamp} = event;
-
-      const eventX = timestampToPosition(timestamp, state);
-      const startX = eventX - REACT_EVENT_SIZE / 2;
-      const stopX = eventX + REACT_EVENT_SIZE / 2;
-      if (canvasMouseX >= startX && canvasMouseX <= stopX) {
-        return {
-          event,
-          flamechartNode: null,
-          measure: null,
-          lane: null,
-          data,
-        };
-      }
-    }
-  } else if (
-    canvasMouseY + offsetY <
-    HEADER_HEIGHT_FIXED + EVENT_ROW_HEIGHT_FIXED + schedulerCanvasHeight
-  ) {
-    // Find hovered React measure
-
-    const adjustedCanvasMouseY = canvasMouseY - HEADER_HEIGHT_FIXED + offsetY;
-    let laneMinY = EVENT_ROW_HEIGHT_FIXED;
-    let lane = null;
-    for (
-      let laneIndex: ReactLane = 0;
-      laneIndex < REACT_TOTAL_NUM_LANES;
-      laneIndex++
-    ) {
-      const laneHeight = getLaneHeight(data, laneIndex);
-      if (
-        adjustedCanvasMouseY >= laneMinY &&
-        adjustedCanvasMouseY <= laneMinY + laneHeight
-      ) {
-        lane = laneIndex;
-        break;
-      }
-      laneMinY += laneHeight;
-    }
-
-    if (lane === null) {
-      return null;
-    }
-
-    // Because data ranges may overlap, we want to find the last intersecting item.
-    // This will always be the one on "top" (the one the user is hovering over).
-    const {measures} = data;
-    for (let index = measures.length - 1; index >= 0; index--) {
-      const measure = measures[index];
-      if (!measure.lanes.includes(lane)) {
-        continue;
-      }
-
-      const {duration, timestamp} = measure;
-      const pointerTime = positionToTimestamp(canvasMouseX, state);
-
-      if (pointerTime >= timestamp && pointerTime <= timestamp + duration) {
-        return {
-          event: null,
-          flamechartNode: null,
-          measure,
-          lane,
-          data,
-        };
-      }
-    }
-  } else {
-    // Find hovered flamechart event
-
-    const layerIndex = Math.floor(
-      (canvasMouseY +
-        offsetY -
-        HEADER_HEIGHT_FIXED -
-        EVENT_ROW_HEIGHT_FIXED -
-        schedulerCanvasHeight) /
-        FLAMECHART_FRAME_HEIGHT,
-    );
-    const layer = flamechart.layers[layerIndex];
-
-    if (layer != null) {
-      let startIndex = 0;
-      let stopIndex = layer.length - 1;
-      while (startIndex <= stopIndex) {
-        const currentIndex = Math.floor((startIndex + stopIndex) / 2);
-        const flamechartNode = layer[currentIndex];
-
-        const {end, start} = flamechartNode;
-
-        const width = durationToWidth((end - start) / 1000, state);
-        const x = Math.floor(timestampToPosition(start / 1000, state));
-
-        if (x <= canvasMouseX && x + width >= canvasMouseX) {
-          return {
-            event: null,
-            flamechartNode,
-            measure: null,
-            lane: null,
-            data,
-          };
-        }
-
-        if (x > canvasMouseX) {
-          stopIndex = currentIndex - 1;
-        } else {
-          startIndex = currentIndex + 1;
-        }
-      }
-    }
-  }
-
-  return null;
-}
 
 export const getLaneHeight = (
   data: $ReadOnly<ReactProfilerData>,
