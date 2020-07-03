@@ -37,6 +37,9 @@ import {
   FLAMECHART_TEXT_PADDING,
   LABEL_FIXED_WIDTH,
   HEADER_HEIGHT_FIXED,
+  REACT_EVENT_SIZE,
+  EVENT_SIZE,
+  REACT_EVENT_ROW_PADDING,
 } from './constants';
 import {REACT_TOTAL_NUM_LANES} from '../constants';
 
@@ -75,6 +78,9 @@ import {REACT_TOTAL_NUM_LANES} from '../constants';
 //                  '──────────────────────────
 //
 
+// TODO: (windowing, optimization) We can avoid rendering offscreen data in many
+// of the render* functions in this file.
+
 function renderBackgroundFills(context, canvasWidth, canvasHeight) {
   // Fill the canvas with the background color
   context.fillStyle = COLORS.BACKGROUND;
@@ -82,11 +88,141 @@ function renderBackgroundFills(context, canvasWidth, canvasHeight) {
 }
 
 /**
- * Render all charting data (once it's loaded and processed) within the
- * "scrollable" region.
+ * Render React events from `data` in a single row.
+ *
+ * The React events will be rendered into the canvas `context` of dimensions
+ * `canvasWidth`x`canvasHeight`, starting at `canvasStartY`. The events will be
+ * offset by pan and zoom `state`. Optionally with a highlighted
+ * `hoveredEvent`.
+ *
+ * @see renderSingleReactEvent
  */
-// TODO (windowing) We can avoid rendering all of this if we've scrolled some of it off screen.
-function renderReactMarksAndMeasures(
+function renderReactEventRow(
+  context,
+  events,
+  state,
+  hoveredEvent,
+  canvasWidth,
+  canvasHeight,
+  canvasStartY,
+): number {
+  const {offsetY} = state;
+
+  // Draw events
+  const baseY = canvasStartY + REACT_EVENT_ROW_PADDING;
+  events.forEach(event => {
+    const showHoverHighlight = hoveredEvent && hoveredEvent.event === event;
+    renderSingleReactEvent(
+      context,
+      state,
+      event,
+      canvasWidth,
+      baseY,
+      offsetY,
+      showHoverHighlight,
+    );
+  });
+
+  // Draw the hovered and/or selected items on top so they stand out.
+  // This is helpful if there are multiple (overlapping) items close to each other.
+  if (hoveredEvent !== null && hoveredEvent.event !== null) {
+    renderSingleReactEvent(
+      context,
+      state,
+      hoveredEvent.event,
+      canvasWidth,
+      baseY,
+      offsetY,
+      true,
+    );
+  }
+
+  const rowHeight =
+    REACT_EVENT_ROW_PADDING + REACT_EVENT_SIZE + REACT_EVENT_ROW_PADDING;
+
+  // Render bottom border
+  context.fillStyle = COLORS.PRIORITY_BORDER;
+  context.fillRect(
+    0,
+    Math.floor(canvasStartY + rowHeight - offsetY - REACT_PRIORITY_BORDER_SIZE),
+    canvasWidth,
+    REACT_PRIORITY_BORDER_SIZE,
+  );
+
+  return canvasStartY + rowHeight;
+}
+
+/**
+ * Render a single `ReactEvent` as a circle in the canvas.
+ *
+ * @see renderReactEventRow
+ */
+function renderSingleReactEvent(
+  context,
+  state,
+  event,
+  canvasWidth,
+  baseY,
+  panOffsetY,
+  showHoverHighlight,
+) {
+  const {timestamp, type} = event;
+
+  const x = timestampToPosition(timestamp, state);
+  if (x + EVENT_SIZE / 2 < 0 || canvasWidth < x) {
+    return; // Not in view
+  }
+
+  let fillStyle = null;
+
+  switch (type) {
+    case 'schedule-render':
+    case 'schedule-state-update':
+    case 'schedule-force-update':
+      if (event.isCascading) {
+        fillStyle = showHoverHighlight
+          ? COLORS.REACT_SCHEDULE_CASCADING_HOVER
+          : COLORS.REACT_SCHEDULE_CASCADING;
+      } else {
+        fillStyle = showHoverHighlight
+          ? COLORS.REACT_SCHEDULE_HOVER
+          : COLORS.REACT_SCHEDULE;
+      }
+      break;
+    case 'suspense-suspend':
+    case 'suspense-resolved':
+    case 'suspense-rejected':
+      fillStyle = showHoverHighlight
+        ? COLORS.REACT_SUSPEND_HOVER
+        : COLORS.REACT_SUSPEND;
+      break;
+    default:
+      console.warn(`Unexpected event type "${type}"`);
+      break;
+  }
+
+  if (fillStyle !== null) {
+    const circumference = REACT_EVENT_SIZE;
+    const y = baseY + REACT_EVENT_SIZE / 2 - panOffsetY;
+
+    context.beginPath();
+    context.fillStyle = fillStyle;
+    context.arc(x, y, circumference / 2, 0, 2 * Math.PI);
+    context.fill();
+  }
+}
+
+/**
+ * Render React measures from `data` in parallel lanes.
+ *
+ * The React measures will be rendered into the canvas `context` of dimensions
+ * `canvasWidth`x`canvasHeight`, starting at `canvasStartY`. The measures will
+ * be offset by pan and zoom `state`. Optionally with a highlighted
+ * `hoveredEvent`.
+ *
+ * @see renderSingleReactMeasure
+ */
+function renderReactMeasures(
   context,
   data,
   state,
@@ -95,6 +231,8 @@ function renderReactMarksAndMeasures(
   canvasHeight,
   canvasStartY,
 ): number {
+  const {offsetY} = state;
+
   // TODO: Compute lanes to render from data? Or just use getLaneHeight to skip lanes
   const lanesToRender: ReactLane[] = Array.from(
     Array(REACT_TOTAL_NUM_LANES).keys(),
@@ -111,45 +249,13 @@ function renderReactMarksAndMeasures(
   context.fillStyle = COLORS.PRIORITY_BACKGROUND;
   context.fillRect(
     0,
-    Math.floor(canvasStartY),
+    Math.floor(canvasStartY - offsetY),
     canvasWidth,
     schedulerAreaHeight,
   );
 
   lanesToRender.forEach(lane => {
     const baseY = laneMinY + REACT_GUTTER_SIZE;
-
-    // TODO: Draw a separate event gutter. Split into a renderReactMarks function?
-    // if (data.events.length > 0) {
-    //   data.events.forEach(event => {
-    //     const showHoverHighlight = hoveredEvent && hoveredEvent.event === event;
-    //     renderSingleReactMarkOrMeasure({
-    //       baseY,
-    //       canvasWidth,
-    //       context,
-    //       eventOrMeasure: event,
-    //       showGroupHighlight: false,
-    //       showHoverHighlight,
-    //       state,
-    //     });
-    //   });
-
-    //   // Draw the hovered and/or selected items on top so they stand out.
-    //   // This is helpful if there are multiple (overlapping) items close to each other.
-    //   // if (hoveredEvent !== null && hoveredEvent.event !== null) {
-    //   //   renderSingleReactMarkOrMeasure({
-    //   //     baseY,
-    //   //     canvasWidth,
-    //   //     context,
-    //   //     eventOrMeasure: hoveredEvent.event,
-    //   //     showGroupHighlight: false,
-    //   //     showHoverHighlight: true,
-    //   //     state,
-    //   //   });
-    //   // }
-
-    //   baseY += REACT_EVENT_SIZE + REACT_GUTTER_SIZE;
-    // }
 
     data.measures
       // TODO: Optimization: precompute this so that we don't filter this array |lanesToRender| times
@@ -178,7 +284,7 @@ function renderReactMarksAndMeasures(
     context.fillStyle = COLORS.PRIORITY_BORDER;
     context.fillRect(
       0,
-      Math.floor(laneMinY - state.offsetY - REACT_PRIORITY_BORDER_SIZE),
+      Math.floor(laneMinY - offsetY - REACT_PRIORITY_BORDER_SIZE),
       canvasWidth,
       REACT_PRIORITY_BORDER_SIZE,
     );
@@ -268,142 +374,6 @@ function renderSingleReactMeasure(
     REACT_WORK_SIZE,
   );
 }
-
-// function renderSingleReactMarkOrMeasure({
-//   baseY,
-//   canvasWidth,
-//   context,
-//   eventOrMeasure,
-//   showGroupHighlight,
-//   showHoverHighlight,
-//   state,
-// }) {
-//   const {timestamp, type} = eventOrMeasure;
-//   const {offsetY} = state;
-
-//   let fillStyle = null;
-//   let hoveredFillStyle = null;
-//   let groupSelectedFillStyle = null;
-//   let x, y, width;
-
-//   switch (type) {
-//     case 'commit':
-//     case 'render-idle':
-//     case 'render':
-//     case 'layout-effects':
-//     case 'passive-effects':
-//       const {depth, duration} = ((eventOrMeasure: any): ReactMeasure);
-
-//       // We could change the max to 0 and just skip over rendering anything that small,
-//       // but this has the effect of making the chart look very empty when zoomed out.
-//       // So long as perf is okay- it might be best to err on the side of showing things.
-//       width = durationToWidth(duration, state);
-//       if (width <= 0) {
-//         return; // Too small to render at this zoom level
-//       }
-
-//       x = timestampToPosition(timestamp, state);
-//       if (x + width < 0 || canvasWidth < x) {
-//         return; // Not in view
-//       }
-
-//       switch (type) {
-//         case 'commit':
-//           fillStyle = COLORS.REACT_COMMIT;
-//           hoveredFillStyle = COLORS.REACT_COMMIT_HOVER;
-//           groupSelectedFillStyle = COLORS.REACT_COMMIT_SELECTED;
-//           break;
-//         case 'render-idle':
-//           // We could render idle time as diagonal hashes.
-//           // This looks nicer when zoomed in, but not so nice when zoomed out.
-//           // color = context.createPattern(getIdlePattern(), 'repeat');
-//           fillStyle = COLORS.REACT_IDLE;
-//           hoveredFillStyle = COLORS.REACT_IDLE_HOVER;
-//           groupSelectedFillStyle = COLORS.REACT_IDLE_SELECTED;
-//           break;
-//         case 'render':
-//           fillStyle = COLORS.REACT_RENDER;
-//           hoveredFillStyle = COLORS.REACT_RENDER_HOVER;
-//           groupSelectedFillStyle = COLORS.REACT_RENDER_SELECTED;
-//           break;
-//         case 'layout-effects':
-//           fillStyle = COLORS.REACT_LAYOUT_EFFECTS;
-//           hoveredFillStyle = COLORS.REACT_LAYOUT_EFFECTS_HOVER;
-//           groupSelectedFillStyle = COLORS.REACT_LAYOUT_EFFECTS_SELECTED;
-//           break;
-//         case 'passive-effects':
-//           fillStyle = COLORS.REACT_PASSIVE_EFFECTS;
-//           hoveredFillStyle = COLORS.REACT_PASSIVE_EFFECTS_HOVER;
-//           groupSelectedFillStyle = COLORS.REACT_PASSIVE_EFFECTS_SELECTED;
-//           break;
-//         default:
-//           console.warn(`Unexpected type "${type}"`);
-//           break;
-//       }
-
-//       y = baseY + REACT_WORK_SIZE * depth + REACT_GUTTER_SIZE * depth - offsetY;
-
-//       // $FlowFixMe We know these won't be null
-//       context.fillStyle = showHoverHighlight
-//         ? hoveredFillStyle
-//         : showGroupHighlight
-//         ? groupSelectedFillStyle
-//         : fillStyle;
-//       context.fillRect(
-//         Math.floor(x),
-//         Math.floor(y),
-//         Math.floor(width),
-//         REACT_WORK_SIZE,
-//       );
-//       break;
-//     case 'schedule-render':
-//     case 'schedule-state-update':
-//     case 'suspend':
-//       const {isCascading} = ((eventOrMeasure: any): ReactEvent);
-
-//       x = timestampToPosition(timestamp, state);
-//       if (x + EVENT_SIZE / 2 < 0 || canvasWidth < x) {
-//         return; // Not in view
-//       }
-
-//       switch (type) {
-//         case 'schedule-render':
-//         case 'schedule-state-update':
-//           if (isCascading) {
-//             fillStyle = showHoverHighlight
-//               ? COLORS.REACT_SCHEDULE_CASCADING_HOVER
-//               : COLORS.REACT_SCHEDULE_CASCADING;
-//           } else {
-//             fillStyle = showHoverHighlight
-//               ? COLORS.REACT_SCHEDULE_HOVER
-//               : COLORS.REACT_SCHEDULE;
-//           }
-//           break;
-//         case 'suspend':
-//           fillStyle = showHoverHighlight
-//             ? COLORS.REACT_SUSPEND_HOVER
-//             : COLORS.REACT_SUSPEND;
-//           break;
-//         default:
-//           console.warn(`Unexpected event or measure type "${type}"`);
-//           break;
-//       }
-
-//       if (fillStyle !== null) {
-//         const circumference = REACT_EVENT_SIZE;
-//         y = baseY + REACT_EVENT_SIZE / 2 - offsetY;
-
-//         context.beginPath();
-//         context.fillStyle = fillStyle;
-//         context.arc(x, y, circumference / 2, 0, 2 * Math.PI);
-//         context.fill();
-//       }
-//       break;
-//     default:
-//       console.warn(`Unexpected event or measure type "${type}"`);
-//       break;
-//   }
-// }
 
 function renderFlamechart(
   context,
@@ -548,7 +518,19 @@ export const renderCanvas = memoize(
 
     renderBackgroundFills(context, canvasWidth, canvasHeight);
 
-    const schedulerAreaEndY = renderReactMarksAndMeasures(
+    let schedulerAreaEndY = HEADER_HEIGHT_FIXED;
+
+    schedulerAreaEndY = renderReactEventRow(
+      context,
+      data.events,
+      state,
+      hoveredEvent,
+      canvasWidth,
+      canvasHeight,
+      schedulerAreaEndY,
+    );
+
+    schedulerAreaEndY = renderReactMeasures(
       context,
       data,
       state,
@@ -557,7 +539,7 @@ export const renderCanvas = memoize(
       canvasHeight,
       // Time markers do not scroll off screen; they are always rendered at a
       // fixed vertical position.
-      HEADER_HEIGHT_FIXED,
+      schedulerAreaEndY,
     );
 
     // Flame graph data renders below the prioritized React data.
