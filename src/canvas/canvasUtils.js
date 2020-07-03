@@ -2,10 +2,12 @@
 // Contains helper functions for rendering canvas elements
 
 import type {
-  ReactProfilerData,
   FlamechartData,
   ReactHoverContextInfo,
+  ReactLane,
   ReactPriority,
+  ReactProfilerData,
+  ReactProfilerDataV2,
 } from '../types';
 import type {PanAndZoomState} from '../util/usePanAndZoom';
 
@@ -274,4 +276,17 @@ export const getPriorityHeight = (
 
     return priorityHeight;
   }
+};
+
+export const getLaneHeight = (
+  data: $ReadOnly<ReactProfilerDataV2>,
+  lane: ReactLane,
+): number => {
+  // TODO: Return 0 if data has no data for lane
+  return (
+    REACT_GUTTER_SIZE +
+    REACT_WORK_SIZE +
+    REACT_GUTTER_SIZE +
+    REACT_PRIORITY_BORDER_SIZE
+  );
 };

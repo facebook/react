@@ -1,11 +1,10 @@
 // @flow
 
 import type {
-  ReactProfilerData,
   FlamechartData,
   ReactHoverContextInfo,
-  ReactEvent,
-  ReactMeasure,
+  ReactLane,
+  ReactProfilerDataV2,
 } from '../types';
 import type {PanAndZoomState} from '../util/usePanAndZoom';
 
@@ -21,20 +20,16 @@ import {
   getCanvasContext,
   getTimeTickInterval,
   trimFlamegraphText,
-  getPriorityHeight,
+  getLaneHeight,
 } from './canvasUtils';
 
 import {
   COLORS,
-  EVENT_SIZE,
-  LABEL_FONT_SIZE,
   MARKER_FONT_SIZE,
   MARKER_TEXT_PADDING,
   MARKER_HEIGHT,
   MARKER_TICK_HEIGHT,
-  REACT_PRIORITIES,
   REACT_GUTTER_SIZE,
-  REACT_EVENT_SIZE,
   REACT_WORK_SIZE,
   REACT_PRIORITY_BORDER_SIZE,
   FLAMECHART_FONT_SIZE,
@@ -43,6 +38,7 @@ import {
   LABEL_FIXED_WIDTH,
   HEADER_HEIGHT_FIXED,
 } from './constants';
+import {REACT_TOTAL_NUM_LANES} from '../constants';
 
 // The canvas we're rendering looks a little like the outline below.
 // Left labels mark different scheduler REACT_PRIORITIES,
@@ -98,206 +94,293 @@ function renderReactMarksAndMeasures(
   canvasWidth,
   canvasHeight,
   canvasStartY,
-) {
-  let priorityMinY = canvasStartY;
+): number {
+  // TODO: Compute lanes to render from data? Or just use getLaneHeight to skip lanes
+  const lanesToRender: ReactLane[] = Array.from(
+    Array(REACT_TOTAL_NUM_LANES).keys(),
+  );
 
-  REACT_PRIORITIES.forEach((priority, priorityIndex) => {
-    const currentPriority = data[priority];
+  let laneMinY = canvasStartY;
 
-    let baseY = priorityMinY + REACT_GUTTER_SIZE;
+  lanesToRender.forEach(lane => {
+    const baseY = laneMinY + REACT_GUTTER_SIZE;
 
-    if (currentPriority.events.length > 0) {
-      currentPriority.events.forEach(event => {
-        const showHoverHighlight = hoveredEvent && hoveredEvent.event === event;
-        renderSingleReactMarkOrMeasure({
-          baseY,
-          canvasWidth,
+    // TODO: Draw a separate event gutter. Split into a renderReactMarks function?
+    // if (data.events.length > 0) {
+    //   data.events.forEach(event => {
+    //     const showHoverHighlight = hoveredEvent && hoveredEvent.event === event;
+    //     renderSingleReactMarkOrMeasure({
+    //       baseY,
+    //       canvasWidth,
+    //       context,
+    //       eventOrMeasure: event,
+    //       showGroupHighlight: false,
+    //       showHoverHighlight,
+    //       state,
+    //     });
+    //   });
+
+    //   // Draw the hovered and/or selected items on top so they stand out.
+    //   // This is helpful if there are multiple (overlapping) items close to each other.
+    //   // if (hoveredEvent !== null && hoveredEvent.event !== null) {
+    //   //   renderSingleReactMarkOrMeasure({
+    //   //     baseY,
+    //   //     canvasWidth,
+    //   //     context,
+    //   //     eventOrMeasure: hoveredEvent.event,
+    //   //     showGroupHighlight: false,
+    //   //     showHoverHighlight: true,
+    //   //     state,
+    //   //   });
+    //   // }
+
+    //   baseY += REACT_EVENT_SIZE + REACT_GUTTER_SIZE;
+    // }
+
+    data.measures
+      // TODO: Optimization: precompute this so that we don't filter this array |lanesToRender| times
+      .filter(measure => measure.lanes.includes(lane))
+      .forEach(measure => {
+        const showHoverHighlight =
+          hoveredEvent && hoveredEvent.measure === measure;
+        const showGroupHighlight =
+          hoveredEvent &&
+          hoveredEvent.measure &&
+          hoveredEvent.measure.batchUID === measure.batchUID;
+        renderSingleReactMeasure(
           context,
-          eventOrMeasure: event,
-          showGroupHighlight: false,
+          state,
+          measure,
+          canvasWidth,
+          baseY,
+          showGroupHighlight,
           showHoverHighlight,
-          priorityIndex,
-          state,
-        });
+        );
       });
 
-      // Draw the hovered and/or selected items on top so they stand out.
-      // This is helpful if there are multiple (overlapping) items close to each other.
-      if (hoveredEvent !== null && hoveredEvent.event !== null) {
-        renderSingleReactMarkOrMeasure({
-          baseY,
-          canvasWidth,
-          context,
-          eventOrMeasure: hoveredEvent.event,
-          showGroupHighlight: false,
-          showHoverHighlight: true,
-          priorityIndex: hoveredEvent.priorityIndex,
-          state,
-        });
-      }
-
-      baseY += REACT_EVENT_SIZE + REACT_GUTTER_SIZE;
-    }
-
-    currentPriority.measures.forEach(measure => {
-      const showHoverHighlight =
-        hoveredEvent && hoveredEvent.measure === measure;
-      const showGroupHighlight =
-        hoveredEvent &&
-        hoveredEvent.measure !== null &&
-        hoveredEvent.measure.batchUID === measure.batchUID;
-      renderSingleReactMarkOrMeasure({
-        baseY,
-        canvasWidth,
-        context,
-        eventOrMeasure: measure,
-        priorityIndex,
-        showGroupHighlight,
-        showHoverHighlight,
-        state,
-      });
-    });
-
-    priorityMinY += getPriorityHeight(data, priority);
+    laneMinY += getLaneHeight(data, lane);
   });
+
+  return laneMinY;
 }
 
-function renderSingleReactMarkOrMeasure({
-  baseY,
-  canvasWidth,
+/**
+ * Render a single `ReactMeasure` as a bar in the canvas.
+ *
+ * @see renderReactMeasures
+ */
+function renderSingleReactMeasure(
   context,
-  eventOrMeasure,
-  priorityIndex,
+  state,
+  measure,
+  canvasWidth,
+  baseY,
   showGroupHighlight,
   showHoverHighlight,
-  state,
-}) {
-  const {timestamp, type} = eventOrMeasure;
+) {
+  const {timestamp, type, duration} = measure;
   const {offsetY} = state;
 
   let fillStyle = null;
   let hoveredFillStyle = null;
   let groupSelectedFillStyle = null;
-  let x, y, width;
+
+  // We could change the max to 0 and just skip over rendering anything that small,
+  // but this has the effect of making the chart look very empty when zoomed out.
+  // So long as perf is okay- it might be best to err on the side of showing things.
+  const width = durationToWidth(duration, state);
+  if (width <= 0) {
+    return; // Too small to render at this zoom level
+  }
+
+  const x = timestampToPosition(timestamp, state);
+  if (x + width < 0 || canvasWidth < x) {
+    return; // Not in view
+  }
 
   switch (type) {
     case 'commit':
-    case 'render-idle':
-    case 'render':
-    case 'layout-effects':
-    case 'passive-effects':
-      const {depth, duration} = ((eventOrMeasure: any): ReactMeasure);
-
-      // We could change the max to 0 and just skip over rendering anything that small,
-      // but this has the effect of making the chart look very empty when zoomed out.
-      // So long as perf is okay- it might be best to err on the side of showing things.
-      width = durationToWidth(duration, state);
-      if (width <= 0) {
-        return; // Too small to render at this zoom level
-      }
-
-      x = timestampToPosition(timestamp, state);
-      if (x + width < 0 || canvasWidth < x) {
-        return; // Not in view
-      }
-
-      switch (type) {
-        case 'commit':
-          fillStyle = COLORS.REACT_COMMIT;
-          hoveredFillStyle = COLORS.REACT_COMMIT_HOVER;
-          groupSelectedFillStyle = COLORS.REACT_COMMIT_SELECTED;
-          break;
-        case 'render-idle':
-          // We could render idle time as diagonal hashes.
-          // This looks nicer when zoomed in, but not so nice when zoomed out.
-          // color = context.createPattern(getIdlePattern(), 'repeat');
-          fillStyle = COLORS.REACT_IDLE;
-          hoveredFillStyle = COLORS.REACT_IDLE_HOVER;
-          groupSelectedFillStyle = COLORS.REACT_IDLE_SELECTED;
-          break;
-        case 'render':
-          fillStyle = COLORS.REACT_RENDER;
-          hoveredFillStyle = COLORS.REACT_RENDER_HOVER;
-          groupSelectedFillStyle = COLORS.REACT_RENDER_SELECTED;
-          break;
-        case 'layout-effects':
-          fillStyle = COLORS.REACT_LAYOUT_EFFECTS;
-          hoveredFillStyle = COLORS.REACT_LAYOUT_EFFECTS_HOVER;
-          groupSelectedFillStyle = COLORS.REACT_LAYOUT_EFFECTS_SELECTED;
-          break;
-        case 'passive-effects':
-          fillStyle = COLORS.REACT_PASSIVE_EFFECTS;
-          hoveredFillStyle = COLORS.REACT_PASSIVE_EFFECTS_HOVER;
-          groupSelectedFillStyle = COLORS.REACT_PASSIVE_EFFECTS_SELECTED;
-          break;
-        default:
-          console.warn(`Unexpected type "${type}"`);
-          break;
-      }
-
-      y = baseY + REACT_WORK_SIZE * depth + REACT_GUTTER_SIZE * depth - offsetY;
-
-      // $FlowFixMe We know these won't be null
-      context.fillStyle = showHoverHighlight
-        ? hoveredFillStyle
-        : showGroupHighlight
-        ? groupSelectedFillStyle
-        : fillStyle;
-      context.fillRect(
-        Math.floor(x),
-        Math.floor(y),
-        Math.floor(width),
-        REACT_WORK_SIZE,
-      );
+      fillStyle = COLORS.REACT_COMMIT;
+      hoveredFillStyle = COLORS.REACT_COMMIT_HOVER;
+      groupSelectedFillStyle = COLORS.REACT_COMMIT_SELECTED;
       break;
-    case 'schedule-render':
-    case 'schedule-state-update':
-    case 'suspend':
-      const {isCascading} = ((eventOrMeasure: any): ReactEvent);
-
-      x = timestampToPosition(timestamp, state);
-      if (x + EVENT_SIZE / 2 < 0 || canvasWidth < x) {
-        return; // Not in view
-      }
-
-      switch (type) {
-        case 'schedule-render':
-        case 'schedule-state-update':
-          if (isCascading) {
-            fillStyle = showHoverHighlight
-              ? COLORS.REACT_SCHEDULE_CASCADING_HOVER
-              : COLORS.REACT_SCHEDULE_CASCADING;
-          } else {
-            fillStyle = showHoverHighlight
-              ? COLORS.REACT_SCHEDULE_HOVER
-              : COLORS.REACT_SCHEDULE;
-          }
-          break;
-        case 'suspend':
-          fillStyle = showHoverHighlight
-            ? COLORS.REACT_SUSPEND_HOVER
-            : COLORS.REACT_SUSPEND;
-          break;
-        default:
-          console.warn(`Unexpected event or measure type "${type}"`);
-          break;
-      }
-
-      if (fillStyle !== null) {
-        const circumference = REACT_EVENT_SIZE;
-        y = baseY + REACT_EVENT_SIZE / 2 - offsetY;
-
-        context.beginPath();
-        context.fillStyle = fillStyle;
-        context.arc(x, y, circumference / 2, 0, 2 * Math.PI);
-        context.fill();
-      }
+    case 'render-idle':
+      // We could render idle time as diagonal hashes.
+      // This looks nicer when zoomed in, but not so nice when zoomed out.
+      // color = context.createPattern(getIdlePattern(), 'repeat');
+      fillStyle = COLORS.REACT_IDLE;
+      hoveredFillStyle = COLORS.REACT_IDLE_HOVER;
+      groupSelectedFillStyle = COLORS.REACT_IDLE_SELECTED;
+      break;
+    case 'render':
+      fillStyle = COLORS.REACT_RENDER;
+      hoveredFillStyle = COLORS.REACT_RENDER_HOVER;
+      groupSelectedFillStyle = COLORS.REACT_RENDER_SELECTED;
+      break;
+    case 'layout-effects':
+      fillStyle = COLORS.REACT_LAYOUT_EFFECTS;
+      hoveredFillStyle = COLORS.REACT_LAYOUT_EFFECTS_HOVER;
+      groupSelectedFillStyle = COLORS.REACT_LAYOUT_EFFECTS_SELECTED;
+      break;
+    case 'passive-effects':
+      fillStyle = COLORS.REACT_PASSIVE_EFFECTS;
+      hoveredFillStyle = COLORS.REACT_PASSIVE_EFFECTS_HOVER;
+      groupSelectedFillStyle = COLORS.REACT_PASSIVE_EFFECTS_SELECTED;
       break;
     default:
-      console.warn(`Unexpected event or measure type "${type}"`);
-      break;
+      throw new Error(`Unexpected measure type "${type}"`);
   }
+
+  const y = baseY - offsetY;
+
+  context.fillStyle = showHoverHighlight
+    ? hoveredFillStyle
+    : showGroupHighlight
+    ? groupSelectedFillStyle
+    : fillStyle;
+  context.fillRect(
+    Math.floor(x),
+    Math.floor(y),
+    Math.floor(width),
+    REACT_WORK_SIZE,
+  );
 }
+
+// function renderSingleReactMarkOrMeasure({
+//   baseY,
+//   canvasWidth,
+//   context,
+//   eventOrMeasure,
+//   showGroupHighlight,
+//   showHoverHighlight,
+//   state,
+// }) {
+//   const {timestamp, type} = eventOrMeasure;
+//   const {offsetY} = state;
+
+//   let fillStyle = null;
+//   let hoveredFillStyle = null;
+//   let groupSelectedFillStyle = null;
+//   let x, y, width;
+
+//   switch (type) {
+//     case 'commit':
+//     case 'render-idle':
+//     case 'render':
+//     case 'layout-effects':
+//     case 'passive-effects':
+//       const {depth, duration} = ((eventOrMeasure: any): ReactMeasure);
+
+//       // We could change the max to 0 and just skip over rendering anything that small,
+//       // but this has the effect of making the chart look very empty when zoomed out.
+//       // So long as perf is okay- it might be best to err on the side of showing things.
+//       width = durationToWidth(duration, state);
+//       if (width <= 0) {
+//         return; // Too small to render at this zoom level
+//       }
+
+//       x = timestampToPosition(timestamp, state);
+//       if (x + width < 0 || canvasWidth < x) {
+//         return; // Not in view
+//       }
+
+//       switch (type) {
+//         case 'commit':
+//           fillStyle = COLORS.REACT_COMMIT;
+//           hoveredFillStyle = COLORS.REACT_COMMIT_HOVER;
+//           groupSelectedFillStyle = COLORS.REACT_COMMIT_SELECTED;
+//           break;
+//         case 'render-idle':
+//           // We could render idle time as diagonal hashes.
+//           // This looks nicer when zoomed in, but not so nice when zoomed out.
+//           // color = context.createPattern(getIdlePattern(), 'repeat');
+//           fillStyle = COLORS.REACT_IDLE;
+//           hoveredFillStyle = COLORS.REACT_IDLE_HOVER;
+//           groupSelectedFillStyle = COLORS.REACT_IDLE_SELECTED;
+//           break;
+//         case 'render':
+//           fillStyle = COLORS.REACT_RENDER;
+//           hoveredFillStyle = COLORS.REACT_RENDER_HOVER;
+//           groupSelectedFillStyle = COLORS.REACT_RENDER_SELECTED;
+//           break;
+//         case 'layout-effects':
+//           fillStyle = COLORS.REACT_LAYOUT_EFFECTS;
+//           hoveredFillStyle = COLORS.REACT_LAYOUT_EFFECTS_HOVER;
+//           groupSelectedFillStyle = COLORS.REACT_LAYOUT_EFFECTS_SELECTED;
+//           break;
+//         case 'passive-effects':
+//           fillStyle = COLORS.REACT_PASSIVE_EFFECTS;
+//           hoveredFillStyle = COLORS.REACT_PASSIVE_EFFECTS_HOVER;
+//           groupSelectedFillStyle = COLORS.REACT_PASSIVE_EFFECTS_SELECTED;
+//           break;
+//         default:
+//           console.warn(`Unexpected type "${type}"`);
+//           break;
+//       }
+
+//       y = baseY + REACT_WORK_SIZE * depth + REACT_GUTTER_SIZE * depth - offsetY;
+
+//       // $FlowFixMe We know these won't be null
+//       context.fillStyle = showHoverHighlight
+//         ? hoveredFillStyle
+//         : showGroupHighlight
+//         ? groupSelectedFillStyle
+//         : fillStyle;
+//       context.fillRect(
+//         Math.floor(x),
+//         Math.floor(y),
+//         Math.floor(width),
+//         REACT_WORK_SIZE,
+//       );
+//       break;
+//     case 'schedule-render':
+//     case 'schedule-state-update':
+//     case 'suspend':
+//       const {isCascading} = ((eventOrMeasure: any): ReactEvent);
+
+//       x = timestampToPosition(timestamp, state);
+//       if (x + EVENT_SIZE / 2 < 0 || canvasWidth < x) {
+//         return; // Not in view
+//       }
+
+//       switch (type) {
+//         case 'schedule-render':
+//         case 'schedule-state-update':
+//           if (isCascading) {
+//             fillStyle = showHoverHighlight
+//               ? COLORS.REACT_SCHEDULE_CASCADING_HOVER
+//               : COLORS.REACT_SCHEDULE_CASCADING;
+//           } else {
+//             fillStyle = showHoverHighlight
+//               ? COLORS.REACT_SCHEDULE_HOVER
+//               : COLORS.REACT_SCHEDULE;
+//           }
+//           break;
+//         case 'suspend':
+//           fillStyle = showHoverHighlight
+//             ? COLORS.REACT_SUSPEND_HOVER
+//             : COLORS.REACT_SUSPEND;
+//           break;
+//         default:
+//           console.warn(`Unexpected event or measure type "${type}"`);
+//           break;
+//       }
+
+//       if (fillStyle !== null) {
+//         const circumference = REACT_EVENT_SIZE;
+//         y = baseY + REACT_EVENT_SIZE / 2 - offsetY;
+
+//         context.beginPath();
+//         context.fillStyle = fillStyle;
+//         context.arc(x, y, circumference / 2, 0, 2 * Math.PI);
+//         context.fill();
+//       }
+//       break;
+//     default:
+//       console.warn(`Unexpected event or measure type "${type}"`);
+//       break;
+//   }
+// }
 
 function renderFlamechart(
   context,
@@ -371,49 +454,49 @@ function renderFlamechart(
   }
 }
 
-function renderPriorityLabels(context, data, canvasWidth, canvasStartY) {
-  let y = canvasStartY;
+// function renderPriorityLabels(context, data, canvasWidth, canvasStartY) {
+//   let y = canvasStartY;
 
-  REACT_PRIORITIES.forEach((priority, priorityIndex) => {
-    const priorityHeight = getPriorityHeight(data, priority);
+//   REACT_PRIORITIES.forEach((priority, priorityIndex) => {
+//     const priorityHeight = getPriorityHeight(data, priority);
 
-    if (priorityHeight === 0) {
-      return;
-    }
+//     if (priorityHeight === 0) {
+//       return;
+//     }
 
-    context.fillStyle = COLORS.PRIORITY_BACKGROUND;
-    context.fillRect(
-      0,
-      Math.floor(y),
-      Math.floor(LABEL_FIXED_WIDTH),
-      priorityHeight,
-    );
+//     context.fillStyle = COLORS.PRIORITY_BACKGROUND;
+//     context.fillRect(
+//       0,
+//       Math.floor(y),
+//       Math.floor(LABEL_FIXED_WIDTH),
+//       priorityHeight,
+//     );
 
-    context.fillStyle = COLORS.PRIORITY_BORDER;
-    context.fillRect(
-      0,
-      Math.floor(y + priorityHeight),
-      canvasWidth,
-      REACT_PRIORITY_BORDER_SIZE,
-    );
+//     context.fillStyle = COLORS.PRIORITY_BORDER;
+//     context.fillRect(
+//       0,
+//       Math.floor(y + priorityHeight),
+//       canvasWidth,
+//       REACT_PRIORITY_BORDER_SIZE,
+//     );
 
-    context.fillStyle = COLORS.PRIORITY_BORDER;
-    context.fillRect(
-      Math.floor(LABEL_FIXED_WIDTH) - REACT_PRIORITY_BORDER_SIZE,
-      Math.floor(y),
-      REACT_PRIORITY_BORDER_SIZE,
-      priorityHeight,
-    );
+//     context.fillStyle = COLORS.PRIORITY_BORDER;
+//     context.fillRect(
+//       Math.floor(LABEL_FIXED_WIDTH) - REACT_PRIORITY_BORDER_SIZE,
+//       Math.floor(y),
+//       REACT_PRIORITY_BORDER_SIZE,
+//       priorityHeight,
+//     );
 
-    context.fillStyle = COLORS.PRIORITY_LABEL;
-    context.textAlign = 'left';
-    context.textBaseline = 'middle';
-    context.font = `${LABEL_FONT_SIZE}px sans-serif`;
-    context.fillText(priority, 4, y + priorityHeight / 2);
+//     context.fillStyle = COLORS.PRIORITY_LABEL;
+//     context.textAlign = 'left';
+//     context.textBaseline = 'middle';
+//     context.font = `${LABEL_FONT_SIZE}px sans-serif`;
+//     context.fillText(priority, 4, y + priorityHeight / 2);
 
-    y += priorityHeight + REACT_PRIORITY_BORDER_SIZE;
-  });
-}
+//     y += priorityHeight + REACT_PRIORITY_BORDER_SIZE;
+//   });
+// }
 
 function renderAxisMarkers(
   context,
@@ -472,13 +555,11 @@ function renderAxisMarkers(
 // TODO Passing "state" directly breaks memoization for e.g. mouse moves
 export const renderCanvas = memoize(
   (
-    data: $ReadOnly<ReactProfilerData>,
+    data: $ReadOnly<ReactProfilerDataV2>,
     flamechart: $ReadOnly<FlamechartData>,
     canvas: HTMLCanvasElement,
     canvasWidth: number,
     canvasHeight: number,
-    /** Precomputed height of marks and measures canvas section */
-    schedulerCanvasHeight: number, // TODO: Figure out why this can't be calculated here
     state: $ReadOnly<PanAndZoomState>,
     hoveredEvent: $ReadOnly<ReactHoverContextInfo> | null,
   ) => {
@@ -488,7 +569,7 @@ export const renderCanvas = memoize(
 
     renderBackgroundFills(context, canvasWidth, canvasHeight);
 
-    renderReactMarksAndMeasures(
+    const schedulerAreaEndY = renderReactMarksAndMeasures(
       context,
       data,
       state,
@@ -509,17 +590,17 @@ export const renderCanvas = memoize(
       hoveredEvent,
       canvasWidth,
       canvasHeight,
-      HEADER_HEIGHT_FIXED + schedulerCanvasHeight - offsetY,
+      HEADER_HEIGHT_FIXED + schedulerAreaEndY - offsetY,
     );
 
     // LEFT: Priority labels
     // Render them last, on top of everything else, to account for things scrolled beneath them.
-    renderPriorityLabels(
-      context,
-      data,
-      canvasWidth,
-      HEADER_HEIGHT_FIXED - offsetY,
-    );
+    // renderPriorityLabels(
+    //   context,
+    //   data,
+    //   canvasWidth,
+    //   HEADER_HEIGHT_FIXED - offsetY,
+    // );
 
     // TOP: Time markers
     // Time markers do not scroll off screen; they are always rendered at a fixed vertical position.

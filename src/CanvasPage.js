@@ -156,12 +156,11 @@ function AutoSizedCanvas({
   useLayoutEffect(() => {
     if (canvasRef.current !== null) {
       renderCanvas(
-        data,
+        dataV2,
         flamechart,
         canvasRef.current,
         width,
         height,
-        schedulerCanvasHeight,
         state,
         hoveredEvent,
       );
