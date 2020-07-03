@@ -102,6 +102,20 @@ function renderReactMarksAndMeasures(
 
   let laneMinY = canvasStartY;
 
+  // Render lanes background.
+  // TODO: Figure out a way not to compute total height twice
+  const schedulerAreaHeight = lanesToRender.reduce(
+    (height, lane) => height + getLaneHeight(data, lane),
+    0,
+  );
+  context.fillStyle = COLORS.PRIORITY_BACKGROUND;
+  context.fillRect(
+    0,
+    Math.floor(canvasStartY),
+    canvasWidth,
+    schedulerAreaHeight,
+  );
+
   lanesToRender.forEach(lane => {
     const baseY = laneMinY + REACT_GUTTER_SIZE;
 
@@ -159,6 +173,15 @@ function renderReactMarksAndMeasures(
       });
 
     laneMinY += getLaneHeight(data, lane);
+
+    // Render bottom border
+    context.fillStyle = COLORS.PRIORITY_BORDER;
+    context.fillRect(
+      0,
+      Math.floor(laneMinY - state.offsetY - REACT_PRIORITY_BORDER_SIZE),
+      canvasWidth,
+      REACT_PRIORITY_BORDER_SIZE,
+    );
   });
 
   return laneMinY;
@@ -454,50 +477,6 @@ function renderFlamechart(
   }
 }
 
-// function renderPriorityLabels(context, data, canvasWidth, canvasStartY) {
-//   let y = canvasStartY;
-
-//   REACT_PRIORITIES.forEach((priority, priorityIndex) => {
-//     const priorityHeight = getPriorityHeight(data, priority);
-
-//     if (priorityHeight === 0) {
-//       return;
-//     }
-
-//     context.fillStyle = COLORS.PRIORITY_BACKGROUND;
-//     context.fillRect(
-//       0,
-//       Math.floor(y),
-//       Math.floor(LABEL_FIXED_WIDTH),
-//       priorityHeight,
-//     );
-
-//     context.fillStyle = COLORS.PRIORITY_BORDER;
-//     context.fillRect(
-//       0,
-//       Math.floor(y + priorityHeight),
-//       canvasWidth,
-//       REACT_PRIORITY_BORDER_SIZE,
-//     );
-
-//     context.fillStyle = COLORS.PRIORITY_BORDER;
-//     context.fillRect(
-//       Math.floor(LABEL_FIXED_WIDTH) - REACT_PRIORITY_BORDER_SIZE,
-//       Math.floor(y),
-//       REACT_PRIORITY_BORDER_SIZE,
-//       priorityHeight,
-//     );
-
-//     context.fillStyle = COLORS.PRIORITY_LABEL;
-//     context.textAlign = 'left';
-//     context.textBaseline = 'middle';
-//     context.font = `${LABEL_FONT_SIZE}px sans-serif`;
-//     context.fillText(priority, 4, y + priorityHeight / 2);
-
-//     y += priorityHeight + REACT_PRIORITY_BORDER_SIZE;
-//   });
-// }
-
 function renderAxisMarkers(
   context,
   state,
@@ -590,17 +569,8 @@ export const renderCanvas = memoize(
       hoveredEvent,
       canvasWidth,
       canvasHeight,
-      HEADER_HEIGHT_FIXED + schedulerAreaEndY - offsetY,
+      schedulerAreaEndY - offsetY,
     );
-
-    // LEFT: Priority labels
-    // Render them last, on top of everything else, to account for things scrolled beneath them.
-    // renderPriorityLabels(
-    //   context,
-    //   data,
-    //   canvasWidth,
-    //   HEADER_HEIGHT_FIXED - offsetY,
-    // );
 
     // TOP: Time markers
     // Time markers do not scroll off screen; they are always rendered at a fixed vertical position.
