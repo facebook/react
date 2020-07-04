@@ -30,15 +30,17 @@ import {
 export default function isValidElementType(type: mixed) {
   if (typeof type === 'string' || typeof type === 'function') return true;
 
-  switch (type) {
-    case REACT_FRAGMENT_TYPE:
-    case REACT_PROFILER_TYPE:
-    case REACT_DEBUG_TRACING_MODE_TYPE:
-    case REACT_STRICT_MODE_TYPE:
-    case REACT_SUSPENSE_TYPE:
-    case REACT_SUSPENSE_LIST_TYPE:
-    case REACT_LEGACY_HIDDEN_TYPE:
-      return true;
+  // Note: typeof might be other than 'symbol' or 'number' (e.g. if it's a polyfill).
+  if (
+    type === REACT_FRAGMENT_TYPE ||
+    type === REACT_PROFILER_TYPE ||
+    type === REACT_DEBUG_TRACING_MODE_TYPE ||
+    type === REACT_STRICT_MODE_TYPE ||
+    type === REACT_SUSPENSE_TYPE ||
+    type === REACT_SUSPENSE_LIST_TYPE ||
+    type === REACT_LEGACY_HIDDEN_TYPE
+  ) {
+    return true;
   }
 
   if (typeof type === 'object' && type !== null) {
