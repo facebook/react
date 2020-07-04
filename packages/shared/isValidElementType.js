@@ -37,9 +37,8 @@ export default function isValidElementType(type: mixed) {
     case REACT_STRICT_MODE_TYPE:
     case REACT_SUSPENSE_TYPE:
     case REACT_SUSPENSE_LIST_TYPE:
-    case REACT_LEGACY_HIDDEN_TYPE: {
+    case REACT_LEGACY_HIDDEN_TYPE:
       return true;
-    }
   }
 
   if (typeof type === 'object' && type !== null) {
@@ -52,12 +51,10 @@ export default function isValidElementType(type: mixed) {
       case REACT_FUNDAMENTAL_TYPE:
       case REACT_RESPONDER_TYPE:
       case REACT_SCOPE_TYPE:
-      case REACT_BLOCK_TYPE: {
+      case REACT_BLOCK_TYPE:
         return true;
-      }
-      default: {
+      default:
         if (type[(0: any)] === REACT_SERVER_BLOCK_TYPE) return true;
-      }
     }
   }
 
