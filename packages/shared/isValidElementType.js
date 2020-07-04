@@ -44,19 +44,19 @@ export default function isValidElementType(type: mixed) {
   }
 
   if (typeof type === 'object' && type !== null) {
-    switch (type.$$typeof) {
-      case REACT_LAZY_TYPE:
-      case REACT_MEMO_TYPE:
-      case REACT_PROVIDER_TYPE:
-      case REACT_CONTEXT_TYPE:
-      case REACT_FORWARD_REF_TYPE:
-      case REACT_FUNDAMENTAL_TYPE:
-      case REACT_RESPONDER_TYPE:
-      case REACT_SCOPE_TYPE:
-      case REACT_BLOCK_TYPE:
-        return true;
-      default:
-        if (type[(0: any)] === REACT_SERVER_BLOCK_TYPE) return true;
+    if (
+      type.$$typeof === REACT_LAZY_TYPE ||
+      type.$$typeof === REACT_MEMO_TYPE ||
+      type.$$typeof === REACT_PROVIDER_TYPE ||
+      type.$$typeof === REACT_CONTEXT_TYPE ||
+      type.$$typeof === REACT_FORWARD_REF_TYPE ||
+      type.$$typeof === REACT_FUNDAMENTAL_TYPE ||
+      type.$$typeof === REACT_RESPONDER_TYPE ||
+      type.$$typeof === REACT_SCOPE_TYPE ||
+      type.$$typeof === REACT_BLOCK_TYPE ||
+      type[(0: any)] === REACT_SERVER_BLOCK_TYPE
+    ) {
+      return true;
     }
   }
 
