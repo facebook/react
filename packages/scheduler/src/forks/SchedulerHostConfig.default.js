@@ -179,7 +179,7 @@ if (
       return;
     }
     if (fps > 0) {
-      yieldInterval = Math.floor(1000 / fps);
+      yieldInterval = (1000 / fps) >>> 0;
     } else {
       // reset the framerate
       yieldInterval = 5;
