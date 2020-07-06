@@ -1744,15 +1744,30 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     expect(Scheduler).toHaveYielded(['Promise resolved [B2]']);
 
-    expect(Scheduler).toFlushAndYield([
-      'B2',
-      'Destroy Layout Effect [Loading...]',
-      'Destroy Layout Effect [B]',
-      'Layout Effect [B2]',
-      'Destroy Effect [Loading...]',
-      'Destroy Effect [B]',
-      'Effect [B2]',
-    ]);
+    // Slight sequencing difference between old and new reconcilers,
+    // because walking the tree during the commit phase means processing deletions
+    // as part of processing the parent rather than the child.
+    gate(flags =>
+      flags.new
+        ? expect(Scheduler).toFlushAndYield([
+            'B2',
+            'Destroy Layout Effect [B]',
+            'Destroy Layout Effect [Loading...]',
+            'Layout Effect [B2]',
+            'Destroy Effect [Loading...]',
+            'Destroy Effect [B]',
+            'Effect [B2]',
+          ])
+        : expect(Scheduler).toFlushAndYield([
+            'B2',
+            'Destroy Layout Effect [Loading...]',
+            'Destroy Layout Effect [B]',
+            'Layout Effect [B2]',
+            'Destroy Effect [Loading...]',
+            'Destroy Effect [B]',
+            'Effect [B2]',
+          ]),
+    );
   });
 
   it('suspends for longer if something took a long (CPU bound) time to render', async () => {

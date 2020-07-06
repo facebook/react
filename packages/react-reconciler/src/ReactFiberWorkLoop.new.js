@@ -1744,6 +1744,8 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         // Mark the parent fiber as incomplete and clear its effect list.
         returnFiber.firstEffect = returnFiber.lastEffect = null;
         returnFiber.effectTag |= Incomplete;
+        returnFiber.subtreeTag = NoEffect;
+        returnFiber.deletions = [];
       }
     }
 
@@ -1781,6 +1783,12 @@ function resetChildLanes(completedWork: Fiber) {
   }
 
   let newChildLanes = NoLanes;
+  let subtreeTag = NoEffect;
+  let childrenDidNotComplete = false;
+
+  const wasFiberCloned =
+    completedWork.alternate === null ||
+    completedWork.child !== completedWork.alternate.child;
 
   // Bubble up the earliest expiration time.
   if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
@@ -1789,24 +1797,31 @@ function resetChildLanes(completedWork: Fiber) {
     let actualDuration = completedWork.actualDuration;
     let treeBaseDuration = ((completedWork.selfBaseDuration: any): number);
 
-    // When a fiber is cloned, its actualDuration is reset to 0. This value will
-    // only be updated if work is done on the fiber (i.e. it doesn't bailout).
-    // When work is done, it should bubble to the parent's actualDuration. If
-    // the fiber has not been cloned though, (meaning no work was done), then
-    // this value will reflect the amount of time spent working on a previous
-    // render. In that case it should not bubble. We determine whether it was
-    // cloned by comparing the child pointer.
-    const shouldBubbleActualDurations =
-      completedWork.alternate === null ||
-      completedWork.child !== completedWork.alternate.child;
-
     let child = completedWork.child;
     while (child !== null) {
       newChildLanes = mergeLanes(
         newChildLanes,
         mergeLanes(child.lanes, child.childLanes),
       );
-      if (shouldBubbleActualDurations) {
+
+      subtreeTag |= child.subtreeTag;
+      subtreeTag |= child.effectTag & HostEffectMask;
+      if (child.deletions.length > 0) {
+        subtreeTag |= Deletion;
+      }
+
+      if ((child.effectTag & Incomplete) !== NoEffect) {
+        childrenDidNotComplete = true;
+      }
+
+      // When a fiber is cloned, its actualDuration is reset to 0. This value will
+      // only be updated if work is done on the fiber (i.e. it doesn't bailout).
+      // When work is done, it should bubble to the parent's actualDuration. If
+      // the fiber has not been cloned though, (meaning no work was done), then
+      // this value will reflect the amount of time spent working on a previous
+      // render. In that case it should not bubble. We determine whether it was
+      // cloned by comparing the child pointer.
+      if (wasFiberCloned) {
         actualDuration += child.actualDuration;
       }
       treeBaseDuration += child.treeBaseDuration;
@@ -1833,11 +1848,27 @@ function resetChildLanes(completedWork: Fiber) {
         newChildLanes,
         mergeLanes(child.lanes, child.childLanes),
       );
+
+      subtreeTag |= child.subtreeTag;
+      subtreeTag |= child.effectTag & HostEffectMask;
+      if (child.deletions.length > 0) {
+        subtreeTag |= Deletion;
+      }
+
+      if ((child.effectTag & Incomplete) !== NoEffect) {
+        childrenDidNotComplete = true;
+      }
+
       child = child.sibling;
     }
   }
 
   completedWork.childLanes = newChildLanes;
+
+  // TODO (effects) is it appropriate to check wasFiberCloned for this?
+  if (!childrenDidNotComplete && wasFiberCloned) {
+    completedWork.subtreeTag |= subtreeTag;
+  }
 }
 
 function commitRoot(root) {
@@ -1952,26 +1983,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     focusedInstanceHandle = prepareForCommit(root.containerInfo);
     shouldFireAfterActiveInstanceBlur = false;
 
-    nextEffect = firstEffect;
-    do {
-      if (__DEV__) {
-        invokeGuardedCallback(null, commitBeforeMutationEffects, null);
-        if (hasCaughtError()) {
-          invariant(nextEffect !== null, 'Should be working on an effect.');
-          const error = clearCaughtError();
-          captureCommitPhaseError(nextEffect, error);
-          nextEffect = nextEffect.nextEffect;
-        }
-      } else {
-        try {
-          commitBeforeMutationEffects();
-        } catch (error) {
-          invariant(nextEffect !== null, 'Should be working on an effect.');
-          captureCommitPhaseError(nextEffect, error);
-          nextEffect = nextEffect.nextEffect;
-        }
-      }
-    } while (nextEffect !== null);
+    commitBeforeMutationEffects(finishedWork);
 
     // We no longer need to track the active instance fiber
     focusedInstanceHandle = null;
@@ -1983,32 +1995,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
 
     // The next phase is the mutation phase, where we mutate the host tree.
-    nextEffect = firstEffect;
-    do {
-      if (__DEV__) {
-        invokeGuardedCallback(
-          null,
-          commitMutationEffects,
-          null,
-          root,
-          renderPriorityLevel,
-        );
-        if (hasCaughtError()) {
-          invariant(nextEffect !== null, 'Should be working on an effect.');
-          const error = clearCaughtError();
-          captureCommitPhaseError(nextEffect, error);
-          nextEffect = nextEffect.nextEffect;
-        }
-      } else {
-        try {
-          commitMutationEffects(root, renderPriorityLevel);
-        } catch (error) {
-          invariant(nextEffect !== null, 'Should be working on an effect.');
-          captureCommitPhaseError(nextEffect, error);
-          nextEffect = nextEffect.nextEffect;
-        }
-      }
-    } while (nextEffect !== null);
+    commitMutationEffects(finishedWork, root, renderPriorityLevel);
 
     if (shouldFireAfterActiveInstanceBlur) {
       afterActiveInstanceBlur();
@@ -2024,26 +2011,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     // The next phase is the layout phase, where we call effects that read
     // the host tree after it's been mutated. The idiomatic use case for this is
     // layout, but class component lifecycles also fire here for legacy reasons.
-    nextEffect = firstEffect;
-    do {
-      if (__DEV__) {
-        invokeGuardedCallback(null, commitLayoutEffects, null, root, lanes);
-        if (hasCaughtError()) {
-          invariant(nextEffect !== null, 'Should be working on an effect.');
-          const error = clearCaughtError();
-          captureCommitPhaseError(nextEffect, error);
-          nextEffect = nextEffect.nextEffect;
-        }
-      } else {
-        try {
-          commitLayoutEffects(root, lanes);
-        } catch (error) {
-          invariant(nextEffect !== null, 'Should be working on an effect.');
-          captureCommitPhaseError(nextEffect, error);
-          nextEffect = nextEffect.nextEffect;
-        }
-      }
-    } while (nextEffect !== null);
+    commitLayoutEffects(finishedWork, root, lanes);
 
     nextEffect = null;
 
@@ -2082,6 +2050,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     // We are done with the effect chain at this point so let's clear the
     // nextEffect pointers to assist with GC. If we have passive effects, we'll
     // clear this in flushPassiveEffects.
+    // TODO (effects) Traverse with subtreeTag Deletion and detatch deletions array only
     nextEffect = firstEffect;
     while (nextEffect !== null) {
       const nextNextEffect = nextEffect.nextEffect;
@@ -2172,160 +2141,320 @@ function commitRootImpl(root, renderPriorityLevel) {
   return null;
 }
 
-function commitBeforeMutationEffects() {
-  while (nextEffect !== null) {
-    const current = nextEffect.alternate;
-
-    if (!shouldFireAfterActiveInstanceBlur && focusedInstanceHandle !== null) {
-      if ((nextEffect.effectTag & Deletion) !== NoEffect) {
-        if (doesFiberContain(nextEffect, focusedInstanceHandle)) {
-          shouldFireAfterActiveInstanceBlur = true;
-          beforeActiveInstanceBlur();
-        }
-      } else {
-        // TODO: Move this out of the hot path using a dedicated effect tag.
-        if (
-          nextEffect.tag === SuspenseComponent &&
-          isSuspenseBoundaryBeingHidden(current, nextEffect) &&
-          doesFiberContain(nextEffect, focusedInstanceHandle)
-        ) {
-          shouldFireAfterActiveInstanceBlur = true;
-          beforeActiveInstanceBlur();
-        }
-      }
+function commitBeforeMutationEffects(fiber: Fiber) {
+  if (fiber.child !== null) {
+    const primarySubtreeTag =
+      fiber.subtreeTag & (Deletion | Snapshot | Passive | Placement);
+    if (primarySubtreeTag !== NoEffect) {
+      commitBeforeMutationEffects(fiber.child);
     }
-
-    const effectTag = nextEffect.effectTag;
-    if ((effectTag & Snapshot) !== NoEffect) {
-      setCurrentDebugFiberInDEV(nextEffect);
-
-      commitBeforeMutationEffectOnFiber(current, nextEffect);
-
-      resetCurrentDebugFiberInDEV();
-    }
-    if ((effectTag & Passive) !== NoEffect) {
-      // If there are passive effects, schedule a callback to flush at
-      // the earliest opportunity.
-      if (!rootDoesHavePassiveEffects) {
-        rootDoesHavePassiveEffects = true;
-        scheduleCallback(NormalSchedulerPriority, () => {
-          flushPassiveEffects();
-          return null;
-        });
-      }
-    }
-    nextEffect = nextEffect.nextEffect;
   }
-}
 
-function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
-  // TODO: Should probably move the bulk of this function to commitWork.
-  while (nextEffect !== null) {
-    setCurrentDebugFiberInDEV(nextEffect);
-
-    const effectTag = nextEffect.effectTag;
-
-    if (effectTag & ContentReset) {
-      commitResetTextContent(nextEffect);
+  if (__DEV__) {
+    setCurrentDebugFiberInDEV(fiber);
+    invokeGuardedCallback(null, commitBeforeMutationEffectsImpl, null, fiber);
+    if (hasCaughtError()) {
+      const error = clearCaughtError();
+      captureCommitPhaseError(fiber, error);
     }
-
-    if (effectTag & Ref) {
-      const current = nextEffect.alternate;
-      if (current !== null) {
-        commitDetachRef(current);
-      }
-      if (enableScopeAPI) {
-        // TODO: This is a temporary solution that allows us to transition away
-        // from React Flare on www.
-        if (nextEffect.tag === ScopeComponent) {
-          commitAttachRef(nextEffect);
-        }
-      }
-    }
-
-    // The following switch statement is only concerned about placement,
-    // updates, and deletions. To avoid needing to add a case for every possible
-    // bitmap value, we remove the secondary effects from the effect tag and
-    // switch on that value.
-    const primaryEffectTag =
-      effectTag & (Placement | Update | Deletion | Hydrating);
-    switch (primaryEffectTag) {
-      case Placement: {
-        commitPlacement(nextEffect);
-        // Clear the "placement" from effect tag so that we know that this is
-        // inserted, before any life-cycles like componentDidMount gets called.
-        // TODO: findDOMNode doesn't rely on this any more but isMounted does
-        // and isMounted is deprecated anyway so we should be able to kill this.
-        nextEffect.effectTag &= ~Placement;
-        break;
-      }
-      case PlacementAndUpdate: {
-        // Placement
-        commitPlacement(nextEffect);
-        // Clear the "placement" from effect tag so that we know that this is
-        // inserted, before any life-cycles like componentDidMount gets called.
-        nextEffect.effectTag &= ~Placement;
-
-        // Update
-        const current = nextEffect.alternate;
-        commitWork(current, nextEffect);
-        break;
-      }
-      case Hydrating: {
-        nextEffect.effectTag &= ~Hydrating;
-        break;
-      }
-      case HydratingAndUpdate: {
-        nextEffect.effectTag &= ~Hydrating;
-
-        // Update
-        const current = nextEffect.alternate;
-        commitWork(current, nextEffect);
-        break;
-      }
-      case Update: {
-        const current = nextEffect.alternate;
-        commitWork(current, nextEffect);
-        break;
-      }
-      case Deletion: {
-        commitDeletion(root, nextEffect, renderPriorityLevel);
-        break;
-      }
-    }
-
     resetCurrentDebugFiberInDEV();
-    nextEffect = nextEffect.nextEffect;
+  } else {
+    try {
+      commitBeforeMutationEffectsImpl(fiber);
+    } catch (error) {
+      captureCommitPhaseError(fiber, error);
+    }
+  }
+
+  if (fiber.sibling !== null) {
+    commitBeforeMutationEffects(fiber.sibling);
   }
 }
 
-function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
-  // TODO: Should probably move the bulk of this function to commitWork.
-  while (nextEffect !== null) {
-    setCurrentDebugFiberInDEV(nextEffect);
+function commitBeforeMutationEffectsImpl(fiber: Fiber) {
+  const current = fiber.alternate;
+  const effectTag = fiber.effectTag;
 
-    const effectTag = nextEffect.effectTag;
-
-    if (effectTag & (Update | Callback)) {
-      const current = nextEffect.alternate;
-      commitLayoutEffectOnFiber(root, current, nextEffect, committedLanes);
+  if (!shouldFireAfterActiveInstanceBlur && focusedInstanceHandle !== null) {
+    // The "deletions" array on a Fiber holds previous children that were marked for deletion.
+    // However the overall commit sequence relies on child deletions being processed before parent's effects,
+    // so to satisfy that we also process the parent's "deletions" array (the deletion of siblings).
+    commitBeforeMutationEffectsDeletions(fiber.deletions);
+    const parent = fiber.return;
+    if (parent) {
+      commitBeforeMutationEffectsDeletions(parent.deletions);
     }
 
+    // Check to see if the focused element was inside of a hidden (Suspense) subtree.
+    // TODO: Move this out of the hot path using a dedicated effect tag.
+    if (
+      fiber.tag === SuspenseComponent &&
+      isSuspenseBoundaryBeingHidden(current, fiber) &&
+      doesFiberContain(fiber, focusedInstanceHandle)
+    ) {
+      shouldFireAfterActiveInstanceBlur = true;
+      beforeActiveInstanceBlur();
+    }
+  }
+
+  if ((effectTag & Snapshot) !== NoEffect) {
+    setCurrentDebugFiberInDEV(fiber);
+    commitBeforeMutationEffectOnFiber(current, fiber);
+    resetCurrentDebugFiberInDEV();
+  }
+
+  if ((effectTag & Passive) !== NoEffect) {
+    // If there are passive effects, schedule a callback to flush at
+    // the earliest opportunity.
+    if (!rootDoesHavePassiveEffects) {
+      rootDoesHavePassiveEffects = true;
+      scheduleCallback(NormalSchedulerPriority, () => {
+        flushPassiveEffects();
+        return null;
+      });
+    }
+  }
+}
+
+function commitBeforeMutationEffectsDeletions(deletions: Array<Fiber>) {
+  for (let i = 0; i < deletions.length; i++) {
+    const fiber = deletions[i];
+
+    // TODO (effects) It would be nice to avoid calling doesFiberContain()
+    // Maybe we can repurpose one of the subtreeTag positions for this instead?
+    // Use it to store which part of the tree the focused instance is in?
+    // This assumes we can safely determine that instance during the "render" phase.
+
+    if (doesFiberContain(fiber, ((focusedInstanceHandle: any): Fiber))) {
+      shouldFireAfterActiveInstanceBlur = true;
+      beforeActiveInstanceBlur();
+    }
+  }
+}
+
+function commitMutationEffects(
+  fiber: Fiber,
+  root: FiberRoot,
+  renderPriorityLevel,
+) {
+  if (fiber.child !== null) {
+    const primarySubtreeTag =
+      fiber.subtreeTag &
+      (ContentReset | Deletion | Hydrating | Placement | Ref | Update);
+    if (primarySubtreeTag !== NoEffect) {
+      commitMutationEffects(fiber.child, root, renderPriorityLevel);
+    }
+  }
+
+  if (__DEV__) {
+    setCurrentDebugFiberInDEV(fiber);
+    invokeGuardedCallback(
+      null,
+      commitMutationEffectsImpl,
+      null,
+      fiber,
+      root,
+      renderPriorityLevel,
+    );
+    if (hasCaughtError()) {
+      const error = clearCaughtError();
+      captureCommitPhaseError(fiber, error);
+    }
+    resetCurrentDebugFiberInDEV();
+  } else {
+    try {
+      commitMutationEffectsImpl(fiber, root, renderPriorityLevel);
+    } catch (error) {
+      captureCommitPhaseError(fiber, error);
+    }
+  }
+
+  if (fiber.sibling !== null) {
+    commitMutationEffects(fiber.sibling, root, renderPriorityLevel);
+  }
+}
+
+function commitMutationEffectsImpl(
+  fiber: Fiber,
+  root: FiberRoot,
+  renderPriorityLevel,
+) {
+  // The "deletions" array on a Fiber holds previous children that were marked for deletion.
+  // However the overall commit sequence relies on child deletions being processed before parent's effects,
+  // so to satisfy that we also process the parent's "deletions" array (the deletion of siblings).
+  commitMutationEffectsDeletions(fiber.deletions, root, renderPriorityLevel);
+  const parent = fiber.return;
+  if (parent) {
+    commitMutationEffectsDeletions(parent.deletions, root, renderPriorityLevel);
+  }
+
+  const effectTag = fiber.effectTag;
+  if (effectTag & ContentReset) {
+    commitResetTextContent(fiber);
+  }
+
+  if (effectTag & Ref) {
+    const current = fiber.alternate;
+    if (current !== null) {
+      commitDetachRef(current);
+    }
     if (enableScopeAPI) {
       // TODO: This is a temporary solution that allows us to transition away
       // from React Flare on www.
-      if (effectTag & Ref && nextEffect.tag !== ScopeComponent) {
-        commitAttachRef(nextEffect);
-      }
-    } else {
-      if (effectTag & Ref) {
-        commitAttachRef(nextEffect);
+      if (fiber.tag === ScopeComponent) {
+        commitAttachRef(fiber);
       }
     }
-
-    resetCurrentDebugFiberInDEV();
-    nextEffect = nextEffect.nextEffect;
   }
+
+  // The following switch statement is only concerned about placement,
+  // updates, and deletions. To avoid needing to add a case for every possible
+  // bitmap value, we remove the secondary effects from the effect tag and
+  // switch on that value.
+  const primaryEffectTag = effectTag & (Placement | Update | Hydrating);
+  switch (primaryEffectTag) {
+    case Placement: {
+      commitPlacement(fiber);
+      // Clear the "placement" from effect tag so that we know that this is
+      // inserted, before any life-cycles like componentDidMount gets called.
+      // TODO: findDOMNode doesn't rely on this any more but isMounted does
+      // and isMounted is deprecated anyway so we should be able to kill this.
+      fiber.effectTag &= ~Placement;
+      break;
+    }
+    case PlacementAndUpdate: {
+      // Placement
+      commitPlacement(fiber);
+      // Clear the "placement" from effect tag so that we know that this is
+      // inserted, before any life-cycles like componentDidMount gets called.
+      fiber.effectTag &= ~Placement;
+
+      // Update
+      const current = fiber.alternate;
+      commitWork(current, fiber);
+      break;
+    }
+    case Hydrating: {
+      fiber.effectTag &= ~Hydrating;
+      break;
+    }
+    case HydratingAndUpdate: {
+      fiber.effectTag &= ~Hydrating;
+
+      // Update
+      const current = fiber.alternate;
+      commitWork(current, fiber);
+      break;
+    }
+    case Update: {
+      const current = fiber.alternate;
+      commitWork(current, fiber);
+      break;
+    }
+  }
+}
+
+function commitMutationEffectsDeletions(
+  deletions: Array<Fiber>,
+  root: FiberRoot,
+  renderPriorityLevel,
+) {
+  for (let i = 0; i < deletions.length; i++) {
+    const childToDelete = deletions[i];
+    if (__DEV__) {
+      invokeGuardedCallback(
+        null,
+        commitDeletion,
+        null,
+        root,
+        childToDelete,
+        renderPriorityLevel,
+      );
+      if (hasCaughtError()) {
+        const error = clearCaughtError();
+        captureCommitPhaseError(childToDelete, error);
+      }
+    } else {
+      try {
+        commitDeletion(root, childToDelete, renderPriorityLevel);
+      } catch (error) {
+        captureCommitPhaseError(childToDelete, error);
+      }
+    }
+    // Don't clear the Deletion effect yet; we also use it to know when we need to detach refs later.
+  }
+
+  // TODO (effects) Don't clear this yet; we may need to cleanup passive effects
+  deletions.splice(0);
+}
+
+function commitLayoutEffects(
+  fiber: Fiber,
+  root: FiberRoot,
+  committedLanes: Lanes,
+) {
+  if (fiber.child !== null) {
+    const primarySubtreeTag = fiber.subtreeTag & (Update | Callback | Ref);
+    if (primarySubtreeTag !== NoEffect) {
+      commitLayoutEffects(fiber.child, root, committedLanes);
+    }
+  }
+
+  if (__DEV__) {
+    setCurrentDebugFiberInDEV(fiber);
+    invokeGuardedCallback(
+      null,
+      commitLayoutEffectsImpl,
+      null,
+      fiber,
+      root,
+      committedLanes,
+    );
+    if (hasCaughtError()) {
+      const error = clearCaughtError();
+      captureCommitPhaseError(fiber, error);
+    }
+    resetCurrentDebugFiberInDEV();
+  } else {
+    try {
+      commitLayoutEffectsImpl(fiber, root, committedLanes);
+    } catch (error) {
+      captureCommitPhaseError(fiber, error);
+    }
+  }
+
+  if (fiber.sibling !== null) {
+    commitLayoutEffects(fiber.sibling, root, committedLanes);
+  }
+}
+
+function commitLayoutEffectsImpl(
+  fiber: Fiber,
+  root: FiberRoot,
+  committedLanes: Lanes,
+) {
+  const effectTag = fiber.effectTag;
+
+  setCurrentDebugFiberInDEV(fiber);
+
+  if (effectTag & (Update | Callback)) {
+    const current = fiber.alternate;
+    commitLayoutEffectOnFiber(root, current, fiber, committedLanes);
+  }
+
+  if (enableScopeAPI) {
+    // TODO: This is a temporary solution that allows us to transition away
+    // from React Flare on www.
+    if (effectTag & Ref && fiber.tag !== ScopeComponent) {
+      commitAttachRef(fiber);
+    }
+  } else {
+    if (effectTag & Ref) {
+      commitAttachRef(fiber);
+    }
+  }
+
+  resetCurrentDebugFiberInDEV();
 }
 
 export function flushPassiveEffects() {
@@ -2542,6 +2671,7 @@ function flushPassiveEffectsImpl() {
   // Note: This currently assumes there are no passive effects on the root fiber
   // because the root is not part of its own effect list.
   // This could change in the future.
+  // TODO (effects) Traverse with subtreeTag Deletion and detatch deletions array only
   let effect = root.current.firstEffect;
   while (effect !== null) {
     const nextNextEffect = effect.nextEffect;

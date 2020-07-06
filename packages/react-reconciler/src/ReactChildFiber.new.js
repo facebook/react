@@ -280,6 +280,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     // deletions, so we can just append the deletion to the list. The remaining
     // effects aren't added until the complete phase. Once we implement
     // resuming, this may not be true.
+    // TODO (effects) Get rid of effects list update here.
     const last = returnFiber.lastEffect;
     if (last !== null) {
       last.nextEffect = childToDelete;
@@ -287,6 +288,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     } else {
       returnFiber.firstEffect = returnFiber.lastEffect = childToDelete;
     }
+    returnFiber.deletions.push(childToDelete);
     childToDelete.nextEffect = null;
     childToDelete.effectTag = Deletion;
   }

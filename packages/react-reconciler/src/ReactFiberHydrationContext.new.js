@@ -24,7 +24,7 @@ import {
   HostRoot,
   SuspenseComponent,
 } from './ReactWorkTags';
-import {Deletion, Placement, Hydrating} from './ReactSideEffectTags';
+import {Deletion, Hydrating, Placement} from './ReactSideEffectTags';
 import invariant from 'shared/invariant';
 
 import {
@@ -125,6 +125,7 @@ function deleteHydratableInstance(
   childToDelete.stateNode = instance;
   childToDelete.return = returnFiber;
   childToDelete.effectTag = Deletion;
+  returnFiber.deletions.push(childToDelete);
 
   // This might seem like it belongs on progressedFirstDeletion. However,
   // these children are not part of the reconciliation list of children.

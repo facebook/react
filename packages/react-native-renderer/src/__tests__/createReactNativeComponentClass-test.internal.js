@@ -45,8 +45,12 @@ describe('createReactNativeComponentClass', () => {
 
     expect(Text).not.toBe(View);
 
-    ReactNative.render(<Text />, 1);
-    ReactNative.render(<View />, 1);
+    ReactNative.render(
+      <View>
+        <Text />
+      </View>,
+      1,
+    );
   });
 
   it('should not allow viewConfigs with duplicate uiViewClassNames to be registered', () => {
