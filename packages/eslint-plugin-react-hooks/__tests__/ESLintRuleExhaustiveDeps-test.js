@@ -6628,6 +6628,44 @@ const testsTypescript = {
         },
       ],
     },
+    {
+      // https://github.com/facebook/react/issues/19243
+      code: normalizeIndent`
+        function MyComponent() {
+          const pizza = {};
+
+          useEffect(() => ({
+            crust: pizza.crust,
+            toppings: pizza?.toppings,
+          }), []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has missing dependencies: 'pizza.crust' and 'pizza.toppings'. " +
+            'Either include them or remove the dependency array.',
+          suggestions: [
+            {
+              // TODO the description and suggestions should probably also
+              // preserve the optional chaining.
+              desc:
+                'Update the dependencies array to be: [pizza.crust, pizza.toppings]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const pizza = {};
+
+                  useEffect(() => ({
+                    crust: pizza.crust,
+                    toppings: pizza?.toppings,
+                  }), [pizza.crust, pizza.toppings]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
   ],
 };
 
