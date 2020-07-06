@@ -27,6 +27,7 @@ import {
   warnAboutUnmockedScheduler,
   deferRenderPhaseUpdateToNextBatch,
   decoupleUpdatePriorityFromScheduler,
+  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -88,6 +89,7 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
+  ScopeComponent,
 } from './ReactWorkTags';
 import {LegacyRoot} from './ReactRootTags';
 import {
@@ -2217,6 +2219,9 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
       if (current !== null) {
         commitDetachRef(current);
       }
+      if (enableScopeAPI && nextEffect.tag === ScopeComponent) {
+        commitAttachRef(nextEffect);
+      }
     }
 
     // The following switch statement is only concerned about placement,
@@ -2287,7 +2292,10 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
       commitLayoutEffectOnFiber(root, current, nextEffect, committedLanes);
     }
 
-    if (effectTag & Ref) {
+    if (
+      effectTag & Ref &&
+      (!enableScopeAPI || nextEffect.tag !== ScopeComponent)
+    ) {
       commitAttachRef(nextEffect);
     }
 
