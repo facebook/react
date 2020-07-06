@@ -473,7 +473,7 @@ describe('ChangeEventPlugin', () => {
   describe('concurrent mode', () => {
     // @gate experimental
     it('text input', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       let input;
 
       class ControlledInput extends React.Component {
@@ -516,7 +516,7 @@ describe('ChangeEventPlugin', () => {
 
     // @gate experimental
     it('checkbox input', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       let input;
 
       class ControlledInput extends React.Component {
@@ -572,7 +572,7 @@ describe('ChangeEventPlugin', () => {
 
     // @gate experimental
     it('textarea', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       let textarea;
 
       class ControlledTextarea extends React.Component {
@@ -615,7 +615,7 @@ describe('ChangeEventPlugin', () => {
 
     // @gate experimental
     it('parent of input', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       let input;
 
       class ControlledInput extends React.Component {
@@ -662,7 +662,7 @@ describe('ChangeEventPlugin', () => {
 
     // @gate experimental
     it('is async for non-input events', () => {
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       let input;
 
       class ControlledInput extends React.Component {
@@ -715,7 +715,7 @@ describe('ChangeEventPlugin', () => {
       const {act} = TestUtils;
       const {useState} = React;
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
 
       const target = React.createRef(null);
       function Foo() {
