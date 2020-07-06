@@ -23,8 +23,8 @@ import {
   registerSimpleEvents,
 } from '../DOMEventProperties';
 import {
-  accumulatePhaseListeners,
-  accumulateEventTargetListeners,
+  accumulateTwoPhaseListeners,
+  accumulateEventHandleTargetListeners,
 } from '../DOMModernPluginEventSystem';
 import {IS_TARGET_PHASE_ONLY} from '../EventSystemFlags';
 import SyntheticAnimationEvent from '../SyntheticAnimationEvent';
@@ -159,14 +159,14 @@ function extractEvents(
     targetContainer != null
   ) {
     const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
-    accumulateEventTargetListeners(
+    accumulateEventHandleTargetListeners(
       dispatchQueue,
       event,
       targetContainer,
       inCapturePhase,
     );
   } else {
-    accumulatePhaseListeners(targetInst, dispatchQueue, event, true);
+    accumulateTwoPhaseListeners(targetInst, dispatchQueue, event, true);
   }
   return event;
 }

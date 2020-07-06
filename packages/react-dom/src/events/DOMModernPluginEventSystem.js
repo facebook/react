@@ -632,7 +632,7 @@ function createDispatchQueueItem(
   };
 }
 
-export function accumulatePhaseListeners(
+export function accumulateTwoPhaseListeners(
   targetFiber: Fiber | null,
   dispatchQueue: DispatchQueue,
   event: ReactSyntheticEvent,
@@ -905,7 +905,7 @@ export function accumulateEnterLeaveListeners(
   }
 }
 
-export function accumulateEventTargetListeners(
+export function accumulateEventHandleTargetListeners(
   dispatchQueue: DispatchQueue,
   event: ReactSyntheticEvent,
   currentTarget: EventTarget,

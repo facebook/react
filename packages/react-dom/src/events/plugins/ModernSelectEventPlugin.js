@@ -29,7 +29,7 @@ import {
 } from '../../client/ReactDOMComponentTree';
 import {hasSelectionCapabilities} from '../../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../../shared/HTMLNodeType';
-import {accumulatePhaseListeners} from '../DOMModernPluginEventSystem';
+import {accumulateTwoPhaseListeners} from '../DOMModernPluginEventSystem';
 
 const skipSelectionChangeEvent =
   canUseDOM && 'documentMode' in document && document.documentMode <= 11;
@@ -136,7 +136,11 @@ function constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget) {
     syntheticEvent.type = 'select';
     syntheticEvent.target = activeElement;
 
-    accumulatePhaseListeners(activeElementInst, dispatchQueue, syntheticEvent);
+    accumulateTwoPhaseListeners(
+      activeElementInst,
+      dispatchQueue,
+      syntheticEvent,
+    );
   }
 }
 

@@ -37,7 +37,7 @@ import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 import {batchedUpdates} from '../ReactDOMUpdateBatching';
 import {
   dispatchEventsInBatch,
-  accumulatePhaseListeners,
+  accumulateTwoPhaseListeners,
 } from '../DOMModernPluginEventSystem';
 
 function registerEvents() {
@@ -63,7 +63,7 @@ function createAndAccumulateChangeEvent(
   event.type = 'change';
   // Flag this event loop as needing state restore.
   enqueueStateRestore(((target: any): Node));
-  accumulatePhaseListeners(inst, dispatchQueue, event);
+  accumulateTwoPhaseListeners(inst, dispatchQueue, event);
 }
 /**
  * For IE shims
