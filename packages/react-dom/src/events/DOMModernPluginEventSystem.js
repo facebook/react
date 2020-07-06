@@ -30,6 +30,7 @@ import {
   LEGACY_FB_SUPPORT,
   IS_REPLAYED,
   IS_TARGET_PHASE_ONLY,
+  IS_CAPTURE_PHASE,
 } from './EventSystemFlags';
 
 import {
@@ -301,9 +302,9 @@ export function listenToTopLevelEvent(
   target: EventTarget,
   listenerMap: ElementListenerMap,
   eventSystemFlags: EventSystemFlags,
+  capture: boolean,
   passive?: boolean,
   priority?: EventPriority,
-  capture?: boolean,
 ): void {
   // TOP_SELECTION_CHANGE needs to be attached to the document
   // otherwise it won't capture incoming events that are only
@@ -312,12 +313,10 @@ export function listenToTopLevelEvent(
     target = (target: any).ownerDocument || target;
     listenerMap = getEventListenerMap(target);
   }
-  capture =
-    capture === undefined ? capturePhaseEvents.has(topLevelType) : capture;
   const listenerMapKey = getListenerMapKey(topLevelType, capture);
-  const listenerEntry: ElementListenerMapEntry | void = listenerMap.get(
+  const listenerEntry = ((listenerMap.get(
     listenerMapKey,
-  );
+  ): any): ElementListenerMapEntry | void);
   const shouldUpgrade = shouldUpgradeListener(listenerEntry, passive);
 
   // If the listener entry is empty or we should upgrade, then
@@ -333,6 +332,9 @@ export function listenToTopLevelEvent(
         ((listenerEntry: any): ElementListenerMapEntry).listener,
       );
     }
+    if (capture) {
+      eventSystemFlags |= IS_CAPTURE_PHASE;
+    }
     const listener = addTrappedEventListener(
       target,
       topLevelType,
@@ -346,20 +348,31 @@ export function listenToTopLevelEvent(
   }
 }
 
-export function listenToEvent(
-  registrationName: string,
+export function listenToReactPropEvent(
+  reactPropEvent: string,
   rootContainerElement: Element,
 ): void {
   const listenerMap = getEventListenerMap(rootContainerElement);
-  const dependencies = registrationNameDependencies[registrationName];
+  // For optimization, let's check if we have the registration name
+  // on the rootContainerElement.
+  if (listenerMap.has(reactPropEvent)) {
+    return;
+  }
+  // Add the registration name to the map, so we can avoid processing
+  // this React prop event again.
+  listenerMap.set(reactPropEvent, null);
+  const dependencies = registrationNameDependencies[reactPropEvent];
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
+    const capture = capturePhaseEvents.has(dependency);
+
     listenToTopLevelEvent(
       dependency,
       rootContainerElement,
       listenerMap,
       PLUGIN_EVENT_SYSTEM,
+      capture,
     );
   }
 }
@@ -892,10 +905,11 @@ export function accumulateEnterLeaveListeners(
   }
 }
 
-export function accumulateEventTargetListeners(
+export function accumulateEventHandleTargetListeners(
   dispatchQueue: DispatchQueue,
   event: ReactSyntheticEvent,
   currentTarget: EventTarget,
+  inCapturePhase: boolean,
 ): void {
   const capturePhase: DispatchQueueItemPhase = [];
   const bubblePhase: DispatchQueueItemPhase = [];
@@ -904,17 +918,16 @@ export function accumulateEventTargetListeners(
   if (eventListeners !== null) {
     const listenersArr = Array.from(eventListeners);
     const targetType = ((event.type: any): DOMTopLevelEventType);
-    const isCapturePhase = (event: any).eventPhase === 1;
 
     for (let i = 0; i < listenersArr.length; i++) {
       const listener = listenersArr[i];
       const {callback, capture, type} = listener;
       if (type === targetType) {
-        if (isCapturePhase && capture) {
+        if (inCapturePhase && capture) {
           capturePhase.push(
             createDispatchQueueItemPhaseEntry(null, callback, currentTarget),
           );
-        } else if (!isCapturePhase && !capture) {
+        } else if (!inCapturePhase && !capture) {
           bubblePhase.push(
             createDispatchQueueItemPhaseEntry(null, callback, currentTarget),
           );

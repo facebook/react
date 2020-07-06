@@ -26,6 +26,7 @@ import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import {
   listenToTopLevelEvent,
   addEventTypeToDispatchConfig,
+  capturePhaseEvents,
 } from '../events/DOMModernPluginEventSystem';
 
 import {HostRoot, HostPortal} from 'react-reconciler/src/ReactWorkTags';
@@ -98,11 +99,13 @@ function registerEventOnNearestTargetContainer(
     );
   }
   const listenerMap = getEventListenerMap(targetContainer);
+  const capture = capturePhaseEvents.has(topLevelType);
   listenToTopLevelEvent(
     topLevelType,
     targetContainer,
     listenerMap,
     PLUGIN_EVENT_SYSTEM,
+    capture,
     passive,
     priority,
   );
@@ -201,9 +204,9 @@ export function createEventHandle(
             eventTarget,
             listenerMap,
             PLUGIN_EVENT_SYSTEM | IS_TARGET_PHASE_ONLY,
+            capture,
             passive,
             priority,
-            capture,
           );
         } else {
           invariant(

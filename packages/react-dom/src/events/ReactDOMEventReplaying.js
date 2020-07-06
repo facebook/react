@@ -220,6 +220,7 @@ function trapReplayableEventForContainer(
     ((container: any): Element),
     listenerMap,
     PLUGIN_EVENT_SYSTEM,
+    false,
   );
 }
 
