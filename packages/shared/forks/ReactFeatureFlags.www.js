@@ -75,6 +75,7 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 // don't have to add another test dimension. The build system will compile this
 // to the correct value.
 export const enableNewReconciler = __VARIANT__;
+export const decoupleUpdatePriorityFromScheduler = __VARIANT__;
 
 // TODO: This does not currently exist in the new reconciler fork.
 export const enableDebugTracing = !__VARIANT__;

@@ -47,6 +47,9 @@ export const {
   act,
   dumpTree,
   getRoot,
+  // TODO: Remove this once callers migrate to alternatives.
+  // This should only be used by React internals.
+  unstable_runWithPriority,
 } = createReactNoop(
   ReactFiberReconciler, // reconciler
   true, // useMutation

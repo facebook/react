@@ -12,7 +12,10 @@ import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
 import type {ElementListenerMap} from '../client/ReactDOMComponentTree';
 import type {EventSystemFlags} from './EventSystemFlags';
-import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {
+  FiberRoot,
+  ReactPriorityLevel,
+} from 'react-reconciler/src/ReactInternalTypes';
 
 import {
   enableDeprecatedFlareAPI,
@@ -62,6 +65,23 @@ export function setAttemptHydrationAtCurrentPriority(
   fn: (fiber: Object) => void,
 ) {
   attemptHydrationAtCurrentPriority = fn;
+}
+
+let getCurrentUpdatePriority: () => ReactPriorityLevel;
+
+export function setGetCurrentUpdatePriority(fn: () => ReactPriorityLevel) {
+  getCurrentUpdatePriority = fn;
+}
+
+let attemptHydrationAtPriority: <T>(
+  priority: ReactPriorityLevel,
+  fn: () => T,
+) => T;
+
+export function setAttemptHydrationAtPriority(
+  fn: <T>(priority: ReactPriorityLevel, fn: () => T) => T,
+) {
+  attemptHydrationAtPriority = fn;
 }
 
 // TODO: Upgrade this definition once we're on a newer version of Flow that
@@ -147,6 +167,7 @@ type QueuedHydrationTarget = {|
   blockedOn: null | Container | SuspenseInstance,
   target: Node,
   priority: number,
+  lanePriority: ReactPriorityLevel,
 |};
 const queuedExplicitHydrationTargets: Array<QueuedHydrationTarget> = [];
 
@@ -508,9 +529,12 @@ function attemptExplicitHydrationTarget(
           // We're blocked on hydrating this boundary.
           // Increase its priority.
           queuedTarget.blockedOn = instance;
-          runWithPriority(queuedTarget.priority, () => {
-            attemptHydrationAtCurrentPriority(nearestMounted);
+          attemptHydrationAtPriority(queuedTarget.lanePriority, () => {
+            runWithPriority(queuedTarget.priority, () => {
+              attemptHydrationAtCurrentPriority(nearestMounted);
+            });
           });
+
           return;
         }
       } else if (tag === HostRoot) {
@@ -529,15 +553,17 @@ function attemptExplicitHydrationTarget(
 
 export function queueExplicitHydrationTarget(target: Node): void {
   if (enableSelectiveHydration) {
-    const priority = getCurrentPriorityLevel();
+    const schedulerPriority = getCurrentPriorityLevel();
+    const updateLanePriority = getCurrentUpdatePriority();
     const queuedTarget: QueuedHydrationTarget = {
       blockedOn: null,
       target: target,
-      priority: priority,
+      priority: schedulerPriority,
+      lanePriority: updateLanePriority,
     };
     let i = 0;
     for (; i < queuedExplicitHydrationTargets.length; i++) {
-      if (priority <= queuedExplicitHydrationTargets[i].priority) {
+      if (schedulerPriority <= queuedExplicitHydrationTargets[i].priority) {
         break;
       }
     }

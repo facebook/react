@@ -231,6 +231,8 @@ describe('SimpleEventPlugin', function() {
   describe('interactive events, in concurrent mode', () => {
     beforeEach(() => {
       jest.resetModules();
+
+      React = require('react');
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
     });
@@ -377,11 +379,14 @@ describe('SimpleEventPlugin', function() {
             <button
               ref={el => (button = el)}
               onClick={() => {
-                Scheduler.unstable_next(() => {
-                  this.setState(state => ({
-                    lowPriCount: state.lowPriCount + 1,
-                  }));
-                });
+                React.unstable_withSuspenseConfig(
+                  () => {
+                    this.setState(state => ({
+                      lowPriCount: state.lowPriCount + 1,
+                    }));
+                  },
+                  {timeoutMs: 5000},
+                );
               }}>
               {text}
             </button>

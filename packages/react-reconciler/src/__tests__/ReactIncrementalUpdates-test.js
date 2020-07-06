@@ -516,11 +516,16 @@ describe('ReactIncrementalUpdates', () => {
         Scheduler.unstable_yieldValue('Committed: ' + log);
         if (log === 'B') {
           // Right after B commits, schedule additional updates.
-          Scheduler.unstable_runWithPriority(
+          // TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
+          ReactNoop.unstable_runWithPriority(
             Scheduler.unstable_UserBlockingPriority,
-            () => {
-              pushToLog('C');
-            },
+            () =>
+              Scheduler.unstable_runWithPriority(
+                Scheduler.unstable_UserBlockingPriority,
+                () => {
+                  pushToLog('C');
+                },
+              ),
           );
           setLog(prevLog => prevLog + 'D');
         }
@@ -538,11 +543,17 @@ describe('ReactIncrementalUpdates', () => {
 
     await ReactNoop.act(async () => {
       pushToLog('A');
-      Scheduler.unstable_runWithPriority(
+
+      // TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
+      ReactNoop.unstable_runWithPriority(
         Scheduler.unstable_UserBlockingPriority,
-        () => {
-          pushToLog('B');
-        },
+        () =>
+          Scheduler.unstable_runWithPriority(
+            Scheduler.unstable_UserBlockingPriority,
+            () => {
+              pushToLog('B');
+            },
+          ),
       );
     });
     expect(Scheduler).toHaveYielded([
@@ -574,11 +585,16 @@ describe('ReactIncrementalUpdates', () => {
         Scheduler.unstable_yieldValue('Committed: ' + this.state.log);
         if (this.state.log === 'B') {
           // Right after B commits, schedule additional updates.
-          Scheduler.unstable_runWithPriority(
+          // TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
+          ReactNoop.unstable_runWithPriority(
             Scheduler.unstable_UserBlockingPriority,
-            () => {
-              this.pushToLog('C');
-            },
+            () =>
+              Scheduler.unstable_runWithPriority(
+                Scheduler.unstable_UserBlockingPriority,
+                () => {
+                  this.pushToLog('C');
+                },
+              ),
           );
           this.pushToLog('D');
         }
@@ -598,11 +614,16 @@ describe('ReactIncrementalUpdates', () => {
 
     await ReactNoop.act(async () => {
       pushToLog('A');
-      Scheduler.unstable_runWithPriority(
+      // TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
+      ReactNoop.unstable_runWithPriority(
         Scheduler.unstable_UserBlockingPriority,
-        () => {
-          pushToLog('B');
-        },
+        () =>
+          Scheduler.unstable_runWithPriority(
+            Scheduler.unstable_UserBlockingPriority,
+            () => {
+              pushToLog('B');
+            },
+          ),
       );
     });
     expect(Scheduler).toHaveYielded([

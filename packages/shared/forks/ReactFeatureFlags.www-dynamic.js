@@ -18,6 +18,7 @@ export const disableInputAttributeSyncing = __VARIANT__;
 export const enableFilterEmptyStringAttributesDOM = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
 export const enableDebugTracing = !__VARIANT__;
+export const decoupleUpdatePriorityFromScheduler = __VARIANT__;
 
 // This only has an effect in the new reconciler. But also, the new reconciler
 // is only enabled when __VARIANT__ is true. So this is set to the opposite of

@@ -35,6 +35,8 @@ import {
   attemptUserBlockingHydration,
   attemptContinuousHydration,
   attemptHydrationAtCurrentPriority,
+  runWithPriority,
+  getCurrentUpdatePriority,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -58,6 +60,8 @@ import {
   setAttemptContinuousHydration,
   setAttemptHydrationAtCurrentPriority,
   queueExplicitHydrationTarget,
+  setGetCurrentUpdatePriority,
+  setAttemptHydrationAtPriority,
 } from '../events/ReactDOMEventReplaying';
 import {setBatchingImplementation} from '../events/ReactDOMUpdateBatching';
 import {
@@ -70,6 +74,8 @@ setAttemptSynchronousHydration(attemptSynchronousHydration);
 setAttemptUserBlockingHydration(attemptUserBlockingHydration);
 setAttemptContinuousHydration(attemptContinuousHydration);
 setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority);
+setGetCurrentUpdatePriority(getCurrentUpdatePriority);
+setAttemptHydrationAtPriority(runWithPriority);
 
 let didWarnAboutUnstableCreatePortal = false;
 let didWarnAboutUnstableRenderSubtreeIntoContainer = false;
@@ -205,6 +211,9 @@ export {
   unstable_createPortal,
   // enableCreateEventHandleAPI
   createEventHandle as unstable_createEventHandle,
+  // TODO: Remove this once callers migrate to alternatives.
+  // This should only be used by React internals.
+  runWithPriority as unstable_runWithPriority,
 };
 
 const foundDevTools = injectIntoDevTools({
