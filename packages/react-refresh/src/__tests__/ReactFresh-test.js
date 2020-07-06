@@ -3059,7 +3059,8 @@ describe('ReactFresh', () => {
     }
   });
 
-  it('remounts classes on every edit', () => {
+  it.only('remounts classes on every edit', () => {
+    throw new Error('HIT');
     if (__DEV__) {
       const HelloV1 = render(() => {
         class Hello extends React.Component {
