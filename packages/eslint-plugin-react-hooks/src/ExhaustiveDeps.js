@@ -1016,11 +1016,11 @@ export default {
           // Is this a variable from top scope?
           const topScopeRef = componentScope.set.get(missingDep);
           const usedDep = dependencies.get(missingDep);
-          if (usedDep.references[0].resolved !== topScopeRef) {
+          if (usedDep && usedDep.references[0].resolved !== topScopeRef) {
             return;
           }
           // Is this a destructured prop?
-          const def = topScopeRef.defs[0];
+          const def = topScopeRef && topScopeRef.defs[0];
           if (def == null || def.name == null || def.type !== 'Parameter') {
             return;
           }
@@ -1062,7 +1062,7 @@ export default {
             return;
           }
           const usedDep = dependencies.get(missingDep);
-          const references = usedDep.references;
+          const references = usedDep ? usedDep.references : [];
           let id;
           let maybeCall;
           for (let i = 0; i < references.length; i++) {
