@@ -19,7 +19,7 @@ import type {
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import {FundamentalComponent} from './ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {Lane} from './ReactFiberLane';
+import type {Lane} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 
 import {
@@ -79,7 +79,7 @@ import {
   NoTimestamp,
   getHighestPriorityPendingLanes,
   higherPriorityLane,
-} from './ReactFiberLane';
+} from './ReactFiberLane.new';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
   scheduleRefresh,

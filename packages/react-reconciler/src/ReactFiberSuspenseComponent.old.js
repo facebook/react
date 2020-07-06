@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import type {Lane} from './ReactFiberLane';
+import type {Lane} from './ReactFiberLane.old';
 import {SuspenseComponent, SuspenseListComponent} from './ReactWorkTags';
 import {NoEffect, DidCapture} from './ReactSideEffectTags';
 import {

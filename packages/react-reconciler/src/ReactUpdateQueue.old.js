@@ -85,10 +85,15 @@
 // resources, but the final state is always the same.
 
 import type {Fiber} from './ReactInternalTypes';
-import type {Lanes, Lane} from './ReactFiberLane';
+import type {Lanes, Lane} from './ReactFiberLane.old';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 
-import {NoLane, NoLanes, isSubsetOfLanes, mergeLanes} from './ReactFiberLane';
+import {
+  NoLane,
+  NoLanes,
+  isSubsetOfLanes,
+  mergeLanes,
+} from './ReactFiberLane.old';
 import {
   enterDisallowedContextReadInDEV,
   exitDisallowedContextReadInDEV,

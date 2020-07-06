@@ -55,7 +55,7 @@ import {
   didNotFindHydratableSuspenseInstance,
 } from './ReactFiberHostConfig';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
-import {OffscreenLane} from './ReactFiberLane';
+import {OffscreenLane} from './ReactFiberLane.new';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.

@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane';
+import type {Lanes} from './ReactFiberLane.old';
 import type {
   ReactFundamentalComponentInstance,
   ReactScopeInstance,
@@ -138,7 +138,7 @@ import {
   popRenderLanes,
 } from './ReactFiberWorkLoop.old';
 import {createFundamentalStateInstance} from './ReactFiberFundamental.old';
-import {OffscreenLane} from './ReactFiberLane';
+import {OffscreenLane} from './ReactFiberLane.old';
 import {resetChildFibers} from './ReactChildFiber.old';
 import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents.old';
 import {createScopeInstance} from './ReactFiberScope.old';

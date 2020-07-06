@@ -19,7 +19,7 @@ import {
   DEPRECATED_mountResponderInstance,
   DEPRECATED_unmountResponderInstance,
 } from './ReactFiberHostConfig';
-import {NoLanes} from './ReactFiberLane';
+import {NoLanes} from './ReactFiberLane.new';
 
 import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 

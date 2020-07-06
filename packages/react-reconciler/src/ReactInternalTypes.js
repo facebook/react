@@ -23,7 +23,7 @@ import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {SideEffectTag} from './ReactSideEffectTags';
-import type {Lane, LanePriority, Lanes, LaneMap} from './ReactFiberLane';
+import type {Lane, LanePriority, Lanes, LaneMap} from './ReactFiberLane.old';
 import type {HookType} from './ReactFiberHooks.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';

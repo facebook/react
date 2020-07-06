@@ -16,7 +16,7 @@ import type {
   ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher} from './ReactInternalTypes';
-import type {Lanes, Lane} from './ReactFiberLane';
+import type {Lanes, Lane} from './ReactFiberLane.new';
 import type {HookEffectTag} from './ReactHookEffectTags';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
@@ -35,7 +35,7 @@ import {
   removeLanes,
   markRootEntangled,
   markRootMutableRead,
-} from './ReactFiberLane';
+} from './ReactFiberLane.new';
 import {readContext} from './ReactFiberNewContext.new';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.new';
 import {

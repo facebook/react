@@ -10,7 +10,7 @@
 import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber, ContextDependency} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.new';
-import type {Lanes} from './ReactFiberLane';
+import type {Lanes} from './ReactFiberLane.new';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.new';
@@ -27,7 +27,7 @@ import {
   includesSomeLane,
   mergeLanes,
   pickArbitraryLane,
-} from './ReactFiberLane';
+} from './ReactFiberLane.new';
 
 import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
