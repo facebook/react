@@ -2219,8 +2219,12 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
       if (current !== null) {
         commitDetachRef(current);
       }
-      if (enableScopeAPI && nextEffect.tag === ScopeComponent) {
-        commitAttachRef(nextEffect);
+      if (enableScopeAPI) {
+        // This is a temporary solution that allows us to transition away
+        // from React Flare on www.
+        if (nextEffect.tag === ScopeComponent) {
+          commitAttachRef(nextEffect);
+        }
       }
     }
 
@@ -2292,11 +2296,16 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
       commitLayoutEffectOnFiber(root, current, nextEffect, committedLanes);
     }
 
-    if (
-      effectTag & Ref &&
-      (!enableScopeAPI || nextEffect.tag !== ScopeComponent)
-    ) {
-      commitAttachRef(nextEffect);
+    if (enableScopeAPI) {
+      // This is a temporary solution that allows us to transition away
+      // from React Flare on www.
+      if (effectTag & Ref && nextEffect.tag !== ScopeComponent) {
+        commitAttachRef(nextEffect);
+      }
+    } else {
+      if (effectTag & Ref) {
+        commitAttachRef(nextEffect);
+      }
     }
 
     resetCurrentDebugFiberInDEV();
