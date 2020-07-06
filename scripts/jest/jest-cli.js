@@ -317,7 +317,11 @@ function main() {
   }
 
   // Run Jest.
-  spawn('node', args, {stdio: 'inherit', env: {...envars, ...process.env}});
+  const jest = spawn('node', args, {stdio: 'inherit', env: {...envars, ...process.env}});
+
+  jest.on('close', (code) => {
+    process.exit(code)
+  });
 }
 
 main();
