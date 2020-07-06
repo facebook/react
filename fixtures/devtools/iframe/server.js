@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 const finalhandler = require('finalhandler');
 const http = require('http');
 const serveStatic = require('serve-static');
