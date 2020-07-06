@@ -238,7 +238,7 @@ describe('SimpleEventPlugin', function() {
     // @gate experimental
     it('flushes pending interactive work before extracting event handler', () => {
       container = document.createElement('div');
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       document.body.appendChild(container);
 
       let button;
@@ -309,7 +309,7 @@ describe('SimpleEventPlugin', function() {
     // @gate experimental
     it('end result of many interactive updates is deterministic', () => {
       container = document.createElement('div');
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       document.body.appendChild(container);
 
       let button;
@@ -408,7 +408,7 @@ describe('SimpleEventPlugin', function() {
       }
 
       // Initial mount
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<Wrapper />);
       expect(Scheduler).toFlushAndYield([
         'High-pri count: 0, Low-pri count: 0',
