@@ -111,9 +111,6 @@ export const disableModulePatternComponents = false;
 // We should remove this flag once the above flag becomes enabled
 export const warnUnstableRenderSubtreeIntoContainer = false;
 
-// Modern event system where events get registered at roots
-export const enableModernEventSystem = false;
-
 // Support legacy Primer support on internal FB www
 export const enableLegacyFBSupport = false;
 

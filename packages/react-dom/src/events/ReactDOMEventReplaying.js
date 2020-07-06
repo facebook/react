@@ -20,7 +20,6 @@ import type {
 import {
   enableDeprecatedFlareAPI,
   enableSelectiveHydration,
-  enableModernEventSystem,
 } from 'shared/ReactFeatureFlags';
 import {
   unstable_runWithPriority as runWithPriority,
