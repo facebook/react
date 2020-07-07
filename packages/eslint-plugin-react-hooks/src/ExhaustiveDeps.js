@@ -588,8 +588,8 @@ export default {
             if (
               parent != null &&
               // ref.current
-              (parent.type === 'MemberExpression' ||
-                parent.type === 'OptionalMemberExpression') &&
+              // Note: no need to handle OptionalMemberExpression because it can't be LHS.
+              parent.type === 'MemberExpression' &&
               !parent.computed &&
               parent.property.type === 'Identifier' &&
               parent.property.name === 'current' &&
@@ -1452,8 +1452,8 @@ function getDependency(node) {
   ) {
     return getDependency(node.parent);
   } else if (
-    (node.type === 'MemberExpression' ||
-      node.type === 'OptionalMemberExpression') &&
+    // Note: we don't check OptionalMemberExpression because it can't be LHS.
+    node.type === 'MemberExpression' &&
     node.parent &&
     node.parent.type === 'AssignmentExpression'
   ) {
