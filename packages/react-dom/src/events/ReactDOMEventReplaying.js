@@ -135,7 +135,10 @@ import {
   TOP_BLUR,
 } from './DOMTopLevelEventTypes';
 import {IS_REPLAYED, PLUGIN_EVENT_SYSTEM} from './EventSystemFlags';
-import {listenToTopLevelEvent} from './DOMModernPluginEventSystem';
+import {
+  listenToTopLevelEvent,
+  capturePhaseEvents,
+} from './DOMModernPluginEventSystem';
 import {addResponderEventSystemEvent} from './DeprecatedDOMEventResponderSystem';
 
 type QueuedReplayableEvent = {|
@@ -236,12 +239,13 @@ function trapReplayableEventForContainer(
   container: Container,
   listenerMap: ElementListenerMap,
 ) {
+  const capture = capturePhaseEvents.has(topLevelType);
   listenToTopLevelEvent(
     topLevelType,
     ((container: any): Element),
     listenerMap,
     PLUGIN_EVENT_SYSTEM,
-    false,
+    capture,
   );
 }
 
