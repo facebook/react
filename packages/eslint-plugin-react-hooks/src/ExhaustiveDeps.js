@@ -1521,7 +1521,7 @@ function analyzePropertyChain(node, optionalChains) {
       if (node.optional) {
         // We only want to consider it optional if *all* usages were optional.
         if (!optionalChains.has(result)) {
-          // Mark as optional.
+          // Mark as (maybe) optional. If there's a required usage, this will be overridden.
           optionalChains.set(result, true);
         }
       } else {
