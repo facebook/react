@@ -60,6 +60,7 @@ import escapeTextForBrowser from './escapeTextForBrowser';
 import {
   prepareToUseHooks,
   finishHooks,
+  resetHooksState,
   Dispatcher,
   currentPartialRenderer,
   setCurrentPartialRenderer,
@@ -955,6 +956,7 @@ class ReactDOMServerRenderer {
     } finally {
       ReactCurrentDispatcher.current = prevDispatcher;
       setCurrentPartialRenderer(prevPartialRenderer);
+      resetHooksState();
     }
   }
 
