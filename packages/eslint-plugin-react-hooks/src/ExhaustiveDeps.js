@@ -1238,7 +1238,7 @@ function collectRecommendations({
     const keys = path.split('.');
     let node = rootNode;
     for (const key of keys) {
-      let child = getChildByKey(node, key);
+      let child = node.children.get(key);
       if (!child) {
         child = createDepTree();
         node.children.set(key, child);
@@ -1251,28 +1251,13 @@ function collectRecommendations({
     const keys = path.split('.');
     let node = rootNode;
     for (const key of keys) {
-      const child = getChildByKey(node, key);
+      const child = node.children.get(key);
       if (!child) {
         return;
       }
       fn(child);
       node = child;
     }
-  }
-
-  /**
-   * Match key with optional chaining
-   * key -> key
-   * key? -> key
-   * key -> key?
-   * Otherwise undefined.
-   */
-  function getChildByKey(node, key) {
-    return (
-      node.children.get(key) ||
-      node.children.get(key.split('?')[0]) ||
-      node.children.get(key + '?')
-    );
   }
 
   // Now we can learn which dependencies are missing or necessary.
@@ -1287,13 +1272,10 @@ function collectRecommendations({
   function scanTreeRecursively(node, missingPaths, satisfyingPaths, keyToPath) {
     node.children.forEach((child, key) => {
       const path = keyToPath(key);
-      // For analyzing dependencies, we want the "normalized" path, without any optional chaining ("?.") operator
-      // foo?.bar -> foo.bar
-      const normalizedPath = path.replace(/\?$/, '');
       if (child.isSatisfiedRecursively) {
         if (child.hasRequiredNodesBelow) {
           // Remember this dep actually satisfied something.
-          satisfyingPaths.add(normalizedPath);
+          satisfyingPaths.add(path);
         }
         // It doesn't matter if there's something deeper.
         // It would be transitively satisfied since we assume immutability.
@@ -1302,7 +1284,7 @@ function collectRecommendations({
       }
       if (child.isRequired) {
         // Remember that no declared deps satisfied this node.
-        missingPaths.add(normalizedPath);
+        missingPaths.add(path);
         // If we got here, nothing in its subtree was satisfied.
         // No need to search further.
         return;
