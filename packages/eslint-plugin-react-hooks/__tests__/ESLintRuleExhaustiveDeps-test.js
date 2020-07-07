@@ -274,6 +274,44 @@ const tests = {
       code: normalizeIndent`
         function MyComponent(props) {
           useEffect(() => {
+            console.log(props.foo?.bar);
+          }, [props.foo.bar]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo.bar);
+          }, [props.foo?.bar]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo.bar);
+            console.log(props.foo?.bar);
+          }, [props.foo?.bar]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo.bar);
+            console.log(props.foo?.bar);
+          }, [props.foo.bar]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
             console.log(props.foo);
             console.log(props.foo?.bar);
           }, [props.foo]);
