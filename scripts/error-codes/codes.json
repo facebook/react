@@ -1,4 +1,3 @@
-
 {
   "0": "React.addons.createFragment(...): Encountered an invalid child; DOM elements are not valid children of React components.",
   "1": "update(): expected target of %s to be an array; got %s.",
@@ -366,5 +365,7 @@
   "365": "Invalid selector type %s specified.",
   "366": "ReactDOM.createEventHandle: setListener called on an target that did not have a corresponding root. This is likely a bug in React.",
   "367": "ReactDOM.createEventHandle: setListener called on an element target that is not managed by React. Ensure React rendered the DOM element.",
-  "368": "ReactDOM.createEventHandle: setListener called on an invalid target. Provide a valid EventTarget or an element managed by React."
+  "368": "ReactDOM.createEventHandle: setListener called on an invalid target. Provide a valid EventTarget or an element managed by React.",
+  "369": "ReactDOM.createEventHandle: setter called on an invalid target. Provide a valid EventTarget or an element managed by React.",
+  "370": "ReactDOM.createEventHandle: setter called with an invalid callback. The callback must be a function."
 }

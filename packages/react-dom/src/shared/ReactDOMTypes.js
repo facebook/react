@@ -78,17 +78,13 @@ export type ReactDOMResponderContext = {
   ...
 };
 
-export type ReactDOMEventHandle = {|
-  setListener(
-    target: EventTarget | ReactScopeInstance,
-    callback: (SyntheticEvent<EventTarget>) => void,
-  ): void,
-  clear(): void,
-|};
+export type ReactDOMEventHandle = (
+  target: EventTarget | ReactScopeInstance,
+  callback: (SyntheticEvent<EventTarget>) => void,
+) => () => void;
 
 export type ReactDOMEventHandleListener = {|
   callback: (SyntheticEvent<EventTarget>) => void,
   capture: boolean,
-  destroy: (target: EventTarget | ReactScopeInstance) => void,
   type: DOMTopLevelEventType,
 |};

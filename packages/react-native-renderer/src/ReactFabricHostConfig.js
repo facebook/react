@@ -479,10 +479,6 @@ export function getInstanceFromNode(node: any) {
   throw new Error('Not yet implemented.');
 }
 
-export function removeInstanceEventHandles(instance: any) {
-  // noop
-}
-
 export function isOpaqueHydratingObject(value: mixed): boolean {
   throw new Error('Not yet implemented');
 }
