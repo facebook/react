@@ -867,6 +867,48 @@ describe('ReactDOMServerHooks', () => {
     });
   });
 
+  it('renders successfully after a component using hooks throws an error', () => {
+    function ThrowingComponent() {
+      const [value, dispatch] = useReducer((state, action) => {
+        return state + 1;
+      }, 0);
+
+      // throw an error if the count gets too high during the re-render phase
+      if (value >= 3) {
+        throw new Error('Error from ThrowingComponent');
+      } else {
+        // dispatch to trigger a re-render of the component
+        dispatch();
+      }
+
+      return <div>{value}</div>;
+    }
+
+    function NonThrowingComponent() {
+      const [count] = useState(0);
+      return <div>{count}</div>;
+    }
+
+    const container = document.createElement('div');
+
+    // First, render a component that will throw an error during a re-render triggered
+    // by a dispatch call.
+    try {
+      container.innerHTML = ReactDOMServer.renderToString(
+        <ThrowingComponent />,
+      );
+    } catch (e) {}
+    expect(container.children.length).toEqual(0);
+
+    // Next, assert that we can render a function component using hooks immediately
+    // after an error occurred, which indictates the internal hooks state has been
+    // reset.
+    container.innerHTML = ReactDOMServer.renderToString(
+      <NonThrowingComponent />,
+    );
+    expect(container.children[0].textContent).toEqual('0');
+  });
+
   if (__EXPERIMENTAL__) {
     describe('useOpaqueIdentifier', () => {
       it('generates unique ids for server string render', async () => {
