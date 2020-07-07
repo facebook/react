@@ -274,6 +274,44 @@ const tests = {
       code: normalizeIndent`
         function MyComponent(props) {
           useEffect(() => {
+            console.log(props.foo?.bar);
+          }, [props.foo.bar]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo.bar);
+          }, [props.foo?.bar]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo.bar);
+            console.log(props.foo?.bar);
+          }, [props.foo?.bar]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            console.log(props.foo.bar);
+            console.log(props.foo?.bar);
+          }, [props.foo.bar]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
             console.log(props.foo);
             console.log(props.foo?.bar);
           }, [props.foo]);
@@ -304,6 +342,42 @@ const tests = {
           useCallback(() => {
             console.log(props.foo?.toString());
           }, [props.foo]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCallback(() => {
+            console.log(props.foo.bar?.toString());
+          }, [props.foo.bar]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCallback(() => {
+            console.log(props.foo?.bar?.toString());
+          }, [props.foo.bar]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCallback(() => {
+            console.log(props.foo.bar.toString());
+          }, [props?.foo?.bar]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCallback(() => {
+            console.log(props.foo?.bar?.baz);
+          }, [props?.foo.bar?.baz]);
         }
       `,
     },
@@ -686,6 +760,24 @@ const tests = {
             myRef.current = {};
             return () => {
               console.log(myRef.current.toString())
+            };
+          }, []);
+          return <div />;
+        }
+      `,
+    },
+    {
+      // Valid because we assign ref.current
+      // ourselves. Therefore it's likely not
+      // a ref managed by React.
+      code: normalizeIndent`
+        function MyComponent() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {};
+            myRef.current = {};
+            return () => {
+              console.log(myRef?.current?.toString())
             };
           }, []);
           return <div />;
@@ -1264,17 +1356,103 @@ const tests = {
       errors: [
         {
           message:
-            "React Hook useCallback has a missing dependency: 'props.foo?.toString'. " +
+            "React Hook useCallback has a missing dependency: 'props.foo'. " +
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [props.foo?.toString]',
+              desc: 'Update the dependencies array to be: [props.foo]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   useCallback(() => {
                     console.log(props.foo?.toString());
-                  }, [props.foo?.toString]);
+                  }, [props.foo]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCallback(() => {
+            console.log(props.foo?.bar.baz);
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            // TODO: Ideally this would suggest props.foo?.bar.baz instead.
+            "React Hook useCallback has a missing dependency: 'props.foo.bar.baz'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo.bar.baz]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useCallback(() => {
+                    console.log(props.foo?.bar.baz);
+                  }, [props.foo.bar.baz]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCallback(() => {
+            console.log(props.foo?.bar?.baz);
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            // TODO: Ideally this would suggest props.foo?.bar?.baz instead.
+            "React Hook useCallback has a missing dependency: 'props.foo.bar.baz'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo.bar.baz]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useCallback(() => {
+                    console.log(props.foo?.bar?.baz);
+                  }, [props.foo.bar.baz]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCallback(() => {
+            console.log(props.foo?.bar.toString());
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            // TODO: Ideally this would suggest props.foo?.bar instead.
+            "React Hook useCallback has a missing dependency: 'props.foo.bar'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo.bar]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useCallback(() => {
+                    console.log(props.foo?.bar.toString());
+                  }, [props.foo.bar]);
                 }
               `,
             },
@@ -1867,18 +2045,18 @@ const tests = {
       errors: [
         {
           message:
-            "React Hook useEffect has a missing dependency: 'history?.foo'. " +
+            "React Hook useEffect has a missing dependency: 'history.foo'. " +
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc: 'Update the dependencies array to be: [history?.foo]',
+              desc: 'Update the dependencies array to be: [history.foo]',
               output: normalizeIndent`
                 function MyComponent({ history }) {
                   useEffect(() => {
                     return [
                       history?.foo
                     ];
-                  }, [history?.foo]);
+                  }, [history.foo]);
                 }
               `,
             },
@@ -3481,6 +3659,47 @@ const tests = {
     },
     {
       code: normalizeIndent`
+        function MyComponent(props) {
+          const ref1 = useRef();
+          const ref2 = useRef();
+          useEffect(() => {
+            ref1?.current?.focus();
+            console.log(ref2?.current?.textContent);
+            alert(props.someOtherRefs.current.innerHTML);
+            fetch(props.color);
+          }, [ref1?.current, ref2?.current, props.someOtherRefs, props.color]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has unnecessary dependencies: 'ref1.current' and 'ref2.current'. " +
+            'Either exclude them or remove the dependency array. ' +
+            "Mutable values like 'ref1.current' aren't valid dependencies " +
+            "because mutating them doesn't re-render the component.",
+          suggestions: [
+            {
+              desc:
+                'Update the dependencies array to be: [props.someOtherRefs, props.color]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  const ref1 = useRef();
+                  const ref2 = useRef();
+                  useEffect(() => {
+                    ref1?.current?.focus();
+                    console.log(ref2?.current?.textContent);
+                    alert(props.someOtherRefs.current.innerHTML);
+                    fetch(props.color);
+                  }, [props.someOtherRefs, props.color]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
         function MyComponent() {
           const ref = useRef();
           useEffect(() => {
@@ -3674,6 +3893,42 @@ const tests = {
                   useEffect(() => {
                     if (props.onChange) {
                       props.onChange();
+                    }
+                  }, [props]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {
+            if (props?.onChange) {
+              props?.onChange();
+            }
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'props'. " +
+            'Either include it or remove the dependency array. ' +
+            `However, 'props' will change when *any* prop changes, so the ` +
+            `preferred fix is to destructure the 'props' object outside ` +
+            `of the useEffect call and refer to those specific ` +
+            `props inside useEffect.`,
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useEffect(() => {
+                    if (props?.onChange) {
+                      props?.onChange();
                     }
                   }, [props]);
                 }
@@ -4080,6 +4335,29 @@ const tests = {
           const myRef = useRef();
           useEffect(() => {
             const handleMove = () => {};
+            myRef?.current?.addEventListener('mousemove', handleMove);
+            return () => myRef?.current?.removeEventListener('mousemove', handleMove);
+          }, []);
+          return <div ref={myRef} />;
+        }
+      `,
+      errors: [
+        {
+          message:
+            `The ref value 'myRef.current' will likely have changed by the time ` +
+            `this effect cleanup function runs. If this ref points to a node ` +
+            `rendered by React, copy 'myRef.current' to a variable inside the effect, ` +
+            `and use that variable in the cleanup function.`,
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const myRef = useRef();
+          useEffect(() => {
+            const handleMove = () => {};
             myRef.current.addEventListener('mousemove', handleMove);
             return () => myRef.current.removeEventListener('mousemove', handleMove);
           });
@@ -4415,6 +4693,51 @@ const tests = {
             const fn = useCallback(() => {
               // nothing
             }, [MutableStore.hello.world, props.foo, x, y, z, global.stuff]);
+          }
+        }
+      `,
+      errors: [
+        {
+          message:
+            'React Hook useCallback has unnecessary dependencies: ' +
+            "'MutableStore.hello.world', 'global.stuff', 'props.foo', 'x', 'y', and 'z'. " +
+            'Either exclude them or remove the dependency array. ' +
+            "Outer scope values like 'MutableStore.hello.world' aren't valid dependencies " +
+            "because mutating them doesn't re-render the component.",
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: []',
+              output: normalizeIndent`
+                import MutableStore from 'store';
+                let z = {};
+
+                function MyComponent(props) {
+                  let x = props.foo;
+                  {
+                    let y = props.bar;
+                    const fn = useCallback(() => {
+                      // nothing
+                    }, []);
+                  }
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        import MutableStore from 'store';
+        let z = {};
+
+        function MyComponent(props) {
+          let x = props.foo;
+          {
+            let y = props.bar;
+            const fn = useCallback(() => {
+              // nothing
+            }, [MutableStore?.hello?.world, props.foo, x, y, z, global?.stuff]);
           }
         }
       `,
@@ -6000,6 +6323,40 @@ const tests = {
                   useEffect(() => {
                     console.log(fetchPodcasts);
                     fetchPodcasts(id).then(setPodcasts);
+                  }, [fetchPodcasts, id]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Podcasts({ fetchPodcasts, id }) {
+          let [podcasts, setPodcasts] = useState(null);
+          useEffect(() => {
+            console.log(fetchPodcasts);
+            fetchPodcasts?.(id).then(setPodcasts);
+          }, [id]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            `React Hook useEffect has a missing dependency: 'fetchPodcasts'. ` +
+            `Either include it or remove the dependency array. ` +
+            `If 'fetchPodcasts' changes too often, ` +
+            `find the parent component that defines it and wrap that definition in useCallback.`,
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [fetchPodcasts, id]',
+              output: normalizeIndent`
+                function Podcasts({ fetchPodcasts, id }) {
+                  let [podcasts, setPodcasts] = useState(null);
+                  useEffect(() => {
+                    console.log(fetchPodcasts);
+                    fetchPodcasts?.(id).then(setPodcasts);
                   }, [fetchPodcasts, id]);
                 }
               `,

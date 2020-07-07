@@ -525,7 +525,8 @@ export default {
             isEffect &&
             // ... and this look like accessing .current...
             dependencyNode.type === 'Identifier' &&
-            dependencyNode.parent.type === 'MemberExpression' &&
+            (dependencyNode.parent.type === 'MemberExpression' ||
+              dependencyNode.parent.type === 'OptionalMemberExpression') &&
             !dependencyNode.parent.computed &&
             dependencyNode.parent.property.type === 'Identifier' &&
             dependencyNode.parent.property.name === 'current' &&
@@ -587,6 +588,7 @@ export default {
             if (
               parent != null &&
               // ref.current
+              // Note: no need to handle OptionalMemberExpression because it can't be LHS.
               parent.type === 'MemberExpression' &&
               !parent.computed &&
               parent.property.type === 'Identifier' &&
@@ -790,7 +792,10 @@ export default {
           }
 
           let maybeID = declaredDependencyNode;
-          while (maybeID.type === 'MemberExpression') {
+          while (
+            maybeID.type === 'MemberExpression' ||
+            maybeID.type === 'OptionalMemberExpression'
+          ) {
             maybeID = maybeID.object;
           }
           const isDeclaredInComponent = !componentScope.through.some(
@@ -991,7 +996,10 @@ export default {
             isPropsOnlyUsedInMembers = false;
             break;
           }
-          if (parent.type !== 'MemberExpression') {
+          if (
+            parent.type !== 'MemberExpression' &&
+            parent.type !== 'OptionalMemberExpression'
+          ) {
             isPropsOnlyUsedInMembers = false;
             break;
           }
@@ -1016,11 +1024,11 @@ export default {
           // Is this a variable from top scope?
           const topScopeRef = componentScope.set.get(missingDep);
           const usedDep = dependencies.get(missingDep);
-          if (usedDep && usedDep.references[0].resolved !== topScopeRef) {
+          if (usedDep.references[0].resolved !== topScopeRef) {
             return;
           }
           // Is this a destructured prop?
-          const def = topScopeRef && topScopeRef.defs[0];
+          const def = topScopeRef.defs[0];
           if (def == null || def.name == null || def.type !== 'Parameter') {
             return;
           }
@@ -1032,7 +1040,8 @@ export default {
             if (
               id != null &&
               id.parent != null &&
-              id.parent.type === 'CallExpression' &&
+              (id.parent.type === 'CallExpression' ||
+                id.parent.type === 'OptionalCallExpression') &&
               id.parent.callee === id
             ) {
               isFunctionCall = true;
@@ -1062,7 +1071,7 @@ export default {
             return;
           }
           const usedDep = dependencies.get(missingDep);
-          const references = usedDep ? usedDep.references : [];
+          const references = usedDep.references;
           let id;
           let maybeCall;
           for (let i = 0; i < references.length; i++) {
@@ -1238,7 +1247,7 @@ function collectRecommendations({
     const keys = path.split('.');
     let node = rootNode;
     for (const key of keys) {
-      let child = getChildByKey(node, key);
+      let child = node.children.get(key);
       if (!child) {
         child = createDepTree();
         node.children.set(key, child);
@@ -1251,28 +1260,13 @@ function collectRecommendations({
     const keys = path.split('.');
     let node = rootNode;
     for (const key of keys) {
-      const child = getChildByKey(node, key);
+      const child = node.children.get(key);
       if (!child) {
         return;
       }
       fn(child);
       node = child;
     }
-  }
-
-  /**
-   * Match key with optional chaining
-   * key -> key
-   * key? -> key
-   * key -> key?
-   * Otherwise undefined.
-   */
-  function getChildByKey(node, key) {
-    return (
-      node.children.get(key) ||
-      node.children.get(key.split('?')[0]) ||
-      node.children.get(key + '?')
-    );
   }
 
   // Now we can learn which dependencies are missing or necessary.
@@ -1287,13 +1281,10 @@ function collectRecommendations({
   function scanTreeRecursively(node, missingPaths, satisfyingPaths, keyToPath) {
     node.children.forEach((child, key) => {
       const path = keyToPath(key);
-      // For analyzing dependencies, we want the "normalized" path, without any optional chaining ("?.") operator
-      // foo?.bar -> foo.bar
-      const normalizedPath = path.replace(/\?$/, '');
       if (child.isSatisfiedRecursively) {
         if (child.hasRequiredNodesBelow) {
           // Remember this dep actually satisfied something.
-          satisfyingPaths.add(normalizedPath);
+          satisfyingPaths.add(path);
         }
         // It doesn't matter if there's something deeper.
         // It would be transitively satisfied since we assume immutability.
@@ -1302,7 +1293,7 @@ function collectRecommendations({
       }
       if (child.isRequired) {
         // Remember that no declared deps satisfied this node.
-        missingPaths.add(normalizedPath);
+        missingPaths.add(path);
         // If we got here, nothing in its subtree was satisfied.
         // No need to search further.
         return;
@@ -1454,12 +1445,14 @@ function getDependency(node) {
     !node.parent.computed &&
     !(
       node.parent.parent != null &&
-      node.parent.parent.type === 'CallExpression' &&
+      (node.parent.parent.type === 'CallExpression' ||
+        node.parent.parent.type === 'OptionalCallExpression') &&
       node.parent.parent.callee === node.parent
     )
   ) {
     return getDependency(node.parent);
   } else if (
+    // Note: we don't check OptionalMemberExpression because it can't be LHS.
     node.type === 'MemberExpression' &&
     node.parent &&
     node.parent.type === 'AssignmentExpression'
@@ -1475,20 +1468,23 @@ function getDependency(node) {
  * (foo) -> 'foo'
  * foo.(bar) -> 'foo.bar'
  * foo.bar.(baz) -> 'foo.bar.baz'
- * foo?.(bar) -> 'foo?.bar'
  * Otherwise throw.
  */
 function toPropertyAccessString(node) {
   if (node.type === 'Identifier') {
     return node.name;
-  } else if (node.type === 'MemberExpression' && !node.computed) {
+  } else if (
+    (node.type === 'MemberExpression' ||
+      node.type === 'OptionalMemberExpression') &&
+    !node.computed
+  ) {
     const object = toPropertyAccessString(node.object);
     const property = toPropertyAccessString(node.property);
+    // Note: we intentionally omit ? even for optional chaining
+    // because the returned string represents a path to the node, and
+    // is used as a key in Maps where being optional doesn't matter.
+    // The result string is not being interpolated in the code output.
     return `${object}.${property}`;
-  } else if (node.type === 'OptionalMemberExpression' && !node.computed) {
-    const object = toPropertyAccessString(node.object);
-    const property = toPropertyAccessString(node.property);
-    return `${object}?.${property}`;
   } else {
     throw new Error(`Unsupported node type: ${node.type}`);
   }
