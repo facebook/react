@@ -525,7 +525,8 @@ export default {
             isEffect &&
             // ... and this look like accessing .current...
             dependencyNode.type === 'Identifier' &&
-            dependencyNode.parent.type === 'MemberExpression' &&
+            (dependencyNode.parent.type === 'MemberExpression' ||
+              dependencyNode.parent.type === 'OptionalMemberExpression') &&
             !dependencyNode.parent.computed &&
             dependencyNode.parent.property.type === 'Identifier' &&
             dependencyNode.parent.property.name === 'current' &&
@@ -587,7 +588,8 @@ export default {
             if (
               parent != null &&
               // ref.current
-              parent.type === 'MemberExpression' &&
+              (parent.type === 'MemberExpression' ||
+                parent.type === 'OptionalMemberExpression') &&
               !parent.computed &&
               parent.property.type === 'Identifier' &&
               parent.property.name === 'current' &&
@@ -790,7 +792,10 @@ export default {
           }
 
           let maybeID = declaredDependencyNode;
-          while (maybeID.type === 'MemberExpression') {
+          while (
+            maybeID.type === 'MemberExpression' ||
+            maybeID.type === 'OptionalMemberExpression'
+          ) {
             maybeID = maybeID.object;
           }
           const isDeclaredInComponent = !componentScope.through.some(
@@ -991,7 +996,10 @@ export default {
             isPropsOnlyUsedInMembers = false;
             break;
           }
-          if (parent.type !== 'MemberExpression') {
+          if (
+            parent.type !== 'MemberExpression' &&
+            parent.type !== 'OptionalMemberExpression'
+          ) {
             isPropsOnlyUsedInMembers = false;
             break;
           }
@@ -1032,7 +1040,8 @@ export default {
             if (
               id != null &&
               id.parent != null &&
-              id.parent.type === 'CallExpression' &&
+              (id.parent.type === 'CallExpression' ||
+                id.parent.type === 'OptionalCallExpression') &&
               id.parent.callee === id
             ) {
               isFunctionCall = true;
@@ -1436,13 +1445,15 @@ function getDependency(node) {
     !node.parent.computed &&
     !(
       node.parent.parent != null &&
-      node.parent.parent.type === 'CallExpression' &&
+      (node.parent.parent.type === 'CallExpression' ||
+        node.parent.parent.type === 'OptionalCallExpression') &&
       node.parent.parent.callee === node.parent
     )
   ) {
     return getDependency(node.parent);
   } else if (
-    node.type === 'MemberExpression' &&
+    (node.type === 'MemberExpression' ||
+      node.type === 'OptionalMemberExpression') &&
     node.parent &&
     node.parent.type === 'AssignmentExpression'
   ) {

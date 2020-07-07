@@ -347,6 +347,42 @@ const tests = {
     },
     {
       code: normalizeIndent`
+        function MyComponent(props) {
+          useCallback(() => {
+            console.log(props.foo.bar?.toString());
+          }, [props.foo.bar]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCallback(() => {
+            console.log(props.foo?.bar?.toString());
+          }, [props.foo.bar]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCallback(() => {
+            console.log(props.foo.bar.toString());
+          }, [props?.foo?.bar]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCallback(() => {
+            console.log(props.foo?.bar?.baz);
+          }, [props?.foo.bar?.baz]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
         function MyComponent() {
           const myEffect = () => {
             // Doesn't use anything
@@ -1302,16 +1338,103 @@ const tests = {
       errors: [
         {
           message:
-            "React Hook useCallback has a missing dependency: 'props.foo.toString'. " +
+            "React Hook useCallback has a missing dependency: 'props.foo'. " +
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc: 'Update the dependencies array to be: [props.foo.toString]',
+              desc: 'Update the dependencies array to be: [props.foo]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   useCallback(() => {
                     console.log(props.foo?.toString());
-                  }, [props.foo.toString]);
+                  }, [props.foo]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCallback(() => {
+            console.log(props.foo?.bar.baz);
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            // TODO: Ideally this would suggest props.foo?.bar.baz instead.
+            "React Hook useCallback has a missing dependency: 'props.foo.bar.baz'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo.bar.baz]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useCallback(() => {
+                    console.log(props.foo?.bar.baz);
+                  }, [props.foo.bar.baz]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCallback(() => {
+            console.log(props.foo?.bar?.baz);
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            // TODO: Ideally this would suggest props.foo?.bar?.baz instead.
+            "React Hook useCallback has a missing dependency: 'props.foo.bar.baz'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo.bar.baz]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useCallback(() => {
+                    console.log(props.foo?.bar?.baz);
+                  }, [props.foo.bar.baz]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useCallback(() => {
+            console.log(props.foo?.bar.toString());
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            // TODO: Ideally this would suggest props.foo?.bar instead.
+            "React Hook useCallback has a missing dependency: 'props.foo.bar'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo.bar]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useCallback(() => {
+                    console.log(props.foo?.bar.toString());
+                  }, [props.foo.bar]);
                 }
               `,
             },
