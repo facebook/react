@@ -125,7 +125,11 @@ function deleteHydratableInstance(
   childToDelete.stateNode = instance;
   childToDelete.return = returnFiber;
   childToDelete.effectTag = Deletion;
-  returnFiber.deletions.push(childToDelete);
+  if (returnFiber.deletions === null) {
+    returnFiber.deletions = [childToDelete];
+  } else {
+    returnFiber.deletions.push(childToDelete);
+  }
 
   // This might seem like it belongs on progressedFirstDeletion. However,
   // these children are not part of the reconciliation list of children.

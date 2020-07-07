@@ -288,7 +288,11 @@ function ChildReconciler(shouldTrackSideEffects) {
     } else {
       returnFiber.firstEffect = returnFiber.lastEffect = childToDelete;
     }
-    returnFiber.deletions.push(childToDelete);
+    if (returnFiber.deletions === null) {
+      returnFiber.deletions = [childToDelete];
+    } else {
+      returnFiber.deletions.push(childToDelete);
+    }
     childToDelete.nextEffect = null;
     childToDelete.effectTag = Deletion;
   }

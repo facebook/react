@@ -1066,9 +1066,7 @@ function completeWork(
                   // TODO (effects) This probably isn't the best approach. Discuss with Brian
                   let child = workInProgress.child;
                   while (child !== null) {
-                    if (child.deletions.length > 0) {
-                      child.deletions = [];
-                    }
+                    child.deletions = null;
                     child = child.sibling;
                   }
                 }

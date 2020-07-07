@@ -127,7 +127,7 @@ export type Fiber = {|
   // Effect
   effectTag: SideEffectTag,
   subtreeTag: SideEffectTag,
-  deletions: Array<Fiber>,
+  deletions: Array<Fiber> | null,
 
   // Singly linked list fast path to the next fiber with side-effects.
   nextEffect: Fiber | null,

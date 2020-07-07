@@ -2066,7 +2066,11 @@ function updateSuspensePrimaryChildren(
     currentFallbackChildFragment.nextEffect = null;
     currentFallbackChildFragment.effectTag = Deletion;
     workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChildFragment;
-    workInProgress.deletions.push(currentFallbackChildFragment);
+    if (workInProgress.deletions === null) {
+      workInProgress.deletions = [currentFallbackChildFragment];
+    } else {
+      workInProgress.deletions.push(currentFallbackChildFragment);
+    }
   }
 
   workInProgress.child = primaryChildFragment;
@@ -3043,7 +3047,11 @@ function remountFiber(
     } else {
       returnFiber.firstEffect = returnFiber.lastEffect = current;
     }
-    returnFiber.deletions.push(current);
+    if (returnFiber.deletions === null) {
+      returnFiber.deletions = [current];
+    } else {
+      returnFiber.deletions.push(current);
+    }
     current.nextEffect = null;
     current.effectTag = Deletion;
 
