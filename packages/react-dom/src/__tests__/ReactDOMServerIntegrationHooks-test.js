@@ -889,20 +889,16 @@ describe('ReactDOMServerHooks', () => {
       return <div>{count}</div>;
     }
 
-    const container = document.createElement('div');
-
     // First, render a component that will throw an error during a re-render triggered
     // by a dispatch call.
-    try {
-      container.innerHTML = ReactDOMServer.renderToString(
-        <ThrowingComponent />,
-      );
-    } catch (e) {}
-    expect(container.children.length).toEqual(0);
+    expect(() => ReactDOMServer.renderToString(<ThrowingComponent />)).toThrow(
+      'Error from ThrowingComponent',
+    );
 
     // Next, assert that we can render a function component using hooks immediately
     // after an error occurred, which indictates the internal hooks state has been
     // reset.
+    const container = document.createElement('div');
     container.innerHTML = ReactDOMServer.renderToString(
       <NonThrowingComponent />,
     );
