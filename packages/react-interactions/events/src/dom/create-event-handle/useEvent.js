@@ -11,7 +11,7 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
 const {useLayoutEffect, useRef} = React;
-const {unstable_createEventHandle: createEventHandle} = ReactDOM;
+const {unstable_createEventHandle} = ReactDOM;
 
 type UseEventHandle = {|
   setListener: (
@@ -29,14 +29,12 @@ export default function useEvent(
     priority?: 0 | 1 | 2,
   |},
 ): UseEventHandle {
-  const handleRef = useRef(null);
-  let setListener;
-  let clears;
-  let useEventHandle;
+  const handleRef = useRef<UseEventHandle | null>(null);
+  let useEventHandle = handleRef.current;
 
-  if (handleRef.current == null) {
-    setListener = createEventHandle(event, options);
-    clears = new Map();
+  if (useEventHandle === null) {
+    const setEventHandle = unstable_createEventHandle(event, options);
+    const clears = new Map();
     useEventHandle = {
       setListener(
         target: EventTarget,
@@ -50,7 +48,7 @@ export default function useEvent(
           clears.delete(target);
           return;
         }
-        clear = setListener(target, callback);
+        clear = setEventHandle(target, callback);
         clears.set(target, clear);
       },
       clear(): void {
@@ -61,17 +59,17 @@ export default function useEvent(
         clears.clear();
       },
     };
-    handleRef.current = {setListener, clears, useEventHandle};
-  } else {
-    ({setListener, clears, useEventHandle} = handleRef.current);
+    handleRef.current = useEventHandle;
   }
 
   useLayoutEffect(() => {
     return () => {
-      useEventHandle.clear();
+      if (useEventHandle !== null) {
+        useEventHandle.clear();
+      }
       handleRef.current = null;
     };
-  }, []);
+  }, [useEventHandle]);
 
   return useEventHandle;
 }
