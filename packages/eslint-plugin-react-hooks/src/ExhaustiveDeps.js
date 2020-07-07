@@ -72,7 +72,7 @@ export default {
     // Should be shared between visitors.
     const setStateCallSites = new WeakMap();
     const stateVariables = new WeakSet();
-    const staticKnownValueCache = new WeakMap();
+    const stableKnownValueCache = new WeakMap();
     const functionWithoutCapturedValueCache = new WeakMap();
     function memoizeWithWeakMap(fn, map) {
       return function(arg) {
@@ -296,7 +296,7 @@ export default {
       // Next we'll define a few helpers that helps us
       // tell if some values don't have to be declared as deps.
 
-      // Some are known to be static based on Hook calls.
+      // Some are known to be stable based on Hook calls.
       // const [state, setState] = useState() / React.useState()
       //               ^^^ true for this reference
       // const [state, dispatch] = useReducer() / React.useReducer()
@@ -304,7 +304,7 @@ export default {
       // const ref = useRef()
       //       ^^^ true for this reference
       // False for everything else.
-      function isStaticKnownHookValue(resolved) {
+      function isStableKnownHookValue(resolved) {
         if (!Array.isArray(resolved.defs)) {
           return false;
         }
@@ -343,7 +343,7 @@ export default {
             typeof init.value === 'number' ||
             init.value === null)
         ) {
-          // Definitely static
+          // Definitely stable
           return true;
         }
         // Detect known Hook calls
@@ -367,10 +367,10 @@ export default {
         const id = def.node.id;
         const {name} = callee;
         if (name === 'useRef' && id.type === 'Identifier') {
-          // useRef() return value is static.
+          // useRef() return value is stable.
           return true;
         } else if (name === 'useState' || name === 'useReducer') {
-          // Only consider second value in initializing tuple static.
+          // Only consider second value in initializing tuple stable.
           if (
             id.type === 'ArrayPattern' &&
             id.elements.length === 2 &&
@@ -387,7 +387,7 @@ export default {
                   );
                 }
               }
-              // Setter is static.
+              // Setter is stable.
               return true;
             } else if (id.elements[0] === resolved.identifiers[0]) {
               if (name === 'useState') {
@@ -452,22 +452,22 @@ export default {
           }
           if (
             pureScopes.has(ref.resolved.scope) &&
-            // Static values are fine though,
+            // Stable values are fine though,
             // although we won't check functions deeper.
-            !memoizedIsStaticKnownHookValue(ref.resolved)
+            !memoizedIsStablecKnownHookValue(ref.resolved)
           ) {
             return false;
           }
         }
         // If we got here, this function doesn't capture anything
-        // from render--or everything it captures is known static.
+        // from render--or everything it captures is known stable.
         return true;
       }
 
       // Remember such values. Avoid re-running extra checks on them.
-      const memoizedIsStaticKnownHookValue = memoizeWithWeakMap(
-        isStaticKnownHookValue,
-        staticKnownValueCache,
+      const memoizedIsStablecKnownHookValue = memoizeWithWeakMap(
+        isStableKnownHookValue,
+        stableKnownValueCache,
       );
       const memoizedIsFunctionWithoutCapturedValues = memoizeWithWeakMap(
         isFunctionWithoutCapturedValues,
@@ -495,7 +495,7 @@ export default {
       }
 
       // Get dependencies from all our resolved references in pure scopes.
-      // Key is dependency string, value is whether it's static.
+      // Key is dependency string, value is whether it's stable.
       const dependencies = new Map();
       gatherDependenciesRecursively(scope);
 
@@ -556,14 +556,14 @@ export default {
           }
 
           // Add the dependency to a map so we can make sure it is referenced
-          // again in our dependencies array. Remember whether it's static.
+          // again in our dependencies array. Remember whether it's stable.
           if (!dependencies.has(dependency)) {
             const resolved = reference.resolved;
-            const isStatic =
-              memoizedIsStaticKnownHookValue(resolved) ||
+            const isStable =
+              memoizedIsStablecKnownHookValue(resolved) ||
               memoizedIsFunctionWithoutCapturedValues(resolved);
             dependencies.set(dependency, {
-              isStatic,
+              isStable,
               references: [reference],
             });
           } else {
@@ -637,11 +637,11 @@ export default {
         });
       }
 
-      // Remember which deps are optional and report bad usage first.
-      const optionalDependencies = new Set();
-      dependencies.forEach(({isStatic, references}, key) => {
-        if (isStatic) {
-          optionalDependencies.add(key);
+      // Remember which deps are stable and report bad usage first.
+      const stableDependencies = new Set();
+      dependencies.forEach(({isStable, references}, key) => {
+        if (isStable) {
+          stableDependencies.add(key);
         }
         references.forEach(reference => {
           if (reference.writeExpr) {
@@ -659,7 +659,7 @@ export default {
         // Check if there are any top-level setState() calls.
         // Those tend to lead to infinite loops.
         let setStateInsideEffectWithoutDeps = null;
-        dependencies.forEach(({isStatic, references}, key) => {
+        dependencies.forEach(({isStable, references}, key) => {
           if (setStateInsideEffectWithoutDeps) {
             return;
           }
@@ -689,7 +689,7 @@ export default {
           const {suggestedDependencies} = collectRecommendations({
             dependencies,
             declaredDependencies: [],
-            optionalDependencies,
+            stableDependencies,
             externalDependencies: new Set(),
             isEffect: true,
           });
@@ -822,7 +822,7 @@ export default {
       } = collectRecommendations({
         dependencies,
         declaredDependencies,
-        optionalDependencies,
+        stableDependencies,
         externalDependencies,
         isEffect,
       });
@@ -901,7 +901,7 @@ export default {
         suggestedDeps = collectRecommendations({
           dependencies,
           declaredDependencies: [], // Pretend we don't know
-          optionalDependencies,
+          stableDependencies,
           externalDependencies,
           isEffect,
         }).suggestedDependencies;
@@ -1198,7 +1198,7 @@ export default {
 function collectRecommendations({
   dependencies,
   declaredDependencies,
-  optionalDependencies,
+  stableDependencies,
   externalDependencies,
   isEffect,
 }) {
@@ -1214,9 +1214,9 @@ function collectRecommendations({
   const depTree = createDepTree();
   function createDepTree() {
     return {
-      isRequired: false, // True if used in code
+      isUsed: false, // True if used in code
       isSatisfiedRecursively: false, // True if specified in deps
-      hasRequiredNodesBelow: false, // True if something deeper is used by code
+      isSubtreeUsed: false, // True if something deeper is used by code
       children: new Map(), // Nodes for properties
     };
   }
@@ -1225,9 +1225,9 @@ function collectRecommendations({
   // Imagine exclamation marks next to each used deep property.
   dependencies.forEach((_, key) => {
     const node = getOrCreateNodeByPath(depTree, key);
-    node.isRequired = true;
+    node.isUsed = true;
     markAllParentsByPath(depTree, key, parent => {
-      parent.hasRequiredNodesBelow = true;
+      parent.isSubtreeUsed = true;
     });
   });
 
@@ -1237,7 +1237,7 @@ function collectRecommendations({
     const node = getOrCreateNodeByPath(depTree, key);
     node.isSatisfiedRecursively = true;
   });
-  optionalDependencies.forEach(key => {
+  stableDependencies.forEach(key => {
     const node = getOrCreateNodeByPath(depTree, key);
     node.isSatisfiedRecursively = true;
   });
@@ -1282,7 +1282,7 @@ function collectRecommendations({
     node.children.forEach((child, key) => {
       const path = keyToPath(key);
       if (child.isSatisfiedRecursively) {
-        if (child.hasRequiredNodesBelow) {
+        if (child.isSubtreeUsed) {
           // Remember this dep actually satisfied something.
           satisfyingPaths.add(path);
         }
@@ -1291,7 +1291,7 @@ function collectRecommendations({
         // `props.foo` is enough if you read `props.foo.id`.
         return;
       }
-      if (child.isRequired) {
+      if (child.isUsed) {
         // Remember that no declared deps satisfied this node.
         missingPaths.add(path);
         // If we got here, nothing in its subtree was satisfied.
