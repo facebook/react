@@ -1264,17 +1264,16 @@ const tests = {
       errors: [
         {
           message:
-            "React Hook useCallback has a missing dependency: 'props.foo?.toString'. " +
+            "React Hook useCallback has a missing dependency: 'props.foo.toString'. " +
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc:
-                'Update the dependencies array to be: [props.foo?.toString]',
+              desc: 'Update the dependencies array to be: [props.foo.toString]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   useCallback(() => {
                     console.log(props.foo?.toString());
-                  }, [props.foo?.toString]);
+                  }, [props.foo.toString]);
                 }
               `,
             },
@@ -1867,18 +1866,18 @@ const tests = {
       errors: [
         {
           message:
-            "React Hook useEffect has a missing dependency: 'history?.foo'. " +
+            "React Hook useEffect has a missing dependency: 'history.foo'. " +
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc: 'Update the dependencies array to be: [history?.foo]',
+              desc: 'Update the dependencies array to be: [history.foo]',
               output: normalizeIndent`
                 function MyComponent({ history }) {
                   useEffect(() => {
                     return [
                       history?.foo
                     ];
-                  }, [history?.foo]);
+                  }, [history.foo]);
                 }
               `,
             },

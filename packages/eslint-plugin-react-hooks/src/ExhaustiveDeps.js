@@ -1457,20 +1457,23 @@ function getDependency(node) {
  * (foo) -> 'foo'
  * foo.(bar) -> 'foo.bar'
  * foo.bar.(baz) -> 'foo.bar.baz'
- * foo?.(bar) -> 'foo?.bar'
  * Otherwise throw.
  */
 function toPropertyAccessString(node) {
   if (node.type === 'Identifier') {
     return node.name;
-  } else if (node.type === 'MemberExpression' && !node.computed) {
+  } else if (
+    (node.type === 'MemberExpression' ||
+      node.type === 'OptionalMemberExpression') &&
+    !node.computed
+  ) {
     const object = toPropertyAccessString(node.object);
     const property = toPropertyAccessString(node.property);
+    // Note: we intentionally omit ? even for optional chaining
+    // because the returned string represents a path to the node, and
+    // is used as a key in Maps where being optional doesn't matter.
+    // The result string is not being interpolated in the code output.
     return `${object}.${property}`;
-  } else if (node.type === 'OptionalMemberExpression' && !node.computed) {
-    const object = toPropertyAccessString(node.object);
-    const property = toPropertyAccessString(node.property);
-    return `${object}?.${property}`;
   } else {
     throw new Error(`Unsupported node type: ${node.type}`);
   }
