@@ -1384,17 +1384,16 @@ const tests = {
       errors: [
         {
           message:
-            // TODO: Ideally this would suggest props.foo?.bar.baz instead.
-            "React Hook useCallback has a missing dependency: 'props.foo.bar.baz'. " +
+            "React Hook useCallback has a missing dependency: 'props.foo?.bar.baz'. " +
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc: 'Update the dependencies array to be: [props.foo.bar.baz]',
+              desc: 'Update the dependencies array to be: [props.foo?.bar.baz]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   useCallback(() => {
                     console.log(props.foo?.bar.baz);
-                  }, [props.foo.bar.baz]);
+                  }, [props.foo?.bar.baz]);
                 }
               `,
             },
@@ -1413,17 +1412,17 @@ const tests = {
       errors: [
         {
           message:
-            // TODO: Ideally this would suggest props.foo?.bar?.baz instead.
-            "React Hook useCallback has a missing dependency: 'props.foo.bar.baz'. " +
+            "React Hook useCallback has a missing dependency: 'props.foo?.bar?.baz'. " +
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc: 'Update the dependencies array to be: [props.foo.bar.baz]',
+              desc:
+                'Update the dependencies array to be: [props.foo?.bar?.baz]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   useCallback(() => {
                     console.log(props.foo?.bar?.baz);
-                  }, [props.foo.bar.baz]);
+                  }, [props.foo?.bar?.baz]);
                 }
               `,
             },
@@ -1442,17 +1441,16 @@ const tests = {
       errors: [
         {
           message:
-            // TODO: Ideally this would suggest props.foo?.bar instead.
-            "React Hook useCallback has a missing dependency: 'props.foo.bar'. " +
+            "React Hook useCallback has a missing dependency: 'props.foo?.bar'. " +
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc: 'Update the dependencies array to be: [props.foo.bar]',
+              desc: 'Update the dependencies array to be: [props.foo?.bar]',
               output: normalizeIndent`
                 function MyComponent(props) {
                   useCallback(() => {
                     console.log(props.foo?.bar.toString());
-                  }, [props.foo.bar]);
+                  }, [props.foo?.bar]);
                 }
               `,
             },
@@ -2045,18 +2043,18 @@ const tests = {
       errors: [
         {
           message:
-            "React Hook useEffect has a missing dependency: 'history.foo'. " +
+            "React Hook useEffect has a missing dependency: 'history?.foo'. " +
             'Either include it or remove the dependency array.',
           suggestions: [
             {
-              desc: 'Update the dependencies array to be: [history.foo]',
+              desc: 'Update the dependencies array to be: [history?.foo]',
               output: normalizeIndent`
                 function MyComponent({ history }) {
                   useEffect(() => {
                     return [
                       history?.foo
                     ];
-                  }, [history.foo]);
+                  }, [history?.foo]);
                 }
               `,
             },
@@ -6986,7 +6984,6 @@ const testsTypescript = {
       ],
     },
     {
-      // https://github.com/facebook/react/issues/19243
       code: normalizeIndent`
         function MyComponent() {
           const pizza = {};
@@ -7000,14 +6997,12 @@ const testsTypescript = {
       errors: [
         {
           message:
-            "React Hook useEffect has missing dependencies: 'pizza.crust' and 'pizza.toppings'. " +
+            "React Hook useEffect has missing dependencies: 'pizza.crust' and 'pizza?.toppings'. " +
             'Either include them or remove the dependency array.',
           suggestions: [
             {
-              // TODO the description and suggestions should probably also
-              // preserve the optional chaining.
               desc:
-                'Update the dependencies array to be: [pizza.crust, pizza.toppings]',
+                'Update the dependencies array to be: [pizza.crust, pizza?.toppings]',
               output: normalizeIndent`
                 function MyComponent() {
                   const pizza = {};
@@ -7015,7 +7010,109 @@ const testsTypescript = {
                   useEffect(() => ({
                     crust: pizza.crust,
                     toppings: pizza?.toppings,
-                  }), [pizza.crust, pizza.toppings]);
+                  }), [pizza.crust, pizza?.toppings]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const pizza = {};
+
+          useEffect(() => ({
+            crust: pizza?.crust,
+            density: pizza.crust.density,
+          }), []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'pizza.crust'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [pizza.crust]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const pizza = {};
+
+                  useEffect(() => ({
+                    crust: pizza?.crust,
+                    density: pizza.crust.density,
+                  }), [pizza.crust]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const pizza = {};
+
+          useEffect(() => ({
+            crust: pizza.crust,
+            density: pizza?.crust.density,
+          }), []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'pizza.crust'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [pizza.crust]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const pizza = {};
+
+                  useEffect(() => ({
+                    crust: pizza.crust,
+                    density: pizza?.crust.density,
+                  }), [pizza.crust]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const pizza = {};
+
+          useEffect(() => ({
+            crust: pizza?.crust,
+            density: pizza?.crust.density,
+          }), []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'pizza?.crust'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [pizza?.crust]',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const pizza = {};
+
+                  useEffect(() => ({
+                    crust: pizza?.crust,
+                    density: pizza?.crust.density,
+                  }), [pizza?.crust]);
                 }
               `,
             },

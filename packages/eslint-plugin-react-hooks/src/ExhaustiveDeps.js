@@ -497,6 +497,7 @@ export default {
       // Get dependencies from all our resolved references in pure scopes.
       // Key is dependency string, value is whether it's stable.
       const dependencies = new Map();
+      const optionalChains = new Map();
       gatherDependenciesRecursively(scope);
 
       function gatherDependenciesRecursively(currentScope) {
@@ -517,7 +518,10 @@ export default {
             reference.identifier,
           );
           const dependencyNode = getDependency(referenceNode);
-          const dependency = toPropertyAccessString(dependencyNode);
+          const dependency = analyzePropertyChain(
+            dependencyNode,
+            optionalChains,
+          );
 
           // Accessing ref.current inside effect cleanup is bad.
           if (
@@ -540,16 +544,13 @@ export default {
           }
 
           const def = reference.resolved.defs[0];
-
           if (def == null) {
             continue;
           }
-
           // Ignore references to the function itself as it's not defined yet.
           if (def.node != null && def.node.init === node.parent) {
             continue;
           }
-
           // Ignore Flow type parameters
           if (def.type === 'TypeParameter') {
             continue;
@@ -570,6 +571,7 @@ export default {
             dependencies.get(dependency).references.push(reference);
           }
         }
+
         for (const childScope of currentScope.childScopes) {
           gatherDependenciesRecursively(childScope);
         }
@@ -755,7 +757,10 @@ export default {
           // will be thrown. We will catch that error and report an error.
           let declaredDependency;
           try {
-            declaredDependency = toPropertyAccessString(declaredDependencyNode);
+            declaredDependency = analyzePropertyChain(
+              declaredDependencyNode,
+              null,
+            );
           } catch (error) {
             if (/Unsupported node type/.test(error.message)) {
               if (declaredDependencyNode.type === 'Literal') {
@@ -920,6 +925,24 @@ export default {
         suggestedDeps.sort();
       }
 
+      // Most of our algorithm deals with dependency paths with optional chaining stripped.
+      // This function is the last step before printing a dependency, so now is a good time to
+      // check whether any members in our path are always used as optional-only. In that case,
+      // we will use ?. instead of . to concatenate those parts of the path.
+      function formatDependency(path) {
+        const members = path.split('.');
+        let finalPath = '';
+        for (let i = 0; i < members.length; i++) {
+          if (i !== 0) {
+            const pathSoFar = members.slice(0, i + 1).join('.');
+            const isOptional = optionalChains.get(pathSoFar) === true;
+            finalPath += isOptional ? '?.' : '.';
+          }
+          finalPath += members[i];
+        }
+        return finalPath;
+      }
+
       function getWarningMessage(deps, singlePrefix, label, fixVerb) {
         if (deps.size === 0) {
           return null;
@@ -933,7 +956,7 @@ export default {
           joinEnglish(
             Array.from(deps)
               .sort()
-              .map(name => "'" + name + "'"),
+              .map(name => "'" + formatDependency(name) + "'"),
           ) +
           `. Either ${fixVerb} ${
             deps.size > 1 ? 'them' : 'it'
@@ -1177,14 +1200,14 @@ export default {
           extraWarning,
         suggest: [
           {
-            desc: `Update the dependencies array to be: [${suggestedDeps.join(
-              ', ',
-            )}]`,
+            desc: `Update the dependencies array to be: [${suggestedDeps
+              .map(formatDependency)
+              .join(', ')}]`,
             fix(fixer) {
               // TODO: consider preserving the comments or formatting?
               return fixer.replaceText(
                 declaredDependenciesNode,
-                `[${suggestedDeps.join(', ')}]`,
+                `[${suggestedDeps.map(formatDependency).join(', ')}]`,
               );
             },
           },
@@ -1466,25 +1489,47 @@ function getDependency(node) {
 /**
  * Assuming () means the passed node.
  * (foo) -> 'foo'
- * foo.(bar) -> 'foo.bar'
- * foo.bar.(baz) -> 'foo.bar.baz'
+ * foo(.)bar -> 'foo.bar'
+ * foo.bar(.)baz -> 'foo.bar.baz'
  * Otherwise throw.
  */
-function toPropertyAccessString(node) {
+function analyzePropertyChain(node, optionalChains) {
   if (node.type === 'Identifier') {
-    return node.name;
-  } else if (
-    (node.type === 'MemberExpression' ||
-      node.type === 'OptionalMemberExpression') &&
-    !node.computed
-  ) {
-    const object = toPropertyAccessString(node.object);
-    const property = toPropertyAccessString(node.property);
-    // Note: we intentionally omit ? even for optional chaining
-    // because the returned string represents a path to the node, and
-    // is used as a key in Maps where being optional doesn't matter.
-    // The result string is not being interpolated in the code output.
-    return `${object}.${property}`;
+    const result = node.name;
+    if (optionalChains) {
+      // Mark as required.
+      optionalChains.set(result, false);
+    }
+    return result;
+  } else if (node.type === 'MemberExpression' && !node.computed) {
+    const object = analyzePropertyChain(node.object, optionalChains);
+    const property = analyzePropertyChain(node.property, null);
+    const result = `${object}.${property}`;
+    if (optionalChains) {
+      // Mark as required.
+      optionalChains.set(result, false);
+    }
+    return result;
+  } else if (node.type === 'OptionalMemberExpression' && !node.computed) {
+    const object = analyzePropertyChain(node.object, optionalChains);
+    const property = analyzePropertyChain(node.property, null);
+    const result = `${object}.${property}`;
+    if (optionalChains) {
+      // Note: OptionalMemberExpression doesn't necessarily mean this node is optional.
+      // It just means there is an optional member somewhere inside.
+      // This particular node might still represent a required member, so check .optional field.
+      if (node.optional) {
+        // We only want to consider it optional if *all* usages were optional.
+        if (!optionalChains.has(result)) {
+          // Mark as optional.
+          optionalChains.set(result, true);
+        }
+      } else {
+        // Mark as required.
+        optionalChains.set(result, false);
+      }
+    }
+    return result;
   } else {
     throw new Error(`Unsupported node type: ${node.type}`);
   }
@@ -1529,7 +1574,7 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
         // target custom reactive hooks.
         let name;
         try {
-          name = toPropertyAccessString(node);
+          name = analyzePropertyChain(node, null);
         } catch (error) {
           if (/Unsupported node type/.test(error.message)) {
             return 0;
