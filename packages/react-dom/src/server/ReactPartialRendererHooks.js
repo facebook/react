@@ -203,23 +203,15 @@ export function finishHooks(
     children = Component(props, refOrContext);
   }
   resetHooksState();
-  if (__DEV__) {
-    isInHookUserCodeInDev = false;
-  }
-
-  // These were reset via the resetHooksState() call
-  // currentlyRenderingComponent = null;
-  // didScheduleRenderPhaseUpdate = false;
-  // firstWorkInProgressHook = null;
-  // numberOfReRenders = 0;
-  // renderPhaseUpdates = null;
-  // workInProgressHook = null;
-
   return children;
 }
 
 // Reset the internal hooks state if an error occurs while rendering a component
 export function resetHooksState(): void {
+  if (__DEV__) {
+    isInHookUserCodeInDev = false;
+  }
+
   didScheduleRenderPhaseUpdate = false;
   firstWorkInProgressHook = null;
   numberOfReRenders = 0;
