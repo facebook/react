@@ -23,7 +23,7 @@ import {
   registerSimpleEvents,
 } from '../DOMEventProperties';
 import {
-  accumulateTwoPhaseListeners,
+  accumulateSinglePhaseListeners,
   accumulateEventHandleTargetListeners,
 } from '../DOMModernPluginEventSystem';
 import {IS_TARGET_PHASE_ONLY} from '../EventSystemFlags';
@@ -152,13 +152,13 @@ function extractEvents(
     nativeEventTarget,
   );
 
+  const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
   if (
     enableCreateEventHandleAPI &&
     eventSystemFlags !== undefined &&
     eventSystemFlags & IS_TARGET_PHASE_ONLY &&
     targetContainer != null
   ) {
-    const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
     accumulateEventHandleTargetListeners(
       dispatchQueue,
       event,
@@ -166,7 +166,13 @@ function extractEvents(
       inCapturePhase,
     );
   } else {
-    accumulateTwoPhaseListeners(targetInst, dispatchQueue, event, true);
+    // We traverse only capture or bubble phase listeners
+    accumulateSinglePhaseListeners(
+      targetInst,
+      dispatchQueue,
+      event,
+      inCapturePhase,
+    );
   }
   return event;
 }

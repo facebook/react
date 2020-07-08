@@ -26,7 +26,6 @@ import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import {
   listenToTopLevelEvent,
   addEventTypeToDispatchConfig,
-  capturePhaseEvents,
 } from '../events/DOMModernPluginEventSystem';
 
 import {HostRoot, HostPortal} from 'react-reconciler/src/ReactWorkTags';
@@ -87,6 +86,7 @@ function registerEventOnNearestTargetContainer(
   topLevelType: DOMTopLevelEventType,
   passive: boolean | void,
   priority: EventPriority | void,
+  capture: boolean,
 ): void {
   // If it is, find the nearest root or portal and make it
   // our event handle target container.
@@ -99,7 +99,6 @@ function registerEventOnNearestTargetContainer(
     );
   }
   const listenerMap = getEventListenerMap(targetContainer);
-  const capture = capturePhaseEvents.has(topLevelType);
   listenToTopLevelEvent(
     topLevelType,
     targetContainer,
@@ -135,6 +134,7 @@ function registerReactDOMEvent(
       topLevelType,
       passive,
       priority,
+      capture,
     );
   } else if (enableScopeAPI && isReactScope(target)) {
     const scopeTarget = ((target: any): ReactScopeInstance);
@@ -148,6 +148,7 @@ function registerReactDOMEvent(
       topLevelType,
       passive,
       priority,
+      capture,
     );
   } else if (isValidEventTarget(target)) {
     const eventTarget = ((target: any): EventTarget);

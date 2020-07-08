@@ -45,8 +45,7 @@ export type DispatchQueueItemPhase = Array<DispatchQueueItemPhaseEntry>;
 
 export type DispatchQueueItem = {|
   event: ReactSyntheticEvent,
-  capture: DispatchQueueItemPhase,
-  bubble: DispatchQueueItemPhase,
+  phase: DispatchQueueItemPhase,
 |};
 
 export type DispatchQueue = Array<DispatchQueueItem>;

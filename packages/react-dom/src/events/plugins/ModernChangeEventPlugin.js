@@ -36,7 +36,7 @@ import {enqueueStateRestore} from '../ReactDOMControlledComponent';
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 import {batchedUpdates} from '../ReactDOMUpdateBatching';
 import {
-  dispatchEventsInBatch,
+  processDispatchQueue,
   accumulateTwoPhaseListeners,
 } from '../DOMModernPluginEventSystem';
 
@@ -106,7 +106,7 @@ function manualDispatchChangeEvent(nativeEvent) {
 }
 
 function runEventInBatch(dispatchQueue) {
-  dispatchEventsInBatch(dispatchQueue);
+  processDispatchQueue(dispatchQueue, 0);
 }
 
 function getInstIfValueChanged(targetInst: Object) {

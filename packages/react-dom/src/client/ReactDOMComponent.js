@@ -13,6 +13,7 @@ import {
   registrationNameDependencies,
   possibleRegistrationNames,
 } from '../events/EventRegistry';
+
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import invariant from 'shared/invariant';
 import {
