@@ -2897,6 +2897,89 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).not.toBe(null);
   });
 
+  // @gate experimental
+  it('regression test: does not overfire non-bubbling browser events', async () => {
+    let suspend = false;
+    let resolve;
+    const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+
+    function Sibling({text}) {
+      if (suspend) {
+        throw promise;
+      } else {
+        return 'Hello';
+      }
+    }
+
+    let submits = 0;
+
+    function Form() {
+      const [submitted, setSubmitted] = React.useState(false);
+      if (submitted) {
+        return null;
+      }
+      return (
+        <form
+          onSubmit={() => {
+            setSubmitted(true);
+            submits++;
+          }}>
+          Click me
+        </form>
+      );
+    }
+
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <Form />
+            <Sibling />
+          </Suspense>
+        </div>
+      );
+    }
+
+    suspend = false;
+    const finalHTML = ReactDOMServer.renderToString(<App />);
+    const container = document.createElement('div');
+    container.innerHTML = finalHTML;
+
+    // We need this to be in the document since we'll dispatch events on it.
+    document.body.appendChild(container);
+
+    const form = container.getElementsByTagName('form')[0];
+
+    // On the client we don't have all data yet but we want to start
+    // hydrating anyway.
+    suspend = true;
+    const root = ReactDOM.createRoot(container, {hydrate: true});
+    root.render(<App />);
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+
+    expect(container.textContent).toBe('Click meHello');
+
+    // We're now partially hydrated.
+    form.dispatchEvent(
+      new Event('submit', {
+        bubbles: true,
+      }),
+    );
+    expect(submits).toBe(0);
+
+    // Resolving the promise so that rendering can complete.
+    suspend = false;
+    resolve();
+    await promise;
+
+    Scheduler.unstable_flushAll();
+    jest.runAllTimers();
+    expect(submits).toBe(1);
+    expect(container.textContent).toBe('Hello');
+    document.body.removeChild(container);
+  });
+
   // This test fails, in both forks. Without a boundary, the deferred tree won't
   // re-enter hydration mode. It doesn't come up in practice because there's
   // always a parent Suspense boundary. But it's still a bug. Leaving for a
