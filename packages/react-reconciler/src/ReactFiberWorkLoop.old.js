@@ -29,6 +29,7 @@ import {
   decoupleUpdatePriorityFromScheduler,
   enableDebugTracing,
   enableSchedulingProfiler,
+  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -111,6 +112,7 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
+  ScopeComponent,
 } from './ReactWorkTags';
 import {LegacyRoot} from './ReactRootTags';
 import {
@@ -2324,6 +2326,13 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
       if (current !== null) {
         commitDetachRef(current);
       }
+      if (enableScopeAPI) {
+        // TODO: This is a temporary solution that allows us to transition away
+        // from React Flare on www.
+        if (nextEffect.tag === ScopeComponent) {
+          commitAttachRef(nextEffect);
+        }
+      }
     }
 
     // The following switch statement is only concerned about placement,
@@ -2404,8 +2413,16 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
       commitLayoutEffectOnFiber(root, current, nextEffect, committedLanes);
     }
 
-    if (effectTag & Ref) {
-      commitAttachRef(nextEffect);
+    if (enableScopeAPI) {
+      // TODO: This is a temporary solution that allows us to transition away
+      // from React Flare on www.
+      if (effectTag & Ref && nextEffect.tag !== ScopeComponent) {
+        commitAttachRef(nextEffect);
+      }
+    } else {
+      if (effectTag & Ref) {
+        commitAttachRef(nextEffect);
+      }
     }
 
     resetCurrentDebugFiberInDEV();
