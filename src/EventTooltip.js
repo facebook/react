@@ -23,6 +23,14 @@ type Props = {|
   state: PanAndZoomState,
 |};
 
+function formatTimestamp(ms) {
+  return ms.toLocaleString(undefined, {minimumFractionDigits: 2}) + 'ms';
+}
+
+function formatDuration(ms) {
+  return prettyMilliseconds(ms, {millisecondsDecimalDigits: 3});
+}
+
 export default function EventTooltip({data, hoveredEvent, state}: Props) {
   const {canvasMouseY, canvasMouseX} = state;
 
@@ -132,11 +140,24 @@ const TooltipFlamechartNode = ({
         color: COLORS.TOOLTIP,
       }}
       ref={tooltipRef}>
-      {prettyMilliseconds((end - start) / 1000)} {name}
+      {formatDuration((end - start) / 1000)} {name}
       <div className={styles.DetailsGrid}>
-        <div className={styles.DetailsGridLabel}>Script URL:</div> {file}
-        <div className={styles.DetailsGridLabel}>Location:</div>
-        line {line}, column {col}
+        <div className={styles.DetailsGridLabel}>Timestamp:</div>
+        <div>{formatTimestamp(start / 1000)}</div>
+        {file && (
+          <>
+            <div className={styles.DetailsGridLabel}>Script URL:</div>
+            <div>{file}</div>
+          </>
+        )}
+        {(line !== undefined || col !== undefined) && (
+          <>
+            <div className={styles.DetailsGridLabel}>Location:</div>
+            <div>
+              line {line}, column {col}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
@@ -194,7 +215,7 @@ const TooltipReactEvent = ({
       <div className={styles.Divider} />
       <div className={styles.DetailsGrid}>
         <div className={styles.DetailsGridLabel}>Timestamp:</div>
-        {prettyMilliseconds(timestamp)}
+        <div>{formatTimestamp(timestamp)}</div>
         {componentStack && (
           <Fragment>
             <div className={styles.DetailsGridLabel}>Component stack:</div>
@@ -217,7 +238,7 @@ const TooltipReactMeasure = ({
   measure: ReactMeasure,
   tooltipRef: Return<typeof useRef>,
 }) => {
-  const {batchUID, duration, timestamp, type} = measure;
+  const {batchUID, duration, timestamp, type, lanes} = measure;
 
   let label = null;
   switch (type) {
@@ -251,13 +272,17 @@ const TooltipReactMeasure = ({
         color: COLORS.TOOLTIP,
       }}
       ref={tooltipRef}>
-      {prettyMilliseconds(duration)} {label}
+      {formatDuration(duration)} {label}
       <div className={styles.Divider} />
       <div className={styles.DetailsGrid}>
         <div className={styles.DetailsGridLabel}>Timestamp:</div>
-        {prettyMilliseconds(timestamp)}
+        <div>{formatTimestamp(timestamp)}</div>
         <div className={styles.DetailsGridLabel}>Batch duration:</div>
-        {prettyMilliseconds(stopTime - startTime)}
+        <div>{formatDuration(stopTime - startTime)}</div>
+        <div className={styles.DetailsGridLabel}>
+          Lane{lanes.length === 1 ? '' : 's'}:
+        </div>
+        <div>{lanes.join(', ')}</div>
       </div>
     </div>
   );
