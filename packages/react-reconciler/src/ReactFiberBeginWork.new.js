@@ -2138,11 +2138,11 @@ function updateSuspenseFallbackChildren(
       workInProgress.firstEffect = primaryChildFragment.firstEffect;
       workInProgress.lastEffect = progressedLastEffect;
       progressedLastEffect.nextEffect = null;
-      workInProgress.deletions = [];
+      workInProgress.deletions = null;
     } else {
       // TODO: Reset this somewhere else? Lol legacy mode is so weird.
       workInProgress.firstEffect = workInProgress.lastEffect = null;
-      workInProgress.deletions = [];
+      workInProgress.deletions = null;
     }
   } else {
     primaryChildFragment = createWorkInProgressOffscreenFiber(

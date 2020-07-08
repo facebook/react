@@ -145,7 +145,7 @@ function FiberNode(
   // Effects
   this.effectTag = NoEffect;
   this.subtreeTag = NoEffect;
-  this.deletions = [];
+  this.deletions = null;
   this.nextEffect = null;
 
   this.firstEffect = null;
@@ -290,7 +290,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     // Reset the effect tag.
     workInProgress.effectTag = NoEffect;
     workInProgress.subtreeTag = NoEffect;
-    workInProgress.deletions = [];
+    workInProgress.deletions = null;
 
     // The effect list is no longer valid.
     workInProgress.nextEffect = null;
