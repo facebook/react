@@ -2,7 +2,7 @@
 
 exports[`preprocessData should process complete set of events (page load sample data) 1`] = `
 Object {
-  "duration": 2615.506,
+  "duration": 2586.895,
   "events": Array [
     Object {
       "componentName": "Unknown",
@@ -10,7 +10,7 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 307.43,
+      "timestamp": 278.073,
       "type": "schedule-render",
     },
     Object {
@@ -23,7 +23,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "0",
-      "timestamp": 687.702,
+      "timestamp": 658.345,
       "type": "suspense-suspend",
     },
     Object {
@@ -36,7 +36,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "1",
-      "timestamp": 690.096,
+      "timestamp": 660.739,
       "type": "suspense-suspend",
     },
     Object {
@@ -49,7 +49,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "2",
-      "timestamp": 691.911,
+      "timestamp": 662.554,
       "type": "suspense-suspend",
     },
     Object {
@@ -62,7 +62,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "3",
-      "timestamp": 692.812,
+      "timestamp": 663.455,
       "type": "suspense-suspend",
     },
     Object {
@@ -75,7 +75,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "4",
-      "timestamp": 693.559,
+      "timestamp": 664.202,
       "type": "suspense-suspend",
     },
     Object {
@@ -88,7 +88,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "0",
-      "timestamp": 696.037,
+      "timestamp": 666.68,
       "type": "suspense-suspend",
     },
     Object {
@@ -101,7 +101,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "1",
-      "timestamp": 696.558,
+      "timestamp": 667.201,
       "type": "suspense-suspend",
     },
     Object {
@@ -114,7 +114,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "2",
-      "timestamp": 697.097,
+      "timestamp": 667.74,
       "type": "suspense-suspend",
     },
     Object {
@@ -127,7 +127,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "3",
-      "timestamp": 697.639,
+      "timestamp": 668.282,
       "type": "suspense-suspend",
     },
     Object {
@@ -140,7 +140,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "4",
-      "timestamp": 698.205,
+      "timestamp": 668.848,
       "type": "suspense-suspend",
     },
     Object {
@@ -154,7 +154,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "0",
-      "timestamp": 700.692,
+      "timestamp": 671.335,
       "type": "suspense-suspend",
     },
     Object {
@@ -166,7 +166,7 @@ Object {
       "lanes": Array [
         0,
       ],
-      "timestamp": 708.795,
+      "timestamp": 679.438,
       "type": "schedule-state-update",
     },
     Object {
@@ -179,7 +179,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "1",
-      "timestamp": 1824.279,
+      "timestamp": 1794.922,
       "type": "suspense-resolved",
     },
     Object {
@@ -192,7 +192,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "1",
-      "timestamp": 1824.731,
+      "timestamp": 1795.374,
       "type": "suspense-resolved",
     },
     Object {
@@ -205,7 +205,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "0",
-      "timestamp": 1826.523,
+      "timestamp": 1797.166,
       "type": "suspense-suspend",
     },
     Object {
@@ -218,7 +218,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "2",
-      "timestamp": 1827.168,
+      "timestamp": 1797.811,
       "type": "suspense-suspend",
     },
     Object {
@@ -231,7 +231,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "3",
-      "timestamp": 1827.52,
+      "timestamp": 1798.163,
       "type": "suspense-suspend",
     },
     Object {
@@ -244,7 +244,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "4",
-      "timestamp": 1827.862,
+      "timestamp": 1798.505,
       "type": "suspense-suspend",
     },
     Object {
@@ -257,7 +257,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "2",
-      "timestamp": 1895.606,
+      "timestamp": 1866.249,
       "type": "suspense-resolved",
     },
     Object {
@@ -270,7 +270,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "2",
-      "timestamp": 1895.899,
+      "timestamp": 1866.542,
       "type": "suspense-resolved",
     },
     Object {
@@ -283,7 +283,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "2",
-      "timestamp": 1896.215,
+      "timestamp": 1866.858,
       "type": "suspense-resolved",
     },
     Object {
@@ -296,7 +296,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "0",
-      "timestamp": 1897.173,
+      "timestamp": 1867.816,
       "type": "suspense-suspend",
     },
     Object {
@@ -309,7 +309,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "3",
-      "timestamp": 1897.995,
+      "timestamp": 1868.638,
       "type": "suspense-suspend",
     },
     Object {
@@ -322,7 +322,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "4",
-      "timestamp": 1898.323,
+      "timestamp": 1868.966,
       "type": "suspense-suspend",
     },
     Object {
@@ -335,7 +335,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "3",
-      "timestamp": 2009.63,
+      "timestamp": 1980.273,
       "type": "suspense-resolved",
     },
     Object {
@@ -348,7 +348,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "3",
-      "timestamp": 2009.879,
+      "timestamp": 1980.522,
       "type": "suspense-resolved",
     },
     Object {
@@ -361,7 +361,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "3",
-      "timestamp": 2010.303,
+      "timestamp": 1980.946,
       "type": "suspense-resolved",
     },
     Object {
@@ -374,7 +374,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "3",
-      "timestamp": 2010.521,
+      "timestamp": 1981.164,
       "type": "suspense-resolved",
     },
     Object {
@@ -387,7 +387,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "0",
-      "timestamp": 2011.436,
+      "timestamp": 1982.079,
       "type": "suspense-suspend",
     },
     Object {
@@ -400,7 +400,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "4",
-      "timestamp": 2012.527,
+      "timestamp": 1983.17,
       "type": "suspense-suspend",
     },
     Object {
@@ -413,7 +413,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "4",
-      "timestamp": 2408.944,
+      "timestamp": 2379.587,
       "type": "suspense-resolved",
     },
     Object {
@@ -426,7 +426,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "4",
-      "timestamp": 2409.252,
+      "timestamp": 2379.895,
       "type": "suspense-resolved",
     },
     Object {
@@ -439,7 +439,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "4",
-      "timestamp": 2409.599,
+      "timestamp": 2380.242,
       "type": "suspense-resolved",
     },
     Object {
@@ -452,7 +452,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "4",
-      "timestamp": 2409.844,
+      "timestamp": 2380.487,
       "type": "suspense-resolved",
     },
     Object {
@@ -465,7 +465,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "4",
-      "timestamp": 2410.092,
+      "timestamp": 2380.735,
       "type": "suspense-resolved",
     },
     Object {
@@ -478,7 +478,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "0",
-      "timestamp": 2411.129,
+      "timestamp": 2381.772,
       "type": "suspense-suspend",
     },
     Object {
@@ -491,7 +491,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "0",
-      "timestamp": 2608.543,
+      "timestamp": 2579.186,
       "type": "suspense-resolved",
     },
     Object {
@@ -504,7 +504,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "0",
-      "timestamp": 2608.844,
+      "timestamp": 2579.487,
       "type": "suspense-resolved",
     },
     Object {
@@ -518,7 +518,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "0",
-      "timestamp": 2609.092,
+      "timestamp": 2579.735,
       "type": "suspense-resolved",
     },
     Object {
@@ -531,7 +531,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "0",
-      "timestamp": 2609.399,
+      "timestamp": 2580.042,
       "type": "suspense-resolved",
     },
     Object {
@@ -544,7 +544,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "0",
-      "timestamp": 2609.647,
+      "timestamp": 2580.29,
       "type": "suspense-resolved",
     },
     Object {
@@ -557,7 +557,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "0",
-      "timestamp": 2609.903,
+      "timestamp": 2580.546,
       "type": "suspense-resolved",
     },
     Object {
@@ -570,7 +570,7 @@ Object {
     at SuspenseDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:36:713)
     at App",
       "id": "0",
-      "timestamp": 2610.157,
+      "timestamp": 2580.8,
       "type": "suspense-resolved",
     },
   ],
@@ -582,7 +582,7 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 314.65,
+      "timestamp": 285.293,
       "type": "render-idle",
     },
     Object {
@@ -592,87 +592,87 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 314.65,
+      "timestamp": 285.293,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 8.168000000000006,
+      "duration": 8.16799999999995,
       "lanes": Array [
         9,
       ],
-      "timestamp": 327.065,
+      "timestamp": 297.708,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 4.988999999999976,
+      "duration": 4.989000000000033,
       "lanes": Array [
         9,
       ],
-      "timestamp": 339.814,
+      "timestamp": 310.457,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 6.46999999999997,
+      "duration": 6.470000000000027,
       "lanes": Array [
         9,
       ],
-      "timestamp": 387.124,
+      "timestamp": 357.767,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 6.632999999999981,
+      "duration": 6.633000000000038,
       "lanes": Array [
         9,
       ],
-      "timestamp": 400.843,
+      "timestamp": 371.486,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 9.890000000000043,
+      "duration": 9.889999999999986,
       "lanes": Array [
         9,
       ],
-      "timestamp": 414.407,
+      "timestamp": 385.05,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.859000000000037,
+      "duration": 7.8589999999999804,
       "lanes": Array [
         9,
       ],
-      "timestamp": 427.417,
+      "timestamp": 398.06,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.260999999999967,
+      "duration": 7.261000000000024,
       "lanes": Array [
         9,
       ],
-      "timestamp": 436.023,
+      "timestamp": 406.666,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.701000000000022,
+      "duration": 7.700999999999965,
       "lanes": Array [
         9,
       ],
-      "timestamp": 443.575,
+      "timestamp": 414.218,
       "type": "render",
     },
     Object {
@@ -682,17 +682,17 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 451.498,
+      "timestamp": 422.141,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.7070000000000505,
+      "duration": 7.706999999999994,
       "lanes": Array [
         9,
       ],
-      "timestamp": 459.542,
+      "timestamp": 430.185,
       "type": "render",
     },
     Object {
@@ -702,7 +702,7 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 468.909,
+      "timestamp": 439.552,
       "type": "render",
     },
     Object {
@@ -712,67 +712,67 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 476.651,
+      "timestamp": 447.294,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.73599999999999,
+      "duration": 7.736000000000047,
       "lanes": Array [
         9,
       ],
-      "timestamp": 484.572,
+      "timestamp": 455.215,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.696000000000026,
+      "duration": 7.6959999999999695,
       "lanes": Array [
         9,
       ],
-      "timestamp": 492.616,
+      "timestamp": 463.259,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.701000000000022,
+      "duration": 7.700999999999965,
       "lanes": Array [
         9,
       ],
-      "timestamp": 500.604,
+      "timestamp": 471.247,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.555000000000007,
+      "duration": 7.55499999999995,
       "lanes": Array [
         9,
       ],
-      "timestamp": 508.719,
+      "timestamp": 479.362,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.789999999999964,
+      "duration": 7.7900000000000205,
       "lanes": Array [
         9,
       ],
-      "timestamp": 516.552,
+      "timestamp": 487.195,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.616999999999962,
+      "duration": 7.617000000000019,
       "lanes": Array [
         9,
       ],
-      "timestamp": 524.711,
+      "timestamp": 495.354,
       "type": "render",
     },
     Object {
@@ -782,17 +782,17 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 533.063,
+      "timestamp": 503.706,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.819000000000074,
+      "duration": 7.81899999999996,
       "lanes": Array [
         9,
       ],
-      "timestamp": 542.463,
+      "timestamp": 513.106,
       "type": "render",
     },
     Object {
@@ -802,37 +802,37 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 551.024,
+      "timestamp": 521.667,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.7579999999999245,
+      "duration": 7.758000000000038,
       "lanes": Array [
         9,
       ],
-      "timestamp": 560.542,
+      "timestamp": 531.185,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.7349999999999,
+      "duration": 7.735000000000014,
       "lanes": Array [
         9,
       ],
-      "timestamp": 568.57,
+      "timestamp": 539.213,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.7299999999999045,
+      "duration": 7.730000000000018,
       "lanes": Array [
         9,
       ],
-      "timestamp": 576.58,
+      "timestamp": 547.223,
       "type": "render",
     },
     Object {
@@ -842,77 +842,77 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 584.591,
+      "timestamp": 555.234,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.714999999999918,
+      "duration": 7.715000000000032,
       "lanes": Array [
         9,
       ],
-      "timestamp": 592.589,
+      "timestamp": 563.232,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.761000000000081,
+      "duration": 7.760999999999967,
       "lanes": Array [
         9,
       ],
-      "timestamp": 600.569,
+      "timestamp": 571.212,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.617999999999938,
+      "duration": 7.618000000000052,
       "lanes": Array [
         9,
       ],
-      "timestamp": 608.681,
+      "timestamp": 579.324,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.738000000000056,
+      "duration": 7.737999999999943,
       "lanes": Array [
         9,
       ],
-      "timestamp": 616.558,
+      "timestamp": 587.201,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.738999999999919,
+      "duration": 7.739000000000033,
       "lanes": Array [
         9,
       ],
-      "timestamp": 624.566,
+      "timestamp": 595.209,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.731999999999971,
+      "duration": 7.732000000000085,
       "lanes": Array [
         9,
       ],
-      "timestamp": 632.551,
+      "timestamp": 603.194,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 7.713000000000079,
+      "duration": 7.712999999999965,
       "lanes": Array [
         9,
       ],
-      "timestamp": 640.569,
+      "timestamp": 611.212,
       "type": "render",
     },
     Object {
@@ -922,7 +922,7 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 648.931,
+      "timestamp": 619.574,
       "type": "render",
     },
     Object {
@@ -932,7 +932,7 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 656.545,
+      "timestamp": 627.188,
       "type": "render",
     },
     Object {
@@ -942,7 +942,7 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 664.55,
+      "timestamp": 635.193,
       "type": "render",
     },
     Object {
@@ -952,7 +952,7 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 672.563,
+      "timestamp": 643.206,
       "type": "render",
     },
     Object {
@@ -962,7 +962,7 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 680.696,
+      "timestamp": 651.339,
       "type": "render",
     },
     Object {
@@ -972,7 +972,7 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 688.802,
+      "timestamp": 659.445,
       "type": "render",
     },
     Object {
@@ -982,7 +982,7 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 694.309,
+      "timestamp": 664.952,
       "type": "render",
     },
     Object {
@@ -992,37 +992,37 @@ Object {
       "lanes": Array [
         9,
       ],
-      "timestamp": 700.141,
+      "timestamp": 670.784,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 14.551999999999907,
+      "duration": 14.552000000000021,
       "lanes": Array [
         9,
       ],
-      "timestamp": 702.681,
+      "timestamp": 673.324,
       "type": "commit",
     },
     Object {
       "batchUID": 0,
       "depth": 1,
-      "duration": 2.689000000000078,
+      "duration": 2.6889999999999645,
       "lanes": Array [
         9,
       ],
-      "timestamp": 706.593,
+      "timestamp": 677.236,
       "type": "layout-effects",
     },
     Object {
       "batchUID": 1,
       "depth": 1,
-      "duration": 3.55600000000004,
+      "duration": 3.5559999999999263,
       "lanes": Array [
         0,
       ],
-      "timestamp": 713.461,
+      "timestamp": 684.104,
       "type": "render-idle",
     },
     Object {
@@ -1032,7 +1032,7 @@ Object {
       "lanes": Array [
         0,
       ],
-      "timestamp": 713.461,
+      "timestamp": 684.104,
       "type": "render",
     },
     Object {
@@ -1042,7 +1042,7 @@ Object {
       "lanes": Array [
         0,
       ],
-      "timestamp": 715.705,
+      "timestamp": 686.348,
       "type": "commit",
     },
     Object {
@@ -1052,7 +1052,7 @@ Object {
       "lanes": Array [
         0,
       ],
-      "timestamp": 716.624,
+      "timestamp": 687.267,
       "type": "layout-effects",
     },
     Object {
@@ -1062,27 +1062,27 @@ Object {
       "lanes": Array [
         10,
       ],
-      "timestamp": 1825.399,
+      "timestamp": 1796.042,
       "type": "render-idle",
     },
     Object {
       "batchUID": 2,
       "depth": 0,
-      "duration": 3.43300000000022,
+      "duration": 3.4329999999999927,
       "lanes": Array [
         10,
       ],
-      "timestamp": 1825.399,
+      "timestamp": 1796.042,
       "type": "render",
     },
     Object {
       "batchUID": 2,
       "depth": 0,
-      "duration": 2.588999999999942,
+      "duration": 2.589000000000169,
       "lanes": Array [
         10,
       ],
-      "timestamp": 1828.929,
+      "timestamp": 1799.572,
       "type": "commit",
     },
     Object {
@@ -1092,7 +1092,7 @@ Object {
       "lanes": Array [
         10,
       ],
-      "timestamp": 1830.962,
+      "timestamp": 1801.605,
       "type": "layout-effects",
     },
     Object {
@@ -1102,7 +1102,7 @@ Object {
       "lanes": Array [
         11,
       ],
-      "timestamp": 1896.355,
+      "timestamp": 1866.998,
       "type": "render-idle",
     },
     Object {
@@ -1112,7 +1112,7 @@ Object {
       "lanes": Array [
         11,
       ],
-      "timestamp": 1896.355,
+      "timestamp": 1866.998,
       "type": "render",
     },
     Object {
@@ -1122,27 +1122,27 @@ Object {
       "lanes": Array [
         11,
       ],
-      "timestamp": 1899.052,
+      "timestamp": 1869.695,
       "type": "commit",
     },
     Object {
       "batchUID": 3,
       "depth": 1,
-      "duration": 0.01999999999998181,
+      "duration": 0.020000000000209184,
       "lanes": Array [
         11,
       ],
-      "timestamp": 1900.121,
+      "timestamp": 1870.764,
       "type": "layout-effects",
     },
     Object {
       "batchUID": 4,
       "depth": 0,
-      "duration": 3.768000000000029,
+      "duration": 3.7679999999998017,
       "lanes": Array [
         12,
       ],
-      "timestamp": 2010.718,
+      "timestamp": 1981.361,
       "type": "render-idle",
     },
     Object {
@@ -1152,17 +1152,17 @@ Object {
       "lanes": Array [
         12,
       ],
-      "timestamp": 2010.718,
+      "timestamp": 1981.361,
       "type": "render",
     },
     Object {
       "batchUID": 4,
       "depth": 0,
-      "duration": 1.2580000000000382,
+      "duration": 1.2579999999998108,
       "lanes": Array [
         12,
       ],
-      "timestamp": 2013.228,
+      "timestamp": 1983.871,
       "type": "commit",
     },
     Object {
@@ -1172,7 +1172,7 @@ Object {
       "lanes": Array [
         12,
       ],
-      "timestamp": 2014.288,
+      "timestamp": 1984.931,
       "type": "layout-effects",
     },
     Object {
@@ -1182,7 +1182,7 @@ Object {
       "lanes": Array [
         13,
       ],
-      "timestamp": 2410.326,
+      "timestamp": 2380.969,
       "type": "render-idle",
     },
     Object {
@@ -1192,7 +1192,7 @@ Object {
       "lanes": Array [
         13,
       ],
-      "timestamp": 2410.326,
+      "timestamp": 2380.969,
       "type": "render",
     },
     Object {
@@ -1202,7 +1202,7 @@ Object {
       "lanes": Array [
         13,
       ],
-      "timestamp": 2412.695,
+      "timestamp": 2383.338,
       "type": "commit",
     },
     Object {
@@ -1212,7 +1212,7 @@ Object {
       "lanes": Array [
         13,
       ],
-      "timestamp": 2413.892,
+      "timestamp": 2384.535,
       "type": "layout-effects",
     },
     Object {
@@ -1222,7 +1222,7 @@ Object {
       "lanes": Array [
         14,
       ],
-      "timestamp": 2610.309,
+      "timestamp": 2580.952,
       "type": "render-idle",
     },
     Object {
@@ -1232,7 +1232,7 @@ Object {
       "lanes": Array [
         14,
       ],
-      "timestamp": 2610.309,
+      "timestamp": 2580.952,
       "type": "render",
     },
     Object {
@@ -1242,7 +1242,7 @@ Object {
       "lanes": Array [
         14,
       ],
-      "timestamp": 2613.805,
+      "timestamp": 2584.448,
       "type": "commit",
     },
     Object {
@@ -1252,17 +1252,17 @@ Object {
       "lanes": Array [
         14,
       ],
-      "timestamp": 2615.479,
+      "timestamp": 2586.122,
       "type": "layout-effects",
     },
   ],
-  "startTime": 8993749139,
+  "startTime": 8993778496,
 }
 `;
 
 exports[`preprocessData should process forced update event 1`] = `
 Object {
-  "duration": 3.988,
+  "duration": 67.461,
   "events": Array [
     Object {
       "componentName": "ForceUpdateDemo_ForceUpdateDemo",
@@ -1273,7 +1273,7 @@ Object {
       "lanes": Array [
         4,
       ],
-      "timestamp": 0,
+      "timestamp": 63.355,
       "type": "schedule-force-update",
     },
   ],
@@ -1281,44 +1281,44 @@ Object {
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 2.191,
+      "duration": 2.1910000000000025,
       "lanes": Array [
         4,
       ],
-      "timestamp": 1.915,
+      "timestamp": 65.27,
       "type": "render-idle",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 0.9769999999999999,
+      "duration": 0.9770000000000039,
       "lanes": Array [
         4,
       ],
-      "timestamp": 1.915,
+      "timestamp": 65.27,
       "type": "render",
     },
     Object {
       "batchUID": 0,
       "depth": 0,
-      "duration": 1.1669999999999998,
+      "duration": 1.1670000000000016,
       "lanes": Array [
         4,
       ],
-      "timestamp": 2.939,
+      "timestamp": 66.294,
       "type": "commit",
     },
     Object {
       "batchUID": 0,
       "depth": 1,
-      "duration": 0.017999999999999794,
+      "duration": 0.018000000000000682,
       "lanes": Array [
         4,
       ],
-      "timestamp": 3.97,
+      "timestamp": 67.325,
       "type": "layout-effects",
     },
   ],
-  "startTime": 40806988231,
+  "startTime": 40806924876,
 }
 `;

@@ -1,6 +1,6 @@
 // @flow
 
-import type {TimelineEvent} from './speedscope/import/chrome';
+import type {TimelineEvent} from '@elg/speedscope';
 import type {FlamechartData, ReactProfilerData} from './types';
 
 import React, {useEffect} from 'react';

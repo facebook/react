@@ -1,6 +1,6 @@
 // @flow
 
-import type {TimelineEvent} from '../speedscope/import/chrome';
+import type {TimelineEvent} from '@elg/speedscope';
 import type {
   Milliseconds,
   BatchUID,
@@ -361,19 +361,27 @@ export default function preprocessData(
   // TODO: Sort `timeline`. JSON Array Format trace events need not be ordered. See:
   // https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview#heading=h.f2f0yd51wi15
 
-  const indexOfFirstEventWithTs = timeline.findIndex(event => !!event.ts);
-
-  // Our user timing events are Complete Events (i.e. ph === 'X') and will
-  // always have ts. If there are no ts events, we can safely abort, knowing
-  // that there are no events to process.
-  // See: https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview#heading=h.lpfof2aylapb
-  if (indexOfFirstEventWithTs === -1) {
+  // Events displayed in flamechart have timestamps relative to the profile
+  // event's startTime. Source: https://github.com/v8/v8/blob/44bd8fd7/src/inspector/js_protocol.json#L1486
+  //
+  // We'll thus expect there to be a 'Profile' event; if there is not one, we
+  // can deduce that there are no flame chart events. As we expect React
+  // scheduling profiling user timing marks to be recorded together with browser
+  // flame chart events, we can futher deduce that the data is invalid and we
+  // don't bother finding React events.
+  const indexOfProfileEvent = timeline.findIndex(
+    event => event.name === 'Profile',
+  );
+  if (indexOfProfileEvent === -1) {
     return profilerData;
   }
 
-  // `profilerData.startTime` cannot be 0 or undefined, otherwise the final
-  // computed React measures will have enormous `timestamp` values.
-  profilerData.startTime = timeline[indexOfFirstEventWithTs].ts;
+  // Use Profile event's `startTime` as the start time to align with flame chart.
+  // TODO: Remove assumption that there'll only be 1 'Profile' event. If this
+  // assumption does not hold, the chart may start at the wrong time.
+  profilerData.startTime = timeline[indexOfProfileEvent].args.data.startTime;
+  profilerData.duration =
+    (timeline[timeline.length - 1].ts - profilerData.startTime) / 1000;
 
   const state: ProcessorState = {
     batchUID: 0,
@@ -388,20 +396,6 @@ export default function preprocessData(
   const {measureStack} = state;
   if (measureStack.length > 0) {
     console.error(`Incomplete events or measures`, measureStack);
-  }
-
-  // Compute profilerData.duration
-  const {events, measures} = profilerData;
-  if (events.length > 0) {
-    const {timestamp} = events[events.length - 1];
-    profilerData.duration = Math.max(profilerData.duration, timestamp);
-  }
-  if (measures.length > 0) {
-    const {duration, timestamp} = measures[measures.length - 1];
-    profilerData.duration = Math.max(
-      profilerData.duration,
-      timestamp + duration,
-    );
   }
 
   return profilerData;

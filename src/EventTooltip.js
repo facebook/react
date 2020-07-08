@@ -1,7 +1,7 @@
 // @flow
 
 import type {PanAndZoomState} from './util/usePanAndZoom';
-import type {FlamechartFrame} from './speedscope/lib/flamechart';
+import type {FlamechartFrame} from '@elg/speedscope';
 import type {
   ReactEvent,
   ReactMeasure,

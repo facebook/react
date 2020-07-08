@@ -1,10 +1,9 @@
 // @flow
 
-import {importFromChromeTimeline} from '../speedscope/import/chrome';
-import {Flamechart} from '../speedscope/lib/flamechart';
+import {importFromChromeTimeline, Flamechart} from '@elg/speedscope';
 
-import type {TimelineEvent} from './speedscope/import/chrome';
-import type {FlamechartData} from './types';
+import type {TimelineEvent} from '@elg/speedscope';
+import type {FlamechartData} from '../types';
 
 export default function preprocessFlamechart(
   rawData: TimelineEvent[],

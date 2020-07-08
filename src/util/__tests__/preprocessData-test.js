@@ -59,10 +59,25 @@ describe(preprocessData, () => {
     });
   });
 
+  it('should return empty data given a timeline with no Profile event', () => {
+    expect(
+      // prettier-ignore
+      preprocessData([
+        {"args":{"data":{"navigationId":"43BC238A4FB7548146D3CD739C9C9434"}},"cat":"blink.user_timing","name":"--schedule-render-Unknown-512-","ph":"R","pid":9312,"tid":10252,"ts":8994056569,"tts":1816966},
+      ]),
+    ).toEqual({
+      startTime: 0,
+      duration: 0,
+      events: [],
+      measures: [],
+    });
+  });
+
   it('should return empty data given a timeline with no React scheduling profiling marks', () => {
     expect(
       // prettier-ignore
       preprocessData([
+        {"args":{"data":{"startTime":8993778496}},"cat":"disabled-by-default-v8.cpu_profiler","id":"0x1","name":"Profile","ph":"P","pid":9312,"tid":10252,"ts":8993778520,"tts":1614266},
         {"pid":57632,"tid":38659,"ts":874860756135,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":18,"tdur":19,"tts":8700284918,"args":{}},
         {"pid":57632,"tid":38659,"ts":874860756158,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":30,"tdur":30,"tts":8700284941,"args":{}},
         {"pid":57632,"tid":38659,"ts":874860756192,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":21,"tdur":20,"tts":8700284976,"args":{}},
@@ -71,8 +86,8 @@ describe(preprocessData, () => {
         {"pid":57632,"tid":38659,"ts":874860756233,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":5,"tdur":4,"tts":8700285017,"args":{}},
       ]),
     ).toEqual({
-      startTime: 874860756135,
-      duration: 0,
+      startTime: 8993778496,
+      duration: 865866977.737,
       events: [],
       measures: [],
     });
@@ -80,8 +95,9 @@ describe(preprocessData, () => {
 
   it('should throw if unrecognized React mark is encountered', () => {
     expect(() =>
+      // prettier-ignore
       preprocessData([
-        // prettier-ignore
+        {"args":{"data":{"startTime":8993778496}},"cat":"disabled-by-default-v8.cpu_profiler","id":"0x1","name":"Profile","ph":"P","pid":9312,"tid":10252,"ts":8993778520,"tts":1614266},
         {"args":{"data":{"navigationId":"E082C30FBDA3ACEE0E7B5FD75F8B7F0D"}},"cat":"blink.user_timing","name":"--there-are-four-lights","ph":"R","pid":17232,"tid":13628,"ts":264686513020,"tts":4082554},
       ]),
     ).toThrow();
@@ -89,8 +105,9 @@ describe(preprocessData, () => {
 
   it('should throw if events and measures are incomplete', () => {
     const error = jest.spyOn(console, 'error');
+    // prettier-ignore
     preprocessData([
-      // prettier-ignore
+      {"args":{"data":{"startTime":8993778496}},"cat":"disabled-by-default-v8.cpu_profiler","id":"0x1","name":"Profile","ph":"P","pid":9312,"tid":10252,"ts":8993778520,"tts":1614266},
       {"args":{"data":{"navigationId":"1065756F5FDAD64BE45CA86B0BBC1F8B"}},"cat":"blink.user_timing","name":"--render-start-8","ph":"R","pid":1852,"tid":12484,"ts":42351664678,"tts":1512475},
     ]);
     expect(error).toHaveBeenCalled();
@@ -98,8 +115,9 @@ describe(preprocessData, () => {
 
   it('should throw if work is completed without being started', () => {
     const error = jest.spyOn(console, 'error');
+    // prettier-ignore
     preprocessData([
-      // prettier-ignore
+      {"args":{"data":{"startTime":8993778496}},"cat":"disabled-by-default-v8.cpu_profiler","id":"0x1","name":"Profile","ph":"P","pid":9312,"tid":10252,"ts":8993778520,"tts":1614266},
       {"args":{"data":{"navigationId":"E082C30FBDA3ACEE0E7B5FD75F8B7F0D"}},"cat":"blink.user_timing","name":"--render-yield","ph":"R","pid":17232,"tid":13628,"ts":264686513020,"tts":4082554},
     ]);
     expect(error).toHaveBeenCalled();
@@ -112,6 +130,7 @@ describe(preprocessData, () => {
       // prettier-ignore
       preprocessData([
         {"args":{"data":{"documentLoaderURL":"https://concurrent-demo.now.sh/","isLoadingMainFrame":true,"navigationId":"43BC238A4FB7548146D3CD739C9C9434"},"frame":"FD65D9AFD04B1295CEA36B883F0FA82F"},"cat":"blink.user_timing","name":"navigationStart","ph":"R","pid":9312,"tid":10252,"ts":8993749139,"tts":1646191},
+        {"args":{"data":{"startTime":8993778496}},"cat":"disabled-by-default-v8.cpu_profiler","id":"0x1","name":"Profile","ph":"P","pid":9312,"tid":10252,"ts":8993778520,"tts":1614266},
         {"args":{"frame":"FD65D9AFD04B1295CEA36B883F0FA82F"},"cat":"blink.user_timing","name":"fetchStart","ph":"R","pid":9312,"tid":10252,"ts":8993751576,"tts":1646197},
         {"args":{},"cat":"blink.user_timing","name":"requestStart","ph":"R","pid":9312,"tid":10252,"ts":8993757325,"tts":1612760},
         {"args":{"frame":"FD65D9AFD04B1295CEA36B883F0FA82F"},"cat":"blink.user_timing","name":"responseEnd","ph":"R","pid":9312,"tid":10252,"ts":8993762841,"tts":1652151},
@@ -303,6 +322,7 @@ describe(preprocessData, () => {
     expect(
       // prettier-ignore
       preprocessData([
+        {"args":{"data":{"startTime":40806924876}},"cat":"disabled-by-default-v8.cpu_profiler","id":"0x2","name":"Profile","ph":"P","pid":1852,"tid":12484,"ts":40806924880,"tts":996658},
         {"args":{"data":{"navigationId":"1065756F5FDAD64BE45CA86B0BBC1F8B"}},"cat":"blink.user_timing","name":"--schedule-forced-update-ForceUpdateDemo_ForceUpdateDemo-16-\n    at ForceUpdateDemo_ForceUpdateDemo (https://concurrent-demo.now.sh/static/js/main.c9f122eb.chunk.js:18:98)\n    at App","ph":"R","pid":1852,"tid":12484,"ts":40806988231,"tts":1037762},
         {"args":{"data":{"navigationId":"1065756F5FDAD64BE45CA86B0BBC1F8B"}},"cat":"blink.user_timing","name":"--render-start-16","ph":"R","pid":1852,"tid":12484,"ts":40806990146,"tts":1038890},
         {"args":{"data":{"navigationId":"1065756F5FDAD64BE45CA86B0BBC1F8B"}},"cat":"blink.user_timing","name":"--render-stop","ph":"R","pid":1852,"tid":12484,"ts":40806991123,"tts":1039401},

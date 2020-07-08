@@ -11,6 +11,7 @@
   "author": "Brian Vaughn <bvaughn@fb.com>",
   "license": "MIT",
   "dependencies": {
+    "@elg/speedscope": "1.6.0-787837d",
     "array-binsearch": "^1.0.1",
     "clipboard-js": "^0.3.6",
     "d3-hierarchy": "^1.1.9",

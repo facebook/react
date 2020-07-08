@@ -1,6 +1,6 @@
 // @flow
 
-import type {Flamechart, FlamechartFrame} from './speedscope/lib/flamechart';
+import type {Flamechart, FlamechartFrame} from '@elg/speedscope';
 
 // Type utilities
 

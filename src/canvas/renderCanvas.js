@@ -412,7 +412,7 @@ function renderFlamechart(
 
       const width = durationToWidth((end - start) / 1000, state);
       if (width <= 0) {
-        return; // Too small to render at this zoom level
+        continue; // Too small to render at this zoom level
       }
 
       const x = Math.floor(timestampToPosition(start / 1000, state));
