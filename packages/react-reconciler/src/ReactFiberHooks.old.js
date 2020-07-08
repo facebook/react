@@ -26,6 +26,7 @@ import type {OpaqueIDType} from './ReactFiberHostConfig';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   enableDebugTracing,
+  enableSchedulingProfiler,
   enableNewReconciler,
 } from 'shared/ReactFeatureFlags';
 
@@ -92,6 +93,7 @@ import {
 } from './ReactMutableSource.old';
 import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
+import {markStateUpdateScheduled} from './SchedulingProfiler';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1763,6 +1765,10 @@ function dispatchAction<S, A>(
         logStateUpdateScheduled(name, lane, action);
       }
     }
+  }
+
+  if (enableSchedulingProfiler) {
+    markStateUpdateScheduled(fiber, lane);
   }
 }
 

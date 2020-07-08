@@ -28,6 +28,7 @@ import {
   deferRenderPhaseUpdateToNextBatch,
   decoupleUpdatePriorityFromScheduler,
   enableDebugTracing,
+  enableSchedulingProfiler,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -57,6 +58,17 @@ import {
   logRenderStarted,
   logRenderStopped,
 } from './DebugTracing';
+import {
+  markCommitStarted,
+  markCommitStopped,
+  markLayoutEffectsStarted,
+  markLayoutEffectsStopped,
+  markPassiveEffectsStarted,
+  markPassiveEffectsStopped,
+  markRenderStarted,
+  markRenderYielded,
+  markRenderStopped,
+} from './SchedulingProfiler';
 
 // The scheduler is imported here *only* to detect whether it's been mocked
 import * as Scheduler from 'scheduler';
@@ -1509,6 +1521,10 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
     }
   }
 
+  if (enableSchedulingProfiler) {
+    markRenderStarted(lanes);
+  }
+
   do {
     try {
       workLoopSync();
@@ -1538,6 +1554,10 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
     if (enableDebugTracing) {
       logRenderStopped();
     }
+  }
+
+  if (enableSchedulingProfiler) {
+    markRenderStopped();
   }
 
   // Set this to null to indicate there's no in-progress render.
@@ -1576,6 +1596,10 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     }
   }
 
+  if (enableSchedulingProfiler) {
+    markRenderStarted(lanes);
+  }
+
   do {
     try {
       workLoopConcurrent();
@@ -1601,9 +1625,16 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
   // Check if the tree has completed.
   if (workInProgress !== null) {
     // Still work remaining.
+    if (enableSchedulingProfiler) {
+      markRenderYielded();
+    }
     return RootIncomplete;
   } else {
     // Completed the tree.
+    if (enableSchedulingProfiler) {
+      markRenderStopped();
+    }
+
     // Set this to null to indicate there's no in-progress render.
     workInProgressRoot = null;
     workInProgressRootRenderLanes = NoLanes;
@@ -1893,11 +1924,19 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
   }
 
+  if (enableSchedulingProfiler) {
+    markCommitStarted(lanes);
+  }
+
   if (finishedWork === null) {
     if (__DEV__) {
       if (enableDebugTracing) {
         logCommitStopped();
       }
+    }
+
+    if (enableSchedulingProfiler) {
+      markCommitStopped();
     }
 
     return null;
@@ -2196,6 +2235,10 @@ function commitRootImpl(root, renderPriorityLevel) {
       }
     }
 
+    if (enableSchedulingProfiler) {
+      markCommitStopped();
+    }
+
     // This is a legacy edge case. We just committed the initial mount of
     // a ReactDOM.render-ed root inside of batchedUpdates. The commit fired
     // synchronously, but layout updates should be deferred until the end
@@ -2210,6 +2253,10 @@ function commitRootImpl(root, renderPriorityLevel) {
     if (enableDebugTracing) {
       logCommitStopped();
     }
+  }
+
+  if (enableSchedulingProfiler) {
+    markCommitStopped();
   }
 
   return null;
@@ -2342,6 +2389,10 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
     }
   }
 
+  if (enableSchedulingProfiler) {
+    markLayoutEffectsStarted(committedLanes);
+  }
+
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
@@ -2365,6 +2416,10 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
     if (enableDebugTracing) {
       logLayoutEffectsStopped();
     }
+  }
+
+  if (enableSchedulingProfiler) {
+    markLayoutEffectsStopped();
   }
 }
 
@@ -2459,6 +2514,10 @@ function flushPassiveEffectsImpl() {
     if (enableDebugTracing) {
       logPassiveEffectsStarted(lanes);
     }
+  }
+
+  if (enableSchedulingProfiler) {
+    markPassiveEffectsStarted(lanes);
   }
 
   if (__DEV__) {
@@ -2621,6 +2680,10 @@ function flushPassiveEffectsImpl() {
     if (enableDebugTracing) {
       logPassiveEffectsStopped();
     }
+  }
+
+  if (enableSchedulingProfiler) {
+    markPassiveEffectsStopped();
   }
 
   executionContext = prevExecutionContext;
