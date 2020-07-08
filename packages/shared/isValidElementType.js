@@ -28,7 +28,8 @@ import {
 } from 'shared/ReactSymbols';
 
 export default function isValidElementType(type: mixed) {
-  if (typeof type === 'string' || typeof type === 'function') return true;
+  if (typeof type === 'string') return true;
+  if (typeof type === 'function') return true;
 
   // Note: typeof might be other than 'symbol' or 'number' (e.g. if it's a polyfill).
   if (
