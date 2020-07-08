@@ -130,6 +130,8 @@ function deleteHydratableInstance(
   } else {
     returnFiber.deletions.push(childToDelete);
   }
+  // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
+  returnFiber.effectTag |= Deletion;
 
   // This might seem like it belongs on progressedFirstDeletion. However,
   // these children are not part of the reconciliation list of children.

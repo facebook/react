@@ -288,7 +288,6 @@ let globalMostRecentFallbackTime: number = 0;
 const FALLBACK_THROTTLE_MS: number = 500;
 const DEFAULT_TIMEOUT_MS: number = 5000;
 
-let nextEffect: Fiber | null = null;
 let hasUncaughtError = false;
 let firstUncaughtError = null;
 let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
@@ -1805,10 +1804,8 @@ function resetChildLanes(completedWork: Fiber) {
       );
 
       subtreeTag |= child.subtreeTag;
+      // TODO (effects) Document why this exception is important
       subtreeTag |= child.effectTag & HostEffectMask;
-      if (child.deletions !== null) {
-        subtreeTag |= Deletion;
-      }
 
       if ((child.effectTag & Incomplete) !== NoEffect) {
         childrenDidNotComplete = true;
@@ -1850,10 +1847,8 @@ function resetChildLanes(completedWork: Fiber) {
       );
 
       subtreeTag |= child.subtreeTag;
+      // TODO (effects) Document why this exception is important
       subtreeTag |= child.effectTag & HostEffectMask;
-      if (child.deletions !== null) {
-        subtreeTag |= Deletion;
-      }
 
       if ((child.effectTag & Incomplete) !== NoEffect) {
         childrenDidNotComplete = true;
@@ -2013,8 +2008,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     // layout, but class component lifecycles also fire here for legacy reasons.
     commitLayoutEffects(finishedWork, root, lanes);
 
-    nextEffect = null;
-
     // Tell Scheduler to yield at the end of the frame, so the browser has an
     // opportunity to paint.
     requestPaint();
@@ -2047,19 +2040,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     pendingPassiveEffectsLanes = lanes;
     pendingPassiveEffectsRenderPriority = renderPriorityLevel;
   } else {
-    // We are done with the effect chain at this point so let's clear the
-    // nextEffect pointers to assist with GC. If we have passive effects, we'll
-    // clear this in flushPassiveEffects.
-    // TODO (effects) Traverse with subtreeTag Deletion and detatch deletions array only
-    nextEffect = firstEffect;
-    while (nextEffect !== null) {
-      const nextNextEffect = nextEffect.nextEffect;
-      nextEffect.nextEffect = null;
-      if (nextEffect.effectTag & Deletion) {
-        detachFiberAfterEffects(nextEffect);
-      }
-      nextEffect = nextNextEffect;
-    }
+    // TODO (effects) Detach sibling pointers for deleted Fibers
   }
 
   // Read this again, since an effect might have updated it
@@ -2658,20 +2639,7 @@ function flushPassiveEffectsImpl() {
     }
   }
 
-  // Note: This currently assumes there are no passive effects on the root fiber
-  // because the root is not part of its own effect list.
-  // This could change in the future.
-  // TODO (effects) Traverse with subtreeTag Deletion and detatch deletions array only
-  let effect = root.current.firstEffect;
-  while (effect !== null) {
-    const nextNextEffect = effect.nextEffect;
-    // Remove nextEffect pointer to assist GC
-    effect.nextEffect = null;
-    if (effect.effectTag & Deletion) {
-      detachFiberAfterEffects(effect);
-    }
-    effect = nextNextEffect;
-  }
+  // TODO (effects) Detach sibling pointers for deleted Fibers
 
   if (enableProfilerTimer && enableProfilerCommitHooks) {
     const profilerEffects = pendingPassiveProfilerEffects;
@@ -3761,8 +3729,4 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
       },
     };
   }
-}
-
-function detachFiberAfterEffects(fiber: Fiber): void {
-  fiber.sibling = null;
 }

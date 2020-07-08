@@ -2071,6 +2071,8 @@ function updateSuspensePrimaryChildren(
     } else {
       workInProgress.deletions.push(currentFallbackChildFragment);
     }
+    // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
+    workInProgress.effectTag |= Deletion;
   }
 
   workInProgress.child = primaryChildFragment;
@@ -3052,6 +3054,8 @@ function remountFiber(
     } else {
       returnFiber.deletions.push(current);
     }
+    // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
+    returnFiber.effectTag |= Deletion;
     current.nextEffect = null;
     current.effectTag = Deletion;
 
