@@ -281,7 +281,7 @@ describe('ReactDOMEventListener', () => {
   // This is a special case for submit and reset events as they are listened on
   // at the element level and not the document.
   // @see https://github.com/facebook/react/pull/13462
-  it('should not receive submit events if native, interim DOM handler prevents it', () => {
+  it.skip('should not receive submit events if native, interim DOM handler prevents it', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
