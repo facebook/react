@@ -56,13 +56,13 @@ describe('SchedulingProfiler', () => {
     delete global.performance;
   });
 
-  // @gate experimental && !enableSchedulingProfiler
+  // @gate !enableSchedulingProfiler
   it('should not mark if enableSchedulingProfiler is false', () => {
     ReactTestRenderer.create(<div />);
     expect(marks).toEqual([]);
   });
 
-  // @gate experimental && enableSchedulingProfiler
+  // @gate enableSchedulingProfiler
   it('should mark sync render without suspends or state updates', () => {
     ReactTestRenderer.create(<div />);
 
@@ -77,7 +77,7 @@ describe('SchedulingProfiler', () => {
     ]);
   });
 
-  // @gate experimental && enableSchedulingProfiler
+  // @gate enableSchedulingProfiler
   it('should mark concurrent render without suspends or state updates', () => {
     ReactTestRenderer.create(<div />, {unstable_isConcurrent: true});
 
@@ -97,7 +97,7 @@ describe('SchedulingProfiler', () => {
     ]);
   });
 
-  // @gate experimental && enableSchedulingProfiler
+  // @gate enableSchedulingProfiler
   it('should mark render yields', async () => {
     function Bar() {
       Scheduler.unstable_yieldValue('Bar');
@@ -120,7 +120,7 @@ describe('SchedulingProfiler', () => {
     ]);
   });
 
-  // @gate experimental && enableSchedulingProfiler
+  // @gate enableSchedulingProfiler
   it('should mark sync render with suspense that resolves', async () => {
     const fakeSuspensePromise = Promise.resolve(true);
     function Example() {
@@ -152,7 +152,7 @@ describe('SchedulingProfiler', () => {
     ]);
   });
 
-  // @gate experimental && enableSchedulingProfiler
+  // @gate enableSchedulingProfiler
   it('should mark sync render with suspense that rejects', async () => {
     const fakeSuspensePromise = Promise.reject(new Error('error'));
     function Example() {
@@ -184,7 +184,7 @@ describe('SchedulingProfiler', () => {
     ]);
   });
 
-  // @gate experimental && enableSchedulingProfiler
+  // @gate enableSchedulingProfiler
   it('should mark concurrent render with suspense that resolves', async () => {
     const fakeSuspensePromise = Promise.resolve(true);
     function Example() {
@@ -222,7 +222,7 @@ describe('SchedulingProfiler', () => {
     ]);
   });
 
-  // @gate experimental && enableSchedulingProfiler
+  // @gate enableSchedulingProfiler
   it('should mark concurrent render with suspense that rejects', async () => {
     const fakeSuspensePromise = Promise.reject(new Error('error'));
     function Example() {
@@ -260,7 +260,7 @@ describe('SchedulingProfiler', () => {
     ]);
   });
 
-  // @gate experimental && enableSchedulingProfiler
+  // @gate enableSchedulingProfiler
   it('should mark cascading class component state updates', () => {
     class Example extends React.Component {
       state = {didMount: false};
@@ -295,7 +295,7 @@ describe('SchedulingProfiler', () => {
     ]);
   });
 
-  // @gate experimental && enableSchedulingProfiler
+  // @gate enableSchedulingProfiler
   it('should mark cascading class component force updates', () => {
     class Example extends React.Component {
       componentDidMount() {
@@ -329,7 +329,7 @@ describe('SchedulingProfiler', () => {
     ]);
   });
 
-  // @gate experimental && enableSchedulingProfiler
+  // @gate enableSchedulingProfiler
   it('should mark render phase state updates for class component', () => {
     class Example extends React.Component {
       state = {didRender: false};
@@ -356,7 +356,7 @@ describe('SchedulingProfiler', () => {
     );
   });
 
-  // @gate experimental && enableSchedulingProfiler
+  // @gate enableSchedulingProfiler
   it('should mark render phase force updates for class component', () => {
     class Example extends React.Component {
       state = {didRender: false};
@@ -383,7 +383,7 @@ describe('SchedulingProfiler', () => {
     );
   });
 
-  // @gate experimental && enableSchedulingProfiler
+  // @gate enableSchedulingProfiler
   it('should mark cascading layout updates', () => {
     function Example() {
       const [didMount, setDidMount] = React.useState(false);
@@ -416,7 +416,7 @@ describe('SchedulingProfiler', () => {
     ]);
   });
 
-  // @gate experimental && enableSchedulingProfiler
+  // @gate enableSchedulingProfiler
   it('should mark cascading passive updates', () => {
     function Example() {
       const [didMount, setDidMount] = React.useState(false);
@@ -447,7 +447,7 @@ describe('SchedulingProfiler', () => {
     ]);
   });
 
-  // @gate experimental && enableSchedulingProfiler
+  // @gate enableSchedulingProfiler
   it('should mark render phase updates', () => {
     function Example() {
       const [didRender, setDidRender] = React.useState(false);
