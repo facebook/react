@@ -3923,7 +3923,6 @@ describe('Profiler', () => {
 
         expect(onPostCommit).toHaveBeenCalledTimes(1);
         expect(onPostCommit.mock.calls[0][4]).toMatchInteractions([
-          initialRenderInteraction,
           highPriUpdateInteraction,
         ]);
 

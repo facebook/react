@@ -26,7 +26,8 @@ export opaque type LanePriority =
   | 13
   | 14
   | 15
-  | 16;
+  | 16
+  | 17;
 export opaque type Lanes = number;
 export opaque type Lane = number;
 export opaque type LaneMap<T> = Array<T>;
@@ -42,23 +43,25 @@ import {
   NoPriority as NoSchedulerPriority,
 } from './SchedulerWithReactIntegration.new';
 
-export const SyncLanePriority: LanePriority = 16;
-const SyncBatchedLanePriority: LanePriority = 15;
+export const SyncLanePriority: LanePriority = 17;
+const SyncBatchedLanePriority: LanePriority = 16;
 
-const InputDiscreteHydrationLanePriority: LanePriority = 14;
-export const InputDiscreteLanePriority: LanePriority = 13;
+const InputDiscreteHydrationLanePriority: LanePriority = 15;
+export const InputDiscreteLanePriority: LanePriority = 14;
 
-const InputContinuousHydrationLanePriority: LanePriority = 12;
-export const InputContinuousLanePriority: LanePriority = 11;
+const InputContinuousHydrationLanePriority: LanePriority = 13;
+export const InputContinuousLanePriority: LanePriority = 12;
 
-const DefaultHydrationLanePriority: LanePriority = 10;
-export const DefaultLanePriority: LanePriority = 9;
+const DefaultHydrationLanePriority: LanePriority = 11;
+export const DefaultLanePriority: LanePriority = 10;
 
-const TransitionShortHydrationLanePriority: LanePriority = 8;
-export const TransitionShortLanePriority: LanePriority = 7;
+const TransitionShortHydrationLanePriority: LanePriority = 9;
+export const TransitionShortLanePriority: LanePriority = 8;
 
-const TransitionLongHydrationLanePriority: LanePriority = 6;
-export const TransitionLongLanePriority: LanePriority = 5;
+const TransitionLongHydrationLanePriority: LanePriority = 7;
+export const TransitionLongLanePriority: LanePriority = 6;
+
+const RetryLanePriority: LanePriority = 5;
 
 const SelectiveHydrationLanePriority: LanePriority = 4;
 
@@ -90,25 +93,30 @@ const InputContinuousUpdateRangeStart = 6;
 const InputContinuousUpdateRangeEnd = 8;
 
 export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000100000000;
-const DefaultLanes: Lanes = /*                          */ 0b0000000000000000011111100000000;
+export const DefaultLanes: Lanes = /*                   */ 0b0000000000000000000111100000000;
 const DefaultUpdateRangeStart = 9;
-const DefaultUpdateRangeEnd = 14;
+const DefaultUpdateRangeEnd = 12;
 
-const TransitionShortHydrationLane: Lane = /*           */ 0b0000000000000000100000000000000;
-const TransitionShortLanes: Lanes = /*                  */ 0b0000000000011111100000000000000;
-const TransitionShortUpdateRangeStart = 15;
-const TransitionShortUpdateRangeEnd = 20;
+const TransitionShortHydrationLane: Lane = /*           */ 0b0000000000000000001000000000000;
+const TransitionShortLanes: Lanes = /*                  */ 0b0000000000000011111000000000000;
+const TransitionShortUpdateRangeStart = 13;
+const TransitionShortUpdateRangeEnd = 17;
 
-const TransitionLongHydrationLane: Lane = /*            */ 0b0000000000100000000000000000000;
-const TransitionLongLanes: Lanes = /*                   */ 0b0000011111100000000000000000000;
-const TransitionLongUpdateRangeStart = 21;
-const TransitionLongUpdateRangeEnd = 26;
+const TransitionLongHydrationLane: Lane = /*            */ 0b0000000000000100000000000000000;
+const TransitionLongLanes: Lanes = /*                   */ 0b0000000001111100000000000000000;
+const TransitionLongUpdateRangeStart = 18;
+const TransitionLongUpdateRangeEnd = 22;
 
-export const SelectiveHydrationLane: Lane = /*          */ 0b0000110000000000000000000000000;
+// Includes all updates. Except Idle updates, which have special semantics.
+const UpdateRangeEnd = TransitionLongUpdateRangeEnd;
+
+const RetryLanes: Lanes = /*                            */ 0b0000011110000000000000000000000;
+const RetryRangeStart = 22;
+const RetryRangeEnd = 26;
+
+export const SelectiveHydrationLane: Lane = /*          */ 0b0000100000000000000000000000000;
 const SelectiveHydrationRangeEnd = 27;
 
-// Includes all non-Idle updates
-const UpdateRangeEnd = 27;
 const NonIdleLanes = /*                                 */ 0b0000111111111111111111111111111;
 
 export const IdleHydrationLane: Lane = /*               */ 0b0001000000000000000000000000000;
@@ -206,6 +214,12 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
       return transitionLongLanes;
     }
   }
+  const retryLanes = RetryLanes & lanes;
+  if (retryLanes !== NoLanes) {
+    return_highestLanePriority = RetryLanePriority;
+    return_updateRangeEnd = RetryRangeEnd;
+    return retryLanes;
+  }
   if (lanes & SelectiveHydrationLane) {
     return_highestLanePriority = SelectiveHydrationLanePriority;
     return_updateRangeEnd = SelectiveHydrationRangeEnd;
@@ -275,6 +289,7 @@ export function lanePriorityToSchedulerPriority(
     case TransitionLongHydrationLanePriority:
     case TransitionLongLanePriority:
     case SelectiveHydrationLanePriority:
+    case RetryLanePriority:
       return NormalSchedulerPriority;
     case IdleHydrationLanePriority:
     case IdleLanePriority:
@@ -537,6 +552,9 @@ export function findUpdateLane(
     case TransitionLongLanePriority:
       // Should be handled by findTransitionLane instead
       break;
+    case RetryLanePriority:
+      // Should be handled by findRetryLane instead
+      break;
     case IdleLanePriority:
       let lane = findLane(IdleUpdateRangeStart, IdleUpdateRangeEnd, wipLanes);
       if (lane === NoLane) {
@@ -602,6 +620,19 @@ export function findTransitionLane(
     'Invalid transition priority: %s. This is a bug in React.',
     lanePriority,
   );
+}
+
+// To ensure consistency across multiple updates in the same event, this should
+// be pure function, so that it always returns the same lane for given inputs.
+export function findRetryLane(wipLanes: Lanes): Lane {
+  // This is a fork of `findUpdateLane` designed specifically for Suspense
+  // "retries" — a special update that attempts to flip a Suspense boundary
+  // from its placeholder state to its primary/resolved state.
+  let lane = findLane(RetryRangeStart, RetryRangeEnd, wipLanes);
+  if (lane === NoLane) {
+    lane = pickArbitraryLane(RetryLanes);
+  }
+  return lane;
 }
 
 function findLane(start, end, skipLanes) {
@@ -806,6 +837,11 @@ export function getBumpedLaneForHydration(
       break;
     case TransitionLongHydrationLanePriority:
     case TransitionLongLanePriority:
+      lane = TransitionLongHydrationLane;
+      break;
+    case RetryLanePriority:
+      // Shouldn't be reachable under normal circumstances, so there's no
+      // dedicated lane for retry priority. Use the one for long transitions.
       lane = TransitionLongHydrationLane;
       break;
     case SelectiveHydrationLanePriority:
