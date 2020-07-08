@@ -14,6 +14,7 @@ import {barWidthThreshold} from './constants';
 import {getGradientColor} from './utils';
 import ChartNode from './ChartNode';
 import {SettingsContext} from '../Settings/SettingsContext';
+import {StoreContext} from '../context';
 
 import type {ChartNode as ChartNodeType} from './FlamegraphChartBuilder';
 import type {ItemData} from './CommitFlamegraph';
@@ -39,6 +40,7 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
   const {renderPathNodes, maxSelfDuration, rows} = chartData;
 
   const {lineHeight} = useContext(SettingsContext);
+  const store = useContext(StoreContext);
 
   const handleClick = useCallback(
     (event: SyntheticMouseEvent<*>, id: number, name: string) => {
@@ -83,6 +85,9 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
           treeBaseDuration,
         } = chartNode;
 
+
+        const elementData = store.getElementByID(id);
+
         const nodeOffset = scaleX(offset, width);
         const nodeWidth = scaleX(treeBaseDuration, width);
 
@@ -121,6 +126,8 @@ function CommitFlamegraphListItem({data, index, style}: Props) {
             onMouseEnter={() => handleMouseEnter(chartNode)}
             onMouseLeave={handleMouseLeave}
             textStyle={{color: textColor}}
+            hocDisplayNames={elementData.hocDisplayNames}
+            type={elementData.type}
             width={nodeWidth}
             x={nodeOffset - selectedNodeOffset}
             y={top}

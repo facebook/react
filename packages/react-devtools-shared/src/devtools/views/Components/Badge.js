@@ -15,6 +15,7 @@ import type {ElementType} from 'react-devtools-shared/src/types';
 
 type Props = {|
   className?: string,
+  extraLabelClassName?: string,
   hocDisplayNames: Array<string> | null,
   type: ElementType,
   children: React$Node,
@@ -22,6 +23,7 @@ type Props = {|
 
 export default function Badge({
   className,
+  extraLabelClassName,
   hocDisplayNames,
   type,
   children,
@@ -36,7 +38,9 @@ export default function Badge({
     <Fragment>
       <div className={`${styles.Badge} ${className || ''}`}>{children}</div>
       {totalBadgeCount > 1 && (
-        <div className={styles.ExtraLabel}>+{totalBadgeCount - 1}</div>
+        <div className={`${styles.ExtraLabel} ${extraLabelClassName || ''}`}>
+          +{totalBadgeCount - 1}
+        </div>
       )}
     </Fragment>
   );

@@ -29,3 +29,8 @@
   text-align: left;
   transition: all ease-in-out 250ms;
 }
+
+.ExtraLabel {
+  display: inline-block;
+  color: var(--color-commit-gradient-text);
+}

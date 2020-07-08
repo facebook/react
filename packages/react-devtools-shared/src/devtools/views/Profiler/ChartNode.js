@@ -10,6 +10,7 @@
 import * as React from 'react';
 
 import styles from './ChartNode.css';
+import Badge from '../Components/Badge';
 
 type Props = {|
   color: string,
@@ -32,6 +33,7 @@ const minWidthToDisplay = 35;
 export default function ChartNode({
   color,
   height,
+  hocDisplayNames,
   isDimmed = false,
   label,
   onClick,
@@ -39,6 +41,7 @@ export default function ChartNode({
   onMouseLeave,
   onDoubleClick,
   textStyle,
+  type,
   width,
   x,
   y,
@@ -71,6 +74,13 @@ export default function ChartNode({
           y={0}>
           <div className={styles.Div} style={textStyle}>
             {label}
+          <Badge
+            className={styles.Badge}
+            hocDisplayNames={hocDisplayNames}
+            extraLabelClassName={styles.ExtraLabel}
+            type={type}>
+            {hocDisplayNames !== null ? <span>{hocDisplayNames[0]}</span> : null}
+          </Badge>
           </div>
         </foreignObject>
       )}
