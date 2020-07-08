@@ -2,9 +2,9 @@
   "name": "scheduling-profiler-prototype",
   "version": "0.0.1",
   "scripts": {
-    "build": "parcel build index.html --no-cache",
+    "build": "parcel build --no-cache index.html",
     "prettier": "prettier --write \"**/*.{js,json,css}\"",
-    "start": "parcel index.html --no-cache",
+    "start": "parcel index.html",
     "lint": "eslint \"src/**/*.js\"",
     "test": "jest"
   },
@@ -24,7 +24,7 @@
     "scheduler": "^0.19.1"
   },
   "devDependencies": {
-    "@babel/core": "^7.10.3",
+    "@babel/core": "^7.10.4",
     "@testing-library/jest-dom": "^5.10.1",
     "@testing-library/react": "^10.3.0",
     "babel-eslint": "^10.1.0",
@@ -39,10 +39,10 @@
     "eslint-plugin-jest": "^23.17.1",
     "eslint-plugin-no-for-of-loops": "^1.0.1",
     "eslint-plugin-react": "^7.20.0",
-    "flow-bin": "^0.127.0",
+    "flow-bin": "^0.128.0",
     "identity-obj-proxy": "^3.0.0",
     "jest": "^26.0.1",
-    "parcel": "2.0.0-alpha.3.2",
+    "parcel": "2.0.0-beta.1",
     "postcss-modules": "^2.0.0",
     "prettier": "1.19.1"
   }

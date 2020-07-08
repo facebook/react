@@ -1,5 +1,8 @@
 [ignore]
-./src/graveyard
+<PROJECT_ROOT>/src/graveyard/.*
+<PROJECT_ROOT>/.parcel-cache/.*
+<PROJECT_ROOT>/coverage/.*
+<PROJECT_ROOT>/static/.*\.json
 
 [include]
 
