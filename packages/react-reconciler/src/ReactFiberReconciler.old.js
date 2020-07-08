@@ -268,7 +268,7 @@ export function updateContainer(
   const lane = requestUpdateLane(current, suspenseConfig);
 
   if (enableSchedulingProfiler) {
-    markRenderScheduled(current, lane);
+    markRenderScheduled(lane);
   }
 
   const context = getContextForSubtree(parentComponent);

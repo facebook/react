@@ -150,7 +150,7 @@ export function markRenderStopped(): void {
   }
 }
 
-export function markRenderScheduled(fiber: Fiber, lane: Lane): void {
+export function markRenderScheduled(lane: Lane): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       performance.mark(`--schedule-render-${formatLanes(lane)}`);
