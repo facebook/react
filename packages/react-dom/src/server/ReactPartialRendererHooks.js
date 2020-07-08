@@ -212,6 +212,7 @@ export function resetHooksState(): void {
     isInHookUserCodeInDev = false;
   }
 
+  currentlyRenderingComponent = null;
   didScheduleRenderPhaseUpdate = false;
   firstWorkInProgressHook = null;
   numberOfReRenders = 0;
