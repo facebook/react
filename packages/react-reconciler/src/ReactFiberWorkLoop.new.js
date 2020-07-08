@@ -2220,7 +2220,7 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
         commitDetachRef(current);
       }
       if (enableScopeAPI) {
-        // This is a temporary solution that allows us to transition away
+        // TODO: This is a temporary solution that allows us to transition away
         // from React Flare on www.
         if (nextEffect.tag === ScopeComponent) {
           commitAttachRef(nextEffect);
@@ -2297,7 +2297,7 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
     }
 
     if (enableScopeAPI) {
-      // This is a temporary solution that allows us to transition away
+      // TODO: This is a temporary solution that allows us to transition away
       // from React Flare on www.
       if (effectTag & Ref && nextEffect.tag !== ScopeComponent) {
         commitAttachRef(nextEffect);
