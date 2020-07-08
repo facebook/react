@@ -31,7 +31,7 @@ import {
   MARKER_TICK_HEIGHT,
   REACT_GUTTER_SIZE,
   REACT_WORK_SIZE,
-  REACT_PRIORITY_BORDER_SIZE,
+  REACT_WORK_BORDER_SIZE,
   FLAMECHART_FONT_SIZE,
   FLAMECHART_FRAME_HEIGHT,
   FLAMECHART_TEXT_PADDING,
@@ -146,10 +146,10 @@ function renderReactEventRow(
       canvasStartY +
         EVENT_ROW_HEIGHT_FIXED -
         offsetY -
-        REACT_PRIORITY_BORDER_SIZE,
+        REACT_WORK_BORDER_SIZE,
     ),
     canvasWidth,
-    REACT_PRIORITY_BORDER_SIZE,
+    REACT_WORK_BORDER_SIZE,
   );
 
   return canvasStartY + EVENT_ROW_HEIGHT_FIXED;
@@ -287,9 +287,9 @@ function renderReactMeasures(
     context.fillStyle = COLORS.PRIORITY_BORDER;
     context.fillRect(
       0,
-      Math.floor(laneMinY - offsetY - REACT_PRIORITY_BORDER_SIZE),
+      Math.floor(laneMinY - offsetY - REACT_WORK_BORDER_SIZE),
       canvasWidth,
-      REACT_PRIORITY_BORDER_SIZE,
+      REACT_WORK_BORDER_SIZE,
     );
   });
 
@@ -427,8 +427,8 @@ function renderFlamechart(
       context.fillRect(
         x,
         layerY,
-        Math.floor(width - REACT_PRIORITY_BORDER_SIZE),
-        Math.floor(FLAMECHART_FRAME_HEIGHT - REACT_PRIORITY_BORDER_SIZE),
+        Math.floor(width - REACT_WORK_BORDER_SIZE),
+        Math.floor(FLAMECHART_FRAME_HEIGHT - REACT_WORK_BORDER_SIZE),
       );
 
       if (width > FLAMECHART_TEXT_PADDING * 2) {
@@ -461,7 +461,7 @@ function renderAxisMarkers(
   context.fillRect(0, 0, canvasWidth, HEADER_HEIGHT_FIXED);
 
   context.fillStyle = COLORS.PRIORITY_BORDER;
-  context.fillRect(0, MARKER_HEIGHT, canvasWidth, REACT_PRIORITY_BORDER_SIZE);
+  context.fillRect(0, MARKER_HEIGHT, canvasWidth, REACT_WORK_BORDER_SIZE);
 
   // Charting data renders within this region of pixels as "scrollable" content.
   // Time markers (top) and priority labels (left) are fixed content.
@@ -487,7 +487,7 @@ function renderAxisMarkers(
       context.fillRect(
         x,
         MARKER_HEIGHT - MARKER_TICK_HEIGHT,
-        REACT_PRIORITY_BORDER_SIZE,
+        REACT_WORK_BORDER_SIZE,
         MARKER_TICK_HEIGHT,
       );
 
