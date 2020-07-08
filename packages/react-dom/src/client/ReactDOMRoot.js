@@ -145,7 +145,7 @@ function createRootImpl(
     containerNodeType !== DOCUMENT_FRAGMENT_NODE &&
     containerNodeType !== DOCUMENT_NODE
   ) {
-    ensureListeningTo(container, 'onMouseEnter');
+    ensureListeningTo(container, 'onMouseEnter', null);
   }
 
   if (mutableSources) {

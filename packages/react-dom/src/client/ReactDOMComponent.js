@@ -266,6 +266,7 @@ if (__DEV__) {
 export function ensureListeningTo(
   rootContainerInstance: Element | Node,
   reactPropEvent: string,
+  targetElement: Element | null,
 ): void {
   // If we have a comment node, then use the parent node,
   // which should be an element.
@@ -282,7 +283,11 @@ export function ensureListeningTo(
     'ensureListeningTo(): received a container that was not an element node. ' +
       'This is likely a bug in React.',
   );
-  listenToReactEvent(reactPropEvent, ((rootContainerElement: any): Element));
+  listenToReactEvent(
+    reactPropEvent,
+    ((rootContainerElement: any): Element),
+    targetElement,
+  );
 }
 
 function getOwnerDocumentFromRootContainer(
@@ -364,7 +369,7 @@ function setInitialDOMProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        ensureListeningTo(rootContainerElement, propKey);
+        ensureListeningTo(rootContainerElement, propKey, domElement);
       }
     } else if (nextProp != null) {
       setValueForProperty(domElement, propKey, nextProp, isCustomComponentTag);
@@ -552,7 +557,7 @@ export function setInitialProperties(
       props = ReactDOMInputGetHostProps(domElement, rawProps);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
     case 'option':
       ReactDOMOptionValidateProps(domElement, rawProps);
@@ -563,14 +568,14 @@ export function setInitialProperties(
       props = ReactDOMSelectGetHostProps(domElement, rawProps);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
       props = ReactDOMTextareaGetHostProps(domElement, rawProps);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
     default:
       props = rawProps;
@@ -790,7 +795,7 @@ export function diffProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        ensureListeningTo(rootContainerElement, propKey);
+        ensureListeningTo(rootContainerElement, propKey, domElement);
       }
       if (!updatePayload && lastProp !== nextProp) {
         // This is a special case. If any listener updates we need to ensure
@@ -904,7 +909,7 @@ export function diffHydratedProperties(
       ReactDOMInputInitWrapperState(domElement, rawProps);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
     case 'option':
       ReactDOMOptionValidateProps(domElement, rawProps);
@@ -913,13 +918,13 @@ export function diffHydratedProperties(
       ReactDOMSelectInitWrapperState(domElement, rawProps);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
   }
 
@@ -986,7 +991,7 @@ export function diffHydratedProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        ensureListeningTo(rootContainerElement, propKey);
+        ensureListeningTo(rootContainerElement, propKey, domElement);
       }
     } else if (
       __DEV__ &&

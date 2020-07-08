@@ -19,7 +19,6 @@ import {
   getClosestInstanceFromNode,
   getEventHandlerListeners,
   setEventHandlerListeners,
-  getEventListenerMap,
   getFiberFromScopeInstance,
 } from './ReactDOMComponentTree';
 import {ELEMENT_NODE, COMMENT_NODE} from '../shared/HTMLNodeType';
@@ -87,6 +86,7 @@ function registerEventOnNearestTargetContainer(
   isPassiveListener: boolean | void,
   listenerPriority: EventPriority | void,
   isCapturePhaseListener: boolean,
+  targetElement: Element | null,
 ): void {
   // If it is, find the nearest root or portal and make it
   // our event handle target container.
@@ -101,13 +101,11 @@ function registerEventOnNearestTargetContainer(
   if (targetContainer.nodeType === COMMENT_NODE) {
     targetContainer = ((targetContainer.parentNode: any): Element);
   }
-  const listenerMap = getEventListenerMap(targetContainer);
   listenToNativeEvent(
     topLevelType,
-    targetContainer,
-    listenerMap,
-    PLUGIN_EVENT_SYSTEM,
     isCapturePhaseListener,
+    targetContainer,
+    targetElement,
     isPassiveListener,
     listenerPriority,
   );
@@ -138,6 +136,7 @@ function registerReactDOMEvent(
       isPassiveListener,
       listenerPriority,
       isCapturePhaseListener,
+      targetElement,
     );
   } else if (enableScopeAPI && isReactScope(target)) {
     const scopeTarget = ((target: any): ReactScopeInstance);
@@ -152,18 +151,20 @@ function registerReactDOMEvent(
       isPassiveListener,
       listenerPriority,
       isCapturePhaseListener,
+      null,
     );
   } else if (isValidEventTarget(target)) {
     const eventTarget = ((target: any): EventTarget);
-    const listenerMap = getEventListenerMap(eventTarget);
+    // These are valid event targets, but they are also
+    // non-managed React nodes.
     listenToNativeEvent(
       topLevelType,
-      eventTarget,
-      listenerMap,
-      PLUGIN_EVENT_SYSTEM | IS_EVENT_HANDLE_NON_MANAGED_NODE,
       isCapturePhaseListener,
+      eventTarget,
+      null,
       isPassiveListener,
       listenerPriority,
+      PLUGIN_EVENT_SYSTEM | IS_EVENT_HANDLE_NON_MANAGED_NODE,
     );
   } else {
     invariant(
