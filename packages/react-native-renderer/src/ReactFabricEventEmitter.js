@@ -7,19 +7,19 @@
  * @flow
  */
 
-import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
+import type {AnyNativeEvent} from './legacy-events/PluginModuleType';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {LegacyPluginModule} from 'legacy-events/PluginModuleType';
-import type {ReactSyntheticEvent} from 'legacy-events/ReactSyntheticEventType';
-import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
+import type {LegacyPluginModule} from './legacy-events/PluginModuleType';
+import type {ReactSyntheticEvent} from './legacy-events/ReactSyntheticEventType';
+import type {TopLevelType} from './legacy-events/TopLevelEventTypes';
 
-import {registrationNameModules} from 'legacy-events/EventPluginRegistry';
-import {batchedUpdates} from 'legacy-events/ReactGenericBatching';
-import accumulateInto from 'legacy-events/accumulateInto';
+import {registrationNameModules} from './legacy-events/EventPluginRegistry';
+import {batchedUpdates} from './legacy-events/ReactGenericBatching';
+import accumulateInto from './legacy-events/accumulateInto';
 
-import {plugins} from 'legacy-events/EventPluginRegistry';
+import {plugins} from './legacy-events/EventPluginRegistry';
 import getListener from './ReactNativeGetListener';
-import {runEventsInBatch} from 'legacy-events/EventBatching';
+import {runEventsInBatch} from './legacy-events/EventBatching';
 
 export {getListener, registrationNameModules as registrationNames};
 

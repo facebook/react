@@ -12,7 +12,7 @@ import {
   PASSIVE_NOT_SUPPORTED,
   RESPONDER_EVENT_SYSTEM,
 } from './EventSystemFlags';
-import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
+import type {AnyNativeEvent} from '../events/PluginModuleType';
 import {
   HostComponent,
   ScopeComponent,
@@ -25,7 +25,7 @@ import type {
   ReactDOMResponderContext,
   ReactDOMResponderEvent,
 } from '../shared/ReactDOMTypes';
-import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
+import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
 import {
   batchedEventUpdates,
   discreteUpdates,
@@ -33,10 +33,7 @@ import {
   executeUserEventHandler,
 } from './ReactDOMUpdateBatching';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import {
-  enableDeprecatedFlareAPI,
-  enableNewReconciler,
-} from 'shared/ReactFeatureFlags';
+import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
@@ -285,9 +282,7 @@ function doesFiberHaveResponder(
 ): boolean {
   const tag = fiber.tag;
   if (tag === HostComponent || tag === ScopeComponent) {
-    const dependencies = enableNewReconciler
-      ? fiber.dependencies_new
-      : fiber.dependencies_old;
+    const dependencies = fiber.dependencies;
     if (dependencies !== null) {
       const respondersMap = dependencies.responders;
       if (respondersMap !== null && respondersMap.has(responder)) {
@@ -386,10 +381,8 @@ function traverseAndHandleEventResponderInstances(
   let node = targetFiber;
   let insidePortal = false;
   while (node !== null) {
-    const {tag} = node;
-    const dependencies = enableNewReconciler
-      ? node.dependencies_new
-      : node.dependencies_old;
+    const tag = node.tag;
+    const dependencies = node.dependencies;
     if (tag === HostPortal) {
       insidePortal = true;
     } else if (

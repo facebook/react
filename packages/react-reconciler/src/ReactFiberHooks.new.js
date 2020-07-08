@@ -30,11 +30,16 @@ import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {
   NoLane,
   NoLanes,
+  InputContinuousLanePriority,
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
   markRootEntangled,
   markRootMutableRead,
+  getCurrentUpdateLanePriority,
+  setCurrentUpdateLanePriority,
+  higherLanePriority,
+  DefaultLanePriority,
 } from './ReactFiberLane';
 import {readContext} from './ReactFiberNewContext.new';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.new';
@@ -925,7 +930,7 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
     }
     return snapshot;
   } else {
-    // This handles the special case of a mutable source being shared beween renderers.
+    // This handles the special case of a mutable source being shared between renderers.
     // In that case, if the source is mutated between the first and second renderer,
     // The second renderer don't know that it needs to reset the WIP version during unwind,
     // (because the hook only marks sources as dirty if it's written to their WIP version).
@@ -1072,7 +1077,7 @@ function useMutableSource<Source, Snapshot>(
   // It's possible that the underlying source was mutated between the when the last "change" event fired,
   // and when the current render (with the new getSnapshot function) is processed.
   //
-  // In both cases, we need to throw away pending udpates (since they are no longer relevant)
+  // In both cases, we need to throw away pending updates (since they are no longer relevant)
   // and treat reading from the source as we do in the mount case.
   if (
     !is(prevGetSnapshot, getSnapshot) ||
@@ -1498,12 +1503,20 @@ function rerenderDeferredValue<T>(
 
 function startTransition(setPending, config, callback) {
   const priorityLevel = getCurrentPriorityLevel();
+  const previousLanePriority = getCurrentUpdateLanePriority();
+  setCurrentUpdateLanePriority(
+    higherLanePriority(previousLanePriority, InputContinuousLanePriority),
+  );
   runWithPriority(
     priorityLevel < UserBlockingPriority ? UserBlockingPriority : priorityLevel,
     () => {
       setPending(true);
     },
   );
+
+  // If there's no SuspenseConfig set, we'll use the DefaultLanePriority for this transition.
+  setCurrentUpdateLanePriority(DefaultLanePriority);
+
   runWithPriority(
     priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
     () => {
@@ -1513,6 +1526,7 @@ function startTransition(setPending, config, callback) {
         setPending(false);
         callback();
       } finally {
+        setCurrentUpdateLanePriority(previousLanePriority);
         ReactCurrentBatchConfig.suspense = previousConfig;
       }
     },

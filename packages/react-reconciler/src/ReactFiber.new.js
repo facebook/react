@@ -138,7 +138,7 @@ function FiberNode(
   this.memoizedProps = null;
   this.updateQueue = null;
   this.memoizedState = null;
-  this.dependencies_new = null;
+  this.dependencies = null;
 
   this.mode = mode;
 
@@ -313,8 +313,8 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
 
   // Clone the dependencies object. This is mutated during the render phase, so
   // it cannot be shared with the current fiber.
-  const currentDependencies = current.dependencies_new;
-  workInProgress.dependencies_new =
+  const currentDependencies = current.dependencies;
+  workInProgress.dependencies =
     currentDependencies === null
       ? null
       : {
@@ -385,7 +385,7 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
     workInProgress.memoizedState = null;
     workInProgress.updateQueue = null;
 
-    workInProgress.dependencies_new = null;
+    workInProgress.dependencies = null;
 
     workInProgress.stateNode = null;
 
@@ -409,8 +409,8 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
 
     // Clone the dependencies object. This is mutated during the render phase, so
     // it cannot be shared with the current fiber.
-    const currentDependencies = current.dependencies_new;
-    workInProgress.dependencies_new =
+    const currentDependencies = current.dependencies;
+    workInProgress.dependencies =
       currentDependencies === null
         ? null
         : {
@@ -823,7 +823,7 @@ export function assignFiberPropertiesInDEV(
   target.memoizedProps = source.memoizedProps;
   target.updateQueue = source.updateQueue;
   target.memoizedState = source.memoizedState;
-  target.dependencies_new = source.dependencies_new;
+  target.dependencies = source.dependencies;
   target.mode = source.mode;
   target.effectTag = source.effectTag;
   target.nextEffect = source.nextEffect;

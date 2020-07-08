@@ -21,11 +21,12 @@ export const {
   disableSchedulerTimeoutBasedOnReactExpirationTime,
   warnAboutSpreadingKeyToJSX,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableModernEventSystem,
   enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport,
-  enableDebugTracing,
   deferRenderPhaseUpdateToNextBatch,
+  decoupleUpdatePriorityFromScheduler,
+  enableDebugTracing,
+  enableSchedulingProfiler,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.

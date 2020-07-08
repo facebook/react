@@ -307,7 +307,7 @@ export default function(babel, opts = {}) {
     if (typeof require === 'function' && !opts.emitFullSignatures) {
       // Prefer to hash when we can (e.g. outside of ASTExplorer).
       // This makes it deterministically compact, even if there's
-      // e.g. a useState ininitalizer with some code inside.
+      // e.g. a useState initializer with some code inside.
       // We also need it for www that has transforms like cx()
       // that don't understand if something is part of a string.
       finalKey = require('crypto')
@@ -537,7 +537,7 @@ export default function(babel, opts = {}) {
 
           // Unlike with $RefreshReg$, this needs to work for nested
           // declarations too. So we need to search for a path where
-          // we can insert a statement rather than hardcoding it.
+          // we can insert a statement rather than hard coding it.
           let insertAfterPath = null;
           path.find(p => {
             if (p.parentPath.isBlock()) {

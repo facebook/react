@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {Lane} from './ReactFiberLane';
 import {SuspenseComponent, SuspenseListComponent} from './ReactWorkTags';
 import {NoEffect, DidCapture} from './ReactSideEffectTags';
 import {
@@ -29,15 +29,10 @@ export type SuspenseState = {|
   // here to indicate that it is dehydrated (flag) and for quick access
   // to check things like isSuspenseInstancePending.
   dehydrated: null | SuspenseInstance,
-  // Represents the work that was deprioritized when we committed the fallback.
-  // The work outside the boundary already committed at this level, so we cannot
-  // unhide the content without including it.
-  baseTime: ExpirationTime,
-  // Represents the earliest expiration time we should attempt to hydrate
-  // a dehydrated boundary at.
-  // Never is the default for dehydrated boundaries.
-  // NoWork is the default for normal boundaries, which turns into "normal" pri.
-  retryTime: ExpirationTime,
+  // Represents the lane we should attempt to hydrate a dehydrated boundary at.
+  // OffscreenLane is the default for dehydrated boundaries.
+  // NoLane is the default for normal boundaries, which turns into "normal" pri.
+  retryLane: Lane,
 |};
 
 export type SuspenseListTailMode = 'collapsed' | 'hidden' | void;

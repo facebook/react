@@ -18,7 +18,7 @@ let prevInfo;
 let prevWarn;
 let prevError;
 let prevGroup;
-let prevgGoupCollapsed;
+let prevGroupCollapsed;
 let prevGroupEnd;
 
 function disabledLog() {}
@@ -33,10 +33,25 @@ export function disableLogs(): void {
       prevWarn = console.warn;
       prevError = console.error;
       prevGroup = console.group;
-      prevgGoupCollapsed = console.groupCollapsed;
+      prevGroupCollapsed = console.groupCollapsed;
       prevGroupEnd = console.groupEnd;
+      // https://github.com/facebook/react/issues/19099
+      const props = {
+        configurable: true,
+        enumerable: true,
+        value: disabledLog,
+        writable: true,
+      };
       // $FlowFixMe Flow thinks console is immutable.
-      console.log = console.info = console.warn = console.error = console.group = console.groupCollapsed = console.groupEnd = disabledLog;
+      Object.defineProperties(console, {
+        info: props,
+        log: props,
+        warn: props,
+        error: props,
+        group: props,
+        groupCollapsed: props,
+        groupEnd: props,
+      });
       /* eslint-enable react-internal/no-production-logging */
     }
     disabledDepth++;
@@ -48,20 +63,21 @@ export function reenableLogs(): void {
     disabledDepth--;
     if (disabledDepth === 0) {
       /* eslint-disable react-internal/no-production-logging */
+      const props = {
+        configurable: true,
+        enumerable: true,
+        writable: true,
+      };
       // $FlowFixMe Flow thinks console is immutable.
-      console.log = prevLog;
-      // $FlowFixMe Flow thinks console is immutable.
-      console.info = prevInfo;
-      // $FlowFixMe Flow thinks console is immutable.
-      console.warn = prevWarn;
-      // $FlowFixMe Flow thinks console is immutable.
-      console.error = prevError;
-      // $FlowFixMe Flow thinks console is immutable.
-      console.group = prevGroup;
-      // $FlowFixMe Flow thinks console is immutable.
-      console.groupCollapsed = prevgGoupCollapsed;
-      // $FlowFixMe Flow thinks console is immutable.
-      console.groupEnd = prevGroupEnd;
+      Object.defineProperties(console, {
+        log: {...props, value: prevLog},
+        info: {...props, value: prevInfo},
+        warn: {...props, value: prevWarn},
+        error: {...props, value: prevError},
+        group: {...props, value: prevGroup},
+        groupCollapsed: {...props, value: prevGroupCollapsed},
+        groupEnd: {...props, value: prevGroupEnd},
+      });
       /* eslint-enable react-internal/no-production-logging */
     }
     if (disabledDepth < 0) {

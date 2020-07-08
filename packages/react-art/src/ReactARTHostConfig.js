@@ -323,10 +323,6 @@ export function resetTextContent(domElement) {
   // Noop
 }
 
-export function shouldDeprioritizeSubtree(type, props) {
-  return false;
-}
-
 export function getRootHostContext() {
   return NO_CONTEXT;
 }
@@ -471,10 +467,6 @@ export function unmountFundamentalComponent(fundamentalInstance) {
 
 export function getInstanceFromNode(node) {
   throw new Error('Not yet implemented.');
-}
-
-export function removeInstanceEventHandles(instance) {
-  // noop
 }
 
 export function isOpaqueHydratingObject(value: mixed): boolean {

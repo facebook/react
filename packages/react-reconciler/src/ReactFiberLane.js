@@ -49,10 +49,10 @@ const InputDiscreteHydrationLanePriority: LanePriority = 14;
 export const InputDiscreteLanePriority: LanePriority = 13;
 
 const InputContinuousHydrationLanePriority: LanePriority = 12;
-const InputContinuousLanePriority: LanePriority = 11;
+export const InputContinuousLanePriority: LanePriority = 11;
 
 const DefaultHydrationLanePriority: LanePriority = 10;
-const DefaultLanePriority: LanePriority = 9;
+export const DefaultLanePriority: LanePriority = 9;
 
 const TransitionShortHydrationLanePriority: LanePriority = 8;
 export const TransitionShortLanePriority: LanePriority = 7;
@@ -119,6 +119,16 @@ const IdleUpdateRangeEnd = 30;
 export const OffscreenLane: Lane = /*                   */ 0b1000000000000000000000000000000;
 
 export const NoTimestamp = -1;
+
+let currentUpdateLanePriority: LanePriority = NoLanePriority;
+
+export function getCurrentUpdateLanePriority(): LanePriority {
+  return currentUpdateLanePriority;
+}
+
+export function setCurrentUpdateLanePriority(newLanePriority: LanePriority) {
+  currentUpdateLanePriority = newLanePriority;
+}
 
 // "Registers" used to "return" multiple values
 // Used by getHighestPriorityLanes and getNextLanes:
@@ -651,6 +661,13 @@ export function higherPriorityLane(a: Lane, b: Lane) {
   return a !== NoLane && a < b ? a : b;
 }
 
+export function higherLanePriority(
+  a: LanePriority,
+  b: LanePriority,
+): LanePriority {
+  return a !== NoLanePriority && a > b ? a : b;
+}
+
 export function createLaneMap<T>(initial: T): LaneMap<T> {
   return new Array(TotalLanes).fill(initial);
 }
@@ -737,7 +754,7 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
     const lane = 1 << index;
 
     // Clear the expiration time
-    expirationTimes[index] = -1;
+    expirationTimes[index] = NoTimestamp;
 
     lanes &= ~lane;
   }

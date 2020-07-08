@@ -214,7 +214,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         ? computeText((newProps.children: any) + '', instance.context)
         : null,
       prop: newProps.prop,
-      hidden: newProps.hidden === true,
+      hidden: !!newProps.hidden,
       context: instance.context,
     };
     Object.defineProperty(clone, 'id', {
@@ -283,7 +283,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           ? computeText((props.children: any) + '', hostContext)
           : null,
         prop: props.prop,
-        hidden: props.hidden === true,
+        hidden: !!props.hidden,
         context: hostContext,
       };
       // Hide from unit tests
@@ -334,10 +334,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     shouldSetTextContent,
-
-    shouldDeprioritizeSubtree(type: string, props: Props): boolean {
-      return !!props.hidden;
-    },
 
     createTextInstance(
       text: string,
@@ -442,10 +438,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       throw new Error('Not yet implemented.');
     },
 
-    removeInstanceEventHandles(instance: any): void {
-      // NO-OP
-    },
-
     beforeActiveInstanceBlur() {
       // NO-OP
     },
@@ -459,8 +451,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     prepareScopeUpdate() {},
-
-    removeScopeEventHandles() {},
 
     getInstanceFromScope() {
       throw new Error('Not yet implemented.');
@@ -490,7 +480,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
           }
           hostUpdateCounter++;
           instance.prop = newProps.prop;
-          instance.hidden = newProps.hidden === true;
+          instance.hidden = !!newProps.hidden;
           if (shouldSetTextContent(type, newProps)) {
             instance.text = computeText(
               (newProps.children: any) + '',
@@ -957,6 +947,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     flushExpired(): Array<mixed> {
       return Scheduler.unstable_flushExpired();
     },
+
+    unstable_runWithPriority: NoopRenderer.runWithPriority,
 
     batchedUpdates: NoopRenderer.batchedUpdates,
 

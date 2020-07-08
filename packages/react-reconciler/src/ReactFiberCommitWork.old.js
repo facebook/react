@@ -17,12 +17,13 @@ import type {
 } from './ReactFiberHostConfig';
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {Lanes} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
+import type {OffscreenState} from './ReactFiberOffscreenComponent';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {
@@ -34,7 +35,6 @@ import {
   enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
-  enableCreateEventHandleAPI,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -54,6 +54,8 @@ import {
   FundamentalComponent,
   ScopeComponent,
   Block,
+  OffscreenComponent,
+  LegacyHiddenComponent,
 } from './ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -106,10 +108,8 @@ import {
   updateFundamentalComponent,
   commitHydratedContainer,
   commitHydratedSuspenseInstance,
-  removeInstanceEventHandles,
   clearContainer,
   prepareScopeUpdate,
-  removeScopeEventHandles,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -460,7 +460,7 @@ function commitLifeCycles(
   finishedRoot: FiberRoot,
   current: Fiber | null,
   finishedWork: Fiber,
-  committedExpirationTime: ExpirationTime,
+  committedLanes: Lanes,
 ): void {
   switch (finishedWork.tag) {
     case FunctionComponent:
@@ -761,6 +761,8 @@ function commitLifeCycles(
     case IncompleteClassComponent:
     case FundamentalComponent:
     case ScopeComponent:
+    case OffscreenComponent:
+    case LegacyHiddenComponent:
       return;
   }
   invariant(
@@ -791,16 +793,13 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
           unhideTextInstance(instance, node.memoizedProps);
         }
       } else if (
-        node.tag === SuspenseComponent &&
-        node.memoizedState !== null &&
-        node.memoizedState.dehydrated === null
+        (node.tag === OffscreenComponent ||
+          node.tag === LegacyHiddenComponent) &&
+        (node.memoizedState: OffscreenState) !== null &&
+        node !== finishedWork
       ) {
-        // Found a nested Suspense component that timed out. Skip over the
-        // primary child fragment, which should remain hidden.
-        const fallbackChildFragment: Fiber = (node.child: any).sibling;
-        fallbackChildFragment.return = node;
-        node = fallbackChildFragment;
-        continue;
+        // Found a nested Offscreen component that is hidden. Don't search
+        // any deeper. This tree should remain hidden.
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -926,9 +925,6 @@ function commitUnmount(
       if (enableDeprecatedFlareAPI) {
         unmountDeprecatedResponderListeners(current);
       }
-      if (enableCreateEventHandleAPI && current.ref !== null) {
-        removeInstanceEventHandles(current.stateNode);
-      }
       safelyDetachRef(current);
       return;
     }
@@ -969,10 +965,6 @@ function commitUnmount(
       if (enableScopeAPI) {
         if (enableDeprecatedFlareAPI) {
           unmountDeprecatedResponderListeners(current);
-        }
-        const scopeInstance = current.stateNode;
-        if (enableCreateEventHandleAPI && current.ref !== null) {
-          removeScopeEventHandles(scopeInstance);
         }
         safelyDetachRef(current);
       }
@@ -1032,7 +1024,7 @@ function detachFiberMutation(fiber: Fiber) {
   // field after effects, see: detachFiberAfterEffects.
   fiber.alternate = null;
   fiber.child = null;
-  fiber.dependencies_old = null;
+  fiber.dependencies = null;
   fiber.firstEffect = null;
   fiber.lastEffect = null;
   fiber.memoizedProps = null;
@@ -1501,6 +1493,10 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
         }
         break;
       }
+      case OffscreenComponent:
+      case LegacyHiddenComponent: {
+        return;
+      }
     }
 
     commitContainer(finishedWork);
@@ -1637,6 +1633,13 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       }
       break;
     }
+    case OffscreenComponent:
+    case LegacyHiddenComponent: {
+      const newState: OffscreenState | null = finishedWork.memoizedState;
+      const isHidden = newState !== null;
+      hideOrUnhideAllChildren(finishedWork, isHidden);
+      return;
+    }
   }
   invariant(
     false,
@@ -1648,18 +1651,22 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
 function commitSuspenseComponent(finishedWork: Fiber) {
   const newState: SuspenseState | null = finishedWork.memoizedState;
 
-  let newDidTimeout;
-  let primaryChildParent = finishedWork;
-  if (newState === null) {
-    newDidTimeout = false;
-  } else {
-    newDidTimeout = true;
-    primaryChildParent = finishedWork.child;
+  if (newState !== null) {
     markCommitTimeOfFallback();
-  }
 
-  if (supportsMutation && primaryChildParent !== null) {
-    hideOrUnhideAllChildren(primaryChildParent, newDidTimeout);
+    if (supportsMutation) {
+      // Hide the Offscreen component that contains the primary children. TODO:
+      // Ideally, this effect would have been scheduled on the Offscreen fiber
+      // itself. That's how unhiding works: the Offscreen component schedules an
+      // effect on itself. However, in this case, the component didn't complete,
+      // so the fiber was never added to the effect list in the normal path. We
+      // could have appended it to the effect list in the Suspense component's
+      // second pass, but doing it this way is less complicated. This would be
+      // simpler if we got rid of the effect list and traversed the tree, like
+      // we're planning to do.
+      const primaryChildParent: Fiber = (finishedWork.child: any);
+      hideOrUnhideAllChildren(primaryChildParent, true);
+    }
   }
 
   if (enableSuspenseCallback && newState !== null) {

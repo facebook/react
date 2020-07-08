@@ -20,11 +20,8 @@ const [
   getInstanceFromNode,
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
-  injectEventPluginsByName,
-  eventNameDispatchConfigs,
   enqueueStateRestore,
   restoreStateIfNeeded,
-  dispatchEvent,
   /* eslint-enable no-unused-vars */
   flushPassiveEffects,
   IsThisRendererActing,

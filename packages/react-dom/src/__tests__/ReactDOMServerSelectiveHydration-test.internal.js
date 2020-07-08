@@ -349,7 +349,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
   // @gate experimental
   it('hydrates the target boundary synchronously during a click (flare)', async () => {
-    const usePress = require('react-interactions/events/press').usePress;
+    const usePress = require('react-interactions/events/press-legacy').usePress;
 
     function Child({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -415,7 +415,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
   // @gate experimental
   it('hydrates at higher pri if sync did not work first time (flare)', async () => {
-    const usePress = require('react-interactions/events/press').usePress;
+    const usePress = require('react-interactions/events/press-legacy').usePress;
     let suspend = false;
     let resolve;
     const promise = new Promise(resolvePromise => (resolve = resolvePromise));
@@ -476,12 +476,10 @@ describe('ReactDOMServerSelectiveHydration', () => {
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
 
-    // This click target cannot be hydrated yet because it's suspended.
-    const result = dispatchClickEvent(spanD);
+    const target = createEventTarget(spanD);
+    target.virtualclick();
 
     expect(Scheduler).toHaveYielded(['App']);
-
-    expect(result).toBe(true);
 
     // Continuing rendering will render B next.
     expect(Scheduler).toFlushAndYield(['B', 'C']);
@@ -499,7 +497,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
   // @gate experimental
   it('hydrates at higher pri for secondary discrete events (flare)', async () => {
-    const usePress = require('react-interactions/events/press').usePress;
+    const usePress = require('react-interactions/events/press-legacy').usePress;
     let suspend = false;
     let resolve;
     const promise = new Promise(resolvePromise => (resolve = resolvePromise));
@@ -563,9 +561,9 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(Scheduler).toHaveYielded([]);
 
     // This click target cannot be hydrated yet because the first is Suspended.
-    dispatchClickEvent(spanA);
-    dispatchClickEvent(spanC);
-    dispatchClickEvent(spanD);
+    createEventTarget(spanA).virtualclick();
+    createEventTarget(spanC).virtualclick();
+    createEventTarget(spanD).virtualclick();
 
     expect(Scheduler).toHaveYielded(['App']);
 
@@ -885,21 +883,14 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
       // Start rendering. This will force the first boundary to hydrate
       // by scheduling it at one higher pri than Idle.
-      expect(Scheduler).toFlushAndYieldThrough(
-        gate(flags =>
-          flags.new
-            ? // An update was scheduled to force hydrate the boundary, but the
-              // new reconciler will continue rendering at Idle until the next
-              // time React yields. This is fine though because it will switch
-              // to the hydration level when it re-enters the work loop.
-              ['App', 'AA']
-            : // The old reconciler gives Scheduler a `timeout` argument, which
-              // affects the ordering of tasks in the queue. That triggers an
-              // immediate interruption, as opposed to at the end of the current
-              // time slice.
-              ['App', 'A'],
-        ),
-      );
+      expect(Scheduler).toFlushAndYieldThrough([
+        // An update was scheduled to force hydrate the boundary, but React will
+        // continue rendering at Idle until the next time React yields. This is
+        // fine though because it will switch to the hydration level when it
+        // re-enters the work loop.
+        'App',
+        'AA',
+      ]);
 
       // Hover over A which (could) schedule at one higher pri than Idle.
       dispatchMouseHoverEvent(spanA, null);

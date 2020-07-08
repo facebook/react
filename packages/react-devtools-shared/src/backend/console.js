@@ -85,7 +85,7 @@ const consoleSettingsRef = {
   breakOnConsoleErrors: false,
 };
 
-// Patches whitelisted console methods to append component stack for the current fiber.
+// Patches console methods to append component stack for the current fiber.
 // Call unpatch() to remove the injected behavior.
 export function patch({
   appendComponentStack,
@@ -184,7 +184,7 @@ export function patch({
   });
 }
 
-// Removed component stack patch from whitelisted console methods.
+// Removed component stack patch from console methods.
 export function unpatch(): void {
   if (unpatchFn !== null) {
     unpatchFn();

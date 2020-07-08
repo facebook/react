@@ -1774,7 +1774,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
         });
 
-        // effects get fored on exiting act()
+        // effects get forced on exiting act()
         // There were multiple updates, but there should only be a
         // single render
         expect(Scheduler).toHaveYielded(['Count: 0']);

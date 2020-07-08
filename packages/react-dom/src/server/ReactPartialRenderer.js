@@ -60,6 +60,7 @@ import escapeTextForBrowser from './escapeTextForBrowser';
 import {
   prepareToUseHooks,
   finishHooks,
+  resetHooksState,
   Dispatcher,
   currentPartialRenderer,
   setCurrentPartialRenderer,
@@ -114,7 +115,7 @@ if (__DEV__) {
   validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
-    validateUnknownProperties(type, props, /* canUseEventSystem */ false);
+    validateUnknownProperties(type, props, null);
   };
 
   describeStackFrame = function(element): string {
@@ -955,6 +956,7 @@ class ReactDOMServerRenderer {
     } finally {
       ReactCurrentDispatcher.current = prevDispatcher;
       setCurrentPartialRenderer(prevPartialRenderer);
+      resetHooksState();
     }
   }
 

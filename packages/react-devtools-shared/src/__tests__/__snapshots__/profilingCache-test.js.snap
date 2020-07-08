@@ -39,7 +39,7 @@ Object {
     5 => 1,
   },
   "interactionIDs": Array [],
-  "priorityLevel": "Immediate",
+  "priorityLevel": "Normal",
   "timestamp": 16,
 }
 `;
@@ -76,7 +76,7 @@ Object {
     4 => 2,
   },
   "interactionIDs": Array [],
-  "priorityLevel": "Immediate",
+  "priorityLevel": "Normal",
   "timestamp": 15,
 }
 `;
@@ -155,7 +155,7 @@ Object {
     5 => 1,
   },
   "interactionIDs": Array [],
-  "priorityLevel": "Immediate",
+  "priorityLevel": "Normal",
   "timestamp": 12,
 }
 `;
@@ -374,7 +374,7 @@ Object {
             ],
           ],
           "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 12,
         },
         Object {
@@ -829,7 +829,7 @@ Object {
             ],
           ],
           "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 11,
         },
         Object {
@@ -1425,7 +1425,7 @@ Object {
         14 => 1,
       },
       "interactionIDs": Array [],
-      "priorityLevel": "Immediate",
+      "priorityLevel": "Normal",
       "timestamp": 24,
     },
   ],
@@ -1507,7 +1507,7 @@ Object {
       "fiberActualDurations": Map {},
       "fiberSelfDurations": Map {},
       "interactionIDs": Array [],
-      "priorityLevel": "Immediate",
+      "priorityLevel": "Normal",
       "timestamp": 34,
     },
   ],
@@ -1994,7 +1994,7 @@ Object {
             ],
           ],
           "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 24,
         },
       ],
@@ -2073,7 +2073,7 @@ Object {
           "fiberActualDurations": Array [],
           "fiberSelfDurations": Array [],
           "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 34,
         },
       ],
@@ -2188,7 +2188,7 @@ Object {
     3 => 0,
   },
   "interactionIDs": Array [],
-  "priorityLevel": "Immediate",
+  "priorityLevel": "Normal",
   "timestamp": 0,
 }
 `;
@@ -2347,7 +2347,7 @@ Object {
             ],
           ],
           "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 0,
         },
         Object {
@@ -2655,7 +2655,7 @@ Object {
     7 => 0,
   },
   "interactionIDs": Array [],
-  "priorityLevel": "Immediate",
+  "priorityLevel": "Normal",
   "timestamp": 0,
 }
 `;
@@ -3049,7 +3049,7 @@ Object {
             ],
           ],
           "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 0,
         },
         Object {
@@ -3841,7 +3841,7 @@ Object {
           "interactionIDs": Array [
             0,
           ],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 11,
         },
         Object {

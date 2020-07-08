@@ -1,3 +1,14 @@
+## 4.0.6
+* Fix crashes and other bugs related to optional chaining. ([@gaearon](https://github.com/gaearon) in [#19273](https://github.com/facebook/react/pull/19273) and [#19275](https://github.com/facebook/react/pull/19275))
+
+## 4.0.5
+* Fix a crash when the dependency array has an empty element. ([@yeonjuan](https://github.com/yeonjuan) in [#19145](https://github.com/facebook/react/pull/19145))
+* Fix a false positive warning that occurs with optional chaining. ([@fredvollmer](https://github.com/fredvollmer) in [#19061](https://github.com/facebook/react/pull/19061))
+
+## 4.0.4
+* Fix a false positive warning that occurs with optional chaining. ([@fredvollmer](https://github.com/fredvollmer) in [#19061](https://github.com/facebook/react/pull/19061))
+* Support nullish coalescing and optional chaining. ([@yanneves](https://github.com/yanneves) in [#19008](https://github.com/facebook/react/pull/19008))
+
 ## 4.0.3
 * Remove the heuristic that checks all Hooks ending with `Effect` due to too many false positives. ([@gaearon](https://github.com/gaearon) in [#19004](https://github.com/facebook/react/pull/19004))
 

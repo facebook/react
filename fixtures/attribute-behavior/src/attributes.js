@@ -255,7 +255,7 @@ const attributes = [
   {
     name: 'cite',
     tagName: 'blockquote',
-    overrideStringValue: 'http://reactjs.com/',
+    overrideStringValue: 'https://reactjs.com/',
   },
   {name: 'class', read: getAttribute('class')},
   {name: 'classID', tagName: 'object', read: getAttribute('classid')},

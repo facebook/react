@@ -329,10 +329,6 @@ export function resetAfterCommit(containerInfo: Container): void {
   // Noop
 }
 
-export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
-  return false;
-}
-
 export function shouldSetTextContent(type: string, props: Props): boolean {
   // TODO (bvaughn) Revisit this decision.
   // Always returning false simplifies the createInstance() implementation,
@@ -481,10 +477,6 @@ export function cloneFundamentalInstance(fundamentalInstance: any) {
 
 export function getInstanceFromNode(node: any) {
   throw new Error('Not yet implemented.');
-}
-
-export function removeInstanceEventHandles(instance: any) {
-  // noop
 }
 
 export function isOpaqueHydratingObject(value: mixed): boolean {

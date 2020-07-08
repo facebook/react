@@ -45,6 +45,7 @@ export type WorkTagMap = {|
   LazyComponent: WorkTag,
   MemoComponent: WorkTag,
   Mode: WorkTag,
+  OffscreenComponent: WorkTag,
   Profiler: WorkTag,
   SimpleMemoComponent: WorkTag,
   SuspenseComponent: WorkTag,
@@ -189,7 +190,7 @@ export type InspectedElement = {|
   // Does the current renderer support editable function props?
   canEditFunctionProps: boolean,
 
-  // Is this Suspense, and can its value be overriden now?
+  // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
 
   // Can view component source location.

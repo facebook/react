@@ -156,17 +156,8 @@ describe('ReactExpiration', () => {
 
     // Schedule another update.
     ReactNoop.render(<TextClass text="B" />);
-    expect(Scheduler).toFlushAndYield(
-      gate(flags =>
-        flags.new
-          ? // In the new reconciler, both updates are batched
-            ['B [render]', 'B [commit]']
-          : // In the old reconciler, they are flushed separately. That's not
-            // ideal, but for the purposes of this test it's fine since they
-            // didn't happen in the same event,
-            ['A [render]', 'A [commit]', 'B [render]', 'B [commit]'],
-      ),
-    );
+    // Both updates are batched
+    expect(Scheduler).toFlushAndYield(['B [render]', 'B [commit]']);
     expect(ReactNoop.getChildren()).toEqual([span('B')]);
 
     // Now do the same thing again, except this time don't flush any work in
@@ -220,17 +211,8 @@ describe('ReactExpiration', () => {
 
       // Schedule another update.
       ReactNoop.render(<TextClass text="B" />);
-      expect(Scheduler).toFlushAndYield(
-        gate(flags =>
-          flags.new
-            ? // In the new reconciler, both updates are batched
-              ['B [render]', 'B [commit]']
-            : // In the old reconciler, they are flushed separately. That's not
-              // ideal, but for the purposes of this test it's fine since they
-              // didn't happen in the same event,
-              ['A [render]', 'A [commit]', 'B [render]', 'B [commit]'],
-        ),
-      );
+      // Both updates are batched
+      expect(Scheduler).toFlushAndYield(['B [render]', 'B [commit]']);
       expect(ReactNoop.getChildren()).toEqual([span('B')]);
 
       // Now do the same thing again, except this time don't flush any work in
@@ -489,7 +471,6 @@ describe('ReactExpiration', () => {
     expect(root).toMatchRenderedOutput('High pri: 2, Normal pri: 2');
   });
 
-  // @gate new
   it('prevents starvation by sync updates', async () => {
     const {useState} = React;
 
@@ -629,7 +610,6 @@ describe('ReactExpiration', () => {
     expect(root).toMatchRenderedOutput('Sync pri: 2, Idle pri: 2');
   });
 
-  // @gate new
   it('a single update can expire without forcing all other updates to expire', async () => {
     const {useState} = React;
 
@@ -766,7 +746,6 @@ describe('ReactExpiration', () => {
     });
   });
 
-  // @gate new
   it('updates do not expire while they are IO-bound', async () => {
     const {Suspense} = React;
 

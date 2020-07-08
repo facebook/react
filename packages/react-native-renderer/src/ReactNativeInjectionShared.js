@@ -16,11 +16,11 @@
 // Module provided by RN:
 import 'react-native/Libraries/ReactPrivate/ReactNativePrivateInitializeCore';
 
-import ResponderEventPlugin from 'legacy-events/ResponderEventPlugin';
+import ResponderEventPlugin from './legacy-events/ResponderEventPlugin';
 import {
   injectEventPluginOrder,
   injectEventPluginsByName,
-} from 'legacy-events/EventPluginRegistry';
+} from './legacy-events/EventPluginRegistry';
 
 import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
 import ReactNativeEventPluginOrder from './ReactNativeEventPluginOrder';

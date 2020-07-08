@@ -17,7 +17,7 @@
     "cjs/",
     "umd/"
   ],
-  "main": "index.js",
+  "main": "runtime.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",

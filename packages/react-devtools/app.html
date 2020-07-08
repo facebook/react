@@ -145,12 +145,33 @@
       </div>
     </div>
     <script>
+      const fs = require('fs');
+      let options;
+      let useHttps = false;
+
+      try {
+        if (process.env.KEY && process.env.CERT) {
+          options.key = fs.readFileSync(process.env.KEY);
+          options.cert = fs.readFileSync(process.env.CERT);
+          useHttps = true;
+        }
+      } catch (err) {
+        console.error('Failed to process SSL options - ', err);
+        options = undefined;
+      }
+
       const {clipboard} = require("electron");
-      const port = process.env.PORT || 8097;
+      const host = process.env.HOST || 'localhost';
+      const protocol = useHttps ? 'https' : 'http';
+      const port = Number(process.env.PORT || 8097);
       const localIp = require("ip").address();
+      const defaultPort = (port === 443 && useHttps) || (port === 80 && !useHttps);
+      const server = defaultPort ? `${protocol}://${host}` : `${protocol}://${host}:${port}`;
+      const serverIp = defaultPort ? `${protocol}://${localIp}` : `${protocol}://${localIp}:${port}`;
       const $ = document.querySelector.bind(document);
       const $promptDiv = $("#box-content-prompt");
       const $confirmationDiv = $("#box-content-confirmation");
+
       let timeoutID;
 
       function selectAllAndCopy(event) {
@@ -184,12 +205,12 @@
       });
 
       const $localhost = $("#localhost");
-      $localhost.innerText = `<script src="http://localhost:${port}"></` + 'script>';
+      $localhost.innerText = `<script src="${server}"></` + 'script>';
       $localhost.addEventListener('click', selectAllAndCopy);
       $localhost.addEventListener('focus', selectAllAndCopy);
 
       const $byIp = $("#byip");
-      $byIp.innerText = `<script src="http://${localIp}:${port}"></` + 'script>';
+      $byIp.innerText = `<script src="${serverIp}"></` + 'script>';
       $byIp.addEventListener('click', selectAllAndCopy);
       $byIp.addEventListener('focus', selectAllAndCopy);
 
@@ -211,7 +232,7 @@
             element.innerText = status;
           }
         })
-        .startServer(port);
+        .startServer(port, host, options);
     </script>
   </body>
 </html>

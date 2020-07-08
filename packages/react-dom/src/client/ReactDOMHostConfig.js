@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
+import type {TopLevelType} from '../events/TopLevelEventTypes';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   BoundingRect,
@@ -75,16 +75,12 @@ import {
   enableSuspenseServerRenderer,
   enableDeprecatedFlareAPI,
   enableFundamentalAPI,
-  enableModernEventSystem,
   enableCreateEventHandleAPI,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
-import {
-  listenToEvent,
-  clearEventHandleListenersForTarget,
-} from '../events/DOMModernPluginEventSystem';
+import {listenToReactPropEvent} from '../events/DOMModernPluginEventSystem';
 
 export type Type = string;
 export type Props = {
@@ -371,12 +367,6 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   );
 }
 
-export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
-  // This is obnoxiously specific so that nobody uses it, but we can still opt
-  // in via an infra-level userspace abstraction.
-  return props.hidden === 'unstable-do-not-use-legacy-hidden';
-}
-
 export function createTextInstance(
   text: string,
   rootContainerInstance: Container,
@@ -514,15 +504,15 @@ export function insertInContainerBefore(
   }
 }
 
-function createEvent(type: TopLevelType): Event {
+function createEvent(type: TopLevelType, bubbles: boolean): Event {
   const event = document.createEvent('Event');
-  event.initEvent(((type: any): string), false, false);
+  event.initEvent(((type: any): string), bubbles, false);
   return event;
 }
 
 function dispatchBeforeDetachedBlur(target: HTMLElement): void {
   if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
-    const event = createEvent(TOP_BEFORE_BLUR);
+    const event = createEvent(TOP_BEFORE_BLUR, true);
     // Dispatch "beforeblur" directly on the target,
     // so it gets picked up by the event system and
     // can propagate through the React internal tree.
@@ -532,20 +522,12 @@ function dispatchBeforeDetachedBlur(target: HTMLElement): void {
 
 function dispatchAfterDetachedBlur(target: HTMLElement): void {
   if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
-    const event = createEvent(TOP_AFTER_BLUR);
+    const event = createEvent(TOP_AFTER_BLUR, false);
     // So we know what was detached, make the relatedTarget the
     // detached target on the "afterblur" event.
     (event: any).relatedTarget = target;
     // Dispatch the event on the document.
     document.dispatchEvent(event);
-  }
-}
-
-export function removeInstanceEventHandles(
-  instance: Instance | TextInstance | SuspenseInstance,
-) {
-  if (enableCreateEventHandleAPI) {
-    clearEventHandleListenersForTarget(instance);
   }
 }
 
@@ -957,7 +939,7 @@ export function didNotFindHydratableContainerSuspenseInstance(
   parentContainer: Container,
 ) {
   if (__DEV__) {
-    // TODO: warnForInsertedHydratedSupsense(parentContainer);
+    // TODO: warnForInsertedHydratedSuspense(parentContainer);
   }
 }
 
@@ -1129,9 +1111,7 @@ export function makeOpaqueHydratingObject(
 }
 
 export function preparePortalMount(portalInstance: Instance): void {
-  if (enableModernEventSystem) {
-    listenToEvent('onMouseEnter', portalInstance);
-  }
+  listenToReactPropEvent('onMouseEnter', portalInstance);
 }
 
 export function prepareScopeUpdate(
@@ -1140,14 +1120,6 @@ export function prepareScopeUpdate(
 ): void {
   if (enableScopeAPI) {
     precacheFiberNode(internalInstanceHandle, scopeInstance);
-  }
-}
-
-export function removeScopeEventHandles(
-  scopeInstance: ReactScopeInstance,
-): void {
-  if (enableScopeAPI && enableCreateEventHandleAPI) {
-    clearEventHandleListenersForTarget(scopeInstance);
   }
 }
 
