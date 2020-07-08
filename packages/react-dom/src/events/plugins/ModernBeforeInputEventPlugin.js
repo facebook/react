@@ -5,10 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
+import type {TopLevelType} from '../../events/TopLevelEventTypes';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
+import {registerTwoPhaseEvent} from '../EventRegistry';
 import {
   TOP_BLUR,
   TOP_COMPOSITION_START,
@@ -57,63 +58,38 @@ const useFallbackCompositionData =
 const SPACEBAR_CODE = 32;
 const SPACEBAR_CHAR = String.fromCharCode(SPACEBAR_CODE);
 
-// Events and their corresponding property names.
-const eventTypes = {
-  beforeInput: {
-    phasedRegistrationNames: {
-      bubbled: 'onBeforeInput',
-      captured: 'onBeforeInputCapture',
-    },
-    dependencies: [
-      TOP_COMPOSITION_END,
-      TOP_KEY_PRESS,
-      TOP_TEXT_INPUT,
-      TOP_PASTE,
-    ],
-  },
-  compositionEnd: {
-    phasedRegistrationNames: {
-      bubbled: 'onCompositionEnd',
-      captured: 'onCompositionEndCapture',
-    },
-    dependencies: [
-      TOP_BLUR,
-      TOP_COMPOSITION_END,
-      TOP_KEY_DOWN,
-      TOP_KEY_PRESS,
-      TOP_KEY_UP,
-      TOP_MOUSE_DOWN,
-    ],
-  },
-  compositionStart: {
-    phasedRegistrationNames: {
-      bubbled: 'onCompositionStart',
-      captured: 'onCompositionStartCapture',
-    },
-    dependencies: [
-      TOP_BLUR,
-      TOP_COMPOSITION_START,
-      TOP_KEY_DOWN,
-      TOP_KEY_PRESS,
-      TOP_KEY_UP,
-      TOP_MOUSE_DOWN,
-    ],
-  },
-  compositionUpdate: {
-    phasedRegistrationNames: {
-      bubbled: 'onCompositionUpdate',
-      captured: 'onCompositionUpdateCapture',
-    },
-    dependencies: [
-      TOP_BLUR,
-      TOP_COMPOSITION_UPDATE,
-      TOP_KEY_DOWN,
-      TOP_KEY_PRESS,
-      TOP_KEY_UP,
-      TOP_MOUSE_DOWN,
-    ],
-  },
-};
+function registerEvents() {
+  registerTwoPhaseEvent('onBeforeInput', [
+    TOP_COMPOSITION_END,
+    TOP_KEY_PRESS,
+    TOP_TEXT_INPUT,
+    TOP_PASTE,
+  ]);
+  registerTwoPhaseEvent('onCompositionEnd', [
+    TOP_BLUR,
+    TOP_COMPOSITION_END,
+    TOP_KEY_DOWN,
+    TOP_KEY_PRESS,
+    TOP_KEY_UP,
+    TOP_MOUSE_DOWN,
+  ]);
+  registerTwoPhaseEvent('onCompositionStart', [
+    TOP_BLUR,
+    TOP_COMPOSITION_START,
+    TOP_KEY_DOWN,
+    TOP_KEY_PRESS,
+    TOP_KEY_UP,
+    TOP_MOUSE_DOWN,
+  ]);
+  registerTwoPhaseEvent('onCompositionUpdate', [
+    TOP_BLUR,
+    TOP_COMPOSITION_UPDATE,
+    TOP_KEY_DOWN,
+    TOP_KEY_PRESS,
+    TOP_KEY_UP,
+    TOP_MOUSE_DOWN,
+  ]);
+}
 
 // Track whether we've ever handled a keypress on the space key.
 let hasSpaceKeypress = false;
@@ -140,11 +116,11 @@ function isKeypressCommand(nativeEvent) {
 function getCompositionEventType(topLevelType) {
   switch (topLevelType) {
     case TOP_COMPOSITION_START:
-      return eventTypes.compositionStart;
+      return 'onCompositionStart';
     case TOP_COMPOSITION_END:
-      return eventTypes.compositionEnd;
+      return 'onCompositionEnd';
     case TOP_COMPOSITION_UPDATE:
-      return eventTypes.compositionUpdate;
+      return 'onCompositionUpdate';
   }
 }
 
@@ -237,10 +213,10 @@ function extractCompositionEvent(
     eventType = getCompositionEventType(topLevelType);
   } else if (!isComposing) {
     if (isFallbackCompositionStart(topLevelType, nativeEvent)) {
-      eventType = eventTypes.compositionStart;
+      eventType = 'onCompositionStart';
     }
   } else if (isFallbackCompositionEnd(topLevelType, nativeEvent)) {
-    eventType = eventTypes.compositionEnd;
+    eventType = 'onCompositionEnd';
   }
 
   if (!eventType) {
@@ -250,16 +226,16 @@ function extractCompositionEvent(
   if (useFallbackCompositionData && !isUsingKoreanIME(nativeEvent)) {
     // The current composition is stored statically and must not be
     // overwritten while composition continues.
-    if (!isComposing && eventType === eventTypes.compositionStart) {
+    if (!isComposing && eventType === 'onCompositionStart') {
       isComposing = FallbackCompositionStateInitialize(nativeEventTarget);
-    } else if (eventType === eventTypes.compositionEnd) {
+    } else if (eventType === 'onCompositionEnd') {
       if (isComposing) {
         fallbackData = FallbackCompositionStateGetData();
       }
     }
   }
 
-  const event = SyntheticCompositionEvent.getPooled(
+  const event = new SyntheticCompositionEvent(
     eventType,
     null,
     nativeEvent,
@@ -429,8 +405,8 @@ function extractBeforeInputEvent(
     return null;
   }
 
-  const event = SyntheticInputEvent.getPooled(
-    eventTypes.beforeInput,
+  const event = new SyntheticInputEvent(
+    'onBeforeInput',
     null,
     nativeEvent,
     nativeEventTarget,
@@ -457,33 +433,29 @@ function extractBeforeInputEvent(
  * allowing us to share composition fallback code for both `beforeInput` and
  * `composition` event types.
  */
-const BeforeInputEventPlugin = {
-  eventTypes: eventTypes,
-
-  extractEvents: function(
+function extractEvents(
+  dispatchQueue,
+  topLevelType,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+  eventSystemFlags,
+  targetContainer,
+) {
+  extractCompositionEvent(
     dispatchQueue,
     topLevelType,
     targetInst,
     nativeEvent,
     nativeEventTarget,
-    eventSystemFlags,
-    container,
-  ) {
-    extractCompositionEvent(
-      dispatchQueue,
-      topLevelType,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget,
-    );
-    extractBeforeInputEvent(
-      dispatchQueue,
-      topLevelType,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget,
-    );
-  },
-};
+  );
+  extractBeforeInputEvent(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+  );
+}
 
-export default BeforeInputEventPlugin;
+export {registerEvents, extractEvents};

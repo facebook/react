@@ -9,6 +9,9 @@
 
 'use strict';
 
+// This test is a hot mess. It heavily uses internals and relies on DOM even
+// though the responder plugin is only used in React Native. Sadness ensues.
+// The coverage is valuable though, so we will keep it for now.
 const {HostComponent} = require('react-reconciler/src/ReactWorkTags');
 const {PLUGIN_EVENT_SYSTEM} = require('react-dom/src/events/EventSystemFlags');
 
@@ -404,9 +407,9 @@ describe('ResponderEventPlugin', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    EventBatching = require('legacy-events/EventBatching');
-    EventPluginUtils = require('legacy-events/EventPluginUtils');
-    ResponderEventPlugin = require('legacy-events/ResponderEventPlugin')
+    EventBatching = require('react-native-renderer/src/legacy-events/EventBatching');
+    EventPluginUtils = require('react-native-renderer/src/legacy-events/EventPluginUtils');
+    ResponderEventPlugin = require('react-native-renderer/src/legacy-events/ResponderEventPlugin')
       .default;
 
     deleteAllListeners(GRANDPARENT_INST);
@@ -1377,9 +1380,10 @@ describe('ResponderEventPlugin', () => {
     // ResponderEventPlugin uses `getLowestCommonAncestor`
     const React = require('react');
     const ReactTestUtils = require('react-dom/test-utils');
-    const getLowestCommonAncestor = require('legacy-events/ResponderEventPlugin')
+    const getLowestCommonAncestor = require('react-native-renderer/src/legacy-events/ResponderEventPlugin')
       .getLowestCommonAncestor;
-    const ReactDOMComponentTree = require('../../react-dom/src/client/ReactDOMComponentTree');
+    // This works by accident and will likely break in the future.
+    const ReactDOMComponentTree = require('react-dom/src/client/ReactDOMComponentTree');
 
     class ChildComponent extends React.Component {
       render() {

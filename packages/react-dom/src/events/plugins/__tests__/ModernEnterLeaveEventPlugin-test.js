@@ -11,7 +11,6 @@
 
 let React;
 let ReactDOM;
-let ReactFeatureFlags;
 
 describe('EnterLeaveEventPlugin', () => {
   let container;
@@ -19,8 +18,6 @@ describe('EnterLeaveEventPlugin', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableModernEventSystem = true;
     React = require('react');
     ReactDOM = require('react-dom');
 

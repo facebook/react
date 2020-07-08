@@ -15,32 +15,24 @@ import {
   HostComponent,
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
-import SyntheticEvent from 'legacy-events/SyntheticEvent';
+import SyntheticEvent from '../events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
-import * as DOMTopLevelEventTypes from '../events/DOMTopLevelEventTypes';
 import act from './ReactTestUtilsAct';
-import forEachAccumulated from 'legacy-events/forEachAccumulated';
-import accumulateInto from 'legacy-events/accumulateInto';
-import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
 import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,
 } from 'shared/ReactErrorUtils';
 
-const {findDOMNode} = ReactDOM;
 // Keep in sync with ReactDOM.js, and ReactTestUtilsAct.js:
 const [
   getInstanceFromNode,
   /* eslint-disable no-unused-vars */
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
-  injectEventPluginsByName,
   /* eslint-enable no-unused-vars */
-  eventNameDispatchConfigs,
   enqueueStateRestore,
   restoreStateIfNeeded,
-  dispatchEvent,
   /* eslint-disable no-unused-vars */
   flushPassiveEffects,
   IsThisRendererActing,
@@ -50,7 +42,6 @@ const [
 function Event(suffix) {}
 
 let hasWarnedAboutDeprecatedMockComponent = false;
-let didWarnSimulateNativeDeprecated = false;
 
 /**
  * @class ReactTestUtils
@@ -392,12 +383,6 @@ function executeDispatchesInOrder(event) {
 }
 
 /**
- * Internal queue of events that have accumulated their dispatches and are
- * waiting to have their dispatches executed.
- */
-let eventQueue: ?(Array<ReactSyntheticEvent> | ReactSyntheticEvent) = null;
-
-/**
  * Dispatches an event and releases it back into the pool, unless persistent.
  *
  * @param {?object} event Synthetic event to be dispatched.
@@ -412,36 +397,6 @@ const executeDispatchesAndRelease = function(event: ReactSyntheticEvent) {
     }
   }
 };
-
-const executeDispatchesAndReleaseTopLevel = function(e) {
-  return executeDispatchesAndRelease(e);
-};
-
-function runEventsInBatch(
-  events: Array<ReactSyntheticEvent> | ReactSyntheticEvent | null,
-) {
-  if (events !== null) {
-    eventQueue = accumulateInto(eventQueue, events);
-  }
-
-  // Set `eventQueue` to null before processing it so that we can tell if more
-  // events get enqueued while processing.
-  const processingEventQueue = eventQueue;
-  eventQueue = null;
-
-  if (!processingEventQueue) {
-    return;
-  }
-
-  forEachAccumulated(processingEventQueue, executeDispatchesAndReleaseTopLevel);
-  invariant(
-    !eventQueue,
-    'processEventQueue(): Additional events were enqueued while processing ' +
-      'an event queue. Support for this has not yet been implemented.',
-  );
-  // This would be a good time to rethrow if any of the event handlers threw.
-  rethrowCaughtError();
-}
 
 function isInteractive(tag) {
   return (
@@ -536,21 +491,26 @@ function getListener(inst: Fiber, registrationName: string) {
 }
 
 function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
-  const registrationName =
-    event.dispatchConfig.phasedRegistrationNames[propagationPhase];
+  let registrationName = event._reactName;
+  if (propagationPhase === 'captured') {
+    registrationName += 'Capture';
+  }
   return getListener(inst, registrationName);
 }
 
 function accumulateDispatches(inst, ignoredDirection, event) {
-  if (inst && event && event.dispatchConfig.registrationName) {
-    const registrationName = event.dispatchConfig.registrationName;
+  if (inst && event && event._reactName) {
+    const registrationName = event._reactName;
     const listener = getListener(inst, registrationName);
     if (listener) {
-      event._dispatchListeners = accumulateInto(
-        event._dispatchListeners,
-        listener,
-      );
-      event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+      if (event._dispatchListeners == null) {
+        event._dispatchListeners = [];
+      }
+      if (event._dispatchInstances == null) {
+        event._dispatchInstances = [];
+      }
+      event._dispatchListeners.push(listener);
+      event._dispatchInstances.push(inst);
     }
   }
 }
@@ -563,37 +523,39 @@ function accumulateDirectionalDispatches(inst, phase, event) {
   }
   const listener = listenerAtPhase(inst, event, phase);
   if (listener) {
-    event._dispatchListeners = accumulateInto(
-      event._dispatchListeners,
-      listener,
-    );
-    event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+    if (event._dispatchListeners == null) {
+      event._dispatchListeners = [];
+    }
+    if (event._dispatchInstances == null) {
+      event._dispatchInstances = [];
+    }
+    event._dispatchListeners.push(listener);
+    event._dispatchInstances.push(inst);
   }
 }
 
 function accumulateDirectDispatchesSingle(event) {
-  if (event && event.dispatchConfig.registrationName) {
+  if (event && event._reactName) {
     accumulateDispatches(event._targetInst, null, event);
   }
 }
 
-function accumulateDirectDispatches(events) {
-  forEachAccumulated(events, accumulateDirectDispatchesSingle);
-}
-
 function accumulateTwoPhaseDispatchesSingle(event) {
-  if (event && event.dispatchConfig.phasedRegistrationNames) {
+  if (event && event._reactName) {
     traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
   }
 }
 
-function accumulateTwoPhaseDispatches(events) {
-  forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
-}
 // End of inline
 
 const Simulate = {};
-let SimulateNative;
+
+const directDispatchEventTypes = new Set([
+  'mouseEnter',
+  'mouseLeave',
+  'pointerEnter',
+  'pointerLeave',
+]);
 
 /**
  * Exports:
@@ -617,17 +579,14 @@ function makeSimulator(eventType) {
         'a component instance. Pass the DOM node you wish to simulate the event on instead.',
     );
 
-    const dispatchConfig = eventNameDispatchConfigs[eventType];
-
+    const reactName = 'on' + eventType[0].toUpperCase() + eventType.slice(1);
     const fakeNativeEvent = new Event();
     fakeNativeEvent.target = domNode;
     fakeNativeEvent.type = eventType.toLowerCase();
 
-    // We don't use SyntheticEvent.getPooled in order to not have to worry about
-    // properly destroying any properties assigned from `eventData` upon release
     const targetInst = getInstanceFromNode(domNode);
     const event = new SyntheticEvent(
-      dispatchConfig,
+      reactName,
       targetInst,
       fakeNativeEvent,
       domNode,
@@ -638,199 +597,116 @@ function makeSimulator(eventType) {
     event.persist();
     Object.assign(event, eventData);
 
-    if (dispatchConfig.phasedRegistrationNames) {
-      accumulateTwoPhaseDispatches(event);
+    if (directDispatchEventTypes.has(eventType)) {
+      accumulateDirectDispatchesSingle(event);
     } else {
-      accumulateDirectDispatches(event);
+      accumulateTwoPhaseDispatchesSingle(event);
     }
 
     ReactDOM.unstable_batchedUpdates(function() {
       // Normally extractEvent enqueues a state restore, but we'll just always
       // do that since we're by-passing it here.
       enqueueStateRestore(domNode);
-      runEventsInBatch(event);
+      executeDispatchesAndRelease(event);
+      rethrowCaughtError();
     });
     restoreStateIfNeeded();
   };
 }
 
+// A one-time snapshot with no plans to update. We'll probably want to deprecate Simulate API.
+const simulatedEventTypes = [
+  'blur',
+  'cancel',
+  'click',
+  'close',
+  'contextMenu',
+  'copy',
+  'cut',
+  'auxClick',
+  'doubleClick',
+  'dragEnd',
+  'dragStart',
+  'drop',
+  'focus',
+  'input',
+  'invalid',
+  'keyDown',
+  'keyPress',
+  'keyUp',
+  'mouseDown',
+  'mouseUp',
+  'paste',
+  'pause',
+  'play',
+  'pointerCancel',
+  'pointerDown',
+  'pointerUp',
+  'rateChange',
+  'reset',
+  'seeked',
+  'submit',
+  'touchCancel',
+  'touchEnd',
+  'touchStart',
+  'volumeChange',
+  'drag',
+  'dragEnter',
+  'dragExit',
+  'dragLeave',
+  'dragOver',
+  'mouseMove',
+  'mouseOut',
+  'mouseOver',
+  'pointerMove',
+  'pointerOut',
+  'pointerOver',
+  'scroll',
+  'toggle',
+  'touchMove',
+  'wheel',
+  'abort',
+  'animationEnd',
+  'animationIteration',
+  'animationStart',
+  'canPlay',
+  'canPlayThrough',
+  'durationChange',
+  'emptied',
+  'encrypted',
+  'ended',
+  'error',
+  'gotPointerCapture',
+  'load',
+  'loadedData',
+  'loadedMetadata',
+  'loadStart',
+  'lostPointerCapture',
+  'playing',
+  'progress',
+  'seeking',
+  'stalled',
+  'suspend',
+  'timeUpdate',
+  'transitionEnd',
+  'waiting',
+  'mouseEnter',
+  'mouseLeave',
+  'pointerEnter',
+  'pointerLeave',
+  'change',
+  'select',
+  'beforeInput',
+  'compositionEnd',
+  'compositionStart',
+  'compositionUpdate',
+];
 function buildSimulators() {
-  let eventType;
-  for (eventType in eventNameDispatchConfigs) {
-    /**
-     * @param {!Element|ReactDOMComponent} domComponentOrNode
-     * @param {?object} eventData Fake event data to use in SyntheticEvent.
-     */
+  simulatedEventTypes.forEach(eventType => {
     Simulate[eventType] = makeSimulator(eventType);
-  }
-}
-
-buildSimulators();
-
-if (!enableModernEventSystem) {
-  SimulateNative = {};
-
-  /**
-   * Simulates a top level event being dispatched from a raw event that occurred
-   * on an `Element` node.
-   * @param {number} topLevelType A number from `TopLevelEventTypes`
-   * @param {!Element} node The dom to simulate an event occurring on.
-   * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
-   */
-  const simulateNativeEventOnNode = function(
-    topLevelType,
-    node,
-    fakeNativeEvent,
-  ) {
-    fakeNativeEvent.target = node;
-    const PLUGIN_EVENT_SYSTEM = 1;
-    dispatchEvent(topLevelType, PLUGIN_EVENT_SYSTEM, null, fakeNativeEvent);
-  };
-
-  /**
-   * Simulates a top level event being dispatched from a raw event that occurred
-   * on the `ReactDOMComponent` `comp`.
-   * @param {Object} topLevelType A type from `BrowserEventConstants.topLevelTypes`.
-   * @param {!ReactDOMComponent} comp
-   * @param {?Event} fakeNativeEvent Fake native event to use in SyntheticEvent.
-   */
-  const simulateNativeEventOnDOMComponent = function(
-    topLevelType,
-    comp,
-    fakeNativeEvent,
-  ) {
-    simulateNativeEventOnNode(topLevelType, findDOMNode(comp), fakeNativeEvent);
-  };
-
-  /**
-   * Exports:
-   *
-   * - `SimulateNative.click(Element/ReactDOMComponent)`
-   * - `SimulateNative.mouseMove(Element/ReactDOMComponent)`
-   * - `SimulateNative.mouseIn/ReactDOMComponent)`
-   * - `SimulateNative.mouseOut(Element/ReactDOMComponent)`
-   * - ... (All keys from `BrowserEventConstants.topLevelTypes`)
-   *
-   * Note: Top level event types are a subset of the entire set of handler types
-   * (which include a broader set of "synthetic" events). For example, onDragDone
-   * is a synthetic event. Except when testing an event plugin or React's event
-   * handling code specifically, you probably want to use Simulate
-   * to dispatch synthetic events.
-   */
-
-  const makeNativeSimulator = function(eventType, topLevelType) {
-    return function(domComponentOrNode, nativeEventData) {
-      if (__DEV__) {
-        if (!didWarnSimulateNativeDeprecated) {
-          didWarnSimulateNativeDeprecated = true;
-          console.warn(
-            'ReactTestUtils.SimulateNative is an undocumented API that does not match ' +
-              'how the browser dispatches events, and will be removed in a future major ' +
-              'version of React. If you rely on it for testing, consider attaching the root ' +
-              'DOM container to the document during the test, and then dispatching native browser ' +
-              'events by calling `node.dispatchEvent()` on the DOM nodes. Make sure to set ' +
-              'the `bubbles` flag to `true` when creating the native browser event.',
-          );
-        }
-      }
-
-      const fakeNativeEvent = new Event(eventType);
-      Object.assign(fakeNativeEvent, nativeEventData);
-      if (isDOMComponent(domComponentOrNode)) {
-        simulateNativeEventOnDOMComponent(
-          topLevelType,
-          domComponentOrNode,
-          fakeNativeEvent,
-        );
-      } else if (domComponentOrNode.tagName) {
-        // Will allow on actual dom nodes.
-        simulateNativeEventOnNode(
-          topLevelType,
-          domComponentOrNode,
-          fakeNativeEvent,
-        );
-      }
-    };
-  };
-
-  [
-    [DOMTopLevelEventTypes.TOP_ABORT, 'abort'],
-    [DOMTopLevelEventTypes.TOP_ANIMATION_END, 'animationEnd'],
-    [DOMTopLevelEventTypes.TOP_ANIMATION_ITERATION, 'animationIteration'],
-    [DOMTopLevelEventTypes.TOP_ANIMATION_START, 'animationStart'],
-    [DOMTopLevelEventTypes.TOP_BLUR, 'blur'],
-    [DOMTopLevelEventTypes.TOP_CAN_PLAY_THROUGH, 'canPlayThrough'],
-    [DOMTopLevelEventTypes.TOP_CAN_PLAY, 'canPlay'],
-    [DOMTopLevelEventTypes.TOP_CANCEL, 'cancel'],
-    [DOMTopLevelEventTypes.TOP_CHANGE, 'change'],
-    [DOMTopLevelEventTypes.TOP_CLICK, 'click'],
-    [DOMTopLevelEventTypes.TOP_CLOSE, 'close'],
-    [DOMTopLevelEventTypes.TOP_COMPOSITION_END, 'compositionEnd'],
-    [DOMTopLevelEventTypes.TOP_COMPOSITION_START, 'compositionStart'],
-    [DOMTopLevelEventTypes.TOP_COMPOSITION_UPDATE, 'compositionUpdate'],
-    [DOMTopLevelEventTypes.TOP_CONTEXT_MENU, 'contextMenu'],
-    [DOMTopLevelEventTypes.TOP_COPY, 'copy'],
-    [DOMTopLevelEventTypes.TOP_CUT, 'cut'],
-    [DOMTopLevelEventTypes.TOP_DOUBLE_CLICK, 'doubleClick'],
-    [DOMTopLevelEventTypes.TOP_DRAG_END, 'dragEnd'],
-    [DOMTopLevelEventTypes.TOP_DRAG_ENTER, 'dragEnter'],
-    [DOMTopLevelEventTypes.TOP_DRAG_EXIT, 'dragExit'],
-    [DOMTopLevelEventTypes.TOP_DRAG_LEAVE, 'dragLeave'],
-    [DOMTopLevelEventTypes.TOP_DRAG_OVER, 'dragOver'],
-    [DOMTopLevelEventTypes.TOP_DRAG_START, 'dragStart'],
-    [DOMTopLevelEventTypes.TOP_DRAG, 'drag'],
-    [DOMTopLevelEventTypes.TOP_DROP, 'drop'],
-    [DOMTopLevelEventTypes.TOP_DURATION_CHANGE, 'durationChange'],
-    [DOMTopLevelEventTypes.TOP_EMPTIED, 'emptied'],
-    [DOMTopLevelEventTypes.TOP_ENCRYPTED, 'encrypted'],
-    [DOMTopLevelEventTypes.TOP_ENDED, 'ended'],
-    [DOMTopLevelEventTypes.TOP_ERROR, 'error'],
-    [DOMTopLevelEventTypes.TOP_FOCUS, 'focus'],
-    [DOMTopLevelEventTypes.TOP_INPUT, 'input'],
-    [DOMTopLevelEventTypes.TOP_KEY_DOWN, 'keyDown'],
-    [DOMTopLevelEventTypes.TOP_KEY_PRESS, 'keyPress'],
-    [DOMTopLevelEventTypes.TOP_KEY_UP, 'keyUp'],
-    [DOMTopLevelEventTypes.TOP_LOAD_START, 'loadStart'],
-    [DOMTopLevelEventTypes.TOP_LOAD_START, 'loadStart'],
-    [DOMTopLevelEventTypes.TOP_LOAD, 'load'],
-    [DOMTopLevelEventTypes.TOP_LOADED_DATA, 'loadedData'],
-    [DOMTopLevelEventTypes.TOP_LOADED_METADATA, 'loadedMetadata'],
-    [DOMTopLevelEventTypes.TOP_MOUSE_DOWN, 'mouseDown'],
-    [DOMTopLevelEventTypes.TOP_MOUSE_MOVE, 'mouseMove'],
-    [DOMTopLevelEventTypes.TOP_MOUSE_OUT, 'mouseOut'],
-    [DOMTopLevelEventTypes.TOP_MOUSE_OVER, 'mouseOver'],
-    [DOMTopLevelEventTypes.TOP_MOUSE_UP, 'mouseUp'],
-    [DOMTopLevelEventTypes.TOP_PASTE, 'paste'],
-    [DOMTopLevelEventTypes.TOP_PAUSE, 'pause'],
-    [DOMTopLevelEventTypes.TOP_PLAY, 'play'],
-    [DOMTopLevelEventTypes.TOP_PLAYING, 'playing'],
-    [DOMTopLevelEventTypes.TOP_PROGRESS, 'progress'],
-    [DOMTopLevelEventTypes.TOP_RATE_CHANGE, 'rateChange'],
-    [DOMTopLevelEventTypes.TOP_SCROLL, 'scroll'],
-    [DOMTopLevelEventTypes.TOP_SEEKED, 'seeked'],
-    [DOMTopLevelEventTypes.TOP_SEEKING, 'seeking'],
-    [DOMTopLevelEventTypes.TOP_SELECTION_CHANGE, 'selectionChange'],
-    [DOMTopLevelEventTypes.TOP_STALLED, 'stalled'],
-    [DOMTopLevelEventTypes.TOP_SUSPEND, 'suspend'],
-    [DOMTopLevelEventTypes.TOP_TEXT_INPUT, 'textInput'],
-    [DOMTopLevelEventTypes.TOP_TIME_UPDATE, 'timeUpdate'],
-    [DOMTopLevelEventTypes.TOP_TOGGLE, 'toggle'],
-    [DOMTopLevelEventTypes.TOP_TOUCH_CANCEL, 'touchCancel'],
-    [DOMTopLevelEventTypes.TOP_TOUCH_END, 'touchEnd'],
-    [DOMTopLevelEventTypes.TOP_TOUCH_MOVE, 'touchMove'],
-    [DOMTopLevelEventTypes.TOP_TOUCH_START, 'touchStart'],
-    [DOMTopLevelEventTypes.TOP_TRANSITION_END, 'transitionEnd'],
-    [DOMTopLevelEventTypes.TOP_VOLUME_CHANGE, 'volumeChange'],
-    [DOMTopLevelEventTypes.TOP_WAITING, 'waiting'],
-    [DOMTopLevelEventTypes.TOP_WHEEL, 'wheel'],
-  ].forEach(([topLevelType, eventType]) => {
-    /**
-     * @param {!Element|ReactDOMComponent} domComponentOrNode
-     * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.
-     */
-    SimulateNative[eventType] = makeNativeSimulator(eventType, topLevelType);
   });
 }
+buildSimulators();
 
 export {
   renderIntoDocument,
@@ -850,6 +726,5 @@ export {
   mockComponent,
   nativeTouchData,
   Simulate,
-  SimulateNative,
   act,
 };

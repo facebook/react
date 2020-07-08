@@ -7,34 +7,30 @@
  * @flow
  */
 
-import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
-import type {
-  ElementListenerMap,
-  ElementListenerMapEntry,
-} from '../client/ReactDOMComponentTree';
+import type {TopLevelType, DOMTopLevelEventType} from './TopLevelEventTypes';
 import type {EventSystemFlags} from './EventSystemFlags';
-import type {EventPriority, ReactScopeInstance} from 'shared/ReactTypes';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
-  ModernPluginModule,
+  AnyNativeEvent,
   DispatchQueue,
   DispatchQueueItem,
   DispatchQueueItemPhase,
   DispatchQueueItemPhaseEntry,
-} from 'legacy-events/PluginModuleType';
+} from './PluginModuleType';
+import type {ReactSyntheticEvent} from './ReactSyntheticEventType';
 import type {
-  ReactSyntheticEvent,
-  CustomDispatchConfig,
-} from 'legacy-events/ReactSyntheticEventType';
+  ElementListenerMap,
+  ElementListenerMapEntry,
+} from '../client/ReactDOMComponentTree';
+import type {EventPriority} from 'shared/ReactTypes';
+import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
-import {registrationNameDependencies} from 'legacy-events/EventPluginRegistry';
-import {plugins} from 'legacy-events/EventPluginRegistry';
+import {registrationNameDependencies} from './EventRegistry';
 import {
   PLUGIN_EVENT_SYSTEM,
   LEGACY_FB_SUPPORT,
   IS_REPLAYED,
   IS_TARGET_PHASE_ONLY,
+  IS_CAPTURE_PHASE,
 } from './EventSystemFlags';
 
 import {
@@ -112,7 +108,75 @@ import {
   addEventCaptureListenerWithPassiveFlag,
 } from './EventListener';
 import {removeTrappedEventListener} from './DeprecatedDOMEventResponderSystem';
-import {topLevelEventsToDispatchConfig} from './DOMEventProperties';
+import {topLevelEventsToReactNames} from './DOMEventProperties';
+import * as ModernBeforeInputEventPlugin from './plugins/ModernBeforeInputEventPlugin';
+import * as ModernChangeEventPlugin from './plugins/ModernChangeEventPlugin';
+import * as ModernEnterLeaveEventPlugin from './plugins/ModernEnterLeaveEventPlugin';
+import * as ModernSelectEventPlugin from './plugins/ModernSelectEventPlugin';
+import * as ModernSimpleEventPlugin from './plugins/ModernSimpleEventPlugin';
+
+// TODO: remove top-level side effect.
+ModernSimpleEventPlugin.registerEvents();
+ModernEnterLeaveEventPlugin.registerEvents();
+ModernChangeEventPlugin.registerEvents();
+ModernSelectEventPlugin.registerEvents();
+ModernBeforeInputEventPlugin.registerEvents();
+
+function extractEvents(
+  dispatchQueue: DispatchQueue,
+  topLevelType: TopLevelType,
+  targetInst: null | Fiber,
+  nativeEvent: AnyNativeEvent,
+  nativeEventTarget: null | EventTarget,
+  eventSystemFlags: EventSystemFlags,
+  targetContainer: null | EventTarget,
+) {
+  ModernSimpleEventPlugin.extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
+  ModernEnterLeaveEventPlugin.extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
+  ModernChangeEventPlugin.extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
+  ModernSelectEventPlugin.extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
+  ModernBeforeInputEventPlugin.extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
+}
 
 export const capturePhaseEvents: Set<DOMTopLevelEventType> = new Set([
   TOP_FOCUS,
@@ -153,14 +217,6 @@ export const capturePhaseEvents: Set<DOMTopLevelEventType> = new Set([
 if (enableCreateEventHandleAPI) {
   capturePhaseEvents.add(TOP_AFTER_BLUR);
 }
-
-const emptyDispatchConfigForCustomEvents: CustomDispatchConfig = {
-  customEvent: true,
-  phasedRegistrationNames: {
-    bubbled: null,
-    captured: null,
-  },
-};
 
 function executeDispatch(
   event: ReactSyntheticEvent,
@@ -218,22 +274,17 @@ function dispatchEventsForPlugins(
   targetInst: null | Fiber,
   targetContainer: EventTarget,
 ): void {
-  const modernPlugins = ((plugins: any): Array<ModernPluginModule<Event>>);
   const nativeEventTarget = getEventTarget(nativeEvent);
   const dispatchQueue: DispatchQueue = [];
-
-  for (let i = 0; i < modernPlugins.length; i++) {
-    const plugin = modernPlugins[i];
-    plugin.extractEvents(
-      dispatchQueue,
-      topLevelType,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget,
-      eventSystemFlags,
-      targetContainer,
-    );
-  }
+  extractEvents(
+    dispatchQueue,
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+    eventSystemFlags,
+    targetContainer,
+  );
   dispatchEventsInBatch(dispatchQueue);
 }
 
@@ -251,9 +302,9 @@ export function listenToTopLevelEvent(
   target: EventTarget,
   listenerMap: ElementListenerMap,
   eventSystemFlags: EventSystemFlags,
+  capture: boolean,
   passive?: boolean,
   priority?: EventPriority,
-  capture?: boolean,
 ): void {
   // TOP_SELECTION_CHANGE needs to be attached to the document
   // otherwise it won't capture incoming events that are only
@@ -262,12 +313,10 @@ export function listenToTopLevelEvent(
     target = (target: any).ownerDocument || target;
     listenerMap = getEventListenerMap(target);
   }
-  capture =
-    capture === undefined ? capturePhaseEvents.has(topLevelType) : capture;
   const listenerMapKey = getListenerMapKey(topLevelType, capture);
-  const listenerEntry: ElementListenerMapEntry | void = listenerMap.get(
+  const listenerEntry = ((listenerMap.get(
     listenerMapKey,
-  );
+  ): any): ElementListenerMapEntry | void);
   const shouldUpgrade = shouldUpgradeListener(listenerEntry, passive);
 
   // If the listener entry is empty or we should upgrade, then
@@ -283,6 +332,9 @@ export function listenToTopLevelEvent(
         ((listenerEntry: any): ElementListenerMapEntry).listener,
       );
     }
+    if (capture) {
+      eventSystemFlags |= IS_CAPTURE_PHASE;
+    }
     const listener = addTrappedEventListener(
       target,
       topLevelType,
@@ -296,20 +348,31 @@ export function listenToTopLevelEvent(
   }
 }
 
-export function listenToEvent(
-  registrationName: string,
+export function listenToReactPropEvent(
+  reactPropEvent: string,
   rootContainerElement: Element,
 ): void {
   const listenerMap = getEventListenerMap(rootContainerElement);
-  const dependencies = registrationNameDependencies[registrationName];
+  // For optimization, let's check if we have the registration name
+  // on the rootContainerElement.
+  if (listenerMap.has(reactPropEvent)) {
+    return;
+  }
+  // Add the registration name to the map, so we can avoid processing
+  // this React prop event again.
+  listenerMap.set(reactPropEvent, null);
+  const dependencies = registrationNameDependencies[reactPropEvent];
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
+    const capture = capturePhaseEvents.has(dependency);
+
     listenToTopLevelEvent(
       dependency,
       rootContainerElement,
       listenerMap,
       PLUGIN_EVENT_SYSTEM,
+      capture,
     );
   }
 }
@@ -575,11 +638,11 @@ export function accumulateTwoPhaseListeners(
   event: ReactSyntheticEvent,
   accumulateEventHandleListeners?: boolean,
 ): void {
-  const phasedRegistrationNames = event.dispatchConfig.phasedRegistrationNames;
+  const bubbled = event._reactName;
+  const captured = bubbled !== null ? bubbled + 'Capture' : null;
   const capturePhase: DispatchQueueItemPhase = [];
   const bubblePhase: DispatchQueueItemPhase = [];
 
-  const {bubbled, captured} = phasedRegistrationNames;
   // If we are not handling EventTarget only phase, then we're doing the
   // usual two phase accumulation using the React fiber tree to pick up
   // all relevant useEvent and on* prop events.
@@ -762,7 +825,7 @@ function accumulateEnterLeaveListenersForEvent(
   common: Fiber | null,
   capture: boolean,
 ): void {
-  const registrationName = event.dispatchConfig.registrationName;
+  const registrationName = event._reactName;
   if (registrationName === undefined) {
     return;
   }
@@ -842,10 +905,11 @@ export function accumulateEnterLeaveListeners(
   }
 }
 
-export function accumulateEventTargetListeners(
+export function accumulateEventHandleTargetListeners(
   dispatchQueue: DispatchQueue,
   event: ReactSyntheticEvent,
   currentTarget: EventTarget,
+  inCapturePhase: boolean,
 ): void {
   const capturePhase: DispatchQueueItemPhase = [];
   const bubblePhase: DispatchQueueItemPhase = [];
@@ -854,17 +918,16 @@ export function accumulateEventTargetListeners(
   if (eventListeners !== null) {
     const listenersArr = Array.from(eventListeners);
     const targetType = ((event.type: any): DOMTopLevelEventType);
-    const isCapturePhase = (event: any).eventPhase === 1;
 
     for (let i = 0; i < listenersArr.length; i++) {
       const listener = listenersArr[i];
       const {callback, capture, type} = listener;
       if (type === targetType) {
-        if (isCapturePhase && capture) {
+        if (inCapturePhase && capture) {
           capturePhase.push(
             createDispatchQueueItemPhaseEntry(null, callback, currentTarget),
           );
-        } else if (!isCapturePhase && !capture) {
+        } else if (!inCapturePhase && !capture) {
           bubblePhase.push(
             createDispatchQueueItemPhaseEntry(null, callback, currentTarget),
           );
@@ -880,35 +943,14 @@ export function accumulateEventTargetListeners(
 }
 
 export function addEventTypeToDispatchConfig(type: DOMTopLevelEventType): void {
-  const dispatchConfig = topLevelEventsToDispatchConfig.get(type);
-  // If we don't have a dispatchConfig, then we're dealing with
+  const reactName = topLevelEventsToReactNames.get(type);
+  // If we don't have a reactName, then we're dealing with
   // an event type that React does not know about (i.e. a custom event).
   // We need to register an event config for this or the SimpleEventPlugin
   // will not appropriately provide a SyntheticEvent, so we use out empty
   // dispatch config for custom events.
-  if (dispatchConfig === undefined) {
-    topLevelEventsToDispatchConfig.set(
-      type,
-      emptyDispatchConfigForCustomEvents,
-    );
-  }
-}
-
-export function clearEventHandleListenersForTarget(
-  target: EventTarget | ReactScopeInstance,
-): void {
-  // It's unfortunate that we have to do this cleanup, but
-  // it's necessary otherwise we will leak the host instances
-  // on the createEventHandle API "listeners" Map. We call destroy
-  // on each listener to ensure we properly remove the instance
-  // from the listeners Map. Note: we have this Map so that we
-  // can track listeners for the handle.clear() API call.
-  const listeners = getEventHandlerListeners(target);
-  if (listeners !== null) {
-    const listenersArr = Array.from(listeners);
-    for (let i = 0; i < listenersArr.length; i++) {
-      listenersArr[i].destroy(target);
-    }
+  if (reactName === undefined) {
+    topLevelEventsToReactNames.set(type, null);
   }
 }
 

@@ -17,7 +17,7 @@ import type {
   SuspenseInstance,
   Props,
 } from './ReactDOMHostConfig';
-import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
+import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
 
 import {
   HostComponent,
@@ -42,7 +42,7 @@ const internalEventHandlerListenersKey = '__reactListeners$' + randomKey;
 
 export type ElementListenerMap = Map<
   DOMTopLevelEventType | string,
-  ElementListenerMapEntry,
+  ElementListenerMapEntry | null,
 >;
 
 export type ElementListenerMapEntry = {

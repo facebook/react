@@ -383,10 +383,6 @@ export function getInstanceFromNode(mockNode: Object) {
   return null;
 }
 
-export function removeInstanceEventHandles(instance: any) {
-  // noop
-}
-
 let clientId: number = 0;
 export function makeClientId(): OpaqueIDType {
   return 'c_' + (clientId++).toString(36);
@@ -438,10 +434,6 @@ export function preparePortalMount(portalInstance: Instance): void {
 
 export function prepareScopeUpdate(scopeInstance: Object, inst: Object): void {
   nodeToInstanceMap.set(scopeInstance, inst);
-}
-
-export function removeScopeEventHandles(scopeInstance: Object): void {
-  nodeToInstanceMap.delete(scopeInstance);
 }
 
 export function getInstanceFromScope(scopeInstance: Object): null | Object {
