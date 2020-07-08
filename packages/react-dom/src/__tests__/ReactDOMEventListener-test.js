@@ -349,13 +349,10 @@ describe('ReactDOMEventListener', () => {
         }),
       );
       // As of the modern event system refactor, we now support
-      // this on <img>. The reason for this, is because we now
-      // attach all media events to the "root" or "portal" in the
-      // capture phase, rather than the bubble phase. This allows
-      // us to assign less event listeners to individual elements,
-      // which also nicely allows us to support more without needing
-      // to add more individual code paths to support various
-      // events that do not bubble.
+      // this on <img>. The reason for this, is because we allow
+      // events to be attached to nodes regardless of if they
+      // necessary support them. This is a strange test, as this
+      // would never occur from normal browser behavior.
       expect(handleImgLoadStart).toHaveBeenCalledTimes(1);
 
       videoRef.current.dispatchEvent(
