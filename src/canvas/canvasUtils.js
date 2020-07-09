@@ -9,7 +9,7 @@ import {
   MAX_INTERVAL_SIZE_PX,
   REACT_GUTTER_SIZE,
   REACT_WORK_SIZE,
-  REACT_PRIORITY_BORDER_SIZE,
+  REACT_WORK_BORDER_SIZE,
 } from './constants';
 
 // hidpi canvas: https://www.html5rocks.com/en/tutorials/canvas/hidpi/
@@ -101,6 +101,6 @@ export const getLaneHeight = (
     REACT_GUTTER_SIZE +
     REACT_WORK_SIZE +
     REACT_GUTTER_SIZE +
-    REACT_PRIORITY_BORDER_SIZE
+    REACT_WORK_BORDER_SIZE
   );
 };
