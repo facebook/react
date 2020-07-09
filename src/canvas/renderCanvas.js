@@ -143,10 +143,7 @@ function renderReactEventRow(
   context.fillRect(
     0,
     Math.floor(
-      canvasStartY +
-        EVENT_ROW_HEIGHT_FIXED -
-        offsetY -
-        REACT_WORK_BORDER_SIZE,
+      canvasStartY + EVENT_ROW_HEIGHT_FIXED - offsetY - REACT_WORK_BORDER_SIZE,
     ),
     canvasWidth,
     REACT_WORK_BORDER_SIZE,

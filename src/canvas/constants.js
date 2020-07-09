@@ -44,7 +44,7 @@ export const TEXT_CSS_PIXELS_OFFSET_TOP = 11;
 export const FONT_SIZE = 10;
 export const BORDER_OPACITY = 0.4;
 
-export const REACT_GUTTER_SIZE = 0; //Increase to add vertical padding to lanes 
+export const REACT_GUTTER_SIZE = 0; //Increase to add vertical padding to lanes
 export const REACT_EVENT_ROW_PADDING = 4;
 export const REACT_EVENT_SIZE = 6;
 export const REACT_WORK_SIZE = 9;
