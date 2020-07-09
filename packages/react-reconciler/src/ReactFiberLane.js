@@ -78,51 +78,31 @@ export const NoLanes: Lanes = /*                        */ 0b0000000000000000000
 export const NoLane: Lane = /*                          */ 0b0000000000000000000000000000000;
 
 export const SyncLane: Lane = /*                        */ 0b0000000000000000000000000000001;
-const SyncUpdateRangeEnd = 1;
 export const SyncBatchedLane: Lane = /*                 */ 0b0000000000000000000000000000010;
-const SyncBatchedUpdateRangeEnd = 2;
 
 export const InputDiscreteHydrationLane: Lane = /*      */ 0b0000000000000000000000000000100;
-const InputDiscreteLanes: Lanes = /*                    */ 0b0000000000000000000000000011100;
-const InputDiscreteUpdateRangeStart = 3;
-const InputDiscreteUpdateRangeEnd = 5;
+const InputDiscreteLanes: Lanes = /*                    */ 0b0000000000000000000000000011000;
 
 const InputContinuousHydrationLane: Lane = /*           */ 0b0000000000000000000000000100000;
-const InputContinuousLanes: Lanes = /*                  */ 0b0000000000000000000000011100000;
-const InputContinuousUpdateRangeStart = 6;
-const InputContinuousUpdateRangeEnd = 8;
+const InputContinuousLanes: Lanes = /*                  */ 0b0000000000000000000000011000000;
 
 export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000100000000;
-export const DefaultLanes: Lanes = /*                   */ 0b0000000000000000000111100000000;
-const DefaultUpdateRangeStart = 9;
-const DefaultUpdateRangeEnd = 12;
+export const DefaultLanes: Lanes = /*                   */ 0b0000000000000000000111000000000;
 
 const TransitionShortHydrationLane: Lane = /*           */ 0b0000000000000000001000000000000;
-const TransitionShortLanes: Lanes = /*                  */ 0b0000000000000011111000000000000;
-const TransitionShortUpdateRangeStart = 13;
-const TransitionShortUpdateRangeEnd = 17;
+const TransitionShortLanes: Lanes = /*                  */ 0b0000000000000011110000000000000;
 
 const TransitionLongHydrationLane: Lane = /*            */ 0b0000000000000100000000000000000;
-const TransitionLongLanes: Lanes = /*                   */ 0b0000000001111100000000000000000;
-const TransitionLongUpdateRangeStart = 18;
-const TransitionLongUpdateRangeEnd = 22;
-
-// Includes all updates. Except Idle updates, which have special semantics.
-const UpdateRangeEnd = TransitionLongUpdateRangeEnd;
+const TransitionLongLanes: Lanes = /*                   */ 0b0000000001111000000000000000000;
 
 const RetryLanes: Lanes = /*                            */ 0b0000011110000000000000000000000;
-const RetryRangeStart = 22;
-const RetryRangeEnd = 26;
 
 export const SelectiveHydrationLane: Lane = /*          */ 0b0000100000000000000000000000000;
-const SelectiveHydrationRangeEnd = 27;
 
 const NonIdleLanes = /*                                 */ 0b0000111111111111111111111111111;
 
 export const IdleHydrationLane: Lane = /*               */ 0b0001000000000000000000000000000;
-const IdleLanes: Lanes = /*                             */ 0b0111000000000000000000000000000;
-const IdleUpdateRangeStart = 28;
-const IdleUpdateRangeEnd = 30;
+const IdleLanes: Lanes = /*                             */ 0b0110000000000000000000000000000;
 
 export const OffscreenLane: Lane = /*                   */ 0b1000000000000000000000000000000;
 
@@ -141,105 +121,81 @@ export function setCurrentUpdateLanePriority(newLanePriority: LanePriority) {
 // "Registers" used to "return" multiple values
 // Used by getHighestPriorityLanes and getNextLanes:
 let return_highestLanePriority: LanePriority = DefaultLanePriority;
-let return_updateRangeEnd: number = -1;
 
 function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
   if ((SyncLane & lanes) !== NoLanes) {
     return_highestLanePriority = SyncLanePriority;
-    return_updateRangeEnd = SyncUpdateRangeEnd;
     return SyncLane;
   }
   if ((SyncBatchedLane & lanes) !== NoLanes) {
     return_highestLanePriority = SyncBatchedLanePriority;
-    return_updateRangeEnd = SyncBatchedUpdateRangeEnd;
     return SyncBatchedLane;
+  }
+  if ((InputDiscreteHydrationLane & lanes) !== NoLanes) {
+    return_highestLanePriority = InputDiscreteHydrationLanePriority;
+    return InputDiscreteHydrationLane;
   }
   const inputDiscreteLanes = InputDiscreteLanes & lanes;
   if (inputDiscreteLanes !== NoLanes) {
-    if (inputDiscreteLanes & InputDiscreteHydrationLane) {
-      return_highestLanePriority = InputDiscreteHydrationLanePriority;
-      return_updateRangeEnd = InputDiscreteUpdateRangeStart;
-      return InputDiscreteHydrationLane;
-    } else {
-      return_highestLanePriority = InputDiscreteLanePriority;
-      return_updateRangeEnd = InputDiscreteUpdateRangeEnd;
-      return inputDiscreteLanes;
-    }
+    return_highestLanePriority = InputDiscreteLanePriority;
+    return inputDiscreteLanes;
+  }
+  if ((lanes & InputContinuousHydrationLane) !== NoLanes) {
+    return_highestLanePriority = InputContinuousHydrationLanePriority;
+    return InputContinuousHydrationLane;
   }
   const inputContinuousLanes = InputContinuousLanes & lanes;
   if (inputContinuousLanes !== NoLanes) {
-    if (inputContinuousLanes & InputContinuousHydrationLane) {
-      return_highestLanePriority = InputContinuousHydrationLanePriority;
-      return_updateRangeEnd = InputContinuousUpdateRangeStart;
-      return InputContinuousHydrationLane;
-    } else {
-      return_highestLanePriority = InputContinuousLanePriority;
-      return_updateRangeEnd = InputContinuousUpdateRangeEnd;
-      return inputContinuousLanes;
-    }
+    return_highestLanePriority = InputContinuousLanePriority;
+    return inputContinuousLanes;
+  }
+  if ((lanes & DefaultHydrationLane) !== NoLanes) {
+    return_highestLanePriority = DefaultHydrationLanePriority;
+    return DefaultHydrationLane;
   }
   const defaultLanes = DefaultLanes & lanes;
   if (defaultLanes !== NoLanes) {
-    if (defaultLanes & DefaultHydrationLane) {
-      return_highestLanePriority = DefaultHydrationLanePriority;
-      return_updateRangeEnd = DefaultUpdateRangeStart;
-      return DefaultHydrationLane;
-    } else {
-      return_highestLanePriority = DefaultLanePriority;
-      return_updateRangeEnd = DefaultUpdateRangeEnd;
-      return defaultLanes;
-    }
+    return_highestLanePriority = DefaultLanePriority;
+    return defaultLanes;
+  }
+  if ((lanes & TransitionShortHydrationLane) !== NoLanes) {
+    return_highestLanePriority = TransitionShortHydrationLanePriority;
+    return TransitionShortHydrationLane;
   }
   const transitionShortLanes = TransitionShortLanes & lanes;
   if (transitionShortLanes !== NoLanes) {
-    if (transitionShortLanes & TransitionShortHydrationLane) {
-      return_highestLanePriority = TransitionShortHydrationLanePriority;
-      return_updateRangeEnd = TransitionShortUpdateRangeStart;
-      return TransitionShortHydrationLane;
-    } else {
-      return_highestLanePriority = TransitionShortLanePriority;
-      return_updateRangeEnd = TransitionShortUpdateRangeEnd;
-      return transitionShortLanes;
-    }
+    return_highestLanePriority = TransitionShortLanePriority;
+    return transitionShortLanes;
+  }
+  if ((lanes & TransitionLongHydrationLane) !== NoLanes) {
+    return_highestLanePriority = TransitionLongHydrationLanePriority;
+    return TransitionLongHydrationLane;
   }
   const transitionLongLanes = TransitionLongLanes & lanes;
   if (transitionLongLanes !== NoLanes) {
-    if (transitionLongLanes & TransitionLongHydrationLane) {
-      return_highestLanePriority = TransitionLongHydrationLanePriority;
-      return_updateRangeEnd = TransitionLongUpdateRangeStart;
-      return TransitionLongHydrationLane;
-    } else {
-      return_highestLanePriority = TransitionLongLanePriority;
-      return_updateRangeEnd = TransitionLongUpdateRangeEnd;
-      return transitionLongLanes;
-    }
+    return_highestLanePriority = TransitionLongLanePriority;
+    return transitionLongLanes;
   }
   const retryLanes = RetryLanes & lanes;
   if (retryLanes !== NoLanes) {
     return_highestLanePriority = RetryLanePriority;
-    return_updateRangeEnd = RetryRangeEnd;
     return retryLanes;
   }
   if (lanes & SelectiveHydrationLane) {
     return_highestLanePriority = SelectiveHydrationLanePriority;
-    return_updateRangeEnd = SelectiveHydrationRangeEnd;
     return SelectiveHydrationLane;
+  }
+  if ((lanes & IdleHydrationLane) !== NoLanes) {
+    return_highestLanePriority = IdleHydrationLanePriority;
+    return IdleHydrationLane;
   }
   const idleLanes = IdleLanes & lanes;
   if (idleLanes !== NoLanes) {
-    if (idleLanes & IdleHydrationLane) {
-      return_highestLanePriority = IdleHydrationLanePriority;
-      return_updateRangeEnd = IdleUpdateRangeStart;
-      return IdleHydrationLane;
-    } else {
-      return_highestLanePriority = IdleLanePriority;
-      return_updateRangeEnd = IdleUpdateRangeEnd;
-      return idleLanes;
-    }
+    return_highestLanePriority = IdleLanePriority;
+    return idleLanes;
   }
   if ((OffscreenLane & lanes) !== NoLanes) {
     return_highestLanePriority = OffscreenLanePriority;
-    return_updateRangeEnd = TotalLanes;
     return OffscreenLane;
   }
   if (__DEV__) {
@@ -247,7 +203,6 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
   }
   // This shouldn't be reachable, but as a fallback, return the entire bitmask.
   return_highestLanePriority = DefaultLanePriority;
-  return_updateRangeEnd = DefaultUpdateRangeEnd;
   return lanes;
 }
 
@@ -316,7 +271,6 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
 
   let nextLanes = NoLanes;
   let nextLanePriority = NoLanePriority;
-  let equalOrHigherPriorityLanes = NoLanes;
 
   const expiredLanes = root.expiredLanes;
   const suspendedLanes = root.suspendedLanes;
@@ -326,7 +280,6 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   if (expiredLanes !== NoLanes) {
     nextLanes = expiredLanes;
     nextLanePriority = return_highestLanePriority = SyncLanePriority;
-    equalOrHigherPriorityLanes = (getLowestPriorityLane(nextLanes) << 1) - 1;
   } else {
     // Do not work on any idle work until all the non-idle work has finished,
     // even if the work is suspended.
@@ -336,13 +289,11 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
       if (nonIdleUnblockedLanes !== NoLanes) {
         nextLanes = getHighestPriorityLanes(nonIdleUnblockedLanes);
         nextLanePriority = return_highestLanePriority;
-        equalOrHigherPriorityLanes = (1 << return_updateRangeEnd) - 1;
       } else {
         const nonIdlePingedLanes = nonIdlePendingLanes & pingedLanes;
         if (nonIdlePingedLanes !== NoLanes) {
           nextLanes = getHighestPriorityLanes(nonIdlePingedLanes);
           nextLanePriority = return_highestLanePriority;
-          equalOrHigherPriorityLanes = (1 << return_updateRangeEnd) - 1;
         }
       }
     } else {
@@ -351,12 +302,10 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
       if (unblockedLanes !== NoLanes) {
         nextLanes = getHighestPriorityLanes(unblockedLanes);
         nextLanePriority = return_highestLanePriority;
-        equalOrHigherPriorityLanes = (1 << return_updateRangeEnd) - 1;
       } else {
         if (pingedLanes !== NoLanes) {
           nextLanes = getHighestPriorityLanes(pingedLanes);
           nextLanePriority = return_highestLanePriority;
-          equalOrHigherPriorityLanes = (1 << return_updateRangeEnd) - 1;
         }
       }
     }
@@ -370,7 +319,7 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
 
   // If there are higher priority lanes, we'll include them even if they
   // are suspended.
-  nextLanes = pendingLanes & equalOrHigherPriorityLanes;
+  nextLanes = pendingLanes & getEqualOrHigherPriorityLanes(nextLanes);
 
   // If we're already in the middle of a render, switching lanes will interrupt
   // it and we'll lose our progress. We should only do this if the new lanes are
@@ -520,45 +469,46 @@ export function findUpdateLane(
     case SyncBatchedLanePriority:
       return SyncBatchedLane;
     case InputDiscreteLanePriority: {
-      let lane = findLane(
-        InputDiscreteUpdateRangeStart,
-        UpdateRangeEnd,
-        wipLanes,
-      );
+      const lane = pickArbitraryLane(InputDiscreteLanes & ~wipLanes);
       if (lane === NoLane) {
-        lane = InputDiscreteHydrationLane;
+        // Shift to the next priority level
+        return findUpdateLane(InputContinuousLanePriority, wipLanes);
       }
       return lane;
     }
     case InputContinuousLanePriority: {
-      let lane = findLane(
-        InputContinuousUpdateRangeStart,
-        UpdateRangeEnd,
-        wipLanes,
-      );
+      const lane = pickArbitraryLane(InputContinuousLanes & ~wipLanes);
       if (lane === NoLane) {
-        lane = InputContinuousHydrationLane;
+        // Shift to the next priority level
+        return findUpdateLane(DefaultLanePriority, wipLanes);
       }
       return lane;
     }
     case DefaultLanePriority: {
-      let lane = findLane(DefaultUpdateRangeStart, UpdateRangeEnd, wipLanes);
+      let lane = pickArbitraryLane(DefaultLanes & ~wipLanes);
       if (lane === NoLane) {
-        lane = DefaultHydrationLane;
+        // If all the default lanes are already being worked on, look for a
+        // lane in the transition range.
+        lane = pickArbitraryLane(
+          (TransitionShortLanes | TransitionLongLanes) & ~wipLanes,
+        );
+        if (lane === NoLane) {
+          // All the transition lanes are taken, too. This should be very
+          // rare, but as a last resort, pick a default lane. This will have
+          // the effect of interrupting the current work-in-progress render.
+          lane = pickArbitraryLane(DefaultLanes);
+        }
       }
       return lane;
     }
-    case TransitionShortLanePriority:
+    case TransitionShortLanePriority: // Should be handled by findTransitionLane instead
     case TransitionLongLanePriority:
-      // Should be handled by findTransitionLane instead
-      break;
-    case RetryLanePriority:
-      // Should be handled by findRetryLane instead
+    case RetryLanePriority: // Should be handled by findRetryLane instead
       break;
     case IdleLanePriority:
-      let lane = findLane(IdleUpdateRangeStart, IdleUpdateRangeEnd, wipLanes);
+      let lane = pickArbitraryLane(IdleLanes & ~wipLanes);
       if (lane === NoLane) {
-        lane = IdleHydrationLane;
+        lane = pickArbitraryLane(IdleLanes);
       }
       return lane;
     default:
@@ -580,37 +530,33 @@ export function findTransitionLane(
   pendingLanes: Lanes,
 ): Lane {
   if (lanePriority === TransitionShortLanePriority) {
-    let lane = findLane(
-      TransitionShortUpdateRangeStart,
-      TransitionShortUpdateRangeEnd,
-      wipLanes | pendingLanes,
-    );
+    // First look for lanes that are completely unclaimed, i.e. have no
+    // pending work.
+    let lane = pickArbitraryLane(TransitionShortLanes & ~pendingLanes);
     if (lane === NoLane) {
-      lane = findLane(
-        TransitionShortUpdateRangeStart,
-        TransitionShortUpdateRangeEnd,
-        wipLanes,
-      );
+      // If all lanes have pending work, look for a lane that isn't currently
+      // being worked on.
+      lane = pickArbitraryLane(TransitionShortLanes & ~wipLanes);
       if (lane === NoLane) {
-        lane = TransitionShortHydrationLane;
+        // If everything is being worked on, pick any lane. This has the
+        // effect of interrupting the current work-in-progress.
+        lane = pickArbitraryLane(TransitionShortLanes);
       }
     }
     return lane;
   }
   if (lanePriority === TransitionLongLanePriority) {
-    let lane = findLane(
-      TransitionLongUpdateRangeStart,
-      TransitionLongUpdateRangeEnd,
-      wipLanes | pendingLanes,
-    );
+    // First look for lanes that are completely unclaimed, i.e. have no
+    // pending work.
+    let lane = pickArbitraryLane(TransitionLongLanes & ~pendingLanes);
     if (lane === NoLane) {
-      lane = findLane(
-        TransitionLongUpdateRangeStart,
-        TransitionLongUpdateRangeEnd,
-        wipLanes,
-      );
+      // If all lanes have pending work, look for a lane that isn't currently
+      // being worked on.
+      lane = pickArbitraryLane(TransitionLongLanes & ~wipLanes);
       if (lane === NoLane) {
-        lane = TransitionLongHydrationLane;
+        // If everything is being worked on, pick any lane. This has the
+        // effect of interrupting the current work-in-progress.
+        lane = pickArbitraryLane(TransitionLongLanes);
       }
     }
     return lane;
@@ -628,27 +574,15 @@ export function findRetryLane(wipLanes: Lanes): Lane {
   // This is a fork of `findUpdateLane` designed specifically for Suspense
   // "retries" — a special update that attempts to flip a Suspense boundary
   // from its placeholder state to its primary/resolved state.
-  let lane = findLane(RetryRangeStart, RetryRangeEnd, wipLanes);
+  let lane = pickArbitraryLane(RetryLanes & ~wipLanes);
   if (lane === NoLane) {
     lane = pickArbitraryLane(RetryLanes);
   }
   return lane;
 }
 
-function findLane(start, end, skipLanes) {
-  // This finds the first bit between the `start` and `end` positions that isn't
-  // in `skipLanes`.
-  // TODO: This will always favor the rightmost bits. That's usually fine
-  // because any bit that's pending will be part of `skipLanes`, so we'll do our
-  // best to avoid accidental entanglement. However, lanes that are pending
-  // inside an Offscreen tree aren't considered "pending" at the root level. So
-  // they aren't included in `skipLanes`. So we should try not to favor any
-  // particular part of the range, perhaps by incrementing an offset for each
-  // distinct event. Must be the same within a single event, though.
-  const bitsInRange = ((1 << (end - start)) - 1) << start;
-  const possibleBits = bitsInRange & ~skipLanes;
-  const leastSignificantBit = possibleBits & -possibleBits;
-  return leastSignificantBit;
+function getHighestPriorityLane(lanes: Lanes) {
+  return lanes & -lanes;
 }
 
 function getLowestPriorityLane(lanes: Lanes): Lane {
@@ -657,8 +591,16 @@ function getLowestPriorityLane(lanes: Lanes): Lane {
   return index < 0 ? NoLanes : 1 << index;
 }
 
+function getEqualOrHigherPriorityLanes(lanes: Lanes | Lane): Lanes {
+  return (getLowestPriorityLane(lanes) << 1) - 1;
+}
+
 export function pickArbitraryLane(lanes: Lanes): Lane {
-  return getLowestPriorityLane(lanes);
+  // This wrapper function gets inlined. Only exists so to communicate that it
+  // doesn't matter which bit is selected; you can pick any bit without
+  // affecting the algorithms where its used. Here I'm using
+  // getHighestPriorityLane because it requires the fewest operations.
+  return getHighestPriorityLane(lanes);
 }
 
 function pickArbitraryLaneIndex(lanes: Lane | Lanes) {
