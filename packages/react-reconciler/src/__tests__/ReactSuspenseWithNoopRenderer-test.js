@@ -2848,7 +2848,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       foo.setState({suspend: false});
     });
 
-    expect(Scheduler).toHaveYielded(['Foo']);
+    expect(Scheduler).toHaveYielded([
+      // First setState
+      'Foo',
+      // Second setState. This update was scheduled while we were in the
+      // middle of rendering the previous update, so it was pushed to a separate
+      // batch to avoid invalidating the work-in-progress tree.
+      'Foo',
+    ]);
     expect(root).toMatchRenderedOutput(<span prop="Foo" />);
   });
 
