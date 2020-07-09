@@ -2897,8 +2897,9 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(ref.current).not.toBe(null);
   });
 
+  // We no longer event replay "submit".
   // @gate experimental
-  it('regression test: does not overfire non-bubbling browser events', async () => {
+  it.skip('regression test: does not overfire non-bubbling browser events', async () => {
     let suspend = false;
     let resolve;
     const promise = new Promise(resolvePromise => (resolve = resolvePromise));

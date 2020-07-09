@@ -1191,6 +1191,36 @@ describe('DOMModernPluginEventSystem', () => {
           }
         });
 
+        // @gate experimental
+        it('regression test: does not overfire non-bubbling browser events', () => {
+          let submits = 0;
+
+          function Form() {
+            return (
+              <form
+                onSubmit={() => {
+                  submits++;
+                }}>
+                Click me
+              </form>
+            );
+          }
+          const finalHTML = ReactDOMServer.renderToString(<Form />);
+          container.innerHTML = finalHTML;
+
+          const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+          root.render(<Form />);
+          Scheduler.unstable_flushAll();
+
+          const form = container.getElementsByTagName('form')[0];
+          form.dispatchEvent(
+            new Event('submit', {
+              bubbles: true,
+            }),
+          );
+          expect(submits).toBe(1);
+        });
+
         describe('ReactDOM.createEventHandle', () => {
           beforeEach(() => {
             jest.resetModules();
