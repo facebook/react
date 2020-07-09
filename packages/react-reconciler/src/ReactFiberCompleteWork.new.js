@@ -1063,7 +1063,6 @@ function completeWork(
                 if (renderState.lastEffect === null) {
                   workInProgress.firstEffect = null;
                   workInProgress.subtreeTag = NoEffect;
-                  // TODO (effects) This probably isn't the best approach. Discuss with Brian
                   let child = workInProgress.child;
                   while (child !== null) {
                     child.deletions = null;
