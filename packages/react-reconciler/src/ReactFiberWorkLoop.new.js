@@ -2215,6 +2215,9 @@ function commitMutationEffects(
 ) {
   if (fiber.deletions !== null) {
     commitMutationEffectsDeletions(fiber.deletions, root, renderPriorityLevel);
+
+    // TODO (effects) Don't clear this yet; we may need to cleanup passive effects
+    fiber.deletions = null;
   }
 
   if (fiber.child !== null) {
@@ -2354,9 +2357,6 @@ function commitMutationEffectsDeletions(
     }
     // Don't clear the Deletion effect yet; we also use it to know when we need to detach refs later.
   }
-
-  // TODO (effects) Don't clear this yet; we may need to cleanup passive effects
-  deletions.splice(0);
 }
 
 function commitLayoutEffects(
