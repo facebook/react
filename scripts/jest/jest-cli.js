@@ -229,12 +229,12 @@ function validateOptions() {
 function getCommandArgs() {
   // Add the correct Jest config.
   const args = ['./scripts/jest/jest.js', '--config'];
-  if (argv.build) {
+  if (argv.project === 'devtools') {
+    args.push(devToolsConfig);
+  } else if (argv.build) {
     args.push(buildConfig);
   } else if (argv.persistent) {
     args.push(persistentConfig);
-  } else if (argv.project === 'devtools') {
-    args.push(devToolsConfig);
   } else if (isWWWConfig()) {
     args.push(wwwConfig);
   } else if (isOSSConfig()) {
