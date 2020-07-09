@@ -11,7 +11,7 @@ module.exports = {
   // Stop ESLint from looking for a configuration file in parent folders
   root: true,
 
-  plugins: ['jest', 'no-for-of-loops', 'react'],
+  plugins: ['jest', 'no-for-of-loops', 'react', 'prettier'],
 
   parser: 'babel-eslint',
   parserOptions: {
@@ -82,6 +82,8 @@ module.exports = {
     // Prevent for...of loops because they require a Symbol polyfill.
     // You can disable this rule for code that isn't shipped (e.g. build scripts and tests).
     'no-for-of-loops/no-for-of-loops': ERROR,
+
+    'prettier/prettier': ERROR,
   },
 
   overrides: [
