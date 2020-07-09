@@ -219,6 +219,11 @@ describe('ReactSuspense', () => {
     await resolve1();
     ReactNoop.render(element);
     expect(Scheduler).toFlushWithoutYielding();
+
+    // Force fallback to commit.
+    // TODO: Should be able to use `act` here.
+    jest.runAllTimers();
+
     expect(ReactNoop.getChildren()).toEqual([
       text('Waiting Tier 2'),
       text('Done'),

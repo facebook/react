@@ -148,6 +148,7 @@ import {
   NoTimestamp,
   findUpdateLane,
   findTransitionLane,
+  findRetryLane,
   includesSomeLane,
   isSubsetOfLanes,
   mergeLanes,
@@ -493,6 +494,28 @@ export function requestUpdateLane(
   }
 
   return lane;
+}
+
+function requestRetryLane(fiber: Fiber) {
+  // This is a fork of `requestUpdateLane` designed specifically for Suspense
+  // "retries" — a special update that attempts to flip a Suspense boundary
+  // from its placeholder state to its primary/resolved state.
+
+  // Special cases
+  const mode = fiber.mode;
+  if ((mode & BlockingMode) === NoMode) {
+    return (SyncLane: Lane);
+  } else if ((mode & ConcurrentMode) === NoMode) {
+    return getCurrentPriorityLevel() === ImmediateSchedulerPriority
+      ? (SyncLane: Lane)
+      : (SyncBatchedLane: Lane);
+  }
+
+  // See `requestUpdateLane` for explanation of `currentEventWipLanes`
+  if (currentEventWipLanes === NoLanes) {
+    currentEventWipLanes = workInProgressRootIncludedLanes;
+  }
+  return findRetryLane(currentEventWipLanes);
 }
 
 export function scheduleUpdateOnFiber(
@@ -2855,10 +2878,7 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
   // suspended it has resolved, which means at least part of the tree was
   // likely unblocked. Try rendering again, at a new expiration time.
   if (retryLane === NoLane) {
-    const suspenseConfig = null; // Retries don't carry over the already committed update.
-    // TODO: Should retries get their own lane? Maybe it could share with
-    // transitions.
-    retryLane = requestUpdateLane(boundaryFiber, suspenseConfig);
+    retryLane = requestRetryLane(boundaryFiber);
   }
   // TODO: Special case idle priority?
   const eventTime = requestEventTime();
