@@ -5,9 +5,13 @@
     Changes that have landed in master but are not yet released.
     Click to see more.
   </summary>
-  
+
   <!-- Upcoming changes go here -->
 </details>
+
+## 4.8.1 (July 10, 2020)
+#### Bugfix
+* Fix break-on-warning to truly be off by default. ([gaearon](https://github.com/gaearon) in [#19309](https://github.com/facebook/react/pull/19309))
 
 ## 4.8.0 (July 9, 2020)
 #### Features
