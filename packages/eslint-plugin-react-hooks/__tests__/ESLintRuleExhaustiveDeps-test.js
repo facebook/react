@@ -1343,6 +1343,39 @@ const tests = {
         }
       `,
     },
+    // Regression test.
+    {
+      code: normalizeIndent`
+        function Example(props) {
+          useEffect(() => {
+            let topHeight = 0;
+            topHeight = props.upperViewHeight;
+          }, [props.upperViewHeight]);
+        }
+      `,
+    },
+    // Regression test.
+    {
+      code: normalizeIndent`
+        function Example(props) {
+          useEffect(() => {
+            let topHeight = 0;
+            topHeight = props?.upperViewHeight;
+          }, [props?.upperViewHeight]);
+        }
+      `,
+    },
+    // Regression test.
+    {
+      code: normalizeIndent`
+        function Example(props) {
+          useEffect(() => {
+            let topHeight = 0;
+            topHeight = props?.upperViewHeight;
+          }, [props]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -7113,6 +7146,70 @@ const testsTypescript = {
                     crust: pizza?.crust,
                     density: pizza?.crust.density,
                   }), [pizza?.crust]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    // Regression test.
+    {
+      code: normalizeIndent`
+        function Example(props) {
+          useEffect(() => {
+            let topHeight = 0;
+            topHeight = props.upperViewHeight;
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'props.upperViewHeight'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc:
+                'Update the dependencies array to be: [props.upperViewHeight]',
+              output: normalizeIndent`
+                function Example(props) {
+                  useEffect(() => {
+                    let topHeight = 0;
+                    topHeight = props.upperViewHeight;
+                  }, [props.upperViewHeight]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    // Regression test.
+    {
+      code: normalizeIndent`
+        function Example(props) {
+          useEffect(() => {
+            let topHeight = 0;
+            topHeight = props?.upperViewHeight;
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'props?.upperViewHeight'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc:
+                'Update the dependencies array to be: [props?.upperViewHeight]',
+              output: normalizeIndent`
+                function Example(props) {
+                  useEffect(() => {
+                    let topHeight = 0;
+                    topHeight = props?.upperViewHeight;
+                  }, [props?.upperViewHeight]);
                 }
               `,
             },
