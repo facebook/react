@@ -17,6 +17,9 @@ let prevLog;
 let prevInfo;
 let prevWarn;
 let prevError;
+let prevGroup;
+let prevGroupCollapsed;
+let prevGroupEnd;
 
 function disabledLog() {}
 disabledLog.__reactDisabledLog = true;
@@ -29,6 +32,9 @@ export function disableLogs(): void {
       prevInfo = console.info;
       prevWarn = console.warn;
       prevError = console.error;
+      prevGroup = console.group;
+      prevGroupCollapsed = console.groupCollapsed;
+      prevGroupEnd = console.groupEnd;
       // https://github.com/facebook/react/issues/19099
       const props = {
         configurable: true,
@@ -42,6 +48,9 @@ export function disableLogs(): void {
         log: props,
         warn: props,
         error: props,
+        group: props,
+        groupCollapsed: props,
+        groupEnd: props,
       });
       /* eslint-enable react-internal/no-production-logging */
     }
@@ -65,6 +74,9 @@ export function reenableLogs(): void {
         info: {...props, value: prevInfo},
         warn: {...props, value: prevWarn},
         error: {...props, value: prevError},
+        group: {...props, value: prevGroup},
+        groupCollapsed: {...props, value: prevGroupCollapsed},
+        groupEnd: {...props, value: prevGroupEnd},
       });
       /* eslint-enable react-internal/no-production-logging */
     }

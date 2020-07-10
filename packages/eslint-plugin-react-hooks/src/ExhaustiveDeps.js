@@ -72,7 +72,7 @@ export default {
     // Should be shared between visitors.
     const setStateCallSites = new WeakMap();
     const stateVariables = new WeakSet();
-    const staticKnownValueCache = new WeakMap();
+    const stableKnownValueCache = new WeakMap();
     const functionWithoutCapturedValueCache = new WeakMap();
     function memoizeWithWeakMap(fn, map) {
       return function(arg) {
@@ -296,7 +296,7 @@ export default {
       // Next we'll define a few helpers that helps us
       // tell if some values don't have to be declared as deps.
 
-      // Some are known to be static based on Hook calls.
+      // Some are known to be stable based on Hook calls.
       // const [state, setState] = useState() / React.useState()
       //               ^^^ true for this reference
       // const [state, dispatch] = useReducer() / React.useReducer()
@@ -304,7 +304,7 @@ export default {
       // const ref = useRef()
       //       ^^^ true for this reference
       // False for everything else.
-      function isStaticKnownHookValue(resolved) {
+      function isStableKnownHookValue(resolved) {
         if (!Array.isArray(resolved.defs)) {
           return false;
         }
@@ -343,7 +343,7 @@ export default {
             typeof init.value === 'number' ||
             init.value === null)
         ) {
-          // Definitely static
+          // Definitely stable
           return true;
         }
         // Detect known Hook calls
@@ -367,10 +367,10 @@ export default {
         const id = def.node.id;
         const {name} = callee;
         if (name === 'useRef' && id.type === 'Identifier') {
-          // useRef() return value is static.
+          // useRef() return value is stable.
           return true;
         } else if (name === 'useState' || name === 'useReducer') {
-          // Only consider second value in initializing tuple static.
+          // Only consider second value in initializing tuple stable.
           if (
             id.type === 'ArrayPattern' &&
             id.elements.length === 2 &&
@@ -387,7 +387,7 @@ export default {
                   );
                 }
               }
-              // Setter is static.
+              // Setter is stable.
               return true;
             } else if (id.elements[0] === resolved.identifiers[0]) {
               if (name === 'useState') {
@@ -452,22 +452,22 @@ export default {
           }
           if (
             pureScopes.has(ref.resolved.scope) &&
-            // Static values are fine though,
+            // Stable values are fine though,
             // although we won't check functions deeper.
-            !memoizedIsStaticKnownHookValue(ref.resolved)
+            !memoizedIsStablecKnownHookValue(ref.resolved)
           ) {
             return false;
           }
         }
         // If we got here, this function doesn't capture anything
-        // from render--or everything it captures is known static.
+        // from render--or everything it captures is known stable.
         return true;
       }
 
       // Remember such values. Avoid re-running extra checks on them.
-      const memoizedIsStaticKnownHookValue = memoizeWithWeakMap(
-        isStaticKnownHookValue,
-        staticKnownValueCache,
+      const memoizedIsStablecKnownHookValue = memoizeWithWeakMap(
+        isStableKnownHookValue,
+        stableKnownValueCache,
       );
       const memoizedIsFunctionWithoutCapturedValues = memoizeWithWeakMap(
         isFunctionWithoutCapturedValues,
@@ -495,8 +495,9 @@ export default {
       }
 
       // Get dependencies from all our resolved references in pure scopes.
-      // Key is dependency string, value is whether it's static.
+      // Key is dependency string, value is whether it's stable.
       const dependencies = new Map();
+      const optionalChains = new Map();
       gatherDependenciesRecursively(scope);
 
       function gatherDependenciesRecursively(currentScope) {
@@ -517,7 +518,10 @@ export default {
             reference.identifier,
           );
           const dependencyNode = getDependency(referenceNode);
-          const dependency = toPropertyAccessString(dependencyNode);
+          const dependency = analyzePropertyChain(
+            dependencyNode,
+            optionalChains,
+          );
 
           // Accessing ref.current inside effect cleanup is bad.
           if (
@@ -525,7 +529,8 @@ export default {
             isEffect &&
             // ... and this look like accessing .current...
             dependencyNode.type === 'Identifier' &&
-            dependencyNode.parent.type === 'MemberExpression' &&
+            (dependencyNode.parent.type === 'MemberExpression' ||
+              dependencyNode.parent.type === 'OptionalMemberExpression') &&
             !dependencyNode.parent.computed &&
             dependencyNode.parent.property.type === 'Identifier' &&
             dependencyNode.parent.property.name === 'current' &&
@@ -539,36 +544,34 @@ export default {
           }
 
           const def = reference.resolved.defs[0];
-
           if (def == null) {
             continue;
           }
-
           // Ignore references to the function itself as it's not defined yet.
           if (def.node != null && def.node.init === node.parent) {
             continue;
           }
-
           // Ignore Flow type parameters
           if (def.type === 'TypeParameter') {
             continue;
           }
 
           // Add the dependency to a map so we can make sure it is referenced
-          // again in our dependencies array. Remember whether it's static.
+          // again in our dependencies array. Remember whether it's stable.
           if (!dependencies.has(dependency)) {
             const resolved = reference.resolved;
-            const isStatic =
-              memoizedIsStaticKnownHookValue(resolved) ||
+            const isStable =
+              memoizedIsStablecKnownHookValue(resolved) ||
               memoizedIsFunctionWithoutCapturedValues(resolved);
             dependencies.set(dependency, {
-              isStatic,
+              isStable,
               references: [reference],
             });
           } else {
             dependencies.get(dependency).references.push(reference);
           }
         }
+
         for (const childScope of currentScope.childScopes) {
           gatherDependenciesRecursively(childScope);
         }
@@ -587,6 +590,7 @@ export default {
             if (
               parent != null &&
               // ref.current
+              // Note: no need to handle OptionalMemberExpression because it can't be LHS.
               parent.type === 'MemberExpression' &&
               !parent.computed &&
               parent.property.type === 'Identifier' &&
@@ -635,11 +639,11 @@ export default {
         });
       }
 
-      // Remember which deps are optional and report bad usage first.
-      const optionalDependencies = new Set();
-      dependencies.forEach(({isStatic, references}, key) => {
-        if (isStatic) {
-          optionalDependencies.add(key);
+      // Remember which deps are stable and report bad usage first.
+      const stableDependencies = new Set();
+      dependencies.forEach(({isStable, references}, key) => {
+        if (isStable) {
+          stableDependencies.add(key);
         }
         references.forEach(reference => {
           if (reference.writeExpr) {
@@ -657,7 +661,7 @@ export default {
         // Check if there are any top-level setState() calls.
         // Those tend to lead to infinite loops.
         let setStateInsideEffectWithoutDeps = null;
-        dependencies.forEach(({isStatic, references}, key) => {
+        dependencies.forEach(({isStable, references}, key) => {
           if (setStateInsideEffectWithoutDeps) {
             return;
           }
@@ -687,7 +691,7 @@ export default {
           const {suggestedDependencies} = collectRecommendations({
             dependencies,
             declaredDependencies: [],
-            optionalDependencies,
+            stableDependencies,
             externalDependencies: new Set(),
             isEffect: true,
           });
@@ -753,7 +757,10 @@ export default {
           // will be thrown. We will catch that error and report an error.
           let declaredDependency;
           try {
-            declaredDependency = toPropertyAccessString(declaredDependencyNode);
+            declaredDependency = analyzePropertyChain(
+              declaredDependencyNode,
+              null,
+            );
           } catch (error) {
             if (/Unsupported node type/.test(error.message)) {
               if (declaredDependencyNode.type === 'Literal') {
@@ -790,7 +797,10 @@ export default {
           }
 
           let maybeID = declaredDependencyNode;
-          while (maybeID.type === 'MemberExpression') {
+          while (
+            maybeID.type === 'MemberExpression' ||
+            maybeID.type === 'OptionalMemberExpression'
+          ) {
             maybeID = maybeID.object;
           }
           const isDeclaredInComponent = !componentScope.through.some(
@@ -817,7 +827,7 @@ export default {
       } = collectRecommendations({
         dependencies,
         declaredDependencies,
-        optionalDependencies,
+        stableDependencies,
         externalDependencies,
         isEffect,
       });
@@ -896,7 +906,7 @@ export default {
         suggestedDeps = collectRecommendations({
           dependencies,
           declaredDependencies: [], // Pretend we don't know
-          optionalDependencies,
+          stableDependencies,
           externalDependencies,
           isEffect,
         }).suggestedDependencies;
@@ -915,6 +925,24 @@ export default {
         suggestedDeps.sort();
       }
 
+      // Most of our algorithm deals with dependency paths with optional chaining stripped.
+      // This function is the last step before printing a dependency, so now is a good time to
+      // check whether any members in our path are always used as optional-only. In that case,
+      // we will use ?. instead of . to concatenate those parts of the path.
+      function formatDependency(path) {
+        const members = path.split('.');
+        let finalPath = '';
+        for (let i = 0; i < members.length; i++) {
+          if (i !== 0) {
+            const pathSoFar = members.slice(0, i + 1).join('.');
+            const isOptional = optionalChains.get(pathSoFar) === true;
+            finalPath += isOptional ? '?.' : '.';
+          }
+          finalPath += members[i];
+        }
+        return finalPath;
+      }
+
       function getWarningMessage(deps, singlePrefix, label, fixVerb) {
         if (deps.size === 0) {
           return null;
@@ -928,7 +956,7 @@ export default {
           joinEnglish(
             Array.from(deps)
               .sort()
-              .map(name => "'" + name + "'"),
+              .map(name => "'" + formatDependency(name) + "'"),
           ) +
           `. Either ${fixVerb} ${
             deps.size > 1 ? 'them' : 'it'
@@ -991,7 +1019,10 @@ export default {
             isPropsOnlyUsedInMembers = false;
             break;
           }
-          if (parent.type !== 'MemberExpression') {
+          if (
+            parent.type !== 'MemberExpression' &&
+            parent.type !== 'OptionalMemberExpression'
+          ) {
             isPropsOnlyUsedInMembers = false;
             break;
           }
@@ -1032,7 +1063,8 @@ export default {
             if (
               id != null &&
               id.parent != null &&
-              id.parent.type === 'CallExpression' &&
+              (id.parent.type === 'CallExpression' ||
+                id.parent.type === 'OptionalCallExpression') &&
               id.parent.callee === id
             ) {
               isFunctionCall = true;
@@ -1168,14 +1200,14 @@ export default {
           extraWarning,
         suggest: [
           {
-            desc: `Update the dependencies array to be: [${suggestedDeps.join(
-              ', ',
-            )}]`,
+            desc: `Update the dependencies array to be: [${suggestedDeps
+              .map(formatDependency)
+              .join(', ')}]`,
             fix(fixer) {
               // TODO: consider preserving the comments or formatting?
               return fixer.replaceText(
                 declaredDependenciesNode,
-                `[${suggestedDeps.join(', ')}]`,
+                `[${suggestedDeps.map(formatDependency).join(', ')}]`,
               );
             },
           },
@@ -1189,7 +1221,7 @@ export default {
 function collectRecommendations({
   dependencies,
   declaredDependencies,
-  optionalDependencies,
+  stableDependencies,
   externalDependencies,
   isEffect,
 }) {
@@ -1205,9 +1237,9 @@ function collectRecommendations({
   const depTree = createDepTree();
   function createDepTree() {
     return {
-      isRequired: false, // True if used in code
+      isUsed: false, // True if used in code
       isSatisfiedRecursively: false, // True if specified in deps
-      hasRequiredNodesBelow: false, // True if something deeper is used by code
+      isSubtreeUsed: false, // True if something deeper is used by code
       children: new Map(), // Nodes for properties
     };
   }
@@ -1216,9 +1248,9 @@ function collectRecommendations({
   // Imagine exclamation marks next to each used deep property.
   dependencies.forEach((_, key) => {
     const node = getOrCreateNodeByPath(depTree, key);
-    node.isRequired = true;
+    node.isUsed = true;
     markAllParentsByPath(depTree, key, parent => {
-      parent.hasRequiredNodesBelow = true;
+      parent.isSubtreeUsed = true;
     });
   });
 
@@ -1228,7 +1260,7 @@ function collectRecommendations({
     const node = getOrCreateNodeByPath(depTree, key);
     node.isSatisfiedRecursively = true;
   });
-  optionalDependencies.forEach(key => {
+  stableDependencies.forEach(key => {
     const node = getOrCreateNodeByPath(depTree, key);
     node.isSatisfiedRecursively = true;
   });
@@ -1238,7 +1270,7 @@ function collectRecommendations({
     const keys = path.split('.');
     let node = rootNode;
     for (const key of keys) {
-      let child = getChildByKey(node, key);
+      let child = node.children.get(key);
       if (!child) {
         child = createDepTree();
         node.children.set(key, child);
@@ -1251,28 +1283,13 @@ function collectRecommendations({
     const keys = path.split('.');
     let node = rootNode;
     for (const key of keys) {
-      const child = getChildByKey(node, key);
+      const child = node.children.get(key);
       if (!child) {
         return;
       }
       fn(child);
       node = child;
     }
-  }
-
-  /**
-   * Match key with optional chaining
-   * key -> key
-   * key? -> key
-   * key -> key?
-   * Otherwise undefined.
-   */
-  function getChildByKey(node, key) {
-    return (
-      node.children.get(key) ||
-      node.children.get(key.split('?')[0]) ||
-      node.children.get(key + '?')
-    );
   }
 
   // Now we can learn which dependencies are missing or necessary.
@@ -1287,22 +1304,19 @@ function collectRecommendations({
   function scanTreeRecursively(node, missingPaths, satisfyingPaths, keyToPath) {
     node.children.forEach((child, key) => {
       const path = keyToPath(key);
-      // For analyzing dependencies, we want the "normalized" path, without any optional chaining ("?.") operator
-      // foo?.bar -> foo.bar
-      const normalizedPath = path.replace(/\?$/, '');
       if (child.isSatisfiedRecursively) {
-        if (child.hasRequiredNodesBelow) {
+        if (child.isSubtreeUsed) {
           // Remember this dep actually satisfied something.
-          satisfyingPaths.add(normalizedPath);
+          satisfyingPaths.add(path);
         }
         // It doesn't matter if there's something deeper.
         // It would be transitively satisfied since we assume immutability.
         // `props.foo` is enough if you read `props.foo.id`.
         return;
       }
-      if (child.isRequired) {
+      if (child.isUsed) {
         // Remember that no declared deps satisfied this node.
-        missingPaths.add(normalizedPath);
+        missingPaths.add(path);
         // If we got here, nothing in its subtree was satisfied.
         // No need to search further.
         return;
@@ -1454,12 +1468,14 @@ function getDependency(node) {
     !node.parent.computed &&
     !(
       node.parent.parent != null &&
-      node.parent.parent.type === 'CallExpression' &&
+      (node.parent.parent.type === 'CallExpression' ||
+        node.parent.parent.type === 'OptionalCallExpression') &&
       node.parent.parent.callee === node.parent
     )
   ) {
     return getDependency(node.parent);
   } else if (
+    // Note: we don't check OptionalMemberExpression because it can't be LHS.
     node.type === 'MemberExpression' &&
     node.parent &&
     node.parent.type === 'AssignmentExpression'
@@ -1473,22 +1489,47 @@ function getDependency(node) {
 /**
  * Assuming () means the passed node.
  * (foo) -> 'foo'
- * foo.(bar) -> 'foo.bar'
- * foo.bar.(baz) -> 'foo.bar.baz'
- * foo?.(bar) -> 'foo?.bar'
+ * foo(.)bar -> 'foo.bar'
+ * foo.bar(.)baz -> 'foo.bar.baz'
  * Otherwise throw.
  */
-function toPropertyAccessString(node) {
+function analyzePropertyChain(node, optionalChains) {
   if (node.type === 'Identifier') {
-    return node.name;
+    const result = node.name;
+    if (optionalChains) {
+      // Mark as required.
+      optionalChains.set(result, false);
+    }
+    return result;
   } else if (node.type === 'MemberExpression' && !node.computed) {
-    const object = toPropertyAccessString(node.object);
-    const property = toPropertyAccessString(node.property);
-    return `${object}.${property}`;
+    const object = analyzePropertyChain(node.object, optionalChains);
+    const property = analyzePropertyChain(node.property, null);
+    const result = `${object}.${property}`;
+    if (optionalChains) {
+      // Mark as required.
+      optionalChains.set(result, false);
+    }
+    return result;
   } else if (node.type === 'OptionalMemberExpression' && !node.computed) {
-    const object = toPropertyAccessString(node.object);
-    const property = toPropertyAccessString(node.property);
-    return `${object}?.${property}`;
+    const object = analyzePropertyChain(node.object, optionalChains);
+    const property = analyzePropertyChain(node.property, null);
+    const result = `${object}.${property}`;
+    if (optionalChains) {
+      // Note: OptionalMemberExpression doesn't necessarily mean this node is optional.
+      // It just means there is an optional member somewhere inside.
+      // This particular node might still represent a required member, so check .optional field.
+      if (node.optional) {
+        // We only want to consider it optional if *all* usages were optional.
+        if (!optionalChains.has(result)) {
+          // Mark as (maybe) optional. If there's a required usage, this will be overridden.
+          optionalChains.set(result, true);
+        }
+      } else {
+        // Mark as required.
+        optionalChains.set(result, false);
+      }
+    }
+    return result;
   } else {
     throw new Error(`Unsupported node type: ${node.type}`);
   }
@@ -1533,7 +1574,7 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
         // target custom reactive hooks.
         let name;
         try {
-          name = toPropertyAccessString(node);
+          name = analyzePropertyChain(node, null);
         } catch (error) {
           if (/Unsupported node type/.test(error.message)) {
             return 0;

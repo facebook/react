@@ -17,6 +17,7 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
   enableDebugTracing,
+  enableSchedulingProfiler,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
@@ -59,6 +60,10 @@ import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
+import {
+  markForceUpdateScheduled,
+  markStateUpdateScheduled,
+} from './SchedulingProfiler';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -214,6 +219,10 @@ const classComponentUpdater = {
         }
       }
     }
+
+    if (enableSchedulingProfiler) {
+      markStateUpdateScheduled(fiber, lane);
+    }
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
@@ -243,6 +252,10 @@ const classComponentUpdater = {
         }
       }
     }
+
+    if (enableSchedulingProfiler) {
+      markStateUpdateScheduled(fiber, lane);
+    }
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
@@ -270,6 +283,10 @@ const classComponentUpdater = {
           logForceUpdateScheduled(name, lane);
         }
       }
+    }
+
+    if (enableSchedulingProfiler) {
+      markForceUpdateScheduled(fiber, lane);
     }
   },
 };

@@ -15,6 +15,11 @@ import * as Scheduler from 'scheduler';
 import {__interactionsRef} from 'scheduler/tracing';
 import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
+import {
+  SyncLanePriority,
+  getCurrentUpdateLanePriority,
+  setCurrentUpdateLanePriority,
+} from './ReactFiberLane';
 
 const {
   unstable_runWithPriority: Scheduler_runWithPriority,
@@ -171,9 +176,11 @@ function flushSyncCallbackQueueImpl() {
     // Prevent re-entrancy.
     isFlushingSyncQueue = true;
     let i = 0;
+    const previousLanePriority = getCurrentUpdateLanePriority();
     try {
       const isSync = true;
       const queue = syncQueue;
+      setCurrentUpdateLanePriority(SyncLanePriority);
       runWithPriority(ImmediatePriority, () => {
         for (; i < queue.length; i++) {
           let callback = queue[i];
@@ -195,6 +202,7 @@ function flushSyncCallbackQueueImpl() {
       );
       throw error;
     } finally {
+      setCurrentUpdateLanePriority(previousLanePriority);
       isFlushingSyncQueue = false;
     }
   }

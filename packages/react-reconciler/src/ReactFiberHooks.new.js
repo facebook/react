@@ -30,11 +30,16 @@ import {NoMode, BlockingMode} from './ReactTypeOfMode';
 import {
   NoLane,
   NoLanes,
+  InputContinuousLanePriority,
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
   markRootEntangled,
   markRootMutableRead,
+  getCurrentUpdateLanePriority,
+  setCurrentUpdateLanePriority,
+  higherLanePriority,
+  DefaultLanePriority,
 } from './ReactFiberLane';
 import {readContext} from './ReactFiberNewContext.new';
 import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.new';
@@ -1498,12 +1503,20 @@ function rerenderDeferredValue<T>(
 
 function startTransition(setPending, config, callback) {
   const priorityLevel = getCurrentPriorityLevel();
+  const previousLanePriority = getCurrentUpdateLanePriority();
+  setCurrentUpdateLanePriority(
+    higherLanePriority(previousLanePriority, InputContinuousLanePriority),
+  );
   runWithPriority(
     priorityLevel < UserBlockingPriority ? UserBlockingPriority : priorityLevel,
     () => {
       setPending(true);
     },
   );
+
+  // If there's no SuspenseConfig set, we'll use the DefaultLanePriority for this transition.
+  setCurrentUpdateLanePriority(DefaultLanePriority);
+
   runWithPriority(
     priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
     () => {
@@ -1513,6 +1526,7 @@ function startTransition(setPending, config, callback) {
         setPending(false);
         callback();
       } finally {
+        setCurrentUpdateLanePriority(previousLanePriority);
         ReactCurrentBatchConfig.suspense = previousConfig;
       }
     },

@@ -623,6 +623,17 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       // The new reconciler batches everything together, so it finishes without
       // suspending again.
       'Sibling',
+
+      // NOTE: The final of the update got pushed into a lower priority range of
+      // lanes, leading to the extra intermediate render. This is because when
+      // we schedule the fourth update, we're already in the middle of rendering
+      // the three others. Since there are only three lanes in the default
+      // range, the fourth lane is shifted to slightly lower priority. This
+      // could easily change when we tweak our batching heuristics. Ideally,
+      // they'd all have default priority and render in a single batch.
+      'Suspend! [Step 3]',
+      'Sibling',
+
       'Step 4',
     ]);
   });
@@ -2837,7 +2848,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       foo.setState({suspend: false});
     });
 
-    expect(Scheduler).toHaveYielded(['Foo']);
+    expect(Scheduler).toHaveYielded([
+      // First setState
+      'Foo',
+      // Second setState. This update was scheduled while we were in the
+      // middle of rendering the previous update, so it was pushed to a separate
+      // batch to avoid invalidating the work-in-progress tree.
+      'Foo',
+    ]);
     expect(root).toMatchRenderedOutput(<span prop="Foo" />);
   });
 
@@ -3895,5 +3913,60 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
     expect(Scheduler).toHaveYielded(['Promise resolved [B]', 'B']);
     expect(root).toMatchRenderedOutput(<span prop="B" />);
+  });
+
+  it('retries have lower priority than normal updates', async () => {
+    const {useState} = React;
+
+    let setText;
+    function UpdatingText() {
+      const [text, _setText] = useState('A');
+      setText = _setText;
+      return <Text text={text} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(
+        <>
+          <UpdatingText />
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText text="Async" />
+          </Suspense>
+        </>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['A', 'Suspend! [Async]', 'Loading...']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="A" />
+        <span prop="Loading..." />
+      </>,
+    );
+
+    await ReactNoop.act(async () => {
+      // Resolve the promise. This will trigger a retry.
+      await resolveText('Async');
+      expect(Scheduler).toHaveYielded(['Promise resolved [Async]']);
+      // Before the retry happens, schedule a new update.
+      setText('B');
+
+      // The update should be allowed to finish before the retry is attempted.
+      expect(Scheduler).toFlushUntilNextPaint(['B']);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span prop="B" />
+          <span prop="Loading..." />
+        </>,
+      );
+    });
+    // Then do the retry.
+    expect(Scheduler).toHaveYielded(['Async']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="B" />
+        <span prop="Async" />
+      </>,
+    );
   });
 });

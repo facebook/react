@@ -12,6 +12,7 @@ import typeof * as ExportsType from './ReactFeatureFlags.test-renderer.www';
 
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableDebugTracing = false;
+export const enableSchedulingProfiler = false;
 export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = __PROFILE__;
@@ -38,7 +39,6 @@ export const enableTrustedTypesIntegration = false;
 export const disableTextareaChildren = false;
 export const disableModulePatternComponents = true;
 export const warnUnstableRenderSubtreeIntoContainer = false;
-export const enableModernEventSystem = false;
 export const warnAboutSpreadingKeyToJSX = false;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
@@ -46,6 +46,7 @@ export const enableFilterEmptyStringAttributesDOM = false;
 
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
+export const decoupleUpdatePriorityFromScheduler = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

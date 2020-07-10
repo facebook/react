@@ -15,6 +15,10 @@ export const enableFilterEmptyStringAttributesDOM = false;
 // Intended to enable React core members to more easily debug scheduling issues in DEV builds.
 export const enableDebugTracing = false;
 
+// Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
+// for an experimental scheduling profiler tool.
+export const enableSchedulingProfiler = false;
+
 // Helps identify side effects in render-phase lifecycle hooks and setState
 // reducers by double invoking them in Strict Mode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
@@ -111,9 +115,6 @@ export const disableModulePatternComponents = false;
 // We should remove this flag once the above flag becomes enabled
 export const warnUnstableRenderSubtreeIntoContainer = false;
 
-// Modern event system where events get registered at roots
-export const enableModernEventSystem = false;
-
 // Support legacy Primer support on internal FB www
 export const enableLegacyFBSupport = false;
 
@@ -123,3 +124,6 @@ export const enableLegacyFBSupport = false;
 // interleaved event. Remove this flag once we have migrated to the
 // new behavior.
 export const deferRenderPhaseUpdateToNextBatch = true;
+
+// Replacement for runWithPriority in React internals.
+export const decoupleUpdatePriorityFromScheduler = false;

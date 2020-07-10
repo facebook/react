@@ -21,7 +21,6 @@ function initializeModules(hasPointerEvents) {
   setPointerEvent(hasPointerEvents);
   jest.resetModules();
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.enableModernEventSystem = true;
   ReactFeatureFlags.enableCreateEventHandleAPI = true;
   React = require('react');
   ReactDOM = require('react-dom');

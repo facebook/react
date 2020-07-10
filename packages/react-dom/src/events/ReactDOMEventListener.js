@@ -7,11 +7,11 @@
  * @flow
  */
 
-import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
+import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
-import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
+import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
@@ -43,7 +43,6 @@ import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
 import {
   enableDeprecatedFlareAPI,
-  enableModernEventSystem,
   enableLegacyFBSupport,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -52,7 +51,6 @@ import {
   DiscreteEvent,
 } from 'shared/ReactTypes';
 import {getEventPriorityForPluginSystem} from './DOMEventProperties';
-import {dispatchEventForLegacyPluginEventSystem} from './DOMLegacyEventPluginSystem';
 import {dispatchEventForPluginEventSystem} from './DOMModernPluginEventSystem';
 import {
   flushDiscreteUpdatesIfNeeded,
@@ -67,6 +65,8 @@ const {
 // TODO: can we stop exporting these?
 export let _enabled = true;
 
+// This is exported in FB builds for use by legacy FB layer infra.
+// We'd like to remove this but it's not clear if this is safe.
 export function setEnabled(enabled: ?boolean) {
   _enabled = !!enabled;
 }
@@ -228,22 +228,13 @@ export function dispatchEvent(
   // in case the event system needs to trace it.
   if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
-      if (enableModernEventSystem) {
-        dispatchEventForPluginEventSystem(
-          topLevelType,
-          eventSystemFlags,
-          nativeEvent,
-          null,
-          targetContainer,
-        );
-      } else {
-        dispatchEventForLegacyPluginEventSystem(
-          topLevelType,
-          eventSystemFlags,
-          nativeEvent,
-          null,
-        );
-      }
+      dispatchEventForPluginEventSystem(
+        topLevelType,
+        eventSystemFlags,
+        nativeEvent,
+        null,
+        targetContainer,
+      );
     }
     if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
@@ -256,22 +247,13 @@ export function dispatchEvent(
       );
     }
   } else {
-    if (enableModernEventSystem) {
-      dispatchEventForPluginEventSystem(
-        topLevelType,
-        eventSystemFlags,
-        nativeEvent,
-        null,
-        targetContainer,
-      );
-    } else {
-      dispatchEventForLegacyPluginEventSystem(
-        topLevelType,
-        eventSystemFlags,
-        nativeEvent,
-        null,
-      );
-    }
+    dispatchEventForPluginEventSystem(
+      topLevelType,
+      eventSystemFlags,
+      nativeEvent,
+      null,
+      targetContainer,
+    );
   }
 }
 
@@ -327,22 +309,13 @@ export function attemptToDispatchEvent(
 
   if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
-      if (enableModernEventSystem) {
-        dispatchEventForPluginEventSystem(
-          topLevelType,
-          eventSystemFlags,
-          nativeEvent,
-          targetInst,
-          targetContainer,
-        );
-      } else {
-        dispatchEventForLegacyPluginEventSystem(
-          topLevelType,
-          eventSystemFlags,
-          nativeEvent,
-          targetInst,
-        );
-      }
+      dispatchEventForPluginEventSystem(
+        topLevelType,
+        eventSystemFlags,
+        nativeEvent,
+        targetInst,
+        targetContainer,
+      );
     }
     if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
@@ -355,22 +328,13 @@ export function attemptToDispatchEvent(
       );
     }
   } else {
-    if (enableModernEventSystem) {
-      dispatchEventForPluginEventSystem(
-        topLevelType,
-        eventSystemFlags,
-        nativeEvent,
-        targetInst,
-        targetContainer,
-      );
-    } else {
-      dispatchEventForLegacyPluginEventSystem(
-        topLevelType,
-        eventSystemFlags,
-        nativeEvent,
-        targetInst,
-      );
-    }
+    dispatchEventForPluginEventSystem(
+      topLevelType,
+      eventSystemFlags,
+      nativeEvent,
+      targetInst,
+      targetContainer,
+    );
   }
   // We're not blocked on anything.
   return null;

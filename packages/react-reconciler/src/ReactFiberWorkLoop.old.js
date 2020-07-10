@@ -26,7 +26,10 @@ import {
   enableSchedulerTracing,
   warnAboutUnmockedScheduler,
   deferRenderPhaseUpdateToNextBatch,
+  decoupleUpdatePriorityFromScheduler,
   enableDebugTracing,
+  enableSchedulingProfiler,
+  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -56,6 +59,17 @@ import {
   logRenderStarted,
   logRenderStopped,
 } from './DebugTracing';
+import {
+  markCommitStarted,
+  markCommitStopped,
+  markLayoutEffectsStarted,
+  markLayoutEffectsStopped,
+  markPassiveEffectsStarted,
+  markPassiveEffectsStopped,
+  markRenderStarted,
+  markRenderYielded,
+  markRenderStopped,
+} from './SchedulingProfiler';
 
 // The scheduler is imported here *only* to detect whether it's been mocked
 import * as Scheduler from 'scheduler';
@@ -98,6 +112,7 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
+  ScopeComponent,
 } from './ReactWorkTags';
 import {LegacyRoot} from './ReactRootTags';
 import {
@@ -124,6 +139,7 @@ import {
   InputDiscreteLanePriority,
   TransitionShortLanePriority,
   TransitionLongLanePriority,
+  DefaultLanePriority,
   NoLanes,
   NoLane,
   SyncLane,
@@ -132,6 +148,7 @@ import {
   NoTimestamp,
   findUpdateLane,
   findTransitionLane,
+  findRetryLane,
   includesSomeLane,
   isSubsetOfLanes,
   mergeLanes,
@@ -141,6 +158,8 @@ import {
   hasUpdatePriority,
   getNextLanes,
   returnNextLanesPriority,
+  setCurrentUpdateLanePriority,
+  getCurrentUpdateLanePriority,
   markStarvedLanesAsExpired,
   getLanesToRetrySynchronouslyOnError,
   markRootUpdated,
@@ -405,7 +424,6 @@ export function requestUpdateLane(
     currentEventWipLanes = workInProgressRootIncludedLanes;
   }
 
-  let lane;
   if (suspenseConfig !== null) {
     // Use the size of the timeout as a heuristic to prioritize shorter
     // transitions over longer ones.
@@ -423,29 +441,81 @@ export function requestUpdateLane(
           : NoLanes;
     }
 
-    lane = findTransitionLane(
+    return findTransitionLane(
       transitionLanePriority,
       currentEventWipLanes,
       currentEventPendingLanes,
     );
-  } else {
-    // TODO: If we're not inside `runWithPriority`, this returns the priority
-    // of the currently running task. That's probably not what we want.
-    const schedulerPriority = getCurrentPriorityLevel();
+  }
 
-    if (
-      // TODO: Temporary. We're removing the concept of discrete updates.
-      (executionContext & DiscreteEventContext) !== NoContext &&
-      schedulerPriority === UserBlockingSchedulerPriority
-    ) {
-      lane = findUpdateLane(InputDiscreteLanePriority, currentEventWipLanes);
-    } else {
-      const lanePriority = schedulerPriorityToLanePriority(schedulerPriority);
-      lane = findUpdateLane(lanePriority, currentEventWipLanes);
+  // TODO: Remove this dependency on the Scheduler priority.
+  // To do that, we're replacing it with an update lane priority.
+  const schedulerPriority = getCurrentPriorityLevel();
+
+  // The old behavior was using the priority level of the Scheduler.
+  // This couples React to the Scheduler internals, so we're replacing it
+  // with the currentUpdateLanePriority above. As an example of how this
+  // could be problematic, if we're not inside `Scheduler.runWithPriority`,
+  // then we'll get the priority of the current running Scheduler task,
+  // which is probably not what we want.
+  let lane;
+  if (
+    // TODO: Temporary. We're removing the concept of discrete updates.
+    (executionContext & DiscreteEventContext) !== NoContext &&
+    schedulerPriority === UserBlockingSchedulerPriority
+  ) {
+    lane = findUpdateLane(InputDiscreteLanePriority, currentEventWipLanes);
+  } else {
+    const schedulerLanePriority = schedulerPriorityToLanePriority(
+      schedulerPriority,
+    );
+
+    if (decoupleUpdatePriorityFromScheduler) {
+      // In the new strategy, we will track the current update lane priority
+      // inside React and use that priority to select a lane for this update.
+      // For now, we're just logging when they're different so we can assess.
+      const currentUpdateLanePriority = getCurrentUpdateLanePriority();
+
+      if (
+        schedulerLanePriority !== currentUpdateLanePriority &&
+        currentUpdateLanePriority !== NoLanePriority
+      ) {
+        if (__DEV__) {
+          console.error(
+            'Expected current scheduler lane priority %s to match current update lane priority %s',
+            schedulerLanePriority,
+            currentUpdateLanePriority,
+          );
+        }
+      }
     }
+
+    lane = findUpdateLane(schedulerLanePriority, currentEventWipLanes);
   }
 
   return lane;
+}
+
+function requestRetryLane(fiber: Fiber) {
+  // This is a fork of `requestUpdateLane` designed specifically for Suspense
+  // "retries" — a special update that attempts to flip a Suspense boundary
+  // from its placeholder state to its primary/resolved state.
+
+  // Special cases
+  const mode = fiber.mode;
+  if ((mode & BlockingMode) === NoMode) {
+    return (SyncLane: Lane);
+  } else if ((mode & ConcurrentMode) === NoMode) {
+    return getCurrentPriorityLevel() === ImmediateSchedulerPriority
+      ? (SyncLane: Lane)
+      : (SyncBatchedLane: Lane);
+  }
+
+  // See `requestUpdateLane` for explanation of `currentEventWipLanes`
+  if (currentEventWipLanes === NoLanes) {
+    currentEventWipLanes = workInProgressRootIncludedLanes;
+  }
+  return findRetryLane(currentEventWipLanes);
 }
 
 export function scheduleUpdateOnFiber(
@@ -1079,7 +1149,13 @@ export function flushDiscreteUpdates() {
 
 export function deferredUpdates<A>(fn: () => A): A {
   // TODO: Remove in favor of Scheduler.next
-  return runWithPriority(NormalSchedulerPriority, fn);
+  const previousLanePriority = getCurrentUpdateLanePriority();
+  try {
+    setCurrentUpdateLanePriority(DefaultLanePriority);
+    return runWithPriority(NormalSchedulerPriority, fn);
+  } finally {
+    setCurrentUpdateLanePriority(previousLanePriority);
+  }
 }
 
 function flushPendingDiscreteUpdates() {
@@ -1134,13 +1210,16 @@ export function discreteUpdates<A, B, C, D, R>(
 ): R {
   const prevExecutionContext = executionContext;
   executionContext |= DiscreteEventContext;
+  const previousLanePriority = getCurrentUpdateLanePriority();
   try {
+    setCurrentUpdateLanePriority(InputDiscreteLanePriority);
     // Should this
     return runWithPriority(
       UserBlockingSchedulerPriority,
       fn.bind(null, a, b, c, d),
     );
   } finally {
+    setCurrentUpdateLanePriority(previousLanePriority);
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
       // Flush the immediate callbacks that were scheduled during this batch
@@ -1177,13 +1256,16 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
     return fn(a);
   }
   executionContext |= BatchedContext;
+  const previousLanePriority = getCurrentUpdateLanePriority();
   try {
+    setCurrentUpdateLanePriority(SyncLanePriority);
     if (fn) {
       return runWithPriority(ImmediateSchedulerPriority, fn.bind(null, a));
     } else {
       return (undefined: $FlowFixMe);
     }
   } finally {
+    setCurrentUpdateLanePriority(previousLanePriority);
     executionContext = prevExecutionContext;
     // Flush the immediate callbacks that were scheduled during this batch.
     // Note that this will happen even if batchedUpdates is higher up
@@ -1195,9 +1277,12 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
 export function flushControlled(fn: () => mixed): void {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
+  const previousLanePriority = getCurrentUpdateLanePriority();
   try {
+    setCurrentUpdateLanePriority(SyncLanePriority);
     runWithPriority(ImmediateSchedulerPriority, fn);
   } finally {
+    setCurrentUpdateLanePriority(previousLanePriority);
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
       // Flush the immediate callbacks that were scheduled during this batch
@@ -1461,6 +1546,10 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
     }
   }
 
+  if (enableSchedulingProfiler) {
+    markRenderStarted(lanes);
+  }
+
   do {
     try {
       workLoopSync();
@@ -1490,6 +1579,10 @@ function renderRootSync(root: FiberRoot, lanes: Lanes) {
     if (enableDebugTracing) {
       logRenderStopped();
     }
+  }
+
+  if (enableSchedulingProfiler) {
+    markRenderStopped();
   }
 
   // Set this to null to indicate there's no in-progress render.
@@ -1528,6 +1621,10 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
     }
   }
 
+  if (enableSchedulingProfiler) {
+    markRenderStarted(lanes);
+  }
+
   do {
     try {
       workLoopConcurrent();
@@ -1553,9 +1650,16 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
   // Check if the tree has completed.
   if (workInProgress !== null) {
     // Still work remaining.
+    if (enableSchedulingProfiler) {
+      markRenderYielded();
+    }
     return RootIncomplete;
   } else {
     // Completed the tree.
+    if (enableSchedulingProfiler) {
+      markRenderStopped();
+    }
+
     // Set this to null to indicate there's no in-progress render.
     workInProgressRoot = null;
     workInProgressRootRenderLanes = NoLanes;
@@ -1845,11 +1949,19 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
   }
 
+  if (enableSchedulingProfiler) {
+    markCommitStarted(lanes);
+  }
+
   if (finishedWork === null) {
     if (__DEV__) {
       if (enableDebugTracing) {
         logCommitStopped();
       }
+    }
+
+    if (enableSchedulingProfiler) {
+      markCommitStopped();
     }
 
     return null;
@@ -1915,6 +2027,9 @@ function commitRootImpl(root, renderPriorityLevel) {
   }
 
   if (firstEffect !== null) {
+    const previousLanePriority = getCurrentUpdateLanePriority();
+    setCurrentUpdateLanePriority(SyncLanePriority);
+
     const prevExecutionContext = executionContext;
     executionContext |= CommitContext;
     const prevInteractions = pushInteractions(root);
@@ -2035,6 +2150,9 @@ function commitRootImpl(root, renderPriorityLevel) {
       popInteractions(((prevInteractions: any): Set<Interaction>));
     }
     executionContext = prevExecutionContext;
+
+    // Reset the priority to the previous non-sync value.
+    setCurrentUpdateLanePriority(previousLanePriority);
   } else {
     // No effects.
     root.current = finishedWork;
@@ -2142,6 +2260,10 @@ function commitRootImpl(root, renderPriorityLevel) {
       }
     }
 
+    if (enableSchedulingProfiler) {
+      markCommitStopped();
+    }
+
     // This is a legacy edge case. We just committed the initial mount of
     // a ReactDOM.render-ed root inside of batchedUpdates. The commit fired
     // synchronously, but layout updates should be deferred until the end
@@ -2156,6 +2278,10 @@ function commitRootImpl(root, renderPriorityLevel) {
     if (enableDebugTracing) {
       logCommitStopped();
     }
+  }
+
+  if (enableSchedulingProfiler) {
+    markCommitStopped();
   }
 
   return null;
@@ -2223,6 +2349,13 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
       if (current !== null) {
         commitDetachRef(current);
       }
+      if (enableScopeAPI) {
+        // TODO: This is a temporary solution that allows us to transition away
+        // from React Flare on www.
+        if (nextEffect.tag === ScopeComponent) {
+          commitAttachRef(nextEffect);
+        }
+      }
     }
 
     // The following switch statement is only concerned about placement,
@@ -2288,6 +2421,10 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
     }
   }
 
+  if (enableSchedulingProfiler) {
+    markLayoutEffectsStarted(committedLanes);
+  }
+
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
@@ -2299,8 +2436,16 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
       commitLayoutEffectOnFiber(root, current, nextEffect, committedLanes);
     }
 
-    if (effectTag & Ref) {
-      commitAttachRef(nextEffect);
+    if (enableScopeAPI) {
+      // TODO: This is a temporary solution that allows us to transition away
+      // from React Flare on www.
+      if (effectTag & Ref && nextEffect.tag !== ScopeComponent) {
+        commitAttachRef(nextEffect);
+      }
+    } else {
+      if (effectTag & Ref) {
+        commitAttachRef(nextEffect);
+      }
     }
 
     resetCurrentDebugFiberInDEV();
@@ -2312,6 +2457,10 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
       logLayoutEffectsStopped();
     }
   }
+
+  if (enableSchedulingProfiler) {
+    markLayoutEffectsStopped();
+  }
 }
 
 export function flushPassiveEffects() {
@@ -2321,7 +2470,15 @@ export function flushPassiveEffects() {
         ? NormalSchedulerPriority
         : pendingPassiveEffectsRenderPriority;
     pendingPassiveEffectsRenderPriority = NoSchedulerPriority;
-    return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
+    const previousLanePriority = getCurrentUpdateLanePriority();
+    try {
+      setCurrentUpdateLanePriority(
+        schedulerPriorityToLanePriority(priorityLevel),
+      );
+      return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
+    } finally {
+      setCurrentUpdateLanePriority(previousLanePriority);
+    }
   }
 }
 
@@ -2397,6 +2554,10 @@ function flushPassiveEffectsImpl() {
     if (enableDebugTracing) {
       logPassiveEffectsStarted(lanes);
     }
+  }
+
+  if (enableSchedulingProfiler) {
+    markPassiveEffectsStarted(lanes);
   }
 
   if (__DEV__) {
@@ -2561,6 +2722,10 @@ function flushPassiveEffectsImpl() {
     }
   }
 
+  if (enableSchedulingProfiler) {
+    markPassiveEffectsStopped();
+  }
+
   executionContext = prevExecutionContext;
 
   flushSyncCallbackQueue();
@@ -2713,10 +2878,7 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
   // suspended it has resolved, which means at least part of the tree was
   // likely unblocked. Try rendering again, at a new expiration time.
   if (retryLane === NoLane) {
-    const suspenseConfig = null; // Retries don't carry over the already committed update.
-    // TODO: Should retries get their own lane? Maybe it could share with
-    // transitions.
-    retryLane = requestUpdateLane(boundaryFiber, suspenseConfig);
+    retryLane = requestRetryLane(boundaryFiber);
   }
   // TODO: Special case idle priority?
   const eventTime = requestEventTime();

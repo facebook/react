@@ -9,9 +9,9 @@
 
 'use strict';
 
-let React = require('react');
-let ReactDOM = require('react-dom');
-let TestUtils = require('react-dom/test-utils');
+let React;
+let ReactDOM;
+let TestUtils;
 let ReactFeatureFlags;
 let Scheduler;
 
@@ -34,6 +34,7 @@ describe('ChangeEventPlugin', () => {
   let container;
 
   beforeEach(() => {
+    jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     // TODO pull this into helper method, reduce repetition.
     // mock the browser APIs which are used in schedule:
@@ -53,7 +54,10 @@ describe('ChangeEventPlugin', () => {
         postMessageCallback(postMessageEvent);
       }
     };
-    jest.resetModules();
+    React = require('react');
+    ReactDOM = require('react-dom');
+    TestUtils = require('react-dom/test-utils');
+    Scheduler = require('scheduler');
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -80,6 +84,30 @@ describe('ChangeEventPlugin', () => {
 
     const node = ReactDOM.render(
       <input type="text" onChange={cb} defaultValue="foo" />,
+      container,
+    );
+    node.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
+    node.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
+
+    if (ReactFeatureFlags.disableInputAttributeSyncing) {
+      // TODO: figure out why. This might be a bug.
+      expect(called).toBe(1);
+    } else {
+      // There should be no React change events because the value stayed the same.
+      expect(called).toBe(0);
+    }
+  });
+
+  it('should consider initial text value to be current (capture)', () => {
+    let called = 0;
+
+    function cb(e) {
+      called++;
+      expect(e.type).toBe('change');
+    }
+
+    const node = ReactDOM.render(
+      <input type="text" onChangeCapture={cb} defaultValue="foo" />,
       container,
     );
     node.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
@@ -467,16 +495,6 @@ describe('ChangeEventPlugin', () => {
   });
 
   describe('concurrent mode', () => {
-    beforeEach(() => {
-      jest.resetModules();
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
-      React = require('react');
-      ReactDOM = require('react-dom');
-      TestUtils = require('react-dom/test-utils');
-      Scheduler = require('scheduler');
-    });
-
     // @gate experimental
     it('text input', () => {
       const root = ReactDOM.unstable_createRoot(container);
@@ -718,13 +736,6 @@ describe('ChangeEventPlugin', () => {
 
     // @gate experimental
     it('mouse enter/leave should be user-blocking but not discrete', async () => {
-      // This is currently behind a feature flag
-      jest.resetModules();
-      React = require('react');
-      ReactDOM = require('react-dom');
-      TestUtils = require('react-dom/test-utils');
-      Scheduler = require('scheduler');
-
       const {act} = TestUtils;
       const {useState} = React;
 

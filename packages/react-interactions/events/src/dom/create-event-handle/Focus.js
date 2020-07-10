@@ -126,6 +126,7 @@ function handleGlobalFocusVisibleEvent(
 }
 
 const passiveObject = {passive: true};
+const passiveCaptureObject = {capture: true, passive: false};
 
 function handleFocusVisibleTargetEvent(
   type: string,
@@ -242,8 +243,8 @@ export function useFocus(
 ): void {
   // Setup controlled state for this useFocus hook
   const stateRef = useRef({isFocused: false, isFocusVisible: false});
-  const focusHandle = useEvent('focus', passiveObject);
-  const blurHandle = useEvent('blur', passiveObject);
+  const focusHandle = useEvent('focus', passiveCaptureObject);
+  const blurHandle = useEvent('blur', passiveCaptureObject);
   const focusVisibleHandles = useFocusVisibleInputHandles();
 
   useEffect(() => {
@@ -329,8 +330,8 @@ export function useFocusWithin(
 ) {
   // Setup controlled state for this useFocus hook
   const stateRef = useRef({isFocused: false, isFocusVisible: false});
-  const focusHandle = useEvent('focus', passiveObject);
-  const blurHandle = useEvent('blur', passiveObject);
+  const focusHandle = useEvent('focus', passiveCaptureObject);
+  const blurHandle = useEvent('blur', passiveCaptureObject);
   const afterBlurHandle = useEvent('afterblur', passiveObject);
   const beforeBlurHandle = useEvent('beforeblur', passiveObject);
   const focusVisibleHandles = useFocusVisibleInputHandles();

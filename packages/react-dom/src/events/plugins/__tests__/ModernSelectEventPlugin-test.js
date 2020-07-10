@@ -11,14 +11,11 @@
 
 let React;
 let ReactDOM;
-let ReactFeatureFlags;
 
 describe('SelectEventPlugin', () => {
   let container;
 
   beforeEach(() => {
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableModernEventSystem = true;
     React = require('react');
     ReactDOM = require('react-dom');
 
@@ -88,6 +85,40 @@ describe('SelectEventPlugin', () => {
 
     const node = ReactDOM.render(
       <input type="text" onSelect={onSelect} />,
+      container,
+    );
+    node.focus();
+
+    let nativeEvent = new MouseEvent('focus', {
+      bubbles: true,
+      cancelable: true,
+    });
+    node.dispatchEvent(nativeEvent);
+    expect(select).toHaveBeenCalledTimes(0);
+
+    nativeEvent = new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true,
+    });
+    node.dispatchEvent(nativeEvent);
+    expect(select).toHaveBeenCalledTimes(0);
+
+    nativeEvent = new MouseEvent('mouseup', {bubbles: true, cancelable: true});
+    node.dispatchEvent(nativeEvent);
+    expect(select).toHaveBeenCalledTimes(1);
+  });
+
+  it('should fire `onSelectCapture` when a listener is present', () => {
+    const select = jest.fn();
+    const onSelectCapture = event => {
+      expect(typeof event).toBe('object');
+      expect(event.type).toBe('select');
+      expect(event.target).toBe(node);
+      select(event.currentTarget);
+    };
+
+    const node = ReactDOM.render(
+      <input type="text" onSelectCapture={onSelectCapture} />,
       container,
     );
     node.focus();

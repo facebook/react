@@ -28,10 +28,14 @@ import {
   NoEffect,
   ShouldCapture,
   LifecycleEffectMask,
+  ForceUpdateForLegacySuspense,
 } from './ReactSideEffectTags';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.old';
 import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
-import {enableDebugTracing} from 'shared/ReactFeatureFlags';
+import {
+  enableDebugTracing,
+  enableSchedulingProfiler,
+} from 'shared/ReactFeatureFlags';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
   enqueueCapturedUpdate,
@@ -55,6 +59,7 @@ import {
 } from './ReactFiberWorkLoop.old';
 import {logCapturedError} from './ReactFiberErrorLogger';
 import {logComponentSuspended} from './DebugTracing';
+import {markComponentSuspended} from './SchedulingProfiler';
 
 import {
   SyncLane,
@@ -200,6 +205,10 @@ function throwException(
       }
     }
 
+    if (enableSchedulingProfiler) {
+      markComponentSuspended(sourceFiber, wakeable);
+    }
+
     if ((sourceFiber.mode & BlockingMode) === NoMode) {
       // Reset the memoizedState to what it was before we attempted
       // to render it.
@@ -249,6 +258,7 @@ function throwException(
         // should *not* suspend the commit.
         if ((workInProgress.mode & BlockingMode) === NoMode) {
           workInProgress.effectTag |= DidCapture;
+          sourceFiber.effectTag |= ForceUpdateForLegacySuspense;
 
           // We're going to commit this fiber even though it didn't complete.
           // But we shouldn't call any lifecycle methods or callbacks. Remove

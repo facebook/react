@@ -357,10 +357,7 @@ describe('ReactDOM', () => {
       ReactDOM.render(<Wrapper />, container);
       let expected;
 
-      if (
-        ReactFeatureFlags.enableModernEventSystem &
-        ReactFeatureFlags.enableLegacyFBSupport
-      ) {
+      if (ReactFeatureFlags.enableLegacyFBSupport) {
         // We expect to duplicate the 2nd handler because this test is
         // not really designed around how the legacy FB support system works.
         // This is because the above test sync fires a click() event
