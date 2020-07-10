@@ -170,7 +170,6 @@ export function patch({
           // Use the browser's Call Stack panel to step out of this override function-
           // to where the original warning or error was logged.
           // eslint-disable-next-line no-debugger
-          debugger;
         }
 
         originalMethod(...args);
