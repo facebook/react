@@ -1,3 +1,6 @@
+## 4.0.7
+* Fixes an overly coarse dependency suggestion. ([@gaearon](https://github.com/gaearon) in [#19313](https://github.com/facebook/react/pull/19313))
+
 ## 4.0.6
 * Fix crashes and other bugs related to optional chaining. ([@gaearon](https://github.com/gaearon) in [#19273](https://github.com/facebook/react/pull/19273) and [#19275](https://github.com/facebook/react/pull/19275))
 
