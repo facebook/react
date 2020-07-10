@@ -85,7 +85,7 @@ import {
   enableDeprecatedFlareAPI,
   enableTrustedTypesIntegration,
 } from 'shared/ReactFeatureFlags';
-import {listenToReactPropEvent} from '../events/DOMModernPluginEventSystem';
+import {listenToReactEvent} from '../events/DOMModernPluginEventSystem';
 import {getEventListenerMap} from './ReactDOMComponentTree';
 
 let didWarnInvalidHydration = false;
@@ -282,10 +282,7 @@ export function ensureListeningTo(
     'ensureListeningTo(): received a container that was not an element node. ' +
       'This is likely a bug in React.',
   );
-  listenToReactPropEvent(
-    reactPropEvent,
-    ((rootContainerElement: any): Element),
-  );
+  listenToReactEvent(reactPropEvent, ((rootContainerElement: any): Element));
 }
 
 function getOwnerDocumentFromRootContainer(

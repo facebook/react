@@ -136,7 +136,7 @@ import {
 } from './DOMTopLevelEventTypes';
 import {IS_REPLAYED, PLUGIN_EVENT_SYSTEM} from './EventSystemFlags';
 import {
-  listenToTopLevelEvent,
+  listenToNativeEvent,
   capturePhaseEvents,
 } from './DOMModernPluginEventSystem';
 import {addResponderEventSystemEvent} from './DeprecatedDOMEventResponderSystem';
@@ -240,7 +240,7 @@ function trapReplayableEventForContainer(
   listenerMap: ElementListenerMap,
 ) {
   const capture = capturePhaseEvents.has(topLevelType);
-  listenToTopLevelEvent(
+  listenToNativeEvent(
     topLevelType,
     ((container: any): Element),
     listenerMap,
