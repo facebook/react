@@ -23,5 +23,5 @@ module.exports = {
   snapshotSerializers: [require.resolve('jest-snapshot-serializer-raw')],
 
   // TODO: Upgrade to Jest 26 which uses jsdom 16 by default.
-  testEnvironment: 'jest-environment-jsdom-sixteen',
+  testEnvironment: require.resolve('jest-environment-jsdom-sixteen'),
 };
