@@ -1478,7 +1478,8 @@ function getDependency(node) {
     // Note: we don't check OptionalMemberExpression because it can't be LHS.
     node.type === 'MemberExpression' &&
     node.parent &&
-    node.parent.type === 'AssignmentExpression'
+    node.parent.type === 'AssignmentExpression' &&
+    node.parent.left === node
   ) {
     return node.object;
   } else {
