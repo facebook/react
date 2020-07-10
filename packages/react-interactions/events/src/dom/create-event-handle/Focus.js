@@ -10,7 +10,7 @@
 import * as React from 'react';
 import useEvent from './useEvent';
 
-const {useEffect, useRef} = React;
+const {useCallback, useEffect, useRef} = React;
 
 type UseFocusOptions = {|
   disabled?: boolean,
@@ -126,7 +126,7 @@ function handleGlobalFocusVisibleEvent(
 }
 
 const passiveObject = {passive: true};
-const passiveCaptureObject = {capture: true, passive: false};
+const passiveObjectWithPriority = {passive: true, priority: 0};
 
 function handleFocusVisibleTargetEvent(
   type: string,
@@ -243,8 +243,8 @@ export function useFocus(
 ): void {
   // Setup controlled state for this useFocus hook
   const stateRef = useRef({isFocused: false, isFocusVisible: false});
-  const focusHandle = useEvent('focus', passiveCaptureObject);
-  const blurHandle = useEvent('blur', passiveCaptureObject);
+  const focusHandle = useEvent('focusin', passiveObjectWithPriority);
+  const blurHandle = useEvent('focusout', passiveObjectWithPriority);
   const focusVisibleHandles = useFocusVisibleInputHandles();
 
   useEffect(() => {
@@ -317,7 +317,9 @@ export function useFocus(
 }
 
 export function useFocusWithin(
-  focusWithinTargetRef: {current: null | Node},
+  focusWithinTargetRef:
+    | {current: null | Node}
+    | ((focusWithinTarget: null | Node) => void),
   {
     disabled,
     onAfterBlurWithin,
@@ -327,114 +329,134 @@ export function useFocusWithin(
     onFocusWithinChange,
     onFocusWithinVisibleChange,
   }: UseFocusWithinOptions,
-) {
+): (focusWithinTarget: null | Node) => void {
   // Setup controlled state for this useFocus hook
-  const stateRef = useRef({isFocused: false, isFocusVisible: false});
-  const focusHandle = useEvent('focus', passiveCaptureObject);
-  const blurHandle = useEvent('blur', passiveCaptureObject);
+  const stateRef = useRef<null | {isFocused: boolean, isFocusVisible: boolean}>(
+    {isFocused: false, isFocusVisible: false},
+  );
+  const focusHandle = useEvent('focusin', passiveObjectWithPriority);
+  const blurHandle = useEvent('focusout', passiveObjectWithPriority);
   const afterBlurHandle = useEvent('afterblur', passiveObject);
   const beforeBlurHandle = useEvent('beforeblur', passiveObject);
   const focusVisibleHandles = useFocusVisibleInputHandles();
 
-  useEffect(() => {
-    const focusWithinTarget = focusWithinTargetRef.current;
-    const state = stateRef.current;
+  const useFocusWithinRef = useCallback(
+    (focusWithinTarget: null | Node) => {
+      // Handle the incoming focusTargetRef. It can be either a function ref
+      // or an object ref.
+      if (typeof focusWithinTargetRef === 'function') {
+        focusWithinTargetRef(focusWithinTarget);
+      } else {
+        focusWithinTargetRef.current = focusWithinTarget;
+      }
+      const state = stateRef.current;
 
-    if (focusWithinTarget !== null && state !== null) {
-      // Handle focus visible
-      setFocusVisibleListeners(
-        focusVisibleHandles,
-        focusWithinTarget,
-        isFocusVisible => {
-          if (state.isFocused && state.isFocusVisible !== isFocusVisible) {
-            state.isFocusVisible = isFocusVisible;
+      if (focusWithinTarget !== null && state !== null) {
+        // Handle focus visible
+        setFocusVisibleListeners(
+          focusVisibleHandles,
+          focusWithinTarget,
+          isFocusVisible => {
+            if (state.isFocused && state.isFocusVisible !== isFocusVisible) {
+              state.isFocusVisible = isFocusVisible;
+              if (onFocusWithinVisibleChange) {
+                onFocusWithinVisibleChange(isFocusVisible);
+              }
+            }
+          },
+        );
+
+        // Handle focus
+        focusHandle.setListener(focusWithinTarget, event => {
+          if (disabled) {
+            return;
+          }
+          if (!state.isFocused) {
+            state.isFocused = true;
+            state.isFocusVisible = isGlobalFocusVisible;
+            if (onFocusWithinChange) {
+              onFocusWithinChange(true);
+            }
+            if (state.isFocusVisible && onFocusWithinVisibleChange) {
+              onFocusWithinVisibleChange(true);
+            }
+          }
+          if (!state.isFocusVisible && isGlobalFocusVisible) {
+            state.isFocusVisible = isGlobalFocusVisible;
             if (onFocusWithinVisibleChange) {
-              onFocusWithinVisibleChange(isFocusVisible);
+              onFocusWithinVisibleChange(true);
             }
           }
-        },
-      );
+          if (onFocusWithin) {
+            onFocusWithin(event);
+          }
+        });
 
-      // Handle focus
-      focusHandle.setListener(focusWithinTarget, event => {
-        if (disabled) {
-          return;
-        }
-        if (!state.isFocused) {
-          state.isFocused = true;
-          state.isFocusVisible = isGlobalFocusVisible;
-          if (onFocusWithinChange) {
-            onFocusWithinChange(true);
+        // Handle blur
+        blurHandle.setListener(focusWithinTarget, event => {
+          if (disabled) {
+            return;
           }
-          if (state.isFocusVisible && onFocusWithinVisibleChange) {
-            onFocusWithinVisibleChange(true);
-          }
-        }
-        if (!state.isFocusVisible && isGlobalFocusVisible) {
-          state.isFocusVisible = isGlobalFocusVisible;
-          if (onFocusWithinVisibleChange) {
-            onFocusWithinVisibleChange(true);
-          }
-        }
-        if (onFocusWithin) {
-          onFocusWithin(event);
-        }
-        isEmulatingMouseEvents = false;
-      });
+          const {relatedTarget} = (event.nativeEvent: any);
 
-      // Handle blur
-      blurHandle.setListener(focusWithinTarget, event => {
-        if (disabled) {
-          return;
-        }
-        const {relatedTarget} = (event: any);
-
-        if (
-          state.isFocused &&
-          !isRelatedTargetWithin(focusWithinTarget, relatedTarget)
-        ) {
-          state.isFocused = false;
-          if (onFocusWithinChange) {
-            onFocusWithinChange(false);
-          }
-          if (state.isFocusVisible && onFocusWithinVisibleChange) {
-            onFocusWithinVisibleChange(false);
-          }
-          if (onBlurWithin) {
-            onBlurWithin(event);
-          }
-        }
-        isEmulatingMouseEvents = false;
-      });
-
-      // Handle before blur. This is a special
-      // React provided event.
-      beforeBlurHandle.setListener(focusWithinTarget, event => {
-        if (disabled) {
-          return;
-        }
-        if (onBeforeBlurWithin) {
-          onBeforeBlurWithin(event);
-          // Add an "afterblur" listener on document. This is a special
-          // React provided event.
-          afterBlurHandle.setListener(document, afterBlurEvent => {
-            if (onAfterBlurWithin) {
-              onAfterBlurWithin(afterBlurEvent);
+          if (
+            state.isFocused &&
+            // $FlowFixMe: focusWithinTarget is never null
+            !isRelatedTargetWithin(focusWithinTarget, relatedTarget)
+          ) {
+            state.isFocused = false;
+            if (onFocusWithinChange) {
+              onFocusWithinChange(false);
             }
-            // Clear listener on document
-            afterBlurHandle.setListener(document, null);
-          });
-        }
-      });
-    }
-  }, [
-    disabled,
-    onBlurWithin,
-    onFocusWithin,
-    onFocusWithinChange,
-    onFocusWithinVisibleChange,
-  ]);
+            if (state.isFocusVisible && onFocusWithinVisibleChange) {
+              onFocusWithinVisibleChange(false);
+            }
+            if (onBlurWithin) {
+              onBlurWithin(event);
+            }
+          }
+        });
+
+        // Handle before blur. This is a special
+        // React provided event.
+        beforeBlurHandle.setListener(focusWithinTarget, event => {
+          if (disabled) {
+            return;
+          }
+          if (onBeforeBlurWithin) {
+            onBeforeBlurWithin(event);
+            // Add an "afterblur" listener on document. This is a special
+            // React provided event.
+            afterBlurHandle.setListener(document, afterBlurEvent => {
+              if (onAfterBlurWithin) {
+                onAfterBlurWithin(afterBlurEvent);
+              }
+              // Clear listener on document
+              afterBlurHandle.setListener(document, null);
+            });
+          }
+        });
+      }
+    },
+    [
+      afterBlurHandle,
+      beforeBlurHandle,
+      blurHandle,
+      disabled,
+      focusHandle,
+      focusVisibleHandles,
+      focusWithinTargetRef,
+      onAfterBlurWithin,
+      onBeforeBlurWithin,
+      onBlurWithin,
+      onFocusWithin,
+      onFocusWithinChange,
+      onFocusWithinVisibleChange,
+    ],
+  );
 
   // Mount/Unmount logic
-  useFocusLifecycles(stateRef);
+  useFocusLifecycles();
+
+  return useFocusWithinRef;
 }
