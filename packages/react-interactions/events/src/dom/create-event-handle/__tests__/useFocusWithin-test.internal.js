@@ -69,12 +69,12 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       onFocusWithinVisibleChange = jest.fn();
       ref = React.createRef();
       const Component = () => {
-        useFocusWithin(ref, {
+        const focusWithinRef = useFocusWithin(ref, {
           disabled: true,
           onFocusWithinChange,
           onFocusWithinVisibleChange,
         });
-        return <div ref={ref} />;
+        return <div ref={focusWithinRef} />;
       };
       ReactDOM.render(<Component />, container);
       Scheduler.unstable_flushAll();
@@ -95,11 +95,11 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
     let onFocusWithinChange, ref, innerRef, innerRef2;
 
     const Component = ({show}) => {
-      useFocusWithin(ref, {
+      const focusWithinRef = useFocusWithin(ref, {
         onFocusWithinChange,
       });
       return (
-        <div ref={ref}>
+        <div ref={focusWithinRef}>
           {show && <input ref={innerRef} />}
           <div ref={innerRef2} />
         </div>
@@ -171,11 +171,11 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
     let onFocusWithinVisibleChange, ref, innerRef, innerRef2;
 
     const Component = ({show}) => {
-      useFocusWithin(ref, {
+      const focusWithinRef = useFocusWithin(ref, {
         onFocusWithinVisibleChange,
       });
       return (
-        <div ref={ref}>
+        <div ref={focusWithinRef}>
           {show && <input ref={innerRef} />}
           <div ref={innerRef2} />
         </div>
@@ -313,12 +313,12 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
     // @gate experimental
     it('is called after a focused element is unmounted', () => {
       const Component = ({show}) => {
-        useFocusWithin(ref, {
+        const focusWithinRef = useFocusWithin(ref, {
           onBeforeBlurWithin,
           onAfterBlurWithin,
         });
         return (
-          <div ref={ref}>
+          <div ref={focusWithinRef}>
             {show && <input ref={innerRef} />}
             <div ref={innerRef2} />
           </div>
@@ -345,12 +345,12 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
     // @gate experimental
     it('is called after a nested focused element is unmounted', () => {
       const Component = ({show}) => {
-        useFocusWithin(ref, {
+        const focusWithinRef = useFocusWithin(ref, {
           onBeforeBlurWithin,
           onAfterBlurWithin,
         });
         return (
-          <div ref={ref}>
+          <div ref={focusWithinRef}>
             {show && (
               <div>
                 <input ref={innerRef} />
@@ -384,12 +384,12 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       const inputRef = React.createRef();
 
       const Component = ({show}) => {
-        useFocusWithin(ref, {
+        const focusWithinRef = useFocusWithin(ref, {
           onBeforeBlurWithin,
           onAfterBlurWithin,
         });
         return (
-          <div ref={ref}>
+          <div ref={focusWithinRef}>
             {show && <button>Press me!</button>}
             {show && <button>Press me!</button>}
             {show && <input ref={inputRef} />}
@@ -422,7 +422,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
 
       const Component = ({show}) => {
         const scopeRef = React.useRef(null);
-        useFocusWithin(scopeRef, {
+        const focusWithinRef = useFocusWithin(scopeRef, {
           onBeforeBlurWithin(event) {
             const scope = scopeRef.current;
             targetNode = innerRef.current;
@@ -431,7 +431,7 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
         });
 
         return (
-          <TestScope ref={scopeRef}>
+          <TestScope ref={focusWithinRef}>
             {show && <input ref={innerRef} />}
           </TestScope>
         );
@@ -465,13 +465,13 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       }
 
       const Component = ({show}) => {
-        useFocusWithin(ref, {
+        const focusWithinRef = useFocusWithin(ref, {
           onBeforeBlurWithin,
           onAfterBlurWithin,
         });
 
         return (
-          <div ref={ref}>
+          <div ref={focusWithinRef}>
             <Suspense fallback="Loading...">
               <Child />
             </Suspense>
@@ -524,13 +524,13 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
       }
 
       const Component = ({show}) => {
-        useFocusWithin(ref, {
+        const focusWithinRef = useFocusWithin(ref, {
           onBeforeBlurWithin,
           onAfterBlurWithin,
         });
 
         return (
-          <div ref={ref}>
+          <div ref={focusWithinRef}>
             <Suspense fallback={<button ref={buttonRef}>Loading...</button>}>
               <Child />
             </Suspense>
