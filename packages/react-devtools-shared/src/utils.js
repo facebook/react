@@ -258,7 +258,7 @@ export function getBreakOnConsoleErrors(): boolean {
       return JSON.parse(raw);
     }
   } catch (error) {}
-  return true;
+  return false;
 }
 
 export function setBreakOnConsoleErrors(value: boolean): void {
