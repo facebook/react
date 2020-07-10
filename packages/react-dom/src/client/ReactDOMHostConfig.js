@@ -80,7 +80,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
-import {listenToReactPropEvent} from '../events/DOMModernPluginEventSystem';
+import {listenToReactEvent} from '../events/DOMModernPluginEventSystem';
 
 export type Type = string;
 export type Props = {
@@ -1111,7 +1111,7 @@ export function makeOpaqueHydratingObject(
 }
 
 export function preparePortalMount(portalInstance: Instance): void {
-  listenToReactPropEvent('onMouseEnter', portalInstance);
+  listenToReactEvent('onMouseEnter', portalInstance);
 }
 
 export function prepareScopeUpdate(

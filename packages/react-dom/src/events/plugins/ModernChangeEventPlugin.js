@@ -8,7 +8,7 @@
  */
 import type {AnyNativeEvent} from '../PluginModuleType';
 import type {TopLevelType} from '../TopLevelEventTypes';
-import type {DispatchQueue} from '../PluginModuleType';
+import type {DispatchQueue} from '../DOMModernPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
 import {registerTwoPhaseEvent} from '../EventRegistry';

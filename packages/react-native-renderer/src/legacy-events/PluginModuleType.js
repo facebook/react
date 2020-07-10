@@ -34,31 +34,3 @@ export type LegacyPluginModule<NativeEvent> = {
   ) => ?ReactSyntheticEvent,
   tapMoveThreshold?: number,
 };
-
-export type DispatchQueueItemPhaseEntry = {|
-  instance: null | Fiber,
-  listener: Function,
-  currentTarget: EventTarget,
-|};
-
-export type DispatchQueueItemPhase = Array<DispatchQueueItemPhaseEntry>;
-
-export type DispatchQueueItem = {|
-  event: ReactSyntheticEvent,
-  phase: DispatchQueueItemPhase,
-|};
-
-export type DispatchQueue = Array<DispatchQueueItem>;
-
-export type ModernPluginModule<NativeEvent> = {
-  eventTypes: EventTypes,
-  extractEvents: (
-    dispatchQueue: DispatchQueue,
-    topLevelType: TopLevelType,
-    targetInst: null | Fiber,
-    nativeTarget: NativeEvent,
-    nativeEventTarget: null | EventTarget,
-    eventSystemFlags: number,
-    container: null | EventTarget,
-  ) => void,
-};

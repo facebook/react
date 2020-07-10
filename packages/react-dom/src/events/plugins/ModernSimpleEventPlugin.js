@@ -9,10 +9,8 @@
 
 import type {TopLevelType} from '../../events/TopLevelEventTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {
-  AnyNativeEvent,
-  DispatchQueue,
-} from '../../events/PluginModuleType';
+import type {AnyNativeEvent} from '../../events/PluginModuleType';
+import type {DispatchQueue} from '../DOMModernPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
 import SyntheticEvent from '../../events/SyntheticEvent';
@@ -24,9 +22,9 @@ import {
 } from '../DOMEventProperties';
 import {
   accumulateSinglePhaseListeners,
-  accumulateEventHandleTargetListeners,
+  accumulateEventHandleNonManagedNodeListeners,
 } from '../DOMModernPluginEventSystem';
-import {IS_TARGET_PHASE_ONLY} from '../EventSystemFlags';
+import {IS_EVENT_HANDLE_NON_MANAGED_NODE} from '../EventSystemFlags';
 import SyntheticAnimationEvent from '../SyntheticAnimationEvent';
 import SyntheticClipboardEvent from '../SyntheticClipboardEvent';
 import SyntheticFocusEvent from '../SyntheticFocusEvent';
@@ -50,7 +48,7 @@ function extractEvents(
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: null | EventTarget,
   eventSystemFlags: EventSystemFlags,
-  targetContainer: null | EventTarget,
+  targetContainer: EventTarget,
 ): void {
   const reactName = topLevelEventsToReactNames.get(topLevelType);
   if (reactName === undefined) {
@@ -155,11 +153,9 @@ function extractEvents(
   const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
   if (
     enableCreateEventHandleAPI &&
-    eventSystemFlags !== undefined &&
-    eventSystemFlags & IS_TARGET_PHASE_ONLY &&
-    targetContainer != null
+    eventSystemFlags & IS_EVENT_HANDLE_NON_MANAGED_NODE
   ) {
-    accumulateEventHandleTargetListeners(
+    accumulateEventHandleNonManagedNodeListeners(
       dispatchQueue,
       event,
       targetContainer,
