@@ -1785,10 +1785,6 @@ function resetChildLanes(completedWork: Fiber) {
   let subtreeTag = NoEffect;
   let childrenDidNotComplete = false;
 
-  const wasFiberCloned =
-    completedWork.alternate === null ||
-    completedWork.child !== completedWork.alternate.child;
-
   // Bubble up the earliest expiration time.
   if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
     // In profiling mode, resetChildExpirationTime is also used to reset
@@ -1803,9 +1799,11 @@ function resetChildLanes(completedWork: Fiber) {
         mergeLanes(child.lanes, child.childLanes),
       );
 
-      subtreeTag |= child.subtreeTag;
-      // TODO (effects) Document why this exception is important
-      subtreeTag |= child.effectTag & HostEffectMask;
+      if (!child.didBailout) {
+        subtreeTag |= child.subtreeTag;
+        // TODO (effects) Document why this exception is important
+        subtreeTag |= child.effectTag & HostEffectMask;
+      }
 
       if ((child.effectTag & Incomplete) !== NoEffect) {
         childrenDidNotComplete = true;
@@ -1818,7 +1816,7 @@ function resetChildLanes(completedWork: Fiber) {
       // this value will reflect the amount of time spent working on a previous
       // render. In that case it should not bubble. We determine whether it was
       // cloned by comparing the child pointer.
-      if (wasFiberCloned) {
+      if (!completedWork.didBailout) {
         actualDuration += child.actualDuration;
       }
       treeBaseDuration += child.treeBaseDuration;
@@ -1846,9 +1844,11 @@ function resetChildLanes(completedWork: Fiber) {
         mergeLanes(child.lanes, child.childLanes),
       );
 
-      subtreeTag |= child.subtreeTag;
-      // TODO (effects) Document why this exception is important
-      subtreeTag |= child.effectTag & HostEffectMask;
+      if (!child.didBailout) {
+        subtreeTag |= child.subtreeTag;
+        // TODO (effects) Document why this exception is important
+        subtreeTag |= child.effectTag & HostEffectMask;
+      }
 
       if ((child.effectTag & Incomplete) !== NoEffect) {
         childrenDidNotComplete = true;
@@ -1860,8 +1860,7 @@ function resetChildLanes(completedWork: Fiber) {
 
   completedWork.childLanes = newChildLanes;
 
-  // TODO (effects) is it appropriate to check wasFiberCloned for this?
-  if (!childrenDidNotComplete && wasFiberCloned) {
+  if (!childrenDidNotComplete) {
     completedWork.subtreeTag |= subtreeTag;
   }
 }
@@ -2123,31 +2122,33 @@ function commitRootImpl(root, renderPriorityLevel) {
 }
 
 function commitBeforeMutationEffects(fiber: Fiber) {
-  if (fiber.deletions !== null) {
-    commitBeforeMutationEffectsDeletions(fiber.deletions);
-  }
-
-  if (fiber.child !== null) {
-    const primarySubtreeTag =
-      fiber.subtreeTag & (Deletion | Snapshot | Passive | Placement);
-    if (primarySubtreeTag !== NoEffect) {
-      commitBeforeMutationEffects(fiber.child);
+  if (!fiber.didBailout) {
+    if (fiber.deletions !== null) {
+      commitBeforeMutationEffectsDeletions(fiber.deletions);
     }
-  }
 
-  if (__DEV__) {
-    setCurrentDebugFiberInDEV(fiber);
-    invokeGuardedCallback(null, commitBeforeMutationEffectsImpl, null, fiber);
-    if (hasCaughtError()) {
-      const error = clearCaughtError();
-      captureCommitPhaseError(fiber, error);
+    if (fiber.child !== null) {
+      const primarySubtreeTag =
+        fiber.subtreeTag & (Deletion | Snapshot | Passive | Placement);
+      if (primarySubtreeTag !== NoEffect) {
+        commitBeforeMutationEffects(fiber.child);
+      }
     }
-    resetCurrentDebugFiberInDEV();
-  } else {
-    try {
-      commitBeforeMutationEffectsImpl(fiber);
-    } catch (error) {
-      captureCommitPhaseError(fiber, error);
+
+    if (__DEV__) {
+      setCurrentDebugFiberInDEV(fiber);
+      invokeGuardedCallback(null, commitBeforeMutationEffectsImpl, null, fiber);
+      if (hasCaughtError()) {
+        const error = clearCaughtError();
+        captureCommitPhaseError(fiber, error);
+      }
+      resetCurrentDebugFiberInDEV();
+    } else {
+      try {
+        commitBeforeMutationEffectsImpl(fiber);
+      } catch (error) {
+        captureCommitPhaseError(fiber, error);
+      }
     }
   }
 
@@ -2213,42 +2214,44 @@ function commitMutationEffects(
   root: FiberRoot,
   renderPriorityLevel,
 ) {
-  if (fiber.deletions !== null) {
-    commitMutationEffectsDeletions(fiber.deletions, root, renderPriorityLevel);
+  if (!fiber.didBailout) {
+    if (fiber.deletions !== null) {
+      commitMutationEffectsDeletions(fiber.deletions, root, renderPriorityLevel);
 
-    // TODO (effects) Don't clear this yet; we may need to cleanup passive effects
-    fiber.deletions = null;
-  }
-
-  if (fiber.child !== null) {
-    const primarySubtreeTag =
-      fiber.subtreeTag &
-      (ContentReset | Deletion | Hydrating | Placement | Ref | Update);
-    if (primarySubtreeTag !== NoEffect) {
-      commitMutationEffects(fiber.child, root, renderPriorityLevel);
+      // TODO (effects) Don't clear this yet; we may need to cleanup passive effects
+      fiber.deletions = null;
     }
-  }
 
-  if (__DEV__) {
-    setCurrentDebugFiberInDEV(fiber);
-    invokeGuardedCallback(
-      null,
-      commitMutationEffectsImpl,
-      null,
-      fiber,
-      root,
-      renderPriorityLevel,
-    );
-    if (hasCaughtError()) {
-      const error = clearCaughtError();
-      captureCommitPhaseError(fiber, error);
+    if (fiber.child !== null) {
+      const primarySubtreeTag =
+        fiber.subtreeTag &
+        (ContentReset | Deletion | Hydrating | Placement | Ref | Update);
+      if (primarySubtreeTag !== NoEffect) {
+        commitMutationEffects(fiber.child, root, renderPriorityLevel);
+      }
     }
-    resetCurrentDebugFiberInDEV();
-  } else {
-    try {
-      commitMutationEffectsImpl(fiber, root, renderPriorityLevel);
-    } catch (error) {
-      captureCommitPhaseError(fiber, error);
+
+    if (__DEV__) {
+      setCurrentDebugFiberInDEV(fiber);
+      invokeGuardedCallback(
+        null,
+        commitMutationEffectsImpl,
+        null,
+        fiber,
+        root,
+        renderPriorityLevel,
+      );
+      if (hasCaughtError()) {
+        const error = clearCaughtError();
+        captureCommitPhaseError(fiber, error);
+      }
+      resetCurrentDebugFiberInDEV();
+    } else {
+      try {
+        commitMutationEffectsImpl(fiber, root, renderPriorityLevel);
+      } catch (error) {
+        captureCommitPhaseError(fiber, error);
+      }
     }
   }
 
@@ -2364,33 +2367,35 @@ function commitLayoutEffects(
   root: FiberRoot,
   committedLanes: Lanes,
 ) {
-  if (fiber.child !== null) {
-    const primarySubtreeTag = fiber.subtreeTag & (Update | Callback | Ref);
-    if (primarySubtreeTag !== NoEffect) {
-      commitLayoutEffects(fiber.child, root, committedLanes);
+  if (!fiber.didBailout) {
+    if (fiber.child !== null) {
+      const primarySubtreeTag = fiber.subtreeTag & (Update | Callback | Ref);
+      if (primarySubtreeTag !== NoEffect) {
+        commitLayoutEffects(fiber.child, root, committedLanes);
+      }
     }
-  }
 
-  if (__DEV__) {
-    setCurrentDebugFiberInDEV(fiber);
-    invokeGuardedCallback(
-      null,
-      commitLayoutEffectsImpl,
-      null,
-      fiber,
-      root,
-      committedLanes,
-    );
-    if (hasCaughtError()) {
-      const error = clearCaughtError();
-      captureCommitPhaseError(fiber, error);
-    }
-    resetCurrentDebugFiberInDEV();
-  } else {
-    try {
-      commitLayoutEffectsImpl(fiber, root, committedLanes);
-    } catch (error) {
-      captureCommitPhaseError(fiber, error);
+    if (__DEV__) {
+      setCurrentDebugFiberInDEV(fiber);
+      invokeGuardedCallback(
+        null,
+        commitLayoutEffectsImpl,
+        null,
+        fiber,
+        root,
+        committedLanes,
+      );
+      if (hasCaughtError()) {
+        const error = clearCaughtError();
+        captureCommitPhaseError(fiber, error);
+      }
+      resetCurrentDebugFiberInDEV();
+    } else {
+      try {
+        commitLayoutEffectsImpl(fiber, root, committedLanes);
+      } catch (error) {
+        captureCommitPhaseError(fiber, error);
+      }
     }
   }
 
