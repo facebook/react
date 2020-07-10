@@ -543,6 +543,10 @@ export default {
             });
           }
 
+          if (dependencyNode.parent.type === 'TSTypeQuery') {
+            continue;
+          }
+
           const def = reference.resolved.defs[0];
           if (def == null) {
             continue;

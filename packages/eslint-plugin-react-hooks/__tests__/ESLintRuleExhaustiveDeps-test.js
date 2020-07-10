@@ -6983,6 +6983,18 @@ const testsTypescript = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const [state, setState] = React.useState<number>(0);
+
+          useEffect(() => {
+            const someNumber: typeof state = 2;
+            setState(prevState => prevState + someNumber);
+          }, [])
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -7212,6 +7224,76 @@ const testsTypescript = {
                   }, [props?.upperViewHeight]);
                 }
               `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const [state, setState] = React.useState<number>(0);
+          
+          useEffect(() => {
+            const someNumber: typeof state = 2;
+            setState(prevState => prevState + someNumber + state);
+          }, [])
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'state'. " +
+            'Either include it or remove the dependency array. ' +
+            `You can also do a functional update 'setState(s => ...)' ` +
+            `if you only need 'state' in the 'setState' call.`,
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [state]',
+              output: normalizeIndent`
+              function MyComponent() {
+                const [state, setState] = React.useState<number>(0);
+                
+                useEffect(() => {
+                  const someNumber: typeof state = 2;
+                  setState(prevState => prevState + someNumber + state);
+                }, [state])
+              }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const [state, setState] = React.useState<number>(0);
+          
+          useMemo(() => {
+            const someNumber: typeof state = 2;
+            console.log(someNumber);
+          }, [state])
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useMemo has an unnecessary dependency: 'state'. " +
+            'Either exclude it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: []',
+              output: normalizeIndent`
+                function MyComponent() {
+                  const [state, setState] = React.useState<number>(0);
+                  
+                  useMemo(() => {
+                    const someNumber: typeof state = 2;
+                    console.log(someNumber);
+                  }, [])
+                }
+                `,
             },
           ],
         },
