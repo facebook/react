@@ -451,8 +451,11 @@ export function getLanesToRetrySynchronouslyOnError(root: FiberRoot): Lanes {
 export function returnNextLanesPriority() {
   return return_highestLanePriority;
 }
-export function hasUpdatePriority(lanes: Lanes) {
+export function includesNonIdleWork(lanes: Lanes) {
   return (lanes & NonIdleLanes) !== NoLanes;
+}
+export function includesOnlyRetries(lanes: Lanes) {
+  return (lanes & RetryLanes) === lanes;
 }
 
 // To ensure consistency across multiple updates in the same event, this should

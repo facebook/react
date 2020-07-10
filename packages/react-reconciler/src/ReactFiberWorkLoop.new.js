@@ -132,7 +132,8 @@ import {
   removeLanes,
   pickArbitraryLane,
   hasDiscreteLanes,
-  hasUpdatePriority,
+  includesNonIdleWork,
+  includesOnlyRetries,
   getNextLanes,
   returnNextLanesPriority,
   setCurrentUpdateLanePriority,
@@ -847,22 +848,13 @@ function finishConcurrentRender(root, finishedWork, exitStatus, lanes) {
       // We have an acceptable loading state. We need to figure out if we
       // should immediately commit it or wait a bit.
 
-      // If we have processed new updates during this render, we may now
-      // have a new loading state ready. We want to ensure that we commit
-      // that as soon as possible.
-      const hasNotProcessedNewUpdates =
-        workInProgressRootLatestProcessedEventTime === NoTimestamp;
       if (
-        hasNotProcessedNewUpdates &&
+        includesOnlyRetries(lanes) &&
         // do not delay if we're inside an act() scope
         !shouldForceFlushFallbacksInDEV()
       ) {
-        // If we have not processed any new updates during this pass, then
-        // this is either a retry of an existing fallback state or a
-        // hidden tree. Hidden trees shouldn't be batched with other work
-        // and after that's fixed it can only be a retry. We're going to
-        // throttle committing retries so that we don't show too many
-        // loading states too quickly.
+        // This render only included retries, no updates. Throttle committing
+        // retries so that we don't show too many loading states too quickly.
         const msUntilTimeout =
           globalMostRecentFallbackTime + FALLBACK_THROTTLE_MS - now();
         // Don't bother with a very short suspense time.
@@ -1475,8 +1467,8 @@ export function renderDidSuspendDelayIfPossible(): void {
   // this render.
   if (
     workInProgressRoot !== null &&
-    (hasUpdatePriority(workInProgressRootSkippedLanes) ||
-      hasUpdatePriority(workInProgressRootUpdatedLanes))
+    (includesNonIdleWork(workInProgressRootSkippedLanes) ||
+      includesNonIdleWork(workInProgressRootUpdatedLanes))
   ) {
     // Mark the current render as suspended so that we switch to working on
     // the updates that were skipped. Usually we only suspend at the end of
