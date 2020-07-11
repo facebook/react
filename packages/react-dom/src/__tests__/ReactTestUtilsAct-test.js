@@ -380,6 +380,16 @@ function runActTests(label, render, unmount, rerender) {
             container,
           );
 
+          expect(Scheduler).toHaveYielded(['effect']);
+          expect(() => {
+            ReactDOM.render(
+              <React.StrictMode>
+                <Component />
+              </React.StrictMode>,
+              container,
+            );
+          }).toErrorDev([]);
+
           // Nothing scheduled so we should not have any unexpected errors regarding missing act();
           expect(Scheduler).toFlushAndYield([]);
         });
