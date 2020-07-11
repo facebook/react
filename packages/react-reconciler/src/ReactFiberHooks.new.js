@@ -71,6 +71,7 @@ import {
   HasEffect as HookHasEffect,
   Layout as HookLayout,
   Passive as HookPassive,
+  NoFlags as HookNoFlags,
 } from './ReactHookEffectTags';
 import {
   getWorkInProgressRoot,
@@ -1430,6 +1431,16 @@ function updateEffectImpl(fiberFlags, hookFlags, create, deps): void {
     }
   }
 
+  if (__DEV__) {
+    if (
+      (hookFlags & HookPassive) !== HookNoFlags &&
+      // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+      'undefined' !== typeof jest
+    ) {
+      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
+    }
+  }
+
   currentlyRenderingFiber.flags |= fiberFlags;
 
   hook.memoizedState = pushEffect(
@@ -1475,12 +1486,6 @@ function updateEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  if (__DEV__) {
-    // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-    if ('undefined' !== typeof jest) {
-      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
-    }
-  }
   return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
