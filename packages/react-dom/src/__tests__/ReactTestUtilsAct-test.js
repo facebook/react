@@ -113,6 +113,31 @@ describe('ReactTestUtils.act()', () => {
         'An update to App ran an effect, but was not wrapped in act(...)',
       ]);
     });
+
+    // @gate experimental
+    it('does not warn on other effects', () => {
+      function Component(props) {
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('layout');
+        });
+        React.useImperativeHandle(React.createRef(), () => {
+          Scheduler.unstable_yieldValue('imperative handle');
+        });
+        return null;
+      }
+
+      expect(() => {
+        const root = ReactDOM.unstable_createRoot(
+          document.createElement('div'),
+        );
+        root.render(<Component />);
+        // sanity check that effects were mounted
+        expect(Scheduler).toFlushAndYield(['layout', 'imperative handle']);
+        root.render(<Component />);
+        // sanity check that effects were updated
+        expect(Scheduler).toFlushAndYield(['layout', 'imperative handle']);
+      }).toErrorDev([]);
+    });
   });
 });
 
