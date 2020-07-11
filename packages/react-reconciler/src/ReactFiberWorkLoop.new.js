@@ -1799,7 +1799,7 @@ function resetChildLanes(completedWork: Fiber) {
         mergeLanes(child.lanes, child.childLanes),
       );
 
-      if (!child.didBailout) {
+      if (!completedWork.didBailout) {
         subtreeTag |= child.subtreeTag;
         // TODO (effects) Document why this exception is important
         subtreeTag |= child.effectTag & HostEffectMask;
@@ -1844,7 +1844,7 @@ function resetChildLanes(completedWork: Fiber) {
         mergeLanes(child.lanes, child.childLanes),
       );
 
-      if (!child.didBailout) {
+      if (!completedWork.didBailout) {
         subtreeTag |= child.subtreeTag;
         // TODO (effects) Document why this exception is important
         subtreeTag |= child.effectTag & HostEffectMask;
@@ -2122,33 +2122,31 @@ function commitRootImpl(root, renderPriorityLevel) {
 }
 
 function commitBeforeMutationEffects(fiber: Fiber) {
-  if (!fiber.didBailout) {
-    if (fiber.deletions !== null) {
-      commitBeforeMutationEffectsDeletions(fiber.deletions);
-    }
+  if (fiber.deletions !== null) {
+    commitBeforeMutationEffectsDeletions(fiber.deletions);
+  }
 
-    if (fiber.child !== null) {
-      const primarySubtreeTag =
-        fiber.subtreeTag & (Deletion | Snapshot | Passive | Placement);
-      if (primarySubtreeTag !== NoEffect) {
-        commitBeforeMutationEffects(fiber.child);
-      }
+  if (fiber.child !== null && !fiber.didBailOut) {
+    const primarySubtreeTag =
+      fiber.subtreeTag & (Deletion | Snapshot | Passive | Placement);
+    if (primarySubtreeTag !== NoEffect) {
+      commitBeforeMutationEffects(fiber.child);
     }
+  }
 
-    if (__DEV__) {
-      setCurrentDebugFiberInDEV(fiber);
-      invokeGuardedCallback(null, commitBeforeMutationEffectsImpl, null, fiber);
-      if (hasCaughtError()) {
-        const error = clearCaughtError();
-        captureCommitPhaseError(fiber, error);
-      }
-      resetCurrentDebugFiberInDEV();
-    } else {
-      try {
-        commitBeforeMutationEffectsImpl(fiber);
-      } catch (error) {
-        captureCommitPhaseError(fiber, error);
-      }
+  if (__DEV__) {
+    setCurrentDebugFiberInDEV(fiber);
+    invokeGuardedCallback(null, commitBeforeMutationEffectsImpl, null, fiber);
+    if (hasCaughtError()) {
+      const error = clearCaughtError();
+      captureCommitPhaseError(fiber, error);
+    }
+    resetCurrentDebugFiberInDEV();
+  } else {
+    try {
+      commitBeforeMutationEffectsImpl(fiber);
+    } catch (error) {
+      captureCommitPhaseError(fiber, error);
     }
   }
 
@@ -2214,44 +2212,42 @@ function commitMutationEffects(
   root: FiberRoot,
   renderPriorityLevel,
 ) {
-  if (!fiber.didBailout) {
-    if (fiber.deletions !== null) {
-      commitMutationEffectsDeletions(fiber.deletions, root, renderPriorityLevel);
+  if (fiber.deletions !== null) {
+    commitMutationEffectsDeletions(fiber.deletions, root, renderPriorityLevel);
 
-      // TODO (effects) Don't clear this yet; we may need to cleanup passive effects
-      fiber.deletions = null;
+    // TODO (effects) Don't clear this yet; we may need to cleanup passive effects
+    fiber.deletions = null;
+  }
+
+  if (fiber.child !== null && !fiber.didBailOut) {
+    const primarySubtreeTag =
+      fiber.subtreeTag &
+      (ContentReset | Deletion | Hydrating | Placement | Ref | Update);
+    if (primarySubtreeTag !== NoEffect) {
+      commitMutationEffects(fiber.child, root, renderPriorityLevel);
     }
+  }
 
-    if (fiber.child !== null) {
-      const primarySubtreeTag =
-        fiber.subtreeTag &
-        (ContentReset | Deletion | Hydrating | Placement | Ref | Update);
-      if (primarySubtreeTag !== NoEffect) {
-        commitMutationEffects(fiber.child, root, renderPriorityLevel);
-      }
+  if (__DEV__) {
+    setCurrentDebugFiberInDEV(fiber);
+    invokeGuardedCallback(
+      null,
+      commitMutationEffectsImpl,
+      null,
+      fiber,
+      root,
+      renderPriorityLevel,
+    );
+    if (hasCaughtError()) {
+      const error = clearCaughtError();
+      captureCommitPhaseError(fiber, error);
     }
-
-    if (__DEV__) {
-      setCurrentDebugFiberInDEV(fiber);
-      invokeGuardedCallback(
-        null,
-        commitMutationEffectsImpl,
-        null,
-        fiber,
-        root,
-        renderPriorityLevel,
-      );
-      if (hasCaughtError()) {
-        const error = clearCaughtError();
-        captureCommitPhaseError(fiber, error);
-      }
-      resetCurrentDebugFiberInDEV();
-    } else {
-      try {
-        commitMutationEffectsImpl(fiber, root, renderPriorityLevel);
-      } catch (error) {
-        captureCommitPhaseError(fiber, error);
-      }
+    resetCurrentDebugFiberInDEV();
+  } else {
+    try {
+      commitMutationEffectsImpl(fiber, root, renderPriorityLevel);
+    } catch (error) {
+      captureCommitPhaseError(fiber, error);
     }
   }
 
@@ -2367,35 +2363,33 @@ function commitLayoutEffects(
   root: FiberRoot,
   committedLanes: Lanes,
 ) {
-  if (!fiber.didBailout) {
-    if (fiber.child !== null) {
-      const primarySubtreeTag = fiber.subtreeTag & (Update | Callback | Ref);
-      if (primarySubtreeTag !== NoEffect) {
-        commitLayoutEffects(fiber.child, root, committedLanes);
-      }
+  if (fiber.child !== null && !fiber.didBailOut) {
+    const primarySubtreeTag = fiber.subtreeTag & (Update | Callback | Ref);
+    if (primarySubtreeTag !== NoEffect) {
+      commitLayoutEffects(fiber.child, root, committedLanes);
     }
+  }
 
-    if (__DEV__) {
-      setCurrentDebugFiberInDEV(fiber);
-      invokeGuardedCallback(
-        null,
-        commitLayoutEffectsImpl,
-        null,
-        fiber,
-        root,
-        committedLanes,
-      );
-      if (hasCaughtError()) {
-        const error = clearCaughtError();
-        captureCommitPhaseError(fiber, error);
-      }
-      resetCurrentDebugFiberInDEV();
-    } else {
-      try {
-        commitLayoutEffectsImpl(fiber, root, committedLanes);
-      } catch (error) {
-        captureCommitPhaseError(fiber, error);
-      }
+  if (__DEV__) {
+    setCurrentDebugFiberInDEV(fiber);
+    invokeGuardedCallback(
+      null,
+      commitLayoutEffectsImpl,
+      null,
+      fiber,
+      root,
+      committedLanes,
+    );
+    if (hasCaughtError()) {
+      const error = clearCaughtError();
+      captureCommitPhaseError(fiber, error);
+    }
+    resetCurrentDebugFiberInDEV();
+  } else {
+    try {
+      commitLayoutEffectsImpl(fiber, root, committedLanes);
+    } catch (error) {
+      captureCommitPhaseError(fiber, error);
     }
   }
 
