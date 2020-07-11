@@ -30,6 +30,7 @@ import {
   enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from './ReactSideEffectTags';
+import {NoEffect as NoSubtreeEffect} from './ReactSubtreeTags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
 import {
   IndeterminateComponent,
@@ -144,8 +145,7 @@ function FiberNode(
 
   // Effects
   this.effectTag = NoEffect;
-  this.subtreeTag = NoEffect;
-  this.didBailout = false; // TODO (effects) Move this value into subtreeTag
+  this.subtreeTag = NoSubtreeEffect;
   this.deletions = null;
   this.nextEffect = null;
 
@@ -290,8 +290,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     // We already have an alternate.
     // Reset the effect tag.
     workInProgress.effectTag = NoEffect;
-    workInProgress.subtreeTag = NoEffect;
-    workInProgress.didBailout = false;
+    workInProgress.subtreeTag = NoSubtreeEffect;
     workInProgress.deletions = null;
 
     // The effect list is no longer valid.
@@ -833,7 +832,6 @@ export function assignFiberPropertiesInDEV(
   target.mode = source.mode;
   target.effectTag = source.effectTag;
   target.subtreeTag = source.subtreeTag;
-  target.didBailout = source.didBailout;
   target.deletions = source.deletions;
   target.nextEffect = source.nextEffect;
   target.firstEffect = source.firstEffect;

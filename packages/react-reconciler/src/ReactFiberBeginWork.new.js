@@ -65,6 +65,7 @@ import {
   Deletion,
   ForceUpdateForLegacySuspense,
 } from './ReactSideEffectTags';
+import {DidBailout} from './ReactSubtreeTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
@@ -2993,9 +2994,7 @@ function bailoutOnAlreadyFinishedWork(
     // and we replay the work, even though we skip render phase (by bailing out)
     // we don't want to bailout on commit effects too.
     // However, this check seems overly aggressive in some cases.
-    // TODO (effects) Move this value into subtreeTag
-    workInProgress.didBailout = true;
-    workInProgress.subtreeTag = NoEffect;
+    workInProgress.subtreeTag = DidBailout;
 
     // The children don't have any work either. We can skip them.
     // TODO: Once we add back resuming, we should check if the children are

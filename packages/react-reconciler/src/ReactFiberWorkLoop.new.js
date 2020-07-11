@@ -98,7 +98,6 @@ import {
   Placement,
   Update,
   PlacementAndUpdate,
-  Deletion,
   Ref,
   ContentReset,
   Snapshot,
@@ -109,7 +108,17 @@ import {
   HostEffectMask,
   Hydrating,
   HydratingAndUpdate,
+  BeforeMutationMask,
+  MutationMask,
+  LayoutMask,
 } from './ReactSideEffectTags';
+import {
+  NoEffect as NoSubtreeTag,
+  DidBailout,
+  BeforeMutation,
+  Mutation,
+  Layout,
+} from './ReactSubtreeTags';
 import {
   NoLanePriority,
   SyncLanePriority,
@@ -1743,7 +1752,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         // Mark the parent fiber as incomplete and clear its effect list.
         returnFiber.firstEffect = returnFiber.lastEffect = null;
         returnFiber.effectTag |= Incomplete;
-        returnFiber.subtreeTag = NoEffect;
+        returnFiber.subtreeTag = NoSubtreeTag;
         returnFiber.deletions = null;
       }
     }
@@ -1781,8 +1790,10 @@ function resetChildLanes(completedWork: Fiber) {
     return;
   }
 
+  const didBailout = (completedWork.subtreeTag & DidBailout) !== NoSubtreeTag;
+
   let newChildLanes = NoLanes;
-  let subtreeTag = NoEffect;
+  let subtreeTag = NoSubtreeTag;
   let childrenDidNotComplete = false;
 
   // Bubble up the earliest expiration time.
@@ -1799,10 +1810,19 @@ function resetChildLanes(completedWork: Fiber) {
         mergeLanes(child.lanes, child.childLanes),
       );
 
-      if (!completedWork.didBailout) {
-        subtreeTag |= child.subtreeTag;
-        // TODO (effects) Document why this exception is important
-        subtreeTag |= child.effectTag & HostEffectMask;
+      if (!didBailout) {
+        subtreeTag |= child.subtreeTag & ~DidBailout;
+
+        const effectTag = child.effectTag;
+        if ((effectTag & BeforeMutationMask) !== NoEffect) {
+          subtreeTag |= BeforeMutation;
+        }
+        if ((effectTag & MutationMask) !== NoEffect) {
+          subtreeTag |= Mutation;
+        }
+        if ((effectTag & LayoutMask) !== NoEffect) {
+          subtreeTag |= Layout;
+        }
       }
 
       if ((child.effectTag & Incomplete) !== NoEffect) {
@@ -1816,7 +1836,7 @@ function resetChildLanes(completedWork: Fiber) {
       // this value will reflect the amount of time spent working on a previous
       // render. In that case it should not bubble. We determine whether it was
       // cloned by comparing the child pointer.
-      if (!completedWork.didBailout) {
+      if (!didBailout) {
         actualDuration += child.actualDuration;
       }
       treeBaseDuration += child.treeBaseDuration;
@@ -1844,10 +1864,19 @@ function resetChildLanes(completedWork: Fiber) {
         mergeLanes(child.lanes, child.childLanes),
       );
 
-      if (!completedWork.didBailout) {
-        subtreeTag |= child.subtreeTag;
-        // TODO (effects) Document why this exception is important
-        subtreeTag |= child.effectTag & HostEffectMask;
+      if (!didBailout) {
+        subtreeTag |= child.subtreeTag & ~DidBailout;
+
+        const effectTag = child.effectTag;
+        if ((effectTag & BeforeMutationMask) !== NoEffect) {
+          subtreeTag |= BeforeMutation;
+        }
+        if ((effectTag & MutationMask) !== NoEffect) {
+          subtreeTag |= Mutation;
+        }
+        if ((effectTag & LayoutMask) !== NoEffect) {
+          subtreeTag |= Layout;
+        }
       }
 
       if ((child.effectTag & Incomplete) !== NoEffect) {
@@ -2126,10 +2155,10 @@ function commitBeforeMutationEffects(fiber: Fiber) {
     commitBeforeMutationEffectsDeletions(fiber.deletions);
   }
 
-  if (fiber.child !== null && !fiber.didBailOut) {
-    const primarySubtreeTag =
-      fiber.subtreeTag & (Deletion | Snapshot | Passive | Placement);
-    if (primarySubtreeTag !== NoEffect) {
+  const didBailout = (fiber.subtreeTag & DidBailout) !== NoSubtreeTag;
+  if (fiber.child !== null && !didBailout) {
+    const primarySubtreeTag = fiber.subtreeTag & BeforeMutation;
+    if (primarySubtreeTag !== NoSubtreeTag) {
       commitBeforeMutationEffects(fiber.child);
     }
   }
@@ -2219,11 +2248,10 @@ function commitMutationEffects(
     fiber.deletions = null;
   }
 
-  if (fiber.child !== null && !fiber.didBailOut) {
-    const primarySubtreeTag =
-      fiber.subtreeTag &
-      (ContentReset | Deletion | Hydrating | Placement | Ref | Update);
-    if (primarySubtreeTag !== NoEffect) {
+  const didBailout = (fiber.subtreeTag & DidBailout) !== NoSubtreeTag;
+  if (fiber.child !== null && !didBailout) {
+    const primarySubtreeTag = fiber.subtreeTag & Mutation;
+    if (primarySubtreeTag !== NoSubtreeTag) {
       commitMutationEffects(fiber.child, root, renderPriorityLevel);
     }
   }
@@ -2363,9 +2391,10 @@ function commitLayoutEffects(
   root: FiberRoot,
   committedLanes: Lanes,
 ) {
-  if (fiber.child !== null && !fiber.didBailOut) {
-    const primarySubtreeTag = fiber.subtreeTag & (Update | Callback | Ref);
-    if (primarySubtreeTag !== NoEffect) {
+  const didBailout = (fiber.subtreeTag & DidBailout) !== NoSubtreeTag;
+  if (fiber.child !== null && !didBailout) {
+    const primarySubtreeTag = fiber.subtreeTag & Layout;
+    if (primarySubtreeTag !== NoSubtreeTag) {
       commitLayoutEffects(fiber.child, root, committedLanes);
     }
   }
