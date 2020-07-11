@@ -353,6 +353,36 @@ function runActTests(label, render, unmount, rerender) {
 
           expect(container.innerHTML).toBe('2');
         });
+
+        it('does not warn on effects that were not queued', () => {
+          function Component() {
+            React.useEffect(() => {
+              Scheduler.unstable_yieldValue('effect');
+            }, []);
+            return null;
+          }
+
+          ReactTestUtils.act(() => {
+            ReactDOM.render(
+              <React.StrictMode>
+                <Component />
+              </React.StrictMode>,
+              container,
+            );
+          });
+
+          expect(Scheduler).toHaveYielded(['effect']);
+
+          ReactDOM.render(
+            <React.StrictMode>
+              <Component />
+            </React.StrictMode>,
+            container,
+          );
+
+          // Nothing scheduled so we should not have any unexpected errors regarding missing act();
+          expect(Scheduler).toFlushAndYield([]);
+        });
       });
     });
 
