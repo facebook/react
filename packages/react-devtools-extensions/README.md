@@ -34,4 +34,7 @@ yarn run test:chrome # Test Chrome extension
 
 yarn build:firefox # => packages/react-devtools-extensions/firefox/build
 yarn run test:firefox # Test Firefox extension
+
+yarn build:edge # => packages/react-devtools-extensions/edge/build
+yarn run test:edge # Test Edge extension
 ```
