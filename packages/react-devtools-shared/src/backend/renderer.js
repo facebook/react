@@ -1237,11 +1237,14 @@ export function attach(
           );
         }
       } else {
+        let primaryChild: Fiber | null = null;
         const areSuspenseChildrenConditionallyWrapped =
           OffscreenComponent === -1;
-        const primaryChild: Fiber | null = areSuspenseChildrenConditionallyWrapped
-          ? fiber.child
-          : (fiber.child: any).child;
+        if (areSuspenseChildrenConditionallyWrapped) {
+          primaryChild = fiber.child;
+        } else if (fiber.child !== null) {
+          primaryChild = fiber.child.child;
+        }
         if (primaryChild !== null) {
           mountFiberRecursively(
             primaryChild,
