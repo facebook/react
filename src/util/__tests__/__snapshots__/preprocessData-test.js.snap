@@ -5,7 +5,6 @@ Object {
   "duration": 2586.895,
   "events": Array [
     Object {
-      "componentName": "Unknown",
       "componentStack": "",
       "lanes": Array [
         9,

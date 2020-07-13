@@ -12,7 +12,7 @@ import preprocessFlamechart from './util/preprocessFlamechart';
 import {readInputData} from './util/readInputData';
 
 // TODO: Use for dev only, switch to import file after
-import JSON_PATH from 'url:../static/Profile-20200625T133129.json';
+import JSON_PATH from 'url:../static/perfprofilev2.json';
 
 type Props = {|
   onDataImported: (

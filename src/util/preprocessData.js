@@ -150,22 +150,19 @@ function processTimelineEvent(
 
   // React Events - schedule
   if (name.startsWith('--schedule-render-')) {
-    const [
-      componentName,
-      laneBitmaskString,
-      ...splitComponentStack
-    ] = name.substr(18).split('-');
+    const [laneBitmaskString, ...splitComponentStack] = name
+      .substr(18)
+      .split('-');
     currentProfilerData.events.push({
       type: 'schedule-render',
       lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
-      componentName,
       componentStack: splitComponentStack.join('-'),
       timestamp: startTime,
     });
   } else if (name.startsWith('--schedule-forced-update-')) {
     const [
-      componentName,
       laneBitmaskString,
+      componentName,
       ...splitComponentStack
     ] = name.substr(25).split('-');
     const isCascading = !!state.measureStack.find(
@@ -181,8 +178,8 @@ function processTimelineEvent(
     });
   } else if (name.startsWith('--schedule-state-update-')) {
     const [
-      componentName,
       laneBitmaskString,
+      componentName,
       ...splitComponentStack
     ] = name.substr(24).split('-');
     const isCascading = !!state.measureStack.find(
@@ -200,7 +197,7 @@ function processTimelineEvent(
 
   // React Events - suspense
   else if (name.startsWith('--suspense-suspend-')) {
-    const [componentName, id, ...splitComponentStack] = name
+    const [id, componentName, ...splitComponentStack] = name
       .substr(19)
       .split('-');
     currentProfilerData.events.push({
@@ -211,7 +208,7 @@ function processTimelineEvent(
       timestamp: startTime,
     });
   } else if (name.startsWith('--suspense-resolved-')) {
-    const [componentName, id, ...splitComponentStack] = name
+    const [id, componentName, ...splitComponentStack] = name
       .substr(20)
       .split('-');
     currentProfilerData.events.push({
@@ -222,7 +219,7 @@ function processTimelineEvent(
       timestamp: startTime,
     });
   } else if (name.startsWith('--suspense-rejected-')) {
-    const [componentName, id, ...splitComponentStack] = name
+    const [id, componentName, ...splitComponentStack] = name
       .substr(20)
       .split('-');
     currentProfilerData.events.push({
