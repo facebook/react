@@ -127,3 +127,6 @@ export const deferRenderPhaseUpdateToNextBatch = true;
 
 // Replacement for runWithPriority in React internals.
 export const decoupleUpdatePriorityFromScheduler = false;
+
+// Enables delegation for submit and reset events.
+export const enableFormEventDelegation = false;
