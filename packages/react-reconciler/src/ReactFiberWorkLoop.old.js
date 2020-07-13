@@ -2836,16 +2836,12 @@ export function pingSuspendedRoot(
     // TODO: If we're rendering sync either due to Sync, Batched or expired,
     // we should probably never restart.
 
-    // If we're suspended with delay, we'll always suspend so we can always
-    // restart. If we're suspended without any updates, it might be a retry.
-    // If it's early in the retry we can restart. We can't know for sure
-    // whether we'll eventually process an update during this render pass,
-    // but it's somewhat unlikely that we get to a ping before that, since
-    // getting to the root most update is usually very fast.
+    // If we're suspended with delay, or if it's a retry, we'll always suspend
+    // so we can always restart.
     if (
       workInProgressRootExitStatus === RootSuspendedWithDelay ||
       (workInProgressRootExitStatus === RootSuspended &&
-        workInProgressRootLatestProcessedEventTime === NoTimestamp &&
+        includesOnlyRetries(workInProgressRootRenderLanes) &&
         now() - globalMostRecentFallbackTime < FALLBACK_THROTTLE_MS)
     ) {
       // Restart from the root.
