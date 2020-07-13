@@ -2191,6 +2191,65 @@ Object {
 }
 `;
 
+exports[`ProfilingCache should handle unexpectedly shallow suspense trees: Empty Suspense node 1`] = `
+Object {
+  "commitData": Array [
+    Object {
+      "changeDescriptions": Map {},
+      "duration": 0,
+      "fiberActualDurations": Map {
+        1 => 0,
+        2 => 0,
+      },
+      "fiberSelfDurations": Map {
+        1 => 0,
+        2 => 0,
+      },
+      "interactionIDs": Array [],
+      "priorityLevel": "Normal",
+      "timestamp": 0,
+    },
+  ],
+  "displayName": "Suspense",
+  "initialTreeBaseDurations": Map {},
+  "interactionCommits": Map {},
+  "interactions": Map {},
+  "operations": Array [
+    Array [
+      1,
+      1,
+      9,
+      8,
+      83,
+      117,
+      115,
+      112,
+      101,
+      110,
+      115,
+      101,
+      1,
+      1,
+      11,
+      1,
+      1,
+      1,
+      2,
+      12,
+      1,
+      0,
+      1,
+      0,
+      4,
+      2,
+      0,
+    ],
+  ],
+  "rootID": 1,
+  "snapshots": Map {},
+}
+`;
+
 exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 0 1`] = `
 Object {
   "changeDescriptions": Map {

@@ -696,4 +696,24 @@ describe('ProfilingCache', () => {
       ),
     );
   });
+
+  it('should handle unexpectedly shallow suspense trees', () => {
+    const container = document.createElement('div');
+
+    utils.act(() => store.profilerStore.startProfiling());
+    utils.act(() => ReactDOM.render(<React.Suspense />, container));
+    utils.act(() => store.profilerStore.stopProfiling());
+
+    function Validator({commitIndex, rootID}) {
+      const profilingDataForRoot = store.profilerStore.getDataForRoot(rootID);
+      expect(profilingDataForRoot).toMatchSnapshot('Empty Suspense node');
+      return null;
+    }
+
+    const rootID = store.roots[0];
+
+    utils.act(() => {
+      TestRenderer.create(<Validator commitIndex={0} rootID={rootID} />);
+    });
+  });
 });
