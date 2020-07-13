@@ -1,3 +1,6 @@
+## 4.0.8
+* Fixes TypeScript `typeof` annotation to not be considered a dependency. ([@delca85](https://github.com/delca85) in [#19316](https://github.com/facebook/react/pull/19316))
+
 ## 4.0.7
 * Fixes an overly coarse dependency suggestion. ([@gaearon](https://github.com/gaearon) in [#19313](https://github.com/facebook/react/pull/19313))
 
