@@ -6995,6 +6995,18 @@ const testsTypescript = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function App() {
+          const foo = {x: 1};
+          React.useEffect(() => {
+            const bar = {x: 2};
+            const baz = bar as typeof foo;
+            console.log(baz);
+          }, []);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -7021,6 +7033,40 @@ const testsTypescript = {
                   useEffect(() => {
                     console.log(local);
                   }, [local]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function App() {
+          const foo = {x: 1};
+          const bar = {x: 2};
+          useEffect(() => {
+            const baz = bar as typeof foo;
+            console.log(baz);
+          }, []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'bar'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [bar]',
+              output: normalizeIndent`
+                function App() {
+                  const foo = {x: 1};
+                  const bar = {x: 2};
+                  useEffect(() => {
+                    const baz = bar as typeof foo;
+                    console.log(baz);
+                  }, [bar]);
                 }
               `,
             },
@@ -7233,7 +7279,7 @@ const testsTypescript = {
       code: normalizeIndent`
         function MyComponent() {
           const [state, setState] = React.useState<number>(0);
-          
+
           useEffect(() => {
             const someNumber: typeof state = 2;
             setState(prevState => prevState + someNumber + state);
@@ -7253,7 +7299,7 @@ const testsTypescript = {
               output: normalizeIndent`
               function MyComponent() {
                 const [state, setState] = React.useState<number>(0);
-                
+
                 useEffect(() => {
                   const someNumber: typeof state = 2;
                   setState(prevState => prevState + someNumber + state);
@@ -7269,7 +7315,7 @@ const testsTypescript = {
       code: normalizeIndent`
         function MyComponent() {
           const [state, setState] = React.useState<number>(0);
-          
+
           useMemo(() => {
             const someNumber: typeof state = 2;
             console.log(someNumber);
@@ -7287,7 +7333,7 @@ const testsTypescript = {
               output: normalizeIndent`
                 function MyComponent() {
                   const [state, setState] = React.useState<number>(0);
-                  
+
                   useMemo(() => {
                     const someNumber: typeof state = 2;
                     console.log(someNumber);
