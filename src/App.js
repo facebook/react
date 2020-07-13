@@ -38,7 +38,6 @@ export default function App() {
       });
     },
   );
-
   if (profilerData && flamechart) {
     return (
       <CanvasPage

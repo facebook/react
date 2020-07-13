@@ -3,6 +3,7 @@
   "transformers": {
     "*.{json,json5}": [
       "@parcel/transformer-raw"
-    ]
+    ],
+    "*.svg": ["@parcel/transformer-raw"]
   }
 }

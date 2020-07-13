@@ -1,0 +1,185 @@
+.App {
+  background-color: #282c34;
+  text-align: center;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  min-height: 100vh;
+}
+
+.link {
+  color: #282c34;
+  transition: 0.2s;
+}
+.link:hover {
+  color: #61dafb;
+  transition: 0.2s;
+}
+
+/* React logo Spinner */
+.reactlogo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .reactlogo {
+    animation: spin infinite 20s linear;
+  }
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+hr {
+  margin-top: 0px;
+  margin-left: 4px;
+  width: 80%;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  flex: 1;
+}
+
+.columncontent {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  flex: 1;
+  text-align: left;
+}
+
+/* Card Styling */
+.card {
+  background-color: white;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  transition: 0.3s;
+  width: 80%;
+  color: black;
+}
+
+.card:hover {
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+}
+
+.cardcontainer {
+  padding: 40px 16px;
+}
+
+/* Button Styling */
+.inputbtn {
+  display: none;
+}
+
+.buttongrp {
+  float: left; /* Float the buttons side by side */
+}
+
+.button {
+  background-color: #61dafb;
+  border: none;
+  color: #ffffff;
+  text-align: center;
+  font-size: 28px;
+  padding: 20px;
+  width: 200px;
+  transition: all 0.3s;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.button span {
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  transition: 0.3s;
+}
+
+.button span:after {
+  content: '\00bb';
+  position: absolute;
+  opacity: 0;
+  top: 0;
+  right: -20px;
+  transition: 0.3s;
+}
+
+.button:hover {
+  background-color: white;
+  color: black;
+}
+
+.button:hover span {
+  padding-right: 25px;
+}
+
+.button:hover span:after {
+  opacity: 1;
+  right: 0;
+}
+
+/* Button2 styling */
+.btndoc {
+  background-color: transparent;
+  color: black;
+  border: none;
+  text-align: center;
+  font-size: 28px;
+  padding: 20px;
+  width: 200px;
+  transition: all 0.3s;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.btndoc span {
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  transition: 0.3s;
+}
+
+.btndoc span:after {
+  content: '\00bb';
+  position: absolute;
+  opacity: 0;
+  top: 0;
+  right: -20px;
+  transition: 0.3s;
+}
+
+.btndoc:hover {
+  background-color: white;
+  color: black;
+}
+
+.btndoc:hover span {
+  padding-right: 25px;
+}
+
+.btndoc:hover span:after {
+  opacity: 1;
+  right: 0;
+}
