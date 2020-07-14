@@ -19,9 +19,9 @@
   },
   "homepage": "https://reactjs.org/",
   "peerDependencies": {
-    "jest": "^23.0.1 || ^24.0.0 || ^25.1.0",
-    "react": "^16.0.0",
-    "react-test-renderer": "^16.0.0"
+    "jest": ">=23.0.1",
+    "react": ">=16.0.0",
+    "react-test-renderer": ">=16.0.0"
   },
   "dependencies": {
     "object-assign": "^4.1.1"
