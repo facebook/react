@@ -409,7 +409,7 @@ describe.each(table)('FocusWithin responder', hasPointerEvents => {
 
     // @gate experimental
     it('is called after a nested focused element is unmounted (with scope query)', () => {
-      const TestScope = React.unstable_createScope();
+      const TestScope = React.unstable_Scope;
       const testScopeQuery = (type, props) => true;
       let targetNodes;
       let targetNode;

@@ -561,7 +561,7 @@ describe('DOMEventResponderSystem', () => {
   it('the event responder onUnmount() function should fire using scopes', () => {
     let onUnmountFired = 0;
 
-    const TestScope = React.unstable_createScope();
+    const TestScope = React.unstable_Scope;
     const TestResponder = createEventResponder({
       targetEventTypes: [],
       onUnmount: () => {
