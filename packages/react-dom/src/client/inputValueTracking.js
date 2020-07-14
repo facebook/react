@@ -139,3 +139,10 @@ export function stopTracking(node: ElementWithValueTracker) {
     tracker.stopTracking();
   }
 }
+
+export function resetTracking(node: ElementWithValueTracker) {
+  const tracker = getTracker(node);
+  if (tracker) {
+    tracker.setValue(node.defaultValue);
+  }
+}

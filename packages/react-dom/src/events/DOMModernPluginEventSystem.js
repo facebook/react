@@ -83,6 +83,7 @@ import {COMMENT_NODE} from '../shared/HTMLNodeType';
 import {batchedEventUpdates} from './ReactDOMUpdateBatching';
 import getListener from './getListener';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
+import {resetTracking} from '../client/inputValueTracking';
 
 import {
   enableFormEventDelegation,
@@ -122,6 +123,33 @@ type DispatchEntry = {|
 |};
 
 export type DispatchQueue = Array<DispatchEntry>;
+
+// when a reset button/input is clicked
+// all inputs inside the closest form or body should be reset
+// by default their values will be reset but we also need to update values of trackers
+function resetForm(target: Element) {
+  let closestForm;
+  let parentNode = target.parentNode;
+  while (parentNode) {
+    if (parentNode.nodeName === 'FORM') {
+      closestForm = ((parentNode: any): Element);
+      break;
+    }
+    parentNode = parentNode.parentNode;
+  }
+  let inputsToReset;
+  if (closestForm) {
+    inputsToReset = ((closestForm.querySelectorAll(
+      'input',
+    ): any): NodeList<HTMLInputElement>);
+  } else {
+    inputsToReset = ((target.ownerDocument.querySelectorAll(
+      'input',
+    ): any): NodeList<HTMLInputElement>);
+  }
+
+  inputsToReset.forEach(inputNode => resetTracking(inputNode));
+}
 
 // TODO: remove top-level side effect.
 ModernSimpleEventPlugin.registerEvents();
@@ -666,6 +694,19 @@ export function dispatchEventForPluginEventSystem(
       targetContainer,
     ),
   );
+
+  const nativeEventTarget = getEventTarget(nativeEvent);
+
+  if (
+    !nativeEvent.defaultPrevented &&
+    (nativeEventTarget.nodeName === 'BUTTON' ||
+      nativeEventTarget.nodeName === 'INPUT') &&
+    nativeEventTarget.type === 'reset' &&
+    nativeEvent.type === 'click'
+  ) {
+    const elementTarget: Element = nativeEventTarget;
+    resetForm(elementTarget);
+  }
 }
 
 function createDispatchListener(
