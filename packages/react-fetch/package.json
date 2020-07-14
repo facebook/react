@@ -18,7 +18,7 @@
     "cjs/"
   ],
   "peerDependencies": {
-    "react": "^16.13.1"
+    "react": ">=16.13.1"
   },
   "browser": {
     "./index.js": "./index.browser.js"
