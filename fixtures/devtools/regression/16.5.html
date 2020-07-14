@@ -8,7 +8,12 @@
     <script type="text/javascript">
       // Enable DevTools to inspect React inside of an <iframe>
       // This must run before React is loaded
-      __REACT_DEVTOOLS_GLOBAL_HOOK__ = parent.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+      if(window.parent) {
+        for (const key in __REACT_DEVTOOLS_GLOBAL_HOOK__) {
+          
+          __REACT_DEVTOOLS_GLOBAL_HOOK__[key] = parent.__REACT_DEVTOOLS_GLOBAL_HOOK__[key]
+        }
+      }
     </script>
 
     <script src="https://unpkg.com/schedule@0.5.0/umd/schedule.development.js"></script>
