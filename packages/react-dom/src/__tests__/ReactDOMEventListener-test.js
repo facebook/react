@@ -12,11 +12,26 @@
 describe('ReactDOMEventListener', () => {
   let React;
   let ReactDOM;
+  let setUntrackedValue;
+  let setUntrackedChecked;
+
+  function dispatchEventOnNode(node, type) {
+    node.dispatchEvent(new Event(type, {bubbles: true, cancelable: true}));
+  }
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+
+    setUntrackedValue = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      'value',
+    ).set;
+    setUntrackedChecked = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      'checked',
+    ).set;
   });
 
   describe('Propagation', () => {
@@ -465,5 +480,131 @@ describe('ReactDOMEventListener', () => {
     } finally {
       document.body.removeChild(container);
     }
+  });
+
+  describe('form resetting', () => {
+    it('should reset the form correctly', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+
+      const checkboxRef = React.createRef();
+      const textRef = React.createRef();
+      const textRefNotReset = React.createRef();
+      const buttonRef = React.createRef();
+
+      const handleChangeCheckbox = jest.fn();
+      const handleChangeTextBox = jest.fn();
+      const handleChangeTextBoxNotReset = jest.fn();
+      class Form extends React.Component {
+        state = {text: 'test', checkbox: false};
+
+        render() {
+          return (
+            <div>
+              <form>
+                <input
+                  ref={textRefNotReset}
+                  defaultValue="not reset"
+                  onChange={handleChangeTextBoxNotReset}
+                />
+              </form>
+              <form>
+                <input
+                  ref={textRef}
+                  onChange={handleChangeTextBox}
+                  value={this.state.text}
+                />
+                <input
+                  ref={checkboxRef}
+                  onChange={handleChangeCheckbox}
+                  type="checkbox"
+                  value={this.state.checkbox}
+                />
+                <button ref={buttonRef} type="reset">
+                  reset
+                </button>
+              </form>
+            </div>
+          );
+        }
+      }
+
+      ReactDOM.render(<Form />, container);
+
+      setUntrackedChecked.call(checkboxRef.current, true);
+      setUntrackedValue.call(textRef.current, 'test1');
+      setUntrackedValue.call(textRefNotReset.current, 'changed');
+      dispatchEventOnNode(textRef.current, 'input');
+      dispatchEventOnNode(textRefNotReset.current, 'input');
+      dispatchEventOnNode(checkboxRef.current, 'click');
+      expect(handleChangeCheckbox).toHaveBeenCalledTimes(1);
+      expect(handleChangeTextBox).toHaveBeenCalledTimes(1);
+      expect(handleChangeTextBoxNotReset).toHaveBeenCalledTimes(1);
+
+      buttonRef.current.click();
+      expect(checkboxRef.current.checked).toBe(false);
+      expect(textRef.current.value).toEqual('test');
+      expect(textRefNotReset.current.value).toEqual('changed');
+
+      setUntrackedChecked.call(checkboxRef.current, true);
+      setUntrackedValue.call(textRef.current, 'test1');
+      setUntrackedValue.call(textRefNotReset.current, 'changed');
+      dispatchEventOnNode(textRef.current, 'input');
+      dispatchEventOnNode(checkboxRef.current, 'click');
+      dispatchEventOnNode(textRefNotReset.current, 'changed');
+      expect(handleChangeCheckbox).toHaveBeenCalledTimes(2);
+      expect(handleChangeTextBox).toHaveBeenCalledTimes(2);
+      expect(handleChangeTextBoxNotReset).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not reset form if is prevented', () => {
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+
+      const textRef = React.createRef();
+      const buttonRef = React.createRef();
+
+      const handleChangeTextBox = jest.fn();
+
+      class Form extends React.Component {
+        state = {text: 'test'};
+
+        render() {
+          return (
+            <form>
+              <input
+                ref={textRef}
+                defaultValue="test"
+                onChange={event => {
+                  this.setState({text: event.target.value});
+                  handleChangeTextBox(event);
+                }}
+              />
+              <button
+                onClick={event => {
+                  event.preventDefault();
+                }}
+                ref={buttonRef}
+                type="reset">
+                reset
+              </button>
+            </form>
+          );
+        }
+      }
+
+      ReactDOM.render(<Form />, container);
+
+      setUntrackedValue.call(textRef.current, 'test1');
+      dispatchEventOnNode(textRef.current, 'input');
+      expect(handleChangeTextBox).toHaveBeenCalledTimes(1);
+
+      buttonRef.current.click();
+      expect(textRef.current.value).toEqual('test1');
+
+      setUntrackedValue.call(textRef.current, 'test1');
+      dispatchEventOnNode(textRef.current, 'input');
+      expect(handleChangeTextBox).toHaveBeenCalledTimes(1);
+    });
   });
 });
