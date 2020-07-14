@@ -56,6 +56,7 @@ import {
   flushDiscreteUpdatesIfNeeded,
   discreteUpdates,
 } from './ReactDOMUpdateBatching';
+import {unstable_runWithPriority} from '../client/ReactDOM';
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
@@ -148,16 +149,19 @@ function dispatchUserBlockingUpdate(
   container,
   nativeEvent,
 ) {
-  runWithPriority(
-    UserBlockingPriority,
-    dispatchEvent.bind(
-      null,
-      topLevelType,
-      eventSystemFlags,
-      container,
-      nativeEvent,
-    ),
-  );
+  // TODO: Double wrapping is necessary while we decouple Scheduler priority.
+  unstable_runWithPriority(UserBlockingPriority, () => {
+    runWithPriority(
+      UserBlockingPriority,
+      dispatchEvent.bind(
+        null,
+        topLevelType,
+        eventSystemFlags,
+        container,
+        nativeEvent,
+      ),
+    );
+  });
 }
 
 export function dispatchEvent(
