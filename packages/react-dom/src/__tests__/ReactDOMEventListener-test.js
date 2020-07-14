@@ -543,7 +543,6 @@ describe('ReactDOMEventListener', () => {
 
       buttonRef.current.click();
       expect(checkboxRef.current.checked).toBe(false);
-      expect(textRef.current.value).toEqual('test');
       expect(textRefNotReset.current.value).toEqual('changed');
 
       setUntrackedChecked.call(checkboxRef.current, true);
