@@ -35,5 +35,8 @@
     "transform": [
       "loose-envify"
     ]
+  },
+  "engines": {
+    "node": ">=0.10.0"
   }
 }
