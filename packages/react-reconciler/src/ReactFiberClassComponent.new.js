@@ -16,8 +16,6 @@ import {Update, Snapshot} from './ReactSideEffectTags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
-  enableDebugTracing,
-  enableSchedulingProfiler,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
@@ -29,7 +27,7 @@ import invariant from 'shared/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
-import {DebugTracingMode, StrictMode} from './ReactTypeOfMode';
+import {StrictMode} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,
@@ -57,13 +55,8 @@ import {
   scheduleUpdateOnFiber,
 } from './ReactFiberWorkLoop.new';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
-import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
-import {
-  markForceUpdateScheduled,
-  markStateUpdateScheduled,
-} from './SchedulingProfiler';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -210,19 +203,6 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleUpdateOnFiber(fiber, lane, eventTime);
-
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        if (fiber.mode & DebugTracingMode) {
-          const name = getComponentName(fiber.type) || 'Unknown';
-          logStateUpdateScheduled(name, lane, payload);
-        }
-      }
-    }
-
-    if (enableSchedulingProfiler) {
-      markStateUpdateScheduled(fiber, lane);
-    }
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
@@ -243,19 +223,6 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleUpdateOnFiber(fiber, lane, eventTime);
-
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        if (fiber.mode & DebugTracingMode) {
-          const name = getComponentName(fiber.type) || 'Unknown';
-          logStateUpdateScheduled(name, lane, payload);
-        }
-      }
-    }
-
-    if (enableSchedulingProfiler) {
-      markStateUpdateScheduled(fiber, lane);
-    }
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
@@ -275,19 +242,6 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleUpdateOnFiber(fiber, lane, eventTime);
-
-    if (__DEV__) {
-      if (enableDebugTracing) {
-        if (fiber.mode & DebugTracingMode) {
-          const name = getComponentName(fiber.type) || 'Unknown';
-          logForceUpdateScheduled(name, lane);
-        }
-      }
-    }
-
-    if (enableSchedulingProfiler) {
-      markForceUpdateScheduled(fiber, lane);
-    }
   },
 };
 

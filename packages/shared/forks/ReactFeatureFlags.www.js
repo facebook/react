@@ -26,6 +26,7 @@ export const {
   deferRenderPhaseUpdateToNextBatch,
   decoupleUpdatePriorityFromScheduler,
   enableDebugTracing,
+  enableSchedulingProfiler,
   enableFormEventDelegation,
 } = dynamicFeatureFlags;
 
@@ -34,7 +35,6 @@ export const {
 
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
-export const enableSchedulingProfiler = __PROFILE__;
 
 // Note: we'll want to remove this when we to userland implementation.
 // For now, we'll turn it on for everyone because it's *already* on for everyone in practice.
