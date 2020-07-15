@@ -53,6 +53,7 @@ import {
   runWithPriority as runWithPriority_old,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
   InputContinuousLanePriority as InputContinuousLanePriority_old,
+  IdleLanePriority as IdleLanePriority_old,
 } from './ReactFiberReconciler.old';
 
 import {
@@ -94,6 +95,7 @@ import {
   runWithPriority as runWithPriority_new,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
   InputContinuousLanePriority as InputContinuousLanePriority_new,
+  IdleLanePriority as IdleLanePriority_new,
 } from './ReactFiberReconciler.new';
 
 export const createContainer = enableNewReconciler
@@ -130,6 +132,9 @@ export const flushPassiveEffects = enableNewReconciler
 export const IsThisRendererActing = enableNewReconciler
   ? IsThisRendererActing_new
   : IsThisRendererActing_old;
+export const IdleLanePriority = enableNewReconciler
+  ? IdleLanePriority_new
+  : IdleLanePriority_old;
 export const InputContinuousLanePriority = enableNewReconciler
   ? InputContinuousLanePriority_new
   : InputContinuousLanePriority_old;

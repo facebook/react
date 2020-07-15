@@ -35,6 +35,7 @@ export {
   unstable_flushControlled,
   unstable_scheduleHydration,
   unstable_runWithPriority,
+  unstable_IdleLanePriority,
   unstable_renderSubtreeIntoContainer,
   unstable_createPortal,
   unstable_createEventHandle,

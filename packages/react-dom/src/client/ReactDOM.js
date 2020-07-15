@@ -37,6 +37,7 @@ import {
   attemptHydrationAtCurrentPriority,
   runWithPriority,
   getCurrentUpdateLanePriority,
+  IdleLanePriority,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -211,9 +212,10 @@ export {
   unstable_createPortal,
   // enableCreateEventHandleAPI
   createEventHandle as unstable_createEventHandle,
-  // TODO: Remove this once callers migrate to alternatives.
-  // This should only be used by React internals.
+  // TODO: Remove these once callers migrate to alternatives.
+  // These should only be used by React internals.
   runWithPriority as unstable_runWithPriority,
+  IdleLanePriority as unstable_IdleLanePriority,
 };
 
 const foundDevTools = injectIntoDevTools({
