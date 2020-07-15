@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {gt, gte} from 'semver';
+import {gte} from 'semver';
 import {
   ComponentFilterDisplayName,
   ComponentFilterElementType,
@@ -153,7 +153,7 @@ export function getInternalReactConstants(
   // **********************************************************
   // The section below is copied from files in React repo.
   // Keep it in sync, and add version guards if it changes.
-  if (gt(version, '16.13.1')) {
+  if (gte(version, '17.0.0-alpha')) {
     // TODO (Offscreen) Update the version number above to reflect the first Offscreen alpha/beta release.
     ReactTypeOfWork = {
       Block: 22,
