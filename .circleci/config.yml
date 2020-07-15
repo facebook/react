@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 aliases:
   - &docker
@@ -371,6 +371,23 @@ jobs:
       - *run_yarn
       - run: yarn test --project=devtools --build --ci
 
+  yarn_test_release_devtools:
+    docker: *docker
+    environment: *environment
+    parameters:
+      version:
+        type: string
+        default: next
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - *restore_yarn_cache
+      - *run_yarn
+      - run:
+          name: Download a specific version of React + renderers
+          command: node scripts/jest/install-devtools-release-test-deps.js << parameters.version >>
+      - run: yarn test --project=devtools --build --ci
+
   RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
     docker: *docker
     environment: *environment
@@ -515,6 +532,9 @@ workflows:
           requires:
             - yarn_build
       - yarn_test_build_devtools:
+          requires:
+            - yarn_build
+      - yarn_test_release_devtools:
           requires:
             - yarn_build
       # FIXME: Temporarily disabled to unblock master.
