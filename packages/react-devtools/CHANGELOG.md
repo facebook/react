@@ -9,6 +9,12 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.8.2 (July 15, 2020)
+#### Bugfix
+* Fix broken `Suspense` heuristic ([bvaughn](https://github.com/bvaughn) in [#19373](https://github.com/facebook/react/pull/19373))
+* Fixed error with standalone in HTTPS mode ([b-ponomarenko](https://github.com/b-ponomarenko) in [#19336](https://github.com/facebook/react/pull/19336))
+* Disable DevTools minification ([bvaughn](https://github.com/bvaughn) in [#19369](https://github.com/facebook/react/pull/19369))
+
 ## 4.8.1 (July 10, 2020)
 #### Bugfix
 * Fix break-on-warning to truly be off by default. ([gaearon](https://github.com/gaearon) in [#19309](https://github.com/facebook/react/pull/19309))
