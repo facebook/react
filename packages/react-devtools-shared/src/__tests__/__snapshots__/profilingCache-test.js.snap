@@ -753,6 +753,19 @@ Array [
 ]
 `;
 
+exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 10 1`] = `
+Array [
+  1,
+  2,
+]
+`;
+
+exports[`ProfilingCache should collect data for each rendered fiber: FiberCommits: element 13 1`] = `
+Array [
+  2,
+]
+`;
+
 exports[`ProfilingCache should collect data for each rendered fiber: imported data 1`] = `
 Object {
   "dataForRoots": Array [
