@@ -12,10 +12,8 @@ import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
 import type {ElementListenerMap} from '../client/ReactDOMComponentTree';
 import type {EventSystemFlags} from './EventSystemFlags';
-import type {
-  FiberRoot,
-  ReactPriorityLevel,
-} from 'react-reconciler/src/ReactInternalTypes';
+import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {LanePriority} from 'react-reconciler/src/ReactFiberLane';
 
 import {
   enableDeprecatedFlareAPI,
@@ -67,19 +65,16 @@ export function setAttemptHydrationAtCurrentPriority(
   attemptHydrationAtCurrentPriority = fn;
 }
 
-let getCurrentUpdatePriority: () => ReactPriorityLevel;
+let getCurrentUpdatePriority: () => LanePriority;
 
-export function setGetCurrentUpdatePriority(fn: () => ReactPriorityLevel) {
+export function setGetCurrentUpdatePriority(fn: () => LanePriority) {
   getCurrentUpdatePriority = fn;
 }
 
-let attemptHydrationAtPriority: <T>(
-  priority: ReactPriorityLevel,
-  fn: () => T,
-) => T;
+let attemptHydrationAtPriority: <T>(priority: LanePriority, fn: () => T) => T;
 
 export function setAttemptHydrationAtPriority(
-  fn: <T>(priority: ReactPriorityLevel, fn: () => T) => T,
+  fn: <T>(priority: LanePriority, fn: () => T) => T,
 ) {
   attemptHydrationAtPriority = fn;
 }
@@ -170,7 +165,7 @@ type QueuedHydrationTarget = {|
   blockedOn: null | Container | SuspenseInstance,
   target: Node,
   priority: number,
-  lanePriority: ReactPriorityLevel,
+  lanePriority: LanePriority,
 |};
 const queuedExplicitHydrationTargets: Array<QueuedHydrationTarget> = [];
 

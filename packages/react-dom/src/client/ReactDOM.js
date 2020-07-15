@@ -36,7 +36,7 @@ import {
   attemptContinuousHydration,
   attemptHydrationAtCurrentPriority,
   runWithPriority,
-  getCurrentUpdatePriority,
+  getCurrentUpdateLanePriority,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -74,7 +74,7 @@ setAttemptSynchronousHydration(attemptSynchronousHydration);
 setAttemptUserBlockingHydration(attemptUserBlockingHydration);
 setAttemptContinuousHydration(attemptContinuousHydration);
 setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority);
-setGetCurrentUpdatePriority(getCurrentUpdatePriority);
+setGetCurrentUpdatePriority(getCurrentUpdateLanePriority);
 setAttemptHydrationAtPriority(runWithPriority);
 
 let didWarnAboutUnstableCreatePortal = false;
