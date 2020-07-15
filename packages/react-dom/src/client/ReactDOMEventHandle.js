@@ -22,7 +22,7 @@ import {
   getEventListenerMap,
   getFiberFromScopeInstance,
 } from './ReactDOMComponentTree';
-import {ELEMENT_NODE, COMMENT_NODE} from '../shared/HTMLNodeType';
+import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import {
   listenToNativeEvent,
   addEventTypeToDispatchConfig,
@@ -90,16 +90,13 @@ function registerEventOnNearestTargetContainer(
 ): void {
   // If it is, find the nearest root or portal and make it
   // our event handle target container.
-  let targetContainer = getNearestRootOrPortalContainer(targetFiber);
+  const targetContainer = getNearestRootOrPortalContainer(targetFiber);
   if (targetContainer === null) {
     invariant(
       false,
       'ReactDOM.createEventHandle: setListener called on an target ' +
         'that did not have a corresponding root. This is likely a bug in React.',
     );
-  }
-  if (targetContainer.nodeType === COMMENT_NODE) {
-    targetContainer = ((targetContainer.parentNode: any): Element);
   }
   const listenerMap = getEventListenerMap(targetContainer);
   listenToNativeEvent(
