@@ -114,7 +114,6 @@ import {
 } from './ReactSideEffectTags';
 import {
   NoEffect as NoSubtreeTag,
-  DidBailout,
   BeforeMutation,
   Mutation,
   Layout,
@@ -1790,7 +1789,9 @@ function resetChildLanes(completedWork: Fiber) {
     return;
   }
 
-  const didBailout = (completedWork.subtreeTag & DidBailout) !== NoSubtreeTag;
+  const didBailout =
+    completedWork.alternate !== null &&
+    completedWork.alternate.child === completedWork.child;
 
   let newChildLanes = NoLanes;
   let subtreeTag = NoSubtreeTag;
@@ -1810,7 +1811,7 @@ function resetChildLanes(completedWork: Fiber) {
       );
 
       if (!didBailout) {
-        subtreeTag |= child.subtreeTag & ~DidBailout;
+        subtreeTag |= child.subtreeTag;
 
         const effectTag = child.effectTag;
         if ((effectTag & BeforeMutationMask) !== NoEffect) {
@@ -1860,7 +1861,7 @@ function resetChildLanes(completedWork: Fiber) {
       );
 
       if (!didBailout) {
-        subtreeTag |= child.subtreeTag & ~DidBailout;
+        subtreeTag |= child.subtreeTag;
 
         const effectTag = child.effectTag;
         if ((effectTag & BeforeMutationMask) !== NoEffect) {
@@ -2144,8 +2145,7 @@ function commitBeforeMutationEffects(fiber: Fiber) {
     commitBeforeMutationEffectsDeletions(fiber.deletions);
   }
 
-  const didBailout = (fiber.subtreeTag & DidBailout) !== NoSubtreeTag;
-  if (fiber.child !== null && !didBailout) {
+  if (fiber.child !== null) {
     const primarySubtreeTag = fiber.subtreeTag & BeforeMutation;
     if (primarySubtreeTag !== NoSubtreeTag) {
       commitBeforeMutationEffects(fiber.child);
@@ -2237,8 +2237,7 @@ function commitMutationEffects(
     fiber.deletions = null;
   }
 
-  const didBailout = (fiber.subtreeTag & DidBailout) !== NoSubtreeTag;
-  if (fiber.child !== null && !didBailout) {
+  if (fiber.child !== null) {
     const primarySubtreeTag = fiber.subtreeTag & Mutation;
     if (primarySubtreeTag !== NoSubtreeTag) {
       commitMutationEffects(fiber.child, root, renderPriorityLevel);
@@ -2380,8 +2379,7 @@ function commitLayoutEffects(
   root: FiberRoot,
   committedLanes: Lanes,
 ) {
-  const didBailout = (fiber.subtreeTag & DidBailout) !== NoSubtreeTag;
-  if (fiber.child !== null && !didBailout) {
+  if (fiber.child !== null) {
     const primarySubtreeTag = fiber.subtreeTag & Layout;
     if (primarySubtreeTag !== NoSubtreeTag) {
       commitLayoutEffects(fiber.child, root, committedLanes);

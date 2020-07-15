@@ -65,7 +65,6 @@ import {
   Deletion,
   ForceUpdateForLegacySuspense,
 } from './ReactSideEffectTags';
-import {DidBailout} from './ReactSubtreeTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
@@ -615,7 +614,7 @@ function updateOffscreenComponent(
       // We're about to bail out, but we need to push this to the stack anyway
       // to avoid a push/pop misalignment.
       pushRenderLanes(workInProgress, nextBaseLanes);
-      return reuseCurrentChild(workInProgress);
+      return null;
     } else {
       // Rendering at offscreen, so we can clear the base lanes.
       const nextState: OffscreenState = {
@@ -1165,7 +1164,7 @@ function updateHostText(current, workInProgress) {
   }
   // Nothing to do here. This is terminal. We'll do the completion step
   // immediately after.
-  return reuseCurrentChild(workInProgress);
+  return null;
 }
 
 function mountLazyComponent(
@@ -1846,7 +1845,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             // The dehydrated completion pass expects this flag to be there
             // but the normal suspense pass doesn't.
             workInProgress.effectTag |= DidCapture;
-            return reuseCurrentChild(workInProgress);
+            return null;
           } else {
             // Suspended but we should no longer be in dehydrated mode.
             // Therefore we now have to render the fallback.
@@ -2283,7 +2282,7 @@ function mountDehydratedSuspenseComponent(
       markSpawnedWork(OffscreenLane);
     }
   }
-  return reuseCurrentChild(workInProgress);
+  return null;
 }
 
 function updateDehydratedSuspenseComponent(
@@ -2386,7 +2385,7 @@ function updateDehydratedSuspenseComponent(
       retry = Schedule_tracing_wrap(retry);
     }
     registerSuspenseInstanceRetry(suspenseInstance, retry);
-    return reuseCurrentChild(workInProgress);
+    return null;
   } else {
     // This is the first attempt.
     reenterHydrationStateFromDehydratedSuspenseInstance(
@@ -2951,7 +2950,7 @@ function updateContextConsumer(
 function updateFundamentalComponent(current, workInProgress, renderLanes) {
   const fundamentalImpl = workInProgress.type.impl;
   if (fundamentalImpl.reconcileChildren === false) {
-    return reuseCurrentChild(workInProgress);
+    return null;
   }
   const nextProps = workInProgress.pendingProps;
   const nextChildren = nextProps.children;
@@ -2970,11 +2969,6 @@ function updateScopeComponent(current, workInProgress, renderLanes) {
 
 export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
-}
-
-function reuseCurrentChild(workInProgress) {
-  workInProgress.subtreeTag = DidBailout;
-  return null;
 }
 
 function bailoutOnAlreadyFinishedWork(
@@ -3004,7 +2998,7 @@ function bailoutOnAlreadyFinishedWork(
     // The children don't have any work either. We can skip them.
     // TODO: Once we add back resuming, we should check if the children are
     // a work-in-progress set. If so, we need to transfer their effects.
-    return reuseCurrentChild(workInProgress);
+    return null;
   } else {
     // This fiber doesn't have work, but its subtree does. Clone the child
     // fibers and continue.
@@ -3186,7 +3180,7 @@ function beginWork(
                 workInProgress.effectTag |= DidCapture;
                 // We should never render the children of a dehydrated boundary until we
                 // upgrade it. We return null instead of bailoutOnAlreadyFinishedWork.
-                return reuseCurrentChild(workInProgress);
+                return null;
               }
             }
 
@@ -3281,7 +3275,7 @@ function beginWork(
             // If none of the children had any work, that means that none of
             // them got retried so they'll still be blocked in the same way
             // as before. We can fast bail out.
-            return reuseCurrentChild(workInProgress);
+            return null;
           }
         }
         case OffscreenComponent:

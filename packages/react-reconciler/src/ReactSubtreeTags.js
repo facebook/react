@@ -9,8 +9,7 @@
 
 export type SubtreeTag = number;
 
-export const NoEffect = /*        */ 0b0000;
-export const DidBailout = /*      */ 0b0001;
-export const BeforeMutation = /*  */ 0b0010;
-export const Mutation = /*        */ 0b0100;
-export const Layout = /*          */ 0b1000;
+export const NoEffect = /*        */ 0b000;
+export const BeforeMutation = /*  */ 0b001;
+export const Mutation = /*        */ 0b010;
+export const Layout = /*          */ 0b100;
