@@ -9,7 +9,6 @@
 
 import type {
   Fiber,
-  ReactPriorityLevel,
   SuspenseHydrationCallbacks,
 } from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
