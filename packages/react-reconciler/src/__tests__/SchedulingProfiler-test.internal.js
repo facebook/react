@@ -351,14 +351,8 @@ describe('SchedulingProfiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    gate(({old}) =>
-      old
-        ? expect(marks.map(normalizeCodeLocInfo)).toContain(
-            '--schedule-state-update-1024-Example-\n    in Example (at **)',
-          )
-        : expect(marks.map(normalizeCodeLocInfo)).toContain(
-            '--schedule-state-update-512-Example-\n    in Example (at **)',
-          ),
+    expect(marks.map(normalizeCodeLocInfo)).toContain(
+      '--schedule-state-update-1024-Example-\n    in Example (at **)',
     );
   });
 
@@ -384,14 +378,8 @@ describe('SchedulingProfiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    gate(({old}) =>
-      old
-        ? expect(marks.map(normalizeCodeLocInfo)).toContain(
-            '--schedule-forced-update-1024-Example-\n    in Example (at **)',
-          )
-        : expect(marks.map(normalizeCodeLocInfo)).toContain(
-            '--schedule-forced-update-512-Example-\n    in Example (at **)',
-          ),
+    expect(marks.map(normalizeCodeLocInfo)).toContain(
+      '--schedule-forced-update-1024-Example-\n    in Example (at **)',
     );
   });
 
@@ -473,14 +461,8 @@ describe('SchedulingProfiler', () => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 
-    gate(({old}) =>
-      old
-        ? expect(marks.map(normalizeCodeLocInfo)).toContain(
-            '--schedule-state-update-1024-Example-\n    in Example (at **)',
-          )
-        : expect(marks.map(normalizeCodeLocInfo)).toContain(
-            '--schedule-state-update-512-Example-\n    in Example (at **)',
-          ),
+    expect(marks.map(normalizeCodeLocInfo)).toContain(
+      '--schedule-state-update-1024-Example-\n    in Example (at **)',
     );
   });
 });

@@ -17,7 +17,7 @@ export const enableDebugTracing = false;
 
 // Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
 // for an experimental scheduling profiler tool.
-export const enableSchedulingProfiler = __PROFILE__ && __EXPERIMENTAL__;
+export const enableSchedulingProfiler = false;
 
 // Helps identify side effects in render-phase lifecycle hooks and setState
 // reducers by double invoking them in Strict Mode.

@@ -39,7 +39,6 @@ import {
 } from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
@@ -96,7 +95,6 @@ import {
   setRefreshHandler,
   findHostInstancesForRefresh,
 } from './ReactFiberHotReloading.new';
-import {markRenderScheduled} from './SchedulingProfiler';
 
 export {registerMutableSourceForHydration} from './ReactMutableSource.new';
 export {createPortal} from './ReactPortal';
@@ -274,10 +272,6 @@ export function updateContainer(
   }
   const suspenseConfig = requestCurrentSuspenseConfig();
   const lane = requestUpdateLane(current, suspenseConfig);
-
-  if (enableSchedulingProfiler) {
-    markRenderScheduled(lane);
-  }
 
   const context = getContextForSubtree(parentComponent);
   if (container.context === null) {
