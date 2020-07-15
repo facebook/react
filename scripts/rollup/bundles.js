@@ -428,19 +428,6 @@ const bundles = [
         ]),
       }),
   },
-  {
-    bundleTypes: [UMD_DEV, UMD_PROD],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-test-renderer/shallow',
-    global: 'ReactShallowRenderer',
-    externals: ['react', 'scheduler', 'scheduler/unstable_mock'],
-    babel: opts =>
-      Object.assign({}, opts, {
-        plugins: opts.plugins.concat([
-          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
-        ]),
-      }),
-  },
 
   /******* React Noop Renderer (used for tests) *******/
   {

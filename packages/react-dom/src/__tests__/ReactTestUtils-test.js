@@ -9,7 +9,6 @@
 
 'use strict';
 
-import ReactShallowRenderer from 'react-test-renderer/shallow';
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import * as ReactDOMServer from 'react-dom/server';
@@ -381,27 +380,6 @@ describe('ReactTestUtils', () => {
       expect(obj.handler).toHaveBeenCalledWith(
         expect.objectContaining({target: node}),
       );
-    });
-
-    it('should throw when attempting to use a React element', () => {
-      class SomeComponent extends React.Component {
-        render() {
-          return <div onClick={this.props.handleClick}>hello, world.</div>;
-        }
-      }
-
-      const handler = jest.fn().mockName('spy');
-      const shallowRenderer = ReactShallowRenderer.createRenderer();
-      const result = shallowRenderer.render(
-        <SomeComponent handleClick={handler} />,
-      );
-
-      expect(() => ReactTestUtils.Simulate.click(result)).toThrowError(
-        'TestUtils.Simulate expected a DOM node as the first argument but received ' +
-          'a React element. Pass the DOM node you wish to simulate the event on instead. ' +
-          'Note that TestUtils.Simulate will not work if you are using shallow rendering.',
-      );
-      expect(handler).not.toHaveBeenCalled();
     });
 
     it('should throw when attempting to use a component instance', () => {
