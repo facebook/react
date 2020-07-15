@@ -143,6 +143,39 @@ describe('DOMModernPluginEventSystem', () => {
           expect(log[5]).toEqual(['bubble', buttonElement]);
         });
 
+        it('handle propagation of click events combined with sync clicks', () => {
+          const buttonRef = React.createRef();
+          let clicks = 0;
+
+          function Test() {
+            const inputRef = React.useRef(null);
+            return (
+              <div>
+                <button
+                  ref={buttonRef}
+                  onClick={() => {
+                    // Sync click
+                    inputRef.current.click();
+                  }}
+                />
+                <input
+                  ref={inputRef}
+                  onClick={() => {
+                    clicks++;
+                  }}
+                />
+              </div>
+            );
+          }
+
+          ReactDOM.render(<Test />, container);
+
+          const buttonElement = buttonRef.current;
+          dispatchClickEvent(buttonElement);
+
+          expect(clicks).toBe(1);
+        });
+
         it('handle propagation of click events between roots', () => {
           const buttonRef = React.createRef();
           const divRef = React.createRef();
