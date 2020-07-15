@@ -2990,11 +2990,6 @@ function bailoutOnAlreadyFinishedWork(
 
   // Check if the children have any pending work.
   if (!includesSomeLane(renderLanes, workInProgress.childLanes)) {
-    // TODO (effects)  The case we are trying to handle is an error thrown during commit,
-    // and we replay the work, even though we skip render phase (by bailing out)
-    // we don't want to bailout on commit effects too.
-    // However, this check seems overly aggressive in some cases.
-
     // The children don't have any work either. We can skip them.
     // TODO: Once we add back resuming, we should check if the children are
     // a work-in-progress set. If so, we need to transfer their effects.
