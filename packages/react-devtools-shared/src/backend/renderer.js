@@ -153,7 +153,8 @@ export function getInternalReactConstants(
   // **********************************************************
   // The section below is copied from files in React repo.
   // Keep it in sync, and add version guards if it changes.
-  if (gte(version, '16.6.0-beta.0')) {
+  if (gte(version, '17.0.0-alpha')) {
+    // TODO (Offscreen) Update the version number above to reflect the first Offscreen alpha/beta release.
     ReactTypeOfWork = {
       Block: 22,
       ClassComponent: 1,
@@ -175,6 +176,34 @@ export function getInternalReactConstants(
       MemoComponent: 14,
       Mode: 8,
       OffscreenComponent: 23, // Experimental
+      Profiler: 12,
+      SimpleMemoComponent: 15,
+      SuspenseComponent: 13,
+      SuspenseListComponent: 19, // Experimental
+      YieldComponent: -1, // Removed
+    };
+  } else if (gte(version, '16.6.0-beta.0')) {
+    ReactTypeOfWork = {
+      Block: 22,
+      ClassComponent: 1,
+      ContextConsumer: 9,
+      ContextProvider: 10,
+      CoroutineComponent: -1, // Removed
+      CoroutineHandlerPhase: -1, // Removed
+      DehydratedSuspenseComponent: 18, // Behind a flag
+      ForwardRef: 11,
+      Fragment: 7,
+      FunctionComponent: 0,
+      HostComponent: 5,
+      HostPortal: 4,
+      HostRoot: 3,
+      HostText: 6,
+      IncompleteClassComponent: 17,
+      IndeterminateComponent: 2,
+      LazyComponent: 16,
+      MemoComponent: 14,
+      Mode: 8,
+      OffscreenComponent: -1, // Experimental
       Profiler: 12,
       SimpleMemoComponent: 15,
       SuspenseComponent: 13,
@@ -452,14 +481,16 @@ export function attach(
   const debug = (name: string, fiber: Fiber, parentFiber: ?Fiber): void => {
     if (__DEBUG__) {
       const displayName = getDisplayNameForFiber(fiber) || 'null';
+      const id = getFiberID(fiber);
       const parentDisplayName =
         (parentFiber != null && getDisplayNameForFiber(parentFiber)) || 'null';
+      const parentID = parentFiber ? getFiberID(parentFiber) : '';
       // NOTE: calling getFiberID or getPrimaryFiber is unsafe here
       // because it will put them in the map. For now, we'll omit them.
       // TODO: better debugging story for this.
       console.log(
-        `[renderer] %c${name} %c${displayName} %c${
-          parentFiber ? parentDisplayName : ''
+        `[renderer] %c${name} %c${displayName} (${id}) %c${
+          parentFiber ? `${parentDisplayName} (${parentID})` : ''
         }`,
         'color: red; font-weight: bold;',
         'color: blue;',
@@ -1076,6 +1107,10 @@ export function attach(
   }
 
   function recordMount(fiber: Fiber, parentFiber: Fiber | null) {
+    if (__DEBUG__) {
+      debug('recordMount()', fiber, parentFiber);
+    }
+
     const isRoot = fiber.tag === HostRoot;
     const id = getFiberID(getPrimaryFiber(fiber));
 
@@ -1130,6 +1165,10 @@ export function attach(
   }
 
   function recordUnmount(fiber: Fiber, isSimulated: boolean) {
+    if (__DEBUG__) {
+      debug('recordUnmount()', fiber);
+    }
+
     if (trackedPathMatchFiber !== null) {
       // We're in the process of trying to restore previous selection.
       // If this fiber matched but is being unmounted, there's no use trying.
@@ -1215,7 +1254,8 @@ export function attach(
       // because we don't want to highlight every host node inside of a newly mounted subtree.
     }
 
-    if (fiber.tag === ReactTypeOfWork.SuspenseComponent) {
+    const isSuspense = fiber.tag === ReactTypeOfWork.SuspenseComponent;
+    if (isSuspense) {
       const isTimedOut = fiber.memoizedState !== null;
       if (isTimedOut) {
         // Special case: if Suspense mounts in a timed-out state,
