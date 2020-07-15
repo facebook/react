@@ -1794,7 +1794,6 @@ function resetChildLanes(completedWork: Fiber) {
 
   let newChildLanes = NoLanes;
   let subtreeTag = NoSubtreeTag;
-  let childrenDidNotComplete = false;
 
   // Bubble up the earliest expiration time.
   if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
@@ -1823,10 +1822,6 @@ function resetChildLanes(completedWork: Fiber) {
         if ((effectTag & LayoutMask) !== NoEffect) {
           subtreeTag |= Layout;
         }
-      }
-
-      if ((child.effectTag & Incomplete) !== NoEffect) {
-        childrenDidNotComplete = true;
       }
 
       // When a fiber is cloned, its actualDuration is reset to 0. This value will
@@ -1879,19 +1874,13 @@ function resetChildLanes(completedWork: Fiber) {
         }
       }
 
-      if ((child.effectTag & Incomplete) !== NoEffect) {
-        childrenDidNotComplete = true;
-      }
-
       child = child.sibling;
     }
   }
 
   completedWork.childLanes = newChildLanes;
 
-  if (!childrenDidNotComplete) {
-    completedWork.subtreeTag |= subtreeTag;
-  }
+  completedWork.subtreeTag |= subtreeTag;
 }
 
 function commitRoot(root) {

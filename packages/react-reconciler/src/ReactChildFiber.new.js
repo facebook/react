@@ -288,10 +288,11 @@ function ChildReconciler(shouldTrackSideEffects) {
     } else {
       returnFiber.firstEffect = returnFiber.lastEffect = childToDelete;
     }
-    if (returnFiber.deletions === null) {
+    const deletions = returnFiber.deletions;
+    if (deletions === null) {
       returnFiber.deletions = [childToDelete];
     } else {
-      returnFiber.deletions.push(childToDelete);
+      deletions.push(childToDelete);
     }
     // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
     returnFiber.effectTag |= Deletion;

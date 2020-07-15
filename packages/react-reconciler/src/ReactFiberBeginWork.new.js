@@ -615,7 +615,7 @@ function updateOffscreenComponent(
       // We're about to bail out, but we need to push this to the stack anyway
       // to avoid a push/pop misalignment.
       pushRenderLanes(workInProgress, nextBaseLanes);
-      return null;
+      return reuseCurrentChild(workInProgress);
     } else {
       // Rendering at offscreen, so we can clear the base lanes.
       const nextState: OffscreenState = {
@@ -1165,7 +1165,7 @@ function updateHostText(current, workInProgress) {
   }
   // Nothing to do here. This is terminal. We'll do the completion step
   // immediately after.
-  return null;
+  return reuseCurrentChild(workInProgress);
 }
 
 function mountLazyComponent(
@@ -1846,7 +1846,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
             // The dehydrated completion pass expects this flag to be there
             // but the normal suspense pass doesn't.
             workInProgress.effectTag |= DidCapture;
-            return null;
+            return reuseCurrentChild(workInProgress);
           } else {
             // Suspended but we should no longer be in dehydrated mode.
             // Therefore we now have to render the fallback.
@@ -2067,10 +2067,11 @@ function updateSuspensePrimaryChildren(
     currentFallbackChildFragment.nextEffect = null;
     currentFallbackChildFragment.effectTag = Deletion;
     workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChildFragment;
-    if (workInProgress.deletions === null) {
+    const deletions = workInProgress.deletions;
+    if (deletions === null) {
       workInProgress.deletions = [currentFallbackChildFragment];
     } else {
-      workInProgress.deletions.push(currentFallbackChildFragment);
+      deletions.push(currentFallbackChildFragment);
     }
     // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
     workInProgress.effectTag |= Deletion;
@@ -2282,7 +2283,7 @@ function mountDehydratedSuspenseComponent(
       markSpawnedWork(OffscreenLane);
     }
   }
-  return null;
+  return reuseCurrentChild(workInProgress);
 }
 
 function updateDehydratedSuspenseComponent(
@@ -2385,7 +2386,7 @@ function updateDehydratedSuspenseComponent(
       retry = Schedule_tracing_wrap(retry);
     }
     registerSuspenseInstanceRetry(suspenseInstance, retry);
-    return null;
+    return reuseCurrentChild(workInProgress);
   } else {
     // This is the first attempt.
     reenterHydrationStateFromDehydratedSuspenseInstance(
@@ -2950,7 +2951,7 @@ function updateContextConsumer(
 function updateFundamentalComponent(current, workInProgress, renderLanes) {
   const fundamentalImpl = workInProgress.type.impl;
   if (fundamentalImpl.reconcileChildren === false) {
-    return null;
+    return reuseCurrentChild(workInProgress);
   }
   const nextProps = workInProgress.pendingProps;
   const nextChildren = nextProps.children;
@@ -2969,6 +2970,11 @@ function updateScopeComponent(current, workInProgress, renderLanes) {
 
 export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
+}
+
+function reuseCurrentChild(workInProgress) {
+  workInProgress.subtreeTag = DidBailout;
+  return null;
 }
 
 function bailoutOnAlreadyFinishedWork(
@@ -2994,12 +3000,11 @@ function bailoutOnAlreadyFinishedWork(
     // and we replay the work, even though we skip render phase (by bailing out)
     // we don't want to bailout on commit effects too.
     // However, this check seems overly aggressive in some cases.
-    workInProgress.subtreeTag = DidBailout;
 
     // The children don't have any work either. We can skip them.
     // TODO: Once we add back resuming, we should check if the children are
     // a work-in-progress set. If so, we need to transfer their effects.
-    return null;
+    return reuseCurrentChild(workInProgress);
   } else {
     // This fiber doesn't have work, but its subtree does. Clone the child
     // fibers and continue.
@@ -3056,10 +3061,11 @@ function remountFiber(
     } else {
       returnFiber.firstEffect = returnFiber.lastEffect = current;
     }
-    if (returnFiber.deletions === null) {
+    const deletions = returnFiber.deletions;
+    if (deletions === null) {
       returnFiber.deletions = [current];
     } else {
-      returnFiber.deletions.push(current);
+      deletions.push(current);
     }
     // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
     returnFiber.effectTag |= Deletion;
@@ -3180,7 +3186,7 @@ function beginWork(
                 workInProgress.effectTag |= DidCapture;
                 // We should never render the children of a dehydrated boundary until we
                 // upgrade it. We return null instead of bailoutOnAlreadyFinishedWork.
-                return null;
+                return reuseCurrentChild(workInProgress);
               }
             }
 
@@ -3275,7 +3281,7 @@ function beginWork(
             // If none of the children had any work, that means that none of
             // them got retried so they'll still be blocked in the same way
             // as before. We can fast bail out.
-            return null;
+            return reuseCurrentChild(workInProgress);
           }
         }
         case OffscreenComponent:
