@@ -7,10 +7,7 @@
  * @flow
  */
 
-import type {
-  Fiber,
-  SuspenseHydrationCallbacks,
-} from './ReactInternalTypes';
+import type {Fiber, SuspenseHydrationCallbacks} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {
@@ -78,6 +75,7 @@ import {
 import {StrictMode} from './ReactTypeOfMode';
 import {
   SyncLane,
+  InputContinuousLanePriority,
   InputDiscreteHydrationLane,
   SelectiveHydrationLane,
   NoTimestamp,
@@ -445,7 +443,7 @@ export function runWithPriority<T>(priority: LanePriority, fn: () => T) {
   }
 }
 
-export {getCurrentUpdateLanePriority};
+export {getCurrentUpdateLanePriority, InputContinuousLanePriority};
 
 export {findHostInstance};
 

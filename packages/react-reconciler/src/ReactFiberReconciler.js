@@ -52,6 +52,7 @@ import {
   registerMutableSourceForHydration as registerMutableSourceForHydration_old,
   runWithPriority as runWithPriority_old,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
+  InputContinuousLanePriority as InputContinuousLanePriority_old,
 } from './ReactFiberReconciler.old';
 
 import {
@@ -92,6 +93,7 @@ import {
   registerMutableSourceForHydration as registerMutableSourceForHydration_new,
   runWithPriority as runWithPriority_new,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
+  InputContinuousLanePriority as InputContinuousLanePriority_new,
 } from './ReactFiberReconciler.new';
 
 export const createContainer = enableNewReconciler
@@ -128,6 +130,9 @@ export const flushPassiveEffects = enableNewReconciler
 export const IsThisRendererActing = enableNewReconciler
   ? IsThisRendererActing_new
   : IsThisRendererActing_old;
+export const InputContinuousLanePriority = enableNewReconciler
+  ? InputContinuousLanePriority_new
+  : InputContinuousLanePriority_old;
 export const getPublicRootInstance = enableNewReconciler
   ? getPublicRootInstance_new
   : getPublicRootInstance_old;

@@ -56,7 +56,11 @@ import {
   flushDiscreteUpdatesIfNeeded,
   discreteUpdates,
 } from './ReactDOMUpdateBatching';
-import {unstable_runWithPriority} from '../client/ReactDOM';
+import {
+  InputContinuousLanePriority,
+  getCurrentUpdateLanePriority,
+  setCurrentUpdateLanePriority,
+} from 'react-reconciler/src/ReactFiberLane';
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
@@ -150,18 +154,19 @@ function dispatchUserBlockingUpdate(
   nativeEvent,
 ) {
   // TODO: Double wrapping is necessary while we decouple Scheduler priority.
-  unstable_runWithPriority(UserBlockingPriority, () => {
-    runWithPriority(
-      UserBlockingPriority,
-      dispatchEvent.bind(
-        null,
-        topLevelType,
-        eventSystemFlags,
-        container,
-        nativeEvent,
-      ),
-    );
-  });
+  const previousPriority = getCurrentUpdateLanePriority();
+  setCurrentUpdateLanePriority(InputContinuousLanePriority);
+  runWithPriority(
+    UserBlockingPriority,
+    dispatchEvent.bind(
+      null,
+      topLevelType,
+      eventSystemFlags,
+      container,
+      nativeEvent,
+    ),
+  );
+  setCurrentUpdateLanePriority(previousPriority);
 }
 
 export function dispatchEvent(
