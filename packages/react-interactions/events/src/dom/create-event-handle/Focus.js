@@ -126,7 +126,6 @@ function handleGlobalFocusVisibleEvent(
 }
 
 const passiveObject = {passive: true};
-const passiveObjectWithPriority = {passive: true, priority: 0};
 
 function handleFocusVisibleTargetEvent(
   type: string,
@@ -243,8 +242,8 @@ export function useFocus(
 ): void {
   // Setup controlled state for this useFocus hook
   const stateRef = useRef({isFocused: false, isFocusVisible: false});
-  const focusHandle = useEvent('focusin', passiveObjectWithPriority);
-  const blurHandle = useEvent('focusout', passiveObjectWithPriority);
+  const focusHandle = useEvent('focusin', passiveObject);
+  const blurHandle = useEvent('focusout', passiveObject);
   const focusVisibleHandles = useFocusVisibleInputHandles();
 
   useEffect(() => {
@@ -334,8 +333,8 @@ export function useFocusWithin(
   const stateRef = useRef<null | {isFocused: boolean, isFocusVisible: boolean}>(
     {isFocused: false, isFocusVisible: false},
   );
-  const focusHandle = useEvent('focusin', passiveObjectWithPriority);
-  const blurHandle = useEvent('focusout', passiveObjectWithPriority);
+  const focusHandle = useEvent('focusin', passiveObject);
+  const blurHandle = useEvent('focusout', passiveObject);
   const afterBlurHandle = useEvent('afterblur', passiveObject);
   const beforeBlurHandle = useEvent('beforeblur', passiveObject);
   const focusVisibleHandles = useFocusVisibleInputHandles();
@@ -397,7 +396,7 @@ export function useFocusWithin(
           if (disabled) {
             return;
           }
-          const {relatedTarget} = (event.nativeEvent: any);
+          const {relatedTarget} = (event: any);
 
           if (
             state.isFocused &&

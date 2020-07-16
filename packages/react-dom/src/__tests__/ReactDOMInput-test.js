@@ -183,6 +183,7 @@ describe('ReactDOMInput', () => {
     // bypass the lazy event attachment system so we won't actually test this.
     dispatchEventOnNode(instance.a, 'input');
     dispatchEventOnNode(instance.a, 'blur');
+    dispatchEventOnNode(instance.a, 'focusout');
 
     expect(instance.a.value).toBe('giraffe');
     expect(instance.switchedFocus).toBe(true);
@@ -684,6 +685,7 @@ describe('ReactDOMInput', () => {
       expect(node.hasAttribute('value')).toBe(false);
     } else {
       dispatchEventOnNode(node, 'blur');
+      dispatchEventOnNode(node, 'focusout');
 
       expect(node.value).toBe('0.0');
       expect(node.getAttribute('value')).toBe('0.0');
@@ -1771,6 +1773,7 @@ describe('ReactDOMInput', () => {
       // be the only way to remove focus in JSDOM
       node.blur();
       dispatchEventOnNode(node, 'blur');
+      dispatchEventOnNode(node, 'focusout');
 
       if (disableInputAttributeSyncing) {
         expect(node.value).toBe('2');
@@ -1796,6 +1799,7 @@ describe('ReactDOMInput', () => {
       // be the only way to remove focus in JSDOM
       node.blur();
       dispatchEventOnNode(node, 'blur');
+      dispatchEventOnNode(node, 'focusout');
 
       expect(node.getAttribute('value')).toBe('1');
     });
@@ -1815,6 +1819,7 @@ describe('ReactDOMInput', () => {
       // be the only way to remove focus in JSDOM
       node.blur();
       dispatchEventOnNode(node, 'blur');
+      dispatchEventOnNode(node, 'focusout');
 
       expect(node.getAttribute('value')).toBe('1');
     });

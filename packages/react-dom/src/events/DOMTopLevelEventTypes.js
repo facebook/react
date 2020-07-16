@@ -32,7 +32,6 @@ export const TOP_ANIMATION_ITERATION = unsafeCastStringToDOMTopLevelType(
 export const TOP_ANIMATION_START = unsafeCastStringToDOMTopLevelType(
   getVendorPrefixedEventName('animationstart'),
 );
-export const TOP_BLUR = unsafeCastStringToDOMTopLevelType('blur');
 export const TOP_CAN_PLAY = unsafeCastStringToDOMTopLevelType('canplay');
 export const TOP_CAN_PLAY_THROUGH = unsafeCastStringToDOMTopLevelType(
   'canplaythrough',
@@ -72,7 +71,6 @@ export const TOP_EMPTIED = unsafeCastStringToDOMTopLevelType('emptied');
 export const TOP_ENCRYPTED = unsafeCastStringToDOMTopLevelType('encrypted');
 export const TOP_ENDED = unsafeCastStringToDOMTopLevelType('ended');
 export const TOP_ERROR = unsafeCastStringToDOMTopLevelType('error');
-export const TOP_FOCUS = unsafeCastStringToDOMTopLevelType('focus');
 export const TOP_GOT_POINTER_CAPTURE = unsafeCastStringToDOMTopLevelType(
   'gotpointercapture',
 );
@@ -151,6 +149,9 @@ export const TOP_WHEEL = unsafeCastStringToDOMTopLevelType('wheel');
 
 export const TOP_AFTER_BLUR = unsafeCastStringToDOMTopLevelType('afterblur');
 export const TOP_BEFORE_BLUR = unsafeCastStringToDOMTopLevelType('beforeblur');
+
+export const TOP_FOCUS_IN = unsafeCastStringToDOMTopLevelType('focusin');
+export const TOP_FOCUS_OUT = unsafeCastStringToDOMTopLevelType('focusout');
 
 // List of events that need to be individually attached to media elements.
 // Note that events in this list will *not* be listened to at the top level

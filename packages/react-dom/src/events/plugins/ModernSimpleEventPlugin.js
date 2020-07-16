@@ -68,8 +68,8 @@ function extractEvents(
     case DOMTopLevelEventTypes.TOP_KEY_UP:
       EventConstructor = SyntheticKeyboardEvent;
       break;
-    case DOMTopLevelEventTypes.TOP_BLUR:
-    case DOMTopLevelEventTypes.TOP_FOCUS:
+    case DOMTopLevelEventTypes.TOP_FOCUS_IN:
+    case DOMTopLevelEventTypes.TOP_FOCUS_OUT:
     case DOMTopLevelEventTypes.TOP_BEFORE_BLUR:
     case DOMTopLevelEventTypes.TOP_AFTER_BLUR:
       EventConstructor = SyntheticFocusEvent;

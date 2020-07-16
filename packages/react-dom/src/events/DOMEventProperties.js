@@ -41,7 +41,6 @@ const eventPriorities = new Map();
 
 // prettier-ignore
 const discreteEventPairsForSimpleEventPlugin = [
-  DOMTopLevelEventTypes.TOP_BLUR, 'blur',
   DOMTopLevelEventTypes.TOP_CANCEL, 'cancel',
   DOMTopLevelEventTypes.TOP_CLICK, 'click',
   DOMTopLevelEventTypes.TOP_CLOSE, 'close',
@@ -53,7 +52,8 @@ const discreteEventPairsForSimpleEventPlugin = [
   DOMTopLevelEventTypes.TOP_DRAG_END, 'dragEnd',
   DOMTopLevelEventTypes.TOP_DRAG_START, 'dragStart',
   DOMTopLevelEventTypes.TOP_DROP, 'drop',
-  DOMTopLevelEventTypes.TOP_FOCUS, 'focus',
+  DOMTopLevelEventTypes.TOP_FOCUS_IN, 'focus',
+  DOMTopLevelEventTypes.TOP_FOCUS_OUT, 'blur',
   DOMTopLevelEventTypes.TOP_INPUT, 'input',
   DOMTopLevelEventTypes.TOP_INVALID, 'invalid',
   DOMTopLevelEventTypes.TOP_KEY_DOWN, 'keyDown',

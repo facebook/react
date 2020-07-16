@@ -12,10 +12,10 @@ import shallowEqual from 'shared/shallowEqual';
 
 import {registerTwoPhaseEvent} from '../EventRegistry';
 import {
-  TOP_BLUR,
+  TOP_FOCUS_OUT,
   TOP_CONTEXT_MENU,
   TOP_DRAG_END,
-  TOP_FOCUS,
+  TOP_FOCUS_IN,
   TOP_KEY_DOWN,
   TOP_KEY_UP,
   TOP_MOUSE_DOWN,
@@ -35,10 +35,10 @@ const skipSelectionChangeEvent =
   canUseDOM && 'documentMode' in document && document.documentMode <= 11;
 
 const rootTargetDependencies = [
-  TOP_BLUR,
+  TOP_FOCUS_OUT,
   TOP_CONTEXT_MENU,
   TOP_DRAG_END,
-  TOP_FOCUS,
+  TOP_FOCUS_IN,
   TOP_KEY_DOWN,
   TOP_KEY_UP,
   TOP_MOUSE_DOWN,
@@ -186,7 +186,7 @@ function extractEvents(
 
   switch (topLevelType) {
     // Track the input node that has focus.
-    case TOP_FOCUS:
+    case TOP_FOCUS_IN:
       if (
         isTextInputElement(targetNode) ||
         targetNode.contentEditable === 'true'
@@ -196,7 +196,7 @@ function extractEvents(
         lastSelection = null;
       }
       break;
-    case TOP_BLUR:
+    case TOP_FOCUS_OUT:
       activeElement = null;
       activeElementInst = null;
       lastSelection = null;
