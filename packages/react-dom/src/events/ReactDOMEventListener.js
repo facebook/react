@@ -44,6 +44,7 @@ import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import {
   enableDeprecatedFlareAPI,
   enableLegacyFBSupport,
+  enableSetUpdateLanePriority,
 } from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
@@ -153,10 +154,25 @@ function dispatchUserBlockingUpdate(
   container,
   nativeEvent,
 ) {
-  // TODO: Double wrapping is necessary while we decouple Scheduler priority.
-  const previousPriority = getCurrentUpdateLanePriority();
-  try {
-    setCurrentUpdateLanePriority(InputContinuousLanePriority);
+  if (enableSetUpdateLanePriority) {
+    const previousPriority = getCurrentUpdateLanePriority();
+    try {
+      // TODO: Double wrapping is necessary while we decouple Scheduler priority.
+      setCurrentUpdateLanePriority(InputContinuousLanePriority);
+      runWithPriority(
+        UserBlockingPriority,
+        dispatchEvent.bind(
+          null,
+          topLevelType,
+          eventSystemFlags,
+          container,
+          nativeEvent,
+        ),
+      );
+    } finally {
+      setCurrentUpdateLanePriority(previousPriority);
+    }
+  } else {
     runWithPriority(
       UserBlockingPriority,
       dispatchEvent.bind(
@@ -167,8 +183,6 @@ function dispatchUserBlockingUpdate(
         nativeEvent,
       ),
     );
-  } finally {
-    setCurrentUpdateLanePriority(previousPriority);
   }
 }
 

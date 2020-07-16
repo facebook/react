@@ -33,7 +33,10 @@ import {
   executeUserEventHandler,
 } from './ReactDOMUpdateBatching';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableDeprecatedFlareAPI,
+  enableSetUpdateLanePriority,
+} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
@@ -108,14 +111,21 @@ const eventResponderContext: ReactDOMResponderContext = {
         break;
       }
       case UserBlockingEvent: {
-        const previousPriority = getCurrentUpdateLanePriority();
-        try {
-          setCurrentUpdateLanePriority(InputContinuousLanePriority);
+        if (enableSetUpdateLanePriority) {
+          // TODO: Double wrapping is necessary while we decouple Scheduler priority.
+          const previousPriority = getCurrentUpdateLanePriority();
+          try {
+            setCurrentUpdateLanePriority(InputContinuousLanePriority);
+            runWithPriority(UserBlockingPriority, () =>
+              executeUserEventHandler(eventListener, eventValue),
+            );
+          } finally {
+            setCurrentUpdateLanePriority(previousPriority);
+          }
+        } else {
           runWithPriority(UserBlockingPriority, () =>
             executeUserEventHandler(eventListener, eventValue),
           );
-        } finally {
-          setCurrentUpdateLanePriority(previousPriority);
         }
         break;
       }

@@ -13,7 +13,10 @@ import type {ReactPriorityLevel} from './ReactInternalTypes';
 // CommonJS interop named imports.
 import * as Scheduler from 'scheduler';
 import {__interactionsRef} from 'scheduler/tracing';
-import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
+import {
+  enableSchedulerTracing,
+  enableSetUpdateLanePriority,
+} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import {
   SyncLanePriority,
@@ -176,11 +179,14 @@ function flushSyncCallbackQueueImpl() {
     // Prevent re-entrancy.
     isFlushingSyncQueue = true;
     let i = 0;
-    const previousLanePriority = getCurrentUpdateLanePriority();
+    let previousLanePriority;
     try {
       const isSync = true;
       const queue = syncQueue;
-      setCurrentUpdateLanePriority(SyncLanePriority);
+      if (enableSetUpdateLanePriority) {
+        previousLanePriority = getCurrentUpdateLanePriority();
+        setCurrentUpdateLanePriority(SyncLanePriority);
+      }
       runWithPriority(ImmediatePriority, () => {
         for (; i < queue.length; i++) {
           let callback = queue[i];
@@ -202,7 +208,9 @@ function flushSyncCallbackQueueImpl() {
       );
       throw error;
     } finally {
-      setCurrentUpdateLanePriority(previousLanePriority);
+      if (enableSetUpdateLanePriority && previousLanePriority != null) {
+        setCurrentUpdateLanePriority(previousLanePriority);
+      }
       isFlushingSyncQueue = false;
     }
   }

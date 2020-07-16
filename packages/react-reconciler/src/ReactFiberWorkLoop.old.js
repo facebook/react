@@ -30,6 +30,7 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   enableScopeAPI,
+  enableSetUpdateLanePriority,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -470,7 +471,7 @@ export function requestUpdateLane(
       schedulerPriority,
     );
 
-    if (decoupleUpdatePriorityFromScheduler) {
+    if (enableSetUpdateLanePriority && decoupleUpdatePriorityFromScheduler) {
       // In the new strategy, we will track the current update lane priority
       // inside React and use that priority to select a lane for this update.
       // For now, we're just logging when they're different so we can assess.
@@ -1135,13 +1136,17 @@ export function flushDiscreteUpdates() {
 }
 
 export function deferredUpdates<A>(fn: () => A): A {
-  // TODO: Remove in favor of Scheduler.next
-  const previousLanePriority = getCurrentUpdateLanePriority();
+  let previousLanePriority;
   try {
-    setCurrentUpdateLanePriority(DefaultLanePriority);
+    if (enableSetUpdateLanePriority) {
+      previousLanePriority = getCurrentUpdateLanePriority();
+      setCurrentUpdateLanePriority(DefaultLanePriority);
+    }
     return runWithPriority(NormalSchedulerPriority, fn);
   } finally {
-    setCurrentUpdateLanePriority(previousLanePriority);
+    if (enableSetUpdateLanePriority && previousLanePriority != null) {
+      setCurrentUpdateLanePriority(previousLanePriority);
+    }
   }
 }
 
@@ -1197,16 +1202,21 @@ export function discreteUpdates<A, B, C, D, R>(
 ): R {
   const prevExecutionContext = executionContext;
   executionContext |= DiscreteEventContext;
-  const previousLanePriority = getCurrentUpdateLanePriority();
+  let previousLanePriority;
   try {
-    setCurrentUpdateLanePriority(InputDiscreteLanePriority);
+    if (enableSetUpdateLanePriority) {
+      previousLanePriority = getCurrentUpdateLanePriority();
+      setCurrentUpdateLanePriority(InputDiscreteLanePriority);
+    }
     // Should this
     return runWithPriority(
       UserBlockingSchedulerPriority,
       fn.bind(null, a, b, c, d),
     );
   } finally {
-    setCurrentUpdateLanePriority(previousLanePriority);
+    if (enableSetUpdateLanePriority && previousLanePriority != null) {
+      setCurrentUpdateLanePriority(previousLanePriority);
+    }
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
       // Flush the immediate callbacks that were scheduled during this batch
@@ -1243,16 +1253,21 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
     return fn(a);
   }
   executionContext |= BatchedContext;
-  const previousLanePriority = getCurrentUpdateLanePriority();
+  let previousLanePriority;
   try {
-    setCurrentUpdateLanePriority(SyncLanePriority);
+    if (enableSetUpdateLanePriority) {
+      previousLanePriority = getCurrentUpdateLanePriority();
+      setCurrentUpdateLanePriority(SyncLanePriority);
+    }
     if (fn) {
       return runWithPriority(ImmediateSchedulerPriority, fn.bind(null, a));
     } else {
       return (undefined: $FlowFixMe);
     }
   } finally {
-    setCurrentUpdateLanePriority(previousLanePriority);
+    if (enableSetUpdateLanePriority && previousLanePriority != null) {
+      setCurrentUpdateLanePriority(previousLanePriority);
+    }
     executionContext = prevExecutionContext;
     // Flush the immediate callbacks that were scheduled during this batch.
     // Note that this will happen even if batchedUpdates is higher up
@@ -1264,12 +1279,17 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
 export function flushControlled(fn: () => mixed): void {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
-  const previousLanePriority = getCurrentUpdateLanePriority();
+  let previousLanePriority;
   try {
-    setCurrentUpdateLanePriority(SyncLanePriority);
+    if (enableSetUpdateLanePriority) {
+      previousLanePriority = getCurrentUpdateLanePriority();
+      setCurrentUpdateLanePriority(SyncLanePriority);
+    }
     runWithPriority(ImmediateSchedulerPriority, fn);
   } finally {
-    setCurrentUpdateLanePriority(previousLanePriority);
+    if (enableSetUpdateLanePriority && previousLanePriority != null) {
+      setCurrentUpdateLanePriority(previousLanePriority);
+    }
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
       // Flush the immediate callbacks that were scheduled during this batch
@@ -2008,8 +2028,11 @@ function commitRootImpl(root, renderPriorityLevel) {
   }
 
   if (firstEffect !== null) {
-    const previousLanePriority = getCurrentUpdateLanePriority();
-    setCurrentUpdateLanePriority(SyncLanePriority);
+    let previousLanePriority;
+    if (enableSetUpdateLanePriority) {
+      previousLanePriority = getCurrentUpdateLanePriority();
+      setCurrentUpdateLanePriority(SyncLanePriority);
+    }
 
     const prevExecutionContext = executionContext;
     executionContext |= CommitContext;
@@ -2132,8 +2155,10 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
     executionContext = prevExecutionContext;
 
-    // Reset the priority to the previous non-sync value.
-    setCurrentUpdateLanePriority(previousLanePriority);
+    if (enableSetUpdateLanePriority && previousLanePriority != null) {
+      // Reset the priority to the previous non-sync value.
+      setCurrentUpdateLanePriority(previousLanePriority);
+    }
   } else {
     // No effects.
     root.current = finishedWork;
@@ -2451,14 +2476,19 @@ export function flushPassiveEffects() {
         ? NormalSchedulerPriority
         : pendingPassiveEffectsRenderPriority;
     pendingPassiveEffectsRenderPriority = NoSchedulerPriority;
-    const previousLanePriority = getCurrentUpdateLanePriority();
+    let previousLanePriority;
     try {
-      setCurrentUpdateLanePriority(
-        schedulerPriorityToLanePriority(priorityLevel),
-      );
+      if (enableSetUpdateLanePriority) {
+        previousLanePriority = getCurrentUpdateLanePriority();
+        setCurrentUpdateLanePriority(
+          schedulerPriorityToLanePriority(priorityLevel),
+        );
+      }
       return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
     } finally {
-      setCurrentUpdateLanePriority(previousLanePriority);
+      if (enableSetUpdateLanePriority && previousLanePriority != null) {
+        setCurrentUpdateLanePriority(previousLanePriority);
+      }
     }
   }
 }
