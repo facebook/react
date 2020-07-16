@@ -500,8 +500,7 @@ export function createFiberFromTypeAndProps(
         if (enableScopeAPI) {
           return createFiberFromScope(type, pendingProps, mode, lanes, key);
         }
-        break;
-
+      // eslint-disable-next-line no-fallthrough
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
