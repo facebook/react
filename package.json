@@ -66,6 +66,7 @@
     "jest": "^25.2.7",
     "jest-cli": "^25.2.7",
     "jest-diff": "^25.2.6",
+    "jest-environment-jsdom-sixteen": "^1.0.3",
     "jest-snapshot-serializer-raw": "^1.1.0",
     "minimatch": "^3.0.4",
     "minimist": "^1.2.3",
@@ -130,8 +131,5 @@
     "version-check": "node ./scripts/tasks/version-check.js",
     "merge-fork": "node ./scripts/merge-fork/merge-fork.js",
     "replace-fork": "node ./scripts/merge-fork/replace-fork.js"
-  },
-  "resolutions": {
-    "**/jsdom": "npm:@gaearon/jsdom@15.2.1"
   }
 }
