@@ -412,7 +412,7 @@ function getPlugins(
     // Please don't enable this for anything else!
     isUMDBundle && entry === 'react-art' && commonjs(),
     // Apply dead code elimination and/or minification.
-    isProduction &&
+    /*isProduction &&
       closure(
         Object.assign({}, closureOptions, {
           // Don't let it create global variables in the browser.
@@ -420,7 +420,7 @@ function getPlugins(
           assume_function_wrapper: !isUMDBundle,
           renaming: !shouldStayReadable,
         })
-      ),
+      ),*/
     // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
     // Note that this plugin must be called after closure applies DCE.
     isProduction && stripUnusedImports(pureExternalModules),
