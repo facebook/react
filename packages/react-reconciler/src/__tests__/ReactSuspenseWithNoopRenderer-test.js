@@ -1743,7 +1743,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await resolveText('B2');
 
     expect(Scheduler).toHaveYielded(['Promise resolved [B2]']);
-
     expect(Scheduler).toFlushAndYield([
       'B2',
       'Destroy Layout Effect [Loading...]',

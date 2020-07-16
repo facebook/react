@@ -2066,6 +2066,14 @@ function updateSuspensePrimaryChildren(
     currentFallbackChildFragment.nextEffect = null;
     currentFallbackChildFragment.effectTag = Deletion;
     workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChildFragment;
+    const deletions = workInProgress.deletions;
+    if (deletions === null) {
+      workInProgress.deletions = [currentFallbackChildFragment];
+      // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
+      workInProgress.effectTag |= Deletion;
+    } else {
+      deletions.push(currentFallbackChildFragment);
+    }
   }
 
   workInProgress.child = primaryChildFragment;
@@ -2131,9 +2139,11 @@ function updateSuspenseFallbackChildren(
       workInProgress.firstEffect = primaryChildFragment.firstEffect;
       workInProgress.lastEffect = progressedLastEffect;
       progressedLastEffect.nextEffect = null;
+      workInProgress.deletions = null;
     } else {
       // TODO: Reset this somewhere else? Lol legacy mode is so weird.
       workInProgress.firstEffect = workInProgress.lastEffect = null;
+      workInProgress.deletions = null;
     }
   } else {
     primaryChildFragment = createWorkInProgressOffscreenFiber(
@@ -3040,8 +3050,15 @@ function remountFiber(
     } else {
       returnFiber.firstEffect = returnFiber.lastEffect = current;
     }
+    const deletions = returnFiber.deletions;
+    if (deletions === null) {
+      returnFiber.deletions = [current];
+      // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
+      returnFiber.effectTag |= Deletion;
+    } else {
+      deletions.push(current);
+    }
     current.nextEffect = null;
-    current.effectTag = Deletion;
 
     newWorkInProgress.effectTag |= Placement;
 

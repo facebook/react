@@ -38,3 +38,8 @@ export const HostEffectMask = /*               */ 0b000011111111111;
 export const Incomplete = /*                   */ 0b000100000000000;
 export const ShouldCapture = /*                */ 0b001000000000000;
 export const ForceUpdateForLegacySuspense = /* */ 0b100000000000000;
+
+// Union of side effect groupings as pertains to subtreeTag
+export const BeforeMutationMask = /*           */ 0b000001100001010;
+export const MutationMask = /*                 */ 0b000010010011110;
+export const LayoutMask = /*                   */ 0b000000010100100;

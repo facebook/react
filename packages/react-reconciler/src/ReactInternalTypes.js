@@ -23,6 +23,7 @@ import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {SideEffectTag} from './ReactSideEffectTags';
+import type {SubtreeTag} from './ReactSubtreeTags';
 import type {Lane, LanePriority, Lanes, LaneMap} from './ReactFiberLane';
 import type {HookType} from './ReactFiberHooks.old';
 import type {RootTag} from './ReactRootTags';
@@ -126,6 +127,8 @@ export type Fiber = {|
 
   // Effect
   effectTag: SideEffectTag,
+  subtreeTag: SubtreeTag,
+  deletions: Array<Fiber> | null,
 
   // Singly linked list fast path to the next fiber with side-effects.
   nextEffect: Fiber | null,
