@@ -291,11 +291,11 @@ function ChildReconciler(shouldTrackSideEffects) {
     const deletions = returnFiber.deletions;
     if (deletions === null) {
       returnFiber.deletions = [childToDelete];
+      // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
+      returnFiber.effectTag |= Deletion;
     } else {
       deletions.push(childToDelete);
     }
-    // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
-    returnFiber.effectTag |= Deletion;
     childToDelete.nextEffect = null;
   }
 

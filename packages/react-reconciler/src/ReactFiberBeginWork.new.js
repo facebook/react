@@ -2069,11 +2069,11 @@ function updateSuspensePrimaryChildren(
     const deletions = workInProgress.deletions;
     if (deletions === null) {
       workInProgress.deletions = [currentFallbackChildFragment];
+      // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
+      workInProgress.effectTag |= Deletion;
     } else {
       deletions.push(currentFallbackChildFragment);
     }
-    // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
-    workInProgress.effectTag |= Deletion;
   }
 
   workInProgress.child = primaryChildFragment;
@@ -3053,11 +3053,11 @@ function remountFiber(
     const deletions = returnFiber.deletions;
     if (deletions === null) {
       returnFiber.deletions = [current];
+      // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
+      returnFiber.effectTag |= Deletion;
     } else {
       deletions.push(current);
     }
-    // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
-    returnFiber.effectTag |= Deletion;
     current.nextEffect = null;
 
     newWorkInProgress.effectTag |= Placement;
