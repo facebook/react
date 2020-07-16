@@ -648,7 +648,11 @@ export function createLaneMap<T>(initial: T): LaneMap<T> {
   return new Array(TotalLanes).fill(initial);
 }
 
-export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
+export function markRootUpdated(
+  root: FiberRoot,
+  updateLane: Lane,
+  eventTime: number,
+) {
   root.pendingLanes |= updateLane;
 
   // TODO: Theoretically, any update to any lane can unblock any other lane. But

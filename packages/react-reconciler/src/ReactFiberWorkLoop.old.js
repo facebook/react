@@ -533,6 +533,35 @@ export function scheduleUpdateOnFiber(
     return null;
   }
 
+  // Mark that the root has a pending update.
+  markRootUpdated(root, lane, eventTime);
+
+  if (root === workInProgressRoot) {
+    // Received an update to a tree that's in the middle of rendering. Mark
+    // that there was an interleaved update work on this root. Unless the
+    // `deferRenderPhaseUpdateToNextBatch` flag is off and this is a render
+    // phase update. In that case, we don't treat render phase updates as if
+    // they were interleaved, for backwards compat reasons.
+    if (
+      deferRenderPhaseUpdateToNextBatch ||
+      (executionContext & RenderContext) === NoContext
+    ) {
+      workInProgressRootUpdatedLanes = mergeLanes(
+        workInProgressRootUpdatedLanes,
+        lane,
+      );
+    }
+    if (workInProgressRootExitStatus === RootSuspendedWithDelay) {
+      // The root already suspended with a delay, which means this render
+      // definitely won't finish. Since we have a new update, let's mark it as
+      // suspended now, right before marking the incoming update. This has the
+      // effect of interrupting the current render and switching to the update.
+      // TODO: Make sure this doesn't override pings that happen while we've
+      // already started rendering.
+      markRootSuspended(root, workInProgressRootRenderLanes);
+    }
+  }
+
   // TODO: requestUpdateLanePriority also reads the priority. Pass the
   // priority as an argument to that function and this one.
   const priorityLevel = getCurrentPriorityLevel();
@@ -598,82 +627,47 @@ export function scheduleUpdateOnFiber(
 // e.g. retrying a Suspense boundary isn't an update, but it does schedule work
 // on a fiber.
 function markUpdateLaneFromFiberToRoot(
-  fiber: Fiber,
+  sourceFiber: Fiber,
   lane: Lane,
 ): FiberRoot | null {
   // Update the source fiber's lanes
-  fiber.lanes = mergeLanes(fiber.lanes, lane);
-  let alternate = fiber.alternate;
+  sourceFiber.lanes = mergeLanes(sourceFiber.lanes, lane);
+  let alternate = sourceFiber.alternate;
   if (alternate !== null) {
     alternate.lanes = mergeLanes(alternate.lanes, lane);
   }
   if (__DEV__) {
     if (
       alternate === null &&
-      (fiber.effectTag & (Placement | Hydrating)) !== NoEffect
+      (sourceFiber.effectTag & (Placement | Hydrating)) !== NoEffect
     ) {
-      warnAboutUpdateOnNotYetMountedFiberInDEV(fiber);
+      warnAboutUpdateOnNotYetMountedFiberInDEV(sourceFiber);
     }
   }
   // Walk the parent path to the root and update the child expiration time.
-  let node = fiber.return;
-  let root = null;
-  if (node === null && fiber.tag === HostRoot) {
-    root = fiber.stateNode;
-  } else {
-    while (node !== null) {
-      alternate = node.alternate;
+  let node = sourceFiber;
+  let parent = sourceFiber.return;
+  while (parent !== null) {
+    parent.childLanes = mergeLanes(parent.childLanes, lane);
+    alternate = parent.alternate;
+    if (alternate !== null) {
+      alternate.childLanes = mergeLanes(alternate.childLanes, lane);
+    } else {
       if (__DEV__) {
-        if (
-          alternate === null &&
-          (node.effectTag & (Placement | Hydrating)) !== NoEffect
-        ) {
-          warnAboutUpdateOnNotYetMountedFiberInDEV(fiber);
+        if ((parent.effectTag & (Placement | Hydrating)) !== NoEffect) {
+          warnAboutUpdateOnNotYetMountedFiberInDEV(sourceFiber);
         }
       }
-      node.childLanes = mergeLanes(node.childLanes, lane);
-      if (alternate !== null) {
-        alternate.childLanes = mergeLanes(alternate.childLanes, lane);
-      }
-      if (node.return === null && node.tag === HostRoot) {
-        root = node.stateNode;
-        break;
-      }
-      node = node.return;
     }
+    node = parent;
+    parent = parent.return;
   }
-
-  if (root !== null) {
-    // Mark that the root has a pending update.
-    markRootUpdated(root, lane);
-    if (workInProgressRoot === root) {
-      // Received an update to a tree that's in the middle of rendering. Mark
-      // that there was an interleaved update work on this root. Unless the
-      // `deferRenderPhaseUpdateToNextBatch` flag is off and this is a render
-      // phase update. In that case, we don't treat render phase updates as if
-      // they were interleaved, for backwards compat reasons.
-      if (
-        deferRenderPhaseUpdateToNextBatch ||
-        (executionContext & RenderContext) === NoContext
-      ) {
-        workInProgressRootUpdatedLanes = mergeLanes(
-          workInProgressRootUpdatedLanes,
-          lane,
-        );
-      }
-      if (workInProgressRootExitStatus === RootSuspendedWithDelay) {
-        // The root already suspended with a delay, which means this render
-        // definitely won't finish. Since we have a new update, let's mark it as
-        // suspended now, right before marking the incoming update. This has the
-        // effect of interrupting the current render and switching to the update.
-        // TODO: Make sure this doesn't override pings that happen while we've
-        // already started rendering.
-        markRootSuspended(root, workInProgressRootRenderLanes);
-      }
-    }
+  if (node.tag === HostRoot) {
+    const root: FiberRoot = node.stateNode;
+    return root;
+  } else {
+    return null;
   }
-
-  return root;
 }
 
 // Use this function to schedule a task for a root. There's only one task per
@@ -2764,6 +2758,7 @@ function captureCommitPhaseErrorOnRoot(
   const eventTime = requestEventTime();
   const root = markUpdateLaneFromFiberToRoot(rootFiber, (SyncLane: Lane));
   if (root !== null) {
+    markRootUpdated(root, SyncLane, eventTime);
     ensureRootIsScheduled(root, eventTime);
     schedulePendingInteractions(root, SyncLane);
   }
@@ -2800,6 +2795,7 @@ export function captureCommitPhaseError(sourceFiber: Fiber, error: mixed) {
         const eventTime = requestEventTime();
         const root = markUpdateLaneFromFiberToRoot(fiber, (SyncLane: Lane));
         if (root !== null) {
+          markRootUpdated(root, SyncLane, eventTime);
           ensureRootIsScheduled(root, eventTime);
           schedulePendingInteractions(root, SyncLane);
         }
@@ -2872,6 +2868,7 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
   const eventTime = requestEventTime();
   const root = markUpdateLaneFromFiberToRoot(boundaryFiber, retryLane);
   if (root !== null) {
+    markRootUpdated(root, retryLane, eventTime);
     ensureRootIsScheduled(root, eventTime);
     schedulePendingInteractions(root, retryLane);
   }
