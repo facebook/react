@@ -297,7 +297,6 @@ function ChildReconciler(shouldTrackSideEffects) {
     // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
     returnFiber.effectTag |= Deletion;
     childToDelete.nextEffect = null;
-    childToDelete.effectTag = Deletion;
   }
 
   function deleteRemainingChildren(

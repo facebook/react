@@ -3059,7 +3059,6 @@ function remountFiber(
     // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
     returnFiber.effectTag |= Deletion;
     current.nextEffect = null;
-    current.effectTag = Deletion;
 
     newWorkInProgress.effectTag |= Placement;
 
