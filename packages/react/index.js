@@ -81,6 +81,6 @@ export {
   DEPRECATED_useResponder,
   DEPRECATED_createResponder,
   unstable_createFundamental,
-  unstable_createScope,
+  unstable_Scope,
   unstable_useOpaqueIdentifier,
 } from './src/React';

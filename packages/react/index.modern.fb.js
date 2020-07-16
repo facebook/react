@@ -53,7 +53,7 @@ export {
   DEPRECATED_useResponder,
   DEPRECATED_createResponder,
   // enableScopeAPI
-  unstable_createScope,
+  unstable_Scope,
   unstable_useOpaqueIdentifier,
   // enableDebugTracing
   unstable_DebugTracingMode,

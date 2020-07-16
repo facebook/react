@@ -2728,6 +2728,77 @@ describe('DOMModernPluginEventSystem', () => {
             document.body.removeChild(container2);
           });
 
+          // @gate experimental
+          it('handle propagation of click events between disjointed comment roots', () => {
+            const buttonRef = React.createRef();
+            const divRef = React.createRef();
+            const log = [];
+            const setClick = ReactDOM.unstable_createEventHandle('click');
+            const setClickCapture = ReactDOM.unstable_createEventHandle(
+              'click',
+              {capture: true},
+            );
+            const onClick = jest.fn(e => log.push(['bubble', e.currentTarget]));
+            const onClickCapture = jest.fn(e =>
+              log.push(['capture', e.currentTarget]),
+            );
+
+            function Child() {
+              React.useEffect(() => {
+                const click1 = setClick(divRef.current, onClick);
+                const click2 = setClickCapture(divRef.current, onClickCapture);
+                return () => {
+                  click1();
+                  click2();
+                };
+              });
+
+              return <div ref={divRef}>Click me!</div>;
+            }
+
+            function Parent() {
+              React.useEffect(() => {
+                const click1 = setClick(buttonRef.current, onClick);
+                const click2 = setClickCapture(
+                  buttonRef.current,
+                  onClickCapture,
+                );
+                return () => {
+                  click1();
+                  click2();
+                };
+              });
+
+              return <button ref={buttonRef} />;
+            }
+
+            // We use a comment node here, then mount to it
+            const disjointedNode = document.createComment(
+              ' react-mount-point-unstable ',
+            );
+            ReactDOM.render(<Parent />, container);
+            Scheduler.unstable_flushAll();
+            buttonRef.current.appendChild(disjointedNode);
+            ReactDOM.render(<Child />, disjointedNode);
+            Scheduler.unstable_flushAll();
+
+            const buttonElement = buttonRef.current;
+            dispatchClickEvent(buttonElement);
+            expect(onClick).toHaveBeenCalledTimes(1);
+            expect(onClickCapture).toHaveBeenCalledTimes(1);
+            expect(log[0]).toEqual(['capture', buttonElement]);
+            expect(log[1]).toEqual(['bubble', buttonElement]);
+
+            const divElement = divRef.current;
+            dispatchClickEvent(divElement);
+            expect(onClick).toHaveBeenCalledTimes(3);
+            expect(onClickCapture).toHaveBeenCalledTimes(3);
+            expect(log[2]).toEqual(['capture', buttonElement]);
+            expect(log[3]).toEqual(['capture', divElement]);
+            expect(log[4]).toEqual(['bubble', divElement]);
+            expect(log[5]).toEqual(['bubble', buttonElement]);
+          });
+
           describe('Compatibility with Scopes API', () => {
             beforeEach(() => {
               jest.resetModules();
@@ -2751,7 +2822,7 @@ describe('DOMModernPluginEventSystem', () => {
               const onClickCapture = jest.fn(e =>
                 log.push(['capture', e.currentTarget]),
               );
-              const TestScope = React.unstable_createScope();
+              const TestScope = React.unstable_Scope;
               const setClick = ReactDOM.unstable_createEventHandle('click');
               const setClickCapture = ReactDOM.unstable_createEventHandle(
                 'click',
@@ -2808,7 +2879,7 @@ describe('DOMModernPluginEventSystem', () => {
               const onClickCapture = jest.fn(e =>
                 log.push(['capture', e.currentTarget]),
               );
-              const TestScope = React.unstable_createScope();
+              const TestScope = React.unstable_Scope;
               const setClick = ReactDOM.unstable_createEventHandle('click');
               const setClickCapture = ReactDOM.unstable_createEventHandle(
                 'click',
@@ -2892,7 +2963,7 @@ describe('DOMModernPluginEventSystem', () => {
             it('should not handle the target being a dangling text node within a scope', () => {
               const clickEvent = jest.fn();
               const buttonRef = React.createRef();
-              const TestScope = React.unstable_createScope();
+              const TestScope = React.unstable_Scope;
               const setClick = ReactDOM.unstable_createEventHandle('click');
 
               function Test() {
@@ -2924,8 +2995,8 @@ describe('DOMModernPluginEventSystem', () => {
               const buttonRef = React.createRef();
               const outerOnClick = jest.fn();
               const innerOnClick = jest.fn(e => e.stopPropagation());
-              const TestScope = React.unstable_createScope();
-              const TestScope2 = React.unstable_createScope();
+              const TestScope = React.unstable_Scope;
+              const TestScope2 = React.unstable_Scope;
               const setClick = ReactDOM.unstable_createEventHandle('click');
 
               function Test() {
@@ -2966,8 +3037,8 @@ describe('DOMModernPluginEventSystem', () => {
               const buttonRef = React.createRef();
               const outerOnClick = jest.fn(e => e.stopPropagation());
               const innerOnClick = jest.fn();
-              const TestScope = React.unstable_createScope();
-              const TestScope2 = React.unstable_createScope();
+              const TestScope = React.unstable_Scope;
+              const TestScope2 = React.unstable_Scope;
               const setClick = ReactDOM.unstable_createEventHandle('click');
 
               function Test() {
@@ -3007,8 +3078,8 @@ describe('DOMModernPluginEventSystem', () => {
             it('handle stopPropagation (inner and outer) correctly between scopes', () => {
               const buttonRef = React.createRef();
               const onClick = jest.fn(e => e.stopPropagation());
-              const TestScope = React.unstable_createScope();
-              const TestScope2 = React.unstable_createScope();
+              const TestScope = React.unstable_Scope;
+              const TestScope2 = React.unstable_Scope;
               const setClick = ReactDOM.unstable_createEventHandle('click');
 
               function Test() {
@@ -3041,82 +3112,6 @@ describe('DOMModernPluginEventSystem', () => {
               dispatchClickEvent(buttonElement);
 
               expect(onClick).toHaveBeenCalledTimes(1);
-            });
-
-            // @gate experimental
-            it('handle propagation of click events between disjointed comment roots', () => {
-              const buttonRef = React.createRef();
-              const divRef = React.createRef();
-              const log = [];
-              const setClick = ReactDOM.unstable_createEventHandle('click');
-              const setClickCapture = ReactDOM.unstable_createEventHandle(
-                'click',
-                {capture: true},
-              );
-              const onClick = jest.fn(e =>
-                log.push(['bubble', e.currentTarget]),
-              );
-              const onClickCapture = jest.fn(e =>
-                log.push(['capture', e.currentTarget]),
-              );
-
-              function Child() {
-                React.useEffect(() => {
-                  const click1 = setClick(divRef.current, onClick);
-                  const click2 = setClickCapture(
-                    divRef.current,
-                    onClickCapture,
-                  );
-                  return () => {
-                    click1();
-                    click2();
-                  };
-                });
-
-                return <div ref={divRef}>Click me!</div>;
-              }
-
-              function Parent() {
-                React.useEffect(() => {
-                  const click1 = setClick(buttonRef.current, onClick);
-                  const click2 = setClickCapture(
-                    buttonRef.current,
-                    onClickCapture,
-                  );
-                  return () => {
-                    click1();
-                    click2();
-                  };
-                });
-
-                return <button ref={buttonRef} />;
-              }
-
-              // We use a comment node here, then mount to it
-              const disjointedNode = document.createComment(
-                ' react-mount-point-unstable ',
-              );
-              ReactDOM.render(<Parent />, container);
-              Scheduler.unstable_flushAll();
-              buttonRef.current.appendChild(disjointedNode);
-              ReactDOM.render(<Child />, disjointedNode);
-              Scheduler.unstable_flushAll();
-
-              const buttonElement = buttonRef.current;
-              dispatchClickEvent(buttonElement);
-              expect(onClick).toHaveBeenCalledTimes(1);
-              expect(onClickCapture).toHaveBeenCalledTimes(1);
-              expect(log[0]).toEqual(['capture', buttonElement]);
-              expect(log[1]).toEqual(['bubble', buttonElement]);
-
-              const divElement = divRef.current;
-              dispatchClickEvent(divElement);
-              expect(onClick).toHaveBeenCalledTimes(3);
-              expect(onClickCapture).toHaveBeenCalledTimes(3);
-              expect(log[2]).toEqual(['capture', buttonElement]);
-              expect(log[3]).toEqual(['capture', divElement]);
-              expect(log[4]).toEqual(['bubble', divElement]);
-              expect(log[5]).toEqual(['bubble', buttonElement]);
             });
           });
         });
