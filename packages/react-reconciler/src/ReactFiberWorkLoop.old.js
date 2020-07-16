@@ -163,6 +163,7 @@ import {
   getCurrentUpdateLanePriority,
   markStarvedLanesAsExpired,
   getLanesToRetrySynchronouslyOnError,
+  getMostRecentEventTime,
   markRootUpdated,
   markRootSuspended as markRootSuspended_dontCallThisOneDirectly,
   markRootPinged,
@@ -286,8 +287,6 @@ const subtreeRenderLanesCursor: StackCursor<Lanes> = createCursor(NoLanes);
 let workInProgressRootExitStatus: RootExitStatus = RootIncomplete;
 // A fatal error, if one is thrown
 let workInProgressRootFatalError: mixed = null;
-// Most recent event time among processed updates during this render.
-let workInProgressRootLatestProcessedEventTime: number = NoTimestamp;
 let workInProgressRootLatestSuspenseTimeout: number = NoTimestamp;
 let workInProgressRootCanSuspendUsingConfig: null | SuspenseConfig = null;
 // "Included" lanes refer to lanes that were worked on during this render. It's
@@ -931,12 +930,13 @@ function finishConcurrentRender(root, finishedWork, exitStatus, lanes) {
           break;
         }
 
+        const mostRecentEventTime = getMostRecentEventTime(root, lanes);
         let msUntilTimeout;
         if (workInProgressRootLatestSuspenseTimeout !== NoTimestamp) {
           // We have processed a suspense config whose expiration time we
           // can use as the timeout.
           msUntilTimeout = workInProgressRootLatestSuspenseTimeout - now();
-        } else if (workInProgressRootLatestProcessedEventTime === NoTimestamp) {
+        } else if (mostRecentEventTime === NoTimestamp) {
           // This should never normally happen because only new updates
           // cause delayed states, so we should have processed something.
           // However, this could also happen in an offscreen tree.
@@ -944,7 +944,7 @@ function finishConcurrentRender(root, finishedWork, exitStatus, lanes) {
         } else {
           // If we didn't process a suspense config, compute a JND based on
           // the amount of time elapsed since the most recent event time.
-          const eventTimeMs = workInProgressRootLatestProcessedEventTime;
+          const eventTimeMs = mostRecentEventTime;
           const timeElapsedMs = now() - eventTimeMs;
           msUntilTimeout = jnd(timeElapsedMs) - timeElapsedMs;
         }
@@ -967,10 +967,11 @@ function finishConcurrentRender(root, finishedWork, exitStatus, lanes) {
     }
     case RootCompleted: {
       // The work completed. Ready to commit.
+      const mostRecentEventTime = getMostRecentEventTime(root, lanes);
       if (
         // do not delay if we're inside an act() scope
         !shouldForceFlushFallbacksInDEV() &&
-        workInProgressRootLatestProcessedEventTime !== NoTimestamp &&
+        mostRecentEventTime !== NoTimestamp &&
         workInProgressRootCanSuspendUsingConfig !== null
       ) {
         // If we have exceeded the minimum loading delay, which probably
@@ -978,7 +979,7 @@ function finishConcurrentRender(root, finishedWork, exitStatus, lanes) {
         // a bit longer to ensure that the spinner is shown for
         // enough time.
         const msUntilTimeout = computeMsUntilSuspenseLoadingDelay(
-          workInProgressRootLatestProcessedEventTime,
+          mostRecentEventTime,
           workInProgressRootCanSuspendUsingConfig,
         );
         if (msUntilTimeout > 10) {
@@ -1316,7 +1317,6 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
   workInProgressRootRenderLanes = subtreeRenderLanes = workInProgressRootIncludedLanes = lanes;
   workInProgressRootExitStatus = RootIncomplete;
   workInProgressRootFatalError = null;
-  workInProgressRootLatestProcessedEventTime = NoTimestamp;
   workInProgressRootLatestSuspenseTimeout = NoTimestamp;
   workInProgressRootCanSuspendUsingConfig = null;
   workInProgressRootSkippedLanes = NoLanes;
@@ -1434,11 +1434,6 @@ export function markRenderEventTimeAndConfig(
   eventTime: number,
   suspenseConfig: null | SuspenseConfig,
 ): void {
-  // Track the most recent event time of all updates processed in this batch.
-  if (workInProgressRootLatestProcessedEventTime < eventTime) {
-    workInProgressRootLatestProcessedEventTime = eventTime;
-  }
-
   // Track the largest/latest timeout deadline in this batch.
   // TODO: If there are two transitions in the same batch, shouldn't we
   // choose the smaller one? Maybe this is because when an intermediate
