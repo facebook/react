@@ -17,10 +17,10 @@ import isTextInputElement from '../isTextInputElement';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
 import {
-  TOP_BLUR,
+  TOP_FOCUS_OUT,
   TOP_CHANGE,
   TOP_CLICK,
-  TOP_FOCUS,
+  TOP_FOCUS_IN,
   TOP_INPUT,
   TOP_KEY_DOWN,
   TOP_KEY_UP,
@@ -42,10 +42,10 @@ import {
 
 function registerEvents() {
   registerTwoPhaseEvent('onChange', [
-    TOP_BLUR,
     TOP_CHANGE,
     TOP_CLICK,
-    TOP_FOCUS,
+    TOP_FOCUS_IN,
+    TOP_FOCUS_OUT,
     TOP_INPUT,
     TOP_KEY_DOWN,
     TOP_KEY_UP,
@@ -172,7 +172,7 @@ function handlePropertyChange(nativeEvent) {
 }
 
 function handleEventsForInputEventPolyfill(topLevelType, target, targetInst) {
-  if (topLevelType === TOP_FOCUS) {
+  if (topLevelType === TOP_FOCUS_IN) {
     // In IE9, propertychange fires for most input events but is buggy and
     // doesn't fire when text is deleted, but conveniently, selectionchange
     // appears to fire in all of the remaining cases so we catch those and
@@ -185,7 +185,7 @@ function handleEventsForInputEventPolyfill(topLevelType, target, targetInst) {
     // missed a blur event somehow.
     stopWatchingForValueChange();
     startWatchingForValueChange(target, targetInst);
-  } else if (topLevelType === TOP_BLUR) {
+  } else if (topLevelType === TOP_FOCUS_OUT) {
     stopWatchingForValueChange();
   }
 }
@@ -304,7 +304,7 @@ function extractEvents(
   }
 
   // When blurring, set the value attribute for number inputs
-  if (topLevelType === TOP_BLUR) {
+  if (topLevelType === TOP_FOCUS_OUT) {
     handleControlledInputBlur(((targetNode: any): HTMLInputElement));
   }
 }

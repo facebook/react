@@ -888,9 +888,9 @@ describe('DOMModernPluginEventSystem', () => {
           expect(onFocus).toHaveBeenCalledTimes(3);
           expect(onFocusCapture).toHaveBeenCalledTimes(3);
           expect(log[2]).toEqual(['capture', buttonElement]);
-          expect(log[3]).toEqual(['bubble', buttonElement]);
-          expect(log[4]).toEqual(['capture', divElement]);
-          expect(log[5]).toEqual(['bubble', divElement]);
+          expect(log[3]).toEqual(['capture', divElement]);
+          expect(log[4]).toEqual(['bubble', divElement]);
+          expect(log[5]).toEqual(['bubble', buttonElement]);
         });
 
         it('handle propagation of focus events between portals', () => {
