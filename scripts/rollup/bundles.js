@@ -69,19 +69,30 @@ const {
 const bundles = [
   /******* Isomorphic *******/
   {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      UMD_PROFILING,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      FB_WWW_PROFILING,
-      RN_FB_DEV,
-      RN_FB_PROD,
-      RN_FB_PROFILING,
-    ],
+    bundleTypes: __EXPERIMENTAL__
+      ? [
+          UMD_DEV,
+          UMD_PROD,
+          UMD_PROFILING,
+          NODE_DEV,
+          NODE_PROD,
+          FB_WWW_DEV,
+          FB_WWW_PROD,
+          FB_WWW_PROFILING,
+        ]
+      : [
+          UMD_DEV,
+          UMD_PROD,
+          UMD_PROFILING,
+          NODE_DEV,
+          NODE_PROD,
+          FB_WWW_DEV,
+          FB_WWW_PROD,
+          FB_WWW_PROFILING,
+          RN_FB_DEV,
+          RN_FB_PROD,
+          RN_FB_PROFILING,
+        ],
     moduleType: ISOMORPHIC,
     entry: 'react',
     global: 'React',
@@ -90,15 +101,21 @@ const bundles = [
 
   /******* React JSX Runtime *******/
   {
-    bundleTypes: [
-      NODE_DEV,
-      NODE_PROD,
-      NODE_PROFILING,
-      // TODO: use on WWW.
-      RN_FB_DEV,
-      RN_FB_PROD,
-      RN_FB_PROFILING,
-    ],
+    bundleTypes: __EXPERIMENTAL__
+      ? [
+          NODE_DEV,
+          NODE_PROD,
+          NODE_PROFILING,
+          // TODO: use on WWW.
+        ]
+      : [
+          NODE_DEV,
+          NODE_PROD,
+          NODE_PROFILING,
+          RN_FB_DEV,
+          RN_FB_PROD,
+          RN_FB_PROFILING,
+        ],
     moduleType: ISOMORPHIC,
     entry: 'react/jsx-runtime',
     global: 'JSXRuntime',
@@ -107,17 +124,26 @@ const bundles = [
 
   /******* React JSX DEV Runtime *******/
   {
-    bundleTypes: [
-      NODE_DEV,
-      NODE_PROD,
-      NODE_PROFILING,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      FB_WWW_PROFILING,
-      RN_FB_DEV,
-      RN_FB_PROD,
-      RN_FB_PROFILING,
-    ],
+    bundleTypes: __EXPERIMENTAL__
+      ? [
+          NODE_DEV,
+          NODE_PROD,
+          NODE_PROFILING,
+          FB_WWW_DEV,
+          FB_WWW_PROD,
+          FB_WWW_PROFILING,
+        ]
+      : [
+          NODE_DEV,
+          NODE_PROD,
+          NODE_PROFILING,
+          FB_WWW_DEV,
+          FB_WWW_PROD,
+          FB_WWW_PROFILING,
+          RN_FB_DEV,
+          RN_FB_PROD,
+          RN_FB_PROFILING,
+        ],
     moduleType: ISOMORPHIC,
     entry: 'react/jsx-dev-runtime',
     global: 'JSXDEVRuntime',
@@ -350,8 +376,8 @@ const bundles = [
   /******* React Native *******/
   {
     bundleTypes: __EXPERIMENTAL__
-      ? [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING]
-      : [],
+      ? []
+      : [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
     moduleType: RENDERER,
     entry: 'react-native-renderer',
     global: 'ReactNativeRenderer',
@@ -380,8 +406,8 @@ const bundles = [
   /******* React Native Fabric *******/
   {
     bundleTypes: __EXPERIMENTAL__
-      ? [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING]
-      : [],
+      ? []
+      : [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
     moduleType: RENDERER,
     entry: 'react-native-renderer/fabric',
     global: 'ReactFabric',
@@ -409,14 +435,9 @@ const bundles = [
 
   /******* React Test Renderer *******/
   {
-    bundleTypes: [
-      FB_WWW_DEV,
-      NODE_DEV,
-      NODE_PROD,
-      UMD_DEV,
-      UMD_PROD,
-      RN_FB_DEV,
-    ],
+    bundleTypes: __EXPERIMENTAL__
+      ? [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD]
+      : [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD, RN_FB_DEV],
     moduleType: RENDERER,
     entry: 'react-test-renderer',
     global: 'ReactTestRenderer',
