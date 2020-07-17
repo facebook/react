@@ -278,10 +278,10 @@ describe('ReactDOMEventListener', () => {
     document.body.removeChild(container);
   });
 
-  // This is a special case for submit and reset events as they are listened on
-  // at the element level and not the document.
-  // @see https://github.com/facebook/react/pull/13462
-  it('should (or not) receive submit events if native, interim DOM handler prevents it', () => {
+  // This tests an implementation detail that submit/reset events are listened to
+  // at the document level, which is necessary for event replaying to work.
+  // They bubble in all modern browsers.
+  it('should not receive submit events if native, interim DOM handler prevents it', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
 
@@ -316,13 +316,8 @@ describe('ReactDOMEventListener', () => {
         }),
       );
 
-      if (gate(flags => flags.enableFormEventDelegation)) {
-        expect(handleSubmit).not.toHaveBeenCalled();
-        expect(handleReset).not.toHaveBeenCalled();
-      } else {
-        expect(handleSubmit).toHaveBeenCalled();
-        expect(handleReset).toHaveBeenCalled();
-      }
+      expect(handleSubmit).not.toHaveBeenCalled();
+      expect(handleReset).not.toHaveBeenCalled();
     } finally {
       document.body.removeChild(container);
     }
