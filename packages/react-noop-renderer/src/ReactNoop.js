@@ -49,7 +49,6 @@ export const {
   getRoot,
   // TODO: Remove these after callers migrate to alternatives.
   unstable_runWithPriority,
-  unstable_InputContinuousLanePriority,
 } = createReactNoop(
   ReactFiberReconciler, // reconciler
   true, // useMutation

@@ -949,8 +949,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     },
 
     unstable_runWithPriority: NoopRenderer.runWithPriority,
-    unstable_InputContinuousLanePriority:
-      NoopRenderer.InputContinuousLanePriority,
 
     batchedUpdates: NoopRenderer.batchedUpdates,
 

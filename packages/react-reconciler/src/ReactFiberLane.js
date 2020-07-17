@@ -66,7 +66,7 @@ const RetryLanePriority: LanePriority = 5;
 const SelectiveHydrationLanePriority: LanePriority = 4;
 
 const IdleHydrationLanePriority: LanePriority = 3;
-export const IdleLanePriority: LanePriority = 2;
+const IdleLanePriority: LanePriority = 2;
 
 const OffscreenLanePriority: LanePriority = 1;
 
