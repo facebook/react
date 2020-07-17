@@ -217,6 +217,7 @@ type BaseFiberRootProperties = {|
   // if it's already working.
   callbackId: Lanes,
   callbackPriority: LanePriority,
+  eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,
 
   pendingLanes: Lanes,

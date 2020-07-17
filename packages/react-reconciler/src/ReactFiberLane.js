@@ -374,6 +374,25 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   return nextLanes;
 }
 
+export function getMostRecentEventTime(root: FiberRoot, lanes: Lanes): number {
+  const eventTimes = root.eventTimes;
+
+  let mostRecentEventTime = NoTimestamp;
+  while (lanes > 0) {
+    const index = pickArbitraryLaneIndex(lanes);
+    const lane = 1 << index;
+
+    const eventTime = eventTimes[index];
+    if (eventTime > mostRecentEventTime) {
+      mostRecentEventTime = eventTime;
+    }
+
+    lanes &= ~lane;
+  }
+
+  return mostRecentEventTime;
+}
+
 function computeExpirationTime(lane: Lane, currentTime: number) {
   // TODO: Expiration heuristic is constant per lane, so could use a map.
   getHighestPriorityLanes(lane);
@@ -606,8 +625,12 @@ export function pickArbitraryLane(lanes: Lanes): Lane {
   return getHighestPriorityLane(lanes);
 }
 
-function pickArbitraryLaneIndex(lanes: Lane | Lanes) {
+function pickArbitraryLaneIndex(lanes: Lanes) {
   return 31 - clz32(lanes);
+}
+
+function laneToIndex(lane: Lane) {
+  return pickArbitraryLaneIndex(lane);
 }
 
 export function includesSomeLane(a: Lanes | Lane, b: Lanes | Lane) {
@@ -648,7 +671,11 @@ export function createLaneMap<T>(initial: T): LaneMap<T> {
   return new Array(TotalLanes).fill(initial);
 }
 
-export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
+export function markRootUpdated(
+  root: FiberRoot,
+  updateLane: Lane,
+  eventTime: number,
+) {
   root.pendingLanes |= updateLane;
 
   // TODO: Theoretically, any update to any lane can unblock any other lane. But
@@ -666,6 +693,12 @@ export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
 
   root.suspendedLanes &= higherPriorityLanes;
   root.pingedLanes &= higherPriorityLanes;
+
+  const eventTimes = root.eventTimes;
+  const index = laneToIndex(updateLane);
+  // We can always overwrite an existing timestamp because we prefer the most
+  // recent event, and we assume time is monotonically increasing.
+  eventTimes[index] = eventTime;
 }
 
 export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
@@ -723,13 +756,18 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
 
   root.entangledLanes &= remainingLanes;
 
+  const entanglements = root.entanglements;
+  const eventTimes = root.eventTimes;
   const expirationTimes = root.expirationTimes;
+
+  // Clear the lanes that no longer have pending work
   let lanes = noLongerPendingLanes;
   while (lanes > 0) {
     const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
 
-    // Clear the expiration time
+    entanglements[index] = NoLanes;
+    eventTimes[index] = NoTimestamp;
     expirationTimes[index] = NoTimestamp;
 
     lanes &= ~lane;
