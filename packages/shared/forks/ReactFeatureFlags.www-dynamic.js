@@ -22,8 +22,7 @@ export const decoupleUpdatePriorityFromScheduler = __VARIANT__;
 // Enable this flag to help with concurrent mode debugging.
 // It logs information to the console about React scheduling, rendering, and commit phases.
 //
-// NOTE: This feature will only work in DEV builds.
-// WARNING: This feature does not yet exist in the new reconciler fork.
+// NOTE: This feature will only work in DEV mode; all callsights are wrapped with __DEV__.
 export const enableDebugTracing = false;
 
 // This only has an effect in the new reconciler. But also, the new reconciler
