@@ -37,7 +37,6 @@ import {
   attemptHydrationAtCurrentPriority,
   runWithPriority,
   getCurrentUpdateLanePriority,
-  IdleLanePriority,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -215,7 +214,6 @@ export {
   // TODO: Remove these once callers migrate to alternatives.
   // These should only be used by React internals.
   runWithPriority as unstable_runWithPriority,
-  IdleLanePriority as unstable_IdleLanePriority,
 };
 
 const foundDevTools = injectIntoDevTools({

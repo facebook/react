@@ -109,11 +109,14 @@ const eventResponderContext: ReactDOMResponderContext = {
       }
       case UserBlockingEvent: {
         const previousPriority = getCurrentUpdateLanePriority();
-        setCurrentUpdateLanePriority(InputContinuousLanePriority);
-        runWithPriority(UserBlockingPriority, () =>
-          executeUserEventHandler(eventListener, eventValue),
-        );
-        setCurrentUpdateLanePriority(previousPriority);
+        try {
+          setCurrentUpdateLanePriority(InputContinuousLanePriority);
+          runWithPriority(UserBlockingPriority, () =>
+            executeUserEventHandler(eventListener, eventValue),
+          );
+        } finally {
+          setCurrentUpdateLanePriority(previousPriority);
+        }
         break;
       }
       case ContinuousEvent: {

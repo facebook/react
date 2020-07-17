@@ -20,7 +20,6 @@ export {
   unstable_flushControlled,
   unstable_scheduleHydration,
   unstable_runWithPriority,
-  unstable_IdleLanePriority,
   unstable_createEventHandle,
   unstable_isNewReconciler,
 } from './src/client/ReactDOM';

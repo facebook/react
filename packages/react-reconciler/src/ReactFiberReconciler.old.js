@@ -75,8 +75,6 @@ import {
 import {StrictMode} from './ReactTypeOfMode';
 import {
   SyncLane,
-  IdleLanePriority,
-  InputContinuousLanePriority,
   InputDiscreteHydrationLane,
   SelectiveHydrationLane,
   NoTimestamp,
@@ -444,11 +442,7 @@ export function runWithPriority<T>(priority: LanePriority, fn: () => T) {
   }
 }
 
-export {
-  getCurrentUpdateLanePriority,
-  InputContinuousLanePriority,
-  IdleLanePriority,
-};
+export {getCurrentUpdateLanePriority};
 
 export {findHostInstance};
 

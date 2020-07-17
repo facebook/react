@@ -155,18 +155,21 @@ function dispatchUserBlockingUpdate(
 ) {
   // TODO: Double wrapping is necessary while we decouple Scheduler priority.
   const previousPriority = getCurrentUpdateLanePriority();
-  setCurrentUpdateLanePriority(InputContinuousLanePriority);
-  runWithPriority(
-    UserBlockingPriority,
-    dispatchEvent.bind(
-      null,
-      topLevelType,
-      eventSystemFlags,
-      container,
-      nativeEvent,
-    ),
-  );
-  setCurrentUpdateLanePriority(previousPriority);
+  try {
+    setCurrentUpdateLanePriority(InputContinuousLanePriority);
+    runWithPriority(
+      UserBlockingPriority,
+      dispatchEvent.bind(
+        null,
+        topLevelType,
+        eventSystemFlags,
+        container,
+        nativeEvent,
+      ),
+    );
+  } finally {
+    setCurrentUpdateLanePriority(previousPriority);
+  }
 }
 
 export function dispatchEvent(

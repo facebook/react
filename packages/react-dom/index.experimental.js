@@ -25,7 +25,6 @@ export {
   unstable_scheduleHydration,
   // DO NOT USE: Temporarily exposing these to migrate off of Scheduler.runWithPriority.
   unstable_runWithPriority,
-  unstable_IdleLanePriority,
   // Disabled behind disableUnstableRenderSubtreeIntoContainer
   unstable_renderSubtreeIntoContainer,
   // Disabled behind disableUnstableCreatePortal
