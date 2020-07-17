@@ -11,7 +11,10 @@ import type {Lane, Lanes} from './ReactFiberLane';
 import type {Fiber} from './ReactInternalTypes';
 import type {Wakeable} from 'shared/ReactTypes';
 
-import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
+import {
+  enableSchedulingProfiler,
+  enableSchedulingProfilerComponentStacks,
+} from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 
@@ -54,21 +57,31 @@ function getWakeableID(wakeable: Wakeable): number {
   return ((wakeableIDs.get(wakeable): any): number);
 }
 
-// $FlowFixMe: Flow cannot handle polymorphic WeakMaps
-const cachedFiberStacks: WeakMap<Fiber, string> = new PossiblyWeakMap();
-function cacheFirstGetComponentStackByFiber(fiber: Fiber): string {
-  if (cachedFiberStacks.has(fiber)) {
-    return ((cachedFiberStacks.get(fiber): any): string);
-  } else {
-    const alternate = fiber.alternate;
-    if (alternate !== null && cachedFiberStacks.has(alternate)) {
-      return ((cachedFiberStacks.get(alternate): any): string);
+let getComponentStackByFiber = function getComponentStackByFiberDisabled(
+  fiber: Fiber,
+): string {
+  return '';
+};
+
+if (enableSchedulingProfilerComponentStacks) {
+  // $FlowFixMe: Flow cannot handle polymorphic WeakMaps
+  const cachedFiberStacks: WeakMap<Fiber, string> = new PossiblyWeakMap();
+  getComponentStackByFiber = function cacheFirstGetComponentStackByFiber(
+    fiber: Fiber,
+  ): string {
+    if (cachedFiberStacks.has(fiber)) {
+      return ((cachedFiberStacks.get(fiber): any): string);
+    } else {
+      const alternate = fiber.alternate;
+      if (alternate !== null && cachedFiberStacks.has(alternate)) {
+        return ((cachedFiberStacks.get(alternate): any): string);
+      }
     }
-  }
-  // TODO (brian) Generate and store temporary ID so DevTools can match up a component stack later.
-  const componentStack = getStackByFiberInDevAndProd(fiber) || '';
-  cachedFiberStacks.set(fiber, componentStack);
-  return componentStack;
+    // TODO (brian) Generate and store temporary ID so DevTools can match up a component stack later.
+    const componentStack = getStackByFiberInDevAndProd(fiber) || '';
+    cachedFiberStacks.set(fiber, componentStack);
+    return componentStack;
+  };
 }
 
 export function markComponentSuspended(fiber: Fiber, wakeable: Wakeable): void {
@@ -76,7 +89,7 @@ export function markComponentSuspended(fiber: Fiber, wakeable: Wakeable): void {
     if (supportsUserTiming) {
       const id = getWakeableID(wakeable);
       const componentName = getComponentName(fiber.type) || 'Unknown';
-      const componentStack = cacheFirstGetComponentStackByFiber(fiber);
+      const componentStack = getComponentStackByFiber(fiber);
       performance.mark(
         `--suspense-suspend-${id}-${componentName}-${componentStack}`,
       );
@@ -162,7 +175,7 @@ export function markForceUpdateScheduled(fiber: Fiber, lane: Lane): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       const componentName = getComponentName(fiber.type) || 'Unknown';
-      const componentStack = cacheFirstGetComponentStackByFiber(fiber);
+      const componentStack = getComponentStackByFiber(fiber);
       performance.mark(
         `--schedule-forced-update-${formatLanes(
           lane,
@@ -176,7 +189,7 @@ export function markStateUpdateScheduled(fiber: Fiber, lane: Lane): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
       const componentName = getComponentName(fiber.type) || 'Unknown';
-      const componentStack = cacheFirstGetComponentStackByFiber(fiber);
+      const componentStack = getComponentStackByFiber(fiber);
       performance.mark(
         `--schedule-state-update-${formatLanes(
           lane,

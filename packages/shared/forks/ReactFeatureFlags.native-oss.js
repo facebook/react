@@ -13,6 +13,7 @@ import typeof * as ExportsType from './ReactFeatureFlags.native-oss';
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableDebugTracing = false;
 export const enableSchedulingProfiler = false;
+export const enableSchedulingProfilerComponentStacks = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;
 export const enableProfilerTimer = __PROFILE__;

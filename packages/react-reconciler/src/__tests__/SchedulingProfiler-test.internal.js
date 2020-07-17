@@ -19,6 +19,20 @@ function normalizeCodeLocInfo(str) {
   );
 }
 
+// TODO (enableSchedulingProfilerComponentStacks) Clean this up once the feature flag has been removed.
+function toggleComponentStacks(mark) {
+  let expectedMark = mark;
+  gate(({enableSchedulingProfilerComponentStacks}) => {
+    if (!enableSchedulingProfilerComponentStacks) {
+      const index = mark.indexOf('\n    ');
+      if (index >= 0) {
+        expectedMark = mark.substr(0, index);
+      }
+    }
+  });
+  return expectedMark;
+}
+
 describe('SchedulingProfiler', () => {
   let React;
   let ReactTestRenderer;
@@ -136,7 +150,9 @@ describe('SchedulingProfiler', () => {
     expect(marks).toEqual([
       '--schedule-render-1',
       '--render-start-1',
-      '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
+      toggleComponentStacks(
+        '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
+      ),
       '--render-stop',
       '--commit-start-1',
       '--layout-effects-start-1',
@@ -148,7 +164,9 @@ describe('SchedulingProfiler', () => {
 
     await fakeSuspensePromise;
     expect(marks).toEqual([
-      '--suspense-resolved-0-Example-\n    at Example\n    at Suspense',
+      toggleComponentStacks(
+        '--suspense-resolved-0-Example-\n    at Example\n    at Suspense',
+      ),
     ]);
   });
 
@@ -168,7 +186,9 @@ describe('SchedulingProfiler', () => {
     expect(marks).toEqual([
       '--schedule-render-1',
       '--render-start-1',
-      '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
+      toggleComponentStacks(
+        '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
+      ),
       '--render-stop',
       '--commit-start-1',
       '--layout-effects-start-1',
@@ -180,7 +200,9 @@ describe('SchedulingProfiler', () => {
 
     await expect(fakeSuspensePromise).rejects.toThrow();
     expect(marks).toEqual([
-      '--suspense-rejected-0-Example-\n    at Example\n    at Suspense',
+      toggleComponentStacks(
+        '--suspense-rejected-0-Example-\n    at Example\n    at Suspense',
+      ),
     ]);
   });
 
@@ -206,7 +228,9 @@ describe('SchedulingProfiler', () => {
 
     expect(marks).toEqual([
       '--render-start-512',
-      '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
+      toggleComponentStacks(
+        '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
+      ),
       '--render-stop',
       '--commit-start-512',
       '--layout-effects-start-512',
@@ -218,7 +242,9 @@ describe('SchedulingProfiler', () => {
 
     await fakeSuspensePromise;
     expect(marks).toEqual([
-      '--suspense-resolved-0-Example-\n    at Example\n    at Suspense',
+      toggleComponentStacks(
+        '--suspense-resolved-0-Example-\n    at Example\n    at Suspense',
+      ),
     ]);
   });
 
@@ -244,7 +270,9 @@ describe('SchedulingProfiler', () => {
 
     expect(marks).toEqual([
       '--render-start-512',
-      '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
+      toggleComponentStacks(
+        '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
+      ),
       '--render-stop',
       '--commit-start-512',
       '--layout-effects-start-512',
@@ -256,7 +284,9 @@ describe('SchedulingProfiler', () => {
 
     await expect(fakeSuspensePromise).rejects.toThrow();
     expect(marks).toEqual([
-      '--suspense-rejected-0-Example-\n    at Example\n    at Suspense',
+      toggleComponentStacks(
+        '--suspense-rejected-0-Example-\n    at Example\n    at Suspense',
+      ),
     ]);
   });
 
@@ -285,7 +315,9 @@ describe('SchedulingProfiler', () => {
       '--render-stop',
       '--commit-start-512',
       '--layout-effects-start-512',
-      '--schedule-state-update-1-Example-\n    in Example (at **)',
+      toggleComponentStacks(
+        '--schedule-state-update-1-Example-\n    in Example (at **)',
+      ),
       '--layout-effects-stop',
       '--render-start-1',
       '--render-stop',
@@ -319,7 +351,9 @@ describe('SchedulingProfiler', () => {
       '--render-stop',
       '--commit-start-512',
       '--layout-effects-start-512',
-      '--schedule-forced-update-1-Example-\n    in Example (at **)',
+      toggleComponentStacks(
+        '--schedule-forced-update-1-Example-\n    in Example (at **)',
+      ),
       '--layout-effects-stop',
       '--render-start-1',
       '--render-stop',
@@ -351,8 +385,18 @@ describe('SchedulingProfiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    expect(marks.map(normalizeCodeLocInfo)).toContain(
-      '--schedule-state-update-1024-Example-\n    in Example (at **)',
+    gate(({old}) =>
+      old
+        ? expect(marks.map(normalizeCodeLocInfo)).toContain(
+            toggleComponentStacks(
+              '--schedule-state-update-1024-Example-\n    in Example (at **)',
+            ),
+          )
+        : expect(marks.map(normalizeCodeLocInfo)).toContain(
+            toggleComponentStacks(
+              '--schedule-state-update-512-Example-\n    in Example (at **)',
+            ),
+          ),
     );
   });
 
@@ -378,8 +422,18 @@ describe('SchedulingProfiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    expect(marks.map(normalizeCodeLocInfo)).toContain(
-      '--schedule-forced-update-1024-Example-\n    in Example (at **)',
+    gate(({old}) =>
+      old
+        ? expect(marks.map(normalizeCodeLocInfo)).toContain(
+            toggleComponentStacks(
+              '--schedule-forced-update-1024-Example-\n    in Example (at **)',
+            ),
+          )
+        : expect(marks.map(normalizeCodeLocInfo)).toContain(
+            toggleComponentStacks(
+              '--schedule-forced-update-512-Example-\n    in Example (at **)',
+            ),
+          ),
     );
   });
 
@@ -406,7 +460,9 @@ describe('SchedulingProfiler', () => {
       '--render-stop',
       '--commit-start-512',
       '--layout-effects-start-512',
-      '--schedule-state-update-1-Example-\n    in Example (at **)',
+      toggleComponentStacks(
+        '--schedule-state-update-1-Example-\n    in Example (at **)',
+      ),
       '--layout-effects-stop',
       '--render-start-1',
       '--render-stop',
@@ -429,6 +485,7 @@ describe('SchedulingProfiler', () => {
     ReactTestRenderer.act(() => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
+
     expect(marks.map(normalizeCodeLocInfo)).toEqual([
       '--schedule-render-512',
       '--render-start-512',
@@ -438,7 +495,9 @@ describe('SchedulingProfiler', () => {
       '--layout-effects-stop',
       '--commit-stop',
       '--passive-effects-start-512',
-      '--schedule-state-update-1024-Example-\n    in Example (at **)',
+      toggleComponentStacks(
+        '--schedule-state-update-1024-Example-\n    in Example (at **)',
+      ),
       '--passive-effects-stop',
       '--render-start-1024',
       '--render-stop',
@@ -461,8 +520,18 @@ describe('SchedulingProfiler', () => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 
-    expect(marks.map(normalizeCodeLocInfo)).toContain(
-      '--schedule-state-update-1024-Example-\n    in Example (at **)',
+    gate(({old}) =>
+      old
+        ? expect(marks.map(normalizeCodeLocInfo)).toContain(
+            toggleComponentStacks(
+              '--schedule-state-update-1024-Example-\n    in Example (at **)',
+            ),
+          )
+        : expect(marks.map(normalizeCodeLocInfo)).toContain(
+            toggleComponentStacks(
+              '--schedule-state-update-512-Example-\n    in Example (at **)',
+            ),
+          ),
     );
   });
 });
