@@ -23,7 +23,7 @@ export {
   createBlockingRoot as unstable_createBlockingRoot,
   unstable_flushControlled,
   unstable_scheduleHydration,
-  // DO NOT USE: Temporarily exposing these to migrate off of Scheduler.runWithPriority.
+  // DO NOT USE: Temporarily exposing this to migrate off of Scheduler.runWithPriority.
   unstable_runWithPriority,
   // Disabled behind disableUnstableRenderSubtreeIntoContainer
   unstable_renderSubtreeIntoContainer,

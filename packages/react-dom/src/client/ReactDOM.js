@@ -211,8 +211,8 @@ export {
   unstable_createPortal,
   // enableCreateEventHandleAPI
   createEventHandle as unstable_createEventHandle,
-  // TODO: Remove these once callers migrate to alternatives.
-  // These should only be used by React internals.
+  // TODO: Remove this once callers migrate to alternatives.
+  // This should only be used by React internals.
   runWithPriority as unstable_runWithPriority,
 };
 
