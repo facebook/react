@@ -7,11 +7,7 @@
  * @flow
  */
 
-import type {
-  Fiber,
-  ReactPriorityLevel,
-  SuspenseHydrationCallbacks,
-} from './ReactInternalTypes';
+import type {Fiber, SuspenseHydrationCallbacks} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {
@@ -23,7 +19,7 @@ import type {
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import {FundamentalComponent} from './ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {Lane} from './ReactFiberLane';
+import type {Lane, LanePriority} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
 import {
@@ -86,8 +82,6 @@ import {
   higherPriorityLane,
   getCurrentUpdateLanePriority,
   setCurrentUpdateLanePriority,
-  schedulerPriorityToLanePriority,
-  lanePriorityToSchedulerPriority,
 } from './ReactFiberLane';
 import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
@@ -438,19 +432,17 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
   markRetryLaneIfNotHydrated(fiber, lane);
 }
 
-export function runWithPriority<T>(priority: ReactPriorityLevel, fn: () => T) {
+export function runWithPriority<T>(priority: LanePriority, fn: () => T) {
   const previousPriority = getCurrentUpdateLanePriority();
   try {
-    setCurrentUpdateLanePriority(schedulerPriorityToLanePriority(priority));
+    setCurrentUpdateLanePriority(priority);
     return fn();
   } finally {
     setCurrentUpdateLanePriority(previousPriority);
   }
 }
 
-export function getCurrentUpdatePriority(): ReactPriorityLevel {
-  return lanePriorityToSchedulerPriority(getCurrentUpdateLanePriority());
-}
+export {getCurrentUpdateLanePriority};
 
 export {findHostInstance};
 

@@ -56,6 +56,13 @@ import {
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
 import * as Scheduler from 'scheduler';
+
+import {
+  InputContinuousLanePriority,
+  getCurrentUpdateLanePriority,
+  setCurrentUpdateLanePriority,
+} from 'react-reconciler/src/ReactFiberLane';
+
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
   unstable_runWithPriority: runWithPriority,
@@ -101,9 +108,15 @@ const eventResponderContext: ReactDOMResponderContext = {
         break;
       }
       case UserBlockingEvent: {
-        runWithPriority(UserBlockingPriority, () =>
-          executeUserEventHandler(eventListener, eventValue),
-        );
+        const previousPriority = getCurrentUpdateLanePriority();
+        try {
+          setCurrentUpdateLanePriority(InputContinuousLanePriority);
+          runWithPriority(UserBlockingPriority, () =>
+            executeUserEventHandler(eventListener, eventValue),
+          );
+        } finally {
+          setCurrentUpdateLanePriority(previousPriority);
+        }
         break;
       }
       case ContinuousEvent: {
