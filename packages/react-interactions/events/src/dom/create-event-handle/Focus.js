@@ -10,25 +10,27 @@
 import * as React from 'react';
 import useEvent from './useEvent';
 
-const {useCallback, useEffect, useRef} = React;
+const {useCallback, useEffect, useLayoutEffect, useRef} = React;
 
-type UseFocusOptions = {|
-  disabled?: boolean,
-  onBlur?: (SyntheticEvent<EventTarget>) => void,
-  onFocus?: (SyntheticEvent<EventTarget>) => void,
-  onFocusChange?: boolean => void,
-  onFocusVisibleChange?: boolean => void,
-|};
+type FocusEvent = SyntheticEvent<EventTarget>;
 
-type UseFocusWithinOptions = {|
+type UseFocusOptions = {
   disabled?: boolean,
-  onAfterBlurWithin?: (SyntheticEvent<EventTarget>) => void,
-  onBeforeBlurWithin?: (SyntheticEvent<EventTarget>) => void,
-  onBlurWithin?: (SyntheticEvent<EventTarget>) => void,
-  onFocusWithin?: (SyntheticEvent<EventTarget>) => void,
+  onBlur?: ?(FocusEvent) => void,
+  onFocus?: ?(FocusEvent) => void,
+  onFocusChange?: ?(boolean) => void,
+  onFocusVisibleChange?: ?(boolean) => void,
+};
+
+type UseFocusWithinOptions = {
+  disabled?: boolean,
+  onAfterBlurWithin?: FocusEvent => void,
+  onBeforeBlurWithin?: FocusEvent => void,
+  onBlurWithin?: FocusEvent => void,
+  onFocusWithin?: FocusEvent => void,
   onFocusWithinChange?: boolean => void,
   onFocusWithinVisibleChange?: boolean => void,
-|};
+};
 
 const isMac =
   typeof window !== 'undefined' && window.navigator != null
@@ -66,12 +68,22 @@ const hasPointerEvents =
 
 const globalFocusVisibleEvents = hasPointerEvents
   ? ['keydown', 'pointermove', 'pointerdown', 'pointerup']
-  : ['keydown', 'mousedown', 'touchmove', 'touchstart', 'touchend'];
+  : [
+      'keydown',
+      'mousedown',
+      'mousemove',
+      'mouseup',
+      'touchmove',
+      'touchstart',
+      'touchend',
+    ];
+
+const passiveObject = {passive: true};
+const passiveObjectWithPriority = {passive: true, priority: 0};
 
 // Global state for tracking focus visible and emulation of mouse
 let isGlobalFocusVisible = true;
 let hasTrackedGlobalFocusVisible = false;
-let isEmulatingMouseEvents = false;
 
 function trackGlobalFocusVisible() {
   globalFocusVisibleEvents.forEach(type => {
@@ -83,130 +95,76 @@ function trackGlobalFocusVisible() {
   });
 }
 
+function isValidKey(nativeEvent: KeyboardEvent): boolean {
+  const {metaKey, altKey, ctrlKey} = nativeEvent;
+  return !(metaKey || (!isMac && altKey) || ctrlKey);
+}
+
+function isTextInput(nativeEvent: KeyboardEvent): boolean {
+  const {key, target} = nativeEvent;
+  if (key === 'Tab' || key === 'Esacpe') {
+    return false;
+  }
+  const {isContentEditable, tagName} = (target: any);
+  return tagName === 'INPUT' || tagName === 'TEXTAREA' || isContentEditable;
+}
+
 function handleGlobalFocusVisibleEvent(
   nativeEvent: MouseEvent | TouchEvent | KeyboardEvent,
 ): void {
-  const {type} = nativeEvent;
-
-  switch (type) {
-    case 'pointermove':
-    case 'pointerdown':
-    case 'pointerup': {
-      isGlobalFocusVisible = false;
-      break;
+  if (nativeEvent.type === 'keydown') {
+    if (isValidKey(((nativeEvent: any): KeyboardEvent))) {
+      isGlobalFocusVisible = true;
     }
-
-    case 'keydown': {
-      const {metaKey, altKey, ctrlKey} = nativeEvent;
-      const validKey = !(metaKey || (!isMac && altKey) || ctrlKey);
-
-      if (validKey) {
-        isGlobalFocusVisible = true;
-      }
-      break;
+  } else {
+    const nodeName = (nativeEvent.target: any).nodeName;
+    // Safari calls mousemove/pointermove when you tab out of the active
+    // Safari frame.
+    if (nodeName === 'HTML') {
+      return;
     }
-
-    // fallbacks for no PointerEvent support
-    case 'touchmove':
-    case 'touchstart':
-    case 'touchend': {
-      isEmulatingMouseEvents = true;
-      isGlobalFocusVisible = false;
-      break;
-    }
-    case 'mousedown': {
-      if (!isEmulatingMouseEvents) {
-        isGlobalFocusVisible = false;
-      } else {
-        isEmulatingMouseEvents = false;
-      }
-      break;
-    }
-  }
-}
-
-const passiveObject = {passive: true};
-
-function handleFocusVisibleTargetEvent(
-  type: string,
-  focusTarget: EventTarget,
-  callback: boolean => void,
-): void {
-  isGlobalFocusVisible = false;
-
-  // Focus should stop being visible if a pointer is used on the element
-  // after it was focused using a keyboard.
-  if (
-    focusTarget !== null &&
-    (type === 'mousedown' || type === 'touchstart' || type === 'pointerdown')
-  ) {
-    callback(false);
+    // Handle all the other mouse/touch/pointer events
+    isGlobalFocusVisible = false;
   }
 }
 
 function handleFocusVisibleTargetEvents(
   event: SyntheticEvent<EventTarget>,
-  focusTarget,
   callback,
 ): void {
-  const {type} = event;
-
-  switch (type) {
-    case 'pointermove':
-    case 'pointerdown':
-    case 'pointerup': {
-      handleFocusVisibleTargetEvent(type, focusTarget, callback);
-      break;
+  if (event.type === 'keydown') {
+    const {nativeEvent} = (event: any);
+    if (isValidKey(nativeEvent) && !isTextInput(nativeEvent)) {
+      callback(true);
     }
-
-    case 'keydown':
-    case 'keyup': {
-      const {metaKey, altKey, ctrlKey} = (event: any);
-      const validKey = !(metaKey || (!isMac && altKey) || ctrlKey);
-
-      if (validKey) {
-        if (focusTarget !== null) {
-          callback(true);
-        }
-      }
-      break;
-    }
-
-    // fallbacks for no PointerEvent support
-    case 'touchmove':
-    case 'touchstart':
-    case 'touchend': {
-      handleFocusVisibleTargetEvent(type, focusTarget, callback);
-      break;
-    }
-    case 'mousedown': {
-      if (!isEmulatingMouseEvents) {
-        handleFocusVisibleTargetEvent(type, focusTarget, callback);
-      }
-      break;
-    }
+  } else {
+    callback(false);
   }
 }
 
 function isRelatedTargetWithin(
-  focusWithinTarget: Node,
-  relatedTarget: null | Node,
+  focusWithinTarget: Object,
+  relatedTarget: null | EventTarget,
 ): boolean {
   if (relatedTarget == null) {
     return false;
   }
-  // To support experimental scopes, which can be the target:
-  const containsNode = (focusWithinTarget: any).containsNode;
-  if (typeof containsNode === 'function') {
-    return containsNode(relatedTarget);
-  }
-  return focusWithinTarget.contains(relatedTarget);
+  // As the focusWithinTarget can be a Scope Instance (experimental API),
+  // we need to use the containsNode() method. Otherwise, focusWithinTarget
+  // must be a Node, which means we can use the contains() method.
+  return typeof focusWithinTarget.containsNode === 'function'
+    ? focusWithinTarget.containsNode(relatedTarget)
+    : focusWithinTarget.contains(relatedTarget);
 }
 
-function setFocusVisibleListeners(focusVisibleHandles, focusTarget, callback) {
+function setFocusVisibleListeners(
+  focusVisibleHandles,
+  focusTarget: EventTarget,
+  callback,
+) {
   focusVisibleHandles.forEach(focusVisibleHandle => {
     focusVisibleHandle.setListener(focusTarget, event =>
-      handleFocusVisibleTargetEvents(event, focusTarget, callback),
+      handleFocusVisibleTargetEvents(event, callback),
     );
   });
 }
@@ -215,13 +173,11 @@ function useFocusVisibleInputHandles() {
   return [
     useEvent('mousedown', passiveObject),
     useEvent(hasPointerEvents ? 'pointerdown' : 'touchstart', passiveObject),
-    useEvent(hasPointerEvents ? 'pointermove' : 'touchmove', passiveObject),
-    useEvent(hasPointerEvents ? 'pointerup' : 'touchend', passiveObject),
     useEvent('keydown', passiveObject),
   ];
 }
 
-function useFocusLifecycles(stateRef) {
+function useFocusLifecycles() {
   useEffect(() => {
     if (!hasTrackedGlobalFocusVisible) {
       hasTrackedGlobalFocusVisible = true;
@@ -241,16 +197,18 @@ export function useFocus(
   }: UseFocusOptions,
 ): void {
   // Setup controlled state for this useFocus hook
-  const stateRef = useRef({isFocused: false, isFocusVisible: false});
-  const focusHandle = useEvent('focusin', passiveObject);
-  const blurHandle = useEvent('focusout', passiveObject);
+  const stateRef = useRef<null | {isFocused: boolean, isFocusVisible: boolean}>(
+    {isFocused: false, isFocusVisible: false},
+  );
+  const focusHandle = useEvent('focusin', passiveObjectWithPriority);
+  const blurHandle = useEvent('focusout', passiveObjectWithPriority);
   const focusVisibleHandles = useFocusVisibleInputHandles();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const focusTarget = focusTargetRef.current;
     const state = stateRef.current;
 
-    if (focusTarget !== null && state !== null) {
+    if (focusTarget !== null && state !== null && focusTarget.nodeType === 1) {
       // Handle focus visible
       setFocusVisibleListeners(
         focusVisibleHandles,
@@ -266,12 +224,10 @@ export function useFocus(
       );
 
       // Handle focus
-      focusHandle.setListener(focusTarget, event => {
-        if (disabled) {
+      focusHandle.setListener(focusTarget, (event: FocusEvent) => {
+        if (disabled === true) {
           return;
         }
-        // Limit focus events to the direct child of the event component.
-        // Browser focus is not expected to bubble.
         if (!state.isFocused && focusTarget === event.target) {
           state.isFocused = true;
           state.isFocusVisible = isGlobalFocusVisible;
@@ -284,13 +240,12 @@ export function useFocus(
           if (state.isFocusVisible && onFocusVisibleChange) {
             onFocusVisibleChange(true);
           }
-          isEmulatingMouseEvents = false;
         }
       });
 
       // Handle blur
-      blurHandle.setListener(focusTarget, event => {
-        if (disabled) {
+      blurHandle.setListener(focusTarget, (event: FocusEvent) => {
+        if (disabled === true) {
           return;
         }
         if (state.isFocused) {
@@ -306,19 +261,28 @@ export function useFocus(
             onFocusVisibleChange(false);
           }
         }
-        isEmulatingMouseEvents = false;
       });
     }
-  }, [disabled, onBlur, onFocus, onFocusChange, onFocusVisibleChange]);
+  }, [
+    blurHandle,
+    disabled,
+    focusHandle,
+    focusTargetRef,
+    focusVisibleHandles,
+    onBlur,
+    onFocus,
+    onFocusChange,
+    onFocusVisibleChange,
+  ]);
 
   // Mount/Unmount logic
-  useFocusLifecycles(stateRef);
+  useFocusLifecycles();
 }
 
-export function useFocusWithin(
+export function useFocusWithin<T>(
   focusWithinTargetRef:
-    | {current: null | Node}
-    | ((focusWithinTarget: null | Node) => void),
+    | {current: null | T}
+    | ((focusWithinTarget: null | T) => void),
   {
     disabled,
     onAfterBlurWithin,
@@ -328,19 +292,19 @@ export function useFocusWithin(
     onFocusWithinChange,
     onFocusWithinVisibleChange,
   }: UseFocusWithinOptions,
-): (focusWithinTarget: null | Node) => void {
+): (focusWithinTarget: null | T) => void {
   // Setup controlled state for this useFocus hook
   const stateRef = useRef<null | {isFocused: boolean, isFocusVisible: boolean}>(
     {isFocused: false, isFocusVisible: false},
   );
-  const focusHandle = useEvent('focusin', passiveObject);
-  const blurHandle = useEvent('focusout', passiveObject);
+  const focusHandle = useEvent('focusin', passiveObjectWithPriority);
+  const blurHandle = useEvent('focusout', passiveObjectWithPriority);
   const afterBlurHandle = useEvent('afterblur', passiveObject);
   const beforeBlurHandle = useEvent('beforeblur', passiveObject);
   const focusVisibleHandles = useFocusVisibleInputHandles();
 
   const useFocusWithinRef = useCallback(
-    (focusWithinTarget: null | Node) => {
+    (focusWithinTarget: null | T) => {
       // Handle the incoming focusTargetRef. It can be either a function ref
       // or an object ref.
       if (typeof focusWithinTargetRef === 'function') {
@@ -354,6 +318,7 @@ export function useFocusWithin(
         // Handle focus visible
         setFocusVisibleListeners(
           focusVisibleHandles,
+          // $FlowFixMe focusWithinTarget is not null here
           focusWithinTarget,
           isFocusVisible => {
             if (state.isFocused && state.isFocusVisible !== isFocusVisible) {
@@ -366,7 +331,8 @@ export function useFocusWithin(
         );
 
         // Handle focus
-        focusHandle.setListener(focusWithinTarget, event => {
+        // $FlowFixMe focusWithinTarget is not null here
+        focusHandle.setListener(focusWithinTarget, (event: FocusEvent) => {
           if (disabled) {
             return;
           }
@@ -392,15 +358,15 @@ export function useFocusWithin(
         });
 
         // Handle blur
-        blurHandle.setListener(focusWithinTarget, event => {
+        // $FlowFixMe focusWithinTarget is not null here
+        blurHandle.setListener(focusWithinTarget, (event: FocusEvent) => {
           if (disabled) {
             return;
           }
-          const {relatedTarget} = (event: any);
+          const {relatedTarget} = (event.nativeEvent: any);
 
           if (
             state.isFocused &&
-            // $FlowFixMe: focusWithinTarget is never null
             !isRelatedTargetWithin(focusWithinTarget, relatedTarget)
           ) {
             state.isFocused = false;
@@ -418,7 +384,8 @@ export function useFocusWithin(
 
         // Handle before blur. This is a special
         // React provided event.
-        beforeBlurHandle.setListener(focusWithinTarget, event => {
+        // $FlowFixMe focusWithinTarget is not null here
+        beforeBlurHandle.setListener(focusWithinTarget, (event: FocusEvent) => {
           if (disabled) {
             return;
           }
@@ -426,13 +393,16 @@ export function useFocusWithin(
             onBeforeBlurWithin(event);
             // Add an "afterblur" listener on document. This is a special
             // React provided event.
-            afterBlurHandle.setListener(document, afterBlurEvent => {
-              if (onAfterBlurWithin) {
-                onAfterBlurWithin(afterBlurEvent);
-              }
-              // Clear listener on document
-              afterBlurHandle.setListener(document, null);
-            });
+            afterBlurHandle.setListener(
+              document,
+              (afterBlurEvent: FocusEvent) => {
+                if (onAfterBlurWithin) {
+                  onAfterBlurWithin(afterBlurEvent);
+                }
+                // Clear listener on document
+                afterBlurHandle.setListener(document, null);
+              },
+            );
           }
         });
       }
@@ -443,7 +413,6 @@ export function useFocusWithin(
       blurHandle,
       disabled,
       focusHandle,
-      focusVisibleHandles,
       focusWithinTargetRef,
       onAfterBlurWithin,
       onBeforeBlurWithin,

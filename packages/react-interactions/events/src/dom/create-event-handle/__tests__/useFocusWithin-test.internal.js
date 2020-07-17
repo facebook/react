@@ -297,6 +297,33 @@ describe.each(table)(`useFocus`, hasPointerEvents => {
     });
   });
 
+  // @gate experimental
+  it('should correctly handle focus visibility when typing into an input', () => {
+    const onFocusWithinVisibleChange = jest.fn();
+    const ref = React.createRef();
+    const inputRef = React.createRef();
+    const Component = () => {
+      const focusWithinRef = useFocusWithin(ref, {
+        onFocusWithinVisibleChange,
+      });
+      return (
+        <div ref={focusWithinRef}>
+          <input ref={inputRef} type="text" />
+        </div>
+      );
+    };
+    act(() => {
+      ReactDOM.render(<Component />, container);
+    });
+
+    const target = createEventTarget(inputRef.current);
+    // focus the target
+    target.pointerdown();
+    target.focus();
+    target.keydown({key: 'a'});
+    expect(onFocusWithinVisibleChange).toHaveBeenCalledTimes(0);
+  });
+
   describe('onBeforeBlurWithin', () => {
     let onBeforeBlurWithin, onAfterBlurWithin, ref, innerRef, innerRef2;
 
