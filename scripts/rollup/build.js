@@ -346,7 +346,7 @@ function getPlugins(
     bundleType === UMD_DEV ||
     bundleType === UMD_PROD ||
     bundleType === UMD_PROFILING;
-  const isFBBundle =
+  const isFBWWWBundle =
     bundleType === FB_WWW_DEV ||
     bundleType === FB_WWW_PROD ||
     bundleType === FB_WWW_PROFILING;
@@ -357,7 +357,7 @@ function getPlugins(
     bundleType === RN_FB_DEV ||
     bundleType === RN_FB_PROD ||
     bundleType === RN_FB_PROFILING;
-  const shouldStayReadable = isFBBundle || isRNBundle || forcePrettyOutput;
+  const shouldStayReadable = isFBWWWBundle || isRNBundle || forcePrettyOutput;
   return [
     // Extract error codes from invariant() messages into a file.
     shouldExtractErrors && {
@@ -371,7 +371,7 @@ function getPlugins(
     // Ensure we don't try to bundle any fbjs modules.
     forbidFBJSImports(),
     // Replace any externals with their valid internal FB mappings
-    isFBBundle && replace(Bundles.fbBundleExternalsMap),
+    isFBWWWBundle && replace(Bundles.fbBundleExternalsMap),
     // Use Node resolution mechanism.
     resolve({
       skip: externals,
@@ -539,14 +539,19 @@ async function createBundle(bundle, bundleType) {
   const format = getFormat(bundleType);
   const packageName = Packaging.getPackageName(bundle.entry);
 
-  const isFBBundle =
+  const isFBWWWBundle =
     bundleType === FB_WWW_DEV ||
     bundleType === FB_WWW_PROD ||
     bundleType === FB_WWW_PROFILING;
 
+  const isFBRNBundle =
+    bundleType === RN_FB_DEV ||
+    bundleType === RN_FB_PROD ||
+    bundleType === RN_FB_PROFILING;
+
   let resolvedEntry = resolveEntryFork(
     require.resolve(bundle.entry),
-    isFBBundle
+    isFBWWWBundle || isFBRNBundle
   );
 
   const shouldBundleDependencies =
@@ -559,7 +564,7 @@ async function createBundle(bundle, bundleType) {
     const deps = Modules.getDependencies(bundleType, bundle.entry);
     externals = externals.concat(deps);
   }
-  if (isFBBundle) {
+  if (isFBWWWBundle) {
     // Add any mapped fb bundle externals
     externals = externals.concat(Object.values(Bundles.fbBundleExternalsMap));
   }
