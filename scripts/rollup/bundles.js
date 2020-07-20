@@ -349,7 +349,9 @@ const bundles = [
 
   /******* React Native *******/
   {
-    bundleTypes: [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
+    bundleTypes: __EXPERIMENTAL__
+      ? []
+      : [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
     moduleType: RENDERER,
     entry: 'react-native-renderer',
     global: 'ReactNativeRenderer',
@@ -377,7 +379,9 @@ const bundles = [
 
   /******* React Native Fabric *******/
   {
-    bundleTypes: [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
+    bundleTypes: __EXPERIMENTAL__
+      ? []
+      : [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
     moduleType: RENDERER,
     entry: 'react-native-renderer/fabric',
     global: 'ReactFabric',
