@@ -739,5 +739,19 @@ describe('Scheduler', () => {
       // Only A should flush
       expect(Scheduler).toFlushAndYield(['A']);
     });
+
+    it('gracefully handles scheduled tasks that are not a function', () => {
+      scheduleCallback(ImmediatePriority, null);
+      expect(Scheduler).toFlushWithoutYielding();
+
+      scheduleCallback(ImmediatePriority, undefined);
+      expect(Scheduler).toFlushWithoutYielding();
+
+      scheduleCallback(ImmediatePriority, {});
+      expect(Scheduler).toFlushWithoutYielding();
+
+      scheduleCallback(ImmediatePriority, 42);
+      expect(Scheduler).toFlushWithoutYielding();
+    });
   });
 });
