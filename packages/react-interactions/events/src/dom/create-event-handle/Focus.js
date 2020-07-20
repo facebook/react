@@ -118,7 +118,7 @@ function handleGlobalFocusVisibleEvent(
     }
   } else {
     const nodeName = (nativeEvent.target: any).nodeName;
-    // Safari calls mousemove/pointermove when you tab out of the active
+    // Safari calls mousemove/pointermove events when you tab out of the active
     // Safari frame.
     if (nodeName === 'HTML') {
       return;
