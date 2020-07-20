@@ -349,9 +349,7 @@ const bundles = [
 
   /******* React Native *******/
   {
-    bundleTypes: __EXPERIMENTAL__
-      ? [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING]
-      : [],
+    bundleTypes: [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
     moduleType: RENDERER,
     entry: 'react-native-renderer',
     global: 'ReactNativeRenderer',
@@ -379,9 +377,7 @@ const bundles = [
 
   /******* React Native Fabric *******/
   {
-    bundleTypes: __EXPERIMENTAL__
-      ? [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING]
-      : [],
+    bundleTypes: [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
     moduleType: RENDERER,
     entry: 'react-native-renderer/fabric',
     global: 'ReactFabric',
@@ -416,6 +412,8 @@ const bundles = [
       UMD_DEV,
       UMD_PROD,
       RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
     ],
     moduleType: RENDERER,
     entry: 'react-test-renderer',
