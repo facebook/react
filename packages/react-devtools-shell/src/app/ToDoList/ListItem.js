@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {memo, useCallback} from 'react';
+import * as React from 'react';
+import {memo, useCallback} from 'react';
 import styles from './ListItem.css';
 
 import type {Item} from './List';
@@ -19,19 +20,13 @@ type Props = {|
 |};
 
 function ListItem({item, removeItem, toggleItem}: Props) {
-  const handleDelete = useCallback(
-    () => {
-      removeItem(item);
-    },
-    [item, removeItem],
-  );
+  const handleDelete = useCallback(() => {
+    removeItem(item);
+  }, [item, removeItem]);
 
-  const handleToggle = useCallback(
-    () => {
-      toggleItem(item);
-    },
-    [item, toggleItem],
-  );
+  const handleToggle = useCallback(() => {
+    toggleItem(item);
+  }, [item, toggleItem]);
 
   return (
     <li className={styles.ListItem}>

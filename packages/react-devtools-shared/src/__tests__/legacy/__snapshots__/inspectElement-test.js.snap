@@ -126,7 +126,14 @@ Object {
   "context": {},
   "hooks": null,
   "props": {
+    "anonymous_fn": {},
     "array_buffer": {},
+    "array_of_arrays": [
+      {}
+    ],
+    "big_int": {},
+    "bound_fn": {},
+    "data_view": {},
     "date": {},
     "fn": {},
     "html_element": {},
@@ -143,7 +150,11 @@ Object {
       "0": {},
       "1": {}
     },
+    "object_of_objects": {
+      "inner": {}
+    },
     "react_element": {},
+    "regexp": {},
     "set": {
       "0": "abc",
       "1": 123
@@ -177,6 +188,47 @@ Object {
     "data": {
       "_number": 42,
       "number": 42
+    }
+  },
+  "state": null
+},
+}
+`;
+
+exports[`InspectedElementContext should support objects with no prototype: 1: Initial inspection 1`] = `
+Object {
+  "id": 2,
+  "type": "full-data",
+  "value": {
+  "id": 2,
+  "owners": null,
+  "context": {},
+  "hooks": null,
+  "props": {
+    "object": {
+      "string": "abc",
+      "number": 123,
+      "boolean": true
+    }
+  },
+  "state": null
+},
+}
+`;
+
+exports[`InspectedElementContext should support objects with overridden hasOwnProperty: 1: Initial inspection 1`] = `
+Object {
+  "id": 2,
+  "type": "full-data",
+  "value": {
+  "id": 2,
+  "owners": null,
+  "context": {},
+  "hooks": null,
+  "props": {
+    "object": {
+      "name": "blah",
+      "hasOwnProperty": true
     }
   },
   "state": null

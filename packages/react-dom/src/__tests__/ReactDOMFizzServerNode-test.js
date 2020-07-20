@@ -18,20 +18,23 @@ describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOMFizzServer = require('react-dom/unstable-fizz');
+    if (__EXPERIMENTAL__) {
+      ReactDOMFizzServer = require('react-dom/unstable-fizz');
+    }
     Stream = require('stream');
   });
 
   function getTestWritable() {
-    let writable = new Stream.PassThrough();
+    const writable = new Stream.PassThrough();
     writable.setEncoding('utf8');
     writable.result = '';
     writable.on('data', chunk => (writable.result += chunk));
     return writable;
   }
 
+  // @gate experimental
   it('should call pipeToNodeWritable', () => {
-    let writable = getTestWritable();
+    const writable = getTestWritable();
     ReactDOMFizzServer.pipeToNodeWritable(<div>hello world</div>, writable);
     jest.runAllTimers();
     expect(writable.result).toBe('<div>hello world</div>');

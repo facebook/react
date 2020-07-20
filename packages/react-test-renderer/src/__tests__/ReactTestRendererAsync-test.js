@@ -17,6 +17,7 @@ let Scheduler;
 describe('ReactTestRendererAsync', () => {
   beforeEach(() => {
     jest.resetModules();
+
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
@@ -160,7 +161,7 @@ describe('ReactTestRendererAsync', () => {
 
       expect(() =>
         expect(Scheduler).toFlushAndYieldThrough(['foo', 'baz']),
-      ).toThrow('Expected value to equal:');
+      ).toThrow('// deep equality');
     });
 
     it('toFlushAndYield', () => {
@@ -181,7 +182,7 @@ describe('ReactTestRendererAsync', () => {
       );
 
       expect(() => expect(Scheduler).toFlushWithoutYielding()).toThrowError(
-        'Expected value to equal:',
+        '// deep equality',
       );
 
       renderer.update(
@@ -193,7 +194,7 @@ describe('ReactTestRendererAsync', () => {
       );
 
       expect(() => expect(Scheduler).toFlushAndYield(['foo', 'baz'])).toThrow(
-        'Expected value to equal:',
+        '// deep equality',
       );
     });
 
@@ -254,7 +255,7 @@ describe('ReactTestRendererAsync', () => {
 
     ReactTestRenderer.create(<App />);
     expect(() => expect(Scheduler).toHaveYielded(['A', 'B'])).toThrow(
-      'Expected value to equal:',
+      '// deep equality',
     );
   });
 

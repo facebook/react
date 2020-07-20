@@ -7,10 +7,11 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
+import type {Fiber} from './ReactInternalTypes';
+import type {Container, SuspenseInstance} from './ReactFiberHostConfig';
+import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {get as getInstance} from 'shared/ReactInstanceMap';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -22,20 +23,16 @@ import {
   HostPortal,
   HostText,
   FundamentalComponent,
-} from 'shared/ReactWorkTags';
-import {NoEffect, Placement, Hydrating} from 'shared/ReactSideEffectTags';
+  SuspenseComponent,
+} from './ReactWorkTags';
+import {NoEffect, Placement, Hydrating} from './ReactSideEffectTags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
-const MOUNTING = 1;
-const MOUNTED = 2;
-const UNMOUNTED = 3;
-
-type MountState = 1 | 2 | 3;
-
-function isFiberMountedImpl(fiber: Fiber): MountState {
+export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
   let node = fiber;
+  let nearestMounted = fiber;
   if (!fiber.alternate) {
     // If there is no alternate, this might be a new tree that isn't inserted
     // yet. If it is, then it will have a pending insertion effect on it.
@@ -43,7 +40,10 @@ function isFiberMountedImpl(fiber: Fiber): MountState {
     do {
       node = nextNode;
       if ((node.effectTag & (Placement | Hydrating)) !== NoEffect) {
-        return MOUNTING;
+        // This is an insertion or in-progress hydration. The nearest possible
+        // mounted fiber is the parent but we need to continue to figure out
+        // if that one is still mounted.
+        nearestMounted = node.return;
       }
       nextNode = node.return;
     } while (nextNode);
@@ -55,15 +55,39 @@ function isFiberMountedImpl(fiber: Fiber): MountState {
   if (node.tag === HostRoot) {
     // TODO: Check if this was a nested HostRoot when used with
     // renderContainerIntoSubtree.
-    return MOUNTED;
+    return nearestMounted;
   }
   // If we didn't hit the root, that means that we're in an disconnected tree
   // that has been unmounted.
-  return UNMOUNTED;
+  return null;
+}
+
+export function getSuspenseInstanceFromFiber(
+  fiber: Fiber,
+): null | SuspenseInstance {
+  if (fiber.tag === SuspenseComponent) {
+    let suspenseState: SuspenseState | null = fiber.memoizedState;
+    if (suspenseState === null) {
+      const current = fiber.alternate;
+      if (current !== null) {
+        suspenseState = current.memoizedState;
+      }
+    }
+    if (suspenseState !== null) {
+      return suspenseState.dehydrated;
+    }
+  }
+  return null;
+}
+
+export function getContainerFromFiber(fiber: Fiber): null | Container {
+  return fiber.tag === HostRoot
+    ? (fiber.stateNode.containerInfo: Container)
+    : null;
 }
 
 export function isFiberMounted(fiber: Fiber): boolean {
-  return isFiberMountedImpl(fiber) === MOUNTED;
+  return getNearestMountedFiber(fiber) === fiber;
 }
 
 export function isMounted(component: React$Component<any, any>): boolean {
@@ -72,15 +96,16 @@ export function isMounted(component: React$Component<any, any>): boolean {
     if (owner !== null && owner.tag === ClassComponent) {
       const ownerFiber: Fiber = owner;
       const instance = ownerFiber.stateNode;
-      warningWithoutStack(
-        instance._warnedAboutRefsInRender,
-        '%s is accessing isMounted inside its render() function. ' +
-          'render() should be a pure function of props and state. It should ' +
-          'never access something that requires stale data from the previous ' +
-          'render, such as refs. Move this logic to componentDidMount and ' +
-          'componentDidUpdate instead.',
-        getComponentName(ownerFiber.type) || 'A component',
-      );
+      if (!instance._warnedAboutRefsInRender) {
+        console.error(
+          '%s is accessing isMounted inside its render() function. ' +
+            'render() should be a pure function of props and state. It should ' +
+            'never access something that requires stale data from the previous ' +
+            'render, such as refs. Move this logic to componentDidMount and ' +
+            'componentDidUpdate instead.',
+          getComponentName(ownerFiber.type) || 'A component',
+        );
+      }
       instance._warnedAboutRefsInRender = true;
     }
   }
@@ -89,26 +114,26 @@ export function isMounted(component: React$Component<any, any>): boolean {
   if (!fiber) {
     return false;
   }
-  return isFiberMountedImpl(fiber) === MOUNTED;
+  return getNearestMountedFiber(fiber) === fiber;
 }
 
 function assertIsMounted(fiber) {
   invariant(
-    isFiberMountedImpl(fiber) === MOUNTED,
+    getNearestMountedFiber(fiber) === fiber,
     'Unable to find node on an unmounted component.',
   );
 }
 
 export function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
-  let alternate = fiber.alternate;
+  const alternate = fiber.alternate;
   if (!alternate) {
     // If there is no alternate, then we only need to check if it is mounted.
-    const state = isFiberMountedImpl(fiber);
+    const nearestMounted = getNearestMountedFiber(fiber);
     invariant(
-      state !== UNMOUNTED,
+      nearestMounted !== null,
       'Unable to find node on an unmounted component.',
     );
-    if (state === MOUNTING) {
+    if (nearestMounted !== fiber) {
       return null;
     }
     return fiber;
@@ -119,12 +144,12 @@ export function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
   let a: Fiber = fiber;
   let b: Fiber = alternate;
   while (true) {
-    let parentA = a.return;
+    const parentA = a.return;
     if (parentA === null) {
       // We're at the root.
       break;
     }
-    let parentB = parentA.alternate;
+    const parentB = parentA.alternate;
     if (parentB === null) {
       // There is no alternate. This is an unusual case. Currently, it only
       // happens when a Suspense component is hidden. An extra fragment fiber
@@ -306,4 +331,28 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
   // Flow needs the return null here, but ESLint complains about it.
   // eslint-disable-next-line no-unreachable
   return null;
+}
+
+export function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
+  const memoizedState = fiber.memoizedState;
+  return (
+    fiber.tag === SuspenseComponent &&
+    memoizedState !== null &&
+    memoizedState.dehydrated === null
+  );
+}
+
+export function doesFiberContain(
+  parentFiber: Fiber,
+  childFiber: Fiber,
+): boolean {
+  let node = childFiber;
+  const parentFiberAlternate = parentFiber.alternate;
+  while (node !== null) {
+    if (node === parentFiber || node === parentFiberAlternate) {
+      return true;
+    }
+    node = node.return;
+  }
+  return false;
 }

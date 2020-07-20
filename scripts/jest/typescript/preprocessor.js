@@ -10,29 +10,46 @@ const tsOptions = {
 };
 
 function formatErrorMessage(error) {
-  return (
-    error.file.filename +
-    '(' +
-    error.file.getLineAndCharacterOfPosition(error.start).line +
-    '): ' +
-    error.messageText
-  );
+  if (error.file) {
+    const message = ts.flattenDiagnosticMessageText(error.messageText, '\n');
+    return (
+      error.file.fileName +
+      '(' +
+      error.file.getLineAndCharacterOfPosition(error.start).line +
+      '): ' +
+      message
+    );
+  } else {
+    return ts.flattenDiagnosticMessageText(error.messageText, '\n');
+  }
 }
 
 function compile(content, contentFilename) {
   let output = null;
   const compilerHost = {
+    fileExists(filename) {
+      return ts.sys.fileExists(filename);
+    },
+    getCanonicalFileName(filename) {
+      return filename;
+    },
+    getCurrentDirectory() {
+      return '';
+    },
+    getDefaultLibFileName: () => 'lib.d.ts',
+    getNewLine: () => ts.sys.newLine,
     getSourceFile(filename, languageVersion) {
       let source;
+      const libRegex = /lib\.(.+\.)?d\.ts$/;
       const jestRegex = /jest\.d\.ts/;
       const reactRegex = /(?:React|ReactDOM|PropTypes)(?:\.d)?\.ts$/;
 
       // `path.normalize` is used to turn forward slashes in
       // the file path into backslashes on Windows.
       filename = path.normalize(filename);
-      if (filename === 'lib.d.ts') {
+      if (filename.match(libRegex)) {
         source = fs
-          .readFileSync(require.resolve('typescript/lib/lib.d.ts'))
+          .readFileSync(require.resolve('typescript/lib/' + filename))
           .toString();
       } else if (filename.match(jestRegex)) {
         source = fs.readFileSync(path.join(__dirname, 'jest.d.ts')).toString();
@@ -55,27 +72,18 @@ function compile(content, contentFilename) {
       }
       return ts.createSourceFile(filename, source, 'ES5', '0');
     },
+    readFile(filename) {
+      return ts.sys.readFile(filename);
+    },
+    useCaseSensitiveFileNames() {
+      return ts.sys.useCaseSensitiveFileNames;
+    },
     writeFile(name, text, writeByteOrderMark) {
       if (output === null) {
         output = text;
       } else {
         throw new Error('Expected only one dependency.');
       }
-    },
-    getCanonicalFileName(filename) {
-      return filename;
-    },
-    getCurrentDirectory() {
-      return '';
-    },
-    getNewLine() {
-      return '\n';
-    },
-    fileExists(filename) {
-      return ts.sys.fileExists(filename);
-    },
-    useCaseSensitiveFileNames() {
-      return ts.sys.useCaseSensitiveFileNames;
     },
   };
   const program = ts.createProgram(

@@ -10,6 +10,7 @@
 import {createContext} from 'react';
 import Store from '../store';
 
+import type {ViewAttributeSource} from 'react-devtools-shared/src/devtools/views/DevTools';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
 export const BridgeContext = createContext<FrontendBridge>(
@@ -19,3 +20,14 @@ BridgeContext.displayName = 'BridgeContext';
 
 export const StoreContext = createContext<Store>(((null: any): Store));
 StoreContext.displayName = 'StoreContext';
+
+export type ContextMenuContextType = {|
+  isEnabledForInspectedElement: boolean,
+  viewAttributeSourceFunction: ViewAttributeSource | null,
+|};
+
+export const ContextMenuContext = createContext<ContextMenuContextType>({
+  isEnabledForInspectedElement: false,
+  viewAttributeSourceFunction: null,
+});
+ContextMenuContext.displayName = 'ContextMenuContext';

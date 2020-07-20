@@ -118,30 +118,38 @@ describe('forwardRef', () => {
 
     expect(() =>
       ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Failed prop type: The prop `required` is marked as required in ' +
         '`ForwardRef(NamedFunction)`, but its value is `undefined`.\n' +
-        '    in ForwardRef(NamedFunction) (at **)',
+        '    in NamedFunction (at **)',
     );
   });
 
   it('should warn if not provided a callback during creation', () => {
-    expect(() => React.forwardRef(undefined)).toWarnDev(
+    expect(() =>
+      React.forwardRef(undefined),
+    ).toErrorDev(
       'forwardRef requires a render function but was given undefined.',
       {withoutStack: true},
     );
-    expect(() => React.forwardRef(null)).toWarnDev(
+    expect(() => React.forwardRef(null)).toErrorDev(
       'forwardRef requires a render function but was given null.',
-      {withoutStack: true},
+      {
+        withoutStack: true,
+      },
     );
-    expect(() => React.forwardRef('foo')).toWarnDev(
+    expect(() =>
+      React.forwardRef('foo'),
+    ).toErrorDev(
       'forwardRef requires a render function but was given string.',
       {withoutStack: true},
     );
   });
 
   it('should warn if no render function is provided', () => {
-    expect(React.forwardRef).toWarnDev(
+    expect(
+      React.forwardRef,
+    ).toErrorDev(
       'forwardRef requires a render function but was given undefined.',
       {withoutStack: true},
     );
@@ -158,12 +166,16 @@ describe('forwardRef', () => {
     }
     renderWithDefaultProps.defaultProps = {};
 
-    expect(() => React.forwardRef(renderWithPropTypes)).toWarnDev(
+    expect(() =>
+      React.forwardRef(renderWithPropTypes),
+    ).toErrorDev(
       'forwardRef render functions do not support propTypes or defaultProps. ' +
         'Did you accidentally pass a React component?',
       {withoutStack: true},
     );
-    expect(() => React.forwardRef(renderWithDefaultProps)).toWarnDev(
+    expect(() =>
+      React.forwardRef(renderWithDefaultProps),
+    ).toErrorDev(
       'forwardRef render functions do not support propTypes or defaultProps. ' +
         'Did you accidentally pass a React component?',
       {withoutStack: true},
@@ -179,7 +191,9 @@ describe('forwardRef', () => {
   it('should warn if the render function provided does not use the forwarded ref parameter', () => {
     const arityOfOne = props => <div {...props} />;
 
-    expect(() => React.forwardRef(arityOfOne)).toWarnDev(
+    expect(() =>
+      React.forwardRef(arityOfOne),
+    ).toErrorDev(
       'forwardRef render functions accept exactly two parameters: props and ref. ' +
         'Did you forget to use the ref parameter?',
       {withoutStack: true},
@@ -194,7 +208,9 @@ describe('forwardRef', () => {
   it('should warn if the render function provided expects to use more than two parameters', () => {
     const arityOfThree = (props, ref, x) => <div {...props} ref={ref} x={x} />;
 
-    expect(() => React.forwardRef(arityOfThree)).toWarnDev(
+    expect(() =>
+      React.forwardRef(arityOfThree),
+    ).toErrorDev(
       'forwardRef render functions accept exactly two parameters: props and ref. ' +
         'Any additional parameter will be undefined.',
       {withoutStack: true},
@@ -223,9 +239,36 @@ describe('forwardRef', () => {
 
     expect(() =>
       ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Failed prop type: The prop `required` is marked as required in ' +
         '`Foo`, but its value is `undefined`.\n' +
+        '    in Foo (at **)',
+    );
+  });
+
+  it('should honor a displayName in stacks if set on the inner function', () => {
+    const Component = props => <div {...props} />;
+
+    const inner = (props, ref) => <Component {...props} forwardedRef={ref} />;
+    inner.displayName = 'Foo';
+    const RefForwardingComponent = React.forwardRef(inner);
+
+    RefForwardingComponent.propTypes = {
+      optional: PropTypes.string,
+      required: PropTypes.string.isRequired,
+    };
+
+    RefForwardingComponent.defaultProps = {
+      optional: 'default',
+    };
+
+    const ref = React.createRef();
+
+    expect(() =>
+      ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />),
+    ).toErrorDev(
+      'Warning: Failed prop type: The prop `required` is marked as required in ' +
+        '`ForwardRef(Foo)`, but its value is `undefined`.\n' +
         '    in Foo (at **)',
     );
   });
@@ -244,11 +287,11 @@ describe('forwardRef', () => {
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(1);
+    expect(renderCount).toBe(__DEV__ ? 2 : 1);
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(2);
+    expect(renderCount).toBe(__DEV__ ? 4 : 2);
   });
 
   it('should bailout if forwardRef is wrapped in memo', () => {
@@ -267,13 +310,13 @@ describe('forwardRef', () => {
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(1);
+    expect(renderCount).toBe(__DEV__ ? 2 : 1);
 
     expect(ref.current.type).toBe('div');
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="foo" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(1);
+    expect(renderCount).toBe(__DEV__ ? 2 : 1);
 
     const differentRef = React.createRef();
 
@@ -281,14 +324,14 @@ describe('forwardRef', () => {
       <RefForwardingComponent ref={differentRef} optional="foo" />,
     );
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(2);
+    expect(renderCount).toBe(__DEV__ ? 4 : 2);
 
     expect(ref.current).toBe(null);
     expect(differentRef.current.type).toBe('div');
 
     ReactNoop.render(<RefForwardingComponent ref={ref} optional="bar" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(3);
+    expect(renderCount).toBe(__DEV__ ? 6 : 3);
   });
 
   it('should custom memo comparisons to compose', () => {
@@ -308,19 +351,19 @@ describe('forwardRef', () => {
 
     ReactNoop.render(<RefForwardingComponent ref={ref} a="0" b="0" c="1" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(1);
+    expect(renderCount).toBe(__DEV__ ? 2 : 1);
 
     expect(ref.current.type).toBe('div');
 
     // Changing either a or b rerenders
     ReactNoop.render(<RefForwardingComponent ref={ref} a="0" b="1" c="1" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(2);
+    expect(renderCount).toBe(__DEV__ ? 4 : 2);
 
     // Changing c doesn't rerender
     ReactNoop.render(<RefForwardingComponent ref={ref} a="0" b="1" c="2" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(2);
+    expect(renderCount).toBe(__DEV__ ? 4 : 2);
 
     const ComposedMemo = React.memo(
       RefForwardingComponent,
@@ -329,29 +372,29 @@ describe('forwardRef', () => {
 
     ReactNoop.render(<ComposedMemo ref={ref} a="0" b="0" c="0" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(3);
+    expect(renderCount).toBe(__DEV__ ? 6 : 3);
 
     // Changing just b no longer updates
     ReactNoop.render(<ComposedMemo ref={ref} a="0" b="1" c="0" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(3);
+    expect(renderCount).toBe(__DEV__ ? 6 : 3);
 
     // Changing just a and c updates
     ReactNoop.render(<ComposedMemo ref={ref} a="2" b="2" c="2" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(4);
+    expect(renderCount).toBe(__DEV__ ? 8 : 4);
 
     // Changing just c does not update
     ReactNoop.render(<ComposedMemo ref={ref} a="2" b="2" c="3" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(4);
+    expect(renderCount).toBe(__DEV__ ? 8 : 4);
 
     // Changing ref still rerenders
     const differentRef = React.createRef();
 
     ReactNoop.render(<ComposedMemo ref={differentRef} a="2" b="2" c="3" />);
     expect(Scheduler).toFlushWithoutYielding();
-    expect(renderCount).toBe(5);
+    expect(renderCount).toBe(__DEV__ ? 10 : 5);
 
     expect(ref.current).toBe(null);
     expect(differentRef.current.type).toBe('div');
@@ -364,7 +407,7 @@ describe('forwardRef', () => {
           return null;
         }),
       );
-    }).toWarnDev(
+    }).toErrorDev(
       [
         'Warning: forwardRef requires a render function but received a `memo` ' +
           'component. Instead of forwardRef(memo(...)), use ' +

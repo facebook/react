@@ -2,8 +2,8 @@
   "manifest_version": 2,
   "name": "React Developer Tools",
   "description": "Adds React debugging tools to the Chrome Developer Tools.",
-  "version": "4.0.6",
-  "version_name": "4.0.6",
+  "version": "4.8.2",
+  "version_name": "4.8.2",
 
   "minimum_chrome_version": "49",
 
@@ -31,7 +31,7 @@
   "web_accessible_resources": [
     "main.html",
     "panel.html",
-    "build/backend.js",
+    "build/react_devtools_backend.js",
     "build/renderer.js"
   ],
 

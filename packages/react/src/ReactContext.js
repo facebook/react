@@ -11,9 +11,6 @@ import {REACT_PROVIDER_TYPE, REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
 import type {ReactContext} from 'shared/ReactTypes';
 
-import warningWithoutStack from 'shared/warningWithoutStack';
-import warning from 'shared/warning';
-
 export function createContext<T>(
   defaultValue: T,
   calculateChangedBits: ?(a: T, b: T) => number,
@@ -22,13 +19,16 @@ export function createContext<T>(
     calculateChangedBits = null;
   } else {
     if (__DEV__) {
-      warningWithoutStack(
-        calculateChangedBits === null ||
-          typeof calculateChangedBits === 'function',
-        'createContext: Expected the optional second argument to be a ' +
-          'function. Instead received: %s',
-        calculateChangedBits,
-      );
+      if (
+        calculateChangedBits !== null &&
+        typeof calculateChangedBits !== 'function'
+      ) {
+        console.error(
+          'createContext: Expected the optional second argument to be a ' +
+            'function. Instead received: %s',
+          calculateChangedBits,
+        );
+      }
     }
   }
 
@@ -57,6 +57,7 @@ export function createContext<T>(
 
   let hasWarnedAboutUsingNestedContextConsumers = false;
   let hasWarnedAboutUsingConsumerProvider = false;
+  let hasWarnedAboutDisplayNameOnConsumer = false;
 
   if (__DEV__) {
     // A separate object, but proxies back to the original context object for
@@ -73,8 +74,7 @@ export function createContext<T>(
         get() {
           if (!hasWarnedAboutUsingConsumerProvider) {
             hasWarnedAboutUsingConsumerProvider = true;
-            warning(
-              false,
+            console.error(
               'Rendering <Context.Consumer.Provider> is not supported and will be removed in ' +
                 'a future major release. Did you mean to render <Context.Provider> instead?',
             );
@@ -113,13 +113,27 @@ export function createContext<T>(
         get() {
           if (!hasWarnedAboutUsingNestedContextConsumers) {
             hasWarnedAboutUsingNestedContextConsumers = true;
-            warning(
-              false,
+            console.error(
               'Rendering <Context.Consumer.Consumer> is not supported and will be removed in ' +
                 'a future major release. Did you mean to render <Context.Consumer> instead?',
             );
           }
           return context.Consumer;
+        },
+      },
+      displayName: {
+        get() {
+          return context.displayName;
+        },
+        set(displayName) {
+          if (!hasWarnedAboutDisplayNameOnConsumer) {
+            console.warn(
+              'Setting `displayName` on Context.Consumer has no effect. ' +
+                "You should set it directly on the context with Context.displayName = '%s'.",
+              displayName,
+            );
+            hasWarnedAboutDisplayNameOnConsumer = true;
+          }
         },
       },
     });

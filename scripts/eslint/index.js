@@ -28,6 +28,10 @@ function runESLintOnFilesWithOptions(filePatterns, onlyChanged, options) {
     : filePatterns;
   const report = cli.executeOnFiles(finalFilePatterns);
 
+  if (options != null && options.fix === true) {
+    CLIEngine.outputFixes(report);
+  }
+
   // When using `ignorePattern`, eslint will show `File ignored...` warnings for any ignores.
   // We don't care because we *expect* some passed files will be ignores if `ignorePattern` is used.
   const messages = report.results.filter(item => {

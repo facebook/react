@@ -7,34 +7,23 @@
  * @flow
  */
 
+import type {ElementRef} from 'react';
 import type {
+  HostComponent,
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
-  NativeMethodsMixinType,
+  NativeMethods,
   ReactNativeBaseComponentViewConfig,
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
+  TouchedViewDataAtPoint,
 } from './ReactNativeTypes';
-import type {
-  ReactEventResponder,
-  ReactEventResponderInstance,
-} from 'shared/ReactTypes';
 
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
 
 import invariant from 'shared/invariant';
-import warningWithoutStack from 'shared/warningWithoutStack';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
-import {
-  addRootEventTypesForResponderInstance,
-  mountEventResponder,
-  unmountEventResponder,
-} from './ReactFabricEventResponderSystem';
-
-import {enableFlareAPI} from 'shared/ReactFeatureFlags';
 
 // Modules provided by RN:
 import {
@@ -67,26 +56,15 @@ const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 // This means that they never overlap.
 let nextReactTag = 2;
 
-type ReactNativeEventResponderInstance = ReactEventResponderInstance<
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
->;
-
-type ReactNativeEventResponder = ReactEventResponder<
-  ReactNativeResponderEvent,
-  ReactNativeResponderContext,
->;
-
 type Node = Object;
 export type Type = string;
 export type Props = Object;
 export type Instance = {
   node: Node,
   canonical: ReactFabricHostComponent,
+  ...
 };
-export type TextInstance = {
-  node: Node,
-};
+export type TextInstance = {node: Node, ...};
 export type HydratableInstance = Instance | TextInstance;
 export type PublicInstance = ReactFabricHostComponent;
 export type Container = number;
@@ -98,6 +76,19 @@ export type UpdatePayload = Object;
 
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
+
+export type OpaqueIDType = void;
+
+export type RendererInspectionConfig = $ReadOnly<{|
+  // Deprecated. Replaced with getInspectorDataForViewAtPoint.
+  getInspectorDataForViewTag?: (tag: number) => Object,
+  getInspectorDataForViewAtPoint?: (
+    inspectedView: Object,
+    locationX: number,
+    locationY: number,
+    callback: (viewData: TouchedViewDataAtPoint) => mixed,
+  ) => void,
+|}>;
 
 // TODO: Remove this conditional once all changes have propagated.
 if (registerEventHandler) {
@@ -129,11 +120,11 @@ class ReactFabricHostComponent {
   }
 
   blur() {
-    TextInputState.blurTextInput(this._nativeTag);
+    TextInputState.blurTextInput(this);
   }
 
   focus() {
-    TextInputState.focusTextInput(this._nativeTag);
+    TextInputState.focusTextInput(this);
   }
 
   measure(callback: MeasureOnSuccessCallback) {
@@ -151,18 +142,19 @@ class ReactFabricHostComponent {
   }
 
   measureLayout(
-    relativeToNativeNode: number | Object,
+    relativeToNativeNode: number | ElementRef<HostComponent<mixed>>,
     onSuccess: MeasureLayoutOnSuccessCallback,
-    onFail: () => void /* currently unused */,
+    onFail?: () => void /* currently unused */,
   ) {
     if (
       typeof relativeToNativeNode === 'number' ||
       !(relativeToNativeNode instanceof ReactFabricHostComponent)
     ) {
-      warningWithoutStack(
-        false,
-        'Warning: ref.measureLayout must be called with a ref to a native component.',
-      );
+      if (__DEV__) {
+        console.error(
+          'Warning: ref.measureLayout must be called with a ref to a native component.',
+        );
+      }
 
       return;
     }
@@ -176,20 +168,23 @@ class ReactFabricHostComponent {
   }
 
   setNativeProps(nativeProps: Object) {
-    warningWithoutStack(
-      false,
-      'Warning: setNativeProps is not currently supported in Fabric',
-    );
+    if (__DEV__) {
+      console.error(
+        'Warning: setNativeProps is not currently supported in Fabric',
+      );
+    }
 
     return;
   }
 }
 
 // eslint-disable-next-line no-unused-expressions
-(ReactFabricHostComponent.prototype: NativeMethodsMixinType);
+(ReactFabricHostComponent.prototype: NativeMethods);
 
-export * from 'shared/HostConfigWithNoMutation';
-export * from 'shared/HostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMutation';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
 
 export function appendInitialChild(
   parentInstance: Instance,
@@ -308,8 +303,9 @@ export function getPublicInstance(instance: Instance): * {
   return instance.canonical;
 }
 
-export function prepareForCommit(containerInfo: Container): void {
+export function prepareForCommit(containerInfo: Container): null | Object {
   // Noop
+  return null;
 }
 
 export function prepareUpdate(
@@ -331,10 +327,6 @@ export function prepareUpdate(
 
 export function resetAfterCommit(containerInfo: Container): void {
   // Noop
-}
-
-export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
-  return false;
 }
 
 export function shouldSetTextContent(type: string, props: Props): boolean {
@@ -443,51 +435,76 @@ export function replaceContainerChildren(
   newChildren: ChildSet,
 ): void {}
 
-export function mountResponderInstance(
-  responder: ReactNativeEventResponder,
-  responderInstance: ReactNativeEventResponderInstance,
+export function DEPRECATED_mountResponderInstance(
+  responder: any,
+  responderInstance: any,
   props: Object,
   state: Object,
   instance: Instance,
 ) {
-  if (enableFlareAPI) {
-    const {rootEventTypes} = responder;
-    if (rootEventTypes !== null) {
-      addRootEventTypesForResponderInstance(responderInstance, rootEventTypes);
-    }
-    mountEventResponder(responder, responderInstance, props, state);
-  }
+  throw new Error('Not yet implemented.');
 }
 
-export function unmountResponderInstance(
-  responderInstance: ReactNativeEventResponderInstance,
+export function DEPRECATED_unmountResponderInstance(
+  responderInstance: any,
 ): void {
-  if (enableFlareAPI) {
-    // TODO stop listening to targetEventTypes
-    unmountEventResponder(responderInstance);
-  }
-}
-
-export function getFundamentalComponentInstance(fundamentalInstance) {
   throw new Error('Not yet implemented.');
 }
 
-export function mountFundamentalComponent(fundamentalInstance) {
+export function getFundamentalComponentInstance(fundamentalInstance: any) {
   throw new Error('Not yet implemented.');
 }
 
-export function shouldUpdateFundamentalComponent(fundamentalInstance) {
+export function mountFundamentalComponent(fundamentalInstance: any) {
   throw new Error('Not yet implemented.');
 }
 
-export function updateFundamentalComponent(fundamentalInstance) {
+export function shouldUpdateFundamentalComponent(fundamentalInstance: any) {
   throw new Error('Not yet implemented.');
 }
 
-export function unmountFundamentalComponent(fundamentalInstance) {
+export function updateFundamentalComponent(fundamentalInstance: any) {
   throw new Error('Not yet implemented.');
 }
 
-export function cloneFundamentalInstance(fundamentalInstance) {
+export function unmountFundamentalComponent(fundamentalInstance: any) {
   throw new Error('Not yet implemented.');
+}
+
+export function cloneFundamentalInstance(fundamentalInstance: any) {
+  throw new Error('Not yet implemented.');
+}
+
+export function getInstanceFromNode(node: any) {
+  throw new Error('Not yet implemented.');
+}
+
+export function isOpaqueHydratingObject(value: mixed): boolean {
+  throw new Error('Not yet implemented');
+}
+
+export function makeOpaqueHydratingObject(
+  attemptToReadValue: () => void,
+): OpaqueIDType {
+  throw new Error('Not yet implemented.');
+}
+
+export function makeClientId(): OpaqueIDType {
+  throw new Error('Not yet implemented');
+}
+
+export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
+  throw new Error('Not yet implemented');
+}
+
+export function beforeActiveInstanceBlur() {
+  // noop
+}
+
+export function afterActiveInstanceBlur() {
+  // noop
+}
+
+export function preparePortalMount(portalInstance: Instance): void {
+  // noop
 }

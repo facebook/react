@@ -31,23 +31,20 @@ describe('ReactSuspense', () => {
 
   function createThenable() {
     let completed = false;
-    const resolveRef = {current: null};
-    let promise = {
-      then(resolve, reject) {
-        resolveRef.current = () => {
-          completed = true;
-          resolve();
-        };
-      },
-    };
-
+    let resolve;
+    const promise = new Promise(res => {
+      resolve = () => {
+        completed = true;
+        res();
+      };
+    });
     const PromiseComp = () => {
       if (!completed) {
         throw promise;
       }
       return 'Done';
     };
-    return {promise, resolveRef, PromiseComp};
+    return {promise, resolve, PromiseComp};
   }
 
   it('check type', () => {
@@ -60,7 +57,7 @@ describe('ReactSuspense', () => {
     );
 
     ReactNoop.render(elementBadType);
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([
       'Warning: Unexpected type for suspenseCallback.',
     ]);
 
@@ -71,11 +68,11 @@ describe('ReactSuspense', () => {
     );
 
     ReactNoop.render(elementMissingCallback);
-    expect(() => Scheduler.unstable_flushAll()).toWarnDev([]);
+    expect(() => Scheduler.unstable_flushAll()).toErrorDev([]);
   });
 
-  it('1 then 0 suspense callback', () => {
-    const {promise, resolveRef, PromiseComp} = createThenable();
+  it('1 then 0 suspense callback', async () => {
+    const {promise, resolve, PromiseComp} = createThenable();
 
     let ops = [];
     const suspenseCallback = thenables => {
@@ -94,21 +91,21 @@ describe('ReactSuspense', () => {
     expect(ops).toEqual([new Set([promise])]);
     ops = [];
 
-    resolveRef.current();
+    await resolve();
     expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren()).toEqual([text('Done')]);
     expect(ops).toEqual([]);
   });
 
-  it('2 then 1 then 0 suspense callback', () => {
+  it('2 then 1 then 0 suspense callback', async () => {
     const {
       promise: promise1,
-      resolveRef: resolveRef1,
+      resolve: resolve1,
       PromiseComp: PromiseComp1,
     } = createThenable();
     const {
       promise: promise2,
-      resolveRef: resolveRef2,
+      resolve: resolve2,
       PromiseComp: PromiseComp2,
     } = createThenable();
 
@@ -132,14 +129,14 @@ describe('ReactSuspense', () => {
     expect(ops).toEqual([new Set([promise1, promise2])]);
     ops = [];
 
-    resolveRef1.current();
+    await resolve1();
     ReactNoop.render(element);
     expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren()).toEqual([text('Waiting Tier 1')]);
     expect(ops).toEqual([new Set([promise2])]);
     ops = [];
 
-    resolveRef2.current();
+    await resolve2();
     ReactNoop.render(element);
     expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren()).toEqual([text('Done'), text('Done')]);
@@ -149,11 +146,11 @@ describe('ReactSuspense', () => {
   it('nested suspense promises are reported only for their tier', () => {
     const {promise, PromiseComp} = createThenable();
 
-    let ops1 = [];
+    const ops1 = [];
     const suspenseCallback1 = thenables => {
       ops1.push(thenables);
     };
-    let ops2 = [];
+    const ops2 = [];
     const suspenseCallback2 = thenables => {
       ops2.push(thenables);
     };
@@ -177,15 +174,15 @@ describe('ReactSuspense', () => {
     expect(ops2).toEqual([new Set([promise])]);
   });
 
-  it('competing suspense promises', () => {
+  it('competing suspense promises', async () => {
     const {
       promise: promise1,
-      resolveRef: resolveRef1,
+      resolve: resolve1,
       PromiseComp: PromiseComp1,
     } = createThenable();
     const {
       promise: promise2,
-      resolveRef: resolveRef2,
+      resolve: resolve2,
       PromiseComp: PromiseComp2,
     } = createThenable();
 
@@ -219,9 +216,14 @@ describe('ReactSuspense', () => {
     ops1 = [];
     ops2 = [];
 
-    resolveRef1.current();
+    await resolve1();
     ReactNoop.render(element);
     expect(Scheduler).toFlushWithoutYielding();
+
+    // Force fallback to commit.
+    // TODO: Should be able to use `act` here.
+    jest.runAllTimers();
+
     expect(ReactNoop.getChildren()).toEqual([
       text('Waiting Tier 2'),
       text('Done'),
@@ -231,7 +233,7 @@ describe('ReactSuspense', () => {
     ops1 = [];
     ops2 = [];
 
-    resolveRef2.current();
+    await resolve2();
     ReactNoop.render(element);
     expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren()).toEqual([text('Done'), text('Done')]);
@@ -250,7 +252,7 @@ describe('ReactSuspense', () => {
       // you can probably just delete it. It's not worth the hassle.
       jest.resetModules();
 
-      let errors = [];
+      const errors = [];
       let hasCaughtError = false;
       jest.mock('shared/ReactErrorUtils', () => ({
         invokeGuardedCallback(name, fn, context, ...args) {

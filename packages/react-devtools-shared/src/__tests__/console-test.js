@@ -44,7 +44,10 @@ describe('console', () => {
 
     // Note the Console module only patches once,
     // so it's important to patch the test console before injection.
-    patchConsole();
+    patchConsole({
+      appendComponentStack: true,
+      breakOnWarn: false,
+    });
 
     const inject = global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject;
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject = internals => {
@@ -61,7 +64,12 @@ describe('console', () => {
   });
 
   function normalizeCodeLocInfo(str) {
-    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+    return (
+      str &&
+      str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+        return '\n    in ' + name + ' (at **)';
+      })
+    );
   }
 
   it('should not patch console methods that do not receive component stacks', () => {
@@ -74,7 +82,10 @@ describe('console', () => {
   it('should only patch the console once', () => {
     const {error, warn} = fakeConsole;
 
-    patchConsole();
+    patchConsole({
+      appendComponentStack: true,
+      breakOnWarn: false,
+    });
 
     expect(fakeConsole.error).toBe(error);
     expect(fakeConsole.warn).toBe(warn);
@@ -109,7 +120,7 @@ describe('console', () => {
   });
 
   it('should not append multiple stacks', () => {
-    const Child = () => {
+    const Child = ({children}) => {
       fakeConsole.warn('warn\n    in Child (at fake.js:123)');
       fakeConsole.error('error', '\n    in Child (at fake.js:123)');
       return null;
@@ -130,12 +141,12 @@ describe('console', () => {
 
   it('should append component stacks to errors and warnings logged during render', () => {
     const Intermediate = ({children}) => children;
-    const Parent = () => (
+    const Parent = ({children}) => (
       <Intermediate>
         <Child />
       </Intermediate>
     );
-    const Child = () => {
+    const Child = ({children}) => {
       fakeConsole.error('error');
       fakeConsole.log('log');
       fakeConsole.warn('warn');
@@ -151,24 +162,24 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(1);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
   it('should append component stacks to errors and warnings logged from effects', () => {
     const Intermediate = ({children}) => children;
-    const Parent = () => (
+    const Parent = ({children}) => (
       <Intermediate>
         <Child />
       </Intermediate>
     );
-    const Child = () => {
+    const Child = ({children}) => {
       React.useLayoutEffect(() => {
         fakeConsole.error('active error');
         fakeConsole.log('active log');
@@ -193,29 +204,29 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('active warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
     expect(mockWarn.mock.calls[1][0]).toBe('passive warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('active error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError.mock.calls[1]).toHaveLength(2);
     expect(mockError.mock.calls[1][0]).toBe('passive error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
   it('should append component stacks to errors and warnings logged from commit hooks', () => {
     const Intermediate = ({children}) => children;
-    const Parent = () => (
+    const Parent = ({children}) => (
       <Intermediate>
         <Child />
       </Intermediate>
@@ -249,29 +260,29 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('didMount warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockWarn.mock.calls[1]).toHaveLength(2);
     expect(mockWarn.mock.calls[1][0]).toBe('didUpdate warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[1][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(2);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('didMount error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError.mock.calls[1]).toHaveLength(2);
     expect(mockError.mock.calls[1][0]).toBe('didUpdate error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
   it('should append component stacks to errors and warnings logged from gDSFP', () => {
     const Intermediate = ({children}) => children;
-    const Parent = () => (
+    const Parent = ({children}) => (
       <Intermediate>
         <Child />
       </Intermediate>
@@ -298,18 +309,18 @@ describe('console', () => {
     expect(mockWarn.mock.calls[0]).toHaveLength(2);
     expect(mockWarn.mock.calls[0][0]).toBe('warn');
     expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
     expect(mockError).toHaveBeenCalledTimes(1);
     expect(mockError.mock.calls[0]).toHaveLength(2);
     expect(mockError.mock.calls[0][0]).toBe('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
-      '\n    in Child (at **)\n    in Parent (at **)',
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 
   it('should append stacks after being uninstalled and reinstalled', () => {
-    const Child = () => {
+    const Child = ({children}) => {
       fakeConsole.warn('warn');
       fakeConsole.error('error');
       return null;
@@ -325,7 +336,10 @@ describe('console', () => {
     expect(mockError.mock.calls[0]).toHaveLength(1);
     expect(mockError.mock.calls[0][0]).toBe('error');
 
-    patchConsole();
+    patchConsole({
+      appendComponentStack: true,
+      breakOnWarn: false,
+    });
     act(() => ReactDOM.render(<Child />, document.createElement('div')));
 
     expect(mockWarn).toHaveBeenCalledTimes(2);
@@ -339,6 +353,53 @@ describe('console', () => {
     expect(mockError.mock.calls[1][0]).toBe('error');
     expect(normalizeCodeLocInfo(mockError.mock.calls[1][1])).toBe(
       '\n    in Child (at **)',
+    );
+  });
+
+  it('should be resilient to prepareStackTrace', () => {
+    Error.prepareStackTrace = function(error, callsites) {
+      const stack = ['An error occurred:', error.message];
+      for (let i = 0; i < callsites.length; i++) {
+        const callsite = callsites[i];
+        stack.push(
+          '\t' + callsite.getFunctionName(),
+          '\t\tat ' + callsite.getFileName(),
+          '\t\ton line ' + callsite.getLineNumber(),
+        );
+      }
+
+      return stack.join('\n');
+    };
+
+    const Intermediate = ({children}) => children;
+    const Parent = ({children}) => (
+      <Intermediate>
+        <Child />
+      </Intermediate>
+    );
+    const Child = ({children}) => {
+      fakeConsole.error('error');
+      fakeConsole.log('log');
+      fakeConsole.warn('warn');
+      return null;
+    };
+
+    act(() => ReactDOM.render(<Parent />, document.createElement('div')));
+
+    expect(mockLog).toHaveBeenCalledTimes(1);
+    expect(mockLog.mock.calls[0]).toHaveLength(1);
+    expect(mockLog.mock.calls[0][0]).toBe('log');
+    expect(mockWarn).toHaveBeenCalledTimes(1);
+    expect(mockWarn.mock.calls[0]).toHaveLength(2);
+    expect(mockWarn.mock.calls[0][0]).toBe('warn');
+    expect(normalizeCodeLocInfo(mockWarn.mock.calls[0][1])).toEqual(
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
+    );
+    expect(mockError).toHaveBeenCalledTimes(1);
+    expect(mockError.mock.calls[0]).toHaveLength(2);
+    expect(mockError.mock.calls[0][0]).toBe('error');
+    expect(normalizeCodeLocInfo(mockError.mock.calls[0][1])).toBe(
+      '\n    in Child (at **)\n    in Intermediate (at **)\n    in Parent (at **)',
     );
   });
 });

@@ -1,12 +1,14 @@
 /** @flow */
 
-import React, {forwardRef} from 'react';
+import * as React from 'react';
+import {forwardRef} from 'react';
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 import {
-  getSavedComponentFilters,
   getAppendComponentStack,
+  getBreakOnConsoleErrors,
+  getSavedComponentFilters,
 } from 'react-devtools-shared/src/utils';
 import {
   MESSAGE_TYPE_GET_SAVED_PREFERENCES,
@@ -37,6 +39,7 @@ export function initialize(
           {
             type: MESSAGE_TYPE_SAVED_PREFERENCES,
             appendComponentStack: getAppendComponentStack(),
+            breakOnConsoleErrors: getBreakOnConsoleErrors(),
             componentFilters: getSavedComponentFilters(),
           },
           '*',
@@ -64,7 +67,7 @@ export function initialize(
     },
   });
 
-  const store: Store = new Store(bridge);
+  const store: Store = new Store(bridge, {supportsTraceUpdates: true});
 
   const ForwardRef = forwardRef<Props, mixed>((props, ref) => (
     <DevTools ref={ref} bridge={bridge} store={store} {...props} />

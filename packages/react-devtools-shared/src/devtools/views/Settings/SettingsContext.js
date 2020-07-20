@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {
+import * as React from 'react';
+import {
   createContext,
   useContext,
   useEffect,
@@ -17,7 +18,9 @@ import React, {
 import {
   COMFORTABLE_LINE_HEIGHT,
   COMPACT_LINE_HEIGHT,
+  LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
+  LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
 } from 'react-devtools-shared/src/constants';
 import {useLocalStorage} from '../hooks';
 import {BridgeContext} from '../context';
@@ -38,8 +41,14 @@ type Context = {|
   appendComponentStack: boolean,
   setAppendComponentStack: (value: boolean) => void,
 
+  breakOnConsoleErrors: boolean,
+  setBreakOnConsoleErrors: (value: boolean) => void,
+
   theme: Theme,
   setTheme(value: Theme): void,
+
+  traceUpdatesEnabled: boolean,
+  setTraceUpdatesEnabled: (value: boolean) => void,
 |};
 
 const SettingsContext = createContext<Context>(((null: any): Context));
@@ -70,94 +79,109 @@ function SettingsContextController({
     'React::DevTools::theme',
     'auto',
   );
-  const [appendComponentStack, setAppendComponentStack] = useLocalStorage<
-    boolean,
-  >(LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY, true);
-
-  const documentElements = useMemo<DocumentElements>(
-    () => {
-      const array: Array<HTMLElement> = [
-        ((document.documentElement: any): HTMLElement),
-      ];
-      if (componentsPortalContainer != null) {
-        array.push(
-          ((componentsPortalContainer.ownerDocument
-            .documentElement: any): HTMLElement),
-        );
-      }
-      if (profilerPortalContainer != null) {
-        array.push(
-          ((profilerPortalContainer.ownerDocument
-            .documentElement: any): HTMLElement),
-        );
-      }
-      return array;
-    },
-    [componentsPortalContainer, profilerPortalContainer],
+  const [
+    appendComponentStack,
+    setAppendComponentStack,
+  ] = useLocalStorage<boolean>(LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY, true);
+  const [
+    breakOnConsoleErrors,
+    setBreakOnConsoleErrors,
+  ] = useLocalStorage<boolean>(
+    LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
+    false,
   );
+  const [
+    traceUpdatesEnabled,
+    setTraceUpdatesEnabled,
+  ] = useLocalStorage<boolean>(LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY, false);
 
-  useLayoutEffect(
-    () => {
-      switch (displayDensity) {
-        case 'comfortable':
-          updateDisplayDensity('comfortable', documentElements);
-          break;
-        case 'compact':
-          updateDisplayDensity('compact', documentElements);
-          break;
-        default:
-          throw Error(`Unsupported displayDensity value "${displayDensity}"`);
-      }
-    },
-    [displayDensity, documentElements],
-  );
+  const documentElements = useMemo<DocumentElements>(() => {
+    const array: Array<HTMLElement> = [
+      ((document.documentElement: any): HTMLElement),
+    ];
+    if (componentsPortalContainer != null) {
+      array.push(
+        ((componentsPortalContainer.ownerDocument
+          .documentElement: any): HTMLElement),
+      );
+    }
+    if (profilerPortalContainer != null) {
+      array.push(
+        ((profilerPortalContainer.ownerDocument
+          .documentElement: any): HTMLElement),
+      );
+    }
+    return array;
+  }, [componentsPortalContainer, profilerPortalContainer]);
 
-  useLayoutEffect(
-    () => {
-      switch (theme) {
-        case 'light':
-          updateThemeVariables('light', documentElements);
-          break;
-        case 'dark':
-          updateThemeVariables('dark', documentElements);
-          break;
-        case 'auto':
-          updateThemeVariables(browserTheme, documentElements);
-          break;
-        default:
-          throw Error(`Unsupported theme value "${theme}"`);
-      }
-    },
-    [browserTheme, theme, documentElements],
-  );
+  useLayoutEffect(() => {
+    switch (displayDensity) {
+      case 'comfortable':
+        updateDisplayDensity('comfortable', documentElements);
+        break;
+      case 'compact':
+        updateDisplayDensity('compact', documentElements);
+        break;
+      default:
+        throw Error(`Unsupported displayDensity value "${displayDensity}"`);
+    }
+  }, [displayDensity, documentElements]);
 
-  useEffect(
-    () => {
-      bridge.send('updateAppendComponentStack', appendComponentStack);
-    },
-    [bridge, appendComponentStack],
-  );
+  useLayoutEffect(() => {
+    switch (theme) {
+      case 'light':
+        updateThemeVariables('light', documentElements);
+        break;
+      case 'dark':
+        updateThemeVariables('dark', documentElements);
+        break;
+      case 'auto':
+        updateThemeVariables(browserTheme, documentElements);
+        break;
+      default:
+        throw Error(`Unsupported theme value "${theme}"`);
+    }
+  }, [browserTheme, theme, documentElements]);
+
+  useEffect(() => {
+    bridge.send('updateConsolePatchSettings', {
+      appendComponentStack,
+      breakOnConsoleErrors,
+    });
+  }, [bridge, appendComponentStack, breakOnConsoleErrors]);
+
+  useEffect(() => {
+    bridge.send('setTraceUpdatesEnabled', traceUpdatesEnabled);
+  }, [bridge, traceUpdatesEnabled]);
 
   const value = useMemo(
     () => ({
-      displayDensity,
-      setDisplayDensity,
-      theme,
-      setTheme,
       appendComponentStack,
-      setAppendComponentStack,
+      breakOnConsoleErrors,
+      displayDensity,
       lineHeight:
         displayDensity === 'compact'
           ? COMPACT_LINE_HEIGHT
           : COMFORTABLE_LINE_HEIGHT,
-    }),
-    [
-      displayDensity,
+      setAppendComponentStack,
+      setBreakOnConsoleErrors,
       setDisplayDensity,
       setTheme,
-      appendComponentStack,
-      setAppendComponentStack,
+      setTraceUpdatesEnabled,
       theme,
+      traceUpdatesEnabled,
+    }),
+    [
+      appendComponentStack,
+      breakOnConsoleErrors,
+      displayDensity,
+      setAppendComponentStack,
+      setBreakOnConsoleErrors,
+      setDisplayDensity,
+      setTheme,
+      setTraceUpdatesEnabled,
+      theme,
+      traceUpdatesEnabled,
     ],
   );
 
@@ -229,6 +253,11 @@ function updateThemeVariables(
   documentElements: DocumentElements,
 ): void {
   updateStyleHelper(theme, 'color-attribute-name', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-attribute-name-not-editable',
+    documentElements,
+  );
   updateStyleHelper(theme, 'color-attribute-name-inverted', documentElements);
   updateStyleHelper(theme, 'color-attribute-value', documentElements);
   updateStyleHelper(theme, 'color-attribute-value-inverted', documentElements);
@@ -295,10 +324,24 @@ function updateThemeVariables(
     'color-component-badge-count-inverted',
     documentElements,
   );
+  updateStyleHelper(theme, 'color-context-background', documentElements);
+  updateStyleHelper(theme, 'color-context-background-hover', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-context-background-selected',
+    documentElements,
+  );
+  updateStyleHelper(theme, 'color-context-border', documentElements);
+  updateStyleHelper(theme, 'color-context-text', documentElements);
+  updateStyleHelper(theme, 'color-context-text-selected', documentElements);
   updateStyleHelper(theme, 'color-dim', documentElements);
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);
+  updateStyleHelper(theme, 'color-error-background', documentElements);
+  updateStyleHelper(theme, 'color-error-border', documentElements);
+  updateStyleHelper(theme, 'color-error-text', documentElements);
   updateStyleHelper(theme, 'color-expand-collapse-toggle', documentElements);
+  updateStyleHelper(theme, 'color-link', documentElements);
   updateStyleHelper(theme, 'color-modal-background', documentElements);
   updateStyleHelper(theme, 'color-record-active', documentElements);
   updateStyleHelper(theme, 'color-record-hover', documentElements);

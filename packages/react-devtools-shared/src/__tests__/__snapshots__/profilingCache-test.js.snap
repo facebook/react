@@ -39,7 +39,7 @@ Object {
     5 => 1,
   },
   "interactionIDs": Array [],
-  "priorityLevel": "Immediate",
+  "priorityLevel": "Normal",
   "timestamp": 16,
 }
 `;
@@ -76,7 +76,7 @@ Object {
     4 => 2,
   },
   "interactionIDs": Array [],
-  "priorityLevel": "Immediate",
+  "priorityLevel": "Normal",
   "timestamp": 15,
 }
 `;
@@ -155,7 +155,7 @@ Object {
     5 => 1,
   },
   "interactionIDs": Array [],
-  "priorityLevel": "Immediate",
+  "priorityLevel": "Normal",
   "timestamp": 12,
 }
 `;
@@ -374,7 +374,7 @@ Object {
             ],
           ],
           "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 12,
         },
         Object {
@@ -829,7 +829,7 @@ Object {
             ],
           ],
           "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 11,
         },
         Object {
@@ -1344,6 +1344,7 @@ Object {
         2,
       ],
       "displayName": null,
+      "hocDisplayNames": null,
       "id": 1,
       "key": null,
       "type": 11,
@@ -1355,6 +1356,7 @@ Object {
         5,
       ],
       "displayName": "Parent",
+      "hocDisplayNames": null,
       "id": 2,
       "key": null,
       "type": 5,
@@ -1362,6 +1364,7 @@ Object {
     3 => Object {
       "children": Array [],
       "displayName": "Child",
+      "hocDisplayNames": null,
       "id": 3,
       "key": "0",
       "type": 5,
@@ -1369,6 +1372,7 @@ Object {
     4 => Object {
       "children": Array [],
       "displayName": "Child",
+      "hocDisplayNames": null,
       "id": 4,
       "key": "1",
       "type": 5,
@@ -1376,6 +1380,9 @@ Object {
     5 => Object {
       "children": Array [],
       "displayName": "Child",
+      "hocDisplayNames": Array [
+        "Memo",
+      ],
       "id": 5,
       "key": null,
       "type": 8,
@@ -1425,7 +1432,7 @@ Object {
         14 => 1,
       },
       "interactionIDs": Array [],
-      "priorityLevel": "Immediate",
+      "priorityLevel": "Normal",
       "timestamp": 24,
     },
   ],
@@ -1507,7 +1514,7 @@ Object {
       "fiberActualDurations": Map {},
       "fiberSelfDurations": Map {},
       "interactionIDs": Array [],
-      "priorityLevel": "Immediate",
+      "priorityLevel": "Normal",
       "timestamp": 34,
     },
   ],
@@ -1540,6 +1547,7 @@ Object {
         7,
       ],
       "displayName": null,
+      "hocDisplayNames": null,
       "id": 6,
       "key": null,
       "type": 11,
@@ -1550,6 +1558,7 @@ Object {
         9,
       ],
       "displayName": "Parent",
+      "hocDisplayNames": null,
       "id": 7,
       "key": null,
       "type": 5,
@@ -1557,6 +1566,7 @@ Object {
     8 => Object {
       "children": Array [],
       "displayName": "Child",
+      "hocDisplayNames": null,
       "id": 8,
       "key": "0",
       "type": 5,
@@ -1564,6 +1574,9 @@ Object {
     9 => Object {
       "children": Array [],
       "displayName": "Child",
+      "hocDisplayNames": Array [
+        "Memo",
+      ],
       "id": 9,
       "key": null,
       "type": 8,
@@ -1870,6 +1883,7 @@ Object {
               2,
             ],
             "displayName": null,
+            "hocDisplayNames": null,
             "id": 1,
             "key": null,
             "type": 11,
@@ -1884,6 +1898,7 @@ Object {
               5,
             ],
             "displayName": "Parent",
+            "hocDisplayNames": null,
             "id": 2,
             "key": null,
             "type": 5,
@@ -1894,6 +1909,7 @@ Object {
           Object {
             "children": Array [],
             "displayName": "Child",
+            "hocDisplayNames": null,
             "id": 3,
             "key": "0",
             "type": 5,
@@ -1904,6 +1920,7 @@ Object {
           Object {
             "children": Array [],
             "displayName": "Child",
+            "hocDisplayNames": null,
             "id": 4,
             "key": "1",
             "type": 5,
@@ -1914,6 +1931,9 @@ Object {
           Object {
             "children": Array [],
             "displayName": "Child",
+            "hocDisplayNames": Array [
+              "Memo",
+            ],
             "id": 5,
             "key": null,
             "type": 8,
@@ -1994,7 +2014,7 @@ Object {
             ],
           ],
           "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 24,
         },
       ],
@@ -2073,7 +2093,7 @@ Object {
           "fiberActualDurations": Array [],
           "fiberSelfDurations": Array [],
           "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 34,
         },
       ],
@@ -2120,6 +2140,7 @@ Object {
               7,
             ],
             "displayName": null,
+            "hocDisplayNames": null,
             "id": 6,
             "key": null,
             "type": 11,
@@ -2133,6 +2154,7 @@ Object {
               9,
             ],
             "displayName": "Parent",
+            "hocDisplayNames": null,
             "id": 7,
             "key": null,
             "type": 5,
@@ -2143,6 +2165,7 @@ Object {
           Object {
             "children": Array [],
             "displayName": "Child",
+            "hocDisplayNames": null,
             "id": 8,
             "key": "0",
             "type": 5,
@@ -2153,12 +2176,505 @@ Object {
           Object {
             "children": Array [],
             "displayName": "Child",
+            "hocDisplayNames": Array [
+              "Memo",
+            ],
             "id": 9,
             "key": null,
             "type": 8,
           },
         ],
       ],
+    },
+  ],
+  "version": 4,
+}
+`;
+
+exports[`ProfilingCache should handle unexpectedly shallow suspense trees: Empty Suspense node 1`] = `
+Object {
+  "commitData": Array [
+    Object {
+      "changeDescriptions": Map {},
+      "duration": 0,
+      "fiberActualDurations": Map {
+        1 => 0,
+        2 => 0,
+      },
+      "fiberSelfDurations": Map {
+        1 => 0,
+        2 => 0,
+      },
+      "interactionIDs": Array [],
+      "priorityLevel": "Normal",
+      "timestamp": 0,
+    },
+  ],
+  "displayName": "Suspense",
+  "initialTreeBaseDurations": Map {},
+  "interactionCommits": Map {},
+  "interactions": Map {},
+  "operations": Array [
+    Array [
+      1,
+      1,
+      9,
+      8,
+      83,
+      117,
+      115,
+      112,
+      101,
+      110,
+      115,
+      101,
+      1,
+      1,
+      11,
+      1,
+      1,
+      1,
+      2,
+      12,
+      1,
+      0,
+      1,
+      0,
+      4,
+      2,
+      0,
+    ],
+  ],
+  "rootID": 1,
+  "snapshots": Map {},
+}
+`;
+
+exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 0 1`] = `
+Object {
+  "changeDescriptions": Map {
+    3 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "isFirstMount": true,
+      "props": null,
+      "state": null,
+    },
+  },
+  "duration": 0,
+  "fiberActualDurations": Map {
+    1 => 0,
+    2 => 0,
+    3 => 0,
+  },
+  "fiberSelfDurations": Map {
+    1 => 0,
+    2 => 0,
+    3 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Normal",
+  "timestamp": 0,
+}
+`;
+
+exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 1 1`] = `
+Object {
+  "changeDescriptions": Map {
+    3 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "isFirstMount": false,
+      "props": Array [
+        "count",
+      ],
+      "state": null,
+    },
+  },
+  "duration": 0,
+  "fiberActualDurations": Map {
+    3 => 0,
+    2 => 0,
+    1 => 0,
+  },
+  "fiberSelfDurations": Map {
+    3 => 0,
+    2 => 0,
+    1 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "timestamp": 0,
+}
+`;
+
+exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 2 1`] = `
+Object {
+  "changeDescriptions": Map {
+    3 => Object {
+      "context": null,
+      "didHooksChange": true,
+      "isFirstMount": false,
+      "props": Array [],
+      "state": null,
+    },
+  },
+  "duration": 0,
+  "fiberActualDurations": Map {
+    3 => 0,
+  },
+  "fiberSelfDurations": Map {
+    3 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "timestamp": 0,
+}
+`;
+
+exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 3 1`] = `
+Object {
+  "changeDescriptions": Map {
+    3 => Object {
+      "context": null,
+      "didHooksChange": true,
+      "isFirstMount": false,
+      "props": Array [],
+      "state": null,
+    },
+  },
+  "duration": 0,
+  "fiberActualDurations": Map {
+    3 => 0,
+  },
+  "fiberSelfDurations": Map {
+    3 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "timestamp": 0,
+}
+`;
+
+exports[`ProfilingCache should properly detect changed hooks: CommitDetails commitIndex: 4 1`] = `
+Object {
+  "changeDescriptions": Map {
+    3 => Object {
+      "context": null,
+      "didHooksChange": false,
+      "isFirstMount": false,
+      "props": Array [],
+      "state": null,
+    },
+  },
+  "duration": 0,
+  "fiberActualDurations": Map {
+    3 => 0,
+    2 => 0,
+    1 => 0,
+  },
+  "fiberSelfDurations": Map {
+    3 => 0,
+    2 => 0,
+    1 => 0,
+  },
+  "interactionIDs": Array [],
+  "priorityLevel": "Immediate",
+  "timestamp": 0,
+}
+`;
+
+exports[`ProfilingCache should properly detect changed hooks: imported data 1`] = `
+Object {
+  "dataForRoots": Array [
+    Object {
+      "commitData": Array [
+        Object {
+          "changeDescriptions": Array [
+            Array [
+              3,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "isFirstMount": true,
+                "props": null,
+                "state": null,
+              },
+            ],
+          ],
+          "duration": 0,
+          "fiberActualDurations": Array [
+            Array [
+              1,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              3,
+              0,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              1,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              3,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Normal",
+          "timestamp": 0,
+        },
+        Object {
+          "changeDescriptions": Array [
+            Array [
+              3,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "isFirstMount": false,
+                "props": Array [
+                  "count",
+                ],
+                "state": null,
+              },
+            ],
+          ],
+          "duration": 0,
+          "fiberActualDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "timestamp": 0,
+        },
+        Object {
+          "changeDescriptions": Array [
+            Array [
+              3,
+              Object {
+                "context": null,
+                "didHooksChange": true,
+                "isFirstMount": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+          ],
+          "duration": 0,
+          "fiberActualDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "timestamp": 0,
+        },
+        Object {
+          "changeDescriptions": Array [
+            Array [
+              3,
+              Object {
+                "context": null,
+                "didHooksChange": true,
+                "isFirstMount": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+          ],
+          "duration": 0,
+          "fiberActualDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "timestamp": 0,
+        },
+        Object {
+          "changeDescriptions": Array [
+            Array [
+              3,
+              Object {
+                "context": null,
+                "didHooksChange": false,
+                "isFirstMount": false,
+                "props": Array [],
+                "state": null,
+              },
+            ],
+          ],
+          "duration": 0,
+          "fiberActualDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "fiberSelfDurations": Array [
+            Array [
+              3,
+              0,
+            ],
+            Array [
+              2,
+              0,
+            ],
+            Array [
+              1,
+              0,
+            ],
+          ],
+          "interactionIDs": Array [],
+          "priorityLevel": "Immediate",
+          "timestamp": 0,
+        },
+      ],
+      "displayName": "Component",
+      "initialTreeBaseDurations": Array [],
+      "interactionCommits": Array [],
+      "interactions": Array [],
+      "operations": Array [
+        Array [
+          1,
+          1,
+          27,
+          16,
+          67,
+          111,
+          110,
+          116,
+          101,
+          120,
+          116,
+          46,
+          80,
+          114,
+          111,
+          118,
+          105,
+          100,
+          101,
+          114,
+          9,
+          67,
+          111,
+          109,
+          112,
+          111,
+          110,
+          101,
+          110,
+          116,
+          1,
+          1,
+          11,
+          1,
+          1,
+          1,
+          2,
+          2,
+          1,
+          0,
+          1,
+          0,
+          4,
+          2,
+          0,
+          1,
+          3,
+          5,
+          2,
+          0,
+          2,
+          0,
+          4,
+          3,
+          0,
+        ],
+        Array [
+          1,
+          1,
+          0,
+        ],
+        Array [
+          1,
+          1,
+          0,
+        ],
+        Array [
+          1,
+          1,
+          0,
+        ],
+        Array [
+          1,
+          1,
+          0,
+        ],
+      ],
+      "rootID": 1,
+      "snapshots": Array [],
     },
   ],
   "version": 4,
@@ -2224,7 +2740,7 @@ Object {
     7 => 0,
   },
   "interactionIDs": Array [],
-  "priorityLevel": "Immediate",
+  "priorityLevel": "Normal",
   "timestamp": 0,
 }
 `;
@@ -2618,7 +3134,7 @@ Object {
             ],
           ],
           "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 0,
         },
         Object {
@@ -3410,7 +3926,7 @@ Object {
           "interactionIDs": Array [
             0,
           ],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 11,
         },
         Object {

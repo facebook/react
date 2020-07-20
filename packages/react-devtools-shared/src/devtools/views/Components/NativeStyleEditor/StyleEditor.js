@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {useContext, useMemo, useRef, useState} from 'react';
+import * as React from 'react';
+import {useContext, useMemo, useRef, useState} from 'react';
 import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
 import {copy} from 'clipboard-js';
 import {
@@ -19,6 +20,7 @@ import ButtonIcon from '../../ButtonIcon';
 import {serializeDataForCopy} from '../../utils';
 import AutoSizeInput from './AutoSizeInput';
 import styles from './StyleEditor.css';
+import {sanitizeForParse} from '../../../utils';
 
 import type {Style} from './types';
 
@@ -162,7 +164,7 @@ function Row({
   // The list of valid attributes would need to be injected by RN backend,
   // which would need to require them from ReactNativeViewViewConfig "validAttributes.style" keys.
   // This would need to degrade gracefully for react-native-web,
-  // althoguh we could let it also inject a custom set of whitelisted attributes.
+  // although we could let it also inject a custom set of allowed attributes.
 
   const [localAttribute, setLocalAttribute] = useState(attribute);
   const [localValue, setLocalValue] = useState(JSON.stringify(value));
@@ -289,17 +291,4 @@ function Field({
       value={value}
     />
   );
-}
-
-// We use JSON.parse to parse string values
-// e.g. 'foo' is not valid JSON but it is a valid string
-// so this method replaces e.g. 'foo' with "foo"
-function sanitizeForParse(value: any) {
-  if (typeof value === 'string') {
-    if (value.charAt(0) === "'" && value.charAt(value.length - 1) === "'") {
-      return '"' + value.substr(1, value.length - 2) + '"';
-    }
-  }
-
-  return value;
 }

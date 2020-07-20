@@ -2,7 +2,7 @@
 
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
-const {getGitHubURL, getVersionString} = require('./utils');
+const {GITHUB_URL, getVersionString} = require('./utils');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -14,7 +14,6 @@ const builtModulesDir = resolve(__dirname, '..', '..', 'build', 'node_modules');
 
 const __DEV__ = NODE_ENV === 'development';
 
-const GITHUB_URL = getGitHubURL();
 const DEVTOOLS_VERSION = getVersionString();
 
 module.exports = {
@@ -32,6 +31,10 @@ module.exports = {
     path: __dirname + '/build',
     filename: '[name].js',
   },
+  node: {
+    // Don't define a polyfill on window.setImmediate
+    setImmediate: false,
+  },
   resolve: {
     alias: {
       react: resolve(builtModulesDir, 'react'),
@@ -41,9 +44,14 @@ module.exports = {
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },
   },
+  optimization: {
+    minimize: false,
+  },
   plugins: [
     new DefinePlugin({
       __DEV__: false,
+      __PROFILE__: false,
+      __EXPERIMENTAL__: true,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.NODE_ENV': `"${NODE_ENV}"`,

@@ -5,9 +5,10 @@
 const {exec} = require('child-process-promise');
 const {Finder} = require('firefox-profile');
 const {resolve} = require('path');
+const {argv} = require('yargs');
 
 const EXTENSION_PATH = resolve('./firefox/build/unpacked');
-const START_URL = 'https://facebook.github.io/react/';
+const START_URL = argv.url || 'https://reactjs.org/';
 
 const main = async () => {
   const finder = new Finder();

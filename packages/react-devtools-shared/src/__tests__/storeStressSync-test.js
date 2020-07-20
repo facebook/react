@@ -7,7 +7,7 @@
  * @flow
  */
 
-describe('StoreStress (Sync Mode)', () => {
+describe('StoreStress (Legacy Mode)', () => {
   let React;
   let ReactDOM;
   let act;
@@ -29,7 +29,7 @@ describe('StoreStress (Sync Mode)', () => {
 
   // This is a stress test for the tree mount/update/unmount traversal.
   // It renders different trees that should produce the same output.
-  it('should handle a stress test with different tree operations (Sync Mode)', () => {
+  it('should handle a stress test with different tree operations (Legacy Mode)', () => {
     let setShowX;
     const A = () => 'a';
     const B = () => 'b';
@@ -37,7 +37,7 @@ describe('StoreStress (Sync Mode)', () => {
       // We'll be manually flipping this component back and forth in the test.
       // We only do this for a single node in order to verify that DevTools
       // can handle a subtree switching alternates while other subtrees are memoized.
-      let [showX, _setShowX] = React.useState(false);
+      const [showX, _setShowX] = React.useState(false);
       setShowX = _setShowX;
       return showX ? <X /> : 'c';
     };
@@ -87,7 +87,7 @@ describe('StoreStress (Sync Mode)', () => {
     // These cases are picked so that rendering them sequentially in the same
     // container results in a combination of mounts, updates, unmounts, and reorders.
     // prettier-ignore
-    let cases = [
+    const cases = [
       [a, b, c, d, e],
       [[a], b, c, d, e],
       [[a, b], c, d, e],
@@ -170,7 +170,7 @@ describe('StoreStress (Sync Mode)', () => {
     expect(print(store)).toBe('');
   });
 
-  it('should handle stress test with reordering (Sync Mode)', () => {
+  it('should handle stress test with reordering (Legacy Mode)', () => {
     const A = () => 'a';
     const B = () => 'b';
     const C = () => 'c';
@@ -183,7 +183,7 @@ describe('StoreStress (Sync Mode)', () => {
     const e = <E key="e" />;
 
     // prettier-ignore
-    let steps = [
+    const steps = [
       a,
       b,
       c,
@@ -207,7 +207,7 @@ describe('StoreStress (Sync Mode)', () => {
     };
 
     // 1. Capture the expected render result.
-    let snapshots = [];
+    const snapshots = [];
     let container = document.createElement('div');
     for (let i = 0; i < steps.length; i++) {
       act(() => ReactDOM.render(<Root>{steps[i]}</Root>, container));
@@ -270,7 +270,7 @@ describe('StoreStress (Sync Mode)', () => {
     }
   });
 
-  it('should handle a stress test for Suspense (Sync Mode)', async () => {
+  it('should handle a stress test for Suspense (Legacy Mode)', async () => {
     const A = () => 'a';
     const B = () => 'b';
     const C = () => 'c';
@@ -308,7 +308,7 @@ describe('StoreStress (Sync Mode)', () => {
 
     // 1. For each step, check Suspense can render them as initial primary content.
     // This is the only step where we use Jest snapshots.
-    let snapshots = [];
+    const snapshots = [];
     let container = document.createElement('div');
     for (let i = 0; i < steps.length; i++) {
       act(() =>
@@ -663,7 +663,7 @@ describe('StoreStress (Sync Mode)', () => {
     }
   });
 
-  it('should handle a stress test for Suspense without type change (Sync Mode)', () => {
+  it('should handle a stress test for Suspense without type change (Legacy Mode)', () => {
     const A = () => 'a';
     const B = () => 'b';
     const C = () => 'c';
@@ -719,7 +719,7 @@ describe('StoreStress (Sync Mode)', () => {
 
     // 1. For each step, check Suspense can render them as initial primary content.
     // This is the only step where we use Jest snapshots.
-    let snapshots = [];
+    const snapshots = [];
     let container = document.createElement('div');
     for (let i = 0; i < steps.length; i++) {
       act(() =>
@@ -744,7 +744,7 @@ describe('StoreStress (Sync Mode)', () => {
     // 2. Verify check Suspense can render same steps as initial fallback content.
     // We don't actually assert here because the tree includes <MaybeSuspend>
     // which is different from the snapshots above. So we take more snapshots.
-    let fallbackSnapshots = [];
+    const fallbackSnapshots = [];
     for (let i = 0; i < steps.length; i++) {
       act(() =>
         ReactDOM.render(

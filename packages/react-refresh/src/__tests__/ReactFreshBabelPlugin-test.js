@@ -7,9 +7,9 @@
 
 'use strict';
 
-let babel = require('@babel/core');
-let {wrap} = require('jest-snapshot-serializer-raw');
-let freshPlugin = require('react-refresh/babel');
+const babel = require('@babel/core');
+const {wrap} = require('jest-snapshot-serializer-raw');
+const freshPlugin = require('react-refresh/babel');
 
 function transform(input, options = {}) {
   return wrap(
@@ -19,7 +19,15 @@ function transform(input, options = {}) {
       plugins: [
         '@babel/syntax-jsx',
         '@babel/syntax-dynamic-import',
-        freshPlugin,
+        [
+          freshPlugin,
+          {
+            skipEnvCheck: true,
+            // To simplify debugging tests:
+            emitFullSignatures: true,
+            ...options.freshOptions,
+          },
+        ],
         ...(options.plugins || []),
       ],
     }).code,
@@ -407,7 +415,7 @@ describe('ReactFreshBabelPlugin', () => {
         }
     `,
         {
-          plugins: ['transform-es2015-modules-commonjs'],
+          plugins: ['@babel/transform-modules-commonjs'],
         },
       ),
     ).toMatchSnapshot();
@@ -458,6 +466,36 @@ describe('ReactFreshBabelPlugin', () => {
           );
         }
     `),
+    ).toMatchSnapshot();
+  });
+
+  it('can handle implicit arrow returns', () => {
+    expect(
+      transform(`
+        export default () => useContext(X);
+        export const Foo = () => useContext(X);
+        module.exports = () => useContext(X);
+        const Bar = () => useContext(X);
+        const Baz = memo(() => useContext(X));
+        const Qux = () => (0, useContext(X));
+      `),
+    ).toMatchSnapshot();
+  });
+
+  it('uses custom identifiers for $RefreshReg$ and $RefreshSig$', () => {
+    expect(
+      transform(
+        `export default function Bar () {
+        useContext(X)
+        return <Foo />
+      };`,
+        {
+          freshOptions: {
+            refreshReg: 'import.meta.refreshReg',
+            refreshSig: 'import.meta.refreshSig',
+          },
+        },
+      ),
     ).toMatchSnapshot();
   });
 });

@@ -29,6 +29,7 @@
 .TabContent {
   flex: 1 1 100%;
   overflow: auto;
+  -webkit-app-region: no-drag;
 }
 
 .DevToolsVersion {
@@ -51,4 +52,9 @@
   .DevToolsVersion {
     display: none;
   }
+}
+
+.DevTools, .DevTools * {
+  box-sizing: border-box;
+  -webkit-font-smoothing: var(--font-smoothing);
 }

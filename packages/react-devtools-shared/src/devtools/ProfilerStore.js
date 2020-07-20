@@ -7,7 +7,7 @@
  * @flow
  */
 
-import EventEmitter from 'events';
+import EventEmitter from '../events';
 import {prepareProfilingDataFrontendFromBackendAndStore} from './views/Profiler/utils';
 import ProfilingCache from './ProfilingCache';
 import Store from './store';
@@ -211,6 +211,7 @@ export default class ProfilerStore extends EventEmitter<{|
         id: elementID,
         children: element.children.slice(0),
         displayName: element.displayName,
+        hocDisplayNames: element.hocDisplayNames,
         key: element.key,
         type: element.type,
       };
@@ -297,7 +298,7 @@ export default class ProfilerStore extends EventEmitter<{|
 
       // Record all renderer IDs initially too (in case of unmount)
       // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-      for (let rendererID of this._store.rootIDToRendererID.values()) {
+      for (const rendererID of this._store.rootIDToRendererID.values()) {
         if (!this._initialRendererIDs.has(rendererID)) {
           this._initialRendererIDs.add(rendererID);
         }

@@ -147,13 +147,25 @@ describe('InspectedElementContext', () => {
 
     const Example = () => null;
 
+    const arrayOfArrays = [[['abc', 123, true], []]];
     const div = document.createElement('div');
     const exampleFunction = () => {};
     const setShallow = new Set(['abc', 123]);
-    const mapShallow = new Map([['name', 'Brian'], ['food', 'sushi']]);
+    const mapShallow = new Map([
+      ['name', 'Brian'],
+      ['food', 'sushi'],
+    ]);
     const setOfSets = new Set([new Set(['a', 'b', 'c']), new Set([1, 2, 3])]);
-    const mapOfMaps = new Map([['first', mapShallow], ['second', mapShallow]]);
+    const mapOfMaps = new Map([
+      ['first', mapShallow],
+      ['second', mapShallow],
+    ]);
+    const objectOfObjects = {
+      inner: {string: 'abc', number: 123, boolean: true},
+    };
     const typedArray = Int8Array.from([100, -100, 0]);
+    const arrayBuffer = typedArray.buffer;
+    const dataView = new DataView(arrayBuffer);
     const immutableMap = Immutable.fromJS({
       a: [{hello: 'there'}, 'fixed', true],
       b: 123,
@@ -163,17 +175,30 @@ describe('InspectedElementContext', () => {
       },
     });
 
+    class Class {
+      anonymousFunction = () => {};
+    }
+    const instance = new Class();
+
     act(() =>
       ReactDOM.render(
         <Example
-          array_buffer={typedArray.buffer}
-          date={new Date()}
+          anonymous_fn={instance.anonymousFunction}
+          array_buffer={arrayBuffer}
+          array_of_arrays={arrayOfArrays}
+          // eslint-disable-next-line no-undef
+          big_int={BigInt(123)}
+          bound_fn={exampleFunction.bind(this)}
+          data_view={dataView}
+          date={new Date(123)}
           fn={exampleFunction}
           html_element={div}
           immutable={immutableMap}
           map={mapShallow}
           map_of_maps={mapOfMaps}
+          object_of_objects={objectOfObjects}
           react_element={<span />}
+          regexp={/abc/giu}
           set={setShallow}
           set_of_sets={setOfSets}
           symbol={Symbol('symbol')}
@@ -189,24 +214,61 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
 
     const {
+      anonymous_fn,
       array_buffer,
+      array_of_arrays,
+      big_int,
+      bound_fn,
+      data_view,
       date,
       fn,
       html_element,
       immutable,
       map,
       map_of_maps,
+      object_of_objects,
       react_element,
+      regexp,
       set,
       set_of_sets,
       symbol,
       typed_array,
     } = inspectedElement.value.props;
 
+    expect(anonymous_fn[meta.inspectable]).toBe(false);
+    expect(anonymous_fn[meta.name]).toBe('function');
+    expect(anonymous_fn[meta.type]).toBe('function');
+    expect(anonymous_fn[meta.preview_long]).toBe('ƒ () {}');
+    expect(anonymous_fn[meta.preview_short]).toBe('ƒ () {}');
+
     expect(array_buffer[meta.size]).toBe(3);
     expect(array_buffer[meta.inspectable]).toBe(false);
     expect(array_buffer[meta.name]).toBe('ArrayBuffer');
     expect(array_buffer[meta.type]).toBe('array_buffer');
+    expect(array_buffer[meta.preview_short]).toBe('ArrayBuffer(3)');
+    expect(array_buffer[meta.preview_long]).toBe('ArrayBuffer(3)');
+
+    expect(array_of_arrays[0][meta.size]).toBe(2);
+    expect(array_of_arrays[0][meta.inspectable]).toBe(true);
+    expect(array_of_arrays[0][meta.name]).toBe('Array');
+    expect(array_of_arrays[0][meta.type]).toBe('array');
+    expect(array_of_arrays[0][meta.preview_long]).toBe('[Array(3), Array(0)]');
+    expect(array_of_arrays[0][meta.preview_short]).toBe('Array(2)');
+
+    expect(big_int[meta.inspectable]).toBe(false);
+    expect(big_int[meta.name]).toBe('123');
+    expect(big_int[meta.type]).toBe('bigint');
+
+    expect(bound_fn[meta.inspectable]).toBe(false);
+    expect(bound_fn[meta.name]).toBe('bound exampleFunction');
+    expect(bound_fn[meta.type]).toBe('function');
+    expect(bound_fn[meta.preview_long]).toBe('ƒ bound exampleFunction() {}');
+    expect(bound_fn[meta.preview_short]).toBe('ƒ bound exampleFunction() {}');
+
+    expect(data_view[meta.size]).toBe(3);
+    expect(data_view[meta.inspectable]).toBe(false);
+    expect(data_view[meta.name]).toBe('DataView');
+    expect(data_view[meta.type]).toBe('data_view');
 
     expect(date[meta.inspectable]).toBe(false);
     expect(date[meta.type]).toBe('date');
@@ -214,6 +276,8 @@ describe('InspectedElementContext', () => {
     expect(fn[meta.inspectable]).toBe(false);
     expect(fn[meta.name]).toBe('exampleFunction');
     expect(fn[meta.type]).toBe('function');
+    expect(fn[meta.preview_long]).toBe('ƒ exampleFunction() {}');
+    expect(fn[meta.preview_short]).toBe('ƒ exampleFunction() {}');
 
     expect(html_element[meta.inspectable]).toBe(false);
     expect(html_element[meta.name]).toBe('DIV');
@@ -233,9 +297,24 @@ describe('InspectedElementContext', () => {
     expect(map_of_maps[meta.type]).toBe('iterator');
     expect(map_of_maps[0][meta.type]).toBe('array');
 
+    expect(object_of_objects.inner[meta.size]).toBe(3);
+    expect(object_of_objects.inner[meta.inspectable]).toBe(true);
+    expect(object_of_objects.inner[meta.name]).toBe('');
+    expect(object_of_objects.inner[meta.type]).toBe('object');
+    expect(object_of_objects.inner[meta.preview_long]).toBe(
+      '{boolean: true, number: 123, string: "abc"}',
+    );
+    expect(object_of_objects.inner[meta.preview_short]).toBe('{…}');
+
     expect(react_element[meta.inspectable]).toBe(false);
     expect(react_element[meta.name]).toBe('span');
     expect(react_element[meta.type]).toBe('react_element');
+
+    expect(regexp[meta.inspectable]).toBe(false);
+    expect(regexp[meta.name]).toBe('/abc/giu');
+    expect(regexp[meta.preview_long]).toBe('/abc/giu');
+    expect(regexp[meta.preview_short]).toBe('/abc/giu');
+    expect(regexp[meta.type]).toBe('regexp');
 
     expect(set[meta.inspectable]).toBeUndefined(); // Complex type
     expect(set[meta.name]).toBe('Set');
@@ -259,6 +338,61 @@ describe('InspectedElementContext', () => {
     expect(typed_array[0]).toBe(100);
     expect(typed_array[1]).toBe(-100);
     expect(typed_array[2]).toBe(0);
+
+    done();
+  });
+
+  it('should support objects with no prototype', async done => {
+    const Example = () => null;
+
+    const object = Object.create(null);
+    object.string = 'abc';
+    object.number = 123;
+    object.boolean = true;
+
+    act(() =>
+      ReactDOM.render(
+        <Example object={object} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const inspectedElement = await read(id);
+
+    expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
+    expect(inspectedElement.value.props.object).toEqual({
+      boolean: true,
+      number: 123,
+      string: 'abc',
+    });
+
+    done();
+  });
+
+  it('should support objects with overridden hasOwnProperty', async done => {
+    const Example = () => null;
+
+    const object = {
+      name: 'blah',
+      hasOwnProperty: true,
+    };
+
+    act(() =>
+      ReactDOM.render(
+        <Example object={object} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const inspectedElement = await read(id);
+
+    expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
+    expect(inspectedElement.value.props.object).toEqual({
+      name: 'blah',
+      hasOwnProperty: true,
+    });
 
     done();
   });
@@ -349,5 +483,197 @@ describe('InspectedElementContext', () => {
     );
 
     done();
+  });
+
+  it('should enable inspected values to be stored as global variables', () => {
+    const Example = () => null;
+
+    const nestedObject = {
+      a: {
+        value: 1,
+        b: {
+          value: 1,
+          c: {
+            value: 1,
+          },
+        },
+      },
+    };
+
+    act(() =>
+      ReactDOM.render(
+        <Example nestedObject={nestedObject} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const rendererID = ((store.getRendererIDForElement(id): any): number);
+
+    const logSpy = jest.fn();
+    spyOn(console, 'log').and.callFake(logSpy);
+
+    // Should store the whole value (not just the hydrated parts)
+    bridge.send('storeAsGlobal', {
+      count: 1,
+      id,
+      path: ['props', 'nestedObject'],
+      rendererID,
+    });
+    jest.runOnlyPendingTimers();
+    expect(logSpy).toHaveBeenCalledWith('$reactTemp1');
+    expect(global.$reactTemp1).toBe(nestedObject);
+
+    logSpy.mockReset();
+
+    // Should store the nested property specified (not just the outer value)
+    bridge.send('storeAsGlobal', {
+      count: 2,
+      id,
+      path: ['props', 'nestedObject', 'a', 'b'],
+      rendererID,
+    });
+    jest.runOnlyPendingTimers();
+    expect(logSpy).toHaveBeenCalledWith('$reactTemp2');
+    expect(global.$reactTemp2).toBe(nestedObject.a.b);
+  });
+
+  it('should enable inspected values to be copied to the clipboard', () => {
+    const Example = () => null;
+
+    const nestedObject = {
+      a: {
+        value: 1,
+        b: {
+          value: 1,
+          c: {
+            value: 1,
+          },
+        },
+      },
+    };
+
+    act(() =>
+      ReactDOM.render(
+        <Example nestedObject={nestedObject} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const rendererID = ((store.getRendererIDForElement(id): any): number);
+
+    // Should copy the whole value (not just the hydrated parts)
+    bridge.send('copyElementPath', {
+      id,
+      path: ['props', 'nestedObject'],
+      rendererID,
+    });
+    jest.runOnlyPendingTimers();
+    expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
+    expect(global.mockClipboardCopy).toHaveBeenCalledWith(
+      JSON.stringify(nestedObject),
+    );
+
+    global.mockClipboardCopy.mockReset();
+
+    // Should copy the nested property specified (not just the outer value)
+    bridge.send('copyElementPath', {
+      id,
+      path: ['props', 'nestedObject', 'a', 'b'],
+      rendererID,
+    });
+    jest.runOnlyPendingTimers();
+    expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
+    expect(global.mockClipboardCopy).toHaveBeenCalledWith(
+      JSON.stringify(nestedObject.a.b),
+    );
+  });
+
+  it('should enable complex values to be copied to the clipboard', () => {
+    const Immutable = require('immutable');
+
+    const Example = () => null;
+
+    const set = new Set(['abc', 123]);
+    const map = new Map([
+      ['name', 'Brian'],
+      ['food', 'sushi'],
+    ]);
+    const setOfSets = new Set([new Set(['a', 'b', 'c']), new Set([1, 2, 3])]);
+    const mapOfMaps = new Map([
+      ['first', map],
+      ['second', map],
+    ]);
+    const typedArray = Int8Array.from([100, -100, 0]);
+    const arrayBuffer = typedArray.buffer;
+    const dataView = new DataView(arrayBuffer);
+    const immutable = Immutable.fromJS({
+      a: [{hello: 'there'}, 'fixed', true],
+      b: 123,
+      c: {
+        '1': 'xyz',
+        xyz: 1,
+      },
+    });
+    // $FlowFixMe
+    const bigInt = BigInt(123); // eslint-disable-line no-undef
+
+    act(() =>
+      ReactDOM.render(
+        <Example
+          arrayBuffer={arrayBuffer}
+          dataView={dataView}
+          map={map}
+          set={set}
+          mapOfMaps={mapOfMaps}
+          setOfSets={setOfSets}
+          typedArray={typedArray}
+          immutable={immutable}
+          bigInt={bigInt}
+        />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const rendererID = ((store.getRendererIDForElement(id): any): number);
+
+    // Should copy the whole value (not just the hydrated parts)
+    bridge.send('copyElementPath', {
+      id,
+      path: ['props'],
+      rendererID,
+    });
+    jest.runOnlyPendingTimers();
+    // Should not error despite lots of unserialized values.
+
+    global.mockClipboardCopy.mockReset();
+
+    // Should copy the nested property specified (not just the outer value)
+    bridge.send('copyElementPath', {
+      id,
+      path: ['props', 'bigInt'],
+      rendererID,
+    });
+    jest.runOnlyPendingTimers();
+    expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
+    expect(global.mockClipboardCopy).toHaveBeenCalledWith(
+      JSON.stringify('123n'),
+    );
+
+    global.mockClipboardCopy.mockReset();
+
+    // Should copy the nested property specified (not just the outer value)
+    bridge.send('copyElementPath', {
+      id,
+      path: ['props', 'typedArray'],
+      rendererID,
+    });
+    jest.runOnlyPendingTimers();
+    expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
+    expect(global.mockClipboardCopy).toHaveBeenCalledWith(
+      JSON.stringify({0: 100, 1: -100, 2: 0}),
+    );
   });
 });

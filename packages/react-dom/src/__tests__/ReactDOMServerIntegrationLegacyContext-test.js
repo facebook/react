@@ -291,5 +291,23 @@ describe('ReactDOMServerIntegration', () => {
       },
       'MyComponent.getChildContext(): key "value2" is not defined in childContextTypes.',
     );
+
+    it('warns when childContextTypes is not defined', () => {
+      class MyComponent extends React.Component {
+        render() {
+          return <div />;
+        }
+        getChildContext() {
+          return {value1: 'foo', value2: 'bar'};
+        }
+      }
+
+      expect(() => {
+        ReactDOMServer.renderToString(<MyComponent />);
+      }).toErrorDev(
+        'Warning: MyComponent.getChildContext(): childContextTypes must be defined in order to use getChildContext().\n' +
+          '    in MyComponent (at **)',
+      );
+    });
   });
 });

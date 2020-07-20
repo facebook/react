@@ -68,7 +68,7 @@ function createEventHandler(instance) {
 
 function destroyEventListeners(instance) {
   if (instance._subscriptions) {
-    for (let type in instance._subscriptions) {
+    for (const type in instance._subscriptions) {
       instance._subscriptions[type]();
     }
   }
@@ -170,7 +170,7 @@ function applyNodeProps(instance, props, prevProps = {}) {
     }
   }
 
-  for (let type in EVENT_TYPES) {
+  for (const type in EVENT_TYPES) {
     addEventListeners(instance, EVENT_TYPES[type], props[type]);
   }
 }
@@ -241,8 +241,10 @@ function applyTextProps(instance, props, prevProps = {}) {
   }
 }
 
-export * from 'shared/HostConfigWithNoPersistence';
-export * from 'shared/HostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
 
 export function appendInitialChild(parentInstance, child) {
   if (typeof child === 'string') {
@@ -306,6 +308,7 @@ export function getPublicInstance(instance) {
 
 export function prepareForCommit() {
   // Noop
+  return null;
 }
 
 export function prepareUpdate(domElement, type, oldProps, newProps) {
@@ -318,10 +321,6 @@ export function resetAfterCommit() {
 
 export function resetTextContent(domElement) {
   // Noop
-}
-
-export function shouldDeprioritizeSubtree(type, props) {
-  return false;
 }
 
 export function getRootHostContext() {
@@ -426,7 +425,11 @@ export function unhideTextInstance(textInstance, text): void {
   // Noop
 }
 
-export function mountResponderInstance(
+export function clearContainer(container) {
+  // TODO Implement this
+}
+
+export function DEPRECATED_mountResponderInstance(
   responder: ReactEventResponder<any, any>,
   responderInstance: ReactEventResponderInstance<any, any>,
   props: Object,
@@ -436,7 +439,7 @@ export function mountResponderInstance(
   throw new Error('Not yet implemented.');
 }
 
-export function unmountResponderInstance(
+export function DEPRECATED_unmountResponderInstance(
   responderInstance: ReactEventResponderInstance<any, any>,
 ): void {
   throw new Error('Not yet implemented.');
@@ -460,4 +463,38 @@ export function updateFundamentalComponent(fundamentalInstance) {
 
 export function unmountFundamentalComponent(fundamentalInstance) {
   throw new Error('Not yet implemented.');
+}
+
+export function getInstanceFromNode(node) {
+  throw new Error('Not yet implemented.');
+}
+
+export function isOpaqueHydratingObject(value: mixed): boolean {
+  throw new Error('Not yet implemented');
+}
+
+export function makeOpaqueHydratingObject(
+  attemptToReadValue: () => void,
+): OpaqueIDType {
+  throw new Error('Not yet implemented.');
+}
+
+export function makeClientId(): OpaqueIDType {
+  throw new Error('Not yet implemented');
+}
+
+export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
+  throw new Error('Not yet implemented');
+}
+
+export function beforeActiveInstanceBlur() {
+  // noop
+}
+
+export function afterActiveInstanceBlur() {
+  // noop
+}
+
+export function preparePortalMount(portalInstance: any): void {
+  // noop
 }

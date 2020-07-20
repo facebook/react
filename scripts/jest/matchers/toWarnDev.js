@@ -1,14 +1,26 @@
 'use strict';
 
-const jestDiff = require('jest-diff');
+const jestDiff = require('jest-diff').default;
 const util = require('util');
 const shouldIgnoreConsoleError = require('../shouldIgnoreConsoleError');
 
 function normalizeCodeLocInfo(str) {
-  return str && str.replace(/at .+?:\d+/g, 'at **');
+  if (typeof str !== 'string') {
+    return str;
+  }
+  // This special case exists only for the special source location in
+  // ReactElementValidator. That will go away if we remove source locations.
+  str = str.replace(/Check your code at .+?:\d+/g, 'Check your code at **');
+  // V8 format:
+  //  at Component (/path/filename.js:123:45)
+  // React format:
+  //    in Component (at filename.js:123)
+  return str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
+    return '\n    in ' + name + ' (at **)';
+  });
 }
 
-const createMatcherFor = consoleMethod =>
+const createMatcherFor = (consoleMethod, matcherName) =>
   function matcher(callback, expectedMessages, options = {}) {
     if (__DEV__) {
       // Warn about incorrect usage of matcher.
@@ -16,7 +28,7 @@ const createMatcherFor = consoleMethod =>
         expectedMessages = [expectedMessages];
       } else if (!Array.isArray(expectedMessages)) {
         throw Error(
-          `toWarnDev() requires a parameter of type string or an array of strings ` +
+          `${matcherName}() requires a parameter of type string or an array of strings ` +
             `but was given ${typeof expectedMessages}.`
         );
       }
@@ -25,14 +37,14 @@ const createMatcherFor = consoleMethod =>
         (typeof options !== 'object' || Array.isArray(options))
       ) {
         throw new Error(
-          'toWarnDev() second argument, when present, should be an object. ' +
+          `${matcherName}() second argument, when present, should be an object. ` +
             'Did you forget to wrap the messages into an array?'
         );
       }
       if (arguments.length > 3) {
         // `matcher` comes from Jest, so it's more than 2 in practice
         throw new Error(
-          'toWarnDev() received more than two arguments. ' +
+          `${matcherName}() received more than two arguments. ` +
             'Did you forget to wrap the messages into an array?'
         );
       }
@@ -53,7 +65,8 @@ const createMatcherFor = consoleMethod =>
       let caughtError;
 
       const isLikelyAComponentStack = message =>
-        typeof message === 'string' && message.includes('\n    in ');
+        typeof message === 'string' &&
+        (message.includes('\n    in ') || message.includes('\n    at '));
 
       const consoleSpy = (format, ...args) => {
         // Ignore uncaught errors reported by jsdom
@@ -177,9 +190,7 @@ const createMatcherFor = consoleMethod =>
           if (withoutStack !== warningsWithoutComponentStack.length) {
             return {
               message: () =>
-                `Expected ${withoutStack} warnings without a component stack but received ${
-                  warningsWithoutComponentStack.length
-                }:\n` +
+                `Expected ${withoutStack} warnings without a component stack but received ${warningsWithoutComponentStack.length}:\n` +
                 warningsWithoutComponentStack.map(warning =>
                   this.utils.printReceived(warning)
                 ),
@@ -195,8 +206,8 @@ const createMatcherFor = consoleMethod =>
                 `Received warning unexpectedly includes a component stack:\n  ${this.utils.printReceived(
                   warningsWithComponentStack[0]
                 )}\nIf this warning intentionally includes the component stack, remove ` +
-                `{withoutStack: true} from the toWarnDev() call. If you have a mix of ` +
-                `warnings with and without stack in one toWarnDev() call, pass ` +
+                `{withoutStack: true} from the ${matcherName}() call. If you have a mix of ` +
+                `warnings with and without stack in one ${matcherName}() call, pass ` +
                 `{withoutStack: N} where N is the number of warnings without stacks.`,
               pass: false,
             };
@@ -210,13 +221,13 @@ const createMatcherFor = consoleMethod =>
                 `Received warning unexpectedly does not include a component stack:\n  ${this.utils.printReceived(
                   warningsWithoutComponentStack[0]
                 )}\nIf this warning intentionally omits the component stack, add ` +
-                `{withoutStack: true} to the toWarnDev() call.`,
+                `{withoutStack: true} to the ${matcherName} call.`,
               pass: false,
             };
           }
         } else {
           throw Error(
-            `The second argument for toWarnDev(), when specified, must be an object. It may have a ` +
+            `The second argument for ${matcherName}(), when specified, must be an object. It may have a ` +
               `property called "withoutStack" whose value may be undefined, boolean, or a number. ` +
               `Instead received ${typeof withoutStack}.`
           );
@@ -258,6 +269,6 @@ const createMatcherFor = consoleMethod =>
   };
 
 module.exports = {
-  toLowPriorityWarnDev: createMatcherFor('warn'),
-  toWarnDev: createMatcherFor('error'),
+  toWarnDev: createMatcherFor('warn', 'toWarnDev'),
+  toErrorDev: createMatcherFor('error', 'toErrorDev'),
 };

@@ -99,9 +99,12 @@ describe('Scheduler', () => {
   const SchedulerResumeEvent = 8;
 
   function stopProfilingAndPrintFlamegraph() {
-    const eventLog = new Int32Array(
-      Scheduler.unstable_Profiling.stopLoggingProfilingEvents(),
-    );
+    const eventBuffer = Scheduler.unstable_Profiling.stopLoggingProfilingEvents();
+    if (eventBuffer === null) {
+      return '(empty profile)';
+    }
+
+    const eventLog = new Int32Array(eventBuffer);
 
     const tasks = new Map();
     const mainThreadRuns = [];
@@ -210,7 +213,8 @@ describe('Scheduler', () => {
 
     // Now we can render the tasks as a flamegraph.
     const labelColumnWidth = 30;
-    const msPerChar = 50;
+    // Scheduler event times are in microseconds
+    const microsecondsPerChar = 50000;
 
     let result = '';
 
@@ -218,7 +222,7 @@ describe('Scheduler', () => {
     let mainThreadTimelineColumn = '';
     let isMainThreadBusy = true;
     for (const time of mainThreadRuns) {
-      const index = time / msPerChar;
+      const index = time / microsecondsPerChar;
       mainThreadTimelineColumn += (isMainThreadBusy ? '█' : '░').repeat(
         index - mainThreadTimelineColumn.length,
       );
@@ -241,18 +245,18 @@ describe('Scheduler', () => {
       labelColumn += ' '.repeat(labelColumnWidth - labelColumn.length - 1);
 
       // Add empty space up until the start mark
-      let timelineColumn = ' '.repeat(task.start / msPerChar);
+      let timelineColumn = ' '.repeat(task.start / microsecondsPerChar);
 
       let isRunning = false;
       for (const time of task.runs) {
-        const index = time / msPerChar;
+        const index = time / microsecondsPerChar;
         timelineColumn += (isRunning ? '█' : '░').repeat(
           index - timelineColumn.length,
         );
         isRunning = !isRunning;
       }
 
-      const endIndex = task.end / msPerChar;
+      const endIndex = task.end / microsecondsPerChar;
       timelineColumn += (isRunning ? '█' : '░').repeat(
         endIndex - timelineColumn.length,
       );
@@ -480,6 +484,32 @@ Task 2 [Normal]              │    ░░░░░░░░🡐 canceled
     );
   });
 
+  it('handles delayed tasks', () => {
+    Scheduler.unstable_Profiling.startLoggingProfilingEvents();
+    scheduleCallback(
+      NormalPriority,
+      () => {
+        Scheduler.unstable_advanceTime(1000);
+        Scheduler.unstable_yieldValue('A');
+      },
+      {
+        delay: 1000,
+      },
+    );
+    expect(Scheduler).toFlushWithoutYielding();
+
+    Scheduler.unstable_advanceTime(1000);
+
+    expect(Scheduler).toFlushAndYield(['A']);
+
+    expect(stopProfilingAndPrintFlamegraph()).toEqual(
+      `
+!!! Main thread              │████████████████████░░░░░░░░░░░░░░░░░░░░
+Task 1 [Normal]              │                    ████████████████████
+`,
+    );
+  });
+
   it('handles cancelling a delayed task', () => {
     Scheduler.unstable_Profiling.startLoggingProfilingEvents();
     const task = scheduleCallback(
@@ -496,13 +526,46 @@ Task 2 [Normal]              │    ░░░░░░░░🡐 canceled
     );
   });
 
-  it('resizes event log buffer if there are many events', () => {
-    const tasks = [];
-    for (let i = 0; i < 5000; i++) {
-      tasks.push(scheduleCallback(NormalPriority, () => {}));
+  it('automatically stops profiling and warns if event log gets too big', async () => {
+    Scheduler.unstable_Profiling.startLoggingProfilingEvents();
+
+    spyOnDevAndProd(console, 'error');
+
+    // Increase infinite loop guard limit
+    const originalMaxIterations = global.__MAX_ITERATIONS__;
+    global.__MAX_ITERATIONS__ = 120000;
+
+    let taskId = 1;
+    while (console.error.calls.count() === 0) {
+      taskId++;
+      const task = scheduleCallback(NormalPriority, () => {});
+      cancelCallback(task);
+      expect(Scheduler).toFlushAndYield([]);
     }
-    expect(getProfilingInfo()).toEqual('Suspended, Queue Size: 5000');
-    tasks.forEach(task => cancelCallback(task));
-    expect(getProfilingInfo()).toEqual('Empty Queue');
+
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      "Scheduler Profiling: Event log exceeded maximum size. Don't forget " +
+        'to call `stopLoggingProfilingEvents()`.',
+    );
+
+    // Should automatically clear profile
+    expect(stopProfilingAndPrintFlamegraph()).toEqual('(empty profile)');
+
+    // Test that we can start a new profile later
+    Scheduler.unstable_Profiling.startLoggingProfilingEvents();
+    scheduleCallback(NormalPriority, () => {
+      Scheduler.unstable_advanceTime(1000);
+    });
+    expect(Scheduler).toFlushAndYield([]);
+
+    // Note: The exact task id is not super important. That just how many tasks
+    // it happens to take before the array is resized.
+    expect(stopProfilingAndPrintFlamegraph()).toEqual(`
+!!! Main thread              │░░░░░░░░░░░░░░░░░░░░
+Task ${taskId} [Normal]          │████████████████████
+`);
+
+    global.__MAX_ITERATIONS__ = originalMaxIterations;
   });
 });

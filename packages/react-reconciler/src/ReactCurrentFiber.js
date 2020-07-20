@@ -7,57 +7,16 @@
  * @flow
  */
 
-import type {Fiber} from './ReactFiber';
+import type {Fiber} from './ReactInternalTypes';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {
-  HostRoot,
-  HostPortal,
-  HostText,
-  Fragment,
-  ContextProvider,
-  ContextConsumer,
-} from 'shared/ReactWorkTags';
-import describeComponentFrame from 'shared/describeComponentFrame';
+import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import getComponentName from 'shared/getComponentName';
 
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 
-type LifeCyclePhase = 'render' | 'getChildContext';
-
-function describeFiber(fiber: Fiber): string {
-  switch (fiber.tag) {
-    case HostRoot:
-    case HostPortal:
-    case HostText:
-    case Fragment:
-    case ContextProvider:
-    case ContextConsumer:
-      return '';
-    default:
-      const owner = fiber._debugOwner;
-      const source = fiber._debugSource;
-      const name = getComponentName(fiber.type);
-      let ownerName = null;
-      if (owner) {
-        ownerName = getComponentName(owner.type);
-      }
-      return describeComponentFrame(name, source, ownerName);
-  }
-}
-
-export function getStackByFiberInDevAndProd(workInProgress: Fiber): string {
-  let info = '';
-  let node = workInProgress;
-  do {
-    info += describeFiber(node);
-    node = node.return;
-  } while (node);
-  return info;
-}
-
 export let current: Fiber | null = null;
-export let phase: LifeCyclePhase | null = null;
+export let isRendering: boolean = false;
 
 export function getCurrentFiberOwnerNameInDevOrNull(): string | null {
   if (__DEV__) {
@@ -72,7 +31,7 @@ export function getCurrentFiberOwnerNameInDevOrNull(): string | null {
   return null;
 }
 
-export function getCurrentFiberStackInDev(): string {
+function getCurrentFiberStackInDev(): string {
   if (__DEV__) {
     if (current === null) {
       return '';
@@ -88,7 +47,7 @@ export function resetCurrentFiber() {
   if (__DEV__) {
     ReactDebugCurrentFrame.getCurrentStack = null;
     current = null;
-    phase = null;
+    isRendering = false;
   }
 }
 
@@ -96,12 +55,18 @@ export function setCurrentFiber(fiber: Fiber) {
   if (__DEV__) {
     ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackInDev;
     current = fiber;
-    phase = null;
+    isRendering = false;
   }
 }
 
-export function setCurrentPhase(lifeCyclePhase: LifeCyclePhase | null) {
+export function setIsRendering(rendering: boolean) {
   if (__DEV__) {
-    phase = lifeCyclePhase;
+    isRendering = rendering;
+  }
+}
+
+export function getIsRendering() {
+  if (__DEV__) {
+    return isRendering;
   }
 }

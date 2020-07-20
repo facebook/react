@@ -7,15 +7,21 @@
  * @flow strict
  */
 
-export const enableUserTimingAPI = __DEV__;
+// Filter certain DOM attributes (e.g. src, href) if their values are empty strings.
+// This prevents e.g. <img src=""> from making an unnecessary HTTP request for certain browsers.
+export const enableFilterEmptyStringAttributesDOM = false;
 
-// Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
-export const debugRenderPhaseSideEffects = false;
+// Adds verbose console logging for e.g. state updates, suspense, and work loop stuff.
+// Intended to enable React core members to more easily debug scheduling issues in DEV builds.
+export const enableDebugTracing = false;
 
-// In some cases, StrictMode should also double-render lifecycles.
-// This can be confusing for tests though,
-// And it can be bad for performance in production.
-// This feature flag can be used to control the behavior:
+// Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
+// for an experimental scheduling profiler tool.
+export const enableSchedulingProfiler = __PROFILE__ && __EXPERIMENTAL__;
+export const enableSchedulingProfilerComponentStacks = false;
+
+// Helps identify side effects in render-phase lifecycle hooks and setState
+// reducers by double invoking them in Strict Mode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 
 // To preserve the "Pause on caught exceptions" behavior of the debugger, we
@@ -28,39 +34,28 @@ export const warnAboutDeprecatedLifecycles = true;
 // Gather advanced timing metrics for Profiler subtrees.
 export const enableProfilerTimer = __PROFILE__;
 
+// Record durations for commit and passive effects phases.
+export const enableProfilerCommitHooks = false;
+
 // Trace which interactions trigger each commit.
 export const enableSchedulerTracing = __PROFILE__;
 
-// Only used in www builds.
-export const enableSuspenseServerRenderer = false; // TODO: __DEV__? Here it might just be false.
+// SSR experiments
+export const enableSuspenseServerRenderer = __EXPERIMENTAL__;
+export const enableSelectiveHydration = __EXPERIMENTAL__;
+
+// Flight experiments
+export const enableBlocksAPI = __EXPERIMENTAL__;
+export const enableLazyElements = __EXPERIMENTAL__;
 
 // Only used in www builds.
 export const enableSchedulerDebugging = false;
 
-// Only used in www builds.
-export function addUserTimingListener() {
-  throw new Error('Not implemented.');
-}
-
 // Disable javascript: URL strings in href for XSS protection.
 export const disableJavaScriptURLs = false;
 
-// React Fire: prevent the value and checked attributes from syncing
-// with their related DOM properties
-export const disableInputAttributeSyncing = false;
-
-// These APIs will no longer be "unstable" in the upcoming 16.7 release,
-// Control this behavior with a flag to support 16.6 minor releases in the meanwhile.
-export const enableStableConcurrentModeAPIs = false;
-
-export const warnAboutShorthandPropertyCollision = false;
-
-// See https://github.com/react-native-community/discussions-and-proposals/issues/72 for more information
-// This is a flag so we can fix warnings in RN core before turning it on
-export const warnAboutDeprecatedSetNativeProps = false;
-
 // Experimental React Flare event system and event components support.
-export const enableFlareAPI = false;
+export const enableDeprecatedFlareAPI = false;
 
 // Experimental Host Component support.
 export const enableFundamentalAPI = false;
@@ -68,21 +63,14 @@ export const enableFundamentalAPI = false;
 // Experimental Scope support.
 export const enableScopeAPI = false;
 
+// Experimental Create Event Handle API.
+export const enableCreateEventHandleAPI = false;
+
 // New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
-export const enableJSXTransformAPI = false;
 
-// We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v17?)
-// Till then, we warn about the missing mock, but still fallback to a sync mode compatible version
+// We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v18?)
+// Till then, we warn about the missing mock, but still fallback to a legacy mode compatible version
 export const warnAboutUnmockedScheduler = false;
-
-// For tests, we flush suspense fallbacks in an act scope;
-// *except* in some of our own tests, where we test incremental loading states.
-export const flushSuspenseFallbacksInTests = true;
-
-// Changes priority of some events like mousemove to user-blocking priority,
-// but without making them discrete. The flag exists in case it causes
-// starvation problems.
-export const enableUserBlockingEvents = false;
 
 // Add a callback property to suspense to notify which promises are currently
 // in the update queue. This allows reporting and tracing of what is causing
@@ -95,8 +83,48 @@ export const enableSuspenseCallback = false;
 // from React.createElement to React.jsx
 // https://github.com/reactjs/rfcs/blob/createlement-rfc/text/0000-create-element-changes.md
 export const warnAboutDefaultPropsOnFunctionComponents = false;
+
+export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+
+export const enableTrustedTypesIntegration = false;
+
+// Enables a warning when trying to spread a 'key' to an element;
+// a deprecated pattern we want to get rid of in the future
+export const warnAboutSpreadingKeyToJSX = false;
+
+export const enableComponentStackLocations = true;
+
+export const enableNewReconciler = false;
+
+// --------------------------
+// Future APIs to be deprecated
+// --------------------------
+
+// Prevent the value and checked attributes from syncing
+// with their related DOM properties
+export const disableInputAttributeSyncing = false;
+
 export const warnAboutStringRefs = false;
 
 export const disableLegacyContext = false;
 
-export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+// Disables children for <textarea> elements
+export const disableTextareaChildren = false;
+
+export const disableModulePatternComponents = false;
+
+// We should remove this flag once the above flag becomes enabled
+export const warnUnstableRenderSubtreeIntoContainer = false;
+
+// Support legacy Primer support on internal FB www
+export const enableLegacyFBSupport = false;
+
+// Updates that occur in the render phase are not officially supported. But when
+// they do occur, we defer them to a subsequent render by picking a lane that's
+// not currently rendering. We treat them the same as if they came from an
+// interleaved event. Remove this flag once we have migrated to the
+// new behavior.
+export const deferRenderPhaseUpdateToNextBatch = true;
+
+// Replacement for runWithPriority in React internals.
+export const decoupleUpdatePriorityFromScheduler = false;

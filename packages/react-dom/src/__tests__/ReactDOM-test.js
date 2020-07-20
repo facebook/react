@@ -139,7 +139,7 @@ describe('ReactDOM', () => {
     expect(() => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, 'no');
-      }).toWarnDev(
+      }).toErrorDev(
         'render(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
       );
@@ -151,7 +151,7 @@ describe('ReactDOM', () => {
     expect(() => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, {foo: 'bar'});
-      }).toWarnDev(
+      }).toErrorDev(
         'render(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
@@ -163,7 +163,7 @@ describe('ReactDOM', () => {
     expect(() => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, new Foo());
-      }).toWarnDev(
+      }).toErrorDev(
         'render(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
@@ -192,7 +192,7 @@ describe('ReactDOM', () => {
     expect(() => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, 'no');
-      }).toWarnDev(
+      }).toErrorDev(
         'render(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: no.',
       );
@@ -205,7 +205,7 @@ describe('ReactDOM', () => {
     expect(() => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, {foo: 'bar'});
-      }).toWarnDev(
+      }).toErrorDev(
         'render(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
@@ -218,7 +218,7 @@ describe('ReactDOM', () => {
     expect(() => {
       expect(() => {
         ReactDOM.render(<A />, myDiv, new Foo());
-      }).toWarnDev(
+      }).toErrorDev(
         'render(...): Expected the last optional `callback` argument to be ' +
           'a function. Instead received: [object Object].',
       );
@@ -359,6 +359,7 @@ describe('ReactDOM', () => {
         '1st node clicked',
         "2nd node clicked imperatively from 1st's handler",
       ];
+
       expect(actual).toEqual(expected);
     } finally {
       document.body.removeChild(container);
@@ -484,7 +485,7 @@ describe('ReactDOM', () => {
     }
 
     const container = document.createElement('div');
-    expect(() => ReactDOM.render(<App />, container)).toWarnDev([
+    expect(() => ReactDOM.render(<App />, container)).toErrorDev([
       // ReactDOM(App > div > span)
       'Invalid ARIA attribute `ariaTypo`. ARIA attributes follow the pattern aria-* and must be lowercase.\n' +
         '    in span (at **)\n' +

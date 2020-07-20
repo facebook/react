@@ -7,143 +7,85 @@
  * @flow
  */
 
-import React, {Fragment, useCallback, useRef, useState} from 'react';
-import Button from '../Button';
-import ButtonIcon from '../ButtonIcon';
+import * as React from 'react';
+import {Fragment, useRef} from 'react';
 import styles from './EditableValue.css';
+import {useEditableValue} from '../hooks';
 
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
 type EditableValueProps = {|
-  dataType: string,
+  className?: string,
   overrideValueFn: OverrideValueFn,
   path: Array<string | number>,
   value: any,
 |};
 
 export default function EditableValue({
-  dataType,
+  className = '',
   overrideValueFn,
   path,
   value,
 }: EditableValueProps) {
-  const [hasPendingChanges, setHasPendingChanges] = useState(false);
-  const [editableValue, setEditableValue] = useState(value);
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const [state, dispatch] = useEditableValue(value);
+  const {editableValue, hasPendingChanges, isValid, parsedValue} = state;
 
-  if (hasPendingChanges && editableValue === value) {
-    setHasPendingChanges(false);
-  }
+  const reset = () =>
+    dispatch({
+      type: 'RESET',
+      externalValue: value,
+    });
 
-  const handleChange = useCallback(
-    ({target}) => {
-      if (dataType === 'boolean') {
-        setEditableValue(target.checked);
-        overrideValueFn(path, target.checked);
-      } else {
-        setEditableValue(target.value);
-      }
-      setHasPendingChanges(true);
-    },
-    [dataType, overrideValueFn, path],
-  );
+  const handleChange = ({target}) =>
+    dispatch({
+      type: 'UPDATE',
+      editableValue: target.value,
+      externalValue: value,
+    });
 
-  const handleReset = useCallback(
-    () => {
-      setEditableValue(value);
-      setHasPendingChanges(false);
+  const handleKeyDown = event => {
+    // Prevent keydown events from e.g. change selected element in the tree
+    event.stopPropagation();
 
-      if (inputRef.current !== null) {
-        inputRef.current.focus();
-      }
-    },
-    [value],
-  );
+    switch (event.key) {
+      case 'Enter':
+        applyChanges();
+        break;
+      case 'Escape':
+        reset();
+        break;
+      default:
+        break;
+    }
+  };
 
-  const handleKeyDown = useCallback(
-    event => {
-      // Prevent keydown events from e.g. change selected element in the tree
-      event.stopPropagation();
-
-      const {key} = event;
-
-      if (key === 'Enter') {
-        if (dataType === 'number') {
-          const parsedValue = parseFloat(editableValue);
-          if (!Number.isNaN(parsedValue)) {
-            overrideValueFn(path, parsedValue);
-          }
-        } else {
-          overrideValueFn(path, editableValue);
-        }
-
-        // Don't reset the pending change flag here.
-        // The inspected fiber won't be updated until after the next "inspectElement" message.
-        // We'll reset that flag during a subsequent render.
-      } else if (key === 'Escape') {
-        setEditableValue(value);
-        setHasPendingChanges(false);
-      }
-    },
-    [editableValue, dataType, overrideValueFn, path, value],
-  );
-
-  // Render different input types based on the dataType
-  let type = 'text';
-  if (dataType === 'boolean') {
-    type = 'checkbox';
-  } else if (dataType === 'number') {
-    type = 'number';
-  }
-
-  let inputValue = value == null ? '' : value;
-  if (hasPendingChanges) {
-    inputValue = editableValue == null ? '' : editableValue;
-  }
+  const applyChanges = () => {
+    if (isValid && hasPendingChanges) {
+      overrideValueFn(path, parsedValue);
+    }
+  };
 
   let placeholder = '';
-  if (value === null) {
-    placeholder = '(null)';
-  } else if (value === undefined) {
+  if (editableValue === undefined) {
     placeholder = '(undefined)';
-  } else if (dataType === 'string') {
-    placeholder = '(string)';
+  } else {
+    placeholder = 'Enter valid JSON';
   }
 
   return (
     <Fragment>
-      {dataType === 'boolean' && (
-        <label className={styles.CheckboxLabel}>
-          <input
-            checked={inputValue}
-            className={styles.Checkbox}
-            onChange={handleChange}
-            onKeyDown={handleKeyDown}
-            ref={inputRef}
-            type={type}
-          />
-        </label>
-      )}
-      {dataType !== 'boolean' && (
-        <input
-          className={styles.Input}
-          onChange={handleChange}
-          onKeyDown={handleKeyDown}
-          placeholder={placeholder}
-          ref={inputRef}
-          type={type}
-          value={inputValue}
-        />
-      )}
-      {hasPendingChanges &&
-        dataType !== 'boolean' && (
-          <Button
-            className={styles.ResetButton}
-            onClick={handleReset}
-            title="Reset value">
-            <ButtonIcon type="undo" />
-          </Button>
-        )}
+      <input
+        autoComplete="new-password"
+        className={`${isValid ? styles.Input : styles.Invalid} ${className}`}
+        onBlur={applyChanges}
+        onChange={handleChange}
+        onKeyDown={handleKeyDown}
+        placeholder={placeholder}
+        ref={inputRef}
+        type="text"
+        value={editableValue}
+      />
     </Fragment>
   );
 }

@@ -17,8 +17,9 @@ import {
 import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
 import {
-  getSavedComponentFilters,
   getAppendComponentStack,
+  getBreakOnConsoleErrors,
+  getSavedComponentFilters,
 } from 'react-devtools-shared/src/utils';
 import {Server} from 'ws';
 import {join} from 'path';
@@ -40,11 +41,6 @@ let nodeWaitingToConnectHTML: string = '';
 let projectRoots: Array<string> = [];
 let statusListener: StatusListener = (message: string) => {};
 
-// Unlike browser extension users, people using the standalone have actively installed version 4,
-// So we probably don't need to show them a changelog notice.
-// We should give embedded users (e.g. Nuclide, Sonar) a way of showing this dialog though.
-let showWelcomeToTheNewDevToolsDialog: boolean = false;
-
 function setContentDOMNode(value: HTMLElement) {
   node = value;
 
@@ -60,11 +56,6 @@ function setProjectRoots(value: Array<string>) {
 
 function setStatusListener(value: StatusListener) {
   statusListener = value;
-  return DevtoolsUI;
-}
-
-function setShowWelcomeToTheNewDevToolsDialog(value: boolean) {
-  showWelcomeToTheNewDevToolsDialog = value;
   return DevtoolsUI;
 }
 
@@ -108,7 +99,6 @@ function reload() {
         bridge: ((bridge: any): FrontendBridge),
         canViewElementSourceFunction,
         showTabBar: true,
-        showWelcomeToTheNewDevToolsDialog,
         store: ((store: any): Store),
         warnIfLegacyBackendDetected: true,
         viewElementSourceFunction,
@@ -154,9 +144,27 @@ function onError({code, message}) {
   safeUnmount();
 
   if (code === 'EADDRINUSE') {
-    node.innerHTML = `<div id="waiting"><h2>Another instance of DevTools is running</h2></div>`;
+    node.innerHTML = `
+      <div class="box">
+        <div class="box-header">
+          Another instance of DevTools is running.
+        </div>
+        <div class="box-content">
+          Only one copy of DevTools can be used at a time.
+        </div>
+      </div>
+    `;
   } else {
-    node.innerHTML = `<div id="waiting"><h2>Unknown error (${message})</h2></div>`;
+    node.innerHTML = `
+      <div class="box">
+        <div class="box-header">
+          Unknown error
+        </div>
+        <div class="box-content">
+          ${message}
+        </div>
+      </div>
+    `;
   }
 }
 
@@ -234,8 +242,20 @@ function connectToSocket(socket: WebSocket) {
   };
 }
 
-function startServer(port?: number = 8097) {
-  const httpServer = require('http').createServer();
+type ServerOptions = {
+  key?: string,
+  cert?: string,
+};
+
+function startServer(
+  port?: number = 8097,
+  host?: string = 'localhost',
+  httpsOptions?: ServerOptions,
+) {
+  const useHttps = !!httpsOptions;
+  const httpServer = useHttps
+    ? require('https').createServer(httpsOptions)
+    : require('http').createServer();
   const server = new Server({server: httpServer});
   let connected: WebSocket | null = null;
   server.on('connection', (socket: WebSocket) => {
@@ -275,11 +295,14 @@ function startServer(port?: number = 8097) {
     // Because of this it relies on the extension to pass filters, so include them wth the response here.
     // This will ensure that saved filters are shared across different web pages.
     const savedPreferencesString = `
-      window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
-        getSavedComponentFilters(),
-      )};
       window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = ${JSON.stringify(
         getAppendComponentStack(),
+      )};
+      window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ = ${JSON.stringify(
+        getBreakOnConsoleErrors(),
+      )};
+      window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
+        getSavedComponentFilters(),
       )};`;
 
     response.end(
@@ -287,7 +310,9 @@ function startServer(port?: number = 8097) {
         '\n;' +
         backendFile.toString() +
         '\n;' +
-        'ReactDevToolsBackend.connectToDevTools();',
+        `ReactDevToolsBackend.connectToDevTools({port: ${port}, host: '${host}', useHttps: ${
+          useHttps ? 'true' : 'false'
+        }});`,
     );
   });
 
@@ -318,7 +343,6 @@ const DevtoolsUI = {
   connectToSocket,
   setContentDOMNode,
   setProjectRoots,
-  setShowWelcomeToTheNewDevToolsDialog,
   setStatusListener,
   startServer,
 };

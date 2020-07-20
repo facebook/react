@@ -183,8 +183,8 @@ describe('DOMPropertyOperations', () => {
           <input type="text" onChange={function() {}} />,
           container,
         ),
-      ).toWarnDev(
-        'A component is changing a controlled input of type text to be uncontrolled',
+      ).toErrorDev(
+        'A component is changing a controlled input to be uncontrolled',
       );
       if (disableInputAttributeSyncing) {
         expect(container.firstChild.hasAttribute('value')).toBe(false);

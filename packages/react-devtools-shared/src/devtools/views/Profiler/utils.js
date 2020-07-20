@@ -60,8 +60,16 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
           throw Error(`Could not find profiling snapshots for root ${rootID}`);
         }
 
-        dataForRoots.set(rootID, {
-          commitData: commitData.map((commitDataBackend, commitIndex) => ({
+        // Do not filter empty commits from the profiler data!
+        // We used to do this, but it was error prone (see #18798).
+        // A commit may appear to be empty (no actual durations) because of component filters,
+        // but filtering these empty commits causes interaction commit indices to be off by N.
+        // This not only corrupts the resulting data, but also potentially causes runtime errors.
+        //
+        // For that matter, hiding "empty" commits might cause confusion too.
+        // A commit *did happen* even if none of the components the Profiler is showing were involved.
+        const convertedCommitData = commitData.map(
+          (commitDataBackend, commitIndex) => ({
             changeDescriptions:
               commitDataBackend.changeDescriptions != null
                 ? new Map(commitDataBackend.changeDescriptions)
@@ -74,7 +82,11 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
             interactionIDs: commitDataBackend.interactionIDs,
             priorityLevel: commitDataBackend.priorityLevel,
             timestamp: commitDataBackend.timestamp,
-          })),
+          }),
+        );
+
+        dataForRoots.set(rootID, {
+          commitData: convertedCommitData,
           displayName,
           initialTreeBaseDurations: new Map(initialTreeBaseDurations),
           interactionCommits: new Map(interactionCommits),
@@ -87,7 +99,7 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
     );
   });
 
-  return {dataForRoots};
+  return {dataForRoots, imported: false};
 }
 
 // Converts a Profiling data export into the format required by the Store.
@@ -144,7 +156,7 @@ export function prepareProfilingDataFrontendFromExport(
     },
   );
 
-  return {dataForRoots};
+  return {dataForRoots, imported: true};
 }
 
 // Converts a Store Profiling data into a format that can be safely (JSON) serialized for export.

@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {
+import * as React from 'react';
+import {
   forwardRef,
   Fragment,
   memo,
@@ -92,12 +93,24 @@ function FunctionWithHooks(props: any, ref: React$Ref<any>) {
 const MemoWithHooks = memo(FunctionWithHooks);
 const ForwardRefWithHooks = forwardRef(FunctionWithHooks);
 
+function wrapWithHoc(Component) {
+  function Hoc() {
+    return <Component />;
+  }
+  // $FlowFixMe
+  const displayName = Component.displayName || Component.name;
+  Hoc.displayName = `withHoc(${displayName})`;
+  return Hoc;
+}
+const HocWithHooks = wrapWithHoc(FunctionWithHooks);
+
 export default function CustomHooks() {
   return (
     <Fragment>
       <FunctionWithHooks />
       <MemoWithHooks />
       <ForwardRefWithHooks />
+      <HocWithHooks />
     </Fragment>
   );
 }

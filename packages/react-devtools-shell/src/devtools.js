@@ -55,9 +55,10 @@ inject('dist/app.js', () => {
       root.render(
         createElement(DevTools, {
           browserTheme: 'light',
+          enabledInspectedElementContextMenu: true,
           showTabBar: true,
-          showWelcomeToTheNewDevToolsDialog: true,
           warnIfLegacyBackendDetected: true,
+          warnIfUnsupportedVersionDetected: true,
         }),
       );
     },

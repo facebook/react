@@ -1,7 +1,7 @@
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
 const {
-  getGitHubURL,
+  GITHUB_URL,
   getVersionString,
 } = require('react-devtools-extensions/utils');
 
@@ -15,7 +15,6 @@ const builtModulesDir = resolve(__dirname, '..', '..', 'build', 'node_modules');
 
 const __DEV__ = NODE_ENV === 'development';
 
-const GITHUB_URL = getGitHubURL();
 const DEVTOOLS_VERSION = getVersionString();
 
 module.exports = {
@@ -44,6 +43,8 @@ module.exports = {
   plugins: [
     new DefinePlugin({
       __DEV__: true,
+      __PROFILE__: false,
+      __EXPERIMENTAL__: true,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
     }),

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import EventEmitter from 'events';
+import EventEmitter from './events';
 
 import type {ComponentFilter, Wall} from './types';
 import type {
@@ -51,9 +51,25 @@ type OverrideSuspense = {|
   forceFallback: boolean,
 |};
 
+type CopyElementPathParams = {|
+  ...ElementAndRendererID,
+  path: Array<string | number>,
+|};
+
+type ViewAttributeSourceParams = {|
+  ...ElementAndRendererID,
+  path: Array<string | number>,
+|};
+
 type InspectElementParams = {|
   ...ElementAndRendererID,
   path?: Array<string | number>,
+|};
+
+type StoreAsGlobalParams = {|
+  ...ElementAndRendererID,
+  count: number,
+  path: Array<string | number>,
 |};
 
 type NativeStyleEditor_RenameAttributeParams = {|
@@ -69,7 +85,13 @@ type NativeStyleEditor_SetValueParams = {|
   value: string,
 |};
 
+type UpdateConsolePatchSettingsParams = {|
+  appendComponentStack: boolean,
+  breakOnConsoleErrors: boolean,
+|};
+
 type BackendEvents = {|
+  extensionBackendInitialized: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
   operations: [Array<number>],
@@ -83,6 +105,7 @@ type BackendEvents = {|
   stopInspectingNative: [boolean],
   syncSelectionFromNativeElementsPanel: [],
   syncSelectionToNativeElementsPanel: [],
+  unsupportedRendererVersion: [RendererID],
 
   // React Native style editor plug-in.
   isNativeStyleEditorSupported: [
@@ -93,6 +116,7 @@ type BackendEvents = {|
 
 type FrontendEvents = {|
   clearNativeElementHighlight: [],
+  copyElementPath: [CopyElementPathParams],
   getOwnersList: [ElementAndRendererID],
   getProfilingData: [{|rendererID: RendererID|}],
   getProfilingStatus: [],
@@ -107,13 +131,16 @@ type FrontendEvents = {|
   profilingData: [ProfilingDataBackend],
   reloadAndProfile: [boolean],
   selectFiber: [number],
+  setTraceUpdatesEnabled: [boolean],
   shutdown: [],
   startInspectingNative: [],
   startProfiling: [boolean],
   stopInspectingNative: [boolean],
   stopProfiling: [],
-  updateAppendComponentStack: [boolean],
+  storeAsGlobal: [StoreAsGlobalParams],
   updateComponentFilters: [Array<ComponentFilter>],
+  updateConsolePatchSettings: [UpdateConsolePatchSettingsParams],
+  viewAttributeSource: [ViewAttributeSourceParams],
   viewElementSource: [ElementAndRendererID],
 
   // React Native style editor plug-in.

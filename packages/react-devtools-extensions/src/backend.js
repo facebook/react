@@ -22,6 +22,10 @@ function welcome(event) {
 window.addEventListener('message', welcome);
 
 function setup(hook) {
+  if (hook == null) {
+    // DevTools didn't get injected into this page (maybe b'c of the contentType).
+    return;
+  }
   const Agent = require('react-devtools-shared/src/backend/agent').default;
   const Bridge = require('react-devtools-shared/src/bridge').default;
   const {initBackend} = require('react-devtools-shared/src/backend');
@@ -66,6 +70,10 @@ function setup(hook) {
   });
 
   initBackend(hook, agent, window);
+
+  // Let the frontend know that the backend has attached listeners and is ready for messages.
+  // This covers the case of of syncing saved values after reloading/navigating while DevTools remain open.
+  bridge.send('extensionBackendInitialized');
 
   // Setup React Native style editor if a renderer like react-native-web has injected it.
   if (hook.resolveRNStyle) {

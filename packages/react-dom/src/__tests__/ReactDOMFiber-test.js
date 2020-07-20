@@ -211,7 +211,7 @@ describe('ReactDOMFiber', () => {
   };
 
   const assertNamespacesMatch = function(tree) {
-    let testContainer = document.createElement('div');
+    const testContainer = document.createElement('div');
     svgEls = [];
     htmlEls = [];
     mathEls = [];
@@ -246,31 +246,33 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('');
   });
 
-  // TODO: remove in React 17
-  it('should support unstable_createPortal alias', () => {
-    const portalContainer = document.createElement('div');
+  // TODO: remove in React 18
+  if (!__EXPERIMENTAL__) {
+    it('should support unstable_createPortal alias', () => {
+      const portalContainer = document.createElement('div');
 
-    expect(() =>
-      ReactDOM.render(
-        <div>
-          {ReactDOM.unstable_createPortal(<div>portal</div>, portalContainer)}
-        </div>,
-        container,
-      ),
-    ).toLowPriorityWarnDev(
-      'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
-        'and will be removed in React 17+. Update your code to use ' +
-        'ReactDOM.createPortal() instead. It has the exact same API, ' +
-        'but without the "unstable_" prefix.',
-      {withoutStack: true},
-    );
-    expect(portalContainer.innerHTML).toBe('<div>portal</div>');
-    expect(container.innerHTML).toBe('<div></div>');
+      expect(() =>
+        ReactDOM.render(
+          <div>
+            {ReactDOM.unstable_createPortal(<div>portal</div>, portalContainer)}
+          </div>,
+          container,
+        ),
+      ).toWarnDev(
+        'The ReactDOM.unstable_createPortal() alias has been deprecated, ' +
+          'and will be removed in React 18+. Update your code to use ' +
+          'ReactDOM.createPortal() instead. It has the exact same API, ' +
+          'but without the "unstable_" prefix.',
+        {withoutStack: true},
+      );
+      expect(portalContainer.innerHTML).toBe('<div>portal</div>');
+      expect(container.innerHTML).toBe('<div></div>');
 
-    ReactDOM.unmountComponentAtNode(container);
-    expect(portalContainer.innerHTML).toBe('');
-    expect(container.innerHTML).toBe('');
-  });
+      ReactDOM.unmountComponentAtNode(container);
+      expect(portalContainer.innerHTML).toBe('');
+      expect(container.innerHTML).toBe('');
+    });
+  }
 
   it('should render many portals', () => {
     const portalContainer1 = document.createElement('div');
@@ -1002,7 +1004,7 @@ describe('ReactDOMFiber', () => {
         return <div onClick="woops" />;
       }
     }
-    expect(() => ReactDOM.render(<Example />, container)).toWarnDev(
+    expect(() => ReactDOM.render(<Example />, container)).toErrorDev(
       'Expected `onClick` listener to be a function, instead got a value of `string` type.\n' +
         '    in div (at **)\n' +
         '    in Example (at **)',
@@ -1015,7 +1017,7 @@ describe('ReactDOMFiber', () => {
         return <div onClick={false} />;
       }
     }
-    expect(() => ReactDOM.render(<Example />, container)).toWarnDev(
+    expect(() => ReactDOM.render(<Example />, container)).toErrorDev(
       'Expected `onClick` listener to be a function, instead got `false`.\n\n' +
         'If you used to conditionally omit it with onClick={condition && value}, ' +
         'pass onClick={condition ? value : undefined} instead.\n' +
@@ -1048,7 +1050,7 @@ describe('ReactDOMFiber', () => {
         super();
         expect(() => {
           node.click();
-        }).toWarnDev(
+        }).toErrorDev(
           'Warning: unstable_flushDiscreteUpdates: Cannot flush updates when React is already rendering.',
         );
       }
@@ -1133,7 +1135,7 @@ describe('ReactDOMFiber', () => {
     expect(() => {
       expect(() =>
         ReactDOM.render(<div key="2">baz</div>, container),
-      ).toWarnDev(
+      ).toErrorDev(
         'render(...): ' +
           'It looks like the React-rendered content of this container was ' +
           'removed without using React. This is not supported and will ' +
@@ -1151,7 +1153,9 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('<div>bar</div>');
     // then we mess with the DOM before an update
     container.innerHTML = '<div>MEOW.</div>';
-    expect(() => ReactDOM.render(<div>baz</div>, container)).toWarnDev(
+    expect(() =>
+      ReactDOM.render(<div>baz</div>, container),
+    ).toErrorDev(
       'render(...): ' +
         'It looks like the React-rendered content of this container was ' +
         'removed without using React. This is not supported and will ' +
@@ -1168,7 +1172,9 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('<div>bar</div>');
     // then we mess with the DOM before an update
     container.innerHTML = '';
-    expect(() => ReactDOM.render(<div>baz</div>, container)).toWarnDev(
+    expect(() =>
+      ReactDOM.render(<div>baz</div>, container),
+    ).toErrorDev(
       'render(...): ' +
         'It looks like the React-rendered content of this container was ' +
         'removed without using React. This is not supported and will ' +
@@ -1218,7 +1224,7 @@ describe('ReactDOMFiber', () => {
 
   // Regression test for https://github.com/facebook/react/issues/12643#issuecomment-413727104
   it('should not diff memoized host components', () => {
-    let inputRef = React.createRef();
+    const inputRef = React.createRef();
     let didCallOnChange = false;
 
     class Child extends React.Component {
@@ -1273,5 +1279,37 @@ describe('ReactDOMFiber', () => {
       }),
     );
     expect(didCallOnChange).toBe(true);
+  });
+
+  it('unmounted legacy roots should never clear newer root content from a container', () => {
+    const ref = React.createRef();
+
+    function OldApp() {
+      const hideOnFocus = () => {
+        // This app unmounts itself inside of a focus event.
+        ReactDOM.unmountComponentAtNode(container);
+      };
+
+      return (
+        <button onFocus={hideOnFocus} ref={ref}>
+          old
+        </button>
+      );
+    }
+
+    function NewApp() {
+      return <button ref={ref}>new</button>;
+    }
+
+    ReactDOM.render(<OldApp />, container);
+    ref.current.focus();
+
+    ReactDOM.render(<NewApp />, container);
+
+    // Calling focus again will flush previously scheduled discrete work for the old root-
+    // but this should not clear out the newly mounted app.
+    ref.current.focus();
+
+    expect(container.textContent).toBe('new');
   });
 });

@@ -117,14 +117,14 @@ describe('Scheduler', () => {
 
     // Advance by just a bit more to expire the user blocking callbacks
     Scheduler.unstable_advanceTime(1);
-    expect(Scheduler).toHaveYielded([
+    expect(Scheduler).toFlushExpired([
       'B (did timeout: true)',
       'C (did timeout: true)',
     ]);
 
     // Expire A
     Scheduler.unstable_advanceTime(4600);
-    expect(Scheduler).toHaveYielded(['A (did timeout: true)']);
+    expect(Scheduler).toFlushExpired(['A (did timeout: true)']);
 
     // Flush the rest without expiring
     expect(Scheduler).toFlushAndYield([
@@ -140,7 +140,7 @@ describe('Scheduler', () => {
     expect(Scheduler).toHaveYielded([]);
 
     Scheduler.unstable_advanceTime(1);
-    expect(Scheduler).toHaveYielded(['A']);
+    expect(Scheduler).toFlushExpired(['A']);
   });
 
   it('continues working on same task after yielding', () => {
@@ -154,7 +154,11 @@ describe('Scheduler', () => {
     });
 
     let didYield = false;
-    const tasks = [['C1', 100], ['C2', 100], ['C3', 100]];
+    const tasks = [
+      ['C1', 100],
+      ['C2', 100],
+      ['C3', 100],
+    ];
     const C = () => {
       while (tasks.length > 0) {
         const [label, ms] = tasks.shift();
@@ -188,7 +192,12 @@ describe('Scheduler', () => {
   });
 
   it('continuation callbacks inherit the expiration of the previous callback', () => {
-    const tasks = [['A', 125], ['B', 124], ['C', 100], ['D', 100]];
+    const tasks = [
+      ['A', 125],
+      ['B', 124],
+      ['C', 100],
+      ['D', 100],
+    ];
     const work = () => {
       while (tasks.length > 0) {
         const [label, ms] = tasks.shift();
@@ -208,11 +217,16 @@ describe('Scheduler', () => {
 
     // Advance time by just a bit more. This should expire all the remaining work.
     Scheduler.unstable_advanceTime(1);
-    expect(Scheduler).toHaveYielded(['C', 'D']);
+    expect(Scheduler).toFlushExpired(['C', 'D']);
   });
 
   it('continuations are interrupted by higher priority work', () => {
-    const tasks = [['A', 100], ['B', 100], ['C', 100], ['D', 100]];
+    const tasks = [
+      ['A', 100],
+      ['B', 100],
+      ['C', 100],
+      ['D', 100],
+    ];
     const work = () => {
       while (tasks.length > 0) {
         const [label, ms] = tasks.shift();
@@ -238,7 +252,12 @@ describe('Scheduler', () => {
     'continuations are interrupted by higher priority work scheduled ' +
       'inside an executing callback',
     () => {
-      const tasks = [['A', 100], ['B', 100], ['C', 100], ['D', 100]];
+      const tasks = [
+        ['A', 100],
+        ['B', 100],
+        ['C', 100],
+        ['D', 100],
+      ];
       const work = () => {
         while (tasks.length > 0) {
           const task = tasks.shift();
@@ -631,7 +650,12 @@ describe('Scheduler', () => {
       );
 
       // Schedule a time-sliced task at default priority.
-      const tasks = [['A', 100], ['B', 100], ['C', 100], ['D', 100]];
+      const tasks = [
+        ['A', 100],
+        ['B', 100],
+        ['C', 100],
+        ['D', 100],
+      ];
       const work = () => {
         while (tasks.length > 0) {
           const task = tasks.shift();
@@ -681,7 +705,7 @@ describe('Scheduler', () => {
 
       // Now it expires
       Scheduler.unstable_advanceTime(1);
-      expect(Scheduler).toHaveYielded(['A']);
+      expect(Scheduler).toFlushExpired(['A']);
     });
 
     it('cancels a delayed task', () => {

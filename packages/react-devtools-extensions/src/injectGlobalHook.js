@@ -24,16 +24,20 @@ let lastDetectionResult;
 // So instead, the hook will use postMessage() to pass message to us here.
 // And when this happens, we'll send a message to the "background page".
 window.addEventListener('message', function(evt) {
-  if (
-    evt.source === window &&
-    evt.data &&
-    evt.data.source === 'react-devtools-detector'
-  ) {
+  if (evt.source !== window || !evt.data) {
+    return;
+  }
+  if (evt.data.source === 'react-devtools-detector') {
     lastDetectionResult = {
       hasDetectedReact: true,
       reactBuildType: evt.data.reactBuildType,
     };
     chrome.runtime.sendMessage(lastDetectionResult);
+  } else if (evt.data.source === 'react-devtools-inject-backend') {
+    const script = document.createElement('script');
+    script.src = chrome.runtime.getURL('build/react_devtools_backend.js');
+    document.documentElement.appendChild(script);
+    script.parentNode.removeChild(script);
   }
 });
 
@@ -82,8 +86,30 @@ if (sessionStorageGetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY) === 'true') {
   injectCode(rendererCode);
 }
 
-// Inject a `__REACT_DEVTOOLS_GLOBAL_HOOK__` global so that React can detect that the
-// devtools are installed (and skip its suggestion to install the devtools).
-injectCode(
-  ';(' + installHook.toString() + '(window))' + saveNativeValues + detectReact,
-);
+// Inject a __REACT_DEVTOOLS_GLOBAL_HOOK__ global for React to interact with.
+// Only do this for HTML documents though, to avoid e.g. breaking syntax highlighting for XML docs.
+if ('text/html' === document.contentType) {
+  injectCode(
+    ';(' +
+      installHook.toString() +
+      '(window))' +
+      saveNativeValues +
+      detectReact,
+  );
+}
+
+if (typeof exportFunction === 'function') {
+  // eslint-disable-next-line no-undef
+  exportFunction(
+    text => {
+      // Call clipboard.writeText from the extension content script
+      // (as it has the clipboardWrite permission) and return a Promise
+      // accessible to the webpage js code.
+      return new window.Promise((resolve, reject) =>
+        window.navigator.clipboard.writeText(text).then(resolve, reject),
+      );
+    },
+    window.wrappedJSObject.__REACT_DEVTOOLS_GLOBAL_HOOK__,
+    {defineAs: 'clipboardCopyText'},
+  );
+}

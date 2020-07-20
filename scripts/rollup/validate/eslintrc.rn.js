@@ -13,6 +13,7 @@ module.exports = {
     Proxy: true,
     WeakMap: true,
     WeakSet: true,
+    Reflect: true,
     // Vendor specific
     MSApp: true,
     __REACT_DEVTOOLS_GLOBAL_HOOK__: true,
@@ -21,6 +22,8 @@ module.exports = {
     // Fabric. See https://github.com/facebook/react/pull/15490
     // for more information
     nativeFabricUIManager: true,
+    // Trusted Types
+    trustedTypes: true,
 
     // Scheduler profiling
     SharedArrayBuffer: true,

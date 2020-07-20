@@ -7,8 +7,4 @@
  * @flow
  */
 
-'use strict';
-
-const Wedge = require('./npm/Wedge');
-
-module.exports = Wedge;
+export {default} from './npm/Wedge';

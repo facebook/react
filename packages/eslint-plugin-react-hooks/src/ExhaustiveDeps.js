@@ -11,14 +11,26 @@
 
 export default {
   meta: {
+    type: 'suggestion',
+    docs: {
+      description:
+        'verifies the list of dependencies for Hooks like useEffect and similar',
+      category: 'Best Practices',
+      recommended: true,
+      url: 'https://github.com/facebook/react/issues/14920',
+    },
     fixable: 'code',
     schema: [
       {
         type: 'object',
         additionalProperties: false,
+        enableDangerousAutofixThisMayCauseInfiniteLoops: false,
         properties: {
           additionalHooks: {
             type: 'string',
+          },
+          enableDangerousAutofixThisMayCauseInfiniteLoops: {
+            type: 'boolean',
           },
         },
       },
@@ -32,13 +44,36 @@ export default {
       context.options[0].additionalHooks
         ? new RegExp(context.options[0].additionalHooks)
         : undefined;
-    const options = {additionalHooks};
+
+    const enableDangerousAutofixThisMayCauseInfiniteLoops =
+      (context.options &&
+        context.options[0] &&
+        context.options[0].enableDangerousAutofixThisMayCauseInfiniteLoops) ||
+      false;
+
+    const options = {
+      additionalHooks,
+      enableDangerousAutofixThisMayCauseInfiniteLoops,
+    };
+
+    function reportProblem(problem) {
+      if (enableDangerousAutofixThisMayCauseInfiniteLoops) {
+        // Used to enable legacy behavior. Dangerous.
+        // Keep this as an option until major IDEs upgrade (including VSCode FB ESLint extension).
+        if (Array.isArray(problem.suggest) && problem.suggest.length > 0) {
+          problem.fix = problem.suggest[0].fix;
+        }
+      }
+      context.report(problem);
+    }
+
+    const scopeManager = context.getSourceCode().scopeManager;
 
     // Should be shared between visitors.
-    let setStateCallSites = new WeakMap();
-    let stateVariables = new WeakSet();
-    let staticKnownValueCache = new WeakMap();
-    let functionWithoutCapturedValueCache = new WeakMap();
+    const setStateCallSites = new WeakMap();
+    const stateVariables = new WeakSet();
+    const stableKnownValueCache = new WeakMap();
+    const functionWithoutCapturedValueCache = new WeakMap();
     function memoizeWithWeakMap(fn, map) {
       return function(arg) {
         if (map.has(arg)) {
@@ -53,50 +88,33 @@ export default {
     }
 
     return {
-      FunctionExpression: visitFunctionExpression,
-      ArrowFunctionExpression: visitFunctionExpression,
+      CallExpression: visitCallExpression,
     };
 
-    /**
-     * Visitor for both function expressions and arrow function expressions.
-     */
-    function visitFunctionExpression(node) {
-      // We only want to lint nodes which are reactive hook callbacks.
-      if (
-        (node.type !== 'FunctionExpression' &&
-          node.type !== 'ArrowFunctionExpression') ||
-        node.parent.type !== 'CallExpression'
-      ) {
+    function visitCallExpression(node) {
+      const callbackIndex = getReactiveHookCallbackIndex(node.callee, options);
+      if (callbackIndex === -1) {
+        // Not a React Hook call that needs deps.
         return;
       }
-
-      const callbackIndex = getReactiveHookCallbackIndex(
-        node.parent.callee,
-        options,
-      );
-      if (node.parent.arguments[callbackIndex] !== node) {
-        return;
-      }
-
-      // Get the reactive hook node.
-      const reactiveHook = node.parent.callee;
+      const callback = node.arguments[callbackIndex];
+      const reactiveHook = node.callee;
       const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
-      const isEffect = reactiveHookName.endsWith('Effect');
+      const declaredDependenciesNode = node.arguments[callbackIndex + 1];
+      const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
 
-      // Get the declared dependencies for this reactive hook. If there is no
+      // Check the declared dependencies for this reactive hook. If there is no
       // second argument then the reactive callback will re-run on every render.
       // So no need to check for dependency inclusion.
-      const depsIndex = callbackIndex + 1;
-      const declaredDependenciesNode = node.parent.arguments[depsIndex];
       if (!declaredDependenciesNode && !isEffect) {
         // These are only used for optimization.
         if (
           reactiveHookName === 'useMemo' ||
           reactiveHookName === 'useCallback'
         ) {
-          // TODO: Can this have an autofix?
-          context.report({
-            node: node.parent.callee,
+          // TODO: Can this have a suggestion?
+          reportProblem({
+            node: reactiveHook,
             message:
               `React Hook ${reactiveHookName} does nothing when called with ` +
               `only one argument. Did you forget to pass an array of ` +
@@ -106,8 +124,128 @@ export default {
         return;
       }
 
+      switch (callback.type) {
+        case 'FunctionExpression':
+        case 'ArrowFunctionExpression':
+          visitFunctionWithDependencies(
+            callback,
+            declaredDependenciesNode,
+            reactiveHook,
+            reactiveHookName,
+            isEffect,
+          );
+          return; // Handled
+        case 'Identifier':
+          if (!declaredDependenciesNode) {
+            // No deps, no problems.
+            return; // Handled
+          }
+          // The function passed as a callback is not written inline.
+          // But perhaps it's in the dependencies array?
+          if (
+            declaredDependenciesNode.elements &&
+            declaredDependenciesNode.elements.some(
+              el => el && el.type === 'Identifier' && el.name === callback.name,
+            )
+          ) {
+            // If it's already in the list of deps, we don't care because
+            // this is valid regardless.
+            return; // Handled
+          }
+          // We'll do our best effort to find it, complain otherwise.
+          const variable = context.getScope().set.get(callback.name);
+          if (variable == null || variable.defs == null) {
+            // If it's not in scope, we don't care.
+            return; // Handled
+          }
+          // The function passed as a callback is not written inline.
+          // But it's defined somewhere in the render scope.
+          // We'll do our best effort to find and check it, complain otherwise.
+          const def = variable.defs[0];
+          if (!def || !def.node) {
+            break; // Unhandled
+          }
+          if (def.type !== 'Variable' && def.type !== 'FunctionName') {
+            // Parameter or an unusual pattern. Bail out.
+            break; // Unhandled
+          }
+          switch (def.node.type) {
+            case 'FunctionDeclaration':
+              // useEffect(() => { ... }, []);
+              visitFunctionWithDependencies(
+                def.node,
+                declaredDependenciesNode,
+                reactiveHook,
+                reactiveHookName,
+                isEffect,
+              );
+              return; // Handled
+            case 'VariableDeclarator':
+              const init = def.node.init;
+              if (!init) {
+                break; // Unhandled
+              }
+              switch (init.type) {
+                // const effectBody = () => {...};
+                // useEffect(effectBody, []);
+                case 'ArrowFunctionExpression':
+                case 'FunctionExpression':
+                  // We can inspect this function as if it were inline.
+                  visitFunctionWithDependencies(
+                    init,
+                    declaredDependenciesNode,
+                    reactiveHook,
+                    reactiveHookName,
+                    isEffect,
+                  );
+                  return; // Handled
+              }
+              break; // Unhandled
+          }
+          break; // Unhandled
+        default:
+          // useEffect(generateEffectBody(), []);
+          reportProblem({
+            node: reactiveHook,
+            message:
+              `React Hook ${reactiveHookName} received a function whose dependencies ` +
+              `are unknown. Pass an inline function instead.`,
+          });
+          return; // Handled
+      }
+
+      // Something unusual. Fall back to suggesting to add the body itself as a dep.
+      reportProblem({
+        node: reactiveHook,
+        message:
+          `React Hook ${reactiveHookName} has a missing dependency: '${callback.name}'. ` +
+          `Either include it or remove the dependency array.`,
+        suggest: [
+          {
+            desc: `Update the dependencies array to be: [${callback.name}]`,
+            fix(fixer) {
+              return fixer.replaceText(
+                declaredDependenciesNode,
+                `[${callback.name}]`,
+              );
+            },
+          },
+        ],
+      });
+    }
+
+    /**
+     * Visitor for both function expressions and arrow function expressions.
+     */
+    function visitFunctionWithDependencies(
+      node,
+      declaredDependenciesNode,
+      reactiveHook,
+      reactiveHookName,
+      isEffect,
+    ) {
       if (isEffect && node.async) {
-        context.report({
+        reportProblem({
           node: node,
           message:
             `Effect callbacks are synchronous to prevent race conditions. ` +
@@ -125,7 +263,7 @@ export default {
       }
 
       // Get the current scope.
-      const scope = context.getScope();
+      const scope = scopeManager.acquire(node);
 
       // Find all our "pure scopes". On every re-render of a component these
       // pure scopes may have changes to the variables declared within. So all
@@ -158,7 +296,7 @@ export default {
       // Next we'll define a few helpers that helps us
       // tell if some values don't have to be declared as deps.
 
-      // Some are known to be static based on Hook calls.
+      // Some are known to be stable based on Hook calls.
       // const [state, setState] = useState() / React.useState()
       //               ^^^ true for this reference
       // const [state, dispatch] = useReducer() / React.useReducer()
@@ -166,7 +304,7 @@ export default {
       // const ref = useRef()
       //       ^^^ true for this reference
       // False for everything else.
-      function isStaticKnownHookValue(resolved) {
+      function isStableKnownHookValue(resolved) {
         if (!Array.isArray(resolved.defs)) {
           return false;
         }
@@ -178,9 +316,12 @@ export default {
         if (def.node.type !== 'VariableDeclarator') {
           return false;
         }
-        const init = def.node.init;
+        let init = def.node.init;
         if (init == null) {
           return false;
+        }
+        while (init.type === 'TSAsExpression') {
+          init = init.expression;
         }
         // Detect primitive constants
         // const foo = 42
@@ -202,7 +343,7 @@ export default {
             typeof init.value === 'number' ||
             init.value === null)
         ) {
-          // Definitely static
+          // Definitely stable
           return true;
         }
         // Detect known Hook calls
@@ -226,10 +367,10 @@ export default {
         const id = def.node.id;
         const {name} = callee;
         if (name === 'useRef' && id.type === 'Identifier') {
-          // useRef() return value is static.
+          // useRef() return value is stable.
           return true;
         } else if (name === 'useState' || name === 'useReducer') {
-          // Only consider second value in initializing tuple static.
+          // Only consider second value in initializing tuple stable.
           if (
             id.type === 'ArrayPattern' &&
             id.elements.length === 2 &&
@@ -246,7 +387,7 @@ export default {
                   );
                 }
               }
-              // Setter is static.
+              // Setter is stable.
               return true;
             } else if (id.elements[0] === resolved.identifiers[0]) {
               if (name === 'useState') {
@@ -279,12 +420,12 @@ export default {
         // Search the direct component subscopes for
         // top-level function definitions matching this reference.
         const fnNode = def.node;
-        let childScopes = componentScope.childScopes;
+        const childScopes = componentScope.childScopes;
         let fnScope = null;
         let i;
         for (i = 0; i < childScopes.length; i++) {
-          let childScope = childScopes[i];
-          let childScopeBlock = childScope.block;
+          const childScope = childScopes[i];
+          const childScopeBlock = childScope.block;
           if (
             // function handleChange() {}
             (fnNode.type === 'FunctionDeclaration' &&
@@ -311,22 +452,22 @@ export default {
           }
           if (
             pureScopes.has(ref.resolved.scope) &&
-            // Static values are fine though,
+            // Stable values are fine though,
             // although we won't check functions deeper.
-            !memoizedIsStaticKnownHookValue(ref.resolved)
+            !memoizedIsStablecKnownHookValue(ref.resolved)
           ) {
             return false;
           }
         }
         // If we got here, this function doesn't capture anything
-        // from render--or everything it captures is known static.
+        // from render--or everything it captures is known stable.
         return true;
       }
 
       // Remember such values. Avoid re-running extra checks on them.
-      const memoizedIsStaticKnownHookValue = memoizeWithWeakMap(
-        isStaticKnownHookValue,
-        staticKnownValueCache,
+      const memoizedIsStablecKnownHookValue = memoizeWithWeakMap(
+        isStableKnownHookValue,
+        stableKnownValueCache,
       );
       const memoizedIsFunctionWithoutCapturedValues = memoizeWithWeakMap(
         isFunctionWithoutCapturedValues,
@@ -354,8 +495,9 @@ export default {
       }
 
       // Get dependencies from all our resolved references in pure scopes.
-      // Key is dependency string, value is whether it's static.
+      // Key is dependency string, value is whether it's stable.
       const dependencies = new Map();
+      const optionalChains = new Map();
       gatherDependenciesRecursively(scope);
 
       function gatherDependenciesRecursively(currentScope) {
@@ -376,7 +518,10 @@ export default {
             reference.identifier,
           );
           const dependencyNode = getDependency(referenceNode);
-          const dependency = toPropertyAccessString(dependencyNode);
+          const dependency = analyzePropertyChain(
+            dependencyNode,
+            optionalChains,
+          );
 
           // Accessing ref.current inside effect cleanup is bad.
           if (
@@ -384,7 +529,8 @@ export default {
             isEffect &&
             // ... and this look like accessing .current...
             dependencyNode.type === 'Identifier' &&
-            dependencyNode.parent.type === 'MemberExpression' &&
+            (dependencyNode.parent.type === 'MemberExpression' ||
+              dependencyNode.parent.type === 'OptionalMemberExpression') &&
             !dependencyNode.parent.computed &&
             dependencyNode.parent.property.type === 'Identifier' &&
             dependencyNode.parent.property.name === 'current' &&
@@ -397,37 +543,39 @@ export default {
             });
           }
 
-          const def = reference.resolved.defs[0];
-
-          if (def == null) {
+          if (dependencyNode.parent.type === 'TSTypeQuery') {
             continue;
           }
 
+          const def = reference.resolved.defs[0];
+          if (def == null) {
+            continue;
+          }
           // Ignore references to the function itself as it's not defined yet.
           if (def.node != null && def.node.init === node.parent) {
             continue;
           }
-
           // Ignore Flow type parameters
           if (def.type === 'TypeParameter') {
             continue;
           }
 
           // Add the dependency to a map so we can make sure it is referenced
-          // again in our dependencies array. Remember whether it's static.
+          // again in our dependencies array. Remember whether it's stable.
           if (!dependencies.has(dependency)) {
             const resolved = reference.resolved;
-            const isStatic =
-              memoizedIsStaticKnownHookValue(resolved) ||
+            const isStable =
+              memoizedIsStablecKnownHookValue(resolved) ||
               memoizedIsFunctionWithoutCapturedValues(resolved);
             dependencies.set(dependency, {
-              isStatic,
+              isStable,
               references: [reference],
             });
           } else {
             dependencies.get(dependency).references.push(reference);
           }
         }
+
         for (const childScope of currentScope.childScopes) {
           gatherDependenciesRecursively(childScope);
         }
@@ -446,6 +594,7 @@ export default {
             if (
               parent != null &&
               // ref.current
+              // Note: no need to handle OptionalMemberExpression because it can't be LHS.
               parent.type === 'MemberExpression' &&
               !parent.computed &&
               parent.property.type === 'Identifier' &&
@@ -462,7 +611,7 @@ export default {
           if (foundCurrentAssignment) {
             return;
           }
-          context.report({
+          reportProblem({
             node: dependencyNode.parent.property,
             message:
               `The ref value '${dependency}.current' will likely have ` +
@@ -476,13 +625,13 @@ export default {
 
       // Warn about assigning to variables in the outer scope.
       // Those are usually bugs.
-      let staleAssignments = new Set();
+      const staleAssignments = new Set();
       function reportStaleAssignment(writeExpr, key) {
         if (staleAssignments.has(key)) {
           return;
         }
         staleAssignments.add(key);
-        context.report({
+        reportProblem({
           node: writeExpr,
           message:
             `Assignments to the '${key}' variable from inside React Hook ` +
@@ -494,11 +643,11 @@ export default {
         });
       }
 
-      // Remember which deps are optional and report bad usage first.
-      const optionalDependencies = new Set();
-      dependencies.forEach(({isStatic, references}, key) => {
-        if (isStatic) {
-          optionalDependencies.add(key);
+      // Remember which deps are stable and report bad usage first.
+      const stableDependencies = new Set();
+      dependencies.forEach(({isStable, references}, key) => {
+        if (isStable) {
+          stableDependencies.add(key);
         }
         references.forEach(reference => {
           if (reference.writeExpr) {
@@ -516,7 +665,7 @@ export default {
         // Check if there are any top-level setState() calls.
         // Those tend to lead to infinite loops.
         let setStateInsideEffectWithoutDeps = null;
-        dependencies.forEach(({isStatic, references}, key) => {
+        dependencies.forEach(({isStable, references}, key) => {
           if (setStateInsideEffectWithoutDeps) {
             return;
           }
@@ -543,27 +692,34 @@ export default {
           });
         });
         if (setStateInsideEffectWithoutDeps) {
-          let {suggestedDependencies} = collectRecommendations({
+          const {suggestedDependencies} = collectRecommendations({
             dependencies,
             declaredDependencies: [],
-            optionalDependencies,
+            stableDependencies,
             externalDependencies: new Set(),
             isEffect: true,
           });
-          context.report({
-            node: node.parent.callee,
+          reportProblem({
+            node: reactiveHook,
             message:
               `React Hook ${reactiveHookName} contains a call to '${setStateInsideEffectWithoutDeps}'. ` +
               `Without a list of dependencies, this can lead to an infinite chain of updates. ` +
               `To fix this, pass [` +
               suggestedDependencies.join(', ') +
               `] as a second argument to the ${reactiveHookName} Hook.`,
-            fix(fixer) {
-              return fixer.insertTextAfter(
-                node,
-                `, [${suggestedDependencies.join(', ')}]`,
-              );
-            },
+            suggest: [
+              {
+                desc: `Add dependencies array: [${suggestedDependencies.join(
+                  ', ',
+                )}]`,
+                fix(fixer) {
+                  return fixer.insertTextAfter(
+                    node,
+                    `, [${suggestedDependencies.join(', ')}]`,
+                  );
+                },
+              },
+            ],
           });
         }
         return;
@@ -575,7 +731,7 @@ export default {
         // If the declared dependencies are not an array expression then we
         // can't verify that the user provided the correct dependencies. Tell
         // the user this in an error.
-        context.report({
+        reportProblem({
           node: declaredDependenciesNode,
           message:
             `React Hook ${context.getSource(reactiveHook)} was passed a ` +
@@ -591,7 +747,7 @@ export default {
           }
           // If we see a spread element then add a special warning.
           if (declaredDependencyNode.type === 'SpreadElement') {
-            context.report({
+            reportProblem({
               node: declaredDependencyNode,
               message:
                 `React Hook ${context.getSource(reactiveHook)} has a spread ` +
@@ -605,34 +761,31 @@ export default {
           // will be thrown. We will catch that error and report an error.
           let declaredDependency;
           try {
-            declaredDependency = toPropertyAccessString(declaredDependencyNode);
+            declaredDependency = analyzePropertyChain(
+              declaredDependencyNode,
+              null,
+            );
           } catch (error) {
             if (/Unsupported node type/.test(error.message)) {
               if (declaredDependencyNode.type === 'Literal') {
                 if (dependencies.has(declaredDependencyNode.value)) {
-                  context.report({
+                  reportProblem({
                     node: declaredDependencyNode,
                     message:
-                      `The ${
-                        declaredDependencyNode.raw
-                      } literal is not a valid dependency ` +
+                      `The ${declaredDependencyNode.raw} literal is not a valid dependency ` +
                       `because it never changes. ` +
-                      `Did you mean to include ${
-                        declaredDependencyNode.value
-                      } in the array instead?`,
+                      `Did you mean to include ${declaredDependencyNode.value} in the array instead?`,
                   });
                 } else {
-                  context.report({
+                  reportProblem({
                     node: declaredDependencyNode,
                     message:
-                      `The ${
-                        declaredDependencyNode.raw
-                      } literal is not a valid dependency ` +
+                      `The ${declaredDependencyNode.raw} literal is not a valid dependency ` +
                       'because it never changes. You can safely remove it.',
                   });
                 }
               } else {
-                context.report({
+                reportProblem({
                   node: declaredDependencyNode,
                   message:
                     `React Hook ${context.getSource(reactiveHook)} has a ` +
@@ -648,7 +801,10 @@ export default {
           }
 
           let maybeID = declaredDependencyNode;
-          while (maybeID.type === 'MemberExpression') {
+          while (
+            maybeID.type === 'MemberExpression' ||
+            maybeID.type === 'OptionalMemberExpression'
+          ) {
             maybeID = maybeID.object;
           }
           const isDeclaredInComponent = !componentScope.through.some(
@@ -667,7 +823,7 @@ export default {
         });
       }
 
-      let {
+      const {
         suggestedDependencies,
         unnecessaryDependencies,
         missingDependencies,
@@ -675,10 +831,12 @@ export default {
       } = collectRecommendations({
         dependencies,
         declaredDependencies,
-        optionalDependencies,
+        stableDependencies,
         externalDependencies,
         isEffect,
       });
+
+      let suggestedDeps = suggestedDependencies;
 
       const problemCount =
         duplicateDependencies.size +
@@ -697,44 +855,46 @@ export default {
         bareFunctions.forEach(({fn, suggestUseCallback}) => {
           let message =
             `The '${fn.name.name}' function makes the dependencies of ` +
-            `${reactiveHookName} Hook (at line ${
-              declaredDependenciesNode.loc.start.line
-            }) ` +
+            `${reactiveHookName} Hook (at line ${declaredDependenciesNode.loc.start.line}) ` +
             `change on every render.`;
           if (suggestUseCallback) {
             message +=
               ` To fix this, ` +
-              `wrap the '${
-                fn.name.name
-              }' definition into its own useCallback() Hook.`;
+              `wrap the '${fn.name.name}' definition into its own useCallback() Hook.`;
           } else {
             message +=
               ` Move it inside the ${reactiveHookName} callback. ` +
-              `Alternatively, wrap the '${
-                fn.name.name
-              }' definition into its own useCallback() Hook.`;
+              `Alternatively, wrap the '${fn.name.name}' definition into its own useCallback() Hook.`;
+          }
+
+          let suggest;
+          // Only handle the simple case: arrow functions.
+          // Wrapping function declarations can mess up hoisting.
+          if (suggestUseCallback && fn.type === 'Variable') {
+            suggest = [
+              {
+                desc: `Wrap the '${fn.name.name}' definition into its own useCallback() Hook.`,
+                fix(fixer) {
+                  return [
+                    // TODO: also add an import?
+                    fixer.insertTextBefore(fn.node.init, 'useCallback('),
+                    // TODO: ideally we'd gather deps here but it would require
+                    // restructuring the rule code. This will cause a new lint
+                    // error to appear immediately for useCallback. Note we're
+                    // not adding [] because would that changes semantics.
+                    fixer.insertTextAfter(fn.node.init, ')'),
+                  ];
+                },
+              },
+            ];
           }
           // TODO: What if the function needs to change on every render anyway?
           // Should we suggest removing effect deps as an appropriate fix too?
-          context.report({
+          reportProblem({
             // TODO: Why not report this at the dependency site?
             node: fn.node,
             message,
-            fix(fixer) {
-              // Only handle the simple case: arrow functions.
-              // Wrapping function declarations can mess up hoisting.
-              if (suggestUseCallback && fn.type === 'Variable') {
-                return [
-                  // TODO: also add an import?
-                  fixer.insertTextBefore(fn.node.init, 'useCallback('),
-                  // TODO: ideally we'd gather deps here but it would require
-                  // restructuring the rule code. This will cause a new lint
-                  // error to appear immediately for useCallback. Note we're
-                  // not adding [] because would that changes semantics.
-                  fixer.insertTextAfter(fn.node.init, ')'),
-                ];
-              }
-            },
+            suggest,
           });
         });
         return;
@@ -747,10 +907,10 @@ export default {
       // for effects though because those have legit
       // use cases for over-specifying deps.
       if (!isEffect && missingDependencies.size > 0) {
-        suggestedDependencies = collectRecommendations({
+        suggestedDeps = collectRecommendations({
           dependencies,
           declaredDependencies: [], // Pretend we don't know
-          optionalDependencies,
+          stableDependencies,
           externalDependencies,
           isEffect,
         }).suggestedDependencies;
@@ -766,7 +926,25 @@ export default {
         return declaredDepKeys.join(',') === sortedDeclaredDepKeys.join(',');
       }
       if (areDeclaredDepsAlphabetized()) {
-        suggestedDependencies.sort();
+        suggestedDeps.sort();
+      }
+
+      // Most of our algorithm deals with dependency paths with optional chaining stripped.
+      // This function is the last step before printing a dependency, so now is a good time to
+      // check whether any members in our path are always used as optional-only. In that case,
+      // we will use ?. instead of . to concatenate those parts of the path.
+      function formatDependency(path) {
+        const members = path.split('.');
+        let finalPath = '';
+        for (let i = 0; i < members.length; i++) {
+          if (i !== 0) {
+            const pathSoFar = members.slice(0, i + 1).join('.');
+            const isOptional = optionalChains.get(pathSoFar) === true;
+            finalPath += isOptional ? '?.' : '.';
+          }
+          finalPath += members[i];
+        }
+        return finalPath;
       }
 
       function getWarningMessage(deps, singlePrefix, label, fixVerb) {
@@ -782,7 +960,7 @@ export default {
           joinEnglish(
             Array.from(deps)
               .sort()
-              .map(name => "'" + name + "'"),
+              .map(name => "'" + formatDependency(name) + "'"),
           ) +
           `. Either ${fixVerb} ${
             deps.size > 1 ? 'them' : 'it'
@@ -821,7 +999,7 @@ export default {
       // a `this` value. This warning can be confusing.
       // So if we're going to show it, append a clarification.
       if (!extraWarning && missingDependencies.has('props')) {
-        let propDep = dependencies.get('props');
+        const propDep = dependencies.get('props');
         if (propDep == null) {
           return;
         }
@@ -845,7 +1023,10 @@ export default {
             isPropsOnlyUsedInMembers = false;
             break;
           }
-          if (parent.type !== 'MemberExpression') {
+          if (
+            parent.type !== 'MemberExpression' &&
+            parent.type !== 'OptionalMemberExpression'
+          ) {
             isPropsOnlyUsedInMembers = false;
             break;
           }
@@ -886,7 +1067,8 @@ export default {
             if (
               id != null &&
               id.parent != null &&
-              id.parent.type === 'CallExpression' &&
+              (id.parent.type === 'CallExpression' ||
+                id.parent.type === 'OptionalCallExpression') &&
               id.parent.callee === id
             ) {
               isFunctionCall = true;
@@ -1001,7 +1183,7 @@ export default {
         }
       }
 
-      context.report({
+      reportProblem({
         node: declaredDependenciesNode,
         message:
           `React Hook ${context.getSource(reactiveHook)} has ` +
@@ -1020,13 +1202,20 @@ export default {
               'omit',
             )) +
           extraWarning,
-        fix(fixer) {
-          // TODO: consider preserving the comments or formatting?
-          return fixer.replaceText(
-            declaredDependenciesNode,
-            `[${suggestedDependencies.join(', ')}]`,
-          );
-        },
+        suggest: [
+          {
+            desc: `Update the dependencies array to be: [${suggestedDeps
+              .map(formatDependency)
+              .join(', ')}]`,
+            fix(fixer) {
+              // TODO: consider preserving the comments or formatting?
+              return fixer.replaceText(
+                declaredDependenciesNode,
+                `[${suggestedDeps.map(formatDependency).join(', ')}]`,
+              );
+            },
+          },
+        ],
       });
     }
   },
@@ -1036,7 +1225,7 @@ export default {
 function collectRecommendations({
   dependencies,
   declaredDependencies,
-  optionalDependencies,
+  stableDependencies,
   externalDependencies,
   isEffect,
 }) {
@@ -1052,9 +1241,9 @@ function collectRecommendations({
   const depTree = createDepTree();
   function createDepTree() {
     return {
-      isRequired: false, // True if used in code
+      isUsed: false, // True if used in code
       isSatisfiedRecursively: false, // True if specified in deps
-      hasRequiredNodesBelow: false, // True if something deeper is used by code
+      isSubtreeUsed: false, // True if something deeper is used by code
       children: new Map(), // Nodes for properties
     };
   }
@@ -1063,9 +1252,9 @@ function collectRecommendations({
   // Imagine exclamation marks next to each used deep property.
   dependencies.forEach((_, key) => {
     const node = getOrCreateNodeByPath(depTree, key);
-    node.isRequired = true;
+    node.isUsed = true;
     markAllParentsByPath(depTree, key, parent => {
-      parent.hasRequiredNodesBelow = true;
+      parent.isSubtreeUsed = true;
     });
   });
 
@@ -1075,16 +1264,16 @@ function collectRecommendations({
     const node = getOrCreateNodeByPath(depTree, key);
     node.isSatisfiedRecursively = true;
   });
-  optionalDependencies.forEach(key => {
+  stableDependencies.forEach(key => {
     const node = getOrCreateNodeByPath(depTree, key);
     node.isSatisfiedRecursively = true;
   });
 
   // Tree manipulation helpers.
   function getOrCreateNodeByPath(rootNode, path) {
-    let keys = path.split('.');
+    const keys = path.split('.');
     let node = rootNode;
-    for (let key of keys) {
+    for (const key of keys) {
       let child = node.children.get(key);
       if (!child) {
         child = createDepTree();
@@ -1095,10 +1284,10 @@ function collectRecommendations({
     return node;
   }
   function markAllParentsByPath(rootNode, path, fn) {
-    let keys = path.split('.');
+    const keys = path.split('.');
     let node = rootNode;
-    for (let key of keys) {
-      let child = node.children.get(key);
+    for (const key of keys) {
+      const child = node.children.get(key);
       if (!child) {
         return;
       }
@@ -1108,8 +1297,8 @@ function collectRecommendations({
   }
 
   // Now we can learn which dependencies are missing or necessary.
-  let missingDependencies = new Set();
-  let satisfyingDependencies = new Set();
+  const missingDependencies = new Set();
+  const satisfyingDependencies = new Set();
   scanTreeRecursively(
     depTree,
     missingDependencies,
@@ -1120,7 +1309,7 @@ function collectRecommendations({
     node.children.forEach((child, key) => {
       const path = keyToPath(key);
       if (child.isSatisfiedRecursively) {
-        if (child.hasRequiredNodesBelow) {
+        if (child.isSubtreeUsed) {
           // Remember this dep actually satisfied something.
           satisfyingPaths.add(path);
         }
@@ -1129,7 +1318,7 @@ function collectRecommendations({
         // `props.foo` is enough if you read `props.foo.id`.
         return;
       }
-      if (child.isRequired) {
+      if (child.isUsed) {
         // Remember that no declared deps satisfied this node.
         missingPaths.add(path);
         // If we got here, nothing in its subtree was satisfied.
@@ -1146,9 +1335,9 @@ function collectRecommendations({
   }
 
   // Collect suggestions in the order they were originally specified.
-  let suggestedDependencies = [];
-  let unnecessaryDependencies = new Set();
-  let duplicateDependencies = new Set();
+  const suggestedDependencies = [];
+  const unnecessaryDependencies = new Set();
+  const duplicateDependencies = new Set();
   declaredDependencies.forEach(({key}) => {
     // Does this declared dep satisfy a real need?
     if (satisfyingDependencies.has(key)) {
@@ -1206,7 +1395,7 @@ function scanForDeclaredBareFunctions({
       if (fnRef == null) {
         return null;
       }
-      let fnNode = fnRef.defs[0];
+      const fnNode = fnRef.defs[0];
       if (fnNode == null) {
         return null;
       }
@@ -1276,17 +1465,27 @@ function scanForDeclaredBareFunctions({
  */
 function getDependency(node) {
   if (
-    node.parent.type === 'MemberExpression' &&
+    (node.parent.type === 'MemberExpression' ||
+      node.parent.type === 'OptionalMemberExpression') &&
     node.parent.object === node &&
     node.parent.property.name !== 'current' &&
     !node.parent.computed &&
     !(
       node.parent.parent != null &&
-      node.parent.parent.type === 'CallExpression' &&
+      (node.parent.parent.type === 'CallExpression' ||
+        node.parent.parent.type === 'OptionalCallExpression') &&
       node.parent.parent.callee === node.parent
     )
   ) {
     return getDependency(node.parent);
+  } else if (
+    // Note: we don't check OptionalMemberExpression because it can't be LHS.
+    node.type === 'MemberExpression' &&
+    node.parent &&
+    node.parent.type === 'AssignmentExpression' &&
+    node.parent.left === node
+  ) {
+    return node.object;
   } else {
     return node;
   }
@@ -1295,17 +1494,47 @@ function getDependency(node) {
 /**
  * Assuming () means the passed node.
  * (foo) -> 'foo'
- * foo.(bar) -> 'foo.bar'
- * foo.bar.(baz) -> 'foo.bar.baz'
+ * foo(.)bar -> 'foo.bar'
+ * foo.bar(.)baz -> 'foo.bar.baz'
  * Otherwise throw.
  */
-function toPropertyAccessString(node) {
+function analyzePropertyChain(node, optionalChains) {
   if (node.type === 'Identifier') {
-    return node.name;
+    const result = node.name;
+    if (optionalChains) {
+      // Mark as required.
+      optionalChains.set(result, false);
+    }
+    return result;
   } else if (node.type === 'MemberExpression' && !node.computed) {
-    const object = toPropertyAccessString(node.object);
-    const property = toPropertyAccessString(node.property);
-    return `${object}.${property}`;
+    const object = analyzePropertyChain(node.object, optionalChains);
+    const property = analyzePropertyChain(node.property, null);
+    const result = `${object}.${property}`;
+    if (optionalChains) {
+      // Mark as required.
+      optionalChains.set(result, false);
+    }
+    return result;
+  } else if (node.type === 'OptionalMemberExpression' && !node.computed) {
+    const object = analyzePropertyChain(node.object, optionalChains);
+    const property = analyzePropertyChain(node.property, null);
+    const result = `${object}.${property}`;
+    if (optionalChains) {
+      // Note: OptionalMemberExpression doesn't necessarily mean this node is optional.
+      // It just means there is an optional member somewhere inside.
+      // This particular node might still represent a required member, so check .optional field.
+      if (node.optional) {
+        // We only want to consider it optional if *all* usages were optional.
+        if (!optionalChains.has(result)) {
+          // Mark as (maybe) optional. If there's a required usage, this will be overridden.
+          optionalChains.set(result, true);
+        }
+      } else {
+        // Mark as required.
+        optionalChains.set(result, false);
+      }
+    }
+    return result;
   } else {
     throw new Error(`Unsupported node type: ${node.type}`);
   }
@@ -1330,9 +1559,9 @@ function getNodeWithoutReactNamespace(node, options) {
 // 1 for useImperativeHandle(ref, fn).
 // For additionally configured Hooks, assume that they're like useEffect (0).
 function getReactiveHookCallbackIndex(calleeNode, options) {
-  let node = getNodeWithoutReactNamespace(calleeNode);
+  const node = getNodeWithoutReactNamespace(calleeNode);
   if (node.type !== 'Identifier') {
-    return null;
+    return -1;
   }
   switch (node.name) {
     case 'useEffect':
@@ -1350,7 +1579,7 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
         // target custom reactive hooks.
         let name;
         try {
-          name = toPropertyAccessString(node);
+          name = analyzePropertyChain(node, null);
         } catch (error) {
           if (/Unsupported node type/.test(error.message)) {
             return 0;
@@ -1376,7 +1605,7 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
  * - agnostic to AST node types, it looks for `{ type: string, ... }`
  */
 function fastFindReferenceWithParent(start, target) {
-  let queue = [start];
+  const queue = [start];
   let item = null;
 
   while (queue.length) {
@@ -1390,7 +1619,7 @@ function fastFindReferenceWithParent(start, target) {
       continue;
     }
 
-    for (let [key, value] of Object.entries(item)) {
+    for (const [key, value] of Object.entries(item)) {
       if (key === 'parent') {
         continue;
       }

@@ -12,6 +12,7 @@ describe('ErrorBoundaryReconciliation', () => {
     jest.resetModules();
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
+
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactTestRenderer = require('react-test-renderer');
     React = require('react');
@@ -68,7 +69,7 @@ describe('ErrorBoundaryReconciliation', () => {
           </ErrorBoundary>,
         );
         Scheduler.unstable_flushAll();
-      }).toWarnDev(isConcurrent ? ['invalid', 'invalid'] : ['invalid']);
+      }).toErrorDev(isConcurrent ? ['invalid', 'invalid'] : ['invalid']);
       const Fallback = fallbackTagName;
       expect(renderer).toMatchRenderedOutput(<Fallback prop="ErrorBoundary" />);
     }
