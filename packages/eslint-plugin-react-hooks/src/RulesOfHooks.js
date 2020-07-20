@@ -476,14 +476,29 @@ export default {
                 'React function component or a custom React Hook function.';
               context.report({node: hook, message});
             } else if (codePathFunctionName) {
-              // Custom message if we found an invalid function name.
-              const message =
-                `React Hook "${context.getSource(hook)}" is called in ` +
-                `function "${context.getSource(codePathFunctionName)}" ` +
-                'that is neither a React function component nor a custom ' +
-                'React Hook function.' +
-                ' React component names must start with an uppercase letter.';
-              context.report({node: hook, message});
+              if (
+                codePathFunctionName.name.charAt(0) ===
+                codePathFunctionName.name.charAt(0).toLowerCase()
+              ) {
+                // Custom message if we found an invalid function name due to a
+                // lowercase first letter.
+                const message =
+                  `React Hook "${context.getSource(hook)}" is called in ` +
+                  `function "${context.getSource(codePathFunctionName)}" ` +
+                  'which is not a valid React component because it does not ' +
+                  'start its name with an upper case letter.';
+                context.report({node: hook, message});
+              } else {
+                // Custom message if we found an invalid function name for all
+                // other cases.
+                const message =
+                  `React Hook "${context.getSource(hook)}" is called in ` +
+                  `function "${context.getSource(codePathFunctionName)}" ` +
+                  'that is neither a React function component nor a custom ' +
+                  'React Hook function.' +
+                  ' React component names must start with an uppercase letter.';
+                context.report({node: hook, message});
+              }
             } else if (codePathNode.type === 'Program') {
               // These are dangerous if you have inline requires enabled.
               const message =
