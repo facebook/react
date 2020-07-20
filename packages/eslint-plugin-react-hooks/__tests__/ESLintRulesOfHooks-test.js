@@ -915,9 +915,9 @@ function loopError(hook) {
 function functionError(hook, fn) {
   return {
     message:
-      `React Hook "${hook}" is called in function "${fn}" which is not ` +
-      'a valid React component because it does not start its name with ' +
-      'an upper case letter.',
+      `React Hook "${hook}" is called in function "${fn}" that is neither ` +
+      'a React function component nor a custom React Hook function.' +
+      ' React component names must start with an uppercase letter.',
   };
 }
 
