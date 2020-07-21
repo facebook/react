@@ -108,8 +108,6 @@ import {
   TOP_KEY_UP,
   TOP_INPUT,
   TOP_TEXT_INPUT,
-  TOP_CLOSE,
-  TOP_CANCEL,
   TOP_COPY,
   TOP_CUT,
   TOP_PASTE,
@@ -129,11 +127,8 @@ import {
   TOP_FOCUS_IN,
   TOP_FOCUS_OUT,
 } from './DOMTopLevelEventTypes';
-import {IS_REPLAYED, PLUGIN_EVENT_SYSTEM} from './EventSystemFlags';
-import {
-  listenToNativeEvent,
-  capturePhaseEvents,
-} from './DOMModernPluginEventSystem';
+import {IS_REPLAYED} from './EventSystemFlags';
+import {listenToNativeEvent} from './DOMModernPluginEventSystem';
 import {addResponderEventSystemEvent} from './DeprecatedDOMEventResponderSystem';
 
 type QueuedReplayableEvent = {|
@@ -198,8 +193,6 @@ const discreteReplayableEvents = [
   TOP_KEY_UP,
   TOP_INPUT,
   TOP_TEXT_INPUT,
-  TOP_CLOSE,
-  TOP_CANCEL,
   TOP_COPY,
   TOP_CUT,
   TOP_PASTE,
@@ -232,16 +225,8 @@ export function isReplayableDiscreteEvent(
 function trapReplayableEventForContainer(
   topLevelType: DOMTopLevelEventType,
   container: Container,
-  listenerMap: ElementListenerMap,
 ) {
-  const capture = capturePhaseEvents.has(topLevelType);
-  listenToNativeEvent(
-    topLevelType,
-    ((container: any): Element),
-    listenerMap,
-    PLUGIN_EVENT_SYSTEM,
-    capture,
-  );
+  listenToNativeEvent(topLevelType, false, ((container: any): Element), null);
 }
 
 function trapReplayableEventForDocument(
@@ -273,23 +258,14 @@ export function eagerlyTrapReplayableEvents(
   document: Document,
 ) {
   const listenerMapForDoc = getEventListenerMap(document);
-  const listenerMapForContainer = getEventListenerMap(container);
   // Discrete
   discreteReplayableEvents.forEach(topLevelType => {
-    trapReplayableEventForContainer(
-      topLevelType,
-      container,
-      listenerMapForContainer,
-    );
+    trapReplayableEventForContainer(topLevelType, container);
     trapReplayableEventForDocument(topLevelType, document, listenerMapForDoc);
   });
   // Continuous
   continuousReplayableEvents.forEach(topLevelType => {
-    trapReplayableEventForContainer(
-      topLevelType,
-      container,
-      listenerMapForContainer,
-    );
+    trapReplayableEventForContainer(topLevelType, container);
     trapReplayableEventForDocument(topLevelType, document, listenerMapForDoc);
   });
 }

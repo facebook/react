@@ -85,8 +85,18 @@ import {
   enableDeprecatedFlareAPI,
   enableTrustedTypesIntegration,
 } from 'shared/ReactFeatureFlags';
-import {listenToReactEvent} from '../events/DOMModernPluginEventSystem';
+import {
+  listenToReactEvent,
+  mediaEventTypes,
+  listenToNonDelegatedEvent,
+} from '../events/DOMModernPluginEventSystem';
 import {getEventListenerMap} from './ReactDOMComponentTree';
+import {
+  TOP_LOAD,
+  TOP_ERROR,
+  TOP_TOGGLE,
+  TOP_INVALID,
+} from '../events/DOMTopLevelEventTypes';
 
 let didWarnInvalidHydration = false;
 let didWarnScriptTags = false;
@@ -266,6 +276,7 @@ if (__DEV__) {
 export function ensureListeningTo(
   rootContainerInstance: Element | Node,
   reactPropEvent: string,
+  targetElement: Element | null,
 ): void {
   // If we have a comment node, then use the parent node,
   // which should be an element.
@@ -282,7 +293,11 @@ export function ensureListeningTo(
     'ensureListeningTo(): received a container that was not an element node. ' +
       'This is likely a bug in React.',
   );
-  listenToReactEvent(reactPropEvent, ((rootContainerElement: any): Element));
+  listenToReactEvent(
+    reactPropEvent,
+    ((rootContainerElement: any): Element),
+    targetElement,
+  );
 }
 
 function getOwnerDocumentFromRootContainer(
@@ -364,7 +379,7 @@ function setInitialDOMProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        ensureListeningTo(rootContainerElement, propKey);
+        ensureListeningTo(rootContainerElement, propKey, domElement);
       }
     } else if (nextProp != null) {
       setValueForProperty(domElement, propKey, nextProp, isCustomComponentTag);
@@ -527,32 +542,50 @@ export function setInitialProperties(
     case 'iframe':
     case 'object':
     case 'embed':
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the load event.
+      listenToNonDelegatedEvent(TOP_LOAD, domElement);
       props = rawProps;
       break;
     case 'video':
     case 'audio':
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for all the media events.
+      for (let i = 0; i < mediaEventTypes.length; i++) {
+        listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
+      }
       props = rawProps;
       break;
     case 'source':
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the error event.
+      listenToNonDelegatedEvent(TOP_ERROR, domElement);
       props = rawProps;
       break;
     case 'img':
     case 'image':
     case 'link':
-      props = rawProps;
-      break;
-    case 'form':
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for error and load events.
+      listenToNonDelegatedEvent(TOP_ERROR, domElement);
+      listenToNonDelegatedEvent(TOP_LOAD, domElement);
       props = rawProps;
       break;
     case 'details':
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the toggle event.
+      listenToNonDelegatedEvent(TOP_TOGGLE, domElement);
       props = rawProps;
       break;
     case 'input':
       ReactDOMInputInitWrapperState(domElement, rawProps);
       props = ReactDOMInputGetHostProps(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
     case 'option':
       ReactDOMOptionValidateProps(domElement, rawProps);
@@ -561,16 +594,22 @@ export function setInitialProperties(
     case 'select':
       ReactDOMSelectInitWrapperState(domElement, rawProps);
       props = ReactDOMSelectGetHostProps(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
       props = ReactDOMTextareaGetHostProps(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
     default:
       props = rawProps;
@@ -790,7 +829,7 @@ export function diffProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        ensureListeningTo(rootContainerElement, propKey);
+        ensureListeningTo(rootContainerElement, propKey, domElement);
       }
       if (!updatePayload && lastProp !== nextProp) {
         // This is a special case. If any listener updates we need to ensure
@@ -900,26 +939,68 @@ export function diffHydratedProperties(
 
   // TODO: Make sure that we check isMounted before firing any of these events.
   switch (tag) {
+    case 'iframe':
+    case 'object':
+    case 'embed':
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the load event.
+      listenToNonDelegatedEvent(TOP_LOAD, domElement);
+      break;
+    case 'video':
+    case 'audio':
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for all the media events.
+      for (let i = 0; i < mediaEventTypes.length; i++) {
+        listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
+      }
+      break;
+    case 'source':
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the error event.
+      listenToNonDelegatedEvent(TOP_ERROR, domElement);
+      break;
+    case 'img':
+    case 'image':
+    case 'link':
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for error and load events.
+      listenToNonDelegatedEvent(TOP_ERROR, domElement);
+      listenToNonDelegatedEvent(TOP_LOAD, domElement);
+      break;
+    case 'details':
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the toggle event.
+      listenToNonDelegatedEvent(TOP_TOGGLE, domElement);
+      break;
     case 'input':
       ReactDOMInputInitWrapperState(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
     case 'option':
       ReactDOMOptionValidateProps(domElement, rawProps);
       break;
     case 'select':
       ReactDOMSelectInitWrapperState(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
   }
 
@@ -986,7 +1067,7 @@ export function diffHydratedProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        ensureListeningTo(rootContainerElement, propKey);
+        ensureListeningTo(rootContainerElement, propKey, domElement);
       }
     } else if (
       __DEV__ &&

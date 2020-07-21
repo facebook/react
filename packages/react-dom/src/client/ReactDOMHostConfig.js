@@ -1111,7 +1111,7 @@ export function makeOpaqueHydratingObject(
 }
 
 export function preparePortalMount(portalInstance: Instance): void {
-  listenToReactEvent('onMouseEnter', portalInstance);
+  listenToReactEvent('onMouseEnter', portalInstance, null);
 }
 
 export function prepareScopeUpdate(

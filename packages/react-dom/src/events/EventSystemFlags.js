@@ -12,9 +12,21 @@ export type EventSystemFlags = number;
 export const PLUGIN_EVENT_SYSTEM = 1;
 export const RESPONDER_EVENT_SYSTEM = 1 << 1;
 export const IS_EVENT_HANDLE_NON_MANAGED_NODE = 1 << 2;
-export const IS_CAPTURE_PHASE = 1 << 3;
-export const IS_PASSIVE = 1 << 4;
-export const PASSIVE_NOT_SUPPORTED = 1 << 5;
+export const IS_NON_DELEGATED = 1 << 3;
+export const IS_CAPTURE_PHASE = 1 << 4;
+export const IS_PASSIVE = 1 << 5;
 export const IS_REPLAYED = 1 << 6;
-export const IS_FIRST_ANCESTOR = 1 << 7;
-export const LEGACY_FB_SUPPORT = 1 << 8;
+export const IS_LEGACY_FB_SUPPORT_MODE = 1 << 7;
+// This is used by React Flare
+export const PASSIVE_NOT_SUPPORTED = 1 << 8;
+
+export const SHOULD_NOT_DEFER_CLICK_FOR_FB_SUPPORT_MODE =
+  IS_LEGACY_FB_SUPPORT_MODE | IS_REPLAYED | IS_CAPTURE_PHASE;
+
+// We do not want to defer if the event system has already been
+// set to LEGACY_FB_SUPPORT. LEGACY_FB_SUPPORT only gets set when
+// we call willDeferLaterForLegacyFBSupport, thus not bailing out
+// will result in endless cycles like an infinite loop.
+// We also don't want to defer during event replaying.
+export const SHOULD_NOT_PROCESS_POLYFILL_EVENT_PLUGINS =
+  IS_EVENT_HANDLE_NON_MANAGED_NODE | IS_NON_DELEGATED | IS_CAPTURE_PHASE;

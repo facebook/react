@@ -33,7 +33,7 @@ import {
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
 import {
   type EventSystemFlags,
-  LEGACY_FB_SUPPORT,
+  IS_LEGACY_FB_SUPPORT_MODE,
   PLUGIN_EVENT_SYSTEM,
   RESPONDER_EVENT_SYSTEM,
 } from './EventSystemFlags';
@@ -132,9 +132,9 @@ function dispatchDiscreteEvent(
 ) {
   if (
     !enableLegacyFBSupport ||
-    // If we have Legacy FB support, it means we've already
+    // If we are in Legacy FB support mode, it means we've already
     // flushed for this event and we don't need to do it again.
-    (eventSystemFlags & LEGACY_FB_SUPPORT) === 0
+    (eventSystemFlags & IS_LEGACY_FB_SUPPORT_MODE) === 0
   ) {
     flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
   }
