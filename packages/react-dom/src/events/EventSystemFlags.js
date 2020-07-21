@@ -20,8 +20,13 @@ export const IS_LEGACY_FB_SUPPORT_MODE = 1 << 7;
 // This is used by React Flare
 export const PASSIVE_NOT_SUPPORTED = 1 << 8;
 
-export const SHOULD_DEFER_CLICK_FOR_FB_SUPPORT_MODE =
+export const SHOULD_NOT_DEFER_CLICK_FOR_FB_SUPPORT_MODE =
   IS_LEGACY_FB_SUPPORT_MODE | IS_REPLAYED | IS_CAPTURE_PHASE;
 
-export const SHOULD_PROCESS_POLYFILL_EVENT_PLUGINS =
+// We do not want to defer if the event system has already been
+// set to LEGACY_FB_SUPPORT. LEGACY_FB_SUPPORT only gets set when
+// we call willDeferLaterForLegacyFBSupport, thus not bailing out
+// will result in endless cycles like an infinite loop.
+// We also don't want to defer during event replaying.
+export const SHOULD_NOT_PROCESS_POLYFILL_EVENT_PLUGINS =
   IS_EVENT_HANDLE_NON_MANAGED_NODE | IS_NON_DELEGATED | IS_CAPTURE_PHASE;

@@ -10,9 +10,9 @@
 import type {TopLevelType, DOMTopLevelEventType} from './TopLevelEventTypes';
 import {
   type EventSystemFlags,
-  SHOULD_DEFER_CLICK_FOR_FB_SUPPORT_MODE,
+  SHOULD_NOT_DEFER_CLICK_FOR_FB_SUPPORT_MODE,
   IS_LEGACY_FB_SUPPORT_MODE,
-  SHOULD_PROCESS_POLYFILL_EVENT_PLUGINS,
+  SHOULD_NOT_PROCESS_POLYFILL_EVENT_PLUGINS,
 } from './EventSystemFlags';
 import type {AnyNativeEvent} from './PluginModuleType';
 import type {ReactSyntheticEvent} from './ReactSyntheticEventType';
@@ -150,7 +150,7 @@ function extractEvents(
     targetContainer,
   );
   const shouldProcessPolyfillPlugins =
-    (eventSystemFlags & SHOULD_PROCESS_POLYFILL_EVENT_PLUGINS) === 0;
+    (eventSystemFlags & SHOULD_NOT_PROCESS_POLYFILL_EVENT_PLUGINS) === 0;
   // We don't process these events unless we are in the
   // event's native "bubble" phase, which means that we're
   // not in the capture phase. That's because we emulate
@@ -209,8 +209,6 @@ function extractEvents(
 }
 
 // List of events that need to be individually attached to media elements.
-// Note that events in this list will *not* be listened to at the top level
-// unless they're explicitly listed in `ReactBrowserEventEmitter.listenTo`.
 export const mediaEventTypes = [
   TOP_ABORT,
   TOP_CAN_PLAY,
@@ -333,6 +331,30 @@ function shouldUpgradeListener(
   return (
     listenerEntry !== undefined && listenerEntry.passive === true && !passive
   );
+}
+
+export function listenToNonDelegatedEvent(
+  topLevelType: DOMTopLevelEventType,
+  targetElement: Element,
+): void {
+  const isCapturePhaseListener = false;
+  const listenerMap = getEventListenerMap(targetElement);
+  const listenerMapKey = getListenerMapKey(
+    topLevelType,
+    isCapturePhaseListener,
+  );
+  const listenerEntry = ((listenerMap.get(
+    listenerMapKey,
+  ): any): ElementListenerMapEntry | void);
+  if (listenerEntry === undefined) {
+    const listener = addTrappedEventListener(
+      targetElement,
+      topLevelType,
+      PLUGIN_EVENT_SYSTEM | IS_NON_DELEGATED,
+      isCapturePhaseListener,
+    );
+    listenerMap.set(listenerMapKey, {passive: false, listener});
+  }
 }
 
 export function listenToNativeEvent(
@@ -578,7 +600,7 @@ export function dispatchEventForPluginEventSystem(
       // for legacy FB support, where the expected behavior was to
       // match React < 16 behavior of delegated clicks to the doc.
       topLevelType === TOP_CLICK &&
-      (eventSystemFlags & SHOULD_DEFER_CLICK_FOR_FB_SUPPORT_MODE) === 0
+      (eventSystemFlags & SHOULD_NOT_DEFER_CLICK_FOR_FB_SUPPORT_MODE) === 0
     ) {
       deferClickToDocumentForLegacyFBSupport(topLevelType, targetContainer);
       return;

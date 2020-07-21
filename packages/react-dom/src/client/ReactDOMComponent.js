@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
 import type {ElementListenerMapEntry} from '../client/ReactDOMComponentTree';
 
 import {
@@ -88,8 +87,8 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {
   listenToReactEvent,
-  listenToNativeEvent,
   mediaEventTypes,
+  listenToNonDelegatedEvent,
 } from '../events/DOMModernPluginEventSystem';
 import {getEventListenerMap} from './ReactDOMComponentTree';
 import {
@@ -272,13 +271,6 @@ if (__DEV__) {
     testElement.innerHTML = html;
     return testElement.innerHTML;
   };
-}
-
-function listenToNonDelegatedEvent(
-  topLevelType: DOMTopLevelEventType,
-  targetElement: Element,
-): void {
-  listenToNativeEvent(topLevelType, false, targetElement, targetElement);
 }
 
 export function ensureListeningTo(
@@ -577,9 +569,6 @@ export function setInitialProperties(
       // listeners still fire for error and load events.
       listenToNonDelegatedEvent(TOP_ERROR, domElement);
       listenToNonDelegatedEvent(TOP_LOAD, domElement);
-      props = rawProps;
-      break;
-    case 'form':
       props = rawProps;
       break;
     case 'details':
