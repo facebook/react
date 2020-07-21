@@ -89,6 +89,7 @@ import {
 import {
   listenToReactEvent,
   listenToNativeEvent,
+  mediaEventTypes,
 } from '../events/DOMModernPluginEventSystem';
 import {getEventListenerMap} from './ReactDOMComponentTree';
 import {
@@ -549,17 +550,22 @@ export function setInitialProperties(
     case 'iframe':
     case 'object':
     case 'embed':
-      // We listen this event in case to ensure emulated bubble
+      // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the load event.
       listenToNonDelegatedEvent(TOP_LOAD, domElement);
       props = rawProps;
       break;
     case 'video':
     case 'audio':
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for all the media events.
+      for (let i = 0; i < mediaEventTypes.length; i++) {
+        listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
+      }
       props = rawProps;
       break;
     case 'source':
-      // We listen this event in case to ensure emulated bubble
+      // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the error event.
       listenToNonDelegatedEvent(TOP_ERROR, domElement);
       props = rawProps;
@@ -577,7 +583,7 @@ export function setInitialProperties(
       props = rawProps;
       break;
     case 'details':
-      // We listen this event in case to ensure emulated bubble
+      // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the toggle event.
       listenToNonDelegatedEvent(TOP_TOGGLE, domElement);
       props = rawProps;
@@ -585,7 +591,7 @@ export function setInitialProperties(
     case 'input':
       ReactDOMInputInitWrapperState(domElement, rawProps);
       props = ReactDOMInputGetHostProps(domElement, rawProps);
-      // We listen this event in case to ensure emulated bubble
+      // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
@@ -599,7 +605,7 @@ export function setInitialProperties(
     case 'select':
       ReactDOMSelectInitWrapperState(domElement, rawProps);
       props = ReactDOMSelectGetHostProps(domElement, rawProps);
-      // We listen this event in case to ensure emulated bubble
+      // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
@@ -609,7 +615,7 @@ export function setInitialProperties(
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
       props = ReactDOMTextareaGetHostProps(domElement, rawProps);
-      // We listen this event in case to ensure emulated bubble
+      // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
@@ -947,12 +953,20 @@ export function diffHydratedProperties(
     case 'iframe':
     case 'object':
     case 'embed':
-      // We listen this event in case to ensure emulated bubble
+      // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the load event.
       listenToNonDelegatedEvent(TOP_LOAD, domElement);
       break;
+    case 'video':
+    case 'audio':
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for all the media events.
+      for (let i = 0; i < mediaEventTypes.length; i++) {
+        listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
+      }
+      break;
     case 'source':
-      // We listen this event in case to ensure emulated bubble
+      // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the error event.
       listenToNonDelegatedEvent(TOP_ERROR, domElement);
       break;
@@ -965,13 +979,13 @@ export function diffHydratedProperties(
       listenToNonDelegatedEvent(TOP_LOAD, domElement);
       break;
     case 'details':
-      // We listen this event in case to ensure emulated bubble
+      // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the toggle event.
       listenToNonDelegatedEvent(TOP_TOGGLE, domElement);
       break;
     case 'input':
       ReactDOMInputInitWrapperState(domElement, rawProps);
-      // We listen this event in case to ensure emulated bubble
+      // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
@@ -983,7 +997,7 @@ export function diffHydratedProperties(
       break;
     case 'select':
       ReactDOMSelectInitWrapperState(domElement, rawProps);
-      // We listen this event in case to ensure emulated bubble
+      // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening
@@ -992,7 +1006,7 @@ export function diffHydratedProperties(
       break;
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
-      // We listen this event in case to ensure emulated bubble
+      // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent(TOP_INVALID, domElement);
       // For controlled components we always need to ensure we're listening

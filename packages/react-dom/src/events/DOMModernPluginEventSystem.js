@@ -208,15 +208,11 @@ function extractEvents(
   }
 }
 
-// We should not delegate these events to the container, but rather
-// set them on the actual target element itself. This is primarily
-// because these events do not consistently bubble in the DOM.
-export const nonDelegatedEvents: Set<DOMTopLevelEventType> = new Set([
-  TOP_SCROLL,
-  TOP_LOAD,
+// List of events that need to be individually attached to media elements.
+// Note that events in this list will *not* be listened to at the top level
+// unless they're explicitly listed in `ReactBrowserEventEmitter.listenTo`.
+export const mediaEventTypes = [
   TOP_ABORT,
-  TOP_CANCEL,
-  TOP_CLOSE,
   TOP_CAN_PLAY,
   TOP_CAN_PLAY_THROUGH,
   TOP_DURATION_CHANGE,
@@ -224,7 +220,6 @@ export const nonDelegatedEvents: Set<DOMTopLevelEventType> = new Set([
   TOP_ENCRYPTED,
   TOP_ENDED,
   TOP_ERROR,
-  TOP_INVALID,
   TOP_LOADED_DATA,
   TOP_LOADED_METADATA,
   TOP_LOAD_START,
@@ -240,6 +235,22 @@ export const nonDelegatedEvents: Set<DOMTopLevelEventType> = new Set([
   TOP_TIME_UPDATE,
   TOP_VOLUME_CHANGE,
   TOP_WAITING,
+];
+
+// We should not delegate these events to the container, but rather
+// set them on the actual target element itself. This is primarily
+// because these events do not consistently bubble in the DOM.
+export const nonDelegatedEvents: Set<DOMTopLevelEventType> = new Set([
+  TOP_SCROLL,
+  TOP_LOAD,
+  TOP_CANCEL,
+  TOP_CLOSE,
+  TOP_INVALID,
+  // In order to reduce bytes, we insert the above array of media events
+  // into this Set. Note: some events like "load" and "error" aren't
+  // exclusively media events, but rather than duplicate them, we just
+  // take them from the media events array.
+  ...mediaEventTypes,
 ]);
 
 function executeDispatch(
