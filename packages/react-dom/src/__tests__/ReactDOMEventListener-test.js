@@ -371,7 +371,9 @@ describe('ReactDOMEventListener', () => {
     document.body.appendChild(container);
 
     const videoRef = React.createRef();
-    const handleVideoPlay = jest.fn(); // We'll test this one.
+    // We'll test this event alone.
+    const handleVideoPlay = jest.fn();
+    const handleVideoPlayDelegated = jest.fn();
     const mediaEvents = {
       onAbort() {},
       onCanPlay() {},
@@ -398,10 +400,20 @@ describe('ReactDOMEventListener', () => {
       onWaiting() {},
     };
 
-    const originalAddEventListener = document.addEventListener;
+    const originalDocAddEventListener = document.addEventListener;
+    const originalRootAddEventListener = container.addEventListener;
     document.addEventListener = function(type) {
       throw new Error(
-        `Did not expect to add a top-level listener for the "${type}" event.`,
+        `Did not expect to add a document-level listener for the "${type}" event.`,
+      );
+    };
+    container.addEventListener = function(type) {
+      if (type === 'mouseout' || type === 'mouseover') {
+        // We currently listen to it unconditionally.
+        return;
+      }
+      throw new Error(
+        `Did not expect to add a root-level listener for the "${type}" event.`,
       );
     };
 
@@ -409,12 +421,11 @@ describe('ReactDOMEventListener', () => {
       // We expect that mounting this tree will
       // *not* attach handlers for any top-level events.
       ReactDOM.render(
-        <div>
+        <div onPlay={handleVideoPlayDelegated}>
           <video ref={videoRef} {...mediaEvents} onPlay={handleVideoPlay} />
           <audio {...mediaEvents}>
             <source {...mediaEvents} />
           </audio>
-          <form onReset={() => {}} onSubmit={() => {}} />
         </div>,
         container,
       );
@@ -426,8 +437,12 @@ describe('ReactDOMEventListener', () => {
         }),
       );
       expect(handleVideoPlay).toHaveBeenCalledTimes(1);
+      // Unlike browsers, we delegate media events.
+      // (This doesn't make a lot of sense but it would be a breaking change not to.)
+      expect(handleVideoPlayDelegated).toHaveBeenCalledTimes(1);
     } finally {
-      document.addEventListener = originalAddEventListener;
+      document.addEventListener = originalDocAddEventListener;
+      container.addEventListener = originalRootAddEventListener;
       document.body.removeChild(container);
     }
   });
