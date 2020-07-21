@@ -11,5 +11,8 @@
 [lints]
 
 [options]
+module.file_ext=.js
+module.file_ext=.mjs
+module.file_ext=.cjs
 
 [strict]
