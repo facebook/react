@@ -48,11 +48,23 @@ ReactDOM.render(
   <HelloMessage name="Taylor" />,
   document.getElementById('container')
 );
+class HelloMessage extends React.Component {  
+  const {name} = this.props
+  return <div>Hello {name}</div>;
+}
+ReactDOM.render(
+  <HelloMessage name="Taylor" />,
+  document.getElementById('root')
+);
+
 ```
 
 This example will render "Hello Taylor" into a container on the page.
 
 You'll notice that we used an HTML-like syntax; [we call it JSX](https://reactjs.org/docs/introducing-jsx.html). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML. If you're using React as a `<script>` tag, read [this section](https://reactjs.org/docs/add-react-to-a-website.html#optional-try-react-with-jsx) on integrating JSX; otherwise, the [recommended JavaScript toolchains](https://reactjs.org/docs/create-a-new-react-app.html) handle it automatically.
+
+The second example uses class components to achieve the same result as example one ( using functional components ). The extend keyword simply extends the class component from the React library that gets created automatically when you run < yarn create react-app >. This example will render "Hello Taylor" into the root of the page.
+The "props" keyword is simply a short form for "property", which is a parameter(s) parsed to the child component(s) in parent component(s).
 
 ## Contributing
 
