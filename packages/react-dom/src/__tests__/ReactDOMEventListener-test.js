@@ -461,4 +461,32 @@ describe('ReactDOMEventListener', () => {
       document.body.removeChild(container);
     }
   });
+
+  // Unlike browsers, we delegate media events.
+  // (This doesn't make a lot of sense but it would be a breaking change not to.)
+  it('should delegate media events even without a direct listener', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const handleVideoPlayDelegated = jest.fn();
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div onPlay={handleVideoPlayDelegated}>
+          {/* Intentionally no handler on the target: */}
+          <video ref={ref} />
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('play', {
+          bubbles: false,
+        }),
+      );
+      // Regression test: ensure React tree delegation still works
+      // even if the actual DOM element did not have a handler.
+      expect(handleVideoPlayDelegated).toHaveBeenCalledTimes(1);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
 });
