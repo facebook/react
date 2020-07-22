@@ -43,3 +43,4 @@ export const ForceUpdateForLegacySuspense = /* */ 0b100000000000000;
 export const BeforeMutationMask = /*           */ 0b000001100001010;
 export const MutationMask = /*                 */ 0b000010010011110;
 export const LayoutMask = /*                   */ 0b000000010100100;
+export const PassiveMask = /*                  */ 0b000001000000000;
