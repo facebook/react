@@ -14,20 +14,15 @@ import getEventCharCode from './getEventCharCode';
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
 const EventInterface = {
-  type: null,
-  target: null,
-  // currentTarget is set when dispatching; no use in copying it here
-  currentTarget: function() {
-    return null;
-  },
-  eventPhase: null,
-  bubbles: null,
-  cancelable: null,
+  type: 0,
+  eventPhase: 0,
+  bubbles: 0,
+  cancelable: 0,
   timeStamp: function(event) {
     return event.timeStamp || Date.now();
   },
-  defaultPrevented: null,
-  isTrusted: null,
+  defaultPrevented: 0,
+  isTrusted: 0,
 };
 
 function functionThatReturnsTrue() {
@@ -61,6 +56,8 @@ export function SyntheticEvent(
   this._reactName = reactName;
   this._targetInst = targetInst;
   this.nativeEvent = nativeEvent;
+  this.target = nativeEventTarget;
+  this.currentTarget = null;
 
   for (const propName in Interface) {
     if (!Interface.hasOwnProperty(propName)) {
@@ -70,11 +67,7 @@ export function SyntheticEvent(
     if (normalize) {
       this[propName] = normalize(nativeEvent);
     } else {
-      if (propName === 'target') {
-        this.target = nativeEventTarget;
-      } else {
-        this[propName] = nativeEvent[propName];
-      }
+      this[propName] = nativeEvent[propName];
     }
   }
 
@@ -146,8 +139,8 @@ Object.assign(SyntheticEvent.prototype, {
 
 export const UIEventInterface = {
   ...EventInterface,
-  view: null,
-  detail: null,
+  view: 0,
+  detail: 0,
 };
 
 let previousScreenX = 0;
@@ -162,19 +155,19 @@ let isMovementYSet = false;
  */
 export const MouseEventInterface = {
   ...UIEventInterface,
-  screenX: null,
-  screenY: null,
-  clientX: null,
-  clientY: null,
-  pageX: null,
-  pageY: null,
-  ctrlKey: null,
-  shiftKey: null,
-  altKey: null,
-  metaKey: null,
+  screenX: 0,
+  screenY: 0,
+  clientX: 0,
+  clientY: 0,
+  pageX: 0,
+  pageY: 0,
+  ctrlKey: 0,
+  shiftKey: 0,
+  altKey: 0,
+  metaKey: 0,
   getModifierState: getEventModifierState,
-  button: null,
-  buttons: null,
+  button: 0,
+  buttons: 0,
   relatedTarget: function(event) {
     return (
       event.relatedTarget ||
@@ -221,7 +214,7 @@ export const MouseEventInterface = {
  */
 export const DragEventInterface = {
   ...MouseEventInterface,
-  dataTransfer: null,
+  dataTransfer: 0,
 };
 
 /**
@@ -230,7 +223,7 @@ export const DragEventInterface = {
  */
 export const FocusEventInterface = {
   ...UIEventInterface,
-  relatedTarget: null,
+  relatedTarget: 0,
 };
 
 /**
@@ -240,9 +233,9 @@ export const FocusEventInterface = {
  */
 export const AnimationEventInterface = {
   ...EventInterface,
-  animationName: null,
-  elapsedTime: null,
-  pseudoElement: null,
+  animationName: 0,
+  elapsedTime: 0,
+  pseudoElement: 0,
 };
 
 /**
@@ -264,7 +257,7 @@ export const ClipboardEventInterface = {
  */
 export const CompositionEventInterface = {
   ...EventInterface,
-  data: null,
+  data: 0,
 };
 
 /**
@@ -406,14 +399,14 @@ function getEventModifierState(nativeEvent) {
 export const KeyboardEventInterface = {
   ...UIEventInterface,
   key: getEventKey,
-  code: null,
-  location: null,
-  ctrlKey: null,
-  shiftKey: null,
-  altKey: null,
-  metaKey: null,
-  repeat: null,
-  locale: null,
+  code: 0,
+  location: 0,
+  ctrlKey: 0,
+  shiftKey: 0,
+  altKey: 0,
+  metaKey: 0,
+  repeat: 0,
+  locale: 0,
   getModifierState: getEventModifierState,
   // Legacy Interface
   charCode: function(event) {
@@ -459,16 +452,16 @@ export const KeyboardEventInterface = {
  */
 export const PointerEventInterface = {
   ...MouseEventInterface,
-  pointerId: null,
-  width: null,
-  height: null,
-  pressure: null,
-  tangentialPressure: null,
-  tiltX: null,
-  tiltY: null,
-  twist: null,
-  pointerType: null,
-  isPrimary: null,
+  pointerId: 0,
+  width: 0,
+  height: 0,
+  pressure: 0,
+  tangentialPressure: 0,
+  tiltX: 0,
+  tiltY: 0,
+  twist: 0,
+  pointerType: 0,
+  isPrimary: 0,
 };
 
 /**
@@ -477,13 +470,13 @@ export const PointerEventInterface = {
  */
 export const TouchEventInterface = {
   ...UIEventInterface,
-  touches: null,
-  targetTouches: null,
-  changedTouches: null,
-  altKey: null,
-  metaKey: null,
-  ctrlKey: null,
-  shiftKey: null,
+  touches: 0,
+  targetTouches: 0,
+  changedTouches: 0,
+  altKey: 0,
+  metaKey: 0,
+  ctrlKey: 0,
+  shiftKey: 0,
   getModifierState: getEventModifierState,
 };
 
@@ -494,9 +487,9 @@ export const TouchEventInterface = {
  */
 export const TransitionEventInterface = {
   ...EventInterface,
-  propertyName: null,
-  elapsedTime: null,
-  pseudoElement: null,
+  propertyName: 0,
+  elapsedTime: 0,
+  pseudoElement: 0,
 };
 
 /**
@@ -524,11 +517,11 @@ export const WheelEventInterface = {
       ? -event.wheelDelta
       : 0;
   },
-  deltaZ: null,
+  deltaZ: 0,
 
   // Browsers without "deltaMode" is reporting in raw wheel delta where one
   // notch on the scroll is always +/- 120, roughly equivalent to pixels.
   // A good approximation of DOM_DELTA_LINE (1) is 5% of viewport size or
   // ~40 pixels, for DOM_DELTA_SCREEN (2) it is 87.5% of viewport size.
-  deltaMode: null,
+  deltaMode: 0,
 };
