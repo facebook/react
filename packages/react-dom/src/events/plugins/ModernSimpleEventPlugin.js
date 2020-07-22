@@ -13,7 +13,20 @@ import type {AnyNativeEvent} from '../../events/PluginModuleType';
 import type {DispatchQueue} from '../DOMModernPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
-import SyntheticEvent from '../../events/SyntheticEvent';
+import {
+  SyntheticEvent,
+  SyntheticAnimationEvent,
+  SyntheticClipboardEvent,
+  SyntheticFocusEvent,
+  SyntheticKeyboardEvent,
+  SyntheticMouseEvent,
+  SyntheticPointerEvent,
+  SyntheticDragEvent,
+  SyntheticTouchEvent,
+  SyntheticTransitionEvent,
+  SyntheticUIEvent,
+  SyntheticWheelEvent,
+} from '../../events/SyntheticEvent';
 
 import * as DOMTopLevelEventTypes from '../DOMTopLevelEventTypes';
 import {
@@ -25,17 +38,7 @@ import {
   accumulateEventHandleNonManagedNodeListeners,
 } from '../DOMModernPluginEventSystem';
 import {IS_EVENT_HANDLE_NON_MANAGED_NODE} from '../EventSystemFlags';
-import SyntheticAnimationEvent from '../SyntheticAnimationEvent';
-import SyntheticClipboardEvent from '../SyntheticClipboardEvent';
-import SyntheticFocusEvent from '../SyntheticFocusEvent';
-import SyntheticKeyboardEvent from '../SyntheticKeyboardEvent';
-import SyntheticMouseEvent from '../SyntheticMouseEvent';
-import SyntheticPointerEvent from '../SyntheticPointerEvent';
-import SyntheticDragEvent from '../SyntheticDragEvent';
-import SyntheticTouchEvent from '../SyntheticTouchEvent';
-import SyntheticTransitionEvent from '../SyntheticTransitionEvent';
-import SyntheticUIEvent from '../SyntheticUIEvent';
-import SyntheticWheelEvent from '../SyntheticWheelEvent';
+
 import getEventCharCode from '../getEventCharCode';
 import {IS_CAPTURE_PHASE} from '../EventSystemFlags';
 

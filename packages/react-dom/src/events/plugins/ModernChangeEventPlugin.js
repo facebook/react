@@ -12,7 +12,7 @@ import type {DispatchQueue} from '../DOMModernPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
 import {registerTwoPhaseEvent} from '../EventRegistry';
-import SyntheticEvent from '../SyntheticEvent';
+import {SyntheticEvent} from '../SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 

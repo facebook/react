@@ -27,8 +27,10 @@ import {
   initialize as FallbackCompositionStateInitialize,
   reset as FallbackCompositionStateReset,
 } from '../FallbackCompositionState';
-import SyntheticCompositionEvent from '../SyntheticCompositionEvent';
-import SyntheticInputEvent from '../SyntheticInputEvent';
+import {
+  SyntheticCompositionEvent,
+  SyntheticInputEvent,
+} from '../SyntheticEvent';
 import {accumulateTwoPhaseListeners} from '../DOMModernPluginEventSystem';
 
 const END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
