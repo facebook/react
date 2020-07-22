@@ -778,7 +778,8 @@ export function accumulateSinglePhaseListeners(
       enableCreateEventHandleAPI &&
       enableScopeAPI &&
       tag === ScopeComponent &&
-      lastHostComponent !== null
+      lastHostComponent !== null &&
+      stateNode !== null
     ) {
       const reactScopeInstance = stateNode;
       const eventHandlerlisteners = getEventHandlerListeners(
