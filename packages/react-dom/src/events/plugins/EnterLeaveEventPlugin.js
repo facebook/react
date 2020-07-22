@@ -131,9 +131,9 @@ function extractEvents(
   const toNode = to == null ? win : getNodeFromInstance(to);
 
   const leave = new eventInterface(
+    nativeEvent,
     leaveEventType,
     from,
-    nativeEvent,
     nativeEventTarget,
   );
   leave.type = eventTypePrefix + 'leave';
@@ -141,9 +141,9 @@ function extractEvents(
   leave.relatedTarget = toNode;
 
   let enter = new eventInterface(
+    nativeEvent,
     enterEventType,
     to,
-    nativeEvent,
     nativeEventTarget,
   );
   enter.type = eventTypePrefix + 'enter';

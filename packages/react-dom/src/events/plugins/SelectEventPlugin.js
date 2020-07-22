@@ -127,9 +127,9 @@ function constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget) {
     lastSelection = currentSelection;
 
     const syntheticEvent = new SyntheticEvent(
+      nativeEvent,
       'onSelect',
       null,
-      nativeEvent,
       nativeEventTarget,
     );
 

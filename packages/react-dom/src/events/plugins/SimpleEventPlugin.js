@@ -147,9 +147,9 @@ function extractEvents(
       break;
   }
   const event = new EventConstructor(
+    nativeEvent,
     reactName,
     null,
-    nativeEvent,
     nativeEventTarget,
   );
 

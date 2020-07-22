@@ -31,9 +31,9 @@ function functionThatReturnsFalse() {
  * DOM interface; custom application-specific events can also subclass this.
  */
 export function SyntheticEvent(
+  nativeEvent,
   reactName,
   targetInst,
-  nativeEvent,
   nativeEventTarget,
 ) {
   this._reactName = reactName;
@@ -118,12 +118,7 @@ Object.assign(SyntheticEvent.prototype, {
   isPersistent: functionThatReturnsTrue,
 });
 
-export function SyntheticUIEvent(
-  reactName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-) {
+export function SyntheticUIEvent(nativeEvent) {
   SyntheticEvent.apply(this, arguments);
   this.view = nativeEvent.view;
   this.detail = nativeEvent.detail;
@@ -136,12 +131,7 @@ let previousScreenY = 0;
 let isMovementXSet = false;
 let isMovementYSet = false;
 
-export function SyntheticMouseEvent(
-  reactName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-) {
+export function SyntheticMouseEvent(nativeEvent) {
   /**
    * @interface MouseEvent
    * @see http://www.w3.org/TR/DOM-Level-3-Events/
@@ -194,12 +184,7 @@ export function SyntheticMouseEvent(
 }
 SyntheticMouseEvent.prototype = SyntheticEvent.prototype;
 
-export function SyntheticDragEvent(
-  reactName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-) {
+export function SyntheticDragEvent(nativeEvent) {
   /**
    * @interface DragEvent
    * @see http://www.w3.org/TR/DOM-Level-3-Events/
@@ -209,12 +194,7 @@ export function SyntheticDragEvent(
 }
 SyntheticDragEvent.prototype = SyntheticEvent.prototype;
 
-export function SyntheticFocusEvent(
-  reactName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-) {
+export function SyntheticFocusEvent(nativeEvent) {
   /**
    * @interface FocusEvent
    * @see http://www.w3.org/TR/DOM-Level-3-Events/
@@ -224,12 +204,7 @@ export function SyntheticFocusEvent(
 }
 SyntheticFocusEvent.prototype = SyntheticEvent.prototype;
 
-export function SyntheticAnimationEvent(
-  reactName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-) {
+export function SyntheticAnimationEvent(nativeEvent) {
   /**
    * @interface Event
    * @see http://www.w3.org/TR/css3-animations/#AnimationEvent-interface
@@ -242,12 +217,7 @@ export function SyntheticAnimationEvent(
 }
 SyntheticAnimationEvent.prototype = SyntheticEvent.prototype;
 
-export function SyntheticClipboardEvent(
-  reactName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-) {
+export function SyntheticClipboardEvent(nativeEvent) {
   /**
    * @interface Event
    * @see http://www.w3.org/TR/clipboard-apis/
@@ -260,12 +230,7 @@ export function SyntheticClipboardEvent(
 }
 SyntheticClipboardEvent.prototype = SyntheticEvent.prototype;
 
-export function SyntheticCompositionEvent(
-  reactName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-) {
+export function SyntheticCompositionEvent(nativeEvent) {
   /**
    * @interface Event
    * @see http://www.w3.org/TR/DOM-Level-3-Events/#events-compositionevents
@@ -275,12 +240,7 @@ export function SyntheticCompositionEvent(
 }
 SyntheticCompositionEvent.prototype = SyntheticEvent.prototype;
 
-export function SyntheticInputEvent(
-  reactName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-) {
+export function SyntheticInputEvent(nativeEvent) {
   /**
    * @interface Event
    * @see http://www.w3.org/TR/2013/WD-DOM-Level-3-Events-20131105
@@ -415,12 +375,7 @@ function getEventModifierState(nativeEvent) {
   return modifierStateGetter;
 }
 
-export function SyntheticKeyboardEvent(
-  reactName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-) {
+export function SyntheticKeyboardEvent(nativeEvent) {
   /**
    * @interface KeyboardEvent
    * @see http://www.w3.org/TR/DOM-Level-3-Events/
@@ -464,12 +419,7 @@ export function SyntheticKeyboardEvent(
 }
 SyntheticKeyboardEvent.prototype = SyntheticEvent.prototype;
 
-export function SyntheticPointerEvent(
-  reactName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-) {
+export function SyntheticPointerEvent(nativeEvent) {
   /**
    * @interface PointerEvent
    * @see http://www.w3.org/TR/pointerevents/
@@ -488,12 +438,7 @@ export function SyntheticPointerEvent(
 }
 SyntheticPointerEvent.prototype = SyntheticEvent.prototype;
 
-export function SyntheticTouchEvent(
-  reactName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-) {
+export function SyntheticTouchEvent(nativeEvent) {
   /**
    * @interface TouchEvent
    * @see http://www.w3.org/TR/touch-events/
@@ -510,12 +455,7 @@ export function SyntheticTouchEvent(
 }
 SyntheticTouchEvent.prototype = SyntheticEvent.prototype;
 
-export function SyntheticTransitionEvent(
-  reactName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-) {
+export function SyntheticTransitionEvent(nativeEvent) {
   /**
    * @interface Event
    * @see http://www.w3.org/TR/2009/WD-css3-transitions-20090320/#transition-events-
@@ -528,12 +468,7 @@ export function SyntheticTransitionEvent(
 }
 SyntheticTransitionEvent.prototype = SyntheticEvent.prototype;
 
-export function SyntheticWheelEvent(
-  reactName,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-) {
+export function SyntheticWheelEvent(nativeEvent) {
   /**
    * @interface WheelEvent
    * @see http://www.w3.org/TR/DOM-Level-3-Events/

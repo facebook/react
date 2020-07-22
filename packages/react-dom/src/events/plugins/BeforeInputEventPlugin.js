@@ -238,9 +238,9 @@ function extractCompositionEvent(
   }
 
   const event = new SyntheticCompositionEvent(
+    nativeEvent,
     eventType,
     null,
-    nativeEvent,
     nativeEventTarget,
   );
   accumulateTwoPhaseListeners(targetInst, dispatchQueue, event);
@@ -408,9 +408,9 @@ function extractBeforeInputEvent(
   }
 
   const event = new SyntheticInputEvent(
+    nativeEvent,
     'onBeforeInput',
     null,
-    nativeEvent,
     nativeEventTarget,
   );
   accumulateTwoPhaseListeners(targetInst, dispatchQueue, event);
