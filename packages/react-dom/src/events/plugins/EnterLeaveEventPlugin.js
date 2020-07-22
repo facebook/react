@@ -18,7 +18,7 @@ import {
   getClosestInstanceFromNode,
   getNodeFromInstance,
 } from '../../client/ReactDOMComponentTree';
-import {accumulateEnterLeaveTwoPhaseListeners} from '../DOMModernPluginEventSystem';
+import {accumulateEnterLeaveTwoPhaseListeners} from '../DOMPluginEventSystem';
 
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';

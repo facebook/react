@@ -89,7 +89,7 @@ import {
   listenToReactEvent,
   mediaEventTypes,
   listenToNonDelegatedEvent,
-} from '../events/DOMModernPluginEventSystem';
+} from '../events/DOMPluginEventSystem';
 import {getEventListenerMap} from './ReactDOMComponentTree';
 import {
   TOP_LOAD,

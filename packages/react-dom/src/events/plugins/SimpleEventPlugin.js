@@ -10,7 +10,7 @@
 import type {TopLevelType} from '../../events/TopLevelEventTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {AnyNativeEvent} from '../../events/PluginModuleType';
-import type {DispatchQueue} from '../DOMModernPluginEventSystem';
+import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
 import {
@@ -36,7 +36,7 @@ import {
 import {
   accumulateSinglePhaseListeners,
   accumulateEventHandleNonManagedNodeListeners,
-} from '../DOMModernPluginEventSystem';
+} from '../DOMPluginEventSystem';
 import {IS_EVENT_HANDLE_NON_MANAGED_NODE} from '../EventSystemFlags';
 
 import getEventCharCode from '../getEventCharCode';

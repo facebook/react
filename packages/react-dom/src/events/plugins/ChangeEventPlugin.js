@@ -8,7 +8,7 @@
  */
 import type {AnyNativeEvent} from '../PluginModuleType';
 import type {TopLevelType} from '../TopLevelEventTypes';
-import type {DispatchQueue} from '../DOMModernPluginEventSystem';
+import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
 import {registerTwoPhaseEvent} from '../EventRegistry';
@@ -38,7 +38,7 @@ import {batchedUpdates} from '../ReactDOMUpdateBatching';
 import {
   processDispatchQueue,
   accumulateTwoPhaseListeners,
-} from '../DOMModernPluginEventSystem';
+} from '../DOMPluginEventSystem';
 
 function registerEvents() {
   registerTwoPhaseEvent('onChange', [

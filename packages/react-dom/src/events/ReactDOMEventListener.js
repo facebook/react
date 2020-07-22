@@ -51,7 +51,7 @@ import {
   DiscreteEvent,
 } from 'shared/ReactTypes';
 import {getEventPriorityForPluginSystem} from './DOMEventProperties';
-import {dispatchEventForPluginEventSystem} from './DOMModernPluginEventSystem';
+import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 import {
   flushDiscreteUpdatesIfNeeded,
   discreteUpdates,
