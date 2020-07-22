@@ -128,7 +128,7 @@ import {
   TOP_FOCUS_OUT,
 } from './DOMTopLevelEventTypes';
 import {IS_REPLAYED} from './EventSystemFlags';
-import {listenToNativeEvent} from './DOMModernPluginEventSystem';
+import {listenToNativeEvent} from './DOMPluginEventSystem';
 import {addResponderEventSystemEvent} from './DeprecatedDOMEventResponderSystem';
 
 type QueuedReplayableEvent = {|

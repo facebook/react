@@ -99,11 +99,11 @@ import {
 } from './EventListener';
 import {removeTrappedEventListener} from './DeprecatedDOMEventResponderSystem';
 import {topLevelEventsToReactNames} from './DOMEventProperties';
-import * as ModernBeforeInputEventPlugin from './plugins/ModernBeforeInputEventPlugin';
-import * as ModernChangeEventPlugin from './plugins/ModernChangeEventPlugin';
-import * as ModernEnterLeaveEventPlugin from './plugins/ModernEnterLeaveEventPlugin';
-import * as ModernSelectEventPlugin from './plugins/ModernSelectEventPlugin';
-import * as ModernSimpleEventPlugin from './plugins/ModernSimpleEventPlugin';
+import * as BeforeInputEventPlugin from './plugins/BeforeInputEventPlugin';
+import * as ChangeEventPlugin from './plugins/ChangeEventPlugin';
+import * as EnterLeaveEventPlugin from './plugins/EnterLeaveEventPlugin';
+import * as SelectEventPlugin from './plugins/SelectEventPlugin';
+import * as SimpleEventPlugin from './plugins/SimpleEventPlugin';
 
 type DispatchListener = {|
   instance: null | Fiber,
@@ -119,11 +119,11 @@ type DispatchEntry = {|
 export type DispatchQueue = Array<DispatchEntry>;
 
 // TODO: remove top-level side effect.
-ModernSimpleEventPlugin.registerEvents();
-ModernEnterLeaveEventPlugin.registerEvents();
-ModernChangeEventPlugin.registerEvents();
-ModernSelectEventPlugin.registerEvents();
-ModernBeforeInputEventPlugin.registerEvents();
+SimpleEventPlugin.registerEvents();
+EnterLeaveEventPlugin.registerEvents();
+ChangeEventPlugin.registerEvents();
+SelectEventPlugin.registerEvents();
+BeforeInputEventPlugin.registerEvents();
 
 function extractEvents(
   dispatchQueue: DispatchQueue,
@@ -140,7 +140,7 @@ function extractEvents(
   // should probably be inlined somewhere and have its logic
   // be core the to event system. This would potentially allow
   // us to ship builds of React without the polyfilled plugins below.
-  ModernSimpleEventPlugin.extractEvents(
+  SimpleEventPlugin.extractEvents(
     dispatchQueue,
     topLevelType,
     targetInst,
@@ -169,7 +169,7 @@ function extractEvents(
   // that might cause other unknown side-effects that we
   // can't forsee right now.
   if (shouldProcessPolyfillPlugins) {
-    ModernEnterLeaveEventPlugin.extractEvents(
+    EnterLeaveEventPlugin.extractEvents(
       dispatchQueue,
       topLevelType,
       targetInst,
@@ -178,7 +178,7 @@ function extractEvents(
       eventSystemFlags,
       targetContainer,
     );
-    ModernChangeEventPlugin.extractEvents(
+    ChangeEventPlugin.extractEvents(
       dispatchQueue,
       topLevelType,
       targetInst,
@@ -187,7 +187,7 @@ function extractEvents(
       eventSystemFlags,
       targetContainer,
     );
-    ModernSelectEventPlugin.extractEvents(
+    SelectEventPlugin.extractEvents(
       dispatchQueue,
       topLevelType,
       targetInst,
@@ -196,7 +196,7 @@ function extractEvents(
       eventSystemFlags,
       targetContainer,
     );
-    ModernBeforeInputEventPlugin.extractEvents(
+    BeforeInputEventPlugin.extractEvents(
       dispatchQueue,
       topLevelType,
       targetInst,
@@ -297,7 +297,7 @@ export function processDispatchQueue(
   for (let i = 0; i < dispatchQueue.length; i++) {
     const {event, listeners} = dispatchQueue[i];
     processDispatchQueueItemsInOrder(event, listeners, inCapturePhase);
-    // Modern event system doesn't use pooling.
+    //  event system doesn't use pooling.
   }
   // This would be a good time to rethrow if any of the event handlers threw.
   rethrowCaughtError();
@@ -816,9 +816,9 @@ export function accumulateSinglePhaseListeners(
 }
 
 // We should only use this function for:
-// - ModernBeforeInputEventPlugin
-// - ModernChangeEventPlugin
-// - ModernSelectEventPlugin
+// - BeforeInputEventPlugin
+// - ChangeEventPlugin
+// - SelectEventPlugin
 // This is because we only process these plugins
 // in the bubble phase, so we need to accumulate two
 // phase event listeners (via emulation).
@@ -969,7 +969,7 @@ function accumulateEnterLeaveListenersForEvent(
 }
 
 // We should only use this function for:
-// - ModernEnterLeaveEventPlugin
+// - EnterLeaveEventPlugin
 // This is because we only process this plugin
 // in the bubble phase, so we need to accumulate two
 // phase event listeners.

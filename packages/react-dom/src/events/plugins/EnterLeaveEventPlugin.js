@@ -13,13 +13,12 @@ import {
   TOP_POINTER_OVER,
 } from '../DOMTopLevelEventTypes';
 import {IS_REPLAYED} from 'react-dom/src/events/EventSystemFlags';
-import SyntheticMouseEvent from '../SyntheticMouseEvent';
-import SyntheticPointerEvent from '../SyntheticPointerEvent';
+import {SyntheticMouseEvent, SyntheticPointerEvent} from '../SyntheticEvent';
 import {
   getClosestInstanceFromNode,
   getNodeFromInstance,
 } from '../../client/ReactDOMComponentTree';
-import {accumulateEnterLeaveTwoPhaseListeners} from '../DOMModernPluginEventSystem';
+import {accumulateEnterLeaveTwoPhaseListeners} from '../DOMPluginEventSystem';
 
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';
