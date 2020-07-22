@@ -17,6 +17,21 @@ function functionThatReturnsFalse() {
   return false;
 }
 
+function assignKeys(dest, src, keys) {
+  for (let i = 0; i < keys.length; i++) {
+    dest[keys[i]] = src[keys[i]];
+  }
+}
+
+const syntheticEventKeys = [
+  'type',
+  'eventPhase',
+  'bubbles',
+  'cancelable',
+  'defaultPrevented',
+  'isTrusted',
+];
+
 /**
  * Synthetic events are dispatched by event plugins, typically in response to a
  * top-level event delegation handler.
@@ -43,16 +58,11 @@ export function SyntheticEvent(
    * @interface Event
    * @see http://www.w3.org/TR/DOM-Level-3-Events/
    */
-  this.type = nativeEvent.type;
   this.target = nativeEventTarget;
   // currentTarget is set when dispatching; no use in copying it here.
   this.currentTarget = null;
-  this.eventPhase = nativeEvent.eventPhase;
-  this.bubbles = nativeEvent.bubbles;
-  this.cancelable = nativeEvent.cancelable;
   this.timeStamp = nativeEvent.timeStamp || Date.now();
-  this.defaultPrevented = nativeEvent.defaultPrevented;
-  this.isTrusted = nativeEvent.isTrusted;
+  assignKeys(this, nativeEvent, syntheticEventKeys);
   const defaultPrevented =
     nativeEvent.defaultPrevented != null
       ? nativeEvent.defaultPrevented
@@ -131,25 +141,29 @@ let previousScreenY = 0;
 let isMovementXSet = false;
 let isMovementYSet = false;
 
+const syntheticMouseEventKeys = [
+  'screenX',
+  'screenY',
+  'clientX',
+  'clientY',
+  'pageX',
+  'pageY',
+  'ctrlKey',
+  'shiftKey',
+  'altKey',
+  'metaKey',
+  'button',
+  'buttons',
+];
+
 export function SyntheticMouseEvent(nativeEvent) {
   /**
    * @interface MouseEvent
    * @see http://www.w3.org/TR/DOM-Level-3-Events/
    */
   SyntheticUIEvent.apply(this, arguments);
-  this.screenX = nativeEvent.screenX;
-  this.screenY = nativeEvent.screenY;
-  this.clientX = nativeEvent.clientX;
-  this.clientY = nativeEvent.clientY;
-  this.pageX = nativeEvent.pageX;
-  this.pageY = nativeEvent.pageY;
-  this.ctrlKey = nativeEvent.ctrlKey;
-  this.shiftKey = nativeEvent.shiftKey;
-  this.altKey = nativeEvent.altKey;
-  this.metaKey = nativeEvent.metaKey;
+  assignKeys(this, nativeEvent, syntheticMouseEventKeys);
   this.getModifierState = getEventModifierState(nativeEvent);
-  this.button = nativeEvent.button;
-  this.buttons = nativeEvent.buttons;
   this.relatedTarget =
     nativeEvent.relatedTarget ||
     (nativeEvent.fromElement === nativeEvent.srcElement
@@ -204,6 +218,12 @@ export function SyntheticFocusEvent(nativeEvent) {
 }
 SyntheticFocusEvent.prototype = SyntheticEvent.prototype;
 
+const syntheticAnimationEventKeys = [
+  'animationName',
+  'elapsedTime',
+  'pseudoElement',
+];
+
 export function SyntheticAnimationEvent(nativeEvent) {
   /**
    * @interface Event
@@ -211,9 +231,7 @@ export function SyntheticAnimationEvent(nativeEvent) {
    * @see https://developer.mozilla.org/en-US/docs/Web/API/AnimationEvent
    */
   SyntheticEvent.apply(this, arguments);
-  this.animationName = nativeEvent.animationName;
-  this.elapsedTime = nativeEvent.elapsedTime;
-  this.pseudoElement = nativeEvent.pseudoElement;
+  assignKeys(this, nativeEvent, syntheticAnimationEventKeys);
 }
 SyntheticAnimationEvent.prototype = SyntheticEvent.prototype;
 
@@ -375,21 +393,25 @@ function getEventModifierState(nativeEvent) {
   return modifierStateGetter;
 }
 
+const syntheticKeyboardEventKeys = [
+  'code',
+  'location',
+  'ctrlKey',
+  'shiftKey',
+  'altKey',
+  'metaKey',
+  'repeat',
+  'locale',
+];
+
 export function SyntheticKeyboardEvent(nativeEvent) {
   /**
    * @interface KeyboardEvent
    * @see http://www.w3.org/TR/DOM-Level-3-Events/
    */
   SyntheticUIEvent.apply(this, arguments);
+  assignKeys(this, nativeEvent, syntheticKeyboardEventKeys);
   this.key = getEventKey(nativeEvent);
-  this.code = nativeEvent.code;
-  this.location = nativeEvent.location;
-  this.ctrlKey = nativeEvent.ctrlKey;
-  this.shiftKey = nativeEvent.shiftKey;
-  this.altKey = nativeEvent.altKey;
-  this.metaKey = nativeEvent.metaKey;
-  this.repeat = nativeEvent.repeat;
-  this.locale = nativeEvent.locale;
   this.getModifierState = getEventModifierState(nativeEvent);
   // Legacy Interface
   // `charCode` is the result of a KeyPress event and represents the value of
@@ -419,24 +441,38 @@ export function SyntheticKeyboardEvent(nativeEvent) {
 }
 SyntheticKeyboardEvent.prototype = SyntheticEvent.prototype;
 
+const syntheticPointerEventKeys = [
+  'pointerId',
+  'width',
+  'height',
+  'pressure',
+  'tangentialPressure',
+  'tiltX',
+  'tiltY',
+  'twist',
+  'pointerType',
+  'isPrimary',
+];
+
 export function SyntheticPointerEvent(nativeEvent) {
   /**
    * @interface PointerEvent
    * @see http://www.w3.org/TR/pointerevents/
    */
   SyntheticMouseEvent.apply(this, arguments);
-  this.pointerId = nativeEvent.pointerId;
-  this.width = nativeEvent.width;
-  this.height = nativeEvent.height;
-  this.pressure = nativeEvent.pressure;
-  this.tangentialPressure = nativeEvent.tangentialPressure;
-  this.tiltX = nativeEvent.tiltX;
-  this.tiltY = nativeEvent.tiltY;
-  this.twist = nativeEvent.twist;
-  this.pointerType = nativeEvent.pointerType;
-  this.isPrimary = nativeEvent.isPrimary;
+  assignKeys(this, nativeEvent, syntheticPointerEventKeys);
 }
 SyntheticPointerEvent.prototype = SyntheticEvent.prototype;
+
+const syntheticTouchEventKeys = [
+  'touches',
+  'targetTouches',
+  'changedTouches',
+  'altKey',
+  'metaKey',
+  'ctrlKey',
+  'shiftKey',
+];
 
 export function SyntheticTouchEvent(nativeEvent) {
   /**
@@ -444,16 +480,16 @@ export function SyntheticTouchEvent(nativeEvent) {
    * @see http://www.w3.org/TR/touch-events/
    */
   SyntheticUIEvent.apply(this, arguments);
-  this.touches = nativeEvent.touches;
-  this.targetTouches = nativeEvent.targetTouches;
-  this.changedTouches = nativeEvent.changedTouches;
-  this.altKey = nativeEvent.altKey;
-  this.metaKey = nativeEvent.metaKey;
-  this.ctrlKey = nativeEvent.ctrlKey;
-  this.shiftKey = nativeEvent.shiftKey;
+  assignKeys(this, nativeEvent, syntheticTouchEventKeys);
   this.getModifierState = getEventModifierState(nativeEvent);
 }
 SyntheticTouchEvent.prototype = SyntheticEvent.prototype;
+
+const syntheticTransitionEventKeys = [
+  'propertyName',
+  'elapsedTime',
+  'pseudoElement',
+];
 
 export function SyntheticTransitionEvent(nativeEvent) {
   /**
@@ -462,9 +498,7 @@ export function SyntheticTransitionEvent(nativeEvent) {
    * @see https://developer.mozilla.org/en-US/docs/Web/API/TransitionEvent
    */
   SyntheticEvent.apply(this, arguments);
-  this.propertyName = nativeEvent.propertyName;
-  this.elapsedTime = nativeEvent.elapsedTime;
-  this.pseudoElement = nativeEvent.pseudoElement;
+  assignKeys(this, nativeEvent, syntheticTransitionEventKeys);
 }
 SyntheticTransitionEvent.prototype = SyntheticEvent.prototype;
 
