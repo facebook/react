@@ -501,4 +501,32 @@ describe('ReactDOMEventListener', () => {
       document.body.removeChild(container);
     }
   });
+
+  // Unlike browsers, we delegate scroll events.
+  // (This doesn't make a lot of sense but it would be a breaking change not to.)
+  it('should delegate scroll events even without a direct listener', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const onScroll = jest.fn();
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div onScroll={onScroll}>
+          {/* Intentionally no handler on the target: */}
+          <video ref={ref} />
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('scroll', {
+          bubbles: false,
+        }),
+      );
+      // Regression test: ensure React tree delegation still works
+      // even if the actual DOM element did not have a handler.
+      expect(onScroll).toHaveBeenCalledTimes(1);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
 });
