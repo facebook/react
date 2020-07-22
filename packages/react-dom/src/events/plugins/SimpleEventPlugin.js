@@ -15,17 +15,17 @@ import type {EventSystemFlags} from '../EventSystemFlags';
 
 import {
   SyntheticEvent,
-  SyntheticAnimationEvent,
-  SyntheticClipboardEvent,
-  SyntheticFocusEvent,
-  SyntheticKeyboardEvent,
-  SyntheticMouseEvent,
-  SyntheticPointerEvent,
-  SyntheticDragEvent,
-  SyntheticTouchEvent,
-  SyntheticTransitionEvent,
-  SyntheticUIEvent,
-  SyntheticWheelEvent,
+  AnimationEventInterface,
+  ClipboardEventInterface,
+  FocusEventInterface,
+  KeyboardEventInterface,
+  MouseEventInterface,
+  PointerEventInterface,
+  DragEventInterface,
+  TouchEventInterface,
+  TransitionEventInterface,
+  UIEventInterface,
+  WheelEventInterface,
 } from '../../events/SyntheticEvent';
 
 import * as DOMTopLevelEventTypes from '../DOMTopLevelEventTypes';
@@ -57,7 +57,7 @@ function extractEvents(
   if (reactName === undefined) {
     return;
   }
-  let EventConstructor;
+  let EventInterface;
   switch (topLevelType) {
     case DOMTopLevelEventTypes.TOP_KEY_PRESS:
       // Firefox creates a keypress event for function keys too. This removes
@@ -69,13 +69,13 @@ function extractEvents(
     /* falls through */
     case DOMTopLevelEventTypes.TOP_KEY_DOWN:
     case DOMTopLevelEventTypes.TOP_KEY_UP:
-      EventConstructor = SyntheticKeyboardEvent;
+      EventInterface = KeyboardEventInterface;
       break;
     case DOMTopLevelEventTypes.TOP_FOCUS_IN:
     case DOMTopLevelEventTypes.TOP_FOCUS_OUT:
     case DOMTopLevelEventTypes.TOP_BEFORE_BLUR:
     case DOMTopLevelEventTypes.TOP_AFTER_BLUR:
-      EventConstructor = SyntheticFocusEvent;
+      EventInterface = FocusEventInterface;
       break;
     case DOMTopLevelEventTypes.TOP_CLICK:
       // Firefox creates a click event on right mouse clicks. This removes the
@@ -94,7 +94,7 @@ function extractEvents(
     case DOMTopLevelEventTypes.TOP_MOUSE_OUT:
     case DOMTopLevelEventTypes.TOP_MOUSE_OVER:
     case DOMTopLevelEventTypes.TOP_CONTEXT_MENU:
-      EventConstructor = SyntheticMouseEvent;
+      EventInterface = MouseEventInterface;
       break;
     case DOMTopLevelEventTypes.TOP_DRAG:
     case DOMTopLevelEventTypes.TOP_DRAG_END:
@@ -104,32 +104,32 @@ function extractEvents(
     case DOMTopLevelEventTypes.TOP_DRAG_OVER:
     case DOMTopLevelEventTypes.TOP_DRAG_START:
     case DOMTopLevelEventTypes.TOP_DROP:
-      EventConstructor = SyntheticDragEvent;
+      EventInterface = DragEventInterface;
       break;
     case DOMTopLevelEventTypes.TOP_TOUCH_CANCEL:
     case DOMTopLevelEventTypes.TOP_TOUCH_END:
     case DOMTopLevelEventTypes.TOP_TOUCH_MOVE:
     case DOMTopLevelEventTypes.TOP_TOUCH_START:
-      EventConstructor = SyntheticTouchEvent;
+      EventInterface = TouchEventInterface;
       break;
     case DOMTopLevelEventTypes.TOP_ANIMATION_END:
     case DOMTopLevelEventTypes.TOP_ANIMATION_ITERATION:
     case DOMTopLevelEventTypes.TOP_ANIMATION_START:
-      EventConstructor = SyntheticAnimationEvent;
+      EventInterface = AnimationEventInterface;
       break;
     case DOMTopLevelEventTypes.TOP_TRANSITION_END:
-      EventConstructor = SyntheticTransitionEvent;
+      EventInterface = TransitionEventInterface;
       break;
     case DOMTopLevelEventTypes.TOP_SCROLL:
-      EventConstructor = SyntheticUIEvent;
+      EventInterface = UIEventInterface;
       break;
     case DOMTopLevelEventTypes.TOP_WHEEL:
-      EventConstructor = SyntheticWheelEvent;
+      EventInterface = WheelEventInterface;
       break;
     case DOMTopLevelEventTypes.TOP_COPY:
     case DOMTopLevelEventTypes.TOP_CUT:
     case DOMTopLevelEventTypes.TOP_PASTE:
-      EventConstructor = SyntheticClipboardEvent;
+      EventInterface = ClipboardEventInterface;
       break;
     case DOMTopLevelEventTypes.TOP_GOT_POINTER_CAPTURE:
     case DOMTopLevelEventTypes.TOP_LOST_POINTER_CAPTURE:
@@ -139,18 +139,18 @@ function extractEvents(
     case DOMTopLevelEventTypes.TOP_POINTER_OUT:
     case DOMTopLevelEventTypes.TOP_POINTER_OVER:
     case DOMTopLevelEventTypes.TOP_POINTER_UP:
-      EventConstructor = SyntheticPointerEvent;
+      EventInterface = PointerEventInterface;
       break;
     default:
       // Unknown event. This is used by createEventHandle.
-      EventConstructor = SyntheticEvent;
       break;
   }
-  const event = new EventConstructor(
+  const event = new SyntheticEvent(
     reactName,
     null,
     nativeEvent,
     nativeEventTarget,
+    EventInterface,
   );
 
   const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;

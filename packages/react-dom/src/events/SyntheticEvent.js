@@ -56,12 +56,12 @@ export function SyntheticEvent(
   targetInst,
   nativeEvent,
   nativeEventTarget,
+  Interface = EventInterface,
 ) {
   this._reactName = reactName;
   this._targetInst = targetInst;
   this.nativeEvent = nativeEvent;
 
-  const Interface = this.constructor.Interface;
   for (const propName in Interface) {
     if (!Interface.hasOwnProperty(propName)) {
       continue;
@@ -144,35 +144,11 @@ Object.assign(SyntheticEvent.prototype, {
   isPersistent: functionThatReturnsTrue,
 });
 
-SyntheticEvent.Interface = EventInterface;
-
-/**
- * Helper to reduce boilerplate when creating subclasses.
- */
-SyntheticEvent.extend = function(Interface) {
-  const Super = this;
-
-  const E = function() {};
-  E.prototype = Super.prototype;
-  const prototype = new E();
-
-  function Class() {
-    return Super.apply(this, arguments);
-  }
-  Object.assign(prototype, Class.prototype);
-  Class.prototype = prototype;
-  Class.prototype.constructor = Class;
-
-  Class.Interface = Object.assign({}, Super.Interface, Interface);
-  Class.extend = Super.extend;
-
-  return Class;
-};
-
-export const SyntheticUIEvent = SyntheticEvent.extend({
+export const UIEventInterface = {
+  ...EventInterface,
   view: null,
   detail: null,
-});
+};
 
 let previousScreenX = 0;
 let previousScreenY = 0;
@@ -184,7 +160,8 @@ let isMovementYSet = false;
  * @interface MouseEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-export const SyntheticMouseEvent = SyntheticUIEvent.extend({
+export const MouseEventInterface = {
+  ...UIEventInterface,
   screenX: null,
   screenY: null,
   clientX: null,
@@ -236,63 +213,67 @@ export const SyntheticMouseEvent = SyntheticUIEvent.extend({
 
     return event.type === 'mousemove' ? event.screenY - screenY : 0;
   },
-});
+};
 
 /**
  * @interface DragEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-export const SyntheticDragEvent = SyntheticMouseEvent.extend({
+export const DragEventInterface = {
+  ...MouseEventInterface,
   dataTransfer: null,
-});
+};
 
 /**
  * @interface FocusEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-export const SyntheticFocusEvent = SyntheticUIEvent.extend({
+export const FocusEventInterface = {
+  ...UIEventInterface,
   relatedTarget: null,
-});
+};
 
 /**
  * @interface Event
  * @see http://www.w3.org/TR/css3-animations/#AnimationEvent-interface
  * @see https://developer.mozilla.org/en-US/docs/Web/API/AnimationEvent
  */
-export const SyntheticAnimationEvent = SyntheticEvent.extend({
+export const AnimationEventInterface = {
+  ...EventInterface,
   animationName: null,
   elapsedTime: null,
   pseudoElement: null,
-});
+};
 
 /**
  * @interface Event
  * @see http://www.w3.org/TR/clipboard-apis/
  */
-export const SyntheticClipboardEvent = SyntheticEvent.extend({
+export const ClipboardEventInterface = {
+  ...EventInterface,
   clipboardData: function(event) {
     return 'clipboardData' in event
       ? event.clipboardData
       : window.clipboardData;
   },
-});
+};
 
 /**
  * @interface Event
  * @see http://www.w3.org/TR/DOM-Level-3-Events/#events-compositionevents
  */
-export const SyntheticCompositionEvent = SyntheticEvent.extend({
+export const CompositionEventInterface = {
+  ...EventInterface,
   data: null,
-});
+};
 
 /**
  * @interface Event
  * @see http://www.w3.org/TR/2013/WD-DOM-Level-3-Events-20131105
  *      /#events-inputevents
  */
-export const SyntheticInputEvent = SyntheticEvent.extend({
-  data: null,
-});
+// Happens to share the same list for now.
+export const InputEventInterface = CompositionEventInterface;
 
 /**
  * Normalization of deprecated HTML5 `key` values
@@ -422,7 +403,8 @@ function getEventModifierState(nativeEvent) {
  * @interface KeyboardEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-export const SyntheticKeyboardEvent = SyntheticUIEvent.extend({
+export const KeyboardEventInterface = {
+  ...UIEventInterface,
   key: getEventKey,
   code: null,
   location: null,
@@ -469,13 +451,14 @@ export const SyntheticKeyboardEvent = SyntheticUIEvent.extend({
     }
     return 0;
   },
-});
+};
 
 /**
  * @interface PointerEvent
  * @see http://www.w3.org/TR/pointerevents/
  */
-export const SyntheticPointerEvent = SyntheticMouseEvent.extend({
+export const PointerEventInterface = {
+  ...MouseEventInterface,
   pointerId: null,
   width: null,
   height: null,
@@ -486,13 +469,14 @@ export const SyntheticPointerEvent = SyntheticMouseEvent.extend({
   twist: null,
   pointerType: null,
   isPrimary: null,
-});
+};
 
 /**
  * @interface TouchEvent
  * @see http://www.w3.org/TR/touch-events/
  */
-export const SyntheticTouchEvent = SyntheticUIEvent.extend({
+export const TouchEventInterface = {
+  ...UIEventInterface,
   touches: null,
   targetTouches: null,
   changedTouches: null,
@@ -501,24 +485,26 @@ export const SyntheticTouchEvent = SyntheticUIEvent.extend({
   ctrlKey: null,
   shiftKey: null,
   getModifierState: getEventModifierState,
-});
+};
 
 /**
  * @interface Event
  * @see http://www.w3.org/TR/2009/WD-css3-transitions-20090320/#transition-events-
  * @see https://developer.mozilla.org/en-US/docs/Web/API/TransitionEvent
  */
-export const SyntheticTransitionEvent = SyntheticEvent.extend({
+export const TransitionEventInterface = {
+  ...EventInterface,
   propertyName: null,
   elapsedTime: null,
   pseudoElement: null,
-});
+};
 
 /**
  * @interface WheelEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-export const SyntheticWheelEvent = SyntheticMouseEvent.extend({
+export const WheelEventInterface = {
+  ...MouseEventInterface,
   deltaX(event) {
     return 'deltaX' in event
       ? event.deltaX
@@ -545,4 +531,4 @@ export const SyntheticWheelEvent = SyntheticMouseEvent.extend({
   // A good approximation of DOM_DELTA_LINE (1) is 5% of viewport size or
   // ~40 pixels, for DOM_DELTA_SCREEN (2) it is 87.5% of viewport size.
   deltaMode: null,
-});
+};
