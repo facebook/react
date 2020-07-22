@@ -9,27 +9,6 @@
 
 import getEventCharCode from './getEventCharCode';
 
-/**
- * @interface Event
- * @see http://www.w3.org/TR/DOM-Level-3-Events/
- */
-const EventInterface = {
-  type: null,
-  target: null,
-  // currentTarget is set when dispatching; no use in copying it here
-  currentTarget: function() {
-    return null;
-  },
-  eventPhase: null,
-  bubbles: null,
-  cancelable: null,
-  timeStamp: function(event) {
-    return event.timeStamp || Date.now();
-  },
-  defaultPrevented: null,
-  isTrusted: null,
-};
-
 function functionThatReturnsTrue() {
   return true;
 }
@@ -60,24 +39,20 @@ export function SyntheticEvent(
   this._reactName = reactName;
   this._targetInst = targetInst;
   this.nativeEvent = nativeEvent;
-
-  const Interface = this.constructor.Interface;
-  for (const propName in Interface) {
-    if (!Interface.hasOwnProperty(propName)) {
-      continue;
-    }
-    const normalize = Interface[propName];
-    if (normalize) {
-      this[propName] = normalize(nativeEvent);
-    } else {
-      if (propName === 'target') {
-        this.target = nativeEventTarget;
-      } else {
-        this[propName] = nativeEvent[propName];
-      }
-    }
-  }
-
+  /**
+   * @interface Event
+   * @see http://www.w3.org/TR/DOM-Level-3-Events/
+   */
+  this.type = nativeEvent.type;
+  this.target = nativeEventTarget;
+  // currentTarget is set when dispatching; no use in copying it here.
+  this.currentTarget = null;
+  this.eventPhase = nativeEvent.eventPhase;
+  this.bubbles = nativeEvent.bubbles;
+  this.cancelable = nativeEvent.cancelable;
+  this.timeStamp = nativeEvent.timeStamp || Date.now();
+  this.defaultPrevented = nativeEvent.defaultPrevented;
+  this.isTrusted = nativeEvent.isTrusted;
   const defaultPrevented =
     nativeEvent.defaultPrevented != null
       ? nativeEvent.defaultPrevented
@@ -88,7 +63,6 @@ export function SyntheticEvent(
     this.isDefaultPrevented = functionThatReturnsFalse;
   }
   this.isPropagationStopped = functionThatReturnsFalse;
-  return this;
 }
 
 Object.assign(SyntheticEvent.prototype, {
@@ -144,35 +118,17 @@ Object.assign(SyntheticEvent.prototype, {
   isPersistent: functionThatReturnsTrue,
 });
 
-SyntheticEvent.Interface = EventInterface;
-
-/**
- * Helper to reduce boilerplate when creating subclasses.
- */
-SyntheticEvent.extend = function(Interface) {
-  const Super = this;
-
-  const E = function() {};
-  E.prototype = Super.prototype;
-  const prototype = new E();
-
-  function Class() {
-    return Super.apply(this, arguments);
-  }
-  Object.assign(prototype, Class.prototype);
-  Class.prototype = prototype;
-  Class.prototype.constructor = Class;
-
-  Class.Interface = Object.assign({}, Super.Interface, Interface);
-  Class.extend = Super.extend;
-
-  return Class;
-};
-
-export const SyntheticUIEvent = SyntheticEvent.extend({
-  view: null,
-  detail: null,
-});
+export function SyntheticUIEvent(
+  reactName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  SyntheticEvent.apply(this, arguments);
+  this.view = nativeEvent.view;
+  this.detail = nativeEvent.detail;
+}
+SyntheticUIEvent.prototype = SyntheticEvent.prototype;
 
 let previousScreenX = 0;
 let previousScreenY = 0;
@@ -180,119 +136,160 @@ let previousScreenY = 0;
 let isMovementXSet = false;
 let isMovementYSet = false;
 
-/**
- * @interface MouseEvent
- * @see http://www.w3.org/TR/DOM-Level-3-Events/
- */
-export const SyntheticMouseEvent = SyntheticUIEvent.extend({
-  screenX: null,
-  screenY: null,
-  clientX: null,
-  clientY: null,
-  pageX: null,
-  pageY: null,
-  ctrlKey: null,
-  shiftKey: null,
-  altKey: null,
-  metaKey: null,
-  getModifierState: getEventModifierState,
-  button: null,
-  buttons: null,
-  relatedTarget: function(event) {
-    return (
-      event.relatedTarget ||
-      (event.fromElement === event.srcElement
-        ? event.toElement
-        : event.fromElement)
-    );
-  },
-  movementX: function(event) {
-    if ('movementX' in event) {
-      return event.movementX;
-    }
-
+export function SyntheticMouseEvent(
+  reactName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  /**
+   * @interface MouseEvent
+   * @see http://www.w3.org/TR/DOM-Level-3-Events/
+   */
+  SyntheticUIEvent.apply(this, arguments);
+  this.screenX = nativeEvent.screenX;
+  this.screenY = nativeEvent.screenY;
+  this.clientX = nativeEvent.clientX;
+  this.clientY = nativeEvent.clientY;
+  this.pageX = nativeEvent.pageX;
+  this.pageY = nativeEvent.pageY;
+  this.ctrlKey = nativeEvent.ctrlKey;
+  this.shiftKey = nativeEvent.shiftKey;
+  this.altKey = nativeEvent.altKey;
+  this.metaKey = nativeEvent.metaKey;
+  this.getModifierState = getEventModifierState(nativeEvent);
+  this.button = nativeEvent.button;
+  this.buttons = nativeEvent.buttons;
+  this.relatedTarget =
+    nativeEvent.relatedTarget ||
+    (nativeEvent.fromElement === nativeEvent.srcElement
+      ? nativeEvent.toElement
+      : nativeEvent.fromElement);
+  if ('movementX' in nativeEvent) {
+    this.movementX = nativeEvent.movementX;
+  } else {
     const screenX = previousScreenX;
-    previousScreenX = event.screenX;
-
+    previousScreenX = nativeEvent.screenX;
     if (!isMovementXSet) {
       isMovementXSet = true;
-      return 0;
+      this.movementX = 0;
+    } else {
+      this.movementX =
+        nativeEvent.type === 'mousemove' ? nativeEvent.screenX - screenX : 0;
     }
-
-    return event.type === 'mousemove' ? event.screenX - screenX : 0;
-  },
-  movementY: function(event) {
-    if ('movementY' in event) {
-      return event.movementY;
-    }
-
+  }
+  if ('movementY' in nativeEvent) {
+    this.movementY = nativeEvent.movementY;
+  } else {
     const screenY = previousScreenY;
-    previousScreenY = event.screenY;
-
+    previousScreenY = nativeEvent.screenY;
     if (!isMovementYSet) {
       isMovementYSet = true;
-      return 0;
+      this.movementY = 0;
+    } else {
+      this.movementY =
+        nativeEvent.type === 'mousemove' ? nativeEvent.screenY - screenY : 0;
     }
+  }
+}
+SyntheticMouseEvent.prototype = SyntheticEvent.prototype;
 
-    return event.type === 'mousemove' ? event.screenY - screenY : 0;
-  },
-});
+export function SyntheticDragEvent(
+  reactName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  /**
+   * @interface DragEvent
+   * @see http://www.w3.org/TR/DOM-Level-3-Events/
+   */
+  SyntheticMouseEvent.apply(this, arguments);
+  this.dataTransfer = nativeEvent.dataTransfer;
+}
+SyntheticDragEvent.prototype = SyntheticEvent.prototype;
 
-/**
- * @interface DragEvent
- * @see http://www.w3.org/TR/DOM-Level-3-Events/
- */
-export const SyntheticDragEvent = SyntheticMouseEvent.extend({
-  dataTransfer: null,
-});
+export function SyntheticFocusEvent(
+  reactName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  /**
+   * @interface FocusEvent
+   * @see http://www.w3.org/TR/DOM-Level-3-Events/
+   */
+  SyntheticUIEvent.apply(this, arguments);
+  this.relatedTarget = nativeEvent.relatedTarget;
+}
+SyntheticFocusEvent.prototype = SyntheticEvent.prototype;
 
-/**
- * @interface FocusEvent
- * @see http://www.w3.org/TR/DOM-Level-3-Events/
- */
-export const SyntheticFocusEvent = SyntheticUIEvent.extend({
-  relatedTarget: null,
-});
+export function SyntheticAnimationEvent(
+  reactName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  /**
+   * @interface Event
+   * @see http://www.w3.org/TR/css3-animations/#AnimationEvent-interface
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/AnimationEvent
+   */
+  SyntheticEvent.apply(this, arguments);
+  this.animationName = nativeEvent.animationName;
+  this.elapsedTime = nativeEvent.elapsedTime;
+  this.pseudoElement = nativeEvent.pseudoElement;
+}
+SyntheticAnimationEvent.prototype = SyntheticEvent.prototype;
 
-/**
- * @interface Event
- * @see http://www.w3.org/TR/css3-animations/#AnimationEvent-interface
- * @see https://developer.mozilla.org/en-US/docs/Web/API/AnimationEvent
- */
-export const SyntheticAnimationEvent = SyntheticEvent.extend({
-  animationName: null,
-  elapsedTime: null,
-  pseudoElement: null,
-});
-
-/**
- * @interface Event
- * @see http://www.w3.org/TR/clipboard-apis/
- */
-export const SyntheticClipboardEvent = SyntheticEvent.extend({
-  clipboardData: function(event) {
-    return 'clipboardData' in event
-      ? event.clipboardData
+export function SyntheticClipboardEvent(
+  reactName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  /**
+   * @interface Event
+   * @see http://www.w3.org/TR/clipboard-apis/
+   */
+  SyntheticEvent.apply(this, arguments);
+  this.clipboardData =
+    'clipboardData' in nativeEvent
+      ? nativeEvent.clipboardData
       : window.clipboardData;
-  },
-});
+}
+SyntheticClipboardEvent.prototype = SyntheticEvent.prototype;
 
-/**
- * @interface Event
- * @see http://www.w3.org/TR/DOM-Level-3-Events/#events-compositionevents
- */
-export const SyntheticCompositionEvent = SyntheticEvent.extend({
-  data: null,
-});
+export function SyntheticCompositionEvent(
+  reactName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  /**
+   * @interface Event
+   * @see http://www.w3.org/TR/DOM-Level-3-Events/#events-compositionevents
+   */
+  SyntheticEvent.apply(this, arguments);
+  this.data = nativeEvent.data;
+}
+SyntheticCompositionEvent.prototype = SyntheticEvent.prototype;
 
-/**
- * @interface Event
- * @see http://www.w3.org/TR/2013/WD-DOM-Level-3-Events-20131105
- *      /#events-inputevents
- */
-export const SyntheticInputEvent = SyntheticEvent.extend({
-  data: null,
-});
+export function SyntheticInputEvent(
+  reactName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  /**
+   * @interface Event
+   * @see http://www.w3.org/TR/2013/WD-DOM-Level-3-Events-20131105
+   *      /#events-inputevents
+   */
+  SyntheticEvent.apply(this, arguments);
+  this.data = nativeEvent.data;
+}
+SyntheticInputEvent.prototype = SyntheticEvent.prototype;
 
 /**
  * Normalization of deprecated HTML5 `key` values
@@ -418,131 +415,152 @@ function getEventModifierState(nativeEvent) {
   return modifierStateGetter;
 }
 
-/**
- * @interface KeyboardEvent
- * @see http://www.w3.org/TR/DOM-Level-3-Events/
- */
-export const SyntheticKeyboardEvent = SyntheticUIEvent.extend({
-  key: getEventKey,
-  code: null,
-  location: null,
-  ctrlKey: null,
-  shiftKey: null,
-  altKey: null,
-  metaKey: null,
-  repeat: null,
-  locale: null,
-  getModifierState: getEventModifierState,
+export function SyntheticKeyboardEvent(
+  reactName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  /**
+   * @interface KeyboardEvent
+   * @see http://www.w3.org/TR/DOM-Level-3-Events/
+   */
+  SyntheticUIEvent.apply(this, arguments);
+  this.key = getEventKey(nativeEvent);
+  this.code = nativeEvent.code;
+  this.location = nativeEvent.location;
+  this.ctrlKey = nativeEvent.ctrlKey;
+  this.shiftKey = nativeEvent.shiftKey;
+  this.altKey = nativeEvent.altKey;
+  this.metaKey = nativeEvent.metaKey;
+  this.repeat = nativeEvent.repeat;
+  this.locale = nativeEvent.locale;
+  this.getModifierState = getEventModifierState(nativeEvent);
   // Legacy Interface
-  charCode: function(event) {
-    // `charCode` is the result of a KeyPress event and represents the value of
-    // the actual printable character.
+  // `charCode` is the result of a KeyPress event and represents the value of
+  // the actual printable character.
+  // KeyPress is deprecated, but its replacement is not yet final and not
+  // implemented in any major browser. Only KeyPress has charCode.
+  this.charCode =
+    nativeEvent.type === 'keypress' ? getEventCharCode(nativeEvent) : 0;
+  // `keyCode` is the result of a KeyDown/Up event and represents the value of
+  // physical keyboard key.
+  // The actual meaning of the value depends on the users' keyboard layout
+  // which cannot be detected. Assuming that it is a US keyboard layout
+  // provides a surprisingly accurate mapping for US and European users.
+  // Due to this, it is left to the user to implement at this time.
+  this.keyCode =
+    nativeEvent.type === 'keydown' || nativeEvent.type === 'keyup'
+      ? nativeEvent.keyCode
+      : 0;
+  // `which` is an alias for either `keyCode` or `charCode` depending on the
+  // type of the event.
+  this.which =
+    nativeEvent.type === 'keypress'
+      ? getEventCharCode(nativeEvent)
+      : nativeEvent.type === 'keydown' || nativeEvent.type === 'keyup'
+      ? nativeEvent.keyCode
+      : 0;
+}
+SyntheticKeyboardEvent.prototype = SyntheticEvent.prototype;
 
-    // KeyPress is deprecated, but its replacement is not yet final and not
-    // implemented in any major browser. Only KeyPress has charCode.
-    if (event.type === 'keypress') {
-      return getEventCharCode(event);
-    }
-    return 0;
-  },
-  keyCode: function(event) {
-    // `keyCode` is the result of a KeyDown/Up event and represents the value of
-    // physical keyboard key.
+export function SyntheticPointerEvent(
+  reactName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  /**
+   * @interface PointerEvent
+   * @see http://www.w3.org/TR/pointerevents/
+   */
+  SyntheticMouseEvent.apply(this, arguments);
+  this.pointerId = nativeEvent.pointerId;
+  this.width = nativeEvent.width;
+  this.height = nativeEvent.height;
+  this.pressure = nativeEvent.pressure;
+  this.tangentialPressure = nativeEvent.tangentialPressure;
+  this.tiltX = nativeEvent.tiltX;
+  this.tiltY = nativeEvent.tiltY;
+  this.twist = nativeEvent.twist;
+  this.pointerType = nativeEvent.pointerType;
+  this.isPrimary = nativeEvent.isPrimary;
+}
+SyntheticPointerEvent.prototype = SyntheticEvent.prototype;
 
-    // The actual meaning of the value depends on the users' keyboard layout
-    // which cannot be detected. Assuming that it is a US keyboard layout
-    // provides a surprisingly accurate mapping for US and European users.
-    // Due to this, it is left to the user to implement at this time.
-    if (event.type === 'keydown' || event.type === 'keyup') {
-      return event.keyCode;
-    }
-    return 0;
-  },
-  which: function(event) {
-    // `which` is an alias for either `keyCode` or `charCode` depending on the
-    // type of the event.
-    if (event.type === 'keypress') {
-      return getEventCharCode(event);
-    }
-    if (event.type === 'keydown' || event.type === 'keyup') {
-      return event.keyCode;
-    }
-    return 0;
-  },
-});
+export function SyntheticTouchEvent(
+  reactName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  /**
+   * @interface TouchEvent
+   * @see http://www.w3.org/TR/touch-events/
+   */
+  SyntheticUIEvent.apply(this, arguments);
+  this.touches = nativeEvent.touches;
+  this.targetTouches = nativeEvent.targetTouches;
+  this.changedTouches = nativeEvent.changedTouches;
+  this.altKey = nativeEvent.altKey;
+  this.metaKey = nativeEvent.metaKey;
+  this.ctrlKey = nativeEvent.ctrlKey;
+  this.shiftKey = nativeEvent.shiftKey;
+  this.getModifierState = getEventModifierState(nativeEvent);
+}
+SyntheticTouchEvent.prototype = SyntheticEvent.prototype;
 
-/**
- * @interface PointerEvent
- * @see http://www.w3.org/TR/pointerevents/
- */
-export const SyntheticPointerEvent = SyntheticMouseEvent.extend({
-  pointerId: null,
-  width: null,
-  height: null,
-  pressure: null,
-  tangentialPressure: null,
-  tiltX: null,
-  tiltY: null,
-  twist: null,
-  pointerType: null,
-  isPrimary: null,
-});
+export function SyntheticTransitionEvent(
+  reactName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  /**
+   * @interface Event
+   * @see http://www.w3.org/TR/2009/WD-css3-transitions-20090320/#transition-events-
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/TransitionEvent
+   */
+  SyntheticEvent.apply(this, arguments);
+  this.propertyName = nativeEvent.propertyName;
+  this.elapsedTime = nativeEvent.elapsedTime;
+  this.pseudoElement = nativeEvent.pseudoElement;
+}
+SyntheticTransitionEvent.prototype = SyntheticEvent.prototype;
 
-/**
- * @interface TouchEvent
- * @see http://www.w3.org/TR/touch-events/
- */
-export const SyntheticTouchEvent = SyntheticUIEvent.extend({
-  touches: null,
-  targetTouches: null,
-  changedTouches: null,
-  altKey: null,
-  metaKey: null,
-  ctrlKey: null,
-  shiftKey: null,
-  getModifierState: getEventModifierState,
-});
-
-/**
- * @interface Event
- * @see http://www.w3.org/TR/2009/WD-css3-transitions-20090320/#transition-events-
- * @see https://developer.mozilla.org/en-US/docs/Web/API/TransitionEvent
- */
-export const SyntheticTransitionEvent = SyntheticEvent.extend({
-  propertyName: null,
-  elapsedTime: null,
-  pseudoElement: null,
-});
-
-/**
- * @interface WheelEvent
- * @see http://www.w3.org/TR/DOM-Level-3-Events/
- */
-export const SyntheticWheelEvent = SyntheticMouseEvent.extend({
-  deltaX(event) {
-    return 'deltaX' in event
-      ? event.deltaX
+export function SyntheticWheelEvent(
+  reactName,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  /**
+   * @interface WheelEvent
+   * @see http://www.w3.org/TR/DOM-Level-3-Events/
+   */
+  SyntheticMouseEvent.apply(this, arguments);
+  this.deltaX =
+    'deltaX' in nativeEvent
+      ? nativeEvent.deltaX
       : // Fallback to `wheelDeltaX` for Webkit and normalize (right is positive).
-      'wheelDeltaX' in event
-      ? -event.wheelDeltaX
+      'wheelDeltaX' in nativeEvent
+      ? -nativeEvent.wheelDeltaX
       : 0;
-  },
-  deltaY(event) {
-    return 'deltaY' in event
-      ? event.deltaY
+  this.deltaY =
+    'deltaY' in nativeEvent
+      ? nativeEvent.deltaY
       : // Fallback to `wheelDeltaY` for Webkit and normalize (down is positive).
-      'wheelDeltaY' in event
-      ? -event.wheelDeltaY
+      'wheelDeltaY' in nativeEvent
+      ? -nativeEvent.wheelDeltaY
       : // Fallback to `wheelDelta` for IE<9 and normalize (down is positive).
-      'wheelDelta' in event
-      ? -event.wheelDelta
+      'wheelDelta' in nativeEvent
+      ? -nativeEvent.wheelDelta
       : 0;
-  },
-  deltaZ: null,
-
+  this.deltaZ = nativeEvent.deltaZ;
   // Browsers without "deltaMode" is reporting in raw wheel delta where one
   // notch on the scroll is always +/- 120, roughly equivalent to pixels.
   // A good approximation of DOM_DELTA_LINE (1) is 5% of viewport size or
   // ~40 pixels, for DOM_DELTA_SCREEN (2) it is 87.5% of viewport size.
-  deltaMode: null,
-});
+  this.deltaMode = nativeEvent.deltaMode;
+}
+SyntheticWheelEvent.prototype = SyntheticEvent.prototype;
