@@ -501,4 +501,60 @@ describe('ReactDOMEventListener', () => {
       document.body.removeChild(container);
     }
   });
+
+  it('should bubble non-native bubbling events', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const onPlay = jest.fn();
+    const onScroll = jest.fn();
+    const onCancel = jest.fn();
+    const onClose = jest.fn();
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div
+          onPlay={onPlay}
+          onScroll={onScroll}
+          onCancel={onCancel}
+          onClose={onClose}>
+          <div
+            ref={ref}
+            onPlay={onPlay}
+            onScroll={onScroll}
+            onCancel={onCancel}
+            onClose={onClose}
+          />
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('play', {
+          bubbles: false,
+        }),
+      );
+      ref.current.dispatchEvent(
+        new Event('scroll', {
+          bubbles: false,
+        }),
+      );
+      ref.current.dispatchEvent(
+        new Event('cancel', {
+          bubbles: false,
+        }),
+      );
+      ref.current.dispatchEvent(
+        new Event('close', {
+          bubbles: false,
+        }),
+      );
+      // Regression test: ensure we still emulate bubbling with non-bubbling
+      // media
+      expect(onPlay).toHaveBeenCalledTimes(2);
+      expect(onScroll).toHaveBeenCalledTimes(2);
+      expect(onCancel).toHaveBeenCalledTimes(2);
+      expect(onClose).toHaveBeenCalledTimes(2);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
 });

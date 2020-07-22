@@ -245,9 +245,9 @@ export const nonDelegatedEvents: Set<DOMTopLevelEventType> = new Set([
   TOP_CLOSE,
   TOP_INVALID,
   // In order to reduce bytes, we insert the above array of media events
-  // into this Set. Note: some events like "load" and "error" aren't
-  // exclusively media events, but rather than duplicate them, we just
-  // take them from the media events array.
+  // into this Set. Note: the "error" event isn't an exclusive media event,
+  // and can occur on other elements too. Rather than duplicate that event,
+  // we just take it from the media events array.
   ...mediaEventTypes,
 ]);
 
