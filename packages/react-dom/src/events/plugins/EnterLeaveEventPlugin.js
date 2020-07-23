@@ -13,7 +13,11 @@ import {
   TOP_POINTER_OVER,
 } from '../DOMTopLevelEventTypes';
 import {IS_REPLAYED} from 'react-dom/src/events/EventSystemFlags';
-import {SyntheticMouseEvent, SyntheticPointerEvent} from '../SyntheticEvent';
+import {
+  SyntheticEvent,
+  MouseEventInterface,
+  PointerEventInterface,
+} from '../SyntheticEvent';
 import {
   getClosestInstanceFromNode,
   getNodeFromInstance,
@@ -113,7 +117,7 @@ function extractEvents(
   let eventInterface, leaveEventType, enterEventType, eventTypePrefix;
 
   if (topLevelType === TOP_MOUSE_OUT || topLevelType === TOP_MOUSE_OVER) {
-    eventInterface = SyntheticMouseEvent;
+    eventInterface = MouseEventInterface;
     leaveEventType = 'onMouseLeave';
     enterEventType = 'onMouseEnter';
     eventTypePrefix = 'mouse';
@@ -121,7 +125,7 @@ function extractEvents(
     topLevelType === TOP_POINTER_OUT ||
     topLevelType === TOP_POINTER_OVER
   ) {
-    eventInterface = SyntheticPointerEvent;
+    eventInterface = PointerEventInterface;
     leaveEventType = 'onPointerLeave';
     enterEventType = 'onPointerEnter';
     eventTypePrefix = 'pointer';
@@ -130,21 +134,23 @@ function extractEvents(
   const fromNode = from == null ? win : getNodeFromInstance(from);
   const toNode = to == null ? win : getNodeFromInstance(to);
 
-  const leave = new eventInterface(
+  const leave = new SyntheticEvent(
     leaveEventType,
     from,
     nativeEvent,
     nativeEventTarget,
+    eventInterface,
   );
   leave.type = eventTypePrefix + 'leave';
   leave.target = fromNode;
   leave.relatedTarget = toNode;
 
-  let enter = new eventInterface(
+  let enter = new SyntheticEvent(
     enterEventType,
     to,
     nativeEvent,
     nativeEventTarget,
+    eventInterface,
   );
   enter.type = eventTypePrefix + 'enter';
   enter.target = toNode;

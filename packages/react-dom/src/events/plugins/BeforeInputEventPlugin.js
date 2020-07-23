@@ -28,8 +28,9 @@ import {
   reset as FallbackCompositionStateReset,
 } from '../FallbackCompositionState';
 import {
-  SyntheticCompositionEvent,
-  SyntheticInputEvent,
+  CompositionEventInterface,
+  InputEventInterface,
+  SyntheticEvent,
 } from '../SyntheticEvent';
 import {accumulateTwoPhaseListeners} from '../DOMPluginEventSystem';
 
@@ -237,11 +238,12 @@ function extractCompositionEvent(
     }
   }
 
-  const event = new SyntheticCompositionEvent(
+  const event = new SyntheticEvent(
     eventType,
     null,
     nativeEvent,
     nativeEventTarget,
+    CompositionEventInterface,
   );
   accumulateTwoPhaseListeners(targetInst, dispatchQueue, event);
 
@@ -407,11 +409,12 @@ function extractBeforeInputEvent(
     return null;
   }
 
-  const event = new SyntheticInputEvent(
+  const event = new SyntheticEvent(
     'onBeforeInput',
     null,
     nativeEvent,
     nativeEventTarget,
+    InputEventInterface,
   );
   accumulateTwoPhaseListeners(targetInst, dispatchQueue, event);
   event.data = chars;
