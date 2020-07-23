@@ -101,6 +101,7 @@
     "testRegex": "/scripts/jest/dont-run-jest-directly\\.js$"
   },
   "scripts": {
+    "generate-react-component": "node ./scripts/generate-component-from-command-line/index.js",
     "build": "node ./scripts/rollup/build.js",
     "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react-dom,react-is,react-debug-tools,scheduler,react-test-renderer --type=NODE",
     "linc": "node ./scripts/tasks/linc.js",
