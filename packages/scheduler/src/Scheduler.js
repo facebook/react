@@ -177,7 +177,7 @@ function workLoop(hasTimeRemaining, initialTime) {
       break;
     }
     const callback = currentTask.callback;
-    if (callback !== null) {
+    if (typeof callback === 'function') {
       currentTask.callback = null;
       currentPriorityLevel = currentTask.priorityLevel;
       const didUserCallbackTimeout = currentTask.expirationTime <= currentTime;
