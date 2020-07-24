@@ -502,6 +502,39 @@ describe('ReactDOMEventListener', () => {
     }
   });
 
+  it('should delegate dialog events even without a direct listener', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const onCancel = jest.fn();
+    const onClose = jest.fn();
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div onCancel={onCancel} onClose={onClose}>
+          {/* Intentionally no handler on the target: */}
+          <dialog ref={ref} />
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('close', {
+          bubbles: false,
+        }),
+      );
+      ref.current.dispatchEvent(
+        new Event('cancel', {
+          bubbles: false,
+        }),
+      );
+      // Regression test: ensure React tree delegation still works
+      // even if the actual DOM element did not have a handler.
+      expect(onCancel).toHaveBeenCalledTimes(1);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
   it('should bubble non-native bubbling events', () => {
     const container = document.createElement('div');
     const ref = React.createRef();

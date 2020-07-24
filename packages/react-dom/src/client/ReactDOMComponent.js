@@ -96,6 +96,8 @@ import {
   TOP_ERROR,
   TOP_TOGGLE,
   TOP_INVALID,
+  TOP_CANCEL,
+  TOP_CLOSE,
 } from '../events/DOMTopLevelEventTypes';
 
 let didWarnInvalidHydration = false;
@@ -539,6 +541,11 @@ export function setInitialProperties(
   // TODO: Make sure that we check isMounted before firing any of these events.
   let props: Object;
   switch (tag) {
+    case 'dialog':
+      listenToNonDelegatedEvent(TOP_CANCEL, domElement);
+      listenToNonDelegatedEvent(TOP_CLOSE, domElement);
+      props = rawProps;
+      break;
     case 'iframe':
     case 'object':
     case 'embed':
@@ -939,6 +946,10 @@ export function diffHydratedProperties(
 
   // TODO: Make sure that we check isMounted before firing any of these events.
   switch (tag) {
+    case 'dialog':
+      listenToNonDelegatedEvent(TOP_CANCEL, domElement);
+      listenToNonDelegatedEvent(TOP_CLOSE, domElement);
+      break;
     case 'iframe':
     case 'object':
     case 'embed':
