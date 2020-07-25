@@ -40,7 +40,7 @@ import {
 import {IS_EVENT_HANDLE_NON_MANAGED_NODE} from '../EventSystemFlags';
 
 import getEventCharCode from '../getEventCharCode';
-import {IS_CAPTURE_PHASE} from '../EventSystemFlags';
+import {IS_CAPTURE_PHASE, IS_NON_DELEGATED} from '../EventSystemFlags';
 
 import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 
@@ -165,12 +165,23 @@ function extractEvents(
       inCapturePhase,
     );
   } else {
+    // When we encounter a non-delegated event in the capture phase,
+    // we shouldn't emuluate capture bubbling. This is because we'll
+    // add a native capture event listener to each element directly,
+    // not the root, and native capture listeners always fire even
+    // if the event doesn't bubble.
+    const isNonDelegatedEvent = (eventSystemFlags & IS_NON_DELEGATED) !== 0;
+    // TODO: We may also want to re-use the accumulateTargetOnly flag to
+    // special case bubbling for onScroll/media events at a later point.
+    const accumulateTargetOnly = inCapturePhase && isNonDelegatedEvent;
+
     // We traverse only capture or bubble phase listeners
     accumulateSinglePhaseListeners(
       targetInst,
       dispatchQueue,
       event,
       inCapturePhase,
+      accumulateTargetOnly,
     );
   }
   return event;

@@ -590,4 +590,36 @@ describe('ReactDOMEventListener', () => {
       document.body.removeChild(container);
     }
   });
+
+  it('should handle non-bubbling capture events correctly', () => {
+    const container = document.createElement('div');
+    const innerRef = React.createRef();
+    const outerRef = React.createRef();
+    const onPlayCapture = jest.fn();
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div ref={outerRef} onPlayCapture={onPlayCapture}>
+          <div onPlayCapture={onPlayCapture}>
+            <div ref={innerRef} onPlayCapture={onPlayCapture} />
+          </div>
+        </div>,
+        container,
+      );
+      innerRef.current.dispatchEvent(
+        new Event('play', {
+          bubbles: false,
+        }),
+      );
+      expect(onPlayCapture).toHaveBeenCalledTimes(3);
+      outerRef.current.dispatchEvent(
+        new Event('play', {
+          bubbles: false,
+        }),
+      );
+      expect(onPlayCapture).toHaveBeenCalledTimes(4);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
 });
