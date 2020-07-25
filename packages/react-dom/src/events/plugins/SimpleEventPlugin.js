@@ -43,6 +43,7 @@ import getEventCharCode from '../getEventCharCode';
 import {IS_CAPTURE_PHASE, IS_NON_DELEGATED} from '../EventSystemFlags';
 
 import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
+import {getClosestInstanceFromNode} from '../../client/ReactDOMComponentTree';
 
 function extractEvents(
   dispatchQueue: DispatchQueue,
@@ -174,6 +175,13 @@ function extractEvents(
     // TODO: We may also want to re-use the accumulateTargetOnly flag to
     // special case bubbling for onScroll/media events at a later point.
     const accumulateTargetOnly = inCapturePhase && isNonDelegatedEvent;
+    // If we are not handling accumulateTargetOnly, then we should traverse
+    // through all React fiber tree, finding all relevant useEvent and
+    // on* prop events as we traverse the tree. Otherwise, we should
+    // only handle the target fiber and stop traversal straight after.
+    if (accumulateTargetOnly) {
+      targetInst = getClosestInstanceFromNode(((targetContainer: any): Node));
+    }
 
     // We traverse only capture or bubble phase listeners
     accumulateSinglePhaseListeners(
