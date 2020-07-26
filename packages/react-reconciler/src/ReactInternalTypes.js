@@ -205,17 +205,15 @@ type BaseFiberRootProperties = {|
   pendingContext: Object | null,
   // Determines if we should attempt to hydrate on the initial mount
   +hydrate: boolean,
-  // Node returned by Scheduler.scheduleCallback
-  callbackNode: *,
 
   // Used by useMutableSource hook to avoid tearing during hydration.
   mutableSourceEagerHydrationData?: Array<
     MutableSource<any> | MutableSourceVersion,
   > | null,
 
-  // Represents the next task that the root should work on, or the current one
-  // if it's already working.
-  callbackId: Lanes,
+  // Node returned by Scheduler.scheduleCallback. Represents the next rendering
+  // task that the root will work on.
+  callbackNode: *,
   callbackPriority: LanePriority,
   eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,
