@@ -7,12 +7,19 @@
  * @flow
  */
 
-import type {CapturedError} from '../ReactCapturedValue';
+import type {Fiber} from '../ReactFiber.old';
+import type {CapturedValue} from '../ReactCapturedValue';
 
-export function showErrorDialog(capturedError: CapturedError): boolean {
-  if (capturedError.errorBoundary) {
-    return false;
-  }
+import {ClassComponent} from '../ReactWorkTags';
 
-  return true;
+export function showErrorDialog(
+  boundary: Fiber,
+  errorInfo: CapturedValue<mixed>,
+): boolean {
+  const errorBoundary =
+    boundary !== null && boundary.tag === ClassComponent
+      ? boundary.stateNode
+      : null;
+
+  return !errorBoundary;
 }

@@ -86,6 +86,14 @@ inlinedHostConfigs.forEach(rendererInfo => {
       return require.requireActual(entryPoint);
     });
   });
+
+  if (rendererInfo.shortName === 'test') {
+    jest.mock('react-reconciler/src/ReactFiberErrorDialog', () => {
+      return require.requireActual(
+        'react-reconciler/src/forks/ReactFiberErrorDialog.test.js'
+      );
+    });
+  }
 });
 
 // Make it possible to import this module inside
