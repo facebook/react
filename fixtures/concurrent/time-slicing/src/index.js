@@ -149,4 +149,3 @@ class App extends PureComponent {
 const container = document.getElementById('root');
 const root = unstable_createRoot(container);
 root.render(<App />);
-
