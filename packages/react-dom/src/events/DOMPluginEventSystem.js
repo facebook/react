@@ -384,6 +384,18 @@ export function listenToNativeEvent(
     !isCapturePhaseListener &&
     nonDelegatedEvents.has(topLevelType)
   ) {
+    // For all non-delegated events, apart from scroll, we attach
+    // their event listeners to the respective elements that their
+    // events fire on. That means we can skip this step, as event
+    // listener has already been added previously. However, we
+    // special case the scroll event because the reality is that any
+    // element can scroll.
+    // TODO: ideally, we'd eventually apply the same logic to all
+    // events from the nonDelegatedEvents list. Then we can remove
+    // this special case and use the same logic for all events.
+    if (topLevelType !== TOP_SCROLL) {
+      return;
+    }
     eventSystemFlags |= IS_NON_DELEGATED;
     target = targetElement;
   }
