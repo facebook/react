@@ -606,6 +606,29 @@ describe('ReactDOMEventListener', () => {
     }
   });
 
+  it('should bubble non-native bubbling invalid events', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const onInvalid = jest.fn();
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <form onInvalid={onInvalid}>
+          <input ref={ref} onInvalid={onInvalid} />
+        </form>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('invalid', {
+          bubbles: false,
+        }),
+      );
+      expect(onInvalid).toHaveBeenCalledTimes(2);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
   it('should handle non-bubbling capture events correctly', () => {
     const container = document.createElement('div');
     const innerRef = React.createRef();
