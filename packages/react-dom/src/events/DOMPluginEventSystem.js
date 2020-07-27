@@ -718,9 +718,6 @@ export function accumulateSinglePhaseListeners(
   const captured = bubbled !== null ? bubbled + 'Capture' : null;
   const listeners: Array<DispatchListener> = [];
 
-  // If we are not handling EventTarget only phase, then we're doing the
-  // usual two phase accumulation using the React fiber tree to pick up
-  // all relevant useEvent and on* prop events.
   let instance = targetFiber;
   let lastHostComponent = null;
   const targetType = event.type;

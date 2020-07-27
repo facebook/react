@@ -595,7 +595,8 @@ describe('ReactDOMEventListener', () => {
     const container = document.createElement('div');
     const innerRef = React.createRef();
     const outerRef = React.createRef();
-    const onPlayCapture = jest.fn();
+    const onPlayCapture = jest.fn(e => log.push(e.currentTarget));
+    const log = [];
     document.body.appendChild(container);
     try {
       ReactDOM.render(
@@ -612,12 +613,23 @@ describe('ReactDOMEventListener', () => {
         }),
       );
       expect(onPlayCapture).toHaveBeenCalledTimes(3);
+      expect(log).toEqual([
+        outerRef.current,
+        outerRef.current.firstChild,
+        innerRef.current,
+      ]);
       outerRef.current.dispatchEvent(
         new Event('play', {
           bubbles: false,
         }),
       );
       expect(onPlayCapture).toHaveBeenCalledTimes(4);
+      expect(log).toEqual([
+        outerRef.current,
+        outerRef.current.firstChild,
+        innerRef.current,
+        outerRef.current,
+      ]);
     } finally {
       document.body.removeChild(container);
     }
