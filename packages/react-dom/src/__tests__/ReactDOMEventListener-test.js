@@ -542,6 +542,7 @@ describe('ReactDOMEventListener', () => {
     const onScroll = jest.fn();
     const onCancel = jest.fn();
     const onClose = jest.fn();
+    const onToggle = jest.fn();
     document.body.appendChild(container);
     try {
       ReactDOM.render(
@@ -549,13 +550,15 @@ describe('ReactDOMEventListener', () => {
           onPlay={onPlay}
           onScroll={onScroll}
           onCancel={onCancel}
-          onClose={onClose}>
+          onClose={onClose}
+          onToggle={onToggle}>
           <div
             ref={ref}
             onPlay={onPlay}
             onScroll={onScroll}
             onCancel={onCancel}
             onClose={onClose}
+            onToggle={onToggle}
           />
         </div>,
         container,
@@ -580,12 +583,18 @@ describe('ReactDOMEventListener', () => {
           bubbles: false,
         }),
       );
+      ref.current.dispatchEvent(
+        new Event('toggle', {
+          bubbles: false,
+        }),
+      );
       // Regression test: ensure we still emulate bubbling with non-bubbling
       // media
       expect(onPlay).toHaveBeenCalledTimes(2);
       expect(onScroll).toHaveBeenCalledTimes(2);
       expect(onCancel).toHaveBeenCalledTimes(2);
       expect(onClose).toHaveBeenCalledTimes(2);
+      expect(onToggle).toHaveBeenCalledTimes(2);
     } finally {
       document.body.removeChild(container);
     }

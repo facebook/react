@@ -68,6 +68,7 @@ import {
   TOP_PLAYING,
   TOP_CLICK,
   TOP_SELECTION_CHANGE,
+  TOP_TOGGLE,
   getRawEventName,
 } from './DOMTopLevelEventTypes';
 import {
@@ -239,11 +240,12 @@ export const mediaEventTypes = [
 // set them on the actual target element itself. This is primarily
 // because these events do not consistently bubble in the DOM.
 export const nonDelegatedEvents: Set<DOMTopLevelEventType> = new Set([
-  TOP_SCROLL,
-  TOP_LOAD,
   TOP_CANCEL,
   TOP_CLOSE,
   TOP_INVALID,
+  TOP_LOAD,
+  TOP_SCROLL,
+  TOP_TOGGLE,
   // In order to reduce bytes, we insert the above array of media events
   // into this Set. Note: the "error" event isn't an exclusive media event,
   // and can occur on other elements too. Rather than duplicate that event,
