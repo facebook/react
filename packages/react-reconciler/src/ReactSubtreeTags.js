@@ -14,3 +14,8 @@ export const BeforeMutation = /*  */ 0b0001;
 export const Mutation = /*        */ 0b0010;
 export const Layout = /*          */ 0b0100;
 export const Passive = /*         */ 0b1000;
+
+// Union of tags that don't get reset on clones.
+// This allows certain concepts to persist without recalculting them,
+// e.g. whether a subtree contains passive effects or portals.
+export const Static = /*          */ 0b1000;

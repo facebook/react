@@ -881,19 +881,6 @@ function commitUnmount(
               if ((tag & HookPassive) !== NoHookEffect) {
                 effect.tag |= HookHasEffect;
 
-                // subtreeTags bubble in resetChildLanes which doens't get called for unmounted subtrees.
-                // So in the case of unmounts, we need to bubble passive effects explicitly.
-                let ancestor = current.return;
-                while (ancestor !== null) {
-                  ancestor.subtreeTag |= PassiveSubtreeTag;
-                  const alternate = ancestor.alternate;
-                  if (alternate !== null) {
-                    alternate.subtreeTag |= PassiveSubtreeTag;
-                  }
-
-                  ancestor = ancestor.return;
-                }
-
                 current.effectTag |= Passive;
 
                 if (__DEV__) {

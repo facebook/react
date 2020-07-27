@@ -30,7 +30,10 @@ import {
   enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement} from './ReactSideEffectTags';
-import {NoEffect as NoSubtreeEffect} from './ReactSubtreeTags';
+import {
+  NoEffect as NoSubtreeEffect,
+  Static as StaticSubtreeEffects,
+} from './ReactSubtreeTags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
 import {
   IndeterminateComponent,
@@ -290,7 +293,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     // We already have an alternate.
     // Reset the effect tag.
     workInProgress.effectTag = NoEffect;
-    workInProgress.subtreeTag = NoSubtreeEffect;
     workInProgress.deletions = null;
 
     // The effect list is no longer valid.
@@ -308,6 +310,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     }
   }
 
+  workInProgress.subtreeTag = current.subtreeTag & StaticSubtreeEffects;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
 
