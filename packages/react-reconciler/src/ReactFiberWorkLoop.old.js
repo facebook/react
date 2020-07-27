@@ -136,6 +136,7 @@ import {
 import {
   NoLanePriority,
   SyncLanePriority,
+  SyncBatchedLanePriority,
   InputDiscreteLanePriority,
   TransitionShortLanePriority,
   TransitionLongLanePriority,
@@ -719,6 +720,11 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     newCallbackNode = scheduleSyncCallback(
       performSyncWorkOnRoot.bind(null, root),
     );
+  } else if (newCallbackPriority === SyncBatchedLanePriority) {
+    newCallbackNode = scheduleCallback(
+      ImmediateSchedulerPriority,
+      performSyncWorkOnRoot.bind(null, root),
+    );
   } else {
     const schedulerPriorityLevel = lanePriorityToSchedulerPriority(
       newCallbackPriority,
@@ -749,7 +755,20 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
 
   // Flush any pending passive effects before deciding which lanes to work on,
   // in case they schedule additional work.
-  flushPassiveEffects();
+  const originalCallbackNode = root.callbackNode;
+  const didFlushPassiveEffects = flushPassiveEffects();
+  if (didFlushPassiveEffects) {
+    // Something in the passive effect phase may have canceled the current task.
+    // Check if the task node for this root was changed.
+    if (root.callbackNode !== originalCallbackNode) {
+      // The current task was canceled. Exit. We don't need to call
+      // `ensureRootIsScheduled` because the check above implies either that
+      // there's a new task, or that there's no remaining work on this root.
+      return null;
+    } else {
+      // Current task was not canceled. Continue.
+    }
+  }
 
   // Determine the next expiration time to work on, using the fields stored
   // on the root.
@@ -758,6 +777,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
   );
   if (lanes === NoLanes) {
+    // Defensive coding. This is never expected to happen.
     return null;
   }
 
@@ -773,8 +793,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     ensureRootIsScheduled(root, now());
     return null;
   }
-
-  const originalCallbackNode = root.callbackNode;
 
   let exitStatus = renderRootConcurrent(root, lanes);
 
@@ -2437,7 +2455,8 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
   }
 }
 
-export function flushPassiveEffects() {
+export function flushPassiveEffects(): boolean {
+  // Returns whether passive effects were flushed.
   if (pendingPassiveEffectsRenderPriority !== NoSchedulerPriority) {
     const priorityLevel =
       pendingPassiveEffectsRenderPriority > NormalSchedulerPriority
@@ -2454,6 +2473,7 @@ export function flushPassiveEffects() {
       setCurrentUpdateLanePriority(previousLanePriority);
     }
   }
+  return false;
 }
 
 export function enqueuePendingPassiveProfilerEffect(fiber: Fiber): void {
