@@ -40,10 +40,9 @@ import {
 import {IS_EVENT_HANDLE_NON_MANAGED_NODE} from '../EventSystemFlags';
 
 import getEventCharCode from '../getEventCharCode';
-import {IS_CAPTURE_PHASE, IS_NON_DELEGATED} from '../EventSystemFlags';
+import {IS_CAPTURE_PHASE} from '../EventSystemFlags';
 
 import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
-import {getClosestInstanceFromNode} from '../../client/ReactDOMComponentTree';
 
 function extractEvents(
   dispatchQueue: DispatchQueue,
@@ -166,22 +165,11 @@ function extractEvents(
       inCapturePhase,
     );
   } else {
-    // When we encounter a non-delegated event in the capture phase,
-    // we shouldn't emuluate capture bubbling. This is because we'll
-    // add a native capture event listener to each element directly,
-    // not the root, and native capture listeners always fire even
-    // if the event doesn't bubble.
-    const isNonDelegatedEvent = (eventSystemFlags & IS_NON_DELEGATED) !== 0;
     // TODO: We may also want to re-use the accumulateTargetOnly flag to
     // special case bubbling for onScroll/media events at a later point.
-    const accumulateTargetOnly = inCapturePhase && isNonDelegatedEvent;
-    // If we are not handling accumulateTargetOnly, then we should traverse
-    // through all React fiber tree, finding all relevant useEvent and
-    // on* prop events as we traverse the tree. Otherwise, we should
-    // only handle the target fiber and stop traversal straight after.
-    if (accumulateTargetOnly) {
-      targetInst = getClosestInstanceFromNode(((targetContainer: any): Node));
-    }
+    // In which case we will want to make this flag boolean and ensure
+    // we change the targetInst to be of the container instance. Like:
+    const accumulateTargetOnly = false;
 
     // We traverse only capture or bubble phase listeners
     accumulateSinglePhaseListeners(

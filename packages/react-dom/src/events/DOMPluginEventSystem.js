@@ -373,9 +373,15 @@ export function listenToNativeEvent(
   if (topLevelType === TOP_SELECTION_CHANGE) {
     target = (rootContainerElement: any).ownerDocument;
   }
-  // If the event can be delegated, we can register it to the root container.
-  // Otherwise, we should register the event to the target element.
-  if (targetElement !== null && nonDelegatedEvents.has(topLevelType)) {
+  // If the event can be delegated (or is capture phase), we can
+  // register it to the root container. Otherwise, we should
+  // register the event to the target element and mark it as
+  // a non-delegated event.
+  if (
+    targetElement !== null &&
+    !isCapturePhaseListener &&
+    nonDelegatedEvents.has(topLevelType)
+  ) {
     eventSystemFlags |= IS_NON_DELEGATED;
     target = targetElement;
   }
