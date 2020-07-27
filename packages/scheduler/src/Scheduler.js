@@ -276,27 +276,10 @@ function unstable_wrapCallback(callback) {
   };
 }
 
-function timeoutForPriorityLevel(priorityLevel) {
-  switch (priorityLevel) {
-    case ImmediatePriority:
-      return IMMEDIATE_PRIORITY_TIMEOUT;
-    case UserBlockingPriority:
-      return USER_BLOCKING_PRIORITY_TIMEOUT;
-    case IdlePriority:
-      return IDLE_PRIORITY_TIMEOUT;
-    case LowPriority:
-      return LOW_PRIORITY_TIMEOUT;
-    case NormalPriority:
-    default:
-      return NORMAL_PRIORITY_TIMEOUT;
-  }
-}
-
 function unstable_scheduleCallback(priorityLevel, callback, options) {
   var currentTime = getCurrentTime();
 
   var startTime;
-  var timeout;
   if (typeof options === 'object' && options !== null) {
     var delay = options.delay;
     if (typeof delay === 'number' && delay > 0) {
@@ -304,13 +287,28 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     } else {
       startTime = currentTime;
     }
-    timeout =
-      typeof options.timeout === 'number'
-        ? options.timeout
-        : timeoutForPriorityLevel(priorityLevel);
   } else {
-    timeout = timeoutForPriorityLevel(priorityLevel);
     startTime = currentTime;
+  }
+
+  var timeout;
+  switch (priorityLevel) {
+    case ImmediatePriority:
+      timeout = IMMEDIATE_PRIORITY_TIMEOUT;
+      break;
+    case UserBlockingPriority:
+      timeout = USER_BLOCKING_PRIORITY_TIMEOUT;
+      break;
+    case IdlePriority:
+      timeout = IDLE_PRIORITY_TIMEOUT;
+      break;
+    case LowPriority:
+      timeout = LOW_PRIORITY_TIMEOUT;
+      break;
+    case NormalPriority:
+    default:
+      timeout = NORMAL_PRIORITY_TIMEOUT;
+      break;
   }
 
   var expirationTime = startTime + timeout;
