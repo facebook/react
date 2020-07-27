@@ -290,7 +290,24 @@ export default {
         if (!currentScope) {
           return;
         }
-        componentScope = currentScope;
+        componentScope = getComponentScope(currentScope);
+        pureScopes.add(componentScope);
+      }
+
+      function getComponentScope(hookParentScope) {
+        let evaluatedScope = hookParentScope;
+
+        while (evaluatedScope) {
+          const blockId = evaluatedScope.block.id;
+          if (
+            blockId &&
+            (/^[A-Z]*$/.test(blockId.name[0]) || blockId.name.startsWith('use'))
+          ) {
+            return evaluatedScope;
+          }
+          evaluatedScope = evaluatedScope.upper;
+        }
+        return hookParentScope;
       }
 
       // Next we'll define a few helpers that helps us

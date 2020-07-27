@@ -1376,6 +1376,27 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function Example({ sortBy }) {
+          const foo = () => useMemo(() => console.log(sortBy), [sortBy])
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function Example(props) {
+          const usefoo = () => useMemo(() => console.log(props.sortBy), [props.sortBy])
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function useMyThing(myRef) {
+          const foo = () => useCallback(() => console.log(myRef), [myRef]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -6960,6 +6981,36 @@ const tests = {
                     foo.bar.baz = 43;
                     props.foo.bar.baz = 1;
                   }, [foo.bar, props.foo.bar]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          const local1 = {};
+          useMemo(() => {
+            console.log(local1);
+          }, [local1, props]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useMemo has an unnecessary dependency: 'props'. " +
+            'Either exclude it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [local1]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  const local1 = {};
+                  useMemo(() => {
+                    console.log(local1);
+                  }, [local1]);
                 }
               `,
             },
