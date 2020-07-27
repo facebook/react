@@ -42,7 +42,10 @@ import {IS_EVENT_HANDLE_NON_MANAGED_NODE} from '../EventSystemFlags';
 import getEventCharCode from '../getEventCharCode';
 import {IS_CAPTURE_PHASE} from '../EventSystemFlags';
 
-import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableCreateEventHandleAPI,
+  disableOnScrollBubbling,
+} from 'shared/ReactFeatureFlags';
 
 function extractEvents(
   dispatchQueue: DispatchQueue,
@@ -165,13 +168,20 @@ function extractEvents(
       inCapturePhase,
     );
   } else {
-    // TODO: We may also want to re-use the accumulateTargetOnly flag to
-    // special case bubbling for onScroll/media events at a later point.
-    // In which case we will want to make this flag boolean and ensure
-    // we change the targetInst to be of the container instance. Like:
-    const accumulateTargetOnly = false;
+    // Some events don't bubble in the browser.
+    // In the past, React has always bubbled them, but this can be surprising.
+    // We're going to try aligning closer to the browser behavior by not bubbling
+    // them in React either. We'll start by not bubbling onScroll, and then expand.
+    let accumulateTargetOnly = false;
+    if (disableOnScrollBubbling) {
+      accumulateTargetOnly =
+        !inCapturePhase &&
+        // TODO: ideally, we'd eventually add all events from
+        // nonDelegatedEvents list in DOMPluginEventSystem.
+        // Then we can remove this special list.
+        topLevelType === DOMTopLevelEventTypes.TOP_SCROLL;
+    }
 
-    // We traverse only capture or bubble phase listeners
     accumulateSinglePhaseListeners(
       targetInst,
       dispatchQueue,

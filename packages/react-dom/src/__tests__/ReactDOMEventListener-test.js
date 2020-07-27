@@ -539,7 +539,6 @@ describe('ReactDOMEventListener', () => {
     const container = document.createElement('div');
     const ref = React.createRef();
     const onPlay = jest.fn();
-    const onScroll = jest.fn();
     const onCancel = jest.fn();
     const onClose = jest.fn();
     const onToggle = jest.fn();
@@ -548,14 +547,12 @@ describe('ReactDOMEventListener', () => {
       ReactDOM.render(
         <div
           onPlay={onPlay}
-          onScroll={onScroll}
           onCancel={onCancel}
           onClose={onClose}
           onToggle={onToggle}>
           <div
             ref={ref}
             onPlay={onPlay}
-            onScroll={onScroll}
             onCancel={onCancel}
             onClose={onClose}
             onToggle={onToggle}
@@ -565,11 +562,6 @@ describe('ReactDOMEventListener', () => {
       );
       ref.current.dispatchEvent(
         new Event('play', {
-          bubbles: false,
-        }),
-      );
-      ref.current.dispatchEvent(
-        new Event('scroll', {
           bubbles: false,
         }),
       );
@@ -591,7 +583,6 @@ describe('ReactDOMEventListener', () => {
       // Regression test: ensure we still emulate bubbling with non-bubbling
       // media
       expect(onPlay).toHaveBeenCalledTimes(2);
-      expect(onScroll).toHaveBeenCalledTimes(2);
       expect(onCancel).toHaveBeenCalledTimes(2);
       expect(onClose).toHaveBeenCalledTimes(2);
       expect(onToggle).toHaveBeenCalledTimes(2);
@@ -638,6 +629,111 @@ describe('ReactDOMEventListener', () => {
         outerRef.current.firstChild,
         innerRef.current,
         outerRef.current,
+      ]);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  // We're moving towards aligning more closely with the browser.
+  // Currently we emulate bubbling for all non-bubbling events except scroll.
+  // We may expand this list in the future, removing emulated bubbling altogether.
+  it('should not emulate bubbling of scroll events', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const log = [];
+    const onScroll = jest.fn(e =>
+      log.push(['bubble', e.currentTarget.className]),
+    );
+    const onScrollCapture = jest.fn(e =>
+      log.push(['capture', e.currentTarget.className]),
+    );
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div
+          className="grand"
+          onScroll={onScroll}
+          onScrollCapture={onScrollCapture}>
+          <div
+            className="parent"
+            onScroll={onScroll}
+            onScrollCapture={onScrollCapture}>
+            <div
+              className="child"
+              onScroll={onScroll}
+              onScrollCapture={onScrollCapture}
+              ref={ref}
+            />
+          </div>
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('scroll', {
+          bubbles: false,
+        }),
+      );
+      if (gate(flags => flags.disableOnScrollBubbling)) {
+        expect(log).toEqual([
+          ['capture', 'grand'],
+          ['capture', 'parent'],
+          ['capture', 'child'],
+          ['bubble', 'child'],
+        ]);
+      } else {
+        expect(log).toEqual([
+          ['capture', 'grand'],
+          ['capture', 'parent'],
+          ['capture', 'child'],
+          ['bubble', 'child'],
+          ['bubble', 'parent'],
+          ['bubble', 'grand'],
+        ]);
+      }
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  // We're moving towards aligning more closely with the browser.
+  // Currently we emulate bubbling for all non-bubbling events except scroll.
+  // We may expand this list in the future, removing emulated bubbling altogether.
+  it('should not emulate bubbling of scroll events (no own handler)', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const log = [];
+    const onScroll = jest.fn(e =>
+      log.push(['bubble', e.currentTarget.className]),
+    );
+    const onScrollCapture = jest.fn(e =>
+      log.push(['capture', e.currentTarget.className]),
+    );
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div
+          className="grand"
+          onScroll={onScroll}
+          onScrollCapture={onScrollCapture}>
+          <div
+            className="parent"
+            onScroll={onScroll}
+            onScrollCapture={onScrollCapture}>
+            {/* Intentionally no handler on the child: */}
+            <div className="child" ref={ref} />
+          </div>
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('scroll', {
+          bubbles: false,
+        }),
+      );
+      expect(log).toEqual([
+        ['capture', 'grand'],
+        ['capture', 'parent'],
       ]);
     } finally {
       document.body.removeChild(container);
