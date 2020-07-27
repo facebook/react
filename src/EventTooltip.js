@@ -31,6 +31,13 @@ function formatDuration(ms) {
   return prettyMilliseconds(ms, {millisecondsDecimalDigits: 3});
 }
 
+function trimComponentName(name) {
+  if (name.length > 128) {
+    return name.substring(0, 127) + '...';
+  }
+  return name;
+}
+
 export default function EventTooltip({data, hoveredEvent, state}: Props) {
   const {canvasMouseY, canvasMouseX} = state;
 
@@ -140,14 +147,14 @@ const TooltipFlamechartNode = ({
         color: COLORS.TOOLTIP,
       }}
       ref={tooltipRef}>
-      {formatDuration((end - start) / 1000)} {name}
+      {formatDuration((end - start) / 1000)} {trimComponentName(name)}
       <div className={styles.DetailsGrid}>
         <div className={styles.DetailsGridLabel}>Timestamp:</div>
         <div>{formatTimestamp(start / 1000)}</div>
         {file && (
           <>
             <div className={styles.DetailsGridLabel}>Script URL:</div>
-            <div>{file}</div>
+            <div className={styles.DetailsGridURL}>{file}</div>
           </>
         )}
         {(line !== undefined || col !== undefined) && (
@@ -208,7 +215,7 @@ const TooltipReactEvent = ({
       ref={tooltipRef}>
       {componentName && (
         <span className={styles.ComponentName} style={{color}}>
-          {componentName}
+          {trimComponentName(componentName)}
         </span>
       )}{' '}
       {label}

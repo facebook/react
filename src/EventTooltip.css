@@ -23,20 +23,20 @@
   padding-top: 5px;
   grid-gap: 2px 5px;
   grid-template-columns: min-content auto;
-  word-break: break-word;
 }
 
 .DetailsGridLabel {
   color: #666;
   text-align: right;
-  white-space: nowrap;
 }
 
-.Duration {
+.DetailsGridURL{
+  overflow: hidden;
 }
 
 .ComponentName {
   font-weight: bold;
+  word-wrap: break-word;
 }
 
 .ComponentStack {
