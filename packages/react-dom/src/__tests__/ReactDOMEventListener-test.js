@@ -348,12 +348,7 @@ describe('ReactDOMEventListener', () => {
           bubbles: false,
         }),
       );
-      // As of the modern event system refactor, we now support
-      // this on <img>. The reason for this, is because we allow
-      // events to be attached to nodes regardless of if they
-      // necessary support them. This is a strange test, as this
-      // would never occur from normal browser behavior.
-      expect(handleImgLoadStart).toHaveBeenCalledTimes(1);
+      expect(handleImgLoadStart).toHaveBeenCalledTimes(0);
 
       videoRef.current.dispatchEvent(
         new ProgressEvent('loadstart', {
@@ -535,35 +530,41 @@ describe('ReactDOMEventListener', () => {
     }
   });
 
-  it('should bubble non-native bubbling events', () => {
+  it('should bubble non-native bubbling toggle events', () => {
     const container = document.createElement('div');
     const ref = React.createRef();
-    const onPlay = jest.fn();
-    const onCancel = jest.fn();
-    const onClose = jest.fn();
     const onToggle = jest.fn();
     document.body.appendChild(container);
     try {
       ReactDOM.render(
-        <div
-          onPlay={onPlay}
-          onCancel={onCancel}
-          onClose={onClose}
-          onToggle={onToggle}>
-          <div
-            ref={ref}
-            onPlay={onPlay}
-            onCancel={onCancel}
-            onClose={onClose}
-            onToggle={onToggle}
-          />
+        <div onToggle={onToggle}>
+          <details ref={ref} onToggle={onToggle} />
         </div>,
         container,
       );
       ref.current.dispatchEvent(
-        new Event('play', {
+        new Event('toggle', {
           bubbles: false,
         }),
+      );
+      expect(onToggle).toHaveBeenCalledTimes(2);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  it('should bubble non-native bubbling cancel/close events', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const onCancel = jest.fn();
+    const onClose = jest.fn();
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div onCancel={onCancel} onClose={onClose}>
+          <dialog ref={ref} onCancel={onCancel} onClose={onClose} />
+        </div>,
+        container,
       );
       ref.current.dispatchEvent(
         new Event('cancel', {
@@ -575,17 +576,54 @@ describe('ReactDOMEventListener', () => {
           bubbles: false,
         }),
       );
+      expect(onCancel).toHaveBeenCalledTimes(2);
+      expect(onClose).toHaveBeenCalledTimes(2);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  it('should bubble non-native bubbling media events events', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const onPlay = jest.fn();
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div onPlay={onPlay}>
+          <video ref={ref} onPlay={onPlay} />
+        </div>,
+        container,
+      );
       ref.current.dispatchEvent(
-        new Event('toggle', {
+        new Event('play', {
           bubbles: false,
         }),
       );
-      // Regression test: ensure we still emulate bubbling with non-bubbling
-      // media
       expect(onPlay).toHaveBeenCalledTimes(2);
-      expect(onCancel).toHaveBeenCalledTimes(2);
-      expect(onClose).toHaveBeenCalledTimes(2);
-      expect(onToggle).toHaveBeenCalledTimes(2);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  it('should bubble non-native bubbling invalid events', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const onInvalid = jest.fn();
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <form onInvalid={onInvalid}>
+          <input ref={ref} onInvalid={onInvalid} />
+        </form>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('invalid', {
+          bubbles: false,
+        }),
+      );
+      expect(onInvalid).toHaveBeenCalledTimes(2);
     } finally {
       document.body.removeChild(container);
     }
