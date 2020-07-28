@@ -1,16 +1,10 @@
 // @flow
 // Contains helper functions for rendering canvas elements
 
-import type {ReactLane, ReactProfilerData} from '../types';
+import type {Rect} from '../layout';
 
 import memoize from 'memoize-one';
-import {
-  INTERVAL_TIMES,
-  MAX_INTERVAL_SIZE_PX,
-  REACT_GUTTER_SIZE,
-  REACT_WORK_SIZE,
-  REACT_WORK_BORDER_SIZE,
-} from './constants';
+import {INTERVAL_TIMES, MAX_INTERVAL_SIZE_PX} from './constants';
 
 // hidpi canvas: https://www.html5rocks.com/en/tutorials/canvas/hidpi/
 function configureRetinaCanvas(canvas, height, width) {
@@ -38,20 +32,6 @@ export const getCanvasContext = memoize(
     return context;
   },
 );
-
-export function getCanvasMousePos(
-  canvas: HTMLCanvasElement,
-  mouseEvent: MouseEvent,
-) {
-  const rect =
-    canvas instanceof HTMLCanvasElement
-      ? canvas.getBoundingClientRect()
-      : {left: 0, top: 0};
-  const canvasMouseX = mouseEvent.clientX - rect.left;
-  const canvasMouseY = mouseEvent.clientY - rect.top;
-
-  return {canvasMouseX, canvasMouseY};
-}
 
 // Time mark intervals vary based on the current zoom range and the time it represents.
 // In Chrome, these seem to range from 70-140 pixels wide.
@@ -92,15 +72,33 @@ export const trimFlamegraphText = (
   return null;
 };
 
-export const getLaneHeight = (
-  data: $ReadOnly<ReactProfilerData>,
-  lane: ReactLane,
-): number => {
-  // TODO: Return 0 if data has no data for lane
-  return (
-    REACT_GUTTER_SIZE +
-    REACT_WORK_SIZE +
-    REACT_GUTTER_SIZE +
-    REACT_WORK_BORDER_SIZE
-  );
-};
+export function positioningScaleFactor(
+  intrinsicWidth: number,
+  frame: Rect,
+): number {
+  return frame.size.width / intrinsicWidth;
+}
+
+export function timestampToPosition(
+  timestamp: number,
+  scaleFactor: number,
+  frame: Rect,
+): number {
+  return frame.origin.x + timestamp * scaleFactor;
+}
+
+export function positionToTimestamp(
+  position: number,
+  scaleFactor: number,
+  frame: Rect,
+): number {
+  return (position - frame.origin.x) / scaleFactor;
+}
+
+export function durationToWidth(duration: number, scaleFactor: number): number {
+  return duration * scaleFactor;
+}
+
+export function widthToDuration(width: number, scaleFactor: number): number {
+  return width / scaleFactor;
+}

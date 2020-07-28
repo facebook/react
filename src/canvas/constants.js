@@ -10,7 +10,6 @@ export const MARKER_TEXT_PADDING = 8;
 export const BAR_HEIGHT = 16;
 export const BAR_HORIZONTAL_SPACING = 1;
 export const BAR_SPACER_SIZE = 6;
-export const EVENT_SIZE = 6; // TODO: What's the difference between this and REACT_EVENT_SIZE?
 export const MIN_BAR_WIDTH = 1;
 export const SECTION_GUTTER_SIZE = 4;
 

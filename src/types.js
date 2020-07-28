@@ -97,7 +97,6 @@ export type ReactProfilerData = {|
 export type ReactHoverContextInfo = {|
   event: ReactEvent | null,
   measure: ReactMeasure | null,
-  lane: ReactLane | null,
   data: $ReadOnly<ReactProfilerData> | null,
   flamechartNode: FlamechartFrame | null,
 |};
