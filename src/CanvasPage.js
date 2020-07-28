@@ -140,14 +140,13 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       surfaceRef.current,
       {origin: zeroPoint, size: {width, height}},
       data.flamechart,
-      data,
+      data.duration,
     );
     flamechartViewRef.current = flamechartView;
     const flamechartVScrollWrapper = new VerticalScrollView(
       surfaceRef.current,
       {origin: zeroPoint, size: {width, height}},
       flamechartView,
-      flamechartView.intrinsicSize.height,
     );
 
     const stackedZoomables = new StaticLayoutView(
@@ -166,7 +165,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       surfaceRef.current,
       {origin: zeroPoint, size: {width, height}},
       stackedZoomables,
-      flamechartView.intrinsicSize.width,
+      reactEventsView.intrinsicSize.width,
     );
 
     rootViewRef.current = new StaticLayoutView(
@@ -250,7 +249,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
 
     const {current: flamechartView} = flamechartViewRef;
     if (flamechartView) {
-      flamechartView.onHover = flamechartStackFrame => {
+      flamechartView.setOnHover(flamechartStackFrame => {
         if (
           !hoveredEvent ||
           hoveredEvent.flamechartStackFrame !== flamechartStackFrame
@@ -262,7 +261,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
             data,
           });
         }
-      };
+      });
     }
   }, [
     reactEventsViewRef,
@@ -287,7 +286,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
 
     const {current: flamechartView} = flamechartViewRef;
     if (flamechartView) {
-      flamechartView.setHoveredFlamechartNode(
+      flamechartView.setHoveredFlamechartStackFrame(
         hoveredEvent ? hoveredEvent.flamechartStackFrame : null,
       );
     }

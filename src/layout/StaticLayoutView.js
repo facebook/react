@@ -18,13 +18,17 @@ export const layeredLayout: Layouter = (views, frame) =>
     subview.setFrame(frame);
   });
 
+/**
+ * Stacks `views` vertically in `frame`. All views in `views` will have their
+ * widths set to the frame's width.
+ */
 export const verticallyStackedLayout: Layouter = (views, frame) => {
   let currentY = frame.origin.y;
   views.forEach(view => {
     const desiredSize = view.desiredSize();
     const height = desiredSize
       ? desiredSize.height
-      : frame.size.height - currentY;
+      : frame.origin.y + frame.size.height - currentY;
     const proposedFrame = {
       origin: {x: frame.origin.x, y: currentY},
       size: {width: frame.size.width, height},

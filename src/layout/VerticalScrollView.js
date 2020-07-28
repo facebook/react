@@ -37,7 +37,6 @@ function clamp(min: number, max: number, value: number): number {
 
 export class VerticalScrollView extends View {
   contentView: View;
-  intrinsicContentHeight: number;
 
   scrollState: VerticalScrollState = {
     offsetY: 0,
@@ -52,14 +51,12 @@ export class VerticalScrollView extends View {
     surface: Surface,
     frame: Rect,
     contentView: View,
-    intrinsicContentHeight: number,
     stateDeriver?: (state: VerticalScrollState) => VerticalScrollState,
     onStateChange?: (state: VerticalScrollState) => void,
   ) {
     super(surface, frame);
     this.contentView = contentView;
     contentView.superview = this;
-    this.intrinsicContentHeight = intrinsicContentHeight;
     if (stateDeriver) this.stateDeriver = stateDeriver;
     if (onStateChange) this.onStateChange = onStateChange;
   }
@@ -78,6 +75,13 @@ export class VerticalScrollView extends View {
 
   layoutSubviews() {
     const {offsetY} = this.scrollState;
+    const desiredSize = this.contentView.desiredSize();
+
+    const remainingHeight = this.frame.size.height;
+    const desiredHeight = desiredSize ? desiredSize.height : 0;
+    // Force last view to take up at least all remaining vertical space.
+    const height = Math.max(desiredHeight, remainingHeight);
+
     const proposedFrame = {
       origin: {
         x: this.frame.origin.x,
@@ -85,7 +89,7 @@ export class VerticalScrollView extends View {
       },
       size: {
         width: this.frame.size.width,
-        height: this.intrinsicContentHeight,
+        height,
       },
     };
     this.contentView.setFrame(proposedFrame);
