@@ -848,9 +848,9 @@ describe('ReactHooksInspectionIntegration', () => {
 
   if (__EXPERIMENTAL__) {
     it('should support composite useMutableSource hook', () => {
-      const mutableSource = React.createMutableSource({}, () => 1);
+      const mutableSource = React.unstable_createMutableSource({}, () => 1);
       function Foo(props) {
-        React.useMutableSource(
+        React.unstable_useMutableSource(
           mutableSource,
           () => 'snapshot',
           () => {},
