@@ -3573,7 +3573,7 @@ function finishPendingInteractions(root, committedLanes) {
 // access to the same internals that we do here. Some trade offs in the
 // implementation no longer make sense.
 
-let isFlushingAct = false;
+let isFlushingAct = null;
 let isInsideThisAct = false;
 
 // TODO: Yes, this is confusing. See above comment. We'll refactor it.
@@ -3582,6 +3582,13 @@ function shouldForceFlushFallbacksInDEV() {
     // Never force flush in production. This function should get stripped out.
     return false;
   }
+
+  // `isFlushingAct` is used by ReactTestRenderer version of `act`.
+  if (isFlushingAct != null) {
+    // Flush callbacks at the end.
+    return isFlushingAct;
+  }
+
   // `IsThisRendererActing.current` is used by ReactTestUtils version of `act`.
   if (IsThisRendererActing.current) {
     // `isInsideAct` is only used by the reconciler implementation of `act`.
