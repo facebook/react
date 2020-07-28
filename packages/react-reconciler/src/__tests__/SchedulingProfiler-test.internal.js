@@ -502,7 +502,11 @@ describe('SchedulingProfiler', () => {
       '--render-start-1024',
       '--render-stop',
       '--commit-start-1024',
+      '--layout-effects-start-1024',
+      '--layout-effects-stop',
       '--commit-stop',
+      '--passive-effects-start-1024',
+      '--passive-effects-stop',
     ]);
   });
 

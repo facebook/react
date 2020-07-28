@@ -24,7 +24,17 @@ import {
   HostRoot,
   SuspenseComponent,
 } from './ReactWorkTags';
-import {Deletion, Hydrating, Placement} from './ReactSideEffectTags';
+import {
+  Deletion,
+  Hydrating,
+  NoEffect,
+  PassiveMask,
+  Placement,
+} from './ReactSideEffectTags';
+import {
+  NoEffect as NoSubtreeTag,
+  Passive as PassiveSubtreeTag,
+} from './ReactSubtreeTags';
 import invariant from 'shared/invariant';
 
 import {
@@ -130,6 +140,14 @@ function deleteHydratableInstance(
     returnFiber.deletions = [childToDelete];
     // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
     returnFiber.effectTag |= Deletion;
+
+    // If we are deleting a subtree that contains a passive effect,
+    // mark the parent so that we're sure to traverse after commit and run any unmount functions.
+    const primaryEffectTag = childToDelete.effectTag & PassiveMask;
+    const primarySubtreeTag = childToDelete.subtreeTag & PassiveSubtreeTag;
+    if (primaryEffectTag !== NoEffect || primarySubtreeTag !== NoSubtreeTag) {
+      returnFiber.subtreeTag |= PassiveSubtreeTag;
+    }
   } else {
     deletions.push(childToDelete);
   }

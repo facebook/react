@@ -64,7 +64,13 @@ import {
   Ref,
   Deletion,
   ForceUpdateForLegacySuspense,
+  PassiveMask,
+  StaticMask,
 } from './ReactSideEffectTags';
+import {
+  NoEffect as NoSubtreeTag,
+  Passive as PassiveSubtreeTag,
+} from './ReactSubtreeTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
@@ -2064,13 +2070,24 @@ function updateSuspensePrimaryChildren(
   if (currentFallbackChildFragment !== null) {
     // Delete the fallback child fragment
     currentFallbackChildFragment.nextEffect = null;
-    currentFallbackChildFragment.effectTag = Deletion;
+    currentFallbackChildFragment.effectTag =
+      (currentFallbackChildFragment.effectTag & StaticMask) | Deletion;
     workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChildFragment;
     const deletions = workInProgress.deletions;
     if (deletions === null) {
       workInProgress.deletions = [currentFallbackChildFragment];
       // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
       workInProgress.effectTag |= Deletion;
+
+      // If we are deleting a subtree that contains a passive effect,
+      // mark the parent so that we're sure to traverse after commit and run any unmount functions.
+      const primaryEffectTag =
+        currentFallbackChildFragment.effectTag & PassiveMask;
+      const primarySubtreeTag =
+        currentFallbackChildFragment.subtreeTag & PassiveSubtreeTag;
+      if (primaryEffectTag !== NoEffect || primarySubtreeTag !== NoSubtreeTag) {
+        workInProgress.subtreeTag |= PassiveSubtreeTag;
+      }
     } else {
       deletions.push(currentFallbackChildFragment);
     }
@@ -3055,6 +3072,14 @@ function remountFiber(
       returnFiber.deletions = [current];
       // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
       returnFiber.effectTag |= Deletion;
+
+      // If we are deleting a subtree that contains a passive effect,
+      // mark the parent so that we're sure to traverse after commit and run any unmount functions.
+      const primaryEffectTag = current.effectTag & PassiveMask;
+      const primarySubtreeTag = current.subtreeTag & PassiveSubtreeTag;
+      if (primaryEffectTag !== NoEffect || primarySubtreeTag !== NoSubtreeTag) {
+        returnFiber.subtreeTag |= PassiveSubtreeTag;
+      }
     } else {
       deletions.push(current);
     }

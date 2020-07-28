@@ -2835,7 +2835,7 @@ function flushPassiveUnmountEffects(firstChild: Fiber): void {
       case ForwardRef:
       case SimpleMemoComponent:
       case Block: {
-        const primaryEffectTag = fiber.effectTag & PassiveMask;
+        const primaryEffectTag = fiber.effectTag & Passive;
         if (primaryEffectTag !== NoEffect) {
           flushPassiveUnmountEffectsImpl(fiber);
         }

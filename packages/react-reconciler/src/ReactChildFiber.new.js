@@ -15,7 +15,16 @@ import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 
 import getComponentName from 'shared/getComponentName';
-import {Placement, Deletion} from './ReactSideEffectTags';
+import {
+  Deletion,
+  NoEffect,
+  PassiveMask,
+  Placement,
+} from './ReactSideEffectTags';
+import {
+  NoEffect as NoSubtreeTag,
+  Passive as PassiveSubtreeTag,
+} from './ReactSubtreeTags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -293,6 +302,14 @@ function ChildReconciler(shouldTrackSideEffects) {
       returnFiber.deletions = [childToDelete];
       // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
       returnFiber.effectTag |= Deletion;
+
+      // If we are deleting a subtree that contains a passive effect,
+      // mark the parent so that we're sure to traverse after commit and run any unmount functions.
+      const primaryEffectTag = childToDelete.effectTag & PassiveMask;
+      const primarySubtreeTag = childToDelete.subtreeTag & PassiveSubtreeTag;
+      if (primaryEffectTag !== NoEffect || primarySubtreeTag !== NoSubtreeTag) {
+        returnFiber.subtreeTag |= PassiveSubtreeTag;
+      }
     } else {
       deletions.push(childToDelete);
     }
