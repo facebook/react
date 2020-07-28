@@ -10,7 +10,7 @@ on:
   push:
     branches: [master]
   pull_request:
-    branches: [master]
+  check_suite:
 
 jobs:
   build:
