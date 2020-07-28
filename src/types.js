@@ -87,11 +87,14 @@ export type ReactMeasure = {|
   +depth: number,
 |};
 
+export type FlamechartData = Flamechart;
+
 export type ReactProfilerData = {|
   startTime: number,
   duration: number,
   events: ReactEvent[],
   measures: ReactMeasure[],
+  flamechart: FlamechartData,
 |};
 
 export type ReactHoverContextInfo = {|
@@ -100,5 +103,3 @@ export type ReactHoverContextInfo = {|
   data: $ReadOnly<ReactProfilerData> | null,
   flamechartNode: FlamechartFrame | null,
 |};
-
-export type FlamechartData = Flamechart;

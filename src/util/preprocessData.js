@@ -1,9 +1,11 @@
 // @flow
 
+import {importFromChromeTimeline, Flamechart} from '@elg/speedscope';
 import type {TimelineEvent} from '@elg/speedscope';
 import type {
   Milliseconds,
   BatchUID,
+  FlamechartData,
   ReactLane,
   ReactMeasureType,
   ReactProfilerData,
@@ -345,18 +347,34 @@ function processTimelineEvent(
   }
 }
 
+function preprocessFlamechart(rawData: TimelineEvent[]): FlamechartData {
+  const parsedData = importFromChromeTimeline(rawData, 'react-devtools');
+  const profile = parsedData.profiles[0]; // TODO: Choose the main CPU thread only
+  const flamechart = new Flamechart({
+    getTotalWeight: profile.getTotalWeight.bind(profile),
+    forEachCall: profile.forEachCall.bind(profile),
+    formatValue: profile.formatValue.bind(profile),
+    getColorBucketForFrame: () => 0,
+  });
+  return flamechart;
+}
+
 export default function preprocessData(
   timeline: TimelineEvent[],
 ): ReactProfilerData {
-  const profilerData = {
+  const flamechart = preprocessFlamechart(timeline);
+
+  const profilerData: ReactProfilerData = {
     startTime: 0,
     duration: 0,
     events: [],
     measures: [],
+    flamechart,
   };
 
-  // TODO: Sort `timeline`. JSON Array Format trace events need not be ordered. See:
+  // Sort `timeline`. JSON Array Format trace events need not be ordered. See:
   // https://docs.google.com/document/d/1CvAClvFfyA5R-PhYUmn5OOQtYMH4h6I0nSsKchNAySU/preview#heading=h.f2f0yd51wi15
+  timeline = timeline.filter(Boolean).sort((a, b) => (a.ts > b.ts ? 1 : -1));
 
   // Events displayed in flamechart have timestamps relative to the profile
   // event's startTime. Source: https://github.com/v8/v8/blob/44bd8fd7/src/inspector/js_protocol.json#L1486

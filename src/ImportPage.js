@@ -1,38 +1,27 @@
 // @flow
 
 import type {TimelineEvent} from '@elg/speedscope';
-import type {FlamechartData, ReactProfilerData} from './types';
+import type {ReactProfilerData} from './types';
 
 import React, {useEffect, useCallback, useRef} from 'react';
 import profilerBrowser from './assets/profilerBrowser.png';
 import style from './ImportPage.css';
 
 import preprocessData from './util/preprocessData';
-import preprocessFlamechart from './util/preprocessFlamechart';
 import {readInputData} from './util/readInputData';
 
 // TODO: Use for dev only, switch to import file after
 import JSON_PATH from 'url:../static/perfprofilev2.json';
 
 type Props = {|
-  onDataImported: (
-    profilerData: ReactProfilerData,
-    flamechart: FlamechartData,
-  ) => void,
+  onDataImported: (profilerData: ReactProfilerData) => void,
 |};
 
 export default function ImportPage({onDataImported}: Props) {
   const processTimeline = useCallback(
     (events: TimelineEvent[]) => {
-      // Filter null entries and sort by timestamp.
-      // I would not expect to have to do either of this,
-      // but some of the data being passed in requires it.
-      events = events.filter(Boolean).sort((a, b) => (a.ts > b.ts ? 1 : -1));
-
       if (events.length > 0) {
-        const processedData = preprocessData(events);
-        const processedFlamechart = preprocessFlamechart(events);
-        onDataImported(processedData, processedFlamechart);
+        onDataImported(preprocessData(events));
       }
     },
     [onDataImported],
