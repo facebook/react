@@ -4,7 +4,7 @@ import type {TimelineEvent} from '@elg/speedscope';
 import type {FlamechartData, ReactProfilerData} from './types';
 
 import React, {useEffect, useCallback, useRef} from 'react';
-import logo from './reactlogo.svg';
+import profilerBrowser from './assets/profilerBrowser.png';
 import style from './ImportPage.css';
 
 import preprocessData from './util/preprocessData';
@@ -63,7 +63,11 @@ export default function ImportPage({onDataImported}: Props) {
           <div className={style.cardcontainer}>
             <div className={style.row}>
               <div className={style.column}>
-                <img src={logo} className={style.reactlogo} alt="logo" />
+                <img
+                  src={profilerBrowser}
+                  className={style.browserScreenshot}
+                  alt="logo"
+                />
               </div>
               <div className={style.columncontent}>
                 <h2>React Concurrent Mode Profiler</h2>
@@ -76,6 +80,24 @@ export default function ImportPage({onDataImported}: Props) {
                     performance profile
                   </a>{' '}
                   from Chrome Devtools.
+                  <br />
+                  To zoom, scroll while holding down <kbd>Ctrl</kbd> or <kbd>Shift</kbd>
+                  <p className={style.legendKey}>
+                    <svg height="20" width="20">
+                      <circle cx="10" cy="10" r="5" fill="#ff718e" />
+                    </svg>
+                    State Update Scheduled
+                    <br />
+                    <svg height="20" width="20">
+                      <circle cx="10" cy="10" r="5" fill="#9fc3f3" />
+                    </svg>
+                    State Update Scheduled
+                    <br />
+                    <svg height="20" width="20">
+                      <circle cx="10" cy="10" r="5" fill="#a6e59f" />
+                    </svg>
+                    Suspended
+                  </p>
                 </p>
 
                 <div className={style.buttongrp}>

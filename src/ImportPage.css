@@ -8,7 +8,7 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 2vmin);
+  font-size: calc(10px + 1.5vmin);
   min-height: 100vh;
 }
 
@@ -21,16 +21,32 @@
   transition: 0.2s;
 }
 
-/* React logo Spinner */
-.reactlogo {
-  height: 40vmin;
-  pointer-events: none;
+kbd {
+  display: inline-block;
+  padding: 0 0.5em;
+  border: 1px solid #d7dfe4;
+  margin: 0 0.2em;
+  background-color: #f6f6f6;
+  border-radius: 0.2em;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .reactlogo {
-    animation: spin infinite 20s linear;
-  }
+/* Landing Graphic */
+.browserScreenshot {
+  width: 35rem;
+  max-width: inherit;
+  align-self: center;
+  justify-content: center;
+  border: 1px solid #d7dfe4;
+  border-radius: 0.4em;
+  box-shadow: 0 2px 4px #ddd;
+}
+
+.legendKey {
+  font-size: calc(8px + 1.5vmin);
+}
+
+.legendKey > svg {
+  padding-left: 2rem;
 }
 
 @keyframes spin {
@@ -56,6 +72,7 @@ hr {
 }
 
 .column {
+  padding: 1rem;
   display: flex;
   flex-direction: column;
   flex-basis: 100%;
