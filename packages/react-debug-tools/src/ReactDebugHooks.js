@@ -86,16 +86,6 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       Dispatcher.useDebugValue(null);
       Dispatcher.useCallback(() => {});
       Dispatcher.useMemo(() => null);
-      Dispatcher.useMutableSource(
-        {
-          _source: {},
-          _getVersion: () => 1,
-          _workInProgressVersionPrimary: null,
-          _workInProgressVersionSecondary: null,
-        },
-        () => null,
-        () => () => {},
-      );
     } finally {
       readHookLog = hookLog;
       hookLog = [];
