@@ -14,6 +14,7 @@ let ReactDOM;
 let ReactDOMServer;
 let Scheduler;
 let act;
+let createMutableSource;
 let useMutableSource;
 
 describe('useMutableSourceHydration', () => {
@@ -25,8 +26,9 @@ describe('useMutableSourceHydration', () => {
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
 
-    useMutableSource = React.useMutableSource;
     act = require('react-dom/test-utils').act;
+    createMutableSource = React.unstable_createMutableSource;
+    useMutableSource = React.unstable_useMutableSource;
   });
 
   const defaultGetSnapshot = source => source.value;
@@ -123,10 +125,6 @@ describe('useMutableSourceHydration', () => {
     };
   }
 
-  function createMutableSource(source) {
-    return React.createMutableSource(source, param => param.version);
-  }
-
   function Component({getSnapshot, label, mutableSource, subscribe}) {
     const snapshot = useMutableSource(mutableSource, getSnapshot, subscribe);
     Scheduler.unstable_yieldValue(`${label}:${snapshot}`);
@@ -136,7 +134,7 @@ describe('useMutableSourceHydration', () => {
   // @gate experimental
   it('should render and hydrate', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     function TestComponent() {
       return (
@@ -173,7 +171,7 @@ describe('useMutableSourceHydration', () => {
   // @gate experimental
   it('should detect a tear before hydrating a component', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     function TestComponent() {
       return (
@@ -217,7 +215,7 @@ describe('useMutableSourceHydration', () => {
   // @gate experimental
   it('should detect a tear between hydrating components', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     function TestComponent() {
       return (
@@ -269,7 +267,7 @@ describe('useMutableSourceHydration', () => {
   // @gate experimental
   it('should detect a tear between hydrating components reading from different parts of a source', () => {
     const source = createComplexSource('a:one', 'b:one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     // Subscribe to part of the store.
     const getSnapshotA = s => s.valueA;
@@ -336,7 +334,7 @@ describe('useMutableSourceHydration', () => {
   // @gate experimental
   it('should detect a tear during a higher priority interruption', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     function Unrelated({flag}) {
       Scheduler.unstable_yieldValue(flag);
