@@ -1,7 +1,5 @@
 // @flow
 
-import type {Flamechart, FlamechartFrame} from '@elg/speedscope';
-
 // Type utilities
 
 // Source: https://github.com/facebook/flow/issues/4002#issuecomment-323612798
@@ -87,19 +85,37 @@ export type ReactMeasure = {|
   +depth: number,
 |};
 
-export type FlamechartData = Flamechart;
+/**
+ * A flamechart stack frame belonging to a stack trace.
+ */
+export type FlamechartStackFrame = {|
+  name: string,
+  timestamp: Milliseconds,
+  duration: Milliseconds,
+  scriptUrl?: string,
+  locationLine?: number,
+  locationColumn?: number,
+|};
+
+/**
+ * A "layer" of stack frames in the profiler UI, i.e. all stack frames of the
+ * same depth across all stack traces. Displayed as a flamechart row in the UI.
+ */
+export type FlamechartStackLayer = FlamechartStackFrame[];
+
+export type Flamechart = FlamechartStackLayer[];
 
 export type ReactProfilerData = {|
   startTime: number,
   duration: number,
   events: ReactEvent[],
   measures: ReactMeasure[],
-  flamechart: FlamechartData,
+  flamechart: Flamechart,
 |};
 
 export type ReactHoverContextInfo = {|
   event: ReactEvent | null,
   measure: ReactMeasure | null,
   data: $ReadOnly<ReactProfilerData> | null,
-  flamechartNode: FlamechartFrame | null,
+  flamechartStackFrame: FlamechartStackFrame | null,
 |};

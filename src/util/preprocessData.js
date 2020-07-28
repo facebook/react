@@ -1,11 +1,14 @@
 // @flow
 
-import {importFromChromeTimeline, Flamechart} from '@elg/speedscope';
+import {
+  importFromChromeTimeline,
+  Flamechart as SpeedscopeFlamechart,
+} from '@elg/speedscope';
 import type {TimelineEvent} from '@elg/speedscope';
 import type {
   Milliseconds,
   BatchUID,
-  FlamechartData,
+  Flamechart,
   ReactLane,
   ReactMeasureType,
   ReactProfilerData,
@@ -347,15 +350,28 @@ function processTimelineEvent(
   }
 }
 
-function preprocessFlamechart(rawData: TimelineEvent[]): FlamechartData {
+function preprocessFlamechart(rawData: TimelineEvent[]): Flamechart {
   const parsedData = importFromChromeTimeline(rawData, 'react-devtools');
   const profile = parsedData.profiles[0]; // TODO: Choose the main CPU thread only
-  const flamechart = new Flamechart({
+
+  const speedscopeFlamechart = new SpeedscopeFlamechart({
     getTotalWeight: profile.getTotalWeight.bind(profile),
     forEachCall: profile.forEachCall.bind(profile),
     formatValue: profile.formatValue.bind(profile),
     getColorBucketForFrame: () => 0,
   });
+
+  const flamechart: Flamechart = speedscopeFlamechart.getLayers().map(layer =>
+    layer.map(({start, end, node: {frame: {name, file, line, col}}}) => ({
+      name,
+      timestamp: start / 1000,
+      duration: (end - start) / 1000,
+      scriptUrl: file,
+      locationLine: line,
+      locationColumn: col,
+    })),
+  );
+
   return flamechart;
 }
 

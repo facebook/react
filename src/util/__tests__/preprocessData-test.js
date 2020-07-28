@@ -75,13 +75,12 @@ describe(preprocessData, () => {
         {"pid":57632,"tid":38659,"ts":874860756224,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":7,"tdur":6,"tts":8700285008,"args":{}},
         {"pid":57632,"tid":38659,"ts":874860756233,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":5,"tdur":4,"tts":8700285017,"args":{}},
       ]),
-    ).toMatchObject({
+    ).toEqual({
       startTime: 8993778496,
       duration: 865866977.737,
       events: [],
       measures: [],
-      // TODO: Change expectation back to toEqual and test for empty flamechart
-      // when custom flamechart type is added.
+      flamechart: [],
     });
   });
 
@@ -325,4 +324,6 @@ describe(preprocessData, () => {
       ]),
     ).toMatchSnapshot();
   });
+
+  // TODO: Add test for flamechart parsing
 });

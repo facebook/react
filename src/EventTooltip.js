@@ -1,8 +1,8 @@
 // @flow
 
 import type {Point} from './layout';
-import type {FlamechartFrame} from '@elg/speedscope';
 import type {
+  FlamechartStackFrame,
   ReactEvent,
   ReactMeasure,
   ReactProfilerData,
@@ -48,7 +48,7 @@ export default function EventTooltip({data, hoveredEvent, origin}: Props) {
     return null;
   }
 
-  const {event, flamechartNode, measure} = hoveredEvent;
+  const {event, flamechartStackFrame, measure} = hoveredEvent;
 
   if (event !== null) {
     switch (event.type) {
@@ -107,10 +107,10 @@ export default function EventTooltip({data, hoveredEvent, origin}: Props) {
         console.warn(`Unexpected measure type "${measure.type}"`);
         break;
     }
-  } else if (flamechartNode !== null) {
+  } else if (flamechartStackFrame !== null) {
     return (
       <TooltipFlamechartNode
-        flamechartNode={flamechartNode}
+        stackFrame={flamechartStackFrame}
         tooltipRef={tooltipRef}
       />
     );
@@ -129,14 +129,20 @@ function formatComponentStack(componentStack: string): string {
 }
 
 const TooltipFlamechartNode = ({
-  flamechartNode,
+  stackFrame,
   tooltipRef,
 }: {
-  flamechartNode: FlamechartFrame,
+  stackFrame: FlamechartStackFrame,
   tooltipRef: Return<typeof useRef>,
 }) => {
-  const {end, node, start} = flamechartNode;
-  const {col, file, line, name} = node.frame;
+  const {
+    name,
+    timestamp,
+    duration,
+    scriptUrl,
+    locationLine,
+    locationColumn,
+  } = stackFrame;
   return (
     <div
       className={styles.Tooltip}
@@ -145,21 +151,21 @@ const TooltipFlamechartNode = ({
         color: COLORS.TOOLTIP,
       }}
       ref={tooltipRef}>
-      {formatDuration((end - start) / 1000)} {trimComponentName(name)}
+      {formatDuration(duration)} {trimComponentName(name)}
       <div className={styles.DetailsGrid}>
         <div className={styles.DetailsGridLabel}>Timestamp:</div>
-        <div>{formatTimestamp(start / 1000)}</div>
-        {file && (
+        <div>{formatTimestamp(timestamp)}</div>
+        {scriptUrl && (
           <>
             <div className={styles.DetailsGridLabel}>Script URL:</div>
-            <div className={styles.DetailsGridURL}>{file}</div>
+            <div className={styles.DetailsGridURL}>{scriptUrl}</div>
           </>
         )}
-        {(line !== undefined || col !== undefined) && (
+        {(locationLine !== undefined || locationColumn !== undefined) && (
           <>
             <div className={styles.DetailsGridLabel}>Location:</div>
             <div>
-              line {line}, column {col}
+              line {locationLine}, column {locationColumn}
             </div>
           </>
         )}

@@ -191,7 +191,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         hoveredEvent &&
         (hoveredEvent.event ||
           hoveredEvent.measure ||
-          hoveredEvent.flamechartNode)
+          hoveredEvent.flamechartStackFrame)
       ) {
         setMouseLocation({
           x: interaction.payload.event.x,
@@ -226,7 +226,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         if (!hoveredEvent || hoveredEvent.event !== event) {
           setHoveredEvent({
             event,
-            flamechartNode: null,
+            flamechartStackFrame: null,
             measure: null,
             data,
           });
@@ -240,7 +240,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         if (!hoveredEvent || hoveredEvent.measure !== measure) {
           setHoveredEvent({
             event: null,
-            flamechartNode: null,
+            flamechartStackFrame: null,
             measure,
             data,
           });
@@ -250,11 +250,14 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
 
     const {current: flamegraphView} = flamegraphViewRef;
     if (flamegraphView) {
-      flamegraphView.onHover = flamechartNode => {
-        if (!hoveredEvent || hoveredEvent.flamechartNode !== flamechartNode) {
+      flamegraphView.onHover = flamechartStackFrame => {
+        if (
+          !hoveredEvent ||
+          hoveredEvent.flamechartStackFrame !== flamechartStackFrame
+        ) {
           setHoveredEvent({
             event: null,
-            flamechartNode,
+            flamechartStackFrame,
             measure: null,
             data,
           });
@@ -285,7 +288,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     const {current: flamegraphView} = flamegraphViewRef;
     if (flamegraphView) {
       flamegraphView.setHoveredFlamechartNode(
-        hoveredEvent ? hoveredEvent.flamechartNode : null,
+        hoveredEvent ? hoveredEvent.flamechartStackFrame : null,
       );
     }
   }, [
@@ -311,7 +314,11 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
           if (contextData.hoveredEvent == null) {
             return null;
           }
-          const {event, flamechartNode, measure} = contextData.hoveredEvent;
+          const {
+            event,
+            flamechartStackFrame,
+            measure,
+          } = contextData.hoveredEvent;
           return (
             <Fragment>
               {event !== null && (
@@ -342,19 +349,20 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
                   Copy summary
                 </ContextMenuItem>
               )}
-              {flamechartNode !== null && (
+              {flamechartStackFrame !== null && (
                 <ContextMenuItem
-                  onClick={() => copy(flamechartNode.node.frame.file)}
+                  onClick={() => copy(flamechartStackFrame.scriptUrl)}
                   title="Copy file path">
                   Copy file path
                 </ContextMenuItem>
               )}
-              {flamechartNode !== null && (
+              {flamechartStackFrame !== null && (
                 <ContextMenuItem
                   onClick={() =>
                     copy(
-                      `line ${flamechartNode.node.frame.line ||
-                        ''}, column ${flamechartNode.node.frame.col || ''}`,
+                      `line ${flamechartStackFrame.locationLine ||
+                        ''}, column ${flamechartStackFrame.locationColumn ||
+                        ''}`,
                     )
                   }
                   title="Copy location">
