@@ -61,8 +61,8 @@ export const EVENT_ROW_HEIGHT_FIXED =
 
 export const COLORS = Object.freeze({
   BACKGROUND: '#ffffff',
-  FLAME_GRAPH: '#fff79f',
-  FLAME_GRAPH_HOVER: '#ffe900',
+  FLAME_CHART: '#fff79f',
+  FLAME_CHART_HOVER: '#ffe900',
   OTHER_SCRIPT: '#fff791',
   OTHER_SCRIPT_HOVER: '#ffea00',
   PRIORITY_BACKGROUND: '#ededf0',

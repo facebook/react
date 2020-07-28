@@ -49,8 +49,8 @@ export function getTimeTickInterval(zoomLevel: number) {
   return interval;
 }
 
-const cachedFlamegraphTextWidths = new Map();
-export const trimFlamegraphText = (
+const cachedFlamechartTextWidths = new Map();
+export const trimFlamechartText = (
   context: CanvasRenderingContext2D,
   text: string,
   width: number,
@@ -58,10 +58,10 @@ export const trimFlamegraphText = (
   for (let i = text.length - 1; i >= 0; i--) {
     const trimmedText = i === text.length - 1 ? text : text.substr(0, i) + '…';
 
-    let measuredWidth = cachedFlamegraphTextWidths.get(trimmedText);
+    let measuredWidth = cachedFlamechartTextWidths.get(trimmedText);
     if (measuredWidth == null) {
       measuredWidth = context.measureText(trimmedText).width;
-      cachedFlamegraphTextWidths.set(trimmedText, measuredWidth);
+      cachedFlamechartTextWidths.set(trimmedText, measuredWidth);
     }
 
     if (measuredWidth <= width) {

@@ -36,7 +36,7 @@ const CONTEXT_MENU_ID = 'canvas';
 import type {ReactHoverContextInfo, ReactProfilerData} from './types';
 import {useCanvasInteraction} from './useCanvasInteraction';
 import {
-  FlamegraphView,
+  FlamechartView,
   ReactEventsView,
   ReactMeasuresView,
   TimeAxisMarkersView,
@@ -108,7 +108,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
   ] = useState<ReactHoverContextInfo | null>(null);
 
   const surfaceRef = useRef(new Surface());
-  const flamegraphViewRef = useRef(null);
+  const flamechartViewRef = useRef(null);
   const axisMarkersViewRef = useRef(null);
   const reactEventsViewRef = useRef(null);
   const reactMeasuresViewRef = useRef(null);
@@ -136,18 +136,18 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     );
     reactMeasuresViewRef.current = reactMeasuresView;
 
-    const flamegraphView = new FlamegraphView(
+    const flamechartView = new FlamechartView(
       surfaceRef.current,
       {origin: zeroPoint, size: {width, height}},
       data.flamechart,
       data,
     );
-    flamegraphViewRef.current = flamegraphView;
-    const flamegraphVScrollWrapper = new VerticalScrollView(
+    flamechartViewRef.current = flamechartView;
+    const flamechartVScrollWrapper = new VerticalScrollView(
       surfaceRef.current,
       {origin: zeroPoint, size: {width, height}},
-      flamegraphView,
-      flamegraphView.intrinsicSize.height,
+      flamechartView,
+      flamechartView.intrinsicSize.height,
     );
 
     const stackedZoomables = new StaticLayoutView(
@@ -158,7 +158,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         axisMarkersView,
         reactEventsView,
         reactMeasuresView,
-        flamegraphVScrollWrapper,
+        flamechartVScrollWrapper,
       ],
     );
 
@@ -166,7 +166,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       surfaceRef.current,
       {origin: zeroPoint, size: {width, height}},
       stackedZoomables,
-      flamegraphView.intrinsicSize.width,
+      flamechartView.intrinsicSize.width,
     );
 
     rootViewRef.current = new StaticLayoutView(
@@ -248,9 +248,9 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       };
     }
 
-    const {current: flamegraphView} = flamegraphViewRef;
-    if (flamegraphView) {
-      flamegraphView.onHover = flamechartStackFrame => {
+    const {current: flamechartView} = flamechartViewRef;
+    if (flamechartView) {
+      flamechartView.onHover = flamechartStackFrame => {
         if (
           !hoveredEvent ||
           hoveredEvent.flamechartStackFrame !== flamechartStackFrame
@@ -267,7 +267,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
   }, [
     reactEventsViewRef,
     reactMeasuresViewRef,
-    flamegraphViewRef,
+    flamechartViewRef,
     hoveredEvent,
     setHoveredEvent,
   ]);
@@ -285,16 +285,16 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       );
     }
 
-    const {current: flamegraphView} = flamegraphViewRef;
-    if (flamegraphView) {
-      flamegraphView.setHoveredFlamechartNode(
+    const {current: flamechartView} = flamechartViewRef;
+    if (flamechartView) {
+      flamechartView.setHoveredFlamechartNode(
         hoveredEvent ? hoveredEvent.flamechartStackFrame : null,
       );
     }
   }, [
     reactEventsViewRef,
     reactMeasuresViewRef,
-    flamegraphViewRef,
+    flamechartViewRef,
     hoveredEvent,
   ]);
 

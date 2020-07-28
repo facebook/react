@@ -20,7 +20,7 @@ import {
   durationToWidth,
   positioningScaleFactor,
   timestampToPosition,
-  trimFlamegraphText,
+  trimFlamechartText,
 } from '../canvasUtils';
 import {
   COLORS,
@@ -30,7 +30,7 @@ import {
   REACT_WORK_BORDER_SIZE,
 } from '../constants';
 
-export class FlamegraphView extends View {
+export class FlamechartView extends View {
   flamechart: Flamechart;
   profilerData: ReactProfilerData;
   intrinsicSize: Size;
@@ -125,8 +125,8 @@ export class FlamegraphView extends View {
 
         const showHoverHighlight = hoveredFlamechartNode === stackLayer[j];
         context.fillStyle = showHoverHighlight
-          ? COLORS.FLAME_GRAPH_HOVER
-          : COLORS.FLAME_GRAPH;
+          ? COLORS.FLAME_CHART_HOVER
+          : COLORS.FLAME_CHART;
 
         const drawableRect = rectIntersectionWithRect(nodeRect, visibleArea);
         context.fillRect(
@@ -137,7 +137,7 @@ export class FlamegraphView extends View {
         );
 
         if (width > FLAMECHART_TEXT_PADDING * 2) {
-          const trimmedName = trimFlamegraphText(
+          const trimmedName = trimFlamechartText(
             context,
             name,
             width - FLAMECHART_TEXT_PADDING * 2 + (x < 0 ? x : 0),
