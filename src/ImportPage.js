@@ -81,7 +81,8 @@ export default function ImportPage({onDataImported}: Props) {
                   </a>{' '}
                   from Chrome Devtools.
                   <br />
-                  To zoom, scroll while holding down <kbd>Ctrl</kbd> or <kbd>Shift</kbd>
+                  To zoom, scroll while holding down <kbd>Ctrl</kbd> or{' '}
+                  <kbd>Shift</kbd>
                   <p className={style.legendKey}>
                     <svg height="20" width="20">
                       <circle cx="10" cy="10" r="5" fill="#ff718e" />
