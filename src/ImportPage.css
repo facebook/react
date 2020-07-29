@@ -43,6 +43,8 @@ kbd {
 
 .legendKey {
   font-size: calc(8px + 1.5vmin);
+  margin: 0;
+  margin-bottom: 1rem;
 }
 
 .legendKey > svg {
