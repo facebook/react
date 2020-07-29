@@ -2560,13 +2560,6 @@ function commitMutationEffectsDeletions(
         captureCommitPhaseError(childToDelete, error);
       }
     }
-
-    // If there are no pending passive effects, it's safe to detach remaining pointers now.
-    const primarySubtreeTag = childToDelete.subtreeTag & PassiveSubtreeTag;
-    const primaryEffectTag = childToDelete.effectTag & PassiveMask;
-    if (primarySubtreeTag === NoSubtreeTag && primaryEffectTag === NoEffect) {
-      detachFiberAfterEffects(childToDelete);
-    }
   }
 }
 
@@ -4062,7 +4055,6 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
 function detachFiberAfterEffects(fiber: Fiber): void {
   // Null out fields to improve GC for references that may be lingering (e.g. DevTools).
   // Note that we already cleared the return pointer in detachFiberMutation().
-  fiber.alternate = null;
   fiber.child = null;
   fiber.dependencies = null;
   fiber.firstEffect = null;

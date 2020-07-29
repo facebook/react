@@ -1027,6 +1027,11 @@ function detachFiberMutation(fiber: Fiber) {
   // Note that we can't clear child or sibling pointers yet.
   // They're needed for passive effects and for findDOMNode.
   // We defer those fields, and all other cleanup, to the passive phase (see detachFiberAfterEffects).
+  const alternate = fiber.alternate;
+  if (alternate !== null) {
+    alternate.return = null;
+    fiber.alternate = null;
+  }
   fiber.return = null;
 }
 

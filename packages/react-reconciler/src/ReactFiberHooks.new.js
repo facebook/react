@@ -1289,7 +1289,7 @@ function updateEffect(
     }
   }
   return updateEffectImpl(
-    UpdateEffect | PassiveEffect | PassiveStaticEffect,
+    UpdateEffect | PassiveEffect,
     HookPassive,
     create,
     deps,
