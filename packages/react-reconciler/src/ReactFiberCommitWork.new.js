@@ -878,6 +878,7 @@ function commitUnmount(
             const {destroy, tag} = effect;
             if (destroy !== undefined) {
               if ((tag & HookPassive) !== NoHookEffect) {
+                // TODO: Consider if we can move this block out of the synchronous commit phase
                 effect.tag |= HookHasEffect;
 
                 current.effectTag |= Passive;

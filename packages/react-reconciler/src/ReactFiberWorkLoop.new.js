@@ -2794,19 +2794,15 @@ function flushPassiveUnmountEffects(firstChild: Fiber): void {
       fiber.deletions = null;
     }
 
-    const didBailout =
-      fiber.alternate !== null && fiber.alternate.child === fiber.child;
-    if (!didBailout) {
-      const child = fiber.child;
-      if (child !== null) {
-        // If any children have passive effects then traverse the subtree.
-        // Note that this requires checking subtreeTag of the current Fiber,
-        // rather than the subtreeTag/effectsTag of the first child,
-        // since that would not cover passive effects in siblings.
-        const primarySubtreeTag = fiber.subtreeTag & PassiveSubtreeTag;
-        if (primarySubtreeTag !== NoSubtreeTag) {
-          flushPassiveUnmountEffects(child);
-        }
+    const child = fiber.child;
+    if (child !== null) {
+      // If any children have passive effects then traverse the subtree.
+      // Note that this requires checking subtreeTag of the current Fiber,
+      // rather than the subtreeTag/effectsTag of the first child,
+      // since that would not cover passive effects in siblings.
+      const primarySubtreeTag = fiber.subtreeTag & PassiveSubtreeTag;
+      if (primarySubtreeTag !== NoSubtreeTag) {
+        flushPassiveUnmountEffects(child);
       }
     }
 
