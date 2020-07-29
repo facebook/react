@@ -34,7 +34,9 @@ describe('SchedulerPostTask', () => {
     jest.resetModules();
 
     // Un-mock scheduler
-    jest.mock('scheduler', () => require.requireActual('scheduler'));
+    jest.mock('scheduler', () =>
+      require.requireActual('scheduler/unstable_post_task'),
+    );
     jest.mock('scheduler/src/SchedulerHostConfig', () =>
       require.requireActual(
         'scheduler/src/forks/SchedulerHostConfig.post-task.js',

@@ -634,8 +634,15 @@ const bundles = [
     externals: [],
   },
 
+  /******* React Scheduler Post Task (experimental) *******/
   {
-    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, FB_WWW_PROFILING],
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+    ],
     moduleType: ISOMORPHIC,
     entry: 'scheduler/unstable_post_task',
     global: 'SchedulerPostTask',
