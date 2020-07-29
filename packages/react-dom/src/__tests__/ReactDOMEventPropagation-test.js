@@ -347,8 +347,7 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    // TODO: this has regressed. Fix me.
-    it.skip('onGotPointerCapture', () => {
+    it('onGotPointerCapture', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onGotPointerCapture',
@@ -413,8 +412,7 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    // TODO: this has regressed. Fix me.
-    it.skip('onLostPointerCapture', () => {
+    it('onLostPointerCapture', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onLostPointerCapture',
