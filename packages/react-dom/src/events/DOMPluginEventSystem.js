@@ -470,8 +470,15 @@ export function listenToReactEvent(
       }
     }
   } else {
-    // Check if the react event ends in "Capture"
-    const isCapturePhaseListener = reactEvent.substr(-7) === 'Capture';
+    const isCapturePhaseListener =
+      reactEvent.substr(-7) === 'Capture' &&
+      // Edge case: onGotPointerCapture and onLostPointerCapture
+      // end with "Capture" but that's part of their event names.
+      // The Capture versions would end with CaptureCapture.
+      // So we have to check against that.
+      // This check works because none of the events we support
+      // end with "Pointer".
+      reactEvent.substr(-14, 7) !== 'Pointer';
     listenToNativeEvent(
       dependencies[0],
       isCapturePhaseListener,
