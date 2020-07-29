@@ -14,6 +14,7 @@ describe('ReactDOMEventListener', () => {
   let container;
 
   beforeEach(() => {
+    window.TextEvent = function() {};
     jest.resetModules();
     React = require('react');
     jest.isolateModules(() => {
@@ -45,6 +46,85 @@ describe('ReactDOMEventListener', () => {
   }
 
   describe('bubbling events', () => {
+    it('onAnimationEnd', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onAnimationEnd',
+        nativeEvent: 'animationend',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('animationend', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onAnimationIteration', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onAnimationIteration',
+        nativeEvent: 'animationiteration',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('animationiteration', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onAnimationStart', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onAnimationStart',
+        nativeEvent: 'animationstart',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('animationstart', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onAuxClick', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onAuxClick',
+        nativeEvent: 'auxclick',
+        dispatch(node) {
+          node.dispatchEvent(
+            new KeyboardEvent('auxclick', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onBlur', () => {
+      testNativeBubblingEvent({
+        type: 'input',
+        reactEvent: 'onBlur',
+        nativeEvent: 'focusout',
+        dispatch(node) {
+          const e = new Event('focusout', {
+            bubbles: true,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
     // This test will fail in legacy mode (only used in WWW)
     // because we emulate the React 16 behavior where
     // the click handler is attached to the document.
@@ -56,6 +136,246 @@ describe('ReactDOMEventListener', () => {
         nativeEvent: 'click',
         dispatch(node) {
           node.click();
+        },
+      });
+    });
+
+    it('onContextMenu', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onContextMenu',
+        nativeEvent: 'contextmenu',
+        dispatch(node) {
+          node.dispatchEvent(
+            new MouseEvent('contextmenu', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onCopy', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onCopy',
+        nativeEvent: 'copy',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('copy', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onCut', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onCut',
+        nativeEvent: 'cut',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('cut', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onDoubleClick', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onDoubleClick',
+        nativeEvent: 'dblclick',
+        dispatch(node) {
+          node.dispatchEvent(
+            new KeyboardEvent('dblclick', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onDrag', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onDrag',
+        nativeEvent: 'drag',
+        dispatch(node) {
+          node.dispatchEvent(
+            new MouseEvent('drag', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onDragEnd', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onDragEnd',
+        nativeEvent: 'dragend',
+        dispatch(node) {
+          node.dispatchEvent(
+            new MouseEvent('dragend', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onDragEnter', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onDragEnter',
+        nativeEvent: 'dragenter',
+        dispatch(node) {
+          node.dispatchEvent(
+            new MouseEvent('dragenter', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onDragExit', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onDragExit',
+        nativeEvent: 'dragexit',
+        dispatch(node) {
+          node.dispatchEvent(
+            new MouseEvent('dragexit', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onDragLeave', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onDragLeave',
+        nativeEvent: 'dragleave',
+        dispatch(node) {
+          node.dispatchEvent(
+            new MouseEvent('dragleave', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onDragOver', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onDragOver',
+        nativeEvent: 'dragover',
+        dispatch(node) {
+          node.dispatchEvent(
+            new MouseEvent('dragover', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onDragStart', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onDragStart',
+        nativeEvent: 'dragstart',
+        dispatch(node) {
+          node.dispatchEvent(
+            new MouseEvent('dragstart', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onDrop', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onDrop',
+        nativeEvent: 'drop',
+        dispatch(node) {
+          node.dispatchEvent(
+            new MouseEvent('drop', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onFocus', () => {
+      testNativeBubblingEvent({
+        type: 'input',
+        reactEvent: 'onFocus',
+        nativeEvent: 'focusin',
+        dispatch(node) {
+          const e = new Event('focusin', {
+            bubbles: true,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    // TODO: this has regressed. Fix me.
+    it.skip('onGotPointerCapture', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onGotPointerCapture',
+        nativeEvent: 'gotpointercapture',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('gotpointercapture', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onKeyDown', () => {
+      testNativeBubblingEvent({
+        type: 'input',
+        reactEvent: 'onKeyDown',
+        nativeEvent: 'keydown',
+        dispatch(node) {
+          node.dispatchEvent(
+            new KeyboardEvent('keydown', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
         },
       });
     });
@@ -77,14 +397,285 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
+    it('onKeyUp', () => {
+      testNativeBubblingEvent({
+        type: 'input',
+        reactEvent: 'onKeyUp',
+        nativeEvent: 'keyup',
+        dispatch(node) {
+          node.dispatchEvent(
+            new KeyboardEvent('keyup', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    // TODO: this has regressed. Fix me.
+    it.skip('onLostPointerCapture', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onLostPointerCapture',
+        nativeEvent: 'lostpointercapture',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('lostpointercapture', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
     it('onMouseDown', () => {
       testNativeBubblingEvent({
-        type: 'button',
+        type: 'div',
         reactEvent: 'onMouseDown',
         nativeEvent: 'mousedown',
         dispatch(node) {
           node.dispatchEvent(
             new MouseEvent('mousedown', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onMouseOut', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onMouseOut',
+        nativeEvent: 'mouseout',
+        dispatch(node) {
+          node.dispatchEvent(
+            new MouseEvent('mouseout', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onMouseOver', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onMouseOver',
+        nativeEvent: 'mouseover',
+        dispatch(node) {
+          node.dispatchEvent(
+            new MouseEvent('mouseover', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onMouseUp', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onMouseUp',
+        nativeEvent: 'mouseup',
+        dispatch(node) {
+          node.dispatchEvent(
+            new MouseEvent('mouseup', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onPaste', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onPaste',
+        nativeEvent: 'paste',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('paste', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onPointerCancel', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onPointerCancel',
+        nativeEvent: 'pointercancel',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('pointercancel', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onPointerDown', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onPointerDown',
+        nativeEvent: 'pointerdown',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('pointerdown', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onPointerMove', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onPointerMove',
+        nativeEvent: 'pointermove',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('pointermove', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onPointerOut', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onPointerOut',
+        nativeEvent: 'pointerout',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('pointerout', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onPointerOver', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onPointerOver',
+        nativeEvent: 'pointerover',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('pointerover', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onPointerUp', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onPointerUp',
+        nativeEvent: 'pointerup',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('pointerup', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onReset', () => {
+      testNativeBubblingEvent({
+        type: 'form',
+        reactEvent: 'onReset',
+        nativeEvent: 'reset',
+        dispatch(node) {
+          const e = new Event('reset', {
+            bubbles: true,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onSubmit', () => {
+      testNativeBubblingEvent({
+        type: 'form',
+        reactEvent: 'onSubmit',
+        nativeEvent: 'submit',
+        dispatch(node) {
+          const e = new Event('submit', {
+            bubbles: true,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onTouchCancel', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onTouchCancel',
+        nativeEvent: 'touchcancel',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('touchcancel', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onTouchEnd', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onTouchEnd',
+        nativeEvent: 'touchend',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('touchend', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
+    it('onTouchMove', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onTouchMove',
+        nativeEvent: 'touchmove',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('touchmove', {
               bubbles: true,
               cancelable: true,
             }),
@@ -109,6 +700,22 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
+    it('onTransitionEnd', () => {
+      testNativeBubblingEvent({
+        type: 'div',
+        reactEvent: 'onTransitionEnd',
+        nativeEvent: 'transitionend',
+        dispatch(node) {
+          node.dispatchEvent(
+            new Event('transitionend', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+
     it('onWheel', () => {
       testNativeBubblingEvent({
         type: 'div',
@@ -124,69 +731,159 @@ describe('ReactDOMEventListener', () => {
         },
       });
     });
-
-    it('onSubmit', () => {
-      testNativeBubblingEvent({
-        type: 'form',
-        reactEvent: 'onSubmit',
-        nativeEvent: 'submit',
-        dispatch(node) {
-          const e = new Event('submit', {
-            bubbles: true,
-            cancelable: true,
-          });
-          node.dispatchEvent(e);
-        },
-      });
-    });
-
-    it('onReset', () => {
-      testNativeBubblingEvent({
-        type: 'form',
-        reactEvent: 'onReset',
-        nativeEvent: 'reset',
-        dispatch(node) {
-          const e = new Event('reset', {
-            bubbles: true,
-            cancelable: true,
-          });
-          node.dispatchEvent(e);
-        },
-      });
-    });
-
-    it('onFocus', () => {
-      testNativeBubblingEvent({
-        type: 'input',
-        reactEvent: 'onFocus',
-        nativeEvent: 'focusin',
-        dispatch(node) {
-          const e = new Event('focusin', {
-            bubbles: true,
-            cancelable: true,
-          });
-          node.dispatchEvent(e);
-        },
-      });
-    });
-
-    it('onBlur', () => {
-      testNativeBubblingEvent({
-        type: 'input',
-        reactEvent: 'onBlur',
-        nativeEvent: 'focusout',
-        dispatch(node) {
-          const e = new Event('focusout', {
-            bubbles: true,
-            cancelable: true,
-          });
-          node.dispatchEvent(e);
-        },
-      });
-    });
   });
 
   describe('non-bubbling events that bubble in React', () => {
+    it('onAbort', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onAbort',
+        nativeEvent: 'abort',
+        dispatch(node) {
+          const e = new Event('abort', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onCancel', () => {
+      testEmulatedBubblingEvent({
+        type: 'dialog',
+        reactEvent: 'onCancel',
+        nativeEvent: 'cancel',
+        dispatch(node) {
+          const e = new Event('cancel', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onCanPlay', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onCanPlay',
+        nativeEvent: 'canplay',
+        dispatch(node) {
+          const e = new Event('canplay', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onCanPlayThrough', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onCanPlayThrough',
+        nativeEvent: 'canplaythrough',
+        dispatch(node) {
+          const e = new Event('canplaythrough', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onClose', () => {
+      testEmulatedBubblingEvent({
+        type: 'dialog',
+        reactEvent: 'onClose',
+        nativeEvent: 'close',
+        dispatch(node) {
+          const e = new Event('close', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onDurationChange', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onDurationChange',
+        nativeEvent: 'durationchange',
+        dispatch(node) {
+          const e = new Event('durationchange', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onEmptied', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onEmptied',
+        nativeEvent: 'emptied',
+        dispatch(node) {
+          const e = new Event('emptied', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onEncrypted', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onEncrypted',
+        nativeEvent: 'encrypted',
+        dispatch(node) {
+          const e = new Event('encrypted', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onEnded', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onEnded',
+        nativeEvent: 'ended',
+        dispatch(node) {
+          const e = new Event('ended', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onError', () => {
+      testEmulatedBubblingEvent({
+        type: 'img',
+        reactEvent: 'onError',
+        nativeEvent: 'error',
+        dispatch(node) {
+          const e = new Event('error', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
     it('onInvalid', () => {
       testEmulatedBubblingEvent({
         type: 'input',
@@ -217,13 +914,13 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onError', () => {
+    it('onLoadedData', () => {
       testEmulatedBubblingEvent({
-        type: 'img',
-        reactEvent: 'onError',
-        nativeEvent: 'error',
+        type: 'video',
+        reactEvent: 'onLoadedData',
+        nativeEvent: 'loadeddata',
         dispatch(node) {
-          const e = new Event('error', {
+          const e = new Event('loadeddata', {
             bubbles: false,
             cancelable: true,
           });
@@ -232,13 +929,13 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onClose', () => {
+    it('onLoadedMetadata', () => {
       testEmulatedBubblingEvent({
-        type: 'dialog',
-        reactEvent: 'onClose',
-        nativeEvent: 'close',
+        type: 'video',
+        reactEvent: 'onLoadedMetadata',
+        nativeEvent: 'loadedmetadata',
         dispatch(node) {
-          const e = new Event('close', {
+          const e = new Event('loadedmetadata', {
             bubbles: false,
             cancelable: true,
           });
@@ -247,13 +944,28 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onCancel', () => {
+    it('onLoadStart', () => {
       testEmulatedBubblingEvent({
-        type: 'dialog',
-        reactEvent: 'onCancel',
-        nativeEvent: 'cancel',
+        type: 'video',
+        reactEvent: 'onLoadStart',
+        nativeEvent: 'loadstart',
         dispatch(node) {
-          const e = new Event('cancel', {
+          const e = new Event('loadstart', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onPause', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onPause',
+        nativeEvent: 'pause',
+        dispatch(node) {
+          const e = new Event('pause', {
             bubbles: false,
             cancelable: true,
           });
@@ -269,6 +981,171 @@ describe('ReactDOMEventListener', () => {
         nativeEvent: 'play',
         dispatch(node) {
           const e = new Event('play', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onPlaying', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onPlaying',
+        nativeEvent: 'playing',
+        dispatch(node) {
+          const e = new Event('playing', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onProgress', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onProgress',
+        nativeEvent: 'progress',
+        dispatch(node) {
+          const e = new Event('progress', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onRateChange', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onRateChange',
+        nativeEvent: 'ratechange',
+        dispatch(node) {
+          const e = new Event('ratechange', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onSeeked', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onSeeked',
+        nativeEvent: 'seeked',
+        dispatch(node) {
+          const e = new Event('seeked', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onSeeking', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onSeeking',
+        nativeEvent: 'seeking',
+        dispatch(node) {
+          const e = new Event('seeking', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onStalled', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onStalled',
+        nativeEvent: 'stalled',
+        dispatch(node) {
+          const e = new Event('stalled', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onSuspend', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onSuspend',
+        nativeEvent: 'suspend',
+        dispatch(node) {
+          const e = new Event('suspend', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onTimeUpdate', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onTimeUpdate',
+        nativeEvent: 'timeupdate',
+        dispatch(node) {
+          const e = new Event('timeupdate', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onToggle', () => {
+      testEmulatedBubblingEvent({
+        type: 'details',
+        reactEvent: 'onToggle',
+        nativeEvent: 'toggle',
+        dispatch(node) {
+          const e = new Event('toggle', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onVolumeChange', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onVolumeChange',
+        nativeEvent: 'volumechange',
+        dispatch(node) {
+          const e = new Event('volumechange', {
+            bubbles: false,
+            cancelable: true,
+          });
+          node.dispatchEvent(e);
+        },
+      });
+    });
+
+    it('onWaiting', () => {
+      testEmulatedBubblingEvent({
+        type: 'video',
+        reactEvent: 'onWaiting',
+        nativeEvent: 'waiting',
+        dispatch(node) {
+          const e = new Event('waiting', {
             bubbles: false,
             cancelable: true,
           });
@@ -298,6 +1175,530 @@ describe('ReactDOMEventListener', () => {
           node.dispatchEvent(e);
         },
       });
+    });
+  });
+
+  // The tests for these events are currently very limited
+  // because they are fully synthetic, and so they don't
+  // work very well across different roots. For now, we'll
+  // just document the current state in these tests.
+  describe('enter/leave events', () => {
+    it('onMouseEnter and onMouseLeave', () => {
+      const log = [];
+      const targetRef = React.createRef();
+      render(
+        <Fixture
+          type="div"
+          targetRef={targetRef}
+          targetProps={{
+            onMouseEnter: e => {
+              log.push('---- inner enter');
+            },
+            onMouseLeave: e => {
+              log.push('---- inner leave');
+            },
+          }}
+          parentProps={{
+            onMouseEnter: e => {
+              log.push('--- inner parent enter');
+            },
+            onMouseLeave: e => {
+              log.push('--- inner parent leave');
+            },
+          }}
+          outerProps={{
+            onMouseEnter: e => {
+              log.push('-- outer enter');
+            },
+            onMouseLeave: e => {
+              log.push('-- outer leave');
+            },
+          }}
+          outerParentProps={{
+            onMouseEnter: e => {
+              log.push('- outer parent enter');
+            },
+            onMouseLeave: e => {
+              log.push('- outer parent leave');
+            },
+          }}
+        />,
+      );
+      expect(log.length).toBe(0);
+      targetRef.current.dispatchEvent(
+        new MouseEvent('mouseover', {
+          bubbles: true,
+          cancelable: true,
+          relatedTarget: null,
+        }),
+      );
+      // This order isn't ideal because each root
+      // has a separate traversal.
+      expect(log).toEqual(unindent`
+        --- inner parent enter
+        ---- inner enter
+        - outer parent enter
+        -- outer enter
+      `);
+      log.length = 0;
+      targetRef.current.dispatchEvent(
+        new MouseEvent('mouseout', {
+          bubbles: true,
+          cancelable: true,
+          relatedTarget: document.body,
+        }),
+      );
+      expect(log).toEqual(unindent`
+        ---- inner leave
+        --- inner parent leave
+        -- outer leave
+        - outer parent leave
+      `);
+    });
+
+    it('onPointerEnter and onPointerLeave', () => {
+      const log = [];
+      const targetRef = React.createRef();
+      render(
+        <Fixture
+          type="div"
+          targetRef={targetRef}
+          targetProps={{
+            onPointerEnter: e => {
+              log.push('---- inner enter');
+            },
+            onPointerLeave: e => {
+              log.push('---- inner leave');
+            },
+          }}
+          parentProps={{
+            onPointerEnter: e => {
+              log.push('--- inner parent enter');
+            },
+            onPointerLeave: e => {
+              log.push('--- inner parent leave');
+            },
+          }}
+          outerProps={{
+            onPointerEnter: e => {
+              log.push('-- outer enter');
+            },
+            onPointerLeave: e => {
+              log.push('-- outer leave');
+            },
+          }}
+          outerParentProps={{
+            onPointerEnter: e => {
+              log.push('- outer parent enter');
+            },
+            onPointerLeave: e => {
+              log.push('- outer parent leave');
+            },
+          }}
+        />,
+      );
+      expect(log.length).toBe(0);
+      targetRef.current.dispatchEvent(
+        new Event('pointerover', {
+          bubbles: true,
+          cancelable: true,
+          relatedTarget: null,
+        }),
+      );
+      // This order isn't ideal because each root
+      // has a separate traversal.
+      expect(log).toEqual(unindent`
+        --- inner parent enter
+        ---- inner enter
+        - outer parent enter
+        -- outer enter
+      `);
+      log.length = 0;
+      targetRef.current.dispatchEvent(
+        new Event('pointerout', {
+          bubbles: true,
+          cancelable: true,
+          relatedTarget: document.body,
+        }),
+      );
+      expect(log).toEqual(unindent`
+        ---- inner leave
+        --- inner parent leave
+        -- outer leave
+        - outer parent leave
+      `);
+    });
+  });
+
+  const setUntrackedValue = Object.getOwnPropertyDescriptor(
+    HTMLInputElement.prototype,
+    'value',
+  ).set;
+
+  // The tests for these events are currently very limited
+  // because they are fully synthetic, and so they don't
+  // work very well across different roots. For now, we'll
+  // just document the current state in these tests.
+  describe('polyfilled events', () => {
+    it('onBeforeInput', () => {
+      const log = [];
+      const targetRef = React.createRef();
+      render(
+        <Fixture
+          type="input"
+          targetRef={targetRef}
+          targetProps={{
+            onBeforeInput: e => {
+              log.push('---- inner');
+            },
+            onBeforeInputCapture: e => {
+              log.push('---- inner capture');
+            },
+          }}
+          parentProps={{
+            onBeforeInput: e => {
+              log.push('--- inner parent');
+            },
+            onBeforeInputCapture: e => {
+              log.push('--- inner parent capture');
+            },
+          }}
+          outerProps={{
+            onBeforeInput: e => {
+              log.push('-- outer');
+            },
+            onBeforeInputCapture: e => {
+              log.push('-- outer capture');
+            },
+          }}
+          outerParentProps={{
+            onBeforeInput: e => {
+              log.push('- outer parent');
+            },
+            onBeforeInputCapture: e => {
+              log.push('- outer parent capture');
+            },
+          }}
+        />,
+      );
+      expect(log.length).toBe(0);
+      const e = new Event('textInput', {
+        bubbles: true,
+      });
+      e.data = 'abcd';
+      targetRef.current.dispatchEvent(e);
+      // Since this is a polyfilled event,
+      // the capture and bubble phases are
+      // emulated, and don't align between roots.
+      expect(log).toEqual(unindent`
+        --- inner parent capture
+        ---- inner capture
+        ---- inner
+        --- inner parent
+        - outer parent capture
+        -- outer capture
+        -- outer
+        - outer parent
+      `);
+    });
+
+    it('onChange', () => {
+      const log = [];
+      const targetRef = React.createRef();
+      render(
+        <Fixture
+          type="input"
+          targetRef={targetRef}
+          targetProps={{
+            onChange: e => {
+              log.push('---- inner');
+            },
+            onChangeCapture: e => {
+              log.push('---- inner capture');
+            },
+          }}
+          parentProps={{
+            onChange: e => {
+              log.push('--- inner parent');
+            },
+            onChangeCapture: e => {
+              log.push('--- inner parent capture');
+            },
+          }}
+          outerProps={{
+            onChange: e => {
+              log.push('-- outer');
+            },
+            onChangeCapture: e => {
+              log.push('-- outer capture');
+            },
+          }}
+          outerParentProps={{
+            onChange: e => {
+              log.push('- outer parent');
+            },
+            onChangeCapture: e => {
+              log.push('- outer parent capture');
+            },
+          }}
+        />,
+      );
+      expect(log.length).toBe(0);
+      setUntrackedValue.call(targetRef.current, 'hello');
+      targetRef.current.dispatchEvent(
+        new Event('input', {
+          bubbles: true,
+        }),
+      );
+      // The outer React doesn't receive the event at all
+      // because it is not responsible for this input.
+      expect(log).toEqual(unindent`
+        --- inner parent capture
+        ---- inner capture
+        ---- inner
+        --- inner parent
+      `);
+    });
+
+    it('onCompositionStart', () => {
+      const log = [];
+      const targetRef = React.createRef();
+      render(
+        <Fixture
+          type="input"
+          targetRef={targetRef}
+          targetProps={{
+            onCompositionStart: e => {
+              log.push('---- inner');
+            },
+            onCompositionStartCapture: e => {
+              log.push('---- inner capture');
+            },
+          }}
+          parentProps={{
+            onCompositionStart: e => {
+              log.push('--- inner parent');
+            },
+            onCompositionStartCapture: e => {
+              log.push('--- inner parent capture');
+            },
+          }}
+          outerProps={{
+            onCompositionStart: e => {
+              log.push('-- outer');
+            },
+            onCompositionStartCapture: e => {
+              log.push('-- outer capture');
+            },
+          }}
+          outerParentProps={{
+            onCompositionStart: e => {
+              log.push('- outer parent');
+            },
+            onCompositionStartCapture: e => {
+              log.push('- outer parent capture');
+            },
+          }}
+        />,
+      );
+      expect(log.length).toBe(0);
+      const e = new Event('compositionstart', {
+        bubbles: true,
+      });
+      targetRef.current.dispatchEvent(e);
+      // Since this is a polyfilled event,
+      // the capture and bubble phases are
+      // emulated, and don't align between roots.
+      expect(log).toEqual(unindent`
+        --- inner parent capture
+        ---- inner capture
+        ---- inner
+        --- inner parent
+        - outer parent capture
+        -- outer capture
+        -- outer
+        - outer parent
+      `);
+    });
+
+    it('onCompositionEnd', () => {
+      const log = [];
+      const targetRef = React.createRef();
+      render(
+        <Fixture
+          type="input"
+          targetRef={targetRef}
+          targetProps={{
+            onCompositionEnd: e => {
+              log.push('---- inner');
+            },
+            onCompositionEndCapture: e => {
+              log.push('---- inner capture');
+            },
+          }}
+          parentProps={{
+            onCompositionEnd: e => {
+              log.push('--- inner parent');
+            },
+            onCompositionEndCapture: e => {
+              log.push('--- inner parent capture');
+            },
+          }}
+          outerProps={{
+            onCompositionEnd: e => {
+              log.push('-- outer');
+            },
+            onCompositionEndCapture: e => {
+              log.push('-- outer capture');
+            },
+          }}
+          outerParentProps={{
+            onCompositionEnd: e => {
+              log.push('- outer parent');
+            },
+            onCompositionEndCapture: e => {
+              log.push('- outer parent capture');
+            },
+          }}
+        />,
+      );
+      expect(log.length).toBe(0);
+      const e = new Event('compositionend', {
+        bubbles: true,
+      });
+      targetRef.current.dispatchEvent(e);
+      // Since this is a polyfilled event,
+      // the capture and bubble phases are
+      // emulated, and don't align between roots.
+      expect(log).toEqual(unindent`
+        --- inner parent capture
+        ---- inner capture
+        ---- inner
+        --- inner parent
+        - outer parent capture
+        -- outer capture
+        -- outer
+        - outer parent
+      `);
+    });
+
+    it('onCompositionUpdate', () => {
+      const log = [];
+      const targetRef = React.createRef();
+      render(
+        <Fixture
+          type="input"
+          targetRef={targetRef}
+          targetProps={{
+            onCompositionUpdate: e => {
+              log.push('---- inner');
+            },
+            onCompositionUpdateCapture: e => {
+              log.push('---- inner capture');
+            },
+          }}
+          parentProps={{
+            onCompositionUpdate: e => {
+              log.push('--- inner parent');
+            },
+            onCompositionUpdateCapture: e => {
+              log.push('--- inner parent capture');
+            },
+          }}
+          outerProps={{
+            onCompositionUpdate: e => {
+              log.push('-- outer');
+            },
+            onCompositionUpdateCapture: e => {
+              log.push('-- outer capture');
+            },
+          }}
+          outerParentProps={{
+            onCompositionUpdate: e => {
+              log.push('- outer parent');
+            },
+            onCompositionUpdateCapture: e => {
+              log.push('- outer parent capture');
+            },
+          }}
+        />,
+      );
+      expect(log.length).toBe(0);
+      const e = new Event('compositionupdate', {
+        bubbles: true,
+      });
+      targetRef.current.dispatchEvent(e);
+      // Since this is a polyfilled event,
+      // the capture and bubble phases are
+      // emulated, and don't align between roots.
+      expect(log).toEqual(unindent`
+        --- inner parent capture
+        ---- inner capture
+        ---- inner
+        --- inner parent
+        - outer parent capture
+        -- outer capture
+        -- outer
+        - outer parent
+      `);
+    });
+
+    it('onSelect', () => {
+      const log = [];
+      const targetRef = React.createRef();
+      render(
+        <Fixture
+          type="input"
+          targetRef={targetRef}
+          targetProps={{
+            onSelect: e => {
+              log.push('---- inner');
+            },
+            onSelectCapture: e => {
+              log.push('---- inner capture');
+            },
+          }}
+          parentProps={{
+            onSelect: e => {
+              log.push('--- inner parent');
+            },
+            onSelectCapture: e => {
+              log.push('--- inner parent capture');
+            },
+          }}
+          outerProps={{
+            onSelect: e => {
+              log.push('-- outer');
+            },
+            onSelectCapture: e => {
+              log.push('-- outer capture');
+            },
+          }}
+          outerParentProps={{
+            onSelect: e => {
+              log.push('- outer parent');
+            },
+            onSelectCapture: e => {
+              log.push('- outer parent capture');
+            },
+          }}
+        />,
+      );
+      expect(log.length).toBe(0);
+      targetRef.current.focus();
+      targetRef.current.dispatchEvent(
+        new Event('keydown', {
+          bubbles: true,
+        }),
+      );
+      // The outer React doesn't receive the event at all
+      // because it is not responsible for this input.
+      expect(log).toEqual(unindent`
+        --- inner parent capture
+        ---- inner capture
+        ---- inner
+        --- inner parent
+      `);
     });
   });
 
