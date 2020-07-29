@@ -116,6 +116,13 @@ const forks = Object.freeze({
         }
       case 'react-test-renderer':
         switch (bundleType) {
+          case RN_FB_DEV:
+          case RN_FB_PROD:
+          case RN_FB_PROFILING:
+          case RN_OSS_DEV:
+          case RN_OSS_PROD:
+          case RN_OSS_PROFILING:
+            return 'shared/forks/ReactFeatureFlags.test-renderer.native.js';
           case FB_WWW_DEV:
           case FB_WWW_PROD:
           case FB_WWW_PROFILING:
