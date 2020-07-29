@@ -132,7 +132,7 @@ import {
   Snapshot,
   Callback,
   Passive,
-  PassiveUnmountPendingDev,
+  PassiveStatic,
   Incomplete,
   HostEffectMask,
   Hydrating,
@@ -2841,14 +2841,6 @@ function flushPassiveUnmountEffectsImpl(fiber: Fiber): void {
         const destroy = effect.destroy;
         effect.destroy = undefined;
 
-        if (__DEV__) {
-          fiber.effectTag &= ~PassiveUnmountPendingDev;
-          const alternate = fiber.alternate;
-          if (alternate !== null) {
-            alternate.effectTag &= ~PassiveUnmountPendingDev;
-          }
-        }
-
         if (typeof destroy === 'function') {
           if (__DEV__) {
             setCurrentDebugFiberInDEV(fiber);
@@ -3334,10 +3326,24 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
       return;
     }
 
-    // If there are pending passive effects unmounts for this Fiber,
-    // we can assume that they would have prevented this update.
-    if ((fiber.effectTag & PassiveUnmountPendingDev) !== NoEffect) {
-      return;
+    if ((fiber.effectTag & PassiveStatic) !== NoEffect) {
+      const updateQueue: FunctionComponentUpdateQueue | null = (fiber.updateQueue: any);
+      if (updateQueue !== null) {
+        const lastEffect = updateQueue.lastEffect;
+        if (lastEffect !== null) {
+          const firstEffect = lastEffect.next;
+
+          let effect = firstEffect;
+          do {
+            if (effect.destroy !== undefined) {
+              if ((effect.tag & HookPassive) !== NoHookEffect) {
+                return;
+              }
+            }
+            effect = effect.next;
+          } while (effect !== firstEffect);
+        }
+      }
     }
 
     // We show the whole stack but dedupe on the top component's name because

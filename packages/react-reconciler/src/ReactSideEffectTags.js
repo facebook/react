@@ -24,6 +24,7 @@ export const DidCapture = /*                   */ 0b0000000001000000;
 export const Ref = /*                          */ 0b0000000010000000;
 export const Snapshot = /*                     */ 0b0000000100000000;
 export const Passive = /*                      */ 0b0000001000000000;
+// TODO (effects) Remove this bit once the new reconciler is synced to the old.
 export const PassiveUnmountPendingDev = /*     */ 0b0010000000000000;
 export const Hydrating = /*                    */ 0b0000010000000000;
 export const HydratingAndUpdate = /*           */ 0b0000010000000100;

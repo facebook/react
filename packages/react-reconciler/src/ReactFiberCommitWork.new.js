@@ -69,7 +69,6 @@ import {
   Snapshot,
   Update,
   Passive,
-  PassiveUnmountPendingDev,
 } from './ReactSideEffectTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
@@ -882,17 +881,6 @@ function commitUnmount(
                 effect.tag |= HookHasEffect;
 
                 current.effectTag |= Passive;
-
-                if (__DEV__) {
-                  // This flag is used to avoid warning about an update to an unmounted component
-                  // if the component has a passive unmount scheduled.
-                  // Presumably the listener would be cleaned up by that unmount.
-                  current.effectTag |= PassiveUnmountPendingDev;
-                  const alternate = current.alternate;
-                  if (alternate !== null) {
-                    alternate.effectTag |= PassiveUnmountPendingDev;
-                  }
-                }
 
                 schedulePassiveEffectCallback();
               } else {
