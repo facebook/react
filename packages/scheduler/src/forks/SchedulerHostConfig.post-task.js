@@ -11,6 +11,16 @@ const perf = window.performance;
 const setTimeout = window.setTimeout;
 const clearTimeout = window.clearTimeout;
 
+// This check should be done upstream but do it again for a clear failure message.
+if (global.scheduler === undefined || global.scheduler.postTask === undefined) {
+  throw new Error('Cannot use postTask Scheduler without global.scheduler');
+}
+
+function postTask(callback) {
+  // Use experimental Chrome Scheduler postTask API.
+  global.scheduler.postTask(callback);
+}
+
 let getNow;
 if (typeof perf === 'object' && typeof perf.now === 'function') {
   getNow = () => perf.now();
@@ -72,12 +82,12 @@ const performWorkUntilDeadline = () => {
       } else {
         // If there's more work, schedule the next message event at the end
         // of the preceding one.
-        port.postMessage(null);
+        postTask(performWorkUntilDeadline);
       }
     } catch (error) {
       // If a scheduler task throws, exit the current browser task so the
       // error can be observed.
-      port.postMessage(null);
+      postTask(performWorkUntilDeadline);
       throw error;
     }
   } else {
@@ -85,15 +95,11 @@ const performWorkUntilDeadline = () => {
   }
 };
 
-const channel = new MessageChannel();
-const port = channel.port2;
-channel.port1.onmessage = performWorkUntilDeadline;
-
 export const requestHostCallback = function(callback) {
   scheduledHostCallback = callback;
   if (!isMessageLoopRunning) {
     isMessageLoopRunning = true;
-    port.postMessage(null);
+    postTask(performWorkUntilDeadline);
   }
 };
 
