@@ -4060,7 +4060,21 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
 }
 
 function detachFiberAfterEffects(fiber: Fiber): void {
+  // Null out fields to improve GC for references that may be lingering (e.g. DevTools).
+  // Note that we already cleared the return pointer in detachFiberMutation().
+  fiber.alternate = null;
   fiber.child = null;
+  fiber.dependencies = null;
+  fiber.firstEffect = null;
+  fiber.lastEffect = null;
+  fiber.memoizedProps = null;
+  fiber.memoizedState = null;
+  fiber.pendingProps = null;
   fiber.sibling = null;
+  fiber.stateNode = null;
   fiber.updateQueue = null;
+
+  if (__DEV__) {
+    fiber._debugOwner = null;
+  }
 }

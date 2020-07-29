@@ -1015,30 +1015,19 @@ function commitNestedUnmounts(
 }
 
 function detachFiberMutation(fiber: Fiber) {
-  // Cut off the return pointers to disconnect it from the tree.
-  // Note that we can't clear child or sibling pointers yet,
-  // because they may be required for passive effects.
-  // These pointers will be cleared in a separate pass.
-  // Ideally, we should clear the child pointer of the parent alternate to let this
+  // Cut off the return pointer to disconnect it from the tree.
+  // This enables us to detect and warn against state updates on an unmounted component.
+  // It also prevents events from bubbling from within disconnected components.
+  //
+  // Ideally, we should also clear the child pointer of the parent alternate to let this
   // get GC:ed but we don't know which for sure which parent is the current
-  // one so we'll settle for GC:ing the subtree of this child. This child
-  // itself will be GC:ed when the parent updates the next time.
-  // Note: we cannot null out sibling here, otherwise it can cause issues
-  // with findDOMNode and how it requires the sibling field to carry out
-  // traversal in a later effect. See PR #16820. We now clear the sibling
-  // field after effects, see: detachFiberAfterEffects.
-  fiber.alternate = null;
-  fiber.dependencies = null;
-  fiber.firstEffect = null;
-  fiber.lastEffect = null;
-  fiber.memoizedProps = null;
-  fiber.memoizedState = null;
-  fiber.pendingProps = null;
+  // one so we'll settle for GC:ing the subtree of this child.
+  // This child itself will be GC:ed when the parent updates the next time.
+  //
+  // Note that we can't clear child or sibling pointers yet.
+  // They're needed for passive effects and for findDOMNode.
+  // We defer those fields, and all other cleanup, to the passive phase (see detachFiberAfterEffects).
   fiber.return = null;
-  fiber.stateNode = null;
-  if (__DEV__) {
-    fiber._debugOwner = null;
-  }
 }
 
 function emptyPortalContainer(current: Fiber) {
