@@ -2183,7 +2183,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
 
     // If there are pending passive effects, schedule a callback to process them.
-    if ((root.current.subtreeTag & PassiveSubtreeTag) !== NoSubtreeTag) {
+    if ((finishedWork.subtreeTag & PassiveSubtreeTag) !== NoSubtreeTag) {
       if (!rootDoesHavePassiveEffects) {
         rootDoesHavePassiveEffects = true;
         scheduleCallback(NormalSchedulerPriority, () => {
@@ -2420,13 +2420,6 @@ function commitMutationEffects(
     const deletions = fiber.deletions;
     if (deletions !== null) {
       commitMutationEffectsDeletions(deletions, root, renderPriorityLevel);
-
-      // If there are no pending passive effects, clear the deletions Array.
-      const primaryEffectTag = fiber.effectTag & PassiveMask;
-      const primarySubtreeTag = fiber.subtreeTag & PassiveSubtreeTag;
-      if (primaryEffectTag === NoEffect && primarySubtreeTag === NoSubtreeTag) {
-        fiber.deletions = null;
-      }
     }
 
     if (fiber.child !== null) {
@@ -2684,15 +2677,9 @@ function invokePassiveEffectCreate(effect: HookEffect): void {
 function flushPassiveMountEffects(firstChild: Fiber): void {
   let fiber = firstChild;
   while (fiber !== null) {
-    const didBailout =
-      fiber.alternate !== null && fiber.alternate.child === fiber.child;
     const primarySubtreeTag = fiber.subtreeTag & PassiveSubtreeTag;
 
-    if (
-      fiber.child !== null &&
-      !didBailout &&
-      primarySubtreeTag !== NoSubtreeTag
-    ) {
+    if (fiber.child !== null && primarySubtreeTag !== NoSubtreeTag) {
       flushPassiveMountEffects(fiber.child);
     }
 
@@ -4056,6 +4043,7 @@ function detachFiberAfterEffects(fiber: Fiber): void {
   // Null out fields to improve GC for references that may be lingering (e.g. DevTools).
   // Note that we already cleared the return pointer in detachFiberMutation().
   fiber.child = null;
+  fiber.deletions = null;
   fiber.dependencies = null;
   fiber.firstEffect = null;
   fiber.lastEffect = null;
