@@ -2783,15 +2783,12 @@ function flushPassiveUnmountEffects(firstChild: Fiber): void {
           primarySubtreeTag !== NoSubtreeTag ||
           primaryEffectTag !== NoEffect
         ) {
-          flushPassiveUnmountEffects(fiberToDelete);
+          flushPassiveUnmountEffectsInsideOfDeletedTree(fiberToDelete);
         }
 
         // Now that passive effects have been processed, it's safe to detach lingering pointers.
         detachFiberAfterEffects(fiberToDelete);
       }
-
-      // Clear deletions now that passive effects have  been procssed.
-      fiber.deletions = null;
     }
 
     const child = fiber.child;
@@ -2803,6 +2800,39 @@ function flushPassiveUnmountEffects(firstChild: Fiber): void {
       const primarySubtreeTag = fiber.subtreeTag & PassiveSubtreeTag;
       if (primarySubtreeTag !== NoSubtreeTag) {
         flushPassiveUnmountEffects(child);
+      }
+    }
+
+    switch (fiber.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent:
+      case Block: {
+        const primaryEffectTag = fiber.effectTag & Passive;
+        if (primaryEffectTag !== NoEffect) {
+          flushPassiveUnmountEffectsImpl(fiber);
+        }
+      }
+    }
+
+    fiber = fiber.sibling;
+  }
+}
+
+function flushPassiveUnmountEffectsInsideOfDeletedTree(
+  firstChild: Fiber,
+): void {
+  let fiber = firstChild;
+  while (fiber !== null) {
+    const child = fiber.child;
+    if (child !== null) {
+      // If any children have passive effects then traverse the subtree.
+      // Note that this requires checking subtreeTag of the current Fiber,
+      // rather than the subtreeTag/effectsTag of the first child,
+      // since that would not cover passive effects in siblings.
+      const primarySubtreeTag = fiber.subtreeTag & PassiveSubtreeTag;
+      if (primarySubtreeTag !== NoSubtreeTag) {
+        flushPassiveUnmountEffectsInsideOfDeletedTree(child);
       }
     }
 
