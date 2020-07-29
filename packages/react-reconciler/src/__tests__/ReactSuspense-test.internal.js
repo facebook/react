@@ -1454,7 +1454,7 @@ describe('ReactSuspense', () => {
       ]);
     });
 
-    it('should call onInteractionScheduledWorkCompleted after suspending', done => {
+    it('should call onInteractionScheduledWorkCompleted after suspending', () => {
       const subscriber = {
         onInteractionScheduledWorkCompleted: jest.fn(),
         onInteractionTraced: jest.fn(),
@@ -1512,13 +1512,11 @@ describe('ReactSuspense', () => {
         jest.advanceTimersByTime(1000);
 
         expect(Scheduler).toHaveYielded(['Promise resolved [C]']);
-        expect(Scheduler).toFlushExpired([
+        expect(Scheduler).toFlushAndYield([
           // Even though the promise for C was thrown three times, we should only
           // re-render once.
           'C',
         ]);
-
-        done();
       });
 
       expect(

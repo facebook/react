@@ -29,7 +29,7 @@ import {
   enableScopeAPI,
   enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
-import {NoEffect, Placement} from './ReactSideEffectTags';
+import {NoEffect, Placement, StaticMask} from './ReactSideEffectTags';
 import {NoEffect as NoSubtreeEffect} from './ReactSubtreeTags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
 import {
@@ -288,8 +288,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     workInProgress.type = current.type;
 
     // We already have an alternate.
-    // Reset the effect tag.
-    workInProgress.effectTag = NoEffect;
     workInProgress.subtreeTag = NoSubtreeEffect;
     workInProgress.deletions = null;
 
@@ -308,6 +306,9 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     }
   }
 
+  // Reset all effects except static ones.
+  // Static effects are not specific to a render.
+  workInProgress.effectTag = current.effectTag & StaticMask;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
 

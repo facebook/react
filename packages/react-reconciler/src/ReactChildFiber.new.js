@@ -15,7 +15,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 
 import getComponentName from 'shared/getComponentName';
-import {Placement, Deletion} from './ReactSideEffectTags';
+import {Deletion, Placement} from './ReactSideEffectTags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,

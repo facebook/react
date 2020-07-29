@@ -486,24 +486,51 @@ describe('SchedulingProfiler', () => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 
-    expect(marks.map(normalizeCodeLocInfo)).toEqual([
-      '--schedule-render-512',
-      '--render-start-512',
-      '--render-stop',
-      '--commit-start-512',
-      '--layout-effects-start-512',
-      '--layout-effects-stop',
-      '--commit-stop',
-      '--passive-effects-start-512',
-      toggleComponentStacks(
-        '--schedule-state-update-1024-Example-\n    in Example (at **)',
-      ),
-      '--passive-effects-stop',
-      '--render-start-1024',
-      '--render-stop',
-      '--commit-start-1024',
-      '--commit-stop',
-    ]);
+    gate(({old}) => {
+      if (old) {
+        expect(marks.map(normalizeCodeLocInfo)).toEqual([
+          '--schedule-render-512',
+          '--render-start-512',
+          '--render-stop',
+          '--commit-start-512',
+          '--layout-effects-start-512',
+          '--layout-effects-stop',
+          '--commit-stop',
+          '--passive-effects-start-512',
+          toggleComponentStacks(
+            '--schedule-state-update-1024-Example-\n    in Example (at **)',
+          ),
+          '--passive-effects-stop',
+          '--render-start-1024',
+          '--render-stop',
+          '--commit-start-1024',
+          '--commit-stop',
+        ]);
+      } else {
+        expect(marks.map(normalizeCodeLocInfo)).toEqual([
+          '--schedule-render-512',
+          '--render-start-512',
+          '--render-stop',
+          '--commit-start-512',
+          '--layout-effects-start-512',
+          '--layout-effects-stop',
+          '--commit-stop',
+          '--passive-effects-start-512',
+          toggleComponentStacks(
+            '--schedule-state-update-1024-Example-\n    in Example (at **)',
+          ),
+          '--passive-effects-stop',
+          '--render-start-1024',
+          '--render-stop',
+          '--commit-start-1024',
+          '--layout-effects-start-1024',
+          '--layout-effects-stop',
+          '--commit-stop',
+          '--passive-effects-start-1024',
+          '--passive-effects-stop',
+        ]);
+      }
+    });
   });
 
   // @gate enableSchedulingProfiler

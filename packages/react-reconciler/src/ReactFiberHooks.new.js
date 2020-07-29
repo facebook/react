@@ -50,6 +50,7 @@ import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.ne
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
+  PassiveStatic as PassiveStaticEffect,
 } from './ReactSideEffectTags';
 import {
   HasEffect as HookHasEffect,
@@ -1270,7 +1271,7 @@ function mountEffect(
     }
   }
   return mountEffectImpl(
-    UpdateEffect | PassiveEffect,
+    UpdateEffect | PassiveEffect | PassiveStaticEffect,
     HookPassive,
     create,
     deps,
@@ -1631,7 +1632,8 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
     const setId = mountState(id)[1];
 
     if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
-      currentlyRenderingFiber.effectTag |= UpdateEffect | PassiveEffect;
+      currentlyRenderingFiber.effectTag |=
+        UpdateEffect | PassiveEffect | PassiveStaticEffect;
       pushEffect(
         HookHasEffect | HookPassive,
         () => {

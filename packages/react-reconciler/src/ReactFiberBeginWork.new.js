@@ -2064,7 +2064,6 @@ function updateSuspensePrimaryChildren(
   if (currentFallbackChildFragment !== null) {
     // Delete the fallback child fragment
     currentFallbackChildFragment.nextEffect = null;
-    currentFallbackChildFragment.effectTag = Deletion;
     workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChildFragment;
     const deletions = workInProgress.deletions;
     if (deletions === null) {
