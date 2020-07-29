@@ -174,7 +174,7 @@ if (
       // Using console['error'] to evade Babel and ESLint
       console['error'](
         'forceFrameRate takes a positive int between 0 and 125, ' +
-          'forcing frame rates higher than 125 fps is not unsupported',
+          'forcing frame rates higher than 125 fps is not supported',
       );
       return;
     }
