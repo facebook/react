@@ -882,8 +882,6 @@ function commitUnmount(
                 effect.tag |= HookHasEffect;
 
                 current.effectTag |= Passive;
-
-                schedulePassiveEffectCallback();
               } else {
                 if (
                   enableProfilerTimer &&
