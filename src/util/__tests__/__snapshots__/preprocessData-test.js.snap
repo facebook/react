@@ -573,6 +573,17 @@ Object {
       "type": "suspense-resolved",
     },
   ],
+  "flamechart": Flamechart {
+    "layers": Array [],
+    "minFrameWidth": 1,
+    "source": Object {
+      "forEachCall": [Function],
+      "formatValue": [Function],
+      "getColorBucketForFrame": [Function],
+      "getTotalWeight": [Function],
+    },
+    "totalWeight": -8993778496,
+  },
   "measures": Array [
     Object {
       "batchUID": 0,
@@ -1276,6 +1287,17 @@ Object {
       "type": "schedule-force-update",
     },
   ],
+  "flamechart": Flamechart {
+    "layers": Array [],
+    "minFrameWidth": 1,
+    "source": Object {
+      "forEachCall": [Function],
+      "formatValue": [Function],
+      "getColorBucketForFrame": [Function],
+      "getTotalWeight": [Function],
+    },
+    "totalWeight": -40806924876,
+  },
   "measures": Array [
     Object {
       "batchUID": 0,

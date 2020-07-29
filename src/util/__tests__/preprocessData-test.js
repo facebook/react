@@ -50,27 +50,17 @@ describe(getLanesFromTransportDecimalBitmask, () => {
 });
 
 describe(preprocessData, () => {
-  it('should return empty data given an empty timeline', () => {
-    expect(preprocessData([])).toEqual({
-      startTime: 0,
-      duration: 0,
-      events: [],
-      measures: [],
-    });
+  it('should throw given an empty timeline', () => {
+    expect(() => preprocessData([])).toThrow();
   });
 
-  it('should return empty data given a timeline with no Profile event', () => {
-    expect(
+  it('should throw given a timeline with no Profile event', () => {
+    expect(() =>
       // prettier-ignore
       preprocessData([
         {"args":{"data":{"navigationId":"43BC238A4FB7548146D3CD739C9C9434"}},"cat":"blink.user_timing","name":"--schedule-render-512-","ph":"R","pid":9312,"tid":10252,"ts":8994056569,"tts":1816966},
       ]),
-    ).toEqual({
-      startTime: 0,
-      duration: 0,
-      events: [],
-      measures: [],
-    });
+    ).toThrow();
   });
 
   it('should return empty data given a timeline with no React scheduling profiling marks', () => {
@@ -85,11 +75,13 @@ describe(preprocessData, () => {
         {"pid":57632,"tid":38659,"ts":874860756224,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":7,"tdur":6,"tts":8700285008,"args":{}},
         {"pid":57632,"tid":38659,"ts":874860756233,"ph":"X","cat":"disabled-by-default-devtools.timeline","name":"RunTask","dur":5,"tdur":4,"tts":8700285017,"args":{}},
       ]),
-    ).toEqual({
+    ).toMatchObject({
       startTime: 8993778496,
       duration: 865866977.737,
       events: [],
       measures: [],
+      // TODO: Change expectation back to toEqual and test for empty flamechart
+      // when custom flamechart type is added.
     });
   });
 
