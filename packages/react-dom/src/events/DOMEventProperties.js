@@ -8,10 +8,7 @@
  */
 
 import type {EventPriority} from 'shared/ReactTypes';
-import type {
-  TopLevelType,
-  DOMTopLevelEventType,
-} from '../events/TopLevelEventTypes';
+import type {TopLevelType} from '../events/TopLevelEventTypes';
 
 import {registerTwoPhaseEvent} from './EventRegistry';
 import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
@@ -154,7 +151,7 @@ const continuousPairsForSimpleEventPlugin = [
  * and registers them.
  */
 function registerSimplePluginEventsAndSetTheirPriorities(
-  eventTypes: Array<DOMTopLevelEventType | string>,
+  eventTypes: Array<TopLevelType | string>,
   priority: EventPriority,
 ): void {
   // As the event types are in pairs of two, we need to iterate
@@ -164,7 +161,7 @@ function registerSimplePluginEventsAndSetTheirPriorities(
   // if we only use three arrays to process all the categories of
   // instead of tuples.
   for (let i = 0; i < eventTypes.length; i += 2) {
-    const topEvent = ((eventTypes[i]: any): DOMTopLevelEventType);
+    const topEvent = ((eventTypes[i]: any): TopLevelType);
     const event = ((eventTypes[i + 1]: any): string);
     const capitalizedEvent = event[0].toUpperCase() + event.slice(1);
     const reactName = 'on' + capitalizedEvent;
@@ -175,7 +172,7 @@ function registerSimplePluginEventsAndSetTheirPriorities(
 }
 
 function setEventPriorities(
-  eventTypes: Array<DOMTopLevelEventType | string>,
+  eventTypes: Array<TopLevelType | string>,
   priority: EventPriority,
 ): void {
   for (let i = 0; i < eventTypes.length; i++) {
@@ -194,7 +191,7 @@ export function getEventPriorityForPluginSystem(
 }
 
 export function getEventPriorityForListenerSystem(
-  type: DOMTopLevelEventType,
+  type: TopLevelType,
 ): EventPriority {
   const priority = eventPriorities.get(type);
   if (priority !== undefined) {

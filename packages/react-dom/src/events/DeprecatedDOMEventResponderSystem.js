@@ -25,7 +25,7 @@ import type {
   ReactDOMResponderContext,
   ReactDOMResponderEvent,
 } from '../shared/ReactDOMTypes';
-import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
+import type {TopLevelType} from '../events/TopLevelEventTypes';
 import {
   batchedEventUpdates,
   discreteUpdates,
@@ -40,7 +40,6 @@ import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import {enqueueStateRestore} from './ReactDOMControlledComponent';
 import {createEventListenerWrapper} from './ReactDOMEventListener';
 import {passiveBrowserEventsSupported} from './checkPassiveEvents';
-import {getRawEventName} from './DOMTopLevelEventTypes';
 import {
   addEventCaptureListener,
   addEventCaptureListenerWithPassiveFlag,
@@ -77,7 +76,7 @@ export function setListenToResponderEventTypes(
 }
 
 const rootEventTypesToEventResponderInstances: Map<
-  DOMTopLevelEventType | string,
+  TopLevelType | string,
   Set<ReactDOMEventResponderInstance>,
 > = new Map();
 
@@ -618,7 +617,7 @@ export function addResponderEventSystemEvent(
   // Check if interactive and wrap in discreteUpdates
   const listener = createEventListenerWrapper(
     document,
-    ((topLevelType: any): DOMTopLevelEventType),
+    ((topLevelType: any): TopLevelType),
     eventFlags,
   );
   if (passiveBrowserEventsSupported) {
@@ -635,10 +634,9 @@ export function addResponderEventSystemEvent(
 
 export function removeTrappedEventListener(
   targetContainer: EventTarget,
-  topLevelType: DOMTopLevelEventType,
+  topLevelType: TopLevelType,
   capture: boolean,
   listener: any => void,
 ): void {
-  const rawEventName = getRawEventName(topLevelType);
-  removeEventListener(targetContainer, rawEventName, listener, capture);
+  removeEventListener(targetContainer, topLevelType, listener, capture);
 }

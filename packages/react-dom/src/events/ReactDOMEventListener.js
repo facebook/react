@@ -11,7 +11,7 @@ import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
-import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
+import type {TopLevelType} from '../events/TopLevelEventTypes';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
@@ -82,7 +82,7 @@ export function isEnabled() {
 
 export function createEventListenerWrapper(
   targetContainer: EventTarget,
-  topLevelType: DOMTopLevelEventType,
+  topLevelType: TopLevelType,
   eventSystemFlags: EventSystemFlags,
 ): Function {
   return dispatchEvent.bind(
@@ -95,7 +95,7 @@ export function createEventListenerWrapper(
 
 export function createEventListenerWrapperWithPriority(
   targetContainer: EventTarget,
-  topLevelType: DOMTopLevelEventType,
+  topLevelType: TopLevelType,
   eventSystemFlags: EventSystemFlags,
   priority?: EventPriority,
 ): Function {
@@ -173,7 +173,7 @@ function dispatchUserBlockingUpdate(
 }
 
 export function dispatchEvent(
-  topLevelType: DOMTopLevelEventType,
+  topLevelType: TopLevelType,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
@@ -271,7 +271,7 @@ export function dispatchEvent(
 
 // Attempt dispatching an event. Returns a SuspenseInstance or Container if it's blocked.
 export function attemptToDispatchEvent(
-  topLevelType: DOMTopLevelEventType,
+  topLevelType: TopLevelType,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,

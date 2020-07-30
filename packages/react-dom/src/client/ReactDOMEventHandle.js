@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
+import type {TopLevelType} from '../events/TopLevelEventTypes';
 import type {EventPriority, ReactScopeInstance} from 'shared/ReactTypes';
 import type {
   ReactDOMEventHandle,
@@ -69,7 +69,7 @@ function isReactScope(target: EventTarget | ReactScopeInstance): boolean {
 }
 
 function createEventHandleListener(
-  type: DOMTopLevelEventType,
+  type: TopLevelType,
   isCapturePhaseListener: boolean,
   callback: (SyntheticEvent<EventTarget>) => void,
 ): ReactDOMEventHandleListener {
@@ -82,7 +82,7 @@ function createEventHandleListener(
 
 function registerEventOnNearestTargetContainer(
   targetFiber: Fiber,
-  topLevelType: DOMTopLevelEventType,
+  topLevelType: TopLevelType,
   isPassiveListener: boolean | void,
   listenerPriority: EventPriority | void,
   isCapturePhaseListener: boolean,
@@ -113,7 +113,7 @@ function registerEventOnNearestTargetContainer(
 
 function registerReactDOMEvent(
   target: EventTarget | ReactScopeInstance,
-  topLevelType: DOMTopLevelEventType,
+  topLevelType: TopLevelType,
   isPassiveListener: boolean | void,
   isCapturePhaseListener: boolean,
   listenerPriority: EventPriority | void,
@@ -180,7 +180,7 @@ export function createEventHandle(
   options?: EventHandleOptions,
 ): ReactDOMEventHandle {
   if (enableCreateEventHandleAPI) {
-    const topLevelType = ((type: any): DOMTopLevelEventType);
+    const topLevelType = ((type: any): TopLevelType);
     let isCapturePhaseListener = false;
     let isPassiveListener = undefined; // Undefined means to use the browser default
     let listenerPriority;

@@ -9,7 +9,7 @@
 
 import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
-import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
+import type {TopLevelType} from '../events/TopLevelEventTypes';
 import type {ElementListenerMap} from '../client/ReactDOMComponentTree';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
@@ -36,7 +36,6 @@ import {
   getClosestInstanceFromNode,
   getEventListenerMap,
 } from '../client/ReactDOMComponentTree';
-import {unsafeCastDOMTopLevelTypeToString} from '../events/TopLevelEventTypes';
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
 
 let attemptSynchronousHydration: (fiber: Object) => void;
@@ -133,7 +132,7 @@ import {addResponderEventSystemEvent} from './DeprecatedDOMEventResponderSystem'
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
-  topLevelType: DOMTopLevelEventType,
+  topLevelType: TopLevelType,
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
   targetContainers: Array<EventTarget>,
@@ -216,36 +215,33 @@ const continuousReplayableEvents = [
   TOP_LOST_POINTER_CAPTURE,
 ];
 
-export function isReplayableDiscreteEvent(
-  eventType: DOMTopLevelEventType,
-): boolean {
+export function isReplayableDiscreteEvent(eventType: TopLevelType): boolean {
   return discreteReplayableEvents.indexOf(eventType) > -1;
 }
 
 function trapReplayableEventForContainer(
-  topLevelType: DOMTopLevelEventType,
+  topLevelType: TopLevelType,
   container: Container,
 ) {
   listenToNativeEvent(topLevelType, false, ((container: any): Element), null);
 }
 
 function trapReplayableEventForDocument(
-  topLevelType: DOMTopLevelEventType,
+  topLevelType: TopLevelType,
   document: Document,
   listenerMap: ElementListenerMap,
 ) {
   if (enableDeprecatedFlareAPI) {
     // Trap events for the responder system.
-    const topLevelTypeString = unsafeCastDOMTopLevelTypeToString(topLevelType);
     // TODO: Ideally we shouldn't need these to be active but
     // if we only have a passive listener, we at least need it
     // to still pretend to be active so that Flare gets those
     // events.
-    const activeEventKey = topLevelTypeString + '_active';
+    const activeEventKey = topLevelType + '_active';
     if (!listenerMap.has(activeEventKey)) {
       const listener = addResponderEventSystemEvent(
         document,
-        topLevelTypeString,
+        topLevelType,
         false,
       );
       listenerMap.set(activeEventKey, {passive: false, listener});
@@ -272,7 +268,7 @@ export function eagerlyTrapReplayableEvents(
 
 function createQueuedReplayableEvent(
   blockedOn: null | Container | SuspenseInstance,
-  topLevelType: DOMTopLevelEventType,
+  topLevelType: TopLevelType,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
@@ -288,7 +284,7 @@ function createQueuedReplayableEvent(
 
 export function queueDiscreteEvent(
   blockedOn: null | Container | SuspenseInstance,
-  topLevelType: DOMTopLevelEventType,
+  topLevelType: TopLevelType,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
@@ -329,7 +325,7 @@ export function queueDiscreteEvent(
 
 // Resets the replaying for this type of continuous event to no event.
 export function clearIfContinuousEvent(
-  topLevelType: DOMTopLevelEventType,
+  topLevelType: TopLevelType,
   nativeEvent: AnyNativeEvent,
 ): void {
   switch (topLevelType) {
@@ -363,7 +359,7 @@ export function clearIfContinuousEvent(
 function accumulateOrCreateContinuousQueuedReplayableEvent(
   existingQueuedEvent: null | QueuedReplayableEvent,
   blockedOn: null | Container | SuspenseInstance,
-  topLevelType: DOMTopLevelEventType,
+  topLevelType: TopLevelType,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
@@ -405,7 +401,7 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
 
 export function queueIfContinuousEvent(
   blockedOn: null | Container | SuspenseInstance,
-  topLevelType: DOMTopLevelEventType,
+  topLevelType: TopLevelType,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
