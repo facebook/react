@@ -15,6 +15,7 @@ import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {Effect as HookEffect} from './ReactFiberHooks.new';
+import type {HookEffectTag} from './ReactHookEffectTags';
 import type {StackCursor} from './ReactFiberStack.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 
@@ -2816,7 +2817,7 @@ function flushPassiveUnmountEffects(firstChild: Fiber): void {
       case Block: {
         const primaryEffectTag = fiber.effectTag & Passive;
         if (primaryEffectTag !== NoEffect) {
-          flushPassiveUnmountEffectsImpl(fiber);
+          flushPassiveUnmountEffectsImpl(fiber, HookPassive | HookHasEffect);
         }
       }
     }
@@ -2848,7 +2849,7 @@ function flushPassiveUnmountEffectsInsideOfDeletedTree(
         case ForwardRef:
         case SimpleMemoComponent:
         case Block: {
-          flushPassiveUnmountEffectsImpl(fiber);
+          flushPassiveUnmountEffectsImpl(fiber, HookPassive);
         }
       }
     }
@@ -2857,7 +2858,12 @@ function flushPassiveUnmountEffectsInsideOfDeletedTree(
   }
 }
 
-function flushPassiveUnmountEffectsImpl(fiber: Fiber): void {
+function flushPassiveUnmountEffectsImpl(
+  fiber: Fiber,
+  // Tags to check for when deciding whether to unmount. e.g. to skip over
+  // layout effects
+  hookEffectTag: HookEffectTag,
+): void {
   const updateQueue: FunctionComponentUpdateQueue | null = (fiber.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
@@ -2867,10 +2873,7 @@ function flushPassiveUnmountEffectsImpl(fiber: Fiber): void {
     let effect = firstEffect;
     do {
       const {next, tag} = effect;
-      if (
-        (tag & HookPassive) !== NoHookEffect &&
-        (tag & HookHasEffect) !== NoHookEffect
-      ) {
+      if ((tag & hookEffectTag) === hookEffectTag) {
         const destroy = effect.destroy;
         if (destroy !== undefined) {
           effect.destroy = undefined;
