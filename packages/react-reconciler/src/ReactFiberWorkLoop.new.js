@@ -2183,7 +2183,10 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
 
     // If there are pending passive effects, schedule a callback to process them.
-    if ((finishedWork.subtreeTag & PassiveSubtreeTag) !== NoSubtreeTag) {
+    if (
+      (finishedWork.subtreeTag & PassiveSubtreeTag) !== NoSubtreeTag ||
+      (finishedWork.effectTag & PassiveMask) !== NoEffect
+    ) {
       if (!rootDoesHavePassiveEffects) {
         rootDoesHavePassiveEffects = true;
         scheduleCallback(NormalSchedulerPriority, () => {

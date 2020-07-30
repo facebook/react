@@ -879,8 +879,6 @@ function commitUnmount(
               if ((tag & HookPassive) !== NoHookEffect) {
                 // TODO: Consider if we can move this block out of the synchronous commit phase
                 effect.tag |= HookHasEffect;
-
-                schedulePassiveEffectCallback();
               } else {
                 if (
                   enableProfilerTimer &&
