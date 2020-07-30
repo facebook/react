@@ -2839,13 +2839,12 @@ function flushPassiveUnmountEffectsInsideOfDeletedTree(
       }
     }
 
-    switch (fiber.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case SimpleMemoComponent:
-      case Block: {
-        const primaryEffectTag = fiber.effectTag & Passive;
-        if (primaryEffectTag !== NoEffect) {
+    if ((fiber.effectTag & PassiveStatic) !== NoEffect) {
+      switch (fiber.tag) {
+        case FunctionComponent:
+        case ForwardRef:
+        case SimpleMemoComponent:
+        case Block: {
           flushPassiveUnmountEffectsImpl(fiber);
         }
       }
