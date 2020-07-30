@@ -8,10 +8,10 @@
  */
 
 import type {EventPriority} from 'shared/ReactTypes';
-import type {TopLevelType} from '../events/TopLevelEventTypes';
+import type {DOMEventName} from '../events/DOMEventNames';
 
 import {registerTwoPhaseEvent} from './EventRegistry';
-import * as DOMTopLevelEventTypes from './DOMTopLevelEventTypes';
+import * as DOMEventNames from './DOMEventNames';
 import {
   DiscreteEvent,
   UserBlockingEvent,
@@ -21,7 +21,7 @@ import {
 import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 
 export const topLevelEventsToReactNames: Map<
-  TopLevelType,
+  DOMEventName,
   string | null,
 > = new Map();
 
@@ -38,104 +38,104 @@ const eventPriorities = new Map();
 
 // prettier-ignore
 const discreteEventPairsForSimpleEventPlugin = [
-  DOMTopLevelEventTypes.TOP_CANCEL, 'cancel',
-  DOMTopLevelEventTypes.TOP_CLICK, 'click',
-  DOMTopLevelEventTypes.TOP_CLOSE, 'close',
-  DOMTopLevelEventTypes.TOP_CONTEXT_MENU, 'contextMenu',
-  DOMTopLevelEventTypes.TOP_COPY, 'copy',
-  DOMTopLevelEventTypes.TOP_CUT, 'cut',
-  DOMTopLevelEventTypes.TOP_AUX_CLICK, 'auxClick',
-  DOMTopLevelEventTypes.TOP_DOUBLE_CLICK, 'doubleClick',
-  DOMTopLevelEventTypes.TOP_DRAG_END, 'dragEnd',
-  DOMTopLevelEventTypes.TOP_DRAG_START, 'dragStart',
-  DOMTopLevelEventTypes.TOP_DROP, 'drop',
-  DOMTopLevelEventTypes.TOP_FOCUS_IN, 'focus',
-  DOMTopLevelEventTypes.TOP_FOCUS_OUT, 'blur',
-  DOMTopLevelEventTypes.TOP_INPUT, 'input',
-  DOMTopLevelEventTypes.TOP_INVALID, 'invalid',
-  DOMTopLevelEventTypes.TOP_KEY_DOWN, 'keyDown',
-  DOMTopLevelEventTypes.TOP_KEY_PRESS, 'keyPress',
-  DOMTopLevelEventTypes.TOP_KEY_UP, 'keyUp',
-  DOMTopLevelEventTypes.TOP_MOUSE_DOWN, 'mouseDown',
-  DOMTopLevelEventTypes.TOP_MOUSE_UP, 'mouseUp',
-  DOMTopLevelEventTypes.TOP_PASTE, 'paste',
-  DOMTopLevelEventTypes.TOP_PAUSE, 'pause',
-  DOMTopLevelEventTypes.TOP_PLAY, 'play',
-  DOMTopLevelEventTypes.TOP_POINTER_CANCEL, 'pointerCancel',
-  DOMTopLevelEventTypes.TOP_POINTER_DOWN, 'pointerDown',
-  DOMTopLevelEventTypes.TOP_POINTER_UP, 'pointerUp',
-  DOMTopLevelEventTypes.TOP_RATE_CHANGE, 'rateChange',
-  DOMTopLevelEventTypes.TOP_RESET, 'reset',
-  DOMTopLevelEventTypes.TOP_SEEKED, 'seeked',
-  DOMTopLevelEventTypes.TOP_SUBMIT, 'submit',
-  DOMTopLevelEventTypes.TOP_TOUCH_CANCEL, 'touchCancel',
-  DOMTopLevelEventTypes.TOP_TOUCH_END, 'touchEnd',
-  DOMTopLevelEventTypes.TOP_TOUCH_START, 'touchStart',
-  DOMTopLevelEventTypes.TOP_VOLUME_CHANGE, 'volumeChange',
+  DOMEventNames.TOP_CANCEL, 'cancel',
+  DOMEventNames.TOP_CLICK, 'click',
+  DOMEventNames.TOP_CLOSE, 'close',
+  DOMEventNames.TOP_CONTEXT_MENU, 'contextMenu',
+  DOMEventNames.TOP_COPY, 'copy',
+  DOMEventNames.TOP_CUT, 'cut',
+  DOMEventNames.TOP_AUX_CLICK, 'auxClick',
+  DOMEventNames.TOP_DOUBLE_CLICK, 'doubleClick',
+  DOMEventNames.TOP_DRAG_END, 'dragEnd',
+  DOMEventNames.TOP_DRAG_START, 'dragStart',
+  DOMEventNames.TOP_DROP, 'drop',
+  DOMEventNames.TOP_FOCUS_IN, 'focus',
+  DOMEventNames.TOP_FOCUS_OUT, 'blur',
+  DOMEventNames.TOP_INPUT, 'input',
+  DOMEventNames.TOP_INVALID, 'invalid',
+  DOMEventNames.TOP_KEY_DOWN, 'keyDown',
+  DOMEventNames.TOP_KEY_PRESS, 'keyPress',
+  DOMEventNames.TOP_KEY_UP, 'keyUp',
+  DOMEventNames.TOP_MOUSE_DOWN, 'mouseDown',
+  DOMEventNames.TOP_MOUSE_UP, 'mouseUp',
+  DOMEventNames.TOP_PASTE, 'paste',
+  DOMEventNames.TOP_PAUSE, 'pause',
+  DOMEventNames.TOP_PLAY, 'play',
+  DOMEventNames.TOP_POINTER_CANCEL, 'pointerCancel',
+  DOMEventNames.TOP_POINTER_DOWN, 'pointerDown',
+  DOMEventNames.TOP_POINTER_UP, 'pointerUp',
+  DOMEventNames.TOP_RATE_CHANGE, 'rateChange',
+  DOMEventNames.TOP_RESET, 'reset',
+  DOMEventNames.TOP_SEEKED, 'seeked',
+  DOMEventNames.TOP_SUBMIT, 'submit',
+  DOMEventNames.TOP_TOUCH_CANCEL, 'touchCancel',
+  DOMEventNames.TOP_TOUCH_END, 'touchEnd',
+  DOMEventNames.TOP_TOUCH_START, 'touchStart',
+  DOMEventNames.TOP_VOLUME_CHANGE, 'volumeChange',
 ];
 
 const otherDiscreteEvents = [
-  DOMTopLevelEventTypes.TOP_CHANGE,
-  DOMTopLevelEventTypes.TOP_SELECTION_CHANGE,
-  DOMTopLevelEventTypes.TOP_TEXT_INPUT,
-  DOMTopLevelEventTypes.TOP_COMPOSITION_START,
-  DOMTopLevelEventTypes.TOP_COMPOSITION_END,
-  DOMTopLevelEventTypes.TOP_COMPOSITION_UPDATE,
+  DOMEventNames.TOP_CHANGE,
+  DOMEventNames.TOP_SELECTION_CHANGE,
+  DOMEventNames.TOP_TEXT_INPUT,
+  DOMEventNames.TOP_COMPOSITION_START,
+  DOMEventNames.TOP_COMPOSITION_END,
+  DOMEventNames.TOP_COMPOSITION_UPDATE,
 ];
 
 if (enableCreateEventHandleAPI) {
   otherDiscreteEvents.push(
-    DOMTopLevelEventTypes.TOP_BEFORE_BLUR,
-    DOMTopLevelEventTypes.TOP_AFTER_BLUR,
+    DOMEventNames.TOP_BEFORE_BLUR,
+    DOMEventNames.TOP_AFTER_BLUR,
   );
 }
 
 // prettier-ignore
 const userBlockingPairsForSimpleEventPlugin = [
-  DOMTopLevelEventTypes.TOP_DRAG, 'drag',
-  DOMTopLevelEventTypes.TOP_DRAG_ENTER, 'dragEnter',
-  DOMTopLevelEventTypes.TOP_DRAG_EXIT, 'dragExit',
-  DOMTopLevelEventTypes.TOP_DRAG_LEAVE, 'dragLeave',
-  DOMTopLevelEventTypes.TOP_DRAG_OVER, 'dragOver',
-  DOMTopLevelEventTypes.TOP_MOUSE_MOVE, 'mouseMove',
-  DOMTopLevelEventTypes.TOP_MOUSE_OUT, 'mouseOut',
-  DOMTopLevelEventTypes.TOP_MOUSE_OVER, 'mouseOver',
-  DOMTopLevelEventTypes.TOP_POINTER_MOVE, 'pointerMove',
-  DOMTopLevelEventTypes.TOP_POINTER_OUT, 'pointerOut',
-  DOMTopLevelEventTypes.TOP_POINTER_OVER, 'pointerOver',
-  DOMTopLevelEventTypes.TOP_SCROLL, 'scroll',
-  DOMTopLevelEventTypes.TOP_TOGGLE, 'toggle',
-  DOMTopLevelEventTypes.TOP_TOUCH_MOVE, 'touchMove',
-  DOMTopLevelEventTypes.TOP_WHEEL, 'wheel',
+  DOMEventNames.TOP_DRAG, 'drag',
+  DOMEventNames.TOP_DRAG_ENTER, 'dragEnter',
+  DOMEventNames.TOP_DRAG_EXIT, 'dragExit',
+  DOMEventNames.TOP_DRAG_LEAVE, 'dragLeave',
+  DOMEventNames.TOP_DRAG_OVER, 'dragOver',
+  DOMEventNames.TOP_MOUSE_MOVE, 'mouseMove',
+  DOMEventNames.TOP_MOUSE_OUT, 'mouseOut',
+  DOMEventNames.TOP_MOUSE_OVER, 'mouseOver',
+  DOMEventNames.TOP_POINTER_MOVE, 'pointerMove',
+  DOMEventNames.TOP_POINTER_OUT, 'pointerOut',
+  DOMEventNames.TOP_POINTER_OVER, 'pointerOver',
+  DOMEventNames.TOP_SCROLL, 'scroll',
+  DOMEventNames.TOP_TOGGLE, 'toggle',
+  DOMEventNames.TOP_TOUCH_MOVE, 'touchMove',
+  DOMEventNames.TOP_WHEEL, 'wheel',
 ];
 
 // prettier-ignore
 const continuousPairsForSimpleEventPlugin = [
-  DOMTopLevelEventTypes.TOP_ABORT, 'abort',
-  DOMTopLevelEventTypes.TOP_ANIMATION_END, 'animationEnd',
-  DOMTopLevelEventTypes.TOP_ANIMATION_ITERATION, 'animationIteration',
-  DOMTopLevelEventTypes.TOP_ANIMATION_START, 'animationStart',
-  DOMTopLevelEventTypes.TOP_CAN_PLAY, 'canPlay',
-  DOMTopLevelEventTypes.TOP_CAN_PLAY_THROUGH, 'canPlayThrough',
-  DOMTopLevelEventTypes.TOP_DURATION_CHANGE, 'durationChange',
-  DOMTopLevelEventTypes.TOP_EMPTIED, 'emptied',
-  DOMTopLevelEventTypes.TOP_ENCRYPTED, 'encrypted',
-  DOMTopLevelEventTypes.TOP_ENDED, 'ended',
-  DOMTopLevelEventTypes.TOP_ERROR, 'error',
-  DOMTopLevelEventTypes.TOP_GOT_POINTER_CAPTURE, 'gotPointerCapture',
-  DOMTopLevelEventTypes.TOP_LOAD, 'load',
-  DOMTopLevelEventTypes.TOP_LOADED_DATA, 'loadedData',
-  DOMTopLevelEventTypes.TOP_LOADED_METADATA, 'loadedMetadata',
-  DOMTopLevelEventTypes.TOP_LOAD_START, 'loadStart',
-  DOMTopLevelEventTypes.TOP_LOST_POINTER_CAPTURE, 'lostPointerCapture',
-  DOMTopLevelEventTypes.TOP_PLAYING, 'playing',
-  DOMTopLevelEventTypes.TOP_PROGRESS, 'progress',
-  DOMTopLevelEventTypes.TOP_SEEKING, 'seeking',
-  DOMTopLevelEventTypes.TOP_STALLED, 'stalled',
-  DOMTopLevelEventTypes.TOP_SUSPEND, 'suspend',
-  DOMTopLevelEventTypes.TOP_TIME_UPDATE, 'timeUpdate',
-  DOMTopLevelEventTypes.TOP_TRANSITION_END, 'transitionEnd',
-  DOMTopLevelEventTypes.TOP_WAITING, 'waiting',
+  DOMEventNames.TOP_ABORT, 'abort',
+  DOMEventNames.TOP_ANIMATION_END, 'animationEnd',
+  DOMEventNames.TOP_ANIMATION_ITERATION, 'animationIteration',
+  DOMEventNames.TOP_ANIMATION_START, 'animationStart',
+  DOMEventNames.TOP_CAN_PLAY, 'canPlay',
+  DOMEventNames.TOP_CAN_PLAY_THROUGH, 'canPlayThrough',
+  DOMEventNames.TOP_DURATION_CHANGE, 'durationChange',
+  DOMEventNames.TOP_EMPTIED, 'emptied',
+  DOMEventNames.TOP_ENCRYPTED, 'encrypted',
+  DOMEventNames.TOP_ENDED, 'ended',
+  DOMEventNames.TOP_ERROR, 'error',
+  DOMEventNames.TOP_GOT_POINTER_CAPTURE, 'gotPointerCapture',
+  DOMEventNames.TOP_LOAD, 'load',
+  DOMEventNames.TOP_LOADED_DATA, 'loadedData',
+  DOMEventNames.TOP_LOADED_METADATA, 'loadedMetadata',
+  DOMEventNames.TOP_LOAD_START, 'loadStart',
+  DOMEventNames.TOP_LOST_POINTER_CAPTURE, 'lostPointerCapture',
+  DOMEventNames.TOP_PLAYING, 'playing',
+  DOMEventNames.TOP_PROGRESS, 'progress',
+  DOMEventNames.TOP_SEEKING, 'seeking',
+  DOMEventNames.TOP_STALLED, 'stalled',
+  DOMEventNames.TOP_SUSPEND, 'suspend',
+  DOMEventNames.TOP_TIME_UPDATE, 'timeUpdate',
+  DOMEventNames.TOP_TRANSITION_END, 'transitionEnd',
+  DOMEventNames.TOP_WAITING, 'waiting',
 ];
 
 /**
@@ -151,7 +151,7 @@ const continuousPairsForSimpleEventPlugin = [
  * and registers them.
  */
 function registerSimplePluginEventsAndSetTheirPriorities(
-  eventTypes: Array<TopLevelType | string>,
+  eventTypes: Array<DOMEventName | string>,
   priority: EventPriority,
 ): void {
   // As the event types are in pairs of two, we need to iterate
@@ -161,7 +161,7 @@ function registerSimplePluginEventsAndSetTheirPriorities(
   // if we only use three arrays to process all the categories of
   // instead of tuples.
   for (let i = 0; i < eventTypes.length; i += 2) {
-    const topEvent = ((eventTypes[i]: any): TopLevelType);
+    const topEvent = ((eventTypes[i]: any): DOMEventName);
     const event = ((eventTypes[i + 1]: any): string);
     const capitalizedEvent = event[0].toUpperCase() + event.slice(1);
     const reactName = 'on' + capitalizedEvent;
@@ -172,7 +172,7 @@ function registerSimplePluginEventsAndSetTheirPriorities(
 }
 
 function setEventPriorities(
-  eventTypes: Array<TopLevelType | string>,
+  eventTypes: Array<DOMEventName | string>,
   priority: EventPriority,
 ): void {
   for (let i = 0; i < eventTypes.length; i++) {
@@ -181,9 +181,9 @@ function setEventPriorities(
 }
 
 export function getEventPriorityForPluginSystem(
-  topLevelType: TopLevelType,
+  domEventName: DOMEventName,
 ): EventPriority {
-  const priority = eventPriorities.get(topLevelType);
+  const priority = eventPriorities.get(domEventName);
   // Default to a ContinuousEvent. Note: we might
   // want to warn if we can't detect the priority
   // for the event.
@@ -191,7 +191,7 @@ export function getEventPriorityForPluginSystem(
 }
 
 export function getEventPriorityForListenerSystem(
-  type: TopLevelType,
+  type: DOMEventName,
 ): EventPriority {
   const priority = eventPriorities.get(type);
   if (priority !== undefined) {

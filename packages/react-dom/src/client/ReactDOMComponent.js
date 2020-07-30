@@ -98,7 +98,7 @@ import {
   TOP_INVALID,
   TOP_CANCEL,
   TOP_CLOSE,
-} from '../events/DOMTopLevelEventTypes';
+} from '../events/DOMEventNames';
 
 let didWarnInvalidHydration = false;
 let didWarnScriptTags = false;

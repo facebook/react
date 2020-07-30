@@ -25,7 +25,7 @@ import type {
   ReactDOMResponderContext,
   ReactDOMResponderEvent,
 } from '../shared/ReactDOMTypes';
-import type {TopLevelType} from '../events/TopLevelEventTypes';
+import type {DOMEventName} from '../events/DOMEventNames';
 import {
   batchedEventUpdates,
   discreteUpdates,
@@ -76,7 +76,7 @@ export function setListenToResponderEventTypes(
 }
 
 const rootEventTypesToEventResponderInstances: Map<
-  TopLevelType | string,
+  DOMEventName | string,
   Set<ReactDOMEventResponderInstance>,
 > = new Map();
 
@@ -310,7 +310,7 @@ function getActiveDocument(): Document {
 }
 
 function createDOMResponderEvent(
-  topLevelType: string,
+  domEventName: string,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: Element | Document,
   passive: boolean,
@@ -333,7 +333,7 @@ function createDOMResponderEvent(
     passive,
     pointerType: eventPointerType,
     target: nativeEventTarget,
-    type: topLevelType,
+    type: domEventName,
   };
 }
 
@@ -369,7 +369,7 @@ function validateResponderTargetEventTypes(
 }
 
 function traverseAndHandleEventResponderInstances(
-  topLevelType: string,
+  domEventName: string,
   targetFiber: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: Document | Element,
@@ -385,7 +385,7 @@ function traverseAndHandleEventResponderInstances(
 
   const visitedResponders = new Set();
   const responderEvent = createDOMResponderEvent(
-    topLevelType,
+    domEventName,
     nativeEvent,
     nativeEventTarget,
     isPassiveEvent,
@@ -410,7 +410,7 @@ function traverseAndHandleEventResponderInstances(
           if (
             !visitedResponders.has(responder) &&
             validateResponderTargetEventTypes(
-              topLevelType,
+              domEventName,
               responder,
               isPassive,
             ) &&
@@ -433,14 +433,14 @@ function traverseAndHandleEventResponderInstances(
     node = node.return;
   }
   // Root phase
-  const passive = rootEventTypesToEventResponderInstances.get(topLevelType);
+  const passive = rootEventTypesToEventResponderInstances.get(domEventName);
   const rootEventResponderInstances = [];
   if (passive !== undefined) {
     rootEventResponderInstances.push(...Array.from(passive));
   }
   if (!isPassive) {
     const active = rootEventTypesToEventResponderInstances.get(
-      topLevelType + '_active',
+      domEventName + '_active',
     );
     if (active !== undefined) {
       rootEventResponderInstances.push(...Array.from(active));
@@ -518,7 +518,7 @@ function validateResponderContext(): void {
 }
 
 export function DEPRECATED_dispatchEventForResponderEventSystem(
-  topLevelType: string,
+  domEventName: string,
   targetFiber: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: Document | Element,
@@ -540,7 +540,7 @@ export function DEPRECATED_dispatchEventForResponderEventSystem(
     try {
       batchedEventUpdates(() => {
         traverseAndHandleEventResponderInstances(
-          topLevelType,
+          domEventName,
           targetFiber,
           nativeEvent,
           nativeEventTarget,
@@ -597,7 +597,7 @@ function DEPRECATED_registerRootEventType(
 
 export function addResponderEventSystemEvent(
   document: Document,
-  topLevelType: string,
+  domEventName: string,
   passive: boolean,
 ): any => void {
   let eventFlags = RESPONDER_EVENT_SYSTEM;
@@ -617,26 +617,26 @@ export function addResponderEventSystemEvent(
   // Check if interactive and wrap in discreteUpdates
   const listener = createEventListenerWrapper(
     document,
-    ((topLevelType: any): TopLevelType),
+    ((domEventName: any): DOMEventName),
     eventFlags,
   );
   if (passiveBrowserEventsSupported) {
     return addEventCaptureListenerWithPassiveFlag(
       document,
-      topLevelType,
+      domEventName,
       listener,
       passive,
     );
   } else {
-    return addEventCaptureListener(document, topLevelType, listener);
+    return addEventCaptureListener(document, domEventName, listener);
   }
 }
 
 export function removeTrappedEventListener(
   targetContainer: EventTarget,
-  topLevelType: TopLevelType,
+  domEventName: DOMEventName,
   capture: boolean,
   listener: any => void,
 ): void {
-  removeEventListener(targetContainer, topLevelType, listener, capture);
+  removeEventListener(targetContainer, domEventName, listener, capture);
 }

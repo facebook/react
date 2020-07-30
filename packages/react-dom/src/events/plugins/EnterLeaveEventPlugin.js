@@ -11,7 +11,7 @@ import {
   TOP_MOUSE_OVER,
   TOP_POINTER_OUT,
   TOP_POINTER_OVER,
-} from '../DOMTopLevelEventTypes';
+} from '../DOMEventNames';
 import {IS_REPLAYED} from 'react-dom/src/events/EventSystemFlags';
 import {
   SyntheticEvent,
@@ -43,7 +43,7 @@ function registerEvents() {
  */
 function extractEvents(
   dispatchQueue,
-  topLevelType,
+  domEventName,
   targetInst,
   nativeEvent,
   nativeEventTarget,
@@ -51,9 +51,9 @@ function extractEvents(
   targetContainer,
 ) {
   const isOverEvent =
-    topLevelType === TOP_MOUSE_OVER || topLevelType === TOP_POINTER_OVER;
+    domEventName === TOP_MOUSE_OVER || domEventName === TOP_POINTER_OVER;
   const isOutEvent =
-    topLevelType === TOP_MOUSE_OUT || topLevelType === TOP_POINTER_OUT;
+    domEventName === TOP_MOUSE_OUT || domEventName === TOP_POINTER_OUT;
 
   if (isOverEvent && (eventSystemFlags & IS_REPLAYED) === 0) {
     const related = nativeEvent.relatedTarget || nativeEvent.fromElement;
@@ -116,14 +116,14 @@ function extractEvents(
 
   let eventInterface, leaveEventType, enterEventType, eventTypePrefix;
 
-  if (topLevelType === TOP_MOUSE_OUT || topLevelType === TOP_MOUSE_OVER) {
+  if (domEventName === TOP_MOUSE_OUT || domEventName === TOP_MOUSE_OVER) {
     eventInterface = MouseEventInterface;
     leaveEventType = 'onMouseLeave';
     enterEventType = 'onMouseEnter';
     eventTypePrefix = 'mouse';
   } else if (
-    topLevelType === TOP_POINTER_OUT ||
-    topLevelType === TOP_POINTER_OVER
+    domEventName === TOP_POINTER_OUT ||
+    domEventName === TOP_POINTER_OVER
   ) {
     eventInterface = PointerEventInterface;
     leaveEventType = 'onPointerLeave';

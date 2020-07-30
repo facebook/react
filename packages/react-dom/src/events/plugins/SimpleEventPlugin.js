@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {TopLevelType} from '../../events/TopLevelEventTypes';
+import type {DOMEventName} from '../../events/DOMEventNames';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {AnyNativeEvent} from '../../events/PluginModuleType';
 import type {DispatchQueue} from '../DOMPluginEventSystem';
@@ -28,7 +28,7 @@ import {
   WheelEventInterface,
 } from '../../events/SyntheticEvent';
 
-import * as DOMTopLevelEventTypes from '../DOMTopLevelEventTypes';
+import * as DOMEventNames from '../DOMEventNames';
 import {
   topLevelEventsToReactNames,
   registerSimpleEvents,
@@ -49,20 +49,20 @@ import {
 
 function extractEvents(
   dispatchQueue: DispatchQueue,
-  topLevelType: TopLevelType,
+  domEventName: DOMEventName,
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: null | EventTarget,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
 ): void {
-  const reactName = topLevelEventsToReactNames.get(topLevelType);
+  const reactName = topLevelEventsToReactNames.get(domEventName);
   if (reactName === undefined) {
     return;
   }
   let EventInterface;
-  switch (topLevelType) {
-    case DOMTopLevelEventTypes.TOP_KEY_PRESS:
+  switch (domEventName) {
+    case DOMEventNames.TOP_KEY_PRESS:
       // Firefox creates a keypress event for function keys too. This removes
       // the unwanted keypress events. Enter is however both printable and
       // non-printable. One would expect Tab to be as well (but it isn't).
@@ -70,78 +70,78 @@ function extractEvents(
         return;
       }
     /* falls through */
-    case DOMTopLevelEventTypes.TOP_KEY_DOWN:
-    case DOMTopLevelEventTypes.TOP_KEY_UP:
+    case DOMEventNames.TOP_KEY_DOWN:
+    case DOMEventNames.TOP_KEY_UP:
       EventInterface = KeyboardEventInterface;
       break;
-    case DOMTopLevelEventTypes.TOP_FOCUS_IN:
-    case DOMTopLevelEventTypes.TOP_FOCUS_OUT:
-    case DOMTopLevelEventTypes.TOP_BEFORE_BLUR:
-    case DOMTopLevelEventTypes.TOP_AFTER_BLUR:
+    case DOMEventNames.TOP_FOCUS_IN:
+    case DOMEventNames.TOP_FOCUS_OUT:
+    case DOMEventNames.TOP_BEFORE_BLUR:
+    case DOMEventNames.TOP_AFTER_BLUR:
       EventInterface = FocusEventInterface;
       break;
-    case DOMTopLevelEventTypes.TOP_CLICK:
+    case DOMEventNames.TOP_CLICK:
       // Firefox creates a click event on right mouse clicks. This removes the
       // unwanted click events.
       if (nativeEvent.button === 2) {
         return;
       }
     /* falls through */
-    case DOMTopLevelEventTypes.TOP_AUX_CLICK:
-    case DOMTopLevelEventTypes.TOP_DOUBLE_CLICK:
-    case DOMTopLevelEventTypes.TOP_MOUSE_DOWN:
-    case DOMTopLevelEventTypes.TOP_MOUSE_MOVE:
-    case DOMTopLevelEventTypes.TOP_MOUSE_UP:
+    case DOMEventNames.TOP_AUX_CLICK:
+    case DOMEventNames.TOP_DOUBLE_CLICK:
+    case DOMEventNames.TOP_MOUSE_DOWN:
+    case DOMEventNames.TOP_MOUSE_MOVE:
+    case DOMEventNames.TOP_MOUSE_UP:
     // TODO: Disabled elements should not respond to mouse events
     /* falls through */
-    case DOMTopLevelEventTypes.TOP_MOUSE_OUT:
-    case DOMTopLevelEventTypes.TOP_MOUSE_OVER:
-    case DOMTopLevelEventTypes.TOP_CONTEXT_MENU:
+    case DOMEventNames.TOP_MOUSE_OUT:
+    case DOMEventNames.TOP_MOUSE_OVER:
+    case DOMEventNames.TOP_CONTEXT_MENU:
       EventInterface = MouseEventInterface;
       break;
-    case DOMTopLevelEventTypes.TOP_DRAG:
-    case DOMTopLevelEventTypes.TOP_DRAG_END:
-    case DOMTopLevelEventTypes.TOP_DRAG_ENTER:
-    case DOMTopLevelEventTypes.TOP_DRAG_EXIT:
-    case DOMTopLevelEventTypes.TOP_DRAG_LEAVE:
-    case DOMTopLevelEventTypes.TOP_DRAG_OVER:
-    case DOMTopLevelEventTypes.TOP_DRAG_START:
-    case DOMTopLevelEventTypes.TOP_DROP:
+    case DOMEventNames.TOP_DRAG:
+    case DOMEventNames.TOP_DRAG_END:
+    case DOMEventNames.TOP_DRAG_ENTER:
+    case DOMEventNames.TOP_DRAG_EXIT:
+    case DOMEventNames.TOP_DRAG_LEAVE:
+    case DOMEventNames.TOP_DRAG_OVER:
+    case DOMEventNames.TOP_DRAG_START:
+    case DOMEventNames.TOP_DROP:
       EventInterface = DragEventInterface;
       break;
-    case DOMTopLevelEventTypes.TOP_TOUCH_CANCEL:
-    case DOMTopLevelEventTypes.TOP_TOUCH_END:
-    case DOMTopLevelEventTypes.TOP_TOUCH_MOVE:
-    case DOMTopLevelEventTypes.TOP_TOUCH_START:
+    case DOMEventNames.TOP_TOUCH_CANCEL:
+    case DOMEventNames.TOP_TOUCH_END:
+    case DOMEventNames.TOP_TOUCH_MOVE:
+    case DOMEventNames.TOP_TOUCH_START:
       EventInterface = TouchEventInterface;
       break;
-    case DOMTopLevelEventTypes.TOP_ANIMATION_END:
-    case DOMTopLevelEventTypes.TOP_ANIMATION_ITERATION:
-    case DOMTopLevelEventTypes.TOP_ANIMATION_START:
+    case DOMEventNames.TOP_ANIMATION_END:
+    case DOMEventNames.TOP_ANIMATION_ITERATION:
+    case DOMEventNames.TOP_ANIMATION_START:
       EventInterface = AnimationEventInterface;
       break;
-    case DOMTopLevelEventTypes.TOP_TRANSITION_END:
+    case DOMEventNames.TOP_TRANSITION_END:
       EventInterface = TransitionEventInterface;
       break;
-    case DOMTopLevelEventTypes.TOP_SCROLL:
+    case DOMEventNames.TOP_SCROLL:
       EventInterface = UIEventInterface;
       break;
-    case DOMTopLevelEventTypes.TOP_WHEEL:
+    case DOMEventNames.TOP_WHEEL:
       EventInterface = WheelEventInterface;
       break;
-    case DOMTopLevelEventTypes.TOP_COPY:
-    case DOMTopLevelEventTypes.TOP_CUT:
-    case DOMTopLevelEventTypes.TOP_PASTE:
+    case DOMEventNames.TOP_COPY:
+    case DOMEventNames.TOP_CUT:
+    case DOMEventNames.TOP_PASTE:
       EventInterface = ClipboardEventInterface;
       break;
-    case DOMTopLevelEventTypes.TOP_GOT_POINTER_CAPTURE:
-    case DOMTopLevelEventTypes.TOP_LOST_POINTER_CAPTURE:
-    case DOMTopLevelEventTypes.TOP_POINTER_CANCEL:
-    case DOMTopLevelEventTypes.TOP_POINTER_DOWN:
-    case DOMTopLevelEventTypes.TOP_POINTER_MOVE:
-    case DOMTopLevelEventTypes.TOP_POINTER_OUT:
-    case DOMTopLevelEventTypes.TOP_POINTER_OVER:
-    case DOMTopLevelEventTypes.TOP_POINTER_UP:
+    case DOMEventNames.TOP_GOT_POINTER_CAPTURE:
+    case DOMEventNames.TOP_LOST_POINTER_CAPTURE:
+    case DOMEventNames.TOP_POINTER_CANCEL:
+    case DOMEventNames.TOP_POINTER_DOWN:
+    case DOMEventNames.TOP_POINTER_MOVE:
+    case DOMEventNames.TOP_POINTER_OUT:
+    case DOMEventNames.TOP_POINTER_OVER:
+    case DOMEventNames.TOP_POINTER_UP:
       EventInterface = PointerEventInterface;
       break;
     default:
@@ -179,7 +179,7 @@ function extractEvents(
         // TODO: ideally, we'd eventually add all events from
         // nonDelegatedEvents list in DOMPluginEventSystem.
         // Then we can remove this special list.
-        topLevelType === DOMTopLevelEventTypes.TOP_SCROLL;
+        domEventName === DOMEventNames.TOP_SCROLL;
     }
 
     accumulateSinglePhaseListeners(

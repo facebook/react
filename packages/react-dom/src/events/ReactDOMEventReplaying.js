@@ -9,7 +9,7 @@
 
 import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
-import type {TopLevelType} from '../events/TopLevelEventTypes';
+import type {DOMEventName} from '../events/DOMEventNames';
 import type {ElementListenerMap} from '../client/ReactDOMComponentTree';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
@@ -125,14 +125,14 @@ import {
   TOP_LOST_POINTER_CAPTURE,
   TOP_FOCUS_IN,
   TOP_FOCUS_OUT,
-} from './DOMTopLevelEventTypes';
+} from './DOMEventNames';
 import {IS_REPLAYED} from './EventSystemFlags';
 import {listenToNativeEvent} from './DOMPluginEventSystem';
 import {addResponderEventSystemEvent} from './DeprecatedDOMEventResponderSystem';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
-  topLevelType: TopLevelType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
   targetContainers: Array<EventTarget>,
@@ -215,19 +215,19 @@ const continuousReplayableEvents = [
   TOP_LOST_POINTER_CAPTURE,
 ];
 
-export function isReplayableDiscreteEvent(eventType: TopLevelType): boolean {
+export function isReplayableDiscreteEvent(eventType: DOMEventName): boolean {
   return discreteReplayableEvents.indexOf(eventType) > -1;
 }
 
 function trapReplayableEventForContainer(
-  topLevelType: TopLevelType,
+  domEventName: DOMEventName,
   container: Container,
 ) {
-  listenToNativeEvent(topLevelType, false, ((container: any): Element), null);
+  listenToNativeEvent(domEventName, false, ((container: any): Element), null);
 }
 
 function trapReplayableEventForDocument(
-  topLevelType: TopLevelType,
+  domEventName: DOMEventName,
   document: Document,
   listenerMap: ElementListenerMap,
 ) {
@@ -237,11 +237,11 @@ function trapReplayableEventForDocument(
     // if we only have a passive listener, we at least need it
     // to still pretend to be active so that Flare gets those
     // events.
-    const activeEventKey = topLevelType + '_active';
+    const activeEventKey = domEventName + '_active';
     if (!listenerMap.has(activeEventKey)) {
       const listener = addResponderEventSystemEvent(
         document,
-        topLevelType,
+        domEventName,
         false,
       );
       listenerMap.set(activeEventKey, {passive: false, listener});
@@ -255,27 +255,27 @@ export function eagerlyTrapReplayableEvents(
 ) {
   const listenerMapForDoc = getEventListenerMap(document);
   // Discrete
-  discreteReplayableEvents.forEach(topLevelType => {
-    trapReplayableEventForContainer(topLevelType, container);
-    trapReplayableEventForDocument(topLevelType, document, listenerMapForDoc);
+  discreteReplayableEvents.forEach(domEventName => {
+    trapReplayableEventForContainer(domEventName, container);
+    trapReplayableEventForDocument(domEventName, document, listenerMapForDoc);
   });
   // Continuous
-  continuousReplayableEvents.forEach(topLevelType => {
-    trapReplayableEventForContainer(topLevelType, container);
-    trapReplayableEventForDocument(topLevelType, document, listenerMapForDoc);
+  continuousReplayableEvents.forEach(domEventName => {
+    trapReplayableEventForContainer(domEventName, container);
+    trapReplayableEventForDocument(domEventName, document, listenerMapForDoc);
   });
 }
 
 function createQueuedReplayableEvent(
   blockedOn: null | Container | SuspenseInstance,
-  topLevelType: TopLevelType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): QueuedReplayableEvent {
   return {
     blockedOn,
-    topLevelType,
+    domEventName,
     eventSystemFlags: eventSystemFlags | IS_REPLAYED,
     nativeEvent,
     targetContainers: [targetContainer],
@@ -284,14 +284,14 @@ function createQueuedReplayableEvent(
 
 export function queueDiscreteEvent(
   blockedOn: null | Container | SuspenseInstance,
-  topLevelType: TopLevelType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): void {
   const queuedEvent = createQueuedReplayableEvent(
     blockedOn,
-    topLevelType,
+    domEventName,
     eventSystemFlags,
     targetContainer,
     nativeEvent,
@@ -325,10 +325,10 @@ export function queueDiscreteEvent(
 
 // Resets the replaying for this type of continuous event to no event.
 export function clearIfContinuousEvent(
-  topLevelType: TopLevelType,
+  domEventName: DOMEventName,
   nativeEvent: AnyNativeEvent,
 ): void {
-  switch (topLevelType) {
+  switch (domEventName) {
     case TOP_FOCUS_IN:
     case TOP_FOCUS_OUT:
       queuedFocus = null;
@@ -359,7 +359,7 @@ export function clearIfContinuousEvent(
 function accumulateOrCreateContinuousQueuedReplayableEvent(
   existingQueuedEvent: null | QueuedReplayableEvent,
   blockedOn: null | Container | SuspenseInstance,
-  topLevelType: TopLevelType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
@@ -370,7 +370,7 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
   ) {
     const queuedEvent = createQueuedReplayableEvent(
       blockedOn,
-      topLevelType,
+      domEventName,
       eventSystemFlags,
       targetContainer,
       nativeEvent,
@@ -401,7 +401,7 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
 
 export function queueIfContinuousEvent(
   blockedOn: null | Container | SuspenseInstance,
-  topLevelType: TopLevelType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
@@ -409,13 +409,13 @@ export function queueIfContinuousEvent(
   // These set relatedTarget to null because the replayed event will be treated as if we
   // moved from outside the window (no target) onto the target once it hydrates.
   // Instead of mutating we could clone the event.
-  switch (topLevelType) {
+  switch (domEventName) {
     case TOP_FOCUS_IN: {
       const focusEvent = ((nativeEvent: any): FocusEvent);
       queuedFocus = accumulateOrCreateContinuousQueuedReplayableEvent(
         queuedFocus,
         blockedOn,
-        topLevelType,
+        domEventName,
         eventSystemFlags,
         targetContainer,
         focusEvent,
@@ -427,7 +427,7 @@ export function queueIfContinuousEvent(
       queuedDrag = accumulateOrCreateContinuousQueuedReplayableEvent(
         queuedDrag,
         blockedOn,
-        topLevelType,
+        domEventName,
         eventSystemFlags,
         targetContainer,
         dragEvent,
@@ -439,7 +439,7 @@ export function queueIfContinuousEvent(
       queuedMouse = accumulateOrCreateContinuousQueuedReplayableEvent(
         queuedMouse,
         blockedOn,
-        topLevelType,
+        domEventName,
         eventSystemFlags,
         targetContainer,
         mouseEvent,
@@ -454,7 +454,7 @@ export function queueIfContinuousEvent(
         accumulateOrCreateContinuousQueuedReplayableEvent(
           queuedPointers.get(pointerId) || null,
           blockedOn,
-          topLevelType,
+          domEventName,
           eventSystemFlags,
           targetContainer,
           pointerEvent,
@@ -470,7 +470,7 @@ export function queueIfContinuousEvent(
         accumulateOrCreateContinuousQueuedReplayableEvent(
           queuedPointerCaptures.get(pointerId) || null,
           blockedOn,
-          topLevelType,
+          domEventName,
           eventSystemFlags,
           targetContainer,
           pointerEvent,
@@ -555,7 +555,7 @@ function attemptReplayContinuousQueuedEvent(
   while (targetContainers.length > 0) {
     const targetContainer = targetContainers[0];
     const nextBlockedOn = attemptToDispatchEvent(
-      queuedEvent.topLevelType,
+      queuedEvent.domEventName,
       queuedEvent.eventSystemFlags,
       targetContainer,
       queuedEvent.nativeEvent,
@@ -604,7 +604,7 @@ function replayUnblockedEvents() {
     while (targetContainers.length > 0) {
       const targetContainer = targetContainers[0];
       const nextBlockedOn = attemptToDispatchEvent(
-        nextDiscreteEvent.topLevelType,
+        nextDiscreteEvent.domEventName,
         nextDiscreteEvent.eventSystemFlags,
         targetContainer,
         nextDiscreteEvent.nativeEvent,

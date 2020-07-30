@@ -7,7 +7,7 @@
  * @flow
  */
 import type {AnyNativeEvent} from '../PluginModuleType';
-import type {TopLevelType} from '../TopLevelEventTypes';
+import type {DOMEventName} from '../DOMEventNames';
 import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
@@ -25,7 +25,7 @@ import {
   TOP_KEY_DOWN,
   TOP_KEY_UP,
   TOP_SELECTION_CHANGE,
-} from '../DOMTopLevelEventTypes';
+} from '../DOMEventNames';
 import getEventTarget from '../getEventTarget';
 import isEventSupported from '../isEventSupported';
 import {getNodeFromInstance} from '../../client/ReactDOMComponentTree';
@@ -116,8 +116,8 @@ function getInstIfValueChanged(targetInst: Object) {
   }
 }
 
-function getTargetInstForChangeEvent(topLevelType, targetInst) {
-  if (topLevelType === TOP_CHANGE) {
+function getTargetInstForChangeEvent(domEventName, targetInst) {
+  if (domEventName === TOP_CHANGE) {
     return targetInst;
   }
 }
@@ -171,8 +171,8 @@ function handlePropertyChange(nativeEvent) {
   }
 }
 
-function handleEventsForInputEventPolyfill(topLevelType, target, targetInst) {
-  if (topLevelType === TOP_FOCUS_IN) {
+function handleEventsForInputEventPolyfill(domEventName, target, targetInst) {
+  if (domEventName === TOP_FOCUS_IN) {
     // In IE9, propertychange fires for most input events but is buggy and
     // doesn't fire when text is deleted, but conveniently, selectionchange
     // appears to fire in all of the remaining cases so we catch those and
@@ -185,17 +185,17 @@ function handleEventsForInputEventPolyfill(topLevelType, target, targetInst) {
     // missed a blur event somehow.
     stopWatchingForValueChange();
     startWatchingForValueChange(target, targetInst);
-  } else if (topLevelType === TOP_FOCUS_OUT) {
+  } else if (domEventName === TOP_FOCUS_OUT) {
     stopWatchingForValueChange();
   }
 }
 
 // For IE8 and IE9.
-function getTargetInstForInputEventPolyfill(topLevelType, targetInst) {
+function getTargetInstForInputEventPolyfill(domEventName, targetInst) {
   if (
-    topLevelType === TOP_SELECTION_CHANGE ||
-    topLevelType === TOP_KEY_UP ||
-    topLevelType === TOP_KEY_DOWN
+    domEventName === TOP_SELECTION_CHANGE ||
+    domEventName === TOP_KEY_UP ||
+    domEventName === TOP_KEY_DOWN
   ) {
     // On the selectionchange event, the target is just document which isn't
     // helpful for us so just check activeElement instead.
@@ -226,14 +226,14 @@ function shouldUseClickEvent(elem) {
   );
 }
 
-function getTargetInstForClickEvent(topLevelType, targetInst) {
-  if (topLevelType === TOP_CLICK) {
+function getTargetInstForClickEvent(domEventName, targetInst) {
+  if (domEventName === TOP_CLICK) {
     return getInstIfValueChanged(targetInst);
   }
 }
 
-function getTargetInstForInputOrChangeEvent(topLevelType, targetInst) {
-  if (topLevelType === TOP_INPUT || topLevelType === TOP_CHANGE) {
+function getTargetInstForInputOrChangeEvent(domEventName, targetInst) {
+  if (domEventName === TOP_INPUT || domEventName === TOP_CHANGE) {
     return getInstIfValueChanged(targetInst);
   }
 }
@@ -263,7 +263,7 @@ function handleControlledInputBlur(node: HTMLInputElement) {
  */
 function extractEvents(
   dispatchQueue: DispatchQueue,
-  topLevelType: TopLevelType,
+  domEventName: DOMEventName,
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: null | EventTarget,
@@ -287,7 +287,7 @@ function extractEvents(
   }
 
   if (getTargetInstFunc) {
-    const inst = getTargetInstFunc(topLevelType, targetInst);
+    const inst = getTargetInstFunc(domEventName, targetInst);
     if (inst) {
       createAndAccumulateChangeEvent(
         dispatchQueue,
@@ -300,11 +300,11 @@ function extractEvents(
   }
 
   if (handleEventFunc) {
-    handleEventFunc(topLevelType, targetNode, targetInst);
+    handleEventFunc(domEventName, targetNode, targetInst);
   }
 
   // When blurring, set the value attribute for number inputs
-  if (topLevelType === TOP_FOCUS_OUT) {
+  if (domEventName === TOP_FOCUS_OUT) {
     handleControlledInputBlur(((targetNode: any): HTMLInputElement));
   }
 }

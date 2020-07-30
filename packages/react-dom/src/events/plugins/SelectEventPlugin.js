@@ -21,7 +21,7 @@ import {
   TOP_MOUSE_DOWN,
   TOP_MOUSE_UP,
   TOP_SELECTION_CHANGE,
-} from '../DOMTopLevelEventTypes';
+} from '../DOMEventNames';
 import getActiveElement from '../../client/getActiveElement';
 import {
   getNodeFromInstance,
@@ -160,7 +160,7 @@ function constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget) {
  */
 function extractEvents(
   dispatchQueue,
-  topLevelType,
+  domEventName,
   targetInst,
   nativeEvent,
   nativeEventTarget,
@@ -175,7 +175,7 @@ function extractEvents(
     // check for the other dependencies, as TOP_SELECTION_CHANGE is only
     // event attached from the onChange plugin and we don't expose an
     // onSelectionChange event from React.
-    topLevelType !== TOP_SELECTION_CHANGE &&
+    domEventName !== TOP_SELECTION_CHANGE &&
     !eventListenerMap.has('onSelect') &&
     !eventListenerMap.has('onSelectCapture')
   ) {
@@ -184,7 +184,7 @@ function extractEvents(
 
   const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
-  switch (topLevelType) {
+  switch (domEventName) {
     // Track the input node that has focus.
     case TOP_FOCUS_IN:
       if (
