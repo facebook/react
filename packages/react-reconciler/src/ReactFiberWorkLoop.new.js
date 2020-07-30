@@ -2702,6 +2702,8 @@ function flushPassiveMountEffects(firstChild: Fiber): void {
 }
 
 function flushPassiveMountEffectsImpl(fiber: Fiber): void {
+  setCurrentDebugFiberInDEV(fiber);
+
   const updateQueue: FunctionComponentUpdateQueue | null = (fiber.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
@@ -2715,7 +2717,6 @@ function flushPassiveMountEffectsImpl(fiber: Fiber): void {
         (tag & HookHasEffect) !== NoHookEffect
       ) {
         if (__DEV__) {
-          setCurrentDebugFiberInDEV(fiber);
           if (
             enableProfilerTimer &&
             enableProfilerCommitHooks &&
@@ -2742,7 +2743,6 @@ function flushPassiveMountEffectsImpl(fiber: Fiber): void {
             const error = clearCaughtError();
             captureCommitPhaseError(fiber, error);
           }
-          resetCurrentDebugFiberInDEV();
         } else {
           try {
             const create = effect.create;
@@ -2769,6 +2769,8 @@ function flushPassiveMountEffectsImpl(fiber: Fiber): void {
 
       effect = next;
     } while (effect !== firstEffect);
+
+    resetCurrentDebugFiberInDEV();
   }
 }
 
@@ -2858,6 +2860,8 @@ function flushPassiveUnmountEffectsImpl(fiber: Fiber): void {
   const updateQueue: FunctionComponentUpdateQueue | null = (fiber.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
+    setCurrentDebugFiberInDEV(fiber);
+
     const firstEffect = lastEffect.next;
     let effect = firstEffect;
     do {
@@ -2871,7 +2875,6 @@ function flushPassiveUnmountEffectsImpl(fiber: Fiber): void {
 
         if (typeof destroy === 'function') {
           if (__DEV__) {
-            setCurrentDebugFiberInDEV(fiber);
             if (
               enableProfilerTimer &&
               enableProfilerCommitHooks &&
@@ -2888,7 +2891,6 @@ function flushPassiveUnmountEffectsImpl(fiber: Fiber): void {
               const error = clearCaughtError();
               captureCommitPhaseError(fiber, error);
             }
-            resetCurrentDebugFiberInDEV();
           } else {
             try {
               if (
@@ -2915,6 +2917,8 @@ function flushPassiveUnmountEffectsImpl(fiber: Fiber): void {
 
       effect = next;
     } while (effect !== firstEffect);
+
+    resetCurrentDebugFiberInDEV();
   }
 }
 
