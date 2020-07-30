@@ -3,7 +3,14 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
+
+import type {AnyNativeEvent} from '../PluginModuleType';
+import type {DOMEventName} from '../DOMEventNames';
+import type {DispatchQueue} from '../DOMPluginEventSystem';
+import type {EventSystemFlags} from '../EventSystemFlags';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {SyntheticEvent} from '../../events/SyntheticEvent';
@@ -11,17 +18,6 @@ import isTextInputElement from '../isTextInputElement';
 import shallowEqual from 'shared/shallowEqual';
 
 import {registerTwoPhaseEvent} from '../EventRegistry';
-import {
-  TOP_FOCUS_OUT,
-  TOP_CONTEXT_MENU,
-  TOP_DRAG_END,
-  TOP_FOCUS_IN,
-  TOP_KEY_DOWN,
-  TOP_KEY_UP,
-  TOP_MOUSE_DOWN,
-  TOP_MOUSE_UP,
-  TOP_SELECTION_CHANGE,
-} from '../DOMTopLevelEventTypes';
 import getActiveElement from '../../client/getActiveElement';
 import {
   getNodeFromInstance,
@@ -34,21 +30,17 @@ import {accumulateTwoPhaseListeners} from '../DOMPluginEventSystem';
 const skipSelectionChangeEvent =
   canUseDOM && 'documentMode' in document && document.documentMode <= 11;
 
-const rootTargetDependencies = [
-  TOP_FOCUS_OUT,
-  TOP_CONTEXT_MENU,
-  TOP_DRAG_END,
-  TOP_FOCUS_IN,
-  TOP_KEY_DOWN,
-  TOP_KEY_UP,
-  TOP_MOUSE_DOWN,
-  TOP_MOUSE_UP,
-];
-
 function registerEvents() {
   registerTwoPhaseEvent('onSelect', [
-    ...rootTargetDependencies,
-    TOP_SELECTION_CHANGE,
+    'focusout',
+    'contextmenu',
+    'dragend',
+    'focusin',
+    'keydown',
+    'keyup',
+    'mousedown',
+    'mouseup',
+    'selectionchange',
   ]);
 }
 
@@ -62,11 +54,8 @@ let mouseDown = false;
  *
  * The return value will not be consistent across nodes or browsers, but
  * two identical selections on the same node will return identical objects.
- *
- * @param {DOMElement} node
- * @return {object}
  */
-function getSelection(node) {
+function getSelection(node: any) {
   if ('selectionStart' in node && hasSelectionCapabilities(node)) {
     return {
       start: node.selectionStart,
@@ -87,11 +76,8 @@ function getSelection(node) {
 
 /**
  * Get document associated with the event target.
- *
- * @param {object} nativeEventTarget
- * @return {Document}
  */
-function getEventTargetDocument(eventTarget) {
+function getEventTargetDocument(eventTarget: any) {
   return eventTarget.window === eventTarget
     ? eventTarget.document
     : eventTarget.nodeType === DOCUMENT_NODE
@@ -159,23 +145,23 @@ function constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget) {
  * - Fires after user input.
  */
 function extractEvents(
-  dispatchQueue,
-  topLevelType,
-  targetInst,
-  nativeEvent,
-  nativeEventTarget,
-  eventSystemFlags,
-  targetContainer,
+  dispatchQueue: DispatchQueue,
+  domEventName: DOMEventName,
+  targetInst: null | Fiber,
+  nativeEvent: AnyNativeEvent,
+  nativeEventTarget: null | EventTarget,
+  eventSystemFlags: EventSystemFlags,
+  targetContainer: EventTarget,
 ) {
   const eventListenerMap = getEventListenerMap(targetContainer);
   // Track whether all listeners exists for this plugin. If none exist, we do
   // not extract events. See #3639.
   if (
-    // If we are handling TOP_SELECTION_CHANGE, then we don't need to
-    // check for the other dependencies, as TOP_SELECTION_CHANGE is only
+    // If we are handling selectionchange, then we don't need to
+    // check for the other dependencies, as selectionchange is only
     // event attached from the onChange plugin and we don't expose an
     // onSelectionChange event from React.
-    topLevelType !== TOP_SELECTION_CHANGE &&
+    domEventName !== 'selectionchange' &&
     !eventListenerMap.has('onSelect') &&
     !eventListenerMap.has('onSelectCapture')
   ) {
@@ -184,11 +170,11 @@ function extractEvents(
 
   const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
-  switch (topLevelType) {
+  switch (domEventName) {
     // Track the input node that has focus.
-    case TOP_FOCUS_IN:
+    case 'focusin':
       if (
-        isTextInputElement(targetNode) ||
+        isTextInputElement((targetNode: any)) ||
         targetNode.contentEditable === 'true'
       ) {
         activeElement = targetNode;
@@ -196,19 +182,19 @@ function extractEvents(
         lastSelection = null;
       }
       break;
-    case TOP_FOCUS_OUT:
+    case 'focusout':
       activeElement = null;
       activeElementInst = null;
       lastSelection = null;
       break;
     // Don't fire the event while the user is dragging. This matches the
     // semantics of the native select event.
-    case TOP_MOUSE_DOWN:
+    case 'mousedown':
       mouseDown = true;
       break;
-    case TOP_CONTEXT_MENU:
-    case TOP_MOUSE_UP:
-    case TOP_DRAG_END:
+    case 'contextmenu':
+    case 'mouseup':
+    case 'dragend':
       mouseDown = false;
       constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget);
       break;
@@ -221,13 +207,13 @@ function extractEvents(
     // keyup, but we check on keydown as well in the case of holding down a
     // key, when multiple keydown events are fired but only one keyup is.
     // This is also our approach for IE handling, for the reason above.
-    case TOP_SELECTION_CHANGE:
+    case 'selectionchange':
       if (skipSelectionChangeEvent) {
         break;
       }
     // falls through
-    case TOP_KEY_DOWN:
-    case TOP_KEY_UP:
+    case 'keydown':
+    case 'keyup':
       constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget);
   }
 

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
+import type {DOMEventName} from '../events/DOMEventNames';
 import type {EventPriority, ReactScopeInstance} from 'shared/ReactTypes';
 import type {
   ReactDOMEventHandle,
@@ -69,7 +69,7 @@ function isReactScope(target: EventTarget | ReactScopeInstance): boolean {
 }
 
 function createEventHandleListener(
-  type: DOMTopLevelEventType,
+  type: DOMEventName,
   isCapturePhaseListener: boolean,
   callback: (SyntheticEvent<EventTarget>) => void,
 ): ReactDOMEventHandleListener {
@@ -82,7 +82,7 @@ function createEventHandleListener(
 
 function registerEventOnNearestTargetContainer(
   targetFiber: Fiber,
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   isPassiveListener: boolean | void,
   listenerPriority: EventPriority | void,
   isCapturePhaseListener: boolean,
@@ -102,7 +102,7 @@ function registerEventOnNearestTargetContainer(
     targetContainer = ((targetContainer.parentNode: any): Element);
   }
   listenToNativeEvent(
-    topLevelType,
+    domEventName,
     isCapturePhaseListener,
     targetContainer,
     targetElement,
@@ -113,7 +113,7 @@ function registerEventOnNearestTargetContainer(
 
 function registerReactDOMEvent(
   target: EventTarget | ReactScopeInstance,
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   isPassiveListener: boolean | void,
   isCapturePhaseListener: boolean,
   listenerPriority: EventPriority | void,
@@ -132,7 +132,7 @@ function registerReactDOMEvent(
     }
     registerEventOnNearestTargetContainer(
       targetFiber,
-      topLevelType,
+      domEventName,
       isPassiveListener,
       listenerPriority,
       isCapturePhaseListener,
@@ -147,7 +147,7 @@ function registerReactDOMEvent(
     }
     registerEventOnNearestTargetContainer(
       targetFiber,
-      topLevelType,
+      domEventName,
       isPassiveListener,
       listenerPriority,
       isCapturePhaseListener,
@@ -158,7 +158,7 @@ function registerReactDOMEvent(
     // These are valid event targets, but they are also
     // non-managed React nodes.
     listenToNativeEvent(
-      topLevelType,
+      domEventName,
       isCapturePhaseListener,
       eventTarget,
       null,
@@ -180,7 +180,7 @@ export function createEventHandle(
   options?: EventHandleOptions,
 ): ReactDOMEventHandle {
   if (enableCreateEventHandleAPI) {
-    const topLevelType = ((type: any): DOMTopLevelEventType);
+    const domEventName = ((type: any): DOMEventName);
     let isCapturePhaseListener = false;
     let isPassiveListener = undefined; // Undefined means to use the browser default
     let listenerPriority;
@@ -201,7 +201,7 @@ export function createEventHandle(
       }
     }
     if (listenerPriority === undefined) {
-      listenerPriority = getEventPriorityForListenerSystem(topLevelType);
+      listenerPriority = getEventPriorityForListenerSystem(domEventName);
     }
 
     const registeredReactDOMEvents = new PossiblyWeakSet();
@@ -219,16 +219,16 @@ export function createEventHandle(
         registeredReactDOMEvents.add(target);
         registerReactDOMEvent(
           target,
-          topLevelType,
+          domEventName,
           isPassiveListener,
           isCapturePhaseListener,
           listenerPriority,
         );
         // Add the event to our known event types list.
-        addEventTypeToDispatchConfig(topLevelType);
+        addEventTypeToDispatchConfig(domEventName);
       }
       const listener = createEventHandleListener(
-        topLevelType,
+        domEventName,
         isCapturePhaseListener,
         callback,
       );

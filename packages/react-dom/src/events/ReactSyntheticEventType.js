@@ -10,10 +10,10 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {EventPriority} from 'shared/ReactTypes';
-import type {TopLevelType} from './TopLevelEventTypes';
+import type {DOMEventName} from './DOMEventNames';
 
 export type DispatchConfig = {|
-  dependencies?: Array<TopLevelType>,
+  dependencies?: Array<DOMEventName>,
   phasedRegistrationNames: {|
     bubbled: null | string,
     captured: null | string,

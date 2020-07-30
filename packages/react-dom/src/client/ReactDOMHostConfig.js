@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {TopLevelType} from '../events/TopLevelEventTypes';
+import type {DOMEventName} from '../events/DOMEventNames';
 import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   BoundingRect,
@@ -79,7 +79,6 @@ import {
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
-import {TOP_BEFORE_BLUR, TOP_AFTER_BLUR} from '../events/DOMTopLevelEventTypes';
 import {listenToReactEvent} from '../events/DOMPluginEventSystem';
 
 export type Type = string;
@@ -504,7 +503,7 @@ export function insertInContainerBefore(
   }
 }
 
-function createEvent(type: TopLevelType, bubbles: boolean): Event {
+function createEvent(type: DOMEventName, bubbles: boolean): Event {
   const event = document.createEvent('Event');
   event.initEvent(((type: any): string), bubbles, false);
   return event;
@@ -512,7 +511,7 @@ function createEvent(type: TopLevelType, bubbles: boolean): Event {
 
 function dispatchBeforeDetachedBlur(target: HTMLElement): void {
   if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
-    const event = createEvent(TOP_BEFORE_BLUR, true);
+    const event = createEvent('beforeblur', true);
     // Dispatch "beforeblur" directly on the target,
     // so it gets picked up by the event system and
     // can propagate through the React internal tree.
@@ -522,7 +521,7 @@ function dispatchBeforeDetachedBlur(target: HTMLElement): void {
 
 function dispatchAfterDetachedBlur(target: HTMLElement): void {
   if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
-    const event = createEvent(TOP_AFTER_BLUR, false);
+    const event = createEvent('afterblur', false);
     // So we know what was detached, make the relatedTarget the
     // detached target on the "afterblur" event.
     (event: any).relatedTarget = target;

@@ -7,7 +7,7 @@
  * @flow
  */
 import type {AnyNativeEvent} from '../PluginModuleType';
-import type {TopLevelType} from '../TopLevelEventTypes';
+import type {DOMEventName} from '../DOMEventNames';
 import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
@@ -16,16 +16,6 @@ import {SyntheticEvent} from '../SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
-import {
-  TOP_FOCUS_OUT,
-  TOP_CHANGE,
-  TOP_CLICK,
-  TOP_FOCUS_IN,
-  TOP_INPUT,
-  TOP_KEY_DOWN,
-  TOP_KEY_UP,
-  TOP_SELECTION_CHANGE,
-} from '../DOMTopLevelEventTypes';
 import getEventTarget from '../getEventTarget';
 import isEventSupported from '../isEventSupported';
 import {getNodeFromInstance} from '../../client/ReactDOMComponentTree';
@@ -42,14 +32,14 @@ import {
 
 function registerEvents() {
   registerTwoPhaseEvent('onChange', [
-    TOP_CHANGE,
-    TOP_CLICK,
-    TOP_FOCUS_IN,
-    TOP_FOCUS_OUT,
-    TOP_INPUT,
-    TOP_KEY_DOWN,
-    TOP_KEY_UP,
-    TOP_SELECTION_CHANGE,
+    'change',
+    'click',
+    'focusin',
+    'focusout',
+    'input',
+    'keydown',
+    'keyup',
+    'selectionchange',
   ]);
 }
 
@@ -116,8 +106,8 @@ function getInstIfValueChanged(targetInst: Object) {
   }
 }
 
-function getTargetInstForChangeEvent(topLevelType, targetInst) {
-  if (topLevelType === TOP_CHANGE) {
+function getTargetInstForChangeEvent(domEventName: DOMEventName, targetInst) {
+  if (domEventName === 'change') {
     return targetInst;
   }
 }
@@ -171,8 +161,12 @@ function handlePropertyChange(nativeEvent) {
   }
 }
 
-function handleEventsForInputEventPolyfill(topLevelType, target, targetInst) {
-  if (topLevelType === TOP_FOCUS_IN) {
+function handleEventsForInputEventPolyfill(
+  domEventName: DOMEventName,
+  target,
+  targetInst,
+) {
+  if (domEventName === 'focusin') {
     // In IE9, propertychange fires for most input events but is buggy and
     // doesn't fire when text is deleted, but conveniently, selectionchange
     // appears to fire in all of the remaining cases so we catch those and
@@ -185,17 +179,20 @@ function handleEventsForInputEventPolyfill(topLevelType, target, targetInst) {
     // missed a blur event somehow.
     stopWatchingForValueChange();
     startWatchingForValueChange(target, targetInst);
-  } else if (topLevelType === TOP_FOCUS_OUT) {
+  } else if (domEventName === 'focusout') {
     stopWatchingForValueChange();
   }
 }
 
 // For IE8 and IE9.
-function getTargetInstForInputEventPolyfill(topLevelType, targetInst) {
+function getTargetInstForInputEventPolyfill(
+  domEventName: DOMEventName,
+  targetInst,
+) {
   if (
-    topLevelType === TOP_SELECTION_CHANGE ||
-    topLevelType === TOP_KEY_UP ||
-    topLevelType === TOP_KEY_DOWN
+    domEventName === 'selectionchange' ||
+    domEventName === 'keyup' ||
+    domEventName === 'keydown'
   ) {
     // On the selectionchange event, the target is just document which isn't
     // helpful for us so just check activeElement instead.
@@ -226,14 +223,17 @@ function shouldUseClickEvent(elem) {
   );
 }
 
-function getTargetInstForClickEvent(topLevelType, targetInst) {
-  if (topLevelType === TOP_CLICK) {
+function getTargetInstForClickEvent(domEventName: DOMEventName, targetInst) {
+  if (domEventName === 'click') {
     return getInstIfValueChanged(targetInst);
   }
 }
 
-function getTargetInstForInputOrChangeEvent(topLevelType, targetInst) {
-  if (topLevelType === TOP_INPUT || topLevelType === TOP_CHANGE) {
+function getTargetInstForInputOrChangeEvent(
+  domEventName: DOMEventName,
+  targetInst,
+) {
+  if (domEventName === 'input' || domEventName === 'change') {
     return getInstIfValueChanged(targetInst);
   }
 }
@@ -263,7 +263,7 @@ function handleControlledInputBlur(node: HTMLInputElement) {
  */
 function extractEvents(
   dispatchQueue: DispatchQueue,
-  topLevelType: TopLevelType,
+  domEventName: DOMEventName,
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: null | EventTarget,
@@ -287,7 +287,7 @@ function extractEvents(
   }
 
   if (getTargetInstFunc) {
-    const inst = getTargetInstFunc(topLevelType, targetInst);
+    const inst = getTargetInstFunc(domEventName, targetInst);
     if (inst) {
       createAndAccumulateChangeEvent(
         dispatchQueue,
@@ -300,11 +300,11 @@ function extractEvents(
   }
 
   if (handleEventFunc) {
-    handleEventFunc(topLevelType, targetNode, targetInst);
+    handleEventFunc(domEventName, targetNode, targetInst);
   }
 
   // When blurring, set the value attribute for number inputs
-  if (topLevelType === TOP_FOCUS_OUT) {
+  if (domEventName === 'focusout') {
     handleControlledInputBlur(((targetNode: any): HTMLInputElement));
   }
 }

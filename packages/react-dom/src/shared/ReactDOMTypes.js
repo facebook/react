@@ -14,7 +14,7 @@ import type {
   EventPriority,
   ReactScopeInstance,
 } from 'shared/ReactTypes';
-import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
+import type {DOMEventName} from '../events/DOMEventNames';
 
 type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
 
@@ -86,5 +86,5 @@ export type ReactDOMEventHandle = (
 export type ReactDOMEventHandleListener = {|
   callback: (SyntheticEvent<EventTarget>) => void,
   capture: boolean,
-  type: DOMTopLevelEventType,
+  type: DOMEventName,
 |};

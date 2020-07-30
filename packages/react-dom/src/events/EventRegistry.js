@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {TopLevelType} from './TopLevelEventTypes';
+import type {DOMEventName} from './DOMEventNames';
 
 /**
  * Mapping from registration name to event name
@@ -25,7 +25,7 @@ export const possibleRegistrationNames = __DEV__ ? {} : (null: any);
 
 export function registerTwoPhaseEvent(
   registrationName: string,
-  dependencies: ?Array<TopLevelType>,
+  dependencies: ?Array<DOMEventName>,
 ): void {
   registerDirectEvent(registrationName, dependencies);
   registerDirectEvent(registrationName + 'Capture', dependencies);
@@ -33,7 +33,7 @@ export function registerTwoPhaseEvent(
 
 export function registerDirectEvent(
   registrationName: string,
-  dependencies: ?Array<TopLevelType>,
+  dependencies: ?Array<DOMEventName>,
 ) {
   if (__DEV__) {
     if (registrationNameDependencies[registrationName]) {

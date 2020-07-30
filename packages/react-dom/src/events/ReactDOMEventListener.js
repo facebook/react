@@ -11,7 +11,7 @@ import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
-import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
+import type {DOMEventName} from '../events/DOMEventNames';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
@@ -82,12 +82,12 @@ export function isEnabled() {
 
 export function createEventListenerWrapper(
   targetContainer: EventTarget,
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
 ): Function {
   return dispatchEvent.bind(
     null,
-    topLevelType,
+    domEventName,
     eventSystemFlags,
     targetContainer,
   );
@@ -95,13 +95,13 @@ export function createEventListenerWrapper(
 
 export function createEventListenerWrapperWithPriority(
   targetContainer: EventTarget,
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   priority?: EventPriority,
 ): Function {
   const eventPriority =
     priority === undefined
-      ? getEventPriorityForPluginSystem(topLevelType)
+      ? getEventPriorityForPluginSystem(domEventName)
       : priority;
   let listenerWrapper;
   switch (eventPriority) {
@@ -118,14 +118,14 @@ export function createEventListenerWrapperWithPriority(
   }
   return listenerWrapper.bind(
     null,
-    topLevelType,
+    domEventName,
     eventSystemFlags,
     targetContainer,
   );
 }
 
 function dispatchDiscreteEvent(
-  topLevelType,
+  domEventName,
   eventSystemFlags,
   container,
   nativeEvent,
@@ -140,7 +140,7 @@ function dispatchDiscreteEvent(
   }
   discreteUpdates(
     dispatchEvent,
-    topLevelType,
+    domEventName,
     eventSystemFlags,
     container,
     nativeEvent,
@@ -148,7 +148,7 @@ function dispatchDiscreteEvent(
 }
 
 function dispatchUserBlockingUpdate(
-  topLevelType,
+  domEventName,
   eventSystemFlags,
   container,
   nativeEvent,
@@ -161,7 +161,7 @@ function dispatchUserBlockingUpdate(
       UserBlockingPriority,
       dispatchEvent.bind(
         null,
-        topLevelType,
+        domEventName,
         eventSystemFlags,
         container,
         nativeEvent,
@@ -173,7 +173,7 @@ function dispatchUserBlockingUpdate(
 }
 
 export function dispatchEvent(
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
@@ -181,13 +181,13 @@ export function dispatchEvent(
   if (!_enabled) {
     return;
   }
-  if (hasQueuedDiscreteEvents() && isReplayableDiscreteEvent(topLevelType)) {
+  if (hasQueuedDiscreteEvents() && isReplayableDiscreteEvent(domEventName)) {
     // If we already have a queue of discrete events, and this is another discrete
     // event, then we can't dispatch it regardless of its target, since they
     // need to dispatch in order.
     queueDiscreteEvent(
       null, // Flags that we're not actually blocked on anything as far as we know.
-      topLevelType,
+      domEventName,
       eventSystemFlags,
       targetContainer,
       nativeEvent,
@@ -196,7 +196,7 @@ export function dispatchEvent(
   }
 
   const blockedOn = attemptToDispatchEvent(
-    topLevelType,
+    domEventName,
     eventSystemFlags,
     targetContainer,
     nativeEvent,
@@ -204,15 +204,15 @@ export function dispatchEvent(
 
   if (blockedOn === null) {
     // We successfully dispatched this event.
-    clearIfContinuousEvent(topLevelType, nativeEvent);
+    clearIfContinuousEvent(domEventName, nativeEvent);
     return;
   }
 
-  if (isReplayableDiscreteEvent(topLevelType)) {
+  if (isReplayableDiscreteEvent(domEventName)) {
     // This this to be replayed later once the target is available.
     queueDiscreteEvent(
       blockedOn,
-      topLevelType,
+      domEventName,
       eventSystemFlags,
       targetContainer,
       nativeEvent,
@@ -223,7 +223,7 @@ export function dispatchEvent(
   if (
     queueIfContinuousEvent(
       blockedOn,
-      topLevelType,
+      domEventName,
       eventSystemFlags,
       targetContainer,
       nativeEvent,
@@ -234,14 +234,14 @@ export function dispatchEvent(
 
   // We need to clear only if we didn't queue because
   // queueing is accummulative.
-  clearIfContinuousEvent(topLevelType, nativeEvent);
+  clearIfContinuousEvent(domEventName, nativeEvent);
 
   // This is not replayable so we'll invoke it but without a target,
   // in case the event system needs to trace it.
   if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
       dispatchEventForPluginEventSystem(
-        topLevelType,
+        domEventName,
         eventSystemFlags,
         nativeEvent,
         null,
@@ -251,7 +251,7 @@ export function dispatchEvent(
     if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
       DEPRECATED_dispatchEventForResponderEventSystem(
-        (topLevelType: any),
+        (domEventName: any),
         null,
         nativeEvent,
         getEventTarget(nativeEvent),
@@ -260,7 +260,7 @@ export function dispatchEvent(
     }
   } else {
     dispatchEventForPluginEventSystem(
-      topLevelType,
+      domEventName,
       eventSystemFlags,
       nativeEvent,
       null,
@@ -271,7 +271,7 @@ export function dispatchEvent(
 
 // Attempt dispatching an event. Returns a SuspenseInstance or Container if it's blocked.
 export function attemptToDispatchEvent(
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
@@ -322,7 +322,7 @@ export function attemptToDispatchEvent(
   if (enableDeprecatedFlareAPI) {
     if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
       dispatchEventForPluginEventSystem(
-        topLevelType,
+        domEventName,
         eventSystemFlags,
         nativeEvent,
         targetInst,
@@ -332,7 +332,7 @@ export function attemptToDispatchEvent(
     if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
       // React Flare event system
       DEPRECATED_dispatchEventForResponderEventSystem(
-        (topLevelType: any),
+        (domEventName: any),
         targetInst,
         nativeEvent,
         nativeEventTarget,
@@ -341,7 +341,7 @@ export function attemptToDispatchEvent(
     }
   } else {
     dispatchEventForPluginEventSystem(
-      topLevelType,
+      domEventName,
       eventSystemFlags,
       nativeEvent,
       targetInst,
