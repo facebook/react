@@ -13,7 +13,6 @@ import {
   unsafeCastStringToDOMTopLevelType,
   unsafeCastDOMTopLevelTypeToString,
 } from '../events/TopLevelEventTypes';
-import getVendorPrefixedEventName from './getVendorPrefixedEventName';
 
 /**
  * To identify top level events in ReactDOM, we use constants defined by this
@@ -23,15 +22,9 @@ import getVendorPrefixedEventName from './getVendorPrefixedEventName';
  * The rest of ReactDOM code should import top level types from this file.
  */
 export const TOP_ABORT = unsafeCastStringToDOMTopLevelType('abort');
-export const TOP_ANIMATION_END = unsafeCastStringToDOMTopLevelType(
-  getVendorPrefixedEventName('animationend'),
-);
-export const TOP_ANIMATION_ITERATION = unsafeCastStringToDOMTopLevelType(
-  getVendorPrefixedEventName('animationiteration'),
-);
-export const TOP_ANIMATION_START = unsafeCastStringToDOMTopLevelType(
-  getVendorPrefixedEventName('animationstart'),
-);
+export const TOP_ANIMATION_END = unsafeCastStringToDOMTopLevelType('animationend');
+export const TOP_ANIMATION_ITERATION = unsafeCastStringToDOMTopLevelType('animationiteration');
+export const TOP_ANIMATION_START = unsafeCastStringToDOMTopLevelType('animationstart');
 export const TOP_CAN_PLAY = unsafeCastStringToDOMTopLevelType('canplay');
 export const TOP_CAN_PLAY_THROUGH = unsafeCastStringToDOMTopLevelType(
   'canplaythrough',
@@ -138,9 +131,7 @@ export const TOP_TOUCH_CANCEL = unsafeCastStringToDOMTopLevelType(
 export const TOP_TOUCH_END = unsafeCastStringToDOMTopLevelType('touchend');
 export const TOP_TOUCH_MOVE = unsafeCastStringToDOMTopLevelType('touchmove');
 export const TOP_TOUCH_START = unsafeCastStringToDOMTopLevelType('touchstart');
-export const TOP_TRANSITION_END = unsafeCastStringToDOMTopLevelType(
-  getVendorPrefixedEventName('transitionend'),
-);
+export const TOP_TRANSITION_END = unsafeCastStringToDOMTopLevelType('transitionend');
 export const TOP_VOLUME_CHANGE = unsafeCastStringToDOMTopLevelType(
   'volumechange',
 );
