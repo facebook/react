@@ -68,7 +68,6 @@ import {
   Placement,
   Snapshot,
   Update,
-  Passive,
 } from './ReactSideEffectTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
@@ -880,8 +879,6 @@ function commitUnmount(
               if ((tag & HookPassive) !== NoHookEffect) {
                 // TODO: Consider if we can move this block out of the synchronous commit phase
                 effect.tag |= HookHasEffect;
-
-                current.effectTag |= Passive;
 
                 schedulePassiveEffectCallback();
               } else {
