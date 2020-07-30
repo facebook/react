@@ -38,39 +38,6 @@ import {
 
 import getEventTarget from './getEventTarget';
 import {
-  TOP_LOAD,
-  TOP_ABORT,
-  TOP_CANCEL,
-  TOP_INVALID,
-  TOP_SCROLL,
-  TOP_CLOSE,
-  TOP_CAN_PLAY,
-  TOP_CAN_PLAY_THROUGH,
-  TOP_DURATION_CHANGE,
-  TOP_EMPTIED,
-  TOP_ENCRYPTED,
-  TOP_ENDED,
-  TOP_ERROR,
-  TOP_WAITING,
-  TOP_VOLUME_CHANGE,
-  TOP_TIME_UPDATE,
-  TOP_SUSPEND,
-  TOP_STALLED,
-  TOP_SEEKING,
-  TOP_SEEKED,
-  TOP_PLAY,
-  TOP_PAUSE,
-  TOP_LOAD_START,
-  TOP_LOADED_DATA,
-  TOP_LOADED_METADATA,
-  TOP_RATE_CHANGE,
-  TOP_PROGRESS,
-  TOP_PLAYING,
-  TOP_CLICK,
-  TOP_SELECTION_CHANGE,
-  TOP_TOGGLE,
-} from './DOMEventNames';
-import {
   getClosestInstanceFromNode,
   getEventListenerMap,
   getEventHandlerListeners,
@@ -209,42 +176,42 @@ function extractEvents(
 }
 
 // List of events that need to be individually attached to media elements.
-export const mediaEventTypes = [
-  TOP_ABORT,
-  TOP_CAN_PLAY,
-  TOP_CAN_PLAY_THROUGH,
-  TOP_DURATION_CHANGE,
-  TOP_EMPTIED,
-  TOP_ENCRYPTED,
-  TOP_ENDED,
-  TOP_ERROR,
-  TOP_LOADED_DATA,
-  TOP_LOADED_METADATA,
-  TOP_LOAD_START,
-  TOP_PAUSE,
-  TOP_PLAY,
-  TOP_PLAYING,
-  TOP_PROGRESS,
-  TOP_RATE_CHANGE,
-  TOP_SEEKED,
-  TOP_SEEKING,
-  TOP_STALLED,
-  TOP_SUSPEND,
-  TOP_TIME_UPDATE,
-  TOP_VOLUME_CHANGE,
-  TOP_WAITING,
+export const mediaEventTypes: Array<DOMEventName> = [
+  'abort',
+  'canplay',
+  'canplaythrough',
+  'durationchange',
+  'emptied',
+  'encrypted',
+  'ended',
+  'error',
+  'loadeddata',
+  'loadedmetadata',
+  'loadstart',
+  'pause',
+  'play',
+  'playing',
+  'progress',
+  'ratechange',
+  'seeked',
+  'seeking',
+  'stalled',
+  'suspend',
+  'timeupdate',
+  'volumechange',
+  'waiting',
 ];
 
 // We should not delegate these events to the container, but rather
 // set them on the actual target element itself. This is primarily
 // because these events do not consistently bubble in the DOM.
 export const nonDelegatedEvents: Set<DOMEventName> = new Set([
-  TOP_CANCEL,
-  TOP_CLOSE,
-  TOP_INVALID,
-  TOP_LOAD,
-  TOP_SCROLL,
-  TOP_TOGGLE,
+  'cancel',
+  'close',
+  'invalid',
+  'load',
+  'scroll',
+  'toggle',
   // In order to reduce bytes, we insert the above array of media events
   // into this Set. Note: the "error" event isn't an exclusive media event,
   // and can occur on other elements too. Rather than duplicate that event,
@@ -368,10 +335,10 @@ export function listenToNativeEvent(
   eventSystemFlags?: EventSystemFlags = PLUGIN_EVENT_SYSTEM,
 ): void {
   let target = rootContainerElement;
-  // TOP_SELECTION_CHANGE needs to be attached to the document
+  // selectionchange needs to be attached to the document
   // otherwise it won't capture incoming events that are only
   // triggered on the document directly.
-  if (domEventName === TOP_SELECTION_CHANGE) {
+  if (domEventName === 'selectionchange') {
     target = (rootContainerElement: any).ownerDocument;
   }
   // If the event can be delegated (or is capture phase), we can
@@ -392,7 +359,7 @@ export function listenToNativeEvent(
     // TODO: ideally, we'd eventually apply the same logic to all
     // events from the nonDelegatedEvents list. Then we can remove
     // this special case and use the same logic for all events.
-    if (domEventName !== TOP_SCROLL) {
+    if (domEventName !== 'scroll') {
       return;
     }
     eventSystemFlags |= IS_NON_DELEGATED;
@@ -623,7 +590,7 @@ export function dispatchEventForPluginEventSystem(
       // then we can defer the event to the "document", to allow
       // for legacy FB support, where the expected behavior was to
       // match React < 16 behavior of delegated clicks to the doc.
-      domEventName === TOP_CLICK &&
+      domEventName === 'click' &&
       (eventSystemFlags & SHOULD_NOT_DEFER_CLICK_FOR_FB_SUPPORT_MODE) === 0
     ) {
       deferClickToDocumentForLegacyFBSupport(domEventName, targetContainer);
