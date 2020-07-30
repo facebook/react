@@ -209,6 +209,7 @@ import {
   commitPassiveEffectDurations,
   commitResetTextContent,
   isSuspenseBoundaryBeingHidden,
+  safelyCallDestroy,
 } from './ReactFiberCommitWork.new';
 import {enqueueUpdate} from './ReactUpdateQueue.new';
 import {resetContextDependencies} from './ReactFiberNewContext.new';
@@ -2871,50 +2872,21 @@ function flushPassiveUnmountEffectsImpl(fiber: Fiber): void {
         (tag & HookHasEffect) !== NoHookEffect
       ) {
         const destroy = effect.destroy;
-        effect.destroy = undefined;
-
-        if (typeof destroy === 'function') {
-          if (__DEV__) {
-            if (
-              enableProfilerTimer &&
-              enableProfilerCommitHooks &&
-              fiber.mode & ProfileMode
-            ) {
-              startPassiveEffectTimer();
-              invokeGuardedCallback(null, destroy, null);
-              recordPassiveEffectDuration(fiber);
-            } else {
-              invokeGuardedCallback(null, destroy, null);
-            }
-            if (hasCaughtError()) {
-              invariant(fiber !== null, 'Should be working on an effect.');
-              const error = clearCaughtError();
-              captureCommitPhaseError(fiber, error);
-            }
+        if (destroy !== undefined) {
+          effect.destroy = undefined;
+          if (
+            enableProfilerTimer &&
+            enableProfilerCommitHooks &&
+            fiber.mode & ProfileMode
+          ) {
+            startPassiveEffectTimer();
+            safelyCallDestroy(fiber, destroy);
+            recordPassiveEffectDuration(fiber);
           } else {
-            try {
-              if (
-                enableProfilerTimer &&
-                enableProfilerCommitHooks &&
-                fiber.mode & ProfileMode
-              ) {
-                try {
-                  startPassiveEffectTimer();
-                  destroy();
-                } finally {
-                  recordPassiveEffectDuration(fiber);
-                }
-              } else {
-                destroy();
-              }
-            } catch (error) {
-              invariant(fiber !== null, 'Should be working on an effect.');
-              captureCommitPhaseError(fiber, error);
-            }
+            safelyCallDestroy(fiber, destroy);
           }
         }
       }
-
       effect = next;
     } while (effect !== firstEffect);
 
