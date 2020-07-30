@@ -29,10 +29,10 @@ import {
 } from '../../events/SyntheticEvent';
 
 import {
-  TOP_ANIMATION_END,
-  TOP_ANIMATION_ITERATION,
-  TOP_ANIMATION_START,
-  TOP_TRANSITION_END,
+  ANIMATION_END,
+  ANIMATION_ITERATION,
+  ANIMATION_START,
+  TRANSITION_END,
 } from '../DOMEventNames';
 import {
   topLevelEventsToReactNames,
@@ -120,12 +120,12 @@ function extractEvents(
     case 'touchstart':
       EventInterface = TouchEventInterface;
       break;
-    case TOP_ANIMATION_END:
-    case TOP_ANIMATION_ITERATION:
-    case TOP_ANIMATION_START:
+    case ANIMATION_END:
+    case ANIMATION_ITERATION:
+    case ANIMATION_START:
       EventInterface = AnimationEventInterface;
       break;
-    case TOP_TRANSITION_END:
+    case TRANSITION_END:
       EventInterface = TransitionEventInterface;
       break;
     case 'scroll':
