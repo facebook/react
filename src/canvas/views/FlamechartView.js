@@ -31,8 +31,35 @@ import {
   FLAMECHART_FONT_SIZE,
   FLAMECHART_FRAME_HEIGHT,
   FLAMECHART_TEXT_PADDING,
+  COLOR_HOVER_DIM_DELTA,
   REACT_WORK_BORDER_SIZE,
 } from '../constants';
+import {ColorGenerator, dimmedColor, hslaColorToString} from '../colors';
+
+// Source: https://source.chromium.org/chromium/chromium/src/+/master:out/Debug/gen/devtools/timeline/TimelineUIUtils.js;l=2109;drc=fb32e928d79707a693351b806b8710b2f6b7d399
+const colorGenerator = new ColorGenerator(
+  {min: 30, max: 330},
+  {min: 50, max: 80, count: 3},
+  85,
+);
+colorGenerator.setColorForID('', {h: 43.6, s: 45.8, l: 90.6, a: 100});
+
+function defaultHslaColorForStackFrame({scriptUrl}: FlamechartStackFrame) {
+  return colorGenerator.colorForID(scriptUrl || '');
+}
+
+function defaultColorForStackFrame(stackFrame: FlamechartStackFrame): string {
+  const color = defaultHslaColorForStackFrame(stackFrame);
+  return hslaColorToString(color);
+}
+
+function hoverColorForStackFrame(stackFrame: FlamechartStackFrame): string {
+  const color = dimmedColor(
+    defaultHslaColorForStackFrame(stackFrame),
+    COLOR_HOVER_DIM_DELTA,
+  );
+  return hslaColorToString(color);
+}
 
 class FlamechartStackLayerView extends View {
   /** Layer to display */
@@ -108,7 +135,8 @@ class FlamechartStackLayerView extends View {
     const scaleFactor = positioningScaleFactor(intrinsicSize.width, frame);
 
     for (let i = 0; i < stackLayer.length; i++) {
-      const {name, timestamp, duration} = stackLayer[i];
+      const stackFrame = stackLayer[i];
+      const {name, timestamp, duration} = stackFrame;
 
       const width = durationToWidth(duration, scaleFactor);
       if (width < 1) {
@@ -129,8 +157,8 @@ class FlamechartStackLayerView extends View {
 
       const showHoverHighlight = hoveredStackFrame === stackLayer[i];
       context.fillStyle = showHoverHighlight
-        ? COLORS.FLAME_CHART_HOVER
-        : COLORS.FLAME_CHART;
+        ? hoverColorForStackFrame(stackFrame)
+        : defaultColorForStackFrame(stackFrame);
 
       const drawableRect = rectIntersectionWithRect(nodeRect, visibleArea);
       context.fillRect(

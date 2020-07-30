@@ -12,6 +12,7 @@ export const BAR_HORIZONTAL_SPACING = 1;
 export const BAR_SPACER_SIZE = 6;
 export const MIN_BAR_WIDTH = 1;
 export const SECTION_GUTTER_SIZE = 4;
+export const COLOR_HOVER_DIM_DELTA = 5;
 
 export const INTERVAL_TIMES = [
   1,
@@ -61,8 +62,6 @@ export const EVENT_ROW_HEIGHT_FIXED =
 
 export const COLORS = Object.freeze({
   BACKGROUND: '#ffffff',
-  FLAME_CHART: '#fff79f',
-  FLAME_CHART_HOVER: '#ffe900',
   OTHER_SCRIPT: '#fff791',
   OTHER_SCRIPT_HOVER: '#ffea00',
   PRIORITY_BACKGROUND: '#ededf0',
