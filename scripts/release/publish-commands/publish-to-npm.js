@@ -9,7 +9,7 @@ const {join} = require('path');
 const {confirm, execRead} = require('../utils');
 const theme = require('../theme');
 
-const run = async ({cwd, dry, packages, tag}, otp) => {
+const run = async ({cwd, dry, packages, tags}, otp) => {
   clear();
 
   for (let i = 0; i < packages.length; i++) {
@@ -34,33 +34,24 @@ const run = async ({cwd, dry, packages, tag}, otp) => {
 
       // Publish the package and tag it.
       if (!dry) {
-        await exec(`npm publish --tag=${tag} --otp=${otp}`, {
+        await exec(`npm publish --tag=${tags[0]} --otp=${otp}`, {
           cwd: packagePath,
         });
       }
       console.log(theme.command(`  cd ${packagePath}`));
-      console.log(theme.command(`  npm publish --tag=${tag} --otp=${otp}`));
+      console.log(theme.command(`  npm publish --tag=${tags[0]} --otp=${otp}`));
 
-      if (tag === 'latest') {
-        // Whenever we publish latest, also tag "next" automatically so they're in sync.
+      for (let j = 1; j < tags.length; j++) {
         if (!dry) {
           await exec(
-            `npm dist-tag add ${packageName}@${version} next --otp=${otp}`
+            `npm dist-tag add ${packageName}@${version} ${tags[j]} --otp=${otp}`,
+            {cwd: packagePath}
           );
         }
         console.log(
           theme.command(
-            `  npm dist-tag add ${packageName}@${version} next --otp=${otp}`
+            `  npm dist-tag add ${packageName}@${version} ${tags[j]} --otp=${otp}`
           )
-        );
-      } else if (tag === 'untagged') {
-        // npm doesn't let us publish without a tag at all,
-        // so for one-off publishes we clean it up ourselves.
-        if (!dry) {
-          await exec(`npm dist-tag rm ${packageName}@untagged --otp=${otp}`);
-        }
-        console.log(
-          theme.command(`npm dist-tag rm ${packageName}@untagged --otp=${otp}`)
         );
       }
     }
