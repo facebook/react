@@ -122,7 +122,6 @@ import {
   NoEffect as NoHookEffect,
   HasEffect as HookHasEffect,
   Layout as HookLayout,
-  Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.new';
 import {
@@ -206,7 +205,7 @@ function safelyDetachRef(current: Fiber) {
   }
 }
 
-function safelyCallDestroy(current, destroy) {
+export function safelyCallDestroy(current: Fiber, destroy: () => void) {
   if (__DEV__) {
     invokeGuardedCallback(null, destroy, null);
     if (hasCaughtError()) {
@@ -876,10 +875,7 @@ function commitUnmount(
           do {
             const {destroy, tag} = effect;
             if (destroy !== undefined) {
-              if ((tag & HookPassive) !== NoHookEffect) {
-                // TODO: Consider if we can move this block out of the synchronous commit phase
-                effect.tag |= HookHasEffect;
-              } else {
+              if ((tag & HookLayout) !== NoHookEffect) {
                 if (
                   enableProfilerTimer &&
                   enableProfilerCommitHooks &&
