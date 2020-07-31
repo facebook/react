@@ -11,15 +11,19 @@ const theme = require('../theme');
 const run = async ({cwd, packages, tags}) => {
   clear();
 
-  if (tags.length === 1) {
+  if (tags.length === 0) {
     console.log(
-      theme`{spinnerSuccess ✓} You are about the publish the following packages under the tag {tag ${tags}}`
+      theme`{spinnerSuccess ✓} You are about the publish the following packages without any tags:`
+    );
+  } else if (tags.length === 1) {
+    console.log(
+      theme`{spinnerSuccess ✓} You are about the publish the following packages under the tag {tag ${tags}}:`
     );
   } else {
     console.log(
       theme`{spinnerSuccess ✓} You are about the publish the following packages under the tags {tag ${tags.join(
         ', '
-      )}}`
+      )}}:`
     );
   }
 
