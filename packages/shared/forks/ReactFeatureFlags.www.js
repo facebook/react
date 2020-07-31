@@ -21,7 +21,6 @@ export const {
   disableSchedulerTimeoutBasedOnReactExpirationTime,
   warnAboutSpreadingKeyToJSX,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport,
   deferRenderPhaseUpdateToNextBatch,
   decoupleUpdatePriorityFromScheduler,

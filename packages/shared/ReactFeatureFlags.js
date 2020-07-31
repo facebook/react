@@ -7,10 +7,6 @@
  * @flow strict
  */
 
-// Filter certain DOM attributes (e.g. src, href) if their values are empty strings.
-// This prevents e.g. <img src=""> from making an unnecessary HTTP request for certain browsers.
-export const enableFilterEmptyStringAttributesDOM = false;
-
 // Adds verbose console logging for e.g. state updates, suspense, and work loop stuff.
 // Intended to enable React core members to more easily debug scheduling issues in DEV builds.
 export const enableDebugTracing = false;

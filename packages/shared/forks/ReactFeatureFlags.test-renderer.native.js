@@ -43,7 +43,6 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 export const warnAboutSpreadingKeyToJSX = false;
 export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
-export const enableFilterEmptyStringAttributesDOM = false;
 
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
