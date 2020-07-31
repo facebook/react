@@ -3,7 +3,6 @@
 'use strict';
 
 const commandLineArgs = require('command-line-args');
-const commandLineUsage = require('command-line-usage');
 const {splitCommaParams} = require('../utils');
 
 const paramDefinitions = [
@@ -30,39 +29,10 @@ const paramDefinitions = [
 
 module.exports = () => {
   const params = commandLineArgs(paramDefinitions);
-
-  const {skipPackages, tags} = params;
-
-  if (!tags || tags.length === 0) {
-    const usage = commandLineUsage([
-      {
-        content:
-          'Publishes the current contents of "build/node_modules" to NPM.',
-      },
-      {
-        header: 'Options',
-        optionList: paramDefinitions,
-      },
-      {
-        header: 'Examples',
-        content: [
-          {
-            desc: 'Dry run test:',
-            example: '$ scripts/release/publish.js --dry --tags next',
-          },
-          {
-            desc: 'Publish a new stable:',
-            example: '$ scripts/release/publish.js --tags next latest',
-          },
-        ],
-      },
-    ]);
-    console.log(usage);
-    process.exit(1);
+  if (!params.tags || !params.tags.length) {
+    params.tags = [];
   }
-
-  splitCommaParams(skipPackages);
-  splitCommaParams(tags);
-
+  splitCommaParams(params.skipPackages);
+  splitCommaParams(params.tags);
   return params;
 };

@@ -20,6 +20,10 @@ The high level process of creating releases is [documented below](#process). Ind
 
 If this is your first time running the release scripts, go to the `scripts/release` directory and run `yarn` to install the dependencies.
 
+## Publishing Without Tags
+
+The sections bekow include meaningful `--tags` in the instructions. However, keep in mind that **the `--tags` arguments is optional**, and you can omit it if you don't want to tag the release on npm at all. This can be useful when preparing breaking changes.
+
 ## Publishing Next
 
 "Next" builds are meant to be lightweight and published often. In most cases, they can be published using artifacts built by Circle CI.
