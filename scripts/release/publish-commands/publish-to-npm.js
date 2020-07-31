@@ -54,6 +54,17 @@ const run = async ({cwd, dry, packages, tags}, otp) => {
           )
         );
       }
+
+      if (tags.includes('untagged')) {
+        // npm doesn't let us publish without a tag at all,
+        // so for one-off publishes we clean it up ourselves.
+        if (!dry) {
+          await exec(`npm dist-tag rm ${packageName}@untagged --otp=${otp}`);
+        }
+        console.log(
+          theme.command(`npm dist-tag rm ${packageName}@untagged --otp=${otp}`)
+        );
+      }
     }
   }
 };
