@@ -8,13 +8,13 @@ const theme = require('./theme');
 
 const checkNPMPermissions = require('./publish-commands/check-npm-permissions');
 const confirmSkippedPackages = require('./publish-commands/confirm-skipped-packages');
-const confirmVersionAndTags = require('./publish-commands/confirm-version-and-tags');
+const confirmVersionAndTag = require('./publish-commands/confirm-version-and-tag');
 const parseParams = require('./publish-commands/parse-params');
 const printFollowUpInstructions = require('./publish-commands/print-follow-up-instructions');
 const promptForOTP = require('./publish-commands/prompt-for-otp');
 const publishToNPM = require('./publish-commands/publish-to-npm');
 const updateStableVersionNumbers = require('./publish-commands/update-stable-version-numbers');
-const validateTags = require('./publish-commands/validate-tags');
+const validateTag = require('./publish-commands/validate-tag');
 const validateSkipPackages = require('./publish-commands/validate-skip-packages');
 
 const run = async () => {
@@ -37,9 +37,9 @@ const run = async () => {
       }
     });
 
-    await validateTags(params);
+    await validateTag(params);
     await confirmSkippedPackages(params);
-    await confirmVersionAndTags(params);
+    await confirmVersionAndTag(params);
     await validateSkipPackages(params);
     await checkNPMPermissions(params);
     const otp = await promptForOTP(params);

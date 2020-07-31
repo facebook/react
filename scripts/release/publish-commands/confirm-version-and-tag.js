@@ -8,24 +8,16 @@ const {join} = require('path');
 const {confirm} = require('../utils');
 const theme = require('../theme');
 
-const run = async ({cwd, packages, tags}) => {
+const run = async ({cwd, packages, tag}) => {
   clear();
 
-  if (tags.length === 0) {
-    console.log(
-      theme`{spinnerSuccess ✓} You are about the publish the following packages without any tags:`
-    );
-  } else if (tags.length === 1) {
-    console.log(
-      theme`{spinnerSuccess ✓} You are about the publish the following packages under the tag {tag ${tags}}:`
-    );
-  } else {
-    console.log(
-      theme`{spinnerSuccess ✓} You are about the publish the following packages under the tags {tag ${tags.join(
-        ', '
-      )}}:`
-    );
-  }
+  // All latest releases are auto-tagged as next too by the script.
+  let tags = tag === 'latest' ? ['latest', 'next'] : [tag];
+  console.log(
+    theme`{spinnerSuccess ✓} You are about the publish the following packages under the tag {tag ${tags.join(
+      ', '
+    )}}:`
+  );
 
   for (let i = 0; i < packages.length; i++) {
     const packageName = packages[i];

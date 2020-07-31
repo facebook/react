@@ -6,7 +6,7 @@ const clear = require('clear');
 const {confirm} = require('../utils');
 const theme = require('../theme');
 
-const run = async ({cwd, packages, skipPackages, tags}) => {
+const run = async ({cwd, packages, skipPackages}) => {
   if (skipPackages.length === 0) {
     return;
   }
