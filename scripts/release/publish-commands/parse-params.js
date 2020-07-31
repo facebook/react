@@ -17,6 +17,7 @@ const paramDefinitions = [
     type: String,
     multiple: true,
     description: 'NPM tags to point to the new release.',
+    defaultValue: ['untagged'],
   },
   {
     name: 'skipPackages',
@@ -29,10 +30,20 @@ const paramDefinitions = [
 
 module.exports = () => {
   const params = commandLineArgs(paramDefinitions);
-  if (!params.tags || !params.tags.length) {
-    params.tags = [];
-  }
   splitCommaParams(params.skipPackages);
   splitCommaParams(params.tags);
+  params.tags.forEach(tag => {
+    switch (tag) {
+      case 'latest':
+      case 'next':
+      case 'experimental':
+      case 'untagged':
+        break;
+      default:
+        console.error('Unknown tag: "' + params.tag + '"');
+        process.exit(1);
+        break;
+    }
+  });
   return params;
 };
