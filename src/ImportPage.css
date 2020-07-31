@@ -15,10 +15,12 @@
 .link {
   color: #282c34;
   transition: 0.2s;
+  font-size: calc(10px + 1.5vmin);
 }
 .link:hover {
   color: #61dafb;
   transition: 0.2s;
+  font-size: calc(10px + 1.5vmin);
 }
 
 kbd {
