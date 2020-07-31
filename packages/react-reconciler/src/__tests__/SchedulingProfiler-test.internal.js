@@ -526,8 +526,6 @@ describe('SchedulingProfiler', () => {
           '--layout-effects-start-1024',
           '--layout-effects-stop',
           '--commit-stop',
-          '--passive-effects-start-1024',
-          '--passive-effects-stop',
         ]);
       }
     });
