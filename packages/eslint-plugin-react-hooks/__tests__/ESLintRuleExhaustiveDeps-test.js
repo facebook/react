@@ -1376,6 +1376,16 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function Component({ reportType }) {
+          let Report = Reports[reportType];
+          let child = useMemo(() => {
+            return <Report />;
+          }, [Report]);
+        }
+      `,
+    }
   ],
   invalid: [
     {
