@@ -15,6 +15,7 @@
 
 export const warnAboutSpreadingKeyToJSX = __VARIANT__;
 export const disableInputAttributeSyncing = __VARIANT__;
+export const enableFilterEmptyStringAttributesDOM = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
 export const decoupleUpdatePriorityFromScheduler = __VARIANT__;
 export const disableOnScrollBubbling = __VARIANT__;

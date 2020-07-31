@@ -7,7 +7,10 @@
  * @flow
  */
 
-import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
+import {
+  enableDeprecatedFlareAPI,
+  enableFilterEmptyStringAttributesDOM,
+} from 'shared/ReactFeatureFlags';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -164,28 +167,30 @@ export function shouldRemoveAttribute(
     return false;
   }
   if (propertyInfo !== null) {
-    if (propertyInfo.removeEmptyString && value === '') {
-      if (__DEV__) {
-        if (name === 'src') {
-          console.error(
-            'An empty string ("") was passed to the %s attribute. ' +
-              'This may cause the browser to download the whole page again over the network. ' +
-              'To fix this, either do not render the element at all ' +
-              'or pass null to %s instead of an empty string.',
-            name,
-            name,
-          );
-        } else {
-          console.error(
-            'An empty string ("") was passed to the %s attribute. ' +
-              'To fix this, either do not render the element at all ' +
-              'or pass null to %s instead of an empty string.',
-            name,
-            name,
-          );
+    if (enableFilterEmptyStringAttributesDOM) {
+      if (propertyInfo.removeEmptyString && value === '') {
+        if (__DEV__) {
+          if (name === 'src') {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'This may cause the browser to download the whole page again over the network. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              name,
+              name,
+            );
+          } else {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              name,
+              name,
+            );
+          }
         }
+        return true;
       }
-      return true;
     }
 
     switch (propertyInfo.type) {
