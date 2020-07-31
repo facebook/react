@@ -44,7 +44,7 @@ export const warnAboutSpreadingKeyToJSX = false;
 export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
-export const disableOnScrollBubbling = false;
+export const disableOnScrollBubbling = true;
 
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
