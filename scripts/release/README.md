@@ -20,9 +20,13 @@ The high level process of creating releases is [documented below](#process). Ind
 
 If this is your first time running the release scripts, go to the `scripts/release` directory and run `yarn` to install the dependencies.
 
-## Publishing Without Tags
+## Publishing Untagged
 
-The sections bekow include meaningful `--tags` in the instructions. However, keep in mind that **the `--tags` arguments is optional**, and you can omit it if you don't want to tag the release on npm at all. This can be useful when preparing breaking changes.
+The sections bekow include meaningful `--tag` in the instructions.
+
+However, keep in mind that **the `--tag` arguments is optional**, and you can omit it if you don't want to tag the release on npm at all. This can be useful when preparing breaking changes.
+
+Because npm requires a tag on publish, the script does it by creating a temporary tag and deleting it afterwards.
 
 ## Publishing Next
 
@@ -42,7 +46,7 @@ scripts/release/prepare-release-from-ci.js --build=124756
 
 Once the build has been checked out and tested locally, you're ready to publish it:
 ```sh
-scripts/release/publish.js --tags next
+scripts/release/publish.js --tag next
 ```
 
 If the OTP code expires while publishing, re-run this command and answer "y" to the questions about whether it was expected for already published packages.
@@ -64,7 +68,7 @@ scripts/release/prepare-release-from-ci.js --build=124763
 Once the build has been checked out and tested locally, you're ready to publish it. When publishing an experimental release, use the `experimental` tag:
 
 ```sh
-scripts/release/publish.js --tags experimental
+scripts/release/publish.js --tag experimental
 ```
 
 If the OTP code expires while publishing, re-run this command and answer "y" to the questions about whether it was expected for already published packages.
@@ -86,10 +90,12 @@ This script will prompt you to select stable version numbers for each of the pac
 Once this step is complete, you're ready to publish the release:
 
 ```sh
-scripts/release/publish.js --tags latest
+scripts/release/publish.js --tag latest
 ```
 
 If the OTP code expires while publishing, re-run this command and answer "y" to the questions about whether it was expected for already published packages.
+
+Note that publishing the `latest` tag will always update the `next` tag automatically as well so they're in sync.
 
 After successfully publishing the release, follow the on-screen instructions to ensure that all of the appropriate post-release steps are executed.
 
@@ -170,7 +176,9 @@ Upon completion, this script provides instructions for tagging the Git commit th
 **Specify a `--dry` flag when running this script if you want to skip the NPM-publish step.** In this event, the script will print the NPM commands but it will not actually run them.
 
 #### Example usage
-To publish a release to NPM as both `next` and `latest`:
+To publish a release to NPM as `latest`:
 ```sh
-scripts/release/publish.js --tags latest
+scripts/release/publish.js --tag latest
 ```
+
+Note that publishing the `latest` tag will always update the `next` tag automatically as well so they're in sync.

@@ -9,7 +9,7 @@ const {join} = require('path');
 const theme = require('../theme');
 const {execRead} = require('../utils');
 
-const run = async ({cwd, packages, tags}) => {
+const run = async ({cwd, packages, tag}) => {
   // All packages are built from a single source revision,
   // so it is safe to read build info from any one of them.
   const arbitraryPackageName = packages[0];
@@ -24,7 +24,7 @@ const run = async ({cwd, packages, tags}) => {
 
   clear();
 
-  if (tags.length === 1 && tags[0] === 'next') {
+  if (tag === 'next') {
     console.log(
       theme`{header A "next" release} {version ${version}} {header has been published!}`
     );
@@ -35,7 +35,7 @@ const run = async ({cwd, packages, tags}) => {
       theme.caution`The release has been published but you're not done yet!`
     );
 
-    if (tags.includes('latest')) {
+    if (tag === 'latest') {
       console.log();
       console.log(
         theme.header`Please review and commit all local, staged changes.`

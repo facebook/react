@@ -6,8 +6,8 @@ const {readFileSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
 const {join} = require('path');
 
-const run = async ({cwd, packages, skipPackages, tags}) => {
-  if (!tags.includes('latest')) {
+const run = async ({cwd, packages, skipPackages, tag}) => {
+  if (tag !== 'latest') {
     // Don't update version numbers for alphas.
     return;
   }
