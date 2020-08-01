@@ -229,9 +229,9 @@ function map(
     return children;
   }
   const result = [];
-  let count = 0;
+  let mapCount = 0;
   mapIntoArray(children, result, '', '', function(child) {
-    return func.call(context, child, count++);
+    return func.call(context, child, mapCount++);
   });
   return result;
 }
