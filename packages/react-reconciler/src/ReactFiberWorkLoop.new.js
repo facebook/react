@@ -149,6 +149,7 @@ import {
   Mutation as MutationSubtreeTag,
   Layout as LayoutSubtreeTag,
   Passive as PassiveSubtreeTag,
+  PassiveStatic as PassiveStaticSubtreeTag,
 } from './ReactSubtreeTags';
 import {
   NoLanePriority,
@@ -1901,6 +1902,9 @@ function resetChildLanes(completedWork: Fiber) {
         if ((effectTag & PassiveMask) !== NoEffect) {
           subtreeTag |= PassiveSubtreeTag;
         }
+        if ((effectTag & PassiveStatic) !== NoEffect) {
+          subtreeTag |= PassiveStaticSubtreeTag;
+        }
 
         // When a fiber is cloned, its actualDuration is reset to 0. This value will
         // only be updated if work is done on the fiber (i.e. it doesn't bailout).
@@ -1950,6 +1954,9 @@ function resetChildLanes(completedWork: Fiber) {
         }
         if ((effectTag & PassiveMask) !== NoEffect) {
           subtreeTag |= PassiveSubtreeTag;
+        }
+        if ((effectTag & PassiveStatic) !== NoEffect) {
+          subtreeTag |= PassiveStaticSubtreeTag;
         }
 
         child = child.sibling;
@@ -2784,8 +2791,9 @@ function flushPassiveUnmountEffects(firstChild: Fiber): void {
       for (let i = 0; i < deletions.length; i++) {
         const fiberToDelete = deletions[i];
         // If this fiber (or anything below it) has passive effects then traverse the subtree.
-        const primaryEffectTag = fiberToDelete.effectTag & PassiveMask;
-        const primarySubtreeTag = fiberToDelete.subtreeTag & PassiveSubtreeTag;
+        const primaryEffectTag = fiberToDelete.effectTag & PassiveStatic;
+        const primarySubtreeTag =
+          fiberToDelete.subtreeTag & PassiveStaticSubtreeTag;
         if (
           primarySubtreeTag !== NoSubtreeTag ||
           primaryEffectTag !== NoEffect
@@ -2837,7 +2845,7 @@ function flushPassiveUnmountEffectsInsideOfDeletedTree(
       // Note that this requires checking subtreeTag of the current Fiber,
       // rather than the subtreeTag/effectsTag of the first child,
       // since that would not cover passive effects in siblings.
-      const primarySubtreeTag = fiber.subtreeTag & PassiveSubtreeTag;
+      const primarySubtreeTag = fiber.subtreeTag & PassiveStaticSubtreeTag;
       if (primarySubtreeTag !== NoSubtreeTag) {
         flushPassiveUnmountEffectsInsideOfDeletedTree(child);
       }

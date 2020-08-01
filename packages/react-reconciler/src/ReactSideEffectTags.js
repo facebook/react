@@ -51,7 +51,7 @@ export const PassiveStatic = /*                */ 0b1000000000000000;
 export const BeforeMutationMask = /*           */ 0b0000001100001010;
 export const MutationMask = /*                 */ 0b0000010010011110;
 export const LayoutMask = /*                   */ 0b0000000010100100;
-export const PassiveMask = /*                  */ 0b1000001000001000;
+export const PassiveMask = /*                  */ 0b0000001000001000;
 
 // Union of tags that don't get reset on clones.
 // This allows certain concepts to persist without recalculting them,
