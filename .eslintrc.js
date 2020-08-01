@@ -51,7 +51,7 @@ module.exports = {
     'no-unused-vars': [ERROR, {args: 'none'}],
     'no-use-before-define': OFF,
     'no-useless-concat': OFF,
-    quotes: [ERROR, 'single', {avoidEscape: true, allowTemplateLiterals: true}],
+    quotes: [ERROR, 'single', {avoidEscape: false, allowTemplateLiterals: true}],
     'space-before-blocks': ERROR,
     'space-before-function-paren': OFF,
     'valid-typeof': [ERROR, {requireStringLiterals: true}],
