@@ -220,7 +220,7 @@ type MapFunc = (child: ?React$Node) => ?ReactNodeList;
  * @param {*} context Context for mapFunction.
  * @return {object} Object containing the ordered map of results.
  */
-function mapChildren(
+function map(
   children: ?ReactNodeList,
   func: MapFunc,
   context: mixed,
@@ -245,9 +245,9 @@ function mapChildren(
  * @param {?*} children Children tree container.
  * @return {number} The number of children.
  */
-function countChildren(children: ?ReactNodeList): number {
+function count(children: ?ReactNodeList): number {
   let n = 0;
-  mapChildren(children, () => {
+  map(children, () => {
     n++;
     // Don't return anything
   });
@@ -268,12 +268,12 @@ type ForEachFunc = (child: ?React$Node) => void;
  * @param {function(*, int)} forEachFunc
  * @param {*} forEachContext Context for forEachContext.
  */
-function forEachChildren(
+function forEach(
   children: ?ReactNodeList,
   forEachFunc: ForEachFunc,
   forEachContext: mixed,
 ): void {
-  mapChildren(
+  map(
     children,
     function() {
       forEachFunc.apply(this, arguments);
@@ -290,7 +290,7 @@ function forEachChildren(
  * See https://reactjs.org/docs/react-api.html#reactchildrentoarray
  */
 function toArray(children: ?ReactNodeList): Array<React$Node> {
-  return mapChildren(children, child => child) || [];
+  return map(children, child => child) || [];
 }
 
 /**
@@ -307,7 +307,7 @@ function toArray(children: ?ReactNodeList): Array<React$Node> {
  * @return {ReactElement} The first and only `ReactElement` contained in the
  * structure.
  */
-function onlyChild<T>(children: T): T {
+function only<T>(children: T): T {
   invariant(
     isValidElement(children),
     'React.Children.only expected to receive a single React element child.',
@@ -315,10 +315,12 @@ function onlyChild<T>(children: T): T {
   return children;
 }
 
-export {
-  forEachChildren as forEach,
-  mapChildren as map,
-  countChildren as count,
-  onlyChild as only,
+const Children = {
+  forEach,
+  map,
+  count,
+  only,
   toArray,
 };
+
+export default Children;

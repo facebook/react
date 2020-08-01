@@ -21,7 +21,7 @@ import {
 
 import {Component, PureComponent} from './ReactBaseClasses';
 import {createRef} from './ReactCreateRef';
-import {forEach, map, count, toArray, only} from './ReactChildren';
+import Children from './ReactChildren';
 import {
   createElement as createElementProd,
   createFactory as createFactoryProd,
@@ -65,14 +65,6 @@ import {createEventResponder} from './ReactEventResponder';
 const createElement = __DEV__ ? createElementWithValidation : createElementProd;
 const cloneElement = __DEV__ ? cloneElementWithValidation : cloneElementProd;
 const createFactory = __DEV__ ? createFactoryWithValidation : createFactoryProd;
-
-const Children = {
-  map,
-  forEach,
-  count,
-  toArray,
-  only,
-};
 
 export {
   Children,
