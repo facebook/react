@@ -140,9 +140,6 @@ export default function(babel, opts = {}) {
             } else if (calleeType === 'MemberExpression') {
               // Could be something like React.forwardRef(...)
               // Pass through.
-            } else {
-              // More complicated call.
-              return false;
             }
             break;
           }
