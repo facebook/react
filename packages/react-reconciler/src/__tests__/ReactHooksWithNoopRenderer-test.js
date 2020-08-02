@@ -3314,4 +3314,45 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
     expect(ReactNoop).toMatchRenderedOutput('ABC');
   });
+
+  it("regression test: don't unmount effects on siblings of deleted nodes", async () => {
+    const root = ReactNoop.createRoot();
+
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return label;
+    }
+
+    await act(async () => {
+      root.render(
+        <>
+          <Child key="A" label="A" />
+          <Child key="B" label="B" />
+        </>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Mount A', 'Mount B']);
+
+    // Delete A. This should only unmount the effect on A. In the regression,
+    // B's effect would also unmount.
+    await act(async () => {
+      root.render(
+        <>
+          <Child key="B" label="B" />
+        </>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Unmount A']);
+
+    // Now delete and unmount B.
+    await act(async () => {
+      root.render(null);
+    });
+    expect(Scheduler).toHaveYielded(['Unmount B']);
+  });
 });
