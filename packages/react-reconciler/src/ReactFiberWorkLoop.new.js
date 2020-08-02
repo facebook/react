@@ -2790,16 +2790,7 @@ function flushPassiveUnmountEffects(firstChild: Fiber): void {
     if (deletions !== null) {
       for (let i = 0; i < deletions.length; i++) {
         const fiberToDelete = deletions[i];
-        // If this fiber (or anything below it) has passive effects then traverse the subtree.
-        const primaryEffectTag = fiberToDelete.effectTag & PassiveStatic;
-        const primarySubtreeTag =
-          fiberToDelete.subtreeTag & PassiveStaticSubtreeTag;
-        if (
-          primarySubtreeTag !== NoSubtreeTag ||
-          primaryEffectTag !== NoEffect
-        ) {
-          flushPassiveUnmountEffectsInsideOfDeletedTree(fiberToDelete);
-        }
+        flushPassiveUnmountEffectsInsideOfDeletedTree(fiberToDelete);
 
         // Now that passive effects have been processed, it's safe to detach lingering pointers.
         detachFiberAfterEffects(fiberToDelete);
@@ -2835,34 +2826,29 @@ function flushPassiveUnmountEffects(firstChild: Fiber): void {
 }
 
 function flushPassiveUnmountEffectsInsideOfDeletedTree(
-  firstChild: Fiber,
+  fiberToDelete: Fiber,
 ): void {
-  let fiber = firstChild;
-  while (fiber !== null) {
-    const child = fiber.child;
-    if (child !== null) {
-      // If any children have passive effects then traverse the subtree.
-      // Note that this requires checking subtreeTag of the current Fiber,
-      // rather than the subtreeTag/effectsTag of the first child,
-      // since that would not cover passive effects in siblings.
-      const primarySubtreeTag = fiber.subtreeTag & PassiveStaticSubtreeTag;
-      if (primarySubtreeTag !== NoSubtreeTag) {
-        flushPassiveUnmountEffectsInsideOfDeletedTree(child);
+  if ((fiberToDelete.subtreeTag & PassiveStaticSubtreeTag) !== NoSubtreeTag) {
+    // If any children have passive effects then traverse the subtree.
+    // Note that this requires checking subtreeTag of the current Fiber,
+    // rather than the subtreeTag/effectsTag of the first child,
+    // since that would not cover passive effects in siblings.
+    let child = fiberToDelete.child;
+    while (child !== null) {
+      flushPassiveUnmountEffectsInsideOfDeletedTree(child);
+      child = child.sibling;
+    }
+  }
+
+  if ((fiberToDelete.effectTag & PassiveStatic) !== NoEffect) {
+    switch (fiberToDelete.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent:
+      case Block: {
+        flushPassiveUnmountEffectsImpl(fiberToDelete, HookPassive);
       }
     }
-
-    if ((fiber.effectTag & PassiveStatic) !== NoEffect) {
-      switch (fiber.tag) {
-        case FunctionComponent:
-        case ForwardRef:
-        case SimpleMemoComponent:
-        case Block: {
-          flushPassiveUnmountEffectsImpl(fiber, HookPassive);
-        }
-      }
-    }
-
-    fiber = fiber.sibling;
   }
 }
 
