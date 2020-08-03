@@ -2,15 +2,19 @@
 
 import type {Interaction} from '../useCanvasInteraction';
 import type {Rect, Size} from './geometry';
+import type {Layouter} from './layouter';
 
 import {Surface} from './Surface';
 import {
-  rectIntersectsRect,
   rectEqualToRect,
+  rectIntersectionWithRect,
+  rectIntersectsRect,
   sizeIsEmpty,
   sizeIsValid,
+  unionOfRects,
   zeroRect,
 } from './geometry';
+import {noopLayout, viewsToLayout, collapseLayoutIntoViews} from './layouter';
 
 /**
  * Base view class that can be subclassed to draw custom content or manage
@@ -24,6 +28,9 @@ export class View {
 
   superview: ?View;
   subviews: View[] = [];
+
+  /** An injected function that lays out our subviews. */
+  layouter: Layouter;
 
   /**
    * Whether this view needs to be drawn.
@@ -45,9 +52,15 @@ export class View {
    */
   subviewsNeedDisplay = false;
 
-  constructor(surface: Surface, frame: Rect, visibleArea: Rect = frame) {
+  constructor(
+    surface: Surface,
+    frame: Rect,
+    layouter: Layouter = noopLayout,
+    visibleArea: Rect = frame,
+  ) {
     this.surface = surface;
     this.frame = frame;
+    this.layouter = layouter;
     this.visibleArea = visibleArea;
   }
 
@@ -103,14 +116,55 @@ export class View {
     }
   }
 
-  desiredSize(): ?Size {}
+  /**
+   * A size that can be used as a hint by layout functions.
+   *
+   * Implementations should typically return the intrinsic content size or a
+   * size that fits all the view's content.
+   *
+   * The default implementation returns a size that fits all the view's
+   * subviews.
+   *
+   * Can be overridden by subclasses.
+   */
+  desiredSize(): ?Size {
+    if (this.needsDisplay) {
+      this.layoutSubviews();
+    }
+    const frames = this.subviews.map(subview => subview.frame);
+    return unionOfRects(...frames).size;
+  }
 
   /**
    * Appends `view` to the list of this view's `subviews`.
    */
   addSubview(view: View) {
+    if (this.subviews.includes(view)) {
+      return;
+    }
     this.subviews.push(view);
     view.superview = this;
+  }
+
+  /**
+   * Breaks the subview-superview relationship between `view` and this view, if
+   * `view` is a subview of this view.
+   */
+  removeSubview(view: View) {
+    const subviewIndex = this.subviews.indexOf(view);
+    if (subviewIndex === -1) {
+      return;
+    }
+    view.superview = undefined;
+    this.subviews.splice(subviewIndex, 1);
+  }
+
+  /**
+   * Removes all subviews from this view.
+   */
+  removeAllSubviews() {
+    this.subviews.forEach(subview => (subview.superview = undefined));
+    this.subviews = [];
   }
 
   /**
@@ -137,14 +191,31 @@ export class View {
    *
    * Implementations should call `setNeedsDisplay` if a draw is required.
    *
-   * To be overwritten by subclasses that wish to manage their subviews'
-   * layout.
+   * The default implementation uses `this.layouter` to lay out subviews.
+   *
+   * Can be overwritten by subclasses that wish to manually manage their
+   * subviews' layout.
    *
    * NOTE: Do not call directly! Use `displayIfNeeded`.
    *
    * @see displayIfNeeded
    */
-  layoutSubviews() {}
+  layoutSubviews() {
+    const {frame, layouter, subviews, visibleArea} = this;
+    const existingLayout = viewsToLayout(subviews);
+    const newLayout = layouter(existingLayout, frame);
+    collapseLayoutIntoViews(newLayout);
+
+    subviews.forEach((subview, subviewIndex) => {
+      if (rectIntersectsRect(visibleArea, subview.frame)) {
+        subview.setVisibleArea(
+          rectIntersectionWithRect(visibleArea, subview.frame),
+        );
+      } else {
+        subview.setVisibleArea(zeroRect);
+      }
+    });
+  }
 
   /**
    * Draw the contents of this view in the given canvas `context`.

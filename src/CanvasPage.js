@@ -16,7 +16,7 @@ import {
   HorizontalPanAndZoomView,
   VerticalScrollView,
   Surface,
-  StaticLayoutView,
+  View,
   layeredLayout,
   zeroPoint,
   verticallyStackedLayout,
@@ -149,17 +149,15 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       flamechartView,
     );
 
-    const stackedZoomables = new StaticLayoutView(
+    const stackedZoomables = new View(
       surfaceRef.current,
       {origin: zeroPoint, size: {width, height}},
       verticallyStackedLayout,
-      [
-        axisMarkersView,
-        reactEventsView,
-        reactMeasuresView,
-        flamechartVScrollWrapper,
-      ],
     );
+    stackedZoomables.addSubview(axisMarkersView);
+    stackedZoomables.addSubview(reactEventsView);
+    stackedZoomables.addSubview(reactMeasuresView);
+    stackedZoomables.addSubview(flamechartVScrollWrapper);
 
     const contentZoomWrapper = new HorizontalPanAndZoomView(
       surfaceRef.current,
@@ -168,12 +166,12 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       reactEventsView.intrinsicSize.width,
     );
 
-    rootViewRef.current = new StaticLayoutView(
+    rootViewRef.current = new View(
       surfaceRef.current,
       {origin: zeroPoint, size: {width, height}},
       layeredLayout,
-      [contentZoomWrapper],
     );
+    rootViewRef.current.addSubview(contentZoomWrapper);
 
     surfaceRef.current.rootView = rootViewRef.current;
   }, [data, setHoveredEvent]);

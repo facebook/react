@@ -10,14 +10,13 @@ import type {Rect, Size} from '../../layout';
 
 import {
   ColorView,
-  View,
   Surface,
-  StaticLayoutView,
+  View,
+  layeredLayout,
   rectContainsPoint,
   rectEqualToRect,
-  rectIntersectsRect,
   rectIntersectionWithRect,
-  layeredLayout,
+  rectIntersectsRect,
   verticallyStackedLayout,
 } from '../../layout';
 import {
@@ -254,17 +253,12 @@ class FlamechartStackLayerView extends View {
 }
 
 export class FlamechartView extends View {
-  flamechart: Flamechart;
-  duration: number;
-
-  intrinsicSize: Size;
-
   flamechartRowViews: FlamechartStackLayerView[] = [];
-  /** Container view that vertically stacks flamechart rows */
-  verticalStackView: StaticLayoutView;
-  /** View that layers a background color view behind `verticalStackView` */
-  layerStackView: StaticLayoutView;
 
+  /** Container view that vertically stacks flamechart rows */
+  verticalStackView: View;
+
+  hoveredStackFrame: FlamechartStackFrame | null = null;
   onHover: ((node: FlamechartStackFrame | null) => void) | null = null;
 
   constructor(
@@ -273,39 +267,46 @@ export class FlamechartView extends View {
     flamechart: Flamechart,
     duration: number,
   ) {
-    super(surface, frame);
-    this.flamechart = flamechart;
-    this.duration = duration;
-    this.intrinsicSize = {
-      width: duration,
-      height: this.flamechart.length * FLAMECHART_FRAME_HEIGHT,
-    };
-
-    this.verticalStackView = new StaticLayoutView(
-      surface,
-      frame,
-      verticallyStackedLayout,
-      [],
-    );
-
-    // Use a plain background view to prevent gaps from appearing between
-    // flamechartRowViews.
-    const colorView = new ColorView(surface, frame, COLORS.BACKGROUND);
-    this.layerStackView = new StaticLayoutView(surface, frame, layeredLayout, [
-      colorView,
-      this.verticalStackView,
-    ]);
-    this.addSubview(this.layerStackView);
+    super(surface, frame, layeredLayout);
+    this.setDataAndUpdateSubviews(flamechart, duration);
   }
 
-  desiredSize() {
-    // TODO: Replace this with one calculated by verticalStackView
-    return this.intrinsicSize;
+  setDataAndUpdateSubviews(flamechart: Flamechart, duration: number) {
+    const {surface, frame, onHover, hoveredStackFrame} = this;
+
+    // Clear existing rows on data update
+    if (this.verticalStackView) {
+      this.removeAllSubviews();
+      this.flamechartRowViews = [];
+    }
+
+    this.verticalStackView = new View(surface, frame, verticallyStackedLayout);
+    this.flamechartRowViews = flamechart.map(stackLayer => {
+      const rowView = new FlamechartStackLayerView(
+        surface,
+        frame,
+        stackLayer,
+        duration,
+      );
+      this.verticalStackView.addSubview(rowView);
+
+      // Update states
+      rowView.onHover = onHover;
+      rowView.setHoveredFlamechartStackFrame(hoveredStackFrame);
+      return rowView;
+    });
+
+    // Add a plain background view to prevent gaps from appearing between
+    // flamechartRowViews.
+    const colorView = new ColorView(surface, frame, COLORS.BACKGROUND);
+    this.addSubview(colorView);
+    this.addSubview(this.verticalStackView);
   }
 
   setHoveredFlamechartStackFrame(
     hoveredStackFrame: FlamechartStackFrame | null,
   ) {
+    this.hoveredStackFrame = hoveredStackFrame;
     this.flamechartRowViews.forEach(rowView =>
       rowView.setHoveredFlamechartStackFrame(hoveredStackFrame),
     );
@@ -316,27 +317,9 @@ export class FlamechartView extends View {
     this.flamechartRowViews.forEach(rowView => (rowView.onHover = onHover));
   }
 
-  layoutSubviews() {
-    if (this.flamechartRowViews.length !== this.flamechart.length) {
-      // TODO: Remove existing row views from verticalStackView
-      this.flamechartRowViews = this.flamechart.map(stackLayer => {
-        const rowView = new FlamechartStackLayerView(
-          this.surface,
-          this.frame,
-          stackLayer,
-          this.duration,
-        );
-        this.verticalStackView.addSubview(rowView);
-        rowView.onHover = this.onHover;
-        return rowView;
-      });
-      this.setNeedsDisplay();
-    }
-
-    // Lay out subviews
-    const {layerStackView} = this;
-    layerStackView.setFrame(this.frame);
-    layerStackView.setVisibleArea(this.visibleArea);
+  desiredSize() {
+    // Ignore the wishes of the background color view
+    return this.verticalStackView.desiredSize();
   }
 
   /**

@@ -72,14 +72,20 @@ export class VerticalScrollView extends View {
     this.updateState(this.scrollState);
   }
 
+  desiredSize() {
+    // We don't want our superview to fit to our content; we'll fit whatever
+    // frame we're given.
+    return null;
+  }
+
   layoutSubviews() {
     const {offsetY} = this.scrollState;
     const desiredSize = this.contentView.desiredSize();
 
-    const remainingHeight = this.frame.size.height;
+    const minimumHeight = this.frame.size.height;
     const desiredHeight = desiredSize ? desiredSize.height : 0;
-    // Force last view to take up at least all remaining vertical space.
-    const height = Math.max(desiredHeight, remainingHeight);
+    // Force view to take up at least all remaining vertical space.
+    const height = Math.max(desiredHeight, minimumHeight);
 
     const proposedFrame = {
       origin: {
@@ -92,7 +98,7 @@ export class VerticalScrollView extends View {
       },
     };
     this.contentView.setFrame(proposedFrame);
-    this.contentView.setVisibleArea(this.visibleArea);
+    super.layoutSubviews();
   }
 
   isPanning = false;

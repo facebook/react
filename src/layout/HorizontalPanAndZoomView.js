@@ -96,6 +96,12 @@ export class HorizontalPanAndZoomView extends View {
     this.updateState(this.panAndZoomState);
   }
 
+  desiredSize() {
+    // We don't want our superview to fit to our content; we'll fit whatever
+    // frame we're given.
+    return null;
+  }
+
   layoutSubviews() {
     const {offsetX, zoomLevel} = this.panAndZoomState;
     const proposedFrame = {
@@ -112,7 +118,7 @@ export class HorizontalPanAndZoomView extends View {
       },
     };
     this.contentView.setFrame(proposedFrame);
-    this.contentView.setVisibleArea(this.visibleArea);
+    super.layoutSubviews();
   }
 
   isPanning = false;
