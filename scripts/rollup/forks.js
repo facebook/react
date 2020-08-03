@@ -137,6 +137,19 @@ const forks = Object.freeze({
             return 'shared/forks/ReactFeatureFlags.testing.www.js';
         }
         return 'shared/forks/ReactFeatureFlags.testing.js';
+      case 'react':
+        switch (bundleType) {
+          case FB_WWW_DEV:
+          case FB_WWW_PROD:
+          case FB_WWW_PROFILING:
+            return 'shared/forks/ReactFeatureFlags.www.js';
+          case RN_FB_DEV:
+          case RN_FB_PROD:
+          case RN_FB_PROFILING:
+            return 'shared/forks/ReactFeatureFlags.native-fb.js';
+          default:
+            return 'shared/ReactFeatureFlags.js';
+        }
       default:
         switch (bundleType) {
           case FB_WWW_DEV:
