@@ -28,27 +28,27 @@ import {
 } from '../constants';
 
 export class TimeAxisMarkersView extends View {
-  totalDuration: number;
-  intrinsicSize: Size;
+  _totalDuration: number;
+  _intrinsicSize: Size;
 
   constructor(surface: Surface, frame: Rect, totalDuration: number) {
     super(surface, frame);
-    this.totalDuration = totalDuration;
-    this.intrinsicSize = {
-      width: this.totalDuration,
+    this._totalDuration = totalDuration;
+    this._intrinsicSize = {
+      width: this._totalDuration,
       height: HEADER_HEIGHT_FIXED,
     };
   }
 
   desiredSize() {
-    return this.intrinsicSize;
+    return this._intrinsicSize;
   }
 
   // Time mark intervals vary based on the current zoom range and the time it represents.
   // In Chrome, these seem to range from 70-140 pixels wide.
   // Time wise, they represent intervals of e.g. 1s, 500ms, 200ms, 100ms, 50ms, 20ms.
   // Based on zoom, we should determine which amount to actually show.
-  getTimeTickInterval(scaleFactor: number): number {
+  _getTimeTickInterval(scaleFactor: number): number {
     for (let i = 0; i < INTERVAL_TIMES.length; i++) {
       const currentInterval = INTERVAL_TIMES[i];
       const intervalWidth = durationToWidth(currentInterval, scaleFactor);
@@ -60,12 +60,12 @@ export class TimeAxisMarkersView extends View {
   }
 
   draw(context: CanvasRenderingContext2D) {
-    const {frame, intrinsicSize, visibleArea} = this;
+    const {frame, _intrinsicSize, visibleArea} = this;
     const clippedFrame = {
       origin: frame.origin,
       size: {
         width: frame.size.width,
-        height: intrinsicSize.height,
+        height: _intrinsicSize.height,
       },
     };
     const drawableRect = rectIntersectionWithRect(clippedFrame, visibleArea);
@@ -80,10 +80,10 @@ export class TimeAxisMarkersView extends View {
     );
 
     const scaleFactor = positioningScaleFactor(
-      intrinsicSize.width,
+      _intrinsicSize.width,
       clippedFrame,
     );
-    const interval = this.getTimeTickInterval(scaleFactor);
+    const interval = this._getTimeTickInterval(scaleFactor);
     const firstIntervalTimestamp =
       Math.ceil(
         positionToTimestamp(

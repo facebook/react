@@ -14,16 +14,16 @@ import {zeroPoint} from './geometry';
  */
 export class Surface {
   rootView: ?View;
-  context: ?CanvasRenderingContext2D;
-  canvasSize: ?Size;
+  _context: ?CanvasRenderingContext2D;
+  _canvasSize: ?Size;
 
   setCanvas(canvas: HTMLCanvasElement, canvasSize: Size) {
-    this.context = getCanvasContext(
+    this._context = getCanvasContext(
       canvas,
       canvasSize.height,
       canvasSize.width,
     );
-    this.canvasSize = canvasSize;
+    this._canvasSize = canvasSize;
 
     if (this.rootView) {
       this.rootView.setNeedsDisplay();
@@ -31,19 +31,19 @@ export class Surface {
   }
 
   displayIfNeeded() {
-    const {rootView, canvasSize, context} = this;
-    if (!rootView || !context || !canvasSize) {
+    const {rootView, _canvasSize, _context} = this;
+    if (!rootView || !_context || !_canvasSize) {
       return;
     }
     rootView.setFrame({
       origin: zeroPoint,
-      size: canvasSize,
+      size: _canvasSize,
     });
     rootView.setVisibleArea({
       origin: zeroPoint,
-      size: canvasSize,
+      size: _canvasSize,
     });
-    rootView.displayIfNeeded(context);
+    rootView.displayIfNeeded(_context);
   }
 
   handleInteraction(interaction: Interaction) {

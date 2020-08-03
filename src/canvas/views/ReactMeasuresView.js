@@ -24,58 +24,58 @@ import {REACT_TOTAL_NUM_LANES} from '../../constants';
 const REACT_LANE_HEIGHT = REACT_WORK_SIZE + REACT_WORK_BORDER_SIZE;
 
 export class ReactMeasuresView extends View {
-  profilerData: ReactProfilerData;
-  intrinsicSize: Size;
+  _profilerData: ReactProfilerData;
+  _intrinsicSize: Size;
 
-  lanesToRender: ReactLane[];
-  laneToMeasures: Map<ReactLane, ReactMeasure[]>;
+  _lanesToRender: ReactLane[];
+  _laneToMeasures: Map<ReactLane, ReactMeasure[]>;
 
-  hoveredMeasure: ReactMeasure | null = null;
+  _hoveredMeasure: ReactMeasure | null = null;
   onHover: ((measure: ReactMeasure | null) => void) | null = null;
 
   constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
     super(surface, frame);
-    this.profilerData = profilerData;
-    this.performPreflightComputations();
+    this._profilerData = profilerData;
+    this._performPreflightComputations();
   }
 
-  performPreflightComputations() {
-    this.lanesToRender = [];
-    this.laneToMeasures = new Map<ReactLane, ReactMeasure[]>();
+  _performPreflightComputations() {
+    this._lanesToRender = [];
+    this._laneToMeasures = new Map<ReactLane, ReactMeasure[]>();
 
     for (let lane: ReactLane = 0; lane < REACT_TOTAL_NUM_LANES; lane++) {
       // Hide lanes without any measures
-      const measuresForLane = this.profilerData.measures.filter(measure =>
+      const measuresForLane = this._profilerData.measures.filter(measure =>
         measure.lanes.includes(lane),
       );
       if (measuresForLane.length) {
-        this.lanesToRender.push(lane);
-        this.laneToMeasures.set(lane, measuresForLane);
+        this._lanesToRender.push(lane);
+        this._laneToMeasures.set(lane, measuresForLane);
       }
     }
 
-    this.intrinsicSize = {
-      width: this.profilerData.duration,
-      height: this.lanesToRender.length * REACT_LANE_HEIGHT,
+    this._intrinsicSize = {
+      width: this._profilerData.duration,
+      height: this._lanesToRender.length * REACT_LANE_HEIGHT,
     };
   }
 
   desiredSize() {
-    return this.intrinsicSize;
+    return this._intrinsicSize;
   }
 
   setHoveredMeasure(hoveredMeasure: ReactMeasure | null) {
-    if (this.hoveredMeasure === hoveredMeasure) {
+    if (this._hoveredMeasure === hoveredMeasure) {
       return;
     }
-    this.hoveredMeasure = hoveredMeasure;
+    this._hoveredMeasure = hoveredMeasure;
     this.setNeedsDisplay();
   }
 
   /**
    * Draw a single `ReactMeasure` as a bar in the canvas.
    */
-  drawSingleReactMeasure(
+  _drawSingleReactMeasure(
     context: CanvasRenderingContext2D,
     rect: Rect,
     measure: ReactMeasure,
@@ -158,9 +158,9 @@ export class ReactMeasuresView extends View {
   draw(context: CanvasRenderingContext2D) {
     const {
       frame,
-      hoveredMeasure,
-      lanesToRender,
-      laneToMeasures,
+      _hoveredMeasure,
+      _lanesToRender,
+      _laneToMeasures,
       visibleArea,
     } = this;
 
@@ -172,12 +172,15 @@ export class ReactMeasuresView extends View {
       visibleArea.size.height,
     );
 
-    const scaleFactor = positioningScaleFactor(this.intrinsicSize.width, frame);
+    const scaleFactor = positioningScaleFactor(
+      this._intrinsicSize.width,
+      frame,
+    );
 
-    for (let i = 0; i < lanesToRender.length; i++) {
-      const lane = lanesToRender[i];
+    for (let i = 0; i < _lanesToRender.length; i++) {
+      const lane = _lanesToRender[i];
       const baseY = frame.origin.y + i * REACT_LANE_HEIGHT;
-      const measuresForLane = laneToMeasures.get(lane);
+      const measuresForLane = _laneToMeasures.get(lane);
 
       if (!measuresForLane) {
         throw new Error(
@@ -188,11 +191,11 @@ export class ReactMeasuresView extends View {
       // Draw measures
       for (let j = 0; j < measuresForLane.length; j++) {
         const measure = measuresForLane[j];
-        const showHoverHighlight = hoveredMeasure === measure;
+        const showHoverHighlight = _hoveredMeasure === measure;
         const showGroupHighlight =
-          !!hoveredMeasure && hoveredMeasure.batchUID === measure.batchUID;
+          !!_hoveredMeasure && _hoveredMeasure.batchUID === measure.batchUID;
 
-        this.drawSingleReactMeasure(
+        this._drawSingleReactMeasure(
           context,
           visibleArea,
           measure,
@@ -236,12 +239,12 @@ export class ReactMeasuresView extends View {
   /**
    * @private
    */
-  handleHover(interaction: HoverInteraction) {
+  _handleHover(interaction: HoverInteraction) {
     const {
       frame,
-      intrinsicSize,
-      lanesToRender,
-      laneToMeasures,
+      _intrinsicSize,
+      _lanesToRender,
+      _laneToMeasures,
       onHover,
       visibleArea,
     } = this;
@@ -260,19 +263,19 @@ export class ReactMeasuresView extends View {
     const renderedLaneIndex = Math.floor(
       adjustedCanvasMouseY / REACT_LANE_HEIGHT,
     );
-    if (renderedLaneIndex < 0 || renderedLaneIndex >= lanesToRender.length) {
+    if (renderedLaneIndex < 0 || renderedLaneIndex >= _lanesToRender.length) {
       onHover(null);
       return;
     }
-    const lane = lanesToRender[renderedLaneIndex];
+    const lane = _lanesToRender[renderedLaneIndex];
 
     // Find the measure in `lane` being hovered over.
     //
     // Because data ranges may overlap, we want to find the last intersecting item.
     // This will always be the one on "top" (the one the user is hovering over).
-    const scaleFactor = positioningScaleFactor(intrinsicSize.width, frame);
+    const scaleFactor = positioningScaleFactor(_intrinsicSize.width, frame);
     const hoverTimestamp = positionToTimestamp(location.x, scaleFactor, frame);
-    const measures = laneToMeasures.get(lane);
+    const measures = _laneToMeasures.get(lane);
     if (!measures) {
       onHover(null);
       return;
@@ -297,7 +300,7 @@ export class ReactMeasuresView extends View {
   handleInteraction(interaction: Interaction) {
     switch (interaction.type) {
       case 'hover':
-        this.handleHover(interaction);
+        this._handleHover(interaction);
         break;
     }
   }

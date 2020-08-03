@@ -29,8 +29,11 @@ export class View {
   superview: ?View;
   subviews: View[] = [];
 
-  /** An injected function that lays out our subviews. */
-  layouter: Layouter;
+  /**
+   * An injected function that lays out our subviews.
+   * @private
+   */
+  _layouter: Layouter;
 
   /**
    * Whether this view needs to be drawn.
@@ -40,7 +43,7 @@ export class View {
    * @see setNeedsDisplay
    * @private
    */
-  needsDisplay = true;
+  _needsDisplay = true;
 
   /**
    * Whether the heirarchy below this view has subviews that need display.
@@ -50,7 +53,7 @@ export class View {
    * @see setSubviewsNeedDisplay
    * @private
    */
-  subviewsNeedDisplay = false;
+  _subviewsNeedDisplay = false;
 
   constructor(
     surface: Surface,
@@ -60,7 +63,7 @@ export class View {
   ) {
     this.surface = surface;
     this.frame = frame;
-    this.layouter = layouter;
+    this._layouter = layouter;
     this.visibleArea = visibleArea;
   }
 
@@ -71,9 +74,9 @@ export class View {
    * be invalidated.
    */
   setNeedsDisplay() {
-    this.needsDisplay = true;
+    this._needsDisplay = true;
     if (this.superview) {
-      this.superview.setSubviewsNeedDisplay();
+      this.superview._setSubviewsNeedDisplay();
     }
     this.subviews.forEach(subview => subview.setNeedsDisplay());
   }
@@ -86,10 +89,10 @@ export class View {
    *
    * @private
    */
-  setSubviewsNeedDisplay() {
-    this.subviewsNeedDisplay = true;
+  _setSubviewsNeedDisplay() {
+    this._subviewsNeedDisplay = true;
     if (this.superview) {
-      this.superview.setSubviewsNeedDisplay();
+      this.superview._setSubviewsNeedDisplay();
     }
   }
 
@@ -128,7 +131,7 @@ export class View {
    * Can be overridden by subclasses.
    */
   desiredSize(): ?Size {
-    if (this.needsDisplay) {
+    if (this._needsDisplay) {
       this.layoutSubviews();
     }
     const frames = this.subviews.map(subview => subview.frame);
@@ -175,13 +178,13 @@ export class View {
    */
   displayIfNeeded(context: CanvasRenderingContext2D) {
     if (
-      (this.needsDisplay || this.subviewsNeedDisplay) &&
+      (this._needsDisplay || this._subviewsNeedDisplay) &&
       rectIntersectsRect(this.frame, this.visibleArea) &&
       !sizeIsEmpty(this.visibleArea.size)
     ) {
       this.layoutSubviews();
-      if (this.needsDisplay) this.needsDisplay = false;
-      if (this.subviewsNeedDisplay) this.subviewsNeedDisplay = false;
+      if (this._needsDisplay) this._needsDisplay = false;
+      if (this._subviewsNeedDisplay) this._subviewsNeedDisplay = false;
       this.draw(context);
     }
   }
@@ -201,9 +204,9 @@ export class View {
    * @see displayIfNeeded
    */
   layoutSubviews() {
-    const {frame, layouter, subviews, visibleArea} = this;
+    const {frame, _layouter, subviews, visibleArea} = this;
     const existingLayout = viewsToLayout(subviews);
-    const newLayout = layouter(existingLayout, frame);
+    const newLayout = _layouter(existingLayout, frame);
     collapseLayoutIntoViews(newLayout);
 
     subviews.forEach((subview, subviewIndex) => {

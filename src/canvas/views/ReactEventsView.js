@@ -26,38 +26,38 @@ import {
 } from '../constants';
 
 export class ReactEventsView extends View {
-  profilerData: ReactProfilerData;
-  intrinsicSize: Size;
+  _profilerData: ReactProfilerData;
+  _intrinsicSize: Size;
 
-  hoveredEvent: ReactEvent | null = null;
+  _hoveredEvent: ReactEvent | null = null;
   onHover: ((event: ReactEvent | null) => void) | null = null;
 
   constructor(surface: Surface, frame: Rect, profilerData: ReactProfilerData) {
     super(surface, frame);
-    this.profilerData = profilerData;
+    this._profilerData = profilerData;
 
-    this.intrinsicSize = {
-      width: this.profilerData.duration,
+    this._intrinsicSize = {
+      width: this._profilerData.duration,
       height: EVENT_ROW_HEIGHT_FIXED,
     };
   }
 
   desiredSize() {
-    return this.intrinsicSize;
+    return this._intrinsicSize;
   }
 
   setHoveredEvent(hoveredEvent: ReactEvent | null) {
-    if (this.hoveredEvent === hoveredEvent) {
+    if (this._hoveredEvent === hoveredEvent) {
       return;
     }
-    this.hoveredEvent = hoveredEvent;
+    this._hoveredEvent = hoveredEvent;
     this.setNeedsDisplay();
   }
 
   /**
    * Draw a single `ReactEvent` as a circle in the canvas.
    */
-  drawSingleReactEvent(
+  _drawSingleReactEvent(
     context: CanvasRenderingContext2D,
     rect: Rect,
     event: ReactEvent,
@@ -122,8 +122,8 @@ export class ReactEventsView extends View {
   draw(context: CanvasRenderingContext2D) {
     const {
       frame,
-      profilerData: {events},
-      hoveredEvent,
+      _profilerData: {events},
+      _hoveredEvent,
       visibleArea,
     } = this;
 
@@ -137,13 +137,16 @@ export class ReactEventsView extends View {
 
     // Draw events
     const baseY = frame.origin.y + REACT_EVENT_ROW_PADDING;
-    const scaleFactor = positioningScaleFactor(this.intrinsicSize.width, frame);
+    const scaleFactor = positioningScaleFactor(
+      this._intrinsicSize.width,
+      frame,
+    );
 
     events.forEach(event => {
-      if (event === hoveredEvent) {
+      if (event === _hoveredEvent) {
         return;
       }
-      this.drawSingleReactEvent(
+      this._drawSingleReactEvent(
         context,
         visibleArea,
         event,
@@ -155,11 +158,11 @@ export class ReactEventsView extends View {
 
     // Draw the hovered and/or selected items on top so they stand out.
     // This is helpful if there are multiple (overlapping) items close to each other.
-    if (hoveredEvent !== null) {
-      this.drawSingleReactEvent(
+    if (_hoveredEvent !== null) {
+      this._drawSingleReactEvent(
         context,
         visibleArea,
-        hoveredEvent,
+        _hoveredEvent,
         baseY,
         scaleFactor,
         true,
@@ -196,7 +199,7 @@ export class ReactEventsView extends View {
   /**
    * @private
    */
-  handleHover(interaction: HoverInteraction) {
+  _handleHover(interaction: HoverInteraction) {
     const {frame, onHover, visibleArea} = this;
     if (!onHover) {
       return;
@@ -209,9 +212,12 @@ export class ReactEventsView extends View {
     }
 
     const {
-      profilerData: {events},
+      _profilerData: {events},
     } = this;
-    const scaleFactor = positioningScaleFactor(this.intrinsicSize.width, frame);
+    const scaleFactor = positioningScaleFactor(
+      this._intrinsicSize.width,
+      frame,
+    );
     const hoverTimestamp = positionToTimestamp(location.x, scaleFactor, frame);
     const eventTimestampAllowance = widthToDuration(
       REACT_EVENT_SIZE / 2,
@@ -239,7 +245,7 @@ export class ReactEventsView extends View {
   handleInteraction(interaction: Interaction) {
     switch (interaction.type) {
       case 'hover':
-        this.handleHover(interaction);
+        this._handleHover(interaction);
         break;
     }
   }

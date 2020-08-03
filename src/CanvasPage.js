@@ -163,7 +163,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       surfaceRef.current,
       {origin: zeroPoint, size: {width, height}},
       stackedZoomables,
-      reactEventsView.intrinsicSize.width,
+      data.duration,
     );
 
     rootViewRef.current = new View(
