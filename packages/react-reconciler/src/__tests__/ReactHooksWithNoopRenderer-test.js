@@ -3314,4 +3314,56 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
     expect(ReactNoop).toMatchRenderedOutput('ABC');
   });
+
+  it("regression test: don't unmount effects on siblings of deleted nodes", async () => {
+    const root = ReactNoop.createRoot();
+
+    function Child({label}) {
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Mount layout ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount layout ' + label);
+        };
+      }, [label]);
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount passive ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount passive ' + label);
+        };
+      }, [label]);
+      return label;
+    }
+
+    await act(async () => {
+      root.render(
+        <>
+          <Child key="A" label="A" />
+          <Child key="B" label="B" />
+        </>,
+      );
+    });
+    expect(Scheduler).toHaveYielded([
+      'Mount layout A',
+      'Mount layout B',
+      'Mount passive A',
+      'Mount passive B',
+    ]);
+
+    // Delete A. This should only unmount the effect on A. In the regression,
+    // B's effect would also unmount.
+    await act(async () => {
+      root.render(
+        <>
+          <Child key="B" label="B" />
+        </>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Unmount layout A', 'Unmount passive A']);
+
+    // Now delete and unmount B.
+    await act(async () => {
+      root.render(null);
+    });
+    expect(Scheduler).toHaveYielded(['Unmount layout B', 'Unmount passive B']);
+  });
 });
