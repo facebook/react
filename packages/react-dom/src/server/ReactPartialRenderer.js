@@ -23,7 +23,6 @@ import {
   disableModulePatternComponents,
   enableSuspenseServerRenderer,
   enableFundamentalAPI,
-  enableDeprecatedFlareAPI,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 
@@ -366,9 +365,6 @@ function createOpenTagMarkup(
 
   for (const propKey in props) {
     if (!hasOwnProperty.call(props, propKey)) {
-      continue;
-    }
-    if (enableDeprecatedFlareAPI && propKey === 'DEPRECATED_flareListeners') {
       continue;
     }
     let propValue = props[propKey];

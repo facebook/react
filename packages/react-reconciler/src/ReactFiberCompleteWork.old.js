@@ -124,7 +124,6 @@ import {
   enableSchedulerTracing,
   enableSuspenseCallback,
   enableSuspenseServerRenderer,
-  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableScopeAPI,
   enableBlocksAPI,
@@ -140,7 +139,6 @@ import {
 import {createFundamentalStateInstance} from './ReactFiberFundamental.old';
 import {OffscreenLane} from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber.old';
-import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents.old';
 import {createScopeInstance} from './ReactFiberScope.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
 
@@ -716,14 +714,6 @@ function completeWork(
           rootContainerInstance,
         );
 
-        if (enableDeprecatedFlareAPI) {
-          const prevListeners = current.memoizedProps.DEPRECATED_flareListeners;
-          const nextListeners = newProps.DEPRECATED_flareListeners;
-          if (prevListeners !== nextListeners) {
-            markUpdate(workInProgress);
-          }
-        }
-
         if (current.ref !== workInProgress.ref) {
           markRef(workInProgress);
         }
@@ -758,16 +748,6 @@ function completeWork(
             // commit-phase we mark this as such.
             markUpdate(workInProgress);
           }
-          if (enableDeprecatedFlareAPI) {
-            const listeners = newProps.DEPRECATED_flareListeners;
-            if (listeners != null) {
-              updateDeprecatedEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
-            }
-          }
         } else {
           const instance = createInstance(
             type,
@@ -779,19 +759,7 @@ function completeWork(
 
           appendAllChildren(instance, workInProgress, false, false);
 
-          // This needs to be set before we mount Flare event listeners
           workInProgress.stateNode = instance;
-
-          if (enableDeprecatedFlareAPI) {
-            const listeners = newProps.DEPRECATED_flareListeners;
-            if (listeners != null) {
-              updateDeprecatedEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
-            }
-          }
 
           // Certain renderers require commit-time effects for initial mount.
           // (eg DOM renderer supports auto-focus for certain elements).
@@ -1262,37 +1230,14 @@ function completeWork(
         if (current === null) {
           const scopeInstance: ReactScopeInstance = createScopeInstance();
           workInProgress.stateNode = scopeInstance;
-          if (enableDeprecatedFlareAPI) {
-            const listeners = newProps.DEPRECATED_flareListeners;
-            if (listeners != null) {
-              const rootContainerInstance = getRootHostContainer();
-              updateDeprecatedEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
-            }
-          }
           prepareScopeUpdate(scopeInstance, workInProgress);
           if (workInProgress.ref !== null) {
             markRef(workInProgress);
             markUpdate(workInProgress);
           }
         } else {
-          if (enableDeprecatedFlareAPI) {
-            const prevListeners =
-              current.memoizedProps.DEPRECATED_flareListeners;
-            const nextListeners = newProps.DEPRECATED_flareListeners;
-            if (
-              prevListeners !== nextListeners ||
-              workInProgress.ref !== null
-            ) {
-              markUpdate(workInProgress);
-            }
-          } else {
-            if (workInProgress.ref !== null) {
-              markUpdate(workInProgress);
-            }
+          if (workInProgress.ref !== null) {
+            markUpdate(workInProgress);
           }
           if (current.ref !== workInProgress.ref) {
             markRef(workInProgress);

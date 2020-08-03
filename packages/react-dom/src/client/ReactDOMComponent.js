@@ -7,8 +7,6 @@
  * @flow
  */
 
-import type {ElementListenerMapEntry} from '../client/ReactDOMComponentTree';
-
 import {
   registrationNameDependencies,
   possibleRegistrationNames,
@@ -16,11 +14,6 @@ import {
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import invariant from 'shared/invariant';
-import {
-  setListenToResponderEventTypes,
-  addResponderEventSystemEvent,
-  removeTrappedEventListener,
-} from '../events/DeprecatedDOMEventResponderSystem';
 
 import {
   getValueForAttribute,
@@ -81,16 +74,12 @@ import {validateProperties as validateInputProperties} from '../shared/ReactDOMN
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 
-import {
-  enableDeprecatedFlareAPI,
-  enableTrustedTypesIntegration,
-} from 'shared/ReactFeatureFlags';
+import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 import {
   listenToReactEvent,
   mediaEventTypes,
   listenToNonDelegatedEvent,
 } from '../events/DOMPluginEventSystem';
-import {getEventListenerMap} from './ReactDOMComponentTree';
 
 let didWarnInvalidHydration = false;
 let didWarnScriptTags = false;
@@ -102,7 +91,6 @@ const AUTOFOCUS = 'autoFocus';
 const CHILDREN = 'children';
 const STYLE = 'style';
 const HTML = '__html';
-const DEPRECATED_flareListeners = 'DEPRECATED_flareListeners';
 
 const {html: HTML_NAMESPACE} = Namespaces;
 
@@ -358,7 +346,6 @@ function setInitialDOMProperties(
         setTextContent(domElement, '' + nextProp);
       }
     } else if (
-      (enableDeprecatedFlareAPI && propKey === DEPRECATED_flareListeners) ||
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
@@ -728,7 +715,6 @@ export function diffProperties(
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML || propKey === CHILDREN) {
       // Noop. This is handled by the clear text mechanism.
     } else if (
-      (enableDeprecatedFlareAPI && propKey === DEPRECATED_flareListeners) ||
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
@@ -817,7 +803,6 @@ export function diffProperties(
         (updatePayload = updatePayload || []).push(propKey, '' + nextProp);
       }
     } else if (
-      (enableDeprecatedFlareAPI && propKey === DEPRECATED_flareListeners) ||
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
@@ -1083,7 +1068,6 @@ export function diffHydratedProperties(
       if (suppressHydrationWarning) {
         // Don't bother comparing. We're ignoring all these warnings.
       } else if (
-        (enableDeprecatedFlareAPI && propKey === DEPRECATED_flareListeners) ||
         propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
         propKey === SUPPRESS_HYDRATION_WARNING ||
         // Controlled attributes are not validated
@@ -1316,72 +1300,4 @@ export function restoreControlledState(
       ReactDOMSelectRestoreControlledState(domElement, props);
       return;
   }
-}
-
-function endsWith(subject: string, search: string): boolean {
-  const length = subject.length;
-  return subject.substring(length - search.length, length) === search;
-}
-
-export function listenToEventResponderEventTypes(
-  eventTypes: Array<string>,
-  document: Document,
-): void {
-  if (enableDeprecatedFlareAPI) {
-    // Get the listening Map for this element. We use this to track
-    // what events we're listening to.
-    const listenerMap = getEventListenerMap(document);
-
-    // Go through each target event type of the event responder
-    for (let i = 0, length = eventTypes.length; i < length; ++i) {
-      const eventType = eventTypes[i];
-      const isPassive = !endsWith(eventType, '_active');
-      const eventKey = isPassive ? eventType + '_passive' : eventType;
-      const targetEventType = isPassive
-        ? eventType
-        : eventType.substring(0, eventType.length - 7);
-      if (!listenerMap.has(eventKey)) {
-        if (isPassive) {
-          const activeKey = targetEventType + '_active';
-          // If we have an active event listener, do not register
-          // a passive event listener. We use the same active event
-          // listener.
-          if (listenerMap.has(activeKey)) {
-            continue;
-          }
-        } else {
-          // If we have a passive event listener, remove the
-          // existing passive event listener before we add the
-          // active event listener.
-          const passiveKey = targetEventType + '_passive';
-          const passiveItem = ((listenerMap.get(
-            passiveKey,
-          ): any): ElementListenerMapEntry | void);
-          if (passiveItem !== undefined) {
-            removeTrappedEventListener(
-              document,
-              (targetEventType: any),
-              true,
-              passiveItem.listener,
-            );
-            listenerMap.delete(passiveKey);
-          }
-        }
-        const eventListener = addResponderEventSystemEvent(
-          document,
-          targetEventType,
-          isPassive,
-        );
-        listenerMap.set(eventKey, {
-          passive: isPassive,
-          listener: eventListener,
-        });
-      }
-    }
-  }
-}
-
-// We can remove this once the event API is stable and out of a flag
-if (enableDeprecatedFlareAPI) {
-  setListenToResponderEventTypes(listenToEventResponderEventTypes);
 }

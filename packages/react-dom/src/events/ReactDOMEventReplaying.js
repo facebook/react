@@ -10,15 +10,11 @@
 import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
-import type {ElementListenerMap} from '../client/ReactDOMComponentTree';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {LanePriority} from 'react-reconciler/src/ReactFiberLane';
 
-import {
-  enableDeprecatedFlareAPI,
-  enableSelectiveHydration,
-} from 'shared/ReactFeatureFlags';
+import {enableSelectiveHydration} from 'shared/ReactFeatureFlags';
 import {
   unstable_runWithPriority as runWithPriority,
   unstable_scheduleCallback as scheduleCallback,
@@ -34,7 +30,6 @@ import {attemptToDispatchEvent} from './ReactDOMEventListener';
 import {
   getInstanceFromNode,
   getClosestInstanceFromNode,
-  getEventListenerMap,
 } from '../client/ReactDOMComponentTree';
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
 
@@ -88,7 +83,6 @@ type PointerEvent = Event & {
 
 import {IS_REPLAYED} from './EventSystemFlags';
 import {listenToNativeEvent} from './DOMPluginEventSystem';
-import {addResponderEventSystemEvent} from './DeprecatedDOMEventResponderSystem';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
@@ -186,43 +180,17 @@ function trapReplayableEventForContainer(
   listenToNativeEvent(domEventName, false, ((container: any): Element), null);
 }
 
-function trapReplayableEventForDocument(
-  domEventName: DOMEventName,
-  document: Document,
-  listenerMap: ElementListenerMap,
-) {
-  if (enableDeprecatedFlareAPI) {
-    // Trap events for the responder system.
-    // TODO: Ideally we shouldn't need these to be active but
-    // if we only have a passive listener, we at least need it
-    // to still pretend to be active so that Flare gets those
-    // events.
-    const activeEventKey = domEventName + '_active';
-    if (!listenerMap.has(activeEventKey)) {
-      const listener = addResponderEventSystemEvent(
-        document,
-        domEventName,
-        false,
-      );
-      listenerMap.set(activeEventKey, {passive: false, listener});
-    }
-  }
-}
-
 export function eagerlyTrapReplayableEvents(
   container: Container,
   document: Document,
 ) {
-  const listenerMapForDoc = getEventListenerMap(document);
   // Discrete
   discreteReplayableEvents.forEach(domEventName => {
     trapReplayableEventForContainer(domEventName, container);
-    trapReplayableEventForDocument(domEventName, document, listenerMapForDoc);
   });
   // Continuous
   continuousReplayableEvents.forEach(domEventName => {
     trapReplayableEventForContainer(domEventName, container);
-    trapReplayableEventForDocument(domEventName, document, listenerMapForDoc);
   });
 }
 

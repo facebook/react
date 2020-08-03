@@ -17,7 +17,6 @@ import type {DOMEventName} from '../events/DOMEventNames';
 // CommonJS interop named imports.
 import * as Scheduler from 'scheduler';
 
-import {DEPRECATED_dispatchEventForResponderEventSystem} from './DeprecatedDOMEventResponderSystem';
 import {
   isReplayableDiscreteEvent,
   queueDiscreteEvent,
@@ -34,17 +33,12 @@ import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
 import {
   type EventSystemFlags,
   IS_LEGACY_FB_SUPPORT_MODE,
-  PLUGIN_EVENT_SYSTEM,
-  RESPONDER_EVENT_SYSTEM,
 } from './EventSystemFlags';
 
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
-import {
-  enableDeprecatedFlareAPI,
-  enableLegacyFBSupport,
-} from 'shared/ReactFeatureFlags';
+import {enableLegacyFBSupport} from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
   ContinuousEvent,
@@ -136,7 +130,7 @@ function dispatchDiscreteEvent(
     // flushed for this event and we don't need to do it again.
     (eventSystemFlags & IS_LEGACY_FB_SUPPORT_MODE) === 0
   ) {
-    flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
+    flushDiscreteUpdatesIfNeeded();
   }
   discreteUpdates(
     dispatchEvent,
@@ -238,35 +232,13 @@ export function dispatchEvent(
 
   // This is not replayable so we'll invoke it but without a target,
   // in case the event system needs to trace it.
-  if (enableDeprecatedFlareAPI) {
-    if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
-      dispatchEventForPluginEventSystem(
-        domEventName,
-        eventSystemFlags,
-        nativeEvent,
-        null,
-        targetContainer,
-      );
-    }
-    if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
-      // React Flare event system
-      DEPRECATED_dispatchEventForResponderEventSystem(
-        (domEventName: any),
-        null,
-        nativeEvent,
-        getEventTarget(nativeEvent),
-        eventSystemFlags,
-      );
-    }
-  } else {
-    dispatchEventForPluginEventSystem(
-      domEventName,
-      eventSystemFlags,
-      nativeEvent,
-      null,
-      targetContainer,
-    );
-  }
+  dispatchEventForPluginEventSystem(
+    domEventName,
+    eventSystemFlags,
+    nativeEvent,
+    null,
+    targetContainer,
+  );
 }
 
 // Attempt dispatching an event. Returns a SuspenseInstance or Container if it's blocked.
@@ -318,36 +290,13 @@ export function attemptToDispatchEvent(
       }
     }
   }
-
-  if (enableDeprecatedFlareAPI) {
-    if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
-      dispatchEventForPluginEventSystem(
-        domEventName,
-        eventSystemFlags,
-        nativeEvent,
-        targetInst,
-        targetContainer,
-      );
-    }
-    if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
-      // React Flare event system
-      DEPRECATED_dispatchEventForResponderEventSystem(
-        (domEventName: any),
-        targetInst,
-        nativeEvent,
-        nativeEventTarget,
-        eventSystemFlags,
-      );
-    }
-  } else {
-    dispatchEventForPluginEventSystem(
-      domEventName,
-      eventSystemFlags,
-      nativeEvent,
-      targetInst,
-      targetContainer,
-    );
-  }
+  dispatchEventForPluginEventSystem(
+    domEventName,
+    eventSystemFlags,
+    nativeEvent,
+    targetInst,
+    targetContainer,
+  );
   // We're not blocked on anything.
   return null;
 }

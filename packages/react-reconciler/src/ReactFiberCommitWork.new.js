@@ -31,7 +31,6 @@ import {
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableSuspenseServerRenderer,
-  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
@@ -124,10 +123,6 @@ import {
   Layout as HookLayout,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.new';
-import {
-  updateDeprecatedEventListeners,
-  unmountDeprecatedResponderListeners,
-} from './ReactFiberDeprecatedEvents.new';
 import {
   NoEffect as NoSubtreeTag,
   Passive as PassiveSubtreeTag,
@@ -904,9 +899,6 @@ function commitUnmount(
       return;
     }
     case HostComponent: {
-      if (enableDeprecatedFlareAPI) {
-        unmountDeprecatedResponderListeners(current);
-      }
       safelyDetachRef(current);
       return;
     }
@@ -945,9 +937,6 @@ function commitUnmount(
     }
     case ScopeComponent: {
       if (enableScopeAPI) {
-        if (enableDeprecatedFlareAPI) {
-          unmountDeprecatedResponderListeners(current);
-        }
         safelyDetachRef(current);
       }
       return;
@@ -1533,13 +1522,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             finishedWork,
           );
         }
-        if (enableDeprecatedFlareAPI) {
-          const prevListeners = oldProps.DEPRECATED_flareListeners;
-          const nextListeners = newProps.DEPRECATED_flareListeners;
-          if (prevListeners !== nextListeners) {
-            updateDeprecatedEventListeners(nextListeners, finishedWork, null);
-          }
-        }
       }
       return;
     }
@@ -1596,15 +1578,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case ScopeComponent: {
       if (enableScopeAPI) {
         const scopeInstance = finishedWork.stateNode;
-        if (enableDeprecatedFlareAPI) {
-          const newProps = finishedWork.memoizedProps;
-          const oldProps = current !== null ? current.memoizedProps : newProps;
-          const prevListeners = oldProps.DEPRECATED_flareListeners;
-          const nextListeners = newProps.DEPRECATED_flareListeners;
-          if (prevListeners !== nextListeners || current === null) {
-            updateDeprecatedEventListeners(nextListeners, finishedWork, null);
-          }
-        }
         prepareScopeUpdate(scopeInstance, finishedWork);
         return;
       }

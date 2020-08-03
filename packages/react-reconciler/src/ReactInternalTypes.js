@@ -10,9 +10,6 @@
 import type {Source} from 'shared/ReactElementType';
 import type {
   RefObject,
-  ReactEventResponder,
-  ReactEventResponderListener,
-  ReactEventResponderInstance,
   ReactContext,
   MutableSourceSubscribeFn,
   MutableSourceGetSnapshotFn,
@@ -44,10 +41,6 @@ export type ContextDependency<T> = {
 export type Dependencies = {
   lanes: Lanes,
   firstContext: ContextDependency<mixed> | null,
-  responders: Map<
-    ReactEventResponder<any, any>,
-    ReactEventResponderInstance<any, any>,
-  > | null,
   ...
 };
 
@@ -298,10 +291,6 @@ export type Dispatcher = {|
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useResponder<E, C>(
-    responder: ReactEventResponder<E, C>,
-    props: Object,
-  ): ReactEventResponderListener<E, C>,
   useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T,
   useTransition(
     config: SuspenseConfig | void | null,

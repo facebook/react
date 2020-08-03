@@ -16,11 +16,7 @@ import type {
 } from 'react-reconciler/src/ReactTestSelectors';
 import type {RootType} from './ReactDOMRoot';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
-import type {
-  ReactDOMEventResponder,
-  ReactDOMEventResponderInstance,
-  ReactDOMFundamentalComponentInstance,
-} from '../shared/ReactDOMTypes';
+import type {ReactDOMFundamentalComponentInstance} from '../shared/ReactDOMTypes';
 
 import {
   precacheFiberNode,
@@ -45,7 +41,6 @@ import {
   warnForDeletedHydratableText,
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
-  listenToEventResponderEventTypes,
 } from './ReactDOMComponent';
 import {getSelectionInformation, restoreSelection} from './ReactInputSelection';
 import setTextContent from './setTextContent';
@@ -65,15 +60,10 @@ import {
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 
 import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
-import {
-  mountEventResponder,
-  unmountEventResponder,
-} from '../events/DeprecatedDOMEventResponderSystem';
 import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 import {
   enableSuspenseServerRenderer,
-  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableCreateEventHandleAPI,
   enableScopeAPI,
@@ -232,7 +222,7 @@ export function prepareForCommit(containerInfo: Container): Object | null {
   eventsEnabled = ReactBrowserEventEmitterIsEnabled();
   selectionInformation = getSelectionInformation();
   let activeInstance = null;
-  if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
+  if (enableCreateEventHandleAPI) {
     const focusedElem = selectionInformation.focusedElem;
     if (focusedElem !== null) {
       activeInstance = getClosestInstanceFromNode(focusedElem);
@@ -243,7 +233,7 @@ export function prepareForCommit(containerInfo: Container): Object | null {
 }
 
 export function beforeActiveInstanceBlur(): void {
-  if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
+  if (enableCreateEventHandleAPI) {
     ReactBrowserEventEmitterSetEnabled(true);
     dispatchBeforeDetachedBlur((selectionInformation: any).focusedElem);
     ReactBrowserEventEmitterSetEnabled(false);
@@ -251,7 +241,7 @@ export function beforeActiveInstanceBlur(): void {
 }
 
 export function afterActiveInstanceBlur(): void {
-  if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
+  if (enableCreateEventHandleAPI) {
     ReactBrowserEventEmitterSetEnabled(true);
     dispatchAfterDetachedBlur((selectionInformation: any).focusedElem);
     ReactBrowserEventEmitterSetEnabled(false);
@@ -510,7 +500,7 @@ function createEvent(type: DOMEventName, bubbles: boolean): Event {
 }
 
 function dispatchBeforeDetachedBlur(target: HTMLElement): void {
-  if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
+  if (enableCreateEventHandleAPI) {
     const event = createEvent('beforeblur', true);
     // Dispatch "beforeblur" directly on the target,
     // so it gets picked up by the event system and
@@ -520,7 +510,7 @@ function dispatchBeforeDetachedBlur(target: HTMLElement): void {
 }
 
 function dispatchAfterDetachedBlur(target: HTMLElement): void {
-  if (enableDeprecatedFlareAPI || enableCreateEventHandleAPI) {
+  if (enableCreateEventHandleAPI) {
     const event = createEvent('afterblur', false);
     // So we know what was detached, make the relatedTarget the
     // detached target on the "afterblur" event.
@@ -972,37 +962,6 @@ export function didNotFindHydratableSuspenseInstance(
 ) {
   if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
     // TODO: warnForInsertedHydratedSuspense(parentInstance);
-  }
-}
-
-export function DEPRECATED_mountResponderInstance(
-  responder: ReactDOMEventResponder,
-  responderInstance: ReactDOMEventResponderInstance,
-  responderProps: Object,
-  responderState: Object,
-  instance: Instance,
-): ReactDOMEventResponderInstance {
-  // Listen to events
-  const doc = instance.ownerDocument;
-  const {targetEventTypes} = ((responder: any): ReactDOMEventResponder);
-  if (targetEventTypes !== null) {
-    listenToEventResponderEventTypes(targetEventTypes, doc);
-  }
-  mountEventResponder(
-    responder,
-    responderInstance,
-    responderProps,
-    responderState,
-  );
-  return responderInstance;
-}
-
-export function DEPRECATED_unmountResponderInstance(
-  responderInstance: ReactDOMEventResponderInstance,
-): void {
-  if (enableDeprecatedFlareAPI) {
-    // TODO stop listening to targetEventTypes
-    unmountEventResponder(responderInstance);
   }
 }
 

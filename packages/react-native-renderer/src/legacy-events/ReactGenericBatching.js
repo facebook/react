@@ -64,7 +64,7 @@ export function discreteUpdates(fn, a, b, c, d) {
   }
 }
 
-export function flushDiscreteUpdatesIfNeeded(timeStamp: number) {
+export function flushDiscreteUpdatesIfNeeded() {
   if (!isInsideEventHandler) {
     flushDiscreteUpdatesImpl();
   }

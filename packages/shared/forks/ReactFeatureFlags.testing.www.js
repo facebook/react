@@ -26,7 +26,6 @@ export const enableLazyElements = false;
 export const disableJavaScriptURLs = true;
 export const disableInputAttributeSyncing = false;
 export const enableSchedulerDebugging = false;
-export const enableDeprecatedFlareAPI = true;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = true;
 export const enableCreateEventHandleAPI = true;

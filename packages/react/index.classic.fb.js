@@ -52,9 +52,6 @@ export {
   // enableBlocksAPI
   block,
   block as unstable_block,
-  // enableDeprecatedFlareAPI
-  DEPRECATED_useResponder,
-  DEPRECATED_createResponder,
   // enableScopeAPI
   unstable_Scope,
   unstable_useOpaqueIdentifier,
