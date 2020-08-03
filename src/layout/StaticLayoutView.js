@@ -1,6 +1,5 @@
 // @flow
 
-import type {Interaction} from '../useCanvasInteraction';
 import type {Rect} from './geometry';
 
 import {Surface} from './Surface';
@@ -39,28 +38,17 @@ export const verticallyStackedLayout: Layouter = (views, frame) => {
 };
 
 export class StaticLayoutView extends View {
-  subviews: View[] = [];
   layouter: Layouter;
 
   constructor(
     surface: Surface,
     frame: Rect,
     layouter: Layouter,
-    subviews: View[],
+    initialSubviews: View[],
   ) {
     super(surface, frame);
     this.layouter = layouter;
-    subviews.forEach(subview => this.addSubview(subview));
-  }
-
-  setNeedsDisplay() {
-    super.setNeedsDisplay();
-    this.subviews.forEach(subview => subview.setNeedsDisplay());
-  }
-
-  addSubview(view: View) {
-    this.subviews.push(view);
-    view.superview = this;
+    initialSubviews.forEach(subview => this.addSubview(subview));
   }
 
   layoutSubviews() {
@@ -75,20 +63,5 @@ export class StaticLayoutView extends View {
         subview.setVisibleArea(zeroRect);
       }
     });
-  }
-
-  draw(context: CanvasRenderingContext2D) {
-    const {subviews, visibleArea} = this;
-    subviews.forEach(subview => {
-      if (rectIntersectsRect(visibleArea, subview.visibleArea)) {
-        subview.displayIfNeeded(context);
-      }
-    });
-  }
-
-  handleInteractionAndPropagateToSubviews(interaction: Interaction) {
-    this.subviews.forEach(subview =>
-      subview.handleInteractionAndPropagateToSubviews(interaction),
-    );
   }
 }

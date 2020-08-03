@@ -12,6 +12,10 @@ import {
   zeroRect,
 } from './geometry';
 
+/**
+ * Base view class that can be subclassed to draw custom content or manage
+ * subclasses.
+ */
 export class View {
   surface: Surface;
 
@@ -19,10 +23,26 @@ export class View {
   visibleArea: Rect;
 
   superview: ?View;
+  subviews: View[] = [];
 
-  /** Whether this view needs to be drawn. */
+  /**
+   * Whether this view needs to be drawn.
+   *
+   * NOTE: Do not set directly! Use `setNeedsDisplay`.
+   *
+   * @see setNeedsDisplay
+   * @private
+   */
   needsDisplay = true;
-  /** Whether the heirarchy below this view has subviews that need display. */
+
+  /**
+   * Whether the heirarchy below this view has subviews that need display.
+   *
+   * NOTE: Do not set directly! Use `setSubviewsNeedDisplay`.
+   *
+   * @see setSubviewsNeedDisplay
+   * @private
+   */
   subviewsNeedDisplay = false;
 
   constructor(surface: Surface, frame: Rect, visibleArea: Rect = frame) {
@@ -36,15 +56,13 @@ export class View {
    *
    * Downward propagating; once called, all subviews of this view should also
    * be invalidated.
-   *
-   * Subclasses with subviews should override this method and call
-   * `setNeedsDisplay` on its subviews.
    */
   setNeedsDisplay() {
     this.needsDisplay = true;
     if (this.superview) {
       this.superview.setSubviewsNeedDisplay();
     }
+    this.subviews.forEach(subview => subview.setNeedsDisplay());
   }
 
   /**
@@ -52,6 +70,8 @@ export class View {
    *
    * Upward propagating; once called, all superviews of this view should also
    * have `subviewsNeedDisplay` = true.
+   *
+   * @private
    */
   setSubviewsNeedDisplay() {
     this.subviewsNeedDisplay = true;
@@ -86,14 +106,19 @@ export class View {
   desiredSize(): ?Size {}
 
   /**
-   * Layout self and subviews.
-   *
-   * Call `setNeedsDisplay` if we are to redraw.
-   *
-   * To be overwritten by subclasses.
+   * Appends `view` to the list of this view's `subviews`.
    */
-  layoutSubviews() {}
+  addSubview(view: View) {
+    this.subviews.push(view);
+    view.superview = this;
+  }
 
+  /**
+   * Executes the display flow if this view needs to be drawn.
+   *
+   * 1. Lays out subviews with `layoutSubviews`.
+   * 2. Draws content with `draw`.
+   */
   displayIfNeeded(context: CanvasRenderingContext2D) {
     if (
       (this.needsDisplay || this.subviewsNeedDisplay) &&
@@ -107,7 +132,64 @@ export class View {
     }
   }
 
-  draw(context: CanvasRenderingContext2D) {}
+  /**
+   * Layout self and subviews.
+   *
+   * Implementations should call `setNeedsDisplay` if a draw is required.
+   *
+   * To be overwritten by subclasses that wish to manage their subviews'
+   * layout.
+   *
+   * NOTE: Do not call directly! Use `displayIfNeeded`.
+   *
+   * @see displayIfNeeded
+   */
+  layoutSubviews() {}
 
-  handleInteractionAndPropagateToSubviews(interaction: Interaction): ?boolean {}
+  /**
+   * Draw the contents of this view in the given canvas `context`.
+   *
+   * Defaults to drawing this view's `subviews`.
+   *
+   * To be overwritten by subclasses that wish to draw custom content.
+   *
+   * NOTE: Do not call directly! Use `displayIfNeeded`.
+   *
+   * @see displayIfNeeded
+   */
+  draw(context: CanvasRenderingContext2D) {
+    const {subviews, visibleArea} = this;
+    subviews.forEach(subview => {
+      if (rectIntersectsRect(visibleArea, subview.visibleArea)) {
+        subview.displayIfNeeded(context);
+      }
+    });
+  }
+
+  /**
+   * Handle an `interaction`.
+   *
+   * To be overwritten by subclasses that wish to handle interactions.
+   */
+  // Internal note: Do not call directly! Use
+  // `handleInteractionAndPropagateToSubviews` so that interactions are
+  // propagated to subviews.
+  handleInteraction(interaction: Interaction) {}
+
+  /**
+   * Handle an `interaction` and propagates it to all of this view's
+   * `subviews`.
+   *
+   * NOTE: Should not be overridden! Subclasses should override
+   * `handleInteraction` instead.
+   *
+   * @see handleInteraction
+   * @protected
+   */
+  handleInteractionAndPropagateToSubviews(interaction: Interaction) {
+    this.handleInteraction(interaction);
+    this.subviews.forEach(subview =>
+      subview.handleInteractionAndPropagateToSubviews(interaction),
+    );
+  }
 }

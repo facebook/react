@@ -8,6 +8,10 @@ import {getCanvasContext} from '../canvas/canvasUtils';
 import {View} from './View';
 import {zeroPoint} from './geometry';
 
+/**
+ * Represents the canvas surface and a view heirarchy. A surface is also the
+ * place where all interactions enter the view heirarchy.
+ */
 export class Surface {
   rootView: ?View;
   context: ?CanvasRenderingContext2D;

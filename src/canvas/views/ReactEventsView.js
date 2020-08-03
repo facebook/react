@@ -236,7 +236,7 @@ export class ReactEventsView extends View {
     onHover(null);
   }
 
-  handleInteractionAndPropagateToSubviews(interaction: Interaction) {
+  handleInteraction(interaction: Interaction) {
     switch (interaction.type) {
       case 'hover':
         this.handleHover(interaction);

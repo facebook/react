@@ -36,6 +36,10 @@ function clamp(min: number, max: number, value: number): number {
 }
 
 export class VerticalScrollView extends View {
+  /**
+   * Reference to the content view. This view is also the only view in
+   * `this.subviews`.
+   */
   contentView: View;
 
   scrollState: VerticalScrollState = {
@@ -56,14 +60,9 @@ export class VerticalScrollView extends View {
   ) {
     super(surface, frame);
     this.contentView = contentView;
-    contentView.superview = this;
+    this.addSubview(this.contentView);
     if (stateDeriver) this.stateDeriver = stateDeriver;
     if (onStateChange) this.onStateChange = onStateChange;
-  }
-
-  setNeedsDisplay() {
-    super.setNeedsDisplay();
-    this.contentView.setNeedsDisplay();
   }
 
   setFrame(newFrame: Rect) {
@@ -94,10 +93,6 @@ export class VerticalScrollView extends View {
     };
     this.contentView.setFrame(proposedFrame);
     this.contentView.setVisibleArea(this.visibleArea);
-  }
-
-  draw(context: CanvasRenderingContext2D) {
-    this.contentView.displayIfNeeded(context);
   }
 
   isPanning = false;
@@ -151,7 +146,7 @@ export class VerticalScrollView extends View {
     });
   }
 
-  handleInteractionAndPropagateToSubviews(interaction: Interaction) {
+  handleInteraction(interaction: Interaction) {
     switch (interaction.type) {
       case 'vertical-pan-start':
         this.handleVerticalPanStart(interaction);
@@ -166,7 +161,6 @@ export class VerticalScrollView extends View {
         this.handleWheelPlain(interaction);
         break;
     }
-    this.contentView.handleInteractionAndPropagateToSubviews(interaction);
   }
 
   /**

@@ -294,7 +294,7 @@ export class ReactMeasuresView extends View {
     onHover(null);
   }
 
-  handleInteractionAndPropagateToSubviews(interaction: Interaction) {
+  handleInteraction(interaction: Interaction) {
     switch (interaction.type) {
       case 'hover':
         this.handleHover(interaction);

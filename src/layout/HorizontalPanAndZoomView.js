@@ -53,6 +53,10 @@ function zoomLevelAndIntrinsicWidthToFrameWidth(
 }
 
 export class HorizontalPanAndZoomView extends View {
+  /**
+   * Reference to the content view. This view is also the only view in
+   * `this.subviews`.
+   */
   contentView: View;
   intrinsicContentWidth: number;
 
@@ -79,15 +83,10 @@ export class HorizontalPanAndZoomView extends View {
   ) {
     super(surface, frame);
     this.contentView = contentView;
-    contentView.superview = this;
+    this.addSubview(this.contentView);
     this.intrinsicContentWidth = intrinsicContentWidth;
     if (stateDeriver) this.stateDeriver = stateDeriver;
     if (onStateChange) this.onStateChange = onStateChange;
-  }
-
-  setNeedsDisplay() {
-    super.setNeedsDisplay();
-    this.contentView.setNeedsDisplay();
   }
 
   setFrame(newFrame: Rect) {
@@ -114,10 +113,6 @@ export class HorizontalPanAndZoomView extends View {
     };
     this.contentView.setFrame(proposedFrame);
     this.contentView.setVisibleArea(this.visibleArea);
-  }
-
-  draw(context: CanvasRenderingContext2D) {
-    this.contentView.displayIfNeeded(context);
   }
 
   isPanning = false;
@@ -214,7 +209,7 @@ export class HorizontalPanAndZoomView extends View {
     this.updateState(offsetAdjustedState);
   }
 
-  handleInteractionAndPropagateToSubviews(interaction: Interaction) {
+  handleInteraction(interaction: Interaction) {
     switch (interaction.type) {
       case 'horizontal-pan-start':
         this.handleHorizontalPanStart(interaction);
@@ -234,7 +229,6 @@ export class HorizontalPanAndZoomView extends View {
         this.handleWheelZoom(interaction);
         break;
     }
-    this.contentView.handleInteractionAndPropagateToSubviews(interaction);
   }
 
   /**

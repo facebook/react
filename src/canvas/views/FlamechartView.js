@@ -244,7 +244,7 @@ class FlamechartStackLayerView extends View {
     onHover(null);
   }
 
-  handleInteractionAndPropagateToSubviews(interaction: Interaction) {
+  handleInteraction(interaction: Interaction) {
     switch (interaction.type) {
       case 'hover':
         this.handleHover(interaction);
@@ -295,7 +295,7 @@ export class FlamechartView extends View {
       colorView,
       this.verticalStackView,
     ]);
-    this.layerStackView.superview = this;
+    this.addSubview(this.layerStackView);
   }
 
   desiredSize() {
@@ -314,11 +314,6 @@ export class FlamechartView extends View {
   setOnHover(onHover: (node: FlamechartStackFrame | null) => void) {
     this.onHover = onHover;
     this.flamechartRowViews.forEach(rowView => (rowView.onHover = onHover));
-  }
-
-  setNeedsDisplay() {
-    super.setNeedsDisplay();
-    this.layerStackView.setNeedsDisplay();
   }
 
   layoutSubviews() {
@@ -344,10 +339,6 @@ export class FlamechartView extends View {
     layerStackView.setVisibleArea(this.visibleArea);
   }
 
-  draw(context: CanvasRenderingContext2D) {
-    this.layerStackView.displayIfNeeded(context);
-  }
-
   /**
    * @private
    */
@@ -364,12 +355,11 @@ export class FlamechartView extends View {
     }
   }
 
-  handleInteractionAndPropagateToSubviews(interaction: Interaction) {
+  handleInteraction(interaction: Interaction) {
     switch (interaction.type) {
       case 'hover':
         this.handleHover(interaction);
         break;
     }
-    this.layerStackView.handleInteractionAndPropagateToSubviews(interaction);
   }
 }
