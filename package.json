@@ -17,6 +17,7 @@
     "d3-hierarchy": "^1.1.9",
     "lodash.clonedeep": "^4.5.0",
     "memoize-one": "^5.1.1",
+    "nullthrows": "^1.1.1",
     "pretty-ms": "^7.0.0",
     "react": "^16.13.1",
     "react-dom": "^16.13.1",

@@ -2,6 +2,7 @@
 
 export * from './ColorView';
 export * from './HorizontalPanAndZoomView';
+export * from './ResizableSplitView';
 export * from './Surface';
 export * from './VerticalScrollView';
 export * from './View';

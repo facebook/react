@@ -14,9 +14,12 @@ import React, {
 
 import {
   HorizontalPanAndZoomView,
+  ResizableSplitView,
   Surface,
   VerticalScrollView,
   View,
+  createComposedLayout,
+  lastViewTakesUpRemainingSpaceLayout,
   verticallyStackedLayout,
   zeroPoint,
 } from './layout';
@@ -180,16 +183,21 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       data.duration,
     );
 
-    // TODO: Replace with ResizableSplitView
-    const resizableContentStack = new View(
+    const resizableContentStack = new ResizableSplitView(
       surface,
       defaultFrame,
-      verticallyStackedLayout,
+      hScrollWrappedReactMeasuresView,
+      hScrollWrappedFlamechartView,
     );
-    resizableContentStack.addSubview(hScrollWrappedReactMeasuresView);
-    resizableContentStack.addSubview(hScrollWrappedFlamechartView);
 
-    const rootView = new View(surface, defaultFrame, verticallyStackedLayout);
+    const rootView = new View(
+      surface,
+      defaultFrame,
+      createComposedLayout(
+        verticallyStackedLayout,
+        lastViewTakesUpRemainingSpaceLayout,
+      ),
+    );
     rootView.addSubview(topContentZoomWrapper);
     rootView.addSubview(resizableContentStack);
 

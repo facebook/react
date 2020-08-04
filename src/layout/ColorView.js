@@ -16,6 +16,14 @@ export class ColorView extends View {
     this._color = color;
   }
 
+  setColor(color: string) {
+    if (this._color === color) {
+      return;
+    }
+    this._color = color;
+    this.setNeedsDisplay();
+  }
+
   draw(context: CanvasRenderingContext2D) {
     const {_color, visibleArea} = this;
     context.fillStyle = _color;
