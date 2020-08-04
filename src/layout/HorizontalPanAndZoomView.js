@@ -93,9 +93,7 @@ export class HorizontalPanAndZoomView extends View {
   }
 
   desiredSize() {
-    // We don't want our superview to fit to our content; we'll fit whatever
-    // frame we're given.
-    return null;
+    return this._contentView.desiredSize();
   }
 
   /**

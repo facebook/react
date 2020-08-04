@@ -14,12 +14,11 @@ import React, {
 
 import {
   HorizontalPanAndZoomView,
-  VerticalScrollView,
   Surface,
+  VerticalScrollView,
   View,
-  layeredLayout,
-  zeroPoint,
   verticallyStackedLayout,
+  zeroPoint,
 } from './layout';
 
 import prettyMilliseconds from 'pretty-ms';
@@ -108,72 +107,93 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
   ] = useState<ReactHoverContextInfo | null>(null);
 
   const surfaceRef = useRef(new Surface());
-  const flamechartViewRef = useRef(null);
-  const axisMarkersViewRef = useRef(null);
   const reactEventsViewRef = useRef(null);
   const reactMeasuresViewRef = useRef(null);
-  const rootViewRef = useRef(null);
+  const flamechartViewRef = useRef(null);
 
   useLayoutEffect(() => {
+    const surface = surfaceRef.current;
+    const defaultFrame = {origin: zeroPoint, size: {width, height}};
+
+    // Top content
+
     const axisMarkersView = new TimeAxisMarkersView(
-      surfaceRef.current,
-      {origin: zeroPoint, size: {width, height}},
+      surface,
+      defaultFrame,
       data.duration,
     );
-    axisMarkersViewRef.current = axisMarkersView;
 
-    const reactEventsView = new ReactEventsView(
-      surfaceRef.current,
-      {origin: zeroPoint, size: {width, height}},
-      data,
-    );
+    const reactEventsView = new ReactEventsView(surface, defaultFrame, data);
     reactEventsViewRef.current = reactEventsView;
 
+    const topContentStack = new View(
+      surface,
+      defaultFrame,
+      verticallyStackedLayout,
+    );
+    topContentStack.addSubview(axisMarkersView);
+    topContentStack.addSubview(reactEventsView);
+
+    const topContentZoomWrapper = new HorizontalPanAndZoomView(
+      surface,
+      defaultFrame,
+      topContentStack,
+      data.duration,
+    );
+
+    // Resizable content
+
     const reactMeasuresView = new ReactMeasuresView(
-      surfaceRef.current,
-      {origin: zeroPoint, size: {width, height}},
+      surface,
+      defaultFrame,
       data,
     );
     reactMeasuresViewRef.current = reactMeasuresView;
+    const vScrollWrappedReactMeasuresView = new VerticalScrollView(
+      surface,
+      defaultFrame,
+      reactMeasuresView,
+    );
+    const hScrollWrappedReactMeasuresView = new HorizontalPanAndZoomView(
+      surface,
+      defaultFrame,
+      vScrollWrappedReactMeasuresView,
+      data.duration,
+    );
 
     const flamechartView = new FlamechartView(
-      surfaceRef.current,
-      {origin: zeroPoint, size: {width, height}},
+      surface,
+      defaultFrame,
       data.flamechart,
       data.duration,
     );
     flamechartViewRef.current = flamechartView;
-    const flamechartVScrollWrapper = new VerticalScrollView(
-      surfaceRef.current,
-      {origin: zeroPoint, size: {width, height}},
+    const vScrollWrappedFlamechartView = new VerticalScrollView(
+      surface,
+      defaultFrame,
       flamechartView,
     );
-
-    const stackedZoomables = new View(
-      surfaceRef.current,
-      {origin: zeroPoint, size: {width, height}},
-      verticallyStackedLayout,
-    );
-    stackedZoomables.addSubview(axisMarkersView);
-    stackedZoomables.addSubview(reactEventsView);
-    stackedZoomables.addSubview(reactMeasuresView);
-    stackedZoomables.addSubview(flamechartVScrollWrapper);
-
-    const contentZoomWrapper = new HorizontalPanAndZoomView(
-      surfaceRef.current,
-      {origin: zeroPoint, size: {width, height}},
-      stackedZoomables,
+    const hScrollWrappedFlamechartView = new HorizontalPanAndZoomView(
+      surface,
+      defaultFrame,
+      vScrollWrappedFlamechartView,
       data.duration,
     );
 
-    rootViewRef.current = new View(
-      surfaceRef.current,
-      {origin: zeroPoint, size: {width, height}},
-      layeredLayout,
+    // TODO: Replace with ResizableSplitView
+    const resizableContentStack = new View(
+      surface,
+      defaultFrame,
+      verticallyStackedLayout,
     );
-    rootViewRef.current.addSubview(contentZoomWrapper);
+    resizableContentStack.addSubview(hScrollWrappedReactMeasuresView);
+    resizableContentStack.addSubview(hScrollWrappedFlamechartView);
 
-    surfaceRef.current.rootView = rootViewRef.current;
+    const rootView = new View(surface, defaultFrame, verticallyStackedLayout);
+    rootView.addSubview(topContentZoomWrapper);
+    rootView.addSubview(resizableContentStack);
+
+    surfaceRef.current.rootView = rootView;
   }, [data, setHoveredEvent]);
 
   useLayoutEffect(() => {
