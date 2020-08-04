@@ -1543,12 +1543,15 @@ describe('DOMPluginEventSystem', () => {
 
             function Test() {
               React.useEffect(() => {
-                setClick(buttonRef.current, onClick);
-                setClickCapture(buttonRef.current, onClickCapture);
+                const cleanClick = setClick(buttonRef.current, onClick);
+                const cleanClickCapture = setClickCapture(
+                  buttonRef.current,
+                  onClickCapture,
+                );
 
                 return () => {
-                  setClick();
-                  setClickCapture();
+                  cleanClick();
+                  cleanClickCapture();
                 };
               });
 
@@ -1667,16 +1670,28 @@ describe('DOMPluginEventSystem', () => {
 
             function Test() {
               React.useEffect(() => {
-                setClick1(buttonRef.current, targetListener1);
-                setClick2(buttonRef.current, targetListener2);
-                setClick3(buttonRef.current, targetListener3);
-                setClick4(buttonRef.current, targetListener4);
+                const cleanClick1 = setClick1(
+                  buttonRef.current,
+                  targetListener1,
+                );
+                const cleanClick2 = setClick2(
+                  buttonRef.current,
+                  targetListener2,
+                );
+                const cleanClick3 = setClick3(
+                  buttonRef.current,
+                  targetListener3,
+                );
+                const cleanClick4 = setClick4(
+                  buttonRef.current,
+                  targetListener4,
+                );
 
                 return () => {
-                  setClick1();
-                  setClick2();
-                  setClick3();
-                  setClick4();
+                  cleanClick1();
+                  cleanClick2();
+                  cleanClick3();
+                  cleanClick4();
                 };
               });
 
@@ -1701,16 +1716,28 @@ describe('DOMPluginEventSystem', () => {
 
             function Test2() {
               React.useEffect(() => {
-                setClick1(buttonRef.current, targetListener1);
-                setClick2(buttonRef.current, targetListener2);
-                setClick3(buttonRef.current, targetListener3);
-                setClick4(buttonRef.current, targetListener4);
+                const cleanClick1 = setClick1(
+                  buttonRef.current,
+                  targetListener1,
+                );
+                const cleanClick2 = setClick2(
+                  buttonRef.current,
+                  targetListener2,
+                );
+                const cleanClick3 = setClick3(
+                  buttonRef.current,
+                  targetListener3,
+                );
+                const cleanClick4 = setClick4(
+                  buttonRef.current,
+                  targetListener4,
+                );
 
                 return () => {
-                  setClick1();
-                  setClick2();
-                  setClick3();
-                  setClick4();
+                  cleanClick1();
+                  cleanClick2();
+                  cleanClick3();
+                  cleanClick4();
                 };
               });
 
