@@ -22,7 +22,7 @@ If this is your first time running the release scripts, go to the `scripts/relea
 
 ## Publishing Without Tags
 
-The sections bekow include meaningful `--tags` in the instructions. However, keep in mind that **the `--tags` arguments is optional**, and you can omit it if you don't want to tag the release on npm at all. This can be useful when preparing breaking changes.
+The sections below include meaningful `--tags` in the instructions. However, keep in mind that **the `--tags` arguments is optional**, and you can omit it if you don't want to tag the release on npm at all. This can be useful when preparing breaking changes.
 
 ## Publishing Next
 
