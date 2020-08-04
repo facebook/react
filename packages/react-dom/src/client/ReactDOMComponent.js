@@ -66,6 +66,7 @@ import {
   DOCUMENT_NODE,
   ELEMENT_NODE,
   COMMENT_NODE,
+  DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
 import possibleStandardNames from '../shared/possibleStandardNames';
@@ -256,7 +257,7 @@ if (__DEV__) {
 }
 
 export function ensureListeningTo(
-  rootContainerInstance: Element | Node,
+  rootContainerInstance: Element | Node | ShadowRoot,
   reactPropEvent: string,
   targetElement: Element | null,
 ): void {
@@ -270,8 +271,10 @@ export function ensureListeningTo(
   // want to register events to document fragments or documents
   // with the modern plugin event system.
   invariant(
-    rootContainerElement != null &&
-      rootContainerElement.nodeType === ELEMENT_NODE,
+    (rootContainerElement != null &&
+      rootContainerElement.nodeType === ELEMENT_NODE) ||
+      (rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE &&
+        (rootContainerElement: ShadowRoot).mode),
     'ensureListeningTo(): received a container that was not an element node. ' +
       'This is likely a bug in React.',
   );
@@ -308,7 +311,7 @@ export function trapClickOnNonInteractiveElement(node: HTMLElement) {
 function setInitialDOMProperties(
   tag: string,
   domElement: Element,
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | ShadowRoot,
   nextProps: Object,
   isCustomComponentTag: boolean,
 ): void {
@@ -510,7 +513,7 @@ export function setInitialProperties(
   domElement: Element,
   tag: string,
   rawProps: Object,
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | ShadowRoot,
 ): void {
   const isCustomComponentTag = isCustomComponent(tag, rawProps);
   if (__DEV__) {
@@ -645,7 +648,7 @@ export function diffProperties(
   tag: string,
   lastRawProps: Object,
   nextRawProps: Object,
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | ShadowRoot,
 ): null | Array<mixed> {
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, nextRawProps);
@@ -910,7 +913,7 @@ export function diffHydratedProperties(
   tag: string,
   rawProps: Object,
   parentNamespace: string,
-  rootContainerElement: Element | Document,
+  rootContainerElement: Element | Document | ShadowRoot,
 ): null | Array<mixed> {
   let isCustomComponentTag;
   let extraAttributeNames: Set<string>;
