@@ -25,6 +25,14 @@ import {
   REACT_WORK_BORDER_SIZE,
 } from '../constants';
 
+function isSuspenseEvent(event: ReactEvent): boolean %checks {
+  return (
+    event.type === 'suspense-suspend' ||
+    event.type === 'suspense-resolved' ||
+    event.type === 'suspense-rejected'
+  );
+}
+
 export class ReactEventsView extends View {
   _profilerData: ReactProfilerData;
   _intrinsicSize: Size;
@@ -142,8 +150,17 @@ export class ReactEventsView extends View {
       frame,
     );
 
+    const highlightedEvents: ReactEvent[] = [];
+
     events.forEach(event => {
-      if (event === _hoveredEvent) {
+      if (
+        event === _hoveredEvent ||
+        (_hoveredEvent &&
+          isSuspenseEvent(event) &&
+          isSuspenseEvent(_hoveredEvent) &&
+          event.id === _hoveredEvent.id)
+      ) {
+        highlightedEvents.push(event);
         return;
       }
       this._drawSingleReactEvent(
@@ -156,18 +173,18 @@ export class ReactEventsView extends View {
       );
     });
 
-    // Draw the hovered and/or selected items on top so they stand out.
+    // Draw the highlighted items on top so they stand out.
     // This is helpful if there are multiple (overlapping) items close to each other.
-    if (_hoveredEvent !== null) {
+    highlightedEvents.forEach(event => {
       this._drawSingleReactEvent(
         context,
         visibleArea,
-        _hoveredEvent,
+        event,
         baseY,
         scaleFactor,
         true,
       );
-    }
+    });
 
     // Render bottom border.
     // Propose border rect, check if intersects with `rect`, draw intersection.
