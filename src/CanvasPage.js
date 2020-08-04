@@ -42,6 +42,7 @@ import {
   ReactEventsView,
   ReactMeasuresView,
   TimeAxisMarkersView,
+  UserTimingMarksView,
 } from './canvas/views';
 
 type ContextMenuContextData = {|
@@ -121,6 +122,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
   ] = useState<ReactHoverContextInfo | null>(null);
 
   const surfaceRef = useRef(new Surface());
+  const userTimingMarksViewRef = useRef(null);
   const reactEventsViewRef = useRef(null);
   const reactMeasuresViewRef = useRef(null);
   const flamechartViewRef = useRef(null);
@@ -137,21 +139,32 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
 
     // Top content
 
-    const axisMarkersView = new TimeAxisMarkersView(
-      surface,
-      defaultFrame,
-      data.duration,
-    );
-
-    const reactEventsView = new ReactEventsView(surface, defaultFrame, data);
-    reactEventsViewRef.current = reactEventsView;
-
     const topContentStack = new View(
       surface,
       defaultFrame,
       verticallyStackedLayout,
     );
+
+    const axisMarkersView = new TimeAxisMarkersView(
+      surface,
+      defaultFrame,
+      data.duration,
+    );
     topContentStack.addSubview(axisMarkersView);
+
+    if (data.otherUserTimingMarks.length > 0) {
+      const userTimingMarksView = new UserTimingMarksView(
+        surface,
+        defaultFrame,
+        data.otherUserTimingMarks,
+        data.duration,
+      );
+      userTimingMarksViewRef.current = userTimingMarksView;
+      topContentStack.addSubview(userTimingMarksView);
+    }
+
+    const reactEventsView = new ReactEventsView(surface, defaultFrame, data);
+    reactEventsViewRef.current = reactEventsView;
     topContentStack.addSubview(reactEventsView);
 
     const topContentHorizontalPanAndZoomView = new HorizontalPanAndZoomView(
@@ -239,7 +252,8 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         hoveredEvent &&
         (hoveredEvent.event ||
           hoveredEvent.measure ||
-          hoveredEvent.flamechartStackFrame)
+          hoveredEvent.flamechartStackFrame ||
+          hoveredEvent.userTimingMark)
       ) {
         setMouseLocation({
           x: interaction.payload.event.x,
@@ -268,11 +282,27 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
   });
 
   useEffect(() => {
+    const {current: userTimingMarksView} = userTimingMarksViewRef;
+    if (userTimingMarksView) {
+      userTimingMarksView.onHover = userTimingMark => {
+        if (!hoveredEvent || hoveredEvent.userTimingMark !== userTimingMark) {
+          setHoveredEvent({
+            userTimingMark,
+            event: null,
+            flamechartStackFrame: null,
+            measure: null,
+            data,
+          });
+        }
+      };
+    }
+
     const {current: reactEventsView} = reactEventsViewRef;
     if (reactEventsView) {
       reactEventsView.onHover = event => {
         if (!hoveredEvent || hoveredEvent.event !== event) {
           setHoveredEvent({
+            userTimingMark: null,
             event,
             flamechartStackFrame: null,
             measure: null,
@@ -287,6 +317,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       reactMeasuresView.onHover = measure => {
         if (!hoveredEvent || hoveredEvent.measure !== measure) {
           setHoveredEvent({
+            userTimingMark: null,
             event: null,
             flamechartStackFrame: null,
             measure,
@@ -304,6 +335,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
           hoveredEvent.flamechartStackFrame !== flamechartStackFrame
         ) {
           setHoveredEvent({
+            userTimingMark: null,
             event: null,
             flamechartStackFrame,
             measure: null,
@@ -321,6 +353,13 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
   ]);
 
   useLayoutEffect(() => {
+    const {current: userTimingMarksView} = userTimingMarksViewRef;
+    if (userTimingMarksView) {
+      userTimingMarksView.setHoveredMark(
+        hoveredEvent ? hoveredEvent.userTimingMark : null,
+      );
+    }
+
     const {current: reactEventsView} = reactEventsViewRef;
     if (reactEventsView) {
       reactEventsView.setHoveredEvent(hoveredEvent ? hoveredEvent.event : null);

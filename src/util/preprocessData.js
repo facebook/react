@@ -146,8 +146,8 @@ function processTimelineEvent(
   /** Intermediate processor state. May be mutated. */
   state: ProcessorState,
 ) {
-  const {cat, name, ts} = event;
-  if (cat !== 'blink.user_timing' || !name.startsWith('--')) {
+  const {cat, name, ts, ph} = event;
+  if (cat !== 'blink.user_timing') {
     return;
   }
 
@@ -342,10 +342,25 @@ function processTimelineEvent(
     );
   } // eslint-disable-line brace-style
 
+  // Other user timing marks/measures
+  else if (ph === 'R' || ph === 'n') {
+    // User Timing mark
+    currentProfilerData.otherUserTimingMarks.push({
+      name,
+      timestamp: startTime,
+    });
+  } else if (ph === 'b') {
+    // TODO: Begin user timing measure (#112)
+  } else if (ph === 'e') {
+    // TODO: End user timing measure (#112)
+  } // eslint-disable-line brace-style
+
   // Unrecognized event
   else {
     throw new Error(
-      `Unrecognized event ${name}! This is likely a bug in this profiler tool.`,
+      `Unrecognized event ${JSON.stringify(
+        event,
+      )}! This is likely a bug in this profiler tool.`,
     );
   }
 }
@@ -386,6 +401,7 @@ export default function preprocessData(
     events: [],
     measures: [],
     flamechart,
+    otherUserTimingMarks: [],
   };
 
   // Sort `timeline`. JSON Array Format trace events need not be ordered. See:

@@ -67,6 +67,8 @@ export const COLORS = Object.freeze({
   PRIORITY_BACKGROUND: '#ededf0',
   PRIORITY_BORDER: '#d7d7db',
   PRIORITY_LABEL: '#272727',
+  USER_TIMING: '#45a1ff',
+  USER_TIMING_HOVER: '#0a84ff',
   REACT_IDLE: '#edf6ff',
   REACT_IDLE_SELECTED: '#EDF6FF',
   REACT_IDLE_HOVER: '#EDF6FF',

@@ -97,6 +97,11 @@ export type FlamechartStackFrame = {|
   locationColumn?: number,
 |};
 
+export type UserTimingMark = {|
+  name: string,
+  timestamp: Milliseconds,
+|};
+
 /**
  * A "layer" of stack frames in the profiler UI, i.e. all stack frames of the
  * same depth across all stack traces. Displayed as a flamechart row in the UI.
@@ -111,6 +116,7 @@ export type ReactProfilerData = {|
   events: ReactEvent[],
   measures: ReactMeasure[],
   flamechart: Flamechart,
+  otherUserTimingMarks: UserTimingMark[],
 |};
 
 export type ReactHoverContextInfo = {|
@@ -118,4 +124,5 @@ export type ReactHoverContextInfo = {|
   measure: ReactMeasure | null,
   data: $ReadOnly<ReactProfilerData> | null,
   flamechartStackFrame: FlamechartStackFrame | null,
+  userTimingMark: UserTimingMark | null,
 |};

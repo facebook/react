@@ -1256,6 +1256,60 @@ Object {
       "type": "layout-effects",
     },
   ],
+  "otherUserTimingMarks": Array [
+    Object {
+      "name": "navigationStart",
+      "timestamp": -29.357,
+    },
+    Object {
+      "name": "fetchStart",
+      "timestamp": -26.92,
+    },
+    Object {
+      "name": "requestStart",
+      "timestamp": -21.171,
+    },
+    Object {
+      "name": "responseEnd",
+      "timestamp": -15.655,
+    },
+    Object {
+      "name": "unloadEventStart",
+      "timestamp": -0.74,
+    },
+    Object {
+      "name": "unloadEventEnd",
+      "timestamp": 39.608,
+    },
+    Object {
+      "name": "requestStart",
+      "timestamp": 107.649,
+    },
+    Object {
+      "name": "requestStart",
+      "timestamp": 108.385,
+    },
+    Object {
+      "name": "loadEventStart",
+      "timestamp": 307.056,
+    },
+    Object {
+      "name": "loadEventEnd",
+      "timestamp": 308.242,
+    },
+    Object {
+      "name": "requestStart",
+      "timestamp": 341.329,
+    },
+    Object {
+      "name": "requestStart",
+      "timestamp": 344.02,
+    },
+    Object {
+      "name": "requestStart",
+      "timestamp": 387.585,
+    },
+  ],
   "startTime": 8993778496,
 }
 `;
@@ -1320,6 +1374,7 @@ Object {
       "type": "layout-effects",
     },
   ],
+  "otherUserTimingMarks": Array [],
   "startTime": 40806924876,
 }
 `;

@@ -4,10 +4,11 @@ import type {Point} from './layout';
 import type {
   FlamechartStackFrame,
   ReactEvent,
+  ReactHoverContextInfo,
   ReactMeasure,
   ReactProfilerData,
-  ReactHoverContextInfo,
   Return,
+  UserTimingMark,
 } from './types';
 
 import prettyMilliseconds from 'pretty-ms';
@@ -84,7 +85,7 @@ export default function EventTooltip({data, hoveredEvent, origin}: Props) {
     return null;
   }
 
-  const {event, flamechartStackFrame, measure} = hoveredEvent;
+  const {event, flamechartStackFrame, measure, userTimingMark} = hoveredEvent;
 
   if (event !== null) {
     switch (event.type) {
@@ -150,6 +151,10 @@ export default function EventTooltip({data, hoveredEvent, origin}: Props) {
         tooltipRef={tooltipRef}
       />
     );
+  } else if (userTimingMark !== null) {
+    return (
+      <TooltipUserTimingMark mark={userTimingMark} tooltipRef={tooltipRef} />
+    );
   }
   return null;
 }
@@ -180,13 +185,7 @@ const TooltipFlamechartNode = ({
     locationColumn,
   } = stackFrame;
   return (
-    <div
-      className={styles.Tooltip}
-      style={{
-        backgroundColor: COLORS.TOOLTIP_BG,
-        color: COLORS.TOOLTIP,
-      }}
-      ref={tooltipRef}>
+    <div className={styles.Tooltip} ref={tooltipRef}>
       {formatDuration(duration)} {trimComponentName(name)}
       <div className={styles.DetailsGrid}>
         <div className={styles.DetailsGridLabel}>Timestamp:</div>
@@ -223,13 +222,7 @@ const TooltipReactEvent = ({
   const label = getReactEventLabel(type);
 
   return (
-    <div
-      className={styles.Tooltip}
-      style={{
-        backgroundColor: COLORS.TOOLTIP_BG,
-        color: COLORS.TOOLTIP,
-      }}
-      ref={tooltipRef}>
+    <div className={styles.Tooltip} ref={tooltipRef}>
       {componentName && (
         <span className={styles.ComponentName} style={{color}}>
           {trimComponentName(componentName)}
@@ -267,14 +260,7 @@ const TooltipReactMeasure = ({
   const [startTime, stopTime] = getBatchRange(batchUID, data);
 
   return (
-    <div
-      className={styles.Tooltip}
-      style={{
-        position: 'absolute',
-        backgroundColor: COLORS.TOOLTIP_BG,
-        color: COLORS.TOOLTIP,
-      }}
-      ref={tooltipRef}>
+    <div className={styles.Tooltip} ref={tooltipRef}>
       {formatDuration(duration)} {label}
       <div className={styles.Divider} />
       <div className={styles.DetailsGrid}>
@@ -286,6 +272,26 @@ const TooltipReactMeasure = ({
           Lane{lanes.length === 1 ? '' : 's'}:
         </div>
         <div>{lanes.join(', ')}</div>
+      </div>
+    </div>
+  );
+};
+
+const TooltipUserTimingMark = ({
+  mark,
+  tooltipRef,
+}: {
+  mark: UserTimingMark,
+  tooltipRef: Return<typeof useRef>,
+}) => {
+  const {name, timestamp} = mark;
+  return (
+    <div className={styles.Tooltip} ref={tooltipRef}>
+      {name}
+      <div className={styles.Divider} />
+      <div className={styles.DetailsGrid}>
+        <div className={styles.DetailsGridLabel}>Timestamp:</div>
+        <div>{formatTimestamp(timestamp)}</div>
       </div>
     </div>
   );

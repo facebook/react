@@ -81,17 +81,8 @@ describe(preprocessData, () => {
       events: [],
       measures: [],
       flamechart: [],
+      otherUserTimingMarks: [],
     });
-  });
-
-  it('should throw if unrecognized React mark is encountered', () => {
-    expect(() =>
-      // prettier-ignore
-      preprocessData([
-        {"args":{"data":{"startTime":8993778496}},"cat":"disabled-by-default-v8.cpu_profiler","id":"0x1","name":"Profile","ph":"P","pid":9312,"tid":10252,"ts":8993778520,"tts":1614266},
-        {"args":{"data":{"navigationId":"E082C30FBDA3ACEE0E7B5FD75F8B7F0D"}},"cat":"blink.user_timing","name":"--there-are-four-lights","ph":"R","pid":17232,"tid":13628,"ts":264686513020,"tts":4082554},
-      ]),
-    ).toThrow();
   });
 
   it('should throw if events and measures are incomplete', () => {
@@ -323,6 +314,33 @@ describe(preprocessData, () => {
         {"args":{"data":{"navigationId":"1065756F5FDAD64BE45CA86B0BBC1F8B"}},"cat":"blink.user_timing","name":"--commit-stop","ph":"R","pid":1852,"tid":12484,"ts":40806992337,"tts":1040149},
       ]),
     ).toMatchSnapshot();
+  });
+
+  it('should populate other user timing marks', () => {
+    expect(
+      // prettier-ignore
+      preprocessData([
+        {"args":{"data":{"startTime":8993778496}},"cat":"disabled-by-default-v8.cpu_profiler","id":"0x1","name":"Profile","ph":"P","pid":9312,"tid":10252,"ts":8993778520,"tts":1614266},
+        {"args":{"data":{"navigationId":"E082C30FBDA3ACEE0E7B5FD75F8B7F0D"}},"cat":"blink.user_timing","name":"--a-mark-that-looks-like-one-of-ours","ph":"R","pid":17232,"tid":13628,"ts":264686513020,"tts":4082554},
+        {"args":{"data":{"navigationId":"E082C30FBDA3ACEE0E7B5FD75F8B7F0D"}},"cat":"blink.user_timing","name":"Some other mark","ph":"R","pid":17232,"tid":13628,"ts":264686513020,"tts":4082554},
+        {"args":{},"cat":"blink.user_timing","id":"0xcdf75f7c","name":"VCWithoutImage: root","ph":"n","pid":55132,"scope":"blink.user_timing","tid":775,"ts":458734963394},
+      ]).otherUserTimingMarks,
+    ).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "name": "Some other mark",
+          "timestamp": 255692734.524,
+        },
+        Object {
+          "name": "--a-mark-that-looks-like-one-of-ours",
+          "timestamp": 255692734.524,
+        },
+        Object {
+          "name": "VCWithoutImage: root",
+          "timestamp": 449741184.898,
+        },
+      ]
+    `);
   });
 
   // TODO: Add test for flamechart parsing
