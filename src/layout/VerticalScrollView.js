@@ -14,9 +14,9 @@ import {View} from './View';
 import {rectContainsPoint} from './geometry';
 import {MOVE_WHEEL_DELTA_THRESHOLD} from '../canvas/constants'; // TODO: Remove external dependency
 
-type VerticalScrollState = {|
+type VerticalScrollState = $ReadOnly<{|
   offsetY: number,
-|};
+|}>;
 
 function scrollStatesAreEqual(
   state1: VerticalScrollState,
@@ -42,22 +42,9 @@ export class VerticalScrollView extends View {
 
   _isPanning = false;
 
-  _stateDeriver: (state: VerticalScrollState) => VerticalScrollState = state =>
-    state;
-
-  _onStateChange: (state: VerticalScrollState) => void = () => {};
-
-  constructor(
-    surface: Surface,
-    frame: Rect,
-    contentView: View,
-    stateDeriver?: (state: VerticalScrollState) => VerticalScrollState,
-    onStateChange?: (state: VerticalScrollState) => void,
-  ) {
+  constructor(surface: Surface, frame: Rect, contentView: View) {
     super(surface, frame);
     this.addSubview(contentView);
-    if (stateDeriver) this._stateDeriver = stateDeriver;
-    if (onStateChange) this._onStateChange = onStateChange;
   }
 
   setFrame(newFrame: Rect) {
@@ -172,12 +159,9 @@ export class VerticalScrollView extends View {
    * @private
    */
   _updateState(proposedState: VerticalScrollState) {
-    const clampedState = this._stateDeriver(
-      this._clampedProposedState(proposedState),
-    );
+    const clampedState = this._clampedProposedState(proposedState);
     if (!scrollStatesAreEqual(clampedState, this._scrollState)) {
       this._scrollState = clampedState;
-      this._onStateChange(this._scrollState);
       this.setNeedsDisplay();
     }
   }

@@ -21,11 +21,16 @@ import {
   MOVE_WHEEL_DELTA_THRESHOLD,
 } from '../canvas/constants'; // TODO: Remove external dependency
 
-type HorizontalPanAndZoomState = {|
+type HorizontalPanAndZoomState = $ReadOnly<{|
   /** Horizontal offset; positive in the left direction */
   offsetX: number,
   zoomLevel: number,
-|};
+|}>;
+
+export type HorizontalPanAndZoomViewOnChangeCallback = (
+  state: HorizontalPanAndZoomState,
+  view: HorizontalPanAndZoomView,
+) => void;
 
 function panAndZoomStatesAreEqual(
   state1: HorizontalPanAndZoomState,
@@ -62,26 +67,18 @@ export class HorizontalPanAndZoomView extends View {
 
   _isPanning = false;
 
-  _stateDeriver: (
-    state: HorizontalPanAndZoomState,
-  ) => HorizontalPanAndZoomState = state => state;
-
-  _onStateChange: (state: HorizontalPanAndZoomState) => void = () => {};
+  _onStateChange: HorizontalPanAndZoomViewOnChangeCallback = () => {};
 
   constructor(
     surface: Surface,
     frame: Rect,
     contentView: View,
     intrinsicContentWidth: number,
-    stateDeriver?: (
-      state: HorizontalPanAndZoomState,
-    ) => HorizontalPanAndZoomState,
-    onStateChange?: (state: HorizontalPanAndZoomState) => void,
+    onStateChange?: HorizontalPanAndZoomViewOnChangeCallback,
   ) {
     super(surface, frame);
     this.addSubview(contentView);
     this._intrinsicContentWidth = intrinsicContentWidth;
-    if (stateDeriver) this._stateDeriver = stateDeriver;
     if (onStateChange) this._onStateChange = onStateChange;
   }
 
@@ -89,7 +86,39 @@ export class HorizontalPanAndZoomView extends View {
     super.setFrame(newFrame);
 
     // Revalidate panAndZoomState
-    this._updateState(this._panAndZoomState);
+    this._setStateAndInformCallbacksIfChanged(this._panAndZoomState);
+  }
+
+  setPanAndZoomState(proposedState: HorizontalPanAndZoomState) {
+    this._setPanAndZoomState(proposedState);
+  }
+
+  /**
+   * Just sets pan and zoom state. Use `_setStateAndInformCallbacksIfChanged`
+   * if this view's callbacks should also be called.
+   *
+   * @returns Whether state was changed
+   * @private
+   */
+  _setPanAndZoomState(proposedState: HorizontalPanAndZoomState): boolean {
+    const clampedState = this._clampedProposedState(proposedState);
+    if (panAndZoomStatesAreEqual(clampedState, this._panAndZoomState)) {
+      return false;
+    }
+    this._panAndZoomState = clampedState;
+    this.setNeedsDisplay();
+    return true;
+  }
+
+  /**
+   * @private
+   */
+  _setStateAndInformCallbacksIfChanged(
+    proposedState: HorizontalPanAndZoomState,
+  ) {
+    if (this._setPanAndZoomState(proposedState)) {
+      this._onStateChange(this._panAndZoomState, this);
+    }
   }
 
   desiredSize() {
@@ -135,7 +164,7 @@ export class HorizontalPanAndZoomView extends View {
     }
     const {offsetX} = this._panAndZoomState;
     const {movementX} = interaction.payload.event;
-    this._updateState({
+    this._setStateAndInformCallbacksIfChanged({
       ...this._panAndZoomState,
       offsetX: offsetX + movementX,
     });
@@ -166,7 +195,7 @@ export class HorizontalPanAndZoomView extends View {
       return;
     }
 
-    this._updateState({
+    this._setStateAndInformCallbacksIfChanged({
       ...this._panAndZoomState,
       offsetX: this._panAndZoomState.offsetX - deltaX,
     });
@@ -212,7 +241,7 @@ export class HorizontalPanAndZoomView extends View {
       offsetX: location.x - newMouseXInFrame,
     });
 
-    this._updateState(offsetAdjustedState);
+    this._setStateAndInformCallbacksIfChanged(offsetAdjustedState);
   }
 
   handleInteraction(interaction: Interaction) {
@@ -234,20 +263,6 @@ export class HorizontalPanAndZoomView extends View {
       case 'wheel-meta':
         this._handleWheelZoom(interaction);
         break;
-    }
-  }
-
-  /**
-   * @private
-   */
-  _updateState(proposedState: HorizontalPanAndZoomState) {
-    const clampedState = this._stateDeriver(
-      this._clampedProposedState(proposedState),
-    );
-    if (!panAndZoomStatesAreEqual(clampedState, this._panAndZoomState)) {
-      this._panAndZoomState = clampedState;
-      this._onStateChange(this._panAndZoomState);
-      this.setNeedsDisplay();
     }
   }
 

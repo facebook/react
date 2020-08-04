@@ -1,6 +1,6 @@
 // @flow
 
-import type {Point} from './layout';
+import type {Point, HorizontalPanAndZoomViewOnChangeCallback} from './layout';
 
 import {copy} from 'clipboard-js';
 import React, {
@@ -93,6 +93,17 @@ const copySummary = (data, measure) => {
 //   zoomTo(startTime, stopTime);
 // };
 
+const syncedHorizontalPanAndZoomViews: HorizontalPanAndZoomView[] = [];
+const syncAllHorizontalPanAndZoomViewStates: HorizontalPanAndZoomViewOnChangeCallback = (
+  newState,
+  view,
+) => {
+  syncedHorizontalPanAndZoomViews.forEach(
+    syncedView =>
+      view !== syncedView && syncedView.setPanAndZoomState(newState),
+  );
+};
+
 type AutoSizedCanvasProps = {|
   data: ReactProfilerData,
   height: number,
@@ -118,6 +129,12 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     const surface = surfaceRef.current;
     const defaultFrame = {origin: zeroPoint, size: {width, height}};
 
+    // Clear synced views
+    syncedHorizontalPanAndZoomViews.splice(
+      0,
+      syncedHorizontalPanAndZoomViews.length,
+    );
+
     // Top content
 
     const axisMarkersView = new TimeAxisMarkersView(
@@ -137,12 +154,14 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     topContentStack.addSubview(axisMarkersView);
     topContentStack.addSubview(reactEventsView);
 
-    const topContentZoomWrapper = new HorizontalPanAndZoomView(
+    const topContentHorizontalPanAndZoomView = new HorizontalPanAndZoomView(
       surface,
       defaultFrame,
       topContentStack,
       data.duration,
+      syncAllHorizontalPanAndZoomViewStates,
     );
+    syncedHorizontalPanAndZoomViews.push(topContentHorizontalPanAndZoomView);
 
     // Resizable content
 
@@ -152,17 +171,19 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       data,
     );
     reactMeasuresViewRef.current = reactMeasuresView;
-    const vScrollWrappedReactMeasuresView = new VerticalScrollView(
+    const reactMeasuresVerticalScrollView = new VerticalScrollView(
       surface,
       defaultFrame,
       reactMeasuresView,
     );
-    const hScrollWrappedReactMeasuresView = new HorizontalPanAndZoomView(
+    const reactMeasuresHorizontalPanAndZoomView = new HorizontalPanAndZoomView(
       surface,
       defaultFrame,
-      vScrollWrappedReactMeasuresView,
+      reactMeasuresVerticalScrollView,
       data.duration,
+      syncAllHorizontalPanAndZoomViewStates,
     );
+    syncedHorizontalPanAndZoomViews.push(reactMeasuresHorizontalPanAndZoomView);
 
     const flamechartView = new FlamechartView(
       surface,
@@ -171,23 +192,25 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       data.duration,
     );
     flamechartViewRef.current = flamechartView;
-    const vScrollWrappedFlamechartView = new VerticalScrollView(
+    const flamechartVerticalScrollView = new VerticalScrollView(
       surface,
       defaultFrame,
       flamechartView,
     );
-    const hScrollWrappedFlamechartView = new HorizontalPanAndZoomView(
+    const flamechartHorizontalPanAndZoomView = new HorizontalPanAndZoomView(
       surface,
       defaultFrame,
-      vScrollWrappedFlamechartView,
+      flamechartVerticalScrollView,
       data.duration,
+      syncAllHorizontalPanAndZoomViewStates,
     );
+    syncedHorizontalPanAndZoomViews.push(flamechartHorizontalPanAndZoomView);
 
     const resizableContentStack = new ResizableSplitView(
       surface,
       defaultFrame,
-      hScrollWrappedReactMeasuresView,
-      hScrollWrappedFlamechartView,
+      reactMeasuresHorizontalPanAndZoomView,
+      flamechartHorizontalPanAndZoomView,
     );
 
     const rootView = new View(
@@ -198,7 +221,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         lastViewTakesUpRemainingSpaceLayout,
       ),
     );
-    rootView.addSubview(topContentZoomWrapper);
+    rootView.addSubview(topContentHorizontalPanAndZoomView);
     rootView.addSubview(resizableContentStack);
 
     surfaceRef.current.rootView = rootView;
