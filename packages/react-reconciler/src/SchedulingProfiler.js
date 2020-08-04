@@ -15,6 +15,7 @@ import {
   enableSchedulingProfiler,
   enableSchedulingProfilerComponentStacks,
 } from 'shared/ReactFeatureFlags';
+import ReactVersion from 'shared/ReactVersion';
 import getComponentName from 'shared/getComponentName';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 
@@ -166,7 +167,9 @@ export function markRenderStopped(): void {
 export function markRenderScheduled(lane: Lane): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
-      performance.mark(`--schedule-render-${formatLanes(lane)}`);
+      performance.mark(
+        `--schedule-render-${formatLanes(lane)}-${ReactVersion}`,
+      );
     }
   }
 }

@@ -10,6 +10,8 @@
 
 'use strict';
 
+import ReactVersion from 'shared/ReactVersion';
+
 function normalizeCodeLocInfo(str) {
   return (
     str &&
@@ -81,7 +83,7 @@ describe('SchedulingProfiler', () => {
     ReactTestRenderer.create(<div />);
 
     expect(marks).toEqual([
-      '--schedule-render-1',
+      `--schedule-render-1-${ReactVersion}`,
       '--render-start-1',
       '--render-stop',
       '--commit-start-1',
@@ -95,7 +97,7 @@ describe('SchedulingProfiler', () => {
   it('should mark concurrent render without suspends or state updates', () => {
     ReactTestRenderer.create(<div />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-512']);
+    expect(marks).toEqual([`--schedule-render-512-${ReactVersion}`]);
 
     marks.splice(0);
 
@@ -128,7 +130,7 @@ describe('SchedulingProfiler', () => {
     expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
 
     expect(marks).toEqual([
-      '--schedule-render-512',
+      `--schedule-render-512-${ReactVersion}`,
       '--render-start-512',
       '--render-yield',
     ]);
@@ -148,7 +150,7 @@ describe('SchedulingProfiler', () => {
     );
 
     expect(marks).toEqual([
-      '--schedule-render-1',
+      `--schedule-render-1-${ReactVersion}`,
       '--render-start-1',
       toggleComponentStacks(
         '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
@@ -184,7 +186,7 @@ describe('SchedulingProfiler', () => {
     );
 
     expect(marks).toEqual([
-      '--schedule-render-1',
+      `--schedule-render-1-${ReactVersion}`,
       '--render-start-1',
       toggleComponentStacks(
         '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
@@ -220,7 +222,7 @@ describe('SchedulingProfiler', () => {
       {unstable_isConcurrent: true},
     );
 
-    expect(marks).toEqual(['--schedule-render-512']);
+    expect(marks).toEqual([`--schedule-render-512-${ReactVersion}`]);
 
     marks.splice(0);
 
@@ -262,7 +264,7 @@ describe('SchedulingProfiler', () => {
       {unstable_isConcurrent: true},
     );
 
-    expect(marks).toEqual(['--schedule-render-512']);
+    expect(marks).toEqual([`--schedule-render-512-${ReactVersion}`]);
 
     marks.splice(0);
 
@@ -304,7 +306,7 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-512']);
+    expect(marks).toEqual([`--schedule-render-512-${ReactVersion}`]);
 
     marks.splice(0);
 
@@ -340,7 +342,7 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-512']);
+    expect(marks).toEqual([`--schedule-render-512-${ReactVersion}`]);
 
     marks.splice(0);
 
@@ -377,7 +379,7 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-512']);
+    expect(marks).toEqual([`--schedule-render-512-${ReactVersion}`]);
 
     marks.splice(0);
 
@@ -414,7 +416,7 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-512']);
+    expect(marks).toEqual([`--schedule-render-512-${ReactVersion}`]);
 
     marks.splice(0);
 
@@ -449,7 +451,7 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-512']);
+    expect(marks).toEqual([`--schedule-render-512-${ReactVersion}`]);
 
     marks.splice(0);
 
@@ -489,7 +491,7 @@ describe('SchedulingProfiler', () => {
     gate(({old}) => {
       if (old) {
         expect(marks.map(normalizeCodeLocInfo)).toEqual([
-          '--schedule-render-512',
+          `--schedule-render-512-${ReactVersion}`,
           '--render-start-512',
           '--render-stop',
           '--commit-start-512',
@@ -508,7 +510,7 @@ describe('SchedulingProfiler', () => {
         ]);
       } else {
         expect(marks.map(normalizeCodeLocInfo)).toEqual([
-          '--schedule-render-512',
+          `--schedule-render-512-${ReactVersion}`,
           '--render-start-512',
           '--render-stop',
           '--commit-start-512',
