@@ -1011,6 +1011,10 @@ function detachFiberMutation(fiber: Fiber) {
   // with findDOMNode and how it requires the sibling field to carry out
   // traversal in a later effect. See PR #16820. We now clear the sibling
   // field after effects, see: detachFiberAfterEffects.
+  //
+  // Don't disconnect stateNode now; it will be detached in detachFiberAfterEffects.
+  // It may be required if the current component is an error boundary,
+  // and one of its descendants throws while unmounting a passive effect.
   fiber.alternate = null;
   fiber.child = null;
   fiber.dependencies = null;
@@ -1020,7 +1024,6 @@ function detachFiberMutation(fiber: Fiber) {
   fiber.memoizedState = null;
   fiber.pendingProps = null;
   fiber.return = null;
-  fiber.stateNode = null;
   fiber.updateQueue = null;
   if (__DEV__) {
     fiber._debugOwner = null;

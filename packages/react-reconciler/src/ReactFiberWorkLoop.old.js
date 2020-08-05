@@ -3793,4 +3793,5 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
 
 function detachFiberAfterEffects(fiber: Fiber): void {
   fiber.sibling = null;
+  fiber.stateNode = null;
 }
