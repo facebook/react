@@ -22,7 +22,6 @@ import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 import {registrationNameDependencies} from './EventRegistry';
 import {
-  PLUGIN_EVENT_SYSTEM,
   IS_CAPTURE_PHASE,
   IS_EVENT_HANDLE_NON_MANAGED_NODE,
   IS_NON_DELEGATED,
@@ -64,7 +63,6 @@ import {
   addEventBubbleListenerWithPassiveFlag,
   addEventCaptureListenerWithPassiveFlag,
 } from './EventListener';
-import {removeTrappedEventListener} from './DeprecatedDOMEventResponderSystem';
 import {topLevelEventsToReactNames} from './DOMEventProperties';
 import * as BeforeInputEventPlugin from './plugins/BeforeInputEventPlugin';
 import * as ChangeEventPlugin from './plugins/ChangeEventPlugin';
@@ -318,7 +316,7 @@ export function listenToNonDelegatedEvent(
     const listener = addTrappedEventListener(
       targetElement,
       domEventName,
-      PLUGIN_EVENT_SYSTEM | IS_NON_DELEGATED,
+      IS_NON_DELEGATED,
       isCapturePhaseListener,
     );
     listenerMap.set(listenerMapKey, {passive: false, listener});
@@ -332,7 +330,7 @@ export function listenToNativeEvent(
   targetElement: Element | null,
   isPassiveListener?: boolean,
   listenerPriority?: EventPriority,
-  eventSystemFlags?: EventSystemFlags = PLUGIN_EVENT_SYSTEM,
+  eventSystemFlags?: EventSystemFlags = 0,
 ): void {
   let target = rootContainerElement;
   // selectionchange needs to be attached to the document
@@ -381,11 +379,11 @@ export function listenToNativeEvent(
     // If we should upgrade, then we need to remove the existing trapped
     // event listener for the target container.
     if (shouldUpgrade) {
-      removeTrappedEventListener(
+      removeEventListener(
         target,
         domEventName,
-        isCapturePhaseListener,
         ((listenerEntry: any): ElementListenerMapEntry).listener,
+        isCapturePhaseListener,
       );
     }
     if (isCapturePhaseListener) {
@@ -549,7 +547,7 @@ function deferClickToDocumentForLegacyFBSupport(
   addTrappedEventListener(
     targetContainer,
     domEventName,
-    PLUGIN_EVENT_SYSTEM | IS_LEGACY_FB_SUPPORT_MODE,
+    IS_LEGACY_FB_SUPPORT_MODE,
     false,
     isDeferredListenerForLegacyFBSupport,
   );

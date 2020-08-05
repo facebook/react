@@ -28,10 +28,7 @@ import {
 } from '../events/DOMPluginEventSystem';
 
 import {HostRoot, HostPortal} from 'react-reconciler/src/ReactWorkTags';
-import {
-  PLUGIN_EVENT_SYSTEM,
-  IS_EVENT_HANDLE_NON_MANAGED_NODE,
-} from '../events/EventSystemFlags';
+import {IS_EVENT_HANDLE_NON_MANAGED_NODE} from '../events/EventSystemFlags';
 
 import {
   enableScopeAPI,
@@ -164,7 +161,7 @@ function registerReactDOMEvent(
       null,
       isPassiveListener,
       listenerPriority,
-      PLUGIN_EVENT_SYSTEM | IS_EVENT_HANDLE_NON_MANAGED_NODE,
+      IS_EVENT_HANDLE_NON_MANAGED_NODE,
     );
   } else {
     invariant(

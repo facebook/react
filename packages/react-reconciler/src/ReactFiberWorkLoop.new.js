@@ -2483,7 +2483,7 @@ function commitMutationEffectsImpl(
       commitDetachRef(current);
     }
     if (enableScopeAPI) {
-      // TODO: This is a temporary solution that allows us to transition away
+      // TODO: This is a temporary solution that allowed us to transition away
       // from React Flare on www.
       if (fiber.tag === ScopeComponent) {
         commitAttachRef(fiber);
@@ -2633,7 +2633,7 @@ function commitLayoutEffectsImpl(
   }
 
   if (enableScopeAPI) {
-    // TODO: This is a temporary solution that allows us to transition away
+    // TODO: This is a temporary solution that allowed us to transition away
     // from React Flare on www.
     if (effectTag & Ref && fiber.tag !== ScopeComponent) {
       commitAttachRef(fiber);

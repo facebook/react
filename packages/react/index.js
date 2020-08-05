@@ -80,8 +80,6 @@ export {
   block,
   block as unstable_block,
   unstable_LegacyHidden,
-  DEPRECATED_useResponder,
-  DEPRECATED_createResponder,
   unstable_createFundamental,
   unstable_Scope,
   unstable_useOpaqueIdentifier,

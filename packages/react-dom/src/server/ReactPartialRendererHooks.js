@@ -14,7 +14,6 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
-  ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
 import type PartialRenderer from './ReactPartialRenderer';
@@ -457,13 +456,6 @@ export function useCallback<T>(
   return useMemo(() => callback, deps);
 }
 
-function useResponder(responder, props): ReactEventResponderListener<any, any> {
-  return {
-    props,
-    responder,
-  };
-}
-
 // TODO Decide on how to implement this hook for server rendering.
 // If a mutation occurs during render, consider triggering a Suspense boundary
 // and falling back to client rendering.
@@ -521,7 +513,6 @@ export const Dispatcher: DispatcherType = {
   useEffect: noop,
   // Debugging effect
   useDebugValue: noop,
-  useResponder,
   useDeferredValue,
   useTransition,
   useOpaqueIdentifier,

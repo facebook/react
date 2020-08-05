@@ -12,13 +12,10 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
-  ReactEventResponder,
-  ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
-import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 
@@ -153,23 +150,6 @@ export function useDebugValue<T>(
 }
 
 export const emptyObject = {};
-
-export function useResponder(
-  responder: ReactEventResponder<any, any>,
-  listenerProps: ?Object,
-): ?ReactEventResponderListener<any, any> {
-  const dispatcher = resolveDispatcher();
-  if (__DEV__) {
-    if (responder == null || responder.$$typeof !== REACT_RESPONDER_TYPE) {
-      console.error(
-        'useResponder: invalid first argument. Expected an event responder, but instead got %s',
-        responder,
-      );
-      return;
-    }
-  }
-  return dispatcher.useResponder(responder, listenerProps || emptyObject);
-}
 
 export function useTransition(
   config: ?Object,

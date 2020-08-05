@@ -17,7 +17,6 @@ let ReactFeatureFlags;
 let Suspense;
 let SuspenseList;
 let act;
-let useHover;
 
 function dispatchMouseEvent(to, from) {
   if (!to) {
@@ -76,7 +75,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableSuspenseCallback = true;
-    ReactFeatureFlags.enableDeprecatedFlareAPI = true;
+    ReactFeatureFlags.enableCreateEventHandleAPI = true;
 
     React = require('react');
     ReactDOM = require('react-dom');
@@ -2202,8 +2201,10 @@ describe('ReactDOMServerPartialHydration', () => {
   });
 
   // @gate experimental
-  it('does not invoke an event on a hydrated EventResponder until it commits', async () => {
+  it('does not invoke an event on a hydrated event handle until it commits', async () => {
+    const setClick = ReactDOM.unstable_createEventHandle('click');
     let suspend = false;
+    let isServerRendering = true;
     let resolve;
     const promise = new Promise(resolvePromise => (resolve = resolvePromise));
 
@@ -2216,17 +2217,15 @@ describe('ReactDOMServerPartialHydration', () => {
     }
 
     const onEvent = jest.fn();
-    const TestResponder = React.DEPRECATED_createResponder(
-      'TestEventResponder',
-      {
-        targetEventTypes: ['click'],
-        onEvent,
-      },
-    );
 
     function Button() {
-      const listener = React.DEPRECATED_useResponder(TestResponder, {});
-      return <a DEPRECATED_flareListeners={listener}>Click me</a>;
+      const ref = React.useRef(null);
+      if (!isServerRendering) {
+        React.useLayoutEffect(() => {
+          return setClick(ref.current, onEvent);
+        });
+      }
+      return <a ref={ref}>Click me</a>;
     }
 
     function App() {
@@ -2253,6 +2252,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
+    isServerRendering = false;
     const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
@@ -2364,23 +2364,25 @@ describe('ReactDOMServerPartialHydration', () => {
   });
 
   // @gate experimental
-  it('invokes discrete events on nested suspense boundaries in a root (responder system)', async () => {
+  it('invokes discrete events on nested suspense boundaries in a root (createEventHandle)', async () => {
     let suspend = false;
+    let isServerRendering = true;
     let resolve;
     const promise = new Promise(resolvePromise => (resolve = resolvePromise));
 
     const onEvent = jest.fn();
-    const TestResponder = React.DEPRECATED_createResponder(
-      'TestEventResponder',
-      {
-        targetEventTypes: ['click'],
-        onEvent,
-      },
-    );
+    const setClick = ReactDOM.unstable_createEventHandle('click');
 
     function Button() {
-      const listener = React.DEPRECATED_useResponder(TestResponder, {});
-      return <a DEPRECATED_flareListeners={listener}>Click me</a>;
+      const ref = React.useRef(null);
+
+      if (!isServerRendering) {
+        React.useLayoutEffect(() => {
+          return setClick(ref.current, onEvent);
+        });
+      }
+
+      return <a ref={ref}>Click me</a>;
     }
 
     function Child() {
@@ -2416,6 +2418,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // On the client we don't have all data yet but we want to start
     // hydrating anyway.
     suspend = true;
+    isServerRendering = false;
     const root = ReactDOM.createRoot(container, {hydrate: true});
     root.render(<App />);
 
@@ -2700,124 +2703,6 @@ describe('ReactDOMServerPartialHydration', () => {
     jest.runAllTimers();
 
     expect(ops).toEqual(['Mouse Enter Second']);
-
-    document.body.removeChild(container);
-  });
-
-  // @gate experimental
-  it('blocks only on the last continuous event (Responder system)', async () => {
-    useHover = require('react-interactions/events/hover').useHover;
-
-    let suspend1 = false;
-    let resolve1;
-    const promise1 = new Promise(resolvePromise => (resolve1 = resolvePromise));
-    let suspend2 = false;
-    let resolve2;
-    const promise2 = new Promise(resolvePromise => (resolve2 = resolvePromise));
-
-    function First({text}) {
-      if (suspend1) {
-        throw promise1;
-      } else {
-        return 'Hello';
-      }
-    }
-
-    function Second({text}) {
-      if (suspend2) {
-        throw promise2;
-      } else {
-        return 'World';
-      }
-    }
-
-    const ops = [];
-
-    function App() {
-      const listener1 = useHover({
-        onHoverStart() {
-          ops.push('Hover Start First');
-        },
-        onHoverEnd() {
-          ops.push('Hover End First');
-        },
-      });
-      const listener2 = useHover({
-        onHoverStart() {
-          ops.push('Hover Start Second');
-        },
-        onHoverEnd() {
-          ops.push('Hover End Second');
-        },
-      });
-      return (
-        <div>
-          <Suspense fallback="Loading First...">
-            <span DEPRECATED_flareListeners={listener1} />
-            {/* We suspend after to test what happens when we eager
-                attach the listener. */}
-            <First />
-          </Suspense>
-          <Suspense fallback="Loading Second...">
-            <span DEPRECATED_flareListeners={listener2}>
-              <Second />
-            </span>
-          </Suspense>
-        </div>
-      );
-    }
-
-    const finalHTML = ReactDOMServer.renderToString(<App />);
-    const container = document.createElement('div');
-    container.innerHTML = finalHTML;
-
-    // We need this to be in the document since we'll dispatch events on it.
-    document.body.appendChild(container);
-
-    const appDiv = container.getElementsByTagName('div')[0];
-    const firstSpan = appDiv.getElementsByTagName('span')[0];
-    const secondSpan = appDiv.getElementsByTagName('span')[1];
-    expect(firstSpan.textContent).toBe('');
-    expect(secondSpan.textContent).toBe('World');
-
-    // On the client we don't have all data yet but we want to start
-    // hydrating anyway.
-    suspend1 = true;
-    suspend2 = true;
-    const root = ReactDOM.createRoot(container, {hydrate: true});
-    root.render(<App />);
-
-    Scheduler.unstable_flushAll();
-    jest.runAllTimers();
-
-    dispatchMouseEvent(appDiv, null);
-    dispatchMouseEvent(firstSpan, appDiv);
-    dispatchMouseEvent(secondSpan, firstSpan);
-
-    // Neither target is yet hydrated.
-    expect(ops).toEqual([]);
-
-    // Resolving the second promise so that rendering can complete.
-    suspend2 = false;
-    resolve2();
-    await promise2;
-
-    Scheduler.unstable_flushAll();
-    jest.runAllTimers();
-
-    // We've unblocked the current hover target so we should be
-    // able to replay it now.
-    expect(ops).toEqual(['Hover Start Second']);
-
-    // Resolving the first promise has no effect now.
-    suspend1 = false;
-    resolve1();
-    await promise1;
-
-    Scheduler.unstable_flushAll();
-    jest.runAllTimers();
-
-    expect(ops).toEqual(['Hover Start Second']);
 
     document.body.removeChild(container);
   });

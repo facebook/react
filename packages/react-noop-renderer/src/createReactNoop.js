@@ -375,14 +375,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     warnsIfNotActing: true,
     supportsHydration: false,
 
-    DEPRECATED_mountResponderInstance(): void {
-      // NO-OP
-    },
-
-    DEPRECATED_unmountResponderInstance(): void {
-      // NO-OP
-    },
-
     getFundamentalComponentInstance(fundamentalInstance): Instance {
       const {impl, props, state} = fundamentalInstance;
       return impl.getInstance(null, props, state);
