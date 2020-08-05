@@ -2220,13 +2220,10 @@ describe('ReactDOMServerPartialHydration', () => {
 
     function Button() {
       const ref = React.useRef(null);
-      const effect = () => {
-        return setClick(ref.current, onEvent);
-      };
-      if (isServerRendering) {
-        React.useEffect(effect);
-      } else {
-        React.useLayoutEffect(effect);
+      if (!isServerRendering) {
+        React.useLayoutEffect(() => {
+          return setClick(ref.current, onEvent);
+        });
       }
       return <a ref={ref}>Click me</a>;
     }
@@ -2379,13 +2376,10 @@ describe('ReactDOMServerPartialHydration', () => {
     function Button() {
       const ref = React.useRef(null);
 
-      const effect = () => {
-        return setClick(ref.current, onEvent);
-      };
-      if (isServerRendering) {
-        React.useEffect(effect);
-      } else {
-        React.useLayoutEffect(effect);
+      if (!isServerRendering) {
+        React.useLayoutEffect(() => {
+          return setClick(ref.current, onEvent);
+        });
       }
 
       return <a ref={ref}>Click me</a>;

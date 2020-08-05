@@ -354,15 +354,12 @@ describe('ReactDOMServerSelectiveHydration', () => {
     function Child({text}) {
       const ref = React.useRef(null);
       Scheduler.unstable_yieldValue(text);
-      const effect = () => {
-        return setClick(ref.current, () => {
-          Scheduler.unstable_yieldValue('Clicked ' + text);
+      if (!isServerRendering) {
+        React.useLayoutEffect(() => {
+          return setClick(ref.current, () => {
+            Scheduler.unstable_yieldValue('Clicked ' + text);
+          });
         });
-      };
-      if (isServerRendering) {
-        React.useEffect(effect);
-      } else {
-        React.useLayoutEffect(effect);
       }
 
       return <span ref={ref}>{text}</span>;
@@ -433,15 +430,12 @@ describe('ReactDOMServerSelectiveHydration', () => {
       }
       Scheduler.unstable_yieldValue(text);
 
-      const effect = () => {
-        return setClick(ref.current, () => {
-          Scheduler.unstable_yieldValue('Clicked ' + text);
+      if (!isServerRendering) {
+        React.useLayoutEffect(() => {
+          return setClick(ref.current, () => {
+            Scheduler.unstable_yieldValue('Clicked ' + text);
+          });
         });
-      };
-      if (isServerRendering) {
-        React.useEffect(effect);
-      } else {
-        React.useLayoutEffect(effect);
       }
 
       return <span ref={ref}>{text}</span>;
@@ -524,15 +518,12 @@ describe('ReactDOMServerSelectiveHydration', () => {
       }
       Scheduler.unstable_yieldValue(text);
 
-      const effect = () => {
-        return setClick(ref.current, () => {
-          Scheduler.unstable_yieldValue('Clicked ' + text);
+      if (!isServerRendering) {
+        React.useLayoutEffect(() => {
+          return setClick(ref.current, () => {
+            Scheduler.unstable_yieldValue('Clicked ' + text);
+          });
         });
-      };
-      if (isServerRendering) {
-        React.useEffect(effect);
-      } else {
-        React.useLayoutEffect(effect);
       }
       return <span ref={ref}>{text}</span>;
     }
