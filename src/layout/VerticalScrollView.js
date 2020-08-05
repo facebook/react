@@ -2,9 +2,9 @@
 
 import type {
   Interaction,
-  VerticalPanStartInteraction,
-  VerticalPanMoveInteraction,
-  VerticalPanEndInteraction,
+  MouseDownInteraction,
+  MouseMoveInteraction,
+  MouseUpInteraction,
   WheelPlainInteraction,
 } from '../useCanvasInteraction';
 import type {Rect} from './geometry';
@@ -89,13 +89,13 @@ export class VerticalScrollView extends View {
     super.layoutSubviews();
   }
 
-  _handleVerticalPanStart(interaction: VerticalPanStartInteraction) {
+  _handleMouseDown(interaction: MouseDownInteraction) {
     if (rectContainsPoint(interaction.payload.location, this.frame)) {
       this._isPanning = true;
     }
   }
 
-  _handleVerticalPanMove(interaction: VerticalPanMoveInteraction) {
+  _handleMouseMove(interaction: MouseMoveInteraction) {
     if (!this._isPanning) {
       return;
     }
@@ -107,7 +107,7 @@ export class VerticalScrollView extends View {
     });
   }
 
-  _handleVerticalPanEnd(interaction: VerticalPanEndInteraction) {
+  _handleMouseUp(interaction: MouseUpInteraction) {
     if (this._isPanning) {
       this._isPanning = false;
     }
@@ -140,14 +140,14 @@ export class VerticalScrollView extends View {
 
   handleInteraction(interaction: Interaction) {
     switch (interaction.type) {
-      case 'vertical-pan-start':
-        this._handleVerticalPanStart(interaction);
+      case 'mousedown':
+        this._handleMouseDown(interaction);
         break;
-      case 'vertical-pan-move':
-        this._handleVerticalPanMove(interaction);
+      case 'mousemove':
+        this._handleMouseMove(interaction);
         break;
-      case 'vertical-pan-end':
-        this._handleVerticalPanEnd(interaction);
+      case 'mouseup':
+        this._handleMouseUp(interaction);
         break;
       case 'wheel-plain':
         this._handleWheelPlain(interaction);

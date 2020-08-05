@@ -2,9 +2,9 @@
 
 import type {
   Interaction,
-  VerticalPanStartInteraction,
-  VerticalPanMoveInteraction,
-  VerticalPanEndInteraction,
+  MouseDownInteraction,
+  MouseMoveInteraction,
+  MouseUpInteraction,
 } from '../useCanvasInteraction';
 import type {Rect, Size} from './geometry';
 
@@ -86,7 +86,7 @@ class ResizeBar extends View {
     this._updateColor();
   }
 
-  _handleVerticalPanStart(interaction: VerticalPanStartInteraction) {
+  _handleMouseDown(interaction: MouseDownInteraction) {
     const cursorInView = rectContainsPoint(
       interaction.payload.location,
       this.frame,
@@ -96,7 +96,7 @@ class ResizeBar extends View {
     }
   }
 
-  _handleVerticalPanMove(interaction: VerticalPanMoveInteraction) {
+  _handleMouseMove(interaction: MouseMoveInteraction) {
     const cursorInView = rectContainsPoint(
       interaction.payload.location,
       this.frame,
@@ -107,7 +107,7 @@ class ResizeBar extends View {
     this._setInteractionState(cursorInView ? 'hovered' : 'normal');
   }
 
-  _handleVerticalPanEnd(interaction: VerticalPanEndInteraction) {
+  _handleMouseUp(interaction: MouseUpInteraction) {
     const cursorInView = rectContainsPoint(
       interaction.payload.location,
       this.frame,
@@ -119,14 +119,14 @@ class ResizeBar extends View {
 
   handleInteraction(interaction: Interaction) {
     switch (interaction.type) {
-      case 'vertical-pan-start':
-        this._handleVerticalPanStart(interaction);
+      case 'mousedown':
+        this._handleMouseDown(interaction);
         return;
-      case 'vertical-pan-move':
-        this._handleVerticalPanMove(interaction);
+      case 'mousemove':
+        this._handleMouseMove(interaction);
         return;
-      case 'vertical-pan-end':
-        this._handleVerticalPanEnd(interaction);
+      case 'mouseup':
+        this._handleMouseUp(interaction);
         return;
     }
   }
@@ -268,7 +268,7 @@ export class ResizableSplitView extends View {
     });
   }
 
-  _handleVerticalPanStart(interaction: VerticalPanStartInteraction) {
+  _handleMouseDown(interaction: MouseDownInteraction) {
     const cursorLocation = interaction.payload.location;
     const resizeBarFrame = this._getResizeBar().frame;
     if (rectContainsPoint(cursorLocation, resizeBarFrame)) {
@@ -280,7 +280,7 @@ export class ResizableSplitView extends View {
     }
   }
 
-  _handleVerticalPanMove(interaction: VerticalPanMoveInteraction) {
+  _handleMouseMove(interaction: MouseMoveInteraction) {
     const {_resizingState} = this;
     if (_resizingState) {
       this._resizingState = {
@@ -291,7 +291,7 @@ export class ResizableSplitView extends View {
     }
   }
 
-  _handleVerticalPanEnd(interaction: VerticalPanEndInteraction) {
+  _handleMouseUp(interaction: MouseUpInteraction) {
     if (this._resizingState) {
       this._resizingState = null;
     }
@@ -299,14 +299,14 @@ export class ResizableSplitView extends View {
 
   handleInteraction(interaction: Interaction) {
     switch (interaction.type) {
-      case 'vertical-pan-start':
-        this._handleVerticalPanStart(interaction);
+      case 'mousedown':
+        this._handleMouseDown(interaction);
         return;
-      case 'vertical-pan-move':
-        this._handleVerticalPanMove(interaction);
+      case 'mousemove':
+        this._handleMouseMove(interaction);
         return;
-      case 'vertical-pan-end':
-        this._handleVerticalPanEnd(interaction);
+      case 'mouseup':
+        this._handleMouseUp(interaction);
         return;
     }
   }

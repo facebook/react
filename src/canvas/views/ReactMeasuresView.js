@@ -1,6 +1,9 @@
 // @flow
 
-import type {Interaction, HoverInteraction} from '../../useCanvasInteraction';
+import type {
+  Interaction,
+  MouseMoveInteraction,
+} from '../../useCanvasInteraction';
 import type {ReactLane, ReactMeasure, ReactProfilerData} from '../../types';
 import type {Rect, Size} from '../../layout';
 
@@ -239,7 +242,7 @@ export class ReactMeasuresView extends View {
   /**
    * @private
    */
-  _handleHover(interaction: HoverInteraction) {
+  _handleMouseMove(interaction: MouseMoveInteraction) {
     const {
       frame,
       _intrinsicSize,
@@ -299,8 +302,8 @@ export class ReactMeasuresView extends View {
 
   handleInteraction(interaction: Interaction) {
     switch (interaction.type) {
-      case 'hover':
-        this._handleHover(interaction);
+      case 'mousemove':
+        this._handleMouseMove(interaction);
         break;
     }
   }

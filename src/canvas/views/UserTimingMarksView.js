@@ -1,6 +1,9 @@
 // @flow
 
-import type {Interaction, HoverInteraction} from '../../useCanvasInteraction';
+import type {
+  Interaction,
+  MouseMoveInteraction,
+} from '../../useCanvasInteraction';
 import type {UserTimingMark} from '../../types';
 import type {Rect, Size} from '../../layout';
 
@@ -178,7 +181,7 @@ export class UserTimingMarksView extends View {
   /**
    * @private
    */
-  _handleHover(interaction: HoverInteraction) {
+  _handleMouseMove(interaction: MouseMoveInteraction) {
     const {frame, onHover, visibleArea} = this;
     if (!onHover) {
       return;
@@ -221,8 +224,8 @@ export class UserTimingMarksView extends View {
 
   handleInteraction(interaction: Interaction) {
     switch (interaction.type) {
-      case 'hover':
-        this._handleHover(interaction);
+      case 'mousemove':
+        this._handleMouseMove(interaction);
         break;
     }
   }

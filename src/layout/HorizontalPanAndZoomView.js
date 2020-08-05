@@ -2,9 +2,9 @@
 
 import type {
   Interaction,
-  HorizontalPanStartInteraction,
-  HorizontalPanMoveInteraction,
-  HorizontalPanEndInteraction,
+  MouseDownInteraction,
+  MouseMoveInteraction,
+  MouseUpInteraction,
   WheelPlainInteraction,
   WheelWithShiftInteraction,
   WheelWithControlInteraction,
@@ -152,13 +152,13 @@ export class HorizontalPanAndZoomView extends View {
     super.layoutSubviews();
   }
 
-  _handleHorizontalPanStart(interaction: HorizontalPanStartInteraction) {
+  _handleMouseDown(interaction: MouseDownInteraction) {
     if (rectContainsPoint(interaction.payload.location, this.frame)) {
       this._isPanning = true;
     }
   }
 
-  _handleHorizontalPanMove(interaction: HorizontalPanMoveInteraction) {
+  _handleMouseMove(interaction: MouseMoveInteraction) {
     if (!this._isPanning) {
       return;
     }
@@ -170,7 +170,7 @@ export class HorizontalPanAndZoomView extends View {
     });
   }
 
-  _handleHorizontalPanEnd(interaction: HorizontalPanEndInteraction) {
+  _handleMouseUp(interaction: MouseUpInteraction) {
     if (this._isPanning) {
       this._isPanning = false;
     }
@@ -246,14 +246,14 @@ export class HorizontalPanAndZoomView extends View {
 
   handleInteraction(interaction: Interaction) {
     switch (interaction.type) {
-      case 'horizontal-pan-start':
-        this._handleHorizontalPanStart(interaction);
+      case 'mousedown':
+        this._handleMouseDown(interaction);
         break;
-      case 'horizontal-pan-move':
-        this._handleHorizontalPanMove(interaction);
+      case 'mousemove':
+        this._handleMouseMove(interaction);
         break;
-      case 'horizontal-pan-end':
-        this._handleHorizontalPanEnd(interaction);
+      case 'mouseup':
+        this._handleMouseUp(interaction);
         break;
       case 'wheel-plain':
         this._handleWheelPlain(interaction);
