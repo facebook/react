@@ -8,7 +8,7 @@
  */
 
 import type {EventPriority} from 'shared/ReactTypes';
-import type {DOMEventName} from '../events/DOMEventNames';
+import type {DOMEventName} from './DOMEventNames';
 
 import {registerTwoPhaseEvent} from './EventRegistry';
 import {
