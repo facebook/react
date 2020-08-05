@@ -16,6 +16,18 @@ export let requestPaint;
 export let getCurrentTime;
 export let forceFrameRate;
 
+const hasPerformanceNow =
+  typeof performance === 'object' && typeof performance.now === 'function';
+
+if (hasPerformanceNow) {
+  const localPerformance = performance;
+  getCurrentTime = () => localPerformance.now();
+} else {
+  const localDate = Date;
+  const initialTime = localDate.now();
+  getCurrentTime = () => localDate.now() - initialTime;
+}
+
 if (
   // If Scheduler runs in a non-DOM environment, it falls back to a naive
   // implementation using setTimeout.
@@ -39,10 +51,6 @@ if (
         throw e;
       }
     }
-  };
-  const initialTime = Date.now();
-  getCurrentTime = function() {
-    return Date.now() - initialTime;
   };
   requestHostCallback = function(cb) {
     if (_callback !== null) {
@@ -68,8 +76,6 @@ if (
   requestPaint = forceFrameRate = function() {};
 } else {
   // Capture local references to native APIs, in case a polyfill overrides them.
-  const performance = window.performance;
-  const Date = window.Date;
   const setTimeout = window.setTimeout;
   const clearTimeout = window.clearTimeout;
 
@@ -96,16 +102,6 @@ if (
           'polyfill in older browsers. https://fb.me/react-polyfills',
       );
     }
-  }
-
-  if (
-    typeof performance === 'object' &&
-    typeof performance.now === 'function'
-  ) {
-    getCurrentTime = () => performance.now();
-  } else {
-    const initialTime = Date.now();
-    getCurrentTime = () => Date.now() - initialTime;
   }
 
   let isMessageLoopRunning = false;
