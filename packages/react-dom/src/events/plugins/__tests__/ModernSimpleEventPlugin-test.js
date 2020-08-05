@@ -275,9 +275,14 @@ describe('SimpleEventPlugin', function() {
       expect(Scheduler).toFlushAndYield(['render button: enabled']);
 
       function click() {
-        button.dispatchEvent(
-          new MouseEvent('click', {bubbles: true, cancelable: true}),
-        );
+        const event = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+        });
+        Object.defineProperty(event, 'timeStamp', {
+          value: 0,
+        });
+        button.dispatchEvent(event);
       }
 
       // Click the button to trigger the side-effect
@@ -340,9 +345,14 @@ describe('SimpleEventPlugin', function() {
       expect(button.textContent).toEqual('Count: 0');
 
       function click() {
-        button.dispatchEvent(
-          new MouseEvent('click', {bubbles: true, cancelable: true}),
-        );
+        const event = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+        });
+        Object.defineProperty(event, 'timeStamp', {
+          value: 0,
+        });
+        button.dispatchEvent(event);
       }
 
       // Click the button a single time
@@ -421,9 +431,14 @@ describe('SimpleEventPlugin', function() {
       expect(button.textContent).toEqual('High-pri count: 0, Low-pri count: 0');
 
       function click() {
-        button.dispatchEvent(
-          new MouseEvent('click', {bubbles: true, cancelable: true}),
-        );
+        const event = new MouseEvent('click', {
+          bubbles: true,
+          cancelable: true,
+        });
+        Object.defineProperty(event, 'timeStamp', {
+          value: 0,
+        });
+        button.dispatchEvent(event);
       }
 
       // Click the button a single time
