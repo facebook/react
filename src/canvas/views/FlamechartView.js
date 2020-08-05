@@ -184,12 +184,14 @@ class FlamechartStackLayerView extends View {
           );
           if (textOverflowsViewableArea) {
             context.save();
+            context.beginPath();
             context.rect(
               drawableRect.origin.x,
               drawableRect.origin.y,
               drawableRect.size.width,
               drawableRect.size.height,
             );
+            context.closePath();
             context.clip();
           }
 
