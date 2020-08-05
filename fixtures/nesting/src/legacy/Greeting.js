@@ -1,0 +1,32 @@
+import React from 'react';
+import {Component} from 'react';
+import {findDOMNode} from 'react-dom';
+import {Link} from 'react-router-dom';
+import ThemeContext from './shared/ThemeContext';
+import Clock from './shared/Clock';
+
+export default class AboutSection extends Component {
+  static contextType = ThemeContext;
+
+  componentDidMount() {
+    // The modern app is wrapped in StrictMode,
+    // but the legacy bits can still use old APIs.
+    findDOMNode(this);
+  }
+
+  render() {
+    const theme = this.context;
+    return (
+      <div style={{border: '1px dashed black', padding: 20}}>
+        <h3>src/legacy/Greeting.js</h3>
+        <h4 style={{color: theme}}>
+          This component is rendered by the nested React.
+        </h4>
+        <Clock />
+        <b>
+          <Link to="/">Go to Home</Link>
+        </b>
+      </div>
+    );
+  }
+}

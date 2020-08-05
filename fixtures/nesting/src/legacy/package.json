@@ -1,0 +1,9 @@
+{
+  "private": true,
+  "name": "react-nesting-example-legacy",
+  "dependencies": {
+    "react": "0.0.0-3d0895557",
+    "react-dom": "0.0.0-3d0895557",
+    "react-router-dom": "5.2.0"
+  }
+}
