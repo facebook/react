@@ -2316,6 +2316,106 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toFlushAndYieldThrough(['Unmount: 1']);
       expect(ReactNoop.getChildren()).toEqual([]);
     });
+
+    describe('errors thrown in passive destroy function within unmounted trees', () => {
+      let BrokenUseEffectCleanup;
+      let ErrorBoundary;
+      let LogOnlyErrorBoundary;
+
+      beforeEach(() => {
+        BrokenUseEffectCleanup = function() {
+          useEffect(() => {
+            Scheduler.unstable_yieldValue('BrokenUseEffectCleanup useEffect');
+            return () => {
+              Scheduler.unstable_yieldValue(
+                'BrokenUseEffectCleanup useEffect destroy',
+              );
+              throw new Error('Expected error');
+            };
+          }, []);
+
+          return 'inner child';
+        };
+
+        ErrorBoundary = class extends React.Component {
+          state = {error: null};
+          static getDerivedStateFromError(error) {
+            Scheduler.unstable_yieldValue(
+              `ErrorBoundary static getDerivedStateFromError`,
+            );
+            return {error};
+          }
+          componentDidCatch(error, info) {
+            Scheduler.unstable_yieldValue(`ErrorBoundary componentDidCatch`);
+          }
+          render() {
+            if (this.state.error) {
+              Scheduler.unstable_yieldValue('ErrorBoundary render error');
+              return 'ErrorBoundary fallback';
+            }
+            Scheduler.unstable_yieldValue('ErrorBoundary render success');
+            return this.props.children;
+          }
+        };
+
+        LogOnlyErrorBoundary = class extends React.Component {
+          componentDidCatch(error, info) {
+            Scheduler.unstable_yieldValue(
+              `LogOnlyErrorBoundary componentDidCatch`,
+            );
+          }
+          render() {
+            Scheduler.unstable_yieldValue(`LogOnlyErrorBoundary render`);
+            return this.props.children;
+          }
+        };
+      });
+
+      it('should not error if the nearest unmounted boundary is log-only', () => {
+        function Conditional({showChildren}) {
+          if (showChildren) {
+            return (
+              <LogOnlyErrorBoundary>
+                <BrokenUseEffectCleanup />
+              </LogOnlyErrorBoundary>
+            );
+          } else {
+            return null;
+          }
+        }
+
+        act(() => {
+          ReactNoop.render(
+            <ErrorBoundary>
+              <Conditional showChildren={true} />
+            </ErrorBoundary>,
+          );
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'ErrorBoundary render success',
+          'LogOnlyErrorBoundary render',
+          'BrokenUseEffectCleanup useEffect',
+        ]);
+
+        act(() => {
+          ReactNoop.render(
+            <ErrorBoundary>
+              <Conditional showChildren={false} />
+            </ErrorBoundary>,
+          );
+          expect(Scheduler).toFlushAndYieldThrough([
+            'ErrorBoundary render success',
+          ]);
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'BrokenUseEffectCleanup useEffect destroy',
+          // This should call componentDidCatch too, but we'll address that in a follow up.
+          // 'LogOnlyErrorBoundary componentDidCatch',
+        ]);
+      });
+    });
   });
 
   describe('useLayoutEffect', () => {
