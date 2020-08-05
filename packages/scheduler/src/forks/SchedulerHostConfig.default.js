@@ -16,14 +16,16 @@ export let requestPaint;
 export let getCurrentTime;
 export let forceFrameRate;
 
-const performance = window.performance;
+const isWindowUndefined = typeof window === 'undefined';
+
+const performance = isWindowUndefined ? global.performance : window.performance;
 if (
   typeof performance === 'object' &&
   typeof performance.now === 'function'
 ) {
   getCurrentTime = () => performance.now();
 } else {
-  const Date = window.Date;
+  const Date = isWindowUndefined ? global.Date : window.Date;
   const initialTime = Date.now();
   getCurrentTime = () => Date.now() - initialTime;
 }
@@ -31,7 +33,7 @@ if (
 if (
   // If Scheduler runs in a non-DOM environment, it falls back to a naive
   // implementation using setTimeout.
-  typeof window === 'undefined' ||
+  isWindowUndefined ||
   // Check if MessageChannel is supported, too.
   typeof MessageChannel !== 'function'
 ) {
