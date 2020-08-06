@@ -7,8 +7,6 @@
  * @flow
  */
 
-import type {ElementListenerMapEntry} from '../client/ReactDOMComponentTree';
-
 import {
   registrationNameDependencies,
   possibleRegistrationNames,
@@ -16,11 +14,6 @@ import {
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 import invariant from 'shared/invariant';
-import {
-  setListenToResponderEventTypes,
-  addResponderEventSystemEvent,
-  removeTrappedEventListener,
-} from '../events/DeprecatedDOMEventResponderSystem';
 
 import {
   getValueForAttribute,
@@ -81,12 +74,12 @@ import {validateProperties as validateInputProperties} from '../shared/ReactDOMN
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 
+import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 import {
-  enableDeprecatedFlareAPI,
-  enableTrustedTypesIntegration,
-} from 'shared/ReactFeatureFlags';
-import {listenToReactEvent} from '../events/DOMModernPluginEventSystem';
-import {getEventListenerMap} from './ReactDOMComponentTree';
+  listenToReactEvent,
+  mediaEventTypes,
+  listenToNonDelegatedEvent,
+} from '../events/DOMPluginEventSystem';
 
 let didWarnInvalidHydration = false;
 let didWarnScriptTags = false;
@@ -98,7 +91,6 @@ const AUTOFOCUS = 'autoFocus';
 const CHILDREN = 'children';
 const STYLE = 'style';
 const HTML = '__html';
-const DEPRECATED_flareListeners = 'DEPRECATED_flareListeners';
 
 const {html: HTML_NAMESPACE} = Namespaces;
 
@@ -266,6 +258,7 @@ if (__DEV__) {
 export function ensureListeningTo(
   rootContainerInstance: Element | Node,
   reactPropEvent: string,
+  targetElement: Element | null,
 ): void {
   // If we have a comment node, then use the parent node,
   // which should be an element.
@@ -282,7 +275,11 @@ export function ensureListeningTo(
     'ensureListeningTo(): received a container that was not an element node. ' +
       'This is likely a bug in React.',
   );
-  listenToReactEvent(reactPropEvent, ((rootContainerElement: any): Element));
+  listenToReactEvent(
+    reactPropEvent,
+    ((rootContainerElement: any): Element),
+    targetElement,
+  );
 }
 
 function getOwnerDocumentFromRootContainer(
@@ -349,7 +346,6 @@ function setInitialDOMProperties(
         setTextContent(domElement, '' + nextProp);
       }
     } else if (
-      (enableDeprecatedFlareAPI && propKey === DEPRECATED_flareListeners) ||
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
@@ -364,7 +360,7 @@ function setInitialDOMProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        ensureListeningTo(rootContainerElement, propKey);
+        ensureListeningTo(rootContainerElement, propKey, domElement);
       }
     } else if (nextProp != null) {
       setValueForProperty(domElement, propKey, nextProp, isCustomComponentTag);
@@ -524,35 +520,58 @@ export function setInitialProperties(
   // TODO: Make sure that we check isMounted before firing any of these events.
   let props: Object;
   switch (tag) {
+    case 'dialog':
+      listenToNonDelegatedEvent('cancel', domElement);
+      listenToNonDelegatedEvent('close', domElement);
+      props = rawProps;
+      break;
     case 'iframe':
     case 'object':
     case 'embed':
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the load event.
+      listenToNonDelegatedEvent('load', domElement);
       props = rawProps;
       break;
     case 'video':
     case 'audio':
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for all the media events.
+      for (let i = 0; i < mediaEventTypes.length; i++) {
+        listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
+      }
       props = rawProps;
       break;
     case 'source':
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the error event.
+      listenToNonDelegatedEvent('error', domElement);
       props = rawProps;
       break;
     case 'img':
     case 'image':
     case 'link':
-      props = rawProps;
-      break;
-    case 'form':
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for error and load events.
+      listenToNonDelegatedEvent('error', domElement);
+      listenToNonDelegatedEvent('load', domElement);
       props = rawProps;
       break;
     case 'details':
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the toggle event.
+      listenToNonDelegatedEvent('toggle', domElement);
       props = rawProps;
       break;
     case 'input':
       ReactDOMInputInitWrapperState(domElement, rawProps);
       props = ReactDOMInputGetHostProps(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent('invalid', domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
     case 'option':
       ReactDOMOptionValidateProps(domElement, rawProps);
@@ -561,16 +580,22 @@ export function setInitialProperties(
     case 'select':
       ReactDOMSelectInitWrapperState(domElement, rawProps);
       props = ReactDOMSelectGetHostProps(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent('invalid', domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
       props = ReactDOMTextareaGetHostProps(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent('invalid', domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
     default:
       props = rawProps;
@@ -690,7 +715,6 @@ export function diffProperties(
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML || propKey === CHILDREN) {
       // Noop. This is handled by the clear text mechanism.
     } else if (
-      (enableDeprecatedFlareAPI && propKey === DEPRECATED_flareListeners) ||
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
@@ -779,7 +803,6 @@ export function diffProperties(
         (updatePayload = updatePayload || []).push(propKey, '' + nextProp);
       }
     } else if (
-      (enableDeprecatedFlareAPI && propKey === DEPRECATED_flareListeners) ||
       propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
@@ -790,7 +813,7 @@ export function diffProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        ensureListeningTo(rootContainerElement, propKey);
+        ensureListeningTo(rootContainerElement, propKey, domElement);
       }
       if (!updatePayload && lastProp !== nextProp) {
         // This is a special case. If any listener updates we need to ensure
@@ -900,26 +923,72 @@ export function diffHydratedProperties(
 
   // TODO: Make sure that we check isMounted before firing any of these events.
   switch (tag) {
+    case 'dialog':
+      listenToNonDelegatedEvent('cancel', domElement);
+      listenToNonDelegatedEvent('close', domElement);
+      break;
+    case 'iframe':
+    case 'object':
+    case 'embed':
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the load event.
+      listenToNonDelegatedEvent('load', domElement);
+      break;
+    case 'video':
+    case 'audio':
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for all the media events.
+      for (let i = 0; i < mediaEventTypes.length; i++) {
+        listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
+      }
+      break;
+    case 'source':
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the error event.
+      listenToNonDelegatedEvent('error', domElement);
+      break;
+    case 'img':
+    case 'image':
+    case 'link':
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for error and load events.
+      listenToNonDelegatedEvent('error', domElement);
+      listenToNonDelegatedEvent('load', domElement);
+      break;
+    case 'details':
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the toggle event.
+      listenToNonDelegatedEvent('toggle', domElement);
+      break;
     case 'input':
       ReactDOMInputInitWrapperState(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent('invalid', domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
     case 'option':
       ReactDOMOptionValidateProps(domElement, rawProps);
       break;
     case 'select':
       ReactDOMSelectInitWrapperState(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent('invalid', domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent('invalid', domElement);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ensureListeningTo(rootContainerElement, 'onChange', domElement);
       break;
   }
 
@@ -986,7 +1055,7 @@ export function diffHydratedProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        ensureListeningTo(rootContainerElement, propKey);
+        ensureListeningTo(rootContainerElement, propKey, domElement);
       }
     } else if (
       __DEV__ &&
@@ -999,7 +1068,6 @@ export function diffHydratedProperties(
       if (suppressHydrationWarning) {
         // Don't bother comparing. We're ignoring all these warnings.
       } else if (
-        (enableDeprecatedFlareAPI && propKey === DEPRECATED_flareListeners) ||
         propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
         propKey === SUPPRESS_HYDRATION_WARNING ||
         // Controlled attributes are not validated
@@ -1232,72 +1300,4 @@ export function restoreControlledState(
       ReactDOMSelectRestoreControlledState(domElement, props);
       return;
   }
-}
-
-function endsWith(subject: string, search: string): boolean {
-  const length = subject.length;
-  return subject.substring(length - search.length, length) === search;
-}
-
-export function listenToEventResponderEventTypes(
-  eventTypes: Array<string>,
-  document: Document,
-): void {
-  if (enableDeprecatedFlareAPI) {
-    // Get the listening Map for this element. We use this to track
-    // what events we're listening to.
-    const listenerMap = getEventListenerMap(document);
-
-    // Go through each target event type of the event responder
-    for (let i = 0, length = eventTypes.length; i < length; ++i) {
-      const eventType = eventTypes[i];
-      const isPassive = !endsWith(eventType, '_active');
-      const eventKey = isPassive ? eventType + '_passive' : eventType;
-      const targetEventType = isPassive
-        ? eventType
-        : eventType.substring(0, eventType.length - 7);
-      if (!listenerMap.has(eventKey)) {
-        if (isPassive) {
-          const activeKey = targetEventType + '_active';
-          // If we have an active event listener, do not register
-          // a passive event listener. We use the same active event
-          // listener.
-          if (listenerMap.has(activeKey)) {
-            continue;
-          }
-        } else {
-          // If we have a passive event listener, remove the
-          // existing passive event listener before we add the
-          // active event listener.
-          const passiveKey = targetEventType + '_passive';
-          const passiveItem = ((listenerMap.get(
-            passiveKey,
-          ): any): ElementListenerMapEntry | void);
-          if (passiveItem !== undefined) {
-            removeTrappedEventListener(
-              document,
-              (targetEventType: any),
-              true,
-              passiveItem.listener,
-            );
-            listenerMap.delete(passiveKey);
-          }
-        }
-        const eventListener = addResponderEventSystemEvent(
-          document,
-          targetEventType,
-          isPassive,
-        );
-        listenerMap.set(eventKey, {
-          passive: isPassive,
-          listener: eventListener,
-        });
-      }
-    }
-  }
-}
-
-// We can remove this once the event API is stable and out of a flag
-if (enableDeprecatedFlareAPI) {
-  setListenToResponderEventTypes(listenToEventResponderEventTypes);
 }

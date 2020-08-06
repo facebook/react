@@ -557,6 +557,11 @@ const attributes = [
     read: getSVGAttribute('end'),
   },
   {
+    name: 'enterKeyHint',
+    tagName: 'input',
+    read: getProperty('enterKeyHint'),
+  },
+  {
     name: 'exponent',
     read: getSVGProperty('exponent'),
     containerTagName: 'svg',

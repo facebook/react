@@ -31,7 +31,6 @@ import {
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableSuspenseServerRenderer,
-  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
@@ -126,10 +125,6 @@ import {
   Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.old';
-import {
-  updateDeprecatedEventListeners,
-  unmountDeprecatedResponderListeners,
-} from './ReactFiberDeprecatedEvents.old';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -922,9 +917,6 @@ function commitUnmount(
       return;
     }
     case HostComponent: {
-      if (enableDeprecatedFlareAPI) {
-        unmountDeprecatedResponderListeners(current);
-      }
       safelyDetachRef(current);
       return;
     }
@@ -963,9 +955,6 @@ function commitUnmount(
     }
     case ScopeComponent: {
       if (enableScopeAPI) {
-        if (enableDeprecatedFlareAPI) {
-          unmountDeprecatedResponderListeners(current);
-        }
         safelyDetachRef(current);
       }
       return;
@@ -1022,6 +1011,10 @@ function detachFiberMutation(fiber: Fiber) {
   // with findDOMNode and how it requires the sibling field to carry out
   // traversal in a later effect. See PR #16820. We now clear the sibling
   // field after effects, see: detachFiberAfterEffects.
+  //
+  // Don't disconnect stateNode now; it will be detached in detachFiberAfterEffects.
+  // It may be required if the current component is an error boundary,
+  // and one of its descendants throws while unmounting a passive effect.
   fiber.alternate = null;
   fiber.child = null;
   fiber.dependencies = null;
@@ -1031,7 +1024,6 @@ function detachFiberMutation(fiber: Fiber) {
   fiber.memoizedState = null;
   fiber.pendingProps = null;
   fiber.return = null;
-  fiber.stateNode = null;
   fiber.updateQueue = null;
   if (__DEV__) {
     fiber._debugOwner = null;
@@ -1556,13 +1548,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             finishedWork,
           );
         }
-        if (enableDeprecatedFlareAPI) {
-          const prevListeners = oldProps.DEPRECATED_flareListeners;
-          const nextListeners = newProps.DEPRECATED_flareListeners;
-          if (prevListeners !== nextListeners) {
-            updateDeprecatedEventListeners(nextListeners, finishedWork, null);
-          }
-        }
       }
       return;
     }
@@ -1619,15 +1604,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case ScopeComponent: {
       if (enableScopeAPI) {
         const scopeInstance = finishedWork.stateNode;
-        if (enableDeprecatedFlareAPI) {
-          const newProps = finishedWork.memoizedProps;
-          const oldProps = current !== null ? current.memoizedProps : newProps;
-          const prevListeners = oldProps.DEPRECATED_flareListeners;
-          const nextListeners = newProps.DEPRECATED_flareListeners;
-          if (prevListeners !== nextListeners || current === null) {
-            updateDeprecatedEventListeners(nextListeners, finishedWork, null);
-          }
-        }
         prepareScopeUpdate(scopeInstance, finishedWork);
         return;
       }

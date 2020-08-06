@@ -2316,6 +2316,106 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toFlushAndYieldThrough(['Unmount: 1']);
       expect(ReactNoop.getChildren()).toEqual([]);
     });
+
+    describe('errors thrown in passive destroy function within unmounted trees', () => {
+      let BrokenUseEffectCleanup;
+      let ErrorBoundary;
+      let LogOnlyErrorBoundary;
+
+      beforeEach(() => {
+        BrokenUseEffectCleanup = function() {
+          useEffect(() => {
+            Scheduler.unstable_yieldValue('BrokenUseEffectCleanup useEffect');
+            return () => {
+              Scheduler.unstable_yieldValue(
+                'BrokenUseEffectCleanup useEffect destroy',
+              );
+              throw new Error('Expected error');
+            };
+          }, []);
+
+          return 'inner child';
+        };
+
+        ErrorBoundary = class extends React.Component {
+          state = {error: null};
+          static getDerivedStateFromError(error) {
+            Scheduler.unstable_yieldValue(
+              `ErrorBoundary static getDerivedStateFromError`,
+            );
+            return {error};
+          }
+          componentDidCatch(error, info) {
+            Scheduler.unstable_yieldValue(`ErrorBoundary componentDidCatch`);
+          }
+          render() {
+            if (this.state.error) {
+              Scheduler.unstable_yieldValue('ErrorBoundary render error');
+              return 'ErrorBoundary fallback';
+            }
+            Scheduler.unstable_yieldValue('ErrorBoundary render success');
+            return this.props.children;
+          }
+        };
+
+        LogOnlyErrorBoundary = class extends React.Component {
+          componentDidCatch(error, info) {
+            Scheduler.unstable_yieldValue(
+              `LogOnlyErrorBoundary componentDidCatch`,
+            );
+          }
+          render() {
+            Scheduler.unstable_yieldValue(`LogOnlyErrorBoundary render`);
+            return this.props.children;
+          }
+        };
+      });
+
+      it('should not error if the nearest unmounted boundary is log-only', () => {
+        function Conditional({showChildren}) {
+          if (showChildren) {
+            return (
+              <LogOnlyErrorBoundary>
+                <BrokenUseEffectCleanup />
+              </LogOnlyErrorBoundary>
+            );
+          } else {
+            return null;
+          }
+        }
+
+        act(() => {
+          ReactNoop.render(
+            <ErrorBoundary>
+              <Conditional showChildren={true} />
+            </ErrorBoundary>,
+          );
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'ErrorBoundary render success',
+          'LogOnlyErrorBoundary render',
+          'BrokenUseEffectCleanup useEffect',
+        ]);
+
+        act(() => {
+          ReactNoop.render(
+            <ErrorBoundary>
+              <Conditional showChildren={false} />
+            </ErrorBoundary>,
+          );
+          expect(Scheduler).toFlushAndYieldThrough([
+            'ErrorBoundary render success',
+          ]);
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'BrokenUseEffectCleanup useEffect destroy',
+          // This should call componentDidCatch too, but we'll address that in a follow up.
+          // 'LogOnlyErrorBoundary componentDidCatch',
+        ]);
+      });
+    });
   });
 
   describe('useLayoutEffect', () => {
@@ -3313,5 +3413,57 @@ describe('ReactHooksWithNoopRenderer', () => {
       updateC(true);
     });
     expect(ReactNoop).toMatchRenderedOutput('ABC');
+  });
+
+  it("regression test: don't unmount effects on siblings of deleted nodes", async () => {
+    const root = ReactNoop.createRoot();
+
+    function Child({label}) {
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Mount layout ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount layout ' + label);
+        };
+      }, [label]);
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount passive ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount passive ' + label);
+        };
+      }, [label]);
+      return label;
+    }
+
+    await act(async () => {
+      root.render(
+        <>
+          <Child key="A" label="A" />
+          <Child key="B" label="B" />
+        </>,
+      );
+    });
+    expect(Scheduler).toHaveYielded([
+      'Mount layout A',
+      'Mount layout B',
+      'Mount passive A',
+      'Mount passive B',
+    ]);
+
+    // Delete A. This should only unmount the effect on A. In the regression,
+    // B's effect would also unmount.
+    await act(async () => {
+      root.render(
+        <>
+          <Child key="B" label="B" />
+        </>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Unmount layout A', 'Unmount passive A']);
+
+    // Now delete and unmount B.
+    await act(async () => {
+      root.render(null);
+    });
+    expect(Scheduler).toHaveYielded(['Unmount layout B', 'Unmount passive B']);
   });
 });

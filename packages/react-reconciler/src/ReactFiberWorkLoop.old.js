@@ -136,6 +136,7 @@ import {
 import {
   NoLanePriority,
   SyncLanePriority,
+  SyncBatchedLanePriority,
   InputDiscreteLanePriority,
   TransitionShortLanePriority,
   TransitionLongLanePriority,
@@ -670,10 +671,10 @@ function markUpdateLaneFromFiberToRoot(
 }
 
 // Use this function to schedule a task for a root. There's only one task per
-// root; if a task was already scheduled, we'll check to make sure the
-// expiration time of the existing task is the same as the expiration time of
-// the next level that the root has work on. This function is called on every
-// update, and right before exiting a task.
+// root; if a task was already scheduled, we'll check to make sure the priority
+// of the existing task is the same as the priority of the next level that the
+// root has work on. This function is called on every update, and right before
+// exiting a task.
 function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   const existingCallbackNode = root.callbackNode;
 
@@ -682,37 +683,32 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   markStarvedLanesAsExpired(root, currentTime);
 
   // Determine the next lanes to work on, and their priority.
-  const newCallbackId = getNextLanes(
+  const nextLanes = getNextLanes(
     root,
     root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
   );
   // This returns the priority level computed during the `getNextLanes` call.
   const newCallbackPriority = returnNextLanesPriority();
 
-  if (newCallbackId === NoLanes) {
+  if (nextLanes === NoLanes) {
     // Special case: There's nothing to work on.
     if (existingCallbackNode !== null) {
       cancelCallback(existingCallbackNode);
       root.callbackNode = null;
       root.callbackPriority = NoLanePriority;
-      root.callbackId = NoLanes;
     }
     return;
   }
 
   // Check if there's an existing task. We may be able to reuse it.
-  const existingCallbackId = root.callbackId;
-  const existingCallbackPriority = root.callbackPriority;
-  if (existingCallbackId !== NoLanes) {
-    if (newCallbackId === existingCallbackId) {
-      // This task is already scheduled. Let's check its priority.
-      if (existingCallbackPriority === newCallbackPriority) {
-        // The priority hasn't changed. Exit.
-        return;
-      }
-      // The task ID is the same but the priority changed. Cancel the existing
-      // callback. We'll schedule a new one below.
+  if (existingCallbackNode !== null) {
+    const existingCallbackPriority = root.callbackPriority;
+    if (existingCallbackPriority === newCallbackPriority) {
+      // The priority hasn't changed. We can reuse the existing task. Exit.
+      return;
     }
+    // The priority changed. Cancel the existing callback. We'll schedule a new
+    // one below.
     cancelCallback(existingCallbackNode);
   }
 
@@ -722,6 +718,11 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     newCallbackNode = scheduleSyncCallback(
+      performSyncWorkOnRoot.bind(null, root),
+    );
+  } else if (newCallbackPriority === SyncBatchedLanePriority) {
+    newCallbackNode = scheduleCallback(
+      ImmediateSchedulerPriority,
       performSyncWorkOnRoot.bind(null, root),
     );
   } else {
@@ -734,7 +735,6 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     );
   }
 
-  root.callbackId = newCallbackId;
   root.callbackPriority = newCallbackPriority;
   root.callbackNode = newCallbackNode;
 }
@@ -755,7 +755,20 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
 
   // Flush any pending passive effects before deciding which lanes to work on,
   // in case they schedule additional work.
-  flushPassiveEffects();
+  const originalCallbackNode = root.callbackNode;
+  const didFlushPassiveEffects = flushPassiveEffects();
+  if (didFlushPassiveEffects) {
+    // Something in the passive effect phase may have canceled the current task.
+    // Check if the task node for this root was changed.
+    if (root.callbackNode !== originalCallbackNode) {
+      // The current task was canceled. Exit. We don't need to call
+      // `ensureRootIsScheduled` because the check above implies either that
+      // there's a new task, or that there's no remaining work on this root.
+      return null;
+    } else {
+      // Current task was not canceled. Continue.
+    }
+  }
 
   // Determine the next expiration time to work on, using the fields stored
   // on the root.
@@ -764,6 +777,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
   );
   if (lanes === NoLanes) {
+    // Defensive coding. This is never expected to happen.
     return null;
   }
 
@@ -779,8 +793,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     ensureRootIsScheduled(root, now());
     return null;
   }
-
-  const originalCallbackNode = root.callbackNode;
 
   let exitStatus = renderRootConcurrent(root, lanes);
 
@@ -2007,7 +2019,6 @@ function commitRootImpl(root, renderPriorityLevel) {
   // commitRoot never returns a continuation; it always finishes synchronously.
   // So we can clear these now to allow a new callback to be scheduled.
   root.callbackNode = null;
-  root.callbackId = NoLanes;
 
   // Update the first and last pending times on this root. The new first
   // pending time is whatever is left on the root fiber.
@@ -2384,7 +2395,7 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
         commitDetachRef(current);
       }
       if (enableScopeAPI) {
-        // TODO: This is a temporary solution that allows us to transition away
+        // TODO: This is a temporary solution that allowed us to transition away
         // from React Flare on www.
         if (nextEffect.tag === ScopeComponent) {
           commitAttachRef(nextEffect);
@@ -2471,7 +2482,7 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
     }
 
     if (enableScopeAPI) {
-      // TODO: This is a temporary solution that allows us to transition away
+      // TODO: This is a temporary solution that allowed us to transition away
       // from React Flare on www.
       if (effectTag & Ref && nextEffect.tag !== ScopeComponent) {
         commitAttachRef(nextEffect);
@@ -2497,7 +2508,8 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
   }
 }
 
-export function flushPassiveEffects() {
+export function flushPassiveEffects(): boolean {
+  // Returns whether passive effects were flushed.
   if (pendingPassiveEffectsRenderPriority !== NoSchedulerPriority) {
     const priorityLevel =
       pendingPassiveEffectsRenderPriority > NormalSchedulerPriority
@@ -2518,6 +2530,7 @@ export function flushPassiveEffects() {
       return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
     }
   }
+  return false;
 }
 
 export function enqueuePendingPassiveProfilerEffect(fiber: Fiber): void {
@@ -3837,4 +3850,5 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
 
 function detachFiberAfterEffects(fiber: Fiber): void {
   fiber.sibling = null;
+  fiber.stateNode = null;
 }

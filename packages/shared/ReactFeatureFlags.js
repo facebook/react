@@ -54,9 +54,6 @@ export const enableSchedulerDebugging = false;
 // Disable javascript: URL strings in href for XSS protection.
 export const disableJavaScriptURLs = false;
 
-// Experimental React Flare event system and event components support.
-export const enableDeprecatedFlareAPI = false;
-
 // Experimental Host Component support.
 export const enableFundamentalAPI = false;
 

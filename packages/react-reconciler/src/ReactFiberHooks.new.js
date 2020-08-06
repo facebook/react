@@ -11,9 +11,7 @@ import type {
   MutableSource,
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
-  ReactEventResponder,
   ReactContext,
-  ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
@@ -47,10 +45,10 @@ import {
   DefaultLanePriority,
 } from './ReactFiberLane';
 import {readContext} from './ReactFiberNewContext.new';
-import {createDeprecatedResponderListener} from './ReactFiberDeprecatedEvents.new';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
+  PassiveStatic as PassiveStaticEffect,
 } from './ReactSideEffectTags';
 import {
   HasEffect as HookHasEffect,
@@ -129,7 +127,6 @@ export type HookType =
   | 'useMemo'
   | 'useImperativeHandle'
   | 'useDebugValue'
-  | 'useResponder'
   | 'useDeferredValue'
   | 'useTransition'
   | 'useMutableSource'
@@ -1271,7 +1268,7 @@ function mountEffect(
     }
   }
   return mountEffectImpl(
-    UpdateEffect | PassiveEffect,
+    UpdateEffect | PassiveEffect | PassiveStaticEffect,
     HookPassive,
     create,
     deps,
@@ -1662,7 +1659,8 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
     const setId = mountState(id)[1];
 
     if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
-      currentlyRenderingFiber.effectTag |= UpdateEffect | PassiveEffect;
+      currentlyRenderingFiber.effectTag |=
+        UpdateEffect | PassiveEffect | PassiveStaticEffect;
       pushEffect(
         HookHasEffect | HookPassive,
         () => {
@@ -1816,7 +1814,6 @@ export const ContextOnlyDispatcher: Dispatcher = {
   useRef: throwInvalidHookError,
   useState: throwInvalidHookError,
   useDebugValue: throwInvalidHookError,
-  useResponder: throwInvalidHookError,
   useDeferredValue: throwInvalidHookError,
   useTransition: throwInvalidHookError,
   useMutableSource: throwInvalidHookError,
@@ -1838,7 +1835,6 @@ const HooksDispatcherOnMount: Dispatcher = {
   useRef: mountRef,
   useState: mountState,
   useDebugValue: mountDebugValue,
-  useResponder: createDeprecatedResponderListener,
   useDeferredValue: mountDeferredValue,
   useTransition: mountTransition,
   useMutableSource: mountMutableSource,
@@ -1860,7 +1856,6 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   useRef: updateRef,
   useState: updateState,
   useDebugValue: updateDebugValue,
-  useResponder: createDeprecatedResponderListener,
   useDeferredValue: updateDeferredValue,
   useTransition: updateTransition,
   useMutableSource: updateMutableSource,
@@ -1882,7 +1877,6 @@ const HooksDispatcherOnRerender: Dispatcher = {
   useRef: updateRef,
   useState: rerenderState,
   useDebugValue: updateDebugValue,
-  useResponder: createDeprecatedResponderListener,
   useDeferredValue: rerenderDeferredValue,
   useTransition: rerenderTransition,
   useMutableSource: updateMutableSource,
@@ -2017,14 +2011,6 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useResponder<E, C>(
-      responder: ReactEventResponder<E, C>,
-      props,
-    ): ReactEventResponderListener<E, C> {
-      currentHookNameInDev = 'useResponder';
-      mountHookTypesDev();
-      return createDeprecatedResponderListener(responder, props);
-    },
     useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
       currentHookNameInDev = 'useDeferredValue';
       mountHookTypesDev();
@@ -2148,14 +2134,6 @@ if (__DEV__) {
       currentHookNameInDev = 'useDebugValue';
       updateHookTypesDev();
       return mountDebugValue(value, formatterFn);
-    },
-    useResponder<E, C>(
-      responder: ReactEventResponder<E, C>,
-      props,
-    ): ReactEventResponderListener<E, C> {
-      currentHookNameInDev = 'useResponder';
-      updateHookTypesDev();
-      return createDeprecatedResponderListener(responder, props);
     },
     useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
       currentHookNameInDev = 'useDeferredValue';
@@ -2281,14 +2259,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useResponder<E, C>(
-      responder: ReactEventResponder<E, C>,
-      props,
-    ): ReactEventResponderListener<E, C> {
-      currentHookNameInDev = 'useResponder';
-      updateHookTypesDev();
-      return createDeprecatedResponderListener(responder, props);
-    },
     useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
@@ -2413,14 +2383,6 @@ if (__DEV__) {
       currentHookNameInDev = 'useDebugValue';
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
-    },
-    useResponder<E, C>(
-      responder: ReactEventResponder<E, C>,
-      props,
-    ): ReactEventResponderListener<E, C> {
-      currentHookNameInDev = 'useResponder';
-      updateHookTypesDev();
-      return createDeprecatedResponderListener(responder, props);
     },
     useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
       currentHookNameInDev = 'useDeferredValue';
@@ -2556,15 +2518,6 @@ if (__DEV__) {
       warnInvalidHookAccess();
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
-    },
-    useResponder<E, C>(
-      responder: ReactEventResponder<E, C>,
-      props,
-    ): ReactEventResponderListener<E, C> {
-      currentHookNameInDev = 'useResponder';
-      warnInvalidHookAccess();
-      mountHookTypesDev();
-      return createDeprecatedResponderListener(responder, props);
     },
     useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
       currentHookNameInDev = 'useDeferredValue';
@@ -2705,15 +2658,6 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useResponder<E, C>(
-      responder: ReactEventResponder<E, C>,
-      props,
-    ): ReactEventResponderListener<E, C> {
-      currentHookNameInDev = 'useResponder';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return createDeprecatedResponderListener(responder, props);
-    },
     useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
@@ -2853,15 +2797,6 @@ if (__DEV__) {
       warnInvalidHookAccess();
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
-    },
-    useResponder<E, C>(
-      responder: ReactEventResponder<E, C>,
-      props,
-    ): ReactEventResponderListener<E, C> {
-      currentHookNameInDev = 'useResponder';
-      warnInvalidHookAccess();
-      updateHookTypesDev();
-      return createDeprecatedResponderListener(responder, props);
     },
     useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
       currentHookNameInDev = 'useDeferredValue';

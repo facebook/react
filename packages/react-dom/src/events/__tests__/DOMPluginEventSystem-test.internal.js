@@ -49,7 +49,7 @@ function endNativeEventListenerClearDown() {
   });
 }
 
-describe('DOMModernPluginEventSystem', () => {
+describe('DOMPluginEventSystem', () => {
   let container;
 
   function withEnableLegacyFBSupport(enableLegacyFBSupport) {

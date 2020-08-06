@@ -19,7 +19,6 @@ describe('ReactScope', () => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableScopeAPI = true;
-    ReactFeatureFlags.enableDeprecatedFlareAPI = true;
     React = require('react');
     Scheduler = require('scheduler');
   });

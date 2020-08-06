@@ -15,7 +15,9 @@ import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {Effect as HookEffect} from './ReactFiberHooks.new';
+import type {HookEffectTag} from './ReactHookEffectTags';
 import type {StackCursor} from './ReactFiberStack.new';
+import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -49,6 +51,11 @@ import {
   flushSyncCallbackQueue,
   scheduleSyncCallback,
 } from './SchedulerWithReactIntegration.new';
+import {
+  NoEffect as NoHookEffect,
+  HasEffect as HookHasEffect,
+  Passive as HookPassive,
+} from './ReactHookEffectTags';
 import {
   logCommitStarted,
   logCommitStopped,
@@ -126,7 +133,7 @@ import {
   Snapshot,
   Callback,
   Passive,
-  PassiveUnmountPendingDev,
+  PassiveStatic,
   Incomplete,
   HostEffectMask,
   Hydrating,
@@ -134,16 +141,20 @@ import {
   BeforeMutationMask,
   MutationMask,
   LayoutMask,
+  PassiveMask,
 } from './ReactSideEffectTags';
 import {
   NoEffect as NoSubtreeTag,
-  BeforeMutation,
-  Mutation,
-  Layout,
+  BeforeMutation as BeforeMutationSubtreeTag,
+  Mutation as MutationSubtreeTag,
+  Layout as LayoutSubtreeTag,
+  Passive as PassiveSubtreeTag,
+  PassiveStatic as PassiveStaticSubtreeTag,
 } from './ReactSubtreeTags';
 import {
   NoLanePriority,
   SyncLanePriority,
+  SyncBatchedLanePriority,
   InputDiscreteLanePriority,
   TransitionShortLanePriority,
   TransitionLongLanePriority,
@@ -200,6 +211,7 @@ import {
   commitPassiveEffectDurations,
   commitResetTextContent,
   isSuspenseBoundaryBeingHidden,
+  safelyCallDestroy,
 } from './ReactFiberCommitWork.new';
 import {enqueueUpdate} from './ReactUpdateQueue.new';
 import {resetContextDependencies} from './ReactFiberNewContext.new';
@@ -326,8 +338,6 @@ let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoSchedulerPriority;
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
-let pendingPassiveHookEffectsMount: Array<HookEffect | Fiber> = [];
-let pendingPassiveHookEffectsUnmount: Array<HookEffect | Fiber> = [];
 let pendingPassiveProfilerEffects: Array<Fiber> = [];
 
 let rootsWithPendingDiscreteUpdates: Set<FiberRoot> | null = null;
@@ -677,10 +687,10 @@ function markUpdateLaneFromFiberToRoot(
 }
 
 // Use this function to schedule a task for a root. There's only one task per
-// root; if a task was already scheduled, we'll check to make sure the
-// expiration time of the existing task is the same as the expiration time of
-// the next level that the root has work on. This function is called on every
-// update, and right before exiting a task.
+// root; if a task was already scheduled, we'll check to make sure the priority
+// of the existing task is the same as the priority of the next level that the
+// root has work on. This function is called on every update, and right before
+// exiting a task.
 function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   const existingCallbackNode = root.callbackNode;
 
@@ -689,37 +699,32 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   markStarvedLanesAsExpired(root, currentTime);
 
   // Determine the next lanes to work on, and their priority.
-  const newCallbackId = getNextLanes(
+  const nextLanes = getNextLanes(
     root,
     root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
   );
   // This returns the priority level computed during the `getNextLanes` call.
   const newCallbackPriority = returnNextLanesPriority();
 
-  if (newCallbackId === NoLanes) {
+  if (nextLanes === NoLanes) {
     // Special case: There's nothing to work on.
     if (existingCallbackNode !== null) {
       cancelCallback(existingCallbackNode);
       root.callbackNode = null;
       root.callbackPriority = NoLanePriority;
-      root.callbackId = NoLanes;
     }
     return;
   }
 
   // Check if there's an existing task. We may be able to reuse it.
-  const existingCallbackId = root.callbackId;
-  const existingCallbackPriority = root.callbackPriority;
-  if (existingCallbackId !== NoLanes) {
-    if (newCallbackId === existingCallbackId) {
-      // This task is already scheduled. Let's check its priority.
-      if (existingCallbackPriority === newCallbackPriority) {
-        // The priority hasn't changed. Exit.
-        return;
-      }
-      // The task ID is the same but the priority changed. Cancel the existing
-      // callback. We'll schedule a new one below.
+  if (existingCallbackNode !== null) {
+    const existingCallbackPriority = root.callbackPriority;
+    if (existingCallbackPriority === newCallbackPriority) {
+      // The priority hasn't changed. We can reuse the existing task. Exit.
+      return;
     }
+    // The priority changed. Cancel the existing callback. We'll schedule a new
+    // one below.
     cancelCallback(existingCallbackNode);
   }
 
@@ -729,6 +734,11 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     newCallbackNode = scheduleSyncCallback(
+      performSyncWorkOnRoot.bind(null, root),
+    );
+  } else if (newCallbackPriority === SyncBatchedLanePriority) {
+    newCallbackNode = scheduleCallback(
+      ImmediateSchedulerPriority,
       performSyncWorkOnRoot.bind(null, root),
     );
   } else {
@@ -741,7 +751,6 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     );
   }
 
-  root.callbackId = newCallbackId;
   root.callbackPriority = newCallbackPriority;
   root.callbackNode = newCallbackNode;
 }
@@ -762,7 +771,20 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
 
   // Flush any pending passive effects before deciding which lanes to work on,
   // in case they schedule additional work.
-  flushPassiveEffects();
+  const originalCallbackNode = root.callbackNode;
+  const didFlushPassiveEffects = flushPassiveEffects();
+  if (didFlushPassiveEffects) {
+    // Something in the passive effect phase may have canceled the current task.
+    // Check if the task node for this root was changed.
+    if (root.callbackNode !== originalCallbackNode) {
+      // The current task was canceled. Exit. We don't need to call
+      // `ensureRootIsScheduled` because the check above implies either that
+      // there's a new task, or that there's no remaining work on this root.
+      return null;
+    } else {
+      // Current task was not canceled. Continue.
+    }
+  }
 
   // Determine the next expiration time to work on, using the fields stored
   // on the root.
@@ -771,6 +793,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
   );
   if (lanes === NoLanes) {
+    // Defensive coding. This is never expected to happen.
     return null;
   }
 
@@ -786,8 +809,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
     ensureRootIsScheduled(root, now());
     return null;
   }
-
-  const originalCallbackNode = root.callbackNode;
 
   let exitStatus = renderRootConcurrent(root, lanes);
 
@@ -1918,13 +1939,19 @@ function resetChildLanes(completedWork: Fiber) {
 
         const effectTag = child.effectTag;
         if ((effectTag & BeforeMutationMask) !== NoEffect) {
-          subtreeTag |= BeforeMutation;
+          subtreeTag |= BeforeMutationSubtreeTag;
         }
         if ((effectTag & MutationMask) !== NoEffect) {
-          subtreeTag |= Mutation;
+          subtreeTag |= MutationSubtreeTag;
         }
         if ((effectTag & LayoutMask) !== NoEffect) {
-          subtreeTag |= Layout;
+          subtreeTag |= LayoutSubtreeTag;
+        }
+        if ((effectTag & PassiveMask) !== NoEffect) {
+          subtreeTag |= PassiveSubtreeTag;
+        }
+        if ((effectTag & PassiveStatic) !== NoEffect) {
+          subtreeTag |= PassiveStaticSubtreeTag;
         }
 
         // When a fiber is cloned, its actualDuration is reset to 0. This value will
@@ -1965,13 +1992,19 @@ function resetChildLanes(completedWork: Fiber) {
 
         const effectTag = child.effectTag;
         if ((effectTag & BeforeMutationMask) !== NoEffect) {
-          subtreeTag |= BeforeMutation;
+          subtreeTag |= BeforeMutationSubtreeTag;
         }
         if ((effectTag & MutationMask) !== NoEffect) {
-          subtreeTag |= Mutation;
+          subtreeTag |= MutationSubtreeTag;
         }
         if ((effectTag & LayoutMask) !== NoEffect) {
-          subtreeTag |= Layout;
+          subtreeTag |= LayoutSubtreeTag;
+        }
+        if ((effectTag & PassiveMask) !== NoEffect) {
+          subtreeTag |= PassiveSubtreeTag;
+        }
+        if ((effectTag & PassiveStatic) !== NoEffect) {
+          subtreeTag |= PassiveStaticSubtreeTag;
         }
 
         child = child.sibling;
@@ -2089,7 +2122,6 @@ function commitRootImpl(root, renderPriorityLevel) {
   // commitRoot never returns a continuation; it always finishes synchronously.
   // So we can clear these now to allow a new callback to be scheduled.
   root.callbackNode = null;
-  root.callbackId = NoLanes;
 
   // Update the first and last pending times on this root. The new first
   // pending time is whatever is left on the root fiber.
@@ -2210,6 +2242,20 @@ function commitRootImpl(root, renderPriorityLevel) {
       markLayoutEffectsStopped();
     }
 
+    // If there are pending passive effects, schedule a callback to process them.
+    if (
+      (finishedWork.subtreeTag & PassiveSubtreeTag) !== NoSubtreeTag ||
+      (finishedWork.effectTag & PassiveMask) !== NoEffect
+    ) {
+      if (!rootDoesHavePassiveEffects) {
+        rootDoesHavePassiveEffects = true;
+        scheduleCallback(NormalSchedulerPriority, () => {
+          flushPassiveEffects();
+          return null;
+        });
+      }
+    }
+
     // Tell Scheduler to yield at the end of the frame, so the browser has an
     // opportunity to paint.
     requestPaint();
@@ -2243,8 +2289,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsLanes = lanes;
     pendingPassiveEffectsRenderPriority = renderPriorityLevel;
-  } else {
-    // TODO (effects) Detach sibling pointers for deleted Fibers
   }
 
   // Read this again, since an effect might have updated it
@@ -2354,7 +2398,7 @@ function commitBeforeMutationEffects(firstChild: Fiber) {
     }
 
     if (fiber.child !== null) {
-      const primarySubtreeTag = fiber.subtreeTag & BeforeMutation;
+      const primarySubtreeTag = fiber.subtreeTag & BeforeMutationSubtreeTag;
       if (primarySubtreeTag !== NoSubtreeTag) {
         commitBeforeMutationEffects(fiber.child);
       }
@@ -2438,19 +2482,13 @@ function commitMutationEffects(
 ) {
   let fiber = firstChild;
   while (fiber !== null) {
-    if (fiber.deletions !== null) {
-      commitMutationEffectsDeletions(
-        fiber.deletions,
-        root,
-        renderPriorityLevel,
-      );
-
-      // TODO (effects) Don't clear this yet; we may need to cleanup passive effects
-      fiber.deletions = null;
+    const deletions = fiber.deletions;
+    if (deletions !== null) {
+      commitMutationEffectsDeletions(deletions, root, renderPriorityLevel);
     }
 
     if (fiber.child !== null) {
-      const primarySubtreeTag = fiber.subtreeTag & Mutation;
+      const primarySubtreeTag = fiber.subtreeTag & MutationSubtreeTag;
       if (primarySubtreeTag !== NoSubtreeTag) {
         commitMutationEffects(fiber.child, root, renderPriorityLevel);
       }
@@ -2498,7 +2536,7 @@ function commitMutationEffectsImpl(
       commitDetachRef(current);
     }
     if (enableScopeAPI) {
-      // TODO: This is a temporary solution that allows us to transition away
+      // TODO: This is a temporary solution that allowed us to transition away
       // from React Flare on www.
       if (fiber.tag === ScopeComponent) {
         commitAttachRef(fiber);
@@ -2580,7 +2618,16 @@ function commitMutationEffectsDeletions(
         captureCommitPhaseError(childToDelete, error);
       }
     }
-    // Don't clear the Deletion effect yet; we also use it to know when we need to detach refs later.
+  }
+}
+
+export function schedulePassiveEffectCallback() {
+  if (!rootDoesHavePassiveEffects) {
+    rootDoesHavePassiveEffects = true;
+    scheduleCallback(NormalSchedulerPriority, () => {
+      flushPassiveEffects();
+      return null;
+    });
   }
 }
 
@@ -2592,7 +2639,7 @@ function commitLayoutEffects(
   let fiber = firstChild;
   while (fiber !== null) {
     if (fiber.child !== null) {
-      const primarySubtreeTag = fiber.subtreeTag & Layout;
+      const primarySubtreeTag = fiber.subtreeTag & LayoutSubtreeTag;
       if (primarySubtreeTag !== NoSubtreeTag) {
         commitLayoutEffects(fiber.child, root, committedLanes);
       }
@@ -2639,7 +2686,7 @@ function commitLayoutEffectsImpl(
   }
 
   if (enableScopeAPI) {
-    // TODO: This is a temporary solution that allows us to transition away
+    // TODO: This is a temporary solution that allowed us to transition away
     // from React Flare on www.
     if (effectTag & Ref && fiber.tag !== ScopeComponent) {
       commitAttachRef(fiber);
@@ -2653,7 +2700,8 @@ function commitLayoutEffectsImpl(
   resetCurrentDebugFiberInDEV();
 }
 
-export function flushPassiveEffects() {
+export function flushPassiveEffects(): boolean {
+  // Returns whether passive effects were flushed.
   if (pendingPassiveEffectsRenderPriority !== NoSchedulerPriority) {
     const priorityLevel =
       pendingPassiveEffectsRenderPriority > NormalSchedulerPriority
@@ -2674,6 +2722,7 @@ export function flushPassiveEffects() {
       return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
     }
   }
+  return false;
 }
 
 export function enqueuePendingPassiveProfilerEffect(fiber: Fiber): void {
@@ -2689,44 +2738,214 @@ export function enqueuePendingPassiveProfilerEffect(fiber: Fiber): void {
   }
 }
 
-export function enqueuePendingPassiveHookEffectMount(
-  fiber: Fiber,
-  effect: HookEffect,
-): void {
-  pendingPassiveHookEffectsMount.push(effect, fiber);
-  if (!rootDoesHavePassiveEffects) {
-    rootDoesHavePassiveEffects = true;
-    scheduleCallback(NormalSchedulerPriority, () => {
-      flushPassiveEffects();
-      return null;
-    });
-  }
-}
-
-export function enqueuePendingPassiveHookEffectUnmount(
-  fiber: Fiber,
-  effect: HookEffect,
-): void {
-  pendingPassiveHookEffectsUnmount.push(effect, fiber);
-  if (__DEV__) {
-    fiber.effectTag |= PassiveUnmountPendingDev;
-    const alternate = fiber.alternate;
-    if (alternate !== null) {
-      alternate.effectTag |= PassiveUnmountPendingDev;
-    }
-  }
-  if (!rootDoesHavePassiveEffects) {
-    rootDoesHavePassiveEffects = true;
-    scheduleCallback(NormalSchedulerPriority, () => {
-      flushPassiveEffects();
-      return null;
-    });
-  }
-}
-
 function invokePassiveEffectCreate(effect: HookEffect): void {
   const create = effect.create;
   effect.destroy = create();
+}
+
+function flushPassiveMountEffects(firstChild: Fiber): void {
+  let fiber = firstChild;
+  while (fiber !== null) {
+    const primarySubtreeTag = fiber.subtreeTag & PassiveSubtreeTag;
+
+    if (fiber.child !== null && primarySubtreeTag !== NoSubtreeTag) {
+      flushPassiveMountEffects(fiber.child);
+    }
+
+    if ((fiber.effectTag & Update) !== NoEffect) {
+      switch (fiber.tag) {
+        case FunctionComponent:
+        case ForwardRef:
+        case SimpleMemoComponent:
+        case Block: {
+          flushPassiveMountEffectsImpl(fiber);
+        }
+      }
+    }
+
+    fiber = fiber.sibling;
+  }
+}
+
+function flushPassiveMountEffectsImpl(fiber: Fiber): void {
+  setCurrentDebugFiberInDEV(fiber);
+
+  const updateQueue: FunctionComponentUpdateQueue | null = (fiber.updateQueue: any);
+  const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+  if (lastEffect !== null) {
+    const firstEffect = lastEffect.next;
+    let effect = firstEffect;
+    do {
+      const {next, tag} = effect;
+
+      if (
+        (tag & HookPassive) !== NoHookEffect &&
+        (tag & HookHasEffect) !== NoHookEffect
+      ) {
+        if (__DEV__) {
+          if (
+            enableProfilerTimer &&
+            enableProfilerCommitHooks &&
+            fiber.mode & ProfileMode
+          ) {
+            startPassiveEffectTimer();
+            invokeGuardedCallback(
+              null,
+              invokePassiveEffectCreate,
+              null,
+              effect,
+            );
+            recordPassiveEffectDuration(fiber);
+          } else {
+            invokeGuardedCallback(
+              null,
+              invokePassiveEffectCreate,
+              null,
+              effect,
+            );
+          }
+          if (hasCaughtError()) {
+            invariant(fiber !== null, 'Should be working on an effect.');
+            const error = clearCaughtError();
+            captureCommitPhaseError(fiber, error);
+          }
+        } else {
+          try {
+            const create = effect.create;
+            if (
+              enableProfilerTimer &&
+              enableProfilerCommitHooks &&
+              fiber.mode & ProfileMode
+            ) {
+              try {
+                startPassiveEffectTimer();
+                effect.destroy = create();
+              } finally {
+                recordPassiveEffectDuration(fiber);
+              }
+            } else {
+              effect.destroy = create();
+            }
+          } catch (error) {
+            invariant(fiber !== null, 'Should be working on an effect.');
+            captureCommitPhaseError(fiber, error);
+          }
+        }
+      }
+
+      effect = next;
+    } while (effect !== firstEffect);
+
+    resetCurrentDebugFiberInDEV();
+  }
+}
+
+function flushPassiveUnmountEffects(firstChild: Fiber): void {
+  let fiber = firstChild;
+  while (fiber !== null) {
+    const deletions = fiber.deletions;
+    if (deletions !== null) {
+      for (let i = 0; i < deletions.length; i++) {
+        const fiberToDelete = deletions[i];
+        flushPassiveUnmountEffectsInsideOfDeletedTree(fiberToDelete);
+
+        // Now that passive effects have been processed, it's safe to detach lingering pointers.
+        detachFiberAfterEffects(fiberToDelete);
+      }
+    }
+
+    const child = fiber.child;
+    if (child !== null) {
+      // If any children have passive effects then traverse the subtree.
+      // Note that this requires checking subtreeTag of the current Fiber,
+      // rather than the subtreeTag/effectsTag of the first child,
+      // since that would not cover passive effects in siblings.
+      const primarySubtreeTag = fiber.subtreeTag & PassiveSubtreeTag;
+      if (primarySubtreeTag !== NoSubtreeTag) {
+        flushPassiveUnmountEffects(child);
+      }
+    }
+
+    switch (fiber.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent:
+      case Block: {
+        const primaryEffectTag = fiber.effectTag & Passive;
+        if (primaryEffectTag !== NoEffect) {
+          flushPassiveUnmountEffectsImpl(fiber, HookPassive | HookHasEffect);
+        }
+      }
+    }
+
+    fiber = fiber.sibling;
+  }
+}
+
+function flushPassiveUnmountEffectsInsideOfDeletedTree(
+  fiberToDelete: Fiber,
+): void {
+  if ((fiberToDelete.subtreeTag & PassiveStaticSubtreeTag) !== NoSubtreeTag) {
+    // If any children have passive effects then traverse the subtree.
+    // Note that this requires checking subtreeTag of the current Fiber,
+    // rather than the subtreeTag/effectsTag of the first child,
+    // since that would not cover passive effects in siblings.
+    let child = fiberToDelete.child;
+    while (child !== null) {
+      flushPassiveUnmountEffectsInsideOfDeletedTree(child);
+      child = child.sibling;
+    }
+  }
+
+  if ((fiberToDelete.effectTag & PassiveStatic) !== NoEffect) {
+    switch (fiberToDelete.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent:
+      case Block: {
+        flushPassiveUnmountEffectsImpl(fiberToDelete, HookPassive);
+      }
+    }
+  }
+}
+
+function flushPassiveUnmountEffectsImpl(
+  fiber: Fiber,
+  // Tags to check for when deciding whether to unmount. e.g. to skip over
+  // layout effects
+  hookEffectTag: HookEffectTag,
+): void {
+  const updateQueue: FunctionComponentUpdateQueue | null = (fiber.updateQueue: any);
+  const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+  if (lastEffect !== null) {
+    setCurrentDebugFiberInDEV(fiber);
+
+    const firstEffect = lastEffect.next;
+    let effect = firstEffect;
+    do {
+      const {next, tag} = effect;
+      if ((tag & hookEffectTag) === hookEffectTag) {
+        const destroy = effect.destroy;
+        if (destroy !== undefined) {
+          effect.destroy = undefined;
+          if (
+            enableProfilerTimer &&
+            enableProfilerCommitHooks &&
+            fiber.mode & ProfileMode
+          ) {
+            startPassiveEffectTimer();
+            safelyCallDestroy(fiber, destroy);
+            recordPassiveEffectDuration(fiber);
+          } else {
+            safelyCallDestroy(fiber, destroy);
+          }
+        }
+      }
+      effect = next;
+    } while (effect !== firstEffect);
+
+    resetCurrentDebugFiberInDEV();
+  }
 }
 
 function flushPassiveEffectsImpl() {
@@ -2768,117 +2987,8 @@ function flushPassiveEffectsImpl() {
   // e.g. a destroy function in one component may unintentionally override a ref
   // value set by a create function in another component.
   // Layout effects have the same constraint.
-
-  // First pass: Destroy stale passive effects.
-  const unmountEffects = pendingPassiveHookEffectsUnmount;
-  pendingPassiveHookEffectsUnmount = [];
-  for (let i = 0; i < unmountEffects.length; i += 2) {
-    const effect = ((unmountEffects[i]: any): HookEffect);
-    const fiber = ((unmountEffects[i + 1]: any): Fiber);
-    const destroy = effect.destroy;
-    effect.destroy = undefined;
-
-    if (__DEV__) {
-      fiber.effectTag &= ~PassiveUnmountPendingDev;
-      const alternate = fiber.alternate;
-      if (alternate !== null) {
-        alternate.effectTag &= ~PassiveUnmountPendingDev;
-      }
-    }
-
-    if (typeof destroy === 'function') {
-      if (__DEV__) {
-        setCurrentDebugFiberInDEV(fiber);
-        if (
-          enableProfilerTimer &&
-          enableProfilerCommitHooks &&
-          fiber.mode & ProfileMode
-        ) {
-          startPassiveEffectTimer();
-          invokeGuardedCallback(null, destroy, null);
-          recordPassiveEffectDuration(fiber);
-        } else {
-          invokeGuardedCallback(null, destroy, null);
-        }
-        if (hasCaughtError()) {
-          invariant(fiber !== null, 'Should be working on an effect.');
-          const error = clearCaughtError();
-          captureCommitPhaseError(fiber, error);
-        }
-        resetCurrentDebugFiberInDEV();
-      } else {
-        try {
-          if (
-            enableProfilerTimer &&
-            enableProfilerCommitHooks &&
-            fiber.mode & ProfileMode
-          ) {
-            try {
-              startPassiveEffectTimer();
-              destroy();
-            } finally {
-              recordPassiveEffectDuration(fiber);
-            }
-          } else {
-            destroy();
-          }
-        } catch (error) {
-          invariant(fiber !== null, 'Should be working on an effect.');
-          captureCommitPhaseError(fiber, error);
-        }
-      }
-    }
-  }
-  // Second pass: Create new passive effects.
-  const mountEffects = pendingPassiveHookEffectsMount;
-  pendingPassiveHookEffectsMount = [];
-  for (let i = 0; i < mountEffects.length; i += 2) {
-    const effect = ((mountEffects[i]: any): HookEffect);
-    const fiber = ((mountEffects[i + 1]: any): Fiber);
-    if (__DEV__) {
-      setCurrentDebugFiberInDEV(fiber);
-      if (
-        enableProfilerTimer &&
-        enableProfilerCommitHooks &&
-        fiber.mode & ProfileMode
-      ) {
-        startPassiveEffectTimer();
-        invokeGuardedCallback(null, invokePassiveEffectCreate, null, effect);
-        recordPassiveEffectDuration(fiber);
-      } else {
-        invokeGuardedCallback(null, invokePassiveEffectCreate, null, effect);
-      }
-      if (hasCaughtError()) {
-        invariant(fiber !== null, 'Should be working on an effect.');
-        const error = clearCaughtError();
-        captureCommitPhaseError(fiber, error);
-      }
-      resetCurrentDebugFiberInDEV();
-    } else {
-      try {
-        const create = effect.create;
-        if (
-          enableProfilerTimer &&
-          enableProfilerCommitHooks &&
-          fiber.mode & ProfileMode
-        ) {
-          try {
-            startPassiveEffectTimer();
-            effect.destroy = create();
-          } finally {
-            recordPassiveEffectDuration(fiber);
-          }
-        } else {
-          effect.destroy = create();
-        }
-      } catch (error) {
-        invariant(fiber !== null, 'Should be working on an effect.');
-        captureCommitPhaseError(fiber, error);
-      }
-    }
-  }
-
-  // TODO (effects) Detach sibling pointers for deleted Fibers
+  flushPassiveUnmountEffects(root.current);
+  flushPassiveMountEffects(root.current);
 
   if (enableProfilerTimer && enableProfilerCommitHooks) {
     const profilerEffects = pendingPassiveProfilerEffects;
@@ -3274,10 +3384,24 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
       return;
     }
 
-    // If there are pending passive effects unmounts for this Fiber,
-    // we can assume that they would have prevented this update.
-    if ((fiber.effectTag & PassiveUnmountPendingDev) !== NoEffect) {
-      return;
+    if ((fiber.effectTag & PassiveStatic) !== NoEffect) {
+      const updateQueue: FunctionComponentUpdateQueue | null = (fiber.updateQueue: any);
+      if (updateQueue !== null) {
+        const lastEffect = updateQueue.lastEffect;
+        if (lastEffect !== null) {
+          const firstEffect = lastEffect.next;
+
+          let effect = firstEffect;
+          do {
+            if (effect.destroy !== undefined) {
+              if ((effect.tag & HookPassive) !== NoHookEffect) {
+                return;
+              }
+            }
+            effect = effect.next;
+          } while (effect !== firstEffect);
+        }
+      }
     }
 
     // We show the whole stack but dedupe on the top component's name because
@@ -3976,5 +4100,25 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
         resolve();
       },
     };
+  }
+}
+
+function detachFiberAfterEffects(fiber: Fiber): void {
+  // Null out fields to improve GC for references that may be lingering (e.g. DevTools).
+  // Note that we already cleared the return pointer in detachFiberMutation().
+  fiber.child = null;
+  fiber.deletions = null;
+  fiber.dependencies = null;
+  fiber.firstEffect = null;
+  fiber.lastEffect = null;
+  fiber.memoizedProps = null;
+  fiber.memoizedState = null;
+  fiber.pendingProps = null;
+  fiber.sibling = null;
+  fiber.stateNode = null;
+  fiber.updateQueue = null;
+
+  if (__DEV__) {
+    fiber._debugOwner = null;
   }
 }

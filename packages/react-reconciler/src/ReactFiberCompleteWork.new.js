@@ -65,7 +65,9 @@ import {
   NoEffect,
   DidCapture,
   Snapshot,
+  MutationMask,
 } from './ReactSideEffectTags';
+import {NoEffect as NoSubtreeTag, Mutation} from './ReactSubtreeTags';
 import invariant from 'shared/invariant';
 
 import {
@@ -124,7 +126,6 @@ import {
   enableSchedulerTracing,
   enableSuspenseCallback,
   enableSuspenseServerRenderer,
-  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableScopeAPI,
   enableBlocksAPI,
@@ -140,7 +141,6 @@ import {
 import {createFundamentalStateInstance} from './ReactFiberFundamental.new';
 import {OffscreenLane} from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber.new';
-import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents.new';
 import {createScopeInstance} from './ReactFiberScope.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
 
@@ -152,6 +152,25 @@ function markUpdate(workInProgress: Fiber) {
 
 function markRef(workInProgress: Fiber) {
   workInProgress.effectTag |= Ref;
+}
+
+function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {
+  const didBailout = current !== null && current.child === completedWork.child;
+  if (didBailout) {
+    return true;
+  }
+
+  let child = completedWork.child;
+  while (child !== null) {
+    if ((child.effectTag & MutationMask) !== NoEffect) {
+      return false;
+    }
+    if ((child.subtreeTag & Mutation) !== NoSubtreeTag) {
+      return false;
+    }
+    child = child.sibling;
+  }
+  return true;
 }
 
 let appendAllChildren;
@@ -198,7 +217,7 @@ if (supportsMutation) {
     }
   };
 
-  updateHostContainer = function(workInProgress: Fiber) {
+  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
     // Noop
   };
   updateHostComponent = function(
@@ -442,13 +461,13 @@ if (supportsMutation) {
       node = node.sibling;
     }
   };
-  updateHostContainer = function(workInProgress: Fiber) {
+  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
     const portalOrRoot: {
       containerInfo: Container,
       pendingChildren: ChildSet,
       ...
     } = workInProgress.stateNode;
-    const childrenUnchanged = workInProgress.firstEffect === null;
+    const childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
     if (childrenUnchanged) {
       // No changes, just reuse the existing instance.
     } else {
@@ -473,7 +492,7 @@ if (supportsMutation) {
     const oldProps = current.memoizedProps;
     // If there are no effects associated with this node, then none of our children had any updates.
     // This guarantees that we can reuse all of them.
-    const childrenUnchanged = workInProgress.firstEffect === null;
+    const childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
     if (childrenUnchanged && oldProps === newProps) {
       // No changes, just reuse the existing instance.
       // Note that this might release a previous clone.
@@ -556,7 +575,7 @@ if (supportsMutation) {
   };
 } else {
   // No host operations
-  updateHostContainer = function(workInProgress: Fiber) {
+  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
     // Noop
   };
   updateHostComponent = function(
@@ -700,7 +719,7 @@ function completeWork(
           workInProgress.effectTag |= Snapshot;
         }
       }
-      updateHostContainer(workInProgress);
+      updateHostContainer(current, workInProgress);
       return null;
     }
     case HostComponent: {
@@ -715,14 +734,6 @@ function completeWork(
           newProps,
           rootContainerInstance,
         );
-
-        if (enableDeprecatedFlareAPI) {
-          const prevListeners = current.memoizedProps.DEPRECATED_flareListeners;
-          const nextListeners = newProps.DEPRECATED_flareListeners;
-          if (prevListeners !== nextListeners) {
-            markUpdate(workInProgress);
-          }
-        }
 
         if (current.ref !== workInProgress.ref) {
           markRef(workInProgress);
@@ -758,16 +769,6 @@ function completeWork(
             // commit-phase we mark this as such.
             markUpdate(workInProgress);
           }
-          if (enableDeprecatedFlareAPI) {
-            const listeners = newProps.DEPRECATED_flareListeners;
-            if (listeners != null) {
-              updateDeprecatedEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
-            }
-          }
         } else {
           const instance = createInstance(
             type,
@@ -779,19 +780,7 @@ function completeWork(
 
           appendAllChildren(instance, workInProgress, false, false);
 
-          // This needs to be set before we mount Flare event listeners
           workInProgress.stateNode = instance;
-
-          if (enableDeprecatedFlareAPI) {
-            const listeners = newProps.DEPRECATED_flareListeners;
-            if (listeners != null) {
-              updateDeprecatedEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
-            }
-          }
 
           // Certain renderers require commit-time effects for initial mount.
           // (eg DOM renderer supports auto-focus for certain elements).
@@ -979,7 +968,7 @@ function completeWork(
     }
     case HostPortal:
       popHostContainer(workInProgress);
-      updateHostContainer(workInProgress);
+      updateHostContainer(current, workInProgress);
       if (current === null) {
         preparePortalMount(workInProgress.stateNode.containerInfo);
       }
@@ -1268,37 +1257,14 @@ function completeWork(
         if (current === null) {
           const scopeInstance: ReactScopeInstance = createScopeInstance();
           workInProgress.stateNode = scopeInstance;
-          if (enableDeprecatedFlareAPI) {
-            const listeners = newProps.DEPRECATED_flareListeners;
-            if (listeners != null) {
-              const rootContainerInstance = getRootHostContainer();
-              updateDeprecatedEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
-            }
-          }
           prepareScopeUpdate(scopeInstance, workInProgress);
           if (workInProgress.ref !== null) {
             markRef(workInProgress);
             markUpdate(workInProgress);
           }
         } else {
-          if (enableDeprecatedFlareAPI) {
-            const prevListeners =
-              current.memoizedProps.DEPRECATED_flareListeners;
-            const nextListeners = newProps.DEPRECATED_flareListeners;
-            if (
-              prevListeners !== nextListeners ||
-              workInProgress.ref !== null
-            ) {
-              markUpdate(workInProgress);
-            }
-          } else {
-            if (workInProgress.ref !== null) {
-              markUpdate(workInProgress);
-            }
+          if (workInProgress.ref !== null) {
+            markUpdate(workInProgress);
           }
           if (current.ref !== workInProgress.ref) {
             markRef(workInProgress);

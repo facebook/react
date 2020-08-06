@@ -44,7 +44,7 @@ import {
 } from './SchedulerWithReactIntegration.new';
 
 export const SyncLanePriority: LanePriority = 17;
-const SyncBatchedLanePriority: LanePriority = 16;
+export const SyncBatchedLanePriority: LanePriority = 16;
 
 const InputDiscreteHydrationLanePriority: LanePriority = 15;
 export const InputDiscreteLanePriority: LanePriority = 14;

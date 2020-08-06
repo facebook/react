@@ -8,7 +8,7 @@
  */
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
-import typeof * as ExportsType from './ReactFeatureFlags.testing.www';
+import typeof * as ExportsType from './ReactFeatureFlags.test-renderer';
 
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableDebugTracing = false;
@@ -16,32 +16,32 @@ export const enableSchedulingProfiler = false;
 export const enableSchedulingProfilerComponentStacks = false;
 export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
-export const enableProfilerTimer = false;
+export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = false;
-export const enableSchedulerTracing = false;
-export const enableSuspenseServerRenderer = true;
-export const enableSelectiveHydration = true;
-export const enableBlocksAPI = true;
+export const enableSchedulerTracing = __PROFILE__;
+export const enableSuspenseServerRenderer = false;
+export const enableSelectiveHydration = false;
+export const enableBlocksAPI = false;
 export const enableLazyElements = false;
-export const disableJavaScriptURLs = true;
+export const disableJavaScriptURLs = false;
 export const disableInputAttributeSyncing = false;
 export const enableSchedulerDebugging = false;
 export const enableFundamentalAPI = false;
-export const enableScopeAPI = true;
-export const enableCreateEventHandleAPI = true;
-export const warnAboutUnmockedScheduler = true;
-export const enableSuspenseCallback = true;
+export const enableScopeAPI = false;
+export const enableCreateEventHandleAPI = false;
+export const warnAboutUnmockedScheduler = false;
+export const enableSuspenseCallback = false;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;
-export const disableLegacyContext = __EXPERIMENTAL__;
+export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableTrustedTypesIntegration = false;
-export const disableTextareaChildren = __EXPERIMENTAL__;
-export const disableModulePatternComponents = true;
+export const disableTextareaChildren = false;
+export const disableModulePatternComponents = false;
 export const warnUnstableRenderSubtreeIntoContainer = false;
 export const warnAboutSpreadingKeyToJSX = false;
-export const enableComponentStackLocations = true;
-export const enableLegacyFBSupport = !__EXPERIMENTAL__;
+export const enableComponentStackLocations = false;
+export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 
 export const enableNewReconciler = false;

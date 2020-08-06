@@ -27,7 +27,6 @@ export const disableJavaScriptURLs = false;
 export const disableInputAttributeSyncing = false;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const warnAboutDeprecatedLifecycles = true;
-export const enableDeprecatedFlareAPI = false;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;

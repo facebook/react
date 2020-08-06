@@ -211,3 +211,35 @@ export type ReactFaricEvent = {
   target: number,
   ...
 };
+
+// Imperative LayoutAnimation API types
+//
+export type LayoutAnimationType =
+  | 'spring'
+  | 'linear'
+  | 'easeInEaseOut'
+  | 'easeIn'
+  | 'easeOut'
+  | 'keyboard';
+
+export type LayoutAnimationProperty =
+  | 'opacity'
+  | 'scaleX'
+  | 'scaleY'
+  | 'scaleXY';
+
+export type LayoutAnimationAnimationConfig = $ReadOnly<{|
+  duration?: number,
+  delay?: number,
+  springDamping?: number,
+  initialVelocity?: number,
+  type?: LayoutAnimationType,
+  property?: LayoutAnimationProperty,
+|}>;
+
+export type LayoutAnimationConfig = $ReadOnly<{|
+  duration: number,
+  create?: LayoutAnimationAnimationConfig,
+  update?: LayoutAnimationAnimationConfig,
+  delete?: LayoutAnimationAnimationConfig,
+|}>;

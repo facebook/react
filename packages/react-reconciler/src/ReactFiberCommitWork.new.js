@@ -31,7 +31,6 @@ import {
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableSuspenseServerRenderer,
-  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
@@ -115,21 +114,19 @@ import {
   captureCommitPhaseError,
   resolveRetryWakeable,
   markCommitTimeOfFallback,
-  enqueuePendingPassiveHookEffectMount,
-  enqueuePendingPassiveHookEffectUnmount,
   enqueuePendingPassiveProfilerEffect,
+  schedulePassiveEffectCallback,
 } from './ReactFiberWorkLoop.new';
 import {
   NoEffect as NoHookEffect,
   HasEffect as HookHasEffect,
   Layout as HookLayout,
-  Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.new';
 import {
-  updateDeprecatedEventListeners,
-  unmountDeprecatedResponderListeners,
-} from './ReactFiberDeprecatedEvents.new';
+  NoEffect as NoSubtreeTag,
+  Passive as PassiveSubtreeTag,
+} from './ReactSubtreeTags';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -203,7 +200,7 @@ function safelyDetachRef(current: Fiber) {
   }
 }
 
-function safelyCallDestroy(current, destroy) {
+export function safelyCallDestroy(current: Fiber, destroy: () => void) {
   if (__DEV__) {
     invokeGuardedCallback(null, destroy, null);
     if (hasCaughtError()) {
@@ -381,26 +378,6 @@ function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
   }
 }
 
-function schedulePassiveEffects(finishedWork: Fiber) {
-  const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
-  const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
-  if (lastEffect !== null) {
-    const firstEffect = lastEffect.next;
-    let effect = firstEffect;
-    do {
-      const {next, tag} = effect;
-      if (
-        (tag & HookPassive) !== NoHookEffect &&
-        (tag & HookHasEffect) !== NoHookEffect
-      ) {
-        enqueuePendingPassiveHookEffectUnmount(finishedWork, effect);
-        enqueuePendingPassiveHookEffectMount(finishedWork, effect);
-      }
-      effect = next;
-    } while (effect !== firstEffect);
-  }
-}
-
 export function commitPassiveEffectDurations(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
@@ -486,7 +463,9 @@ function commitLifeCycles(
         commitHookEffectListMount(HookLayout | HookHasEffect, finishedWork);
       }
 
-      schedulePassiveEffects(finishedWork);
+      if ((finishedWork.subtreeTag & PassiveSubtreeTag) !== NoSubtreeTag) {
+        schedulePassiveEffectCallback();
+      }
       return;
     }
     case ClassComponent: {
@@ -891,9 +870,7 @@ function commitUnmount(
           do {
             const {destroy, tag} = effect;
             if (destroy !== undefined) {
-              if ((tag & HookPassive) !== NoHookEffect) {
-                enqueuePendingPassiveHookEffectUnmount(current, effect);
-              } else {
+              if ((tag & HookLayout) !== NoHookEffect) {
                 if (
                   enableProfilerTimer &&
                   enableProfilerCommitHooks &&
@@ -922,9 +899,6 @@ function commitUnmount(
       return;
     }
     case HostComponent: {
-      if (enableDeprecatedFlareAPI) {
-        unmountDeprecatedResponderListeners(current);
-      }
       safelyDetachRef(current);
       return;
     }
@@ -963,9 +937,6 @@ function commitUnmount(
     }
     case ScopeComponent: {
       if (enableScopeAPI) {
-        if (enableDeprecatedFlareAPI) {
-          unmountDeprecatedResponderListeners(current);
-        }
         safelyDetachRef(current);
       }
       return;
@@ -1013,29 +984,24 @@ function commitNestedUnmounts(
 }
 
 function detachFiberMutation(fiber: Fiber) {
-  // Cut off the return pointers to disconnect it from the tree. Ideally, we
-  // should clear the child pointer of the parent alternate to let this
+  // Cut off the return pointer to disconnect it from the tree.
+  // This enables us to detect and warn against state updates on an unmounted component.
+  // It also prevents events from bubbling from within disconnected components.
+  //
+  // Ideally, we should also clear the child pointer of the parent alternate to let this
   // get GC:ed but we don't know which for sure which parent is the current
-  // one so we'll settle for GC:ing the subtree of this child. This child
-  // itself will be GC:ed when the parent updates the next time.
-  // Note: we cannot null out sibling here, otherwise it can cause issues
-  // with findDOMNode and how it requires the sibling field to carry out
-  // traversal in a later effect. See PR #16820. We now clear the sibling
-  // field after effects, see: detachFiberAfterEffects.
-  fiber.alternate = null;
-  fiber.child = null;
-  fiber.dependencies = null;
-  fiber.firstEffect = null;
-  fiber.lastEffect = null;
-  fiber.memoizedProps = null;
-  fiber.memoizedState = null;
-  fiber.pendingProps = null;
-  fiber.return = null;
-  fiber.stateNode = null;
-  fiber.updateQueue = null;
-  if (__DEV__) {
-    fiber._debugOwner = null;
+  // one so we'll settle for GC:ing the subtree of this child.
+  // This child itself will be GC:ed when the parent updates the next time.
+  //
+  // Note that we can't clear child or sibling pointers yet.
+  // They're needed for passive effects and for findDOMNode.
+  // We defer those fields, and all other cleanup, to the passive phase (see detachFiberAfterEffects).
+  const alternate = fiber.alternate;
+  if (alternate !== null) {
+    alternate.return = null;
+    fiber.alternate = null;
   }
+  fiber.return = null;
 }
 
 function emptyPortalContainer(current: Fiber) {
@@ -1556,13 +1522,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             finishedWork,
           );
         }
-        if (enableDeprecatedFlareAPI) {
-          const prevListeners = oldProps.DEPRECATED_flareListeners;
-          const nextListeners = newProps.DEPRECATED_flareListeners;
-          if (prevListeners !== nextListeners) {
-            updateDeprecatedEventListeners(nextListeners, finishedWork, null);
-          }
-        }
       }
       return;
     }
@@ -1619,15 +1578,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case ScopeComponent: {
       if (enableScopeAPI) {
         const scopeInstance = finishedWork.stateNode;
-        if (enableDeprecatedFlareAPI) {
-          const newProps = finishedWork.memoizedProps;
-          const oldProps = current !== null ? current.memoizedProps : newProps;
-          const prevListeners = oldProps.DEPRECATED_flareListeners;
-          const nextListeners = newProps.DEPRECATED_flareListeners;
-          if (prevListeners !== nextListeners || current === null) {
-            updateDeprecatedEventListeners(nextListeners, finishedWork, null);
-          }
-        }
         prepareScopeUpdate(scopeInstance, finishedWork);
         return;
       }

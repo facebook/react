@@ -13,8 +13,6 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   ReactProviderType,
-  ReactEventResponder,
-  ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -86,16 +84,6 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       Dispatcher.useDebugValue(null);
       Dispatcher.useCallback(() => {});
       Dispatcher.useMemo(() => null);
-      Dispatcher.useMutableSource(
-        {
-          _source: {},
-          _getVersion: () => 1,
-          _workInProgressVersionPrimary: null,
-          _workInProgressVersionSecondary: null,
-        },
-        () => null,
-        () => () => {},
-      );
     } finally {
       readHookLog = hookLog;
       hookLog = [];
@@ -270,22 +258,6 @@ function useMutableSource<Source, Snapshot>(
   return value;
 }
 
-function useResponder(
-  responder: ReactEventResponder<any, any>,
-  listenerProps: Object,
-): ReactEventResponderListener<any, any> {
-  // Don't put the actual event responder object in, just its displayName
-  const value = {
-    responder: responder.displayName || 'EventResponder',
-    props: listenerProps,
-  };
-  hookLog.push({primitive: 'Responder', stackError: new Error(), value});
-  return {
-    responder,
-    props: listenerProps,
-  };
-}
-
 function useTransition(
   config: SuspenseConfig | null | void,
 ): [(() => void) => void, boolean] {
@@ -345,7 +317,6 @@ const Dispatcher: DispatcherType = {
   useReducer,
   useRef,
   useState,
-  useResponder,
   useTransition,
   useMutableSource,
   useDeferredValue,

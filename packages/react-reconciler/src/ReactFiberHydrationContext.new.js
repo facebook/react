@@ -124,7 +124,7 @@ function deleteHydratableInstance(
   const childToDelete = createFiberFromHostInstanceForDeletion();
   childToDelete.stateNode = instance;
   childToDelete.return = returnFiber;
-  childToDelete.effectTag = Deletion;
+
   const deletions = returnFiber.deletions;
   if (deletions === null) {
     returnFiber.deletions = [childToDelete];

@@ -7,12 +7,16 @@
  * @flow
  */
 
-export type TopLevelType =
+import getVendorPrefixedEventName from './getVendorPrefixedEventName';
+
+export type DOMEventName =
   | 'abort'
-  // Dynamic and vendor-prefixed at the usage site:
+  | 'afterblur' // Not a real event. This is used by event experiments.
+  // These are vendor-prefixed so you should use the exported constants instead:
   // 'animationiteration' |
   // 'animationend |
   // 'animationstart' |
+  | 'beforeblur' // Not a real event. This is used by event experiments.
   | 'canplay'
   | 'canplaythrough'
   | 'cancel'
@@ -40,6 +44,8 @@ export type TopLevelType =
   | 'encrypted'
   | 'ended'
   | 'error'
+  | 'focusin'
+  | 'focusout'
   | 'gotpointercapture'
   | 'input'
   | 'invalid'
@@ -78,19 +84,28 @@ export type TopLevelType =
   | 'stalled'
   | 'submit'
   | 'suspend'
-  | 'textInput'
+  | 'textInput' // Intentionally camelCase. Non-standard.
   | 'timeupdate'
   | 'toggle'
   | 'touchcancel'
   | 'touchend'
   | 'touchmove'
   | 'touchstart'
-  // Dynamic and vendor-prefixed at the usage site:
+  // These are vendor-prefixed so you should use the exported constants instead:
   // 'transitionend' |
   | 'volumechange'
   | 'waiting'
-  | 'wheel'
-  | 'afterblur'
-  | 'beforeblur'
-  | 'focusin'
-  | 'focusout';
+  | 'wheel';
+
+export const ANIMATION_END: DOMEventName = getVendorPrefixedEventName(
+  'animationend',
+);
+export const ANIMATION_ITERATION: DOMEventName = getVendorPrefixedEventName(
+  'animationiteration',
+);
+export const ANIMATION_START: DOMEventName = getVendorPrefixedEventName(
+  'animationstart',
+);
+export const TRANSITION_END: DOMEventName = getVendorPrefixedEventName(
+  'transitionend',
+);

@@ -3223,6 +3223,31 @@
 | `end=(null)`| (initial)| `<null>` |
 | `end=(undefined)`| (initial)| `<null>` |
 
+## `enterKeyHint` (on `<input>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `enterKeyHint=(string)`| (initial)| `<empty string>` |
+| `enterKeyHint=(empty string)`| (initial)| `<empty string>` |
+| `enterKeyHint=(array with string)`| (initial)| `<empty string>` |
+| `enterKeyHint=(empty array)`| (initial)| `<empty string>` |
+| `enterKeyHint=(object)`| (initial)| `<empty string>` |
+| `enterKeyHint=(numeric string)`| (initial)| `<empty string>` |
+| `enterKeyHint=(-1)`| (initial)| `<empty string>` |
+| `enterKeyHint=(0)`| (initial)| `<empty string>` |
+| `enterKeyHint=(integer)`| (initial)| `<empty string>` |
+| `enterKeyHint=(NaN)`| (initial, warning)| `<empty string>` |
+| `enterKeyHint=(float)`| (initial)| `<empty string>` |
+| `enterKeyHint=(true)`| (initial, warning)| `<empty string>` |
+| `enterKeyHint=(false)`| (initial, warning)| `<empty string>` |
+| `enterKeyHint=(string 'true')`| (initial)| `<empty string>` |
+| `enterKeyHint=(string 'false')`| (initial)| `<empty string>` |
+| `enterKeyHint=(string 'on')`| (initial)| `<empty string>` |
+| `enterKeyHint=(string 'off')`| (initial)| `<empty string>` |
+| `enterKeyHint=(symbol)`| (initial, warning)| `<empty string>` |
+| `enterKeyHint=(function)`| (initial, warning)| `<empty string>` |
+| `enterKeyHint=(null)`| (initial)| `<empty string>` |
+| `enterKeyHint=(undefined)`| (initial)| `<empty string>` |
+
 ## `exponent` (on `<feFuncA>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |

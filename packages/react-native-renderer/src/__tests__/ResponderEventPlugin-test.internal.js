@@ -13,7 +13,6 @@
 // though the responder plugin is only used in React Native. Sadness ensues.
 // The coverage is valuable though, so we will keep it for now.
 const {HostComponent} = require('react-reconciler/src/ReactWorkTags');
-const {PLUGIN_EVENT_SYSTEM} = require('react-dom/src/events/EventSystemFlags');
 
 let EventBatching;
 let EventPluginUtils;
@@ -320,7 +319,7 @@ const run = function(config, hierarchyConfig, nativeEventConfig) {
     nativeEventConfig.targetInst,
     nativeEventConfig.nativeEvent,
     nativeEventConfig.target,
-    PLUGIN_EVENT_SYSTEM,
+    0,
   );
 
   // At this point the negotiation events have been dispatched as part of the

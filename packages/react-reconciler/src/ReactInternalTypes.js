@@ -10,9 +10,6 @@
 import type {Source} from 'shared/ReactElementType';
 import type {
   RefObject,
-  ReactEventResponder,
-  ReactEventResponderListener,
-  ReactEventResponderInstance,
   ReactContext,
   MutableSourceSubscribeFn,
   MutableSourceGetSnapshotFn,
@@ -44,10 +41,6 @@ export type ContextDependency<T> = {
 export type Dependencies = {
   lanes: Lanes,
   firstContext: ContextDependency<mixed> | null,
-  responders: Map<
-    ReactEventResponder<any, any>,
-    ReactEventResponderInstance<any, any>,
-  > | null,
   ...
 };
 
@@ -205,17 +198,15 @@ type BaseFiberRootProperties = {|
   pendingContext: Object | null,
   // Determines if we should attempt to hydrate on the initial mount
   +hydrate: boolean,
-  // Node returned by Scheduler.scheduleCallback
-  callbackNode: *,
 
   // Used by useMutableSource hook to avoid tearing during hydration.
   mutableSourceEagerHydrationData?: Array<
     MutableSource<any> | MutableSourceVersion,
   > | null,
 
-  // Represents the next task that the root should work on, or the current one
-  // if it's already working.
-  callbackId: Lanes,
+  // Node returned by Scheduler.scheduleCallback. Represents the next rendering
+  // task that the root will work on.
+  callbackNode: *,
   callbackPriority: LanePriority,
   eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,
@@ -300,10 +291,6 @@ export type Dispatcher = {|
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useResponder<E, C>(
-    responder: ReactEventResponder<E, C>,
-    props: Object,
-  ): ReactEventResponderListener<E, C>,
   useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T,
   useTransition(
     config: SuspenseConfig | void | null,

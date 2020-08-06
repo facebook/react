@@ -19,30 +19,32 @@ let cancelCallback;
 let scheduleCallback;
 let NormalPriority;
 
-// The Scheduler implementation uses browser APIs like `MessageChannel` and
-// `setTimeout` to schedule work on the main thread. Most of our tests treat
-// these as implementation details; however, the sequence and timing of these
+// The Scheduler postTask implementation uses a new postTask browser API to
+// schedule work on the main thread. Most of our tests treat this as an
+// implementation detail; however, the sequence and timing of browser
 // APIs are not precisely specified, and can vary across browsers.
 //
 // To prevent regressions, we need the ability to simulate specific edge cases
 // that we may encounter in various browsers.
 //
 // This test suite mocks all browser methods used in our implementation. It
-// assumes as little as possible about the order and timing of events.
-describe('SchedulerBrowser', () => {
+// assumes as little as possible about the order and timing of events.s
+describe('SchedulerPostTask', () => {
   beforeEach(() => {
     jest.resetModules();
 
     // Un-mock scheduler
-    jest.mock('scheduler', () => require.requireActual('scheduler'));
+    jest.mock('scheduler', () =>
+      require.requireActual('scheduler/unstable_post_task'),
+    );
     jest.mock('scheduler/src/SchedulerHostConfig', () =>
       require.requireActual(
-        'scheduler/src/forks/SchedulerHostConfig.default.js',
+        'scheduler/src/forks/SchedulerHostConfig.post-task.js',
       ),
     );
 
     runtime = installMockBrowserRuntime();
-    performance = global.performance;
+    performance = window.performance;
     Scheduler = require('scheduler');
     cancelCallback = Scheduler.unstable_cancelCallback;
     scheduleCallback = Scheduler.unstable_scheduleCallback;
@@ -50,36 +52,26 @@ describe('SchedulerBrowser', () => {
   });
 
   afterEach(() => {
-    delete global.performance;
-
     if (!runtime.isLogEmpty()) {
       throw Error('Test exited without clearing log.');
     }
   });
 
   function installMockBrowserRuntime() {
-    let hasPendingMessageEvent = false;
-
+    let hasPendingTask = false;
     let timerIDCounter = 0;
-    // let timerIDs = new Map();
-
     let eventLog = [];
 
-    let currentTime = 0;
+    // Mock window functions
+    const window = {};
+    global.window = window;
 
-    global.performance = {
+    let currentTime = 0;
+    window.performance = {
       now() {
         return currentTime;
       },
     };
-
-    const window = {};
-    global.window = window;
-
-    // TODO: Scheduler no longer requires these methods to be polyfilled. But
-    // maybe we want to continue warning if they don't exist, to preserve the
-    // option to rely on it in the future?
-    window.requestAnimationFrame = window.cancelAnimationFrame = () => {};
 
     window.setTimeout = (cb, delay) => {
       const id = timerIDCounter++;
@@ -91,19 +83,18 @@ describe('SchedulerBrowser', () => {
       // TODO
     };
 
-    const port1 = {};
-    const port2 = {
-      postMessage() {
-        if (hasPendingMessageEvent) {
-          throw Error('Message event already scheduled');
-        }
-        log('Post Message');
-        hasPendingMessageEvent = true;
-      },
-    };
-    global.MessageChannel = function MessageChannel() {
-      this.port1 = port1;
-      this.port2 = port2;
+    // Mock browser scheduler.
+    const scheduler = {};
+    global.scheduler = scheduler;
+
+    let nextTask;
+    scheduler.postTask = function(callback) {
+      if (hasPendingTask) {
+        throw Error('Task already scheduled');
+      }
+      log('Post Task');
+      hasPendingTask = true;
+      nextTask = callback;
     };
 
     function ensureLogIsEmpty() {
@@ -114,15 +105,22 @@ describe('SchedulerBrowser', () => {
     function advanceTime(ms) {
       currentTime += ms;
     }
-    function fireMessageEvent() {
+    function fireNextTask() {
       ensureLogIsEmpty();
-      if (!hasPendingMessageEvent) {
-        throw Error('No message event was scheduled');
+      if (!hasPendingTask) {
+        throw Error('No task was scheduled');
       }
-      hasPendingMessageEvent = false;
-      const onMessage = port1.onmessage;
-      log('Message Event');
-      onMessage();
+      hasPendingTask = false;
+
+      log('Task Event');
+
+      // If there's a continuation, it will call postTask again
+      // which will set nextTask. That means we need to clear
+      // nextTask before the invocation, otherwise we would
+      // delete the continuation task.
+      const task = nextTask;
+      nextTask = null;
+      task();
     }
     function log(val) {
       eventLog.push(val);
@@ -137,7 +135,7 @@ describe('SchedulerBrowser', () => {
     }
     return {
       advanceTime,
-      fireMessageEvent,
+      fireNextTask,
       log,
       isLogEmpty,
       assertLog,
@@ -148,9 +146,9 @@ describe('SchedulerBrowser', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Task');
     });
-    runtime.assertLog(['Post Message']);
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'Task']);
+    runtime.assertLog(['Post Task']);
+    runtime.fireNextTask();
+    runtime.assertLog(['Task Event', 'Task']);
   });
 
   it('task with continuation', () => {
@@ -164,18 +162,13 @@ describe('SchedulerBrowser', () => {
         runtime.log('Continuation');
       };
     });
-    runtime.assertLog(['Post Message']);
+    runtime.assertLog(['Post Task']);
 
-    runtime.fireMessageEvent();
-    runtime.assertLog([
-      'Message Event',
-      'Task',
-      'Yield at 5ms',
-      'Post Message',
-    ]);
+    runtime.fireNextTask();
+    runtime.assertLog(['Task Event', 'Task', 'Yield at 5ms', 'Post Task']);
 
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'Continuation']);
+    runtime.fireNextTask();
+    runtime.assertLog(['Task Event', 'Continuation']);
   });
 
   it('multiple tasks', () => {
@@ -185,9 +178,9 @@ describe('SchedulerBrowser', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('B');
     });
-    runtime.assertLog(['Post Message']);
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'A', 'B']);
+    runtime.assertLog(['Post Task']);
+    runtime.fireNextTask();
+    runtime.assertLog(['Task Event', 'A', 'B']);
   });
 
   it('multiple tasks with a yield in between', () => {
@@ -198,23 +191,23 @@ describe('SchedulerBrowser', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('B');
     });
-    runtime.assertLog(['Post Message']);
-    runtime.fireMessageEvent();
+    runtime.assertLog(['Post Task']);
+    runtime.fireNextTask();
     runtime.assertLog([
-      'Message Event',
+      'Task Event',
       'A',
       // Ran out of time. Post a continuation event.
-      'Post Message',
+      'Post Task',
     ]);
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'B']);
+    runtime.fireNextTask();
+    runtime.assertLog(['Task Event', 'B']);
   });
 
   it('cancels tasks', () => {
     const task = scheduleCallback(NormalPriority, () => {
       runtime.log('Task');
     });
-    runtime.assertLog(['Post Message']);
+    runtime.assertLog(['Post Task']);
     cancelCallback(task);
     runtime.assertLog([]);
   });
@@ -227,13 +220,13 @@ describe('SchedulerBrowser', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Yay');
     });
-    runtime.assertLog(['Post Message']);
+    runtime.assertLog(['Post Task']);
 
-    expect(() => runtime.fireMessageEvent()).toThrow('Oops!');
-    runtime.assertLog(['Message Event', 'Oops!', 'Post Message']);
+    expect(() => runtime.fireNextTask()).toThrow('Oops!');
+    runtime.assertLog(['Task Event', 'Oops!', 'Post Task']);
 
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'Yay']);
+    runtime.fireNextTask();
+    runtime.assertLog(['Task Event', 'Yay']);
   });
 
   it('schedule new task after queue has emptied', () => {
@@ -241,16 +234,16 @@ describe('SchedulerBrowser', () => {
       runtime.log('A');
     });
 
-    runtime.assertLog(['Post Message']);
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'A']);
+    runtime.assertLog(['Post Task']);
+    runtime.fireNextTask();
+    runtime.assertLog(['Task Event', 'A']);
 
     scheduleCallback(NormalPriority, () => {
       runtime.log('B');
     });
-    runtime.assertLog(['Post Message']);
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'B']);
+    runtime.assertLog(['Post Task']);
+    runtime.fireNextTask();
+    runtime.assertLog(['Task Event', 'B']);
   });
 
   it('schedule new task after a cancellation', () => {
@@ -258,17 +251,17 @@ describe('SchedulerBrowser', () => {
       runtime.log('A');
     });
 
-    runtime.assertLog(['Post Message']);
+    runtime.assertLog(['Post Task']);
     cancelCallback(handle);
 
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event']);
+    runtime.fireNextTask();
+    runtime.assertLog(['Task Event']);
 
     scheduleCallback(NormalPriority, () => {
       runtime.log('B');
     });
-    runtime.assertLog(['Post Message']);
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'B']);
+    runtime.assertLog(['Post Task']);
+    runtime.fireNextTask();
+    runtime.assertLog(['Task Event', 'B']);
   });
 });
