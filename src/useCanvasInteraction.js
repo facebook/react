@@ -1,8 +1,10 @@
 // @flow
 
 import type {Point} from './layout';
+import type {NormalizedWheelDelta} from './util/normalizeWheel';
 
 import {useEffect} from 'react';
+import {normalizeWheel} from './util/normalizeWheel';
 
 export type MouseDownInteraction = {|
   type: 'mousedown',
@@ -30,6 +32,7 @@ export type WheelPlainInteraction = {|
   payload: {|
     event: WheelEvent,
     location: Point,
+    delta: NormalizedWheelDelta,
   |},
 |};
 export type WheelWithShiftInteraction = {|
@@ -37,6 +40,7 @@ export type WheelWithShiftInteraction = {|
   payload: {|
     event: WheelEvent,
     location: Point,
+    delta: NormalizedWheelDelta,
   |},
 |};
 export type WheelWithControlInteraction = {|
@@ -44,6 +48,7 @@ export type WheelWithControlInteraction = {|
   payload: {|
     event: WheelEvent,
     location: Point,
+    delta: NormalizedWheelDelta,
   |},
 |};
 export type WheelWithMetaInteraction = {|
@@ -51,6 +56,7 @@ export type WheelWithMetaInteraction = {|
   payload: {|
     event: WheelEvent,
     location: Point,
+    delta: NormalizedWheelDelta,
   |},
 |};
 
@@ -137,37 +143,28 @@ export function useCanvasInteraction(
       event.preventDefault();
       event.stopPropagation();
 
+      const location = localToCanvasCoordinates({x: event.x, y: event.y});
+      const delta = normalizeWheel(event);
+
       if (event.shiftKey) {
         interactor({
           type: 'wheel-shift',
-          payload: {
-            event,
-            location: localToCanvasCoordinates({x: event.x, y: event.y}),
-          },
+          payload: {event, location, delta},
         });
       } else if (event.ctrlKey) {
         interactor({
           type: 'wheel-control',
-          payload: {
-            event,
-            location: localToCanvasCoordinates({x: event.x, y: event.y}),
-          },
+          payload: {event, location, delta},
         });
       } else if (event.metaKey) {
         interactor({
           type: 'wheel-meta',
-          payload: {
-            event,
-            location: localToCanvasCoordinates({x: event.x, y: event.y}),
-          },
+          payload: {event, location, delta},
         });
       } else {
         interactor({
           type: 'wheel-plain',
-          payload: {
-            event,
-            location: localToCanvasCoordinates({x: event.x, y: event.y}),
-          },
+          payload: {event, location, delta},
         });
       }
 

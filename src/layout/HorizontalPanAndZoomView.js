@@ -179,7 +179,7 @@ export class HorizontalPanAndZoomView extends View {
   _handleWheelPlain(interaction: WheelPlainInteraction) {
     const {
       location,
-      event: {deltaX, deltaY},
+      delta: {deltaX, deltaY},
     } = interaction.payload;
     if (!rectContainsPoint(location, this.frame)) {
       return; // Not scrolling on view
@@ -209,7 +209,7 @@ export class HorizontalPanAndZoomView extends View {
   ) {
     const {
       location,
-      event: {deltaY},
+      delta: {deltaY},
     } = interaction.payload;
     if (!rectContainsPoint(location, this.frame)) {
       return; // Not scrolling on view

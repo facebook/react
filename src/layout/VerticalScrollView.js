@@ -116,7 +116,7 @@ export class VerticalScrollView extends View {
   _handleWheelPlain(interaction: WheelPlainInteraction) {
     const {
       location,
-      event: {deltaX, deltaY},
+      delta: {deltaX, deltaY},
     } = interaction.payload;
     if (!rectContainsPoint(location, this.frame)) {
       return; // Not scrolling on view
