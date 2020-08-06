@@ -112,7 +112,6 @@ export function flushDiscreteUpdatesIfNeeded(timeStamp: number) {
     }
   } else {
     if (!isInsideEventHandler) {
-      lastFlushedEventTimeStamp = timeStamp;
       flushDiscreteUpdatesImpl();
     }
   }
