@@ -38,6 +38,10 @@ function runJest(testFile) {
     cwd,
     env: Object.assign({}, process.env, {
       REACT_CLASS_EQUIVALENCE_TEST: 'true',
+      // Remove these so that the test file is not filtered out by the mechanism
+      // we use to parallelize tests in CI
+      CIRCLE_NODE_TOTAL: '',
+      CIRCLE_NODE_INDEX: '',
     }),
   });
 

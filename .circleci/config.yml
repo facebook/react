@@ -19,6 +19,8 @@ aliases:
       name: Install Packages
       command: yarn --frozen-lockfile
 
+  - &TEST_PARALLELISM 20
+
   - &attach_workspace
     at: build
 
@@ -92,6 +94,7 @@ jobs:
   RELEASE_CHANNEL_stable_yarn_test:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
 
     steps:
       - checkout
@@ -102,6 +105,7 @@ jobs:
   yarn_test:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_yarn_cache
@@ -111,6 +115,7 @@ jobs:
   RELEASE_CHANNEL_stable_yarn_test_www:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_yarn_cache
@@ -120,6 +125,7 @@ jobs:
   RELEASE_CHANNEL_stable_yarn_test_www_variant:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_yarn_cache
@@ -129,6 +135,7 @@ jobs:
   RELEASE_CHANNEL_stable_yarn_test_prod_www:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_yarn_cache
@@ -138,6 +145,7 @@ jobs:
   RELEASE_CHANNEL_stable_yarn_test_prod_www_variant:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_yarn_cache
@@ -147,6 +155,7 @@ jobs:
   yarn_test_www:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_yarn_cache
@@ -156,6 +165,7 @@ jobs:
   yarn_test_www_variant:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_yarn_cache
@@ -165,6 +175,7 @@ jobs:
   yarn_test_prod_www:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_yarn_cache
@@ -174,6 +185,7 @@ jobs:
   yarn_test_prod_www_variant:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_yarn_cache
@@ -183,6 +195,7 @@ jobs:
   RELEASE_CHANNEL_stable_yarn_test_persistent:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
 
     steps:
       - checkout
@@ -193,6 +206,7 @@ jobs:
   RELEASE_CHANNEL_stable_yarn_test_prod:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
 
     steps:
       - checkout
@@ -203,6 +217,7 @@ jobs:
   yarn_test_prod:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_yarn_cache
@@ -212,7 +227,7 @@ jobs:
   RELEASE_CHANNEL_stable_yarn_build:
     docker: *docker
     environment: *environment
-    parallelism: 20
+    parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_yarn_cache
@@ -344,6 +359,7 @@ jobs:
   RELEASE_CHANNEL_stable_yarn_test_build:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - attach_workspace: *attach_workspace
@@ -354,6 +370,7 @@ jobs:
   yarn_test_build:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - attach_workspace: *attach_workspace
@@ -404,6 +421,7 @@ jobs:
   RELEASE_CHANNEL_stable_yarn_test_build_prod:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - attach_workspace: *attach_workspace
@@ -414,6 +432,7 @@ jobs:
   yarn_test_build_prod:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - attach_workspace: *attach_workspace
