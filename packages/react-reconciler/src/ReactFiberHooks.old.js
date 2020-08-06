@@ -1510,41 +1510,64 @@ function rerenderDeferredValue<T>(
 
 function startTransition(setPending, config, callback) {
   const priorityLevel = getCurrentPriorityLevel();
-  let previousLanePriority;
   if (decoupleUpdatePriorityFromScheduler) {
-    previousLanePriority = getCurrentUpdateLanePriority();
+    const previousLanePriority = getCurrentUpdateLanePriority();
     setCurrentUpdateLanePriority(
       higherLanePriority(previousLanePriority, InputContinuousLanePriority),
     );
-  }
-  runWithPriority(
-    priorityLevel < UserBlockingPriority ? UserBlockingPriority : priorityLevel,
-    () => {
-      setPending(true);
-    },
-  );
 
-  if (decoupleUpdatePriorityFromScheduler) {
+    runWithPriority(
+      priorityLevel < UserBlockingPriority
+        ? UserBlockingPriority
+        : priorityLevel,
+      () => {
+        setPending(true);
+      },
+    );
+
     // If there's no SuspenseConfig set, we'll use the DefaultLanePriority for this transition.
     setCurrentUpdateLanePriority(DefaultLanePriority);
-  }
 
-  runWithPriority(
-    priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
-    () => {
-      const previousConfig = ReactCurrentBatchConfig.suspense;
-      ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
-      try {
-        setPending(false);
-        callback();
-      } finally {
-        if (decoupleUpdatePriorityFromScheduler && previousLanePriority != null) {
-          setCurrentUpdateLanePriority(previousLanePriority);
+    runWithPriority(
+      priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
+      () => {
+        const previousConfig = ReactCurrentBatchConfig.suspense;
+        ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+        try {
+          setPending(false);
+          callback();
+        } finally {
+          if (decoupleUpdatePriorityFromScheduler) {
+            setCurrentUpdateLanePriority(previousLanePriority);
+          }
+          ReactCurrentBatchConfig.suspense = previousConfig;
         }
-        ReactCurrentBatchConfig.suspense = previousConfig;
-      }
-    },
-  );
+      },
+    );
+  } else {
+    runWithPriority(
+      priorityLevel < UserBlockingPriority
+        ? UserBlockingPriority
+        : priorityLevel,
+      () => {
+        setPending(true);
+      },
+    );
+
+    runWithPriority(
+      priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
+      () => {
+        const previousConfig = ReactCurrentBatchConfig.suspense;
+        ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+        try {
+          setPending(false);
+          callback();
+        } finally {
+          ReactCurrentBatchConfig.suspense = previousConfig;
+        }
+      },
+    );
+  }
 }
 
 function mountTransition(
