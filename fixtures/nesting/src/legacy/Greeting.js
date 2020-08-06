@@ -2,10 +2,17 @@ import React from 'react';
 import {Component} from 'react';
 import {findDOMNode} from 'react-dom';
 import {Link} from 'react-router-dom';
+import {connect} from 'react-redux';
+import {store} from '../store';
+
 import ThemeContext from './shared/ThemeContext';
 import Clock from './shared/Clock';
 
-export default class AboutSection extends Component {
+store.subscribe(() => {
+  console.log('Counter:', store.getState());
+});
+
+class AboutSection extends Component {
   static contextType = ThemeContext;
 
   componentDidMount() {
@@ -23,6 +30,12 @@ export default class AboutSection extends Component {
           This component is rendered by the nested React.
         </h4>
         <Clock />
+        <p>
+          Counter: {this.props.counter}{' '}
+          <button onClick={() => this.props.dispatch({type: 'increment'})}>
+            +
+          </button>
+        </p>
         <b>
           <Link to="/">Go to Home</Link>
         </b>
@@ -30,3 +43,9 @@ export default class AboutSection extends Component {
     );
   }
 }
+
+function mapStateToProps(state) {
+  return {counter: state};
+}
+
+export default connect(mapStateToProps)(AboutSection);

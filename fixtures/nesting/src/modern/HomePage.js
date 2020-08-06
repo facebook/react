@@ -5,7 +5,7 @@ import {Link} from 'react-router-dom';
 import ThemeContext from './shared/ThemeContext';
 import Clock from './shared/Clock';
 
-export default function HomePage() {
+export default function HomePage({counter, dispatch}) {
   const theme = useContext(ThemeContext);
   return (
     <>
