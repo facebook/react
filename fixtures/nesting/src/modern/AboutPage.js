@@ -14,7 +14,7 @@ function AboutPage({counter, dispatch}) {
     <>
       <h2>src/modern/AboutPage.js</h2>
       <h3 style={{color: theme}}>
-        This component is rendered by the outer React.
+        This component is rendered by the outer React ({React.version}).
       </h3>
       <Greeting />
       <br />

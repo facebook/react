@@ -2,9 +2,9 @@
   "private": true,
   "name": "react-nesting-example-legacy",
   "dependencies": {
-    "react": "0.0.0-3d0895557",
-    "react-dom": "0.0.0-3d0895557",
-    "react-redux": "7.2.1",
+    "react": "16.8",
+    "react-dom": "16.8",
+    "react-redux": "4.4.10",
     "react-router-dom": "5.2.0"
   }
 }
