@@ -7,8 +7,8 @@ import React, {useEffect, useCallback, useRef} from 'react';
 import profilerBrowser from './assets/profilerBrowser.png';
 import style from './ImportPage.css';
 
-import preprocessData from './util/preprocessData';
-import {readInputData} from './util/readInputData';
+import preprocessData from './utils/preprocessData';
+import {readInputData} from './utils/readInputData';
 
 // TODO: Use for dev only, switch to import file after
 import JSON_PATH from 'url:../static/perfprofilev2.json';

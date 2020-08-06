@@ -1,6 +1,9 @@
 // @flow
 
-import type {Point, HorizontalPanAndZoomViewOnChangeCallback} from './layout';
+import type {
+  Point,
+  HorizontalPanAndZoomViewOnChangeCallback,
+} from './view-base';
 
 import {copy} from 'clipboard-js';
 import React, {
@@ -20,30 +23,30 @@ import {
   View,
   createComposedLayout,
   lastViewTakesUpRemainingSpaceLayout,
+  useCanvasInteraction,
   verticallyStackedLayout,
   zeroPoint,
-} from './layout';
+} from './view-base';
 
 import prettyMilliseconds from 'pretty-ms';
-import {getBatchRange} from './util/getBatchRange';
+import {getBatchRange} from './utils/getBatchRange';
 import EventTooltip from './EventTooltip';
 import styles from './CanvasPage.css';
 import AutoSizer from 'react-virtualized-auto-sizer';
-import {COLORS} from './canvas/constants';
+import {COLORS} from './content-views/constants';
 
 import {ContextMenu, ContextMenuItem, useContextMenu} from './context';
 
 const CONTEXT_MENU_ID = 'canvas';
 
 import type {ReactHoverContextInfo, ReactProfilerData} from './types';
-import {useCanvasInteraction} from './useCanvasInteraction';
 import {
   FlamechartView,
   ReactEventsView,
   ReactMeasuresView,
   TimeAxisMarkersView,
   UserTimingMarksView,
-} from './canvas/views';
+} from './content-views';
 
 type ContextMenuContextData = {|
   data: ReactProfilerData,

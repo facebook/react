@@ -1,10 +1,10 @@
 // @flow
 
-import type {Point} from './layout';
-import type {NormalizedWheelDelta} from './util/normalizeWheel';
+import type {NormalizedWheelDelta} from './utils/normalizeWheel';
+import type {Point} from './geometry';
 
 import {useEffect} from 'react';
-import {normalizeWheel} from './util/normalizeWheel';
+import {normalizeWheel} from './utils/normalizeWheel';
 
 export type MouseDownInteraction = {|
   type: 'mousedown',

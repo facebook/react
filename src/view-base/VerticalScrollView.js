@@ -6,13 +6,13 @@ import type {
   MouseMoveInteraction,
   MouseUpInteraction,
   WheelPlainInteraction,
-} from '../useCanvasInteraction';
+} from './useCanvasInteraction';
 import type {Rect} from './geometry';
 
 import {Surface} from './Surface';
 import {View} from './View';
 import {rectContainsPoint} from './geometry';
-import {MOVE_WHEEL_DELTA_THRESHOLD} from '../canvas/constants'; // TODO: Remove external dependency
+import {MOVE_WHEEL_DELTA_THRESHOLD} from './constants';
 
 type VerticalScrollState = $ReadOnly<{|
   offsetY: number,

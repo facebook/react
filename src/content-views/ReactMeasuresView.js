@@ -1,30 +1,26 @@
 // @flow
 
-import type {
-  Interaction,
-  MouseMoveInteraction,
-} from '../../useCanvasInteraction';
-import type {ReactLane, ReactMeasure, ReactProfilerData} from '../../types';
-import type {Rect, Size} from '../../layout';
+import type {ReactLane, ReactMeasure, ReactProfilerData} from '../types';
+import type {Interaction, MouseMoveInteraction, Rect, Size} from '../view-base';
 
 import {
   durationToWidth,
   positioningScaleFactor,
   positionToTimestamp,
   timestampToPosition,
-} from '../canvasUtils';
+} from './utils/positioning';
 import {
   View,
   Surface,
   rectContainsPoint,
   rectIntersectsRect,
   rectIntersectionWithRect,
-} from '../../layout';
+} from '../view-base';
 
-import {COLORS, REACT_WORK_BORDER_SIZE, REACT_WORK_SIZE} from '../constants';
-import {REACT_TOTAL_NUM_LANES} from '../../constants';
+import {COLORS, BORDER_SIZE, REACT_MEASURE_HEIGHT} from './constants';
+import {REACT_TOTAL_NUM_LANES} from '../constants';
 
-const REACT_LANE_HEIGHT = REACT_WORK_SIZE + REACT_WORK_BORDER_SIZE;
+const REACT_LANE_HEIGHT = REACT_MEASURE_HEIGHT + BORDER_SIZE;
 
 export class ReactMeasuresView extends View {
   _profilerData: ReactProfilerData;
@@ -105,7 +101,7 @@ export class ReactMeasuresView extends View {
     const x = timestampToPosition(timestamp, scaleFactor, frame);
     const measureRect: Rect = {
       origin: {x, y: baseY},
-      size: {width, height: REACT_WORK_SIZE},
+      size: {width, height: REACT_MEASURE_HEIGHT},
     };
     if (!rectIntersectsRect(measureRect, rect)) {
       return; // Not in view
@@ -213,14 +209,11 @@ export class ReactMeasuresView extends View {
       const borderFrame: Rect = {
         origin: {
           x: frame.origin.x,
-          y:
-            frame.origin.y +
-            (i + 1) * REACT_LANE_HEIGHT -
-            REACT_WORK_BORDER_SIZE,
+          y: frame.origin.y + (i + 1) * REACT_LANE_HEIGHT - BORDER_SIZE,
         },
         size: {
           width: frame.size.width,
-          height: REACT_WORK_BORDER_SIZE,
+          height: BORDER_SIZE,
         },
       };
       if (rectIntersectsRect(borderFrame, visibleArea)) {

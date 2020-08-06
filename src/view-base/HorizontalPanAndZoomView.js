@@ -9,7 +9,7 @@ import type {
   WheelWithShiftInteraction,
   WheelWithControlInteraction,
   WheelWithMetaInteraction,
-} from '../useCanvasInteraction';
+} from './useCanvasInteraction';
 import type {Rect} from './geometry';
 
 import {Surface} from './Surface';
@@ -19,7 +19,7 @@ import {
   MIN_ZOOM_LEVEL,
   MAX_ZOOM_LEVEL,
   MOVE_WHEEL_DELTA_THRESHOLD,
-} from '../canvas/constants'; // TODO: Remove external dependency
+} from './constants';
 
 type HorizontalPanAndZoomState = $ReadOnly<{|
   /** Horizontal offset; positive in the left direction */

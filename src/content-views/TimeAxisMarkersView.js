@@ -1,31 +1,33 @@
 // @flow
 
-import type {Rect, Size} from '../../layout';
+import type {Rect, Size} from '../view-base';
 
 import {
   durationToWidth,
   positioningScaleFactor,
   positionToTimestamp,
   timestampToPosition,
-} from '../canvasUtils';
+} from './utils/positioning';
 import {
   View,
   Surface,
   rectIntersectsRect,
   rectIntersectionWithRect,
-} from '../../layout';
+} from '../view-base';
 import {
   COLORS,
-  HEADER_HEIGHT_FIXED,
   INTERVAL_TIMES,
-  LABEL_FIXED_WIDTH,
+  LABEL_SIZE,
   MARKER_FONT_SIZE,
   MARKER_HEIGHT,
   MARKER_TEXT_PADDING,
   MARKER_TICK_HEIGHT,
   MIN_INTERVAL_SIZE_PX,
-  REACT_WORK_BORDER_SIZE,
-} from '../constants';
+  BORDER_SIZE,
+} from './constants';
+
+const HEADER_HEIGHT_FIXED = MARKER_HEIGHT + BORDER_SIZE;
+const LABEL_FIXED_WIDTH = LABEL_SIZE + BORDER_SIZE;
 
 export class TimeAxisMarkersView extends View {
   _totalDuration: number;
@@ -113,7 +115,7 @@ export class TimeAxisMarkersView extends View {
       context.fillRect(
         x,
         drawableRect.origin.y + MARKER_HEIGHT - MARKER_TICK_HEIGHT,
-        REACT_WORK_BORDER_SIZE,
+        BORDER_SIZE,
         MARKER_TICK_HEIGHT,
       );
 
@@ -133,14 +135,11 @@ export class TimeAxisMarkersView extends View {
     const borderFrame: Rect = {
       origin: {
         x: clippedFrame.origin.x,
-        y:
-          clippedFrame.origin.y +
-          clippedFrame.size.height -
-          REACT_WORK_BORDER_SIZE,
+        y: clippedFrame.origin.y + clippedFrame.size.height - BORDER_SIZE,
       },
       size: {
         width: clippedFrame.size.width,
-        height: REACT_WORK_BORDER_SIZE,
+        height: BORDER_SIZE,
       },
     };
     if (rectIntersectsRect(borderFrame, visibleArea)) {

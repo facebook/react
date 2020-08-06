@@ -1,32 +1,30 @@
 // @flow
 
-import type {
-  Interaction,
-  MouseMoveInteraction,
-} from '../../useCanvasInteraction';
-import type {ReactEvent, ReactProfilerData} from '../../types';
-import type {Rect, Size} from '../../layout';
+import type {ReactEvent, ReactProfilerData} from '../types';
+import type {Interaction, MouseMoveInteraction, Rect, Size} from '../view-base';
 
 import {
   positioningScaleFactor,
   timestampToPosition,
   positionToTimestamp,
   widthToDuration,
-} from '../canvasUtils';
+} from './utils/positioning';
 import {
   View,
   Surface,
   rectContainsPoint,
   rectIntersectsRect,
   rectIntersectionWithRect,
-} from '../../layout';
+} from '../view-base';
 import {
   COLORS,
-  EVENT_ROW_HEIGHT_FIXED,
-  REACT_EVENT_ROW_PADDING,
-  REACT_EVENT_SIZE,
-  REACT_WORK_BORDER_SIZE,
-} from '../constants';
+  EVENT_ROW_PADDING,
+  EVENT_DIAMETER,
+  BORDER_SIZE,
+} from './constants';
+
+const EVENT_ROW_HEIGHT_FIXED =
+  EVENT_ROW_PADDING + EVENT_DIAMETER + EVENT_ROW_PADDING;
 
 function isSuspenseEvent(event: ReactEvent): boolean %checks {
   return (
@@ -80,13 +78,13 @@ export class ReactEventsView extends View {
     const {timestamp, type} = event;
 
     const x = timestampToPosition(timestamp, scaleFactor, frame);
-    const radius = REACT_EVENT_SIZE / 2;
+    const radius = EVENT_DIAMETER / 2;
     const eventRect: Rect = {
       origin: {
         x: x - radius,
         y: baseY,
       },
-      size: {width: REACT_EVENT_SIZE, height: REACT_EVENT_SIZE},
+      size: {width: EVENT_DIAMETER, height: EVENT_DIAMETER},
     };
     if (!rectIntersectsRect(eventRect, rect)) {
       return; // Not in view
@@ -147,7 +145,7 @@ export class ReactEventsView extends View {
     );
 
     // Draw events
-    const baseY = frame.origin.y + REACT_EVENT_ROW_PADDING;
+    const baseY = frame.origin.y + EVENT_ROW_PADDING;
     const scaleFactor = positioningScaleFactor(
       this._intrinsicSize.width,
       frame,
@@ -194,11 +192,11 @@ export class ReactEventsView extends View {
     const borderFrame: Rect = {
       origin: {
         x: frame.origin.x,
-        y: frame.origin.y + EVENT_ROW_HEIGHT_FIXED - REACT_WORK_BORDER_SIZE,
+        y: frame.origin.y + EVENT_ROW_HEIGHT_FIXED - BORDER_SIZE,
       },
       size: {
         width: frame.size.width,
-        height: REACT_WORK_BORDER_SIZE,
+        height: BORDER_SIZE,
       },
     };
     if (rectIntersectsRect(borderFrame, visibleArea)) {
@@ -240,7 +238,7 @@ export class ReactEventsView extends View {
     );
     const hoverTimestamp = positionToTimestamp(location.x, scaleFactor, frame);
     const eventTimestampAllowance = widthToDuration(
-      REACT_EVENT_SIZE / 2,
+      EVENT_DIAMETER / 2,
       scaleFactor,
     );
 

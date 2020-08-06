@@ -1,6 +1,6 @@
 // @flow
 
-import type {Interaction} from '../useCanvasInteraction';
+import type {Interaction} from './useCanvasInteraction';
 import type {Rect, Size} from './geometry';
 import type {Layouter} from './layouter';
 

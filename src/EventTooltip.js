@@ -1,6 +1,6 @@
 // @flow
 
-import type {Point} from './layout';
+import type {Point} from './view-base';
 import type {
   FlamechartStackFrame,
   ReactEvent,
@@ -13,9 +13,9 @@ import type {
 
 import prettyMilliseconds from 'pretty-ms';
 import React, {Fragment, useRef} from 'react';
-import {COLORS} from './canvas/constants';
-import {getBatchRange} from './util/getBatchRange';
-import useSmartTooltip from './util/useSmartTooltip';
+import {COLORS} from './content-views/constants';
+import {getBatchRange} from './utils/getBatchRange';
+import useSmartTooltip from './utils/useSmartTooltip';
 import styles from './EventTooltip.css';
 
 type Props = {|

@@ -5,7 +5,7 @@ import type {
   MouseDownInteraction,
   MouseMoveInteraction,
   MouseUpInteraction,
-} from '../useCanvasInteraction';
+} from './useCanvasInteraction';
 import type {Rect, Size} from './geometry';
 
 import nullthrows from 'nullthrows';

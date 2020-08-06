@@ -1,34 +1,29 @@
 // @flow
 
-import type {
-  Interaction,
-  MouseMoveInteraction,
-} from '../../useCanvasInteraction';
-import type {UserTimingMark} from '../../types';
-import type {Rect, Size} from '../../layout';
+import type {UserTimingMark} from '../types';
+import type {Interaction, MouseMoveInteraction, Rect, Size} from '../view-base';
 
 import {
   positioningScaleFactor,
   timestampToPosition,
   positionToTimestamp,
   widthToDuration,
-} from '../canvasUtils';
+} from './utils/positioning';
 import {
   View,
   Surface,
   rectContainsPoint,
   rectIntersectsRect,
   rectIntersectionWithRect,
-} from '../../layout';
+} from '../view-base';
 import {
   COLORS,
-  EVENT_ROW_HEIGHT_FIXED,
-  REACT_EVENT_ROW_PADDING,
-  REACT_EVENT_SIZE,
-  REACT_WORK_BORDER_SIZE,
-} from '../constants';
+  EVENT_ROW_PADDING,
+  EVENT_DIAMETER,
+  BORDER_SIZE,
+} from './constants';
 
-// COMBAK: use this viewA
+const ROW_HEIGHT_FIXED = EVENT_ROW_PADDING + EVENT_DIAMETER + EVENT_ROW_PADDING;
 
 export class UserTimingMarksView extends View {
   _marks: UserTimingMark[];
@@ -48,7 +43,7 @@ export class UserTimingMarksView extends View {
 
     this._intrinsicSize = {
       width: duration,
-      height: EVENT_ROW_HEIGHT_FIXED,
+      height: ROW_HEIGHT_FIXED,
     };
   }
 
@@ -79,13 +74,13 @@ export class UserTimingMarksView extends View {
     const {timestamp} = mark;
 
     const x = timestampToPosition(timestamp, scaleFactor, frame);
-    const radius = REACT_EVENT_SIZE / 2;
+    const radius = EVENT_DIAMETER / 2;
     const markRect: Rect = {
       origin: {
         x: x - radius,
         y: baseY,
       },
-      size: {width: REACT_EVENT_SIZE, height: REACT_EVENT_SIZE},
+      size: {width: EVENT_DIAMETER, height: EVENT_DIAMETER},
     };
     if (!rectIntersectsRect(markRect, rect)) {
       return; // Not in view
@@ -118,7 +113,7 @@ export class UserTimingMarksView extends View {
     );
 
     // Draw marks
-    const baseY = frame.origin.y + REACT_EVENT_ROW_PADDING;
+    const baseY = frame.origin.y + EVENT_ROW_PADDING;
     const scaleFactor = positioningScaleFactor(
       this._intrinsicSize.width,
       frame,
@@ -156,11 +151,11 @@ export class UserTimingMarksView extends View {
     const borderFrame: Rect = {
       origin: {
         x: frame.origin.x,
-        y: frame.origin.y + EVENT_ROW_HEIGHT_FIXED - REACT_WORK_BORDER_SIZE,
+        y: frame.origin.y + ROW_HEIGHT_FIXED - BORDER_SIZE,
       },
       size: {
         width: frame.size.width,
-        height: REACT_WORK_BORDER_SIZE,
+        height: BORDER_SIZE,
       },
     };
     if (rectIntersectsRect(borderFrame, visibleArea)) {
@@ -200,7 +195,7 @@ export class UserTimingMarksView extends View {
     );
     const hoverTimestamp = positionToTimestamp(location.x, scaleFactor, frame);
     const markTimestampAllowance = widthToDuration(
-      REACT_EVENT_SIZE / 2,
+      EVENT_DIAMETER / 2,
       scaleFactor,
     );
 

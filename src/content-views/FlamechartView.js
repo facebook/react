@@ -1,15 +1,11 @@
 // @flow
 
 import type {
-  Interaction,
-  MouseMoveInteraction,
-} from '../../useCanvasInteraction';
-import type {
   Flamechart,
   FlamechartStackFrame,
   FlamechartStackLayer,
-} from '../../types';
-import type {Rect, Size} from '../../layout';
+} from '../types';
+import type {Interaction, MouseMoveInteraction, Rect, Size} from '../view-base';
 
 import {
   ColorView,
@@ -21,22 +17,21 @@ import {
   rectIntersectionWithRect,
   rectIntersectsRect,
   verticallyStackedLayout,
-} from '../../layout';
+} from '../view-base';
 import {
   durationToWidth,
   positioningScaleFactor,
   timestampToPosition,
-  trimFlamechartText,
-} from '../canvasUtils';
+} from './utils/positioning';
 import {
   COLORS,
   FLAMECHART_FONT_SIZE,
   FLAMECHART_FRAME_HEIGHT,
   FLAMECHART_TEXT_PADDING,
   COLOR_HOVER_DIM_DELTA,
-  REACT_WORK_BORDER_SIZE,
-} from '../constants';
-import {ColorGenerator, dimmedColor, hslaColorToString} from '../colors';
+  BORDER_SIZE,
+} from './constants';
+import {ColorGenerator, dimmedColor, hslaColorToString} from './utils/colors';
 
 // Source: https://source.chromium.org/chromium/chromium/src/+/master:out/Debug/gen/devtools/timeline/TimelineUIUtils.js;l=2109;drc=fb32e928d79707a693351b806b8710b2f6b7d399
 const colorGenerator = new ColorGenerator(
@@ -62,6 +57,29 @@ function hoverColorForStackFrame(stackFrame: FlamechartStackFrame): string {
   );
   return hslaColorToString(color);
 }
+
+const cachedFlamechartTextWidths = new Map();
+const trimFlamechartText = (
+  context: CanvasRenderingContext2D,
+  text: string,
+  width: number,
+) => {
+  for (let i = text.length - 1; i >= 0; i--) {
+    const trimmedText = i === text.length - 1 ? text : text.substr(0, i) + '…';
+
+    let measuredWidth = cachedFlamechartTextWidths.get(trimmedText);
+    if (measuredWidth == null) {
+      measuredWidth = context.measureText(trimmedText).width;
+      cachedFlamechartTextWidths.set(trimmedText, measuredWidth);
+    }
+
+    if (measuredWidth <= width) {
+      return trimmedText;
+    }
+  }
+
+  return null;
+};
 
 class FlamechartStackLayerView extends View {
   /** Layer to display */
@@ -149,8 +167,8 @@ class FlamechartStackLayerView extends View {
       const nodeRect: Rect = {
         origin: {x, y: frame.origin.y},
         size: {
-          width: Math.floor(width - REACT_WORK_BORDER_SIZE),
-          height: Math.floor(FLAMECHART_FRAME_HEIGHT - REACT_WORK_BORDER_SIZE),
+          width: Math.floor(width - BORDER_SIZE),
+          height: Math.floor(FLAMECHART_FRAME_HEIGHT - BORDER_SIZE),
         },
       };
       if (!rectIntersectsRect(nodeRect, visibleArea)) {
