@@ -25,7 +25,7 @@ export default function lazyLegacyRoot(getLegacyComponent) {
     const containerRef = useRef(null);
     const [root, setRoot] = useState(null);
 
-    // Popluate every contexts we want the legacy subtree to see.
+    // Populate every contexts we want the legacy subtree to see.
     // Then in src/legacy/createLegacyRoot we will apply them.
     const theme = useContext(ThemeContext);
     const router = useContext(__RouterContext);
@@ -46,7 +46,7 @@ export default function lazyLegacyRoot(getLegacyComponent) {
       }
     }, [createLegacyRoot, root]);
 
-    // Mout/update.
+    // Mount/update.
     useLayoutEffect(() => {
       if (root) {
         root.render(Component, props, context);
