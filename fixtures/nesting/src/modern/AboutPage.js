@@ -1,6 +1,5 @@
 import React from 'react';
 import {useContext} from 'react';
-import {findDOMNode} from 'react-dom';
 
 import ThemeContext from './shared/ThemeContext';
 import lazyLegacyRoot from './lazyLegacyRoot';
@@ -9,7 +8,6 @@ import lazyLegacyRoot from './lazyLegacyRoot';
 const Greeting = lazyLegacyRoot(() => import('../legacy/Greeting'));
 
 export default function AboutPage() {
-  findDOMNode();
   const theme = useContext(ThemeContext);
   return (
     <>

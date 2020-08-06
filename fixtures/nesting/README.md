@@ -13,7 +13,7 @@ See https://github.com/facebook/react/pull/19531 for more information.
 ```shell
 # 1: Install fixture dependencies
 cd fixtures/nesting
-npm
+npm install
 
 # 2: Run the app
 npm start
