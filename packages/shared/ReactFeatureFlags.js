@@ -125,3 +125,5 @@ export const deferRenderPhaseUpdateToNextBatch = true;
 
 // Replacement for runWithPriority in React internals.
 export const decoupleUpdatePriorityFromScheduler = false;
+
+export const enableDiscreteEventFlushingChange = false;
