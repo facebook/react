@@ -29,7 +29,9 @@ import {
   ClassComponent,
   HostText,
   HostPortal,
+  ForwardRef,
   Fragment,
+  SimpleMemoComponent,
   Block,
 } from './ReactWorkTags';
 import invariant from 'shared/invariant';
@@ -1385,14 +1387,16 @@ function ChildReconciler(shouldTrackSideEffects) {
         // Intentionally fall through to the next case, which handles both
         // functions and classes
         // eslint-disable-next-lined no-fallthrough
-        case FunctionComponent: {
-          const Component = returnFiber.type;
+        case Block:
+        case FunctionComponent:
+        case ForwardRef:
+        case SimpleMemoComponent: {
           invariant(
             false,
             '%s(...): Nothing was returned from render. This usually means a ' +
               'return statement is missing. Or, to render nothing, ' +
               'return null.',
-            Component.displayName || Component.name || 'Component',
+            getComponentName(returnFiber.type) || 'Component',
           );
         }
       }
