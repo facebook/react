@@ -460,7 +460,7 @@ describe('ReactChildren', () => {
     });
 
     function assertCalls() {
-      expect(callback).toHaveBeenCalledTimes(2, 0);
+      expect(callback).toHaveBeenCalledTimes(2);
       expect(callback).toHaveBeenCalledWith('a', 0);
       expect(callback).toHaveBeenCalledWith(13, 1);
       callback.mockClear();
