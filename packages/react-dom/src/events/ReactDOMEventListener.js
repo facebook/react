@@ -38,7 +38,10 @@ import {
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
-import {enableLegacyFBSupport} from 'shared/ReactFeatureFlags';
+import {
+  enableLegacyFBSupport,
+  decoupleUpdatePriorityFromScheduler,
+} from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
   ContinuousEvent,
@@ -147,10 +150,25 @@ function dispatchUserBlockingUpdate(
   container,
   nativeEvent,
 ) {
-  // TODO: Double wrapping is necessary while we decouple Scheduler priority.
-  const previousPriority = getCurrentUpdateLanePriority();
-  try {
-    setCurrentUpdateLanePriority(InputContinuousLanePriority);
+  if (decoupleUpdatePriorityFromScheduler) {
+    const previousPriority = getCurrentUpdateLanePriority();
+    try {
+      // TODO: Double wrapping is necessary while we decouple Scheduler priority.
+      setCurrentUpdateLanePriority(InputContinuousLanePriority);
+      runWithPriority(
+        UserBlockingPriority,
+        dispatchEvent.bind(
+          null,
+          domEventName,
+          eventSystemFlags,
+          container,
+          nativeEvent,
+        ),
+      );
+    } finally {
+      setCurrentUpdateLanePriority(previousPriority);
+    }
+  } else {
     runWithPriority(
       UserBlockingPriority,
       dispatchEvent.bind(
@@ -161,8 +179,6 @@ function dispatchUserBlockingUpdate(
         nativeEvent,
       ),
     );
-  } finally {
-    setCurrentUpdateLanePriority(previousPriority);
   }
 }
 
