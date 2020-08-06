@@ -17,18 +17,16 @@ let runtime;
 let performance;
 let cancelCallback;
 let scheduleCallback;
+let ImmediatePriority;
 let NormalPriority;
+let UserBlockingPriority;
+let LowPriority;
+let IdlePriority;
 
 // The Scheduler postTask implementation uses a new postTask browser API to
-// schedule work on the main thread. Most of our tests treat this as an
-// implementation detail; however, the sequence and timing of browser
-// APIs are not precisely specified, and can vary across browsers.
-//
-// To prevent regressions, we need the ability to simulate specific edge cases
-// that we may encounter in various browsers.
-//
-// This test suite mocks all browser methods used in our implementation. It
-// assumes as little as possible about the order and timing of events.s
+// schedule work on the main thread. This test suite mocks all browser methods
+// used in our implementation. It assumes as little as possible about the order
+// and timing of events.
 describe('SchedulerPostTask', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -37,18 +35,17 @@ describe('SchedulerPostTask', () => {
     jest.mock('scheduler', () =>
       require.requireActual('scheduler/unstable_post_task'),
     );
-    jest.mock('scheduler/src/SchedulerHostConfig', () =>
-      require.requireActual(
-        'scheduler/src/forks/SchedulerHostConfig.post-task.js',
-      ),
-    );
 
     runtime = installMockBrowserRuntime();
     performance = window.performance;
     Scheduler = require('scheduler');
     cancelCallback = Scheduler.unstable_cancelCallback;
     scheduleCallback = Scheduler.unstable_scheduleCallback;
+    ImmediatePriority = Scheduler.unstable_ImmediatePriority;
+    UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
     NormalPriority = Scheduler.unstable_NormalPriority;
+    LowPriority = Scheduler.unstable_LowPriority;
+    IdlePriority = Scheduler.unstable_IdlePriority;
   });
 
   afterEach(() => {
@@ -58,14 +55,14 @@ describe('SchedulerPostTask', () => {
   });
 
   function installMockBrowserRuntime() {
-    let hasPendingTask = false;
-    let timerIDCounter = 0;
+    let taskQueue = new Map();
     let eventLog = [];
 
     // Mock window functions
     const window = {};
     global.window = window;
 
+    let idCounter = 0;
     let currentTime = 0;
     window.performance = {
       now() {
@@ -73,28 +70,33 @@ describe('SchedulerPostTask', () => {
       },
     };
 
-    window.setTimeout = (cb, delay) => {
-      const id = timerIDCounter++;
-      log(`Set Timer`);
-      // TODO
-      return id;
-    };
-    window.clearTimeout = id => {
-      // TODO
-    };
-
     // Mock browser scheduler.
     const scheduler = {};
     global.scheduler = scheduler;
 
-    let nextTask;
-    scheduler.postTask = function(callback) {
-      if (hasPendingTask) {
-        throw Error('Task already scheduled');
+    scheduler.postTask = function(callback, {priority, signal}) {
+      const id = idCounter++;
+      log(
+        `Post Task ${id} [${priority === undefined ? '<default>' : priority}]`,
+      );
+      const controller = signal._controller;
+      return new Promise((resolve, reject) => {
+        taskQueue.set(controller, {id, callback, resolve, reject});
+      });
+    };
+
+    global.TaskController = class TaskController {
+      constructor() {
+        this.signal = {_controller: this};
       }
-      log('Post Task');
-      hasPendingTask = true;
-      nextTask = callback;
+      abort() {
+        const task = taskQueue.get(this);
+        if (task !== undefined) {
+          taskQueue.delete(this);
+          const reject = task.reject;
+          reject(new Error('Aborted'));
+        }
+      }
     };
 
     function ensureLogIsEmpty() {
@@ -105,22 +107,26 @@ describe('SchedulerPostTask', () => {
     function advanceTime(ms) {
       currentTime += ms;
     }
-    function fireNextTask() {
+    function flushTasks() {
       ensureLogIsEmpty();
-      if (!hasPendingTask) {
-        throw Error('No task was scheduled');
-      }
-      hasPendingTask = false;
-
-      log('Task Event');
 
       // If there's a continuation, it will call postTask again
       // which will set nextTask. That means we need to clear
       // nextTask before the invocation, otherwise we would
       // delete the continuation task.
-      const task = nextTask;
-      nextTask = null;
-      task();
+      const prevTaskQueue = taskQueue;
+      taskQueue = new Map();
+      for (const [, {id, callback, resolve, reject}] of prevTaskQueue) {
+        try {
+          log(`Task ${id} Fired`);
+          callback(false);
+          resolve();
+        } catch (error) {
+          log(`Task ${id} errored [${error.message}]`);
+          reject(error);
+          continue;
+        }
+      }
     }
     function log(val) {
       eventLog.push(val);
@@ -135,7 +141,7 @@ describe('SchedulerPostTask', () => {
     }
     return {
       advanceTime,
-      fireNextTask,
+      flushTasks,
       log,
       isLogEmpty,
       assertLog,
@@ -144,16 +150,16 @@ describe('SchedulerPostTask', () => {
 
   it('task that finishes before deadline', () => {
     scheduleCallback(NormalPriority, () => {
-      runtime.log('Task');
+      runtime.log('A');
     });
-    runtime.assertLog(['Post Task']);
-    runtime.fireNextTask();
-    runtime.assertLog(['Task Event', 'Task']);
+    runtime.assertLog(['Post Task 0 [user-visible]']);
+    runtime.flushTasks();
+    runtime.assertLog(['Task 0 Fired', 'A']);
   });
 
   it('task with continuation', () => {
     scheduleCallback(NormalPriority, () => {
-      runtime.log('Task');
+      runtime.log('A');
       while (!Scheduler.unstable_shouldYield()) {
         runtime.advanceTime(1);
       }
@@ -162,13 +168,18 @@ describe('SchedulerPostTask', () => {
         runtime.log('Continuation');
       };
     });
-    runtime.assertLog(['Post Task']);
+    runtime.assertLog(['Post Task 0 [user-visible]']);
 
-    runtime.fireNextTask();
-    runtime.assertLog(['Task Event', 'Task', 'Yield at 5ms', 'Post Task']);
+    runtime.flushTasks();
+    runtime.assertLog([
+      'Task 0 Fired',
+      'A',
+      'Yield at 5ms',
+      'Post Task 1 [user-visible]',
+    ]);
 
-    runtime.fireNextTask();
-    runtime.assertLog(['Task Event', 'Continuation']);
+    runtime.flushTasks();
+    runtime.assertLog(['Task 1 Fired', 'Continuation']);
   });
 
   it('multiple tasks', () => {
@@ -178,55 +189,42 @@ describe('SchedulerPostTask', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('B');
     });
-    runtime.assertLog(['Post Task']);
-    runtime.fireNextTask();
-    runtime.assertLog(['Task Event', 'A', 'B']);
-  });
-
-  it('multiple tasks with a yield in between', () => {
-    scheduleCallback(NormalPriority, () => {
-      runtime.log('A');
-      runtime.advanceTime(4999);
-    });
-    scheduleCallback(NormalPriority, () => {
-      runtime.log('B');
-    });
-    runtime.assertLog(['Post Task']);
-    runtime.fireNextTask();
     runtime.assertLog([
-      'Task Event',
-      'A',
-      // Ran out of time. Post a continuation event.
-      'Post Task',
+      'Post Task 0 [user-visible]',
+      'Post Task 1 [user-visible]',
     ]);
-    runtime.fireNextTask();
-    runtime.assertLog(['Task Event', 'B']);
+    runtime.flushTasks();
+    runtime.assertLog(['Task 0 Fired', 'A', 'Task 1 Fired', 'B']);
   });
 
   it('cancels tasks', () => {
     const task = scheduleCallback(NormalPriority, () => {
-      runtime.log('Task');
+      runtime.log('A');
     });
-    runtime.assertLog(['Post Task']);
+    runtime.assertLog(['Post Task 0 [user-visible]']);
     cancelCallback(task);
+    runtime.flushTasks();
     runtime.assertLog([]);
   });
 
-  it('throws when a task errors then continues in a new event', () => {
+  it('an error in one task does not affect execution of other tasks', () => {
     scheduleCallback(NormalPriority, () => {
-      runtime.log('Oops!');
       throw Error('Oops!');
     });
     scheduleCallback(NormalPriority, () => {
       runtime.log('Yay');
     });
-    runtime.assertLog(['Post Task']);
-
-    expect(() => runtime.fireNextTask()).toThrow('Oops!');
-    runtime.assertLog(['Task Event', 'Oops!', 'Post Task']);
-
-    runtime.fireNextTask();
-    runtime.assertLog(['Task Event', 'Yay']);
+    runtime.assertLog([
+      'Post Task 0 [user-visible]',
+      'Post Task 1 [user-visible]',
+    ]);
+    runtime.flushTasks();
+    runtime.assertLog([
+      'Task 0 Fired',
+      'Task 0 errored [Oops!]',
+      'Task 1 Fired',
+      'Yay',
+    ]);
   });
 
   it('schedule new task after queue has emptied', () => {
@@ -234,16 +232,16 @@ describe('SchedulerPostTask', () => {
       runtime.log('A');
     });
 
-    runtime.assertLog(['Post Task']);
-    runtime.fireNextTask();
-    runtime.assertLog(['Task Event', 'A']);
+    runtime.assertLog(['Post Task 0 [user-visible]']);
+    runtime.flushTasks();
+    runtime.assertLog(['Task 0 Fired', 'A']);
 
     scheduleCallback(NormalPriority, () => {
       runtime.log('B');
     });
-    runtime.assertLog(['Post Task']);
-    runtime.fireNextTask();
-    runtime.assertLog(['Task Event', 'B']);
+    runtime.assertLog(['Post Task 1 [user-visible]']);
+    runtime.flushTasks();
+    runtime.assertLog(['Task 1 Fired', 'B']);
   });
 
   it('schedule new task after a cancellation', () => {
@@ -251,17 +249,55 @@ describe('SchedulerPostTask', () => {
       runtime.log('A');
     });
 
-    runtime.assertLog(['Post Task']);
+    runtime.assertLog(['Post Task 0 [user-visible]']);
     cancelCallback(handle);
 
-    runtime.fireNextTask();
-    runtime.assertLog(['Task Event']);
+    runtime.flushTasks();
+    runtime.assertLog([]);
 
     scheduleCallback(NormalPriority, () => {
       runtime.log('B');
     });
-    runtime.assertLog(['Post Task']);
-    runtime.fireNextTask();
-    runtime.assertLog(['Task Event', 'B']);
+    runtime.assertLog(['Post Task 1 [user-visible]']);
+    runtime.flushTasks();
+    runtime.assertLog(['Task 1 Fired', 'B']);
+  });
+
+  it('schedules tasks at different priorities', () => {
+    scheduleCallback(ImmediatePriority, () => {
+      runtime.log('A');
+    });
+    scheduleCallback(UserBlockingPriority, () => {
+      runtime.log('B');
+    });
+    scheduleCallback(NormalPriority, () => {
+      runtime.log('C');
+    });
+    scheduleCallback(LowPriority, () => {
+      runtime.log('D');
+    });
+    scheduleCallback(IdlePriority, () => {
+      runtime.log('E');
+    });
+    runtime.assertLog([
+      'Post Task 0 [user-blocking]',
+      'Post Task 1 [user-blocking]',
+      'Post Task 2 [user-visible]',
+      'Post Task 3 [user-visible]',
+      'Post Task 4 [background]',
+    ]);
+    runtime.flushTasks();
+    runtime.assertLog([
+      'Task 0 Fired',
+      'A',
+      'Task 1 Fired',
+      'B',
+      'Task 2 Fired',
+      'C',
+      'Task 3 Fired',
+      'D',
+      'Task 4 Fired',
+      'E',
+    ]);
   });
 });

@@ -29,6 +29,8 @@ module.exports = {
     SharedArrayBuffer: true,
     Int32Array: true,
     ArrayBuffer: true,
+
+    TaskController: true,
   },
   parserOptions: {
     ecmaVersion: 5,
