@@ -77,8 +77,6 @@ export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const warnUnstableRenderSubtreeIntoContainer = false;
 
-export const enableSetUpdateLanePriority = true;
-
 // Enable forked reconciler. Piggy-backing on the "variant" global so that we
 // don't have to add another test dimension. The build system will compile this
 // to the correct value.

@@ -15,7 +15,7 @@ import * as Scheduler from 'scheduler';
 import {__interactionsRef} from 'scheduler/tracing';
 import {
   enableSchedulerTracing,
-  enableSetUpdateLanePriority,
+  decoupleUpdatePriorityFromScheduler,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import {
@@ -183,7 +183,7 @@ function flushSyncCallbackQueueImpl() {
     try {
       const isSync = true;
       const queue = syncQueue;
-      if (enableSetUpdateLanePriority) {
+      if (decoupleUpdatePriorityFromScheduler) {
         previousLanePriority = getCurrentUpdateLanePriority();
         setCurrentUpdateLanePriority(SyncLanePriority);
       }
@@ -208,7 +208,7 @@ function flushSyncCallbackQueueImpl() {
       );
       throw error;
     } finally {
-      if (enableSetUpdateLanePriority && previousLanePriority != null) {
+      if (decoupleUpdatePriorityFromScheduler && previousLanePriority != null) {
         setCurrentUpdateLanePriority(previousLanePriority);
       }
       isFlushingSyncQueue = false;

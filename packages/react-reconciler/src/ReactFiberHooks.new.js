@@ -28,7 +28,7 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   enableNewReconciler,
-  enableSetUpdateLanePriority,
+  decoupleUpdatePriorityFromScheduler,
 } from 'shared/ReactFeatureFlags';
 
 import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
@@ -1511,7 +1511,7 @@ function rerenderDeferredValue<T>(
 function startTransition(setPending, config, callback) {
   const priorityLevel = getCurrentPriorityLevel();
   let previousLanePriority;
-  if (enableSetUpdateLanePriority) {
+  if (decoupleUpdatePriorityFromScheduler) {
     previousLanePriority = getCurrentUpdateLanePriority();
     setCurrentUpdateLanePriority(
       higherLanePriority(previousLanePriority, InputContinuousLanePriority),
@@ -1524,7 +1524,7 @@ function startTransition(setPending, config, callback) {
     },
   );
 
-  if (enableSetUpdateLanePriority) {
+  if (decoupleUpdatePriorityFromScheduler) {
     // If there's no SuspenseConfig set, we'll use the DefaultLanePriority for this transition.
     setCurrentUpdateLanePriority(DefaultLanePriority);
   }
@@ -1538,7 +1538,7 @@ function startTransition(setPending, config, callback) {
         setPending(false);
         callback();
       } finally {
-        if (enableSetUpdateLanePriority && previousLanePriority != null) {
+        if (decoupleUpdatePriorityFromScheduler && previousLanePriority != null) {
           setCurrentUpdateLanePriority(previousLanePriority);
         }
         ReactCurrentBatchConfig.suspense = previousConfig;

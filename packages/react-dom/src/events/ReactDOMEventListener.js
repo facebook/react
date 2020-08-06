@@ -44,7 +44,7 @@ import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import {
   enableDeprecatedFlareAPI,
   enableLegacyFBSupport,
-  enableSetUpdateLanePriority,
+  decoupleUpdatePriorityFromScheduler,
 } from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
@@ -154,7 +154,7 @@ function dispatchUserBlockingUpdate(
   container,
   nativeEvent,
 ) {
-  if (enableSetUpdateLanePriority) {
+  if (decoupleUpdatePriorityFromScheduler) {
     const previousPriority = getCurrentUpdateLanePriority();
     try {
       // TODO: Double wrapping is necessary while we decouple Scheduler priority.

@@ -35,7 +35,7 @@ import {
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import {
   enableDeprecatedFlareAPI,
-  enableSetUpdateLanePriority,
+  decoupleUpdatePriorityFromScheduler,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 
@@ -111,7 +111,7 @@ const eventResponderContext: ReactDOMResponderContext = {
         break;
       }
       case UserBlockingEvent: {
-        if (enableSetUpdateLanePriority) {
+        if (decoupleUpdatePriorityFromScheduler) {
           // TODO: Double wrapping is necessary while we decouple Scheduler priority.
           const previousPriority = getCurrentUpdateLanePriority();
           try {
