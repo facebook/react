@@ -47,6 +47,7 @@ export const enableFilterEmptyStringAttributesDOM = false;
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
 export const decoupleUpdatePriorityFromScheduler = false;
+export const enableDiscreteEventFlushingChange = true;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

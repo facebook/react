@@ -1031,6 +1031,17 @@ describe('ReactDOMFiber', () => {
     const handlerA = () => ops.push('A');
     const handlerB = () => ops.push('B');
 
+    function click() {
+      const event = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      });
+      Object.defineProperty(event, 'timeStamp', {
+        value: 0,
+      });
+      node.dispatchEvent(event);
+    }
+
     class Example extends React.Component {
       state = {flip: false, count: 0};
       flip() {
@@ -1064,7 +1075,7 @@ describe('ReactDOMFiber', () => {
     const node = container.firstChild;
     expect(node.tagName).toEqual('DIV');
 
-    node.click();
+    click();
 
     expect(ops).toEqual(['A']);
     ops = [];
@@ -1072,7 +1083,7 @@ describe('ReactDOMFiber', () => {
     // Render with the other event handler.
     inst.flip();
 
-    node.click();
+    click();
 
     expect(ops).toEqual(['B']);
     ops = [];
@@ -1080,7 +1091,7 @@ describe('ReactDOMFiber', () => {
     // Rerender without changing any props.
     inst.tick();
 
-    node.click();
+    click();
 
     expect(ops).toEqual(['B']);
     ops = [];
@@ -1100,7 +1111,7 @@ describe('ReactDOMFiber', () => {
     ops = [];
 
     // Any click that happens after commit, should invoke A.
-    node.click();
+    click();
     expect(ops).toEqual(['A']);
   });
 
