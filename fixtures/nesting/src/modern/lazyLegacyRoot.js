@@ -19,10 +19,10 @@ export default function lazyLegacyRoot(getLegacyComponent) {
   };
 
   return function Wrapper(props) {
-    const createLegacyRoot = readRecord(rendererModule, () =>
+    const createLegacyRoot = readModule(rendererModule, () =>
       import('../legacy/createLegacyRoot')
     ).default;
-    const Component = readRecord(componentModule, getLegacyComponent).default;
+    const Component = readModule(componentModule, getLegacyComponent).default;
     const containerRef = useRef(null);
     const rootRef = useRef(null);
 
@@ -65,7 +65,7 @@ export default function lazyLegacyRoot(getLegacyComponent) {
 // This is similar to React.lazy, but implemented manually.
 // We use this to Suspend rendering of this component until
 // we fetch the component and the legacy React to render it.
-function readRecord(record, createPromise) {
+function readModule(record, createPromise) {
   if (record.status === 'fulfilled') {
     return record.result;
   }
