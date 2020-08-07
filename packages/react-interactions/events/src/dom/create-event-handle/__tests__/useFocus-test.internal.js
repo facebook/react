@@ -22,6 +22,7 @@ function initializeModules(hasPointerEvents) {
   jest.resetModules();
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
   ReactFeatureFlags.enableCreateEventHandleAPI = true;
+  ReactFeatureFlags.enableBeforeAfterFocusEvents = true;
   React = require('react');
   ReactDOM = require('react-dom');
   Scheduler = require('scheduler');

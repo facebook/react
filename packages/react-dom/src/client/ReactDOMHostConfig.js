@@ -65,7 +65,7 @@ import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 import {
   enableSuspenseServerRenderer,
   enableFundamentalAPI,
-  enableCreateEventHandleAPI,
+  enableBeforeAfterFocusEvents,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
@@ -222,7 +222,7 @@ export function prepareForCommit(containerInfo: Container): Object | null {
   eventsEnabled = ReactBrowserEventEmitterIsEnabled();
   selectionInformation = getSelectionInformation();
   let activeInstance = null;
-  if (enableCreateEventHandleAPI) {
+  if (enableBeforeAfterFocusEvents) {
     const focusedElem = selectionInformation.focusedElem;
     if (focusedElem !== null) {
       activeInstance = getClosestInstanceFromNode(focusedElem);
@@ -233,7 +233,7 @@ export function prepareForCommit(containerInfo: Container): Object | null {
 }
 
 export function beforeActiveInstanceBlur(): void {
-  if (enableCreateEventHandleAPI) {
+  if (enableBeforeAfterFocusEvents) {
     ReactBrowserEventEmitterSetEnabled(true);
     dispatchBeforeDetachedBlur((selectionInformation: any).focusedElem);
     ReactBrowserEventEmitterSetEnabled(false);
@@ -241,7 +241,7 @@ export function beforeActiveInstanceBlur(): void {
 }
 
 export function afterActiveInstanceBlur(): void {
-  if (enableCreateEventHandleAPI) {
+  if (enableBeforeAfterFocusEvents) {
     ReactBrowserEventEmitterSetEnabled(true);
     dispatchAfterDetachedBlur((selectionInformation: any).focusedElem);
     ReactBrowserEventEmitterSetEnabled(false);
@@ -500,7 +500,7 @@ function createEvent(type: DOMEventName, bubbles: boolean): Event {
 }
 
 function dispatchBeforeDetachedBlur(target: HTMLElement): void {
-  if (enableCreateEventHandleAPI) {
+  if (enableBeforeAfterFocusEvents) {
     const event = createEvent('beforeblur', true);
     // Dispatch "beforeblur" directly on the target,
     // so it gets picked up by the event system and
@@ -510,7 +510,7 @@ function dispatchBeforeDetachedBlur(target: HTMLElement): void {
 }
 
 function dispatchAfterDetachedBlur(target: HTMLElement): void {
-  if (enableCreateEventHandleAPI) {
+  if (enableBeforeAfterFocusEvents) {
     const event = createEvent('afterblur', false);
     // So we know what was detached, make the relatedTarget the
     // detached target on the "afterblur" event.

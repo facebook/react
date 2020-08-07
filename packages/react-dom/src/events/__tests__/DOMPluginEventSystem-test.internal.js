@@ -61,11 +61,13 @@ describe('DOMPluginEventSystem', () => {
           jest.resetModules();
           ReactFeatureFlags = require('shared/ReactFeatureFlags');
           ReactFeatureFlags.enableLegacyFBSupport = enableLegacyFBSupport;
+          ReactFeatureFlags.enableBeforeAfterFocusEvents = true;
 
           React = require('react');
           ReactDOM = require('react-dom');
           Scheduler = require('scheduler');
           ReactDOMServer = require('react-dom/server');
+          ReactTestUtils = require('react-dom/test-utils');
           container = document.createElement('div');
           document.body.appendChild(container);
           startNativeEventListenerClearDown();
@@ -1224,12 +1226,185 @@ describe('DOMPluginEventSystem', () => {
           }
         });
 
+        it('beforeblur is called after a focused element is unmounted', () => {
+          const log = [];
+          const onBeforeBlur = jest.fn(e => log.push(e.type));
+          const innerRef = React.createRef();
+          const innerRef2 = React.createRef();
+
+          const Component = ({show}) => {
+            return (
+              <div onBeforeBlur={onBeforeBlur}>
+                {show && <input ref={innerRef} />}
+                <div ref={innerRef2} />
+              </div>
+            );
+          };
+
+          ReactDOM.render(<Component show={true} />, container);
+          Scheduler.unstable_flushAll();
+
+          const inner = innerRef.current;
+          const target = createEventTarget(inner);
+          target.focus();
+          expect(onBeforeBlur).toHaveBeenCalledTimes(0);
+
+          ReactDOM.render(<Component show={false} />, container);
+          Scheduler.unstable_flushAll();
+
+          expect(onBeforeBlur).toHaveBeenCalledTimes(1);
+        });
+
+        it('beforeblur is called after a nested focused element is unmounted', () => {
+          const log = [];
+          const onBeforeBlur = jest.fn(e => log.push(e.type));
+          const innerRef = React.createRef();
+          const innerRef2 = React.createRef();
+          const Component = ({show}) => {
+            return (
+              <div onBeforeBlur={onBeforeBlur}>
+                {show && (
+                  <div>
+                    <input ref={innerRef} />
+                  </div>
+                )}
+                <div ref={innerRef2} />
+              </div>
+            );
+          };
+
+          ReactDOM.render(<Component show={true} />, container);
+          Scheduler.unstable_flushAll();
+
+          const inner = innerRef.current;
+          const target = createEventTarget(inner);
+          target.focus();
+          expect(onBeforeBlur).toHaveBeenCalledTimes(0);
+
+          ReactDOM.render(<Component show={false} />, container);
+          Scheduler.unstable_flushAll();
+
+          expect(onBeforeBlur).toHaveBeenCalledTimes(1);
+        });
+
+        // @gate experimental
+        it('beforeblur is called after a focused element is suspended', () => {
+          const log = [];
+          const onBeforeBlur = jest.fn(e => log.push(e.type));
+          const innerRef = React.createRef();
+          const Suspense = React.Suspense;
+          let suspend = false;
+          let resolve;
+          const promise = new Promise(
+            resolvePromise => (resolve = resolvePromise),
+          );
+
+          function Child() {
+            if (suspend) {
+              throw promise;
+            } else {
+              return <input ref={innerRef} />;
+            }
+          }
+
+          const Component = () => {
+            return (
+              <div onBeforeBlur={onBeforeBlur}>
+                <Suspense fallback="Loading...">
+                  <Child />
+                </Suspense>
+              </div>
+            );
+          };
+
+          const container2 = document.createElement('div');
+          document.body.appendChild(container2);
+
+          const root = ReactDOM.createRoot(container2);
+
+          ReactTestUtils.act(() => {
+            root.render(<Component />);
+          });
+          jest.runAllTimers();
+
+          const inner = innerRef.current;
+          const target = createEventTarget(inner);
+          target.focus();
+          expect(onBeforeBlur).toHaveBeenCalledTimes(0);
+
+          suspend = true;
+          ReactTestUtils.act(() => {
+            root.render(<Component />);
+          });
+          jest.runAllTimers();
+
+          expect(onBeforeBlur).toHaveBeenCalledTimes(1);
+          resolve();
+          document.body.removeChild(container2);
+        });
+
+        // @gate experimental
+        it('regression: does not fire beforeblur if target is already hidden', () => {
+          const Suspense = React.Suspense;
+          let suspend = false;
+          const promise = Promise.resolve();
+          const innerRef = React.createRef();
+
+          function Child() {
+            if (suspend) {
+              throw promise;
+            }
+            return <input ref={innerRef} />;
+          }
+
+          const Component = () => {
+            const [, setState] = React.useState(0);
+
+            return (
+              <div
+                onBeforeBlur={() => {
+                  // In the regression case, this would trigger an update, then
+                  // the resulting render would trigger another blur event,
+                  // which would trigger an update again, and on and on in an
+                  // infinite loop.
+                  setState(n => n + 1);
+                }}>
+                <Suspense fallback="Loading...">
+                  <Child />
+                </Suspense>
+              </div>
+            );
+          };
+
+          const container2 = document.createElement('div');
+          document.body.appendChild(container2);
+
+          const root = ReactDOM.createRoot(container2);
+          ReactTestUtils.act(() => {
+            root.render(<Component />);
+          });
+
+          // Focus the input node
+          const inner = innerRef.current;
+          const target = createEventTarget(inner);
+          target.focus();
+
+          // Suspend. This hides the input node, causing it to lose focus.
+          suspend = true;
+          ReactTestUtils.act(() => {
+            root.render(<Component />);
+          });
+
+          document.body.removeChild(container2);
+        });
+
         describe('ReactDOM.createEventHandle', () => {
           beforeEach(() => {
             jest.resetModules();
             ReactFeatureFlags = require('shared/ReactFeatureFlags');
             ReactFeatureFlags.enableLegacyFBSupport = enableLegacyFBSupport;
             ReactFeatureFlags.enableCreateEventHandleAPI = true;
+            ReactFeatureFlags.enableBeforeAfterFocusEvents = true;
 
             React = require('react');
             ReactDOM = require('react-dom');
@@ -2461,9 +2636,7 @@ describe('DOMPluginEventSystem', () => {
           // @gate experimental
           it('beforeblur and afterblur are called after a focused element is unmounted', () => {
             const log = [];
-            // We have to persist here because we want to read relatedTarget later.
             const onAfterBlur = jest.fn(e => {
-              e.persist();
               log.push(e.type);
             });
             const onBeforeBlur = jest.fn(e => log.push(e.type));
@@ -2520,9 +2693,7 @@ describe('DOMPluginEventSystem', () => {
           // @gate experimental
           it('beforeblur and afterblur are called after a nested focused element is unmounted', () => {
             const log = [];
-            // We have to persist here because we want to read relatedTarget later.
             const onAfterBlur = jest.fn(e => {
-              e.persist();
               log.push(e.type);
             });
             const onBeforeBlur = jest.fn(e => log.push(e.type));
@@ -2583,9 +2754,7 @@ describe('DOMPluginEventSystem', () => {
           // @gate experimental
           it('beforeblur and afterblur are called after a focused element is suspended', () => {
             const log = [];
-            // We have to persist here because we want to read relatedTarget later.
             const onAfterBlur = jest.fn(e => {
-              e.persist();
               log.push(e.type);
             });
             const onBeforeBlur = jest.fn(e => log.push(e.type));
@@ -2805,6 +2974,7 @@ describe('DOMPluginEventSystem', () => {
               ReactFeatureFlags = require('shared/ReactFeatureFlags');
               ReactFeatureFlags.enableCreateEventHandleAPI = true;
               ReactFeatureFlags.enableScopeAPI = true;
+              ReactFeatureFlags.enableBeforeAfterFocusEvents = true;
 
               React = require('react');
               ReactDOM = require('react-dom');

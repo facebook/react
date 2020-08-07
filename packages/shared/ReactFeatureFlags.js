@@ -63,6 +63,9 @@ export const enableScopeAPI = false;
 // Experimental Create Event Handle API.
 export const enableCreateEventHandleAPI = false;
 
+// Additional focus related events.
+export const enableBeforeAfterFocusEvents = false;
+
 // New API for JSX transforms to target - https://github.com/reactjs/rfcs/pull/107
 
 // We will enforce mocking scheduler with scheduler/unstable_mock at some point. (v18?)

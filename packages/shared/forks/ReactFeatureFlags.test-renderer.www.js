@@ -29,6 +29,7 @@ export const disableInputAttributeSyncing = false;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = true;
 export const enableCreateEventHandleAPI = false;
+export const enableBeforeAfterFocusEvents = false;
 export const warnAboutUnmockedScheduler = true;
 export const enableSuspenseCallback = true;
 export const warnAboutDefaultPropsOnFunctionComponents = false;

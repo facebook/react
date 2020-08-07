@@ -29,6 +29,7 @@ export const enableSchedulerDebugging = false;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = true;
 export const enableCreateEventHandleAPI = true;
+export const enableBeforeAfterFocusEvents = true;
 export const warnAboutUnmockedScheduler = true;
 export const enableSuspenseCallback = true;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
