@@ -845,4 +845,36 @@ describe('BeforeInputEventPlugin', () => {
   it('should extract onBeforeInput when simulating in env with only CompositionEvent on contenteditable', () => {
     testContentEditableComponent(environments[3], scenarios);
   });
+
+  describe('supporting the native beforeinput event', () => {
+    beforeEach(() => {
+      jest.resetModules();
+      InputEvent.prototype.getTargetRanges = function() {};
+      React = require('react');
+      ReactDOM = require('react-dom');
+    });
+
+    afterEach(() => {
+      delete InputEvent.prototype.getTargetRanges;
+    });
+
+    function dispatchBeforeInputEvent(target, data) {
+      const event = new InputEvent('beforeinput', {bubbles: true, data});
+      target.dispatchEvent(event);
+    }
+
+    it('should extract onBeforeInput on an input', () => {
+      const onBeforeInput = jest.fn();
+      const ref = React.createRef();
+
+      function Test() {
+        return <input onBeforeInput={onBeforeInput} ref={ref} />;
+      }
+      ReactDOM.render(<Test />, container);
+
+      const target = ref.current;
+      dispatchBeforeInputEvent(target, 'A');
+      expect(onBeforeInput).toHaveBeenCalledTimes(1);
+    });
+  });
 });

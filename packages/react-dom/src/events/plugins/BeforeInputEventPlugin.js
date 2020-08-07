@@ -44,6 +44,12 @@ if (canUseDOM && 'documentMode' in document) {
 const canUseTextInputEvent =
   canUseDOM && 'TextEvent' in window && !documentMode;
 
+let canUseBeforeInputEvent = false;
+
+if (canUseDOM && 'InputEvent' in window && !documentMode) {
+  canUseBeforeInputEvent = 'getTargetRanges' in new window.InputEvent('input');
+}
+
 // In IE9+, we have access to composition events, but the data supplied
 // by the native compositionend event may be incorrect. Japanese ideographic
 // spaces, for instance (\u3000) are not recorded correctly.
@@ -61,6 +67,7 @@ function registerEvents() {
     'keypress',
     'textInput',
     'paste',
+    'beforeinput',
   ]);
   registerTwoPhaseEvent('onCompositionEnd', [
     'compositionend',
@@ -253,6 +260,16 @@ function getNativeBeforeInputChars(
   domEventName: DOMEventName,
   nativeEvent: any,
 ): ?string {
+  if (domEventName === 'beforeinput') {
+    return nativeEvent.data;
+  }
+  return null;
+}
+
+function getFallbackBeforeInputChars(
+  domEventName: DOMEventName,
+  nativeEvent: any,
+): ?string {
   switch (domEventName) {
     case 'compositionend':
       return getDataFromCustomEvent(nativeEvent);
@@ -302,7 +319,7 @@ function getNativeBeforeInputChars(
  * For browsers that do not provide the `textInput` event, extract the
  * appropriate string to use for SyntheticInputEvent.
  */
-function getFallbackBeforeInputChars(
+function getLegacyFallbackBeforeInputChars(
   domEventName: DOMEventName,
   nativeEvent: any,
 ): ?string {
@@ -384,10 +401,12 @@ function extractBeforeInputEvent(
 ) {
   let chars;
 
-  if (canUseTextInputEvent) {
+  if (canUseBeforeInputEvent) {
     chars = getNativeBeforeInputChars(domEventName, nativeEvent);
-  } else {
+  } else if (canUseTextInputEvent) {
     chars = getFallbackBeforeInputChars(domEventName, nativeEvent);
+  } else {
+    chars = getLegacyFallbackBeforeInputChars(domEventName, nativeEvent);
   }
 
   // If no characters are being inserted, no BeforeInput event should
