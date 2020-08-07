@@ -8,21 +8,17 @@
  */
 
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
-import type {ThreadID} from './ReactThreadIDAllocator';
-import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 
 import type {
   MutableSource,
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
-  ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
-import type {ReactDOMListenerMap} from '../shared/ReactDOMTypes';
+import type PartialRenderer from './ReactPartialRenderer';
 
 import {validateContextBounds} from './ReactPartialRendererContext';
-import {makeServerId} from '../client/ReactDOMHostConfig';
 
 import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
@@ -49,6 +45,8 @@ type Hook = {|
 type TimeoutConfig = {|
   timeoutMs: number,
 |};
+
+type OpaqueIDType = string;
 
 let currentlyRenderingComponent: Object | null = null;
 let firstWorkInProgressHook: Hook | null = null;
@@ -203,31 +201,29 @@ export function finishHooks(
 
     children = Component(props, refOrContext);
   }
-  currentlyRenderingComponent = null;
-  firstWorkInProgressHook = null;
-  numberOfReRenders = 0;
-  renderPhaseUpdates = null;
-  workInProgressHook = null;
+  resetHooksState();
+  return children;
+}
+
+// Reset the internal hooks state if an error occurs while rendering a component
+export function resetHooksState(): void {
   if (__DEV__) {
     isInHookUserCodeInDev = false;
   }
 
-  // These were reset above
-  // currentlyRenderingComponent = null;
-  // didScheduleRenderPhaseUpdate = false;
-  // firstWorkInProgressHook = null;
-  // numberOfReRenders = 0;
-  // renderPhaseUpdates = null;
-  // workInProgressHook = null;
-
-  return children;
+  currentlyRenderingComponent = null;
+  didScheduleRenderPhaseUpdate = false;
+  firstWorkInProgressHook = null;
+  numberOfReRenders = 0;
+  renderPhaseUpdates = null;
+  workInProgressHook = null;
 }
 
 function readContext<T>(
   context: ReactContext<T>,
   observedBits: void | number | boolean,
 ): T {
-  const threadID = currentThreadID;
+  const threadID = currentPartialRenderer.threadID;
   validateContextBounds(context, threadID);
   if (__DEV__) {
     if (isInHookUserCodeInDev) {
@@ -250,7 +246,7 @@ function useContext<T>(
     currentHookNameInDev = 'useContext';
   }
   resolveCurrentlyRenderingComponent();
-  const threadID = currentThreadID;
+  const threadID = currentPartialRenderer.threadID;
   validateContextBounds(context, threadID);
   return context[threadID];
 }
@@ -457,15 +453,7 @@ export function useCallback<T>(
   callback: T,
   deps: Array<mixed> | void | null,
 ): T {
-  // Callbacks are passed as they are in the server environment.
-  return callback;
-}
-
-function useResponder(responder, props): ReactEventResponderListener<any, any> {
-  return {
-    props,
-    responder,
-  };
+  return useMemo(() => callback, deps);
 }
 
 // TODO Decide on how to implement this hook for server rendering.
@@ -496,22 +484,18 @@ function useTransition(
 }
 
 function useOpaqueIdentifier(): OpaqueIDType {
-  return makeServerId();
-}
-
-function useEvent(event: any): ReactDOMListenerMap {
-  return {
-    clear: noop,
-    setListener: noop,
-  };
+  return (
+    (currentPartialRenderer.identifierPrefix || '') +
+    'R:' +
+    (currentPartialRenderer.uniqueID++).toString(36)
+  );
 }
 
 function noop(): void {}
 
-export let currentThreadID: ThreadID = 0;
-
-export function setCurrentThreadID(threadID: ThreadID) {
-  currentThreadID = threadID;
+export let currentPartialRenderer: PartialRenderer = (null: any);
+export function setCurrentPartialRenderer(renderer: PartialRenderer) {
+  currentPartialRenderer = renderer;
 }
 
 export const Dispatcher: DispatcherType = {
@@ -529,10 +513,8 @@ export const Dispatcher: DispatcherType = {
   useEffect: noop,
   // Debugging effect
   useDebugValue: noop,
-  useResponder,
   useDeferredValue,
   useTransition,
-  useEvent,
   useOpaqueIdentifier,
   // Subscriptions are not setup in a server environment.
   useMutableSource,

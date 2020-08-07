@@ -1,81 +1,114 @@
 'use strict';
 
-const chalk = require('chalk');
 const path = require('path');
-const spawnSync = require('child_process').spawnSync;
-const glob = require('glob');
 
-const extension = process.platform === 'win32' ? '.cmd' : '';
+const {ESLint} = require('eslint');
+
+const {bundles, getFilename, bundleTypes} = require('../bundles');
+const Packaging = require('../packaging');
+
+const {
+  NODE_ES2015,
+  UMD_DEV,
+  UMD_PROD,
+  UMD_PROFILING,
+  NODE_DEV,
+  NODE_PROD,
+  NODE_PROFILING,
+  FB_WWW_DEV,
+  FB_WWW_PROD,
+  FB_WWW_PROFILING,
+  RN_OSS_DEV,
+  RN_OSS_PROD,
+  RN_OSS_PROFILING,
+  RN_FB_DEV,
+  RN_FB_PROD,
+  RN_FB_PROFILING,
+} = bundleTypes;
+
+function getFormat(bundleType) {
+  switch (bundleType) {
+    case UMD_DEV:
+    case UMD_PROD:
+    case UMD_PROFILING:
+      return 'umd';
+    case NODE_ES2015:
+      return 'cjs2015';
+    case NODE_DEV:
+    case NODE_PROD:
+    case NODE_PROFILING:
+      return 'cjs';
+    case FB_WWW_DEV:
+    case FB_WWW_PROD:
+    case FB_WWW_PROFILING:
+      return 'fb';
+    case RN_OSS_DEV:
+    case RN_OSS_PROD:
+    case RN_OSS_PROFILING:
+    case RN_FB_DEV:
+    case RN_FB_PROD:
+    case RN_FB_PROFILING:
+      return 'rn';
+  }
+  throw new Error('unknown bundleType');
+}
+
+function getESLintInstance(format) {
+  return new ESLint({
+    useEslintrc: false,
+    overrideConfigFile: path.join(__dirname, `eslintrc.${format}.js`),
+    ignore: false,
+  });
+}
+
+const esLints = {
+  cjs: getESLintInstance('cjs'),
+  cjs2015: getESLintInstance('cjs2015'),
+  rn: getESLintInstance('rn'),
+  fb: getESLintInstance('fb'),
+  umd: getESLintInstance('umd'),
+};
 
 // Performs sanity checks on bundles *built* by Rollup.
 // Helps catch Rollup regressions.
-function lint({format, filePatterns}) {
-  console.log(`Linting ${format} bundles...`);
-  const result = spawnSync(
-    path.join('node_modules', '.bin', 'eslint' + extension),
-    [
-      ...filePatterns,
-      '--config',
-      path.join(__dirname, `eslintrc.${format}.js`),
-      // Disregard our ESLint rules that apply to the source.
-      '--no-eslintrc',
-      // Use a different ignore file.
-      '--ignore-path',
-      path.join(__dirname, 'eslintignore'),
-    ],
-    {
-      // Allow colors to pass through
-      stdio: 'inherit',
-    }
+async function lint(bundle, bundleType) {
+  const filename = getFilename(bundle, bundleType);
+  const format = getFormat(bundleType);
+  const eslint = esLints[format];
+
+  const packageName = Packaging.getPackageName(bundle.entry);
+  const mainOutputPath = Packaging.getBundleOutputPath(
+    bundleType,
+    filename,
+    packageName
   );
-  if (result.status !== 0) {
-    console.error(chalk.red(`Linting of ${format} bundles has failed.`));
-    process.exit(result.status);
-  } else {
-    console.log(chalk.green(`Linted ${format} bundles successfully!`));
-    console.log();
+
+  const results = await eslint.lintFiles([mainOutputPath]);
+  if (
+    results.some(result => result.errorCount > 0 || result.warningCount > 0)
+  ) {
+    process.exitCode = 1;
+    console.log(`Failed ${mainOutputPath}`);
+    const formatter = await eslint.loadFormatter('stylish');
+    const resultText = formatter.format(results);
+    console.log(resultText);
   }
 }
 
-function checkFilesExist(bundle) {
-  const {format, filePatterns} = bundle;
-  filePatterns.forEach(pattern => {
-    console.log(`Checking if files exist in ${pattern}...`);
-    const files = glob.sync(pattern);
-    if (files.length === 0) {
-      console.error(chalk.red(`Found no ${format} bundles in ${pattern}`));
-      process.exit(1);
-    } else {
-      console.log(chalk.green(`Found ${files.length} bundles.`));
-      console.log();
+async function lintEverything() {
+  console.log(`Linting known bundles...`);
+  let promises = [];
+  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+  for (const bundle of bundles) {
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const bundleType of bundle.bundleTypes) {
+      promises.push(lint(bundle, bundleType));
     }
-  });
-  return bundle;
+  }
+  await Promise.all(promises);
 }
 
-const bundles = [
-  {
-    format: 'rn',
-    filePatterns: [`./build/react-native/implementations/*.js`],
-  },
-  {
-    format: 'umd',
-    filePatterns: [`./build/node_modules/*/umd/*.js`],
-  },
-  {
-    format: 'cjs',
-    filePatterns: [
-      `./build/node_modules/*/*.js`,
-      `./build/node_modules/*/cjs/*.js`,
-    ],
-  },
-];
-
-if (process.env.RELEASE_CHANNEL === 'experimental') {
-  bundles.push({
-    format: 'fb',
-    filePatterns: [`./build/facebook-www/*.js`],
-  });
-}
-
-bundles.map(checkFilesExist).map(lint);
+lintEverything().catch(error => {
+  process.exitCode = 1;
+  console.error(error);
+});

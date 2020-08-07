@@ -8,7 +8,12 @@
  */
 
 import * as React from 'react';
-import {Fragment, Suspense, SuspenseList, useState} from 'react';
+import {
+  Fragment,
+  Suspense,
+  unstable_SuspenseList as SuspenseList,
+  useState,
+} from 'react';
 
 function SuspenseTree() {
   return (
@@ -20,8 +25,13 @@ function SuspenseTree() {
       <PrimaryFallbackTest initialSuspend={true} />
       <NestedSuspenseTest />
       <SuspenseListTest />
+      <EmptySuspense />
     </Fragment>
   );
+}
+
+function EmptySuspense() {
+  return <Suspense />;
 }
 
 function PrimaryFallbackTest({initialSuspend}) {

@@ -16,7 +16,7 @@ import styles from './ContextMenu.css';
 
 import type {RegistryContextType} from './Contexts';
 
-function respositionToFit(element: HTMLElement, pageX: number, pageY: number) {
+function repositionToFit(element: HTMLElement, pageX: number, pageY: number) {
   const ownerWindow = element.ownerDocument.defaultView;
   if (element !== null) {
     if (pageY + element.offsetHeight >= ownerWindow.innerHeight) {
@@ -108,7 +108,7 @@ export default function ContextMenu({children, id}: Props) {
       const ownerWindow = ownerDocument.defaultView;
       ownerWindow.addEventListener('resize', hide);
 
-      respositionToFit(menu, state.pageX, state.pageY);
+      repositionToFit(menu, state.pageX, state.pageY);
 
       return () => {
         ownerDocument.removeEventListener('mousedown', hideUnlessContains);

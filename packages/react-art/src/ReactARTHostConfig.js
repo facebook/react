@@ -10,10 +10,6 @@ import Mode from 'art/modes/current';
 import invariant from 'shared/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
-import type {
-  ReactEventResponder,
-  ReactEventResponderInstance,
-} from 'shared/ReactTypes';
 
 const pooledTransform = new Transform();
 
@@ -243,6 +239,8 @@ function applyTextProps(instance, props, prevProps = {}) {
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
 
 export function appendInitialChild(parentInstance, child) {
   if (typeof child === 'string') {
@@ -306,6 +304,7 @@ export function getPublicInstance(instance) {
 
 export function prepareForCommit() {
   // Noop
+  return null;
 }
 
 export function prepareUpdate(domElement, type, oldProps, newProps) {
@@ -318,10 +317,6 @@ export function resetAfterCommit() {
 
 export function resetTextContent(domElement) {
   // Noop
-}
-
-export function shouldDeprioritizeSubtree(type, props) {
-  return false;
 }
 
 export function getRootHostContext() {
@@ -426,20 +421,8 @@ export function unhideTextInstance(textInstance, text): void {
   // Noop
 }
 
-export function DEPRECATED_mountResponderInstance(
-  responder: ReactEventResponder<any, any>,
-  responderInstance: ReactEventResponderInstance<any, any>,
-  props: Object,
-  state: Object,
-  instance: Object,
-) {
-  throw new Error('Not yet implemented.');
-}
-
-export function DEPRECATED_unmountResponderInstance(
-  responderInstance: ReactEventResponderInstance<any, any>,
-): void {
-  throw new Error('Not yet implemented.');
+export function clearContainer(container) {
+  // TODO Implement this
 }
 
 export function getFundamentalComponentInstance(fundamentalInstance) {
@@ -466,10 +449,6 @@ export function getInstanceFromNode(node) {
   throw new Error('Not yet implemented.');
 }
 
-export function beforeRemoveInstance(instance) {
-  // noop
-}
-
 export function isOpaqueHydratingObject(value: mixed): boolean {
   throw new Error('Not yet implemented');
 }
@@ -488,22 +467,14 @@ export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
   throw new Error('Not yet implemented');
 }
 
-export function makeServerId(): OpaqueIDType {
-  throw new Error('Not yet implemented');
+export function beforeActiveInstanceBlur() {
+  // noop
 }
 
-export function registerEvent(event: any, rootContainerInstance: any) {
-  throw new Error('Not yet implemented.');
+export function afterActiveInstanceBlur() {
+  // noop
 }
 
-export function mountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function unmountEventListener(listener: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function validateEventListenerTarget(target: any, listener: any) {
-  throw new Error('Not yet implemented.');
+export function preparePortalMount(portalInstance: any): void {
+  // noop
 }

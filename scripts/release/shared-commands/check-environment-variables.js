@@ -15,7 +15,7 @@ module.exports = () => {
       In order to run this script you will need to create your own API token.
       Instructions can be found at:
 
-      {link https://circleci.com/docs/api/v1-reference/#getting-started}
+      {link https://app.circleci.com/settings/user/tokens}
 
       To make this token available to the release script, add it to your {path .bash_profile} like so:
 

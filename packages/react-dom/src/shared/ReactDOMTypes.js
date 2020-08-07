@@ -9,93 +9,22 @@
 
 import type {
   ReactFundamentalComponentInstance,
-  ReactEventResponder,
-  ReactEventResponderInstance,
-  EventPriority,
-  ReactScopeMethods,
+  ReactScopeInstance,
 } from 'shared/ReactTypes';
-import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
-
-type AnyNativeEvent = Event | KeyboardEvent | MouseEvent | Touch;
-
-export type PointerType =
-  | ''
-  | 'mouse'
-  | 'keyboard'
-  | 'pen'
-  | 'touch'
-  | 'trackpad';
-
-export type ReactDOMResponderEvent = {
-  nativeEvent: AnyNativeEvent,
-  passive: boolean,
-  pointerType: PointerType,
-  target: Element | Document,
-  type: string,
-  ...
-};
-
-export type ReactDOMEventResponder = ReactEventResponder<
-  ReactDOMResponderEvent,
-  ReactDOMResponderContext,
->;
-
-export type ReactDOMEventResponderInstance = ReactEventResponderInstance<
-  ReactDOMResponderEvent,
-  ReactDOMResponderContext,
->;
+import type {DOMEventName} from '../events/DOMEventNames';
 
 export type ReactDOMFundamentalComponentInstance = ReactFundamentalComponentInstance<
   any,
   any,
 >;
 
-export type ReactDOMResponderContext = {
-  dispatchEvent: (
-    eventValue: any,
-    listener: (any) => void,
-    eventPriority: EventPriority,
-  ) => void,
-  isTargetWithinNode: (
-    childTarget: Element | Document,
-    parentTarget: Element | Document,
-  ) => boolean,
-  isTargetWithinResponder: (null | Element | Document) => boolean,
-  isTargetWithinResponderScope: (null | Element | Document) => boolean,
-  addRootEventTypes: (rootEventTypes: Array<string>) => void,
-  removeRootEventTypes: (rootEventTypes: Array<string>) => void,
-  getActiveDocument(): Document,
-  objectAssign: Function,
-  getTimeStamp: () => number,
-  isTargetWithinHostComponent: (
-    target: Element | Document,
-    elementType: string,
-  ) => boolean,
-  continuePropagation(): void,
-  // Used for controller components
-  enqueueStateRestore(Element | Document): void,
-  getResponderNode(): Element | null,
-  ...
-};
-
-export type ReactDOMListenerEvent = {|
-  capture: boolean,
-  passive: void | boolean,
-  priority: EventPriority,
-  type: DOMTopLevelEventType,
-|};
-
-export type ReactDOMListenerMap = {|
-  clear: () => void,
-  setListener: (
-    target: EventTarget | ReactScopeMethods,
-    callback: ?(SyntheticEvent<EventTarget>) => void,
-  ) => void,
-|};
-
-export type ReactDOMListener = {|
+export type ReactDOMEventHandle = (
+  target: EventTarget | ReactScopeInstance,
   callback: (SyntheticEvent<EventTarget>) => void,
-  destroy: Node => void,
-  event: ReactDOMListenerEvent,
-  target: EventTarget | ReactScopeMethods,
+) => () => void;
+
+export type ReactDOMEventHandleListener = {|
+  callback: (SyntheticEvent<EventTarget>) => void,
+  capture: boolean,
+  type: DOMEventName,
 |};

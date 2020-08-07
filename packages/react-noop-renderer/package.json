@@ -12,13 +12,12 @@
   "license": "MIT",
   "dependencies": {
     "object-assign": "^4.1.1",
-    "regenerator-runtime": "^0.11.0",
     "react-reconciler": "*",
     "react-client": "*",
     "react-server": "*"
   },
   "peerDependencies": {
-    "react": "^16.13.0"
+    "react": "^17.0.0-alpha"
   },
   "files": [
     "LICENSE",

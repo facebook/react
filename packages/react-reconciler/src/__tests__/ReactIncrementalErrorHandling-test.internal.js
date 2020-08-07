@@ -45,6 +45,19 @@ describe('ReactIncrementalErrorHandling', () => {
     );
   }
 
+  // Note: This is based on a similar component we use in www. We can delete
+  // once the extra div wrapper is no longer necessary.
+  function LegacyHiddenDiv({children, mode}) {
+    return (
+      <div hidden={mode === 'hidden'}>
+        <React.unstable_LegacyHidden
+          mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
+          {children}
+        </React.unstable_LegacyHidden>
+      </div>
+    );
+  }
+
   it('recovers from errors asynchronously', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -239,8 +252,9 @@ describe('ReactIncrementalErrorHandling', () => {
       });
     }
 
-    ReactNoop.render(<App isBroken={true} />, onCommit);
-    Scheduler.unstable_advanceTime(1000);
+    ReactNoop.discreteUpdates(() => {
+      ReactNoop.render(<App isBroken={true} />, onCommit);
+    });
     expect(Scheduler).toFlushAndYieldThrough(['error']);
     interrupt();
 
@@ -269,6 +283,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Everything is fine.')]);
   });
 
+  // @gate experimental
   it('does not include offscreen work when retrying after an error', () => {
     function App(props) {
       if (props.isBroken) {
@@ -279,9 +294,9 @@ describe('ReactIncrementalErrorHandling', () => {
       return (
         <>
           Everything is fine
-          <div hidden={true}>
+          <LegacyHiddenDiv mode="hidden">
             <div>Offscreen content</div>
-          </div>
+          </LegacyHiddenDiv>
         </>
       );
     }
@@ -296,8 +311,9 @@ describe('ReactIncrementalErrorHandling', () => {
       });
     }
 
-    ReactNoop.render(<App isBroken={true} />, onCommit);
-    Scheduler.unstable_advanceTime(1000);
+    ReactNoop.discreteUpdates(() => {
+      ReactNoop.render(<App isBroken={true} />, onCommit);
+    });
     expect(Scheduler).toFlushAndYieldThrough(['error']);
     interrupt();
 
@@ -424,8 +440,8 @@ describe('ReactIncrementalErrorHandling', () => {
       'C',
       'D',
 
-      // Since the error occured during a partially concurrent render, we should
-      // retry one more time, synchonrously.
+      // Since the error occurred during a partially concurrent render, we should
+      // retry one more time, synchronously.
       'A',
       'B',
       'Oops',
@@ -1670,6 +1686,62 @@ describe('ReactIncrementalErrorHandling', () => {
     );
     expect(Scheduler).toFlushWithoutYielding();
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello')]);
+  });
+
+  it('provides component stack even if overriding prepareStackTrace', () => {
+    Error.prepareStackTrace = function(error, callsites) {
+      const stack = ['An error occurred:', error.message];
+      for (let i = 0; i < callsites.length; i++) {
+        const callsite = callsites[i];
+        stack.push(
+          '\t' + callsite.getFunctionName(),
+          '\t\tat ' + callsite.getFileName(),
+          '\t\ton line ' + callsite.getLineNumber(),
+        );
+      }
+
+      return stack.join('\n');
+    };
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null, errorInfo: null};
+      componentDidCatch(error, errorInfo) {
+        this.setState({error, errorInfo});
+      }
+      render() {
+        if (this.state.errorInfo) {
+          Scheduler.unstable_yieldValue('render error message');
+          return (
+            <span
+              prop={`Caught an error:${normalizeCodeLocInfo(
+                this.state.errorInfo.componentStack,
+              )}.`}
+            />
+          );
+        }
+        return this.props.children;
+      }
+    }
+
+    function BrokenRender(props) {
+      throw new Error('Hello');
+    }
+
+    ReactNoop.render(
+      <ErrorBoundary>
+        <BrokenRender />
+      </ErrorBoundary>,
+    );
+    expect(Scheduler).toFlushAndYield(['render error message']);
+    Error.prepareStackTrace = undefined;
+
+    expect(ReactNoop.getChildren()).toEqual([
+      span(
+        'Caught an error:\n' +
+          '    in BrokenRender (at **)\n' +
+          '    in ErrorBoundary (at **).',
+      ),
+    ]);
   });
 
   if (!ReactFeatureFlags.disableModulePatternComponents) {

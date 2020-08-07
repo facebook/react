@@ -165,7 +165,7 @@ export function attach(
   }
 
   function getID(internalInstance: InternalInstance): number {
-    if (typeof internalInstance !== 'object') {
+    if (typeof internalInstance !== 'object' || internalInstance === null) {
       throw new Error('Invalid internal instance: ' + internalInstance);
     }
     if (!internalInstanceToIDMap.has(internalInstance)) {
@@ -586,10 +586,10 @@ export function attach(
     });
   }
 
-  function createIsPathWhitelisted(key: string) {
+  function createIsPathAllowed(key: string) {
     // This function helps prevent previously-inspected paths from being dehydrated in updates.
     // This is important to avoid a bad user experience where expanded toggles collapse on update.
-    return function isPathWhitelisted(path: Array<string | number>): boolean {
+    return function isPathAllowed(path: Array<string | number>): boolean {
       let current = currentlyInspectedPaths[key];
       if (!current) {
         return false;
@@ -706,15 +706,15 @@ export function attach(
 
     inspectedElement.context = cleanForBridge(
       inspectedElement.context,
-      createIsPathWhitelisted('context'),
+      createIsPathAllowed('context'),
     );
     inspectedElement.props = cleanForBridge(
       inspectedElement.props,
-      createIsPathWhitelisted('props'),
+      createIsPathAllowed('props'),
     );
     inspectedElement.state = cleanForBridge(
       inspectedElement.state,
-      createIsPathWhitelisted('state'),
+      createIsPathAllowed('state'),
     );
 
     return {
@@ -731,7 +731,7 @@ export function attach(
       return null;
     }
 
-    const {displayName} = getData(internalInstance);
+    const {displayName, key} = getData(internalInstance);
     const type = getElementType(internalInstance);
 
     let context = null;
@@ -789,6 +789,8 @@ export function attach(
 
       type: type,
 
+      key: key != null ? key : null,
+
       // Inspectable properties.
       context,
       hooks: null,
@@ -798,8 +800,12 @@ export function attach(
       // List of owners
       owners,
 
-      // Location of component in source coude.
+      // Location of component in source code.
       source,
+
+      rootType: null,
+      rendererPackageName: null,
+      rendererVersion: null,
     };
   }
 

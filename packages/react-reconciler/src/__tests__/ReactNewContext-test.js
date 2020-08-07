@@ -42,6 +42,19 @@ describe('ReactNewContext', () => {
     return dispatcher.readContext(Context, observedBits);
   }
 
+  // Note: This is based on a similar component we use in www. We can delete
+  // once the extra div wrapper is no longer necessary.
+  function LegacyHiddenDiv({children, mode}) {
+    return (
+      <div hidden={mode === 'hidden'}>
+        <React.unstable_LegacyHidden
+          mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
+          {children}
+        </React.unstable_LegacyHidden>
+      </div>
+    );
+  }
+
   // We have several ways of reading from context. sharedContextTests runs
   // a suite of tests for a given context consumer implementation.
   sharedContextTests('Context.Consumer', Context => Context.Consumer);
@@ -903,6 +916,7 @@ describe('ReactNewContext', () => {
         expect(ReactNoop.getChildren()).toEqual([span(2), span(2)]);
       });
 
+      // @gate experimental
       it("context consumer doesn't bail out inside hidden subtree", () => {
         const Context = React.createContext('dark');
         const Consumer = getConsumer(Context);
@@ -910,9 +924,9 @@ describe('ReactNewContext', () => {
         function App({theme}) {
           return (
             <Context.Provider value={theme}>
-              <div hidden={true}>
+              <LegacyHiddenDiv mode="hidden">
                 <Consumer>{value => <Text text={value} />}</Consumer>
-              </div>
+              </LegacyHiddenDiv>
             </Context.Provider>
           );
         }
@@ -1066,6 +1080,21 @@ describe('ReactNewContext', () => {
       expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
         'calculateChangedBits: Expected the return value to be a 31-bit ' +
           'integer. Instead received: 4294967295',
+      );
+    });
+
+    it('warns if no value prop provided', () => {
+      const Context = React.createContext();
+
+      ReactNoop.render(
+        <Context.Provider anyPropNameOtherThanValue="value could be anything" />,
+      );
+
+      expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+        'The `value` prop is required for the `<Context.Provider>`. Did you misspell it or forget to pass it?',
+        {
+          withoutStack: true,
+        },
       );
     });
 
@@ -1597,7 +1626,7 @@ describe('ReactNewContext', () => {
     // caused by unwinding the context from wrong point.
     ReactNoop.render(
       <errorInCompletePhase>
-        <Context.Provider />
+        <Context.Provider value={null} />
       </errorInCompletePhase>,
     );
     expect(Scheduler).toFlushAndThrow('Error in host config.');

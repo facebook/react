@@ -316,4 +316,24 @@ describe('ReactEmptyComponent', () => {
     const noscript2 = container.firstChild;
     expect(noscript2).toBe(null);
   });
+
+  it('should warn about React.forwardRef that returns undefined', () => {
+    const Empty = () => {};
+    const EmptyForwardRef = React.forwardRef(Empty);
+
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<EmptyForwardRef />);
+    }).toThrowError(
+      'ForwardRef(Empty)(...): Nothing was returned from render.',
+    );
+  });
+
+  it('should warn about React.memo that returns undefined', () => {
+    const Empty = () => {};
+    const EmptyMemo = React.memo(Empty);
+
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<EmptyMemo />);
+    }).toThrowError('Empty(...): Nothing was returned from render.');
+  });
 });

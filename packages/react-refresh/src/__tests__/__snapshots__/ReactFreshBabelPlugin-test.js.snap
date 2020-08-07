@@ -37,12 +37,12 @@ const Bar = () => {
 _s4(Bar, "useContext{}");
 
 _c2 = Bar;
-
-const Baz = _c4 = memo(_c3 = _s5(() => {
+const Baz = memo(_c3 = _s5(() => {
   _s5();
 
   return useContext(X);
 }, "useContext{}"));
+_c4 = Baz;
 
 const Qux = () => {
   _s6();
@@ -108,20 +108,22 @@ exports[`ReactFreshBabelPlugin generates signatures for function expressions cal
 var _s = $RefreshSig$(),
     _s2 = $RefreshSig$();
 
-export const A = _c3 = React.memo(_c2 = React.forwardRef(_c = _s((props, ref) => {
+export const A = React.memo(_c2 = React.forwardRef(_c = _s((props, ref) => {
   _s();
 
   const [foo, setFoo] = useState(0);
   React.useEffect(() => {});
   return <h1 ref={ref}>{foo}</h1>;
 }, "useState{[foo, setFoo](0)}\\nuseEffect{}")));
-export const B = _c6 = React.memo(_c5 = React.forwardRef(_c4 = _s2(function (props, ref) {
+_c3 = A;
+export const B = React.memo(_c5 = React.forwardRef(_c4 = _s2(function (props, ref) {
   _s2();
 
   const [foo, setFoo] = useState(0);
   React.useEffect(() => {});
   return <h1 ref={ref}>{foo}</h1>;
 }, "useState{[foo, setFoo](0)}\\nuseEffect{}")));
+_c6 = B;
 
 function hoc() {
   var _s3 = $RefreshSig$();
@@ -289,12 +291,11 @@ exports[`ReactFreshBabelPlugin includes custom hooks into the signatures when co
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-
-var _s = $RefreshSig$();
-
 exports.default = App;
 
 var _hooks = require("./hooks");
+
+var _s = $RefreshSig$();
 
 function App() {
   _s();
@@ -327,9 +328,10 @@ function Foo() {
 
 _c = Foo;
 export default _c2 = hoc(Foo);
-export const A = _c3 = hoc(Foo);
-
-const B = _c4 = hoc(Foo);
+export const A = hoc(Foo);
+_c3 = A;
+const B = hoc(Foo);
+_c4 = B;
 
 var _c, _c2, _c3, _c4;
 
@@ -343,72 +345,100 @@ exports[`ReactFreshBabelPlugin registers identifiers used in JSX at definition s
 import A from './A';
 import Store from './Store';
 Store.subscribe();
-const Header = _c = styled.div\`color: red\`;
-const Factory = funny.factory\`\`;
+const Header = styled.div\`color: red\`;
+_c = Header;
+const StyledFactory1 = styled('div')\`color: hotpink\`;
+_c2 = StyledFactory1;
+const StyledFactory2 = styled('div')({
+  color: 'hotpink'
+});
+_c3 = StyledFactory2;
+const StyledFactory3 = styled(A)({
+  color: 'hotpink'
+});
+_c4 = StyledFactory3;
+const FunnyFactory = funny.factory\`\`;
 let Alias1 = A;
 let Alias2 = A.Foo;
 const Dict = {};
 
 function Foo() {
-  return <div><A /><B /><Alias1 /><Alias2 /><Header /><Dict.X /></div>;
+  return <div><A /><B /><StyledFactory1 /><StyledFactory2 /><StyledFactory3 /><Alias1 /><Alias2 /><Header /><Dict.X /></div>;
 }
 
-_c2 = Foo;
+_c5 = Foo;
+const B = hoc(A); // This is currently registered as a false positive:
 
-const B = _c3 = hoc(A); // This is currently registered as a false positive:
+_c6 = B;
+const NotAComponent = wow(A); // We could avoid it but it also doesn't hurt.
 
+_c7 = NotAComponent;
 
-const NotAComponent = _c4 = wow(A); // We could avoid it but it also doesn't hurt.
-
-
-var _c, _c2, _c3, _c4;
+var _c, _c2, _c3, _c4, _c5, _c6, _c7;
 
 $RefreshReg$(_c, "Header");
-$RefreshReg$(_c2, "Foo");
-$RefreshReg$(_c3, "B");
-$RefreshReg$(_c4, "NotAComponent");
+$RefreshReg$(_c2, "StyledFactory1");
+$RefreshReg$(_c3, "StyledFactory2");
+$RefreshReg$(_c4, "StyledFactory3");
+$RefreshReg$(_c5, "Foo");
+$RefreshReg$(_c6, "B");
+$RefreshReg$(_c7, "NotAComponent");
 `;
 
 exports[`ReactFreshBabelPlugin registers identifiers used in React.createElement at definition site 1`] = `
 import A from './A';
 import Store from './Store';
 Store.subscribe();
-const Header = _c = styled.div\`color: red\`;
-const Factory = funny.factory\`\`;
+const Header = styled.div\`color: red\`;
+_c = Header;
+const StyledFactory1 = styled('div')\`color: hotpink\`;
+_c2 = StyledFactory1;
+const StyledFactory2 = styled('div')({
+  color: 'hotpink'
+});
+_c3 = StyledFactory2;
+const StyledFactory3 = styled(A)({
+  color: 'hotpink'
+});
+_c4 = StyledFactory3;
+const FunnyFactory = funny.factory\`\`;
 let Alias1 = A;
 let Alias2 = A.Foo;
 const Dict = {};
 
 function Foo() {
-  return [React.createElement(A), React.createElement(B), React.createElement(Alias1), React.createElement(Alias2), jsx(Header), React.createElement(Dict.X)];
+  return [React.createElement(A), React.createElement(B), React.createElement(StyledFactory1), React.createElement(StyledFactory2), React.createElement(StyledFactory3), React.createElement(Alias1), React.createElement(Alias2), jsx(Header), React.createElement(Dict.X)];
 }
 
-_c2 = Foo;
+_c5 = Foo;
 React.createContext(Store);
+const B = hoc(A); // This is currently registered as a false positive:
 
-const B = _c3 = hoc(A); // This is currently registered as a false positive:
+_c6 = B;
+const NotAComponent = wow(A); // We could avoid it but it also doesn't hurt.
 
+_c7 = NotAComponent;
 
-const NotAComponent = _c4 = wow(A); // We could avoid it but it also doesn't hurt.
-
-
-var _c, _c2, _c3, _c4;
+var _c, _c2, _c3, _c4, _c5, _c6, _c7;
 
 $RefreshReg$(_c, "Header");
-$RefreshReg$(_c2, "Foo");
-$RefreshReg$(_c3, "B");
-$RefreshReg$(_c4, "NotAComponent");
+$RefreshReg$(_c2, "StyledFactory1");
+$RefreshReg$(_c3, "StyledFactory2");
+$RefreshReg$(_c4, "StyledFactory3");
+$RefreshReg$(_c5, "Foo");
+$RefreshReg$(_c6, "B");
+$RefreshReg$(_c7, "NotAComponent");
 `;
 
 exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 1`] = `
-const A = _c2 = forwardRef(_c = function () {
+const A = forwardRef(_c = function () {
   return <h1>Foo</h1>;
 });
-
-const B = _c5 = memo(_c4 = React.forwardRef(_c3 = () => {
+_c2 = A;
+const B = memo(_c4 = React.forwardRef(_c3 = () => {
   return <h1>Foo</h1>;
 }));
-
+_c5 = B;
 export default _c8 = React.memo(_c7 = forwardRef(_c6 = (props, ref) => {
   return <h1>Foo</h1>;
 }));

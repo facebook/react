@@ -116,6 +116,13 @@ const forks = Object.freeze({
         }
       case 'react-test-renderer':
         switch (bundleType) {
+          case RN_FB_DEV:
+          case RN_FB_PROD:
+          case RN_FB_PROFILING:
+          case RN_OSS_DEV:
+          case RN_OSS_PROD:
+          case RN_OSS_PROFILING:
+            return 'shared/forks/ReactFeatureFlags.test-renderer.native.js';
           case FB_WWW_DEV:
           case FB_WWW_PROD:
           case FB_WWW_PROFILING:
@@ -136,6 +143,10 @@ const forks = Object.freeze({
           case FB_WWW_PROD:
           case FB_WWW_PROFILING:
             return 'shared/forks/ReactFeatureFlags.www.js';
+          case RN_FB_DEV:
+          case RN_FB_PROD:
+          case RN_FB_PROFILING:
+            return 'shared/forks/ReactFeatureFlags.native-fb.js';
         }
     }
     return null;
@@ -198,6 +209,8 @@ const forks = Object.freeze({
       entry === 'react-test-renderer'
     ) {
       return 'scheduler/src/forks/SchedulerHostConfig.mock';
+    } else if (entry === 'scheduler/unstable_post_task') {
+      return 'scheduler/src/forks/SchedulerHostConfig.post-task';
     }
     return 'scheduler/src/forks/SchedulerHostConfig.default';
   },
@@ -480,14 +493,6 @@ const forks = Object.freeze({
       default:
         return null;
     }
-  },
-
-  // React DOM uses different top level event names and supports mouse events.
-  'legacy-events/ResponderTopLevelEventTypes': (bundleType, entry) => {
-    if (entry === 'react-dom' || entry.startsWith('react-dom/')) {
-      return 'legacy-events/forks/ResponderTopLevelEventTypes.dom.js';
-    }
-    return null;
   },
 });
 

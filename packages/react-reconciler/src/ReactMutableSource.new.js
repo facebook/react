@@ -7,18 +7,15 @@
  * @flow
  */
 
-import type {ExpirationTime} from './ReactFiberExpirationTime.new';
-import type {FiberRoot} from './ReactInternalTypes';
 import type {MutableSource, MutableSourceVersion} from 'shared/ReactTypes';
+import type {FiberRoot} from './ReactInternalTypes';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
-import {NoWork} from './ReactFiberExpirationTime.new';
 
 // Work in progress version numbers only apply to a single render,
 // and should be reset before starting a new render.
 // This tracks which mutable sources need to be reset after a render.
-const workInProgressPrimarySources: Array<MutableSource<any>> = [];
-const workInProgressSecondarySources: Array<MutableSource<any>> = [];
+const workInProgressSources: Array<MutableSource<any>> = [];
 
 let rendererSigil;
 if (__DEV__) {
@@ -26,56 +23,20 @@ if (__DEV__) {
   rendererSigil = {};
 }
 
-export function clearPendingUpdates(
-  root: FiberRoot,
-  expirationTime: ExpirationTime,
-): void {
-  if (expirationTime <= root.mutableSourceLastPendingUpdateTime) {
-    // All updates for this source have been processed.
-    root.mutableSourceLastPendingUpdateTime = NoWork;
-  }
-}
-
-export function getLastPendingExpirationTime(root: FiberRoot): ExpirationTime {
-  return root.mutableSourceLastPendingUpdateTime;
-}
-
-export function setPendingExpirationTime(
-  root: FiberRoot,
-  expirationTime: ExpirationTime,
-): void {
-  const mutableSourceLastPendingUpdateTime =
-    root.mutableSourceLastPendingUpdateTime;
-  if (
-    mutableSourceLastPendingUpdateTime === NoWork ||
-    expirationTime < mutableSourceLastPendingUpdateTime
-  ) {
-    root.mutableSourceLastPendingUpdateTime = expirationTime;
-  }
-}
-
 export function markSourceAsDirty(mutableSource: MutableSource<any>): void {
-  if (isPrimaryRenderer) {
-    workInProgressPrimarySources.push(mutableSource);
-  } else {
-    workInProgressSecondarySources.push(mutableSource);
-  }
+  workInProgressSources.push(mutableSource);
 }
 
 export function resetWorkInProgressVersions(): void {
-  if (isPrimaryRenderer) {
-    for (let i = 0; i < workInProgressPrimarySources.length; i++) {
-      const mutableSource = workInProgressPrimarySources[i];
+  for (let i = 0; i < workInProgressSources.length; i++) {
+    const mutableSource = workInProgressSources[i];
+    if (isPrimaryRenderer) {
       mutableSource._workInProgressVersionPrimary = null;
-    }
-    workInProgressPrimarySources.length = 0;
-  } else {
-    for (let i = 0; i < workInProgressSecondarySources.length; i++) {
-      const mutableSource = workInProgressSecondarySources[i];
+    } else {
       mutableSource._workInProgressVersionSecondary = null;
     }
-    workInProgressSecondarySources.length = 0;
   }
+  workInProgressSources.length = 0;
 }
 
 export function getWorkInProgressVersion(
@@ -94,11 +55,10 @@ export function setWorkInProgressVersion(
 ): void {
   if (isPrimaryRenderer) {
     mutableSource._workInProgressVersionPrimary = version;
-    workInProgressPrimarySources.push(mutableSource);
   } else {
     mutableSource._workInProgressVersionSecondary = version;
-    workInProgressSecondarySources.push(mutableSource);
   }
+  workInProgressSources.push(mutableSource);
 }
 
 export function warnAboutMultipleRenderersDEV(
@@ -124,5 +84,25 @@ export function warnAboutMultipleRenderersDEV(
         );
       }
     }
+  }
+}
+
+// Eager reads the version of a mutable source and stores it on the root.
+// This ensures that the version used for server rendering matches the one
+// that is eventually read during hydration.
+// If they don't match there's a potential tear and a full deopt render is required.
+export function registerMutableSourceForHydration(
+  root: FiberRoot,
+  mutableSource: MutableSource<any>,
+): void {
+  const getVersion = mutableSource._getVersion;
+  const version = getVersion(mutableSource._source);
+
+  // TODO Clear this data once all pending hydration work is finished.
+  // Retaining it forever may interfere with GC.
+  if (root.mutableSourceEagerHydrationData == null) {
+    root.mutableSourceEagerHydrationData = [mutableSource, version];
+  } else {
+    root.mutableSourceEagerHydrationData.push(mutableSource, version);
   }
 }

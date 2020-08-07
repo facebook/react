@@ -681,33 +681,6 @@ describe('Scheduler', () => {
       ]);
     });
 
-    it('schedules callback with both delay and timeout', () => {
-      scheduleCallback(
-        NormalPriority,
-        () => {
-          Scheduler.unstable_yieldValue('A');
-          Scheduler.unstable_advanceTime(100);
-        },
-        {delay: 100, timeout: 900},
-      );
-
-      Scheduler.unstable_advanceTime(99);
-      // Does not flush because delay has not elapsed
-      expect(Scheduler).toFlushAndYield([]);
-
-      // Delay has elapsed but task has not expired
-      Scheduler.unstable_advanceTime(1);
-      expect(Scheduler).toFlushExpired([]);
-
-      // Still not expired
-      Scheduler.unstable_advanceTime(899);
-      expect(Scheduler).toFlushExpired([]);
-
-      // Now it expires
-      Scheduler.unstable_advanceTime(1);
-      expect(Scheduler).toFlushExpired(['A']);
-    });
-
     it('cancels a delayed task', () => {
       // Schedule several tasks with the same delay
       const options = {delay: 100};
@@ -738,6 +711,20 @@ describe('Scheduler', () => {
 
       // Only A should flush
       expect(Scheduler).toFlushAndYield(['A']);
+    });
+
+    it('gracefully handles scheduled tasks that are not a function', () => {
+      scheduleCallback(ImmediatePriority, null);
+      expect(Scheduler).toFlushWithoutYielding();
+
+      scheduleCallback(ImmediatePriority, undefined);
+      expect(Scheduler).toFlushWithoutYielding();
+
+      scheduleCallback(ImmediatePriority, {});
+      expect(Scheduler).toFlushWithoutYielding();
+
+      scheduleCallback(ImmediatePriority, 42);
+      expect(Scheduler).toFlushWithoutYielding();
     });
   });
 });

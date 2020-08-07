@@ -75,6 +75,19 @@ describe('ReactFresh', () => {
     return type;
   }
 
+  // Note: This is based on a similar component we use in www. We can delete
+  // once the extra div wrapper is no longer neccessary.
+  function LegacyHiddenDiv({children, mode}) {
+    return (
+      <div hidden={mode === 'hidden'}>
+        <React.unstable_LegacyHidden
+          mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
+          {children}
+        </React.unstable_LegacyHidden>
+      </div>
+    );
+  }
+
   it('can preserve state for compatible types', () => {
     if (__DEV__) {
       const HelloV1 = render(() => {
@@ -2417,14 +2430,14 @@ describe('ReactFresh', () => {
             Scheduler.unstable_yieldValue('App#layout');
           });
           return (
-            <div hidden={offscreen}>
+            <LegacyHiddenDiv mode={offscreen ? 'hidden' : 'visible'}>
               <Hello />
-            </div>
+            </LegacyHiddenDiv>
           );
         };
       });
 
-      const root = ReactDOM.createRoot(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<AppV1 offscreen={true} />);
       expect(Scheduler).toFlushAndYieldThrough(['App#layout']);
       const el = container.firstChild;

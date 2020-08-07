@@ -25,7 +25,9 @@ describe('ReactFiberHostContext', () => {
   it('works with null host context', () => {
     let creates = 0;
     const Renderer = ReactFiberReconciler({
-      prepareForCommit: function() {},
+      prepareForCommit: function() {
+        return null;
+      },
       resetAfterCommit: function() {},
       getRootHostContext: function() {
         return null;
@@ -51,6 +53,7 @@ describe('ReactFiberHostContext', () => {
       appendChildToContainer: function() {
         return null;
       },
+      clearContainer: function() {},
       supportsMutation: true,
     });
 
@@ -76,6 +79,7 @@ describe('ReactFiberHostContext', () => {
     const Renderer = ReactFiberReconciler({
       prepareForCommit: function(hostContext) {
         expect(hostContext).toBe(rootContext);
+        return null;
       },
       resetAfterCommit: function(hostContext) {
         expect(hostContext).toBe(rootContext);
@@ -104,6 +108,7 @@ describe('ReactFiberHostContext', () => {
       appendChildToContainer: function() {
         return null;
       },
+      clearContainer: function() {},
       supportsMutation: true,
     });
 

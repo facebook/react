@@ -68,7 +68,8 @@ beforeEach(() => {
     .RCTEventEmitter;
   React = require('react');
   ReactNative = require('react-native-renderer');
-  ResponderEventPlugin = require('legacy-events/ResponderEventPlugin').default;
+  ResponderEventPlugin = require('react-native-renderer/src/legacy-events/ResponderEventPlugin')
+    .default;
   UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
     .UIManager;
   createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
@@ -83,7 +84,7 @@ it('fails to register the same event name with different types', () => {
     }
 
     // This view config has the same bubbling and direct event name
-    // which will fail to register in developement.
+    // which will fail to register in development.
     return {
       uiViewClassName: 'InvalidEvents',
       validAttributes: {

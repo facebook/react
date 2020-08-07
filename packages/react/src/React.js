@@ -15,6 +15,8 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
+  REACT_LEGACY_HIDDEN_TYPE,
+  REACT_SCOPE_TYPE,
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
@@ -43,7 +45,6 @@ import {
   useReducer,
   useRef,
   useState,
-  useResponder,
   useTransition,
   useDeferredValue,
   useOpaqueIdentifier,
@@ -57,8 +58,6 @@ import {
 import {createMutableSource} from './ReactMutableSource';
 import ReactSharedInternals from './ReactSharedInternals';
 import {createFundamental} from './ReactFundamental';
-import {createEventResponder} from './ReactEventResponder';
-import {createScope} from './ReactScope';
 
 // TODO: Move this branching into the other module instead and just re-export.
 const createElement = __DEV__ ? createElementWithValidation : createElementProd;
@@ -110,15 +109,13 @@ export {
   useTransition,
   useDeferredValue,
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
+  REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
   withSuspenseConfig as unstable_withSuspenseConfig,
   // enableBlocksAPI
   block,
-  // enableDeprecatedFlareAPI
-  useResponder as DEPRECATED_useResponder,
-  createEventResponder as DEPRECATED_createResponder,
   // enableFundamentalAPI
   createFundamental as unstable_createFundamental,
   // enableScopeAPI
-  createScope as unstable_createScope,
+  REACT_SCOPE_TYPE as unstable_Scope,
   useOpaqueIdentifier as unstable_useOpaqueIdentifier,
 };

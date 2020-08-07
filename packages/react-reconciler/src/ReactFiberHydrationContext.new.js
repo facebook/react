@@ -24,7 +24,7 @@ import {
   HostRoot,
   SuspenseComponent,
 } from './ReactWorkTags';
-import {Deletion, Placement, Hydrating} from './ReactSideEffectTags';
+import {Deletion, Hydrating, Placement} from './ReactSideEffectTags';
 import invariant from 'shared/invariant';
 
 import {
@@ -55,7 +55,7 @@ import {
   didNotFindHydratableSuspenseInstance,
 } from './ReactFiberHostConfig';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
-import {Never, NoWork} from './ReactFiberExpirationTime.new';
+import {OffscreenLane} from './ReactFiberLane';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
@@ -124,7 +124,15 @@ function deleteHydratableInstance(
   const childToDelete = createFiberFromHostInstanceForDeletion();
   childToDelete.stateNode = instance;
   childToDelete.return = returnFiber;
-  childToDelete.effectTag = Deletion;
+
+  const deletions = returnFiber.deletions;
+  if (deletions === null) {
+    returnFiber.deletions = [childToDelete];
+    // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
+    returnFiber.effectTag |= Deletion;
+  } else {
+    deletions.push(childToDelete);
+  }
 
   // This might seem like it belongs on progressedFirstDeletion. However,
   // these children are not part of the reconciliation list of children.
@@ -231,8 +239,7 @@ function tryHydrate(fiber, nextInstance) {
         if (suspenseInstance !== null) {
           const suspenseState: SuspenseState = {
             dehydrated: suspenseInstance,
-            baseTime: NoWork,
-            retryTime: Never,
+            retryLane: OffscreenLane,
           };
           fiber.memoizedState = suspenseState;
           // Store the dehydrated fragment as a child fiber.

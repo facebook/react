@@ -29,19 +29,11 @@ function printWarning(level, format, args) {
   // When changing this logic, you might want to also
   // update consoleWithStackDev.www.js as well.
   if (__DEV__) {
-    const hasExistingStack =
-      args.length > 0 &&
-      typeof args[args.length - 1] === 'string' &&
-      args[args.length - 1].indexOf('\n    in') === 0;
-
-    if (!hasExistingStack) {
-      const ReactDebugCurrentFrame =
-        ReactSharedInternals.ReactDebugCurrentFrame;
-      const stack = ReactDebugCurrentFrame.getStackAddendum();
-      if (stack !== '') {
-        format += '%s';
-        args = args.concat([stack]);
-      }
+    const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
+    const stack = ReactDebugCurrentFrame.getStackAddendum();
+    if (stack !== '') {
+      format += '%s';
+      args = args.concat([stack]);
     }
 
     const argsWithFormat = args.map(item => '' + item);
@@ -51,15 +43,5 @@ function printWarning(level, format, args) {
     // breaks IE9: https://github.com/facebook/react/issues/13610
     // eslint-disable-next-line react-internal/no-production-logging
     Function.prototype.apply.call(console[level], console, argsWithFormat);
-
-    try {
-      // --- Welcome to debugging React ---
-      // This error was thrown as a convenience so that you can use this stack
-      // to find the callsite that caused this warning to fire.
-      let argIndex = 0;
-      const message =
-        'Warning: ' + format.replace(/%s/g, () => args[argIndex++]);
-      throw new Error(message);
-    } catch (x) {}
   }
 }

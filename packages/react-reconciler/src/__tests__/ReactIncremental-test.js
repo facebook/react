@@ -24,6 +24,19 @@ describe('ReactIncremental', () => {
     PropTypes = require('prop-types');
   });
 
+  // Note: This is based on a similar component we use in www. We can delete
+  // once the extra div wrapper is no longer necessary.
+  function LegacyHiddenDiv({children, mode}) {
+    return (
+      <div hidden={mode === 'hidden'}>
+        <React.unstable_LegacyHidden
+          mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
+          {children}
+        </React.unstable_LegacyHidden>
+      </div>
+    );
+  }
+
   it('should render a simple component', () => {
     function Bar() {
       return <div>Hello World</div>;
@@ -210,6 +223,7 @@ describe('ReactIncremental', () => {
     expect(inst.state).toEqual({text: 'bar', text2: 'baz'});
   });
 
+  // @gate experimental
   it('can deprioritize unfinished work and resume it later', () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -226,13 +240,13 @@ describe('ReactIncremental', () => {
       return (
         <div>
           <Bar>{props.text}</Bar>
-          <section hidden={true}>
+          <LegacyHiddenDiv mode="hidden">
             <Middle>{props.text}</Middle>
-          </section>
+          </LegacyHiddenDiv>
           <Bar>{props.text}</Bar>
-          <footer hidden={true}>
+          <LegacyHiddenDiv mode="hidden">
             <Middle>Footer</Middle>
-          </footer>
+          </LegacyHiddenDiv>
         </div>
       );
     }
@@ -255,6 +269,7 @@ describe('ReactIncremental', () => {
     expect(Scheduler).toFlushAndYield(['Middle', 'Middle']);
   });
 
+  // @gate experimental
   it('can deprioritize a tree from without dropping work', () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -271,13 +286,13 @@ describe('ReactIncremental', () => {
       return (
         <div>
           <Bar>{props.text}</Bar>
-          <section hidden={true}>
+          <LegacyHiddenDiv mode="hidden">
             <Middle>{props.text}</Middle>
-          </section>
+          </LegacyHiddenDiv>
           <Bar>{props.text}</Bar>
-          <footer hidden={true}>
+          <LegacyHiddenDiv mode="hidden">
             <Middle>Footer</Middle>
-          </footer>
+          </LegacyHiddenDiv>
         </div>
       );
     }
@@ -1950,6 +1965,7 @@ describe('ReactIncremental', () => {
     });
   }
 
+  // @gate experimental
   it('provides context when reusing work', () => {
     class Intl extends React.Component {
       static childContextTypes = {
@@ -1981,12 +1997,12 @@ describe('ReactIncremental', () => {
     ReactNoop.render(
       <Intl locale="fr">
         <ShowLocale />
-        <div hidden="true">
+        <LegacyHiddenDiv mode="hidden">
           <ShowLocale />
           <Intl locale="ru">
             <ShowLocale />
           </Intl>
-        </div>
+        </LegacyHiddenDiv>
         <ShowLocale />
       </Intl>,
     );

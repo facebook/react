@@ -18,6 +18,7 @@ import HoveredFiberInfo from './HoveredFiberInfo';
 import {scale} from './utils';
 import {StoreContext} from '../context';
 import {SettingsContext} from '../Settings/SettingsContext';
+import {useHighlightNativeElement} from '../hooks';
 import Tooltip from './Tooltip';
 
 import styles from './CommitRanked.css';
@@ -28,7 +29,8 @@ import type {CommitTree} from './types';
 
 export type ItemData = {|
   chartData: ChartData,
-  hoverFiber: (fiberData: TooltipFiberData | null) => void,
+  onElementMouseEnter: (fiberData: TooltipFiberData) => void,
+  onElementMouseLeave: () => void,
   scaleX: (value: number, fallbackValue: number) => number,
   selectedFiberID: number | null,
   selectedFiberIndex: number,
@@ -94,28 +96,55 @@ type Props = {|
 |};
 
 function CommitRanked({chartData, commitTree, height, width}: Props) {
-  const [hoveredFiberData, hoverFiber] = useState<TooltipFiberData | null>(
-    null,
-  );
+  const [
+    hoveredFiberData,
+    setHoveredFiberData,
+  ] = useState<TooltipFiberData | null>(null);
   const {lineHeight} = useContext(SettingsContext);
   const {selectedFiberID, selectFiber} = useContext(ProfilerContext);
+  const {
+    highlightNativeElement,
+    clearHighlightNativeElement,
+  } = useHighlightNativeElement();
 
   const selectedFiberIndex = useMemo(
     () => getNodeIndex(chartData, selectedFiberID),
     [chartData, selectedFiberID],
   );
 
+  const handleElementMouseEnter = useCallback(
+    ({id, name}) => {
+      highlightNativeElement(id); // Highlight last hovered element.
+      setHoveredFiberData({id, name}); // Set hovered fiber data for tooltip
+    },
+    [highlightNativeElement],
+  );
+
+  const handleElementMouseLeave = useCallback(() => {
+    clearHighlightNativeElement(); // clear highlighting of element on mouse leave
+    setHoveredFiberData(null); // clear hovered fiber data for tooltip
+  }, [clearHighlightNativeElement]);
+
   const itemData = useMemo<ItemData>(
     () => ({
       chartData,
-      hoverFiber,
+      onElementMouseEnter: handleElementMouseEnter,
+      onElementMouseLeave: handleElementMouseLeave,
       scaleX: scale(0, chartData.nodes[selectedFiberIndex].value, 0, width),
       selectedFiberID,
       selectedFiberIndex,
       selectFiber,
       width,
     }),
-    [chartData, selectedFiberID, selectedFiberIndex, selectFiber, width],
+    [
+      chartData,
+      handleElementMouseEnter,
+      handleElementMouseLeave,
+      selectedFiberID,
+      selectedFiberIndex,
+      selectFiber,
+      width,
+    ],
   );
 
   // Tooltip used to show summary of fiber info on hover
@@ -138,7 +167,6 @@ function CommitRanked({chartData, commitTree, height, width}: Props) {
         width={width}>
         {CommitRankedListItem}
       </FixedSizeList>
-      >
     </Tooltip>
   );
 }

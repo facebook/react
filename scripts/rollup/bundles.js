@@ -1,6 +1,14 @@
 'use strict';
 
+const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
+
+const __EXPERIMENTAL__ =
+  typeof RELEASE_CHANNEL === 'string'
+    ? RELEASE_CHANNEL === 'experimental'
+    : true;
+
 const bundleTypes = {
+  NODE_ES2015: 'NODE_ES2015',
   UMD_DEV: 'UMD_DEV',
   UMD_PROD: 'UMD_PROD',
   UMD_PROFILING: 'UMD_PROFILING',
@@ -19,6 +27,7 @@ const bundleTypes = {
 };
 
 const {
+  NODE_ES2015,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -69,6 +78,9 @@ const bundles = [
       FB_WWW_DEV,
       FB_WWW_PROD,
       FB_WWW_PROFILING,
+      RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
     ],
     moduleType: ISOMORPHIC,
     entry: 'react',
@@ -82,9 +94,10 @@ const bundles = [
       NODE_DEV,
       NODE_PROD,
       NODE_PROFILING,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      FB_WWW_PROFILING,
+      // TODO: use on WWW.
+      RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
     ],
     moduleType: ISOMORPHIC,
     entry: 'react/jsx-runtime',
@@ -101,11 +114,41 @@ const bundles = [
       FB_WWW_DEV,
       FB_WWW_PROD,
       FB_WWW_PROFILING,
+      RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
     ],
     moduleType: ISOMORPHIC,
     entry: 'react/jsx-dev-runtime',
     global: 'JSXDEVRuntime',
     externals: ['react'],
+  },
+
+  /******* React Cache (experimental, new) *******/
+  {
+    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD, NODE_PROFILING] : [],
+    moduleType: ISOMORPHIC,
+    entry: 'react/unstable-cache',
+    global: 'ReactCache',
+    externals: ['react'],
+  },
+
+  /******* React Fetch Browser (experimental, new) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-fetch/index.browser',
+    global: 'ReactFetch',
+    externals: ['react'],
+  },
+
+  /******* React Fetch Node (experimental, new) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-fetch/index.node',
+    global: 'ReactFetch',
+    externals: ['react', 'http', 'https'],
   },
 
   /******* React DOM *******/
@@ -149,19 +192,10 @@ const bundles = [
   /******* React DOM - www - Testing *******/
   {
     moduleType: RENDERER,
-    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, FB_WWW_PROFILING],
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
     entry: 'react-dom/testing',
     global: 'ReactDOMTesting',
     externals: ['react'],
-  },
-
-  /* React DOM internals required for react-native-web (e.g., to shim native events from react-dom) */
-  {
-    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD],
-    moduleType: RENDERER_UTILS,
-    entry: 'react-dom/unstable-native-dependencies',
-    global: 'ReactDOMUnstableNativeDependencies',
-    externals: ['react', 'react-dom'],
   },
 
   /******* React DOM Server *******/
@@ -200,77 +234,68 @@ const bundles = [
 
   /******* React DOM Fizz Server *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: __EXPERIMENTAL__
+      ? [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD]
+      : [],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-fizz.browser',
     global: 'ReactDOMFizzServer',
     externals: ['react', 'react-dom/server'],
   },
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
     moduleType: RENDERER,
     entry: 'react-dom/unstable-fizz.node',
     global: 'ReactDOMFizzServer',
     externals: ['react', 'react-dom/server'],
   },
 
-  /******* React DOM Flight Server Webpack *******/
+  /******* React Transport DOM Server Webpack *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
-    entry: 'react-flight-dom-webpack/server.browser',
-    global: 'ReactFlightDOMServer',
+    entry: 'react-transport-dom-webpack/server.browser',
+    global: 'ReactTransportDOMServer',
     externals: ['react', 'react-dom/server'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-flight-dom-webpack/server.node',
-    global: 'ReactFlightDOMServer',
+    entry: 'react-transport-dom-webpack/server.node',
+    global: 'ReactTransportDOMServer',
     externals: ['react', 'react-dom/server'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-flight-dom-webpack/server-runtime',
-    global: 'ReactFlightDOMServerRuntime',
+    entry: 'react-transport-dom-webpack/server-runtime',
+    global: 'ReactTransportDOMServerRuntime',
     externals: ['react'],
   },
 
-  /******* React DOM Flight Client Webpack *******/
+  /******* React Transport DOM Client Webpack *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
-    entry: 'react-flight-dom-webpack',
-    global: 'ReactFlightDOMClient',
+    entry: 'react-transport-dom-webpack',
+    global: 'ReactTransportDOMClient',
     externals: ['react'],
   },
 
-  /******* React DOM Flight Webpack Plugin *******/
+  /******* React Transport DOM Webpack Plugin *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_ES2015],
     moduleType: RENDERER_UTILS,
-    entry: 'react-flight-dom-webpack/plugin',
+    entry: 'react-transport-dom-webpack/plugin',
     global: 'ReactFlightWebpackPlugin',
     externals: [],
-    babel: opts =>
-      Object.assign({}, opts, {
-        // Include JSX
-        presets: opts.presets.concat([
-          require.resolve('@babel/preset-react'),
-          require.resolve('@babel/preset-flow'),
-        ]),
-        plugins: opts.plugins.concat([
-          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
-        ]),
-      }),
   },
 
-  /******* React DOM Flight Server Relay *******/
+  /******* React Transport DOM Server Relay *******/
   {
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
-    entry: 'react-flight-dom-relay/server',
+    entry: 'react-transport-dom-relay/server',
     global: 'ReactFlightDOMRelayServer',
     externals: [
       'react',
@@ -281,7 +306,7 @@ const bundles = [
   {
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
-    entry: 'react-flight-dom-relay/server-runtime',
+    entry: 'react-transport-dom-relay/server-runtime',
     global: 'ReactFlightDOMRelayServerRuntime',
     externals: ['react', 'ReactFlightDOMRelayServerIntegration'],
   },
@@ -290,7 +315,7 @@ const bundles = [
   {
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
-    entry: 'react-flight-dom-relay',
+    entry: 'react-transport-dom-relay',
     global: 'ReactFlightDOMRelayClient',
     externals: ['react', 'ReactFlightDOMRelayClientIntegration'],
   },
@@ -324,7 +349,9 @@ const bundles = [
 
   /******* React Native *******/
   {
-    bundleTypes: [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
+    bundleTypes: __EXPERIMENTAL__
+      ? []
+      : [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
     moduleType: RENDERER,
     entry: 'react-native-renderer',
     global: 'ReactNativeRenderer',
@@ -352,7 +379,9 @@ const bundles = [
 
   /******* React Native Fabric *******/
   {
-    bundleTypes: [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
+    bundleTypes: __EXPERIMENTAL__
+      ? []
+      : [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
     moduleType: RENDERER,
     entry: 'react-native-renderer/fabric',
     global: 'ReactFabric',
@@ -380,23 +409,19 @@ const bundles = [
 
   /******* React Test Renderer *******/
   {
-    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [
+      FB_WWW_DEV,
+      NODE_DEV,
+      NODE_PROD,
+      UMD_DEV,
+      UMD_PROD,
+      RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
+    ],
     moduleType: RENDERER,
     entry: 'react-test-renderer',
     global: 'ReactTestRenderer',
-    externals: ['react', 'scheduler', 'scheduler/unstable_mock'],
-    babel: opts =>
-      Object.assign({}, opts, {
-        plugins: opts.plugins.concat([
-          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
-        ]),
-      }),
-  },
-  {
-    bundleTypes: [UMD_DEV, UMD_PROD],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-test-renderer/shallow',
-    global: 'ReactShallowRenderer',
     externals: ['react', 'scheduler', 'scheduler/unstable_mock'],
     babel: opts =>
       Object.assign({}, opts, {
@@ -538,19 +563,14 @@ const bundles = [
     externals: [],
   },
 
-  /******* React Cache (experimental) *******/
+  /******* React Cache (experimental, old) *******/
   {
-    bundleTypes: [
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      UMD_DEV,
-      UMD_PROD,
-    ],
+    // This is only used by our own tests.
+    // We can delete it later.
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
     entry: 'react-cache',
-    global: 'ReactCache',
+    global: 'ReactCacheOld',
     externals: ['react', 'scheduler'],
   },
 
@@ -586,6 +606,9 @@ const bundles = [
       FB_WWW_DEV,
       FB_WWW_PROD,
       FB_WWW_PROFILING,
+      RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
     ],
     moduleType: ISOMORPHIC,
     entry: 'scheduler',
@@ -602,10 +625,27 @@ const bundles = [
       NODE_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
+      RN_FB_DEV,
+      RN_FB_PROD,
     ],
     moduleType: ISOMORPHIC,
     entry: 'scheduler/unstable_mock',
     global: 'SchedulerMock',
+    externals: [],
+  },
+
+  /******* React Scheduler Post Task (experimental) *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'scheduler/unstable_post_task',
+    global: 'SchedulerPostTask',
     externals: [],
   },
 
@@ -655,96 +695,16 @@ const bundles = [
       NODE_DEV,
       NODE_PROD,
       NODE_PROFILING,
+      RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
     ],
     moduleType: ISOMORPHIC,
     entry: 'scheduler/tracing',
     global: 'SchedulerTracing',
     externals: [],
   },
-
-  /******* React Events (experimental) *******/
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/context-menu',
-    global: 'ReactEventsContextMenu',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/deprecated-focus',
-    global: 'ReactEventsFocus',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/hover',
-    global: 'ReactEventsHover',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/keyboard',
-    global: 'ReactEventsKeyboard',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/press-legacy',
-    global: 'ReactEventsPressLegacy',
-    externals: ['react'],
-  },
 ];
-
-const fbBundleExternalsMap = {
-  'react-interactions/events/focus': 'ReactEventsFocus',
-  'react-interactions/events/keyboard': 'ReactEventsKeyboard',
-  'react-interactions/events/tap': 'ReactEventsTap',
-};
 
 // Based on deep-freeze by substack (public domain)
 function deepFreeze(o) {
@@ -766,9 +726,44 @@ deepFreeze(bundles);
 deepFreeze(bundleTypes);
 deepFreeze(moduleTypes);
 
+function getFilename(bundle, bundleType) {
+  let name = bundle.entry;
+  const globalName = bundle.global;
+  // we do this to replace / to -, for react-dom/server
+  name = name.replace('/index.', '.').replace('/', '-');
+  switch (bundleType) {
+    case NODE_ES2015:
+      return `${name}.js`;
+    case UMD_DEV:
+      return `${name}.development.js`;
+    case UMD_PROD:
+      return `${name}.production.min.js`;
+    case UMD_PROFILING:
+      return `${name}.profiling.min.js`;
+    case NODE_DEV:
+      return `${name}.development.js`;
+    case NODE_PROD:
+      return `${name}.production.min.js`;
+    case NODE_PROFILING:
+      return `${name}.profiling.min.js`;
+    case FB_WWW_DEV:
+    case RN_OSS_DEV:
+    case RN_FB_DEV:
+      return `${globalName}-dev.js`;
+    case FB_WWW_PROD:
+    case RN_OSS_PROD:
+    case RN_FB_PROD:
+      return `${globalName}-prod.js`;
+    case FB_WWW_PROFILING:
+    case RN_FB_PROFILING:
+    case RN_OSS_PROFILING:
+      return `${globalName}-profiling.js`;
+  }
+}
+
 module.exports = {
-  fbBundleExternalsMap,
   bundleTypes,
   moduleTypes,
   bundles,
+  getFilename,
 };

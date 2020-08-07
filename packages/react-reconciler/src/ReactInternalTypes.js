@@ -10,32 +10,23 @@
 import type {Source} from 'shared/ReactElementType';
 import type {
   RefObject,
-  ReactEventResponder,
-  ReactEventResponderListener,
-  ReactEventResponderInstance,
   ReactContext,
   MutableSourceSubscribeFn,
   MutableSourceGetSnapshotFn,
+  MutableSourceVersion,
   MutableSource,
 } from 'shared/ReactTypes';
-import type {
-  SuspenseInstance,
-  ReactListenerEvent,
-} from './ReactFiberHostConfig';
+import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {SideEffectTag} from './ReactSideEffectTags';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
-// import type {UpdateQueue} from './ReactUpdateQueue.old';
+import type {SubtreeTag} from './ReactSubtreeTags';
+import type {Lane, LanePriority, Lanes, LaneMap} from './ReactFiberLane';
 import type {HookType} from './ReactFiberHooks.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {
-  OpaqueIDType,
-  ReactListenerMap,
-} from 'react-reconciler/src/ReactFiberHostConfig';
 import type {SuspenseConfig, TimeoutConfig} from './ReactFiberSuspenseConfig';
 
 export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
@@ -48,12 +39,8 @@ export type ContextDependency<T> = {
 };
 
 export type Dependencies = {
-  expirationTime: ExpirationTime,
+  lanes: Lanes,
   firstContext: ContextDependency<mixed> | null,
-  responders: Map<
-    ReactEventResponder<any, any>,
-    ReactEventResponderInstance<any, any>,
-  > | null,
   ...
 };
 
@@ -133,6 +120,8 @@ export type Fiber = {|
 
   // Effect
   effectTag: SideEffectTag,
+  subtreeTag: SubtreeTag,
+  deletions: Array<Fiber> | null,
 
   // Singly linked list fast path to the next fiber with side-effects.
   nextEffect: Fiber | null,
@@ -143,12 +132,8 @@ export type Fiber = {|
   firstEffect: Fiber | null,
   lastEffect: Fiber | null,
 
-  // Represents a time in the future by which this work should be completed.
-  // Does not include work found in its subtree.
-  expirationTime: ExpirationTime,
-
-  // This is used to quickly determine if a subtree has no pending changes.
-  childExpirationTime: ExpirationTime,
+  lanes: Lanes,
+  childLanes: Lanes,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
@@ -190,8 +175,6 @@ export type Fiber = {|
   _debugHookTypes?: Array<HookType> | null,
 |};
 
-export type PendingInteractionMap = Map<ExpirationTime, Set<Interaction>>;
-
 type BaseFiberRootProperties = {|
   // The type of root (legacy, batched, concurrent, etc.)
   tag: RootTag,
@@ -203,12 +186,8 @@ type BaseFiberRootProperties = {|
   // The currently active root fiber. This is the mutable root of the tree.
   current: Fiber,
 
-  pingCache:
-    | WeakMap<Wakeable, Set<ExpirationTime>>
-    | Map<Wakeable, Set<ExpirationTime>>
-    | null,
+  pingCache: WeakMap<Wakeable, Set<mixed>> | Map<Wakeable, Set<mixed>> | null,
 
-  finishedExpirationTime: ExpirationTime,
   // A finished work-in-progress HostRoot that's ready to be committed.
   finishedWork: Fiber | null,
   // Timeout handle returned by setTimeout. Used to cancel a pending timeout, if
@@ -219,29 +198,29 @@ type BaseFiberRootProperties = {|
   pendingContext: Object | null,
   // Determines if we should attempt to hydrate on the initial mount
   +hydrate: boolean,
-  // Node returned by Scheduler.scheduleCallback
+
+  // Used by useMutableSource hook to avoid tearing during hydration.
+  mutableSourceEagerHydrationData?: Array<
+    MutableSource<any> | MutableSourceVersion,
+  > | null,
+
+  // Node returned by Scheduler.scheduleCallback. Represents the next rendering
+  // task that the root will work on.
   callbackNode: *,
-  // Expiration of the callback associated with this root
-  callbackExpirationTime: ExpirationTime,
-  // Priority of the callback associated with this root
-  callbackPriority: ReactPriorityLevel,
-  // The earliest pending expiration time that exists in the tree
-  firstPendingTime: ExpirationTime,
-  // The latest pending expiration time that exists in the tree
-  lastPendingTime: ExpirationTime,
-  // The earliest suspended expiration time that exists in the tree
-  firstSuspendedTime: ExpirationTime,
-  // The latest suspended expiration time that exists in the tree
-  lastSuspendedTime: ExpirationTime,
-  // The next known expiration time after the suspended range
-  nextKnownPendingLevel: ExpirationTime,
-  // The latest time at which a suspended component pinged the root to
-  // render again
-  lastPingedTime: ExpirationTime,
-  lastExpiredTime: ExpirationTime,
-  // Used by useMutableSource hook to avoid tearing within this root
-  // when external, mutable sources are read from during render.
-  mutableSourceLastPendingUpdateTime: ExpirationTime,
+  callbackPriority: LanePriority,
+  eventTimes: LaneMap<number>,
+  expirationTimes: LaneMap<number>,
+
+  pendingLanes: Lanes,
+  suspendedLanes: Lanes,
+  pingedLanes: Lanes,
+  expiredLanes: Lanes,
+  mutableReadLanes: Lanes,
+
+  finishedLanes: Lanes,
+
+  entangledLanes: Lanes,
+  entanglements: LaneMap<Lanes>,
 |};
 
 // The following attributes are only used by interaction tracing builds.
@@ -251,7 +230,7 @@ type BaseFiberRootProperties = {|
 type ProfilingOnlyFiberRootProperties = {|
   interactionThreadID: number,
   memoizedInteractions: Set<Interaction>,
-  pendingInteractionMap: PendingInteractionMap,
+  pendingInteractionMap: Map<Lane | Lanes, Set<Interaction>>,
 |};
 
 export type SuspenseHydrationCallbacks = {
@@ -312,10 +291,6 @@ export type Dispatcher = {|
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useResponder<E, C>(
-    responder: ReactEventResponder<E, C>,
-    props: Object,
-  ): ReactEventResponderListener<E, C>,
   useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T,
   useTransition(
     config: SuspenseConfig | void | null,
@@ -325,6 +300,7 @@ export type Dispatcher = {|
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
-  useEvent(event: ReactListenerEvent): ReactListenerMap,
-  useOpaqueIdentifier(): OpaqueIDType | void,
+  useOpaqueIdentifier(): any,
+
+  unstable_isNewReconciler?: boolean,
 |};

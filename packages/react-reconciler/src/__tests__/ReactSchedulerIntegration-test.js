@@ -53,6 +53,19 @@ describe('ReactSchedulerIntegration', () => {
     }
   }
 
+  // Note: This is based on a similar component we use in www. We can delete
+  // once the extra div wrapper is no longer necessary.
+  function LegacyHiddenDiv({children, mode}) {
+    return (
+      <div hidden={mode === 'hidden'}>
+        <React.unstable_LegacyHidden
+          mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
+          {children}
+        </React.unstable_LegacyHidden>
+      </div>
+    );
+  }
+
   it('flush sync has correct priority', () => {
     function ReadPriority() {
       Scheduler.unstable_yieldValue(
@@ -351,6 +364,7 @@ describe('ReactSchedulerIntegration', () => {
     expect(Scheduler).toHaveYielded(['A', 'B', 'C']);
   });
 
+  // @gate experimental
   it('idle updates are not blocked by offscreen work', async () => {
     function Text({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -361,9 +375,9 @@ describe('ReactSchedulerIntegration', () => {
       return (
         <>
           <Text text={`Visible: ` + label} />
-          <div hidden={true}>
+          <LegacyHiddenDiv mode="hidden">
             <Text text={`Hidden: ` + label} />
-          </div>
+          </LegacyHiddenDiv>
         </>
       );
     }
@@ -486,7 +500,7 @@ describe(
       // This test reproduces a bug where React's Scheduler task timed out but
       // the `shouldYield` method returned true. Usually we try not to mock
       // internal methods, but I've made an exception here since the point is
-      // specifically to test that React is reslient to the behavior of a
+      // specifically to test that React is resilient to the behavior of a
       // Scheduler API. That being said, feel free to rewrite or delete this
       // test if/when the API changes.
       function Text({text}) {

@@ -21,7 +21,6 @@ import {
   batchedUpdates as batchedUpdates_old,
   unbatchedUpdates as unbatchedUpdates_old,
   deferredUpdates as deferredUpdates_old,
-  syncUpdates as syncUpdates_old,
   discreteUpdates as discreteUpdates_old,
   flushDiscreteUpdates as flushDiscreteUpdates_old,
   flushControlled as flushControlled_old,
@@ -40,6 +39,19 @@ import {
   injectIntoDevTools as injectIntoDevTools_old,
   act as act_old,
   createPortal as createPortal_old,
+  createComponentSelector as createComponentSelector_old,
+  createHasPsuedoClassSelector as createHasPsuedoClassSelector_old,
+  createRoleSelector as createRoleSelector_old,
+  createTestNameSelector as createTestNameSelector_old,
+  createTextSelector as createTextSelector_old,
+  getFindAllNodesFailureDescription as getFindAllNodesFailureDescription_old,
+  findAllNodes as findAllNodes_old,
+  findBoundingRects as findBoundingRects_old,
+  focusWithin as focusWithin_old,
+  observeVisibleRects as observeVisibleRects_old,
+  registerMutableSourceForHydration as registerMutableSourceForHydration_old,
+  runWithPriority as runWithPriority_old,
+  getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
 } from './ReactFiberReconciler.old';
 
 import {
@@ -49,7 +61,6 @@ import {
   batchedUpdates as batchedUpdates_new,
   unbatchedUpdates as unbatchedUpdates_new,
   deferredUpdates as deferredUpdates_new,
-  syncUpdates as syncUpdates_new,
   discreteUpdates as discreteUpdates_new,
   flushDiscreteUpdates as flushDiscreteUpdates_new,
   flushControlled as flushControlled_new,
@@ -68,6 +79,19 @@ import {
   injectIntoDevTools as injectIntoDevTools_new,
   act as act_new,
   createPortal as createPortal_new,
+  createComponentSelector as createComponentSelector_new,
+  createHasPsuedoClassSelector as createHasPsuedoClassSelector_new,
+  createRoleSelector as createRoleSelector_new,
+  createTestNameSelector as createTestNameSelector_new,
+  createTextSelector as createTextSelector_new,
+  getFindAllNodesFailureDescription as getFindAllNodesFailureDescription_new,
+  findAllNodes as findAllNodes_new,
+  findBoundingRects as findBoundingRects_new,
+  focusWithin as focusWithin_new,
+  observeVisibleRects as observeVisibleRects_new,
+  registerMutableSourceForHydration as registerMutableSourceForHydration_new,
+  runWithPriority as runWithPriority_new,
+  getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
 } from './ReactFiberReconciler.new';
 
 export const createContainer = enableNewReconciler
@@ -88,9 +112,6 @@ export const unbatchedUpdates = enableNewReconciler
 export const deferredUpdates = enableNewReconciler
   ? deferredUpdates_new
   : deferredUpdates_old;
-export const syncUpdates = enableNewReconciler
-  ? syncUpdates_new
-  : syncUpdates_old;
 export const discreteUpdates = enableNewReconciler
   ? discreteUpdates_new
   : discreteUpdates_old;
@@ -122,6 +143,9 @@ export const attemptContinuousHydration = enableNewReconciler
 export const attemptHydrationAtCurrentPriority = enableNewReconciler
   ? attemptHydrationAtCurrentPriority_new
   : attemptHydrationAtCurrentPriority_old;
+export const getCurrentUpdateLanePriority = enableNewReconciler
+  ? getCurrentUpdateLanePriority_new
+  : getCurrentUpdateLanePriority_old;
 export const findHostInstance = enableNewReconciler
   ? findHostInstance_new
   : findHostInstance_old;
@@ -141,3 +165,41 @@ export const act = enableNewReconciler ? act_new : act_old;
 export const createPortal = enableNewReconciler
   ? createPortal_new
   : createPortal_old;
+export const createComponentSelector = enableNewReconciler
+  ? createComponentSelector_new
+  : createComponentSelector_old;
+
+//TODO: "psuedo" is spelled "pseudo"
+export const createHasPsuedoClassSelector = enableNewReconciler
+  ? createHasPsuedoClassSelector_new
+  : createHasPsuedoClassSelector_old;
+export const createRoleSelector = enableNewReconciler
+  ? createRoleSelector_new
+  : createRoleSelector_old;
+export const createTextSelector = enableNewReconciler
+  ? createTextSelector_new
+  : createTextSelector_old;
+export const createTestNameSelector = enableNewReconciler
+  ? createTestNameSelector_new
+  : createTestNameSelector_old;
+export const getFindAllNodesFailureDescription = enableNewReconciler
+  ? getFindAllNodesFailureDescription_new
+  : getFindAllNodesFailureDescription_old;
+export const findAllNodes = enableNewReconciler
+  ? findAllNodes_new
+  : findAllNodes_old;
+export const findBoundingRects = enableNewReconciler
+  ? findBoundingRects_new
+  : findBoundingRects_old;
+export const focusWithin = enableNewReconciler
+  ? focusWithin_new
+  : focusWithin_old;
+export const observeVisibleRects = enableNewReconciler
+  ? observeVisibleRects_new
+  : observeVisibleRects_old;
+export const registerMutableSourceForHydration = enableNewReconciler
+  ? registerMutableSourceForHydration_new
+  : registerMutableSourceForHydration_old;
+export const runWithPriority = enableNewReconciler
+  ? runWithPriority_new
+  : runWithPriority_old;

@@ -14,18 +14,14 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
 import * as Scheduler from 'scheduler';
 
-// Keep in sync with ReactDOMUnstableNativeDependencies.js
-// ReactDOM.js, and ReactTestUtils.js:
+// Keep in sync with ReactDOM.js, and ReactTestUtils.js:
 const [
   /* eslint-disable no-unused-vars */
   getInstanceFromNode,
   getNodeFromInstance,
   getFiberCurrentPropsFromNode,
-  injectEventPluginsByName,
-  eventNameDispatchConfigs,
   enqueueStateRestore,
   restoreStateIfNeeded,
-  dispatchEvent,
   /* eslint-enable no-unused-vars */
   flushPassiveEffects,
   IsThisRendererActing,

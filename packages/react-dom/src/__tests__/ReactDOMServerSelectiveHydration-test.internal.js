@@ -96,8 +96,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     jest.resetModuleRegistry();
 
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableDeprecatedFlareAPI = true;
-
+    ReactFeatureFlags.enableCreateEventHandleAPI = true;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
@@ -348,18 +347,22 @@ describe('ReactDOMServerSelectiveHydration', () => {
   });
 
   // @gate experimental
-  it('hydrates the target boundary synchronously during a click (flare)', async () => {
-    const usePress = require('react-interactions/events/press').usePress;
+  it('hydrates the target boundary synchronously during a click (createEventHandle)', async () => {
+    const setClick = ReactDOM.unstable_createEventHandle('click');
+    let isServerRendering = true;
 
     function Child({text}) {
+      const ref = React.useRef(null);
       Scheduler.unstable_yieldValue(text);
-      const listener = usePress({
-        onPress() {
-          Scheduler.unstable_yieldValue('Clicked ' + text);
-        },
-      });
+      if (!isServerRendering) {
+        React.useLayoutEffect(() => {
+          return setClick(ref.current, () => {
+            Scheduler.unstable_yieldValue('Clicked ' + text);
+          });
+        });
+      }
 
-      return <span DEPRECATED_flareListeners={listener}>{text}</span>;
+      return <span ref={ref}>{text}</span>;
     }
 
     function App() {
@@ -386,7 +389,10 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     container.innerHTML = finalHTML;
 
+    isServerRendering = false;
+
     const root = ReactDOM.createRoot(container, {hydrate: true});
+
     root.render(<App />);
 
     // Nothing has been hydrated so far.
@@ -398,11 +404,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
     // This should synchronously hydrate the root App and the second suspense
     // boundary.
-    const preventDefault = jest.fn();
-    target.virtualclick({preventDefault});
-
-    // The event should have been canceled because we called preventDefault.
-    expect(preventDefault).toHaveBeenCalled();
+    target.virtualclick();
 
     // We rendered App, B and then invoked the event without rendering A.
     expect(Scheduler).toHaveYielded(['App', 'B', 'Clicked B']);
@@ -414,24 +416,29 @@ describe('ReactDOMServerSelectiveHydration', () => {
   });
 
   // @gate experimental
-  it('hydrates at higher pri if sync did not work first time (flare)', async () => {
-    const usePress = require('react-interactions/events/press').usePress;
+  it('hydrates at higher pri if sync did not work first time (createEventHandle)', async () => {
     let suspend = false;
+    let isServerRendering = true;
     let resolve;
     const promise = new Promise(resolvePromise => (resolve = resolvePromise));
+    const setClick = ReactDOM.unstable_createEventHandle('click');
 
     function Child({text}) {
+      const ref = React.useRef(null);
       if ((text === 'A' || text === 'D') && suspend) {
         throw promise;
       }
       Scheduler.unstable_yieldValue(text);
 
-      const listener = usePress({
-        onPress() {
-          Scheduler.unstable_yieldValue('Clicked ' + text);
-        },
-      });
-      return <span DEPRECATED_flareListeners={listener}>{text}</span>;
+      if (!isServerRendering) {
+        React.useLayoutEffect(() => {
+          return setClick(ref.current, () => {
+            Scheduler.unstable_yieldValue('Clicked ' + text);
+          });
+        });
+      }
+
+      return <span ref={ref}>{text}</span>;
     }
 
     function App() {
@@ -467,6 +474,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     const spanD = container.getElementsByTagName('span')[3];
 
     suspend = true;
+    isServerRendering = false;
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
@@ -476,12 +484,10 @@ describe('ReactDOMServerSelectiveHydration', () => {
     // Nothing has been hydrated so far.
     expect(Scheduler).toHaveYielded([]);
 
-    // This click target cannot be hydrated yet because it's suspended.
-    const result = dispatchClickEvent(spanD);
+    const target = createEventTarget(spanD);
+    target.virtualclick();
 
     expect(Scheduler).toHaveYielded(['App']);
-
-    expect(result).toBe(true);
 
     // Continuing rendering will render B next.
     expect(Scheduler).toFlushAndYield(['B', 'C']);
@@ -498,24 +504,28 @@ describe('ReactDOMServerSelectiveHydration', () => {
   });
 
   // @gate experimental
-  it('hydrates at higher pri for secondary discrete events (flare)', async () => {
-    const usePress = require('react-interactions/events/press').usePress;
+  it('hydrates at higher pri for secondary discrete events (createEventHandle)', async () => {
+    const setClick = ReactDOM.unstable_createEventHandle('click');
     let suspend = false;
+    let isServerRendering = true;
     let resolve;
     const promise = new Promise(resolvePromise => (resolve = resolvePromise));
 
     function Child({text}) {
+      const ref = React.useRef(null);
       if ((text === 'A' || text === 'D') && suspend) {
         throw promise;
       }
       Scheduler.unstable_yieldValue(text);
 
-      const listener = usePress({
-        onPress() {
-          Scheduler.unstable_yieldValue('Clicked ' + text);
-        },
-      });
-      return <span DEPRECATED_flareListeners={listener}>{text}</span>;
+      if (!isServerRendering) {
+        React.useLayoutEffect(() => {
+          return setClick(ref.current, () => {
+            Scheduler.unstable_yieldValue('Clicked ' + text);
+          });
+        });
+      }
+      return <span ref={ref}>{text}</span>;
     }
 
     function App() {
@@ -553,6 +563,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     const spanD = container.getElementsByTagName('span')[3];
 
     suspend = true;
+    isServerRendering = false;
 
     // A and D will be suspended. We'll click on D which should take
     // priority, after we unsuspend.
@@ -563,9 +574,9 @@ describe('ReactDOMServerSelectiveHydration', () => {
     expect(Scheduler).toHaveYielded([]);
 
     // This click target cannot be hydrated yet because the first is Suspended.
-    dispatchClickEvent(spanA);
-    dispatchClickEvent(spanC);
-    dispatchClickEvent(spanD);
+    createEventTarget(spanA).virtualclick();
+    createEventTarget(spanC).virtualclick();
+    createEventTarget(spanD).virtualclick();
 
     expect(Scheduler).toHaveYielded(['App']);
 
@@ -885,7 +896,14 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
       // Start rendering. This will force the first boundary to hydrate
       // by scheduling it at one higher pri than Idle.
-      expect(Scheduler).toFlushAndYieldThrough(['App', 'A']);
+      expect(Scheduler).toFlushAndYieldThrough([
+        // An update was scheduled to force hydrate the boundary, but React will
+        // continue rendering at Idle until the next time React yields. This is
+        // fine though because it will switch to the hydration level when it
+        // re-enters the work loop.
+        'App',
+        'AA',
+      ]);
 
       // Hover over A which (could) schedule at one higher pri than Idle.
       dispatchMouseHoverEvent(spanA, null);

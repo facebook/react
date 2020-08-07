@@ -39,7 +39,7 @@ Object {
     5 => 1,
   },
   "interactionIDs": Array [],
-  "priorityLevel": "Immediate",
+  "priorityLevel": "Normal",
   "timestamp": 16,
 }
 `;
@@ -76,7 +76,7 @@ Object {
     4 => 2,
   },
   "interactionIDs": Array [],
-  "priorityLevel": "Immediate",
+  "priorityLevel": "Normal",
   "timestamp": 15,
 }
 `;
@@ -155,7 +155,7 @@ Object {
     5 => 1,
   },
   "interactionIDs": Array [],
-  "priorityLevel": "Immediate",
+  "priorityLevel": "Normal",
   "timestamp": 12,
 }
 `;
@@ -374,7 +374,7 @@ Object {
             ],
           ],
           "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 12,
         },
         Object {
@@ -829,7 +829,7 @@ Object {
             ],
           ],
           "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 11,
         },
         Object {
@@ -1344,6 +1344,7 @@ Object {
         2,
       ],
       "displayName": null,
+      "hocDisplayNames": null,
       "id": 1,
       "key": null,
       "type": 11,
@@ -1355,6 +1356,7 @@ Object {
         5,
       ],
       "displayName": "Parent",
+      "hocDisplayNames": null,
       "id": 2,
       "key": null,
       "type": 5,
@@ -1362,6 +1364,7 @@ Object {
     3 => Object {
       "children": Array [],
       "displayName": "Child",
+      "hocDisplayNames": null,
       "id": 3,
       "key": "0",
       "type": 5,
@@ -1369,6 +1372,7 @@ Object {
     4 => Object {
       "children": Array [],
       "displayName": "Child",
+      "hocDisplayNames": null,
       "id": 4,
       "key": "1",
       "type": 5,
@@ -1376,6 +1380,9 @@ Object {
     5 => Object {
       "children": Array [],
       "displayName": "Child",
+      "hocDisplayNames": Array [
+        "Memo",
+      ],
       "id": 5,
       "key": null,
       "type": 8,
@@ -1425,7 +1432,7 @@ Object {
         14 => 1,
       },
       "interactionIDs": Array [],
-      "priorityLevel": "Immediate",
+      "priorityLevel": "Normal",
       "timestamp": 24,
     },
   ],
@@ -1500,7 +1507,17 @@ Object {
 
 exports[`ProfilingCache should collect data for each root (including ones added or mounted after profiling started): Data for root Parent 3`] = `
 Object {
-  "commitData": Array [],
+  "commitData": Array [
+    Object {
+      "changeDescriptions": Map {},
+      "duration": 0,
+      "fiberActualDurations": Map {},
+      "fiberSelfDurations": Map {},
+      "interactionIDs": Array [],
+      "priorityLevel": "Normal",
+      "timestamp": 34,
+    },
+  ],
   "displayName": "Parent",
   "initialTreeBaseDurations": Map {
     6 => 11,
@@ -1510,7 +1527,19 @@ Object {
   },
   "interactionCommits": Map {},
   "interactions": Map {},
-  "operations": Array [],
+  "operations": Array [
+    Array [
+      1,
+      6,
+      0,
+      2,
+      4,
+      9,
+      8,
+      7,
+      6,
+    ],
+  ],
   "rootID": 6,
   "snapshots": Map {
     6 => Object {
@@ -1518,6 +1547,7 @@ Object {
         7,
       ],
       "displayName": null,
+      "hocDisplayNames": null,
       "id": 6,
       "key": null,
       "type": 11,
@@ -1528,6 +1558,7 @@ Object {
         9,
       ],
       "displayName": "Parent",
+      "hocDisplayNames": null,
       "id": 7,
       "key": null,
       "type": 5,
@@ -1535,6 +1566,7 @@ Object {
     8 => Object {
       "children": Array [],
       "displayName": "Child",
+      "hocDisplayNames": null,
       "id": 8,
       "key": "0",
       "type": 5,
@@ -1542,6 +1574,9 @@ Object {
     9 => Object {
       "children": Array [],
       "displayName": "Child",
+      "hocDisplayNames": Array [
+        "Memo",
+      ],
       "id": 9,
       "key": null,
       "type": 8,
@@ -1848,6 +1883,7 @@ Object {
               2,
             ],
             "displayName": null,
+            "hocDisplayNames": null,
             "id": 1,
             "key": null,
             "type": 11,
@@ -1862,6 +1898,7 @@ Object {
               5,
             ],
             "displayName": "Parent",
+            "hocDisplayNames": null,
             "id": 2,
             "key": null,
             "type": 5,
@@ -1872,6 +1909,7 @@ Object {
           Object {
             "children": Array [],
             "displayName": "Child",
+            "hocDisplayNames": null,
             "id": 3,
             "key": "0",
             "type": 5,
@@ -1882,6 +1920,7 @@ Object {
           Object {
             "children": Array [],
             "displayName": "Child",
+            "hocDisplayNames": null,
             "id": 4,
             "key": "1",
             "type": 5,
@@ -1892,6 +1931,9 @@ Object {
           Object {
             "children": Array [],
             "displayName": "Child",
+            "hocDisplayNames": Array [
+              "Memo",
+            ],
             "id": 5,
             "key": null,
             "type": 8,
@@ -1972,7 +2014,7 @@ Object {
             ],
           ],
           "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 24,
         },
       ],
@@ -2044,7 +2086,17 @@ Object {
       "snapshots": Array [],
     },
     Object {
-      "commitData": Array [],
+      "commitData": Array [
+        Object {
+          "changeDescriptions": Array [],
+          "duration": 0,
+          "fiberActualDurations": Array [],
+          "fiberSelfDurations": Array [],
+          "interactionIDs": Array [],
+          "priorityLevel": "Normal",
+          "timestamp": 34,
+        },
+      ],
       "displayName": "Parent",
       "initialTreeBaseDurations": Array [
         Array [
@@ -2066,7 +2118,19 @@ Object {
       ],
       "interactionCommits": Array [],
       "interactions": Array [],
-      "operations": Array [],
+      "operations": Array [
+        Array [
+          1,
+          6,
+          0,
+          2,
+          4,
+          9,
+          8,
+          7,
+          6,
+        ],
+      ],
       "rootID": 6,
       "snapshots": Array [
         Array [
@@ -2076,6 +2140,7 @@ Object {
               7,
             ],
             "displayName": null,
+            "hocDisplayNames": null,
             "id": 6,
             "key": null,
             "type": 11,
@@ -2089,6 +2154,7 @@ Object {
               9,
             ],
             "displayName": "Parent",
+            "hocDisplayNames": null,
             "id": 7,
             "key": null,
             "type": 5,
@@ -2099,6 +2165,7 @@ Object {
           Object {
             "children": Array [],
             "displayName": "Child",
+            "hocDisplayNames": null,
             "id": 8,
             "key": "0",
             "type": 5,
@@ -2109,6 +2176,9 @@ Object {
           Object {
             "children": Array [],
             "displayName": "Child",
+            "hocDisplayNames": Array [
+              "Memo",
+            ],
             "id": 9,
             "key": null,
             "type": 8,
@@ -2118,6 +2188,65 @@ Object {
     },
   ],
   "version": 4,
+}
+`;
+
+exports[`ProfilingCache should handle unexpectedly shallow suspense trees: Empty Suspense node 1`] = `
+Object {
+  "commitData": Array [
+    Object {
+      "changeDescriptions": Map {},
+      "duration": 0,
+      "fiberActualDurations": Map {
+        1 => 0,
+        2 => 0,
+      },
+      "fiberSelfDurations": Map {
+        1 => 0,
+        2 => 0,
+      },
+      "interactionIDs": Array [],
+      "priorityLevel": "Normal",
+      "timestamp": 0,
+    },
+  ],
+  "displayName": "Suspense",
+  "initialTreeBaseDurations": Map {},
+  "interactionCommits": Map {},
+  "interactions": Map {},
+  "operations": Array [
+    Array [
+      1,
+      1,
+      9,
+      8,
+      83,
+      117,
+      115,
+      112,
+      101,
+      110,
+      115,
+      101,
+      1,
+      1,
+      11,
+      1,
+      1,
+      1,
+      2,
+      12,
+      1,
+      0,
+      1,
+      0,
+      4,
+      2,
+      0,
+    ],
+  ],
+  "rootID": 1,
+  "snapshots": Map {},
 }
 `;
 
@@ -2144,7 +2273,7 @@ Object {
     3 => 0,
   },
   "interactionIDs": Array [],
-  "priorityLevel": "Immediate",
+  "priorityLevel": "Normal",
   "timestamp": 0,
 }
 `;
@@ -2303,7 +2432,7 @@ Object {
             ],
           ],
           "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 0,
         },
         Object {
@@ -2611,7 +2740,7 @@ Object {
     7 => 0,
   },
   "interactionIDs": Array [],
-  "priorityLevel": "Immediate",
+  "priorityLevel": "Normal",
   "timestamp": 0,
 }
 `;
@@ -3005,7 +3134,7 @@ Object {
             ],
           ],
           "interactionIDs": Array [],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 0,
         },
         Object {
@@ -3797,7 +3926,7 @@ Object {
           "interactionIDs": Array [
             0,
           ],
-          "priorityLevel": "Immediate",
+          "priorityLevel": "Normal",
           "timestamp": 11,
         },
         Object {

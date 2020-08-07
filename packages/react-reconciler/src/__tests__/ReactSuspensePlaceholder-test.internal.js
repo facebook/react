@@ -403,10 +403,11 @@ describe('ReactSuspensePlaceholder', () => {
         expect(onRender).toHaveBeenCalledTimes(2);
 
         // The suspense update should only show the "Loading..." Fallback.
-        // Both durations should include 10ms spent rendering Fallback
-        // plus the 8ms rendering the (hidden) components.
+        // The actual duration should include 10ms spent rendering Fallback,
+        // plus the 8ms render all of the hidden, suspended subtree.
+        // But the tree base duration should only include 10ms spent rendering Fallback,
         expect(onRender.mock.calls[1][2]).toBe(18);
-        expect(onRender.mock.calls[1][3]).toBe(18);
+        expect(onRender.mock.calls[1][3]).toBe(10);
 
         ReactNoop.renderLegacySyncRoot(
           <App shouldSuspend={true} text="New" textRenderDuration={6} />,
@@ -421,12 +422,8 @@ describe('ReactSuspensePlaceholder', () => {
         expect(ReactNoop).toMatchRenderedOutput('Loading...');
         expect(onRender).toHaveBeenCalledTimes(3);
 
-        // If we force another update while still timed out,
-        // but this time the Text component took 1ms longer to render.
-        // This should impact both actualDuration and treeBaseDuration.
-        expect(onRender.mock.calls[2][2]).toBe(19);
-        expect(onRender.mock.calls[2][3]).toBe(19);
-
+        expect(onRender.mock.calls[1][2]).toBe(18);
+        expect(onRender.mock.calls[1][3]).toBe(10);
         jest.advanceTimersByTime(1000);
 
         expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
@@ -481,10 +478,9 @@ describe('ReactSuspensePlaceholder', () => {
         // The suspense update should only show the "Loading..." Fallback.
         // The actual duration should include 10ms spent rendering Fallback,
         // plus the 8ms render all of the hidden, suspended subtree.
-        // But the tree base duration should only include 10ms spent rendering Fallback,
-        // plus the 5ms rendering the previously committed version of the hidden tree.
+        // But the tree base duration should only include 10ms spent rendering Fallback.
         expect(onRender.mock.calls[1][2]).toBe(18);
-        expect(onRender.mock.calls[1][3]).toBe(15);
+        expect(onRender.mock.calls[1][3]).toBe(10);
 
         // Update again while timed out.
         // Since this test was originally written we added an optimization to avoid

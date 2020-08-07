@@ -45,7 +45,7 @@ const run = async ({cwd, local, packages, version}) => {
     const tempPackagePath = join(nodeModulesPath, 'package');
 
     // Download packages from NPM and extract them to the expected build locations.
-    await exec(`curl ${url} > ${filePath}`, {cwd});
+    await exec(`curl -L ${url} > ${filePath}`, {cwd});
     await exec(`tar -xvzf ${filePath} -C ${nodeModulesPath}`, {cwd});
     await exec(`mv ${tempPackagePath} ${packagePath}`, {cwd});
     await exec(`rm ${filePath}`, {cwd});

@@ -25,7 +25,7 @@ import {
   FundamentalComponent,
   SuspenseComponent,
 } from './ReactWorkTags';
-import {NoEffect, Placement, Hydrating, Deletion} from './ReactSideEffectTags';
+import {NoEffect, Placement, Hydrating} from './ReactSideEffectTags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -342,12 +342,14 @@ export function isFiberSuspenseAndTimedOut(fiber: Fiber): boolean {
   );
 }
 
-// This is only safe to call in the commit phase when the return tree is consistent.
-// It should not be used anywhere else. See PR #18609 for details.
-export function isFiberInsideHiddenOrRemovedTree(fiber: Fiber): boolean {
-  let node = fiber;
+export function doesFiberContain(
+  parentFiber: Fiber,
+  childFiber: Fiber,
+): boolean {
+  let node = childFiber;
+  const parentFiberAlternate = parentFiber.alternate;
   while (node !== null) {
-    if (node.effectTag & Deletion || isFiberSuspenseAndTimedOut(node)) {
+    if (node === parentFiber || node === parentFiberAlternate) {
       return true;
     }
     node = node.return;

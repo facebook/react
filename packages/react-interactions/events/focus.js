@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from './src/dom/use-event/Focus';
+export * from './src/dom/create-event-handle/Focus';
