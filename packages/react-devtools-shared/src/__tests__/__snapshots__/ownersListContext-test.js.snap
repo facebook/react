@@ -78,7 +78,7 @@ Array [
 ]
 `;
 
-exports[`OwnersListContext should include all owners for a component wrapped in react memo : owners for "Anonymous" 1`] = `
+exports[`OwnersListContext should include all owners for a component wrapped in react memo: owners for "InnerComponent" 1`] = `
 Array [
   Object {
     "displayName": "Grandparent",
@@ -87,14 +87,18 @@ Array [
     "type": 5,
   },
   Object {
-    "displayName": "Anonymous",
-    "hocDisplayNames": null,
+    "displayName": "InnerComponent",
+    "hocDisplayNames": Array [
+      "Memo",
+    ],
     "id": 3,
     "type": 8,
   },
   Object {
-    "displayName": "Anonymous",
-    "hocDisplayNames": null,
+    "displayName": "InnerComponent",
+    "hocDisplayNames": Array [
+      "ForwardRef",
+    ],
     "id": 4,
     "type": 6,
   },

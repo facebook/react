@@ -207,9 +207,10 @@ describe('OwnersListContext', () => {
     done();
   });
 
-  it('should include all owners for a component wrapped in react memo ', async done => {
-    const InnerComponent = React.forwardRef((props, ref) => <div ref={ref} />);
-    const Memo = React.memo(InnerComponent);
+  it('should include all owners for a component wrapped in react memo', async done => {
+    const InnerComponent = (props, ref) => <div ref={ref} />;
+    const ForwardRef = React.forwardRef(InnerComponent);
+    const Memo = React.memo(ForwardRef);
     const Grandparent = () => {
       const ref = React.createRef();
       return <Memo ref={ref} />;
