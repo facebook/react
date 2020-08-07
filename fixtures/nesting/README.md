@@ -103,7 +103,7 @@ function AboutPage() {
 }
 ```
 
-As a result, only if the `AboutPage` (and as a result, `<Greeting />`) gets rendered, we will load the bundle containing the legacy React and the `Greeting` legacy component. Like with `React.lazy()`, we wrap it in `<Suspense>` to specify the loading indicator:
+As a result, only if the `AboutPage` (and as a result, `<Greeting />`) gets rendered, we will load the bundle containing the legacy React and the legacy `Greeting` component. Like with `React.lazy()`, we wrap it in `<Suspense>` to specify the loading indicator:
 
 ```js
 <Suspense fallback={<Spinner />}>
@@ -111,7 +111,7 @@ As a result, only if the `AboutPage` (and as a result, `<Greeting />`) gets rend
 </Suspense>
 ```
 
-You can also use this to load the old React bundle on demand, if it makes sense for your user experience:
+If the legacy component is only rendered conditionally, we won't load the second React until it's shown:
 
 ```js
 <>
@@ -127,15 +127,15 @@ You can also use this to load the old React bundle on demand, if it makes sense 
 ```
 
 
-The implementation of the `src/modern/lazyLegacyRoot.js` helper is included so you can tweak it and customize it to your needs. Remember to test lazy loading with the production builds because the bundler may not opimize it in development.
+The implementation of the `src/modern/lazyLegacyRoot.js` helper is included so you can tweak it and customize it to your needs. Remember to test lazy loading with the production builds because the bundler may not optimize it in development.
 
 ### Context
 
-If you have nested trees managed by different versions of React, the inner tree won't "see" the outer tree's Context. This breaks third-party libraries like React Redux or React Router, as well as any of your own usage of Context (for example, for theming).
+If you have nested trees managed by different versions of React, the inner tree won't "see" the outer tree's Context.
 
-To solve this problem, we read all the Contexts we care about in the outer tree, pass them to the inner tree, and then wrap the inner tree in the corresponding Providers.
+This breaks third-party libraries like React Redux or React Router, as well as any of your own usage of Context (for example, for theming).
 
-You can see this in action in two files:
+To solve this problem, we read all the Contexts we care about in the outer tree, pass them to the inner tree, and then wrap the inner tree in the corresponding Providers. You can see this in action in two files:
 
 * `src/modern/lazyLegacyRoot.js`: Look for `useContext` calls, and how their results are combined into a single object that is passed through. **You can read more Contexts there** if your app requires them.
 * `src/legacy/createLegacyRoot.js`: Look for the `Bridge` component which receives that object and wraps its children with the appropriate Context Providers. **You can wrap them with more Providers there** if your app requires them.
