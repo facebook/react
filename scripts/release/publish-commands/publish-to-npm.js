@@ -62,7 +62,9 @@ const run = async ({cwd, dry, packages, tags}, otp) => {
           await exec(`npm dist-tag rm ${packageName} untagged --otp=${otp}`);
         }
         console.log(
-          theme.command(`npm dist-tag rm ${packageName} untagged --otp=${otp}`)
+          theme.command(
+            `  npm dist-tag rm ${packageName} untagged --otp=${otp}`
+          )
         );
       }
     }
