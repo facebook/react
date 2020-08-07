@@ -1,6 +1,3 @@
-
-
-
 # Nested React Demo
 
 This is a demo of how you can configure a build system to serve **two different versions of React** side by side in the same app. This is not optimal, and should only be used as a compromise to prevent your app from getting stuck on an old version of React.
