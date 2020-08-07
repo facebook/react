@@ -579,6 +579,10 @@ export function createFiberFromTypeAndProps(
   fiber.type = resolvedType;
   fiber.lanes = lanes;
 
+  if (__DEV__) {
+    fiber._debugOwner = owner;
+  }
+
   return fiber;
 }
 
