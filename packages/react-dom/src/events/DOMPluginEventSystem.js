@@ -923,7 +923,7 @@ function accumulateEnterLeaveListenersForEvent(
   inCapturePhase: boolean,
 ): void {
   const registrationName = event._reactName;
-  if (registrationName === undefined) {
+  if (registrationName === null) {
     return;
   }
   const listeners: Array<DispatchListener> = [];

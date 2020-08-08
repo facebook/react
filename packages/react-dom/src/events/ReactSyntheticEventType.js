@@ -27,7 +27,7 @@ export type ReactSyntheticEvent = {|
   isPropagationStopped: () => boolean,
   _dispatchInstances?: null | Array<Fiber | null> | Fiber,
   _dispatchListeners?: null | Array<Function> | Function,
-  _reactName: string,
+  _reactName: string | null,
   _targetInst: Fiber,
   nativeEvent: Event,
   type: string,
