@@ -1,5 +1,5 @@
 {
-  "name": "eslint-plugin-react-hooks",
+  "name": "@lewisl9029/eslint-plugin-react-hooks",
   "description": "ESLint rules for React Hooks",
   "version": "4.2.0",
   "repository": {
