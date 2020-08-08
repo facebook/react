@@ -44,7 +44,7 @@ describe('SyntheticFocusEvent', () => {
       }),
     );
 
-    expect(log).toEqual(['onFocusCapture: focusin', 'onFocus: focusin']);
+    expect(log).toEqual(['onFocusCapture: focus', 'onFocus: focus']);
   });
 
   test('onBlur events have the blur type', () => {
@@ -65,6 +65,6 @@ describe('SyntheticFocusEvent', () => {
       }),
     );
 
-    expect(log).toEqual(['onBlurCapture: focusout', 'onBlur: focusout']);
+    expect(log).toEqual(['onBlurCapture: blur', 'onBlur: blur']);
   });
 });

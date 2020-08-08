@@ -158,6 +158,13 @@ function extractEvents(
     EventInterface,
   );
 
+  if (domEventName === 'focusin') {
+    event.type = 'focus';
+  }
+  if (domEventName === 'focusout') {
+    event.type = 'blur';
+  }
+
   const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
   if (
     enableCreateEventHandleAPI &&
