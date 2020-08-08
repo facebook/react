@@ -104,6 +104,14 @@ function isInsideComponentOrHook(node) {
   return false;
 }
 
+function isDirectlyInsideRenderHooks(node) {
+  return node.parent && 
+    node.parent.type === 'JSXExpressionContainer' && 
+    node.parent.parent && 
+    node.parent.parent.type === 'JSXElement' && 
+    node.parent.parent.openingElement.name.name === 'Hooks';
+}
+
 export default {
   meta: {
     type: 'problem',
@@ -352,7 +360,7 @@ export default {
         const isDirectlyInsideComponentOrHook = codePathFunctionName
           ? isComponentName(codePathFunctionName) ||
             isHook(codePathFunctionName)
-          : isForwardRefCallback(codePathNode) || isMemoCallback(codePathNode);
+          : isForwardRefCallback(codePathNode) || isMemoCallback(codePathNode) || isDirectlyInsideRenderHooks(codePathNode);
 
         // Compute the earliest finalizer level using information from the
         // cache. We expect all reachable final segments to have a cache entry

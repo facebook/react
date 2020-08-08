@@ -337,6 +337,16 @@ const tests = {
         const [myState, setMyState] = useState(null);
       }
     `,
+    `
+      // Valid because render-hooks acts as a component boundary
+      function App(props) {
+        return props.isOpen
+          ? <Hooks>
+              {() => <Modal close={useCallback(() => props.setIsOpen(false), [props.setIsOpen])} />}
+            </Hooks> 
+          : null;
+      }
+    `,
   ],
   invalid: [
     {
@@ -887,6 +897,21 @@ const tests = {
       `,
       errors: [classError('useState')],
     },
+    {
+      code: `
+        // Invalid because rule of hooks still need to be adhered to within render-hooks
+        function App(props) {
+          return props.isOpen
+            ? <Hooks>
+                {() => {
+                  return <Modal close={props.setIsOpen ? useCallback(() => props.setIsOpen(false), [props.setIsOpen]) : undefined} />;
+                }}
+              </Hooks> 
+            : null;
+        }
+      `,
+      errors: [conditionalError('useCallback')]
+    }
   ],
 };
 
