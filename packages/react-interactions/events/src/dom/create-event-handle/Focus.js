@@ -200,8 +200,8 @@ export function useFocus(
   const stateRef = useRef<null | {isFocused: boolean, isFocusVisible: boolean}>(
     {isFocused: false, isFocusVisible: false},
   );
-  const focusHandle = useEvent('focus', passiveObjectWithPriority);
-  const blurHandle = useEvent('blur', passiveObjectWithPriority);
+  const focusHandle = useEvent('focusin', passiveObjectWithPriority);
+  const blurHandle = useEvent('focusout', passiveObjectWithPriority);
   const focusVisibleHandles = useFocusVisibleInputHandles();
 
   useLayoutEffect(() => {
@@ -297,8 +297,8 @@ export function useFocusWithin<T>(
   const stateRef = useRef<null | {isFocused: boolean, isFocusVisible: boolean}>(
     {isFocused: false, isFocusVisible: false},
   );
-  const focusHandle = useEvent('focus', passiveObjectWithPriority);
-  const blurHandle = useEvent('blur', passiveObjectWithPriority);
+  const focusHandle = useEvent('focusin', passiveObjectWithPriority);
+  const blurHandle = useEvent('focusout', passiveObjectWithPriority);
   const afterBlurHandle = useEvent('afterblur', passiveObject);
   const beforeBlurHandle = useEvent('beforeblur', passiveObject);
   const focusVisibleHandles = useFocusVisibleInputHandles();

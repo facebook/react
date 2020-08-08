@@ -91,7 +91,7 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
         useFocus(ref, {
           onBlur,
         });
-        return <div ref={ref} onBlur={() => {}} onFocus={() => {}} />;
+        return <div ref={ref} />;
       };
       ReactDOM.render(<Component />, container);
       Scheduler.unstable_flushAll();
@@ -119,7 +119,7 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
           onFocus,
         });
         return (
-          <div ref={ref} onFocus={() => {}}>
+          <div ref={ref}>
             <a ref={innerRef} />
           </div>
         );
@@ -158,7 +158,7 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
         });
         return (
           <div ref={ref}>
-            <div ref={innerRef} onBlur={() => {}} onFocus={() => {}} />
+            <div ref={innerRef} />
           </div>
         );
       };
@@ -201,7 +201,7 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
           onFocusVisibleChange,
         });
         return (
-          <div ref={ref} onBlur={() => {}} onFocus={() => {}}>
+          <div ref={ref}>
             <div ref={innerRef} />
           </div>
         );
@@ -295,7 +295,7 @@ describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
           onFocusChange: createEventHandler('outer: onFocusChange'),
         });
         return (
-          <div ref={outerRef} onBlur={() => {}} onFocus={() => {}}>
+          <div ref={outerRef}>
             <Inner />
           </div>
         );

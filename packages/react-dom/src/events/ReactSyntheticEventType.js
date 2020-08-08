@@ -29,6 +29,7 @@ export type ReactSyntheticEvent = {|
   _dispatchListeners?: null | Array<Function> | Function,
   _reactName: string,
   _targetInst: Fiber,
+  nativeEvent: Event,
   type: string,
   currentTarget: null | EventTarget,
 |};
