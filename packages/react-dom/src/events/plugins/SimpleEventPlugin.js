@@ -18,6 +18,8 @@ import {
   AnimationEventInterface,
   ClipboardEventInterface,
   FocusEventInterface,
+  FocusInEventInterface,
+  FocusOutEventInterface,
   KeyboardEventInterface,
   MouseEventInterface,
   PointerEventInterface,
@@ -77,7 +79,11 @@ function extractEvents(
       EventInterface = KeyboardEventInterface;
       break;
     case 'focusin':
+      EventInterface = FocusInEventInterface;
+      break;
     case 'focusout':
+      EventInterface = FocusOutEventInterface;
+      break;
     case 'beforeblur':
     case 'afterblur':
       EventInterface = FocusEventInterface;
@@ -157,13 +163,6 @@ function extractEvents(
     nativeEventTarget,
     EventInterface,
   );
-
-  if (domEventName === 'focusin') {
-    event.type = 'focus';
-  }
-  if (domEventName === 'focusout') {
-    event.type = 'blur';
-  }
 
   const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
   if (

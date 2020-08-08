@@ -226,6 +226,20 @@ export const FocusEventInterface = {
   relatedTarget: 0,
 };
 
+export const FocusInEventInterface = {
+  ...FocusEventInterface,
+  type: function() {
+    return 'focus';
+  },
+};
+
+export const FocusOutEventInterface = {
+  ...FocusEventInterface,
+  type: function() {
+    return 'blur';
+  },
+};
+
 /**
  * @interface Event
  * @see http://www.w3.org/TR/css3-animations/#AnimationEvent-interface
