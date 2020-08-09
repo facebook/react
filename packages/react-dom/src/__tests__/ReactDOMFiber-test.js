@@ -966,7 +966,7 @@ describe('ReactDOMFiber', () => {
         container,
       );
 
-      simulateMouseMove(container, firstTarget);
+      simulateMouseMove(firstTarget.parentElement, firstTarget);
       expect(ops).toEqual(['enter parent']);
 
       ops = [];
@@ -987,6 +987,40 @@ describe('ReactDOMFiber', () => {
     } finally {
       document.body.removeChild(portalContainer);
     }
+  });
+
+  it('does not fire mouseEnter twice', () => {
+    const ops = [];
+    let target = null;
+
+    function simulateMouseMove(from, to) {
+      if (from) {
+        from.dispatchEvent(
+          new MouseEvent('mouseout', {
+            bubbles: true,
+            cancelable: true,
+            relatedTarget: to,
+          }),
+        );
+      }
+      if (to) {
+        to.dispatchEvent(
+          new MouseEvent('mouseover', {
+            bubbles: true,
+            cancelable: true,
+            relatedTarget: from,
+          }),
+        );
+      }
+    }
+
+    ReactDOM.render(
+      <div onMouseEnter={() => ops.push('enter')} ref={n => (target = n)} />,
+      container,
+    );
+
+    simulateMouseMove(target.parentElement, target);
+    expect(ops).toEqual(['enter']);
   });
 
   it('should throw on bad createPortal argument', () => {
