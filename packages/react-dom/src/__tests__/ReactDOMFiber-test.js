@@ -966,7 +966,7 @@ describe('ReactDOMFiber', () => {
         container,
       );
 
-      simulateMouseMove(null, firstTarget);
+      simulateMouseMove(container, firstTarget);
       expect(ops).toEqual(['enter parent']);
 
       ops = [];
