@@ -27,9 +27,6 @@
   "peerDependencies": {
     "react": "^17.0.0-alpha"
   },
-  "resolutions": {
-    "react-shallow-renderer/react-is": "^17.0.0-alpha"
-  },
   "files": [
     "LICENSE",
     "README.md",
