@@ -20,6 +20,7 @@ const run = async ({cwd, packages, tags}) => {
   const {version} = await readJson(packageJSONPath);
   const isExperimentalVersion = version.indexOf('experimental') !== -1;
   if (version.indexOf('0.0.0') === 0) {
+    // 0.0.0-...
     if (tags.includes('latest')) {
       if (isExperimentalVersion) {
         console.log(
@@ -44,8 +45,23 @@ const run = async ({cwd, packages, tags}) => {
       );
       process.exit(1);
     }
+  } else if (version.indexOf('-') !== -1) {
+    // 17.0.0-rc.0
+    if (tags.includes('latest')) {
+      console.log(
+        theme`{error Prerelease} {version ${version}} {error cannot be tagged as} {tag latest}`
+      );
+      process.exit(1);
+    }
+    if (tags.includes('experimental')) {
+      console.log(
+        theme`{error Prerelease} {version ${version}} {error cannot be tagged as} {tag experimental}`
+      );
+      process.exit(1);
+    }
   } else {
     if (!tags.includes('latest')) {
+      // 17.0.0
       console.log(
         theme`{error Stable release} {version ${version}} {error must always be tagged as} {tag latest}`
       );
