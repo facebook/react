@@ -56,6 +56,7 @@ describe('SchedulingProfiler', () => {
   beforeEach(() => {
     jest.resetModules();
     global.performance = createUserTimingPolyfill();
+    marks = [];
 
     React = require('react');
 
@@ -64,8 +65,6 @@ describe('SchedulingProfiler', () => {
     ReactNoop = require('react-noop-renderer');
 
     Scheduler = require('scheduler');
-
-    marks = [];
   });
 
   afterEach(() => {
@@ -79,11 +78,17 @@ describe('SchedulingProfiler', () => {
   });
 
   // @gate enableSchedulingProfiler
+  it('should log React version on initialization', () => {
+    expect(marks).toEqual([`--react-init-${ReactVersion}`]);
+  });
+
+  // @gate enableSchedulingProfiler
   it('should mark sync render without suspends or state updates', () => {
     ReactTestRenderer.create(<div />);
 
     expect(marks).toEqual([
-      `--schedule-render-1-${ReactVersion}`,
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-1',
       '--render-start-1',
       '--render-stop',
       '--commit-start-1',
@@ -97,7 +102,10 @@ describe('SchedulingProfiler', () => {
   it('should mark concurrent render without suspends or state updates', () => {
     ReactTestRenderer.create(<div />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([`--schedule-render-512-${ReactVersion}`]);
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+    ]);
 
     marks.splice(0);
 
@@ -130,7 +138,8 @@ describe('SchedulingProfiler', () => {
     expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
 
     expect(marks).toEqual([
-      `--schedule-render-512-${ReactVersion}`,
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
       '--render-start-512',
       '--render-yield',
     ]);
@@ -150,7 +159,8 @@ describe('SchedulingProfiler', () => {
     );
 
     expect(marks).toEqual([
-      `--schedule-render-1-${ReactVersion}`,
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-1',
       '--render-start-1',
       toggleComponentStacks(
         '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
@@ -186,7 +196,8 @@ describe('SchedulingProfiler', () => {
     );
 
     expect(marks).toEqual([
-      `--schedule-render-1-${ReactVersion}`,
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-1',
       '--render-start-1',
       toggleComponentStacks(
         '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
@@ -222,7 +233,10 @@ describe('SchedulingProfiler', () => {
       {unstable_isConcurrent: true},
     );
 
-    expect(marks).toEqual([`--schedule-render-512-${ReactVersion}`]);
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+    ]);
 
     marks.splice(0);
 
@@ -264,7 +278,10 @@ describe('SchedulingProfiler', () => {
       {unstable_isConcurrent: true},
     );
 
-    expect(marks).toEqual([`--schedule-render-512-${ReactVersion}`]);
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+    ]);
 
     marks.splice(0);
 
@@ -306,7 +323,10 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([`--schedule-render-512-${ReactVersion}`]);
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+    ]);
 
     marks.splice(0);
 
@@ -342,7 +362,10 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([`--schedule-render-512-${ReactVersion}`]);
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+    ]);
 
     marks.splice(0);
 
@@ -379,7 +402,10 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([`--schedule-render-512-${ReactVersion}`]);
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+    ]);
 
     marks.splice(0);
 
@@ -416,7 +442,10 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([`--schedule-render-512-${ReactVersion}`]);
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+    ]);
 
     marks.splice(0);
 
@@ -451,7 +480,10 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([`--schedule-render-512-${ReactVersion}`]);
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+    ]);
 
     marks.splice(0);
 
@@ -491,7 +523,8 @@ describe('SchedulingProfiler', () => {
     gate(({old}) => {
       if (old) {
         expect(marks.map(normalizeCodeLocInfo)).toEqual([
-          `--schedule-render-512-${ReactVersion}`,
+          `--react-init-${ReactVersion}`,
+          '--schedule-render-512',
           '--render-start-512',
           '--render-stop',
           '--commit-start-512',
@@ -510,7 +543,8 @@ describe('SchedulingProfiler', () => {
         ]);
       } else {
         expect(marks.map(normalizeCodeLocInfo)).toEqual([
-          `--schedule-render-512-${ReactVersion}`,
+          `--react-init-${ReactVersion}`,
+          '--schedule-render-512',
           '--render-start-512',
           '--render-stop',
           '--commit-start-512',

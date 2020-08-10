@@ -30,6 +30,13 @@ function formatLanes(laneOrLanes: Lane | Lanes): string {
   return ((laneOrLanes: any): number).toString();
 }
 
+// Create a mark on React initialization
+if (enableSchedulingProfiler) {
+  if (supportsUserTiming) {
+    performance.mark(`--react-init-${ReactVersion}`);
+  }
+}
+
 export function markCommitStarted(lanes: Lanes): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
@@ -167,9 +174,7 @@ export function markRenderStopped(): void {
 export function markRenderScheduled(lane: Lane): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTiming) {
-      performance.mark(
-        `--schedule-render-${formatLanes(lane)}-${ReactVersion}`,
-      );
+      performance.mark(`--schedule-render-${formatLanes(lane)}`);
     }
   }
 }
