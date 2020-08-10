@@ -12,13 +12,14 @@ import type {Lanes} from './ReactFiberLane';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 
 import * as React from 'react';
-import {Update, Snapshot} from './ReactFiberFlags';
+import {Update, Snapshot, MountLayoutDev} from './ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
   enableDebugTracing,
   enableSchedulingProfiler,
   warnAboutDeprecatedLifecycles,
+  enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
 import {isMounted} from './ReactFiberTreeReflection';
@@ -890,7 +891,11 @@ function mountClassInstance(
   }
 
   if (typeof instance.componentDidMount === 'function') {
-    workInProgress.flags |= Update;
+    if (__DEV__ && enableDoubleInvokingEffects) {
+      workInProgress.flags |= MountLayoutDev | Update;
+    } else {
+      workInProgress.flags |= Update;
+    }
   }
 }
 
@@ -960,7 +965,11 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.flags |= Update;
+      if (__DEV__ && enableDoubleInvokingEffects) {
+        workInProgress.flags |= MountLayoutDev | Update;
+      } else {
+        workInProgress.flags |= Update;
+      }
     }
     return false;
   }
@@ -1003,13 +1012,21 @@ function resumeMountClassInstance(
       }
     }
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.flags |= Update;
+      if (__DEV__ && enableDoubleInvokingEffects) {
+        workInProgress.flags |= MountLayoutDev | Update;
+      } else {
+        workInProgress.flags |= Update;
+      }
     }
   } else {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.flags |= Update;
+      if (__DEV__ && enableDoubleInvokingEffects) {
+        workInProgress.flags |= MountLayoutDev | Update;
+      } else {
+        workInProgress.flags |= Update;
+      }
     }
 
     // If shouldComponentUpdate returned false, we should still update the

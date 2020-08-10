@@ -29,6 +29,7 @@ export const {
   skipUnmountedBoundaries,
   enableEagerRootListeners,
   disableSchedulerTimeoutInWorkLoop,
+  enableDoubleInvokingEffects,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.

@@ -4149,6 +4149,49 @@ describe('Profiler', () => {
         expect(onRender.mock.calls[2][2]).toBe(15); // actual
         expect(onRender.mock.calls[2][3]).toBe(1 + 15); // base
       });
+
+      if (__DEV__) {
+        // @gate new
+        it('double invoking does not disconnect wrapped async work', () => {
+          ReactFeatureFlags.enableDoubleInvokingEffects = true;
+
+          const callback = jest.fn(() => {
+            const wrappedInteractions = SchedulerTracing.unstable_getCurrent();
+            // Expect wrappedInteractions and interactions to be the same set.
+            expect(wrappedInteractions).toMatchInteractions([interaction]);
+          });
+
+          const Component = jest.fn(() => {
+            React.useEffect(() => {
+              setTimeout(SchedulerTracing.unstable_wrap(callback), 0);
+            });
+            React.useLayoutEffect(() => {
+              setTimeout(SchedulerTracing.unstable_wrap(callback), 0);
+            });
+
+            return null;
+          });
+
+          let interaction;
+          SchedulerTracing.unstable_trace(
+            'event',
+            Scheduler.unstable_now(),
+            () => {
+              const interactions = SchedulerTracing.unstable_getCurrent();
+              expect(interactions.size).toBe(1);
+              interaction = Array.from(interactions)[0];
+              ReactTestRenderer.create(<Component />);
+            },
+          );
+          Scheduler.unstable_flushAll();
+
+          jest.runAllTimers();
+
+          expect(callback).toHaveBeenCalledTimes(4); // 2x per effect
+
+          expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        });
+      }
     });
   });
 });
