@@ -146,7 +146,8 @@ export function createTextInstance(
 ): TextInstance {
   invariant(
     hostContext.isInAParentText,
-    'Text strings must be rendered within a <Text> component.',
+    'Text string must be rendered within a <Text> component.\n\nText: %s',
+    text,
   );
 
   const tag = allocateTag();
