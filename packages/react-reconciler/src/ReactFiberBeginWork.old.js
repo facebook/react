@@ -434,7 +434,7 @@ function updateMemoComponent(
       Component.type,
       null,
       nextProps,
-      null,
+      workInProgress,
       workInProgress.mode,
       renderLanes,
     );
