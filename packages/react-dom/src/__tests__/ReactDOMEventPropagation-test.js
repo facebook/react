@@ -50,6 +50,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onAnimationEnd',
+        reactEventType: 'animationend',
         nativeEvent: 'animationend',
         dispatch(node) {
           node.dispatchEvent(
@@ -66,6 +67,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onAnimationIteration',
+        reactEventType: 'animationiteration',
         nativeEvent: 'animationiteration',
         dispatch(node) {
           node.dispatchEvent(
@@ -82,6 +84,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onAnimationStart',
+        reactEventType: 'animationstart',
         nativeEvent: 'animationstart',
         dispatch(node) {
           node.dispatchEvent(
@@ -98,6 +101,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onAuxClick',
+        reactEventType: 'auxclick',
         nativeEvent: 'auxclick',
         dispatch(node) {
           node.dispatchEvent(
@@ -114,6 +118,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'input',
         reactEvent: 'onBlur',
+        reactEventType: 'blur',
         nativeEvent: 'focusout',
         dispatch(node) {
           const e = new Event('focusout', {
@@ -133,6 +138,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onClick',
+        reactEventType: 'click',
         nativeEvent: 'click',
         dispatch(node) {
           node.click();
@@ -144,6 +150,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onContextMenu',
+        reactEventType: 'contextmenu',
         nativeEvent: 'contextmenu',
         dispatch(node) {
           node.dispatchEvent(
@@ -160,6 +167,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onCopy',
+        reactEventType: 'copy',
         nativeEvent: 'copy',
         dispatch(node) {
           node.dispatchEvent(
@@ -176,6 +184,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onCut',
+        reactEventType: 'cut',
         nativeEvent: 'cut',
         dispatch(node) {
           node.dispatchEvent(
@@ -192,6 +201,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDoubleClick',
+        reactEventType: 'dblclick',
         nativeEvent: 'dblclick',
         dispatch(node) {
           node.dispatchEvent(
@@ -208,6 +218,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDrag',
+        reactEventType: 'drag',
         nativeEvent: 'drag',
         dispatch(node) {
           node.dispatchEvent(
@@ -224,6 +235,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDragEnd',
+        reactEventType: 'dragend',
         nativeEvent: 'dragend',
         dispatch(node) {
           node.dispatchEvent(
@@ -240,6 +252,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDragEnter',
+        reactEventType: 'dragenter',
         nativeEvent: 'dragenter',
         dispatch(node) {
           node.dispatchEvent(
@@ -256,6 +269,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDragExit',
+        reactEventType: 'dragexit',
         nativeEvent: 'dragexit',
         dispatch(node) {
           node.dispatchEvent(
@@ -272,6 +286,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDragLeave',
+        reactEventType: 'dragleave',
         nativeEvent: 'dragleave',
         dispatch(node) {
           node.dispatchEvent(
@@ -288,6 +303,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDragOver',
+        reactEventType: 'dragover',
         nativeEvent: 'dragover',
         dispatch(node) {
           node.dispatchEvent(
@@ -304,6 +320,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDragStart',
+        reactEventType: 'dragstart',
         nativeEvent: 'dragstart',
         dispatch(node) {
           node.dispatchEvent(
@@ -320,6 +337,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onDrop',
+        reactEventType: 'drop',
         nativeEvent: 'drop',
         dispatch(node) {
           node.dispatchEvent(
@@ -336,6 +354,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'input',
         reactEvent: 'onFocus',
+        reactEventType: 'focus',
         nativeEvent: 'focusin',
         dispatch(node) {
           const e = new Event('focusin', {
@@ -351,6 +370,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onGotPointerCapture',
+        reactEventType: 'gotpointercapture',
         nativeEvent: 'gotpointercapture',
         dispatch(node) {
           node.dispatchEvent(
@@ -367,6 +387,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'input',
         reactEvent: 'onKeyDown',
+        reactEventType: 'keydown',
         nativeEvent: 'keydown',
         dispatch(node) {
           node.dispatchEvent(
@@ -383,6 +404,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'input',
         reactEvent: 'onKeyPress',
+        reactEventType: 'keypress',
         nativeEvent: 'keypress',
         dispatch(node) {
           node.dispatchEvent(
@@ -400,6 +422,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'input',
         reactEvent: 'onKeyUp',
+        reactEventType: 'keyup',
         nativeEvent: 'keyup',
         dispatch(node) {
           node.dispatchEvent(
@@ -416,6 +439,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onLostPointerCapture',
+        reactEventType: 'lostpointercapture',
         nativeEvent: 'lostpointercapture',
         dispatch(node) {
           node.dispatchEvent(
@@ -432,6 +456,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onMouseDown',
+        reactEventType: 'mousedown',
         nativeEvent: 'mousedown',
         dispatch(node) {
           node.dispatchEvent(
@@ -448,6 +473,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onMouseOut',
+        reactEventType: 'mouseout',
         nativeEvent: 'mouseout',
         dispatch(node) {
           node.dispatchEvent(
@@ -464,6 +490,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onMouseOver',
+        reactEventType: 'mouseover',
         nativeEvent: 'mouseover',
         dispatch(node) {
           node.dispatchEvent(
@@ -480,6 +507,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onMouseUp',
+        reactEventType: 'mouseup',
         nativeEvent: 'mouseup',
         dispatch(node) {
           node.dispatchEvent(
@@ -496,6 +524,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onPaste',
+        reactEventType: 'paste',
         nativeEvent: 'paste',
         dispatch(node) {
           node.dispatchEvent(
@@ -512,6 +541,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onPointerCancel',
+        reactEventType: 'pointercancel',
         nativeEvent: 'pointercancel',
         dispatch(node) {
           node.dispatchEvent(
@@ -528,6 +558,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onPointerDown',
+        reactEventType: 'pointerdown',
         nativeEvent: 'pointerdown',
         dispatch(node) {
           node.dispatchEvent(
@@ -544,6 +575,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onPointerMove',
+        reactEventType: 'pointermove',
         nativeEvent: 'pointermove',
         dispatch(node) {
           node.dispatchEvent(
@@ -560,6 +592,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onPointerOut',
+        reactEventType: 'pointerout',
         nativeEvent: 'pointerout',
         dispatch(node) {
           node.dispatchEvent(
@@ -576,6 +609,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onPointerOver',
+        reactEventType: 'pointerover',
         nativeEvent: 'pointerover',
         dispatch(node) {
           node.dispatchEvent(
@@ -592,6 +626,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onPointerUp',
+        reactEventType: 'pointerup',
         nativeEvent: 'pointerup',
         dispatch(node) {
           node.dispatchEvent(
@@ -608,6 +643,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'form',
         reactEvent: 'onReset',
+        reactEventType: 'reset',
         nativeEvent: 'reset',
         dispatch(node) {
           const e = new Event('reset', {
@@ -623,6 +659,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'form',
         reactEvent: 'onSubmit',
+        reactEventType: 'submit',
         nativeEvent: 'submit',
         dispatch(node) {
           const e = new Event('submit', {
@@ -638,6 +675,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onTouchCancel',
+        reactEventType: 'touchcancel',
         nativeEvent: 'touchcancel',
         dispatch(node) {
           node.dispatchEvent(
@@ -654,6 +692,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onTouchEnd',
+        reactEventType: 'touchend',
         nativeEvent: 'touchend',
         dispatch(node) {
           node.dispatchEvent(
@@ -670,6 +709,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onTouchMove',
+        reactEventType: 'touchmove',
         nativeEvent: 'touchmove',
         dispatch(node) {
           node.dispatchEvent(
@@ -686,6 +726,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onTouchStart',
+        reactEventType: 'touchstart',
         nativeEvent: 'touchstart',
         dispatch(node) {
           node.dispatchEvent(
@@ -702,6 +743,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onTransitionEnd',
+        reactEventType: 'transitionend',
         nativeEvent: 'transitionend',
         dispatch(node) {
           node.dispatchEvent(
@@ -718,6 +760,7 @@ describe('ReactDOMEventListener', () => {
       testNativeBubblingEvent({
         type: 'div',
         reactEvent: 'onWheel',
+        reactEventType: 'wheel',
         nativeEvent: 'wheel',
         dispatch(node) {
           node.dispatchEvent(
@@ -736,6 +779,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onAbort',
+        reactEventType: 'abort',
         nativeEvent: 'abort',
         dispatch(node) {
           const e = new Event('abort', {
@@ -751,6 +795,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'dialog',
         reactEvent: 'onCancel',
+        reactEventType: 'cancel',
         nativeEvent: 'cancel',
         dispatch(node) {
           const e = new Event('cancel', {
@@ -766,6 +811,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onCanPlay',
+        reactEventType: 'canplay',
         nativeEvent: 'canplay',
         dispatch(node) {
           const e = new Event('canplay', {
@@ -781,6 +827,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onCanPlayThrough',
+        reactEventType: 'canplaythrough',
         nativeEvent: 'canplaythrough',
         dispatch(node) {
           const e = new Event('canplaythrough', {
@@ -796,6 +843,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'dialog',
         reactEvent: 'onClose',
+        reactEventType: 'close',
         nativeEvent: 'close',
         dispatch(node) {
           const e = new Event('close', {
@@ -811,6 +859,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onDurationChange',
+        reactEventType: 'durationchange',
         nativeEvent: 'durationchange',
         dispatch(node) {
           const e = new Event('durationchange', {
@@ -826,6 +875,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onEmptied',
+        reactEventType: 'emptied',
         nativeEvent: 'emptied',
         dispatch(node) {
           const e = new Event('emptied', {
@@ -841,6 +891,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onEncrypted',
+        reactEventType: 'encrypted',
         nativeEvent: 'encrypted',
         dispatch(node) {
           const e = new Event('encrypted', {
@@ -856,6 +907,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onEnded',
+        reactEventType: 'ended',
         nativeEvent: 'ended',
         dispatch(node) {
           const e = new Event('ended', {
@@ -871,6 +923,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'img',
         reactEvent: 'onError',
+        reactEventType: 'error',
         nativeEvent: 'error',
         dispatch(node) {
           const e = new Event('error', {
@@ -886,6 +939,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'input',
         reactEvent: 'onInvalid',
+        reactEventType: 'invalid',
         nativeEvent: 'invalid',
         dispatch(node) {
           const e = new Event('invalid', {
@@ -901,6 +955,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'img',
         reactEvent: 'onLoad',
+        reactEventType: 'load',
         nativeEvent: 'load',
         dispatch(node) {
           const e = new Event('load', {
@@ -916,6 +971,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onLoadedData',
+        reactEventType: 'loadeddata',
         nativeEvent: 'loadeddata',
         dispatch(node) {
           const e = new Event('loadeddata', {
@@ -931,6 +987,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onLoadedMetadata',
+        reactEventType: 'loadedmetadata',
         nativeEvent: 'loadedmetadata',
         dispatch(node) {
           const e = new Event('loadedmetadata', {
@@ -946,6 +1003,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onLoadStart',
+        reactEventType: 'loadstart',
         nativeEvent: 'loadstart',
         dispatch(node) {
           const e = new Event('loadstart', {
@@ -961,6 +1019,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onPause',
+        reactEventType: 'pause',
         nativeEvent: 'pause',
         dispatch(node) {
           const e = new Event('pause', {
@@ -976,6 +1035,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onPlay',
+        reactEventType: 'play',
         nativeEvent: 'play',
         dispatch(node) {
           const e = new Event('play', {
@@ -991,6 +1051,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onPlaying',
+        reactEventType: 'playing',
         nativeEvent: 'playing',
         dispatch(node) {
           const e = new Event('playing', {
@@ -1006,6 +1067,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onProgress',
+        reactEventType: 'progress',
         nativeEvent: 'progress',
         dispatch(node) {
           const e = new Event('progress', {
@@ -1021,6 +1083,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onRateChange',
+        reactEventType: 'ratechange',
         nativeEvent: 'ratechange',
         dispatch(node) {
           const e = new Event('ratechange', {
@@ -1036,6 +1099,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onSeeked',
+        reactEventType: 'seeked',
         nativeEvent: 'seeked',
         dispatch(node) {
           const e = new Event('seeked', {
@@ -1051,6 +1115,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onSeeking',
+        reactEventType: 'seeking',
         nativeEvent: 'seeking',
         dispatch(node) {
           const e = new Event('seeking', {
@@ -1066,6 +1131,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onStalled',
+        reactEventType: 'stalled',
         nativeEvent: 'stalled',
         dispatch(node) {
           const e = new Event('stalled', {
@@ -1081,6 +1147,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onSuspend',
+        reactEventType: 'suspend',
         nativeEvent: 'suspend',
         dispatch(node) {
           const e = new Event('suspend', {
@@ -1096,6 +1163,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onTimeUpdate',
+        reactEventType: 'timeupdate',
         nativeEvent: 'timeupdate',
         dispatch(node) {
           const e = new Event('timeupdate', {
@@ -1111,6 +1179,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'details',
         reactEvent: 'onToggle',
+        reactEventType: 'toggle',
         nativeEvent: 'toggle',
         dispatch(node) {
           const e = new Event('toggle', {
@@ -1126,6 +1195,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onVolumeChange',
+        reactEventType: 'volumechange',
         nativeEvent: 'volumechange',
         dispatch(node) {
           const e = new Event('volumechange', {
@@ -1141,6 +1211,7 @@ describe('ReactDOMEventListener', () => {
       testEmulatedBubblingEvent({
         type: 'video',
         reactEvent: 'onWaiting',
+        reactEventType: 'waiting',
         nativeEvent: 'waiting',
         dispatch(node) {
           const e = new Event('waiting', {
@@ -1158,6 +1229,7 @@ describe('ReactDOMEventListener', () => {
       testNonBubblingEvent({
         type: 'div',
         reactEvent: 'onScroll',
+        reactEventType: 'scroll',
         nativeEvent: 'scroll',
         dispatch(node) {
           const e = new Event('scroll', {
@@ -1368,6 +1440,7 @@ describe('ReactDOMEventListener', () => {
               log.push('- outer parent');
             },
             onBeforeInputCapture: e => {
+              expect(e.type).toBe('beforeinput');
               log.push('- outer parent capture');
             },
           }}
@@ -1430,6 +1503,7 @@ describe('ReactDOMEventListener', () => {
               log.push('- outer parent');
             },
             onChangeCapture: e => {
+              expect(e.type).toBe('change');
               log.push('- outer parent capture');
             },
           }}
@@ -1488,6 +1562,7 @@ describe('ReactDOMEventListener', () => {
               log.push('- outer parent');
             },
             onCompositionStartCapture: e => {
+              expect(e.type).toBe('compositionstart');
               log.push('- outer parent capture');
             },
           }}
@@ -1549,6 +1624,7 @@ describe('ReactDOMEventListener', () => {
               log.push('- outer parent');
             },
             onCompositionEndCapture: e => {
+              expect(e.type).toBe('compositionend');
               log.push('- outer parent capture');
             },
           }}
@@ -1610,6 +1686,7 @@ describe('ReactDOMEventListener', () => {
               log.push('- outer parent');
             },
             onCompositionUpdateCapture: e => {
+              expect(e.type).toBe('compositionupdate');
               log.push('- outer parent capture');
             },
           }}
@@ -1671,6 +1748,7 @@ describe('ReactDOMEventListener', () => {
               log.push('- outer parent');
             },
             onSelectCapture: e => {
+              expect(e.type).toBe('select');
               log.push('- outer parent capture');
             },
           }}
@@ -1769,6 +1847,7 @@ describe('ReactDOMEventListener', () => {
             log.push('- outer parent');
           },
           [eventConfig.reactEvent + 'Capture']: e => {
+            expect(e.type).toBe(eventConfig.reactEventType);
             log.push('- outer parent capture');
           },
         }}
@@ -1825,6 +1904,7 @@ describe('ReactDOMEventListener', () => {
             log.push('- outer parent');
           },
           [eventConfig.reactEvent + 'Capture']: e => {
+            expect(e.type).toBe(eventConfig.reactEventType);
             log.push('- outer parent capture');
           },
         }}
@@ -1883,6 +1963,7 @@ describe('ReactDOMEventListener', () => {
             log.push('- outer parent');
           },
           [eventConfig.reactEvent + 'Capture']: e => {
+            expect(e.type).toBe(eventConfig.reactEventType);
             log.push('- outer parent capture');
           },
         }}
@@ -1935,6 +2016,7 @@ describe('ReactDOMEventListener', () => {
             log.push('- outer parent');
           },
           [eventConfig.reactEvent + 'Capture']: e => {
+            expect(e.type).toBe(eventConfig.reactEventType);
             log.push('- outer parent capture');
           },
         }}
@@ -1986,6 +2068,7 @@ describe('ReactDOMEventListener', () => {
             log.push('- outer parent');
           },
           [eventConfig.reactEvent + 'Capture']: e => {
+            expect(e.type).toBe(eventConfig.reactEventType);
             log.push('- outer parent capture');
           },
         }}
@@ -2039,6 +2122,7 @@ describe('ReactDOMEventListener', () => {
             log.push('- outer parent');
           },
           [eventConfig.reactEvent + 'Capture']: e => {
+            expect(e.type).toBe(eventConfig.reactEventType);
             log.push('- outer parent capture');
           },
         }}
@@ -2103,6 +2187,7 @@ describe('ReactDOMEventListener', () => {
             log.push('- outer parent');
           },
           [eventConfig.reactEvent + 'Capture']: e => {
+            expect(e.type).toBe(eventConfig.reactEventType);
             log.push('- outer parent capture');
           },
         }}
@@ -2165,6 +2250,7 @@ describe('ReactDOMEventListener', () => {
             log.push('- outer parent');
           },
           [eventConfig.reactEvent + 'Capture']: e => {
+            expect(e.type).toBe(eventConfig.reactEventType);
             log.push('- outer parent capture');
           },
         }}
@@ -2228,6 +2314,7 @@ describe('ReactDOMEventListener', () => {
             log.push('- outer parent');
           },
           [eventConfig.reactEvent + 'Capture']: e => {
+            expect(e.type).toBe(eventConfig.reactEventType);
             log.push('- outer parent capture');
           },
         }}
@@ -2282,6 +2369,7 @@ describe('ReactDOMEventListener', () => {
             log.push('- outer parent');
           },
           [eventConfig.reactEvent + 'Capture']: e => {
+            expect(e.type).toBe(eventConfig.reactEventType);
             log.push('- outer parent capture');
           },
         }}
@@ -2350,6 +2438,7 @@ describe('ReactDOMEventListener', () => {
             log.push('- outer parent');
           },
           [eventConfig.reactEvent + 'Capture']: e => {
+            expect(e.type).toBe(eventConfig.reactEventType);
             log.push('- outer parent capture');
           },
         }}
@@ -2417,6 +2506,7 @@ describe('ReactDOMEventListener', () => {
             log.push('- outer parent');
           },
           [eventConfig.reactEvent + 'Capture']: e => {
+            expect(e.type).toBe(eventConfig.reactEventType);
             log.push('- outer parent capture');
           },
         }}
@@ -2482,6 +2572,7 @@ describe('ReactDOMEventListener', () => {
             log.push('- outer parent');
           },
           [eventConfig.reactEvent + 'Capture']: e => {
+            expect(e.type).toBe(eventConfig.reactEventType);
             log.push('- outer parent capture');
           },
         }}
@@ -2547,6 +2638,7 @@ describe('ReactDOMEventListener', () => {
             log.push('- outer parent');
           },
           [eventConfig.reactEvent + 'Capture']: e => {
+            expect(e.type).toBe(eventConfig.reactEventType);
             log.push('- outer parent capture');
           },
         }}
@@ -2615,6 +2707,7 @@ describe('ReactDOMEventListener', () => {
             log.push('- outer parent');
           },
           [eventConfig.reactEvent + 'Capture']: e => {
+            expect(e.type).toBe(eventConfig.reactEventType);
             log.push('- outer parent capture');
           },
         }}

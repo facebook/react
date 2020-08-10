@@ -224,14 +224,16 @@ describe('BeforeInputEventPlugin', () => {
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('compositionend');
+            expect(beforeInputEvent.nativeEvent.type).toBe('compositionend');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('test string 3');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('textInput');
+            expect(beforeInputEvent.nativeEvent.type).toBe('textInput');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('abcß');
           },
         },
@@ -244,7 +246,8 @@ describe('BeforeInputEventPlugin', () => {
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.nativeEvent.type).toBe('keypress');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe(' ');
           },
         },
@@ -281,7 +284,8 @@ describe('BeforeInputEventPlugin', () => {
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('textInput');
+            expect(beforeInputEvent.nativeEvent.type).toBe('textInput');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('\uD83D\uDE0A');
           },
         },
@@ -359,14 +363,16 @@ describe('BeforeInputEventPlugin', () => {
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.nativeEvent.type).toBe('keypress');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('a');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.nativeEvent.type).toBe('keypress');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe(' ');
           },
         },
@@ -391,14 +397,16 @@ describe('BeforeInputEventPlugin', () => {
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.nativeEvent.type).toBe('keypress');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('c');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.nativeEvent.type).toBe('keypress');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('\uD83D\uDE0A');
           },
         },
@@ -482,14 +490,16 @@ describe('BeforeInputEventPlugin', () => {
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.nativeEvent.type).toBe('keypress');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('a');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.nativeEvent.type).toBe('keypress');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe(' ');
           },
         },
@@ -514,14 +524,16 @@ describe('BeforeInputEventPlugin', () => {
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.nativeEvent.type).toBe('keypress');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('c');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.nativeEvent.type).toBe('keypress');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('\uD83D\uDE0A');
           },
         },
@@ -540,7 +552,8 @@ describe('BeforeInputEventPlugin', () => {
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('keydown');
+            expect(beforeInputEvent.nativeEvent.type).toBe('keydown');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('bar');
           },
         },
@@ -553,7 +566,8 @@ describe('BeforeInputEventPlugin', () => {
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('keyup');
+            expect(beforeInputEvent.nativeEvent.type).toBe('keyup');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('BAR');
           },
         },
@@ -566,7 +580,8 @@ describe('BeforeInputEventPlugin', () => {
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.nativeEvent.type).toBe('keypress');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('Bar');
           },
         },
@@ -596,7 +611,8 @@ describe('BeforeInputEventPlugin', () => {
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('compositionend');
+            expect(beforeInputEvent.nativeEvent.type).toBe('compositionend');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('test string 3');
           },
         },
@@ -609,14 +625,16 @@ describe('BeforeInputEventPlugin', () => {
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.nativeEvent.type).toBe('keypress');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('a');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.nativeEvent.type).toBe('keypress');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe(' ');
           },
         },
@@ -641,14 +659,16 @@ describe('BeforeInputEventPlugin', () => {
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.nativeEvent.type).toBe('keypress');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('c');
           },
         },
         {
           run: ({beforeInputEvent, spyOnBeforeInput}) => {
             expect(spyOnBeforeInput).toHaveBeenCalledTimes(1);
-            expect(beforeInputEvent.type).toBe('keypress');
+            expect(beforeInputEvent.nativeEvent.type).toBe('keypress');
+            expect(beforeInputEvent.type).toBe('beforeinput');
             expect(beforeInputEvent.data).toBe('\uD83D\uDE0A');
           },
         },
@@ -715,17 +735,17 @@ describe('BeforeInputEventPlugin', () => {
     const node = ReactDOM.render(
       <input
         type="text"
-        onBeforeInput={({type, data}) => {
+        onBeforeInput={e => {
           spyOnBeforeInput();
-          beforeInputEvent = {type, data};
+          beforeInputEvent = e;
         }}
-        onCompositionStart={({type, data}) => {
+        onCompositionStart={e => {
           spyOnCompositionStart();
-          compositionStartEvent = {type, data};
+          compositionStartEvent = e;
         }}
-        onCompositionUpdate={({type, data}) => {
+        onCompositionUpdate={e => {
           spyOnCompositionUpdate();
-          compositionUpdateEvent = {type, data};
+          compositionUpdateEvent = e;
         }}
       />,
       container,
@@ -761,17 +781,17 @@ describe('BeforeInputEventPlugin', () => {
     const node = ReactDOM.render(
       <div
         contentEditable={true}
-        onBeforeInput={({type, data}) => {
+        onBeforeInput={e => {
           spyOnBeforeInput();
-          beforeInputEvent = {type, data};
+          beforeInputEvent = e;
         }}
-        onCompositionStart={({type, data}) => {
+        onCompositionStart={e => {
           spyOnCompositionStart();
-          compositionStartEvent = {type, data};
+          compositionStartEvent = e;
         }}
-        onCompositionUpdate={({type, data}) => {
+        onCompositionUpdate={e => {
           spyOnCompositionUpdate();
-          compositionUpdateEvent = {type, data};
+          compositionUpdateEvent = e;
         }}
       />,
       container,

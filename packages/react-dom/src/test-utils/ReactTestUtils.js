@@ -587,6 +587,7 @@ function makeSimulator(eventType) {
     const targetInst = getInstanceFromNode(domNode);
     const event = new SyntheticEvent(
       reactName,
+      fakeNativeEvent.type,
       targetInst,
       fakeNativeEvent,
       domNode,

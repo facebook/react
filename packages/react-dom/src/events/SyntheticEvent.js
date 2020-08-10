@@ -14,7 +14,6 @@ import getEventCharCode from './getEventCharCode';
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
 const EventInterface = {
-  type: 0,
   eventPhase: 0,
   bubbles: 0,
   cancelable: 0,
@@ -48,6 +47,7 @@ function functionThatReturnsFalse() {
  */
 export function SyntheticEvent(
   reactName,
+  reactEventType,
   targetInst,
   nativeEvent,
   nativeEventTarget,
@@ -55,6 +55,7 @@ export function SyntheticEvent(
 ) {
   this._reactName = reactName;
   this._targetInst = targetInst;
+  this.type = reactEventType;
   this.nativeEvent = nativeEvent;
   this.target = nativeEventTarget;
   this.currentTarget = null;

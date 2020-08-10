@@ -709,7 +709,7 @@ export function accumulateSinglePhaseListeners(
 
   let instance = targetFiber;
   let lastHostComponent = null;
-  const targetType = event.type;
+  const targetType = event.nativeEvent.type;
 
   // Accumulate all instances and listeners via the target -> root path.
   while (instance !== null) {
