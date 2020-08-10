@@ -9,9 +9,9 @@
   },
   "dependencies": {
     "object-assign": "^4.1.1",
-    "scheduler": "^0.11.0"
+    "scheduler": "0.20.0-rc.0"
   },
   "peerDependencies": {
-    "react": "^17.0.0-alpha"
+    "react": "17.0.0-rc.0"
   }
 }
