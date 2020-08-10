@@ -86,25 +86,24 @@ const copySummary = (data, measure) => {
   );
 };
 
-// TODO: Migrate zoomToBatch to new views architecture
-// const zoomToBatch = (data, measure, state) => {
-//   const {zoomTo} = state;
-//   if (!zoomTo) {
-//     return;
-//   }
-//   const {batchUID} = measure;
-//   const [startTime, stopTime] = getBatchRange(batchUID, data);
-//   zoomTo(startTime, stopTime);
-// };
-
 const syncedHorizontalPanAndZoomViews: HorizontalPanAndZoomView[] = [];
 const syncAllHorizontalPanAndZoomViewStates: HorizontalPanAndZoomViewOnChangeCallback = (
   newState,
-  view,
+  view?: HorizontalPanAndZoomView,
 ) => {
   syncedHorizontalPanAndZoomViews.forEach(
     syncedView =>
       view !== syncedView && syncedView.setPanAndZoomState(newState),
+  );
+};
+
+const zoomToBatch = (data, measure) => {
+  const {batchUID} = measure;
+  const [startTime, stopTime] = getBatchRange(batchUID, data);
+  syncedHorizontalPanAndZoomViews.forEach(syncedView =>
+    // Using time as range works because the views' intrinsic content size is
+    // based on time.
+    syncedView.zoomToRange(startTime, stopTime),
   );
 };
 
@@ -425,13 +424,13 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
                   Copy component stack
                 </ContextMenuItem>
               )}
-              {/* {measure !== null && (
+              {measure !== null && (
                 <ContextMenuItem
-                  onClick={() => zoomToBatch(contextData.data, measure, state)}
+                  onClick={() => zoomToBatch(contextData.data, measure)}
                   title="Zoom to batch">
                   Zoom to batch
                 </ContextMenuItem>
-              )} */}
+              )}
               {measure !== null && (
                 <ContextMenuItem
                   onClick={() => copySummary(contextData.data, measure)}

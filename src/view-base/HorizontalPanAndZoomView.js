@@ -152,6 +152,35 @@ export class HorizontalPanAndZoomView extends View {
     super.layoutSubviews();
   }
 
+  /**
+   * Zoom to a specific range of the content specified as a range of the
+   * content view's intrinsic content size.
+   *
+   * Does not inform callbacks of state change since this is a public API.
+   */
+  zoomToRange(startX: number, endX: number) {
+    // Zoom and offset must be done separately, so that if the zoom level is
+    // clamped the offset will still be correct (unless it gets clamped too).
+    const zoomClampedState = this._clampedProposedStateZoomLevel({
+      ...this._panAndZoomState,
+      // Let:
+      //   I = intrinsic content width, i = zoom range = (endX - startX).
+      //   W = contentView's final zoomed width, w = this view's width
+      // Goal: we want the visible width w to only contain the requested range i.
+      // Derivation:
+      // (1)  i/I = w/W           (by intuitive definition of variables)
+      // (2)  W = zoomLevel * I   (definition of zoomLevel)
+      //      => zoomLevel = W/I  (algebraic manipulation)
+      //                   = w/i  (rearranging (1))
+      zoomLevel: this.frame.size.width / (endX - startX),
+    });
+    const offsetAdjustedState = this._clampedProposedStateOffsetX({
+      ...zoomClampedState,
+      offsetX: -startX * zoomClampedState.zoomLevel,
+    });
+    this._setPanAndZoomState(offsetAdjustedState);
+  }
+
   _handleMouseDown(interaction: MouseDownInteraction) {
     if (rectContainsPoint(interaction.payload.location, this.frame)) {
       this._isPanning = true;
