@@ -8984,15 +8984,14 @@ randomfill@^1.0.3:
     randombytes "^2.0.5"
     safe-buffer "^5.1.0"
 
-react-dom@^16.13.1:
-  version "16.13.1"
-  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-16.13.1.tgz#c1bd37331a0486c078ee54c4740720993b2e0e7f"
-  integrity sha512-81PIMmVLnCNLO/fFOQxdQkvEq/+Hfpv24XNJfpyZhTRfO0QcmQIF/PgCa1zCOj2w1hrn12MFLyaJ/G0+Mxtfag==
+react-dom@experimental:
+  version "0.0.0-experimental-3d0895557"
+  resolved "https://registry.yarnpkg.com/react-dom/-/react-dom-0.0.0-experimental-3d0895557.tgz#8fdb08f45c461fa38fbc8a4b458450abcd10910b"
+  integrity sha512-rb88BTYlEfDbZ+1TlRKGDUflKGJWptlXKUv+4jI+LM91mr6idkWGf+3U92m7hb09aYvlHozt7slrGV3P5XuFGg==
   dependencies:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
-    prop-types "^15.6.2"
-    scheduler "^0.19.1"
+    scheduler "0.0.0-experimental-3d0895557"
 
 react-is@^16.12.0:
   version "16.13.1"
@@ -9031,6 +9030,14 @@ react@^16.7.0:
     loose-envify "^1.1.0"
     object-assign "^4.1.1"
     prop-types "^15.6.2"
+
+react@experimental:
+  version "0.0.0-experimental-3d0895557"
+  resolved "https://registry.yarnpkg.com/react/-/react-0.0.0-experimental-3d0895557.tgz#0c6c95681bf93e023f74a5448f2261ba99b41c01"
+  integrity sha512-/5nwNTI6QypTthi9rRbf74i/ac6UTf3syRrgJpkzV52470aNlF+Qq6D6e7kFiPpcfh3A/V6vnMCPtmB/rNnElA==
+  dependencies:
+    loose-envify "^1.1.0"
+    object-assign "^4.1.1"
 
 read-pkg-up@^7.0.1:
   version "7.0.1"
@@ -9487,6 +9494,14 @@ saxes@^5.0.0:
   integrity sha512-5LBh1Tls8c9xgGjw3QrMwETmTMVk0oFgvrFSvWx62llR2hcEInrKNZ2GZCCuuy2lvWrdl5jhbpeqc5hRYKFOcw==
   dependencies:
     xmlchars "^2.2.0"
+
+scheduler@0.0.0-experimental-3d0895557:
+  version "0.0.0-experimental-3d0895557"
+  resolved "https://registry.yarnpkg.com/scheduler/-/scheduler-0.0.0-experimental-3d0895557.tgz#ad5e191e8f13d4b61e52d3fce0a6a42a769eacd7"
+  integrity sha512-6ZRZa9aolgD+1y2w/vagSzXeoAMllKNBgrVLWdlP2uAHYRsmOQaAkOedqrtEFnqDg/k0SI+uvUhYe5BWOtzFkQ==
+  dependencies:
+    loose-envify "^1.1.0"
+    object-assign "^4.1.1"
 
 scheduler@^0.19.1:
   version "0.19.1"

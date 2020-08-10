@@ -19,8 +19,8 @@
     "memoize-one": "^5.1.1",
     "nullthrows": "^1.1.1",
     "pretty-ms": "^7.0.0",
-    "react": "^16.13.1",
-    "react-dom": "^16.13.1",
+    "react": "experimental",
+    "react-dom": "experimental",
     "react-virtualized-auto-sizer": "^1.0.2",
     "scheduler": "^0.19.1"
   },
