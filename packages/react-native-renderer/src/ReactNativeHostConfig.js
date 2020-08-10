@@ -147,7 +147,7 @@ export function createTextInstance(
   invariant(
     hostContext.isInAParentText,
     'Text string must be rendered within a <Text> component.\n\nText: %s',
-    text,
+    text.length > 100 ? text.substr(0, 88) + ' (truncated)' : text,
   );
 
   const tag = allocateTag();

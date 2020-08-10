@@ -567,6 +567,14 @@ describe('ReactFabric', () => {
     );
 
     expect(() =>
+      ReactFabric.render(<View>{'x'.repeat(200)}</View>, 11),
+    ).toThrow(
+      `Text string must be rendered within a <Text> component.\n\nText: ${'x'.repeat(
+        88,
+      )} (truncated)`,
+    );
+
+    expect(() =>
       ReactFabric.render(
         <Text>
           <ScrollView>hi hello hi</ScrollView>

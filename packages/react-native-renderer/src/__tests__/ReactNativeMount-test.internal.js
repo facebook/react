@@ -427,6 +427,14 @@ describe('ReactNative', () => {
     );
 
     expect(() =>
+      ReactNative.render(<View>{'x'.repeat(200)}</View>, 11),
+    ).toThrow(
+      `Text string must be rendered within a <Text> component.\n\nText: ${'x'.repeat(
+        88,
+      )} (truncated)`,
+    );
+
+    expect(() =>
       ReactNative.render(
         <Text>
           <ScrollView>hi hello hi</ScrollView>
