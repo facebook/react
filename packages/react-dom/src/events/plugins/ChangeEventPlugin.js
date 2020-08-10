@@ -49,8 +49,13 @@ function createAndAccumulateChangeEvent(
   nativeEvent,
   target,
 ) {
-  const event = new SyntheticEvent('onChange', null, nativeEvent, target);
-  event.type = 'change';
+  const event = new SyntheticEvent(
+    'onChange',
+    'change',
+    null,
+    nativeEvent,
+    target,
+  );
   // Flag this event loop as needing state restore.
   enqueueStateRestore(((target: any): Node));
   accumulateTwoPhaseListeners(inst, dispatchQueue, event);

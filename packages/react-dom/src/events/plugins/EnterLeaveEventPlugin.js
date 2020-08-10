@@ -133,23 +133,23 @@ function extractEvents(
 
   const leave = new SyntheticEvent(
     leaveEventType,
+    eventTypePrefix + 'leave',
     from,
     nativeEvent,
     nativeEventTarget,
     eventInterface,
   );
-  leave.type = eventTypePrefix + 'leave';
   leave.target = fromNode;
   leave.relatedTarget = toNode;
 
   let enter = new SyntheticEvent(
     enterEventType,
+    eventTypePrefix + 'enter',
     to,
     nativeEvent,
     nativeEventTarget,
     eventInterface,
   );
-  enter.type = eventTypePrefix + 'enter';
   enter.target = toNode;
   enter.relatedTarget = fromNode;
 

@@ -114,12 +114,11 @@ function constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget) {
 
     const syntheticEvent = new SyntheticEvent(
       'onSelect',
+      'select',
       null,
       nativeEvent,
       nativeEventTarget,
     );
-
-    syntheticEvent.type = 'select';
     syntheticEvent.target = activeElement;
 
     accumulateTwoPhaseListeners(

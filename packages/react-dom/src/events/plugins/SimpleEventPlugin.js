@@ -63,7 +63,7 @@ function extractEvents(
     return;
   }
   let EventInterface;
-  let syntheticType;
+  let reactEventType = domEventName;
   switch (domEventName) {
     case 'keypress':
       // Firefox creates a keypress event for function keys too. This removes
@@ -78,11 +78,11 @@ function extractEvents(
       EventInterface = KeyboardEventInterface;
       break;
     case 'focusin':
-      syntheticType = 'focus';
+      reactEventType = 'focus';
       EventInterface = FocusEventInterface;
       break;
     case 'focusout':
-      syntheticType = 'blur';
+      reactEventType = 'blur';
       EventInterface = FocusEventInterface;
       break;
     case 'beforeblur':
@@ -159,14 +159,12 @@ function extractEvents(
   }
   const event = new SyntheticEvent(
     reactName,
+    reactEventType,
     null,
     nativeEvent,
     nativeEventTarget,
     EventInterface,
   );
-  if (syntheticType) {
-    event.type = syntheticType;
-  }
 
   const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
   if (

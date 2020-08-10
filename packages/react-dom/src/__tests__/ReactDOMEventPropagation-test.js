@@ -1440,8 +1440,7 @@ describe('ReactDOMEventListener', () => {
               log.push('- outer parent');
             },
             onBeforeInputCapture: e => {
-              // FIXME: this should be beforeinput for consistency.
-              expect(e.type).toBe('textInput');
+              expect(e.type).toBe('beforeinput');
               log.push('- outer parent capture');
             },
           }}

@@ -229,6 +229,7 @@ function extractCompositionEvent(
 
   const event = new SyntheticEvent(
     eventType,
+    domEventName,
     null,
     nativeEvent,
     nativeEventTarget,
@@ -397,6 +398,7 @@ function extractBeforeInputEvent(
 
   const event = new SyntheticEvent(
     'onBeforeInput',
+    'beforeinput',
     null,
     nativeEvent,
     nativeEventTarget,
