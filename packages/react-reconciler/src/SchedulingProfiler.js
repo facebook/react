@@ -15,6 +15,7 @@ import {
   enableSchedulingProfiler,
   enableSchedulingProfilerComponentStacks,
 } from 'shared/ReactFeatureFlags';
+import ReactVersion from 'shared/ReactVersion';
 import getComponentName from 'shared/getComponentName';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 
@@ -27,6 +28,13 @@ const supportsUserTiming =
 
 function formatLanes(laneOrLanes: Lane | Lanes): string {
   return ((laneOrLanes: any): number).toString();
+}
+
+// Create a mark on React initialization
+if (enableSchedulingProfiler) {
+  if (supportsUserTiming) {
+    performance.mark(`--react-init-${ReactVersion}`);
+  }
 }
 
 export function markCommitStarted(lanes: Lanes): void {
