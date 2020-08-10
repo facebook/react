@@ -18,8 +18,6 @@ import {
   AnimationEventInterface,
   ClipboardEventInterface,
   FocusEventInterface,
-  FocusInEventInterface,
-  FocusOutEventInterface,
   KeyboardEventInterface,
   MouseEventInterface,
   PointerEventInterface,
@@ -65,6 +63,7 @@ function extractEvents(
     return;
   }
   let EventInterface;
+  let syntheticType;
   switch (domEventName) {
     case 'keypress':
       // Firefox creates a keypress event for function keys too. This removes
@@ -79,10 +78,12 @@ function extractEvents(
       EventInterface = KeyboardEventInterface;
       break;
     case 'focusin':
-      EventInterface = FocusInEventInterface;
+      syntheticType = 'focus';
+      EventInterface = FocusEventInterface;
       break;
     case 'focusout':
-      EventInterface = FocusOutEventInterface;
+      syntheticType = 'blur';
+      EventInterface = FocusEventInterface;
       break;
     case 'beforeblur':
     case 'afterblur':
@@ -163,6 +164,9 @@ function extractEvents(
     nativeEventTarget,
     EventInterface,
   );
+  if (syntheticType) {
+    event.type = syntheticType;
+  }
 
   const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
   if (
