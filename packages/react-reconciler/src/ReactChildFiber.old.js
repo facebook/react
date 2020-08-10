@@ -1375,6 +1375,18 @@ function ChildReconciler(shouldTrackSideEffects) {
       // component, throw an error. If Fiber return types are disabled,
       // we already threw above.
       switch (returnFiber.tag) {
+        case Block:
+        case ForwardRef:
+        case SimpleMemoComponent:
+          if (__DEV__) {
+            console.warn(
+              '%s(...): Nothing was returned from render. This usually means a ' +
+                'return statement is missing. Or, to render nothing, ' +
+                'return null.',
+              getComponentName(returnFiber.type) || 'Component',
+            );
+          }
+          break;
         case ClassComponent: {
           if (__DEV__) {
             const instance = returnFiber.stateNode;
@@ -1387,10 +1399,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         // Intentionally fall through to the next case, which handles both
         // functions and classes
         // eslint-disable-next-lined no-fallthrough
-        case Block:
-        case FunctionComponent:
-        case ForwardRef:
-        case SimpleMemoComponent: {
+        case FunctionComponent: {
           invariant(
             false,
             '%s(...): Nothing was returned from render. This usually means a ' +

@@ -323,9 +323,7 @@ describe('ReactEmptyComponent', () => {
 
     expect(() => {
       ReactTestUtils.renderIntoDocument(<EmptyForwardRef />);
-    }).toThrowError(
-      'ForwardRef(Empty)(...): Nothing was returned from render.',
-    );
+    }).toWarnDev('ForwardRef(Empty)(...): Nothing was returned from render.');
   });
 
   it('should warn about React.memo that returns undefined', () => {
@@ -334,6 +332,6 @@ describe('ReactEmptyComponent', () => {
 
     expect(() => {
       ReactTestUtils.renderIntoDocument(<EmptyMemo />);
-    }).toThrowError('Empty(...): Nothing was returned from render.');
+    }).toWarnDev('Empty(...): Nothing was returned from render.');
   });
 });
