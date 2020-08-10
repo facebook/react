@@ -22,6 +22,7 @@ import {
 import {
   getClosestInstanceFromNode,
   getNodeFromInstance,
+  isContainerMarkedAsRoot,
 } from '../../client/ReactDOMComponentTree';
 import {accumulateEnterLeaveTwoPhaseListeners} from '../DOMPluginEventSystem';
 
@@ -57,15 +58,19 @@ function extractEvents(
     domEventName === 'mouseout' || domEventName === 'pointerout';
 
   if (isOverEvent && (eventSystemFlags & IS_REPLAYED) === 0) {
+    // If this is an over event with a target, we might have already dispatched
+    // the event in the out event of the other target. If this is replayed,
+    // then it's because we couldn't dispatch against this target previously
+    // so we have to do it now instead.
     const related =
       (nativeEvent: any).relatedTarget || (nativeEvent: any).fromElement;
     if (related) {
-      // Due to the fact we don't add listeners to the document with the
-      // modern event system and instead attach listeners to roots, we
-      // need to handle the over event case. To ensure this, we just need to
-      // make sure the node that we're coming from is managed by React.
-      const inst = getClosestInstanceFromNode(related);
-      if (inst !== null) {
+      // If the related node is managed by React, we can assume that we have
+      // already dispatched the corresponding events during its mouseout.
+      if (
+        getClosestInstanceFromNode(related) ||
+        isContainerMarkedAsRoot(related)
+      ) {
         return;
       }
     }
