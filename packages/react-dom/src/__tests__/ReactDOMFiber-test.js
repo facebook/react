@@ -991,7 +991,7 @@ describe('ReactDOMFiber', () => {
 
   // Regression test for https://github.com/facebook/react/issues/19562
   it('does not fire mouseEnter twice when relatedTarget is the root node', () => {
-    const ops = [];
+    let ops = [];
     let target = null;
 
     function simulateMouseMove(from, to) {
@@ -1016,13 +1016,28 @@ describe('ReactDOMFiber', () => {
     }
 
     ReactDOM.render(
-      <div onMouseEnter={() => ops.push('enter')} ref={n => (target = n)} />,
+      <div
+        ref={n => (target = n)}
+        onMouseEnter={() => ops.push('enter')}
+        onMouseLeave={() => ops.push('leave')}
+      />,
       container,
     );
 
     simulateMouseMove(null, container);
+    expect(ops).toEqual([]);
+
+    ops = [];
     simulateMouseMove(container, target);
     expect(ops).toEqual(['enter']);
+
+    ops = [];
+    simulateMouseMove(target, container);
+    expect(ops).toEqual(['leave']);
+
+    ops = [];
+    simulateMouseMove(container, null);
+    expect(ops).toEqual([]);
   });
 
   it('should throw on bad createPortal argument', () => {
