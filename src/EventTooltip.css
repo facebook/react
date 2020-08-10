@@ -1,5 +1,5 @@
 .Tooltip {
-  position: absolute;
+  position: fixed;
   display: inline-block;
   border-radius: 0.125rem;
   max-width: 300px;
@@ -31,12 +31,20 @@
 }
 
 .DetailsGridURL {
+  word-break: break-all;
+  max-height: 50vh;
   overflow: hidden;
+}
+
+.FlamechartStackFrameName {
+  word-break: break-word;
+  margin-left: 0.4rem;
 }
 
 .ComponentName {
   font-weight: bold;
-  word-wrap: break-word;
+  word-break: break-word;
+  margin-right: 0.4rem;
 }
 
 .ComponentStack {
@@ -60,4 +68,12 @@
   );
   white-space: pre;
   --gradient-height: 5em;
+}
+
+.ReactMeasureLabel {
+  margin-left: 0.4rem;
+}
+
+.UserTimingLabel {
+  word-break: break-word;
 }

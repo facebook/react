@@ -32,14 +32,14 @@ function formatDuration(ms) {
   return prettyMilliseconds(ms, {millisecondsDecimalDigits: 3});
 }
 
-function trimComponentName(name) {
-  if (name.length > 128) {
-    return name.substring(0, 127) + '...';
+function trimmedString(string: string, length: number): string {
+  if (string.length > length) {
+    return `${string.substr(0, length - 1)}…`;
   }
-  return name;
+  return string;
 }
 
-function getReactEventLabel(type) {
+function getReactEventLabel(type): string | null {
   switch (type) {
     case 'schedule-render':
       return 'render scheduled';
@@ -58,7 +58,25 @@ function getReactEventLabel(type) {
   }
 }
 
-function getReactMeasureLabel(type: string) {
+function getReactEventColor(event: ReactEvent): string | null {
+  switch (event.type) {
+    case 'schedule-render':
+      return COLORS.REACT_SCHEDULE_HOVER;
+    case 'schedule-state-update':
+    case 'schedule-force-update':
+      return event.isCascading
+        ? COLORS.REACT_SCHEDULE_CASCADING_HOVER
+        : COLORS.REACT_SCHEDULE_HOVER;
+    case 'suspense-suspend':
+    case 'suspense-resolved':
+    case 'suspense-rejected':
+      return COLORS.REACT_SUSPEND_HOVER;
+    default:
+      return null;
+  }
+}
+
+function getReactMeasureLabel(type): string | null {
   switch (type) {
     case 'commit':
       return 'commit';
@@ -85,65 +103,18 @@ export default function EventTooltip({data, hoveredEvent, origin}: Props) {
     return null;
   }
 
-  const {event, flamechartStackFrame, measure, userTimingMark} = hoveredEvent;
+  const {event, measure, flamechartStackFrame, userTimingMark} = hoveredEvent;
 
   if (event !== null) {
-    switch (event.type) {
-      case 'schedule-render':
-        return (
-          <TooltipReactEvent
-            color={COLORS.REACT_SCHEDULE_HOVER}
-            data={data}
-            event={event}
-            tooltipRef={tooltipRef}
-          />
-        );
-      case 'schedule-state-update': // eslint-disable-line no-case-declarations
-      case 'schedule-force-update':
-        const color = event.isCascading
-          ? COLORS.REACT_SCHEDULE_CASCADING_HOVER
-          : COLORS.REACT_SCHEDULE_HOVER;
-        return (
-          <TooltipReactEvent
-            color={color}
-            data={data}
-            event={event}
-            tooltipRef={tooltipRef}
-          />
-        );
-      case 'suspense-suspend':
-      case 'suspense-resolved':
-      case 'suspense-rejected':
-        return (
-          <TooltipReactEvent
-            color={COLORS.REACT_SUSPEND_HOVER}
-            data={data}
-            event={event}
-            tooltipRef={tooltipRef}
-          />
-        );
-      default:
-        console.warn(`Unexpected event type "${event.type}"`);
-        break;
-    }
+    return <TooltipReactEvent event={event} tooltipRef={tooltipRef} />;
   } else if (measure !== null) {
-    switch (measure.type) {
-      case 'commit':
-      case 'render-idle':
-      case 'render':
-      case 'layout-effects':
-      case 'passive-effects':
-        return (
-          <TooltipReactMeasure
-            data={data}
-            measure={measure}
-            tooltipRef={tooltipRef}
-          />
-        );
-      default:
-        console.warn(`Unexpected measure type "${measure.type}"`);
-        break;
-    }
+    return (
+      <TooltipReactMeasure
+        data={data}
+        measure={measure}
+        tooltipRef={tooltipRef}
+      />
+    );
   } else if (flamechartStackFrame !== null) {
     return (
       <TooltipFlamechartNode
@@ -186,7 +157,8 @@ const TooltipFlamechartNode = ({
   } = stackFrame;
   return (
     <div className={styles.Tooltip} ref={tooltipRef}>
-      {formatDuration(duration)} {trimComponentName(name)}
+      {formatDuration(duration)}
+      <span className={styles.FlamechartStackFrameName}>{name}</span>
       <div className={styles.DetailsGrid}>
         <div className={styles.DetailsGridLabel}>Timestamp:</div>
         <div>{formatTimestamp(timestamp)}</div>
@@ -210,24 +182,28 @@ const TooltipFlamechartNode = ({
 };
 
 const TooltipReactEvent = ({
-  color,
   event,
   tooltipRef,
 }: {
-  color: string,
   event: ReactEvent,
   tooltipRef: Return<typeof useRef>,
 }) => {
-  const {componentName, componentStack, timestamp, type} = event;
-  const label = getReactEventLabel(type);
+  const label = getReactEventLabel(event.type);
+  const color = getReactEventColor(event);
+  if (!label || !color) {
+    console.warn(`Unexpected event type "${event.type}"`);
+    return null;
+  }
+
+  const {componentName, componentStack, timestamp} = event;
 
   return (
     <div className={styles.Tooltip} ref={tooltipRef}>
       {componentName && (
         <span className={styles.ComponentName} style={{color}}>
-          {trimComponentName(componentName)}
+          {trimmedString(componentName, 768)}
         </span>
-      )}{' '}
+      )}
       {label}
       <div className={styles.Divider} />
       <div className={styles.DetailsGrid}>
@@ -255,13 +231,19 @@ const TooltipReactMeasure = ({
   measure: ReactMeasure,
   tooltipRef: Return<typeof useRef>,
 }) => {
-  const {batchUID, duration, timestamp, type, lanes} = measure;
-  const label = getReactMeasureLabel(type);
+  const label = getReactMeasureLabel(measure.type);
+  if (!label) {
+    console.warn(`Unexpected measure type "${measure.type}"`);
+    return null;
+  }
+
+  const {batchUID, duration, timestamp, lanes} = measure;
   const [startTime, stopTime] = getBatchRange(batchUID, data);
 
   return (
     <div className={styles.Tooltip} ref={tooltipRef}>
-      {formatDuration(duration)} {label}
+      {formatDuration(duration)}
+      <span className={styles.ReactMeasureLabel}>{label}</span>
       <div className={styles.Divider} />
       <div className={styles.DetailsGrid}>
         <div className={styles.DetailsGridLabel}>Timestamp:</div>
@@ -287,7 +269,7 @@ const TooltipUserTimingMark = ({
   const {name, timestamp} = mark;
   return (
     <div className={styles.Tooltip} ref={tooltipRef}>
-      {name}
+      <span className={styles.UserTimingLabel}>{name}</span>
       <div className={styles.Divider} />
       <div className={styles.DetailsGrid}>
         <div className={styles.DetailsGridLabel}>Timestamp:</div>

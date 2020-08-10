@@ -250,25 +250,19 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
 
   const interactor = useCallback(
     interaction => {
-      if (
-        hoveredEvent &&
-        (hoveredEvent.event ||
-          hoveredEvent.measure ||
-          hoveredEvent.flamechartStackFrame ||
-          hoveredEvent.userTimingMark)
-      ) {
-        setMouseLocation({
-          x: interaction.payload.event.x,
-          y: interaction.payload.event.y,
-        });
-      }
       if (canvasRef.current === null) {
         return;
       }
       surfaceRef.current.handleInteraction(interaction);
-      surfaceRef.current.displayIfNeeded();
+      // Defer drawing to canvas until React's commit phase, to avoid drawing
+      // twice and to ensure that both the canvas and DOM elements managed by
+      // React are in sync.
+      setMouseLocation({
+        x: interaction.payload.event.x,
+        y: interaction.payload.event.y,
+      });
     },
-    [surfaceRef, hoveredEvent, setMouseLocation],
+    [surfaceRef, canvasRef, hoveredEvent, setMouseLocation],
   );
 
   useCanvasInteraction(canvasRef, interactor);
@@ -387,10 +381,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     hoveredEvent,
   ]);
 
-  // When React component renders, rerender surface.
-  // TODO: See if displaying on rAF would make more sense since we're somewhat
-  // decoupled from React and we don't want to render canvas multiple times per
-  // frame.
+  // Draw to canvas in React's commit phase
   useLayoutEffect(() => {
     surfaceRef.current.displayIfNeeded();
   });

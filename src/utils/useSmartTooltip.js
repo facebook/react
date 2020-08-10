@@ -57,7 +57,7 @@ export default function useSmartTooltip({
         element.style.left = `${mouseX + TOOLTIP_OFFSET}px`;
       }
     }
-  });
+  }, [mouseX, mouseY, ref]);
 
   return ref;
 }
