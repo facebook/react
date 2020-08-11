@@ -151,7 +151,10 @@ export function dehydrate(
         inspectable: false,
         preview_short: formatDataForPreview(data, false),
         preview_long: formatDataForPreview(data, true),
-        name: data.name || 'function',
+        name:
+          typeof data.name === 'function' || !data.name
+            ? 'function'
+            : data.name,
         type,
       };
 
