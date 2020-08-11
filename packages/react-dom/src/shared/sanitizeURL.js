@@ -8,7 +8,10 @@
  */
 
 import invariant from 'shared/invariant';
-import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
+import {
+  disableJavaScriptURLs,
+  enableTrustedTypesIntegration,
+} from 'shared/ReactFeatureFlags';
 
 // A javascript: URL can contain leading C0 control or \u0020 SPACE,
 // and any newline or tab are filtered out as if they're not part of the URL.
@@ -24,7 +27,15 @@ const isJavaScriptProtocol = /^[\u0000-\u001F ]*j[\r\n\t]*a[\r\n\t]*v[\r\n\t]*a[
 
 let didWarn = false;
 
-function sanitizeURL(url: string) {
+function sanitizeURL(url: any): any {
+  if (
+    !enableTrustedTypesIntegration ||
+    typeof trustedTypes === 'undefined' ||
+    !trustedTypes.isScriptURL(url)
+  ) {
+    // Coerce to a string, unless we know it's an immutable TrustedScriptURL object.
+    url = '' + url;
+  }
   if (disableJavaScriptURLs) {
     invariant(
       !isJavaScriptProtocol.test(url),
@@ -41,6 +52,7 @@ function sanitizeURL(url: string) {
       );
     }
   }
+  return url;
 }
 
 export default sanitizeURL;

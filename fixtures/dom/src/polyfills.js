@@ -2,6 +2,7 @@ import 'core-js/es6/symbol';
 import 'core-js/es6/promise';
 import 'core-js/es6/set';
 import 'core-js/es6/map';
+import 'core-js/features/array/fill';
 
 // http://paulirish.com/2011/requestanimationframe-for-smart-animating/
 // http://my.opera.com/emoller/blog/2011/12/20/requestanimationframe-for-smart-er-animating

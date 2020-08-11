@@ -16,13 +16,31 @@ import {
   OVERLOADED_BOOLEAN,
 } from '../shared/DOMProperty';
 import sanitizeURL from '../shared/sanitizeURL';
-import {
-  disableJavaScriptURLs,
-  enableTrustedTypesIntegration,
-} from 'shared/ReactFeatureFlags';
+import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
 import {isOpaqueHydratingObject} from './ReactDOMHostConfig';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
+
+/**
+ * Cached result of detectStringification() function.
+ * Should become true in all environments but IE<=9.
+ */
+let setAttributeCanStringify = undefined;
+
+/**
+ * Detect if Element.setAttribute stringifies attribute values.
+ * Should return true for all environments but IE <= 9.
+ * @param {DOMElement} node
+ */
+function detectStringification(node: Element) {
+  const obj: any = {
+    toString: () => 'foo',
+  };
+  const attrName = 'reacttest';
+  const el = node.ownerDocument.createElement('p');
+  el.setAttribute(attrName, obj);
+  return el.getAttribute(attrName) === 'foo';
+}
 
 /**
  * Get the value for a property on a node. Only used in DEV for SSR validation.
@@ -146,6 +164,9 @@ export function setValueForProperty(
   if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponentTag)) {
     value = null;
   }
+  if (setAttributeCanStringify === undefined) {
+    setAttributeCanStringify = detectStringification(node);
+  }
   // If the prop isn't in the special list, treat it as a simple attribute.
   if (isCustomComponentTag || propertyInfo === null) {
     if (isAttributeNameSafe(name)) {
@@ -155,7 +176,7 @@ export function setValueForProperty(
       } else {
         node.setAttribute(
           attributeName,
-          enableTrustedTypesIntegration ? (value: any) : '' + (value: any),
+          setAttributeCanStringify ? (value: any) : '' + (value: any),
         );
       }
     }
@@ -186,15 +207,15 @@ export function setValueForProperty(
       // and we won't require Trusted Type here.
       attributeValue = '';
     } else {
-      // `setAttribute` with objects becomes only `[object]` in IE8/9,
-      // ('' + value) makes it output the correct toString()-value.
-      if (enableTrustedTypesIntegration) {
+      if (setAttributeCanStringify) {
         attributeValue = (value: any);
       } else {
+        // As `setAttribute` does not stringify the value itself.
+        // ('' + value) makes it output the correct toString()-value.
         attributeValue = '' + (value: any);
       }
       if (propertyInfo.sanitizeURL) {
-        sanitizeURL(attributeValue.toString());
+        attributeValue = sanitizeURL(attributeValue);
       }
     }
     if (attributeNamespace) {
