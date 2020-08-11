@@ -36,7 +36,7 @@ function detectStringification(node: Element) {
   const obj: any = {
     toString: () => 'foo',
   };
-  const attrName = 'reacttest';
+  const attrName = 'title';
   const el = node.ownerDocument.createElement('p');
   el.setAttribute(attrName, obj);
   return el.getAttribute(attrName) === 'foo';
