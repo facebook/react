@@ -1376,6 +1376,72 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function useFoo(foo){
+          return useMemo(() => foo, [foo]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function useFoo(){
+          const foo = "hi!";
+          return useMemo(() => foo, [foo]); 
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function useFoo(){
+          const foo = new MyObj();
+          return useMemo(() => foo, [foo]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function useFoo(){
+          let foo = {};
+          foo = 1;
+          return useMemo(() => foo, [foo]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function useFoo(){
+          let {foo} = {foo: 1};
+          return useMemo(() => foo, [foo]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function useFoo(){
+          let [foo] = [1];
+          return useMemo(() => foo, [foo]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function useFoo() {
+          const foo = "fine";
+          if(true) {
+            const foo = {};
+          }
+          return useMemo(() => foo, [foo]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent({foo}) {
+          return useMemo(() => foo, [foo])
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -6960,6 +7026,341 @@ const tests = {
                     foo.bar.baz = 43;
                     props.foo.bar.baz = 1;
                   }, [foo.bar, props.foo.bar]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const foo = {};
+          useMemo(() => foo, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' object makes the dependencies of useMemo Hook (at line 4) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useMemo() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const foo = [];
+          useMemo(() => foo, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' array makes the dependencies of useMemo Hook (at line 4) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useMemo() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const foo = () => {};
+          useMemo(() => foo, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' function makes the dependencies of useMemo Hook (at line 4) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useCallback() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const foo = function bar(){};
+          useMemo(() => foo, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' function makes the dependencies of useMemo Hook (at line 4) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useCallback() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const foo = class {};
+          useMemo(() => foo, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' class makes the dependencies of useMemo Hook (at line 4) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useMemo() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const foo = true ? {} : "fine";
+          useMemo(() => foo, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' conditional could make the dependencies of useMemo Hook (at line 4) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useMemo() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const foo = bar || {};
+          useMemo(() => foo, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' logical expression could make the dependencies of useMemo Hook (at line 4) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useMemo() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const foo = bar ?? {};
+          useMemo(() => foo, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' logical expression could make the dependencies of useMemo Hook (at line 4) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useMemo() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const foo = bar && {};
+          useMemo(() => foo, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' logical expression could make the dependencies of useMemo Hook (at line 4) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useMemo() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const foo = bar ? baz ? {} : null : null;
+          useMemo(() => foo, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' conditional could make the dependencies of useMemo Hook (at line 4) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useMemo() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          let foo = {};
+          useMemo(() => foo, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' object makes the dependencies of useMemo Hook (at line 4) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useMemo() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          var foo = {};
+          useMemo(() => foo, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' object makes the dependencies of useMemo Hook (at line 4) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useMemo() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const foo = {};
+          useCallback(() => {
+            console.log(foo);
+          }, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' object makes the dependencies of useCallback Hook (at line 6) change on every render. " +
+            "Move it inside the useCallback callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useMemo() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const foo = {};
+          useEffect(() => {
+            console.log(foo);
+          }, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' object makes the dependencies of useEffect Hook (at line 6) change on every render. " +
+            "Move it inside the useEffect callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useMemo() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const foo = {};
+          useLayoutEffect(() => {
+            console.log(foo);
+          }, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' object makes the dependencies of useLayoutEffect Hook (at line 6) change on every render. " +
+            "Move it inside the useLayoutEffect callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useMemo() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Component() {
+          const foo = {};
+          useImperativeHandle(
+            ref,
+            () => {
+               console.log(foo);
+            },
+            [foo]
+          );
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' object makes the dependencies of useImperativeHandle Hook (at line 9) change on every render. " +
+            "Move it inside the useImperativeHandle callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useMemo() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Foo(section) {
+          const foo = section.section_components?.edges ?? [];
+          useEffect(() => {
+            console.log(foo);
+          }, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' logical expression could make the dependencies of useEffect Hook (at line 6) change on every render. " +
+            "Move it inside the useEffect callback. Alternatively, wrap the 'foo' definition into its own " +
+            'useMemo() Hook.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Foo(section) {
+          const foo = {};
+          console.log(foo);
+          useMemo(() => {
+            console.log(foo);
+          }, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' object makes the dependencies of useMemo Hook (at line 7) change on every render. " +
+            "To fix this, wrap the 'foo' definition into its own useMemo() Hook.",
+          suggestions: [
+            {
+              desc: "Wrap the 'foo' definition into its own useMemo() Hook.",
+              output: normalizeIndent`
+                function Foo(section) {
+                  const foo = useMemo(() => { return {}; });
+                  console.log(foo);
+                  useMemo(() => {
+                    console.log(foo);
+                  }, [foo]);
                 }
               `,
             },

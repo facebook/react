@@ -844,59 +844,70 @@ export default {
         unnecessaryDependencies.size;
 
       if (problemCount === 0) {
-        // If nothing else to report, check if some callbacks
-        // are bare and would invalidate on every render.
-        const bareFunctions = scanForDeclaredBareFunctions({
+        // If nothing else to report, check if some dependencies would
+        // invalidate on every render.
+        const constructions = scanForConstructions({
           declaredDependencies,
           declaredDependenciesNode,
           componentScope,
           scope,
         });
-        bareFunctions.forEach(({fn, suggestUseCallback}) => {
-          let message =
-            `The '${fn.name.name}' function makes the dependencies of ` +
-            `${reactiveHookName} Hook (at line ${declaredDependenciesNode.loc.start.line}) ` +
-            `change on every render.`;
-          if (suggestUseCallback) {
-            message +=
-              ` To fix this, ` +
-              `wrap the '${fn.name.name}' definition into its own useCallback() Hook.`;
-          } else {
-            message +=
-              ` Move it inside the ${reactiveHookName} callback. ` +
-              `Alternatively, wrap the '${fn.name.name}' definition into its own useCallback() Hook.`;
-          }
+        constructions.forEach(
+          ({construction, isUsedOutsideOfHook, depType}) => {
+            const wrapperHook =
+              depType === 'function' ? 'useCallback' : 'useMemo';
 
-          let suggest;
-          // Only handle the simple case: arrow functions.
-          // Wrapping function declarations can mess up hoisting.
-          if (suggestUseCallback && fn.type === 'Variable') {
-            suggest = [
-              {
-                desc: `Wrap the '${fn.name.name}' definition into its own useCallback() Hook.`,
-                fix(fixer) {
-                  return [
-                    // TODO: also add an import?
-                    fixer.insertTextBefore(fn.node.init, 'useCallback('),
-                    // TODO: ideally we'd gather deps here but it would require
-                    // restructuring the rule code. This will cause a new lint
-                    // error to appear immediately for useCallback. Note we're
-                    // not adding [] because would that changes semantics.
-                    fixer.insertTextAfter(fn.node.init, ')'),
-                  ];
+            const defaultAdvice = `wrap the '${construction.name.name}' definition into its own ${wrapperHook}() Hook.`;
+
+            const advice = isUsedOutsideOfHook
+              ? `To fix this, ${defaultAdvice}`
+              : `Move it inside the ${reactiveHookName} callback. Alternatively, ${defaultAdvice}`;
+
+            const causation =
+              depType === 'conditional' || depType === 'logical expression'
+                ? 'could make'
+                : 'makes';
+
+            const message =
+              `The '${construction.name.name}' ${depType} ${causation} the dependencies of ` +
+              `${reactiveHookName} Hook (at line ${declaredDependenciesNode.loc.start.line}) ` +
+              `change on every render. ${advice}`;
+
+            let suggest;
+            // Only handle the simple case of variable assignments.
+            // Wrapping function declarations can mess up hoisting.
+            if (isUsedOutsideOfHook && construction.type === 'Variable') {
+              suggest = [
+                {
+                  desc: `Wrap the '${construction.name.name}' definition into its own ${wrapperHook}() Hook.`,
+                  fix(fixer) {
+                    const [before, after] =
+                      wrapperHook === 'useMemo'
+                        ? [`useMemo(() => { return `, '; })']
+                        : ['useCallback(', ')'];
+                    return [
+                      // TODO: also add an import?
+                      fixer.insertTextBefore(construction.node.init, before),
+                      // TODO: ideally we'd gather deps here but it would require
+                      // restructuring the rule code. This will cause a new lint
+                      // error to appear immediately for useCallback. Note we're
+                      // not adding [] because would that changes semantics.
+                      fixer.insertTextAfter(construction.node.init, after),
+                    ];
+                  },
                 },
-              },
-            ];
-          }
-          // TODO: What if the function needs to change on every render anyway?
-          // Should we suggest removing effect deps as an appropriate fix too?
-          reportProblem({
-            // TODO: Why not report this at the dependency site?
-            node: fn.node,
-            message,
-            suggest,
-          });
-        });
+              ];
+            }
+            // TODO: What if the function needs to change on every render anyway?
+            // Should we suggest removing effect deps as an appropriate fix too?
+            reportProblem({
+              // TODO: Why not report this at the dependency site?
+              node: construction.node,
+              message,
+              suggest,
+            });
+          },
+        );
         return;
       }
 
@@ -1381,50 +1392,97 @@ function collectRecommendations({
   };
 }
 
-// Finds functions declared as dependencies
+// If the node will result in constructing a referentially unique value, return
+// its human readable type name, else return null.
+function getConstructionExpresionType(node) {
+  switch (node.type) {
+    case 'ObjectExpression':
+      return 'object';
+    case 'ArrayExpression':
+      return 'array';
+    case 'ArrowFunctionExpression':
+    case 'FunctionExpression':
+      return 'function';
+    case 'ClassExpression':
+      return 'class';
+    case 'ConditionalExpression':
+      if (
+        getConstructionExpresionType(node.consequent) != null ||
+        getConstructionExpresionType(node.alternate) != null
+      ) {
+        return 'conditional';
+      }
+      return null;
+    case 'LogicalExpression':
+      if (
+        getConstructionExpresionType(node.left) != null ||
+        getConstructionExpresionType(node.right) != null
+      ) {
+        return 'logical expression';
+      }
+      return null;
+  }
+  return null;
+}
+
+// Finds variables declared as dependencies
 // that would invalidate on every render.
-function scanForDeclaredBareFunctions({
+function scanForConstructions({
   declaredDependencies,
   declaredDependenciesNode,
   componentScope,
   scope,
 }) {
-  const bareFunctions = declaredDependencies
+  const constructions = declaredDependencies
     .map(({key}) => {
-      const fnRef = componentScope.set.get(key);
-      if (fnRef == null) {
+      const ref = componentScope.variables.find(v => v.name === key);
+      if (ref == null) {
         return null;
       }
-      const fnNode = fnRef.defs[0];
-      if (fnNode == null) {
+
+      if (ref.references.some(r => !r.init && r.isWrite())) {
+        // The variable gets reassigned. This complicates things so we won't
+        // try to reason about it for now.
+        return null;
+      }
+
+      const node = ref.defs[0];
+      if (node == null) {
         return null;
       }
       // const handleChange = function () {}
       // const handleChange = () => {}
+      // const foo = {}
+      // const foo = []
+      // etc.
       if (
-        fnNode.type === 'Variable' &&
-        fnNode.node.type === 'VariableDeclarator' &&
-        fnNode.node.init != null &&
-        (fnNode.node.init.type === 'ArrowFunctionExpression' ||
-          fnNode.node.init.type === 'FunctionExpression')
+        node.type === 'Variable' &&
+        node.node.type === 'VariableDeclarator' &&
+        node.node.id.type === 'Identifier' && // Ensure this is not destructed assignment
+        node.node.init != null
       ) {
-        return fnRef;
+        const constantExpressionType = getConstructionExpresionType(
+          node.node.init,
+        );
+        if (constantExpressionType != null) {
+          return [ref, constantExpressionType];
+        }
       }
       // function handleChange() {}
       if (
-        fnNode.type === 'FunctionName' &&
-        fnNode.node.type === 'FunctionDeclaration'
+        node.type === 'FunctionName' &&
+        node.node.type === 'FunctionDeclaration'
       ) {
-        return fnRef;
+        return [ref, 'function'];
       }
       return null;
     })
     .filter(Boolean);
 
-  function isUsedOutsideOfHook(fnRef) {
+  function isUsedOutsideOfHook(ref) {
     let foundWriteExpr = false;
-    for (let i = 0; i < fnRef.references.length; i++) {
-      const reference = fnRef.references[i];
+    for (let i = 0; i < ref.references.length; i++) {
+      const reference = ref.references[i];
       if (reference.writeExpr) {
         if (foundWriteExpr) {
           // Two writes to the same function.
@@ -1450,9 +1508,10 @@ function scanForDeclaredBareFunctions({
     return false;
   }
 
-  return bareFunctions.map(fnRef => ({
-    fn: fnRef.defs[0],
-    suggestUseCallback: isUsedOutsideOfHook(fnRef),
+  return constructions.map(([ref, depType]) => ({
+    construction: ref.defs[0],
+    depType,
+    isUsedOutsideOfHook: isUsedOutsideOfHook(ref),
   }));
 }
 
