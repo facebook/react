@@ -43,7 +43,7 @@ describe('Bridge', () => {
     jest.runAllTimers();
     expect(wall.send).not.toHaveBeenCalled();
     expect(console.warn).toHaveBeenCalledWith(
-      'Cannot send message "should not send" through a Bridge that has been shutdown.',
+      'Warning: Cannot send message "should not send" through a Bridge that has been shutdown.',
     );
   });
 });

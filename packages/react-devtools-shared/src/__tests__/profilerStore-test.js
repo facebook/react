@@ -73,7 +73,7 @@ describe('ProfilerStore', () => {
     expect(store.profilerStore.profilingData).not.toBe(fauxProfilingData);
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith(
-      'Profiling data cannot be updated while profiling is in progress.',
+      'Warning: Profiling data cannot be updated while profiling is in progress.',
     );
     utils.act(() => store.profilerStore.stopProfiling());
     store.profilerStore.profilingData = fauxProfilingData;

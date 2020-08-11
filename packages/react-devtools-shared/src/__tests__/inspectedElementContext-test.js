@@ -403,13 +403,13 @@ describe('InspectedElementContext', () => {
 
     expect(targetRenderCount).toBe(1);
     expect(errorSpy).toHaveBeenCalledTimes(1);
-    expect(errorSpy).toHaveBeenCalledWith('error');
+    expect(errorSpy).toHaveBeenCalledWith('Warning: error');
     expect(infoSpy).toHaveBeenCalledTimes(1);
     expect(infoSpy).toHaveBeenCalledWith('info');
     expect(logSpy).toHaveBeenCalledTimes(1);
     expect(logSpy).toHaveBeenCalledWith('log');
     expect(warnSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy).toHaveBeenCalledWith('warn');
+    expect(warnSpy).toHaveBeenCalledWith('Warning: warn');
 
     const id = ((store.getElementIDAtIndex(0): any): number);
 
