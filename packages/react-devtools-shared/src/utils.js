@@ -539,7 +539,9 @@ export function formatDataForPreview(
     case 'html_element':
       return `<${truncateForDisplay(data.tagName.toLowerCase())} />`;
     case 'function':
-      return truncateForDisplay(`ƒ ${data.name}() {}`);
+      return truncateForDisplay(
+        `ƒ ${typeof data.name === 'function' ? '' : data.name}() {}`,
+      );
     case 'string':
       return `"${data}"`;
     case 'bigint':
