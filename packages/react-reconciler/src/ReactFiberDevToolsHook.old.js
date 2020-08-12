@@ -24,7 +24,7 @@ export const isDevToolsPresent =
   typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined';
 
 export function injectInternals(internals: Object): boolean {
-  if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
+  if (!isDevToolsPresent) {
     // No DevTools
     return false;
   }
