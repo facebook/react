@@ -1428,6 +1428,26 @@ function getConstructionExpresionType(node) {
         return 'logical expression';
       }
       return null;
+    case 'JSXFragment':
+      return 'JSX fragment';
+    case 'JSXElement':
+      return 'JSX element';
+    case 'AssignmentExpression':
+      if (getConstructionExpresionType(node.right) != null) {
+        return 'assignment expression';
+      }
+      return null;
+    case 'NewExpression':
+      return 'object construction';
+    case 'Literal':
+      if (node.value instanceof RegExp) {
+        return 'regular expression';
+      }
+      return null;
+    case 'TypeCastExpression':
+      return getConstructionExpresionType(node.expression);
+    case 'TSAsExpression':
+      return getConstructionExpresionType(node.expression);
   }
   return null;
 }
@@ -1481,6 +1501,11 @@ function scanForConstructions({
         node.node.type === 'FunctionDeclaration'
       ) {
         return [ref, 'function'];
+      }
+
+      // class Foo {}
+      if (node.type === 'ClassName' && node.node.type === 'ClassDeclaration') {
+        return [ref, 'class'];
       }
       return null;
     })

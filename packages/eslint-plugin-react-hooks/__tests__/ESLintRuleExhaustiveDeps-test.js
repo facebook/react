@@ -1394,14 +1394,6 @@ const tests = {
     {
       code: normalizeIndent`
         function useFoo(){
-          const foo = new MyObj();
-          return useMemo(() => foo, [foo]);
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        function useFoo(){
           let foo = {};
           foo = 1;
           return useMemo(() => foo, [foo]);
@@ -7305,6 +7297,150 @@ const tests = {
         },
       ],
     },
+    {
+      code: normalizeIndent`
+        function Foo() {
+          const foo = <>Hi!</>;
+          useMemo(() => {
+            console.log(foo);
+          }, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' JSX fragment makes the dependencies of useMemo Hook (at line 6) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Foo() {
+          const foo = <div>Hi!</div>;
+          useMemo(() => {
+            console.log(foo);
+          }, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' JSX element makes the dependencies of useMemo Hook (at line 6) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Foo() {
+          const foo = bar = {};
+          useMemo(() => {
+            console.log(foo);
+          }, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' assignment expression makes the dependencies of useMemo Hook (at line 6) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Foo() {
+          const foo = new String('foo'); // Note 'foo' will be boxed, and thus an object and thus compared by reference.
+          useMemo(() => {
+            console.log(foo);
+          }, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' object construction makes the dependencies of useMemo Hook (at line 6) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Foo() {
+          const foo = new Map([]);
+          useMemo(() => {
+            console.log(foo);
+          }, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' object construction makes the dependencies of useMemo Hook (at line 6) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Foo() {
+          const foo = /reg/;
+          useMemo(() => {
+            console.log(foo);
+          }, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' regular expression makes the dependencies of useMemo Hook (at line 6) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Foo() {
+          const foo = ({}: any);
+          useMemo(() => {
+            console.log(foo);
+          }, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' object makes the dependencies of useMemo Hook (at line 6) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Foo() {
+          class Bar {};
+          useMemo(() => {
+            console.log(new Bar());
+          }, [Bar]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'Bar' class makes the dependencies of useMemo Hook (at line 6) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'Bar' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ],
+    },
   ],
 };
 
@@ -7680,6 +7816,24 @@ const testsTypescript = {
                 `,
             },
           ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Foo() {
+          const foo = {} as any;;
+          useMemo(() => {
+            console.log(foo);
+          }, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' object makes the dependencies of useMemo Hook (at line 6) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
         },
       ],
     },
