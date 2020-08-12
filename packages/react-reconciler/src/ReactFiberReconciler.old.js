@@ -206,7 +206,7 @@ function findHostInstanceWithWarning(
                 '%s was passed an instance of %s which is inside StrictMode. ' +
                 'Instead, add a ref directly to the element you want to reference. ' +
                 'Learn more about using refs safely here: ' +
-                'https://fb.me/react-strict-mode-find-node',
+                'https://reactjs.org/docs/strict-mode.html#warning-about-deprecated-finddomnode-usage',
               methodName,
               methodName,
               componentName,
@@ -217,7 +217,7 @@ function findHostInstanceWithWarning(
                 '%s was passed an instance of %s which renders StrictMode children. ' +
                 'Instead, add a ref directly to the element you want to reference. ' +
                 'Learn more about using refs safely here: ' +
-                'https://fb.me/react-strict-mode-find-node',
+                'https://reactjs.org/docs/strict-mode.html#warning-about-deprecated-finddomnode-usage',
               methodName,
               methodName,
               componentName,

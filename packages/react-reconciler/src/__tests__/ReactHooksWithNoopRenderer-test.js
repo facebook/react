@@ -162,7 +162,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://reactjs.org/warnings/invalid-hook-call-warning for tips about how to debug and fix this problem.',
     );
 
     // Confirm that a subsequent hook works properly.
@@ -192,7 +192,7 @@ describe('ReactHooksWithNoopRenderer', () => {
             '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
             '2. You might be breaking the Rules of Hooks\n' +
             '3. You might have more than one copy of React in the same app\n' +
-            'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+            'See https://reactjs.org/warnings/invalid-hook-call-warning for tips about how to debug and fix this problem.',
         ),
       ).toErrorDev(
         'Warning: The <Counter /> component appears to be a function component that returns a class instance. ' +
@@ -219,7 +219,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://reactjs.org/warnings/invalid-hook-call-warning for tips about how to debug and fix this problem.',
     );
   });
 
@@ -3124,7 +3124,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       }).toErrorDev([
         'Warning: React has detected a change in the order of Hooks called by App. ' +
           'This will lead to bugs and errors if not fixed. For more information, ' +
-          'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+          'read the Rules of Hooks: https://reactjs.org/docs/hooks-rules\n\n' +
           '   Previous render            Next render\n' +
           '   ------------------------------------------------------\n' +
           '1. useState                   useState\n' +
@@ -3220,7 +3220,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
-            'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+            'read the Rules of Hooks: https://reactjs.org/docs/hooks-rules\n\n' +
             '   Previous render            Next render\n' +
             '   ------------------------------------------------------\n' +
             '1. useEffect                  useEffect\n' +

@@ -6575,7 +6575,7 @@ const tests = {
             '  }\n' +
             '  fetchData();\n' +
             `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
-            'Learn more about data fetching with Hooks: https://fb.me/react-hooks-data-fetching',
+            'Learn more about data fetching with Hooks: https://reactjs.org/docs/hooks-faq.html#how-can-i-do-data-fetching-with-hooks',
           suggestions: undefined,
         },
       ],
@@ -6599,7 +6599,7 @@ const tests = {
             '  }\n' +
             '  fetchData();\n' +
             `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
-            'Learn more about data fetching with Hooks: https://fb.me/react-hooks-data-fetching',
+            'Learn more about data fetching with Hooks: https://reactjs.org/docs/hooks-faq.html#how-can-i-do-data-fetching-with-hooks',
           suggestions: undefined,
         },
       ],

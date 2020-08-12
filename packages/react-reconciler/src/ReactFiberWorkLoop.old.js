@@ -3296,7 +3296,7 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
             console.error(
               'Cannot update a component (`%s`) while rendering a ' +
                 'different component (`%s`). To locate the bad setState() call inside `%s`, ' +
-                'follow the stack trace as described in https://fb.me/setstate-in-render',
+                'follow the stack trace as described in https://github.com/facebook/react/issues/18178#issuecomment-595846312',
               setStateComponentName,
               renderingComponentName,
               renderingComponentName,
@@ -3379,7 +3379,7 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
           '/* assert on the output */\n\n' +
           "This ensures that you're testing the behavior the user would see " +
           'in the browser.' +
-          ' Learn more at https://fb.me/react-wrap-tests-with-act',
+          ' Learn more at https://reactjs.org/docs/test-utils.html#act',
         getComponentName(fiber.type),
       );
     }
@@ -3407,7 +3407,7 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
             '/* assert on the output */\n\n' +
             "This ensures that you're testing the behavior the user would see " +
             'in the browser.' +
-            ' Learn more at https://fb.me/react-wrap-tests-with-act',
+            ' Learn more at https://reactjs.org/docs/test-utils.html#act',
           getComponentName(fiber.type),
         );
       } finally {

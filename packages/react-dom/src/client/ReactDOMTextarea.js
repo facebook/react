@@ -76,7 +76,7 @@ export function initWrapperState(element: Element, props: Object) {
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled textarea ' +
           'and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
+          'https://reactjs.org/docs/forms.html#controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
       );
       didWarnValDefaultVal = true;

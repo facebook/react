@@ -365,7 +365,7 @@ describe('create-react-class-integration', () => {
       expect(() => Component()).toThrow(),
     ).toErrorDev(
       'Warning: Something is calling a React component directly. Use a ' +
-        'factory or JSX instead. See: https://fb.me/react-legacyfactory',
+        'factory or JSX instead. See: https://reactjs.org/warnings/legacy-factories',
       {withoutStack: true},
     );
   });
@@ -555,7 +555,7 @@ describe('create-react-class-integration', () => {
           '  componentWillReceiveProps\n' +
           '  componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://fb.me/react-unsafe-component-lifecycles',
+          'https://reactjs.org/blog/2018/03/27/update-on-async-rendering',
       );
     }).toWarnDev(
       [
@@ -598,7 +598,7 @@ describe('create-react-class-integration', () => {
           '  componentWillReceiveProps\n' +
           '  componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://fb.me/react-unsafe-component-lifecycles',
+          'https://reactjs.org/blog/2018/03/27/update-on-async-rendering',
       );
     }).toWarnDev(
       [

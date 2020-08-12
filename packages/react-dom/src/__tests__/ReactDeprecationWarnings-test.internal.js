@@ -69,7 +69,7 @@ describe('ReactDeprecationWarnings', () => {
         'Support for string refs will be removed in a future major release. ' +
         'We recommend using useRef() or createRef() instead. ' +
         'Learn more about using refs safely here: ' +
-        'https://fb.me/react-strict-mode-string-ref' +
+        'https://reactjs.org/docs/refs-and-the-dom.html#legacy-api-string-refs' +
         '\n    in Component (at **)',
     );
   });
@@ -110,7 +110,7 @@ describe('ReactDeprecationWarnings', () => {
         'This case cannot be automatically converted to an arrow function. ' +
         'We ask you to manually fix this case by using useRef() or createRef() instead. ' +
         'Learn more about using refs safely here: ' +
-        'https://fb.me/react-strict-mode-string-ref',
+        'https://reactjs.org/docs/refs-and-the-dom.html#legacy-api-string-refs',
     ]);
   });
 
@@ -141,7 +141,7 @@ describe('ReactDeprecationWarnings', () => {
           'This case cannot be automatically converted to an arrow function. ' +
           'We ask you to manually fix this case by using useRef() or createRef() instead. ' +
           'Learn more about using refs safely here: ' +
-          'https://fb.me/react-strict-mode-string-ref',
+          'https://reactjs.org/docs/refs-and-the-dom.html#legacy-api-string-refs',
       );
     });
   }

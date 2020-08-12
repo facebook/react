@@ -324,7 +324,7 @@ function mockComponent(module, mockTagName) {
       console.warn(
         'ReactTestUtils.mockComponent() is deprecated. ' +
           'Use shallow rendering or jest.mock() instead.\n\n' +
-          'See https://fb.me/test-utils-mock-component for more information.',
+          'See https://gist.github.com/bvaughn/fbf41b3f895bf2d297935faa5525eee9 for more information.',
       );
     }
   }

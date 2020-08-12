@@ -176,7 +176,7 @@ const ProfilingNotSupported = () => (
       Learn more at{' '}
       <a
         className={styles.Link}
-        href="https://fb.me/react-profiling"
+        href="https://gist.github.com/bvaughn/25e6233aeb1b4f0cdb8d8366e54a3977"
         rel="noopener noreferrer"
         target="_blank">
         fb.me/react-profiling
