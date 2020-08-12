@@ -56,7 +56,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local = {};
+          const local = useMemo(() => ({}), []);
           useEffect(() => {
             console.log(local);
           }, [local]);
@@ -94,9 +94,9 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local1 = {};
+          const local1 = useMemo(() => ({}), []);
           {
-            const local2 = {};
+            const local2 = useMemo(() => ({}), []);
             useCallback(() => {
               console.log(local1);
               console.log(local2);
@@ -108,9 +108,9 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local1 = {};
+          const local1 = useMemo(() => ({}), []);
           function MyNestedComponent() {
-            const local2 = {};
+            const local2 = useMemo(() => ({}), []);
             useCallback(() => {
               console.log(local1);
               console.log(local2);
@@ -122,7 +122,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local = {};
+          const local = useMemo(() => ({}), []);
           useEffect(() => {
             console.log(local);
             console.log(local);
@@ -142,7 +142,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local = {};
+          const local = useMemo(() => ({}), []);
           useEffect(() => {
             console.log(local);
           }, [,,,local,,,]);
@@ -222,7 +222,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent(props) {
-          const local = {};
+          const local = useMemo(() => ({}), []);
           useEffect(() => {
             console.log(props.foo);
             console.log(props.bar);
@@ -243,7 +243,7 @@ const tests = {
             console.log(props.bar);
           }, [props, props.foo]);
 
-          let color = {}
+          let color = useMemo(() => ({}), []);
           useEffect(() => {
             console.log(props.foo.bar.baz);
             console.log(color);
@@ -416,7 +416,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local = {};
+          const local = useMemo(() => ({}), []);
           function myEffect() {
             console.log(local);
           }
@@ -731,7 +731,7 @@ const tests = {
       // direct assignments.
       code: normalizeIndent`
         function MyComponent(props) {
-          let obj = {};
+          let obj = useMemo(() => ({}), []);
           useEffect(() => {
             obj.foo = true;
           }, [obj]);
@@ -1560,7 +1560,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local = {};
+          const local = useMemo(() => ({}), []);
           useEffect(() => {
             console.log(local);
           }, []);
@@ -1576,7 +1576,7 @@ const tests = {
               desc: 'Update the dependencies array to be: [local]',
               output: normalizeIndent`
                 function MyComponent() {
-                  const local = {};
+                  const local = useMemo(() => ({}), []);
                   useEffect(() => {
                     console.log(local);
                   }, [local]);
@@ -1702,7 +1702,7 @@ const tests = {
       // Regression test
       code: normalizeIndent`
         function MyComponent() {
-          const local = {};
+          const local = useMemo(() => ({}), []);
           useEffect(() => {
             if (true) {
               console.log(local);
@@ -1720,7 +1720,7 @@ const tests = {
               desc: 'Update the dependencies array to be: [local]',
               output: normalizeIndent`
                 function MyComponent() {
-                  const local = {};
+                  const local = useMemo(() => ({}), []);
                   useEffect(() => {
                     if (true) {
                       console.log(local);
@@ -1808,9 +1808,9 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local1 = {};
+          const local1 = useMemo(() => ({}), []);
           {
-            const local2 = {};
+            const local2 = useMemo(() => ({}), []);
             useEffect(() => {
               console.log(local1);
               console.log(local2);
@@ -1828,9 +1828,9 @@ const tests = {
               desc: 'Update the dependencies array to be: [local1, local2]',
               output: normalizeIndent`
                 function MyComponent() {
-                  const local1 = {};
+                  const local1 = useMemo(() => ({}), []);
                   {
-                    const local2 = {};
+                    const local2 = useMemo(() => ({}), []);
                     useEffect(() => {
                       console.log(local1);
                       console.log(local2);
@@ -1912,7 +1912,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local1 = {};
+          const local1 = useMemo(() => ({}), []);
           function MyNestedComponent() {
             const local2 = {};
             useCallback(() => {
@@ -1934,7 +1934,7 @@ const tests = {
               desc: 'Update the dependencies array to be: [local2]',
               output: normalizeIndent`
                 function MyComponent() {
-                  const local1 = {};
+                  const local1 = useMemo(() => ({}), []);
                   function MyNestedComponent() {
                     const local2 = {};
                     useCallback(() => {
@@ -2361,7 +2361,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local = {};
+          const local = useMemo(() => ({}), []);
           useEffect(() => {
             console.log(local);
           }, [local, ...dependencies]);
@@ -5810,56 +5810,6 @@ const tests = {
             '(at line 16) change on every render. To fix this, wrap the ' +
             "'handleNext2' definition into its own useCallback() Hook.",
           suggestions: undefined,
-        },
-      ],
-    },
-    {
-      code: normalizeIndent`
-        function MyComponent(props) {
-          let handleNext = () => {
-            console.log('hello');
-          };
-          if (props.foo) {
-            handleNext = () => {
-              console.log('hello');
-            };
-          }
-          useEffect(() => {
-            return Store.subscribe(handleNext);
-          }, [handleNext]);
-        }
-      `,
-      errors: [
-        {
-          message:
-            "The 'handleNext' function makes the dependencies of useEffect Hook " +
-            '(at line 13) change on every render. To fix this, wrap the ' +
-            "'handleNext' definition into its own useCallback() Hook.",
-          // Normally we'd suggest moving handleNext inside an
-          // effect. But it's used more than once.
-          // TODO: our autofix here isn't quite sufficient because
-          // it only wraps the first definition. But seems ok.
-          suggestions: [
-            {
-              desc:
-                "Wrap the 'handleNext' definition into its own useCallback() Hook.",
-              output: normalizeIndent`
-                function MyComponent(props) {
-                  let handleNext = useCallback(() => {
-                    console.log('hello');
-                  });
-                  if (props.foo) {
-                    handleNext = () => {
-                      console.log('hello');
-                    };
-                  }
-                  useEffect(() => {
-                    return Store.subscribe(handleNext);
-                  }, [handleNext]);
-                }
-              `,
-            },
-          ],
         },
       ],
     },
