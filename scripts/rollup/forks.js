@@ -209,8 +209,6 @@ const forks = Object.freeze({
       entry === 'react-test-renderer'
     ) {
       return 'scheduler/src/forks/SchedulerHostConfig.mock';
-    } else if (entry === 'scheduler/unstable_post_task') {
-      return 'scheduler/src/forks/SchedulerHostConfig.post-task';
     }
     return 'scheduler/src/forks/SchedulerHostConfig.default';
   },
