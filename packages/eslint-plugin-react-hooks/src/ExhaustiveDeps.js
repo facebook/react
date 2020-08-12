@@ -857,7 +857,7 @@ export default {
             const wrapperHook =
               depType === 'function' ? 'useCallback' : 'useMemo';
 
-            const defaultAdvice = `wrap the '${construction.name.name}' definition into its own ${wrapperHook}() Hook.`;
+            const defaultAdvice = `wrap the construction of '${construction.name.name}' in its own ${wrapperHook}() Hook.`;
 
             const advice = isUsedOutsideOfHook
               ? `To fix this, ${defaultAdvice}`
@@ -876,10 +876,17 @@ export default {
             let suggest;
             // Only handle the simple case of variable assignments.
             // Wrapping function declarations can mess up hoisting.
-            if (isUsedOutsideOfHook && construction.type === 'Variable') {
+            if (
+              isUsedOutsideOfHook &&
+              construction.type === 'Variable' &&
+              // Objects may be mutated ater construction, which would make this
+              // fix unsafe. Functions _probably_ won't be mutated, so we'll
+              // allow this fix for them.
+              depType === 'function'
+            ) {
               suggest = [
                 {
-                  desc: `Wrap the '${construction.name.name}' definition into its own ${wrapperHook}() Hook.`,
+                  desc: `Wrap the construction of '${construction.name.name}' in its own ${wrapperHook}() Hook.`,
                   fix(fixer) {
                     const [before, after] =
                       wrapperHook === 'useMemo'
