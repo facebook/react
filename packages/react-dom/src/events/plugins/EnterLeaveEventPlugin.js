@@ -25,6 +25,7 @@ import {
   isContainerMarkedAsRoot,
 } from '../../client/ReactDOMComponentTree';
 import {accumulateEnterLeaveTwoPhaseListeners} from '../DOMPluginEventSystem';
+import type {KnownReactSyntheticEvent} from '../ReactSyntheticEventType';
 
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';
@@ -147,7 +148,7 @@ function extractEvents(
   leave.target = fromNode;
   leave.relatedTarget = toNode;
 
-  let enter = new SyntheticEvent(
+  let enter: KnownReactSyntheticEvent | null = new SyntheticEvent(
     enterEventType,
     eventTypePrefix + 'enter',
     to,
@@ -155,8 +156,9 @@ function extractEvents(
     nativeEventTarget,
     eventInterface,
   );
-  enter.target = toNode;
-  enter.relatedTarget = fromNode;
+  // flow thinks `enter` could be `null` at this point
+  ((enter: any): KnownReactSyntheticEvent).target = toNode;
+  ((enter: any): KnownReactSyntheticEvent).relatedTarget = fromNode;
 
   // If we are not processing the first ancestor, then we
   // should not process the same nativeEvent again, as we
