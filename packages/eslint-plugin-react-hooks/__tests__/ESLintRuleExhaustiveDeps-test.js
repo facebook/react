@@ -1387,7 +1387,7 @@ const tests = {
       code: normalizeIndent`
         function useFoo(){
           const foo = "hi!";
-          return useMemo(() => foo, [foo]); 
+          return useMemo(() => foo, [foo]);
         }
       `,
     },
@@ -5797,20 +5797,20 @@ const tests = {
       ],
     },
     {
-      code: normalizeIndent`	
-        function MyComponent(props) {	
-          let handleNext = () => {	
-            console.log('hello');	
-          };	
-          if (props.foo) {	
-            handleNext = () => {	
-              console.log('hello');	
-            };	
-          }	
-          useEffect(() => {	
-            return Store.subscribe(handleNext);	
-          }, [handleNext]);	
-        }	
+      code: normalizeIndent`
+        function MyComponent(props) {
+          let handleNext = () => {
+            console.log('hello');
+          };
+          if (props.foo) {
+            handleNext = () => {
+              console.log('hello');
+            };
+          }
+          useEffect(() => {
+            return Store.subscribe(handleNext);
+          }, [handleNext]);
+        }
       `,
       errors: [
         {
@@ -5826,20 +5826,20 @@ const tests = {
             {
               desc:
                 "Wrap the construction of 'handleNext' in its own useCallback() Hook.",
-              output: normalizeIndent`	
-          function MyComponent(props) {	
-            let handleNext = useCallback(() => {	
-              console.log('hello');	
-            });	
-            if (props.foo) {	
-              handleNext = () => {	
-                console.log('hello');	
-              };	
-            }	
-            useEffect(() => {	
-              return Store.subscribe(handleNext);	
-            }, [handleNext]);	
-          }	
+              output: normalizeIndent`
+          function MyComponent(props) {
+            let handleNext = useCallback(() => {
+              console.log('hello');
+            });
+            if (props.foo) {
+              handleNext = () => {
+                console.log('hello');
+              };
+            }
+            useEffect(() => {
+              return Store.subscribe(handleNext);
+            }, [handleNext]);
+          }
         `,
             },
           ],
