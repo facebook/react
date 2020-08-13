@@ -70,6 +70,15 @@ describe('SchedulerPostTask', () => {
       },
     };
 
+    // Note: setTimeout is used to report errors and nothing else.
+    window.setTimeout = cb => {
+      try {
+        cb();
+      } catch (error) {
+        runtime.log(`Error: ${error.message}`);
+      }
+    };
+
     // Mock browser scheduler.
     const scheduler = {};
     global.scheduler = scheduler;
@@ -116,16 +125,10 @@ describe('SchedulerPostTask', () => {
       // delete the continuation task.
       const prevTaskQueue = taskQueue;
       taskQueue = new Map();
-      for (const [, {id, callback, resolve, reject}] of prevTaskQueue) {
-        try {
-          log(`Task ${id} Fired`);
-          callback(false);
-          resolve();
-        } catch (error) {
-          log(`Task ${id} errored [${error.message}]`);
-          reject(error);
-          continue;
-        }
+      for (const [, {id, callback, resolve}] of prevTaskQueue) {
+        log(`Task ${id} Fired`);
+        callback(false);
+        resolve();
       }
     }
     function log(val) {
@@ -219,12 +222,7 @@ describe('SchedulerPostTask', () => {
       'Post Task 1 [user-visible]',
     ]);
     runtime.flushTasks();
-    runtime.assertLog([
-      'Task 0 Fired',
-      'Task 0 errored [Oops!]',
-      'Task 1 Fired',
-      'Yay',
-    ]);
+    runtime.assertLog(['Task 0 Fired', 'Error: Oops!', 'Task 1 Fired', 'Yay']);
   });
 
   it('schedule new task after queue has emptied', () => {
