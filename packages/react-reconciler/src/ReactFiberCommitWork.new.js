@@ -173,13 +173,13 @@ function safelyCallComponentWillUnmount(current, instance) {
     );
     if (hasCaughtError()) {
       const unmountError = clearCaughtError();
-      captureCommitPhaseError(current, unmountError);
+      captureCommitPhaseError(current, current.return, unmountError);
     }
   } else {
     try {
       callComponentWillUnmountWithTimer(current, instance);
     } catch (unmountError) {
-      captureCommitPhaseError(current, unmountError);
+      captureCommitPhaseError(current, current.return, unmountError);
     }
   }
 }
@@ -192,13 +192,13 @@ function safelyDetachRef(current: Fiber) {
         invokeGuardedCallback(null, ref, null, null);
         if (hasCaughtError()) {
           const refError = clearCaughtError();
-          captureCommitPhaseError(current, refError);
+          captureCommitPhaseError(current, current.return, refError);
         }
       } else {
         try {
           ref(null);
         } catch (refError) {
-          captureCommitPhaseError(current, refError);
+          captureCommitPhaseError(current, current.return, refError);
         }
       }
     } else {
@@ -207,18 +207,22 @@ function safelyDetachRef(current: Fiber) {
   }
 }
 
-export function safelyCallDestroy(current: Fiber, destroy: () => void) {
+export function safelyCallDestroy(
+  current: Fiber,
+  nearestMountedAncestor: Fiber | null,
+  destroy: () => void,
+) {
   if (__DEV__) {
     invokeGuardedCallback(null, destroy, null);
     if (hasCaughtError()) {
       const error = clearCaughtError();
-      captureCommitPhaseError(current, error);
+      captureCommitPhaseError(current, nearestMountedAncestor, error);
     }
   } else {
     try {
       destroy();
     } catch (error) {
-      captureCommitPhaseError(current, error);
+      captureCommitPhaseError(current, nearestMountedAncestor, error);
     }
   }
 }
@@ -337,10 +341,10 @@ function commitHookEffectListUnmount(tag: HookEffectTag, finishedWork: Fiber) {
 
 // TODO: Remove this duplication.
 function commitHookEffectListUnmount2(
-  // Tags to check for when deciding whether to unmount. e.g. to skip over
-  // layout effects
+  // Tags to check for when deciding whether to unmount. e.g. to skip over layout effects
   hookEffectTag: HookEffectTag,
   fiber: Fiber,
+  nearestMountedAncestor: Fiber | null,
 ): void {
   const updateQueue: FunctionComponentUpdateQueue | null = (fiber.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
@@ -359,10 +363,10 @@ function commitHookEffectListUnmount2(
             fiber.mode & ProfileMode
           ) {
             startPassiveEffectTimer();
-            safelyCallDestroy(fiber, destroy);
+            safelyCallDestroy(fiber, nearestMountedAncestor, destroy);
             recordPassiveEffectDuration(fiber);
           } else {
-            safelyCallDestroy(fiber, destroy);
+            safelyCallDestroy(fiber, nearestMountedAncestor, destroy);
           }
         }
       }
@@ -465,7 +469,7 @@ function commitHookEffectListMount2(fiber: Fiber): void {
           if (hasCaughtError()) {
             invariant(fiber !== null, 'Should be working on an effect.');
             const error = clearCaughtError();
-            captureCommitPhaseError(fiber, error);
+            captureCommitPhaseError(fiber, fiber.return, error);
           }
         } else {
           try {
@@ -488,7 +492,7 @@ function commitHookEffectListMount2(fiber: Fiber): void {
             // The warning refers to useEffect but only applies to useLayoutEffect.
           } catch (error) {
             invariant(fiber !== null, 'Should be working on an effect.');
-            captureCommitPhaseError(fiber, error);
+            captureCommitPhaseError(fiber, fiber.return, error);
           }
         }
       }
@@ -997,10 +1001,10 @@ function commitUnmount(
                   current.mode & ProfileMode
                 ) {
                   startLayoutEffectTimer();
-                  safelyCallDestroy(current, destroy);
+                  safelyCallDestroy(current, current.return, destroy);
                   recordLayoutEffectDuration(current);
                 } else {
-                  safelyCallDestroy(current, destroy);
+                  safelyCallDestroy(current, current.return, destroy);
                 }
               }
             }
@@ -1842,18 +1846,29 @@ function commitPassiveWork(finishedWork: Fiber): void {
     case ForwardRef:
     case SimpleMemoComponent:
     case Block: {
-      commitHookEffectListUnmount2(HookPassive | HookHasEffect, finishedWork);
+      commitHookEffectListUnmount2(
+        HookPassive | HookHasEffect,
+        finishedWork,
+        finishedWork.return,
+      );
     }
   }
 }
 
-function commitPassiveUnmount(current: Fiber): void {
+function commitPassiveUnmount(
+  current: Fiber,
+  nearestMountedAncestor: Fiber | null,
+): void {
   switch (current.tag) {
     case FunctionComponent:
     case ForwardRef:
     case SimpleMemoComponent:
     case Block:
-      commitHookEffectListUnmount2(HookPassive, current);
+      commitHookEffectListUnmount2(
+        HookPassive,
+        current,
+        nearestMountedAncestor,
+      );
   }
 }
 

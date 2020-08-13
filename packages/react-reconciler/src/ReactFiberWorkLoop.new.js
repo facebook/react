@@ -2406,14 +2406,14 @@ function commitBeforeMutationEffects(firstChild: Fiber) {
       invokeGuardedCallback(null, commitBeforeMutationEffectsImpl, null, fiber);
       if (hasCaughtError()) {
         const error = clearCaughtError();
-        captureCommitPhaseError(fiber, error);
+        captureCommitPhaseError(fiber, fiber.return, error);
       }
       resetCurrentDebugFiberInDEV();
     } else {
       try {
         commitBeforeMutationEffectsImpl(fiber);
       } catch (error) {
-        captureCommitPhaseError(fiber, error);
+        captureCommitPhaseError(fiber, fiber.return, error);
       }
     }
     fiber = fiber.sibling;
@@ -2503,14 +2503,14 @@ function commitMutationEffects(
       );
       if (hasCaughtError()) {
         const error = clearCaughtError();
-        captureCommitPhaseError(fiber, error);
+        captureCommitPhaseError(fiber, fiber.return, error);
       }
       resetCurrentDebugFiberInDEV();
     } else {
       try {
         commitMutationEffectsImpl(fiber, root, renderPriorityLevel);
       } catch (error) {
-        captureCommitPhaseError(fiber, error);
+        captureCommitPhaseError(fiber, fiber.return, error);
       }
     }
     fiber = fiber.sibling;
@@ -2606,13 +2606,13 @@ function commitMutationEffectsDeletions(
       );
       if (hasCaughtError()) {
         const error = clearCaughtError();
-        captureCommitPhaseError(childToDelete, error);
+        captureCommitPhaseError(childToDelete, childToDelete.return, error);
       }
     } else {
       try {
         commitDeletion(root, childToDelete, renderPriorityLevel);
       } catch (error) {
-        captureCommitPhaseError(childToDelete, error);
+        captureCommitPhaseError(childToDelete, childToDelete.return, error);
       }
     }
   }
@@ -2654,14 +2654,14 @@ function commitLayoutEffects(
       );
       if (hasCaughtError()) {
         const error = clearCaughtError();
-        captureCommitPhaseError(fiber, error);
+        captureCommitPhaseError(fiber, fiber.return, error);
       }
       resetCurrentDebugFiberInDEV();
     } else {
       try {
         commitLayoutEffectsImpl(fiber, root, committedLanes);
       } catch (error) {
-        captureCommitPhaseError(fiber, error);
+        captureCommitPhaseError(fiber, fiber.return, error);
       }
     }
     fiber = fiber.sibling;
@@ -2761,7 +2761,7 @@ function flushPassiveUnmountEffects(firstChild: Fiber): void {
     if (deletions !== null) {
       for (let i = 0; i < deletions.length; i++) {
         const fiberToDelete = deletions[i];
-        flushPassiveUnmountEffectsInsideOfDeletedTree(fiberToDelete);
+        flushPassiveUnmountEffectsInsideOfDeletedTree(fiberToDelete, fiber);
 
         // Now that passive effects have been processed, it's safe to detach lingering pointers.
         detachFiberAfterEffects(fiberToDelete);
@@ -2793,6 +2793,7 @@ function flushPassiveUnmountEffects(firstChild: Fiber): void {
 
 function flushPassiveUnmountEffectsInsideOfDeletedTree(
   fiberToDelete: Fiber,
+  nearestMountedAncestor: Fiber,
 ): void {
   if ((fiberToDelete.subtreeTag & PassiveStaticSubtreeTag) !== NoSubtreeTag) {
     // If any children have passive effects then traverse the subtree.
@@ -2801,14 +2802,17 @@ function flushPassiveUnmountEffectsInsideOfDeletedTree(
     // since that would not cover passive effects in siblings.
     let child = fiberToDelete.child;
     while (child !== null) {
-      flushPassiveUnmountEffectsInsideOfDeletedTree(child);
+      flushPassiveUnmountEffectsInsideOfDeletedTree(
+        child,
+        nearestMountedAncestor,
+      );
       child = child.sibling;
     }
   }
 
   if ((fiberToDelete.effectTag & PassiveStatic) !== NoEffect) {
     setCurrentDebugFiberInDEV(fiberToDelete);
-    commitPassiveUnmount(fiberToDelete);
+    commitPassiveUnmount(fiberToDelete, nearestMountedAncestor);
     resetCurrentDebugFiberInDEV();
   }
 }
@@ -2935,7 +2939,11 @@ function captureCommitPhaseErrorOnRoot(
   }
 }
 
-export function captureCommitPhaseError(sourceFiber: Fiber, error: mixed) {
+export function captureCommitPhaseError(
+  sourceFiber: Fiber,
+  nearestMountedAncestor: Fiber | null,
+  error: mixed,
+) {
   if (sourceFiber.tag === HostRoot) {
     // Error was thrown at the root. There is no parent, so the root
     // itself should capture it.
@@ -2943,7 +2951,7 @@ export function captureCommitPhaseError(sourceFiber: Fiber, error: mixed) {
     return;
   }
 
-  let fiber = sourceFiber.return;
+  let fiber = nearestMountedAncestor;
   while (fiber !== null) {
     if (fiber.tag === HostRoot) {
       captureCommitPhaseErrorOnRoot(fiber, sourceFiber, error);

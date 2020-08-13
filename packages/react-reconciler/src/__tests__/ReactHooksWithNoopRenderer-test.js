@@ -2320,6 +2320,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     describe('errors thrown in passive destroy function within unmounted trees', () => {
       let BrokenUseEffectCleanup;
       let ErrorBoundary;
+      let DerivedStateOnlyErrorBoundary;
       let LogOnlyErrorBoundary;
 
       beforeEach(() => {
@@ -2351,10 +2352,32 @@ describe('ReactHooksWithNoopRenderer', () => {
           render() {
             if (this.state.error) {
               Scheduler.unstable_yieldValue('ErrorBoundary render error');
-              return 'ErrorBoundary fallback';
+              return <span prop="ErrorBoundary fallback" />;
             }
             Scheduler.unstable_yieldValue('ErrorBoundary render success');
-            return this.props.children;
+            return this.props.children || null;
+          }
+        };
+
+        DerivedStateOnlyErrorBoundary = class extends React.Component {
+          state = {error: null};
+          static getDerivedStateFromError(error) {
+            Scheduler.unstable_yieldValue(
+              `DerivedStateOnlyErrorBoundary static getDerivedStateFromError`,
+            );
+            return {error};
+          }
+          render() {
+            if (this.state.error) {
+              Scheduler.unstable_yieldValue(
+                'DerivedStateOnlyErrorBoundary render error',
+              );
+              return <span prop="DerivedStateOnlyErrorBoundary fallback" />;
+            }
+            Scheduler.unstable_yieldValue(
+              'DerivedStateOnlyErrorBoundary render success',
+            );
+            return this.props.children || null;
           }
         };
 
@@ -2366,12 +2389,13 @@ describe('ReactHooksWithNoopRenderer', () => {
           }
           render() {
             Scheduler.unstable_yieldValue(`LogOnlyErrorBoundary render`);
-            return this.props.children;
+            return this.props.children || null;
           }
         };
       });
 
-      it('should not error if the nearest unmounted boundary is log-only', () => {
+      // @gate old
+      it('should call componentDidCatch() for the nearest unmounted log-only boundary', () => {
         function Conditional({showChildren}) {
           if (showChildren) {
             return (
@@ -2411,9 +2435,267 @@ describe('ReactHooksWithNoopRenderer', () => {
 
         expect(Scheduler).toHaveYielded([
           'BrokenUseEffectCleanup useEffect destroy',
-          // This should call componentDidCatch too, but we'll address that in a follow up.
-          // 'LogOnlyErrorBoundary componentDidCatch',
+          'LogOnlyErrorBoundary componentDidCatch',
         ]);
+      });
+
+      // @gate old
+      it('should call componentDidCatch() for the nearest unmounted logging-capable boundary', () => {
+        function Conditional({showChildren}) {
+          if (showChildren) {
+            return (
+              <ErrorBoundary>
+                <BrokenUseEffectCleanup />
+              </ErrorBoundary>
+            );
+          } else {
+            return null;
+          }
+        }
+
+        act(() => {
+          ReactNoop.render(
+            <ErrorBoundary>
+              <Conditional showChildren={true} />
+            </ErrorBoundary>,
+          );
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'ErrorBoundary render success',
+          'ErrorBoundary render success',
+          'BrokenUseEffectCleanup useEffect',
+        ]);
+
+        act(() => {
+          ReactNoop.render(
+            <ErrorBoundary>
+              <Conditional showChildren={false} />
+            </ErrorBoundary>,
+          );
+          expect(Scheduler).toFlushAndYieldThrough([
+            'ErrorBoundary render success',
+          ]);
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'BrokenUseEffectCleanup useEffect destroy',
+          'ErrorBoundary componentDidCatch',
+        ]);
+      });
+
+      // @gate old
+      it('should not call getDerivedStateFromError for unmounted error boundaries', () => {
+        function Conditional({showChildren}) {
+          if (showChildren) {
+            return (
+              <ErrorBoundary>
+                <BrokenUseEffectCleanup />
+              </ErrorBoundary>
+            );
+          } else {
+            return null;
+          }
+        }
+
+        act(() => {
+          ReactNoop.render(<Conditional showChildren={true} />);
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'ErrorBoundary render success',
+          'BrokenUseEffectCleanup useEffect',
+        ]);
+
+        act(() => {
+          ReactNoop.render(<Conditional showChildren={false} />);
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'BrokenUseEffectCleanup useEffect destroy',
+          'ErrorBoundary componentDidCatch',
+        ]);
+      });
+
+      // @gate old
+      it('should not throw if there are no unmounted logging-capable boundaries to call', () => {
+        function Conditional({showChildren}) {
+          if (showChildren) {
+            return (
+              <DerivedStateOnlyErrorBoundary>
+                <BrokenUseEffectCleanup />
+              </DerivedStateOnlyErrorBoundary>
+            );
+          } else {
+            return null;
+          }
+        }
+
+        act(() => {
+          ReactNoop.render(<Conditional showChildren={true} />);
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'DerivedStateOnlyErrorBoundary render success',
+          'BrokenUseEffectCleanup useEffect',
+        ]);
+
+        act(() => {
+          ReactNoop.render(<Conditional showChildren={false} />);
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'BrokenUseEffectCleanup useEffect destroy',
+        ]);
+      });
+
+      // @gate new
+      it('should use the nearest still-mounted boundary if there are no unmounted boundaries', () => {
+        act(() => {
+          ReactNoop.render(
+            <LogOnlyErrorBoundary>
+              <BrokenUseEffectCleanup />
+            </LogOnlyErrorBoundary>,
+          );
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'LogOnlyErrorBoundary render',
+          'BrokenUseEffectCleanup useEffect',
+        ]);
+
+        act(() => {
+          ReactNoop.render(<LogOnlyErrorBoundary />);
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'LogOnlyErrorBoundary render',
+          'BrokenUseEffectCleanup useEffect destroy',
+          'LogOnlyErrorBoundary componentDidCatch',
+        ]);
+      });
+
+      // @gate new
+      it('should skip unmounted boundaries and use the nearest still-mounted boundary', () => {
+        function Conditional({showChildren}) {
+          if (showChildren) {
+            return (
+              <ErrorBoundary>
+                <BrokenUseEffectCleanup />
+              </ErrorBoundary>
+            );
+          } else {
+            return null;
+          }
+        }
+
+        act(() => {
+          ReactNoop.render(
+            <LogOnlyErrorBoundary>
+              <Conditional showChildren={true} />
+            </LogOnlyErrorBoundary>,
+          );
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'LogOnlyErrorBoundary render',
+          'ErrorBoundary render success',
+          'BrokenUseEffectCleanup useEffect',
+        ]);
+
+        act(() => {
+          ReactNoop.render(
+            <LogOnlyErrorBoundary>
+              <Conditional showChildren={false} />
+            </LogOnlyErrorBoundary>,
+          );
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'LogOnlyErrorBoundary render',
+          'BrokenUseEffectCleanup useEffect destroy',
+          'LogOnlyErrorBoundary componentDidCatch',
+        ]);
+      });
+
+      // @gate new
+      it('should call getDerivedStateFromError in the nearest still-mounted boundary', () => {
+        function Conditional({showChildren}) {
+          if (showChildren) {
+            return <BrokenUseEffectCleanup />;
+          } else {
+            return null;
+          }
+        }
+
+        act(() => {
+          ReactNoop.render(
+            <ErrorBoundary>
+              <Conditional showChildren={true} />
+            </ErrorBoundary>,
+          );
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'ErrorBoundary render success',
+          'BrokenUseEffectCleanup useEffect',
+        ]);
+
+        act(() => {
+          ReactNoop.render(
+            <ErrorBoundary>
+              <Conditional showChildren={false} />
+            </ErrorBoundary>,
+          );
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'ErrorBoundary render success',
+          'BrokenUseEffectCleanup useEffect destroy',
+          'ErrorBoundary static getDerivedStateFromError',
+          'ErrorBoundary render error',
+          'ErrorBoundary componentDidCatch',
+        ]);
+
+        expect(ReactNoop.getChildren()).toEqual([
+          span('ErrorBoundary fallback'),
+        ]);
+      });
+
+      // @gate new
+      it('should rethrow error if there are no still-mounted boundaries', () => {
+        function Conditional({showChildren}) {
+          if (showChildren) {
+            return (
+              <ErrorBoundary>
+                <BrokenUseEffectCleanup />
+              </ErrorBoundary>
+            );
+          } else {
+            return null;
+          }
+        }
+
+        act(() => {
+          ReactNoop.render(<Conditional showChildren={true} />);
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'ErrorBoundary render success',
+          'BrokenUseEffectCleanup useEffect',
+        ]);
+
+        expect(() => {
+          act(() => {
+            ReactNoop.render(<Conditional showChildren={false} />);
+          });
+        }).toThrow('Expected error');
+
+        expect(Scheduler).toHaveYielded([
+          'BrokenUseEffectCleanup useEffect destroy',
+        ]);
+
+        expect(ReactNoop.getChildren()).toEqual([]);
       });
     });
   });
