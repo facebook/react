@@ -7036,7 +7036,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7053,7 +7053,7 @@ const tests = {
         {
           message:
             "The 'foo' array makes the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7104,7 +7104,7 @@ const tests = {
         {
           message:
             "The 'foo' class makes the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7121,7 +7121,7 @@ const tests = {
         {
           message:
             "The 'foo' conditional could make the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7138,7 +7138,7 @@ const tests = {
         {
           message:
             "The 'foo' logical expression could make the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7155,7 +7155,7 @@ const tests = {
         {
           message:
             "The 'foo' logical expression could make the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7172,7 +7172,7 @@ const tests = {
         {
           message:
             "The 'foo' logical expression could make the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7189,7 +7189,7 @@ const tests = {
         {
           message:
             "The 'foo' conditional could make the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7206,7 +7206,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7223,7 +7223,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7242,7 +7242,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useCallback Hook (at line 6) change on every render. " +
-            "Move it inside the useCallback callback. Alternatively, wrap the assignment of 'foo' in its own " +
+            "Move it inside the useCallback callback. Alternatively, wrap the initialization of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7261,7 +7261,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useEffect Hook (at line 6) change on every render. " +
-            "Move it inside the useEffect callback. Alternatively, wrap the assignment of 'foo' in its own " +
+            "Move it inside the useEffect callback. Alternatively, wrap the initialization of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7280,7 +7280,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useLayoutEffect Hook (at line 6) change on every render. " +
-            "Move it inside the useLayoutEffect callback. Alternatively, wrap the assignment of 'foo' in its own " +
+            "Move it inside the useLayoutEffect callback. Alternatively, wrap the initialization of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7303,7 +7303,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useImperativeHandle Hook (at line 9) change on every render. " +
-            "Move it inside the useImperativeHandle callback. Alternatively, wrap the assignment of 'foo' in its own " +
+            "Move it inside the useImperativeHandle callback. Alternatively, wrap the initialization of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7322,7 +7322,7 @@ const tests = {
         {
           message:
             "The 'foo' logical expression could make the dependencies of useEffect Hook (at line 6) change on every render. " +
-            "Move it inside the useEffect callback. Alternatively, wrap the assignment of 'foo' in its own " +
+            "Move it inside the useEffect callback. Alternatively, wrap the initialization of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7342,7 +7342,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useMemo Hook (at line 7) change on every render. " +
-            "To fix this, wrap the assignment of 'foo' in its own useMemo() Hook.",
+            "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7360,7 +7360,7 @@ const tests = {
         {
           message:
             "The 'foo' JSX fragment makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7378,7 +7378,7 @@ const tests = {
         {
           message:
             "The 'foo' JSX element makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7396,7 +7396,7 @@ const tests = {
         {
           message:
             "The 'foo' assignment expression makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7414,7 +7414,7 @@ const tests = {
         {
           message:
             "The 'foo' object construction makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7432,7 +7432,7 @@ const tests = {
         {
           message:
             "The 'foo' object construction makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7450,7 +7450,7 @@ const tests = {
         {
           message:
             "The 'foo' regular expression makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7468,7 +7468,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7486,7 +7486,7 @@ const tests = {
         {
           message:
             "The 'Bar' class makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'Bar' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'Bar' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7882,7 +7882,7 @@ const testsTypescript = {
         {
           message:
             "The 'foo' object makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],

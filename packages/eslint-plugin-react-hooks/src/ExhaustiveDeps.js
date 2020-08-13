@@ -858,7 +858,7 @@ export default {
               depType === 'function' ? 'useCallback' : 'useMemo';
 
             const constructionType =
-              depType === 'function' ? 'definition' : 'assignment';
+              depType === 'function' ? 'definition' : 'initialization';
 
             const defaultAdvice = `wrap the ${constructionType} of '${construction.name.name}' in its own ${wrapperHook}() Hook.`;
 
