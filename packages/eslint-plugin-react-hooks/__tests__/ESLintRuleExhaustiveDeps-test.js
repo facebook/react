@@ -1394,15 +1394,6 @@ const tests = {
     {
       code: normalizeIndent`
         function useFoo(){
-          let foo = {};
-          foo = 1;
-          return useMemo(() => foo, [foo]);
-        }
-      `,
-    },
-    {
-      code: normalizeIndent`
-        function useFoo(){
           let {foo} = {foo: 1};
           return useMemo(() => foo, [foo]);
         }
@@ -5802,6 +5793,56 @@ const tests = {
             '(at line 16) change on every render. To fix this, wrap the ' +
             "construction of 'handleNext2' in its own useCallback() Hook.",
           suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`	
+        function MyComponent(props) {	
+          let handleNext = () => {	
+            console.log('hello');	
+          };	
+          if (props.foo) {	
+            handleNext = () => {	
+              console.log('hello');	
+            };	
+          }	
+          useEffect(() => {	
+            return Store.subscribe(handleNext);	
+          }, [handleNext]);	
+        }	
+      `,
+      errors: [
+        {
+          message:
+            "The 'handleNext' function makes the dependencies of useEffect Hook " +
+            '(at line 13) change on every render. To fix this, wrap the construction of ' +
+            "'handleNext' in its own useCallback() Hook.",
+          // Normally we'd suggest moving handleNext inside an
+          // effect. But it's used more than once.
+          // TODO: our autofix here isn't quite sufficient because
+          // it only wraps the first definition. But seems ok.
+          suggestions: [
+            {
+              desc:
+                "Wrap the construction of 'handleNext' in its own useCallback() Hook.",
+              output: normalizeIndent`	
+          function MyComponent(props) {	
+            let handleNext = useCallback(() => {	
+              console.log('hello');	
+            });	
+            if (props.foo) {	
+              handleNext = () => {	
+                console.log('hello');	
+              };	
+            }	
+            useEffect(() => {	
+              return Store.subscribe(handleNext);	
+            }, [handleNext]);	
+          }	
+        `,
+            },
+          ],
         },
       ],
     },

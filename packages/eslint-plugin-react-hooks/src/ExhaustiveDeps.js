@@ -1467,12 +1467,6 @@ function scanForConstructions({
         return null;
       }
 
-      if (ref.references.some(r => !r.init && r.isWrite())) {
-        // The variable gets reassigned. This complicates things so we won't
-        // try to reason about it for now.
-        return null;
-      }
-
       const node = ref.defs[0];
       if (node == null) {
         return null;
