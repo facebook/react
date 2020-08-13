@@ -39,6 +39,7 @@ export {
 
 // Capture local references to native APIs, in case a polyfill overrides them.
 const perf = window.performance;
+const setTimeout = window.setTimeout;
 
 // Use experimental Chrome Scheduler postTask API.
 const scheduler = global.scheduler;
@@ -112,7 +113,7 @@ export function unstable_scheduleCallback<T>(
       runTask.bind(null, priorityLevel, postTaskPriority, node, callback),
       postTaskOptions,
     )
-    .catch(handlePostTaskError);
+    .catch(handleAbortError);
 
   return node;
 }
@@ -150,30 +151,28 @@ function runTask<T>(
           ),
           continuationOptions,
         )
-        .catch(handlePostTaskError);
+        .catch(handleAbortError);
     }
+  } catch (error) {
+    // We're inside a `postTask` promise. If we don't handle this error, then it
+    // will trigger an "Unhandled promise rejection" error. We don't want that,
+    // but we do want the default error reporting behavior that normal
+    // (non-Promise) tasks get for unhandled errors.
+    //
+    // So we'll re-throw the error inside a regular browser task.
+    setTimeout(() => {
+      throw error;
+    });
   } finally {
     currentPriorityLevel_DEPRECATED = NormalPriority;
   }
 }
 
-function handlePostTaskError(error) {
-  // This error is either a user error thrown by a callback, or an AbortError
-  // as a result of a cancellation.
-  //
-  // User errors trigger a global `error` event even if we don't rethrow them.
-  // In fact, if we do rethrow them, they'll get reported to the console twice.
-  // I'm not entirely sure the current `postTask` spec makes sense here. If I
-  // catch a `postTask` call, it shouldn't trigger a global error.
-  //
+function handleAbortError(error) {
   // Abort errors are an implementation detail. We don't expose the
   // TaskController to the user, nor do we expose the promise that is returned
-  // from `postTask`. So we shouldn't rethrow those, either, since there's no
-  // way to handle them. (If we did return the promise to the user, then it
-  // should be up to them to handle the AbortError.)
-  //
-  // In either case, we can suppress the error, barring changes to the spec
-  // or the Scheduler API.
+  // from `postTask`. So we should suppress them, since there's no way for the
+  // user to handle them.
 }
 
 export function unstable_cancelCallback(node: CallbackNode) {
