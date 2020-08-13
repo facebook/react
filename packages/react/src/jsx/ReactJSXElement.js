@@ -70,7 +70,7 @@ function warnIfStringRefCannotBeAutoConverted(config, self) {
             'This case cannot be automatically converted to an arrow function. ' +
             'We ask you to manually fix this case by using useRef() or createRef() instead. ' +
             'Learn more about using refs safely here: ' +
-            'https://fb.me/react-strict-mode-string-ref',
+            'https://reactjs.org/link/strict-mode-string-ref',
           getComponentName(ReactCurrentOwner.current.type),
           config.ref,
         );
@@ -89,7 +89,7 @@ function defineKeyPropWarningGetter(props, displayName) {
           '%s: `key` is not a prop. Trying to access it will result ' +
             'in `undefined` being returned. If you need to access the same ' +
             'value within the child component, you should pass it as a different ' +
-            'prop. (https://fb.me/react-special-props)',
+            'prop. (https://reactjs.org/link/special-props)',
           displayName,
         );
       }
@@ -111,7 +111,7 @@ function defineRefPropWarningGetter(props, displayName) {
           '%s: `ref` is not a prop. Trying to access it will result ' +
             'in `undefined` being returned. If you need to access the same ' +
             'value within the child component, you should pass it as a different ' +
-            'prop. (https://fb.me/react-special-props)',
+            'prop. (https://reactjs.org/link/special-props)',
           displayName,
         );
       }

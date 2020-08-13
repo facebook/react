@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+
 
 const ESLintTester = require('eslint').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
@@ -6575,7 +6575,7 @@ const tests = {
             '  }\n' +
             '  fetchData();\n' +
             `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
-            'Learn more about data fetching with Hooks: https://fb.me/react-hooks-data-fetching',
+            'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching',
           suggestions: undefined,
         },
       ],
@@ -6599,7 +6599,7 @@ const tests = {
             '  }\n' +
             '  fetchData();\n' +
             `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
-            'Learn more about data fetching with Hooks: https://fb.me/react-hooks-data-fetching',
+            'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching',
           suggestions: undefined,
         },
       ],

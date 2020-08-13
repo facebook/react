@@ -31,7 +31,7 @@ describe('ReactDOMInvalidARIAHook', () => {
     it('should warn for one invalid aria-* prop', () => {
       expect(() => mountComponent({'aria-badprop': 'maybe'})).toErrorDev(
         'Warning: Invalid aria prop `aria-badprop` on <div> tag. ' +
-          'For details, see https://fb.me/invalid-aria-prop',
+          'For details, see https://reactjs.org/link/invalid-aria-props',
       );
     });
     it('should warn for many invalid aria-* props', () => {
@@ -42,7 +42,7 @@ describe('ReactDOMInvalidARIAHook', () => {
         }),
       ).toErrorDev(
         'Warning: Invalid aria props `aria-badprop`, `aria-malprop` on <div> ' +
-          'tag. For details, see https://fb.me/invalid-aria-prop',
+          'tag. For details, see https://reactjs.org/link/invalid-aria-props',
       );
     });
     it('should warn for an improperly cased aria-* prop', () => {

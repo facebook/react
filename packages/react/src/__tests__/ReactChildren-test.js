@@ -974,7 +974,7 @@ describe('ReactChildren', () => {
       ).toErrorDev(
         'Warning: ' +
           'Each child in a list should have a unique "key" prop.' +
-          ' See https://fb.me/react-warning-keys for more information.' +
+          ' See https://reactjs.org/link/warning-keys for more information.' +
           '\n    in ComponentReturningArray (at **)',
       );
     });
@@ -995,7 +995,7 @@ describe('ReactChildren', () => {
       ).toErrorDev(
         'Warning: ' +
           'Each child in a list should have a unique "key" prop.' +
-          ' See https://fb.me/react-warning-keys for more information.',
+          ' See https://reactjs.org/link/warning-keys for more information.',
         {withoutStack: true}, // There's nothing on the stack
       );
     });

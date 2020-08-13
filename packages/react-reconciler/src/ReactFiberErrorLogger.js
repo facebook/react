@@ -65,7 +65,7 @@ export function logCapturedError(
       } else {
         errorBoundaryMessage =
           'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-          'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.';
+          'Visit https://reactjs.org/link/error-boundaries to learn more about error boundaries.';
       }
       const combinedMessage =
         `${componentNameMessage}\n${componentStack}\n\n` +
