@@ -857,7 +857,10 @@ export default {
             const wrapperHook =
               depType === 'function' ? 'useCallback' : 'useMemo';
 
-            const defaultAdvice = `wrap the construction of '${construction.name.name}' in its own ${wrapperHook}() Hook.`;
+            const constructionType =
+              depType === 'function' ? 'definition' : 'assignment';
+
+            const defaultAdvice = `wrap the ${constructionType} of '${construction.name.name}' in its own ${wrapperHook}() Hook.`;
 
             const advice = isUsedOutsideOfHook
               ? `To fix this, ${defaultAdvice}`
@@ -886,7 +889,7 @@ export default {
             ) {
               suggest = [
                 {
-                  desc: `Wrap the construction of '${construction.name.name}' in its own ${wrapperHook}() Hook.`,
+                  desc: `Wrap the ${constructionType} of '${construction.name.name}' in its own ${wrapperHook}() Hook.`,
                   fix(fixer) {
                     const [before, after] =
                       wrapperHook === 'useMemo'
@@ -1401,7 +1404,7 @@ function collectRecommendations({
 
 // If the node will result in constructing a referentially unique value, return
 // its human readable type name, else return null.
-function getConstructionExpresionType(node) {
+function getConstructionExpressionType(node) {
   switch (node.type) {
     case 'ObjectExpression':
       return 'object';
@@ -1414,16 +1417,16 @@ function getConstructionExpresionType(node) {
       return 'class';
     case 'ConditionalExpression':
       if (
-        getConstructionExpresionType(node.consequent) != null ||
-        getConstructionExpresionType(node.alternate) != null
+        getConstructionExpressionType(node.consequent) != null ||
+        getConstructionExpressionType(node.alternate) != null
       ) {
         return 'conditional';
       }
       return null;
     case 'LogicalExpression':
       if (
-        getConstructionExpresionType(node.left) != null ||
-        getConstructionExpresionType(node.right) != null
+        getConstructionExpressionType(node.left) != null ||
+        getConstructionExpressionType(node.right) != null
       ) {
         return 'logical expression';
       }
@@ -1433,7 +1436,7 @@ function getConstructionExpresionType(node) {
     case 'JSXElement':
       return 'JSX element';
     case 'AssignmentExpression':
-      if (getConstructionExpresionType(node.right) != null) {
+      if (getConstructionExpressionType(node.right) != null) {
         return 'assignment expression';
       }
       return null;
@@ -1445,9 +1448,9 @@ function getConstructionExpresionType(node) {
       }
       return null;
     case 'TypeCastExpression':
-      return getConstructionExpresionType(node.expression);
+      return getConstructionExpressionType(node.expression);
     case 'TSAsExpression':
-      return getConstructionExpresionType(node.expression);
+      return getConstructionExpressionType(node.expression);
   }
   return null;
 }
@@ -1482,7 +1485,7 @@ function scanForConstructions({
         node.node.id.type === 'Identifier' && // Ensure this is not destructed assignment
         node.node.init != null
       ) {
-        const constantExpressionType = getConstructionExpresionType(
+        const constantExpressionType = getConstructionExpressionType(
           node.node.init,
         );
         if (constantExpressionType != null) {

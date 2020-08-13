@@ -56,7 +56,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local = useMemo(() => ({}), []);
+          const local = someFunc();
           useEffect(() => {
             console.log(local);
           }, [local]);
@@ -94,9 +94,9 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local1 = useMemo(() => ({}), []);
+          const local1 = someFunc();
           {
-            const local2 = useMemo(() => ({}), []);
+            const local2 = someFunc();
             useCallback(() => {
               console.log(local1);
               console.log(local2);
@@ -108,9 +108,9 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local1 = useMemo(() => ({}), []);
+          const local1 = someFunc();
           function MyNestedComponent() {
-            const local2 = useMemo(() => ({}), []);
+            const local2 = someFunc();
             useCallback(() => {
               console.log(local1);
               console.log(local2);
@@ -122,7 +122,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local = useMemo(() => ({}), []);
+          const local = someFunc();
           useEffect(() => {
             console.log(local);
             console.log(local);
@@ -142,7 +142,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local = useMemo(() => ({}), []);
+          const local = someFunc();
           useEffect(() => {
             console.log(local);
           }, [,,,local,,,]);
@@ -222,7 +222,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent(props) {
-          const local = useMemo(() => ({}), []);
+          const local = someFunc();
           useEffect(() => {
             console.log(props.foo);
             console.log(props.bar);
@@ -243,7 +243,7 @@ const tests = {
             console.log(props.bar);
           }, [props, props.foo]);
 
-          let color = useMemo(() => ({}), []);
+          let color = someFunc();
           useEffect(() => {
             console.log(props.foo.bar.baz);
             console.log(color);
@@ -416,7 +416,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local = useMemo(() => ({}), []);
+          const local = someFunc();
           function myEffect() {
             console.log(local);
           }
@@ -731,7 +731,7 @@ const tests = {
       // direct assignments.
       code: normalizeIndent`
         function MyComponent(props) {
-          let obj = useMemo(() => ({}), []);
+          let obj = someFunc();
           useEffect(() => {
             obj.foo = true;
           }, [obj]);
@@ -1411,7 +1411,8 @@ const tests = {
       code: normalizeIndent`
         function useFoo() {
           const foo = "fine";
-          if(true) {
+          if (true) {
+            // Shadowed variable with constant construction in a nested scope is fine.
             const foo = {};
           }
           return useMemo(() => foo, [foo]);
@@ -1422,6 +1423,14 @@ const tests = {
       code: normalizeIndent`
         function MyComponent({foo}) {
           return useMemo(() => foo, [foo])
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const foo = true ? "fine" : "also fine";
+          return useMemo(() => foo, [foo]);
         }
       `,
     },
@@ -1543,7 +1552,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local = useMemo(() => ({}), []);
+          const local = someFunc();
           useEffect(() => {
             console.log(local);
           }, []);
@@ -1559,7 +1568,7 @@ const tests = {
               desc: 'Update the dependencies array to be: [local]',
               output: normalizeIndent`
                 function MyComponent() {
-                  const local = useMemo(() => ({}), []);
+                  const local = someFunc();
                   useEffect(() => {
                     console.log(local);
                   }, [local]);
@@ -1685,7 +1694,7 @@ const tests = {
       // Regression test
       code: normalizeIndent`
         function MyComponent() {
-          const local = useMemo(() => ({}), []);
+          const local = someFunc();
           useEffect(() => {
             if (true) {
               console.log(local);
@@ -1703,7 +1712,7 @@ const tests = {
               desc: 'Update the dependencies array to be: [local]',
               output: normalizeIndent`
                 function MyComponent() {
-                  const local = useMemo(() => ({}), []);
+                  const local = someFunc();
                   useEffect(() => {
                     if (true) {
                       console.log(local);
@@ -1791,9 +1800,9 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local1 = useMemo(() => ({}), []);
+          const local1 = someFunc();
           {
-            const local2 = useMemo(() => ({}), []);
+            const local2 = someFunc();
             useEffect(() => {
               console.log(local1);
               console.log(local2);
@@ -1811,9 +1820,9 @@ const tests = {
               desc: 'Update the dependencies array to be: [local1, local2]',
               output: normalizeIndent`
                 function MyComponent() {
-                  const local1 = useMemo(() => ({}), []);
+                  const local1 = someFunc();
                   {
-                    const local2 = useMemo(() => ({}), []);
+                    const local2 = someFunc();
                     useEffect(() => {
                       console.log(local1);
                       console.log(local2);
@@ -1895,7 +1904,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local1 = useMemo(() => ({}), []);
+          const local1 = someFunc();
           function MyNestedComponent() {
             const local2 = {};
             useCallback(() => {
@@ -1917,7 +1926,7 @@ const tests = {
               desc: 'Update the dependencies array to be: [local2]',
               output: normalizeIndent`
                 function MyComponent() {
-                  const local1 = useMemo(() => ({}), []);
+                  const local1 = someFunc();
                   function MyNestedComponent() {
                     const local2 = {};
                     useCallback(() => {
@@ -2344,7 +2353,7 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent() {
-          const local = useMemo(() => ({}), []);
+          const local = someFunc();
           useEffect(() => {
             console.log(local);
           }, [local, ...dependencies]);
@@ -5360,7 +5369,7 @@ const tests = {
             `The 'handleNext' function makes the dependencies of ` +
             `useEffect Hook (at line 11) change on every render. ` +
             `Move it inside the useEffect callback. Alternatively, ` +
-            `wrap the construction of 'handleNext' in its own useCallback() Hook.`,
+            `wrap the definition of 'handleNext' in its own useCallback() Hook.`,
           // Not gonna fix a function definition
           // because it's not always safe due to hoisting.
           suggestions: undefined,
@@ -5389,7 +5398,7 @@ const tests = {
             `The 'handleNext' function makes the dependencies of ` +
             `useEffect Hook (at line 11) change on every render. ` +
             `Move it inside the useEffect callback. Alternatively, ` +
-            `wrap the construction of 'handleNext' in its own useCallback() Hook.`,
+            `wrap the definition of 'handleNext' in its own useCallback() Hook.`,
           // We don't fix moving (too invasive). But that's the suggested fix
           // when only effect uses this function. Otherwise, we'd useCallback.
           suggestions: undefined,
@@ -5422,13 +5431,13 @@ const tests = {
           message:
             `The 'handleNext' function makes the dependencies of ` +
             `useEffect Hook (at line 11) change on every render. ` +
-            `To fix this, wrap the construction of 'handleNext' in its own useCallback() Hook.`,
+            `To fix this, wrap the definition of 'handleNext' in its own useCallback() Hook.`,
           // We fix this one with useCallback since it's
           // the easy fix and you can't just move it into effect.
           suggestions: [
             {
               desc:
-                "Wrap the construction of 'handleNext' in its own useCallback() Hook.",
+                "Wrap the definition of 'handleNext' in its own useCallback() Hook.",
               output: normalizeIndent`
                 function MyComponent(props) {
                   let [, setState] = useState();
@@ -5477,21 +5486,21 @@ const tests = {
           message:
             "The 'handleNext1' function makes the dependencies of useEffect Hook " +
             '(at line 14) change on every render. Move it inside the useEffect callback. ' +
-            "Alternatively, wrap the construction of 'handleNext1' in its own useCallback() Hook.",
+            "Alternatively, wrap the definition of 'handleNext1' in its own useCallback() Hook.",
           suggestions: undefined,
         },
         {
           message:
             "The 'handleNext2' function makes the dependencies of useLayoutEffect Hook " +
             '(at line 17) change on every render. Move it inside the useLayoutEffect callback. ' +
-            "Alternatively, wrap the construction of 'handleNext2' in its own useCallback() Hook.",
+            "Alternatively, wrap the definition of 'handleNext2' in its own useCallback() Hook.",
           suggestions: undefined,
         },
         {
           message:
             "The 'handleNext3' function makes the dependencies of useMemo Hook " +
             '(at line 20) change on every render. Move it inside the useMemo callback. ' +
-            "Alternatively, wrap the construction of 'handleNext3' in its own useCallback() Hook.",
+            "Alternatively, wrap the definition of 'handleNext3' in its own useCallback() Hook.",
           suggestions: undefined,
         },
       ],
@@ -5529,21 +5538,21 @@ const tests = {
           message:
             "The 'handleNext1' function makes the dependencies of useEffect Hook " +
             '(at line 15) change on every render. Move it inside the useEffect callback. ' +
-            "Alternatively, wrap the construction of 'handleNext1' in its own useCallback() Hook.",
+            "Alternatively, wrap the definition of 'handleNext1' in its own useCallback() Hook.",
           suggestions: undefined,
         },
         {
           message:
             "The 'handleNext2' function makes the dependencies of useLayoutEffect Hook " +
             '(at line 19) change on every render. Move it inside the useLayoutEffect callback. ' +
-            "Alternatively, wrap the construction of 'handleNext2' in its own useCallback() Hook.",
+            "Alternatively, wrap the definition of 'handleNext2' in its own useCallback() Hook.",
           suggestions: undefined,
         },
         {
           message:
             "The 'handleNext3' function makes the dependencies of useMemo Hook " +
             '(at line 23) change on every render. Move it inside the useMemo callback. ' +
-            "Alternatively, wrap the construction of 'handleNext3' in its own useCallback() Hook.",
+            "Alternatively, wrap the definition of 'handleNext3' in its own useCallback() Hook.",
           suggestions: undefined,
         },
       ],
@@ -5590,20 +5599,20 @@ const tests = {
           message:
             "The 'handleNext1' function makes the dependencies of useEffect Hook " +
             '(at line 15) change on every render. To fix this, wrap the ' +
-            "construction of 'handleNext1' in its own useCallback() Hook.",
+            "definition of 'handleNext1' in its own useCallback() Hook.",
           suggestions: undefined,
         },
         {
           message:
             "The 'handleNext2' function makes the dependencies of useLayoutEffect Hook " +
             '(at line 19) change on every render. To fix this, wrap the ' +
-            "construction of 'handleNext2' in its own useCallback() Hook.",
+            "definition of 'handleNext2' in its own useCallback() Hook.",
           // Suggestion wraps into useCallback where possible (variables only)
           // because they are only referenced outside the effect.
           suggestions: [
             {
               desc:
-                "Wrap the construction of 'handleNext2' in its own useCallback() Hook.",
+                "Wrap the definition of 'handleNext2' in its own useCallback() Hook.",
               output: normalizeIndent`
                 function MyComponent(props) {
                   function handleNext1() {
@@ -5647,13 +5656,13 @@ const tests = {
           message:
             "The 'handleNext3' function makes the dependencies of useMemo Hook " +
             '(at line 23) change on every render. To fix this, wrap the ' +
-            "construction of 'handleNext3' in its own useCallback() Hook.",
+            "definition of 'handleNext3' in its own useCallback() Hook.",
           // Autofix wraps into useCallback where possible (variables only)
           // because they are only referenced outside the effect.
           suggestions: [
             {
               desc:
-                "Wrap the construction of 'handleNext3' in its own useCallback() Hook.",
+                "Wrap the definition of 'handleNext3' in its own useCallback() Hook.",
               output: normalizeIndent`
                 function MyComponent(props) {
                   function handleNext1() {
@@ -5724,11 +5733,11 @@ const tests = {
           message:
             "The 'handleNext1' function makes the dependencies of useEffect Hook " +
             '(at line 12) change on every render. To fix this, wrap the ' +
-            "construction of 'handleNext1' in its own useCallback() Hook.",
+            "definition of 'handleNext1' in its own useCallback() Hook.",
           suggestions: [
             {
               desc:
-                "Wrap the construction of 'handleNext1' in its own useCallback() Hook.",
+                "Wrap the definition of 'handleNext1' in its own useCallback() Hook.",
               output: normalizeIndent`
                 function MyComponent(props) {
                   const handleNext1 = useCallback(() => {
@@ -5754,11 +5763,11 @@ const tests = {
           message:
             "The 'handleNext1' function makes the dependencies of useEffect Hook " +
             '(at line 16) change on every render. To fix this, wrap the ' +
-            "construction of 'handleNext1' in its own useCallback() Hook.",
+            "definition of 'handleNext1' in its own useCallback() Hook.",
           suggestions: [
             {
               desc:
-                "Wrap the construction of 'handleNext1' in its own useCallback() Hook.",
+                "Wrap the definition of 'handleNext1' in its own useCallback() Hook.",
               output: normalizeIndent`
                 function MyComponent(props) {
                   const handleNext1 = useCallback(() => {
@@ -5784,14 +5793,14 @@ const tests = {
           message:
             "The 'handleNext2' function makes the dependencies of useEffect Hook " +
             '(at line 12) change on every render. To fix this, wrap the ' +
-            "construction of 'handleNext2' in its own useCallback() Hook.",
+            "definition of 'handleNext2' in its own useCallback() Hook.",
           suggestions: undefined,
         },
         {
           message:
             "The 'handleNext2' function makes the dependencies of useEffect Hook " +
             '(at line 16) change on every render. To fix this, wrap the ' +
-            "construction of 'handleNext2' in its own useCallback() Hook.",
+            "definition of 'handleNext2' in its own useCallback() Hook.",
           suggestions: undefined,
         },
       ],
@@ -5816,7 +5825,7 @@ const tests = {
         {
           message:
             "The 'handleNext' function makes the dependencies of useEffect Hook " +
-            '(at line 13) change on every render. To fix this, wrap the construction of ' +
+            '(at line 13) change on every render. To fix this, wrap the definition of ' +
             "'handleNext' in its own useCallback() Hook.",
           // Normally we'd suggest moving handleNext inside an
           // effect. But it's used more than once.
@@ -5825,22 +5834,22 @@ const tests = {
           suggestions: [
             {
               desc:
-                "Wrap the construction of 'handleNext' in its own useCallback() Hook.",
+                "Wrap the definition of 'handleNext' in its own useCallback() Hook.",
               output: normalizeIndent`
-          function MyComponent(props) {
-            let handleNext = useCallback(() => {
-              console.log('hello');
-            });
-            if (props.foo) {
-              handleNext = () => {
-                console.log('hello');
-              };
-            }
-            useEffect(() => {
-              return Store.subscribe(handleNext);
-            }, [handleNext]);
-          }
-        `,
+                function MyComponent(props) {
+                  let handleNext = useCallback(() => {
+                    console.log('hello');
+                  });
+                  if (props.foo) {
+                    handleNext = () => {
+                      console.log('hello');
+                    };
+                  }
+                  useEffect(() => {
+                    return Store.subscribe(handleNext);
+                  }, [handleNext]);
+                }
+              `,
             },
           ],
         },
@@ -5869,7 +5878,7 @@ const tests = {
             `The 'handleNext' function makes the dependencies of ` +
             `useEffect Hook (at line 14) change on every render. ` +
             `Move it inside the useEffect callback. Alternatively, wrap the ` +
-            `construction of 'handleNext' in its own useCallback() Hook.`,
+            `definition of 'handleNext' in its own useCallback() Hook.`,
           suggestions: undefined,
         },
       ],
@@ -6134,7 +6143,7 @@ const tests = {
           message:
             `The 'increment' function makes the dependencies of useEffect Hook ` +
             `(at line 14) change on every render. Move it inside the useEffect callback. ` +
-            `Alternatively, wrap the construction of \'increment\' in its own ` +
+            `Alternatively, wrap the definition of \'increment\' in its own ` +
             `useCallback() Hook.`,
           suggestions: undefined,
         },
@@ -7027,7 +7036,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7044,7 +7053,7 @@ const tests = {
         {
           message:
             "The 'foo' array makes the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7061,7 +7070,7 @@ const tests = {
         {
           message:
             "The 'foo' function makes the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the definition of 'foo' in its own " +
             'useCallback() Hook.',
           suggestions: undefined,
         },
@@ -7078,7 +7087,7 @@ const tests = {
         {
           message:
             "The 'foo' function makes the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the definition of 'foo' in its own " +
             'useCallback() Hook.',
           suggestions: undefined,
         },
@@ -7095,7 +7104,7 @@ const tests = {
         {
           message:
             "The 'foo' class makes the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7112,7 +7121,7 @@ const tests = {
         {
           message:
             "The 'foo' conditional could make the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7129,7 +7138,7 @@ const tests = {
         {
           message:
             "The 'foo' logical expression could make the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7146,7 +7155,7 @@ const tests = {
         {
           message:
             "The 'foo' logical expression could make the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7163,7 +7172,7 @@ const tests = {
         {
           message:
             "The 'foo' logical expression could make the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7180,7 +7189,7 @@ const tests = {
         {
           message:
             "The 'foo' conditional could make the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7197,7 +7206,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7214,7 +7223,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useMemo Hook (at line 4) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7233,7 +7242,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useCallback Hook (at line 6) change on every render. " +
-            "Move it inside the useCallback callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useCallback callback. Alternatively, wrap the assignment of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7252,7 +7261,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useEffect Hook (at line 6) change on every render. " +
-            "Move it inside the useEffect callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useEffect callback. Alternatively, wrap the assignment of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7271,7 +7280,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useLayoutEffect Hook (at line 6) change on every render. " +
-            "Move it inside the useLayoutEffect callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useLayoutEffect callback. Alternatively, wrap the assignment of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7294,7 +7303,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useImperativeHandle Hook (at line 9) change on every render. " +
-            "Move it inside the useImperativeHandle callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useImperativeHandle callback. Alternatively, wrap the assignment of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7313,7 +7322,7 @@ const tests = {
         {
           message:
             "The 'foo' logical expression could make the dependencies of useEffect Hook (at line 6) change on every render. " +
-            "Move it inside the useEffect callback. Alternatively, wrap the construction of 'foo' in its own " +
+            "Move it inside the useEffect callback. Alternatively, wrap the assignment of 'foo' in its own " +
             'useMemo() Hook.',
           suggestions: undefined,
         },
@@ -7333,7 +7342,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useMemo Hook (at line 7) change on every render. " +
-            "To fix this, wrap the construction of 'foo' in its own useMemo() Hook.",
+            "To fix this, wrap the assignment of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7351,7 +7360,7 @@ const tests = {
         {
           message:
             "The 'foo' JSX fragment makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7369,7 +7378,7 @@ const tests = {
         {
           message:
             "The 'foo' JSX element makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7387,7 +7396,7 @@ const tests = {
         {
           message:
             "The 'foo' assignment expression makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7405,7 +7414,7 @@ const tests = {
         {
           message:
             "The 'foo' object construction makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7423,7 +7432,7 @@ const tests = {
         {
           message:
             "The 'foo' object construction makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7441,7 +7450,7 @@ const tests = {
         {
           message:
             "The 'foo' regular expression makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7459,7 +7468,7 @@ const tests = {
         {
           message:
             "The 'foo' object makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7477,7 +7486,7 @@ const tests = {
         {
           message:
             "The 'Bar' class makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'Bar' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'Bar' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7863,7 +7872,7 @@ const testsTypescript = {
     {
       code: normalizeIndent`
         function Foo() {
-          const foo = {} as any;;
+          const foo = {} as any;
           useMemo(() => {
             console.log(foo);
           }, [foo]);
@@ -7873,7 +7882,7 @@ const testsTypescript = {
         {
           message:
             "The 'foo' object makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the construction of 'foo' in its own useMemo() Hook.",
+            "Move it inside the useMemo callback. Alternatively, wrap the assignment of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
