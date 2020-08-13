@@ -14,8 +14,6 @@ import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
-import type {Effect as HookEffect} from './ReactFiberHooks.new';
-import type {HookEffectTag} from './ReactHookEffectTags';
 import type {StackCursor} from './ReactFiberStack.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 
@@ -53,7 +51,6 @@ import {
 } from './SchedulerWithReactIntegration.new';
 import {
   NoEffect as NoHookEffect,
-  HasEffect as HookHasEffect,
   Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {
@@ -206,12 +203,14 @@ import {
   commitPlacement,
   commitWork,
   commitDeletion,
+  commitPassiveUnmount,
+  commitPassiveWork,
+  commitPassiveLifeCycles as commitPassiveEffectOnFiber,
   commitDetachRef,
   commitAttachRef,
   commitPassiveEffectDurations,
   commitResetTextContent,
   isSuspenseBoundaryBeingHidden,
-  safelyCallDestroy,
 } from './ReactFiberCommitWork.new';
 import {enqueueUpdate} from './ReactUpdateQueue.new';
 import {resetContextDependencies} from './ReactFiberNewContext.new';
@@ -229,8 +228,6 @@ import {
 
 import {
   recordCommitTime,
-  recordPassiveEffectDuration,
-  startPassiveEffectTimer,
   startProfilerTimer,
   stopProfilerTimerIfRunningAndRecordDelta,
 } from './ReactProfilerTimer.new';
@@ -2738,11 +2735,6 @@ export function enqueuePendingPassiveProfilerEffect(fiber: Fiber): void {
   }
 }
 
-function invokePassiveEffectCreate(effect: HookEffect): void {
-  const create = effect.create;
-  effect.destroy = create();
-}
-
 function flushPassiveMountEffects(firstChild: Fiber): void {
   let fiber = firstChild;
   while (fiber !== null) {
@@ -2753,90 +2745,12 @@ function flushPassiveMountEffects(firstChild: Fiber): void {
     }
 
     if ((fiber.effectTag & Update) !== NoEffect) {
-      switch (fiber.tag) {
-        case FunctionComponent:
-        case ForwardRef:
-        case SimpleMemoComponent:
-        case Block: {
-          flushPassiveMountEffectsImpl(fiber);
-        }
-      }
+      setCurrentDebugFiberInDEV(fiber);
+      commitPassiveEffectOnFiber(fiber);
+      resetCurrentDebugFiberInDEV();
     }
 
     fiber = fiber.sibling;
-  }
-}
-
-function flushPassiveMountEffectsImpl(fiber: Fiber): void {
-  setCurrentDebugFiberInDEV(fiber);
-
-  const updateQueue: FunctionComponentUpdateQueue | null = (fiber.updateQueue: any);
-  const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
-  if (lastEffect !== null) {
-    const firstEffect = lastEffect.next;
-    let effect = firstEffect;
-    do {
-      const {next, tag} = effect;
-
-      if (
-        (tag & HookPassive) !== NoHookEffect &&
-        (tag & HookHasEffect) !== NoHookEffect
-      ) {
-        if (__DEV__) {
-          if (
-            enableProfilerTimer &&
-            enableProfilerCommitHooks &&
-            fiber.mode & ProfileMode
-          ) {
-            startPassiveEffectTimer();
-            invokeGuardedCallback(
-              null,
-              invokePassiveEffectCreate,
-              null,
-              effect,
-            );
-            recordPassiveEffectDuration(fiber);
-          } else {
-            invokeGuardedCallback(
-              null,
-              invokePassiveEffectCreate,
-              null,
-              effect,
-            );
-          }
-          if (hasCaughtError()) {
-            invariant(fiber !== null, 'Should be working on an effect.');
-            const error = clearCaughtError();
-            captureCommitPhaseError(fiber, error);
-          }
-        } else {
-          try {
-            const create = effect.create;
-            if (
-              enableProfilerTimer &&
-              enableProfilerCommitHooks &&
-              fiber.mode & ProfileMode
-            ) {
-              try {
-                startPassiveEffectTimer();
-                effect.destroy = create();
-              } finally {
-                recordPassiveEffectDuration(fiber);
-              }
-            } else {
-              effect.destroy = create();
-            }
-          } catch (error) {
-            invariant(fiber !== null, 'Should be working on an effect.');
-            captureCommitPhaseError(fiber, error);
-          }
-        }
-      }
-
-      effect = next;
-    } while (effect !== firstEffect);
-
-    resetCurrentDebugFiberInDEV();
   }
 }
 
@@ -2866,16 +2780,11 @@ function flushPassiveUnmountEffects(firstChild: Fiber): void {
       }
     }
 
-    switch (fiber.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case SimpleMemoComponent:
-      case Block: {
-        const primaryEffectTag = fiber.effectTag & Passive;
-        if (primaryEffectTag !== NoEffect) {
-          flushPassiveUnmountEffectsImpl(fiber, HookPassive | HookHasEffect);
-        }
-      }
+    const primaryEffectTag = fiber.effectTag & Passive;
+    if (primaryEffectTag !== NoEffect) {
+      setCurrentDebugFiberInDEV(fiber);
+      commitPassiveWork(fiber);
+      resetCurrentDebugFiberInDEV();
     }
 
     fiber = fiber.sibling;
@@ -2898,52 +2807,8 @@ function flushPassiveUnmountEffectsInsideOfDeletedTree(
   }
 
   if ((fiberToDelete.effectTag & PassiveStatic) !== NoEffect) {
-    switch (fiberToDelete.tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case SimpleMemoComponent:
-      case Block: {
-        flushPassiveUnmountEffectsImpl(fiberToDelete, HookPassive);
-      }
-    }
-  }
-}
-
-function flushPassiveUnmountEffectsImpl(
-  fiber: Fiber,
-  // Tags to check for when deciding whether to unmount. e.g. to skip over
-  // layout effects
-  hookEffectTag: HookEffectTag,
-): void {
-  const updateQueue: FunctionComponentUpdateQueue | null = (fiber.updateQueue: any);
-  const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
-  if (lastEffect !== null) {
-    setCurrentDebugFiberInDEV(fiber);
-
-    const firstEffect = lastEffect.next;
-    let effect = firstEffect;
-    do {
-      const {next, tag} = effect;
-      if ((tag & hookEffectTag) === hookEffectTag) {
-        const destroy = effect.destroy;
-        if (destroy !== undefined) {
-          effect.destroy = undefined;
-          if (
-            enableProfilerTimer &&
-            enableProfilerCommitHooks &&
-            fiber.mode & ProfileMode
-          ) {
-            startPassiveEffectTimer();
-            safelyCallDestroy(fiber, destroy);
-            recordPassiveEffectDuration(fiber);
-          } else {
-            safelyCallDestroy(fiber, destroy);
-          }
-        }
-      }
-      effect = next;
-    } while (effect !== firstEffect);
-
+    setCurrentDebugFiberInDEV(fiberToDelete);
+    commitPassiveUnmount(fiberToDelete);
     resetCurrentDebugFiberInDEV();
   }
 }
