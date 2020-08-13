@@ -2481,15 +2481,11 @@ describe('Profiler', () => {
         // Errors that happen inside of a subscriber should throw,
         throwInOnWorkStarted = true;
         expect(Scheduler).toFlushAndThrow('Expected error onWorkStarted');
-        // Rendering was interrupted by the error that was thrown
-        expect(Scheduler).toHaveYielded([]);
-        // Rendering continues in the next task
-        expect(Scheduler).toFlushAndYield(['Component:text']);
         throwInOnWorkStarted = false;
+        // Rendering was interrupted by the error that was thrown, then
+        // continued and finished in the next task.
+        expect(Scheduler).toHaveYielded(['Component:text']);
         expect(onWorkStarted).toHaveBeenCalled();
-
-        // But the React work should have still been processed.
-        expect(Scheduler).toFlushAndYield([]);
         const tree = renderer.toTree();
         expect(tree.type).toBe(Component);
         expect(tree.props.children).toBe('text');
