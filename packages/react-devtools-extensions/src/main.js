@@ -296,7 +296,7 @@ function createPanelIfReactLoaded() {
       let needsToSyncElementSelection = false;
 
       chrome.devtools.panels.create(
-        isChrome ? '⚛ Components' : 'Components',
+        isChrome ? '⚛️ Components' : 'Components',
         '',
         'panel.html',
         extensionPanel => {
@@ -326,7 +326,7 @@ function createPanelIfReactLoaded() {
       );
 
       chrome.devtools.panels.create(
-        isChrome ? '⚛ Profiler' : 'Profiler',
+        isChrome ? '⚛️ Profiler' : 'Profiler',
         '',
         'panel.html',
         extensionPanel => {
