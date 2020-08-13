@@ -446,8 +446,6 @@ describe(
       React = require('react');
       ReactNoop = require('react-noop-renderer');
       Scheduler = require('scheduler');
-
-      React = require('react');
     });
 
     afterEach(() => {
@@ -531,6 +529,14 @@ describe(
 
         // Expire the task
         Scheduler.unstable_advanceTime(10000);
+        // Scheduling a new update is a trick to force the expiration to kick
+        // in. We don't check if a update has been starved at the beginning of
+        // working on it, since there's no point — we're already working on it.
+        // We only check before yielding to the main thread (to avoid starvation
+        // by other main thread work) or when receiving an update (to avoid
+        // starvation by incoming updates).
+        ReactNoop.render(<App />);
+
         // Because the render expired, React should finish the tree without
         // consulting `shouldYield` again
         expect(Scheduler).toFlushExpired(['B', 'C']);
