@@ -170,7 +170,7 @@ export const MouseEventInterface = {
   button: 0,
   buttons: 0,
   relatedTarget: function(event) {
-    if (!event.relatedTarget && event.fromElement)
+    if (event.relatedTarget === undefined)
       return event.fromElement === event.srcElement
         ? event.toElement
         : event.fromElement;
