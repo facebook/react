@@ -7491,6 +7491,33 @@ const tests = {
         },
       ],
     },
+    {
+      code: normalizeIndent`
+        function Foo() {
+          const foo = {};
+          useLayoutEffect(() => {
+            console.log(foo);
+          }, [foo]);
+          useEffect(() => {
+            console.log(foo);
+          }, [foo]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            "The 'foo' object makes the dependencies of useLayoutEffect Hook (at line 6) change on every render. " +
+            "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+        {
+          message:
+            "The 'foo' object makes the dependencies of useEffect Hook (at line 9) change on every render. " +
+            "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ],
+    },
   ],
 };
 
