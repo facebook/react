@@ -170,12 +170,12 @@ export const MouseEventInterface = {
   button: 0,
   buttons: 0,
   relatedTarget: function(event) {
-    return (
-      event.relatedTarget ||
-      (event.fromElement === event.srcElement
+    if (event.relatedTarget === undefined)
+      return event.fromElement === event.srcElement
         ? event.toElement
-        : event.fromElement)
-    );
+        : event.fromElement;
+
+    return event.relatedTarget;
   },
   movementX: function(event) {
     if ('movementX' in event) {
