@@ -918,6 +918,14 @@ function commitUnmount(
     }
     case HostComponent: {
       safelyDetachRef(current);
+      for (let prop in current.stateNode) {
+        if(prop.indexOf('__reactEventHandlers$') > -1) {
+            delete current.stateNode[prop];
+        }
+        if(prop.indexOf('__reactInternalInstance$') > -1) {
+            delete current.stateNode[prop];
+        }
+      }
       return;
     }
     case HostPortal: {
