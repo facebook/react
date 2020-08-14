@@ -1,4 +1,6 @@
-# `eslint-plugin-react-hooks`
+# `@lewisl9029/eslint-plugin-react-hooks`
+
+This is a fork of the official eslint plugin `eslint-plugin-react-hooks`, that adds support for the [render-hooks](https://github.com/lewisl9029/render-hooks#readme) library/pattern.
 
 This ESLint plugin enforces the [Rules of Hooks](https://reactjs.org/docs/hooks-rules.html).
 
@@ -12,10 +14,10 @@ Assuming you already have ESLint installed, run:
 
 ```sh
 # npm
-npm install eslint-plugin-react-hooks --save-dev
+npm install @lewisl9029/eslint-plugin-react-hooks --save-dev
 
 # yarn
-yarn add eslint-plugin-react-hooks --dev
+yarn add @lewisl90290/eslint-plugin-react-hooks --dev
 ```
 
 Then extend the recommended eslint config:
