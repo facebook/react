@@ -595,6 +595,58 @@ describe('ChangeEventPlugin', () => {
     });
 
     // @gate experimental
+    it('works with label activation behavior in a browser when clicking a label', () => {
+      // We're simulating what would happen in a browser (tested in Chrome 84) if a label that is associated with a checkbox is clicked.
+      // A user click on the label creates the following event order:
+      // - mousedown event on label
+      // - mouseup event on label
+      // - click event on label
+      // - focus event on input
+      // - click event on input
+      // However, label.click() does NOT include the focus behavior.
+      // So we're simply using imperative DOM API to simulate synchronous focus+click.
+
+      let input;
+      const root = ReactDOM.unstable_createRoot(container);
+      const eventLog = [];
+      function ControlledInput() {
+        const [checked, setChecked] = React.useState(false);
+        const [, setFocused] = React.useState(false);
+
+        Scheduler.unstable_yieldValue(`render`);
+
+        return (
+          <input
+            checked={checked}
+            onChange={event => {
+              eventLog.push('change');
+              setChecked(event.target.checked);
+            }}
+            onClick={() => eventLog.push('click')}
+            onFocus={() => {
+              eventLog.push('focus');
+              setFocused(true);
+            }}
+            ref={el => (input = el)}
+            type="checkbox"
+          />
+        );
+      }
+      root.render(<ControlledInput />);
+
+      expect(Scheduler).toFlushAndYield(['render']);
+      expect(input.checked).toBe(false);
+
+      input.focus();
+      input.click();
+
+      // TODO what state should be yielded?
+      expect(eventLog).toEqual(['focus', 'click']);
+      expect(Scheduler).toHaveYielded(['render']);
+      expect(input.checked).toBe(true);
+    });
+
+    // @gate experimental
     it('textarea', () => {
       const root = ReactDOM.unstable_createRoot(container);
       let textarea;
