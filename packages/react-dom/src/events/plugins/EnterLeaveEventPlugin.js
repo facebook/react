@@ -148,24 +148,24 @@ function extractEvents(
   leave.target = fromNode;
   leave.relatedTarget = toNode;
 
-  let enter: KnownReactSyntheticEvent | null = new SyntheticEvent(
-    enterEventType,
-    eventTypePrefix + 'enter',
-    to,
-    nativeEvent,
-    nativeEventTarget,
-    eventInterface,
-  );
-  // flow thinks `enter` could be `null` at this point
-  ((enter: any): KnownReactSyntheticEvent).target = toNode;
-  ((enter: any): KnownReactSyntheticEvent).relatedTarget = fromNode;
+  let enter: KnownReactSyntheticEvent | null = null;
 
-  // If we are not processing the first ancestor, then we
-  // should not process the same nativeEvent again, as we
+  // If we are processing the first ancestor, then we
+  // should process the same nativeEvent again, as we
   // will have already processed it in the first ancestor.
   const nativeTargetInst = getClosestInstanceFromNode((nativeEventTarget: any));
-  if (nativeTargetInst !== targetInst) {
-    enter = null;
+  if (nativeTargetInst === targetInst) {
+    const enterEvent: KnownReactSyntheticEvent = new SyntheticEvent(
+      enterEventType,
+      eventTypePrefix + 'enter',
+      to,
+      nativeEvent,
+      nativeEventTarget,
+      eventInterface,
+    );
+    enterEvent.target = toNode;
+    enterEvent.relatedTarget = fromNode;
+    enter = enterEvent;
   }
 
   accumulateEnterLeaveTwoPhaseListeners(dispatchQueue, leave, enter, from, to);
