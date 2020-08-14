@@ -25,12 +25,6 @@ export const decoupleUpdatePriorityFromScheduler = __VARIANT__;
 // NOTE: This feature will only work in DEV mode; all callsights are wrapped with __DEV__.
 export const enableDebugTracing = false;
 
-// TODO: getStackByFiberInDevAndProd() causes errors when synced to www.
-// This flag can be used to disable component stacks for the profiler marks,
-// so that the feature can be synced for others,
-// while still enabling investigation into the underlying source of the errors.
-export const enableSchedulingProfilerComponentStacks = false;
-
 // This only has an effect in the new reconciler. But also, the new reconciler
 // is only enabled when __VARIANT__ is true. So this is set to the opposite of
 // __VARIANT__ so that it's `false` when running against the new reconciler.
