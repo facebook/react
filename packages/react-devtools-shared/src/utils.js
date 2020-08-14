@@ -372,6 +372,7 @@ export type DataType =
   | 'data_view'
   | 'date'
   | 'function'
+  | 'html_all_collection'
   | 'html_element'
   | 'infinity'
   | 'iterator'
@@ -447,6 +448,9 @@ export function getDataType(data: Object): DataType {
     case 'symbol':
       return 'symbol';
     default:
+      if (data instanceof HTMLAllCollection) {
+        return 'html_all_collection';
+      }
       return 'unknown';
   }
 }
