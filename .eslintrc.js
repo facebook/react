@@ -166,6 +166,12 @@ module.exports = {
         __webpack_require__: true,
       },
     },
+    {
+      files: ['packages/scheduler/**/*.js'],
+      globals: {
+        TaskController: true,
+      },
+    },
   ],
 
   globals: {

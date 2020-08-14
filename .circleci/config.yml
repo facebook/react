@@ -7,17 +7,11 @@ aliases:
   - &environment
     TZ: /usr/share/zoneinfo/America/Los_Angeles
 
-  - &restore_yarn_cache
+  - &restore_node_modules
     restore_cache:
       name: Restore node_modules cache
       keys:
-        - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
-        - v2-node-{{ arch }}-{{ .Branch }}-
-        - v2-node-{{ arch }}-
-  - &run_yarn
-    run:
-      name: Install Packages
-      command: yarn --frozen-lockfile
+        - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-node-modules
 
   - &TEST_PARALLELISM 20
 
@@ -30,8 +24,7 @@ aliases:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: node ./scripts/rollup/consolidateBundleSizes.js
       - run: ./scripts/circleci/pack_and_store_artifact.sh
       - store_artifacts:
@@ -59,13 +52,29 @@ jobs:
       - run:
           name: Nodejs Version
           command: node --version
-      - *restore_yarn_cache
-      - *run_yarn
+      - restore_cache:
+          name: Restore yarn cache
+          key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
+      - run:
+          name: Install Packages
+          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
       - save_cache:
-          name: Save node_modules cache
-          key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          # Store the yarn cache globally for all lock files with this same
+          # checksum. This will speed up the setup job for all PRs where the
+          # lockfile is the same.
+          name: Save yarn cache for future installs
+          key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
           paths:
             - ~/.cache/yarn
+      - save_cache:
+          # Store node_modules for all jobs in this workflow so that they don't
+          # need to each run a yarn install for each job. This will speed up
+          # all jobs run on this branch with the same lockfile.
+          name: Save node_modules cache
+          # This cache key is per branch, a yarn install in setup is required.
+          key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-node-modules
+          paths:
+            - node_modules
 
   yarn_lint:
     docker: *docker
@@ -73,8 +82,7 @@ jobs:
 
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: node ./scripts/prettier/index
       - run: node ./scripts/tasks/eslint
       - run: ./scripts/circleci/check_license.sh
@@ -87,8 +95,7 @@ jobs:
 
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: node ./scripts/tasks/flow-ci
 
   RELEASE_CHANNEL_stable_yarn_test:
@@ -98,8 +105,7 @@ jobs:
 
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --release-channel=stable --ci
 
   yarn_test:
@@ -108,8 +114,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --ci
 
   RELEASE_CHANNEL_stable_yarn_test_www:
@@ -118,8 +123,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --release-channel=www-classic --ci
 
   RELEASE_CHANNEL_stable_yarn_test_www_variant:
@@ -128,8 +132,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --release-channel=www-classic --variant --ci
 
   RELEASE_CHANNEL_stable_yarn_test_prod_www:
@@ -138,8 +141,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --release-channel=www-classic --prod --ci
 
   RELEASE_CHANNEL_stable_yarn_test_prod_www_variant:
@@ -148,8 +150,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --release-channel=www-classic --prod --variant --ci
 
   yarn_test_www:
@@ -158,8 +159,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --release-channel=www-modern --ci
 
   yarn_test_www_variant:
@@ -168,8 +168,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --release-channel=www-modern --variant --ci
 
   yarn_test_prod_www:
@@ -178,8 +177,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --release-channel=www-modern --prod --ci
 
   yarn_test_prod_www_variant:
@@ -188,8 +186,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --release-channel=www-modern --prod --variant --ci
 
   RELEASE_CHANNEL_stable_yarn_test_persistent:
@@ -199,8 +196,7 @@ jobs:
 
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --release-channel=stable --persistent --ci
 
   RELEASE_CHANNEL_stable_yarn_test_prod:
@@ -210,8 +206,7 @@ jobs:
 
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --release-channel=stable --prod --ci
 
   yarn_test_prod:
@@ -220,8 +215,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --release-channel=experimental --prod --ci
 
   RELEASE_CHANNEL_stable_yarn_build:
@@ -230,8 +224,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run:
           environment:
             RELEASE_CHANNEL: stable
@@ -257,8 +250,7 @@ jobs:
     parallelism: 20
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run:
           environment:
             RELEASE_CHANNEL: experimental
@@ -285,8 +277,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run:
           environment:
             RELEASE_CHANNEL: experimental
@@ -305,8 +296,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       # This runs in the process_artifacts job, too, but it's faster to run
       # this step in both jobs instead of running the jobs sequentially
       - run: node ./scripts/rollup/consolidateBundleSizes.js
@@ -321,8 +311,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       # This runs in the process_artifacts job, too, but it's faster to run
       # this step in both jobs instead of running the jobs sequentially
       - run: node ./scripts/rollup/consolidateBundleSizes.js
@@ -337,8 +326,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn lint-build
       - run: scripts/circleci/check_minified_errors.sh
 
@@ -348,8 +336,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run:
           environment:
             RELEASE_CHANNEL: stable
@@ -363,8 +350,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --release-channel=stable --build --ci
 
   yarn_test_build:
@@ -374,8 +360,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --release-channel=experimental --build --ci
 
   yarn_test_build_devtools:
@@ -384,8 +369,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --project=devtools --build --ci
 
   RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
@@ -394,7 +378,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
+      - *restore_node_modules
       - run:
           name: Run DOM fixture tests
           environment:
@@ -410,8 +394,7 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run:
           name: Run fuzz tests
           command: |
@@ -425,8 +408,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --release-channel=stable --build --prod --ci
 
   yarn_test_build_prod:
@@ -436,8 +418,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
       - run: yarn test --release-channel=experimental --build --prod --ci
 
 workflows:

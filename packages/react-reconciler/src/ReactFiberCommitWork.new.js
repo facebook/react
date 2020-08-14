@@ -20,10 +20,14 @@ import type {FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
-import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
+import type {
+  Effect as HookEffect,
+  FunctionComponentUpdateQueue,
+} from './ReactFiberHooks.new';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
+import type {HookEffectTag} from './ReactHookEffectTags';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {
@@ -77,6 +81,8 @@ import {
   getCommitTime,
   recordLayoutEffectDuration,
   startLayoutEffectTimer,
+  recordPassiveEffectDuration,
+  startPassiveEffectTimer,
 } from './ReactProfilerTimer.new';
 import {ProfileMode} from './ReactTypeOfMode';
 import {commitUpdateQueue} from './ReactUpdateQueue.new';
@@ -121,6 +127,7 @@ import {
   NoEffect as NoHookEffect,
   HasEffect as HookHasEffect,
   Layout as HookLayout,
+  Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.new';
 import {
@@ -308,7 +315,7 @@ function commitBeforeMutationLifeCycles(
   );
 }
 
-function commitHookEffectListUnmount(tag: number, finishedWork: Fiber) {
+function commitHookEffectListUnmount(tag: HookEffectTag, finishedWork: Fiber) {
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
@@ -328,7 +335,43 @@ function commitHookEffectListUnmount(tag: number, finishedWork: Fiber) {
   }
 }
 
-function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
+// TODO: Remove this duplication.
+function commitHookEffectListUnmount2(
+  // Tags to check for when deciding whether to unmount. e.g. to skip over
+  // layout effects
+  hookEffectTag: HookEffectTag,
+  fiber: Fiber,
+): void {
+  const updateQueue: FunctionComponentUpdateQueue | null = (fiber.updateQueue: any);
+  const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+  if (lastEffect !== null) {
+    const firstEffect = lastEffect.next;
+    let effect = firstEffect;
+    do {
+      const {next, tag} = effect;
+      if ((tag & hookEffectTag) === hookEffectTag) {
+        const destroy = effect.destroy;
+        if (destroy !== undefined) {
+          effect.destroy = undefined;
+          if (
+            enableProfilerTimer &&
+            enableProfilerCommitHooks &&
+            fiber.mode & ProfileMode
+          ) {
+            startPassiveEffectTimer();
+            safelyCallDestroy(fiber, destroy);
+            recordPassiveEffectDuration(fiber);
+          } else {
+            safelyCallDestroy(fiber, destroy);
+          }
+        }
+      }
+      effect = next;
+    } while (effect !== firstEffect);
+  }
+}
+
+function commitHookEffectListMount(tag: HookEffectTag, finishedWork: Fiber) {
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
@@ -374,6 +417,83 @@ function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
         }
       }
       effect = effect.next;
+    } while (effect !== firstEffect);
+  }
+}
+
+function invokePassiveEffectCreate(effect: HookEffect): void {
+  const create = effect.create;
+  effect.destroy = create();
+}
+
+// TODO: Remove this duplication.
+function commitHookEffectListMount2(fiber: Fiber): void {
+  const updateQueue: FunctionComponentUpdateQueue | null = (fiber.updateQueue: any);
+  const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
+  if (lastEffect !== null) {
+    const firstEffect = lastEffect.next;
+    let effect = firstEffect;
+    do {
+      const {next, tag} = effect;
+
+      if (
+        (tag & HookPassive) !== NoHookEffect &&
+        (tag & HookHasEffect) !== NoHookEffect
+      ) {
+        if (__DEV__) {
+          if (
+            enableProfilerTimer &&
+            enableProfilerCommitHooks &&
+            fiber.mode & ProfileMode
+          ) {
+            startPassiveEffectTimer();
+            invokeGuardedCallback(
+              null,
+              invokePassiveEffectCreate,
+              null,
+              effect,
+            );
+            recordPassiveEffectDuration(fiber);
+          } else {
+            invokeGuardedCallback(
+              null,
+              invokePassiveEffectCreate,
+              null,
+              effect,
+            );
+          }
+          if (hasCaughtError()) {
+            invariant(fiber !== null, 'Should be working on an effect.');
+            const error = clearCaughtError();
+            captureCommitPhaseError(fiber, error);
+          }
+        } else {
+          try {
+            const create = effect.create;
+            if (
+              enableProfilerTimer &&
+              enableProfilerCommitHooks &&
+              fiber.mode & ProfileMode
+            ) {
+              try {
+                startPassiveEffectTimer();
+                effect.destroy = create();
+              } finally {
+                recordPassiveEffectDuration(fiber);
+              }
+            } else {
+              effect.destroy = create();
+            }
+            // TODO: This is missing the warning that exists in commitHookEffectListMount.
+            // The warning refers to useEffect but only applies to useLayoutEffect.
+          } catch (error) {
+            invariant(fiber !== null, 'Should be working on an effect.');
+            captureCommitPhaseError(fiber, error);
+          }
+        }
+      }
+
+      effect = next;
     } while (effect !== firstEffect);
   }
 }
@@ -1709,11 +1829,43 @@ export function isSuspenseBoundaryBeingHidden(
   return false;
 }
 
-function commitResetTextContent(current: Fiber) {
+function commitResetTextContent(current: Fiber): void {
   if (!supportsMutation) {
     return;
   }
   resetTextContent(current.stateNode);
+}
+
+function commitPassiveWork(finishedWork: Fiber): void {
+  switch (finishedWork.tag) {
+    case FunctionComponent:
+    case ForwardRef:
+    case SimpleMemoComponent:
+    case Block: {
+      commitHookEffectListUnmount2(HookPassive | HookHasEffect, finishedWork);
+    }
+  }
+}
+
+function commitPassiveUnmount(current: Fiber): void {
+  switch (current.tag) {
+    case FunctionComponent:
+    case ForwardRef:
+    case SimpleMemoComponent:
+    case Block:
+      commitHookEffectListUnmount2(HookPassive, current);
+  }
+}
+
+function commitPassiveLifeCycles(finishedWork: Fiber): void {
+  switch (finishedWork.tag) {
+    case FunctionComponent:
+    case ForwardRef:
+    case SimpleMemoComponent:
+    case Block: {
+      commitHookEffectListMount2(finishedWork);
+    }
+  }
 }
 
 export {
@@ -1725,4 +1877,7 @@ export {
   commitLifeCycles,
   commitAttachRef,
   commitDetachRef,
+  commitPassiveUnmount,
+  commitPassiveWork,
+  commitPassiveLifeCycles,
 };
