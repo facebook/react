@@ -50,9 +50,6 @@ ${source}`;
  *
 ${license}
  */
-
-'use strict';
-
 ${source}`;
   },
 
@@ -63,7 +60,7 @@ ${source}`;
  *
 ${license}
  */
-${source}`;
+(function(){${source}})();`;
   },
 
   /***************** UMD_PROFILING *****************/
@@ -73,7 +70,7 @@ ${source}`;
  *
 ${license}
  */
-${source}`;
+(function(){${source}})();`;
   },
 
   /***************** NODE_DEV *****************/
