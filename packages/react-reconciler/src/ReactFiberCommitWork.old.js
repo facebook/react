@@ -967,6 +967,18 @@ function commitUnmount(
       }
       return;
     }
+    case HostText:
+      {
+        for (var prop in current.stateNode) {
+          if (prop.indexOf('__reactEventHandlers$') > -1) {
+            delete current.stateNode[prop];
+          }
+          if (prop.indexOf('__reactInternalInstance$') > -1) {
+            delete current.stateNode[prop];
+          }
+        }
+        return;
+      }
   }
 }
 
