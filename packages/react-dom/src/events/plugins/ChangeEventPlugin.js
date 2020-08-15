@@ -246,13 +246,17 @@ function getTargetInstForInputOrChangeEvent(
 function handleControlledInputBlur(node: HTMLInputElement) {
   const state = (node: any)._wrapperState;
 
-  if (!state || !state.controlled || node.type !== 'number') {
+  if (
+    !state ||
+    !state.controlled ||
+    (node.type !== 'number' && node.type !== 'email')
+  ) {
     return;
   }
 
   if (!disableInputAttributeSyncing) {
     // If controlled, assign the value attribute to the current value on blur
-    setDefaultValue((node: any), 'number', (node: any).value);
+    setDefaultValue((node: any), node.type, (node: any).value);
   }
 }
 
