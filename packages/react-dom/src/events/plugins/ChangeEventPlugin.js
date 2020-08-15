@@ -246,7 +246,11 @@ function getTargetInstForInputOrChangeEvent(
 function handleControlledInputBlur(node: HTMLInputElement) {
   const state = (node: any)._wrapperState;
 
-  if (!state || !state.controlled || node.type !== 'number') {
+  if (
+    !state ||
+    !state.controlled ||
+    (node.type !== 'number' && node.type !== 'email')
+  ) {
     return;
   }
 
