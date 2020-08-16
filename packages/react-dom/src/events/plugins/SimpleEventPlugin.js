@@ -198,7 +198,6 @@ function extractEvents(
       accumulateTargetOnly,
     );
   }
-  return event;
 }
 
 export {registerSimpleEvents as registerEvents, extractEvents};
