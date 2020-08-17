@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-
+'use strict';
 
 const ESLintTester = require('eslint').RuleTester;
 const ReactHooksESLintPlugin = require('eslint-plugin-react-hooks');
