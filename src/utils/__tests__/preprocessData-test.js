@@ -320,24 +320,24 @@ describe(preprocessData, () => {
     expect(
       // prettier-ignore
       preprocessData([
-        {"args":{"data":{"startTime":8993778496}},"cat":"disabled-by-default-v8.cpu_profiler","id":"0x1","name":"Profile","ph":"P","pid":9312,"tid":10252,"ts":8993778520,"tts":1614266},
-        {"args":{"data":{"navigationId":"E082C30FBDA3ACEE0E7B5FD75F8B7F0D"}},"cat":"blink.user_timing","name":"--a-mark-that-looks-like-one-of-ours","ph":"R","pid":17232,"tid":13628,"ts":264686513020,"tts":4082554},
-        {"args":{"data":{"navigationId":"E082C30FBDA3ACEE0E7B5FD75F8B7F0D"}},"cat":"blink.user_timing","name":"Some other mark","ph":"R","pid":17232,"tid":13628,"ts":264686513020,"tts":4082554},
         {"args":{},"cat":"blink.user_timing","id":"0xcdf75f7c","name":"VCWithoutImage: root","ph":"n","pid":55132,"scope":"blink.user_timing","tid":775,"ts":458734963394},
+        {"args":{"data":{"startTime":458738069897}},"cat":"disabled-by-default-v8.cpu_profiler","id":"0x4","name":"Profile","ph":"P","pid":55132,"tid":775,"ts":458738069898,"tts":27896428},
+        {"args":{"data":{"navigationId":"B8774C733A75946C099FE21F8A0E8D38"}},"cat":"blink.user_timing","name":"--a-mark-that-looks-like-one-of-ours","ph":"R","pid":55132,"tid":775,"ts":458738256356,"tts":28082555},
+        {"args":{"data":{"navigationId":"B8774C733A75946C099FE21F8A0E8D38"}},"cat":"blink.user_timing","name":"Some other mark","ph":"R","pid":55132,"tid":775,"ts":458738261491,"tts":28087691},
       ]).otherUserTimingMarks,
     ).toMatchInlineSnapshot(`
       Array [
         Object {
-          "name": "Some other mark",
-          "timestamp": 255692734.524,
+          "name": "VCWithoutImage: root",
+          "timestamp": -3106.503,
         },
         Object {
           "name": "--a-mark-that-looks-like-one-of-ours",
-          "timestamp": 255692734.524,
+          "timestamp": 186.459,
         },
         Object {
-          "name": "VCWithoutImage: root",
-          "timestamp": 449741184.898,
+          "name": "Some other mark",
+          "timestamp": 191.594,
         },
       ]
     `);
