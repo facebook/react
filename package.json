@@ -1,6 +1,8 @@
 {
-  "name": "scheduling-profiler-prototype",
+  "private": true,
+  "name": "react-scheduling-profiler",
   "version": "0.0.1",
+  "license": "MIT",
   "scripts": {
     "build": "parcel build --no-cache index.html",
     "prettier": "prettier --write \"**/*.{js,json,css}\"",
@@ -8,8 +10,6 @@
     "lint": "eslint \"src/**/*.js\"",
     "test": "jest"
   },
-  "author": "Brian Vaughn <bvaughn@fb.com>",
-  "license": "MIT",
   "dependencies": {
     "@elg/speedscope": "1.9.0-c46bbab",
     "array-binsearch": "^1.0.1",
