@@ -16,10 +16,7 @@
     "react-virtualized-auto-sizer": "^1.0.2"
   },
   "devDependencies": {
-    "@testing-library/jest-dom": "^5.11.3",
-    "@testing-library/react": "^10.4.8",
     "babel-preset-react-app": "^9.1.2",
-    "identity-obj-proxy": "^3.0.0",
     "parcel": "2.0.0-beta.1",
     "postcss-modules": "^3.2.0"
   }
