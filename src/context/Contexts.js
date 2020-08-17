@@ -64,13 +64,13 @@ function registerMenu(id: string, showFn: ShowFn, hideFn: HideFn) {
   };
 }
 
-type ContextMenuContext = {|
+export type RegistryContextType = {|
   hideMenu: typeof hideMenu,
   showMenu: typeof showMenu,
   registerMenu: typeof registerMenu,
 |};
 
-export const RegistryContext = createContext<ContextMenuContext>({
+export const RegistryContext = createContext<RegistryContextType>({
   hideMenu,
   showMenu,
   registerMenu,

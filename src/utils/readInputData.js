@@ -1,24 +1,29 @@
 // @flow
 
-export const readInputData = (file: File) => {
+import nullthrows from 'nullthrows';
+
+export const readInputData = (file: File): Promise<string> => {
   if (!file.name.endsWith('.json')) {
-    console.error(
-      'Invalid file type, insert a captured performance profile JSON',
+    return Promise.reject(
+      new Error(
+        'Invalid file type. Only JSON performance profiles are supported',
+      ),
     );
-    return;
   }
-  // Initialize file reader
+
   const fileReader = new FileReader();
 
   return new Promise((resolve, reject) => {
-    fileReader.onerror = () => {
-      fileReader.abort();
-      reject(new DOMException('Problem parsing input file.'));
+    fileReader.onload = () => {
+      const result = nullthrows(fileReader.result);
+      if (typeof result === 'string') {
+        resolve(result);
+      }
+      reject(new Error('Input file was not read as a string'));
     };
 
-    fileReader.onload = () => {
-      resolve(fileReader.result);
-    };
+    fileReader.onerror = () => reject(fileReader.error);
+
     fileReader.readAsText(file);
   });
 };

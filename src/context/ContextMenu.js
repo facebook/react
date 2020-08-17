@@ -1,18 +1,15 @@
 // @flow
 
-import React, {
-  useContext,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from 'react';
+import type {RegistryContextType} from './Contexts';
+
+import * as React from 'react';
+import {useContext, useEffect, useLayoutEffect, useRef, useState} from 'react';
 import {createPortal} from 'react-dom';
 import {RegistryContext} from './Contexts';
 
 import styles from './ContextMenu.css';
 
-function respositionToFit(element: HTMLElement, pageX: number, pageY: number) {
+function repositionToFit(element: HTMLElement, pageX: number, pageY: number) {
   const ownerWindow = element.ownerDocument.defaultView;
   if (element !== null) {
     if (pageY + element.offsetHeight >= ownerWindow.innerHeight) {
@@ -50,7 +47,9 @@ type Props = {|
 |};
 
 export default function ContextMenu({children, id}: Props) {
-  const {hideMenu, registerMenu} = useContext(RegistryContext);
+  const {hideMenu, registerMenu} = useContext<RegistryContextType>(
+    RegistryContext,
+  );
 
   const [state, setState] = useState(HIDDEN_STATE);
 
@@ -95,7 +94,7 @@ export default function ContextMenu({children, id}: Props) {
     const hideUnlessContains: MouseEventHandler &
       TouchEventHandler &
       KeyboardEventHandler = event => {
-      if (!menu.contains(event.target)) {
+      if (event.target instanceof HTMLElement && !menu.contains(event.target)) {
         hideMenu();
       }
     };
@@ -108,7 +107,7 @@ export default function ContextMenu({children, id}: Props) {
     const ownerWindow = ownerDocument.defaultView;
     ownerWindow.addEventListener('resize', hideMenu);
 
-    respositionToFit(menu, state.pageX, state.pageY);
+    repositionToFit(menu, state.pageX, state.pageY);
 
     return () => {
       ownerDocument.removeEventListener('mousedown', hideUnlessContains);
@@ -122,11 +121,16 @@ export default function ContextMenu({children, id}: Props) {
   if (!state.isVisible) {
     return <div ref={bodyAccessorRef} />;
   } else {
-    return createPortal(
-      <div ref={menuRef} className={styles.ContextMenu}>
-        {children(state.data)}
-      </div>,
-      containerRef.current,
-    );
+    const container = containerRef.current;
+    if (container !== null) {
+      return createPortal(
+        <div ref={menuRef} className={styles.ContextMenu}>
+          {children(state.data)}
+        </div>,
+        container,
+      );
+    } else {
+      return null;
+    }
   }
 }
