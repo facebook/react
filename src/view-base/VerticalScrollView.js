@@ -12,6 +12,7 @@ import type {Rect} from './geometry';
 import {Surface} from './Surface';
 import {View} from './View';
 import {rectContainsPoint} from './geometry';
+import {clamp} from './utils/clamp';
 import {MOVE_WHEEL_DELTA_THRESHOLD} from './constants';
 
 type VerticalScrollState = $ReadOnly<{|
@@ -23,16 +24,6 @@ function scrollStatesAreEqual(
   state2: VerticalScrollState,
 ): boolean {
   return state1.offsetY === state2.offsetY;
-}
-
-// TODO: Deduplicate
-function clamp(min: number, max: number, value: number): number {
-  if (Number.isNaN(min) || Number.isNaN(max) || Number.isNaN(value)) {
-    throw new Error(
-      `Clamp was called with NaN. Args: min: ${min}, max: ${max}, value: ${value}.`,
-    );
-  }
-  return Math.min(max, Math.max(min, value));
 }
 
 export class VerticalScrollView extends View {

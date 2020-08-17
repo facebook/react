@@ -14,6 +14,7 @@ import {View} from './View';
 import {rectContainsPoint} from './geometry';
 import {layeredLayout, noopLayout} from './layouter';
 import {ColorView} from './ColorView';
+import {clamp} from './utils/clamp';
 
 type ResizeBarState = 'normal' | 'hovered' | 'dragging';
 
@@ -28,16 +29,6 @@ type LayoutState = $ReadOnly<{|
   /** Resize bar's vertical position relative to resize view's frame.origin.y */
   barOffsetY: number,
 |}>;
-
-// TODO: Deduplicate
-function clamp(min: number, max: number, value: number): number {
-  if (Number.isNaN(min) || Number.isNaN(max) || Number.isNaN(value)) {
-    throw new Error(
-      `Clamp was called with NaN. Args: min: ${min}, max: ${max}, value: ${value}.`,
-    );
-  }
-  return Math.min(max, Math.max(min, value));
-}
 
 function getColorForBarState(state: ResizeBarState): string {
   // Colors obtained from Firefox Profiler

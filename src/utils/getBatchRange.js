@@ -4,7 +4,7 @@ import memoize from 'memoize-one';
 
 import type {BatchUID, Milliseconds, ReactProfilerData} from '../types';
 
-// TODO Batch duration probably shouldn't include delayed passive effects?
+// TODO: Batch duration probably shouldn't include delayed passive effects?
 // It should probably end with the layout effect.
 
 function unmemoizedGetBatchRange(

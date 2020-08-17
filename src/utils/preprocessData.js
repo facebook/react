@@ -350,9 +350,9 @@ function processTimelineEvent(
       timestamp: startTime,
     });
   } else if (ph === 'b') {
-    // TODO: Begin user timing measure (#112)
+    // TODO: Begin user timing measure
   } else if (ph === 'e') {
-    // TODO: End user timing measure (#112)
+    // TODO: End user timing measure
   } // eslint-disable-line brace-style
 
   // Unrecognized event

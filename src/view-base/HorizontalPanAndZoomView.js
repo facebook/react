@@ -15,6 +15,7 @@ import type {Rect} from './geometry';
 import {Surface} from './Surface';
 import {View} from './View';
 import {rectContainsPoint} from './geometry';
+import {clamp} from './utils/clamp';
 import {
   MIN_ZOOM_LEVEL,
   MAX_ZOOM_LEVEL,
@@ -39,15 +40,6 @@ function panAndZoomStatesAreEqual(
   return (
     state1.offsetX === state2.offsetX && state1.zoomLevel === state2.zoomLevel
   );
-}
-
-function clamp(min: number, max: number, value: number): number {
-  if (Number.isNaN(min) || Number.isNaN(max) || Number.isNaN(value)) {
-    throw new Error(
-      `Clamp was called with NaN. Args: min: ${min}, max: ${max}, value: ${value}.`,
-    );
-  }
-  return Math.min(max, Math.max(min, value));
 }
 
 function zoomLevelAndIntrinsicWidthToFrameWidth(

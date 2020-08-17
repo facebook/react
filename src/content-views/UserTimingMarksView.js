@@ -86,7 +86,6 @@ export class UserTimingMarksView extends View {
       return; // Not in view
     }
 
-    // TODO: Use blue color from Firefox
     const fillStyle = showHoverHighlight
       ? COLORS.USER_TIMING_HOVER
       : COLORS.USER_TIMING;
