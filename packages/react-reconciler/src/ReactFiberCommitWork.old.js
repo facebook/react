@@ -179,7 +179,7 @@ function safelyCallComponentWillUnmount(
   }
 }
 
-function safelyDetachRef(current: Fiber) {
+function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
   const ref = current.ref;
   if (ref !== null) {
     if (typeof ref === 'function') {
@@ -187,13 +187,13 @@ function safelyDetachRef(current: Fiber) {
         invokeGuardedCallback(null, ref, null, null);
         if (hasCaughtError()) {
           const refError = clearCaughtError();
-          captureCommitPhaseError(current, current.return, refError);
+          captureCommitPhaseError(current, nearestMountedAncestor, refError);
         }
       } else {
         try {
           ref(null);
         } catch (refError) {
-          captureCommitPhaseError(current, current.return, refError);
+          captureCommitPhaseError(current, nearestMountedAncestor, refError);
         }
       }
     } else {
@@ -918,7 +918,7 @@ function commitUnmount(
       return;
     }
     case ClassComponent: {
-      safelyDetachRef(current);
+      safelyDetachRef(current, nearestMountedAncestor);
       const instance = current.stateNode;
       if (typeof instance.componentWillUnmount === 'function') {
         safelyCallComponentWillUnmount(
@@ -930,7 +930,7 @@ function commitUnmount(
       return;
     }
     case HostComponent: {
-      safelyDetachRef(current);
+      safelyDetachRef(current, nearestMountedAncestor);
       return;
     }
     case HostPortal: {
@@ -973,7 +973,7 @@ function commitUnmount(
     }
     case ScopeComponent: {
       if (enableScopeAPI) {
-        safelyDetachRef(current);
+        safelyDetachRef(current, nearestMountedAncestor);
       }
       return;
     }

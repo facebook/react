@@ -2558,4 +2558,90 @@ describe('ReactErrorBoundaries', () => {
       'Component render OuterFallback',
     ]);
   });
+
+  // @gate skipUnmountedBoundaries
+  it('catches errors thrown while detaching refs', () => {
+    class LocalErrorBoundary extends React.Component {
+      state = {error: null};
+      static getDerivedStateFromError(error) {
+        Scheduler.unstable_yieldValue(
+          `ErrorBoundary static getDerivedStateFromError`,
+        );
+        return {error};
+      }
+      render() {
+        const {children, id, fallbackID} = this.props;
+        const {error} = this.state;
+        if (error) {
+          Scheduler.unstable_yieldValue(`${id} render error`);
+          return <Component id={fallbackID} />;
+        }
+        Scheduler.unstable_yieldValue(`${id} render success`);
+        return children || null;
+      }
+    }
+
+    class Component extends React.Component {
+      render() {
+        const {id} = this.props;
+        Scheduler.unstable_yieldValue('Component render ' + id);
+        return id;
+      }
+    }
+
+    class LocalBrokenCallbackRef extends React.Component {
+      _ref = ref => {
+        Scheduler.unstable_yieldValue('LocalBrokenCallbackRef ref ' + !!ref);
+        if (ref === null) {
+          throw Error('Expected');
+        }
+      };
+
+      render() {
+        Scheduler.unstable_yieldValue('LocalBrokenCallbackRef render');
+        return <div ref={this._ref}>ref</div>;
+      }
+    }
+
+    const container = document.createElement('div');
+
+    ReactDOM.render(
+      <LocalErrorBoundary id="OuterBoundary" fallbackID="OuterFallback">
+        <Component id="sibling" />
+        <LocalErrorBoundary id="InnerBoundary" fallbackID="InnerFallback">
+          <LocalBrokenCallbackRef />
+        </LocalErrorBoundary>
+      </LocalErrorBoundary>,
+      container,
+    );
+
+    expect(container.firstChild.textContent).toBe('sibling');
+    expect(container.lastChild.textContent).toBe('ref');
+    expect(Scheduler).toHaveYielded([
+      'OuterBoundary render success',
+      'Component render sibling',
+      'InnerBoundary render success',
+      'LocalBrokenCallbackRef render',
+      'LocalBrokenCallbackRef ref true',
+    ]);
+
+    ReactDOM.render(
+      <LocalErrorBoundary id="OuterBoundary" fallbackID="OuterFallback">
+        <Component id="sibling" />
+      </LocalErrorBoundary>,
+      container,
+    );
+
+    // React should skip over the unmounting boundary and find the nearest still-mounted boundary.
+    expect(container.firstChild.textContent).toBe('OuterFallback');
+    expect(container.lastChild.textContent).toBe('OuterFallback');
+    expect(Scheduler).toHaveYielded([
+      'OuterBoundary render success',
+      'Component render sibling',
+      'LocalBrokenCallbackRef ref false',
+      'ErrorBoundary static getDerivedStateFromError',
+      'OuterBoundary render error',
+      'Component render OuterFallback',
+    ]);
+  });
 });
