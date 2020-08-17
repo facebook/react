@@ -258,7 +258,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
 
     const e = await render(<a href={firstIsSafe} />);
     expect(toStringCalls).toBe(expectedToStringCalls);
-    expect(e.href).toBe('https://freactjs.org/);
+    expect(e.href).toBe('https://freactjs.org/');
   });
 
   it('rejects a javascript protocol href if it is added during an update twice', () => {
