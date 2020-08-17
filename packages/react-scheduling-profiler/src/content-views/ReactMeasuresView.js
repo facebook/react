@@ -22,6 +22,13 @@ import {REACT_TOTAL_NUM_LANES} from '../constants';
 
 const REACT_LANE_HEIGHT = REACT_MEASURE_HEIGHT + BORDER_SIZE;
 
+function getMeasuresForLane(
+  allMeasures: ReactMeasure[],
+  lane: ReactLane,
+): ReactMeasure[] {
+  return allMeasures.filter(measure => measure.lanes.includes(lane));
+}
+
 export class ReactMeasuresView extends View {
   _profilerData: ReactProfilerData;
   _intrinsicSize: Size;
@@ -43,10 +50,11 @@ export class ReactMeasuresView extends View {
     this._laneToMeasures = new Map<ReactLane, ReactMeasure[]>();
 
     for (let lane: ReactLane = 0; lane < REACT_TOTAL_NUM_LANES; lane++) {
-      // Hide lanes without any measures
-      const measuresForLane = this._profilerData.measures.filter(measure =>
-        measure.lanes.includes(lane),
+      const measuresForLane = getMeasuresForLane(
+        this._profilerData.measures,
+        lane,
       );
+      // Only show lanes with measures
       if (measuresForLane.length) {
         this._lanesToRender.push(lane);
         this._laneToMeasures.set(lane, measuresForLane);
