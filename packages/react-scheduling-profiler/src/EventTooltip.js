@@ -192,7 +192,9 @@ const TooltipReactEvent = ({
   const label = getReactEventLabel(event.type);
   const color = getReactEventColor(event);
   if (!label || !color) {
-    console.warn(`Unexpected event type "${event.type}"`);
+    if (__DEV__) {
+      console.warn('Unexpected event type "%s"', event.type);
+    }
     return null;
   }
 
@@ -234,7 +236,9 @@ const TooltipReactMeasure = ({
 }) => {
   const label = getReactMeasureLabel(measure.type);
   if (!label) {
-    console.warn(`Unexpected measure type "${measure.type}"`);
+    if (__DEV__) {
+      console.warn('Unexpected measure type "%s"', measure.type);
+    }
     return null;
   }
 

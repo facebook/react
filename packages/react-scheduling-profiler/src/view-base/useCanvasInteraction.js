@@ -70,7 +70,9 @@ export type Interaction =
   | WheelWithMetaInteraction;
 
 let canvasBoundingRectCache = null;
-function cacheFirstGetCanvasBoundingRect(canvas) {
+function cacheFirstGetCanvasBoundingRect(
+  canvas: HTMLCanvasElement,
+): ClientRect {
   if (
     canvasBoundingRectCache &&
     canvas.width === canvasBoundingRectCache.width &&
@@ -92,21 +94,16 @@ export function useCanvasInteraction(
 ) {
   useEffect(() => {
     const canvas = canvasRef.current;
+    if (!canvas) {
+      return;
+    }
 
     function localToCanvasCoordinates(localCoordinates: Point): Point {
-      if (!canvas) {
-        return localCoordinates;
-      }
       const canvasRect = cacheFirstGetCanvasBoundingRect(canvas);
       return {
         x: localCoordinates.x - canvasRect.left,
         y: localCoordinates.y - canvasRect.top,
       };
-    }
-
-    if (!(canvas instanceof HTMLCanvasElement)) {
-      console.error('canvas is not a HTMLCanvasElement!', canvas);
-      return;
     }
 
     const onCanvasMouseDown: MouseEventHandler = event => {
