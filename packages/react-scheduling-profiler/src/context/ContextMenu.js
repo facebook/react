@@ -53,9 +53,9 @@ export default function ContextMenu({children, id}: Props) {
 
   const [state, setState] = useState(HIDDEN_STATE);
 
-  const bodyAccessorRef = useRef<?HTMLDivElement>(null);
-  const containerRef = useRef<?HTMLDivElement>(null);
-  const menuRef = useRef<?HTMLDivElement>(null);
+  const bodyAccessorRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!bodyAccessorRef.current) {

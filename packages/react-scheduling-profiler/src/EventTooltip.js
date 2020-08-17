@@ -11,8 +11,9 @@ import type {
   UserTimingMark,
 } from './types';
 
+import * as React from 'react';
+import {Fragment, useRef} from 'react';
 import prettyMilliseconds from 'pretty-ms';
-import React, {Fragment, useRef} from 'react';
 import {COLORS} from './content-views/constants';
 import {getBatchRange} from './utils/getBatchRange';
 import useSmartTooltip from './utils/useSmartTooltip';

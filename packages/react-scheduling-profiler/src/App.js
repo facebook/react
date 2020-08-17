@@ -2,7 +2,8 @@
 
 import type {ReactProfilerData} from './types';
 
-import React, {useState} from 'react';
+import * as React from 'react';
+import {useState} from 'react';
 
 import ImportPage from './ImportPage';
 import CanvasPage from './CanvasPage';

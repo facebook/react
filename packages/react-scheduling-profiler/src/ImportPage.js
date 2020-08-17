@@ -3,7 +3,9 @@
 import type {TimelineEvent} from '@elg/speedscope';
 import type {ReactProfilerData} from './types';
 
-import React, {useEffect, useCallback, useRef} from 'react';
+import * as React from 'react';
+import {useEffect, useCallback, useRef} from 'react';
+
 import profilerBrowser from './assets/profilerBrowser.png';
 import style from './ImportPage.css';
 

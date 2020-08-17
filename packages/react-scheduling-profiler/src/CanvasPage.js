@@ -6,7 +6,8 @@ import type {
 } from './view-base';
 
 import {copy} from 'clipboard-js';
-import React, {
+import * as React from 'react';
+import {
   Fragment,
   useEffect,
   useLayoutEffect,
