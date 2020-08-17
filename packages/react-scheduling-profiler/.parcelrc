@@ -1,0 +1,14 @@
+{
+  "extends": "@parcel/config-default",
+  "transformers": {
+    "*.{json,json5}": [
+      "@parcel/transformer-raw"
+    ],
+    "*.svg": [
+      "@parcel/transformer-raw"
+    ],
+    "*.png": [
+      "@parcel/transformer-raw"
+    ]
+  }
+}
