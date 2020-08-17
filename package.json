@@ -1,0 +1,51 @@
+{
+  "private": true,
+  "name": "react-scheduling-profiler",
+  "version": "0.0.1",
+  "license": "MIT",
+  "scripts": {
+    "build": "parcel build --no-cache index.html",
+    "prettier": "prettier --write \"**/*.{js,json,css}\"",
+    "start": "parcel index.html",
+    "lint": "eslint \"src/**/*.js\"",
+    "test": "jest"
+  },
+  "dependencies": {
+    "@elg/speedscope": "1.9.0-c46bbab",
+    "array-binsearch": "^1.0.1",
+    "clipboard-js": "^0.3.6",
+    "d3-hierarchy": "^1.1.9",
+    "lodash.clonedeep": "^4.5.0",
+    "memoize-one": "^5.1.1",
+    "nullthrows": "^1.1.1",
+    "pretty-ms": "^7.0.0",
+    "react": "^0.0.0-experimental-94c0244ba",
+    "react-dom": "^0.0.0-experimental-94c0244ba",
+    "react-virtualized-auto-sizer": "^1.0.2",
+    "scheduler": "^0.19.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.11.1",
+    "@testing-library/jest-dom": "^5.11.3",
+    "@testing-library/react": "^10.4.8",
+    "babel-eslint": "^10.1.0",
+    "babel-jest": "^26.3.0",
+    "babel-preset-react-app": "^9.1.2",
+    "confusing-browser-globals": "^1.0.9",
+    "eslint": "^7.7.0",
+    "eslint-config-fbjs": "^1.1.1",
+    "eslint-config-prettier": "^6.11.0",
+    "eslint-plugin-babel": "^5.3.1",
+    "eslint-plugin-flowtype": "^5.2.0",
+    "eslint-plugin-jest": "^23.20.0",
+    "eslint-plugin-no-for-of-loops": "^1.0.1",
+    "eslint-plugin-prettier": "^3.1.4",
+    "eslint-plugin-react": "^7.20.6",
+    "flow-bin": "^0.131.0",
+    "identity-obj-proxy": "^3.0.0",
+    "jest": "^26.4.0",
+    "parcel": "2.0.0-beta.1",
+    "postcss-modules": "^3.2.0",
+    "prettier": "1.19.1"
+  }
+}

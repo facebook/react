@@ -1,0 +1,5 @@
+node_modules/*
+dist/*
+static/*
+src/speedscope/*
+src/tracerbench/*
