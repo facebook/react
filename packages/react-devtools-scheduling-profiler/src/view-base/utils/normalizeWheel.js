@@ -1,21 +1,13 @@
 /**
- * Copyright (c) 2015, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) Facebook, Inc. and its affiliates.
  *
- * This source code is licensed under the BSD-style license found in
- * https://github.com/facebookarchive/fixed-data-table/blob/master/LICENSE.
- * An additional grant of patent rights can be found in the PATENTS file in the
- * same directory.
- *
- * Adapted from: https://github.com/facebookarchive/fixed-data-table/blob/master/src/vendor_upstream/dom/normalizeWheel.js
- *
- * TODO: Figure out the license of this code. It was originally licensed by
- * Facebook with a BSD-style license. Since this profiler project is going into
- * another Facebook repository, I suppose we can just relicense it under
- * React's license?
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @flow
  */
+
+// Adapted from: https://github.com/facebookarchive/fixed-data-table/blob/master/src/vendor_upstream/dom/normalizeWheel.js
 
 export type NormalizedWheelDelta = {|
   deltaX: number,
