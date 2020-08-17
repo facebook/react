@@ -13,7 +13,6 @@ import {
 } from '../events/EventRegistry';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import invariant from 'shared/invariant';
 
 import {
   getValueForAttribute,
@@ -257,7 +256,7 @@ if (__DEV__) {
 }
 
 export function ensureListeningTo(
-  rootContainerInstance: Element | Node | ShadowRoot,
+  rootContainerInstance: Element | Node,
   reactPropEvent: string,
   targetElement: Element | null,
 ): void {
@@ -267,18 +266,19 @@ export function ensureListeningTo(
     rootContainerInstance.nodeType === COMMENT_NODE
       ? rootContainerInstance.parentNode
       : rootContainerInstance;
-  // Containers should only ever be element nodes. We do not
-  // want to register events to document fragments or documents
-  // with the modern plugin event system.
-  invariant(
-    rootContainerElement != null &&
-      (rootContainerElement.nodeType === ELEMENT_NODE ||
-        (rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE &&
-          // $FlowFixMe GH issue #8457
-          ((rootContainerElement: any): ShadowRoot).mode)),
-    'ensureListeningTo(): received a container that was not an element node. ' +
-      'This is likely a bug in React.',
-  );
+  if (__DEV__) {
+    if (
+      rootContainerElement == null ||
+      (rootContainerElement.nodeType !== ELEMENT_NODE &&
+        // This is to support rendering into a ShadowRoot:
+        rootContainerElement.nodeType !== DOCUMENT_FRAGMENT_NODE)
+    ) {
+      console.error(
+        'ensureListeningTo(): received a container that was not an element node. ' +
+          'This is likely a bug in React. Please file an issue.',
+      );
+    }
+  }
   listenToReactEvent(
     reactPropEvent,
     ((rootContainerElement: any): Element),
@@ -287,7 +287,7 @@ export function ensureListeningTo(
 }
 
 function getOwnerDocumentFromRootContainer(
-  rootContainerElement: Element | Document | ShadowRoot,
+  rootContainerElement: Element | Document,
 ): Document {
   return rootContainerElement.nodeType === DOCUMENT_NODE
     ? (rootContainerElement: any)
@@ -312,7 +312,7 @@ export function trapClickOnNonInteractiveElement(node: HTMLElement) {
 function setInitialDOMProperties(
   tag: string,
   domElement: Element,
-  rootContainerElement: Element | Document | ShadowRoot,
+  rootContainerElement: Element | Document,
   nextProps: Object,
   isCustomComponentTag: boolean,
 ): void {
@@ -397,7 +397,7 @@ function updateDOMProperties(
 export function createElement(
   type: string,
   props: Object,
-  rootContainerElement: Element | Document | ShadowRoot,
+  rootContainerElement: Element | Document,
   parentNamespace: string,
 ): Element {
   let isCustomComponentTag;
@@ -503,7 +503,7 @@ export function createElement(
 
 export function createTextNode(
   text: string,
-  rootContainerElement: Element | Document | ShadowRoot,
+  rootContainerElement: Element | Document,
 ): Text {
   return getOwnerDocumentFromRootContainer(rootContainerElement).createTextNode(
     text,
@@ -514,7 +514,7 @@ export function setInitialProperties(
   domElement: Element,
   tag: string,
   rawProps: Object,
-  rootContainerElement: Element | Document | ShadowRoot,
+  rootContainerElement: Element | Document,
 ): void {
   const isCustomComponentTag = isCustomComponent(tag, rawProps);
   if (__DEV__) {
@@ -649,7 +649,7 @@ export function diffProperties(
   tag: string,
   lastRawProps: Object,
   nextRawProps: Object,
-  rootContainerElement: Element | Document | ShadowRoot,
+  rootContainerElement: Element | Document,
 ): null | Array<mixed> {
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, nextRawProps);
@@ -914,7 +914,7 @@ export function diffHydratedProperties(
   tag: string,
   rawProps: Object,
   parentNamespace: string,
-  rootContainerElement: Element | Document | ShadowRoot,
+  rootContainerElement: Element | Document,
 ): null | Array<mixed> {
   let isCustomComponentTag;
   let extraAttributeNames: Set<string>;
@@ -1213,7 +1213,7 @@ export function warnForUnmatchedText(textNode: Text, text: string) {
 }
 
 export function warnForDeletedHydratableElement(
-  parentNode: Element | Document | ShadowRoot,
+  parentNode: Element | Document,
   child: Element,
 ) {
   if (__DEV__) {
@@ -1230,7 +1230,7 @@ export function warnForDeletedHydratableElement(
 }
 
 export function warnForDeletedHydratableText(
-  parentNode: Element | Document | ShadowRoot,
+  parentNode: Element | Document,
   child: Text,
 ) {
   if (__DEV__) {
@@ -1247,7 +1247,7 @@ export function warnForDeletedHydratableText(
 }
 
 export function warnForInsertedHydratedElement(
-  parentNode: Element | Document | ShadowRoot,
+  parentNode: Element | Document,
   tag: string,
   props: Object,
 ) {
@@ -1265,7 +1265,7 @@ export function warnForInsertedHydratedElement(
 }
 
 export function warnForInsertedHydratedText(
-  parentNode: Element | Document | ShadowRoot,
+  parentNode: Element | Document,
   text: string,
 ) {
   if (__DEV__) {
