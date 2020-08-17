@@ -1,4 +1,4 @@
-'use strict';
+// @flow
 
 import {
   pointEqualToPoint,
