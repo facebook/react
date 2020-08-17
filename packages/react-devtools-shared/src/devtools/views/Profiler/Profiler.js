@@ -176,10 +176,10 @@ const ProfilingNotSupported = () => (
       Learn more at{' '}
       <a
         className={styles.Link}
-        href="https://fb.me/react-profiling"
+        href="https://reactjs.org/link/profiling"
         rel="noopener noreferrer"
         target="_blank">
-        fb.me/react-profiling
+        reactjs.org/link/profiling
       </a>
       .
     </p>

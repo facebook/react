@@ -162,7 +162,7 @@ function validateExplicitKey(element, parentType) {
     setCurrentlyValidatingElement(element);
     console.error(
       'Each child in a list should have a unique "key" prop.' +
-        '%s%s See https://fb.me/react-warning-keys for more information.',
+        '%s%s See https://reactjs.org/link/warning-keys for more information.',
       currentComponentErrorInfo,
       childOwner,
     );
