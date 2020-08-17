@@ -10,8 +10,9 @@ import style from './ImportPage.css';
 import preprocessData from './utils/preprocessData';
 import {readInputData} from './utils/readInputData';
 
-// TODO: Use for dev only, switch to import file after
-import JSON_PATH from 'url:../static/perfprofilev2.json';
+// Used in DEV only
+// $FlowFixMe Flow cannot read this url path
+import JSON_PATH from 'url:../static/sample-chrome-profile.json';
 
 type Props = {|
   onDataImported: (profilerData: ReactProfilerData) => void,
