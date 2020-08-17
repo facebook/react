@@ -8,7 +8,7 @@
     "start": "parcel index.html"
   },
   "dependencies": {
-    "@elg/speedscope": "1.9.0-c46bbab",
+    "@elg/speedscope": "1.9.0-a6f84db",
     "clipboard-js": "^0.3.6",
     "memoize-one": "^5.1.1",
     "nullthrows": "^1.1.1",

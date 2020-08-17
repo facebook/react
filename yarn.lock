@@ -2108,10 +2108,10 @@
     global-agent "^2.0.2"
     global-tunnel-ng "^2.7.1"
 
-"@elg/speedscope@1.9.0-c46bbab":
-  version "1.9.0-c46bbab"
-  resolved "https://registry.yarnpkg.com/@elg/speedscope/-/speedscope-1.9.0-c46bbab.tgz#c11bfb533b5363e366b368b7f9ce6239a96c5fb6"
-  integrity sha512-qW38AOykb7OeeNVUECxw3jRZanKaPdm5h0iC6sYadBkYJtxjM/TK+Mlu1WJZJu9wfgQLlZiA9siGYRwJwXdJTw==
+"@elg/speedscope@1.9.0-a6f84db":
+  version "1.9.0-a6f84db"
+  resolved "https://registry.yarnpkg.com/@elg/speedscope/-/speedscope-1.9.0-a6f84db.tgz#36079096390b9b396dfec5aeac12e971feb46084"
+  integrity sha512-AoGBS1H5s8jrqIh51P8tZnO9i02w7jBJsd0W6+nrF2tLce502zb2rOyot4iv4fnvhmjnM6VFPBLjE2DfElg8Dw==
   dependencies:
     opn "5.3.0"
     react "^16.13.1"
