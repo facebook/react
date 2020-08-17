@@ -20,7 +20,7 @@
 .*/packages/react-noop-renderer/.*
 
 .*/.parcel-cache/.*
-.*/packages/react-scheduling-profiler/static/.*
+.*/packages/react-devtools-scheduling-profiler/static/.*
 
 %REACT_RENDERER_FLOW_IGNORES%
 

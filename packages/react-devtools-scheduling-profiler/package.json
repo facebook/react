@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "react-scheduling-profiler",
+  "name": "react-devtools-scheduling-profiler",
   "version": "0.0.1",
   "license": "MIT",
   "scripts": {
