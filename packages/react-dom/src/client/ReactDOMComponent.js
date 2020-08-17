@@ -13,7 +13,6 @@ import {
 } from '../events/EventRegistry';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import invariant from 'shared/invariant';
 
 import {
   getValueForAttribute,
@@ -66,6 +65,7 @@ import {
   DOCUMENT_NODE,
   ELEMENT_NODE,
   COMMENT_NODE,
+  DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
 import possibleStandardNames from '../shared/possibleStandardNames';
@@ -266,15 +266,19 @@ export function ensureListeningTo(
     rootContainerInstance.nodeType === COMMENT_NODE
       ? rootContainerInstance.parentNode
       : rootContainerInstance;
-  // Containers should only ever be element nodes. We do not
-  // want to register events to document fragments or documents
-  // with the modern plugin event system.
-  invariant(
-    rootContainerElement != null &&
-      rootContainerElement.nodeType === ELEMENT_NODE,
-    'ensureListeningTo(): received a container that was not an element node. ' +
-      'This is likely a bug in React.',
-  );
+  if (__DEV__) {
+    if (
+      rootContainerElement == null ||
+      (rootContainerElement.nodeType !== ELEMENT_NODE &&
+        // This is to support rendering into a ShadowRoot:
+        rootContainerElement.nodeType !== DOCUMENT_FRAGMENT_NODE)
+    ) {
+      console.error(
+        'ensureListeningTo(): received a container that was not an element node. ' +
+          'This is likely a bug in React. Please file an issue.',
+      );
+    }
+  }
   listenToReactEvent(
     reactPropEvent,
     ((rootContainerElement: any): Element),
