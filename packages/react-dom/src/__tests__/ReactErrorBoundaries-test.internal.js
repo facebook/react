@@ -2474,6 +2474,7 @@ describe('ReactErrorBoundaries', () => {
     );
   });
 
+  // @gate skipUnmountedBoundaries
   it('catches errors thrown in componentWillUnmount', () => {
     class LocalErrorBoundary extends React.Component {
       state = {error: null};

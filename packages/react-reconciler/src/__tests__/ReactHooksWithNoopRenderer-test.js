@@ -2798,6 +2798,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
     });
 
+    // @gate skipUnmountedBoundaries
     it('catches errors thrown in useLayoutEffect', () => {
       class ErrorBoundary extends React.Component {
         state = {error: null};
