@@ -30,6 +30,7 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   enableScopeAPI,
+  skipUnmountedBoundaries,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -2462,13 +2463,18 @@ function commitBeforeMutationEffectsDeletions(deletions: Array<Fiber>) {
 function commitMutationEffects(
   firstChild: Fiber,
   root: FiberRoot,
-  renderPriorityLevel,
+  renderPriorityLevel: ReactPriorityLevel,
 ) {
   let fiber = firstChild;
   while (fiber !== null) {
     const deletions = fiber.deletions;
     if (deletions !== null) {
-      commitMutationEffectsDeletions(deletions, root, renderPriorityLevel);
+      commitMutationEffectsDeletions(
+        deletions,
+        fiber,
+        root,
+        renderPriorityLevel,
+      );
     }
 
     if (fiber.child !== null) {
@@ -2577,6 +2583,7 @@ function commitMutationEffectsImpl(
 
 function commitMutationEffectsDeletions(
   deletions: Array<Fiber>,
+  nearestMountedAncestor: Fiber,
   root: FiberRoot,
   renderPriorityLevel,
 ) {
@@ -2589,17 +2596,23 @@ function commitMutationEffectsDeletions(
         null,
         root,
         childToDelete,
+        nearestMountedAncestor,
         renderPriorityLevel,
       );
       if (hasCaughtError()) {
         const error = clearCaughtError();
-        captureCommitPhaseError(childToDelete, childToDelete.return, error);
+        captureCommitPhaseError(childToDelete, nearestMountedAncestor, error);
       }
     } else {
       try {
-        commitDeletion(root, childToDelete, renderPriorityLevel);
+        commitDeletion(
+          root,
+          childToDelete,
+          nearestMountedAncestor,
+          renderPriorityLevel,
+        );
       } catch (error) {
-        captureCommitPhaseError(childToDelete, childToDelete.return, error);
+        captureCommitPhaseError(childToDelete, nearestMountedAncestor, error);
       }
     }
   }
@@ -2938,7 +2951,13 @@ export function captureCommitPhaseError(
     return;
   }
 
-  let fiber = nearestMountedAncestor;
+  let fiber = null;
+  if (skipUnmountedBoundaries) {
+    fiber = nearestMountedAncestor;
+  } else {
+    fiber = sourceFiber.return;
+  }
+
   while (fiber !== null) {
     if (fiber.tag === HostRoot) {
       captureCommitPhaseErrorOnRoot(fiber, sourceFiber, error);
