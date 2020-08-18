@@ -323,7 +323,11 @@ function commitBeforeMutationLifeCycles(
   );
 }
 
-function commitHookEffectListUnmount(tag: HookEffectTag, finishedWork: Fiber) {
+function commitHookEffectListUnmount(
+  tag: HookEffectTag,
+  finishedWork: Fiber,
+  nearestMountedAncestor: Fiber | null,
+) {
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
@@ -335,7 +339,7 @@ function commitHookEffectListUnmount(tag: HookEffectTag, finishedWork: Fiber) {
         const destroy = effect.destroy;
         effect.destroy = undefined;
         if (destroy !== undefined) {
-          safelyCallDestroy(finishedWork, destroy);
+          safelyCallDestroy(finishedWork, nearestMountedAncestor, destroy);
         }
       }
       effect = effect.next;
@@ -1598,12 +1602,17 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             commitHookEffectListUnmount(
               HookLayout | HookHasEffect,
               finishedWork,
+              finishedWork.return,
             );
           } finally {
             recordLayoutEffectDuration(finishedWork);
           }
         } else {
-          commitHookEffectListUnmount(HookLayout | HookHasEffect, finishedWork);
+          commitHookEffectListUnmount(
+            HookLayout | HookHasEffect,
+            finishedWork,
+            finishedWork.return,
+          );
         }
         return;
       }
@@ -1658,12 +1667,20 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       ) {
         try {
           startLayoutEffectTimer();
-          commitHookEffectListUnmount(HookLayout | HookHasEffect, finishedWork);
+          commitHookEffectListUnmount(
+            HookLayout | HookHasEffect,
+            finishedWork,
+            finishedWork.return,
+          );
         } finally {
           recordLayoutEffectDuration(finishedWork);
         }
       } else {
-        commitHookEffectListUnmount(HookLayout | HookHasEffect, finishedWork);
+        commitHookEffectListUnmount(
+          HookLayout | HookHasEffect,
+          finishedWork,
+          finishedWork.return,
+        );
       }
       return;
     }
