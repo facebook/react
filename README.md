@@ -8,6 +8,8 @@ React is a JavaScript library for building user interfaces.
 
 [Learn how to use React in your own project](https://reactjs.org/docs/getting-started.html).
 
+[![DepShield Badge](https://depshield.sonatype.org/badges/owner/repository/depshield.svg)](https://depshield.github.io)
+
 ## Installation
 
 React has been designed for gradual adoption from the start, and **you can use as little or as much React as you need**:
