@@ -19,10 +19,6 @@ import style from './ImportPage.css';
 import preprocessData from './utils/preprocessData';
 import {readInputData} from './utils/readInputData';
 
-// Used in DEV only
-// $FlowFixMe Flow cannot read this url path
-import JSON_PATH from 'url:../static/sample-chrome-profile.json';
-
 type Props = {|
   onDataImported: (profilerData: ReactProfilerData) => void,
 |};
@@ -37,12 +33,13 @@ export default function ImportPage({onDataImported}: Props) {
     [onDataImported],
   );
 
-  // DEV only: auto-import a demo profile on component mount (i.e. page load)
   useEffect(() => {
-    if (process.env.NODE_ENV === 'production') return;
-    fetch(JSON_PATH)
-      .then(res => res.json())
-      .then(processTimeline);
+    if (__DEV__) {
+      // Auto-import a demo profile on component mount (i.e. page load)
+      import('../static/sample-chrome-profile.json')
+        .then(module => module.default)
+        .then(processTimeline);
+    }
   }, [processTimeline]);
 
   const handleProfilerInput = useCallback(

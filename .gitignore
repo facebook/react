@@ -23,7 +23,6 @@ chrome-user-data
 .vscode
 *.swp
 *.swo
-.parcel-cache
 
 packages/react-devtools-core/dist
 packages/react-devtools-extensions/chrome/build
@@ -36,5 +35,4 @@ packages/react-devtools-extensions/shared/build
 packages/react-devtools-extensions/.tempUserDataDir
 packages/react-devtools-inline/dist
 packages/react-devtools-shell/dist
-
 packages/react-devtools-scheduling-profiler/dist
