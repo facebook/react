@@ -348,6 +348,8 @@ describe('ReactDOMServerSelectiveHydration', () => {
 
   // @gate experimental
   it('hydrates the target boundary synchronously during a click (createEventHandle)', async () => {
+    const usePress = require('react-interactions/events/press').usePress;
+    console.log(usePress);
     const setClick = ReactDOM.unstable_createEventHandle('click');
     let isServerRendering = true;
 
