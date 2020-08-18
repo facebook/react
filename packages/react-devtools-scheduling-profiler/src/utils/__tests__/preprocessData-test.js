@@ -93,7 +93,7 @@ describe(preprocessData, () => {
   });
 
   it('should error if events and measures are incomplete', () => {
-    const error = spyOnDev(console, 'error');
+    const error = spyOnDevAndProd(console, 'error');
     // prettier-ignore
     preprocessData([
       {"args":{"data":{"startTime":8993778496}},"cat":"disabled-by-default-v8.cpu_profiler","id":"0x1","name":"Profile","ph":"P","pid":9312,"tid":10252,"ts":8993778520,"tts":1614266},
@@ -103,16 +103,13 @@ describe(preprocessData, () => {
   });
 
   it('should error if work is completed without being started', () => {
-    expect(() =>
-      // prettier-ignore
-      preprocessData([
-        {"args":{"data":{"startTime":8993778496}},"cat":"disabled-by-default-v8.cpu_profiler","id":"0x1","name":"Profile","ph":"P","pid":9312,"tid":10252,"ts":8993778520,"tts":1614266},
-        {"args":{"data":{"navigationId":"E082C30FBDA3ACEE0E7B5FD75F8B7F0D"}},"cat":"blink.user_timing","name":"--render-yield","ph":"R","pid":17232,"tid":13628,"ts":264686513020,"tts":4082554},
-      ]),
-    ).toErrorDev(
-      'Unexpected type "render" completed at 255692734.524ms while stack is empty.',
-      {withoutStack: true},
-    );
+    const error = spyOnDevAndProd(console, 'error');
+    // prettier-ignore
+    preprocessData([
+      {"args":{"data":{"startTime":8993778496}},"cat":"disabled-by-default-v8.cpu_profiler","id":"0x1","name":"Profile","ph":"P","pid":9312,"tid":10252,"ts":8993778520,"tts":1614266},
+      {"args":{"data":{"navigationId":"E082C30FBDA3ACEE0E7B5FD75F8B7F0D"}},"cat":"blink.user_timing","name":"--render-yield","ph":"R","pid":17232,"tid":13628,"ts":264686513020,"tts":4082554},
+    ]);
+    expect(error).toHaveBeenCalled();
   });
 
   it('should process complete set of events (page load sample data)', () => {

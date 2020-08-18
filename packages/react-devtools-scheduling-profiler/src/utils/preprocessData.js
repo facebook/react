@@ -107,35 +107,29 @@ function markWorkCompleted(
   stack: $PropertyType<ProcessorState, 'measureStack'>,
 ) {
   if (stack.length === 0) {
-    if (__DEV__) {
-      console.error(
-        'Unexpected type "%s" completed at %sms while stack is empty.',
-        type,
-        stopTime,
-      );
-    }
+    console.error(
+      'Unexpected type "%s" completed at %sms while stack is empty.',
+      type,
+      stopTime,
+    );
     // Ignore work "completion" user timing mark that doesn't complete anything
     return;
   }
 
   const last = stack[stack.length - 1];
   if (last.type !== type) {
-    if (__DEV__) {
-      console.error(
-        'Unexpected type "%s" completed at %sms before "%s" completed.',
-        type,
-        stopTime,
-        last.type,
-      );
-    }
+    console.error(
+      'Unexpected type "%s" completed at %sms before "%s" completed.',
+      type,
+      stopTime,
+      last.type,
+    );
   }
 
   const {index, startTime} = stack.pop();
   const measure = currentProfilerData.measures[index];
   if (!measure) {
-    if (__DEV__) {
-      console.error('Could not find matching measure for type "%s".', type);
-    }
+    console.error('Could not find matching measure for type "%s".', type);
   }
 
   // $FlowFixMe This property should not be writable outside of this function.
@@ -460,9 +454,7 @@ export default function preprocessData(
   // Validate that all events and measures are complete
   const {measureStack} = state;
   if (measureStack.length > 0) {
-    if (__DEV__) {
-      console.error('Incomplete events or measures', measureStack);
-    }
+    console.error('Incomplete events or measures', measureStack);
   }
 
   return profilerData;
