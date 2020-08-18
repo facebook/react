@@ -335,7 +335,7 @@ function commitHookEffectListUnmount(tag: HookEffectTag, finishedWork: Fiber) {
         const destroy = effect.destroy;
         effect.destroy = undefined;
         if (destroy !== undefined) {
-          destroy();
+          safelyCallDestroy(finishedWork, destroy);
         }
       }
       effect = effect.next;
