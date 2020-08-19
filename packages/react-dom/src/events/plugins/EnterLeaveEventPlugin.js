@@ -150,9 +150,8 @@ function extractEvents(
 
   let enter: KnownReactSyntheticEvent | null = null;
 
-  // If we are processing the first ancestor, then we
-  // should process the same nativeEvent again, as we
-  // will have already processed it in the first ancestor.
+  // We should only process this nativeEvent if we are processing
+  // the first ancestor. Next time, we will ignore the event.
   const nativeTargetInst = getClosestInstanceFromNode((nativeEventTarget: any));
   if (nativeTargetInst === targetInst) {
     const enterEvent: KnownReactSyntheticEvent = new SyntheticEvent(
