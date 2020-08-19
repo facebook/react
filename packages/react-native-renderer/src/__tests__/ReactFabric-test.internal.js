@@ -563,7 +563,15 @@ describe('ReactFabric', () => {
     }));
 
     expect(() => ReactFabric.render(<View>this should warn</View>, 11)).toThrow(
-      'Text strings must be rendered within a <Text> component.',
+      'Text string must be rendered within a <Text> component.\n\nText: this should warn',
+    );
+
+    expect(() =>
+      ReactFabric.render(<View>{'x'.repeat(200)}</View>, 11),
+    ).toThrow(
+      `Text string must be rendered within a <Text> component.\n\nText: ${'x'.repeat(
+        88,
+      )} (truncated)`,
     );
 
     expect(() =>
@@ -573,7 +581,9 @@ describe('ReactFabric', () => {
         </Text>,
         11,
       ),
-    ).toThrow('Text strings must be rendered within a <Text> component.');
+    ).toThrow(
+      'Text string must be rendered within a <Text> component.\n\nText: hi hello hi',
+    );
   });
 
   it('should not throw for text inside of an indirect <Text> ancestor', () => {
@@ -771,7 +781,7 @@ describe('ReactFabric', () => {
         'findHostInstance_DEPRECATED was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
-        'https://fb.me/react-strict-mode-find-node' +
+        'https://reactjs.org/link/strict-mode-find-node' +
         '\n    in RCTView (at **)' +
         '\n    in ContainsStrictModeChild (at **)',
     ]);
@@ -808,7 +818,7 @@ describe('ReactFabric', () => {
         'findHostInstance_DEPRECATED was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
-        'https://fb.me/react-strict-mode-find-node' +
+        'https://reactjs.org/link/strict-mode-find-node' +
         '\n    in RCTView (at **)' +
         '\n    in IsInStrictMode (at **)',
     ]);
@@ -842,7 +852,7 @@ describe('ReactFabric', () => {
         'findNodeHandle was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
-        'https://fb.me/react-strict-mode-find-node' +
+        'https://reactjs.org/link/strict-mode-find-node' +
         '\n    in RCTView (at **)' +
         '\n    in ContainsStrictModeChild (at **)',
     ]);
@@ -877,7 +887,7 @@ describe('ReactFabric', () => {
         'findNodeHandle was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
-        'https://fb.me/react-strict-mode-find-node' +
+        'https://reactjs.org/link/strict-mode-find-node' +
         '\n    in RCTView (at **)' +
         '\n    in IsInStrictMode (at **)',
     ]);

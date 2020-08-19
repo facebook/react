@@ -11,6 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
       const location = ln.href;
       ln.onclick = function() {
         chrome.tabs.create({active: true, url: location});
+        return false;
       };
     })();
   }

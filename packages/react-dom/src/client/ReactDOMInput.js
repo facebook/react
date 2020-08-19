@@ -86,7 +86,7 @@ export function initWrapperState(element: Element, props: Object) {
           '(specify either the checked prop, or the defaultChecked prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
+          'https://reactjs.org/link/controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
@@ -103,7 +103,7 @@ export function initWrapperState(element: Element, props: Object) {
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
+          'https://reactjs.org/link/controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
@@ -147,7 +147,7 @@ export function updateWrapper(element: Element, props: Object) {
           'This is likely caused by the value changing from undefined to ' +
           'a defined value, which should not happen. ' +
           'Decide between using a controlled or uncontrolled input ' +
-          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+          'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
       );
       didWarnUncontrolledToControlled = true;
     }
@@ -161,7 +161,7 @@ export function updateWrapper(element: Element, props: Object) {
           'This is likely caused by the value changing from a defined to ' +
           'undefined, which should not happen. ' +
           'Decide between using a controlled or uncontrolled input ' +
-          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+          'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
       );
       didWarnControlledToUncontrolled = true;
     }

@@ -215,7 +215,7 @@ if (__DEV__) {
           error = new Error(
             "A cross-origin error was thrown. React doesn't have access to " +
               'the actual error object in development. ' +
-              'See https://fb.me/react-crossorigin-error for more information.',
+              'See https://reactjs.org/link/crossorigin-error for more information.',
           );
         }
         this.onError(error);

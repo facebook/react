@@ -96,7 +96,7 @@ if (__DEV__) {
 
     console.error(
       'Each child in a list should have a unique ' +
-        '"key" prop. See https://fb.me/react-warning-keys for ' +
+        '"key" prop. See https://reactjs.org/link/warning-keys for ' +
         'more information.',
     );
   };
@@ -137,7 +137,7 @@ function coerceRef(
                 'will be removed in a future major release. We recommend using ' +
                 'useRef() or createRef() instead. ' +
                 'Learn more about using refs safely here: ' +
-                'https://fb.me/react-strict-mode-string-ref',
+                'https://reactjs.org/link/strict-mode-string-ref',
               componentName,
               mixedRef,
             );
@@ -147,7 +147,7 @@ function coerceRef(
                 'String refs are a source of potential bugs and should be avoided. ' +
                 'We recommend using useRef() or createRef() instead. ' +
                 'Learn more about using refs safely here: ' +
-                'https://fb.me/react-strict-mode-string-ref',
+                'https://reactjs.org/link/strict-mode-string-ref',
               mixedRef,
             );
           }
@@ -166,7 +166,7 @@ function coerceRef(
           'Function components cannot have string refs. ' +
             'We recommend using useRef() instead. ' +
             'Learn more about using refs safely here: ' +
-            'https://fb.me/react-strict-mode-string-ref',
+            'https://reactjs.org/link/strict-mode-string-ref',
         );
         inst = ownerFiber.stateNode;
       }
@@ -212,7 +212,7 @@ function coerceRef(
           '1. You may be adding a ref to a function component\n' +
           "2. You may be adding a ref to a component that was not created inside a component's render method\n" +
           '3. You have multiple copies of React loaded\n' +
-          'See https://fb.me/react-refs-must-have-owner for more information.',
+          'See https://reactjs.org/link/refs-must-have-owner for more information.',
         mixedRef,
       );
     }
