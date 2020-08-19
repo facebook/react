@@ -11,7 +11,7 @@ import type {TimelineEvent} from '@elg/speedscope';
 import type {ReactProfilerData} from './types';
 
 import * as React from 'react';
-import {useEffect, useCallback, useRef} from 'react';
+import {useCallback, useRef} from 'react';
 
 import profilerBrowser from './assets/profilerBrowser.png';
 import style from './ImportPage.css';
@@ -32,15 +32,6 @@ export default function ImportPage({onDataImported}: Props) {
     },
     [onDataImported],
   );
-
-  useEffect(() => {
-    if (__DEV__) {
-      // Auto-import a demo profile on component mount (i.e. page load)
-      import('../static/sample-chrome-profile.json')
-        .then(module => module.default)
-        .then(processTimeline);
-    }
-  }, [processTimeline]);
 
   const handleProfilerInput = useCallback(
     async (event: SyntheticInputEvent<HTMLInputElement>) => {
