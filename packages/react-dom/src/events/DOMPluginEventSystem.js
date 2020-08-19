@@ -53,6 +53,7 @@ import {
   enableLegacyFBSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
+  enablePassiveEventIntervention,
 } from 'shared/ReactFeatureFlags';
 import {
   invokeGuardedCallbackAndCatchFirstError,
@@ -342,7 +343,7 @@ export function listenToNativeEvent(
   if (domEventName === 'selectionchange') {
     target = (rootContainerElement: any).ownerDocument;
   }
-  if (isPassiveListener === undefined) {
+  if (enablePassiveEventIntervention && isPassiveListener === undefined) {
     // Browsers introduced an intervention, making these events
     // passive by default on document. React doesn't bind them
     // to document anymore, but changing this now would undo

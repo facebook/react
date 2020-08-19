@@ -537,7 +537,11 @@ describe('SimpleEventPlugin', function() {
         container,
       );
 
-      expect(passiveEvents).toEqual(['touchstart', 'touchmove', 'wheel']);
+      if (gate(flags => flags.enablePassiveEventIntervention)) {
+        expect(passiveEvents).toEqual(['touchstart', 'touchmove', 'wheel']);
+      } else {
+        expect(passiveEvents).toEqual([]);
+      }
     });
   });
 });
