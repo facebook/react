@@ -411,8 +411,7 @@ export function createElement(
   let namespaceURI = parentNamespace;
   if (namespaceURI === HTML_NAMESPACE) {
     namespaceURI = getIntrinsicNamespace(type);
-  }
-  if (namespaceURI === HTML_NAMESPACE) {
+
     if (__DEV__) {
       isCustomComponentTag = isCustomComponent(type, props);
       // Should this check be gated by parent namespace? Not sure we want to
@@ -1132,8 +1131,7 @@ export function diffHydratedProperties(
           let ownNamespace = parentNamespace;
           if (ownNamespace === HTML_NAMESPACE) {
             ownNamespace = getIntrinsicNamespace(tag);
-          }
-          if (ownNamespace === HTML_NAMESPACE) {
+
             // $FlowFixMe - Should be inferred as not undefined.
             extraAttributeNames.delete(propKey.toLowerCase());
           } else {
