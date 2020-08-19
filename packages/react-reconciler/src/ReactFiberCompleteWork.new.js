@@ -139,7 +139,7 @@ import {
   popRenderLanes,
 } from './ReactFiberWorkLoop.new';
 import {createFundamentalStateInstance} from './ReactFiberFundamental.new';
-import {OffscreenLane} from './ReactFiberLane';
+import {OffscreenLane, SomeRetryLane} from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber.new';
 import {createScopeInstance} from './ReactFiberScope.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
@@ -1136,9 +1136,9 @@ function completeWork(
             // them, then they really have the same priority as this render.
             // So we'll pick it back up the very next render pass once we've had
             // an opportunity to yield for paint.
-            workInProgress.lanes = renderLanes;
+            workInProgress.lanes = SomeRetryLane;
             if (enableSchedulerTracing) {
-              markSpawnedWork(renderLanes);
+              markSpawnedWork(SomeRetryLane);
             }
           }
         }

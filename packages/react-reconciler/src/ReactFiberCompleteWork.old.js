@@ -137,7 +137,7 @@ import {
   popRenderLanes,
 } from './ReactFiberWorkLoop.old';
 import {createFundamentalStateInstance} from './ReactFiberFundamental.old';
-import {OffscreenLane} from './ReactFiberLane';
+import {OffscreenLane, SomeRetryLane} from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber.old';
 import {createScopeInstance} from './ReactFiberScope.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
@@ -1105,13 +1105,16 @@ function completeWork(
             cutOffTailIfNeeded(renderState, false);
 
             // Since nothing actually suspended, there will nothing to ping this
-            // to get it started back up to attempt the next item. If we can show
-            // them, then they really have the same priority as this render.
-            // So we'll pick it back up the very next render pass once we've had
-            // an opportunity to yield for paint.
-            workInProgress.lanes = renderLanes;
+            // to get it started back up to attempt the next item. While in terms
+            // of priority this work has the same priority as this current render,
+            // it's not part of the same transition once the transition has
+            // committed. If it's sync, we still want to yield so that it can be
+            // painted. Conceptually, this is really the same as pinging.
+            // We can use any RetryLane even if it's the one currently rendering
+            // since we're leaving it behind on this node.
+            workInProgress.lanes = SomeRetryLane;
             if (enableSchedulerTracing) {
-              markSpawnedWork(renderLanes);
+              markSpawnedWork(SomeRetryLane);
             }
           }
         }
