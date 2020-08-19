@@ -49,7 +49,7 @@ const colorGenerator = new ColorGenerator(
 colorGenerator.setColorForID('', {h: 43.6, s: 45.8, l: 90.6, a: 100});
 
 function defaultHslaColorForStackFrame({scriptUrl}: FlamechartStackFrame) {
-  return colorGenerator.colorForID(scriptUrl || '');
+  return colorGenerator.colorForID(scriptUrl ?? '');
 }
 
 function defaultColorForStackFrame(stackFrame: FlamechartStackFrame): string {

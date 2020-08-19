@@ -456,8 +456,8 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
                 <ContextMenuItem
                   onClick={() =>
                     copy(
-                      `line ${flamechartStackFrame.locationLine ||
-                        ''}, column ${flamechartStackFrame.locationColumn ||
+                      `line ${flamechartStackFrame.locationLine ??
+                        ''}, column ${flamechartStackFrame.locationColumn ??
                         ''}`,
                     )
                   }
