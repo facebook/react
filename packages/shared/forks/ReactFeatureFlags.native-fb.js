@@ -44,6 +44,7 @@ export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 export const skipUnmountedBoundaries = false;
+export const disableOnScrollBubbling = true;
 
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;

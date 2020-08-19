@@ -712,12 +712,23 @@ describe('ReactDOMEventListener', () => {
           bubbles: false,
         }),
       );
-      expect(log).toEqual([
-        ['capture', 'grand'],
-        ['capture', 'parent'],
-        ['capture', 'child'],
-        ['bubble', 'child'],
-      ]);
+      if (gate(flags => flags.disableOnScrollBubbling)) {
+        expect(log).toEqual([
+          ['capture', 'grand'],
+          ['capture', 'parent'],
+          ['capture', 'child'],
+          ['bubble', 'child'],
+        ]);
+      } else {
+        expect(log).toEqual([
+          ['capture', 'grand'],
+          ['capture', 'parent'],
+          ['capture', 'child'],
+          ['bubble', 'child'],
+          ['bubble', 'parent'],
+          ['bubble', 'grand'],
+        ]);
+      }
     } finally {
       document.body.removeChild(container);
     }
