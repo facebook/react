@@ -15,7 +15,10 @@ import {
   SHOULD_NOT_PROCESS_POLYFILL_EVENT_PLUGINS,
 } from './EventSystemFlags';
 import type {AnyNativeEvent} from './PluginModuleType';
-import type {ReactSyntheticEvent} from './ReactSyntheticEventType';
+import type {
+  KnownReactSyntheticEvent,
+  ReactSyntheticEvent,
+} from './ReactSyntheticEventType';
 import type {ElementListenerMapEntry} from '../client/ReactDOMComponentTree';
 import type {EventPriority} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
@@ -917,15 +920,12 @@ function getLowestCommonAncestor(instA: Fiber, instB: Fiber): Fiber | null {
 
 function accumulateEnterLeaveListenersForEvent(
   dispatchQueue: DispatchQueue,
-  event: ReactSyntheticEvent,
+  event: KnownReactSyntheticEvent,
   target: Fiber,
   common: Fiber | null,
   inCapturePhase: boolean,
 ): void {
   const registrationName = event._reactName;
-  if (registrationName === undefined) {
-    return;
-  }
   const listeners: Array<DispatchListener> = [];
 
   let instance = target;
@@ -969,8 +969,8 @@ function accumulateEnterLeaveListenersForEvent(
 // phase event listeners.
 export function accumulateEnterLeaveTwoPhaseListeners(
   dispatchQueue: DispatchQueue,
-  leaveEvent: ReactSyntheticEvent,
-  enterEvent: null | ReactSyntheticEvent,
+  leaveEvent: KnownReactSyntheticEvent,
+  enterEvent: null | KnownReactSyntheticEvent,
   from: Fiber | null,
   to: Fiber | null,
 ): void {
