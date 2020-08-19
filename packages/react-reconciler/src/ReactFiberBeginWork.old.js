@@ -2635,7 +2635,6 @@ function initSuspenseListRenderState(
       renderingStartTime: 0,
       last: lastContentRow,
       tail: tail,
-      tailExpiration: 0,
       tailMode: tailMode,
       lastEffect: lastEffectBeforeRendering,
     }: SuspenseListRenderState);
@@ -2646,7 +2645,6 @@ function initSuspenseListRenderState(
     renderState.renderingStartTime = 0;
     renderState.last = lastContentRow;
     renderState.tail = tail;
-    renderState.tailExpiration = 0;
     renderState.tailMode = tailMode;
     renderState.lastEffect = lastEffectBeforeRendering;
   }
