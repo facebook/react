@@ -53,6 +53,7 @@ import {
   enableLegacyFBSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
+  enablePassiveEventIntervention,
 } from 'shared/ReactFeatureFlags';
 import {
   invokeGuardedCallbackAndCatchFirstError,
@@ -342,6 +343,21 @@ export function listenToNativeEvent(
   if (domEventName === 'selectionchange') {
     target = (rootContainerElement: any).ownerDocument;
   }
+  if (enablePassiveEventIntervention && isPassiveListener === undefined) {
+    // Browsers introduced an intervention, making these events
+    // passive by default on document. React doesn't bind them
+    // to document anymore, but changing this now would undo
+    // the performance wins from the change. So we emulate
+    // the existing behavior manually on the roots now.
+    // https://github.com/facebook/react/issues/19651
+    if (
+      domEventName === 'touchstart' ||
+      domEventName === 'touchmove' ||
+      domEventName === 'wheel'
+    ) {
+      isPassiveListener = true;
+    }
+  }
   // If the event can be delegated (or is capture phase), we can
   // register it to the root container. Otherwise, we should
   // register the event to the target element and mark it as
@@ -506,7 +522,7 @@ function addTrappedEventListener(
     };
   }
   if (isCapturePhaseListener) {
-    if (enableCreateEventHandleAPI && isPassiveListener !== undefined) {
+    if (isPassiveListener !== undefined) {
       unsubscribeListener = addEventCaptureListenerWithPassiveFlag(
         targetContainer,
         domEventName,
@@ -521,7 +537,7 @@ function addTrappedEventListener(
       );
     }
   } else {
-    if (enableCreateEventHandleAPI && isPassiveListener !== undefined) {
+    if (isPassiveListener !== undefined) {
       unsubscribeListener = addEventBubbleListenerWithPassiveFlag(
         targetContainer,
         domEventName,

@@ -504,5 +504,44 @@ describe('SimpleEventPlugin', function() {
 
       expect(onClick).toHaveBeenCalledTimes(0);
     });
+
+    it('registers passive handlers for events affected by the intervention', () => {
+      container = document.createElement('div');
+
+      const passiveEvents = [];
+      const nativeAddEventListener = container.addEventListener;
+      container.addEventListener = function(type, fn, options) {
+        if (options !== null && typeof options === 'object') {
+          if (options.passive) {
+            passiveEvents.push(type);
+          }
+        }
+        return nativeAddEventListener.apply(this, arguments);
+      };
+
+      ReactDOM.render(
+        <div
+          // Affected by the intervention:
+          // https://github.com/facebook/react/issues/19651
+          onTouchStart={() => {}}
+          onTouchMove={() => {}}
+          onWheel={() => {}}
+          // A few events that should be unaffected:
+          onClick={() => {}}
+          onScroll={() => {}}
+          onTouchEnd={() => {}}
+          onChange={() => {}}
+          onPointerDown={() => {}}
+          onPointerMove={() => {}}
+        />,
+        container,
+      );
+
+      if (gate(flags => flags.enablePassiveEventIntervention)) {
+        expect(passiveEvents).toEqual(['touchstart', 'touchmove', 'wheel']);
+      } else {
+        expect(passiveEvents).toEqual([]);
+      }
+    });
   });
 });
