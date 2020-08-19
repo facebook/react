@@ -82,7 +82,7 @@ function CanvasPage({profilerData}: Props) {
   );
 }
 
-const copySummary = (data, measure) => {
+const copySummary = (data: ReactProfilerData, measure: ReactMeasure) => {
   const {batchUID, duration, timestamp, type} = measure;
 
   const [startTime, stopTime] = getBatchRange(batchUID, data);
@@ -261,13 +261,13 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     rootView.addSubview(resizableContentStack);
 
     surfaceRef.current.rootView = rootView;
-  }, [data, setHoveredEvent]);
+  }, [data]);
 
   useLayoutEffect(() => {
     if (canvasRef.current) {
       surfaceRef.current.setCanvas(canvasRef.current, {width, height});
     }
-  }, [surfaceRef, canvasRef, width, height]);
+  }, [width, height]);
 
   const interactor = useCallback(
     interaction => {
@@ -361,13 +361,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         }
       });
     }
-  }, [
-    reactEventsViewRef,
-    reactMeasuresViewRef,
-    flamechartViewRef,
-    hoveredEvent,
-    setHoveredEvent,
-  ]);
+  }, [hoveredEvent]);
 
   useLayoutEffect(() => {
     const {current: userTimingMarksView} = userTimingMarksViewRef;
@@ -395,12 +389,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         hoveredEvent ? hoveredEvent.flamechartStackFrame : null,
       );
     }
-  }, [
-    reactEventsViewRef,
-    reactMeasuresViewRef,
-    flamechartViewRef,
-    hoveredEvent,
-  ]);
+  }, [hoveredEvent]);
 
   // Draw to canvas in React's commit phase
   useLayoutEffect(() => {
