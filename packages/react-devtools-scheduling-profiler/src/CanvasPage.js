@@ -11,8 +11,12 @@ import type {
   Point,
   HorizontalPanAndZoomViewOnChangeCallback,
 } from './view-base';
+import type {
+  ReactHoverContextInfo,
+  ReactProfilerData,
+  ReactMeasure,
+} from './types';
 
-import {copy} from 'clipboard-js';
 import * as React from 'react';
 import {
   Fragment,
@@ -22,6 +26,9 @@ import {
   useState,
   useCallback,
 } from 'react';
+import AutoSizer from 'react-virtualized-auto-sizer';
+import {copy} from 'clipboard-js';
+import prettyMilliseconds from 'pretty-ms';
 
 import {
   HorizontalPanAndZoomView,
@@ -35,19 +42,6 @@ import {
   verticallyStackedLayout,
   zeroPoint,
 } from './view-base';
-
-import prettyMilliseconds from 'pretty-ms';
-import {getBatchRange} from './utils/getBatchRange';
-import EventTooltip from './EventTooltip';
-import styles from './CanvasPage.css';
-import AutoSizer from 'react-virtualized-auto-sizer';
-import {COLORS} from './content-views/constants';
-
-import {ContextMenu, ContextMenuItem, useContextMenu} from './context';
-
-const CONTEXT_MENU_ID = 'canvas';
-
-import type {ReactHoverContextInfo, ReactProfilerData} from './types';
 import {
   FlamechartView,
   ReactEventsView,
@@ -55,6 +49,15 @@ import {
   TimeAxisMarkersView,
   UserTimingMarksView,
 } from './content-views';
+import {COLORS} from './content-views/constants';
+
+import EventTooltip from './EventTooltip';
+import {ContextMenu, ContextMenuItem, useContextMenu} from './context';
+import {getBatchRange} from './utils/getBatchRange';
+
+import styles from './CanvasPage.css';
+
+const CONTEXT_MENU_ID = 'canvas';
 
 type ContextMenuContextData = {|
   data: ReactProfilerData,
@@ -94,18 +97,11 @@ const copySummary = (data, measure) => {
   );
 };
 
-const syncedHorizontalPanAndZoomViews: HorizontalPanAndZoomView[] = [];
-const syncAllHorizontalPanAndZoomViewStates: HorizontalPanAndZoomViewOnChangeCallback = (
-  newState,
-  view?: HorizontalPanAndZoomView,
+const zoomToBatch = (
+  data: ReactProfilerData,
+  measure: ReactMeasure,
+  syncedHorizontalPanAndZoomViews: HorizontalPanAndZoomView[],
 ) => {
-  syncedHorizontalPanAndZoomViews.forEach(
-    syncedView =>
-      view !== syncedView && syncedView.setPanAndZoomState(newState),
-  );
-};
-
-const zoomToBatch = (data, measure) => {
   const {batchUID} = measure;
   const [startTime, stopTime] = getBatchRange(batchUID, data);
   syncedHorizontalPanAndZoomViews.forEach(syncedView =>
@@ -136,16 +132,27 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
   const reactEventsViewRef = useRef(null);
   const reactMeasuresViewRef = useRef(null);
   const flamechartViewRef = useRef(null);
+  const syncedHorizontalPanAndZoomViewsRef = useRef<HorizontalPanAndZoomView[]>(
+    [],
+  );
 
   useLayoutEffect(() => {
     const surface = surfaceRef.current;
     const defaultFrame = {origin: zeroPoint, size: {width, height}};
 
     // Clear synced views
-    syncedHorizontalPanAndZoomViews.splice(
-      0,
-      syncedHorizontalPanAndZoomViews.length,
-    );
+    syncedHorizontalPanAndZoomViewsRef.current = [];
+
+    const syncAllHorizontalPanAndZoomViewStates: HorizontalPanAndZoomViewOnChangeCallback = (
+      newState,
+      triggeringView?: HorizontalPanAndZoomView,
+    ) => {
+      syncedHorizontalPanAndZoomViewsRef.current.forEach(
+        syncedView =>
+          triggeringView !== syncedView &&
+          syncedView.setPanAndZoomState(newState),
+      );
+    };
 
     // Top content
 
@@ -184,7 +191,9 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       data.duration,
       syncAllHorizontalPanAndZoomViewStates,
     );
-    syncedHorizontalPanAndZoomViews.push(topContentHorizontalPanAndZoomView);
+    syncedHorizontalPanAndZoomViewsRef.current.push(
+      topContentHorizontalPanAndZoomView,
+    );
 
     // Resizable content
 
@@ -206,7 +215,9 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       data.duration,
       syncAllHorizontalPanAndZoomViewStates,
     );
-    syncedHorizontalPanAndZoomViews.push(reactMeasuresHorizontalPanAndZoomView);
+    syncedHorizontalPanAndZoomViewsRef.current.push(
+      reactMeasuresHorizontalPanAndZoomView,
+    );
 
     const flamechartView = new FlamechartView(
       surface,
@@ -227,7 +238,9 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       data.duration,
       syncAllHorizontalPanAndZoomViewStates,
     );
-    syncedHorizontalPanAndZoomViews.push(flamechartHorizontalPanAndZoomView);
+    syncedHorizontalPanAndZoomViewsRef.current.push(
+      flamechartHorizontalPanAndZoomView,
+    );
 
     const resizableContentStack = new ResizableSplitView(
       surface,
@@ -425,7 +438,13 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
               )}
               {measure !== null && (
                 <ContextMenuItem
-                  onClick={() => zoomToBatch(contextData.data, measure)}
+                  onClick={() =>
+                    zoomToBatch(
+                      contextData.data,
+                      measure,
+                      syncedHorizontalPanAndZoomViewsRef.current,
+                    )
+                  }
                   title="Zoom to batch">
                   Zoom to batch
                 </ContextMenuItem>
