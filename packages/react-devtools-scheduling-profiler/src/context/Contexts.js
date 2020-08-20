@@ -47,6 +47,9 @@ function showMenu({
 |}) {
   const showFn = idToShowFnMap.get(id);
   if (typeof showFn === 'function') {
+    // Prevent open menus from being left hanging.
+    hideMenu();
+
     currentHideFn = idToHideFnMap.get(id);
     showFn({data, pageX, pageY});
 
