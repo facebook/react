@@ -5095,9 +5095,9 @@ electron-to-chromium@^1.3.338:
   integrity sha512-hRFBAglhcj5iVYH+o8QU0+XId1WGoc0VGowJB1cuJAt3exHGrivZvWeAO5BRgBZqwZtwxjm8a5MQeGoT/Su3ww==
 
 electron-to-chromium@^1.3.523:
-  version "1.3.533"
-  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.533.tgz#d7e5ca4d57e9bc99af87efbe13e7be5dde729b0f"
-  integrity sha512-YqAL+NXOzjBnpY+dcOKDlZybJDCOzgsq4koW3fvyty/ldTmsb4QazZpOWmVvZ2m0t5jbBf7L0lIGU3BUipwG+A==
+  version "1.3.538"
+  resolved "https://registry.yarnpkg.com/electron-to-chromium/-/electron-to-chromium-1.3.538.tgz#15226638ee9db5d8e74f4c860cef6078d8e1e871"
+  integrity sha512-rlyYXLlOoZkJuvY4AJXUpP7CHRVtwZz311HPVoEO1UHo/kqDCsP1pNas0A9paZuPEiYGdLwrjllF2hs69NEaTw==
 
 electron@^9.1.0:
   version "9.1.0"
