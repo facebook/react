@@ -1,0 +1,206 @@
+.App {
+  background-color: #282c34;
+  text-align: center;
+}
+
+.container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 1.5vmin);
+  min-height: 100vh;
+}
+
+.link {
+  color: #282c34;
+  transition: 0.2s;
+  font-size: calc(10px + 1.5vmin);
+}
+.link:hover {
+  color: #61dafb;
+  transition: 0.2s;
+  font-size: calc(10px + 1.5vmin);
+}
+
+kbd {
+  display: inline-block;
+  padding: 0 0.5em;
+  border: 1px solid #d7dfe4;
+  margin: 0 0.2em;
+  background-color: #f6f6f6;
+  border-radius: 0.2em;
+}
+
+/* Landing Graphic */
+.browserScreenshot {
+  width: 35rem;
+  max-width: inherit;
+  align-self: center;
+  justify-content: center;
+  border: 1px solid #d7dfe4;
+  border-radius: 0.4em;
+  box-shadow: 0 2px 4px #ddd;
+}
+
+.legendKey {
+  font-size: calc(8px + 1.5vmin);
+  margin: 0;
+  margin-bottom: 1rem;
+}
+
+.legendKey > svg {
+  padding-left: 2rem;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+hr {
+  margin-top: 0px;
+  margin-left: 4px;
+  width: 80%;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.column {
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  flex: 1;
+}
+
+.columncontent {
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  flex: 1;
+  text-align: left;
+}
+
+/* Card Styling */
+.card {
+  background-color: white;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  transition: 0.3s;
+  width: 80%;
+  color: black;
+}
+
+.card:hover {
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+}
+
+.cardcontainer {
+  padding: 40px 16px;
+}
+
+.inputbtn {
+  display: none;
+}
+
+.buttongrp {
+  float: left; /* Float the buttons side by side */
+}
+
+/* Import Button Styling */
+.ImportButton {
+  background-color: #61dafb;
+  border: none;
+  color: #ffffff;
+  text-align: center;
+  font-size: 28px;
+  padding: 20px;
+  width: 200px;
+  transition: all 0.3s;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.ImportButton span {
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  transition: 0.3s;
+}
+
+.ImportButton span:after {
+  content: '\00bb';
+  position: absolute;
+  opacity: 0;
+  top: 0;
+  right: -20px;
+  transition: 0.3s;
+}
+
+.ImportButton:hover {
+  background-color: white;
+  color: black;
+}
+
+.ImportButton:hover span {
+  padding-right: 25px;
+}
+
+.ImportButton:hover span:after {
+  opacity: 1;
+  right: 0;
+}
+
+/* ViewSource Button styling */
+.ViewSourceButton {
+  background-color: transparent;
+  color: black;
+  border: none;
+  text-align: center;
+  font-size: 28px;
+  padding: 20px;
+  width: 200px;
+  transition: all 0.3s;
+  cursor: pointer;
+  margin: 5px;
+}
+
+.ViewSourceButton span {
+  cursor: pointer;
+  display: inline-block;
+  position: relative;
+  transition: 0.3s;
+}
+
+.ViewSourceButton span:after {
+  content: '\00bb';
+  position: absolute;
+  opacity: 0;
+  top: 0;
+  right: -20px;
+  transition: 0.3s;
+}
+
+.ViewSourceButton:hover {
+  background-color: white;
+  color: black;
+}
+
+.ViewSourceButton:hover span {
+  padding-right: 25px;
+}
+
+.ViewSourceButton:hover span:after {
+  opacity: 1;
+  right: 0;
+}
