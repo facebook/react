@@ -21,7 +21,7 @@ import {
   layeredLayout,
   rectContainsPoint,
   rectEqualToRect,
-  rectIntersectionWithRect,
+  intersectionOfRects,
   rectIntersectsRect,
   verticallyStackedLayout,
 } from '../view-base';
@@ -187,7 +187,7 @@ class FlamechartStackLayerView extends View {
         ? hoverColorForStackFrame(stackFrame)
         : defaultColorForStackFrame(stackFrame);
 
-      const drawableRect = rectIntersectionWithRect(nodeRect, visibleArea);
+      const drawableRect = intersectionOfRects(nodeRect, visibleArea);
       context.fillRect(
         drawableRect.origin.x,
         drawableRect.origin.y,

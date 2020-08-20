@@ -14,7 +14,7 @@ import {
   sizeIsValid,
   sizeIsEmpty,
   rectIntersectsRect,
-  rectIntersectionWithRect,
+  intersectionOfRects,
   rectContainsPoint,
   unionOfRects,
 } from '../geometry';
@@ -175,13 +175,13 @@ describe(rectIntersectsRect, () => {
   });
 });
 
-describe(rectIntersectionWithRect, () => {
+describe(intersectionOfRects, () => {
   // NOTE: Undefined behavior if rects do not intersect
 
   it('should return intersection when 2 rects intersect', () => {
     // Rects touch
     expect(
-      rectIntersectionWithRect(
+      intersectionOfRects(
         {origin: {x: 0, y: 0}, size: {width: 1, height: 1}},
         {origin: {x: 1, y: 1}, size: {width: 1, height: 1}},
       ),
@@ -189,7 +189,7 @@ describe(rectIntersectionWithRect, () => {
 
     // Rects overlap
     expect(
-      rectIntersectionWithRect(
+      intersectionOfRects(
         {origin: {x: 0, y: 0}, size: {width: 2, height: 1}},
         {origin: {x: 1, y: -2}, size: {width: 0.5, height: 5}},
       ),
@@ -197,7 +197,7 @@ describe(rectIntersectionWithRect, () => {
 
     // Rects are equal
     expect(
-      rectIntersectionWithRect(
+      intersectionOfRects(
         {origin: {x: 1, y: 2}, size: {width: 9.24, height: 4}},
         {origin: {x: 1, y: 2}, size: {width: 9.24, height: 4}},
       ),
@@ -206,7 +206,7 @@ describe(rectIntersectionWithRect, () => {
 });
 
 describe(rectContainsPoint, () => {
-  it("should return true if point is on the rect's boundary", () => {
+  it("should return true if point is on the rect's edge", () => {
     expect(
       rectContainsPoint(
         {x: 0, y: 0},

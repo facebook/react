@@ -18,7 +18,7 @@ export type Rect = $ReadOnly<{origin: Point, size: Size}>;
  * Alternative representation of `Rect`.
  * A tuple of (`top`, `right`, `bottom`, `left`) coordinates.
  */
-type RectBoundaries = [number, number, number, number];
+type Box = [number, number, number, number];
 
 export const zeroPoint: Point = Object.freeze({x: 0, y: 0});
 export const zeroSize: Size = Object.freeze({width: 0, height: 0});
@@ -50,7 +50,7 @@ export function sizeIsEmpty({width, height}: Size): boolean {
   return width <= 0 || height <= 0;
 }
 
-function rectToBoundaries(rect: Rect): RectBoundaries {
+function rectToBox(rect: Rect): Box {
   const top = rect.origin.y;
   const right = rect.origin.x + rect.size.width;
   const bottom = rect.origin.y + rect.size.height;
@@ -58,8 +58,8 @@ function rectToBoundaries(rect: Rect): RectBoundaries {
   return [top, right, bottom, left];
 }
 
-function boundariesToRect(boundaries: RectBoundaries): Rect {
-  const [top, right, bottom, left] = boundaries;
+function boxToRect(box: Box): Rect {
+  const [top, right, bottom, left] = box;
   return {
     origin: {
       x: left,
@@ -73,8 +73,8 @@ function boundariesToRect(boundaries: RectBoundaries): Rect {
 }
 
 export function rectIntersectsRect(rect1: Rect, rect2: Rect): boolean {
-  const [top1, right1, bottom1, left1] = rectToBoundaries(rect1);
-  const [top2, right2, bottom2, left2] = rectToBoundaries(rect2);
+  const [top1, right1, bottom1, left1] = rectToBox(rect1);
+  const [top2, right2, bottom2, left2] = rectToBox(rect2);
   return !(
     right1 < left2 ||
     right2 < left1 ||
@@ -84,12 +84,14 @@ export function rectIntersectsRect(rect1: Rect, rect2: Rect): boolean {
 }
 
 /**
- * Prerequisite: rect1 must intersect with rect2.
+ * Returns the intersection of the 2 rectangles.
+ *
+ * Prerequisite: `rect1` must intersect with `rect2`.
  */
-export function rectIntersectionWithRect(rect1: Rect, rect2: Rect): Rect {
-  const [top1, right1, bottom1, left1] = rectToBoundaries(rect1);
-  const [top2, right2, bottom2, left2] = rectToBoundaries(rect2);
-  return boundariesToRect([
+export function intersectionOfRects(rect1: Rect, rect2: Rect): Rect {
+  const [top1, right1, bottom1, left1] = rectToBox(rect1);
+  const [top2, right2, bottom2, left2] = rectToBox(rect2);
+  return boxToRect([
     Math.max(top1, top2),
     Math.min(right1, right2),
     Math.min(bottom1, bottom2),
@@ -98,14 +100,14 @@ export function rectIntersectionWithRect(rect1: Rect, rect2: Rect): Rect {
 }
 
 export function rectContainsPoint({x, y}: Point, rect: Rect): boolean {
-  const [top, right, bottom, left] = rectToBoundaries(rect);
+  const [top, right, bottom, left] = rectToBox(rect);
   return left <= x && x <= right && top <= y && y <= bottom;
 }
 
 /**
- * The smallest rectangle that contains all provided rects.
+ * Returns the smallest rectangle that contains all provided rects.
  *
- * @returns `zeroRect` if `rects` is empty.
+ * @returns Union of `rects`. If `rects` is empty, returns `zeroRect`.
  */
 export function unionOfRects(...rects: Rect[]): Rect {
   if (rects.length === 0) {
@@ -113,17 +115,17 @@ export function unionOfRects(...rects: Rect[]): Rect {
   }
 
   const [firstRect, ...remainingRects] = rects;
-  const boundaryUnion = remainingRects
-    .map(rectToBoundaries)
-    .reduce((unionBoundaries, nextBoundaries): RectBoundaries => {
-      const [unionTop, unionRight, unionBottom, unionLeft] = unionBoundaries;
-      const [nextTop, nextRight, nextBottom, nextLeft] = nextBoundaries;
+  const boxUnion = remainingRects
+    .map(rectToBox)
+    .reduce((intermediateUnion, nextBox): Box => {
+      const [unionTop, unionRight, unionBottom, unionLeft] = intermediateUnion;
+      const [nextTop, nextRight, nextBottom, nextLeft] = nextBox;
       return [
         Math.min(unionTop, nextTop),
         Math.max(unionRight, nextRight),
         Math.max(unionBottom, nextBottom),
         Math.min(unionLeft, nextLeft),
       ];
-    }, rectToBoundaries(firstRect));
-  return boundariesToRect(boundaryUnion);
+    }, rectToBox(firstRect));
+  return boxToRect(boxUnion);
 }

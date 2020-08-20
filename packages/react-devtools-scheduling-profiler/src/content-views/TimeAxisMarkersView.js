@@ -19,7 +19,7 @@ import {
   View,
   Surface,
   rectIntersectsRect,
-  rectIntersectionWithRect,
+  intersectionOfRects,
 } from '../view-base';
 import {
   COLORS,
@@ -77,7 +77,7 @@ export class TimeAxisMarkersView extends View {
         height: _intrinsicSize.height,
       },
     };
-    const drawableRect = rectIntersectionWithRect(clippedFrame, visibleArea);
+    const drawableRect = intersectionOfRects(clippedFrame, visibleArea);
 
     // Clear background
     context.fillStyle = COLORS.BACKGROUND;
@@ -150,10 +150,7 @@ export class TimeAxisMarkersView extends View {
       },
     };
     if (rectIntersectsRect(borderFrame, visibleArea)) {
-      const borderDrawableRect = rectIntersectionWithRect(
-        borderFrame,
-        visibleArea,
-      );
+      const borderDrawableRect = intersectionOfRects(borderFrame, visibleArea);
       context.fillStyle = COLORS.PRIORITY_BORDER;
       context.fillRect(
         borderDrawableRect.origin.x,

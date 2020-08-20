@@ -21,7 +21,7 @@ import {
   Surface,
   rectContainsPoint,
   rectIntersectsRect,
-  rectIntersectionWithRect,
+  intersectionOfRects,
 } from '../view-base';
 import {
   COLORS,
@@ -209,10 +209,7 @@ export class ReactEventsView extends View {
       },
     };
     if (rectIntersectsRect(borderFrame, visibleArea)) {
-      const borderDrawableRect = rectIntersectionWithRect(
-        borderFrame,
-        visibleArea,
-      );
+      const borderDrawableRect = intersectionOfRects(borderFrame, visibleArea);
       context.fillStyle = COLORS.PRIORITY_BORDER;
       context.fillRect(
         borderDrawableRect.origin.x,

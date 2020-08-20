@@ -14,7 +14,7 @@ import type {Layouter} from './layouter';
 import {Surface} from './Surface';
 import {
   rectEqualToRect,
-  rectIntersectionWithRect,
+  intersectionOfRects,
   rectIntersectsRect,
   sizeIsEmpty,
   sizeIsValid,
@@ -218,9 +218,7 @@ export class View {
 
     subviews.forEach((subview, subviewIndex) => {
       if (rectIntersectsRect(visibleArea, subview.frame)) {
-        subview.setVisibleArea(
-          rectIntersectionWithRect(visibleArea, subview.frame),
-        );
+        subview.setVisibleArea(intersectionOfRects(visibleArea, subview.frame));
       } else {
         subview.setVisibleArea(zeroRect);
       }

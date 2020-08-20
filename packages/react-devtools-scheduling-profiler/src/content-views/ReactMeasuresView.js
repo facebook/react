@@ -21,7 +21,7 @@ import {
   Surface,
   rectContainsPoint,
   rectIntersectsRect,
-  rectIntersectionWithRect,
+  intersectionOfRects,
 } from '../view-base';
 
 import {COLORS, BORDER_SIZE, REACT_MEASURE_HEIGHT} from './constants';
@@ -155,7 +155,7 @@ export class ReactMeasuresView extends View {
         throw new Error(`Unexpected measure type "${type}"`);
     }
 
-    const drawableRect = rectIntersectionWithRect(measureRect, rect);
+    const drawableRect = intersectionOfRects(measureRect, rect);
     context.fillStyle = showHoverHighlight
       ? hoveredFillStyle
       : showGroupHighlight
@@ -232,7 +232,7 @@ export class ReactMeasuresView extends View {
         },
       };
       if (rectIntersectsRect(borderFrame, visibleArea)) {
-        const borderDrawableRect = rectIntersectionWithRect(
+        const borderDrawableRect = intersectionOfRects(
           borderFrame,
           visibleArea,
         );
