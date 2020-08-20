@@ -967,8 +967,8 @@ describe('DOMPluginEventSystem', () => {
               <div ref={middleDivRef}>
                 <div
                   ref={divRef}
-                  onClick={onFocus}
-                  onClickCapture={onFocusCapture}
+                  onFocus={onFocus}
+                  onFocusCapture={onFocusCapture}
                   tabIndex={0}>
                   Click me!
                 </div>
@@ -980,7 +980,7 @@ describe('DOMPluginEventSystem', () => {
             React.useLayoutEffect(() => {
               // This should prevent the portalElement listeners from
               // capturing the events in the bubble phase.
-              middleDivRef.current.addEventListener('click', e => {
+              middleDivRef.current.addEventListener('focusin', e => {
                 e.stopPropagation();
               });
             });
@@ -1007,7 +1007,7 @@ describe('DOMPluginEventSystem', () => {
           const divElement = divRef.current;
           divElement.focus();
           expect(onFocus).toHaveBeenCalledTimes(1);
-          expect(onFocusCapture).toHaveBeenCalledTimes(1);
+          expect(onFocusCapture).toHaveBeenCalledTimes(3);
 
           document.body.removeChild(portalElement);
         });
