@@ -7,12 +7,9 @@
  * @flow
  */
 
-type MutablePoint = {x: number, y: number};
-type MutableSize = {width: number, height: number};
-
-export type Point = $ReadOnly<MutablePoint>;
-export type Size = $ReadOnly<MutableSize>;
-export type Rect = $ReadOnly<{origin: Point, size: Size}>;
+export type Point = $ReadOnly<{|x: number, y: number|}>;
+export type Size = $ReadOnly<{|width: number, height: number|}>;
+export type Rect = $ReadOnly<{|origin: Point, size: Size|}>;
 
 /**
  * Alternative representation of `Rect`.
