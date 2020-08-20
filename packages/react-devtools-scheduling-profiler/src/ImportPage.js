@@ -91,7 +91,7 @@ export default function ImportPage({onDataImported}: Props) {
                 <div className={style.buttongrp}>
                   <label htmlFor="upload">
                     <button
-                      className={style.button}
+                      className={style.ImportButton}
                       onClick={() => upload.current && upload.current.click()}>
                       Import
                     </button>
@@ -104,7 +104,7 @@ export default function ImportPage({onDataImported}: Props) {
                     />
                   </label>
                   <a href="https://github.com/MLH-Fellowship/scheduling-profiler-prototype">
-                    <button className={style.btndoc}>
+                    <button className={style.ViewSourceButton}>
                       <span>Source </span>
                     </button>
                   </a>

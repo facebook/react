@@ -109,7 +109,6 @@ hr {
   padding: 40px 16px;
 }
 
-/* Button Styling */
 .inputbtn {
   display: none;
 }
@@ -118,7 +117,8 @@ hr {
   float: left; /* Float the buttons side by side */
 }
 
-.button {
+/* Import Button Styling */
+.ImportButton {
   background-color: #61dafb;
   border: none;
   color: #ffffff;
@@ -131,14 +131,14 @@ hr {
   margin: 5px;
 }
 
-.button span {
+.ImportButton span {
   cursor: pointer;
   display: inline-block;
   position: relative;
   transition: 0.3s;
 }
 
-.button span:after {
+.ImportButton span:after {
   content: '\00bb';
   position: absolute;
   opacity: 0;
@@ -147,22 +147,22 @@ hr {
   transition: 0.3s;
 }
 
-.button:hover {
+.ImportButton:hover {
   background-color: white;
   color: black;
 }
 
-.button:hover span {
+.ImportButton:hover span {
   padding-right: 25px;
 }
 
-.button:hover span:after {
+.ImportButton:hover span:after {
   opacity: 1;
   right: 0;
 }
 
-/* Button2 styling */
-.btndoc {
+/* ViewSource Button styling */
+.ViewSourceButton {
   background-color: transparent;
   color: black;
   border: none;
@@ -175,14 +175,14 @@ hr {
   margin: 5px;
 }
 
-.btndoc span {
+.ViewSourceButton span {
   cursor: pointer;
   display: inline-block;
   position: relative;
   transition: 0.3s;
 }
 
-.btndoc span:after {
+.ViewSourceButton span:after {
   content: '\00bb';
   position: absolute;
   opacity: 0;
@@ -191,16 +191,16 @@ hr {
   transition: 0.3s;
 }
 
-.btndoc:hover {
+.ViewSourceButton:hover {
   background-color: white;
   color: black;
 }
 
-.btndoc:hover span {
+.ViewSourceButton:hover span {
   padding-right: 25px;
 }
 
-.btndoc:hover span:after {
+.ViewSourceButton:hover span:after {
   opacity: 1;
   right: 0;
 }
