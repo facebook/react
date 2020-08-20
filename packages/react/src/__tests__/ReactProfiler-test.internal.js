@@ -294,6 +294,7 @@ describe('Profiler', () => {
           'read current time',
           'read current time',
           'read current time',
+          'read current time',
         ]);
 
         // Restore original mock
