@@ -281,7 +281,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
       x: interaction.payload.event.x,
       y: interaction.payload.event.y,
     });
-  });
+  }, []);
 
   useCanvasInteraction(canvasRef, interactor);
 
