@@ -215,8 +215,6 @@ function extractEvents(
     case 'keyup':
       constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget);
   }
-
-  return;
 }
 
 export {registerEvents, extractEvents};

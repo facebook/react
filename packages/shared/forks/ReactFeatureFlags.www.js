@@ -27,6 +27,8 @@ export const {
   decoupleUpdatePriorityFromScheduler,
   enableDebugTracing,
   skipUnmountedBoundaries,
+  enablePassiveEventIntervention,
+  disableOnScrollBubbling,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.

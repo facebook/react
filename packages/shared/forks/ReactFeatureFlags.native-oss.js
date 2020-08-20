@@ -43,11 +43,13 @@ export const enableComponentStackLocations = false;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 export const skipUnmountedBoundaries = false;
+export const disableOnScrollBubbling = true;
 
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
 export const decoupleUpdatePriorityFromScheduler = false;
 export const enableDiscreteEventFlushingChange = false;
+export const enablePassiveEventIntervention = true;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

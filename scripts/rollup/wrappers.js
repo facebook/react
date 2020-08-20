@@ -291,6 +291,20 @@ ${source}
     return exports;
 };`;
   },
+
+  /***************** NODE_PROFILING (reconciler only) *****************/
+  [NODE_PROFILING](source, globalName, filename, moduleType) {
+    return `/** @license React v${reactVersion}
+ * ${filename}
+ *
+${license}
+ */
+module.exports = function $$$reconciler($$$hostConfig) {
+    var exports = {};
+${source}
+    return exports;
+};`;
+  },
 };
 
 function wrapBundle(source, bundleType, globalName, filename, moduleType) {

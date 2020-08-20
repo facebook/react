@@ -488,7 +488,7 @@ const bundles = [
 
   /******* React Reconciler *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, NODE_PROFILING],
     moduleType: RECONCILER,
     entry: 'react-reconciler',
     global: 'ReactReconciler',
