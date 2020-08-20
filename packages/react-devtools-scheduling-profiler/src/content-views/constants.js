@@ -33,6 +33,7 @@ export const MIN_INTERVAL_SIZE_PX = 70;
 
 export const EVENT_ROW_PADDING = 4;
 export const EVENT_DIAMETER = 6;
+export const USER_TIMING_MARK_SIZE = 8;
 export const REACT_MEASURE_HEIGHT = 9;
 export const BORDER_SIZE = 1;
 
