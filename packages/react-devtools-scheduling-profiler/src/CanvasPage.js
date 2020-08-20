@@ -269,22 +269,19 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     }
   }, [width, height]);
 
-  const interactor = useCallback(
-    interaction => {
-      if (canvasRef.current === null) {
-        return;
-      }
-      surfaceRef.current.handleInteraction(interaction);
-      // Defer drawing to canvas until React's commit phase, to avoid drawing
-      // twice and to ensure that both the canvas and DOM elements managed by
-      // React are in sync.
-      setMouseLocation({
-        x: interaction.payload.event.x,
-        y: interaction.payload.event.y,
-      });
-    },
-    [surfaceRef, canvasRef, hoveredEvent, setMouseLocation],
-  );
+  const interactor = useCallback(interaction => {
+    if (canvasRef.current === null) {
+      return;
+    }
+    surfaceRef.current.handleInteraction(interaction);
+    // Defer drawing to canvas until React's commit phase, to avoid drawing
+    // twice and to ensure that both the canvas and DOM elements managed by
+    // React are in sync.
+    setMouseLocation({
+      x: interaction.payload.event.x,
+      y: interaction.payload.event.y,
+    });
+  });
 
   useCanvasInteraction(canvasRef, interactor);
 
