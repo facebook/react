@@ -57,17 +57,16 @@
   -webkit-mask-image: linear-gradient(
     180deg,
     #fff,
-    #fff var(--gradient-height),
+    #fff 5em,
     transparent
   );
   mask-image: linear-gradient(
     180deg,
     #fff,
-    #fff var(--gradient-height),
+    #fff 5em,
     transparent
   );
   white-space: pre;
-  --gradient-height: 5em;
 }
 
 .ReactMeasureLabel {
