@@ -16,6 +16,7 @@ import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import {getToStringValue, toString} from './ToStringValue';
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {updateValueIfChanged} from './inputValueTracking';
+import getActiveElement from './getActiveElement';
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 
 import type {ToStringValue} from './ToStringValue';
@@ -412,7 +413,7 @@ export function setDefaultValue(
   if (
     // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
     type !== 'number' ||
-    node.ownerDocument.activeElement !== node
+    getActiveElement(node.ownerDocument) !== node
   ) {
     if (value == null) {
       node.defaultValue = toString(node._wrapperState.initialValue);
