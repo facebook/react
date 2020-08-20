@@ -26,11 +26,12 @@ import {
 import {
   COLORS,
   EVENT_ROW_PADDING,
-  EVENT_DIAMETER,
+  USER_TIMING_MARK_SIZE,
   BORDER_SIZE,
 } from './constants';
 
-const ROW_HEIGHT_FIXED = EVENT_ROW_PADDING + EVENT_DIAMETER + EVENT_ROW_PADDING;
+const ROW_HEIGHT_FIXED =
+  EVENT_ROW_PADDING + USER_TIMING_MARK_SIZE + EVENT_ROW_PADDING;
 
 export class UserTimingMarksView extends View {
   _marks: UserTimingMark[];
@@ -81,13 +82,15 @@ export class UserTimingMarksView extends View {
     const {timestamp} = mark;
 
     const x = timestampToPosition(timestamp, scaleFactor, frame);
-    const radius = EVENT_DIAMETER / 2;
+    const size = USER_TIMING_MARK_SIZE;
+    const halfSize = size / 2;
+
     const markRect: Rect = {
       origin: {
-        x: x - radius,
+        x: x - halfSize,
         y: baseY,
       },
-      size: {width: EVENT_DIAMETER, height: EVENT_DIAMETER},
+      size: {width: size, height: size},
     };
     if (!rectIntersectsRect(markRect, rect)) {
       return; // Not in view
@@ -98,11 +101,14 @@ export class UserTimingMarksView extends View {
       : COLORS.USER_TIMING;
 
     if (fillStyle !== null) {
-      const y = markRect.origin.y + radius;
+      const y = baseY + halfSize;
 
       context.beginPath();
       context.fillStyle = fillStyle;
-      context.arc(x, y, radius, 0, 2 * Math.PI);
+      context.moveTo(x, y - halfSize);
+      context.lineTo(x + halfSize, y);
+      context.lineTo(x, y + halfSize);
+      context.lineTo(x - halfSize, y);
       context.fill();
     }
   }
@@ -198,7 +204,7 @@ export class UserTimingMarksView extends View {
     );
     const hoverTimestamp = positionToTimestamp(location.x, scaleFactor, frame);
     const markTimestampAllowance = widthToDuration(
-      EVENT_DIAMETER / 2,
+      USER_TIMING_MARK_SIZE / 2,
       scaleFactor,
     );
 
