@@ -99,6 +99,7 @@ module.exports = {
     'react-internal/warning-args': ERROR,
     'react-internal/no-production-logging': ERROR,
     'react-internal/no-cross-fork-imports': ERROR,
+    'react-internal/no-cross-fork-types': ERROR,
   },
 
   overrides: [
