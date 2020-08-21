@@ -147,10 +147,6 @@ function FiberNode(
   this.effectTag = NoEffect;
   this.subtreeTag = NoSubtreeEffect;
   this.deletions = null;
-  this.nextEffect = null;
-
-  this.firstEffect = null;
-  this.lastEffect = null;
 
   this.lanes = NoLanes;
   this.childLanes = NoLanes;
@@ -291,11 +287,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     workInProgress.subtreeTag = NoSubtreeEffect;
     workInProgress.deletions = null;
 
-    // The effect list is no longer valid.
-    workInProgress.nextEffect = null;
-    workInProgress.firstEffect = null;
-    workInProgress.lastEffect = null;
-
     if (enableProfilerTimer) {
       // We intentionally reset, rather than copy, actualDuration & actualStartTime.
       // This prevents time from endlessly accumulating in new commits.
@@ -374,11 +365,6 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
   // that child fiber is setting, not the reconciliation.
   workInProgress.effectTag &= Placement;
 
-  // The effect list is no longer valid.
-  workInProgress.nextEffect = null;
-  workInProgress.firstEffect = null;
-  workInProgress.lastEffect = null;
-
   const current = workInProgress.alternate;
   if (current === null) {
     // Reset to createFiber's initial values.
@@ -386,6 +372,7 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
     workInProgress.lanes = renderLanes;
 
     workInProgress.child = null;
+    workInProgress.subtreeTag = NoSubtreeEffect;
     workInProgress.memoizedProps = null;
     workInProgress.memoizedState = null;
     workInProgress.updateQueue = null;
@@ -406,6 +393,8 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
     workInProgress.lanes = current.lanes;
 
     workInProgress.child = current.child;
+    workInProgress.subtreeTag = current.subtreeTag;
+    workInProgress.deletions = null;
     workInProgress.memoizedProps = current.memoizedProps;
     workInProgress.memoizedState = current.memoizedState;
     workInProgress.updateQueue = current.updateQueue;
@@ -830,9 +819,6 @@ export function assignFiberPropertiesInDEV(
   target.effectTag = source.effectTag;
   target.subtreeTag = source.subtreeTag;
   target.deletions = source.deletions;
-  target.nextEffect = source.nextEffect;
-  target.firstEffect = source.firstEffect;
-  target.lastEffect = source.lastEffect;
   target.lanes = source.lanes;
   target.childLanes = source.childLanes;
   target.alternate = source.alternate;
