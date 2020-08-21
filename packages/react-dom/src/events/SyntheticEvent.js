@@ -207,7 +207,9 @@ export const MouseEventInterface: EventInterfaceType = {
     if ('movementY' in event) {
       return event.movementY;
     }
-    updateMouseMovementPolyfillState(event);
+    // Don't need to call updateMouseMovementPolyfillState() here
+    // because it's guaranteed to have already run when movementX
+    // was copied.
     return lastMovementY;
   },
 };
