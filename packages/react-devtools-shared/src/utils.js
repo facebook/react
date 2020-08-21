@@ -406,10 +406,6 @@ export function getDataType(data: Object): DataType {
     return 'html_element';
   }
 
-  if (Object.prototype.toString.call(data) === '[object HTMLAllCollection]') {
-    return 'html_all_collection';
-  }
-
   const type = typeof data;
   switch (type) {
     case 'bigint':
@@ -445,12 +441,23 @@ export function getDataType(data: Object): DataType {
         return 'regexp';
       } else if (Object.prototype.toString.call(data) === '[object Date]') {
         return 'date';
+      } else if (
+        Object.prototype.toString.call(data) === '[object HTMLAllCollection]'
+      ) {
+        return 'html_all_collection';
       }
       return 'object';
     case 'string':
       return 'string';
     case 'symbol':
       return 'symbol';
+    case 'undefined':
+      if (
+        Object.prototype.toString.call(data) === '[object HTMLAllCollection]'
+      ) {
+        return 'html_all_collection';
+      }
+      return 'undefined';
     default:
       return 'unknown';
   }
