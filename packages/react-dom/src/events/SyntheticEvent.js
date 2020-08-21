@@ -152,11 +152,22 @@ export const UIEventInterface: EventInterfaceType = {
   detail: 0,
 };
 
-let previousScreenX = 0;
-let previousScreenY = 0;
-// Use flags to signal movementX/Y has already been set
-let isMovementXSet = false;
-let isMovementYSet = false;
+let lastMovementX;
+let lastMovementY;
+let lastMouseEvent;
+
+function updateMouseMovementPolyfillState(event) {
+  if (event !== lastMouseEvent) {
+    if (lastMouseEvent && event.type === 'mousemove') {
+      lastMovementX = event.screenX - lastMouseEvent.screenX;
+      lastMovementY = event.screenY - lastMouseEvent.screenY;
+    } else {
+      lastMovementX = 0;
+      lastMovementY = 0;
+    }
+    lastMouseEvent = event;
+  }
+}
 
 /**
  * @interface MouseEvent
@@ -189,31 +200,17 @@ export const MouseEventInterface: EventInterfaceType = {
     if ('movementX' in event) {
       return event.movementX;
     }
-
-    const screenX = previousScreenX;
-    previousScreenX = event.screenX;
-
-    if (!isMovementXSet) {
-      isMovementXSet = true;
-      return 0;
-    }
-
-    return event.type === 'mousemove' ? event.screenX - screenX : 0;
+    updateMouseMovementPolyfillState(event);
+    return lastMovementX;
   },
   movementY: function(event) {
     if ('movementY' in event) {
       return event.movementY;
     }
-
-    const screenY = previousScreenY;
-    previousScreenY = event.screenY;
-
-    if (!isMovementYSet) {
-      isMovementYSet = true;
-      return 0;
-    }
-
-    return event.type === 'mousemove' ? event.screenY - screenY : 0;
+    // Don't need to call updateMouseMovementPolyfillState() here
+    // because it's guaranteed to have already run when movementX
+    // was copied.
+    return lastMovementY;
   },
 };
 
