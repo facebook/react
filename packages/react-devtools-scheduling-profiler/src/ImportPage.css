@@ -1,26 +1,56 @@
 .App {
+  min-height: 100vh;
   background-color: #282c34;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  padding: 2rem;
 }
 
-.container {
+.Card {
   display: flex;
+  flex: 0 1 1000px;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  font-size: calc(10px + 1.5vmin);
-  min-height: 100vh;
 }
 
-.link {
-  color: #282c34;
-  transition: 0.2s;
-  font-size: calc(10px + 1.5vmin);
+.Card {
+  background-color: white;
+  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  transition: 0.3s;
 }
-.link:hover {
-  color: #61dafb;
+
+.Card:hover {
+  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+}
+
+.Row {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.Column {
+  margin: 2rem;
+  margin-right: 0;
+  display: flex;
+  flex-direction: column;
+  flex-basis: 100%;
+  flex: 1;
+}
+.Column:last-of-type {
+  margin-right: 2rem;
+}
+
+.Link {
+  color: #2683E2;
   transition: 0.2s;
-  font-size: calc(10px + 1.5vmin);
+}
+.Link:hover {
+  color: #1572D1;
 }
 
 kbd {
@@ -32,10 +62,10 @@ kbd {
   border-radius: 0.2em;
 }
 
-/* Landing Graphic */
-.browserScreenshot {
+.Screenshot {
   width: 35rem;
-  max-width: inherit;
+  max-width: 100%;
+  min-width: 25rem;
   align-self: center;
   justify-content: center;
   border: 1px solid #d7dfe4;
@@ -43,14 +73,20 @@ kbd {
   box-shadow: 0 2px 4px #ddd;
 }
 
-.legendKey {
-  font-size: calc(8px + 1.5vmin);
-  margin: 0;
-  margin-bottom: 1rem;
+.Header {
+  margin-top: 0px;
 }
 
-.legendKey > svg {
-  padding-left: 2rem;
+.LegendKey {
+  margin: 0;
+  margin-bottom: 1.25rem;
+  list-style: none;
+  padding: 0;
+}
+
+.LegendItem {
+  display: flex;
+  align-items: center;
 }
 
 @keyframes spin {
@@ -62,117 +98,38 @@ kbd {
   }
 }
 
-hr {
-  margin-top: 0px;
-  margin-left: 4px;
-  width: 80%;
-}
-
-.row {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  width: 100%;
-}
-
-.column {
-  padding: 1rem;
-  display: flex;
-  flex-direction: column;
-  flex-basis: 100%;
-  flex: 1;
-}
-
-.columncontent {
-  display: flex;
-  flex-direction: column;
-  flex-basis: 100%;
-  flex: 1;
-  text-align: left;
-}
-
-/* Card Styling */
-.card {
-  background-color: white;
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
-  border-radius: 5px;
-  transition: 0.3s;
-  width: 80%;
-  color: black;
-}
-
-.card:hover {
-  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
-}
-
-.cardcontainer {
-  padding: 40px 16px;
-}
-
-.inputbtn {
-  display: none;
-}
-
-.buttongrp {
+.Buttons {
   float: left; /* Float the buttons side by side */
 }
 
-/* Import Button Styling */
-.ImportButton {
-  background-color: #61dafb;
-  border: none;
-  color: #ffffff;
+.ImportButton,
+.ViewSourceButton {
+  width: 10rem;
+  font-size: 1.5rem;
+  padding: 1.5rem;
   text-align: center;
-  font-size: 28px;
-  padding: 20px;
-  width: 200px;
   transition: all 0.3s;
   cursor: pointer;
-  margin: 5px;
 }
 
-.ImportButton span {
-  cursor: pointer;
-  display: inline-block;
-  position: relative;
-  transition: 0.3s;
-}
-
-.ImportButton span:after {
-  content: '\00bb';
-  position: absolute;
-  opacity: 0;
-  top: 0;
-  right: -20px;
-  transition: 0.3s;
+.ImportButton {
+  background-color: #2683E2;
+  border: none;
+  color: #ffffff;
 }
 
 .ImportButton:hover {
-  background-color: white;
-  color: black;
+  background-color: #1572D1;
 }
 
-.ImportButton:hover span {
-  padding-right: 25px;
+.ImportButtonFile {
+  display: none;
 }
 
-.ImportButton:hover span:after {
-  opacity: 1;
-  right: 0;
-}
-
-/* ViewSource Button styling */
 .ViewSourceButton {
   background-color: transparent;
   color: black;
   border: none;
-  text-align: center;
-  font-size: 28px;
-  padding: 20px;
-  width: 200px;
-  transition: all 0.3s;
-  cursor: pointer;
-  margin: 5px;
 }
 
 .ViewSourceButton span {
