@@ -406,8 +406,8 @@ export function getDataType(data: Object): DataType {
     return 'html_element';
   }
 
-  // $FlowFixMe Flow doesn't know about HTMLAllCollection
   if (
+    // $FlowFixMe Flow doesn't know about HTMLAllCollection
     typeof HTMLAllCollection !== 'undefined' &&
     data instanceof HTMLAllCollection
   ) {
