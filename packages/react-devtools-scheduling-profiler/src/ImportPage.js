@@ -102,7 +102,7 @@ export default function ImportPage({onDataImported}: Props) {
                   accept="application/json"
                 />
               </label>
-              <a href="https://github.com/MLH-Fellowship/scheduling-profiler-prototype">
+              <a href="https://github.com/facebook/react/tree/master/packages/react-devtools-scheduling-profiler">
                 <button className={style.ViewSourceButton}>
                   <span>Source </span>
                 </button>
