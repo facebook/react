@@ -398,18 +398,49 @@ describe('ReactDOMEventListener', () => {
     const originalDocAddEventListener = document.addEventListener;
     const originalRootAddEventListener = container.addEventListener;
     document.addEventListener = function(type) {
-      throw new Error(
-        `Did not expect to add a document-level listener for the "${type}" event.`,
-      );
+      switch (type) {
+        case 'selectionchange':
+          break;
+        default:
+          throw new Error(
+            `Did not expect to add a document-level listener for the "${type}" event.`,
+          );
+      }
     };
-    container.addEventListener = function(type) {
-      if (type === 'mouseout' || type === 'mouseover') {
-        // We currently listen to it unconditionally.
+    container.addEventListener = function(type, fn, options) {
+      if (options && (options === true || options.capture)) {
         return;
       }
-      throw new Error(
-        `Did not expect to add a root-level listener for the "${type}" event.`,
-      );
+      switch (type) {
+        case 'abort':
+        case 'canplay':
+        case 'canplaythrough':
+        case 'durationchange':
+        case 'emptied':
+        case 'encrypted':
+        case 'ended':
+        case 'error':
+        case 'loadeddata':
+        case 'loadedmetadata':
+        case 'loadstart':
+        case 'pause':
+        case 'play':
+        case 'playing':
+        case 'progress':
+        case 'ratechange':
+        case 'seeked':
+        case 'seeking':
+        case 'stalled':
+        case 'suspend':
+        case 'timeupdate':
+        case 'volumechange':
+        case 'waiting':
+          throw new Error(
+            `Did not expect to add a root-level listener for the "${type}" event.`,
+          );
+        default:
+          break;
+      }
     };
 
     try {

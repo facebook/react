@@ -14,7 +14,10 @@ import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {LanePriority} from 'react-reconciler/src/ReactFiberLane';
 
-import {enableSelectiveHydration} from 'shared/ReactFeatureFlags';
+import {
+  enableSelectiveHydration,
+  enableEagerRootListeners,
+} from 'shared/ReactFeatureFlags';
 import {
   unstable_runWithPriority as runWithPriority,
   unstable_scheduleCallback as scheduleCallback,
@@ -177,21 +180,27 @@ function trapReplayableEventForContainer(
   domEventName: DOMEventName,
   container: Container,
 ) {
-  listenToNativeEvent(domEventName, false, ((container: any): Element), null);
+  // When the flag is on, we do this in a unified codepath elsewhere.
+  if (!enableEagerRootListeners) {
+    listenToNativeEvent(domEventName, false, ((container: any): Element), null);
+  }
 }
 
 export function eagerlyTrapReplayableEvents(
   container: Container,
   document: Document,
 ) {
-  // Discrete
-  discreteReplayableEvents.forEach(domEventName => {
-    trapReplayableEventForContainer(domEventName, container);
-  });
-  // Continuous
-  continuousReplayableEvents.forEach(domEventName => {
-    trapReplayableEventForContainer(domEventName, container);
-  });
+  // When the flag is on, we do this in a unified codepath elsewhere.
+  if (!enableEagerRootListeners) {
+    // Discrete
+    discreteReplayableEvents.forEach(domEventName => {
+      trapReplayableEventForContainer(domEventName, container);
+    });
+    // Continuous
+    continuousReplayableEvents.forEach(domEventName => {
+      trapReplayableEventForContainer(domEventName, container);
+    });
+  }
 }
 
 function createQueuedReplayableEvent(

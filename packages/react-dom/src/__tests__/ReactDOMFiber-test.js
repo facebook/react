@@ -1040,6 +1040,7 @@ describe('ReactDOMFiber', () => {
     expect(ops).toEqual([]);
   });
 
+  // @gate enableEagerRootListeners
   it('listens to events that do not exist in the Portal subtree', () => {
     const onClick = jest.fn();
 
@@ -1055,7 +1056,7 @@ describe('ReactDOMFiber', () => {
     });
     ref.current.dispatchEvent(event);
 
-    expect(onClick).toHaveBeenCalledTimes(1); // 0
+    expect(onClick).toHaveBeenCalledTimes(1);
   });
 
   it('should throw on bad createPortal argument', () => {

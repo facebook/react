@@ -67,9 +67,13 @@ import {
   enableFundamentalAPI,
   enableCreateEventHandleAPI,
   enableScopeAPI,
+  enableEagerRootListeners,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
-import {listenToReactEvent} from '../events/DOMPluginEventSystem';
+import {
+  listenToReactEvent,
+  listenToAllSupportedEvents,
+} from '../events/DOMPluginEventSystem';
 
 export type Type = string;
 export type Props = {
@@ -1069,7 +1073,11 @@ export function makeOpaqueHydratingObject(
 }
 
 export function preparePortalMount(portalInstance: Instance): void {
-  listenToReactEvent('onMouseEnter', portalInstance, null);
+  if (enableEagerRootListeners) {
+    listenToAllSupportedEvents(portalInstance);
+  } else {
+    listenToReactEvent('onMouseEnter', portalInstance, null);
+  }
 }
 
 export function prepareScopeUpdate(
