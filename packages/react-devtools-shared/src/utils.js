@@ -406,6 +406,11 @@ export function getDataType(data: Object): DataType {
     return 'html_element';
   }
 
+  // $FlowFixMe Flow doesn't know about HTMLAllCollection
+  if (typeof HTMLAllCollection !== 'undefined' && data instanceof HTMLAllCollection) {
+    return 'html_all_collection';
+  }
+
   const type = typeof data;
   switch (type) {
     case 'bigint':
@@ -448,9 +453,6 @@ export function getDataType(data: Object): DataType {
     case 'symbol':
       return 'symbol';
     default:
-      if (data instanceof HTMLAllCollection) {
-        return 'html_all_collection';
-      }
       return 'unknown';
   }
 }
