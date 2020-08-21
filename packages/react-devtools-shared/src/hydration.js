@@ -222,6 +222,7 @@ export function dehydrate(
         ),
       );
 
+    case 'html_all_collection':
     case 'typed_array':
     case 'iterator':
       isPathAllowedCheck = isPathAllowed(path);
