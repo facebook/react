@@ -439,12 +439,13 @@ export function getDataType(data: Object): DataType {
         return 'iterator';
       } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
-      } else if (Object.prototype.toString.call(data) === '[object Date]') {
-        return 'date';
-      } else if (
-        Object.prototype.toString.call(data) === '[object HTMLAllCollection]'
-      ) {
-        return 'html_all_collection';
+      } else {
+        const toStringValue = Object.prototype.toString.call(data);
+        if (toStringValue === '[object Date]') {
+          return 'date';
+        } else if (toStringValue === '[object HTMLAllCollection]') {
+          return 'html_all_collection';
+        }
       }
       return 'object';
     case 'string':
