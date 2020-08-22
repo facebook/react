@@ -451,47 +451,23 @@ describe('SchedulingProfiler', () => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 
-    gate(({old}) => {
-      if (old) {
-        expect(marks).toEqual([
-          `--react-init-${ReactVersion}`,
-          '--schedule-render-512',
-          '--render-start-512',
-          '--render-stop',
-          '--commit-start-512',
-          '--layout-effects-start-512',
-          '--layout-effects-stop',
-          '--commit-stop',
-          '--passive-effects-start-512',
-          '--schedule-state-update-1024-Example',
-          '--passive-effects-stop',
-          '--render-start-1024',
-          '--render-stop',
-          '--commit-start-1024',
-          '--commit-stop',
-        ]);
-      } else {
-        expect(marks).toEqual([
-          `--react-init-${ReactVersion}`,
-          '--schedule-render-512',
-          '--render-start-512',
-          '--render-stop',
-          '--commit-start-512',
-          '--layout-effects-start-512',
-          '--layout-effects-stop',
-          '--commit-stop',
-          '--passive-effects-start-512',
-          '--schedule-state-update-1024-Example',
-          '--passive-effects-stop',
-          '--render-start-1024',
-          '--render-stop',
-          '--commit-start-1024',
-          '--layout-effects-start-1024',
-          '--layout-effects-stop',
-          '--commit-stop',
-        ]);
-      }
-    });
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+      '--render-start-512',
+      '--render-stop',
+      '--commit-start-512',
+      '--layout-effects-start-512',
+      '--layout-effects-stop',
+      '--commit-stop',
+      '--passive-effects-start-512',
+      '--schedule-state-update-1024-Example',
+      '--passive-effects-stop',
+      '--render-start-1024',
+      '--render-stop',
+      '--commit-start-1024',
+      '--commit-stop',
+    ]);
   });
 
   // @gate enableSchedulingProfiler
