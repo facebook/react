@@ -21,6 +21,7 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
 } from 'shared/ReactSymbols';
 import isValidElementType from 'shared/isValidElementType';
 
@@ -70,6 +71,7 @@ export const Portal = REACT_PORTAL_TYPE;
 export const Profiler = REACT_PROFILER_TYPE;
 export const StrictMode = REACT_STRICT_MODE_TYPE;
 export const Suspense = REACT_SUSPENSE_TYPE;
+export const SuspenseList = REACT_SUSPENSE_LIST_TYPE;
 
 export {isValidElementType};
 
