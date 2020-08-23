@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {getDisplayName} from 'react-devtools-shared/src/utils';
+import {getDisplayName, getDisplayNameForReactElement} from 'react-devtools-shared/src/utils';
 
 describe('utils', () => {
   describe('getDisplayName', () => {
@@ -35,6 +35,26 @@ describe('utils', () => {
     it('should return a fallback when the name prop is not a string', () => {
       const FauxComponent = {name: {}};
       expect(getDisplayName(FauxComponent, 'Fallback')).toEqual('Fallback');
+    });
+  });
+  describe('getDisplayNameForReactElement', () => {
+    it('should return correct display name for an element with function type', () => {
+      function FauxComponent() {}
+      FauxComponent.displayName = 'OverrideDisplayName';
+      const FauxElement = {type: FauxComponent}
+      expect(getDisplayNameForReactElement(FauxElement)).toEqual('OverrideDisplayName');
+    });
+    it('should return Anonymous for an element with invalid symbol type', () => {
+      const FauxElement = {type: Symbol('foo')}
+      expect(getDisplayNameForReactElement(FauxElement)).toEqual('Anonymous');
+    });
+    it('should return Anonymous for an element with invalid type', () => {
+      const FauxElement = {type: true}
+      expect(getDisplayNameForReactElement(FauxElement)).toEqual('Anonymous');
+    });
+    it('should return Element for null type', () => {
+      const FauxElement = {type: null}
+      expect(getDisplayNameForReactElement(FauxElement)).toEqual('Element');
     });
   });
 });

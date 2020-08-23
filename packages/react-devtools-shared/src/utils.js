@@ -21,6 +21,7 @@ import {
   Profiler,
   StrictMode,
   Suspense,
+  SuspenseList,
 } from 'react-is';
 import {
   TREE_OPERATION_ADD,
@@ -489,12 +490,16 @@ export function getDisplayNameForReactElement(
       return 'StrictMode';
     case Suspense:
       return 'Suspense';
+    case SuspenseList:
+      return 'SuspenseList';
     default:
       const {type} = element;
       if (typeof type === 'string') {
         return type;
-      } else if (type != null) {
+      } else if (typeof type === 'function') {
         return getDisplayName(type, 'Anonymous');
+      } else if (type != null) {
+        return 'Anonymous';
       } else {
         return 'Element';
       }
