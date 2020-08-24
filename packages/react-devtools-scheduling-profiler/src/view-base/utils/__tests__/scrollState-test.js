@@ -71,7 +71,7 @@ describe(clampState, () => {
     ).toBeCloseTo(0, 10);
   });
 
-  it('should passthrough length if inside container length', () => {
+  it('should passthrough length if container fits in content', () => {
     expect(
       clampState({
         state: {offset: 0, length: 70},
