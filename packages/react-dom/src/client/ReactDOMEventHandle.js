@@ -20,6 +20,8 @@ import {
   getEventHandlerListeners,
   setEventHandlerListeners,
   getFiberFromScopeInstance,
+  doesTargetHaveEventHandle,
+  addEventHandleToTarget,
 } from './ReactDOMComponentTree';
 import {ELEMENT_NODE, COMMENT_NODE} from '../shared/HTMLNodeType';
 import {
@@ -41,8 +43,6 @@ type EventHandleOptions = {|
   passive?: boolean,
   priority?: EventPriority,
 |};
-
-const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
 
 function getNearestRootOrPortalContainer(node: Fiber): null | Element {
   while (node !== null) {
@@ -201,9 +201,7 @@ export function createEventHandle(
       listenerPriority = getEventPriorityForListenerSystem(domEventName);
     }
 
-    const registeredReactDOMEvents = new PossiblyWeakSet();
-
-    return (
+    const eventHandle = (
       target: EventTarget | ReactScopeInstance,
       callback: (SyntheticEvent<EventTarget>) => void,
     ) => {
@@ -212,8 +210,8 @@ export function createEventHandle(
         'ReactDOM.createEventHandle: setter called with an invalid ' +
           'callback. The callback must be a function.',
       );
-      if (!registeredReactDOMEvents.has(target)) {
-        registeredReactDOMEvents.add(target);
+      if (!doesTargetHaveEventHandle(target, eventHandle)) {
+        addEventHandleToTarget(target, eventHandle);
         registerReactDOMEvent(
           target,
           domEventName,
@@ -241,6 +239,8 @@ export function createEventHandle(
         );
       };
     };
+
+    return eventHandle;
   }
   return (null: any);
 }
