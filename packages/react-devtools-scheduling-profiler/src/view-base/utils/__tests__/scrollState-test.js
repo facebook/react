@@ -10,7 +10,7 @@
 import {
   clampState,
   moveStateToRange,
-  scrollStatesAreEqual,
+  areScrollStatesEqual,
   translateState,
   zoomState,
 } from '../scrollState';
@@ -71,15 +71,15 @@ describe(clampState, () => {
     ).toBeCloseTo(0, 10);
   });
 
-  it('should passthrough length if inside range [minContentLength, maxContentLength]', () => {
+  it('should passthrough length if inside container length', () => {
     expect(
       clampState({
-        state: {offset: 0, length: 0},
+        state: {offset: 0, length: 70},
         minContentLength: 0,
         maxContentLength: 100,
         containerLength: 50,
       }).length,
-    ).toBeCloseTo(0, 10);
+    ).toBeCloseTo(70, 10);
     expect(
       clampState({
         state: {offset: 0, length: 50},
@@ -98,23 +98,42 @@ describe(clampState, () => {
     ).toBeCloseTo(100, 10);
   });
 
-  it('should clamp length if outside range [minContentLength, maxContentLength]', () => {
+  it('should clamp length to minimum of max(minContentLength, containerLength)', () => {
     expect(
       clampState({
-        state: {offset: 0, length: 3},
-        minContentLength: 5,
+        state: {offset: -20, length: 0},
+        minContentLength: 20,
         maxContentLength: 100,
         containerLength: 50,
       }).length,
-    ).toBeCloseTo(5, 10);
+    ).toBeCloseTo(50, 10);
     expect(
       clampState({
-        state: {offset: 0, length: 101},
+        state: {offset: -20, length: 0},
+        minContentLength: 50,
+        maxContentLength: 100,
+        containerLength: 20,
+      }).length,
+    ).toBeCloseTo(50, 10);
+  });
+
+  it('should clamp length to maximum of max(containerLength, maxContentLength)', () => {
+    expect(
+      clampState({
+        state: {offset: -20, length: 100},
         minContentLength: 0,
-        maxContentLength: 100,
+        maxContentLength: 40,
         containerLength: 50,
       }).length,
-    ).toBeCloseTo(100, 10);
+    ).toBeCloseTo(50, 10);
+    expect(
+      clampState({
+        state: {offset: -20, length: 100},
+        minContentLength: 0,
+        maxContentLength: 50,
+        containerLength: 40,
+      }).length,
+    ).toBeCloseTo(50, 10);
   });
 });
 
@@ -221,22 +240,22 @@ describe(moveStateToRange, () => {
   });
 });
 
-describe(scrollStatesAreEqual, () => {
+describe(areScrollStatesEqual, () => {
   it('should return true if equal', () => {
     expect(
-      scrollStatesAreEqual({offset: 0, length: 0}, {offset: 0, length: 0}),
+      areScrollStatesEqual({offset: 0, length: 0}, {offset: 0, length: 0}),
     ).toBe(true);
     expect(
-      scrollStatesAreEqual({offset: -1, length: 1}, {offset: -1, length: 1}),
+      areScrollStatesEqual({offset: -1, length: 1}, {offset: -1, length: 1}),
     ).toBe(true);
   });
 
   it('should return false if not equal', () => {
     expect(
-      scrollStatesAreEqual({offset: 0, length: 0}, {offset: -1, length: 0}),
+      areScrollStatesEqual({offset: 0, length: 0}, {offset: -1, length: 0}),
     ).toBe(false);
     expect(
-      scrollStatesAreEqual({offset: -1, length: 1}, {offset: -1, length: 0}),
+      areScrollStatesEqual({offset: -1, length: 1}, {offset: -1, length: 0}),
     ).toBe(false);
   });
 });

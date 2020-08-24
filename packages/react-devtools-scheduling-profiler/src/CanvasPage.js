@@ -149,8 +149,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     ) => {
       syncedHorizontalPanAndZoomViewsRef.current.forEach(
         syncedView =>
-          triggeringView !== syncedView &&
-          syncedView.setPanAndZoomState(newState),
+          triggeringView !== syncedView && syncedView.setScrollState(newState),
       );
     };
 

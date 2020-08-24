@@ -26,7 +26,7 @@ import {rectContainsPoint} from './geometry';
 import {
   clampState,
   moveStateToRange,
-  scrollStatesAreEqual,
+  areScrollStatesEqual,
   translateState,
   zoomState,
 } from './utils/scrollState';
@@ -44,8 +44,8 @@ export type HorizontalPanAndZoomViewOnChangeCallback = (
 
 export class HorizontalPanAndZoomView extends View {
   _intrinsicContentWidth: number;
-  _scrollState: ScrollState;
   _isPanning = false;
+  _scrollState: ScrollState = {offset: 0, length: 0};
   _onStateChange: HorizontalPanAndZoomViewOnChangeCallback = () => {};
 
   constructor(
@@ -58,10 +58,10 @@ export class HorizontalPanAndZoomView extends View {
     super(surface, frame);
     this.addSubview(contentView);
     this._intrinsicContentWidth = intrinsicContentWidth;
-    this._scrollState = {
+    this._setScrollState({
       offset: 0,
       length: intrinsicContentWidth * DEFAULT_ZOOM_LEVEL,
-    };
+    });
     if (onStateChange) this._onStateChange = onStateChange;
   }
 
@@ -72,25 +72,25 @@ export class HorizontalPanAndZoomView extends View {
     this._setStateAndInformCallbacksIfChanged(this._scrollState);
   }
 
-  setPanAndZoomState(proposedState: ScrollState) {
-    this._setPanAndZoomState(proposedState);
+  setScrollState(proposedState: ScrollState) {
+    this._setScrollState(proposedState);
   }
 
   /**
-   * Just sets pan and zoom state. Use `_setStateAndInformCallbacksIfChanged`
-   * if this view's callbacks should also be called.
+   * Just sets scroll state. Use `_setStateAndInformCallbacksIfChanged` if this
+   * view's callbacks should also be called.
    *
    * @returns Whether state was changed
    * @private
    */
-  _setPanAndZoomState(proposedState: ScrollState): boolean {
+  _setScrollState(proposedState: ScrollState): boolean {
     const clampedState = clampState({
       state: proposedState,
       minContentLength: this._intrinsicContentWidth * MIN_ZOOM_LEVEL,
       maxContentLength: this._intrinsicContentWidth * MAX_ZOOM_LEVEL,
       containerLength: this.frame.size.width,
     });
-    if (scrollStatesAreEqual(clampedState, this._scrollState)) {
+    if (areScrollStatesEqual(clampedState, this._scrollState)) {
       return false;
     }
     this._scrollState = clampedState;
@@ -102,7 +102,7 @@ export class HorizontalPanAndZoomView extends View {
    * @private
    */
   _setStateAndInformCallbacksIfChanged(proposedState: ScrollState) {
-    if (this._setPanAndZoomState(proposedState)) {
+    if (this._setScrollState(proposedState)) {
       this._onStateChange(this._scrollState, this);
     }
   }
@@ -152,7 +152,7 @@ export class HorizontalPanAndZoomView extends View {
       maxContentLength: this._intrinsicContentWidth * MAX_ZOOM_LEVEL,
       containerLength: this.frame.size.width,
     });
-    this._setPanAndZoomState(newState);
+    this._setScrollState(newState);
   }
 
   _handleMouseDown(interaction: MouseDownInteraction) {
@@ -200,7 +200,7 @@ export class HorizontalPanAndZoomView extends View {
 
     const newState = translateState({
       state: this._scrollState,
-      delta: deltaX,
+      delta: -deltaX,
       containerLength: this.frame.size.width,
     });
     this._setStateAndInformCallbacksIfChanged(newState);
