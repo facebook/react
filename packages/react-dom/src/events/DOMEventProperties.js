@@ -201,8 +201,9 @@ export function getEventPriorityForListenerSystem(
   }
   if (__DEV__) {
     console.warn(
-      'The event "type" provided to createEventHandle() does not have a known priority type.' +
+      'The event "%s" provided to createEventHandle() does not have a known priority type.' +
         ' It is recommended to provide a "priority" option to specify a priority.',
+      type,
     );
   }
   return ContinuousEvent;
