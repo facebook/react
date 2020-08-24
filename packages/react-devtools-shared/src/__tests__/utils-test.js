@@ -7,8 +7,15 @@
  * @flow
  */
 
-import {getDisplayName, getDisplayNameForReactElement} from 'react-devtools-shared/src/utils';
-import { StrictMode, SuspenseList, Element} from 'react-is/src/ReactIs.js'
+import {
+  getDisplayName, 
+  getDisplayNameForReactElement,
+} from 'react-devtools-shared/src/utils';
+import {
+  REACT_SUSPENSE_LIST_TYPE as SuspenseList,
+  REACT_STRICT_MODE_TYPE as StrictMode,
+  REACT_ELEMENT_TYPE as Element,
+} from 'shared/ReactSymbols';
 
  describe('utils', () => {
   describe('getDisplayName', () => {
@@ -57,13 +64,13 @@ import { StrictMode, SuspenseList, Element} from 'react-is/src/ReactIs.js'
       FauxElement.$$typeof = Element;
       expect(getDisplayNameForReactElement(FauxElement)).toEqual('SuspenseList');
     });
-    it('should return Anonymous for an element with invalid symbol type', () => {
+    it('should return NotImplementedInDevtools for an element with invalid symbol type', () => {
       const FauxElement = {type: Symbol('foo')}
-      expect(getDisplayNameForReactElement(FauxElement)).toEqual('Anonymous');
+      expect(getDisplayNameForReactElement(FauxElement)).toEqual('NotImplementedInDevtools');
     });
-    it('should return Anonymous for an element with invalid type', () => {
+    it('should return NotImplementedInDevtools for an element with invalid type', () => {
       const FauxElement = {type: true}
-      expect(getDisplayNameForReactElement(FauxElement)).toEqual('Anonymous');
+      expect(getDisplayNameForReactElement(FauxElement)).toEqual('NotImplementedInDevtools');
     });
     it('should return Element for null type', () => {
       const FauxElement = {type: null}
