@@ -41,6 +41,7 @@ import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
 import {
   enableLegacyFBSupport,
+  enableEagerRootListeners,
   decoupleUpdatePriorityFromScheduler,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -192,13 +193,18 @@ export function dispatchEvent(
   if (!_enabled) {
     return;
   }
-  // TODO: replaying capture events is currently broken
-  // because we used to do it during top-level native bubble handlers
-  // but now we use different bubble and capture handlers.
-  // For now, disable the replaying codepaths for capture listeners.
-  const isBubblePhase = (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
+  let allowReplay = true;
+  if (enableEagerRootListeners) {
+    // TODO: replaying capture phase events is currently broken
+    // because we used to do it during top-level native bubble handlers
+    // but now we use different bubble and capture handlers.
+    // In eager mode, we attach capture listeners early, so we need
+    // to filter them out until we fix the logic to handle them correctly.
+    // This could've been outside the flag but I put it inside to reduce risk.
+    allowReplay = (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
+  }
   if (
-    isBubblePhase &&
+    allowReplay &&
     hasQueuedDiscreteEvents() &&
     isReplayableDiscreteEvent(domEventName)
   ) {
@@ -224,13 +230,13 @@ export function dispatchEvent(
 
   if (blockedOn === null) {
     // We successfully dispatched this event.
-    if (isBubblePhase) {
+    if (allowReplay) {
       clearIfContinuousEvent(domEventName, nativeEvent);
     }
     return;
   }
 
-  if (isBubblePhase) {
+  if (allowReplay) {
     if (isReplayableDiscreteEvent(domEventName)) {
       // This this to be replayed later once the target is available.
       queueDiscreteEvent(
