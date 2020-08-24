@@ -3137,6 +3137,67 @@ describe('DOMPluginEventSystem', () => {
 
               expect(onClick).toHaveBeenCalledTimes(1);
             });
+
+            // @gate experimental
+            it('should be able to register non-passive handlers for events affected by the intervention', () => {
+              const rootContainer = document.createElement('div');
+              container.appendChild(rootContainer);
+
+              const defaultPreventedEvents = [];
+              const handler = e => {
+                if (e.defaultPrevented) defaultPreventedEvents.push(e.type);
+              };
+
+              container.addEventListener('touchstart', handler);
+              container.addEventListener('touchmove', handler);
+              container.addEventListener('wheel', handler);
+
+              const ref = React.createRef();
+              const setTouchStart = ReactDOM.unstable_createEventHandle(
+                'touchstart',
+                {passive: false},
+              );
+              const setTouchMove = ReactDOM.unstable_createEventHandle(
+                'touchmove',
+                {passive: false},
+              );
+              const setWheel = ReactDOM.unstable_createEventHandle('wheel', {
+                passive: false,
+              });
+
+              function Component() {
+                React.useEffect(() => {
+                  const clearTouchStart = setTouchStart(ref.current, e =>
+                    e.preventDefault(),
+                  );
+                  const clearTouchMove = setTouchMove(ref.current, e =>
+                    e.preventDefault(),
+                  );
+                  const clearWheel = setWheel(ref.current, e =>
+                    e.preventDefault(),
+                  );
+                  return () => {
+                    clearTouchStart();
+                    clearTouchMove();
+                    clearWheel();
+                  };
+                });
+                return <div ref={ref}>test</div>;
+              }
+
+              ReactDOM.render(<Component />, rootContainer);
+              Scheduler.unstable_flushAll();
+
+              dispatchEvent(ref.current, 'touchstart');
+              dispatchEvent(ref.current, 'touchmove');
+              dispatchEvent(ref.current, 'wheel');
+
+              expect(defaultPreventedEvents).toEqual([
+                'touchstart',
+                'touchmove',
+                'wheel',
+              ]);
+            });
           });
         });
       },
