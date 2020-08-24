@@ -8,8 +8,9 @@
  */
 
 import {getDisplayName, getDisplayNameForReactElement} from 'react-devtools-shared/src/utils';
+import { StrictMode, SuspenseList, Element} from 'react-is/src/ReactIs.js'
 
-describe('utils', () => {
+ describe('utils', () => {
   describe('getDisplayName', () => {
     it('should return a function name', () => {
       function FauxComponent() {}
@@ -43,6 +44,18 @@ describe('utils', () => {
       FauxComponent.displayName = 'OverrideDisplayName';
       const FauxElement = {type: FauxComponent}
       expect(getDisplayNameForReactElement(FauxElement)).toEqual('OverrideDisplayName');
+    });
+    it('should return correct display name for an element with a type of StrictMode', () => {
+      const FauxElement = {}
+      FauxElement.type = StrictMode;
+      FauxElement.$$typeof = Element;
+      expect(getDisplayNameForReactElement(FauxElement)).toEqual('StrictMode');
+    });
+    it('should return correct display name for an element with a type of SuspenseList', () => {
+      const FauxElement = {}
+      FauxElement.type = SuspenseList;
+      FauxElement.$$typeof = Element;
+      expect(getDisplayNameForReactElement(FauxElement)).toEqual('SuspenseList');
     });
     it('should return Anonymous for an element with invalid symbol type', () => {
       const FauxElement = {type: Symbol('foo')}
