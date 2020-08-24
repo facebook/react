@@ -32,6 +32,7 @@ import {
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
 import {
   type EventSystemFlags,
+  IS_CAPTURE_PHASE,
   IS_LEGACY_FB_SUPPORT_MODE,
 } from './EventSystemFlags';
 
@@ -40,6 +41,7 @@ import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
 import {
   enableLegacyFBSupport,
+  enableEagerRootListeners,
   decoupleUpdatePriorityFromScheduler,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -191,7 +193,21 @@ export function dispatchEvent(
   if (!_enabled) {
     return;
   }
-  if (hasQueuedDiscreteEvents() && isReplayableDiscreteEvent(domEventName)) {
+  let allowReplay = true;
+  if (enableEagerRootListeners) {
+    // TODO: replaying capture phase events is currently broken
+    // because we used to do it during top-level native bubble handlers
+    // but now we use different bubble and capture handlers.
+    // In eager mode, we attach capture listeners early, so we need
+    // to filter them out until we fix the logic to handle them correctly.
+    // This could've been outside the flag but I put it inside to reduce risk.
+    allowReplay = (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
+  }
+  if (
+    allowReplay &&
+    hasQueuedDiscreteEvents() &&
+    isReplayableDiscreteEvent(domEventName)
+  ) {
     // If we already have a queue of discrete events, and this is another discrete
     // event, then we can't dispatch it regardless of its target, since they
     // need to dispatch in order.
@@ -214,37 +230,39 @@ export function dispatchEvent(
 
   if (blockedOn === null) {
     // We successfully dispatched this event.
+    if (allowReplay) {
+      clearIfContinuousEvent(domEventName, nativeEvent);
+    }
+    return;
+  }
+
+  if (allowReplay) {
+    if (isReplayableDiscreteEvent(domEventName)) {
+      // This this to be replayed later once the target is available.
+      queueDiscreteEvent(
+        blockedOn,
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        nativeEvent,
+      );
+      return;
+    }
+    if (
+      queueIfContinuousEvent(
+        blockedOn,
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        nativeEvent,
+      )
+    ) {
+      return;
+    }
+    // We need to clear only if we didn't queue because
+    // queueing is accummulative.
     clearIfContinuousEvent(domEventName, nativeEvent);
-    return;
   }
-
-  if (isReplayableDiscreteEvent(domEventName)) {
-    // This this to be replayed later once the target is available.
-    queueDiscreteEvent(
-      blockedOn,
-      domEventName,
-      eventSystemFlags,
-      targetContainer,
-      nativeEvent,
-    );
-    return;
-  }
-
-  if (
-    queueIfContinuousEvent(
-      blockedOn,
-      domEventName,
-      eventSystemFlags,
-      targetContainer,
-      nativeEvent,
-    )
-  ) {
-    return;
-  }
-
-  // We need to clear only if we didn't queue because
-  // queueing is accummulative.
-  clearIfContinuousEvent(domEventName, nativeEvent);
 
   // This is not replayable so we'll invoke it but without a target,
   // in case the event system needs to trace it.

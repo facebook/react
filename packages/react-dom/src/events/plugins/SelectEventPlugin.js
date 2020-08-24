@@ -16,6 +16,7 @@ import {canUseDOM} from 'shared/ExecutionEnvironment';
 import {SyntheticEvent} from '../../events/SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
 import shallowEqual from 'shared/shallowEqual';
+import {enableEagerRootListeners} from 'shared/ReactFeatureFlags';
 
 import {registerTwoPhaseEvent} from '../EventRegistry';
 import getActiveElement from '../../client/getActiveElement';
@@ -152,19 +153,21 @@ function extractEvents(
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
 ) {
-  const eventListenerMap = getEventListenerMap(targetContainer);
-  // Track whether all listeners exists for this plugin. If none exist, we do
-  // not extract events. See #3639.
-  if (
-    // If we are handling selectionchange, then we don't need to
-    // check for the other dependencies, as selectionchange is only
-    // event attached from the onChange plugin and we don't expose an
-    // onSelectionChange event from React.
-    domEventName !== 'selectionchange' &&
-    !eventListenerMap.has('onSelect') &&
-    !eventListenerMap.has('onSelectCapture')
-  ) {
-    return;
+  if (!enableEagerRootListeners) {
+    const eventListenerMap = getEventListenerMap(targetContainer);
+    // Track whether all listeners exists for this plugin. If none exist, we do
+    // not extract events. See #3639.
+    if (
+      // If we are handling selectionchange, then we don't need to
+      // check for the other dependencies, as selectionchange is only
+      // event attached from the onChange plugin and we don't expose an
+      // onSelectionChange event from React.
+      domEventName !== 'selectionchange' &&
+      !eventListenerMap.has('onSelect') &&
+      !eventListenerMap.has('onSelectCapture')
+    ) {
+      return;
+    }
   }
 
   const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;

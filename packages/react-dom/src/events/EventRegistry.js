@@ -9,6 +9,10 @@
 
 import type {DOMEventName} from './DOMEventNames';
 
+import {enableEagerRootListeners} from 'shared/ReactFeatureFlags';
+
+export const allNativeEvents: Set<DOMEventName> = new Set();
+
 /**
  * Mapping from registration name to event name
  */
@@ -25,7 +29,7 @@ export const possibleRegistrationNames = __DEV__ ? {} : (null: any);
 
 export function registerTwoPhaseEvent(
   registrationName: string,
-  dependencies: ?Array<DOMEventName>,
+  dependencies: Array<DOMEventName>,
 ): void {
   registerDirectEvent(registrationName, dependencies);
   registerDirectEvent(registrationName + 'Capture', dependencies);
@@ -33,7 +37,7 @@ export function registerTwoPhaseEvent(
 
 export function registerDirectEvent(
   registrationName: string,
-  dependencies: ?Array<DOMEventName>,
+  dependencies: Array<DOMEventName>,
 ) {
   if (__DEV__) {
     if (registrationNameDependencies[registrationName]) {
@@ -53,6 +57,12 @@ export function registerDirectEvent(
 
     if (registrationName === 'onDoubleClick') {
       possibleRegistrationNames.ondblclick = registrationName;
+    }
+  }
+
+  if (enableEagerRootListeners) {
+    for (let i = 0; i < dependencies.length; i++) {
+      allNativeEvents.add(dependencies[i]);
     }
   }
 }

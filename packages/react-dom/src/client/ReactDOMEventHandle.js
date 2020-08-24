@@ -15,6 +15,7 @@ import type {
 } from '../shared/ReactDOMTypes';
 
 import {getEventPriorityForListenerSystem} from '../events/DOMEventProperties';
+import {allNativeEvents} from '../events/EventRegistry';
 import {
   getClosestInstanceFromNode,
   getEventHandlerListeners,
@@ -35,6 +36,7 @@ import {IS_EVENT_HANDLE_NON_MANAGED_NODE} from '../events/EventSystemFlags';
 import {
   enableScopeAPI,
   enableCreateEventHandleAPI,
+  enableEagerRootListeners,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 
@@ -178,6 +180,26 @@ export function createEventHandle(
 ): ReactDOMEventHandle {
   if (enableCreateEventHandleAPI) {
     const domEventName = ((type: any): DOMEventName);
+
+    if (enableEagerRootListeners) {
+      // We cannot support arbitrary native events with eager root listeners
+      // because the eager strategy relies on knowing the whole list ahead of time.
+      // If we wanted to support this, we'd have to add code to keep track
+      // (or search) for all portal and root containers, and lazily add listeners
+      // to them whenever we see a previously unknown event. This seems like a lot
+      // of complexity for something we don't even have a particular use case for.
+      // Unfortunately, the downside of this invariant is that *removing* a native
+      // event from the list of known events has now become a breaking change for
+      // any code relying on the createEventHandle API.
+      invariant(
+        allNativeEvents.has(domEventName) ||
+          domEventName === 'beforeblur' ||
+          domEventName === 'afterblur',
+        'Cannot call unstable_createEventHandle with "%s", as it is not an event known to React.',
+        domEventName,
+      );
+    }
+
     let isCapturePhaseListener = false;
     let isPassiveListener = undefined; // Undefined means to use the browser default
     let listenerPriority;

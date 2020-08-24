@@ -1040,6 +1040,25 @@ describe('ReactDOMFiber', () => {
     expect(ops).toEqual([]);
   });
 
+  // @gate enableEagerRootListeners
+  it('listens to events that do not exist in the Portal subtree', () => {
+    const onClick = jest.fn();
+
+    const ref = React.createRef();
+    ReactDOM.render(
+      <div onClick={onClick}>
+        {ReactDOM.createPortal(<button ref={ref}>click</button>, document.body)}
+      </div>,
+      container,
+    );
+    const event = new MouseEvent('click', {
+      bubbles: true,
+    });
+    ref.current.dispatchEvent(event);
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
   it('should throw on bad createPortal argument', () => {
     expect(() => {
       ReactDOM.createPortal(<div>portal</div>, null);
