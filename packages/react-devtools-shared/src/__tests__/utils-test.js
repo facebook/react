@@ -14,8 +14,8 @@ import {
 import {
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_STRICT_MODE_TYPE as StrictMode,
-  REACT_ELEMENT_TYPE as Element,
 } from 'shared/ReactSymbols';
+import { createElement } from 'react/src/ReactElement'
 
 describe('utils', () => {
   describe('getDisplayName', () => {
@@ -49,40 +49,36 @@ describe('utils', () => {
     it('should return correct display name for an element with function type', () => {
       function FauxComponent() {}
       FauxComponent.displayName = 'OverrideDisplayName';
-      const FauxElement = {type: FauxComponent};
-      expect(getDisplayNameForReactElement(FauxElement)).toEqual(
+      const element = createElement(FauxComponent)
+      expect(getDisplayNameForReactElement(element)).toEqual(
         'OverrideDisplayName',
       );
     });
     it('should return correct display name for an element with a type of StrictMode', () => {
-      const FauxElement = {};
-      FauxElement.type = StrictMode;
-      FauxElement.$$typeof = Element;
-      expect(getDisplayNameForReactElement(FauxElement)).toEqual('StrictMode');
+      const element = createElement(StrictMode);
+      expect(getDisplayNameForReactElement(element)).toEqual('StrictMode');
     });
     it('should return correct display name for an element with a type of SuspenseList', () => {
-      const FauxElement = {};
-      FauxElement.type = SuspenseList;
-      FauxElement.$$typeof = Element;
-      expect(getDisplayNameForReactElement(FauxElement)).toEqual(
+      const element = createElement(SuspenseList);
+      expect(getDisplayNameForReactElement(element)).toEqual(
         'SuspenseList',
       );
     });
     it('should return NotImplementedInDevtools for an element with invalid symbol type', () => {
-      const FauxElement = {type: Symbol('foo')};
-      expect(getDisplayNameForReactElement(FauxElement)).toEqual(
+      const element = createElement(Symbol('foo'));
+      expect(getDisplayNameForReactElement(element)).toEqual(
         'NotImplementedInDevtools',
       );
     });
     it('should return NotImplementedInDevtools for an element with invalid type', () => {
-      const FauxElement = {type: true};
-      expect(getDisplayNameForReactElement(FauxElement)).toEqual(
+      const element = createElement(true)
+      expect(getDisplayNameForReactElement(element)).toEqual(
         'NotImplementedInDevtools',
       );
     });
     it('should return Element for null type', () => {
-      const FauxElement = {type: null};
-      expect(getDisplayNameForReactElement(FauxElement)).toEqual('Element');
+      const element = createElement();
+      expect(getDisplayNameForReactElement(element)).toEqual('Element');
     });
   });
 });
