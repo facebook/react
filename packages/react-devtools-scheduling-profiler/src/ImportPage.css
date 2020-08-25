@@ -5,15 +5,6 @@
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
-  padding: 2rem;
-}
-
-.Card {
-  display: flex;
-  flex: 0 1 1000px;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: center;
 }
 
 .Card {
@@ -21,10 +12,7 @@
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2);
   border-radius: 5px;
   transition: 0.3s;
-}
-
-.Card:hover {
-  box-shadow: 0 8px 16px 0 rgba(0, 0, 0, 0.2);
+  width: 80%;
 }
 
 .Row {
@@ -33,16 +21,19 @@
   flex-wrap: wrap;
 }
 
+.ModalRow {
+  margin-top: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
 .Column {
   margin: 2rem;
-  margin-right: 0;
   display: flex;
   flex-direction: column;
   flex-basis: 100%;
   flex: 1;
-}
-.Column:last-of-type {
-  margin-right: 2rem;
 }
 
 .Link {
@@ -62,10 +53,10 @@ kbd {
   border-radius: 0.2em;
 }
 
-.Screenshot {
+.Screenshot, .ModalImg {
   width: 35rem;
   max-width: 100%;
-  min-width: 25rem;
+  min-width: 200px;
   align-self: center;
   justify-content: center;
   border: 1px solid #d7dfe4;
@@ -73,29 +64,18 @@ kbd {
   box-shadow: 0 2px 4px #ddd;
 }
 
+.ModalImg {
+  width: 45rem;
+  margin: 0 auto;
+  margin-top: 1.5rem;
+}
+
 .Header {
   margin-top: 0px;
 }
 
-.LegendKey {
-  margin: 0;
-  margin-bottom: 1.25rem;
-  list-style: none;
-  padding: 0;
-}
-
-.LegendItem {
-  display: flex;
-  align-items: center;
-}
-
-@keyframes spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.GithubIcon{
+  float: right;
 }
 
 .Buttons {
@@ -103,7 +83,7 @@ kbd {
 }
 
 .ImportButton,
-.ViewSourceButton {
+.HowToButton {
   width: 10rem;
   font-size: 1.5rem;
   padding: 1.5rem;
@@ -116,6 +96,7 @@ kbd {
   background-color: #2683E2;
   border: none;
   color: #ffffff;
+  margin-right: 15px;
 }
 
 .ImportButton:hover {
@@ -126,20 +107,20 @@ kbd {
   display: none;
 }
 
-.ViewSourceButton {
+.HowToButton {
   background-color: transparent;
   color: black;
   border: none;
 }
 
-.ViewSourceButton span {
+.HowToButton span {
   cursor: pointer;
   display: inline-block;
   position: relative;
   transition: 0.3s;
 }
 
-.ViewSourceButton span:after {
+.HowToButton span:after {
   content: '\00bb';
   position: absolute;
   opacity: 0;
@@ -148,16 +129,234 @@ kbd {
   transition: 0.3s;
 }
 
-.ViewSourceButton:hover {
+.HowToButton:hover {
   background-color: white;
   color: black;
 }
 
-.ViewSourceButton:hover span {
+.HowToButton:hover span {
   padding-right: 25px;
 }
 
-.ViewSourceButton:hover span:after {
+.HowToButton:hover span:after {
   opacity: 1;
   right: 0;
+}
+
+@media only screen and (min-width: 40em) {
+  .ModalOverlay {
+    display: -webkit-box;
+    display: flex;
+    -webkit-box-align: center;
+    align-items: center;
+    -webkit-box-pack: center;
+    justify-content: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5;
+    background-color: rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    backface-visibility: hidden;
+    -webkit-transition: opacity 0.3s cubic-bezier(0.55, 0, 0.1, 1),
+      visibility 0.3s cubic-bezier(0.55, 0, 0.1, 1);
+    transition: opacity 0.3s cubic-bezier(0.55, 0, 0.1, 1),
+      visibility 0.3s cubic-bezier(0.55, 0, 0.1, 1);
+  }
+  .ModalOverlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+.Modal {
+  display: -webkit-box;
+  display: flex;
+  -webkit-box-align: center;
+  align-items: center;
+  -webkit-box-pack: center;
+  justify-content: center;
+  position: relative;
+  margin: 0 auto;
+  background-color: #fff;
+  width: 80%;
+  min-height: 20rem;
+  max-height: 100%;
+  max-width: 75rem;
+  padding: 1rem;
+  border-radius: 3px;
+  opacity: 0;
+  overflow-y: auto;
+  visibility: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transform: scale(1.2);
+  transform: scale(1.2);
+  -webkit-transition: all 0.3s cubic-bezier(0.55, 0, 0.1, 1);
+  transition: all 0.3s cubic-bezier(0.55, 0, 0.1, 1);
+}
+.Modal .CloseModal {
+  position: absolute;
+  cursor: pointer;
+  top: 5px;
+  right: 15px;
+  opacity: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transition: opacity 0.3s cubic-bezier(0.55, 0, 0.1, 1),
+    -webkit-transform 0.3s cubic-bezier(0.55, 0, 0.1, 1);
+  transition: opacity 0.3s cubic-bezier(0.55, 0, 0.1, 1),
+    -webkit-transform 0.3s cubic-bezier(0.55, 0, 0.1, 1);
+  transition: opacity 0.3s cubic-bezier(0.55, 0, 0.1, 1),
+    transform 0.3s cubic-bezier(0.55, 0, 0.1, 1);
+  transition: opacity 0.3s cubic-bezier(0.55, 0, 0.1, 1),
+    transform 0.3s cubic-bezier(0.55, 0, 0.1, 1),
+    -webkit-transform 0.3s cubic-bezier(0.55, 0, 0.1, 1);
+  -webkit-transition-delay: 0.3s;
+  transition-delay: 0.3s;
+}
+.Modal .CloseModal svg {
+  width: 1.75em;
+  height: 1.75em;
+}
+.Modal .ModalContent {
+  width: 100%;
+  text-align: left;
+  opacity: 0;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  -webkit-transition: opacity 0.3s cubic-bezier(0.55, 0, 0.1, 1);
+  transition: opacity 0.3s cubic-bezier(0.55, 0, 0.1, 1);
+  -webkit-transition-delay: 0.3s;
+  transition-delay: 0.3s;
+}
+.Modal.active {
+  visibility: visible;
+  opacity: 1;
+  -webkit-transform: scale(1);
+  transform: scale(1);
+}
+.Modal.active .ModalContent {
+  opacity: 1;
+}
+.Modal.active .CloseModal {
+  -webkit-transform: translateY(10px);
+  transform: translateY(10px);
+  opacity: 1;
+}
+
+@media only screen and (max-width: 39.9375em) {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .Modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    -webkit-overflow-scrolling: touch;
+    border-radius: 0;
+    -webkit-transform: scale(1.1);
+    transform: scale(1.1);
+    padding: 0 !important;
+  }
+
+  .ModalContent{
+    font-size: 1rem;
+    margin: 0 10px;
+  }
+
+  .CloseModal {
+    right: 20px !important;
+  }
+}
+
+.SpinnerText{
+  text-align: center;
+}
+
+.Spinner {
+  font-size: 10px;
+  margin: auto;
+  text-indent: -9999em;
+  width: 10em;
+  height: 10em;
+  border-radius: 50%;
+  background: #61dafb;
+  background: -moz-linear-gradient(
+    left,
+    #61dafb 10%,
+    rgba(255, 255, 255, 0) 42%
+  );
+  background: -webkit-linear-gradient(
+    left,
+    #61dafb 10%,
+    rgba(255, 255, 255, 0) 42%
+  );
+  background: -o-linear-gradient(left, #61dafb 10%, rgba(255, 255, 255, 0) 42%);
+  background: -ms-linear-gradient(
+    left,
+    #61dafb 10%,
+    rgba(255, 255, 255, 0) 42%
+  );
+  background: linear-gradient(
+    to right,
+    #61dafb 10%,
+    rgba(255, 255, 255, 0) 42%
+  );
+  position: relative;
+  -webkit-animation: load 1.4s infinite linear;
+  animation: load 1.4s infinite linear;
+  -webkit-transform: translateZ(0);
+  -ms-transform: translateZ(0);
+  transform: translateZ(0);
+}
+.Spinner:before {
+  width: 50%;
+  height: 50%;
+  background: #61dafb;
+  border-radius: 100% 0 0 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  content: '';
+}
+.Spinner:after {
+  background: white;
+  width: 75%;
+  height: 75%;
+  border-radius: 50%;
+  content: '';
+  margin: auto;
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+@-webkit-keyframes load {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
+}
+@keyframes load {
+  0% {
+    -webkit-transform: rotate(0deg);
+    transform: rotate(0deg);
+  }
+  100% {
+    -webkit-transform: rotate(360deg);
+    transform: rotate(360deg);
+  }
 }
