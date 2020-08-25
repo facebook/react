@@ -15,7 +15,7 @@ import {
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_STRICT_MODE_TYPE as StrictMode,
 } from 'shared/ReactSymbols';
-import { createElement } from 'react/src/ReactElement'
+import {createElement} from 'react/src/ReactElement';
 
 describe('utils', () => {
   describe('getDisplayName', () => {
@@ -49,7 +49,7 @@ describe('utils', () => {
     it('should return correct display name for an element with function type', () => {
       function FauxComponent() {}
       FauxComponent.displayName = 'OverrideDisplayName';
-      const element = createElement(FauxComponent)
+      const element = createElement(FauxComponent);
       expect(getDisplayNameForReactElement(element)).toEqual(
         'OverrideDisplayName',
       );
@@ -60,9 +60,7 @@ describe('utils', () => {
     });
     it('should return correct display name for an element with a type of SuspenseList', () => {
       const element = createElement(SuspenseList);
-      expect(getDisplayNameForReactElement(element)).toEqual(
-        'SuspenseList',
-      );
+      expect(getDisplayNameForReactElement(element)).toEqual('SuspenseList');
     });
     it('should return NotImplementedInDevtools for an element with invalid symbol type', () => {
       const element = createElement(Symbol('foo'));
@@ -71,7 +69,7 @@ describe('utils', () => {
       );
     });
     it('should return NotImplementedInDevtools for an element with invalid type', () => {
-      const element = createElement(true)
+      const element = createElement(true);
       expect(getDisplayNameForReactElement(element)).toEqual(
         'NotImplementedInDevtools',
       );
