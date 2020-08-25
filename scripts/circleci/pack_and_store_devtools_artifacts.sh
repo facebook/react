@@ -21,6 +21,10 @@ yarn build
 mv ./chrome/build/ReactDevTools.zip ../../build/devtools/chrome-extension.zip
 mv ./firefox/build/ReactDevTools.zip ../../build/devtools/firefox-extension.zip
 
+cd ../react-devtools-scheduling-profiler
+yarn build
+mv ./dist ../../build/devtools/scheduling-profiler
+
 # Compress all DevTools artifacts into a single tarball for easy download
 cd ../../build/devtools
 tar -zcvf ../devtools.tgz .
