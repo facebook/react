@@ -72,6 +72,8 @@ export {
   createFactory,
   useTransition,
   useTransition as unstable_useTransition,
+  startTransition,
+  startTransition as unstable_startTransition,
   useDeferredValue,
   useDeferredValue as unstable_useDeferredValue,
   SuspenseList,
