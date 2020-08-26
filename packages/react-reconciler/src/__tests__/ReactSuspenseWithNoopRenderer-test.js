@@ -2514,6 +2514,215 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
   });
 
+  describe('delays transitions when using React.startTranistion', () => {
+    // @gate experimental
+    it('top level render', async () => {
+      function App({page}) {
+        return (
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText text={page} ms={5000} />
+          </Suspense>
+        );
+      }
+
+      // Initial render.
+      React.unstable_startTransition(() => ReactNoop.render(<App page="A" />));
+
+      expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading...']);
+      // Only a short time is needed to unsuspend the initial loading state.
+      Scheduler.unstable_advanceTime(400);
+      await advanceTimers(400);
+      expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+
+      // Later we load the data.
+      Scheduler.unstable_advanceTime(5000);
+      await advanceTimers(5000);
+      expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+      expect(Scheduler).toFlushAndYield(['A']);
+      expect(ReactNoop.getChildren()).toEqual([span('A')]);
+
+      // Start transition.
+      React.unstable_startTransition(() => ReactNoop.render(<App page="B" />));
+
+      expect(Scheduler).toFlushAndYield(['Suspend! [B]', 'Loading...']);
+      Scheduler.unstable_advanceTime(2999);
+      await advanceTimers(2999);
+      // Since the timeout is infinite (or effectively infinite),
+      // we have still not yet flushed the loading state.
+      expect(ReactNoop.getChildren()).toEqual([span('A')]);
+
+      // Later we load the data.
+      Scheduler.unstable_advanceTime(3000);
+      await advanceTimers(3000);
+      expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+      expect(Scheduler).toFlushAndYield(['B']);
+      expect(ReactNoop.getChildren()).toEqual([span('B')]);
+
+      // Start a long (infinite) transition.
+      React.unstable_startTransition(() => ReactNoop.render(<App page="C" />));
+      expect(Scheduler).toFlushAndYield(['Suspend! [C]', 'Loading...']);
+
+      // Advance past the current (effectively) infinite timeout.
+      // This is enforcing temporary behavior until it's truly infinite.
+      Scheduler.unstable_advanceTime(100000);
+      await advanceTimers(100000);
+      expect(ReactNoop.getChildren()).toEqual([
+        hiddenSpan('B'),
+        span('Loading...'),
+      ]);
+    });
+
+    // @gate experimental
+    it('hooks', async () => {
+      let transitionToPage;
+      function App() {
+        const [page, setPage] = React.useState('none');
+        transitionToPage = setPage;
+        if (page === 'none') {
+          return null;
+        }
+        return (
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText text={page} ms={5000} />
+          </Suspense>
+        );
+      }
+
+      ReactNoop.render(<App />);
+      expect(Scheduler).toFlushAndYield([]);
+
+      // Initial render.
+      await ReactNoop.act(async () => {
+        React.unstable_startTransition(() => transitionToPage('A'));
+
+        expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading...']);
+        // Only a short time is needed to unsuspend the initial loading state.
+        Scheduler.unstable_advanceTime(400);
+        await advanceTimers(400);
+        expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+      });
+
+      // Later we load the data.
+      Scheduler.unstable_advanceTime(5000);
+      await advanceTimers(5000);
+      expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+      expect(Scheduler).toFlushAndYield(['A']);
+      expect(ReactNoop.getChildren()).toEqual([span('A')]);
+
+      // Start transition.
+      await ReactNoop.act(async () => {
+        React.unstable_startTransition(() => transitionToPage('B'));
+
+        expect(Scheduler).toFlushAndYield(['Suspend! [B]', 'Loading...']);
+
+        Scheduler.unstable_advanceTime(2999);
+        await advanceTimers(2999);
+        // Since the timeout is infinite (or effectively infinite),
+        // we have still not yet flushed the loading state.
+        expect(ReactNoop.getChildren()).toEqual([span('A')]);
+      });
+
+      // Later we load the data.
+      Scheduler.unstable_advanceTime(3000);
+      await advanceTimers(3000);
+      expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+      expect(Scheduler).toFlushAndYield(['B']);
+      expect(ReactNoop.getChildren()).toEqual([span('B')]);
+
+      // Start a long (infinite) transition.
+      await ReactNoop.act(async () => {
+        React.unstable_startTransition(() => transitionToPage('C'));
+
+        expect(Scheduler).toFlushAndYield(['Suspend! [C]', 'Loading...']);
+
+        // Advance past the current effectively infinite timeout.
+        // This is enforcing temporary behavior until it's truly infinite.
+        Scheduler.unstable_advanceTime(100000);
+        await advanceTimers(100000);
+        expect(ReactNoop.getChildren()).toEqual([
+          hiddenSpan('B'),
+          span('Loading...'),
+        ]);
+      });
+    });
+
+    // @gate experimental
+    it('classes', async () => {
+      let transitionToPage;
+      class App extends React.Component {
+        state = {page: 'none'};
+        render() {
+          transitionToPage = page => this.setState({page});
+          const page = this.state.page;
+          if (page === 'none') {
+            return null;
+          }
+          return (
+            <Suspense fallback={<Text text="Loading..." />}>
+              <AsyncText text={page} ms={5000} />
+            </Suspense>
+          );
+        }
+      }
+
+      ReactNoop.render(<App />);
+      expect(Scheduler).toFlushAndYield([]);
+
+      // Initial render.
+      await ReactNoop.act(async () => {
+        React.unstable_startTransition(() => transitionToPage('A'));
+
+        expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading...']);
+        // Only a short time is needed to unsuspend the initial loading state.
+        Scheduler.unstable_advanceTime(400);
+        await advanceTimers(400);
+        expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
+      });
+
+      // Later we load the data.
+      Scheduler.unstable_advanceTime(5000);
+      await advanceTimers(5000);
+      expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
+      expect(Scheduler).toFlushAndYield(['A']);
+      expect(ReactNoop.getChildren()).toEqual([span('A')]);
+
+      // Start transition.
+      await ReactNoop.act(async () => {
+        React.unstable_startTransition(() => transitionToPage('B'));
+
+        expect(Scheduler).toFlushAndYield(['Suspend! [B]', 'Loading...']);
+        Scheduler.unstable_advanceTime(2999);
+        await advanceTimers(2999);
+        // Since the timeout is infinite (or effectively infinite),
+        // we have still not yet flushed the loading state.
+        expect(ReactNoop.getChildren()).toEqual([span('A')]);
+      });
+
+      // Later we load the data.
+      Scheduler.unstable_advanceTime(3000);
+      await advanceTimers(3000);
+      expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
+      expect(Scheduler).toFlushAndYield(['B']);
+      expect(ReactNoop.getChildren()).toEqual([span('B')]);
+
+      // Start a long (infinite) transition.
+      await ReactNoop.act(async () => {
+        React.unstable_startTransition(() => transitionToPage('C'));
+
+        expect(Scheduler).toFlushAndYield(['Suspend! [C]', 'Loading...']);
+
+        // Advance past the current effectively infinite timeout.
+        // This is enforcing temporary behavior until it's truly infinite.
+        Scheduler.unstable_advanceTime(100000);
+        await advanceTimers(100000);
+        expect(ReactNoop.getChildren()).toEqual([
+          hiddenSpan('B'),
+          span('Loading...'),
+        ]);
+      });
+    });
+  });
+
   // @gate experimental
   it('disables suspense config when nothing is passed to withSuspenseConfig', async () => {
     function App({page}) {

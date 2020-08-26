@@ -42,6 +42,7 @@ export {
   // exposeConcurrentModeAPIs
   useTransition as unstable_useTransition,
   useDeferredValue as unstable_useDeferredValue,
+  startTransition as unstable_startTransition,
   SuspenseList as unstable_SuspenseList,
   unstable_withSuspenseConfig,
   // enableBlocksAPI
