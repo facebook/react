@@ -8,7 +8,7 @@ require("reactComponentExpect");
 require("mocks");
 require("mock-modules");
 require("./mock-timers");
-
+console.log(1)
 exports.enableTest = function(testID) {
   describe(testID, function() {
     beforeEach(function() {
