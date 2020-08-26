@@ -96,11 +96,7 @@ import {markStateUpdateScheduled} from './SchedulingProfiler';
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
 type Update<S, A> = {|
-  // TODO: Temporary field. Will remove this by storing a map of
-  // transition -> start time on the root.
-  eventTime: number,
   lane: Lane,
-  suspenseConfig: null | SuspenseConfig,
   action: A,
   eagerReducer: ((S, A) => S) | null,
   eagerState: S | null,
@@ -714,17 +710,13 @@ function updateReducer<S, I, A>(
     let newBaseQueueLast = null;
     let update = first;
     do {
-      const suspenseConfig = update.suspenseConfig;
       const updateLane = update.lane;
-      const updateEventTime = update.eventTime;
       if (!isSubsetOfLanes(renderLanes, updateLane)) {
         // Priority is insufficient. Skip this update. If this is the first
         // skipped update, the previous update/state is the new base
         // update/state.
         const clone: Update<S, A> = {
-          eventTime: updateEventTime,
           lane: updateLane,
-          suspenseConfig: suspenseConfig,
           action: update.action,
           eagerReducer: update.eagerReducer,
           eagerState: update.eagerState,
@@ -749,12 +741,10 @@ function updateReducer<S, I, A>(
 
         if (newBaseQueueLast !== null) {
           const clone: Update<S, A> = {
-            eventTime: updateEventTime,
             // This update is going to be committed so we never want uncommit
             // it. Using NoLane works because 0 is a subset of all bitmasks, so
             // this will never be skipped by the check above.
             lane: NoLane,
-            suspenseConfig: update.suspenseConfig,
             action: update.action,
             eagerReducer: update.eagerReducer,
             eagerState: update.eagerState,
@@ -1699,9 +1689,7 @@ function dispatchAction<S, A>(
   const lane = requestUpdateLane(fiber, suspenseConfig);
 
   const update: Update<S, A> = {
-    eventTime,
     lane,
-    suspenseConfig,
     action,
     eagerReducer: null,
     eagerState: null,

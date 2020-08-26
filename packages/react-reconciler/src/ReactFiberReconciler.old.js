@@ -297,7 +297,7 @@ export function updateContainer(
     }
   }
 
-  const update = createUpdate(eventTime, lane, suspenseConfig);
+  const update = createUpdate(eventTime, lane);
   // Caution: React DevTools currently depends on this property
   // being called "element".
   update.payload = {element};
