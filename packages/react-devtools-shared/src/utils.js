@@ -22,6 +22,7 @@ import {
   StrictMode,
   Suspense,
 } from 'react-is';
+import {REACT_SUSPENSE_LIST_TYPE as SuspenseList} from 'shared/ReactSymbols';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
@@ -43,7 +44,6 @@ import {
 } from 'react-devtools-shared/src/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
 import {meta} from './hydration';
-
 import type {ComponentFilter, ElementType} from './types';
 
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
@@ -489,12 +489,16 @@ export function getDisplayNameForReactElement(
       return 'StrictMode';
     case Suspense:
       return 'Suspense';
+    case SuspenseList:
+      return 'SuspenseList';
     default:
       const {type} = element;
       if (typeof type === 'string') {
         return type;
-      } else if (type != null) {
+      } else if (typeof type === 'function') {
         return getDisplayName(type, 'Anonymous');
+      } else if (type != null) {
+        return 'NotImplementedInDevtools';
       } else {
         return 'Element';
       }
