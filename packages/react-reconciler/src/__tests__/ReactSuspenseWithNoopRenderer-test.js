@@ -4030,9 +4030,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         // Neither is resolved yet.
         'Pending...',
         '',
-        'Pending...',
-        'Suspend! [a]',
-        'Loading...',
         'Suspend! [b]',
         'Loading...',
       ]);
