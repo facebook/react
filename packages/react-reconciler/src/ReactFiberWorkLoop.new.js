@@ -171,6 +171,7 @@ import {
   hasDiscreteLanes,
   includesNonIdleWork,
   includesOnlyRetries,
+  includesOnlyTransitions,
   getNextLanes,
   returnNextLanesPriority,
   setCurrentUpdateLanePriority,
@@ -302,7 +303,6 @@ const subtreeRenderLanesCursor: StackCursor<Lanes> = createCursor(NoLanes);
 let workInProgressRootExitStatus: RootExitStatus = RootIncomplete;
 // A fatal error, if one is thrown
 let workInProgressRootFatalError: mixed = null;
-let workInProgressRootLatestSuspenseTimeout: number = NoTimestamp;
 // "Included" lanes refer to lanes that were worked on during this render. It's
 // slightly different than `renderLanes` because `renderLanes` can change as you
 // enter and exit an Offscreen tree. This value is the combination of all render
@@ -322,7 +322,6 @@ let mostRecentlyUpdatedRoot: FiberRoot | null = null;
 // model where we don't commit new loading states in too quick succession.
 let globalMostRecentFallbackTime: number = 0;
 const FALLBACK_THROTTLE_MS: number = 500;
-const DEFAULT_TIMEOUT_MS: number = 5000;
 
 // The absolute time for when we should start giving up on rendering
 // more and prefer CPU suspense heuristics instead.
@@ -922,12 +921,10 @@ function finishConcurrentRender(root, exitStatus, lanes) {
     case RootSuspendedWithDelay: {
       markRootSuspended(root, lanes);
 
-      if (workInProgressRootLatestSuspenseTimeout !== NoTimestamp) {
+      if (includesOnlyTransitions(lanes)) {
         // This is a transition, so we should exit without committing a
         // placeholder and without scheduling a timeout. Delay indefinitely
         // until we receive more data.
-        // TODO: Check the lanes to see if it's a transition, instead of
-        // tracking the latest timeout.
         break;
       }
 
@@ -1344,7 +1341,6 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
   workInProgressRootRenderLanes = subtreeRenderLanes = workInProgressRootIncludedLanes = lanes;
   workInProgressRootExitStatus = RootIncomplete;
   workInProgressRootFatalError = null;
-  workInProgressRootLatestSuspenseTimeout = NoTimestamp;
   workInProgressRootSkippedLanes = NoLanes;
   workInProgressRootUpdatedLanes = NoLanes;
   workInProgressRootPingedLanes = NoLanes;
@@ -1454,29 +1450,6 @@ function popInteractions(prevInteractions) {
 
 export function markCommitTimeOfFallback() {
   globalMostRecentFallbackTime = now();
-}
-
-export function markRenderEventTimeAndConfig(
-  eventTime: number,
-  suspenseConfig: null | SuspenseConfig,
-): void {
-  // Track the largest/latest timeout deadline in this batch.
-  // TODO: If there are two transitions in the same batch, shouldn't we
-  // choose the smaller one? Maybe this is because when an intermediate
-  // transition is superseded, we should ignore its suspense config, but
-  // we don't currently.
-  if (suspenseConfig !== null) {
-    // If `timeoutMs` is not specified, we default to 5 seconds. We have to
-    // resolve this default here because `suspenseConfig` is owned
-    // by userspace.
-    // TODO: Store this on the root instead (transition -> timeoutMs)
-    // TODO: Should this default to a JND instead?
-    const timeoutMs = suspenseConfig.timeoutMs | 0 || DEFAULT_TIMEOUT_MS;
-    const timeoutTime = eventTime + timeoutMs;
-    if (timeoutTime > workInProgressRootLatestSuspenseTimeout) {
-      workInProgressRootLatestSuspenseTimeout = timeoutTime;
-    }
-  }
 }
 
 export function markSkippedUpdateLanes(lane: Lane | Lanes): void {

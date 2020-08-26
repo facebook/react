@@ -461,6 +461,9 @@ export function includesNonIdleWork(lanes: Lanes) {
 export function includesOnlyRetries(lanes: Lanes) {
   return (lanes & RetryLanes) === lanes;
 }
+export function includesOnlyTransitions(lanes: Lanes) {
+  return (lanes & TransitionLanes) === lanes;
+}
 
 // To ensure consistency across multiple updates in the same event, this should
 // be a pure function, so that it always returns the same lane for given inputs.
