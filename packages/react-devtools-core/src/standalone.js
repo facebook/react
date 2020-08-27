@@ -18,6 +18,7 @@ import Bridge from 'react-devtools-shared/src/bridge';
 import Store from 'react-devtools-shared/src/devtools/store';
 import {
   getAppendComponentStack,
+  getEnableDoubleLogging,
   getBreakOnConsoleErrors,
   getSavedComponentFilters,
 } from 'react-devtools-shared/src/utils';
@@ -297,6 +298,9 @@ function startServer(
     const savedPreferencesString = `
       window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = ${JSON.stringify(
         getAppendComponentStack(),
+      )};
+      window.__REACT_DEVTOOLS_ENABLE_DOUBLE_LOGGING__ = ${JSON.stringify(
+        getEnableDoubleLogging(),
       )};
       window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ = ${JSON.stringify(
         getBreakOnConsoleErrors(),

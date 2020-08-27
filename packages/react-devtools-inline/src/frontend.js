@@ -9,6 +9,7 @@ import {
   getAppendComponentStack,
   getBreakOnConsoleErrors,
   getSavedComponentFilters,
+  getEnableDoubleLogging
 } from 'react-devtools-shared/src/utils';
 import {
   MESSAGE_TYPE_GET_SAVED_PREFERENCES,
@@ -39,6 +40,7 @@ export function initialize(
           {
             type: MESSAGE_TYPE_SAVED_PREFERENCES,
             appendComponentStack: getAppendComponentStack(),
+            enableDoubleLogging: getEnableDoubleLogging(),
             breakOnConsoleErrors: getBreakOnConsoleErrors(),
             componentFilters: getSavedComponentFilters(),
           },

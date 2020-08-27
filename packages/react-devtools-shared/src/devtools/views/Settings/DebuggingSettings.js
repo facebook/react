@@ -17,6 +17,8 @@ export default function DebuggingSettings(_: {||}) {
   const {
     appendComponentStack,
     breakOnConsoleErrors,
+    enableDoubleLogging,
+    setEnableDoubleLogging,
     setAppendComponentStack,
     setBreakOnConsoleErrors,
   } = useContext(SettingsContext);
@@ -35,7 +37,18 @@ export default function DebuggingSettings(_: {||}) {
           Append component stacks to console warnings and errors.
         </label>
       </div>
-
+      <div className={styles.Setting}>
+        <label>
+          <input
+            type="checkbox"
+            checked={enableDoubleLogging}
+            onChange={({currentTarget}) =>
+              setEnableDoubleLogging(currentTarget.checked)
+            }
+          />{' '}
+          Enable double logging
+        </label>
+      </div>
       <div className={styles.Setting}>
         <label>
           <input
