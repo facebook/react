@@ -358,7 +358,10 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         }
       });
     }
-  }, [hoveredEvent]);
+  }, [
+    hoveredEvent,
+    data, // Attach onHover callbacks when views are re-created on data change
+  ]);
 
   useLayoutEffect(() => {
     const {current: userTimingMarksView} = userTimingMarksViewRef;
