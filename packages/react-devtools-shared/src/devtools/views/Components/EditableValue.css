@@ -3,7 +3,7 @@
   display: flex;
 }
 .CheckboxLabel:focus-within {
-  background-color: var(--color-button-background-focus);
+  /*background-color: var(--color-button-background-focus);*/
 }
 
 .Checkbox:focus {
