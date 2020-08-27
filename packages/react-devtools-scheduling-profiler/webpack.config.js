@@ -4,6 +4,7 @@ const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
+const {getVersionString} = require('./buildUtils');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -20,6 +21,8 @@ if (!TARGET) {
 const shouldUseDevServer = TARGET === 'local';
 
 const builtModulesDir = resolve(__dirname, '..', '..', 'build', 'node_modules');
+
+const DEVTOOLS_VERSION = getVersionString();
 
 const imageInlineSizeLimit = 10000;
 
@@ -41,6 +44,7 @@ const config = {
       __DEV__,
       __PROFILE__: false,
       __EXPERIMENTAL__: true,
+      'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
     }),
     new HtmlWebpackPlugin({
       title: 'React Concurrent Mode Profiler',

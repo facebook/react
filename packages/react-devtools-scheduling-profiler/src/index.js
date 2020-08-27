@@ -19,6 +19,7 @@ import './index.css';
 
 const container = document.createElement('div');
 container.id = 'root';
+container.style.height = '100%'; // Style specified here as CSS for #root will be stripped
 
 const body = nullthrows(document.body, 'Expect document.body to exist');
 body.appendChild(container);
