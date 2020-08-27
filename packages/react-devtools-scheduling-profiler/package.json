@@ -18,6 +18,8 @@
   },
   "devDependencies": {
     "@pmmmwh/react-refresh-webpack-plugin": "^0.4.1",
+    "@reach/menu-button": "^0.11.0",
+    "@reach/tooltip": "^0.11.0",
     "babel-loader": "^8.1.0",
     "css-loader": "^4.2.1",
     "file-loader": "^6.0.0",
