@@ -15,7 +15,7 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
 } from 'shared/ReactTypes';
-import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
+import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberTransition';
 import type PartialRenderer from './ReactPartialRenderer';
 
 import {validateContextBounds} from './ReactPartialRendererContext';

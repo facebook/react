@@ -7,17 +7,21 @@
  * @flow
  */
 
-import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
+import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberTransition';
 
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
 
-// Within the scope of the callback, mark all updates as being allowed to suspend.
+// This is a copy of startTransition, except if null or undefined is passed,
+// then updates inside the scope are opted-out of the outer transition scope.
+// TODO: Deprecated. Remove in favor of startTransition. Figure out how scopes
+// should nest, and whether we need an API to opt-out nested scopes.
 export function withSuspenseConfig(scope: () => void, config?: SuspenseConfig) {
-  const previousConfig = ReactCurrentBatchConfig.suspense;
-  ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+  const prevTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition =
+    config === undefined || config === null ? 0 : 1;
   try {
     scope();
   } finally {
-    ReactCurrentBatchConfig.suspense = previousConfig;
+    ReactCurrentBatchConfig.transition = prevTransition;
   }
 }

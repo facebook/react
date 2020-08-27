@@ -12,7 +12,6 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {StackCursor} from './ReactFiberStack.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
@@ -188,6 +187,7 @@ import {
   schedulerPriorityToLanePriority,
   lanePriorityToSchedulerPriority,
 } from './ReactFiberLane';
+import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork.new';
 import {completeWork} from './ReactFiberCompleteWork.new';
 import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork.new';
@@ -402,10 +402,7 @@ export function getCurrentTime() {
   return now();
 }
 
-export function requestUpdateLane(
-  fiber: Fiber,
-  suspenseConfig: SuspenseConfig | null,
-): Lane {
+export function requestUpdateLane(fiber: Fiber): Lane {
   // Special cases
   const mode = fiber.mode;
   if ((mode & BlockingMode) === NoMode) {
@@ -449,10 +446,8 @@ export function requestUpdateLane(
     currentEventWipLanes = workInProgressRootIncludedLanes;
   }
 
-  if (suspenseConfig !== null) {
-    // Use the size of the timeout as a heuristic to prioritize shorter
-    // transitions over longer ones.
-    // TODO: This will coerce numbers larger than 31 bits to 0.
+  const isTransition = requestCurrentTransition() !== NoTransition;
+  if (isTransition) {
     if (currentEventPendingLanes !== NoLanes) {
       currentEventPendingLanes =
         mostRecentlyUpdatedRoot !== null
