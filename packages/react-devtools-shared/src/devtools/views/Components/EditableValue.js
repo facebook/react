@@ -50,7 +50,7 @@ export default function EditableValue({
       editableValue: target.checked,
       externalValue: value,
     });
-    applyChangesCheckBox();
+    applyChangesFromCheckBox();
   };
 
   const handleKeyDown = event => {
@@ -75,8 +75,8 @@ export default function EditableValue({
     }
   };
 
-  const applyChangesCheckBox = () => {
-    if (isValid && hasPendingChanges) {
+  const applyChangesFromCheckBox = () => {
+    if (isValid) {
       overrideValueFn(path, inputRef.current.checked);
     }
   };
