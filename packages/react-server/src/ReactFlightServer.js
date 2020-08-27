@@ -436,7 +436,7 @@ const Dispatcher: DispatcherType = {
     return value;
   },
   useTransition(): [(callback: () => void) => void, boolean] {
-    return [false, () => {}];
+    return [() => {}, false];
   },
   readContext: (unsupportedHook: any),
   useContext: (unsupportedHook: any),
