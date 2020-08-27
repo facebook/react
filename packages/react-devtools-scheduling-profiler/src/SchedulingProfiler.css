@@ -103,3 +103,9 @@
     display: none;
   }
 }
+
+@media screen and (max-height: 600px) {
+  .ScreenshotWrapper {
+    display: none;
+  }
+}
