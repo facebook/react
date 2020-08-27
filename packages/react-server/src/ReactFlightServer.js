@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   Destination,
   Chunk,
@@ -46,6 +47,7 @@ import {
 } from 'shared/ReactSymbols';
 
 import * as React from 'react';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
 
 type ReactJSONValue =
@@ -84,6 +86,8 @@ export type Request = {
   flowing: boolean,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
 };
+
+const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
 export function createRequest(
   model: ReactModel,
@@ -269,9 +273,11 @@ export function resolveModelToJSON(
     value !== null &&
     value.$$typeof === REACT_ELEMENT_TYPE
   ) {
+    const prevDispatcher = ReactCurrentDispatcher.current;
     // TODO: Concatenate keys of parents onto children.
     const element: React$Element<any> = (value: any);
     try {
+      ReactCurrentDispatcher.current = Dispatcher;
       // Attempt to render the server component.
       value = attemptResolveElement(element);
     } catch (x) {
@@ -286,6 +292,8 @@ export function resolveModelToJSON(
         // Something errored. Don't bother encoding anything up to here.
         throw x;
       }
+    } finally {
+      ReactCurrentDispatcher.current = prevDispatcher;
     }
   }
 
@@ -411,3 +419,33 @@ export function startFlowing(request: Request): void {
   request.flowing = true;
   flushCompletedChunks(request);
 }
+
+function unsupportedHook(): void {
+  invariant(false, 'This Hook is not supported in Server Components.');
+}
+
+const Dispatcher: DispatcherType = {
+  useMemo<T>(nextCreate: () => T): T {
+    return nextCreate();
+  },
+  useCallback<T>(callback: T): T {
+    return callback;
+  },
+  useDebugValue(): void {},
+  useDeferredValue<T>(value: T): T {
+    return value;
+  },
+  useTransition(): [(callback: () => void) => void, boolean] {
+    return [false, () => {}];
+  },
+  readContext: unsupportedHook,
+  useContext: unsupportedHook,
+  useReducer: unsupportedHook,
+  useRef: unsupportedHook,
+  useState: unsupportedHook,
+  useLayoutEffect: unsupportedHook,
+  useImperativeHandle: unsupportedHook,
+  useEffect: unsupportedHook,
+  useOpaqueIdentifier: unsupportedHook,
+  useMutableSource: unsupportedHook,
+};

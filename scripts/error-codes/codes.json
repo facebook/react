@@ -360,5 +360,6 @@
   "369": "ReactDOM.createEventHandle: setter called on an invalid target. Provide a valid EventTarget or an element managed by React.",
   "370": "ReactDOM.createEventHandle: setter called with an invalid callback. The callback must be a function.",
   "371": "Text string must be rendered within a <Text> component.\n\nText: %s",
-  "372": "Cannot call unstable_createEventHandle with \"%s\", as it is not an event known to React."
+  "372": "Cannot call unstable_createEventHandle with \"%s\", as it is not an event known to React.",
+  "373": "This Hook is not supported in Server Components."
 }
