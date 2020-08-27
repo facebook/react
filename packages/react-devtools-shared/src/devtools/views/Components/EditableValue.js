@@ -43,8 +43,8 @@ export default function EditableValue({
       editableValue: target.value,
       externalValue: value,
     });
-  
-  const handeCheckBoxToggle = ({target})=> {
+
+  const handeCheckBoxToggle = ({target}) => {
     dispatch({
       type: 'UPDATE',
       editableValue: target.checked,
@@ -88,9 +88,9 @@ export default function EditableValue({
     placeholder = 'Enter valid JSON';
   }
 
-  let isBool=null;
-  if ( (parsedValue===true || parsedValue===false) ) {
-    isBool=parsedValue;
+  let isBool = null;
+  if (parsedValue === true || parsedValue === false) {
+    isBool = parsedValue;
   }
   return (
     <Fragment>
@@ -105,14 +105,16 @@ export default function EditableValue({
         type="text"
         value={editableValue}
       />
-      {typeof isBool==='boolean' && (<label className={styles.CheckboxLabel} >
-      <input 
-        checked={isBool}
-        type="checkbox"
-        onClick={handeCheckBoxToggle}
-        ref={inputRef}
-         />
-      </label>)}
+      {typeof isBool === 'boolean' && (
+        <label className={styles.CheckboxLabel}>
+          <input
+            checked={isBool}
+            type="checkbox"
+            onClick={handeCheckBoxToggle}
+            ref={inputRef}
+          />
+        </label>
+      )}
     </Fragment>
   );
 }
