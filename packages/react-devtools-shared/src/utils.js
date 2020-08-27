@@ -34,7 +34,7 @@ import {
   LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
-  LOCAL_STORAGE_SHOULD_ENABLE_DOUBLE_LOGGING
+  LOCAL_STORAGE_SHOULD_ENABLE_DOUBLE_LOGGING,
 } from './constants';
 import {ComponentFilterElementType, ElementTypeHostComponent} from './types';
 import {
@@ -271,9 +271,7 @@ export function setEnableDoubleLogging(value: boolean): void {
 
 export function getEnableDoubleLogging(): boolean {
   try {
-    const raw = localStorageGetItem(
-      LOCAL_STORAGE_SHOULD_ENABLE_DOUBLE_LOGGING,
-    );
+    const raw = localStorageGetItem(LOCAL_STORAGE_SHOULD_ENABLE_DOUBLE_LOGGING);
     if (raw != null) {
       return JSON.parse(raw);
     }

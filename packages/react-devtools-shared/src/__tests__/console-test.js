@@ -86,7 +86,6 @@ describe('console', () => {
       appendComponentStack: true,
       breakOnWarn: false,
     });
-
     expect(fakeConsole.error).toBe(error);
     expect(fakeConsole.warn).toBe(warn);
   });

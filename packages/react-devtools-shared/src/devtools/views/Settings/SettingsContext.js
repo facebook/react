@@ -21,7 +21,7 @@ import {
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
-  LOCAL_STORAGE_SHOULD_ENABLE_DOUBLE_LOGGING
+  LOCAL_STORAGE_SHOULD_ENABLE_DOUBLE_LOGGING,
 } from 'react-devtools-shared/src/constants';
 import {useLocalStorage} from '../hooks';
 import {BridgeContext} from '../context';
@@ -39,7 +39,7 @@ type Context = {|
   // Specified as a separate prop so it can trigger a re-render of FixedSizeList.
   lineHeight: number,
 
-  enableDoubleLogging : boolean,
+  enableDoubleLogging: boolean,
   setEnableDoubleLogging: (value: boolean) => void,
 
   appendComponentStack: boolean,
@@ -85,9 +85,12 @@ function SettingsContextController({
   );
 
   const [
-   enableDoubleLogging,
-   setEnableDoubleLogging,
-  ] = useLocalStorage<boolean>(LOCAL_STORAGE_SHOULD_ENABLE_DOUBLE_LOGGING, false);
+    enableDoubleLogging,
+    setEnableDoubleLogging,
+  ] = useLocalStorage<boolean>(
+    LOCAL_STORAGE_SHOULD_ENABLE_DOUBLE_LOGGING,
+    false,
+  );
 
   const [
     appendComponentStack,
@@ -157,8 +160,9 @@ function SettingsContextController({
     bridge.send('updateConsolePatchSettings', {
       appendComponentStack,
       breakOnConsoleErrors,
+      enableDoubleLogging,
     });
-  }, [bridge, appendComponentStack, breakOnConsoleErrors]);
+  }, [bridge, appendComponentStack, breakOnConsoleErrors, enableDoubleLogging]);
 
   useEffect(() => {
     bridge.send('setTraceUpdatesEnabled', traceUpdatesEnabled);

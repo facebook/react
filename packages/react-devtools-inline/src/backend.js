@@ -41,7 +41,7 @@ function startActivation(contentWindow: window) {
         if (contentWindow !== window) {
           window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = appendComponentStack;
           window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ = breakOnConsoleErrors;
-          Window.__REACT_DEVTOOLS_ENABLE_DOUBLE_LOGGING__ = enableDoubleLogging;
+          window.__REACT_DEVTOOLS_ENABLE_DOUBLE_LOGGING__ = enableDoubleLogging;
           window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = componentFilters;
         }
 
