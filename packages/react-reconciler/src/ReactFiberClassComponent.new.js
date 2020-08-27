@@ -199,7 +199,7 @@ const classComponentUpdater = {
     const suspenseConfig = requestCurrentSuspenseConfig();
     const lane = requestUpdateLane(fiber, suspenseConfig);
 
-    const update = createUpdate(eventTime, lane, suspenseConfig);
+    const update = createUpdate(eventTime, lane);
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
@@ -230,7 +230,7 @@ const classComponentUpdater = {
     const suspenseConfig = requestCurrentSuspenseConfig();
     const lane = requestUpdateLane(fiber, suspenseConfig);
 
-    const update = createUpdate(eventTime, lane, suspenseConfig);
+    const update = createUpdate(eventTime, lane);
     update.tag = ReplaceState;
     update.payload = payload;
 
@@ -263,7 +263,7 @@ const classComponentUpdater = {
     const suspenseConfig = requestCurrentSuspenseConfig();
     const lane = requestUpdateLane(fiber, suspenseConfig);
 
-    const update = createUpdate(eventTime, lane, suspenseConfig);
+    const update = createUpdate(eventTime, lane);
     update.tag = ForceUpdate;
 
     if (callback !== undefined && callback !== null) {
