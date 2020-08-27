@@ -29,12 +29,23 @@ import {
 
 import {
   REACT_BLOCK_TYPE,
-  REACT_SERVER_BLOCK_TYPE,
   REACT_ELEMENT_TYPE,
+  REACT_DEBUG_TRACING_MODE_TYPE,
+  REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_LAZY_TYPE,
+  REACT_LEGACY_HIDDEN_TYPE,
+  REACT_MEMO_TYPE,
+  REACT_OFFSCREEN_TYPE,
+  REACT_PROFILER_TYPE,
+  REACT_SCOPE_TYPE,
+  REACT_SERVER_BLOCK_TYPE,
+  REACT_STRICT_MODE_TYPE,
+  REACT_SUSPENSE_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
 } from 'shared/ReactSymbols';
 
+import * as React from 'react';
 import invariant from 'shared/invariant';
 
 type ReactJSONValue =
@@ -110,11 +121,33 @@ function attemptResolveElement(element: React$Element<any>): ReactModel {
     return [REACT_ELEMENT_TYPE, type, element.key, element.props];
   } else if (type[0] === REACT_SERVER_BLOCK_TYPE) {
     return [REACT_ELEMENT_TYPE, type, element.key, element.props];
-  } else if (type === REACT_FRAGMENT_TYPE) {
+  } else if (
+    type === REACT_FRAGMENT_TYPE ||
+    type === REACT_STRICT_MODE_TYPE ||
+    type === REACT_PROFILER_TYPE ||
+    type === REACT_SCOPE_TYPE ||
+    type === REACT_DEBUG_TRACING_MODE_TYPE ||
+    type === REACT_LEGACY_HIDDEN_TYPE ||
+    type === REACT_OFFSCREEN_TYPE ||
+    // TODO: These are temporary shims
+    // and we'll want a different behavior.
+    type === REACT_SUSPENSE_TYPE ||
+    type === REACT_SUSPENSE_LIST_TYPE
+  ) {
     return element.props.children;
-  } else {
-    invariant(false, 'Unsupported type.');
+  } else if (type != null && typeof type === 'object') {
+    switch (type.$$typeof) {
+      case REACT_FORWARD_REF_TYPE: {
+        const render = type.render;
+        return render(props, undefined);
+      }
+      case REACT_MEMO_TYPE: {
+        const nextChildren = React.createElement(type.type, element.props);
+        return attemptResolveElement(nextChildren);
+      }
+    }
   }
+  invariant(false, 'Unsupported type.');
 }
 
 function pingSegment(request: Request, segment: Segment): void {
