@@ -20,6 +20,7 @@ import {
   COMPACT_LINE_HEIGHT,
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
+  LOCAL_STORAGE_ENABLE_DOUBLE_LOGGING,
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
 } from 'react-devtools-shared/src/constants';
 import {useLocalStorage} from '../hooks';
@@ -40,6 +41,9 @@ type Context = {|
 
   appendComponentStack: boolean,
   setAppendComponentStack: (value: boolean) => void,
+
+  enableDoubleLogging: boolean,
+  setEnableDoubleLogging: (value: boolean) => void,
 
   breakOnConsoleErrors: boolean,
   setBreakOnConsoleErrors: (value: boolean) => void,
@@ -83,6 +87,12 @@ function SettingsContextController({
     appendComponentStack,
     setAppendComponentStack,
   ] = useLocalStorage<boolean>(LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY, true);
+
+  const [
+    enableDoubleLogging,
+    setEnableDoubleLogging,
+  ] = useLocalStorage<boolean>(LOCAL_STORAGE_ENABLE_DOUBLE_LOGGING, false);
+
   const [
     breakOnConsoleErrors,
     setBreakOnConsoleErrors,
@@ -147,8 +157,9 @@ function SettingsContextController({
     bridge.send('updateConsolePatchSettings', {
       appendComponentStack,
       breakOnConsoleErrors,
+      enableDoubleLogging,
     });
-  }, [bridge, appendComponentStack, breakOnConsoleErrors]);
+  }, [bridge, appendComponentStack, breakOnConsoleErrors, enableDoubleLogging]);
 
   useEffect(() => {
     bridge.send('setTraceUpdatesEnabled', traceUpdatesEnabled);
@@ -158,6 +169,7 @@ function SettingsContextController({
     () => ({
       appendComponentStack,
       breakOnConsoleErrors,
+      enableDoubleLogging,
       displayDensity,
       lineHeight:
         displayDensity === 'compact'
@@ -165,6 +177,7 @@ function SettingsContextController({
           : COMFORTABLE_LINE_HEIGHT,
       setAppendComponentStack,
       setBreakOnConsoleErrors,
+      setEnableDoubleLogging,
       setDisplayDensity,
       setTheme,
       setTraceUpdatesEnabled,
@@ -174,9 +187,11 @@ function SettingsContextController({
     [
       appendComponentStack,
       breakOnConsoleErrors,
+      enableDoubleLogging,
       displayDensity,
       setAppendComponentStack,
       setBreakOnConsoleErrors,
+      setEnableDoubleLogging,
       setDisplayDensity,
       setTheme,
       setTraceUpdatesEnabled,

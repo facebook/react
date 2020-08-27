@@ -7,6 +7,7 @@ import Store from 'react-devtools-shared/src/devtools/store';
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
 import {
   getAppendComponentStack,
+  getEnableDoubleLogging,
   getBreakOnConsoleErrors,
   getSavedComponentFilters,
 } from 'react-devtools-shared/src/utils';
@@ -38,6 +39,7 @@ export function initialize(
         contentWindow.postMessage(
           {
             type: MESSAGE_TYPE_SAVED_PREFERENCES,
+            enableDoubleLogging: getEnableDoubleLogging(),
             appendComponentStack: getAppendComponentStack(),
             breakOnConsoleErrors: getBreakOnConsoleErrors(),
             componentFilters: getSavedComponentFilters(),

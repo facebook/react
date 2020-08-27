@@ -7,6 +7,7 @@ import Store from 'react-devtools-shared/src/devtools/store';
 import {getBrowserName, getBrowserTheme} from './utils';
 import {LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY} from 'react-devtools-shared/src/constants';
 import {
+  getEnableDoubleLogging,
   getAppendComponentStack,
   getBreakOnConsoleErrors,
   getSavedComponentFilters,
@@ -30,11 +31,15 @@ let panelCreated = false;
 // Instead it relies on the extension to pass filters through.
 function syncSavedPreferences() {
   const appendComponentStack = getAppendComponentStack();
+  const enableDoubleLogging = getEnableDoubleLogging();
   const breakOnConsoleErrors = getBreakOnConsoleErrors();
   const componentFilters = getSavedComponentFilters();
   chrome.devtools.inspectedWindow.eval(
     `window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = ${JSON.stringify(
       appendComponentStack,
+    )};
+    window.__REACT_DEVTOOLS_ENABLE_DOUBLE_LOGGING__ = ${JSON.stringify(
+      enableDoubleLogging,
     )};
     window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ = ${JSON.stringify(
       breakOnConsoleErrors,

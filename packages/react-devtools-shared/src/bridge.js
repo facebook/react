@@ -87,6 +87,7 @@ type NativeStyleEditor_SetValueParams = {|
 
 type UpdateConsolePatchSettingsParams = {|
   appendComponentStack: boolean,
+  enableDoubleLogging: boolean,
   breakOnConsoleErrors: boolean,
 |};
 

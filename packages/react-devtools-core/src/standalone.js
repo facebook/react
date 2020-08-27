@@ -20,6 +20,7 @@ import {
   getAppendComponentStack,
   getBreakOnConsoleErrors,
   getSavedComponentFilters,
+  getEnableDoubleLogging,
 } from 'react-devtools-shared/src/utils';
 import {Server} from 'ws';
 import {join} from 'path';
@@ -295,6 +296,9 @@ function startServer(
     // Because of this it relies on the extension to pass filters, so include them wth the response here.
     // This will ensure that saved filters are shared across different web pages.
     const savedPreferencesString = `
+    window.__REACT_DEVTOOLS_ENABLE_DOUBLE_LOGGING__ = ${JSON.stringify(
+      getEnableDoubleLogging(),
+    )};
       window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = ${JSON.stringify(
         getAppendComponentStack(),
       )};
