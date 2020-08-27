@@ -462,7 +462,7 @@ export function useCallback<T>(
 function useMutableSource<Source, Snapshot>(
   source: MutableSource<Source>,
   getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+  subscribe: MutableSourceSubscribeFn<Source>,
 ): Snapshot {
   resolveCurrentlyRenderingComponent();
   return getSnapshot(source._source);

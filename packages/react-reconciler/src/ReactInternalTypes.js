@@ -298,7 +298,7 @@ export type Dispatcher = {|
   useMutableSource<Source, Snapshot>(
     source: MutableSource<Source>,
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-    subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+    subscribe: MutableSourceSubscribeFn<Source>,
   ): Snapshot,
   useOpaqueIdentifier(): any,
 
