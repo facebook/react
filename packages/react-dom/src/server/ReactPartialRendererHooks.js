@@ -15,7 +15,6 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
 } from 'shared/ReactTypes';
-import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberTransition';
 import type PartialRenderer from './ReactPartialRenderer';
 
 import {validateContextBounds} from './ReactPartialRendererContext';
@@ -40,10 +39,6 @@ type Hook = {|
   memoizedState: any,
   queue: UpdateQueue<any> | null,
   next: Hook | null,
-|};
-
-type TimeoutConfig = {|
-  timeoutMs: number,
 |};
 
 type OpaqueIDType = string;
@@ -468,14 +463,12 @@ function useMutableSource<Source, Snapshot>(
   return getSnapshot(source._source);
 }
 
-function useDeferredValue<T>(value: T, config: TimeoutConfig | null | void): T {
+function useDeferredValue<T>(value: T): T {
   resolveCurrentlyRenderingComponent();
   return value;
 }
 
-function useTransition(
-  config: SuspenseConfig | null | void,
-): [(callback: () => void) => void, boolean] {
+function useTransition(): [(callback: () => void) => void, boolean] {
   resolveCurrentlyRenderingComponent();
   const startTransition = callback => {
     callback();

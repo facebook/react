@@ -16,7 +16,6 @@ import type {
 import type {Fiber, Dispatcher} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookEffectTag} from './ReactHookEffectTags';
-import type {SuspenseConfig} from './ReactFiberTransition';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
@@ -150,10 +149,6 @@ export type Effect = {|
 |};
 
 export type FunctionComponentUpdateQueue = {|lastEffect: Effect | null|};
-
-type TimeoutConfig = {|
-  timeoutMs: number,
-|};
 
 type BasicStateAction<S> = (S => S) | S;
 
@@ -1432,10 +1427,7 @@ function updateMemo<T>(
   return nextValue;
 }
 
-function mountDeferredValue<T>(
-  value: T,
-  config: TimeoutConfig | void | null,
-): T {
+function mountDeferredValue<T>(value: T): T {
   const [prevValue, setValue] = mountState(value);
   mountEffect(() => {
     const prevTransition = ReactCurrentBatchConfig.transition;
@@ -1445,14 +1437,11 @@ function mountDeferredValue<T>(
     } finally {
       ReactCurrentBatchConfig.transition = prevTransition;
     }
-  }, [value, config]);
+  }, [value]);
   return prevValue;
 }
 
-function updateDeferredValue<T>(
-  value: T,
-  config: TimeoutConfig | void | null,
-): T {
+function updateDeferredValue<T>(value: T): T {
   const [prevValue, setValue] = updateState(value);
   updateEffect(() => {
     const prevTransition = ReactCurrentBatchConfig.transition;
@@ -1462,14 +1451,11 @@ function updateDeferredValue<T>(
     } finally {
       ReactCurrentBatchConfig.transition = prevTransition;
     }
-  }, [value, config]);
+  }, [value]);
   return prevValue;
 }
 
-function rerenderDeferredValue<T>(
-  value: T,
-  config: TimeoutConfig | void | null,
-): T {
+function rerenderDeferredValue<T>(value: T): T {
   const [prevValue, setValue] = rerenderState(value);
   updateEffect(() => {
     const prevTransition = ReactCurrentBatchConfig.transition;
@@ -1479,11 +1465,11 @@ function rerenderDeferredValue<T>(
     } finally {
       ReactCurrentBatchConfig.transition = prevTransition;
     }
-  }, [value, config]);
+  }, [value]);
   return prevValue;
 }
 
-function startTransition(setPending, config, callback) {
+function startTransition(setPending, callback) {
   const priorityLevel = getCurrentPriorityLevel();
   if (decoupleUpdatePriorityFromScheduler) {
     const previousLanePriority = getCurrentUpdateLanePriority();
@@ -1500,7 +1486,9 @@ function startTransition(setPending, config, callback) {
       },
     );
 
-    // If there's no SuspenseConfig set, we'll use the DefaultLanePriority for this transition.
+    // TODO: Can remove this. Was only necessary because we used to give
+    // different behavior to transitions without a config object. Now they are
+    // all treated the same.
     setCurrentUpdateLanePriority(DefaultLanePriority);
 
     runWithPriority(
@@ -1545,36 +1533,26 @@ function startTransition(setPending, config, callback) {
   }
 }
 
-function mountTransition(
-  config: SuspenseConfig | void | null,
-): [(() => void) => void, boolean] {
+function mountTransition(): [(() => void) => void, boolean] {
   const [isPending, setPending] = mountState(false);
-  const start = mountCallback(startTransition.bind(null, setPending, config), [
-    setPending,
-    config,
-  ]);
+  // The `start` method can be stored on a ref, since `setPending`
+  // never changes.
+  const start = startTransition.bind(null, setPending);
+  mountRef(start);
   return [start, isPending];
 }
 
-function updateTransition(
-  config: SuspenseConfig | void | null,
-): [(() => void) => void, boolean] {
-  const [isPending, setPending] = updateState(false);
-  const start = updateCallback(startTransition.bind(null, setPending, config), [
-    setPending,
-    config,
-  ]);
+function updateTransition(): [(() => void) => void, boolean] {
+  const [isPending] = updateState(false);
+  const startRef = updateRef();
+  const start: (() => void) => void = (startRef.current: any);
   return [start, isPending];
 }
 
-function rerenderTransition(
-  config: SuspenseConfig | void | null,
-): [(() => void) => void, boolean] {
-  const [isPending, setPending] = rerenderState(false);
-  const start = updateCallback(startTransition.bind(null, setPending, config), [
-    setPending,
-    config,
-  ]);
+function rerenderTransition(): [(() => void) => void, boolean] {
+  const [isPending] = rerenderState(false);
+  const startRef = updateRef();
+  const start: (() => void) => void = (startRef.current: any);
   return [start, isPending];
 }
 
@@ -1986,17 +1964,15 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+    useDeferredValue<T>(value: T): T {
       currentHookNameInDev = 'useDeferredValue';
       mountHookTypesDev();
-      return mountDeferredValue(value, config);
+      return mountDeferredValue(value);
     },
-    useTransition(
-      config: SuspenseConfig | void | null,
-    ): [(() => void) => void, boolean] {
+    useTransition(): [(() => void) => void, boolean] {
       currentHookNameInDev = 'useTransition';
       mountHookTypesDev();
-      return mountTransition(config);
+      return mountTransition();
     },
     useMutableSource<Source, Snapshot>(
       source: MutableSource<Source>,
@@ -2110,17 +2086,15 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+    useDeferredValue<T>(value: T): T {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
-      return mountDeferredValue(value, config);
+      return mountDeferredValue(value);
     },
-    useTransition(
-      config: SuspenseConfig | void | null,
-    ): [(() => void) => void, boolean] {
+    useTransition(): [(() => void) => void, boolean] {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
-      return mountTransition(config);
+      return mountTransition();
     },
     useMutableSource<Source, Snapshot>(
       source: MutableSource<Source>,
@@ -2234,17 +2208,15 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+    useDeferredValue<T>(value: T): T {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
-      return updateDeferredValue(value, config);
+      return updateDeferredValue(value);
     },
-    useTransition(
-      config: SuspenseConfig | void | null,
-    ): [(() => void) => void, boolean] {
+    useTransition(): [(() => void) => void, boolean] {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
-      return updateTransition(config);
+      return updateTransition();
     },
     useMutableSource<Source, Snapshot>(
       source: MutableSource<Source>,
@@ -2359,17 +2331,15 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+    useDeferredValue<T>(value: T): T {
       currentHookNameInDev = 'useDeferredValue';
       updateHookTypesDev();
-      return rerenderDeferredValue(value, config);
+      return rerenderDeferredValue(value);
     },
-    useTransition(
-      config: SuspenseConfig | void | null,
-    ): [(() => void) => void, boolean] {
+    useTransition(): [(() => void) => void, boolean] {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
-      return rerenderTransition(config);
+      return rerenderTransition();
     },
     useMutableSource<Source, Snapshot>(
       source: MutableSource<Source>,
@@ -2494,19 +2464,17 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+    useDeferredValue<T>(value: T): T {
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return mountDeferredValue(value, config);
+      return mountDeferredValue(value);
     },
-    useTransition(
-      config: SuspenseConfig | void | null,
-    ): [(() => void) => void, boolean] {
+    useTransition(): [(() => void) => void, boolean] {
       currentHookNameInDev = 'useTransition';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return mountTransition(config);
+      return mountTransition();
     },
     useMutableSource<Source, Snapshot>(
       source: MutableSource<Source>,
@@ -2633,19 +2601,17 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+    useDeferredValue<T>(value: T): T {
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateDeferredValue(value, config);
+      return updateDeferredValue(value);
     },
-    useTransition(
-      config: SuspenseConfig | void | null,
-    ): [(() => void) => void, boolean] {
+    useTransition(): [(() => void) => void, boolean] {
       currentHookNameInDev = 'useTransition';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return updateTransition(config);
+      return updateTransition();
     },
     useMutableSource<Source, Snapshot>(
       source: MutableSource<Source>,
@@ -2773,19 +2739,17 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDebugValue(value, formatterFn);
     },
-    useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T {
+    useDeferredValue<T>(value: T): T {
       currentHookNameInDev = 'useDeferredValue';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return rerenderDeferredValue(value, config);
+      return rerenderDeferredValue(value);
     },
-    useTransition(
-      config: SuspenseConfig | void | null,
-    ): [(() => void) => void, boolean] {
+    useTransition(): [(() => void) => void, boolean] {
       currentHookNameInDev = 'useTransition';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return rerenderTransition(config);
+      return rerenderTransition();
     },
     useMutableSource<Source, Snapshot>(
       source: MutableSource<Source>,

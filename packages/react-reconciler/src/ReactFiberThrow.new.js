@@ -314,8 +314,8 @@ function throwException(
         // that we can show the initial loading state as quickly as possible.
         //
         // If we hit a "Delayed" case, such as when we'd switch from content back into
-        // a fallback, then we should always suspend/restart. SuspenseConfig applies to
-        // this case. If none is defined, JND is used instead.
+        // a fallback, then we should always suspend/restart. Transitions apply
+        // to this case. If none is defined, JND is used instead.
         //
         // If we're already showing a fallback and it gets "retried", allowing us to show
         // another level, but there's still an inner boundary that would show a fallback,
