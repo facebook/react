@@ -603,6 +603,10 @@ const tests = {
           const [state4, dispatch2] = React.useReducer();
           const [state5, maybeSetState] = useFunnyState();
           const [state6, maybeDispatch] = useFunnyReducer();
+          const [startTransition1] = useTransition();
+          const [startTransition2, isPending2] = useTransition();
+          const [startTransition3] = React.useTransition();
+          const [startTransition4, isPending4] = React.useTransition();
           const mySetState = useCallback(() => {}, []);
           let myDispatch = useCallback(() => {}, []);
 
@@ -616,6 +620,10 @@ const tests = {
             setState2();
             dispatch1();
             dispatch2();
+            startTransition1();
+            startTransition2();
+            startTransition3();
+            startTransition4();
 
             // Dynamic
             console.log(state1);
@@ -624,6 +632,8 @@ const tests = {
             console.log(state4);
             console.log(state5);
             console.log(state6);
+            console.log(isPending2);
+            console.log(isPending4);
             mySetState();
             myDispatch();
 
@@ -634,6 +644,7 @@ const tests = {
             // Dynamic
             state1, state2, state3, state4, state5, state6,
             maybeRef1, maybeRef2,
+            isPending2, isPending4,
 
             // Not sure; assume dynamic
             mySetState, myDispatch,
