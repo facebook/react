@@ -20,7 +20,6 @@ import type {
 } from 'react-reconciler/src/ReactInternalTypes';
 import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 
-import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberTransition';
 import {NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 import ErrorStackParser from 'error-stack-parser';
@@ -61,10 +60,6 @@ type Hook = {
   memoizedState: any,
   next: Hook | null,
 };
-
-type TimeoutConfig = {|
-  timeoutMs: number,
-|};
 
 function getPrimitiveStackCache(): Map<string, Array<any>> {
   // This initializes a cache of all primitive hooks so that the top
@@ -258,9 +253,7 @@ function useMutableSource<Source, Snapshot>(
   return value;
 }
 
-function useTransition(
-  config: SuspenseConfig | null | void,
-): [(() => void) => void, boolean] {
+function useTransition(): [(() => void) => void, boolean] {
   // useTransition() composes multiple hooks internally.
   // Advance the current hook index the same number of times
   // so that subsequent hooks have the right memoized state.
@@ -269,12 +262,12 @@ function useTransition(
   hookLog.push({
     primitive: 'Transition',
     stackError: new Error(),
-    value: config,
+    value: undefined,
   });
   return [callback => {}, false];
 }
 
-function useDeferredValue<T>(value: T, config: TimeoutConfig | null | void): T {
+function useDeferredValue<T>(value: T): T {
   // useDeferredValue() composes multiple hooks internally.
   // Advance the current hook index the same number of times
   // so that subsequent hooks have the right memoized state.
