@@ -9,18 +9,22 @@
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
-const {ReactCurrentBatchConfig} = ReactSharedInternals;
-
+// Deprecated
 export type SuspenseConfig = {|
   timeoutMs: number,
   busyDelayMs?: number,
   busyMinDurationMs?: number,
 |};
 
+// Deprecated
 export type TimeoutConfig = {|
   timeoutMs: number,
 |};
 
-export function requestCurrentSuspenseConfig(): null | SuspenseConfig {
-  return ReactCurrentBatchConfig.suspense;
+const {ReactCurrentBatchConfig} = ReactSharedInternals;
+
+export const NoTransition = 0;
+
+export function requestCurrentTransition(): number {
+  return ReactCurrentBatchConfig.transition;
 }

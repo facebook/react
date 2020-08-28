@@ -20,7 +20,7 @@ import type {
 } from 'react-reconciler/src/ReactInternalTypes';
 import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 
-import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
+import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberTransition';
 import {NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 import ErrorStackParser from 'error-stack-parser';

@@ -27,7 +27,7 @@ import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {SuspenseConfig, TimeoutConfig} from './ReactFiberSuspenseConfig';
+import type {SuspenseConfig, TimeoutConfig} from './ReactFiberTransition';
 
 export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
 

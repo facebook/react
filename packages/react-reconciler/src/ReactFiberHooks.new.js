@@ -16,7 +16,7 @@ import type {
 import type {Fiber, Dispatcher} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookEffectTag} from './ReactHookEffectTags';
-import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
+import type {SuspenseConfig} from './ReactFiberTransition';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
@@ -70,7 +70,6 @@ import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.new';
-import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
   UserBlockingPriority,
   NormalPriority,
@@ -1003,8 +1002,7 @@ function useMutableSource<Source, Snapshot>(
       if (!is(snapshot, maybeNewSnapshot)) {
         setSnapshot(maybeNewSnapshot);
 
-        const suspenseConfig = requestCurrentSuspenseConfig();
-        const lane = requestUpdateLane(fiber, suspenseConfig);
+        const lane = requestUpdateLane(fiber);
         markRootMutableRead(root, lane);
       }
       // If the source mutated between render and now,
@@ -1024,8 +1022,7 @@ function useMutableSource<Source, Snapshot>(
         latestSetSnapshot(latestGetSnapshot(source._source));
 
         // Record a pending mutable source update with the same expiration time.
-        const suspenseConfig = requestCurrentSuspenseConfig();
-        const lane = requestUpdateLane(fiber, suspenseConfig);
+        const lane = requestUpdateLane(fiber);
 
         markRootMutableRead(root, lane);
       } catch (error) {
@@ -1441,12 +1438,12 @@ function mountDeferredValue<T>(
 ): T {
   const [prevValue, setValue] = mountState(value);
   mountEffect(() => {
-    const previousConfig = ReactCurrentBatchConfig.suspense;
-    ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+    const prevTransition = ReactCurrentBatchConfig.transition;
+    ReactCurrentBatchConfig.transition = 1;
     try {
       setValue(value);
     } finally {
-      ReactCurrentBatchConfig.suspense = previousConfig;
+      ReactCurrentBatchConfig.transition = prevTransition;
     }
   }, [value, config]);
   return prevValue;
@@ -1458,12 +1455,12 @@ function updateDeferredValue<T>(
 ): T {
   const [prevValue, setValue] = updateState(value);
   updateEffect(() => {
-    const previousConfig = ReactCurrentBatchConfig.suspense;
-    ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+    const prevTransition = ReactCurrentBatchConfig.transition;
+    ReactCurrentBatchConfig.transition = 1;
     try {
       setValue(value);
     } finally {
-      ReactCurrentBatchConfig.suspense = previousConfig;
+      ReactCurrentBatchConfig.transition = prevTransition;
     }
   }, [value, config]);
   return prevValue;
@@ -1475,12 +1472,12 @@ function rerenderDeferredValue<T>(
 ): T {
   const [prevValue, setValue] = rerenderState(value);
   updateEffect(() => {
-    const previousConfig = ReactCurrentBatchConfig.suspense;
-    ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+    const prevTransition = ReactCurrentBatchConfig.transition;
+    ReactCurrentBatchConfig.transition = 1;
     try {
       setValue(value);
     } finally {
-      ReactCurrentBatchConfig.suspense = previousConfig;
+      ReactCurrentBatchConfig.transition = prevTransition;
     }
   }, [value, config]);
   return prevValue;
@@ -1509,8 +1506,8 @@ function startTransition(setPending, config, callback) {
     runWithPriority(
       priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
       () => {
-        const previousConfig = ReactCurrentBatchConfig.suspense;
-        ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+        const prevTransition = ReactCurrentBatchConfig.transition;
+        ReactCurrentBatchConfig.transition = 1;
         try {
           setPending(false);
           callback();
@@ -1518,7 +1515,7 @@ function startTransition(setPending, config, callback) {
           if (decoupleUpdatePriorityFromScheduler) {
             setCurrentUpdateLanePriority(previousLanePriority);
           }
-          ReactCurrentBatchConfig.suspense = previousConfig;
+          ReactCurrentBatchConfig.transition = prevTransition;
         }
       },
     );
@@ -1535,13 +1532,13 @@ function startTransition(setPending, config, callback) {
     runWithPriority(
       priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
       () => {
-        const previousConfig = ReactCurrentBatchConfig.suspense;
-        ReactCurrentBatchConfig.suspense = config === undefined ? null : config;
+        const prevTransition = ReactCurrentBatchConfig.transition;
+        ReactCurrentBatchConfig.transition = 1;
         try {
           setPending(false);
           callback();
         } finally {
-          ReactCurrentBatchConfig.suspense = previousConfig;
+          ReactCurrentBatchConfig.transition = prevTransition;
         }
       },
     );
@@ -1685,8 +1682,7 @@ function dispatchAction<S, A>(
   }
 
   const eventTime = requestEventTime();
-  const suspenseConfig = requestCurrentSuspenseConfig();
-  const lane = requestUpdateLane(fiber, suspenseConfig);
+  const lane = requestUpdateLane(fiber);
 
   const update: Update<S, A> = {
     lane,
