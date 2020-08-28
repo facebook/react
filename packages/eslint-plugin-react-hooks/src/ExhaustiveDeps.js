@@ -400,6 +400,17 @@ export default {
               return false;
             }
           }
+        } else if (name === 'useTransition') {
+          if (
+            id.type === 'ArrayPattern' &&
+            Array.isArray(resolved.identifiers)
+          ) {
+            // Is first tuple value the same reference we're checking?
+            if (id.elements[0] === resolved.identifiers[0]) {
+              // Setter is stable.
+              return true;
+            }
+          }
         }
         // By default assume it's dynamic.
         return false;
