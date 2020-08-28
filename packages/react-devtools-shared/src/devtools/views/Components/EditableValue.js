@@ -28,6 +28,7 @@ export default function EditableValue({
   value,
 }: EditableValueProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const checkBoxRef = useRef<HTMLInputElement | any>(null);
   const [state, dispatch] = useEditableValue(value);
   const {editableValue, hasPendingChanges, isValid, parsedValue} = state;
 
@@ -77,7 +78,7 @@ export default function EditableValue({
 
   const applyChangesFromCheckBox = () => {
     if (isValid) {
-      overrideValueFn(path, inputRef.current.checked);
+      overrideValueFn(path, checkBoxRef.current.checked);
     }
   };
 
@@ -111,7 +112,7 @@ export default function EditableValue({
             checked={isBool}
             type="checkbox"
             onClick={handeCheckBoxToggle}
-            ref={inputRef}
+            ref={checkBoxRef}
           />
         </label>
       )}
