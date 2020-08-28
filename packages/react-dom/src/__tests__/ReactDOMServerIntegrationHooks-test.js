@@ -1190,6 +1190,15 @@ describe('ReactDOMServerHooks', () => {
         identifierPrefix: 'two',
       }).setEncoding('utf8');
 
+      const streamOneIsDone = new Promise((resolve, reject) => {
+        streamOne.on('end', () => resolve());
+        streamOne.on('error', e => reject(e));
+      });
+      const streamTwoIsDone = new Promise((resolve, reject) => {
+        streamTwo.on('end', () => resolve());
+        streamTwo.on('error', e => reject(e));
+      });
+
       const containerOne = document.createElement('div');
       const containerTwo = document.createElement('div');
 
@@ -1230,6 +1239,17 @@ describe('ReactDOMServerHooks', () => {
       expect(containerTwo.children[0].getAttribute('id')).toEqual(
         containerTwo.children[2].getAttribute('aria-labelledby'),
       );
+
+      // Exhaust the rest of the stream
+      class Sink extends require('stream').Writable {
+        _write(chunk, encoding, done) {
+          done();
+        }
+      }
+      streamOne.pipe(new Sink());
+      streamTwo.pipe(new Sink());
+
+      await Promise.all([streamOneIsDone, streamTwoIsDone]);
     });
 
     // @gate experimental
