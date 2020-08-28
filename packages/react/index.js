@@ -78,7 +78,6 @@ export {
   useDeferredValue as unstable_useDeferredValue,
   SuspenseList,
   SuspenseList as unstable_SuspenseList,
-  unstable_withSuspenseConfig,
   block,
   block as unstable_block,
   unstable_LegacyHidden,

@@ -771,14 +771,11 @@ function runActTests(label, render, unmount, rerender) {
           expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
 
           // trigger a suspendy update with a delay
-          React.unstable_withSuspenseConfig(
-            () => {
-              act(() => {
-                rerender(<App suspend={true} />);
-              });
-            },
-            {timeout: 5000},
-          );
+          React.unstable_startTransition(() => {
+            act(() => {
+              rerender(<App suspend={true} />);
+            });
+          });
 
           if (label === 'concurrent mode') {
             // In Concurrent Mode, refresh transitions delay indefinitely.

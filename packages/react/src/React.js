@@ -49,7 +49,6 @@ import {
   useDeferredValue,
   useOpaqueIdentifier,
 } from './ReactHooks';
-import {withSuspenseConfig} from './ReactBatchConfig';
 import {
   createElementWithValidation,
   createFactoryWithValidation,
@@ -112,7 +111,6 @@ export {
   useDeferredValue,
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
-  withSuspenseConfig as unstable_withSuspenseConfig,
   // enableBlocksAPI
   block,
   // enableFundamentalAPI
