@@ -7973,6 +7973,11 @@ new ESLintTester({
 }).run('react-hooks', ReactHooksESLintRule, tests);
 
 new ESLintTester({
+  parser: require.resolve('@babel/eslint-parser'),
+  parserOptions,
+}).run('react-hooks', ReactHooksESLintRule, tests);
+
+new ESLintTester({
   parser: require.resolve('@typescript-eslint/parser'),
   parserOptions,
 }).run('react-hooks', ReactHooksESLintRule, testsTypescript);
