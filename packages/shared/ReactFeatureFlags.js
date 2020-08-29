@@ -137,4 +137,4 @@ export const enableDiscreteEventFlushingChange = false;
 export const enablePassiveEventIntervention = true;
 export const disableOnScrollBubbling = true;
 
-export const enableEagerRootListeners = false;
+export const enableEagerRootListeners = true;

@@ -76,7 +76,7 @@ function createRootErrorUpdate(
   errorInfo: CapturedValue<mixed>,
   lane: Lane,
 ): Update<mixed> {
-  const update = createUpdate(NoTimestamp, lane, null);
+  const update = createUpdate(NoTimestamp, lane);
   // Unmount the root by rendering null.
   update.tag = CaptureUpdate;
   // Caution: React DevTools currently depends on this property
@@ -95,7 +95,7 @@ function createClassErrorUpdate(
   errorInfo: CapturedValue<mixed>,
   lane: Lane,
 ): Update<mixed> {
-  const update = createUpdate(NoTimestamp, lane, null);
+  const update = createUpdate(NoTimestamp, lane);
   update.tag = CaptureUpdate;
   const getDerivedStateFromError = fiber.type.getDerivedStateFromError;
   if (typeof getDerivedStateFromError === 'function') {
@@ -274,7 +274,7 @@ function throwException(
               // When we try rendering again, we should not reuse the current fiber,
               // since it's known to be in an inconsistent state. Use a force update to
               // prevent a bail out.
-              const update = createUpdate(NoTimestamp, SyncLane, null);
+              const update = createUpdate(NoTimestamp, SyncLane);
               update.tag = ForceUpdate;
               enqueueUpdate(sourceFiber, update);
             }
@@ -314,8 +314,8 @@ function throwException(
         // that we can show the initial loading state as quickly as possible.
         //
         // If we hit a "Delayed" case, such as when we'd switch from content back into
-        // a fallback, then we should always suspend/restart. SuspenseConfig applies to
-        // this case. If none is defined, JND is used instead.
+        // a fallback, then we should always suspend/restart. Transitions apply
+        // to this case. If none is defined, JND is used instead.
         //
         // If we're already showing a fallback and it gets "retried", allowing us to show
         // another level, but there's still an inner boundary that would show a fallback,

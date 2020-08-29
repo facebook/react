@@ -9,16 +9,12 @@
 
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
 
-// Default to an arbitrarily large timeout. Effectively, this is infinite. The
-// eventual goal is to never timeout when refreshing already visible content.
-const IndefiniteTimeoutConfig = {timeoutMs: 100000};
-
 export function startTransition(scope: () => void) {
-  const previousConfig = ReactCurrentBatchConfig.suspense;
-  ReactCurrentBatchConfig.suspense = IndefiniteTimeoutConfig;
+  const prevTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition = 1;
   try {
     scope();
   } finally {
-    ReactCurrentBatchConfig.suspense = previousConfig;
+    ReactCurrentBatchConfig.transition = prevTransition;
   }
 }

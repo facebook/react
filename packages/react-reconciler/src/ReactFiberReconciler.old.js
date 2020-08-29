@@ -83,7 +83,6 @@ import {
   getCurrentUpdateLanePriority,
   setCurrentUpdateLanePriority,
 } from './ReactFiberLane';
-import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {
   scheduleRefresh,
   scheduleRoot,
@@ -266,8 +265,7 @@ export function updateContainer(
       warnIfNotScopedWithMatchingAct(current);
     }
   }
-  const suspenseConfig = requestCurrentSuspenseConfig();
-  const lane = requestUpdateLane(current, suspenseConfig);
+  const lane = requestUpdateLane(current);
 
   if (enableSchedulingProfiler) {
     markRenderScheduled(lane);
@@ -297,7 +295,7 @@ export function updateContainer(
     }
   }
 
-  const update = createUpdate(eventTime, lane, suspenseConfig);
+  const update = createUpdate(eventTime, lane);
   // Caution: React DevTools currently depends on this property
   // being called "element".
   update.payload = {element};
@@ -427,7 +425,7 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
     return;
   }
   const eventTime = requestEventTime();
-  const lane = requestUpdateLane(fiber, null);
+  const lane = requestUpdateLane(fiber);
   scheduleUpdateOnFiber(fiber, lane, eventTime);
   markRetryLaneIfNotHydrated(fiber, lane);
 }

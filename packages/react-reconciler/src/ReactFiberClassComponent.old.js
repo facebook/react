@@ -56,7 +56,6 @@ import {
   requestUpdateLane,
   scheduleUpdateOnFiber,
 } from './ReactFiberWorkLoop.old';
-import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
 import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
@@ -196,10 +195,9 @@ const classComponentUpdater = {
   enqueueSetState(inst, payload, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
-    const suspenseConfig = requestCurrentSuspenseConfig();
-    const lane = requestUpdateLane(fiber, suspenseConfig);
+    const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane, suspenseConfig);
+    const update = createUpdate(eventTime, lane);
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
@@ -227,10 +225,9 @@ const classComponentUpdater = {
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
-    const suspenseConfig = requestCurrentSuspenseConfig();
-    const lane = requestUpdateLane(fiber, suspenseConfig);
+    const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane, suspenseConfig);
+    const update = createUpdate(eventTime, lane);
     update.tag = ReplaceState;
     update.payload = payload;
 
@@ -260,10 +257,9 @@ const classComponentUpdater = {
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
-    const suspenseConfig = requestCurrentSuspenseConfig();
-    const lane = requestUpdateLane(fiber, suspenseConfig);
+    const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane, suspenseConfig);
+    const update = createUpdate(eventTime, lane);
     update.tag = ForceUpdate;
 
     if (callback !== undefined && callback !== null) {

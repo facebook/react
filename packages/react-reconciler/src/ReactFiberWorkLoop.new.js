@@ -12,7 +12,6 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {StackCursor} from './ReactFiberStack.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
@@ -153,8 +152,6 @@ import {
   SyncLanePriority,
   SyncBatchedLanePriority,
   InputDiscreteLanePriority,
-  TransitionShortLanePriority,
-  TransitionLongLanePriority,
   DefaultLanePriority,
   NoLanes,
   NoLane,
@@ -173,6 +170,7 @@ import {
   hasDiscreteLanes,
   includesNonIdleWork,
   includesOnlyRetries,
+  includesOnlyTransitions,
   getNextLanes,
   returnNextLanesPriority,
   setCurrentUpdateLanePriority,
@@ -189,6 +187,7 @@ import {
   schedulerPriorityToLanePriority,
   lanePriorityToSchedulerPriority,
 } from './ReactFiberLane';
+import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork.new';
 import {completeWork} from './ReactFiberCompleteWork.new';
 import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork.new';
@@ -304,8 +303,6 @@ const subtreeRenderLanesCursor: StackCursor<Lanes> = createCursor(NoLanes);
 let workInProgressRootExitStatus: RootExitStatus = RootIncomplete;
 // A fatal error, if one is thrown
 let workInProgressRootFatalError: mixed = null;
-let workInProgressRootLatestSuspenseTimeout: number = NoTimestamp;
-let workInProgressRootCanSuspendUsingConfig: null | SuspenseConfig = null;
 // "Included" lanes refer to lanes that were worked on during this render. It's
 // slightly different than `renderLanes` because `renderLanes` can change as you
 // enter and exit an Offscreen tree. This value is the combination of all render
@@ -325,7 +322,6 @@ let mostRecentlyUpdatedRoot: FiberRoot | null = null;
 // model where we don't commit new loading states in too quick succession.
 let globalMostRecentFallbackTime: number = 0;
 const FALLBACK_THROTTLE_MS: number = 500;
-const DEFAULT_TIMEOUT_MS: number = 5000;
 
 // The absolute time for when we should start giving up on rendering
 // more and prefer CPU suspense heuristics instead.
@@ -406,10 +402,7 @@ export function getCurrentTime() {
   return now();
 }
 
-export function requestUpdateLane(
-  fiber: Fiber,
-  suspenseConfig: SuspenseConfig | null,
-): Lane {
+export function requestUpdateLane(fiber: Fiber): Lane {
   // Special cases
   const mode = fiber.mode;
   if ((mode & BlockingMode) === NoMode) {
@@ -453,28 +446,15 @@ export function requestUpdateLane(
     currentEventWipLanes = workInProgressRootIncludedLanes;
   }
 
-  if (suspenseConfig !== null) {
-    // Use the size of the timeout as a heuristic to prioritize shorter
-    // transitions over longer ones.
-    // TODO: This will coerce numbers larger than 31 bits to 0.
-    const timeoutMs = suspenseConfig.timeoutMs;
-    const transitionLanePriority =
-      timeoutMs === undefined || (timeoutMs | 0) < 10000
-        ? TransitionShortLanePriority
-        : TransitionLongLanePriority;
-
+  const isTransition = requestCurrentTransition() !== NoTransition;
+  if (isTransition) {
     if (currentEventPendingLanes !== NoLanes) {
       currentEventPendingLanes =
         mostRecentlyUpdatedRoot !== null
           ? mostRecentlyUpdatedRoot.pendingLanes
           : NoLanes;
     }
-
-    return findTransitionLane(
-      transitionLanePriority,
-      currentEventWipLanes,
-      currentEventPendingLanes,
-    );
+    return findTransitionLane(currentEventWipLanes, currentEventPendingLanes);
   }
 
   // TODO: Remove this dependency on the Scheduler priority.
@@ -936,52 +916,30 @@ function finishConcurrentRender(root, exitStatus, lanes) {
     case RootSuspendedWithDelay: {
       markRootSuspended(root, lanes);
 
-      if (
-        // do not delay if we're inside an act() scope
-        !shouldForceFlushFallbacksInDEV()
-      ) {
-        // We're suspended in a state that should be avoided. We'll try to
-        // avoid committing it for as long as the timeouts let us.
-        const nextLanes = getNextLanes(root, NoLanes);
-        if (nextLanes !== NoLanes) {
-          // There's additional work on this root.
-          break;
-        }
-        const suspendedLanes = root.suspendedLanes;
-        if (!isSubsetOfLanes(suspendedLanes, lanes)) {
-          // We should prefer to render the fallback of at the last
-          // suspended level. Ping the last suspended level to try
-          // rendering it again.
-          // FIXME: What if the suspended lanes are Idle? Should not restart.
-          const eventTime = requestEventTime();
-          markRootPinged(root, suspendedLanes, eventTime);
-          break;
-        }
+      if (includesOnlyTransitions(lanes)) {
+        // This is a transition, so we should exit without committing a
+        // placeholder and without scheduling a timeout. Delay indefinitely
+        // until we receive more data.
+        break;
+      }
+
+      if (!shouldForceFlushFallbacksInDEV()) {
+        // This is not a transition, but we did trigger an avoided state.
+        // Schedule a placeholder to display after a short delay, using the Just
+        // Noticable Difference.
+        // TODO: Is the JND optimization worth the added complexity? If this is
+        // the only reason we track the event time, then probably not.
+        // Consider removing.
 
         const mostRecentEventTime = getMostRecentEventTime(root, lanes);
-        let msUntilTimeout;
-        if (workInProgressRootLatestSuspenseTimeout !== NoTimestamp) {
-          // We have processed a suspense config whose expiration time we
-          // can use as the timeout.
-          msUntilTimeout = workInProgressRootLatestSuspenseTimeout - now();
-        } else if (mostRecentEventTime === NoTimestamp) {
-          // This should never normally happen because only new updates
-          // cause delayed states, so we should have processed something.
-          // However, this could also happen in an offscreen tree.
-          msUntilTimeout = 0;
-        } else {
-          // If we didn't process a suspense config, compute a JND based on
-          // the amount of time elapsed since the most recent event time.
-          const eventTimeMs = mostRecentEventTime;
-          const timeElapsedMs = now() - eventTimeMs;
-          msUntilTimeout = jnd(timeElapsedMs) - timeElapsedMs;
-        }
+        const eventTimeMs = mostRecentEventTime;
+        const timeElapsedMs = now() - eventTimeMs;
+        const msUntilTimeout = jnd(timeElapsedMs) - timeElapsedMs;
 
         // Don't bother with a very short suspense time.
         if (msUntilTimeout > 10) {
-          // The render is suspended, it hasn't timed out, and there's no
-          // lower priority work to do. Instead of committing the fallback
-          // immediately, wait for more data to arrive.
+          // Instead of committing the fallback immediately, wait for more data
+          // to arrive.
           root.timeoutHandle = scheduleTimeout(
             commitRoot.bind(null, root),
             msUntilTimeout,
@@ -989,36 +947,13 @@ function finishConcurrentRender(root, exitStatus, lanes) {
           break;
         }
       }
-      // The work expired. Commit immediately.
+
+      // Commit the placeholder.
       commitRoot(root);
       break;
     }
     case RootCompleted: {
       // The work completed. Ready to commit.
-      const mostRecentEventTime = getMostRecentEventTime(root, lanes);
-      if (
-        // do not delay if we're inside an act() scope
-        !shouldForceFlushFallbacksInDEV() &&
-        mostRecentEventTime !== NoTimestamp &&
-        workInProgressRootCanSuspendUsingConfig !== null
-      ) {
-        // If we have exceeded the minimum loading delay, which probably
-        // means we have shown a spinner already, we might have to suspend
-        // a bit longer to ensure that the spinner is shown for
-        // enough time.
-        const msUntilTimeout = computeMsUntilSuspenseLoadingDelay(
-          mostRecentEventTime,
-          workInProgressRootCanSuspendUsingConfig,
-        );
-        if (msUntilTimeout > 10) {
-          markRootSuspended(root, lanes);
-          root.timeoutHandle = scheduleTimeout(
-            commitRoot.bind(null, root),
-            msUntilTimeout,
-          );
-          break;
-        }
-      }
       commitRoot(root);
       break;
     }
@@ -1401,8 +1336,6 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
   workInProgressRootRenderLanes = subtreeRenderLanes = workInProgressRootIncludedLanes = lanes;
   workInProgressRootExitStatus = RootIncomplete;
   workInProgressRootFatalError = null;
-  workInProgressRootLatestSuspenseTimeout = NoTimestamp;
-  workInProgressRootCanSuspendUsingConfig = null;
   workInProgressRootSkippedLanes = NoLanes;
   workInProgressRootUpdatedLanes = NoLanes;
   workInProgressRootPingedLanes = NoLanes;
@@ -1512,30 +1445,6 @@ function popInteractions(prevInteractions) {
 
 export function markCommitTimeOfFallback() {
   globalMostRecentFallbackTime = now();
-}
-
-export function markRenderEventTimeAndConfig(
-  eventTime: number,
-  suspenseConfig: null | SuspenseConfig,
-): void {
-  // Track the largest/latest timeout deadline in this batch.
-  // TODO: If there are two transitions in the same batch, shouldn't we
-  // choose the smaller one? Maybe this is because when an intermediate
-  // transition is superseded, we should ignore its suspense config, but
-  // we don't currently.
-  if (suspenseConfig !== null) {
-    // If `timeoutMs` is not specified, we default to 5 seconds. We have to
-    // resolve this default here because `suspenseConfig` is owned
-    // by userspace.
-    // TODO: Store this on the root instead (transition -> timeoutMs)
-    // TODO: Should this default to a JND instead?
-    const timeoutMs = suspenseConfig.timeoutMs | 0 || DEFAULT_TIMEOUT_MS;
-    const timeoutTime = eventTime + timeoutMs;
-    if (timeoutTime > workInProgressRootLatestSuspenseTimeout) {
-      workInProgressRootLatestSuspenseTimeout = timeoutTime;
-      workInProgressRootCanSuspendUsingConfig = suspenseConfig;
-    }
-  }
 }
 
 export function markSkippedUpdateLanes(lane: Lane | Lanes): void {
@@ -3109,30 +3018,6 @@ function jnd(timeElapsed: number) {
     : timeElapsed < 4320
     ? 4320
     : ceil(timeElapsed / 1960) * 1960;
-}
-
-function computeMsUntilSuspenseLoadingDelay(
-  mostRecentEventTime: number,
-  suspenseConfig: SuspenseConfig,
-) {
-  const busyMinDurationMs = (suspenseConfig.busyMinDurationMs: any) | 0;
-  if (busyMinDurationMs <= 0) {
-    return 0;
-  }
-  const busyDelayMs = (suspenseConfig.busyDelayMs: any) | 0;
-
-  // Compute the time until this render pass would expire.
-  const currentTimeMs: number = now();
-  const eventTimeMs: number = mostRecentEventTime;
-  const timeElapsed = currentTimeMs - eventTimeMs;
-  if (timeElapsed <= busyDelayMs) {
-    // If we haven't yet waited longer than the initial delay, we don't
-    // have to wait any additional time.
-    return 0;
-  }
-  const msUntilTimeout = busyDelayMs + busyMinDurationMs - timeElapsed;
-  // This is the value that is passed to `setTimeout`.
-  return msUntilTimeout;
 }
 
 function checkForNestedUpdates() {
