@@ -308,21 +308,6 @@ let mostRecentlyUpdatedRoot: FiberRoot | null = null;
 let globalMostRecentFallbackTime: number = 0;
 const FALLBACK_THROTTLE_MS: number = 500;
 
-// The absolute time for when we should start giving up on rendering
-// more and prefer CPU suspense heuristics instead.
-let workInProgressRootRenderTargetTime: number = Infinity;
-// How long a render is supposed to take before we start following CPU
-// suspense heuristics and opt out of rendering more content.
-const RENDER_TIMEOUT_MS = 500;
-
-function resetRenderTimer() {
-  workInProgressRootRenderTargetTime = now() + RENDER_TIMEOUT_MS;
-}
-
-export function getRenderTargetTime(): number {
-  return workInProgressRootRenderTargetTime;
-}
-
 let nextEffect: Fiber | null = null;
 let hasUncaughtError = false;
 let firstUncaughtError = null;
@@ -585,7 +570,6 @@ export function scheduleUpdateOnFiber(
         // scheduleCallbackForFiber to preserve the ability to schedule a callback
         // without immediately flushing it. We only do this for user-initiated
         // updates, to preserve historical behavior of legacy mode.
-        resetRenderTimer();
         flushSyncCallbackQueue();
       }
     }
@@ -1049,7 +1033,6 @@ export function flushRoot(root: FiberRoot, lanes: Lanes) {
   markRootExpired(root, lanes);
   ensureRootIsScheduled(root, now());
   if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
-    resetRenderTimer();
     flushSyncCallbackQueue();
   }
 }
@@ -1124,7 +1107,6 @@ export function batchedUpdates<A, R>(fn: A => R, a: A): R {
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
       // Flush the immediate callbacks that were scheduled during this batch
-      resetRenderTimer();
       flushSyncCallbackQueue();
     }
   }
@@ -1139,7 +1121,6 @@ export function batchedEventUpdates<A, R>(fn: A => R, a: A): R {
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
       // Flush the immediate callbacks that were scheduled during this batch
-      resetRenderTimer();
       flushSyncCallbackQueue();
     }
   }
@@ -1168,7 +1149,6 @@ export function discreteUpdates<A, B, C, D, R>(
       executionContext = prevExecutionContext;
       if (executionContext === NoContext) {
         // Flush the immediate callbacks that were scheduled during this batch
-        resetRenderTimer();
         flushSyncCallbackQueue();
       }
     }
@@ -1182,7 +1162,6 @@ export function discreteUpdates<A, B, C, D, R>(
       executionContext = prevExecutionContext;
       if (executionContext === NoContext) {
         // Flush the immediate callbacks that were scheduled during this batch
-        resetRenderTimer();
         flushSyncCallbackQueue();
       }
     }
@@ -1199,7 +1178,6 @@ export function unbatchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
       // Flush the immediate callbacks that were scheduled during this batch
-      resetRenderTimer();
       flushSyncCallbackQueue();
     }
   }
@@ -1267,7 +1245,6 @@ export function flushControlled(fn: () => mixed): void {
       executionContext = prevExecutionContext;
       if (executionContext === NoContext) {
         // Flush the immediate callbacks that were scheduled during this batch
-        resetRenderTimer();
         flushSyncCallbackQueue();
       }
     }
@@ -1278,7 +1255,6 @@ export function flushControlled(fn: () => mixed): void {
       executionContext = prevExecutionContext;
       if (executionContext === NoContext) {
         // Flush the immediate callbacks that were scheduled during this batch
-        resetRenderTimer();
         flushSyncCallbackQueue();
       }
     }
@@ -1571,7 +1547,6 @@ function renderRootConcurrent(root: FiberRoot, lanes: Lanes) {
   // If the root or lanes have changed, throw out the existing stack
   // and prepare a fresh one. Otherwise we'll continue where we left off.
   if (workInProgressRoot !== root || workInProgressRootRenderLanes !== lanes) {
-    resetRenderTimer();
     prepareFreshStack(root, lanes);
     startWorkOnPendingInteractions(root, lanes);
   }

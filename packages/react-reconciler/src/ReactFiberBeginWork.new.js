@@ -2628,6 +2628,7 @@ function initSuspenseListRenderState(
       renderingStartTime: 0,
       last: lastContentRow,
       tail: tail,
+      tailExpiration: 0,
       tailMode: tailMode,
     }: SuspenseListRenderState);
   } else {
@@ -2637,6 +2638,7 @@ function initSuspenseListRenderState(
     renderState.renderingStartTime = 0;
     renderState.last = lastContentRow;
     renderState.tail = tail;
+    renderState.tailExpiration = 0;
     renderState.tailMode = tailMode;
   }
 }

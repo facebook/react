@@ -91,8 +91,6 @@ const TransitionLanes: Lanes = /*                       */ 0b0000000001111111110
 
 const RetryLanes: Lanes = /*                            */ 0b0000011110000000000000000000000;
 
-export const SomeRetryLane: Lanes = /*                  */ 0b0000010000000000000000000000000;
-
 export const SelectiveHydrationLane: Lane = /*          */ 0b0000100000000000000000000000000;
 
 const NonIdleLanes = /*                                 */ 0b0000111111111111111111111111111;
