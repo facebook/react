@@ -389,14 +389,11 @@ describe('SimpleEventPlugin', function() {
             <button
               ref={el => (button = el)}
               onClick={() => {
-                React.unstable_withSuspenseConfig(
-                  () => {
-                    this.setState(state => ({
-                      lowPriCount: state.lowPriCount + 1,
-                    }));
-                  },
-                  {timeoutMs: 5000},
-                );
+                React.unstable_startTransition(() => {
+                  this.setState(state => ({
+                    lowPriCount: state.lowPriCount + 1,
+                  }));
+                });
               }}>
               {text}
             </button>

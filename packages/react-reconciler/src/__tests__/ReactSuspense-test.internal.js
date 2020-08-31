@@ -363,12 +363,9 @@ describe('ReactSuspense', () => {
 
       // Schedule another update. This will have lower priority because it's
       // a transition.
-      React.unstable_withSuspenseConfig(
-        () => {
-          root.update(<App shouldSuspend={false} step={2} />);
-        },
-        {timeoutMs: 10000},
-      );
+      React.unstable_startTransition(() => {
+        root.update(<App shouldSuspend={false} step={2} />);
+      });
 
       // Interrupt to trigger a restart.
       interrupt();
@@ -465,12 +462,9 @@ describe('ReactSuspense', () => {
 
         // Schedule another update. This will have lower priority because it's
         // a transition.
-        React.unstable_withSuspenseConfig(
-          () => {
-            setShouldHideInParent(true);
-          },
-          {timeoutMs: 10000},
-        );
+        React.unstable_startTransition(() => {
+          setShouldHideInParent(true);
+        });
 
         expect(Scheduler).toFlushAndYieldThrough([
           // Should have restarted the first update, because of the interruption
