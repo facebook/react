@@ -15,6 +15,7 @@ Object {
   "numElements": 5,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -73,6 +74,7 @@ Object {
     },
   ],
   "ownerID": 4,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -131,6 +133,7 @@ Object {
     },
   ],
   "ownerID": 4,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -145,6 +148,7 @@ Object {
   "numElements": 5,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -165,6 +169,7 @@ Object {
   "numElements": 2,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -193,6 +198,7 @@ Object {
     },
   ],
   "ownerID": 3,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -207,6 +213,7 @@ Object {
   "numElements": 1,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -235,6 +242,7 @@ Object {
     },
   ],
   "ownerID": 2,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -249,6 +257,7 @@ Object {
   "numElements": 0,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -271,6 +280,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -328,6 +338,7 @@ Object {
     },
   ],
   "ownerID": 3,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -371,6 +382,7 @@ Object {
     },
   ],
   "ownerID": 3,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -399,6 +411,7 @@ Object {
     },
   ],
   "ownerID": 3,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -421,6 +434,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -478,6 +492,7 @@ Object {
     },
   ],
   "ownerID": 3,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -492,6 +507,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -512,6 +528,7 @@ Object {
   "numElements": 2,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -526,6 +543,7 @@ Object {
   "numElements": 2,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": 0,
   "searchResults": Array [
     3,
@@ -542,6 +560,7 @@ Object {
   "numElements": 3,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": 0,
   "searchResults": Array [
     3,
@@ -567,6 +586,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -581,6 +601,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": 0,
   "searchResults": Array [
     3,
@@ -598,6 +619,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": 0,
   "searchResults": Array [
     2,
@@ -614,6 +636,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "y",
@@ -628,6 +651,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": 0,
   "searchResults": Array [
     5,
@@ -651,6 +675,7 @@ Object {
   "numElements": 3,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -665,6 +690,7 @@ Object {
   "numElements": 3,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": 0,
   "searchResults": Array [
     3,
@@ -682,6 +708,7 @@ Object {
   "numElements": 3,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": 1,
   "searchResults": Array [
     3,
@@ -699,6 +726,7 @@ Object {
   "numElements": 2,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": 0,
   "searchResults": Array [
     3,
@@ -723,6 +751,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -737,6 +766,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": 0,
   "searchResults": Array [
     3,
@@ -755,6 +785,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": 1,
   "searchResults": Array [
     3,
@@ -773,6 +804,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": 2,
   "searchResults": Array [
     3,
@@ -791,6 +823,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": 1,
   "searchResults": Array [
     3,
@@ -809,6 +842,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": 0,
   "searchResults": Array [
     3,
@@ -827,6 +861,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": 2,
   "searchResults": Array [
     3,
@@ -845,6 +880,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": 0,
   "searchResults": Array [
     3,
@@ -871,6 +907,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -885,6 +922,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -899,6 +937,7 @@ Object {
   "numElements": 2,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -913,12 +952,44 @@ Object {
   "numElements": 0,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
   "selectedElementID": null,
   "selectedElementIndex": null,
 }
+`;
+
+exports[`TreeListContext tree state should navigate next/previous sibling and skip over children in between: 0: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+        <Child key="2">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`TreeListContext tree state should navigate the owner hierarchy: 0: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Wrapper>
+      ▾ <Parent>
+          <Child key="0">
+    ▾ <Wrapper>
+      ▾ <Parent>
+          <Child key="0">
+          <Child key="1">
+          <Child key="2">
+    ▾ <Wrapper>
+      ▾ <Parent>
+          <Child key="0">
+          <Child key="1">
 `;
 
 exports[`TreeListContext tree state should select child elements: 0: mount 1`] = `
@@ -938,6 +1009,7 @@ Object {
   "numElements": 7,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -952,6 +1024,7 @@ Object {
   "numElements": 7,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -966,6 +1039,7 @@ Object {
   "numElements": 7,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -980,6 +1054,7 @@ Object {
   "numElements": 7,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -1005,6 +1080,7 @@ Object {
   "numElements": 7,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -1019,6 +1095,7 @@ Object {
   "numElements": 7,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -1033,6 +1110,7 @@ Object {
   "numElements": 7,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -1047,6 +1125,7 @@ Object {
   "numElements": 7,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -1069,6 +1148,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -1083,6 +1163,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -1097,6 +1178,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -1111,6 +1193,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -1125,6 +1208,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -1139,6 +1223,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -1153,6 +1238,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -1167,6 +1253,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -1181,6 +1268,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
@@ -1195,6 +1283,7 @@ Object {
   "numElements": 4,
   "ownerFlatTree": null,
   "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
   "searchIndex": null,
   "searchResults": Array [],
   "searchText": "",
