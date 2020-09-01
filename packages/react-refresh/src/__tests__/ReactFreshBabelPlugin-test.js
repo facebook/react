@@ -16,13 +16,15 @@ function transform(input, options = {}) {
     babel.transform(input, {
       babelrc: false,
       configFile: false,
+      envName: options.envName,
       plugins: [
         '@babel/syntax-jsx',
         '@babel/syntax-dynamic-import',
         [
           freshPlugin,
           {
-            skipEnvCheck: true,
+            skipEnvCheck:
+              options.skipEnvCheck === undefined ? true : options.skipEnvCheck,
             // To simplify debugging tests:
             emitFullSignatures: true,
             ...options.freshOptions,
@@ -506,5 +508,20 @@ describe('ReactFreshBabelPlugin', () => {
         },
       ),
     ).toMatchSnapshot();
+  });
+
+  it("respects Babel's envName option", () => {
+    const envName = 'random';
+    expect(() =>
+      transform(`export default function BabelEnv () { return null };`, {
+        envName,
+        skipEnvCheck: false,
+      }),
+    ).toThrowError(
+      'React Refresh Babel transform should only be enabled in development environment. ' +
+        'Instead, the environment is: "' +
+        envName +
+        '". If you want to override this check, pass {skipEnvCheck: true} as plugin options.',
+    );
   });
 });
