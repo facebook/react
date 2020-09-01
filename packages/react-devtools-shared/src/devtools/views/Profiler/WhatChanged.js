@@ -123,7 +123,7 @@ export default function WhatChanged({fiberID}: Props) {
   if (changes.length === 0) {
     changes.push(
       <div key="nothing" className={styles.Item}>
-        The parent component rendered.
+      • Not verified. Likely that parent component rendered.
       </div>,
     );
   }
