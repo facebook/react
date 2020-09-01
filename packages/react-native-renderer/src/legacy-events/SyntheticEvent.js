@@ -259,13 +259,6 @@ addEventPoolingTo(SyntheticEvent);
  * @return {object} defineProperty object
  */
 function getPooledWarningPropertyDefinition(propName, getVal) {
-  const isFunction = typeof getVal === 'function';
-  return {
-    configurable: true,
-    set: set,
-    get: get,
-  };
-
   function set(val) {
     const action = isFunction ? 'setting the method' : 'setting the property';
     warn(action, 'This is effectively a no-op');
@@ -296,6 +289,12 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
       );
     }
   }
+  const isFunction = typeof getVal === 'function';
+  return {
+    configurable: true,
+    set: set,
+    get: get,
+  };
 }
 
 function createOrGetPooledEvent(
