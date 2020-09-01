@@ -5407,6 +5407,11 @@ eslint-plugin-no-for-of-loops@^1.0.0:
   resolved "https://registry.yarnpkg.com/eslint-plugin-no-for-of-loops/-/eslint-plugin-no-for-of-loops-1.0.1.tgz#2ee3732d50c642b8d1bfacedbfe3b28f86222369"
   integrity sha512-uCotzBHt2W+HbLw2srRmqDJHOPbJGzeVLstKh8YyxS3ppduq2P50qdpJfHKoD+UGbnqA/zhy8NRgPH6p0y8bnA==
 
+eslint-plugin-no-function-declare-after-return@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-no-function-declare-after-return/-/eslint-plugin-no-function-declare-after-return-1.0.0.tgz#ddf01d71d27b37ced61ccb295c6ac0708d87b209"
+  integrity sha512-/w6tuSK4kYSwHSlPtf36u/rQOG8YVPgl8a0bh4rV/ElZNaUGYOquY/hp4jaCnEmPta0aTpAkFEmSi6ZTd7wCEQ==
+
 eslint-plugin-no-unsanitized@3.1.2:
   version "3.1.2"
   resolved "https://registry.yarnpkg.com/eslint-plugin-no-unsanitized/-/eslint-plugin-no-unsanitized-3.1.2.tgz#a54724e0b81d43279bb1f8f5e1d82c97da78c858"
