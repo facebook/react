@@ -28,7 +28,6 @@ export default function EditableValue({
   value,
 }: EditableValueProps) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const checkBoxRef = useRef<HTMLInputElement | any>(null);
   const [state, dispatch] = useEditableValue(value);
   const {editableValue, hasPendingChanges, isValid, parsedValue} = state;
 
@@ -45,13 +44,13 @@ export default function EditableValue({
       externalValue: value,
     });
 
-  const handeCheckBoxToggle = ({target}) => {
+  const handleCheckBoxToggle = ({target}) => {
     dispatch({
       type: 'UPDATE',
       editableValue: target.checked,
       externalValue: value,
     });
-    applyChangesFromCheckBox();
+    overrideValueFn(path, target.checked);
   };
 
   const handleKeyDown = event => {
@@ -76,12 +75,6 @@ export default function EditableValue({
     }
   };
 
-  const applyChangesFromCheckBox = () => {
-    if (isValid) {
-      overrideValueFn(path, checkBoxRef.current.checked);
-    }
-  };
-
   let placeholder = '';
   if (editableValue === undefined) {
     placeholder = '(undefined)';
@@ -89,10 +82,8 @@ export default function EditableValue({
     placeholder = 'Enter valid JSON';
   }
 
-  let isBool = null;
-  if (parsedValue === true || parsedValue === false) {
-    isBool = parsedValue;
-  }
+  const isBool = parsedValue === true || parsedValue === false;
+
   return (
     <Fragment>
       <input
@@ -106,15 +97,13 @@ export default function EditableValue({
         type="text"
         value={editableValue}
       />
-      {typeof isBool === 'boolean' && (
-        <label className={styles.CheckboxLabel}>
-          <input
-            checked={isBool}
-            type="checkbox"
-            onClick={handeCheckBoxToggle}
-            ref={checkBoxRef}
-          />
-        </label>
+       {isBool && (
+        <input
+          className={styles.Checkbox}
+          checked={parsedValue}
+          type="checkbox"
+          onChange={handleCheckBoxToggle}
+        />
       )}
     </Fragment>
   );
