@@ -1904,6 +1904,14 @@ function resetChildLanes(completedWork: Fiber) {
           mergeLanes(child.lanes, child.childLanes),
         );
 
+        // Preserve passive static flag even in the case of a bailout;
+        // otherwise a subsequent unmount may bailout before calling destroy functions.
+        subtreeTag |= child.subtreeTag & PassiveStaticSubtreeTag;
+        const effectTag = child.effectTag;
+        if ((effectTag & PassiveStatic) !== NoEffect) {
+          subtreeTag |= PassiveStaticSubtreeTag;
+        }
+
         treeBaseDuration += child.treeBaseDuration;
         child = child.sibling;
       }
@@ -1928,9 +1936,19 @@ function resetChildLanes(completedWork: Fiber) {
           mergeLanes(child.lanes, child.childLanes),
         );
 
+        // Preserve passive static flag even in the case of a bailout;
+        // otherwise a subsequent unmount may bailout before calling destroy functions.
+        subtreeTag |= child.subtreeTag & PassiveStaticSubtreeTag;
+        const effectTag = child.effectTag;
+        if ((effectTag & PassiveStatic) !== NoEffect) {
+          subtreeTag |= PassiveStaticSubtreeTag;
+        }
+
         child = child.sibling;
       }
     }
+
+    completedWork.subtreeTag |= subtreeTag;
   }
 
   completedWork.childLanes = newChildLanes;
