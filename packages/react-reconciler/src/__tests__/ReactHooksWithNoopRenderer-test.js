@@ -2734,6 +2734,144 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(ReactNoop.getChildren()).toEqual([]);
       });
     });
+
+    it('calls passive effect destroy functions for memoized components', () => {
+      const Wrapper = ({children}) => children;
+      function Child() {
+        React.useEffect(() => {
+          Scheduler.unstable_yieldValue('passive create');
+          return () => {
+            Scheduler.unstable_yieldValue('passive destroy');
+          };
+        }, []);
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('layout create');
+          return () => {
+            Scheduler.unstable_yieldValue('layout destroy');
+          };
+        }, []);
+        Scheduler.unstable_yieldValue('render');
+        return null;
+      }
+
+      const isEqual = (prevProps, nextProps) =>
+        prevProps.prop === nextProps.prop;
+      const MemoizedChild = React.memo(Child, isEqual);
+
+      act(() => {
+        ReactNoop.render(
+          <Wrapper>
+            <MemoizedChild key={1} />
+          </Wrapper>,
+        );
+      });
+      expect(Scheduler).toHaveYielded([
+        'render',
+        'layout create',
+        'passive create',
+      ]);
+
+      // Include at least one no-op (memoized) update to trigger original bug.
+      act(() => {
+        ReactNoop.render(
+          <Wrapper>
+            <MemoizedChild key={1} />
+          </Wrapper>,
+        );
+      });
+      expect(Scheduler).toHaveYielded([]);
+
+      act(() => {
+        ReactNoop.render(
+          <Wrapper>
+            <MemoizedChild key={2} />
+          </Wrapper>,
+        );
+      });
+      expect(Scheduler).toHaveYielded([
+        'render',
+        'layout destroy',
+        'layout create',
+        'passive destroy',
+        'passive create',
+      ]);
+
+      act(() => {
+        ReactNoop.render(null);
+      });
+      expect(Scheduler).toHaveYielded(['layout destroy', 'passive destroy']);
+    });
+
+    it('calls passive effect destroy functions for descendants of memoized components', () => {
+      const Wrapper = ({children}) => children;
+      function Child() {
+        return <Grandchild />;
+      }
+
+      function Grandchild() {
+        React.useEffect(() => {
+          Scheduler.unstable_yieldValue('passive create');
+          return () => {
+            Scheduler.unstable_yieldValue('passive destroy');
+          };
+        }, []);
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('layout create');
+          return () => {
+            Scheduler.unstable_yieldValue('layout destroy');
+          };
+        }, []);
+        Scheduler.unstable_yieldValue('render');
+        return null;
+      }
+
+      const isEqual = (prevProps, nextProps) =>
+        prevProps.prop === nextProps.prop;
+      const MemoizedChild = React.memo(Child, isEqual);
+
+      act(() => {
+        ReactNoop.render(
+          <Wrapper>
+            <MemoizedChild key={1} />
+          </Wrapper>,
+        );
+      });
+      expect(Scheduler).toHaveYielded([
+        'render',
+        'layout create',
+        'passive create',
+      ]);
+
+      // Include at least one no-op (memoized) update to trigger original bug.
+      act(() => {
+        ReactNoop.render(
+          <Wrapper>
+            <MemoizedChild key={1} />
+          </Wrapper>,
+        );
+      });
+      expect(Scheduler).toHaveYielded([]);
+
+      act(() => {
+        ReactNoop.render(
+          <Wrapper>
+            <MemoizedChild key={2} />
+          </Wrapper>,
+        );
+      });
+      expect(Scheduler).toHaveYielded([
+        'render',
+        'layout destroy',
+        'layout create',
+        'passive destroy',
+        'passive create',
+      ]);
+
+      act(() => {
+        ReactNoop.render(null);
+      });
+      expect(Scheduler).toHaveYielded(['layout destroy', 'passive destroy']);
+    });
   });
 
   describe('useLayoutEffect', () => {
