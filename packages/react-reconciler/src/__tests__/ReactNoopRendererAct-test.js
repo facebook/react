@@ -9,7 +9,6 @@
 
 // sanity tests for ReactNoop.act()
 
-jest.useRealTimers();
 const React = require('react');
 const ReactNoop = require('react-noop-renderer');
 const Scheduler = require('scheduler');

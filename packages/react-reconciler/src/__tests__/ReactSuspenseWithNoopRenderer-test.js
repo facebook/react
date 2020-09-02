@@ -3846,8 +3846,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       await ReactNoop.act(async () => {
         await resolveText('b');
       });
-      expect(Scheduler).toHaveYielded(['Promise resolved [b]']);
-      expect(Scheduler).toFlushAndYield(['b']);
+      expect(Scheduler).toHaveYielded(['Promise resolved [b]', 'b']);
       // The bug was that the pending state got stuck forever.
       expect(root).toMatchRenderedOutput(<span prop="b" />);
     });

@@ -18,26 +18,24 @@ import {
 import {SyntheticEvent} from '../events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
-import act from './ReactTestUtilsAct';
+import {unstable_concurrentAct} from './ReactTestUtilsAct';
 import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,
 } from 'shared/ReactErrorUtils';
 
 // Keep in sync with ReactDOM.js, and ReactTestUtilsAct.js:
-const [
-  getInstanceFromNode,
-  /* eslint-disable no-unused-vars */
-  getNodeFromInstance,
-  getFiberCurrentPropsFromNode,
-  /* eslint-enable no-unused-vars */
-  enqueueStateRestore,
-  restoreStateIfNeeded,
-  /* eslint-disable no-unused-vars */
-  flushPassiveEffects,
-  IsThisRendererActing,
-  /* eslint-enable no-unused-vars */
-] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
+const EventInternals =
+  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
+const getInstanceFromNode = EventInternals[0];
+const getNodeFromInstance = EventInternals[1];
+const getFiberCurrentPropsFromNode = EventInternals[2];
+const enqueueStateRestore = EventInternals[3];
+const restoreStateIfNeeded = EventInternals[4];
+// const flushPassiveEffects = EventInternals[5];
+// TODO: These are related to `act`, not events. Move to separate key?
+// const IsThisRendererActing = EventInternals[6];
+const act = EventInternals[7];
 
 function Event(suffix) {}
 
@@ -728,4 +726,5 @@ export {
   nativeTouchData,
   Simulate,
   act,
+  unstable_concurrentAct,
 };

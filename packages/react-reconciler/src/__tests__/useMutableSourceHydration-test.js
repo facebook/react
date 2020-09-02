@@ -26,7 +26,7 @@ describe('useMutableSourceHydration', () => {
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
 
-    act = require('react-dom/test-utils').act;
+    act = require('react-dom/test-utils').unstable_concurrentAct;
     createMutableSource = React.unstable_createMutableSource;
     useMutableSource = React.unstable_useMutableSource;
   });
