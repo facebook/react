@@ -97,7 +97,7 @@ export default function EditableValue({
         type="text"
         value={editableValue}
       />
-       {isBool && (
+      {isBool && (
         <input
           className={styles.Checkbox}
           checked={parsedValue}
