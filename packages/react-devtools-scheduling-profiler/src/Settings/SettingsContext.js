@@ -9,6 +9,7 @@
 
 import * as React from 'react';
 import {createContext, useLayoutEffect, useMemo} from 'react';
+import {enableDarkMode} from '../SchedulingProfilerFeatureFlags';
 import {COMFORTABLE_LINE_HEIGHT, COMPACT_LINE_HEIGHT} from '../constants';
 import {useLocalStorage} from '../hooks';
 
@@ -69,6 +70,11 @@ function SettingsContextController({browserTheme, children}: Props) {
   }, [displayDensity, documentElements]);
 
   useLayoutEffect(() => {
+    if (!enableDarkMode) {
+      updateThemeVariables('light', documentElements);
+      return;
+    }
+
     switch (theme) {
       case 'light':
         updateThemeVariables('light', documentElements);

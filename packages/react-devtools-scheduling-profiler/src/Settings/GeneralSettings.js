@@ -9,6 +9,7 @@
 
 import * as React from 'react';
 import {useContext} from 'react';
+import {enableDarkMode} from '../SchedulingProfilerFeatureFlags';
 import {SettingsContext} from './SettingsContext';
 
 import styles from './SettingsShared.css';
@@ -20,17 +21,19 @@ export default function GeneralSettings(_: {||}) {
 
   return (
     <div className={styles.Settings}>
-      <div className={styles.Setting}>
-        <div className={styles.RadioLabel}>Theme</div>
-        <select
-          className={styles.Select}
-          value={theme}
-          onChange={({currentTarget}) => setTheme(currentTarget.value)}>
-          <option value="auto">Auto</option>
-          <option value="light">Light</option>
-          <option value="dark">Dark</option>
-        </select>
-      </div>
+      {enableDarkMode && (
+        <div className={styles.Setting}>
+          <div className={styles.RadioLabel}>Theme</div>
+          <select
+            className={styles.Select}
+            value={theme}
+            onChange={({currentTarget}) => setTheme(currentTarget.value)}>
+            <option value="auto">Auto</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
+      )}
 
       <div className={styles.Setting}>
         <div className={styles.RadioLabel}>Display density</div>
