@@ -51,6 +51,7 @@ export const decoupleUpdatePriorityFromScheduler = false;
 export const enableDiscreteEventFlushingChange = true;
 export const enablePassiveEventIntervention = true;
 export const enableEagerRootListeners = true;
+export const enableNativeBeforeInput = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

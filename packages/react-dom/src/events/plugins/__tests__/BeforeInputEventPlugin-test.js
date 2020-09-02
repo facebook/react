@@ -11,6 +11,7 @@
 
 let React;
 let ReactDOM;
+const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 describe('BeforeInputEventPlugin', () => {
   let container;
@@ -846,35 +847,39 @@ describe('BeforeInputEventPlugin', () => {
     testContentEditableComponent(environments[3], scenarios);
   });
 
-  describe('supporting the native beforeinput event', () => {
-    beforeEach(() => {
-      jest.resetModules();
-      InputEvent.prototype.getTargetRanges = function() {};
-      React = require('react');
-      ReactDOM = require('react-dom');
-    });
+  if (ReactFeatureFlags.enableNativeBeforeInput) {
+    describe('supporting the native beforeinput event', () => {
+      beforeEach(() => {
+        jest.resetModules();
+        InputEvent.prototype.getTargetRanges = function() {};
+        React = require('react');
+        ReactDOM = require('react-dom');
+      });
 
-    afterEach(() => {
-      delete InputEvent.prototype.getTargetRanges;
-    });
+      afterEach(() => {
+        delete InputEvent.prototype.getTargetRanges;
+      });
 
-    function dispatchBeforeInputEvent(target, data) {
-      const event = new InputEvent('beforeinput', {bubbles: true, data});
-      target.dispatchEvent(event);
-    }
-
-    it('should extract onBeforeInput on an input', () => {
-      const onBeforeInput = jest.fn();
-      const ref = React.createRef();
-
-      function Test() {
-        return <input onBeforeInput={onBeforeInput} ref={ref} />;
+      function dispatchBeforeInputEvent(target, data) {
+        const event = new InputEvent('beforeinput', {bubbles: true, data});
+        target.dispatchEvent(event);
       }
-      ReactDOM.render(<Test />, container);
 
-      const target = ref.current;
-      dispatchBeforeInputEvent(target, 'A');
-      expect(onBeforeInput).toHaveBeenCalledTimes(1);
+      it('should extract onBeforeInput on an input', () => {
+        const onBeforeInput = jest.fn().mockImplementationOnce(e => {
+          expect(e.data).toBe('A');
+        });
+        const ref = React.createRef();
+
+        function Test() {
+          return <input onBeforeInput={onBeforeInput} ref={ref} />;
+        }
+        ReactDOM.render(<Test />, container);
+
+        const target = ref.current;
+        dispatchBeforeInputEvent(target, 'A');
+        expect(onBeforeInput).toHaveBeenCalledTimes(1);
+      });
     });
-  });
+  }
 });

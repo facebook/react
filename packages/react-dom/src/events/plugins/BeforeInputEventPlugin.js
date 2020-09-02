@@ -14,6 +14,7 @@ import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
+import {enableNativeBeforeInput} from 'shared/ReactFeatureFlags';
 
 import {registerTwoPhaseEvent} from '../EventRegistry';
 import {
@@ -401,7 +402,7 @@ function extractBeforeInputEvent(
 ) {
   let chars;
 
-  if (canUseBeforeInputEvent) {
+  if (enableNativeBeforeInput && canUseBeforeInputEvent) {
     chars = getNativeBeforeInputChars(domEventName, nativeEvent);
   } else if (canUseTextInputEvent) {
     chars = getFallbackBeforeInputChars(domEventName, nativeEvent);

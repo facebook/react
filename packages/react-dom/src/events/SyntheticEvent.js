@@ -264,6 +264,7 @@ export const ClipboardEventInterface: EventInterfaceType = {
 export const CompositionEventInterface: EventInterfaceType = {
   ...EventInterface,
   data: 0,
+  inputType: 0,
 };
 
 /**
