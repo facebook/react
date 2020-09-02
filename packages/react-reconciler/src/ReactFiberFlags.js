@@ -7,10 +7,10 @@
  * @flow
  */
 
-export type SideEffectTag = number;
+export type Flags = number;
 
 // Don't change these two values. They're used by React Dev Tools.
-export const NoEffect = /*                     */ 0b0000000000000000;
+export const NoFlags = /*                     */ 0b0000000000000000;
 export const PerformedWork = /*                */ 0b0000000000000001;
 
 // You can change the rest (and add more).
@@ -47,7 +47,7 @@ export const ForceUpdateForLegacySuspense = /* */ 0b0100000000000000;
 // and instead rely on the static flag as a signal that there may be cleanup work.
 export const PassiveStatic = /*                */ 0b1000000000000000;
 
-// Union of side effect groupings as pertains to subtreeTag
+// Union of side effect groupings as pertains to subtreeFlags
 export const BeforeMutationMask = /*           */ 0b0000001100001010;
 export const MutationMask = /*                 */ 0b0000010010011110;
 export const LayoutMask = /*                   */ 0b0000000010100100;

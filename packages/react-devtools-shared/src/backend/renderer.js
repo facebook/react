@@ -106,10 +106,15 @@ type ReactPriorityLevelsType = {|
 |};
 
 type ReactTypeOfSideEffectType = {|
-  NoEffect: number,
+  NoFlags: number,
   PerformedWork: number,
   Placement: number,
 |};
+
+function getFiberFlags(fiber: Fiber): number {
+  // The name of this field changed from "effectTag" to "flags"
+  return fiber.flags !== undefined ? fiber.flags : (fiber: any).effectTag;
+}
 
 // Some environments (e.g. React Native / Hermes) don't support the performance API yet.
 const getCurrentTime =
@@ -127,7 +132,7 @@ export function getInternalReactConstants(
   ReactTypeOfWork: WorkTagMap,
 |} {
   const ReactTypeOfSideEffect: ReactTypeOfSideEffectType = {
-    NoEffect: 0b00,
+    NoFlags: 0b00,
     PerformedWork: 0b01,
     Placement: 0b10,
   };
@@ -416,7 +421,7 @@ export function attach(
     ReactTypeOfWork,
     ReactTypeOfSideEffect,
   } = getInternalReactConstants(renderer.version);
-  const {NoEffect, PerformedWork, Placement} = ReactTypeOfSideEffect;
+  const {NoFlags, PerformedWork, Placement} = ReactTypeOfSideEffect;
   const {
     FunctionComponent,
     ClassComponent,
@@ -944,7 +949,7 @@ export function attach(
         // For types that execute user code, we check PerformedWork effect.
         // We don't reflect bailouts (either referential or sCU) in DevTools.
         // eslint-disable-next-line no-bitwise
-        return (nextFiber.effectTag & PerformedWork) === PerformedWork;
+        return (getFiberFlags(nextFiber) & PerformedWork) === PerformedWork;
       // Note: ContextConsumer only gets PerformedWork effect in 16.3.3+
       // so it won't get highlighted with React 16.3.0 to 16.3.2.
       default:
@@ -1928,12 +1933,12 @@ export function attach(
     if (!fiber.alternate) {
       // If there is no alternate, this might be a new tree that isn't inserted
       // yet. If it is, then it will have a pending insertion effect on it.
-      if ((node.effectTag & Placement) !== NoEffect) {
+      if ((getFiberFlags(node) & Placement) !== NoFlags) {
         return MOUNTING;
       }
       while (node.return) {
         node = node.return;
-        if ((node.effectTag & Placement) !== NoEffect) {
+        if ((getFiberFlags(node) & Placement) !== NoFlags) {
           return MOUNTING;
         }
       }

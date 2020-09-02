@@ -117,7 +117,7 @@ import {
 } from './ReactWorkTags';
 import {LegacyRoot} from './ReactRootTags';
 import {
-  NoEffect,
+  NoFlags,
   PerformedWork,
   Placement,
   Update,
@@ -133,7 +133,7 @@ import {
   HostEffectMask,
   Hydrating,
   HydratingAndUpdate,
-} from './ReactSideEffectTags';
+} from './ReactFiberFlags';
 import {
   NoLanePriority,
   SyncLanePriority,
@@ -637,7 +637,7 @@ function markUpdateLaneFromFiberToRoot(
   if (__DEV__) {
     if (
       alternate === null &&
-      (sourceFiber.effectTag & (Placement | Hydrating)) !== NoEffect
+      (sourceFiber.flags & (Placement | Hydrating)) !== NoFlags
     ) {
       warnAboutUpdateOnNotYetMountedFiberInDEV(sourceFiber);
     }
@@ -652,7 +652,7 @@ function markUpdateLaneFromFiberToRoot(
       alternate.childLanes = mergeLanes(alternate.childLanes, lane);
     } else {
       if (__DEV__) {
-        if ((parent.effectTag & (Placement | Hydrating)) !== NoEffect) {
+        if ((parent.flags & (Placement | Hydrating)) !== NoFlags) {
           warnAboutUpdateOnNotYetMountedFiberInDEV(sourceFiber);
         }
       }
@@ -1693,7 +1693,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
     const returnFiber = completedWork.return;
 
     // Check if the work completed or if something threw.
-    if ((completedWork.effectTag & Incomplete) === NoEffect) {
+    if ((completedWork.flags & Incomplete) === NoFlags) {
       setCurrentDebugFiberInDEV(completedWork);
       let next;
       if (
@@ -1720,7 +1720,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
       if (
         returnFiber !== null &&
         // Do not append effects to parents if a sibling failed to complete
-        (returnFiber.effectTag & Incomplete) === NoEffect
+        (returnFiber.flags & Incomplete) === NoFlags
       ) {
         // Append all the effects of the subtree and this fiber onto the effect
         // list of the parent. The completion order of the children affects the
@@ -1741,12 +1741,12 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         // schedule our own side-effect on our own list because if end up
         // reusing children we'll schedule this effect onto itself since we're
         // at the end.
-        const effectTag = completedWork.effectTag;
+        const flags = completedWork.flags;
 
         // Skip both NoWork and PerformedWork tags when creating the effect
         // list. PerformedWork effect is read by React DevTools but shouldn't be
         // committed.
-        if (effectTag > PerformedWork) {
+        if (flags > PerformedWork) {
           if (returnFiber.lastEffect !== null) {
             returnFiber.lastEffect.nextEffect = completedWork;
           } else {
@@ -1768,7 +1768,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         // back here again.
         // Since we're restarting, remove anything that is not a host effect
         // from the effect tag.
-        next.effectTag &= HostEffectMask;
+        next.flags &= HostEffectMask;
         workInProgress = next;
         return;
       }
@@ -1793,7 +1793,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
       if (returnFiber !== null) {
         // Mark the parent fiber as incomplete and clear its effect list.
         returnFiber.firstEffect = returnFiber.lastEffect = null;
-        returnFiber.effectTag |= Incomplete;
+        returnFiber.flags |= Incomplete;
       }
     }
 
@@ -1985,7 +1985,7 @@ function commitRootImpl(root, renderPriorityLevel) {
 
   // Get the list of effects.
   let firstEffect;
-  if (finishedWork.effectTag > PerformedWork) {
+  if (finishedWork.flags > PerformedWork) {
     // A fiber's effect list consists only of its children, not itself. So if
     // the root has an effect, we need to add it to the end of the list. The
     // resulting list is the set that would belong to the root's parent, if it
@@ -2161,7 +2161,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     while (nextEffect !== null) {
       const nextNextEffect = nextEffect.nextEffect;
       nextEffect.nextEffect = null;
-      if (nextEffect.effectTag & Deletion) {
+      if (nextEffect.flags & Deletion) {
         detachFiberAfterEffects(nextEffect);
       }
       nextEffect = nextNextEffect;
@@ -2272,7 +2272,7 @@ function commitBeforeMutationEffects() {
     const current = nextEffect.alternate;
 
     if (!shouldFireAfterActiveInstanceBlur && focusedInstanceHandle !== null) {
-      if ((nextEffect.effectTag & Deletion) !== NoEffect) {
+      if ((nextEffect.flags & Deletion) !== NoFlags) {
         if (doesFiberContain(nextEffect, focusedInstanceHandle)) {
           shouldFireAfterActiveInstanceBlur = true;
           beforeActiveInstanceBlur();
@@ -2290,15 +2290,15 @@ function commitBeforeMutationEffects() {
       }
     }
 
-    const effectTag = nextEffect.effectTag;
-    if ((effectTag & Snapshot) !== NoEffect) {
+    const flags = nextEffect.flags;
+    if ((flags & Snapshot) !== NoFlags) {
       setCurrentDebugFiberInDEV(nextEffect);
 
       commitBeforeMutationEffectOnFiber(current, nextEffect);
 
       resetCurrentDebugFiberInDEV();
     }
-    if ((effectTag & Passive) !== NoEffect) {
+    if ((flags & Passive) !== NoFlags) {
       // If there are passive effects, schedule a callback to flush at
       // the earliest opportunity.
       if (!rootDoesHavePassiveEffects) {
@@ -2321,13 +2321,13 @@ function commitMutationEffects(
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
 
-    const effectTag = nextEffect.effectTag;
+    const flags = nextEffect.flags;
 
-    if (effectTag & ContentReset) {
+    if (flags & ContentReset) {
       commitResetTextContent(nextEffect);
     }
 
-    if (effectTag & Ref) {
+    if (flags & Ref) {
       const current = nextEffect.alternate;
       if (current !== null) {
         commitDetachRef(current);
@@ -2345,16 +2345,15 @@ function commitMutationEffects(
     // updates, and deletions. To avoid needing to add a case for every possible
     // bitmap value, we remove the secondary effects from the effect tag and
     // switch on that value.
-    const primaryEffectTag =
-      effectTag & (Placement | Update | Deletion | Hydrating);
-    switch (primaryEffectTag) {
+    const primaryFlags = flags & (Placement | Update | Deletion | Hydrating);
+    switch (primaryFlags) {
       case Placement: {
         commitPlacement(nextEffect);
         // Clear the "placement" from effect tag so that we know that this is
         // inserted, before any life-cycles like componentDidMount gets called.
         // TODO: findDOMNode doesn't rely on this any more but isMounted does
         // and isMounted is deprecated anyway so we should be able to kill this.
-        nextEffect.effectTag &= ~Placement;
+        nextEffect.flags &= ~Placement;
         break;
       }
       case PlacementAndUpdate: {
@@ -2362,7 +2361,7 @@ function commitMutationEffects(
         commitPlacement(nextEffect);
         // Clear the "placement" from effect tag so that we know that this is
         // inserted, before any life-cycles like componentDidMount gets called.
-        nextEffect.effectTag &= ~Placement;
+        nextEffect.flags &= ~Placement;
 
         // Update
         const current = nextEffect.alternate;
@@ -2370,11 +2369,11 @@ function commitMutationEffects(
         break;
       }
       case Hydrating: {
-        nextEffect.effectTag &= ~Hydrating;
+        nextEffect.flags &= ~Hydrating;
         break;
       }
       case HydratingAndUpdate: {
-        nextEffect.effectTag &= ~Hydrating;
+        nextEffect.flags &= ~Hydrating;
 
         // Update
         const current = nextEffect.alternate;
@@ -2417,9 +2416,9 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
 
-    const effectTag = nextEffect.effectTag;
+    const flags = nextEffect.flags;
 
-    if (effectTag & (Update | Callback)) {
+    if (flags & (Update | Callback)) {
       const current = nextEffect.alternate;
       commitLayoutEffectOnFiber(root, current, nextEffect, committedLanes);
     }
@@ -2427,11 +2426,11 @@ function commitLayoutEffects(root: FiberRoot, committedLanes: Lanes) {
     if (enableScopeAPI) {
       // TODO: This is a temporary solution that allowed us to transition away
       // from React Flare on www.
-      if (effectTag & Ref && nextEffect.tag !== ScopeComponent) {
+      if (flags & Ref && nextEffect.tag !== ScopeComponent) {
         commitAttachRef(nextEffect);
       }
     } else {
-      if (effectTag & Ref) {
+      if (flags & Ref) {
         commitAttachRef(nextEffect);
       }
     }
@@ -2509,10 +2508,10 @@ export function enqueuePendingPassiveHookEffectUnmount(
 ): void {
   pendingPassiveHookEffectsUnmount.push(effect, fiber);
   if (__DEV__) {
-    fiber.effectTag |= PassiveUnmountPendingDev;
+    fiber.flags |= PassiveUnmountPendingDev;
     const alternate = fiber.alternate;
     if (alternate !== null) {
-      alternate.effectTag |= PassiveUnmountPendingDev;
+      alternate.flags |= PassiveUnmountPendingDev;
     }
   }
   if (!rootDoesHavePassiveEffects) {
@@ -2579,10 +2578,10 @@ function flushPassiveEffectsImpl() {
     effect.destroy = undefined;
 
     if (__DEV__) {
-      fiber.effectTag &= ~PassiveUnmountPendingDev;
+      fiber.flags &= ~PassiveUnmountPendingDev;
       const alternate = fiber.alternate;
       if (alternate !== null) {
-        alternate.effectTag &= ~PassiveUnmountPendingDev;
+        alternate.flags &= ~PassiveUnmountPendingDev;
       }
     }
 
@@ -2686,7 +2685,7 @@ function flushPassiveEffectsImpl() {
     const nextNextEffect = effect.nextEffect;
     // Remove nextEffect pointer to assist GC
     effect.nextEffect = null;
-    if (effect.effectTag & Deletion) {
+    if (effect.flags & Deletion) {
       detachFiberAfterEffects(effect);
     }
     effect = nextNextEffect;
@@ -3092,7 +3091,7 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
 
     // If there are pending passive effects unmounts for this Fiber,
     // we can assume that they would have prevented this update.
-    if ((fiber.effectTag & PassiveUnmountPendingDev) !== NoEffect) {
+    if ((fiber.flags & PassiveUnmountPendingDev) !== NoFlags) {
       return;
     }
 

@@ -29,7 +29,7 @@ import {
   enableScopeAPI,
   enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
-import {NoEffect, Placement} from './ReactSideEffectTags';
+import {NoFlags, Placement} from './ReactFiberFlags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
 import {
   IndeterminateComponent,
@@ -143,7 +143,7 @@ function FiberNode(
   this.mode = mode;
 
   // Effects
-  this.effectTag = NoEffect;
+  this.flags = NoFlags;
   this.nextEffect = null;
 
   this.firstEffect = null;
@@ -286,7 +286,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
 
     // We already have an alternate.
     // Reset the effect tag.
-    workInProgress.effectTag = NoEffect;
+    workInProgress.flags = NoFlags;
 
     // The effect list is no longer valid.
     workInProgress.nextEffect = null;
@@ -366,7 +366,7 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
 
   // Reset the effect tag but keep any Placement tags, since that's something
   // that child fiber is setting, not the reconciliation.
-  workInProgress.effectTag &= Placement;
+  workInProgress.flags &= Placement;
 
   // The effect list is no longer valid.
   workInProgress.nextEffect = null;
@@ -821,7 +821,7 @@ export function assignFiberPropertiesInDEV(
   target.memoizedState = source.memoizedState;
   target.dependencies = source.dependencies;
   target.mode = source.mode;
-  target.effectTag = source.effectTag;
+  target.flags = source.flags;
   target.nextEffect = source.nextEffect;
   target.firstEffect = source.firstEffect;
   target.lastEffect = source.lastEffect;

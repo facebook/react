@@ -22,7 +22,7 @@ type BundleType =
   | 1; // DEV
 
 export type WorkTag = number;
-export type SideEffectTag = number;
+export type WorkFlags = number;
 export type ExpirationTime = number;
 
 export type WorkTagMap = {|

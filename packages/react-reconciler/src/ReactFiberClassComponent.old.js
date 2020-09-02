@@ -12,7 +12,7 @@ import type {Lanes} from './ReactFiberLane';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
 
 import * as React from 'react';
-import {Update, Snapshot} from './ReactSideEffectTags';
+import {Update, Snapshot} from './ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
@@ -890,7 +890,7 @@ function mountClassInstance(
   }
 
   if (typeof instance.componentDidMount === 'function') {
-    workInProgress.effectTag |= Update;
+    workInProgress.flags |= Update;
   }
 }
 
@@ -960,7 +960,7 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.effectTag |= Update;
+      workInProgress.flags |= Update;
     }
     return false;
   }
@@ -1003,13 +1003,13 @@ function resumeMountClassInstance(
       }
     }
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.effectTag |= Update;
+      workInProgress.flags |= Update;
     }
   } else {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.effectTag |= Update;
+      workInProgress.flags |= Update;
     }
 
     // If shouldComponentUpdate returned false, we should still update the
@@ -1106,7 +1106,7 @@ function updateClassInstance(
         unresolvedOldProps !== current.memoizedProps ||
         oldState !== current.memoizedState
       ) {
-        workInProgress.effectTag |= Update;
+        workInProgress.flags |= Update;
       }
     }
     if (typeof instance.getSnapshotBeforeUpdate === 'function') {
@@ -1114,7 +1114,7 @@ function updateClassInstance(
         unresolvedOldProps !== current.memoizedProps ||
         oldState !== current.memoizedState
       ) {
-        workInProgress.effectTag |= Snapshot;
+        workInProgress.flags |= Snapshot;
       }
     }
     return false;
@@ -1158,10 +1158,10 @@ function updateClassInstance(
       }
     }
     if (typeof instance.componentDidUpdate === 'function') {
-      workInProgress.effectTag |= Update;
+      workInProgress.flags |= Update;
     }
     if (typeof instance.getSnapshotBeforeUpdate === 'function') {
-      workInProgress.effectTag |= Snapshot;
+      workInProgress.flags |= Snapshot;
     }
   } else {
     // If an update was already in progress, we should schedule an Update
@@ -1171,7 +1171,7 @@ function updateClassInstance(
         unresolvedOldProps !== current.memoizedProps ||
         oldState !== current.memoizedState
       ) {
-        workInProgress.effectTag |= Update;
+        workInProgress.flags |= Update;
       }
     }
     if (typeof instance.getSnapshotBeforeUpdate === 'function') {
@@ -1179,7 +1179,7 @@ function updateClassInstance(
         unresolvedOldProps !== current.memoizedProps ||
         oldState !== current.memoizedState
       ) {
-        workInProgress.effectTag |= Snapshot;
+        workInProgress.flags |= Snapshot;
       }
     }
 

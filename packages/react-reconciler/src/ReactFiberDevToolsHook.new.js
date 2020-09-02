@@ -12,7 +12,7 @@ import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 import type {Fiber, FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
-import {DidCapture} from './ReactSideEffectTags';
+import {DidCapture} from './ReactFiberFlags';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
@@ -84,7 +84,7 @@ export function onCommitRoot(
 ) {
   if (injectedHook && typeof injectedHook.onCommitFiberRoot === 'function') {
     try {
-      const didError = (root.current.effectTag & DidCapture) === DidCapture;
+      const didError = (root.current.flags & DidCapture) === DidCapture;
       if (enableProfilerTimer) {
         injectedHook.onCommitFiberRoot(
           rendererID,

@@ -25,7 +25,7 @@ import {
   FundamentalComponent,
   SuspenseComponent,
 } from './ReactWorkTags';
-import {NoEffect, Placement, Hydrating} from './ReactSideEffectTags';
+import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
@@ -39,7 +39,7 @@ export function getNearestMountedFiber(fiber: Fiber): null | Fiber {
     let nextNode = node;
     do {
       node = nextNode;
-      if ((node.effectTag & (Placement | Hydrating)) !== NoEffect) {
+      if ((node.flags & (Placement | Hydrating)) !== NoFlags) {
         // This is an insertion or in-progress hydration. The nearest possible
         // mounted fiber is the parent but we need to continue to figure out
         // if that one is still mounted.

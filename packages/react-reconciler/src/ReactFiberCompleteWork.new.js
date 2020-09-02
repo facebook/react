@@ -62,12 +62,12 @@ import {NoMode, BlockingMode, ProfileMode} from './ReactTypeOfMode';
 import {
   Ref,
   Update,
-  NoEffect,
+  NoFlags,
   DidCapture,
   Snapshot,
   MutationMask,
-} from './ReactSideEffectTags';
-import {NoEffect as NoSubtreeTag, Mutation} from './ReactSubtreeTags';
+} from './ReactFiberFlags';
+import {NoFlags as NoSubtreeFlags, Mutation} from './ReactSubtreeFlags';
 import invariant from 'shared/invariant';
 
 import {
@@ -148,11 +148,11 @@ import {transferActualDuration} from './ReactProfilerTimer.new';
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
   // a PlacementAndUpdate.
-  workInProgress.effectTag |= Update;
+  workInProgress.flags |= Update;
 }
 
 function markRef(workInProgress: Fiber) {
-  workInProgress.effectTag |= Ref;
+  workInProgress.flags |= Ref;
 }
 
 function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {
@@ -163,10 +163,10 @@ function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {
 
   let child = completedWork.child;
   while (child !== null) {
-    if ((child.effectTag & MutationMask) !== NoEffect) {
+    if ((child.flags & MutationMask) !== NoFlags) {
       return false;
     }
-    if ((child.subtreeTag & Mutation) !== NoSubtreeTag) {
+    if ((child.subtreeFlags & Mutation) !== NoSubtreeFlags) {
       return false;
     }
     child = child.sibling;
@@ -318,7 +318,7 @@ if (supportsMutation) {
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
       } else if (node.tag === SuspenseComponent) {
-        if ((node.effectTag & Update) !== NoEffect) {
+        if ((node.flags & Update) !== NoFlags) {
           // Need to toggle the visibility of the primary children.
           const newIsHidden = node.memoizedState !== null;
           if (newIsHidden) {
@@ -412,7 +412,7 @@ if (supportsMutation) {
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
       } else if (node.tag === SuspenseComponent) {
-        if ((node.effectTag & Update) !== NoEffect) {
+        if ((node.flags & Update) !== NoFlags) {
           // Need to toggle the visibility of the primary children.
           const newIsHidden = node.memoizedState !== null;
           if (newIsHidden) {
@@ -717,7 +717,7 @@ function completeWork(
           // This handles the case of React rendering into a container with previous children.
           // It's also safe to do for updates too, because current.child would only be null
           // if the previous render was null (so the the container would already be empty).
-          workInProgress.effectTag |= Snapshot;
+          workInProgress.flags |= Snapshot;
         }
       }
       updateHostContainer(current, workInProgress);
@@ -863,7 +863,7 @@ function completeWork(
             // However, in some of those paths, we might have reentered a hydration state
             // and then we might be inside a hydration state. In that case, we'll need to exit out of it.
             resetHydrationState();
-            if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+            if ((workInProgress.flags & DidCapture) === NoFlags) {
               // This boundary did not suspend so it's now hydrated and unsuspended.
               workInProgress.memoizedState = null;
             }
@@ -872,13 +872,13 @@ function completeWork(
             // It's also a signal to replay events and the suspense callback.
             // If something suspended, schedule an effect to attach retry listeners.
             // So we might as well always mark this.
-            workInProgress.effectTag |= Update;
+            workInProgress.flags |= Update;
             return null;
           }
         }
       }
 
-      if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
+      if ((workInProgress.flags & DidCapture) !== NoFlags) {
         // Something suspended. Re-render with the fallback children.
         workInProgress.lanes = renderLanes;
         // Do not reset the effect list.
@@ -943,7 +943,7 @@ function completeWork(
           // If this boundary just timed out, schedule an effect to attach a
           // retry listener to the promise. This flag is also used to hide the
           // primary children.
-          workInProgress.effectTag |= Update;
+          workInProgress.flags |= Update;
         }
       }
       if (supportsMutation) {
@@ -954,7 +954,7 @@ function completeWork(
           // primary children. In mutation mode, we also need the flag to
           // *unhide* children that were previously hidden, so check if this
           // is currently timed out, too.
-          workInProgress.effectTag |= Update;
+          workInProgress.flags |= Update;
         }
       }
       if (
@@ -963,7 +963,7 @@ function completeWork(
         workInProgress.memoizedProps.suspenseCallback != null
       ) {
         // Always notify the callback
-        workInProgress.effectTag |= Update;
+        workInProgress.flags |= Update;
       }
       return null;
     }
@@ -999,8 +999,7 @@ function completeWork(
         return null;
       }
 
-      let didSuspendAlready =
-        (workInProgress.effectTag & DidCapture) !== NoEffect;
+      let didSuspendAlready = (workInProgress.flags & DidCapture) !== NoFlags;
 
       const renderedTail = renderState.rendering;
       if (renderedTail === null) {
@@ -1019,14 +1018,14 @@ function completeWork(
           // findFirstSuspended.
           const cannotBeSuspended =
             renderHasNotSuspendedYet() &&
-            (current === null || (current.effectTag & DidCapture) === NoEffect);
+            (current === null || (current.flags & DidCapture) === NoFlags);
           if (!cannotBeSuspended) {
             let row = workInProgress.child;
             while (row !== null) {
               const suspended = findFirstSuspended(row);
               if (suspended !== null) {
                 didSuspendAlready = true;
-                workInProgress.effectTag |= DidCapture;
+                workInProgress.flags |= DidCapture;
                 cutOffTailIfNeeded(renderState, false);
 
                 // If this is a newly suspended tree, it might not get committed as
@@ -1044,13 +1043,13 @@ function completeWork(
                 const newThennables = suspended.updateQueue;
                 if (newThennables !== null) {
                   workInProgress.updateQueue = newThennables;
-                  workInProgress.effectTag |= Update;
+                  workInProgress.flags |= Update;
                 }
 
                 // Rerender the whole list, but this time, we'll force fallbacks
                 // to stay in place.
                 // Reset the child fibers to their original state.
-                workInProgress.subtreeTag = NoEffect;
+                workInProgress.subtreeFlags = NoFlags;
                 resetChildFibers(workInProgress, renderLanes);
 
                 // Set up the Suspense Context to force suspense and immediately
@@ -1072,7 +1071,7 @@ function completeWork(
             // We have already passed our CPU deadline but we still have rows
             // left in the tail. We'll just give up further attempts to render
             // the main content and only render fallbacks.
-            workInProgress.effectTag |= DidCapture;
+            workInProgress.flags |= DidCapture;
             didSuspendAlready = true;
 
             cutOffTailIfNeeded(renderState, false);
@@ -1099,7 +1098,7 @@ function completeWork(
         if (!didSuspendAlready) {
           const suspended = findFirstSuspended(renderedTail);
           if (suspended !== null) {
-            workInProgress.effectTag |= DidCapture;
+            workInProgress.flags |= DidCapture;
             didSuspendAlready = true;
 
             // Ensure we transfer the update queue to the parent so that it doesn't
@@ -1107,7 +1106,7 @@ function completeWork(
             const newThennables = suspended.updateQueue;
             if (newThennables !== null) {
               workInProgress.updateQueue = newThennables;
-              workInProgress.effectTag |= Update;
+              workInProgress.flags |= Update;
             }
 
             cutOffTailIfNeeded(renderState, true);
@@ -1132,7 +1131,7 @@ function completeWork(
             // We have now passed our CPU deadline and we'll just give up further
             // attempts to render the main content and only render fallbacks.
             // The assumption is that this is usually faster.
-            workInProgress.effectTag |= DidCapture;
+            workInProgress.flags |= DidCapture;
             didSuspendAlready = true;
 
             cutOffTailIfNeeded(renderState, false);
@@ -1285,7 +1284,7 @@ function completeWork(
           prevIsHidden !== nextIsHidden &&
           newProps.mode !== 'unstable-defer-without-hiding'
         ) {
-          workInProgress.effectTag |= Update;
+          workInProgress.flags |= Update;
         }
       }
       return null;

@@ -7,9 +7,10 @@
  * @flow
  */
 
-export type SubtreeTag = number;
+// TODO: Move this to ReactFiberFlags so it's easier to line up the bits
+export type SubtreeFlags = number;
 
-export const NoEffect = /*        */ 0b00000;
+export const NoFlags = /*        */ 0b00000;
 export const BeforeMutation = /*  */ 0b00001;
 export const Mutation = /*        */ 0b00010;
 export const Layout = /*          */ 0b00100;

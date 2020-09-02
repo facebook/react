@@ -15,7 +15,7 @@ import type {
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
-import type {HookEffectTag} from './ReactHookEffectTags';
+import type {HookFlags} from './ReactHookEffectTags';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
@@ -48,7 +48,7 @@ import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
   PassiveStatic as PassiveStaticEffect,
-} from './ReactSideEffectTags';
+} from './ReactFiberFlags';
 import {
   HasEffect as HookHasEffect,
   Layout as HookLayout,
@@ -141,7 +141,7 @@ export type Hook = {|
 |};
 
 export type Effect = {|
-  tag: HookEffectTag,
+  tag: HookFlags,
   create: () => (() => void) | void,
   destroy: (() => void) | void,
   deps: Array<mixed> | null,
@@ -482,7 +482,7 @@ export function bailoutHooks(
   lanes: Lanes,
 ) {
   workInProgress.updateQueue = current.updateQueue;
-  workInProgress.effectTag &= ~(PassiveEffect | UpdateEffect);
+  workInProgress.flags &= ~(PassiveEffect | UpdateEffect);
   current.lanes = removeLanes(current.lanes, lanes);
 }
 
@@ -1191,19 +1191,19 @@ function updateRef<T>(initialValue: T): {|current: T|} {
   return hook.memoizedState;
 }
 
-function mountEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
+function mountEffectImpl(fiberFlags, hookFlags, create, deps): void {
   const hook = mountWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
-  currentlyRenderingFiber.effectTag |= fiberEffectTag;
+  currentlyRenderingFiber.flags |= fiberFlags;
   hook.memoizedState = pushEffect(
-    HookHasEffect | hookEffectTag,
+    HookHasEffect | hookFlags,
     create,
     undefined,
     nextDeps,
   );
 }
 
-function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
+function updateEffectImpl(fiberFlags, hookFlags, create, deps): void {
   const hook = updateWorkInProgressHook();
   const nextDeps = deps === undefined ? null : deps;
   let destroy = undefined;
@@ -1214,16 +1214,16 @@ function updateEffectImpl(fiberEffectTag, hookEffectTag, create, deps): void {
     if (nextDeps !== null) {
       const prevDeps = prevEffect.deps;
       if (areHookInputsEqual(nextDeps, prevDeps)) {
-        pushEffect(hookEffectTag, create, destroy, nextDeps);
+        pushEffect(hookFlags, create, destroy, nextDeps);
         return;
       }
     }
   }
 
-  currentlyRenderingFiber.effectTag |= fiberEffectTag;
+  currentlyRenderingFiber.flags |= fiberFlags;
 
   hook.memoizedState = pushEffect(
-    HookHasEffect | hookEffectTag,
+    HookHasEffect | hookFlags,
     create,
     destroy,
     nextDeps,
@@ -1615,7 +1615,7 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
     const setId = mountState(id)[1];
 
     if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
-      currentlyRenderingFiber.effectTag |=
+      currentlyRenderingFiber.flags |=
         UpdateEffect | PassiveEffect | PassiveStaticEffect;
       pushEffect(
         HookHasEffect | HookPassive,
