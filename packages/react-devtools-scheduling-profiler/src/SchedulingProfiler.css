@@ -82,24 +82,14 @@
   border: 2px solid var(--color-border);
 }
 
-.DevToolsVersion {
-  font-size: var(--font-size-sans-normal);
-  margin-right: 0.5rem;
-}
-
-.DevToolsVersion:before {
+.AppName {
   font-size: var(--font-size-sans-large);
-  content: 'Concurrent Mode Profiler ';
+  margin-right: 0.5rem;
+  user-select: none;
 }
 
-@media screen and (max-width: 400px) {
-  .DevToolsVersion:before {
-    content: '';
-  }
-}
-
-@media screen and (max-width: 300px) {
-  .DevToolsVersion {
+@media screen and (max-width: 350px) {
+  .AppName {
     display: none;
   }
 }

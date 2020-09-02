@@ -40,9 +40,7 @@ export function SchedulingProfiler(_: {||}) {
       <div className={styles.SchedulingProfiler}>
         <div className={styles.Toolbar}>
           <ReactLogo />
-          <span className={styles.DevToolsVersion}>
-            {process.env.DEVTOOLS_VERSION}
-          </span>
+          <span className={styles.AppName}>Concurrent Mode Profiler</span>
           <div className={styles.VRule} />
           <ImportButton onDataImported={setProfilerData} />
           <div className={styles.Spacer} />
