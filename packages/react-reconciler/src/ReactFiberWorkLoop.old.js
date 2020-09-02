@@ -914,7 +914,7 @@ function finishConcurrentRender(root, exitStatus, lanes) {
       if (!shouldForceFlushFallbacksInDEV()) {
         // This is not a transition, but we did trigger an avoided state.
         // Schedule a placeholder to display after a short delay, using the Just
-        // Noticable Difference.
+        // Noticeable Difference.
         // TODO: Is the JND optimization worth the added complexity? If this is
         // the only reason we track the event time, then probably not.
         // Consider removing.
