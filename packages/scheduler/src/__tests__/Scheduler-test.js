@@ -249,7 +249,7 @@ describe('Scheduler', () => {
   });
 
   it(
-    'continuations do not block higher priority work scheduled ' +
+    'continuations are interrupted by higher priority work scheduled ' +
       'inside an executing callback',
     () => {
       const tasks = [
@@ -272,8 +272,8 @@ describe('Scheduler', () => {
               Scheduler.unstable_yieldValue('High pri');
             });
           }
-          if (tasks.length > 0) {
-            // Return a continuation
+          if (tasks.length > 0 && shouldYield()) {
+            Scheduler.unstable_yieldValue('Yield!');
             return work;
           }
         }
@@ -283,8 +283,9 @@ describe('Scheduler', () => {
         'A',
         'B',
         'Schedule high pri',
-        // The high pri callback should fire before the continuation of the
-        // lower pri work
+        // Even though there's time left in the frame, the low pri callback
+        // should yield to the high pri callback
+        'Yield!',
         'High pri',
         // Continue low pri work
         'C',
@@ -661,7 +662,7 @@ describe('Scheduler', () => {
           const [label, ms] = task;
           Scheduler.unstable_advanceTime(ms);
           Scheduler.unstable_yieldValue(label);
-          if (tasks.length > 0) {
+          if (tasks.length > 0 && shouldYield()) {
             return work;
           }
         }

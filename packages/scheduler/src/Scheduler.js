@@ -393,6 +393,21 @@ function unstable_getCurrentPriorityLevel() {
   return currentPriorityLevel;
 }
 
+function unstable_shouldYield() {
+  const currentTime = getCurrentTime();
+  advanceTimers(currentTime);
+  const firstTask = peek(taskQueue);
+  return (
+    (firstTask !== currentTask &&
+      currentTask !== null &&
+      firstTask !== null &&
+      firstTask.callback !== null &&
+      firstTask.startTime <= currentTime &&
+      firstTask.expirationTime < currentTask.expirationTime) ||
+    shouldYieldToHost()
+  );
+}
+
 const unstable_requestPaint = requestPaint;
 
 export {
@@ -407,7 +422,7 @@ export {
   unstable_cancelCallback,
   unstable_wrapCallback,
   unstable_getCurrentPriorityLevel,
-  shouldYieldToHost as unstable_shouldYield,
+  unstable_shouldYield,
   unstable_requestPaint,
   unstable_continueExecution,
   unstable_pauseExecution,
