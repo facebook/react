@@ -7,7 +7,7 @@
     "react-dom-15": "npm:react-dom@^15"
   },
   "dependencies": {
-    "@babel/runtime": "^7.0.0",
+    "@babel/runtime": "^7.11.2",
     "@reach/menu-button": "^0.1.17",
     "@reach/tooltip": "^0.2.2",
     "clipboard-js": "^0.3.6",

@@ -25,7 +25,6 @@ export const enableLazyElements = false;
 export const enableSchedulerDebugging = false;
 export const disableJavaScriptURLs = false;
 export const disableInputAttributeSyncing = false;
-export const enableDeprecatedFlareAPI = true;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = true;
 export const enableCreateEventHandleAPI = false;
@@ -43,10 +42,14 @@ export const warnAboutSpreadingKeyToJSX = false;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
+export const skipUnmountedBoundaries = false;
 
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
 export const decoupleUpdatePriorityFromScheduler = false;
+export const enableDiscreteEventFlushingChange = false;
+export const enablePassiveEventIntervention = true;
+export const enableEagerRootListeners = true;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

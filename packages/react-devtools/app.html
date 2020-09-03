@@ -151,8 +151,10 @@
 
       try {
         if (process.env.KEY && process.env.CERT) {
-          options.key = fs.readFileSync(process.env.KEY);
-          options.cert = fs.readFileSync(process.env.CERT);
+          options = {
+            key: fs.readFileSync(process.env.KEY),
+            cert: fs.readFileSync(process.env.CERT)
+          };
           useHttps = true;
         }
       } catch (err) {

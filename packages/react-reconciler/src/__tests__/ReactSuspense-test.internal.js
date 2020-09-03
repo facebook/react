@@ -363,12 +363,9 @@ describe('ReactSuspense', () => {
 
       // Schedule another update. This will have lower priority because it's
       // a transition.
-      React.unstable_withSuspenseConfig(
-        () => {
-          root.update(<App shouldSuspend={false} step={2} />);
-        },
-        {timeoutMs: 10000},
-      );
+      React.unstable_startTransition(() => {
+        root.update(<App shouldSuspend={false} step={2} />);
+      });
 
       // Interrupt to trigger a restart.
       interrupt();
@@ -465,12 +462,9 @@ describe('ReactSuspense', () => {
 
         // Schedule another update. This will have lower priority because it's
         // a transition.
-        React.unstable_withSuspenseConfig(
-          () => {
-            setShouldHideInParent(true);
-          },
-          {timeoutMs: 10000},
-        );
+        React.unstable_startTransition(() => {
+          setShouldHideInParent(true);
+        });
 
         expect(Scheduler).toFlushAndYieldThrough([
           // Should have restarted the first update, because of the interruption
@@ -1454,7 +1448,7 @@ describe('ReactSuspense', () => {
       ]);
     });
 
-    it('should call onInteractionScheduledWorkCompleted after suspending', done => {
+    it('should call onInteractionScheduledWorkCompleted after suspending', () => {
       const subscriber = {
         onInteractionScheduledWorkCompleted: jest.fn(),
         onInteractionTraced: jest.fn(),
@@ -1512,13 +1506,11 @@ describe('ReactSuspense', () => {
         jest.advanceTimersByTime(1000);
 
         expect(Scheduler).toHaveYielded(['Promise resolved [C]']);
-        expect(Scheduler).toFlushExpired([
+        expect(Scheduler).toFlushAndYield([
           // Even though the promise for C was thrown three times, we should only
           // re-render once.
           'C',
         ]);
-
-        done();
       });
 
       expect(

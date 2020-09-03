@@ -43,23 +43,20 @@ import {
   NoPriority as NoSchedulerPriority,
 } from './SchedulerWithReactIntegration.new';
 
-export const SyncLanePriority: LanePriority = 17;
-const SyncBatchedLanePriority: LanePriority = 16;
+export const SyncLanePriority: LanePriority = 15;
+export const SyncBatchedLanePriority: LanePriority = 14;
 
-const InputDiscreteHydrationLanePriority: LanePriority = 15;
-export const InputDiscreteLanePriority: LanePriority = 14;
+const InputDiscreteHydrationLanePriority: LanePriority = 13;
+export const InputDiscreteLanePriority: LanePriority = 12;
 
-const InputContinuousHydrationLanePriority: LanePriority = 13;
-export const InputContinuousLanePriority: LanePriority = 12;
+const InputContinuousHydrationLanePriority: LanePriority = 11;
+export const InputContinuousLanePriority: LanePriority = 10;
 
-const DefaultHydrationLanePriority: LanePriority = 11;
-export const DefaultLanePriority: LanePriority = 10;
+const DefaultHydrationLanePriority: LanePriority = 9;
+export const DefaultLanePriority: LanePriority = 8;
 
-const TransitionShortHydrationLanePriority: LanePriority = 9;
-export const TransitionShortLanePriority: LanePriority = 8;
-
-const TransitionLongHydrationLanePriority: LanePriority = 7;
-export const TransitionLongLanePriority: LanePriority = 6;
+const TransitionHydrationPriority: LanePriority = 7;
+export const TransitionPriority: LanePriority = 6;
 
 const RetryLanePriority: LanePriority = 5;
 
@@ -89,13 +86,12 @@ const InputContinuousLanes: Lanes = /*                  */ 0b0000000000000000000
 export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000100000000;
 export const DefaultLanes: Lanes = /*                   */ 0b0000000000000000000111000000000;
 
-const TransitionShortHydrationLane: Lane = /*           */ 0b0000000000000000001000000000000;
-const TransitionShortLanes: Lanes = /*                  */ 0b0000000000000011110000000000000;
-
-const TransitionLongHydrationLane: Lane = /*            */ 0b0000000000000100000000000000000;
-const TransitionLongLanes: Lanes = /*                   */ 0b0000000001111000000000000000000;
+const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000001000000000000;
+const TransitionLanes: Lanes = /*                       */ 0b0000000001111111110000000000000;
 
 const RetryLanes: Lanes = /*                            */ 0b0000011110000000000000000000000;
+
+export const SomeRetryLane: Lanes = /*                  */ 0b0000010000000000000000000000000;
 
 export const SelectiveHydrationLane: Lane = /*          */ 0b0000100000000000000000000000000;
 
@@ -158,23 +154,14 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
     return_highestLanePriority = DefaultLanePriority;
     return defaultLanes;
   }
-  if ((lanes & TransitionShortHydrationLane) !== NoLanes) {
-    return_highestLanePriority = TransitionShortHydrationLanePriority;
-    return TransitionShortHydrationLane;
+  if ((lanes & TransitionHydrationLane) !== NoLanes) {
+    return_highestLanePriority = TransitionHydrationPriority;
+    return TransitionHydrationLane;
   }
-  const transitionShortLanes = TransitionShortLanes & lanes;
-  if (transitionShortLanes !== NoLanes) {
-    return_highestLanePriority = TransitionShortLanePriority;
-    return transitionShortLanes;
-  }
-  if ((lanes & TransitionLongHydrationLane) !== NoLanes) {
-    return_highestLanePriority = TransitionLongHydrationLanePriority;
-    return TransitionLongHydrationLane;
-  }
-  const transitionLongLanes = TransitionLongLanes & lanes;
-  if (transitionLongLanes !== NoLanes) {
-    return_highestLanePriority = TransitionLongLanePriority;
-    return transitionLongLanes;
+  const transitionLanes = TransitionLanes & lanes;
+  if (transitionLanes !== NoLanes) {
+    return_highestLanePriority = TransitionPriority;
+    return transitionLanes;
   }
   const retryLanes = RetryLanes & lanes;
   if (retryLanes !== NoLanes) {
@@ -239,10 +226,8 @@ export function lanePriorityToSchedulerPriority(
       return UserBlockingSchedulerPriority;
     case DefaultHydrationLanePriority:
     case DefaultLanePriority:
-    case TransitionShortHydrationLanePriority:
-    case TransitionShortLanePriority:
-    case TransitionLongHydrationLanePriority:
-    case TransitionLongLanePriority:
+    case TransitionHydrationPriority:
+    case TransitionPriority:
     case SelectiveHydrationLanePriority:
     case RetryLanePriority:
       return NormalSchedulerPriority;
@@ -374,6 +359,25 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   return nextLanes;
 }
 
+export function getMostRecentEventTime(root: FiberRoot, lanes: Lanes): number {
+  const eventTimes = root.eventTimes;
+
+  let mostRecentEventTime = NoTimestamp;
+  while (lanes > 0) {
+    const index = pickArbitraryLaneIndex(lanes);
+    const lane = 1 << index;
+
+    const eventTime = eventTimes[index];
+    if (eventTime > mostRecentEventTime) {
+      mostRecentEventTime = eventTime;
+    }
+
+    lanes &= ~lane;
+  }
+
+  return mostRecentEventTime;
+}
+
 function computeExpirationTime(lane: Lane, currentTime: number) {
   // TODO: Expiration heuristic is constant per lane, so could use a map.
   getHighestPriorityLanes(lane);
@@ -381,7 +385,7 @@ function computeExpirationTime(lane: Lane, currentTime: number) {
   if (priority >= InputContinuousLanePriority) {
     // User interactions should expire slightly more quickly.
     return currentTime + 1000;
-  } else if (priority >= TransitionLongLanePriority) {
+  } else if (priority >= TransitionPriority) {
     return currentTime + 5000;
   } else {
     // Anything idle priority or lower should never expire.
@@ -451,8 +455,14 @@ export function getLanesToRetrySynchronouslyOnError(root: FiberRoot): Lanes {
 export function returnNextLanesPriority() {
   return return_highestLanePriority;
 }
-export function hasUpdatePriority(lanes: Lanes) {
+export function includesNonIdleWork(lanes: Lanes) {
   return (lanes & NonIdleLanes) !== NoLanes;
+}
+export function includesOnlyRetries(lanes: Lanes) {
+  return (lanes & RetryLanes) === lanes;
+}
+export function includesOnlyTransitions(lanes: Lanes) {
+  return (lanes & TransitionLanes) === lanes;
 }
 
 // To ensure consistency across multiple updates in the same event, this should
@@ -489,9 +499,7 @@ export function findUpdateLane(
       if (lane === NoLane) {
         // If all the default lanes are already being worked on, look for a
         // lane in the transition range.
-        lane = pickArbitraryLane(
-          (TransitionShortLanes | TransitionLongLanes) & ~wipLanes,
-        );
+        lane = pickArbitraryLane(TransitionLanes & ~wipLanes);
         if (lane === NoLane) {
           // All the transition lanes are taken, too. This should be very
           // rare, but as a last resort, pick a default lane. This will have
@@ -501,8 +509,7 @@ export function findUpdateLane(
       }
       return lane;
     }
-    case TransitionShortLanePriority: // Should be handled by findTransitionLane instead
-    case TransitionLongLanePriority:
+    case TransitionPriority: // Should be handled by findTransitionLane instead
     case RetryLanePriority: // Should be handled by findRetryLane instead
       break;
     case IdleLanePriority:
@@ -524,48 +531,21 @@ export function findUpdateLane(
 
 // To ensure consistency across multiple updates in the same event, this should
 // be pure function, so that it always returns the same lane for given inputs.
-export function findTransitionLane(
-  lanePriority: LanePriority,
-  wipLanes: Lanes,
-  pendingLanes: Lanes,
-): Lane {
-  if (lanePriority === TransitionShortLanePriority) {
-    // First look for lanes that are completely unclaimed, i.e. have no
-    // pending work.
-    let lane = pickArbitraryLane(TransitionShortLanes & ~pendingLanes);
+export function findTransitionLane(wipLanes: Lanes, pendingLanes: Lanes): Lane {
+  // First look for lanes that are completely unclaimed, i.e. have no
+  // pending work.
+  let lane = pickArbitraryLane(TransitionLanes & ~pendingLanes);
+  if (lane === NoLane) {
+    // If all lanes have pending work, look for a lane that isn't currently
+    // being worked on.
+    lane = pickArbitraryLane(TransitionLanes & ~wipLanes);
     if (lane === NoLane) {
-      // If all lanes have pending work, look for a lane that isn't currently
-      // being worked on.
-      lane = pickArbitraryLane(TransitionShortLanes & ~wipLanes);
-      if (lane === NoLane) {
-        // If everything is being worked on, pick any lane. This has the
-        // effect of interrupting the current work-in-progress.
-        lane = pickArbitraryLane(TransitionShortLanes);
-      }
+      // If everything is being worked on, pick any lane. This has the
+      // effect of interrupting the current work-in-progress.
+      lane = pickArbitraryLane(TransitionLanes);
     }
-    return lane;
   }
-  if (lanePriority === TransitionLongLanePriority) {
-    // First look for lanes that are completely unclaimed, i.e. have no
-    // pending work.
-    let lane = pickArbitraryLane(TransitionLongLanes & ~pendingLanes);
-    if (lane === NoLane) {
-      // If all lanes have pending work, look for a lane that isn't currently
-      // being worked on.
-      lane = pickArbitraryLane(TransitionLongLanes & ~wipLanes);
-      if (lane === NoLane) {
-        // If everything is being worked on, pick any lane. This has the
-        // effect of interrupting the current work-in-progress.
-        lane = pickArbitraryLane(TransitionLongLanes);
-      }
-    }
-    return lane;
-  }
-  invariant(
-    false,
-    'Invalid transition priority: %s. This is a bug in React.',
-    lanePriority,
-  );
+  return lane;
 }
 
 // To ensure consistency across multiple updates in the same event, this should
@@ -603,8 +583,12 @@ export function pickArbitraryLane(lanes: Lanes): Lane {
   return getHighestPriorityLane(lanes);
 }
 
-function pickArbitraryLaneIndex(lanes: Lane | Lanes) {
+function pickArbitraryLaneIndex(lanes: Lanes) {
   return 31 - clz32(lanes);
+}
+
+function laneToIndex(lane: Lane) {
+  return pickArbitraryLaneIndex(lane);
 }
 
 export function includesSomeLane(a: Lanes | Lane, b: Lanes | Lane) {
@@ -645,7 +629,11 @@ export function createLaneMap<T>(initial: T): LaneMap<T> {
   return new Array(TotalLanes).fill(initial);
 }
 
-export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
+export function markRootUpdated(
+  root: FiberRoot,
+  updateLane: Lane,
+  eventTime: number,
+) {
   root.pendingLanes |= updateLane;
 
   // TODO: Theoretically, any update to any lane can unblock any other lane. But
@@ -663,6 +651,12 @@ export function markRootUpdated(root: FiberRoot, updateLane: Lane) {
 
   root.suspendedLanes &= higherPriorityLanes;
   root.pingedLanes &= higherPriorityLanes;
+
+  const eventTimes = root.eventTimes;
+  const index = laneToIndex(updateLane);
+  // We can always overwrite an existing timestamp because we prefer the most
+  // recent event, and we assume time is monotonically increasing.
+  eventTimes[index] = eventTime;
 }
 
 export function markRootSuspended(root: FiberRoot, suspendedLanes: Lanes) {
@@ -720,13 +714,18 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
 
   root.entangledLanes &= remainingLanes;
 
+  const entanglements = root.entanglements;
+  const eventTimes = root.eventTimes;
   const expirationTimes = root.expirationTimes;
+
+  // Clear the lanes that no longer have pending work
   let lanes = noLongerPendingLanes;
   while (lanes > 0) {
     const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
 
-    // Clear the expiration time
+    entanglements[index] = NoLanes;
+    eventTimes[index] = NoTimestamp;
     expirationTimes[index] = NoTimestamp;
 
     lanes &= ~lane;
@@ -773,18 +772,14 @@ export function getBumpedLaneForHydration(
     case DefaultLanePriority:
       lane = DefaultHydrationLane;
       break;
-    case TransitionShortHydrationLanePriority:
-    case TransitionShortLanePriority:
-      lane = TransitionShortHydrationLane;
-      break;
-    case TransitionLongHydrationLanePriority:
-    case TransitionLongLanePriority:
-      lane = TransitionLongHydrationLane;
+    case TransitionHydrationPriority:
+    case TransitionPriority:
+      lane = TransitionHydrationLane;
       break;
     case RetryLanePriority:
       // Shouldn't be reachable under normal circumstances, so there's no
       // dedicated lane for retry priority. Use the one for long transitions.
-      lane = TransitionLongHydrationLane;
+      lane = TransitionHydrationLane;
       break;
     case SelectiveHydrationLanePriority:
       lane = SelectiveHydrationLane;

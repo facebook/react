@@ -86,37 +86,6 @@ export type RefObject = {|
   current: any,
 |};
 
-export type ReactEventResponderInstance<E, C> = {|
-  fiber: Object,
-  props: Object,
-  responder: ReactEventResponder<E, C>,
-  rootEventTypes: null | Set<string>,
-  state: Object,
-|};
-
-export type ReactEventResponderListener<E, C> = {|
-  props: Object,
-  responder: ReactEventResponder<E, C>,
-|};
-
-export type ReactEventResponder<E, C> = {
-  $$typeof: Symbol | number,
-  displayName: string,
-  targetEventTypes: null | Array<string>,
-  targetPortalPropagation: boolean,
-  rootEventTypes: null | Array<string>,
-  getInitialState: null | ((props: Object) => Object),
-  onEvent:
-    | null
-    | ((event: E, context: C, props: Object, state: Object) => void),
-  onRootEvent:
-    | null
-    | ((event: E, context: C, props: Object, state: Object) => void),
-  onMount: null | ((context: C, props: Object, state: Object) => void),
-  onUnmount: null | ((context: C, props: Object, state: Object) => void),
-  ...
-};
-
 export type EventPriority = 0 | 1 | 2;
 
 export const DiscreteEvent: EventPriority = 0;

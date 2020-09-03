@@ -15,7 +15,7 @@ import {
   HostComponent,
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
-import SyntheticEvent from '../events/SyntheticEvent';
+import {SyntheticEvent} from '../events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import act from './ReactTestUtilsAct';
@@ -324,7 +324,7 @@ function mockComponent(module, mockTagName) {
       console.warn(
         'ReactTestUtils.mockComponent() is deprecated. ' +
           'Use shallow rendering or jest.mock() instead.\n\n' +
-          'See https://fb.me/test-utils-mock-component for more information.',
+          'See https://reactjs.org/link/test-utils-mock-component for more information.',
       );
     }
   }
@@ -587,6 +587,7 @@ function makeSimulator(eventType) {
     const targetInst = getInstanceFromNode(domNode);
     const event = new SyntheticEvent(
       reactName,
+      fakeNativeEvent.type,
       targetInst,
       fakeNativeEvent,
       domNode,

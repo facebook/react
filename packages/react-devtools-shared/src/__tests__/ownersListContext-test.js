@@ -206,4 +206,43 @@ describe('OwnersListContext', () => {
 
     done();
   });
+
+  it('should include all owners for a component wrapped in react memo', async done => {
+    const InnerComponent = (props, ref) => <div ref={ref} />;
+    const ForwardRef = React.forwardRef(InnerComponent);
+    const Memo = React.memo(ForwardRef);
+    const Grandparent = () => {
+      const ref = React.createRef();
+      return <Memo ref={ref} />;
+    };
+
+    utils.act(() =>
+      ReactDOM.render(<Grandparent />, document.createElement('div')),
+    );
+
+    let didFinish = false;
+    function Suspender({owner}) {
+      const read = React.useContext(OwnersListContext);
+      const owners = read(owner.id);
+      didFinish = true;
+      expect(owners.length).toBe(3);
+      expect(owners).toMatchSnapshot(
+        `owners for "${(owner && owner.displayName) || ''}"`,
+      );
+      return null;
+    }
+
+    const wrapped = ((store.getElementAtIndex(2): any): Element);
+    await utils.actAsync(() =>
+      TestRenderer.create(
+        <Contexts defaultOwnerID={wrapped.id}>
+          <React.Suspense fallback={null}>
+            <Suspender owner={wrapped} />
+          </React.Suspense>
+        </Contexts>,
+      ),
+    );
+    expect(didFinish).toBe(true);
+    done();
+  });
 });

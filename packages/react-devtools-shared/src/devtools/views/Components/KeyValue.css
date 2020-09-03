@@ -21,7 +21,7 @@
 
 .Value {
   color: var(--color-attribute-value);
-  white-space: nowrap;
+  white-space: pre;
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: default;

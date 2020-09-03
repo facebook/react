@@ -8,5 +8,6 @@ module.exports = {
     'invariant-args': require('./invariant-args'),
     'no-production-logging': require('./no-production-logging'),
     'no-cross-fork-imports': require('./no-cross-fork-imports'),
+    'no-cross-fork-types': require('./no-cross-fork-types'),
   },
 };

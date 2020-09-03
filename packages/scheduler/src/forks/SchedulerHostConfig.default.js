@@ -16,6 +16,18 @@ export let requestPaint;
 export let getCurrentTime;
 export let forceFrameRate;
 
+const hasPerformanceNow =
+  typeof performance === 'object' && typeof performance.now === 'function';
+
+if (hasPerformanceNow) {
+  const localPerformance = performance;
+  getCurrentTime = () => localPerformance.now();
+} else {
+  const localDate = Date;
+  const initialTime = localDate.now();
+  getCurrentTime = () => localDate.now() - initialTime;
+}
+
 if (
   // If Scheduler runs in a non-DOM environment, it falls back to a naive
   // implementation using setTimeout.
@@ -39,10 +51,6 @@ if (
         throw e;
       }
     }
-  };
-  const initialTime = Date.now();
-  getCurrentTime = function() {
-    return Date.now() - initialTime;
   };
   requestHostCallback = function(cb) {
     if (_callback !== null) {
@@ -68,8 +76,6 @@ if (
   requestPaint = forceFrameRate = function() {};
 } else {
   // Capture local references to native APIs, in case a polyfill overrides them.
-  const performance = window.performance;
-  const Date = window.Date;
   const setTimeout = window.setTimeout;
   const clearTimeout = window.clearTimeout;
 
@@ -85,7 +91,7 @@ if (
       console['error'](
         "This browser doesn't support requestAnimationFrame. " +
           'Make sure that you load a ' +
-          'polyfill in older browsers. https://fb.me/react-polyfills',
+          'polyfill in older browsers. https://reactjs.org/link/react-polyfills',
       );
     }
     if (typeof cancelAnimationFrame !== 'function') {
@@ -93,19 +99,9 @@ if (
       console['error'](
         "This browser doesn't support cancelAnimationFrame. " +
           'Make sure that you load a ' +
-          'polyfill in older browsers. https://fb.me/react-polyfills',
+          'polyfill in older browsers. https://reactjs.org/link/react-polyfills',
       );
     }
-  }
-
-  if (
-    typeof performance === 'object' &&
-    typeof performance.now === 'function'
-  ) {
-    getCurrentTime = () => performance.now();
-  } else {
-    const initialTime = Date.now();
-    getCurrentTime = () => Date.now() - initialTime;
   }
 
   let isMessageLoopRunning = false;
@@ -174,7 +170,7 @@ if (
       // Using console['error'] to evade Babel and ESLint
       console['error'](
         'forceFrameRate takes a positive int between 0 and 125, ' +
-          'forcing frame rates higher than 125 fps is not unsupported',
+          'forcing frame rates higher than 125 fps is not supported',
       );
       return;
     }

@@ -50,9 +50,6 @@ ${source}`;
  *
 ${license}
  */
-
-'use strict';
-
 ${source}`;
   },
 
@@ -63,7 +60,7 @@ ${source}`;
  *
 ${license}
  */
-${source}`;
+(function(){${source}})();`;
   },
 
   /***************** UMD_PROFILING *****************/
@@ -73,7 +70,7 @@ ${source}`;
  *
 ${license}
  */
-${source}`;
+(function(){${source}})();`;
   },
 
   /***************** NODE_DEV *****************/
@@ -283,6 +280,20 @@ ${source}
 
   /***************** NODE_PROD (reconciler only) *****************/
   [NODE_PROD](source, globalName, filename, moduleType) {
+    return `/** @license React v${reactVersion}
+ * ${filename}
+ *
+${license}
+ */
+module.exports = function $$$reconciler($$$hostConfig) {
+    var exports = {};
+${source}
+    return exports;
+};`;
+  },
+
+  /***************** NODE_PROFILING (reconciler only) *****************/
+  [NODE_PROFILING](source, globalName, filename, moduleType) {
     return `/** @license React v${reactVersion}
  * ${filename}
  *

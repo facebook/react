@@ -165,7 +165,7 @@ export function attach(
   }
 
   function getID(internalInstance: InternalInstance): number {
-    if (typeof internalInstance !== 'object') {
+    if (typeof internalInstance !== 'object' || internalInstance === null) {
       throw new Error('Invalid internal instance: ' + internalInstance);
     }
     if (!internalInstanceToIDMap.has(internalInstance)) {

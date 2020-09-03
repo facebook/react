@@ -124,4 +124,93 @@ describe('ReactFlightDOMRelay', () => {
 
     expect(container.innerHTML).toEqual('<span>Hello, Seb Smith</span>');
   });
+
+  // @gate experimental
+  it('can reasonably handle different element types', () => {
+    const {
+      forwardRef,
+      memo,
+      Fragment,
+      StrictMode,
+      Profiler,
+      Suspense,
+      SuspenseList,
+    } = React;
+
+    const Inner = memo(
+      forwardRef((props, ref) => {
+        return <div ref={ref}>{'Hello ' + props.name}</div>;
+      }),
+    );
+
+    function Foo() {
+      return {
+        bar: (
+          <div>
+            <Fragment>Fragment child</Fragment>
+            <Profiler>Profiler child</Profiler>
+            <StrictMode>StrictMode child</StrictMode>
+            <Suspense fallback="Loading...">Suspense child</Suspense>
+            <SuspenseList fallback="Loading...">
+              {'SuspenseList row 1'}
+              {'SuspenseList row 2'}
+            </SuspenseList>
+            <Inner name="world" />
+          </div>
+        ),
+      };
+    }
+    const transport = [];
+    ReactDOMFlightRelayServer.render(
+      {
+        foo: <Foo />,
+      },
+      transport,
+    );
+
+    const model = readThrough(transport);
+    expect(model).toEqual({
+      foo: {
+        bar: (
+          <div>
+            {'Fragment child'}
+            {'Profiler child'}
+            {'StrictMode child'}
+            {'Suspense child'}
+            {['SuspenseList row 1', 'SuspenseList row 2']}
+            <div>Hello world</div>
+          </div>
+        ),
+      },
+    });
+  });
+
+  it('can handle a subset of Hooks', () => {
+    const {useMemo, useCallback} = React;
+    function Inner({x}) {
+      const foo = useMemo(() => x + x, [x]);
+      const bar = useCallback(() => 10 + foo, [foo]);
+      return bar();
+    }
+
+    function Foo() {
+      return {
+        bar: <Inner x={2} />,
+      };
+    }
+    const transport = [];
+    ReactDOMFlightRelayServer.render(
+      {
+        foo: <Foo />,
+      },
+      transport,
+    );
+
+    const model = readThrough(transport);
+    expect(model).toEqual({
+      foo: {
+        bar: 14,
+      },
+    });
+  });
 });

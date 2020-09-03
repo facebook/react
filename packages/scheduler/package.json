@@ -28,6 +28,7 @@
     "tracing.js",
     "tracing-profiling.js",
     "unstable_mock.js",
+    "unstable_post_task.js",
     "cjs/",
     "umd/"
   ],

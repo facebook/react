@@ -347,29 +347,42 @@ import Store from './Store';
 Store.subscribe();
 const Header = styled.div\`color: red\`;
 _c = Header;
-const Factory = funny.factory\`\`;
+const StyledFactory1 = styled('div')\`color: hotpink\`;
+_c2 = StyledFactory1;
+const StyledFactory2 = styled('div')({
+  color: 'hotpink'
+});
+_c3 = StyledFactory2;
+const StyledFactory3 = styled(A)({
+  color: 'hotpink'
+});
+_c4 = StyledFactory3;
+const FunnyFactory = funny.factory\`\`;
 let Alias1 = A;
 let Alias2 = A.Foo;
 const Dict = {};
 
 function Foo() {
-  return <div><A /><B /><Alias1 /><Alias2 /><Header /><Dict.X /></div>;
+  return <div><A /><B /><StyledFactory1 /><StyledFactory2 /><StyledFactory3 /><Alias1 /><Alias2 /><Header /><Dict.X /></div>;
 }
 
-_c2 = Foo;
+_c5 = Foo;
 const B = hoc(A); // This is currently registered as a false positive:
 
-_c3 = B;
+_c6 = B;
 const NotAComponent = wow(A); // We could avoid it but it also doesn't hurt.
 
-_c4 = NotAComponent;
+_c7 = NotAComponent;
 
-var _c, _c2, _c3, _c4;
+var _c, _c2, _c3, _c4, _c5, _c6, _c7;
 
 $RefreshReg$(_c, "Header");
-$RefreshReg$(_c2, "Foo");
-$RefreshReg$(_c3, "B");
-$RefreshReg$(_c4, "NotAComponent");
+$RefreshReg$(_c2, "StyledFactory1");
+$RefreshReg$(_c3, "StyledFactory2");
+$RefreshReg$(_c4, "StyledFactory3");
+$RefreshReg$(_c5, "Foo");
+$RefreshReg$(_c6, "B");
+$RefreshReg$(_c7, "NotAComponent");
 `;
 
 exports[`ReactFreshBabelPlugin registers identifiers used in React.createElement at definition site 1`] = `
@@ -378,30 +391,43 @@ import Store from './Store';
 Store.subscribe();
 const Header = styled.div\`color: red\`;
 _c = Header;
-const Factory = funny.factory\`\`;
+const StyledFactory1 = styled('div')\`color: hotpink\`;
+_c2 = StyledFactory1;
+const StyledFactory2 = styled('div')({
+  color: 'hotpink'
+});
+_c3 = StyledFactory2;
+const StyledFactory3 = styled(A)({
+  color: 'hotpink'
+});
+_c4 = StyledFactory3;
+const FunnyFactory = funny.factory\`\`;
 let Alias1 = A;
 let Alias2 = A.Foo;
 const Dict = {};
 
 function Foo() {
-  return [React.createElement(A), React.createElement(B), React.createElement(Alias1), React.createElement(Alias2), jsx(Header), React.createElement(Dict.X)];
+  return [React.createElement(A), React.createElement(B), React.createElement(StyledFactory1), React.createElement(StyledFactory2), React.createElement(StyledFactory3), React.createElement(Alias1), React.createElement(Alias2), jsx(Header), React.createElement(Dict.X)];
 }
 
-_c2 = Foo;
+_c5 = Foo;
 React.createContext(Store);
 const B = hoc(A); // This is currently registered as a false positive:
 
-_c3 = B;
+_c6 = B;
 const NotAComponent = wow(A); // We could avoid it but it also doesn't hurt.
 
-_c4 = NotAComponent;
+_c7 = NotAComponent;
 
-var _c, _c2, _c3, _c4;
+var _c, _c2, _c3, _c4, _c5, _c6, _c7;
 
 $RefreshReg$(_c, "Header");
-$RefreshReg$(_c2, "Foo");
-$RefreshReg$(_c3, "B");
-$RefreshReg$(_c4, "NotAComponent");
+$RefreshReg$(_c2, "StyledFactory1");
+$RefreshReg$(_c3, "StyledFactory2");
+$RefreshReg$(_c4, "StyledFactory3");
+$RefreshReg$(_c5, "Foo");
+$RefreshReg$(_c6, "B");
+$RefreshReg$(_c7, "NotAComponent");
 `;
 
 exports[`ReactFreshBabelPlugin registers likely HOCs with inline functions 1`] = `

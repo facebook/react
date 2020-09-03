@@ -1,6 +1,5 @@
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
-const TerserPlugin = require('terser-webpack-plugin');
 const {
   GITHUB_URL,
   getVersionString,
@@ -41,14 +40,7 @@ const config = {
     },
   },
   optimization: {
-    minimizer: [
-      new TerserPlugin({
-        terserOptions: {
-          compress: {drop_debugger: false},
-          output: {comments: true},
-        },
-      }),
-    ],
+    minimize: false,
   },
   plugins: [
     new DefinePlugin({

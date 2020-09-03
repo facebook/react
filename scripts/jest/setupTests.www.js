@@ -16,7 +16,6 @@ jest.mock('shared/ReactFeatureFlags', () => {
   wwwFlags.disableLegacyContext = defaultFlags.disableLegacyContext;
   wwwFlags.warnAboutUnmockedScheduler = defaultFlags.warnAboutUnmockedScheduler;
   wwwFlags.disableJavaScriptURLs = defaultFlags.disableJavaScriptURLs;
-  wwwFlags.enableDeprecatedFlareAPI = defaultFlags.enableDeprecatedFlareAPI;
 
   return wwwFlags;
 });

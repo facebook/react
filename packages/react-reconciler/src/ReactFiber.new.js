@@ -29,7 +29,8 @@ import {
   enableScopeAPI,
   enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
-import {NoEffect, Placement} from './ReactSideEffectTags';
+import {NoEffect, Placement, StaticMask} from './ReactSideEffectTags';
+import {NoEffect as NoSubtreeEffect} from './ReactSubtreeTags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
 import {
   IndeterminateComponent,
@@ -144,10 +145,8 @@ function FiberNode(
 
   // Effects
   this.effectTag = NoEffect;
-  this.nextEffect = null;
-
-  this.firstEffect = null;
-  this.lastEffect = null;
+  this.subtreeTag = NoSubtreeEffect;
+  this.deletions = null;
 
   this.lanes = NoLanes;
   this.childLanes = NoLanes;
@@ -285,13 +284,8 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     workInProgress.type = current.type;
 
     // We already have an alternate.
-    // Reset the effect tag.
-    workInProgress.effectTag = NoEffect;
-
-    // The effect list is no longer valid.
-    workInProgress.nextEffect = null;
-    workInProgress.firstEffect = null;
-    workInProgress.lastEffect = null;
+    workInProgress.subtreeTag = NoSubtreeEffect;
+    workInProgress.deletions = null;
 
     if (enableProfilerTimer) {
       // We intentionally reset, rather than copy, actualDuration & actualStartTime.
@@ -303,6 +297,9 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     }
   }
 
+  // Reset all effects except static ones.
+  // Static effects are not specific to a render.
+  workInProgress.effectTag = current.effectTag & StaticMask;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
 
@@ -320,7 +317,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
       : {
           lanes: currentDependencies.lanes,
           firstContext: currentDependencies.firstContext,
-          responders: currentDependencies.responders,
         };
 
   // These will be overridden during the parent's reconciliation
@@ -369,11 +365,6 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
   // that child fiber is setting, not the reconciliation.
   workInProgress.effectTag &= Placement;
 
-  // The effect list is no longer valid.
-  workInProgress.nextEffect = null;
-  workInProgress.firstEffect = null;
-  workInProgress.lastEffect = null;
-
   const current = workInProgress.alternate;
   if (current === null) {
     // Reset to createFiber's initial values.
@@ -381,6 +372,7 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
     workInProgress.lanes = renderLanes;
 
     workInProgress.child = null;
+    workInProgress.subtreeTag = NoSubtreeEffect;
     workInProgress.memoizedProps = null;
     workInProgress.memoizedState = null;
     workInProgress.updateQueue = null;
@@ -401,6 +393,8 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
     workInProgress.lanes = current.lanes;
 
     workInProgress.child = current.child;
+    workInProgress.subtreeTag = current.subtreeTag;
+    workInProgress.deletions = null;
     workInProgress.memoizedProps = current.memoizedProps;
     workInProgress.memoizedState = current.memoizedState;
     workInProgress.updateQueue = current.updateQueue;
@@ -416,7 +410,6 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
         : {
             lanes: currentDependencies.lanes,
             firstContext: currentDependencies.firstContext,
-            responders: currentDependencies.responders,
           };
 
     if (enableProfilerTimer) {
@@ -496,7 +489,11 @@ export function createFiberFromTypeAndProps(
         return createFiberFromOffscreen(pendingProps, mode, lanes, key);
       case REACT_LEGACY_HIDDEN_TYPE:
         return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
-
+      case REACT_SCOPE_TYPE:
+        if (enableScopeAPI) {
+          return createFiberFromScope(type, pendingProps, mode, lanes, key);
+        }
+      // eslint-disable-next-line no-fallthrough
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
@@ -534,16 +531,6 @@ export function createFiberFromTypeAndProps(
                 );
               }
               break;
-            case REACT_SCOPE_TYPE:
-              if (enableScopeAPI) {
-                return createFiberFromScope(
-                  type,
-                  pendingProps,
-                  mode,
-                  lanes,
-                  key,
-                );
-              }
           }
         }
         let info = '';
@@ -580,6 +567,10 @@ export function createFiberFromTypeAndProps(
   fiber.elementType = type;
   fiber.type = resolvedType;
   fiber.lanes = lanes;
+
+  if (__DEV__) {
+    fiber._debugOwner = owner;
+  }
 
   return fiber;
 }
@@ -826,9 +817,8 @@ export function assignFiberPropertiesInDEV(
   target.dependencies = source.dependencies;
   target.mode = source.mode;
   target.effectTag = source.effectTag;
-  target.nextEffect = source.nextEffect;
-  target.firstEffect = source.firstEffect;
-  target.lastEffect = source.lastEffect;
+  target.subtreeTag = source.subtreeTag;
+  target.deletions = source.deletions;
   target.lanes = source.lanes;
   target.childLanes = source.childLanes;
   target.alternate = source.alternate;

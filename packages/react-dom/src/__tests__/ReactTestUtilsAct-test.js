@@ -771,18 +771,24 @@ function runActTests(label, render, unmount, rerender) {
           expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
 
           // trigger a suspendy update with a delay
-          React.unstable_withSuspenseConfig(
-            () => {
-              act(() => {
-                rerender(<App suspend={true} />);
-              });
-            },
-            {timeout: 5000},
-          );
-          // the spinner shows up regardless
-          expect(
-            document.querySelector('[data-test-id=spinner]'),
-          ).not.toBeNull();
+          React.unstable_startTransition(() => {
+            act(() => {
+              rerender(<App suspend={true} />);
+            });
+          });
+
+          if (label === 'concurrent mode') {
+            // In Concurrent Mode, refresh transitions delay indefinitely.
+            expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
+          } else {
+            // In Legacy Mode and Blocking Mode, all fallbacks are forced to
+            // display, even during a refresh transition.
+            // TODO: Consider delaying indefinitely in Blocking Mode, to match
+            // Concurrent Mode semantics.
+            expect(
+              document.querySelector('[data-test-id=spinner]'),
+            ).not.toBeNull();
+          }
 
           // resolve the promise
           await act(async () => {

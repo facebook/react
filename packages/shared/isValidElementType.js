@@ -20,12 +20,12 @@ import {
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
   REACT_FUNDAMENTAL_TYPE,
-  REACT_RESPONDER_TYPE,
   REACT_SCOPE_TYPE,
   REACT_BLOCK_TYPE,
   REACT_SERVER_BLOCK_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
 } from 'shared/ReactSymbols';
+import {enableScopeAPI} from './ReactFeatureFlags';
 
 export default function isValidElementType(type: mixed) {
   if (typeof type === 'string' || typeof type === 'function') {
@@ -40,7 +40,8 @@ export default function isValidElementType(type: mixed) {
     type === REACT_STRICT_MODE_TYPE ||
     type === REACT_SUSPENSE_TYPE ||
     type === REACT_SUSPENSE_LIST_TYPE ||
-    type === REACT_LEGACY_HIDDEN_TYPE
+    type === REACT_LEGACY_HIDDEN_TYPE ||
+    (enableScopeAPI && type === REACT_SCOPE_TYPE)
   ) {
     return true;
   }
@@ -53,8 +54,6 @@ export default function isValidElementType(type: mixed) {
       type.$$typeof === REACT_CONTEXT_TYPE ||
       type.$$typeof === REACT_FORWARD_REF_TYPE ||
       type.$$typeof === REACT_FUNDAMENTAL_TYPE ||
-      type.$$typeof === REACT_RESPONDER_TYPE ||
-      type.$$typeof === REACT_SCOPE_TYPE ||
       type.$$typeof === REACT_BLOCK_TYPE ||
       type[(0: any)] === REACT_SERVER_BLOCK_TYPE
     ) {

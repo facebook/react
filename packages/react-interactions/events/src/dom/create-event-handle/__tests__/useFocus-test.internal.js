@@ -36,7 +36,7 @@ function initializeModules(hasPointerEvents) {
 const forcePointerEvents = true;
 const table = [[forcePointerEvents], [!forcePointerEvents]];
 
-describe.each(table)(`useFocus`, hasPointerEvents => {
+describe.each(table)(`useFocus hasPointerEvents=%s`, hasPointerEvents => {
   let container;
 
   beforeEach(() => {

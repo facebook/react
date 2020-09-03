@@ -350,8 +350,8 @@ const bundles = [
   /******* React Native *******/
   {
     bundleTypes: __EXPERIMENTAL__
-      ? [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING]
-      : [],
+      ? []
+      : [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
     moduleType: RENDERER,
     entry: 'react-native-renderer',
     global: 'ReactNativeRenderer',
@@ -380,8 +380,8 @@ const bundles = [
   /******* React Native Fabric *******/
   {
     bundleTypes: __EXPERIMENTAL__
-      ? [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING]
-      : [],
+      ? []
+      : [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
     moduleType: RENDERER,
     entry: 'react-native-renderer/fabric',
     global: 'ReactFabric',
@@ -416,23 +416,12 @@ const bundles = [
       UMD_DEV,
       UMD_PROD,
       RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
     ],
     moduleType: RENDERER,
     entry: 'react-test-renderer',
     global: 'ReactTestRenderer',
-    externals: ['react', 'scheduler', 'scheduler/unstable_mock'],
-    babel: opts =>
-      Object.assign({}, opts, {
-        plugins: opts.plugins.concat([
-          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
-        ]),
-      }),
-  },
-  {
-    bundleTypes: [UMD_DEV, UMD_PROD],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-test-renderer/shallow',
-    global: 'ReactShallowRenderer',
     externals: ['react', 'scheduler', 'scheduler/unstable_mock'],
     babel: opts =>
       Object.assign({}, opts, {
@@ -499,7 +488,7 @@ const bundles = [
 
   /******* React Reconciler *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, NODE_PROFILING],
     moduleType: RECONCILER,
     entry: 'react-reconciler',
     global: 'ReactReconciler',
@@ -645,6 +634,21 @@ const bundles = [
     externals: [],
   },
 
+  /******* React Scheduler Post Task (experimental) *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'scheduler/unstable_post_task',
+    global: 'SchedulerPostTask',
+    externals: [],
+  },
+
   /******* Jest React (experimental) *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -700,74 +704,7 @@ const bundles = [
     global: 'SchedulerTracing',
     externals: [],
   },
-
-  /******* React Events (experimental) *******/
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/context-menu',
-    global: 'ReactEventsContextMenu',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/deprecated-focus',
-    global: 'ReactEventsFocus',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/hover',
-    global: 'ReactEventsHover',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/press-legacy',
-    global: 'ReactEventsPressLegacy',
-    externals: ['react'],
-  },
 ];
-
-const fbBundleExternalsMap = {
-  'react-interactions/events/focus': 'ReactEventsFocus',
-  'react-interactions/events/tap': 'ReactEventsTap',
-};
 
 // Based on deep-freeze by substack (public domain)
 function deepFreeze(o) {
@@ -825,7 +762,6 @@ function getFilename(bundle, bundleType) {
 }
 
 module.exports = {
-  fbBundleExternalsMap,
   bundleTypes,
   moduleTypes,
   bundles,

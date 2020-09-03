@@ -231,7 +231,7 @@ describe('ReactElement.jsx', () => {
       'Child: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://fb.me/react-special-props)',
+        'prop. (https://reactjs.org/link/special-props)',
     );
   });
 
@@ -258,7 +258,7 @@ describe('ReactElement.jsx', () => {
       'div: `key` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://fb.me/react-special-props)',
+        'prop. (https://reactjs.org/link/special-props)',
       {withoutStack: true},
     );
   });
@@ -283,7 +283,7 @@ describe('ReactElement.jsx', () => {
       'Child: `ref` is not a prop. Trying to access it will result ' +
         'in `undefined` being returned. If you need to access the same ' +
         'value within the child component, you should pass it as a different ' +
-        'prop. (https://fb.me/react-special-props)',
+        'prop. (https://reactjs.org/link/special-props)',
     );
   });
 
@@ -363,7 +363,7 @@ describe('ReactElement.jsx', () => {
       ReactDOM.render(JSXRuntime.jsx(Parent, {}), container),
     ).toErrorDev(
       'Warning: Each child in a list should have a unique "key" prop.\n\n' +
-        'Check the render method of `Parent`. See https://fb.me/react-warning-keys for more information.\n' +
+        'Check the render method of `Parent`. See https://reactjs.org/link/warning-keys for more information.\n' +
         '    in Child (at **)\n' +
         '    in Parent (at **)',
     );

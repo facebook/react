@@ -1,13 +1,7 @@
-.CheckboxLabel {
-  flex: 1 1 100%;
-  display: flex;
-}
-.CheckboxLabel:focus-within {
-  background-color: var(--color-button-background-focus);
-}
-
-.Checkbox:focus {
-  outline: none;
+.Checkbox {
+  flex: 0 0 auto;
+  align-self: center;
+  margin: 0 0.25rem;
 }
 
 .Input {

@@ -150,7 +150,7 @@ describe('ReactDOMComponent', () => {
       ).toErrorDev(
         'Warning: Invalid value for prop `foo` on <div> tag. Either remove it ' +
           'from the element, or pass a string or number value to keep ' +
-          'it in the DOM. For details, see https://fb.me/react-attribute-behavior' +
+          'it in the DOM. For details, see https://reactjs.org/link/attribute-behavior ' +
           '\n    in div (at **)',
       );
     });
@@ -162,7 +162,7 @@ describe('ReactDOMComponent', () => {
       ).toErrorDev(
         'Warning: Invalid values for props `foo`, `baz` on <div> tag. Either remove ' +
           'them from the element, or pass a string or number value to keep ' +
-          'them in the DOM. For details, see https://fb.me/react-attribute-behavior' +
+          'them in the DOM. For details, see https://reactjs.org/link/attribute-behavior ' +
           '\n    in div (at **)',
       );
     });
@@ -1384,7 +1384,7 @@ describe('ReactDOMComponent', () => {
         mountComponent({dangerouslySetInnerHTML: '<span>Hi Jim!</span>'});
       }).toThrowError(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-          'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.',
+          'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
       );
     });
 
@@ -1393,7 +1393,7 @@ describe('ReactDOMComponent', () => {
         mountComponent({dangerouslySetInnerHTML: {foo: 'bar'}});
       }).toThrowError(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-          'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.',
+          'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
       );
     });
 

@@ -6,4 +6,4 @@
  */
 
 // TODO: this is special because it gets imported during build.
-export default '16.13.1';
+export default '17.0.0-alpha.0';

@@ -320,7 +320,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
       : {
           lanes: currentDependencies.lanes,
           firstContext: currentDependencies.firstContext,
-          responders: currentDependencies.responders,
         };
 
   // These will be overridden during the parent's reconciliation
@@ -416,7 +415,6 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
         : {
             lanes: currentDependencies.lanes,
             firstContext: currentDependencies.firstContext,
-            responders: currentDependencies.responders,
           };
 
     if (enableProfilerTimer) {
@@ -496,7 +494,11 @@ export function createFiberFromTypeAndProps(
         return createFiberFromOffscreen(pendingProps, mode, lanes, key);
       case REACT_LEGACY_HIDDEN_TYPE:
         return createFiberFromLegacyHidden(pendingProps, mode, lanes, key);
-
+      case REACT_SCOPE_TYPE:
+        if (enableScopeAPI) {
+          return createFiberFromScope(type, pendingProps, mode, lanes, key);
+        }
+      // eslint-disable-next-line no-fallthrough
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
@@ -534,16 +536,6 @@ export function createFiberFromTypeAndProps(
                 );
               }
               break;
-            case REACT_SCOPE_TYPE:
-              if (enableScopeAPI) {
-                return createFiberFromScope(
-                  type,
-                  pendingProps,
-                  mode,
-                  lanes,
-                  key,
-                );
-              }
           }
         }
         let info = '';
@@ -580,6 +572,10 @@ export function createFiberFromTypeAndProps(
   fiber.elementType = type;
   fiber.type = resolvedType;
   fiber.lanes = lanes;
+
+  if (__DEV__) {
+    fiber._debugOwner = owner;
+  }
 
   return fiber;
 }

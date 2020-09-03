@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
-
 const hasReadOnlyValue = {
   button: true,
   checkbox: true,
@@ -29,8 +27,7 @@ export function checkControlledValueProps(
         props.onInput ||
         props.readOnly ||
         props.disabled ||
-        props.value == null ||
-        (enableDeprecatedFlareAPI && props.DEPRECATED_flareListeners)
+        props.value == null
       )
     ) {
       console.error(
@@ -46,8 +43,7 @@ export function checkControlledValueProps(
         props.onChange ||
         props.readOnly ||
         props.disabled ||
-        props.checked == null ||
-        (enableDeprecatedFlareAPI && props.DEPRECATED_flareListeners)
+        props.checked == null
       )
     ) {
       console.error(

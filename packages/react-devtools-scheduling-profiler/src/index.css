@@ -1,0 +1,21 @@
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  margin: 0;
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sans-normal);
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.Container {
+  height: 100%;
+}

@@ -16,13 +16,15 @@ function transform(input, options = {}) {
     babel.transform(input, {
       babelrc: false,
       configFile: false,
+      envName: options.envName,
       plugins: [
         '@babel/syntax-jsx',
         '@babel/syntax-dynamic-import',
         [
           freshPlugin,
           {
-            skipEnvCheck: true,
+            skipEnvCheck:
+              options.skipEnvCheck === undefined ? true : options.skipEnvCheck,
             // To simplify debugging tests:
             emitFullSignatures: true,
             ...options.freshOptions,
@@ -261,7 +263,10 @@ describe('ReactFreshBabelPlugin', () => {
         Store.subscribe();
 
         const Header = styled.div\`color: red\`
-        const Factory = funny.factory\`\`;
+        const StyledFactory1 = styled('div')\`color: hotpink\`
+        const StyledFactory2 = styled('div')({ color: 'hotpink' })
+        const StyledFactory3 = styled(A)({ color: 'hotpink' })
+        const FunnyFactory = funny.factory\`\`;
 
         let Alias1 = A;
         let Alias2 = A.Foo;
@@ -269,7 +274,7 @@ describe('ReactFreshBabelPlugin', () => {
 
         function Foo() {
           return (
-            <div><A /><B /><Alias1 /><Alias2 /><Header /><Dict.X /></div>
+            <div><A /><B /><StyledFactory1 /><StyledFactory2 /><StyledFactory3 /><Alias1 /><Alias2 /><Header /><Dict.X /></div>
           );
         }
 
@@ -294,7 +299,10 @@ describe('ReactFreshBabelPlugin', () => {
         Store.subscribe();
 
         const Header = styled.div\`color: red\`
-        const Factory = funny.factory\`\`;
+        const StyledFactory1 = styled('div')\`color: hotpink\`
+        const StyledFactory2 = styled('div')({ color: 'hotpink' })
+        const StyledFactory3 = styled(A)({ color: 'hotpink' })
+        const FunnyFactory = funny.factory\`\`;
 
         let Alias1 = A;
         let Alias2 = A.Foo;
@@ -304,6 +312,9 @@ describe('ReactFreshBabelPlugin', () => {
           return [
             React.createElement(A),
             React.createElement(B),
+            React.createElement(StyledFactory1),
+            React.createElement(StyledFactory2),
+            React.createElement(StyledFactory3),
             React.createElement(Alias1),
             React.createElement(Alias2),
             jsx(Header),
@@ -408,7 +419,7 @@ describe('ReactFreshBabelPlugin', () => {
       transform(
         `
         import {useFancyState} from './hooks';
-        
+
         export default function App() {
           const bar = useFancyState();
           return <h1>{bar}</h1>;
@@ -497,5 +508,20 @@ describe('ReactFreshBabelPlugin', () => {
         },
       ),
     ).toMatchSnapshot();
+  });
+
+  it("respects Babel's envName option", () => {
+    const envName = 'random';
+    expect(() =>
+      transform(`export default function BabelEnv () { return null };`, {
+        envName,
+        skipEnvCheck: false,
+      }),
+    ).toThrowError(
+      'React Refresh Babel transform should only be enabled in development environment. ' +
+        'Instead, the environment is: "' +
+        envName +
+        '". If you want to override this check, pass {skipEnvCheck: true} as plugin options.',
+    );
   });
 });

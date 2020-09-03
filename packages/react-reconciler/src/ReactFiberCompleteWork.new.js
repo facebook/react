@@ -65,7 +65,9 @@ import {
   NoEffect,
   DidCapture,
   Snapshot,
+  MutationMask,
 } from './ReactSideEffectTags';
+import {NoEffect as NoSubtreeTag, Mutation} from './ReactSubtreeTags';
 import invariant from 'shared/invariant';
 
 import {
@@ -124,7 +126,6 @@ import {
   enableSchedulerTracing,
   enableSuspenseCallback,
   enableSuspenseServerRenderer,
-  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableScopeAPI,
   enableBlocksAPI,
@@ -136,11 +137,11 @@ import {
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
   popRenderLanes,
+  getRenderTargetTime,
 } from './ReactFiberWorkLoop.new';
 import {createFundamentalStateInstance} from './ReactFiberFundamental.new';
-import {OffscreenLane} from './ReactFiberLane';
+import {OffscreenLane, SomeRetryLane} from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber.new';
-import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents.new';
 import {createScopeInstance} from './ReactFiberScope.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
 
@@ -152,6 +153,25 @@ function markUpdate(workInProgress: Fiber) {
 
 function markRef(workInProgress: Fiber) {
   workInProgress.effectTag |= Ref;
+}
+
+function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {
+  const didBailout = current !== null && current.child === completedWork.child;
+  if (didBailout) {
+    return true;
+  }
+
+  let child = completedWork.child;
+  while (child !== null) {
+    if ((child.effectTag & MutationMask) !== NoEffect) {
+      return false;
+    }
+    if ((child.subtreeTag & Mutation) !== NoSubtreeTag) {
+      return false;
+    }
+    child = child.sibling;
+  }
+  return true;
 }
 
 let appendAllChildren;
@@ -198,7 +218,7 @@ if (supportsMutation) {
     }
   };
 
-  updateHostContainer = function(workInProgress: Fiber) {
+  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
     // Noop
   };
   updateHostComponent = function(
@@ -442,13 +462,13 @@ if (supportsMutation) {
       node = node.sibling;
     }
   };
-  updateHostContainer = function(workInProgress: Fiber) {
+  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
     const portalOrRoot: {
       containerInfo: Container,
       pendingChildren: ChildSet,
       ...
     } = workInProgress.stateNode;
-    const childrenUnchanged = workInProgress.firstEffect === null;
+    const childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
     if (childrenUnchanged) {
       // No changes, just reuse the existing instance.
     } else {
@@ -473,7 +493,7 @@ if (supportsMutation) {
     const oldProps = current.memoizedProps;
     // If there are no effects associated with this node, then none of our children had any updates.
     // This guarantees that we can reuse all of them.
-    const childrenUnchanged = workInProgress.firstEffect === null;
+    const childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
     if (childrenUnchanged && oldProps === newProps) {
       // No changes, just reuse the existing instance.
       // Note that this might release a previous clone.
@@ -556,7 +576,7 @@ if (supportsMutation) {
   };
 } else {
   // No host operations
-  updateHostContainer = function(workInProgress: Fiber) {
+  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
     // Noop
   };
   updateHostComponent = function(
@@ -700,7 +720,7 @@ function completeWork(
           workInProgress.effectTag |= Snapshot;
         }
       }
-      updateHostContainer(workInProgress);
+      updateHostContainer(current, workInProgress);
       return null;
     }
     case HostComponent: {
@@ -715,14 +735,6 @@ function completeWork(
           newProps,
           rootContainerInstance,
         );
-
-        if (enableDeprecatedFlareAPI) {
-          const prevListeners = current.memoizedProps.DEPRECATED_flareListeners;
-          const nextListeners = newProps.DEPRECATED_flareListeners;
-          if (prevListeners !== nextListeners) {
-            markUpdate(workInProgress);
-          }
-        }
 
         if (current.ref !== workInProgress.ref) {
           markRef(workInProgress);
@@ -758,16 +770,6 @@ function completeWork(
             // commit-phase we mark this as such.
             markUpdate(workInProgress);
           }
-          if (enableDeprecatedFlareAPI) {
-            const listeners = newProps.DEPRECATED_flareListeners;
-            if (listeners != null) {
-              updateDeprecatedEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
-            }
-          }
         } else {
           const instance = createInstance(
             type,
@@ -779,19 +781,7 @@ function completeWork(
 
           appendAllChildren(instance, workInProgress, false, false);
 
-          // This needs to be set before we mount Flare event listeners
           workInProgress.stateNode = instance;
-
-          if (enableDeprecatedFlareAPI) {
-            const listeners = newProps.DEPRECATED_flareListeners;
-            if (listeners != null) {
-              updateDeprecatedEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
-            }
-          }
 
           // Certain renderers require commit-time effects for initial mount.
           // (eg DOM renderer supports auto-focus for certain elements).
@@ -979,7 +969,7 @@ function completeWork(
     }
     case HostPortal:
       popHostContainer(workInProgress);
-      updateHostContainer(workInProgress);
+      updateHostContainer(current, workInProgress);
       if (current === null) {
         preparePortalMount(workInProgress.stateNode.containerInfo);
       }
@@ -1059,12 +1049,8 @@ function completeWork(
 
                 // Rerender the whole list, but this time, we'll force fallbacks
                 // to stay in place.
-                // Reset the effect list before doing the second pass since that's now invalid.
-                if (renderState.lastEffect === null) {
-                  workInProgress.firstEffect = null;
-                }
-                workInProgress.lastEffect = renderState.lastEffect;
                 // Reset the child fibers to their original state.
+                workInProgress.subtreeTag = NoEffect;
                 resetChildFibers(workInProgress, renderLanes);
 
                 // Set up the Suspense Context to force suspense and immediately
@@ -1079,6 +1065,29 @@ function completeWork(
                 return workInProgress.child;
               }
               row = row.sibling;
+            }
+          }
+
+          if (renderState.tail !== null && now() > getRenderTargetTime()) {
+            // We have already passed our CPU deadline but we still have rows
+            // left in the tail. We'll just give up further attempts to render
+            // the main content and only render fallbacks.
+            workInProgress.effectTag |= DidCapture;
+            didSuspendAlready = true;
+
+            cutOffTailIfNeeded(renderState, false);
+
+            // Since nothing actually suspended, there will nothing to ping this
+            // to get it started back up to attempt the next item. While in terms
+            // of priority this work has the same priority as this current render,
+            // it's not part of the same transition once the transition has
+            // committed. If it's sync, we still want to yield so that it can be
+            // painted. Conceptually, this is really the same as pinging.
+            // We can use any RetryLane even if it's the one currently rendering
+            // since we're leaving it behind on this node.
+            workInProgress.lanes = SomeRetryLane;
+            if (enableSchedulerTracing) {
+              markSpawnedWork(SomeRetryLane);
             }
           }
         } else {
@@ -1109,23 +1118,15 @@ function completeWork(
               !renderedTail.alternate &&
               !getIsHydrating() // We don't cut it if we're hydrating.
             ) {
-              // We need to delete the row we just rendered.
-              // Reset the effect list to what it was before we rendered this
-              // child. The nested children have already appended themselves.
-              const lastEffect = (workInProgress.lastEffect =
-                renderState.lastEffect);
-              // Remove any effects that were appended after this point.
-              if (lastEffect !== null) {
-                lastEffect.nextEffect = null;
-              }
               // We're done.
               return null;
             }
           } else if (
-            // The time it took to render last row is greater than time until
-            // the expiration.
+            // The time it took to render last row is greater than the remaining
+            // time we have to render. So rendering one more row would likely
+            // exceed it.
             now() * 2 - renderState.renderingStartTime >
-              renderState.tailExpiration &&
+              getRenderTargetTime() &&
             renderLanes !== OffscreenLane
           ) {
             // We have now passed our CPU deadline and we'll just give up further
@@ -1141,9 +1142,9 @@ function completeWork(
             // them, then they really have the same priority as this render.
             // So we'll pick it back up the very next render pass once we've had
             // an opportunity to yield for paint.
-            workInProgress.lanes = renderLanes;
+            workInProgress.lanes = SomeRetryLane;
             if (enableSchedulerTracing) {
-              markSpawnedWork(renderLanes);
+              markSpawnedWork(SomeRetryLane);
             }
           }
         }
@@ -1168,23 +1169,10 @@ function completeWork(
 
       if (renderState.tail !== null) {
         // We still have tail rows to render.
-        if (renderState.tailExpiration === 0) {
-          // Heuristic for how long we're willing to spend rendering rows
-          // until we just give up and show what we have so far.
-          const TAIL_EXPIRATION_TIMEOUT_MS = 500;
-          renderState.tailExpiration = now() + TAIL_EXPIRATION_TIMEOUT_MS;
-          // TODO: This is meant to mimic the train model or JND but this
-          // is a per component value. It should really be since the start
-          // of the total render or last commit. Consider using something like
-          // globalMostRecentFallbackTime. That doesn't account for being
-          // suspended for part of the time or when it's a new render.
-          // It should probably use a global start time value instead.
-        }
         // Pop a row.
         const next = renderState.tail;
         renderState.rendering = next;
         renderState.tail = next.sibling;
-        renderState.lastEffect = workInProgress.lastEffect;
         renderState.renderingStartTime = now();
         next.sibling = null;
 
@@ -1262,37 +1250,14 @@ function completeWork(
         if (current === null) {
           const scopeInstance: ReactScopeInstance = createScopeInstance();
           workInProgress.stateNode = scopeInstance;
-          if (enableDeprecatedFlareAPI) {
-            const listeners = newProps.DEPRECATED_flareListeners;
-            if (listeners != null) {
-              const rootContainerInstance = getRootHostContainer();
-              updateDeprecatedEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
-            }
-          }
           prepareScopeUpdate(scopeInstance, workInProgress);
           if (workInProgress.ref !== null) {
             markRef(workInProgress);
             markUpdate(workInProgress);
           }
         } else {
-          if (enableDeprecatedFlareAPI) {
-            const prevListeners =
-              current.memoizedProps.DEPRECATED_flareListeners;
-            const nextListeners = newProps.DEPRECATED_flareListeners;
-            if (
-              prevListeners !== nextListeners ||
-              workInProgress.ref !== null
-            ) {
-              markUpdate(workInProgress);
-            }
-          } else {
-            if (workInProgress.ref !== null) {
-              markUpdate(workInProgress);
-            }
+          if (workInProgress.ref !== null) {
+            markUpdate(workInProgress);
           }
           if (current.ref !== workInProgress.ref) {
             markRef(workInProgress);

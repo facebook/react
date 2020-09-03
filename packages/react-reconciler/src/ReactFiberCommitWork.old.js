@@ -31,7 +31,6 @@ import {
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableSuspenseServerRenderer,
-  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
@@ -126,10 +125,6 @@ import {
   Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.old';
-import {
-  updateDeprecatedEventListeners,
-  unmountDeprecatedResponderListeners,
-} from './ReactFiberDeprecatedEvents.old';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -158,7 +153,11 @@ const callComponentWillUnmountWithTimer = function(current, instance) {
 };
 
 // Capture errors so they don't interrupt unmounting.
-function safelyCallComponentWillUnmount(current, instance) {
+function safelyCallComponentWillUnmount(
+  current: Fiber,
+  instance: any,
+  nearestMountedAncestor: Fiber | null,
+) {
   if (__DEV__) {
     invokeGuardedCallback(
       null,
@@ -169,18 +168,18 @@ function safelyCallComponentWillUnmount(current, instance) {
     );
     if (hasCaughtError()) {
       const unmountError = clearCaughtError();
-      captureCommitPhaseError(current, unmountError);
+      captureCommitPhaseError(current, nearestMountedAncestor, unmountError);
     }
   } else {
     try {
       callComponentWillUnmountWithTimer(current, instance);
     } catch (unmountError) {
-      captureCommitPhaseError(current, unmountError);
+      captureCommitPhaseError(current, nearestMountedAncestor, unmountError);
     }
   }
 }
 
-function safelyDetachRef(current: Fiber) {
+function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber | null) {
   const ref = current.ref;
   if (ref !== null) {
     if (typeof ref === 'function') {
@@ -188,13 +187,13 @@ function safelyDetachRef(current: Fiber) {
         invokeGuardedCallback(null, ref, null, null);
         if (hasCaughtError()) {
           const refError = clearCaughtError();
-          captureCommitPhaseError(current, refError);
+          captureCommitPhaseError(current, nearestMountedAncestor, refError);
         }
       } else {
         try {
           ref(null);
         } catch (refError) {
-          captureCommitPhaseError(current, refError);
+          captureCommitPhaseError(current, nearestMountedAncestor, refError);
         }
       }
     } else {
@@ -203,18 +202,22 @@ function safelyDetachRef(current: Fiber) {
   }
 }
 
-function safelyCallDestroy(current, destroy) {
+function safelyCallDestroy(
+  current: Fiber,
+  nearestMountedAncestor: Fiber | null,
+  destroy: () => void,
+) {
   if (__DEV__) {
     invokeGuardedCallback(null, destroy, null);
     if (hasCaughtError()) {
       const error = clearCaughtError();
-      captureCommitPhaseError(current, error);
+      captureCommitPhaseError(current, nearestMountedAncestor, error);
     }
   } else {
     try {
       destroy();
     } catch (error) {
-      captureCommitPhaseError(current, error);
+      captureCommitPhaseError(current, nearestMountedAncestor, error);
     }
   }
 }
@@ -364,7 +367,7 @@ function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
                 '  }\n' +
                 '  fetchData();\n' +
                 `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
-                'Learn more about data fetching with Hooks: https://fb.me/react-hooks-data-fetching';
+                'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching';
             } else {
               addendum = ' You returned: ' + destroy;
             }
@@ -871,6 +874,7 @@ function commitDetachRef(current: Fiber) {
 function commitUnmount(
   finishedRoot: FiberRoot,
   current: Fiber,
+  nearestMountedAncestor: Fiber | null,
   renderPriorityLevel: ReactPriorityLevel,
 ): void {
   onCommitUnmount(current);
@@ -900,10 +904,10 @@ function commitUnmount(
                   current.mode & ProfileMode
                 ) {
                   startLayoutEffectTimer();
-                  safelyCallDestroy(current, destroy);
+                  safelyCallDestroy(current, nearestMountedAncestor, destroy);
                   recordLayoutEffectDuration(current);
                 } else {
-                  safelyCallDestroy(current, destroy);
+                  safelyCallDestroy(current, nearestMountedAncestor, destroy);
                 }
               }
             }
@@ -914,18 +918,19 @@ function commitUnmount(
       return;
     }
     case ClassComponent: {
-      safelyDetachRef(current);
+      safelyDetachRef(current, nearestMountedAncestor);
       const instance = current.stateNode;
       if (typeof instance.componentWillUnmount === 'function') {
-        safelyCallComponentWillUnmount(current, instance);
+        safelyCallComponentWillUnmount(
+          current,
+          instance,
+          nearestMountedAncestor,
+        );
       }
       return;
     }
     case HostComponent: {
-      if (enableDeprecatedFlareAPI) {
-        unmountDeprecatedResponderListeners(current);
-      }
-      safelyDetachRef(current);
+      safelyDetachRef(current, nearestMountedAncestor);
       return;
     }
     case HostPortal: {
@@ -933,7 +938,12 @@ function commitUnmount(
       // We are also not using this parent because
       // the portal will get pushed immediately.
       if (supportsMutation) {
-        unmountHostComponents(finishedRoot, current, renderPriorityLevel);
+        unmountHostComponents(
+          finishedRoot,
+          current,
+          nearestMountedAncestor,
+          renderPriorityLevel,
+        );
       } else if (supportsPersistence) {
         emptyPortalContainer(current);
       }
@@ -963,10 +973,7 @@ function commitUnmount(
     }
     case ScopeComponent: {
       if (enableScopeAPI) {
-        if (enableDeprecatedFlareAPI) {
-          unmountDeprecatedResponderListeners(current);
-        }
-        safelyDetachRef(current);
+        safelyDetachRef(current, nearestMountedAncestor);
       }
       return;
     }
@@ -976,6 +983,7 @@ function commitUnmount(
 function commitNestedUnmounts(
   finishedRoot: FiberRoot,
   root: Fiber,
+  nearestMountedAncestor: Fiber | null,
   renderPriorityLevel: ReactPriorityLevel,
 ): void {
   // While we're inside a removed host node we don't want to call
@@ -985,7 +993,12 @@ function commitNestedUnmounts(
   // we do an inner loop while we're still inside the host node.
   let node: Fiber = root;
   while (true) {
-    commitUnmount(finishedRoot, node, renderPriorityLevel);
+    commitUnmount(
+      finishedRoot,
+      node,
+      nearestMountedAncestor,
+      renderPriorityLevel,
+    );
     // Visit children because they may contain more composite or host nodes.
     // Skip portals because commitUnmount() currently visits them recursively.
     if (
@@ -1022,6 +1035,10 @@ function detachFiberMutation(fiber: Fiber) {
   // with findDOMNode and how it requires the sibling field to carry out
   // traversal in a later effect. See PR #16820. We now clear the sibling
   // field after effects, see: detachFiberAfterEffects.
+  //
+  // Don't disconnect stateNode now; it will be detached in detachFiberAfterEffects.
+  // It may be required if the current component is an error boundary,
+  // and one of its descendants throws while unmounting a passive effect.
   fiber.alternate = null;
   fiber.child = null;
   fiber.dependencies = null;
@@ -1031,7 +1048,6 @@ function detachFiberMutation(fiber: Fiber) {
   fiber.memoizedState = null;
   fiber.pendingProps = null;
   fiber.return = null;
-  fiber.stateNode = null;
   fiber.updateQueue = null;
   if (__DEV__) {
     fiber._debugOwner = null;
@@ -1271,9 +1287,10 @@ function insertOrAppendPlacementNode(
 }
 
 function unmountHostComponents(
-  finishedRoot,
-  current,
-  renderPriorityLevel,
+  finishedRoot: FiberRoot,
+  current: Fiber,
+  nearestMountedAncestor: Fiber | null,
+  renderPriorityLevel: ReactPriorityLevel,
 ): void {
   // We only have the top Fiber that was deleted but we need to recurse down its
   // children to find all the terminal nodes.
@@ -1322,7 +1339,12 @@ function unmountHostComponents(
     }
 
     if (node.tag === HostComponent || node.tag === HostText) {
-      commitNestedUnmounts(finishedRoot, node, renderPriorityLevel);
+      commitNestedUnmounts(
+        finishedRoot,
+        node,
+        nearestMountedAncestor,
+        renderPriorityLevel,
+      );
       // After all the children have unmounted, it is now safe to remove the
       // node from the tree.
       if (currentParentIsContainer) {
@@ -1339,7 +1361,12 @@ function unmountHostComponents(
       // Don't visit children because we already visited them.
     } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
       const fundamentalNode = node.stateNode.instance;
-      commitNestedUnmounts(finishedRoot, node, renderPriorityLevel);
+      commitNestedUnmounts(
+        finishedRoot,
+        node,
+        nearestMountedAncestor,
+        renderPriorityLevel,
+      );
       // After all the children have unmounted, it is now safe to remove the
       // node from the tree.
       if (currentParentIsContainer) {
@@ -1391,7 +1418,12 @@ function unmountHostComponents(
         continue;
       }
     } else {
-      commitUnmount(finishedRoot, node, renderPriorityLevel);
+      commitUnmount(
+        finishedRoot,
+        node,
+        nearestMountedAncestor,
+        renderPriorityLevel,
+      );
       // Visit children because we may find more host components below.
       if (node.child !== null) {
         node.child.return = node;
@@ -1421,15 +1453,26 @@ function unmountHostComponents(
 function commitDeletion(
   finishedRoot: FiberRoot,
   current: Fiber,
+  nearestMountedAncestor: Fiber | null,
   renderPriorityLevel: ReactPriorityLevel,
 ): void {
   if (supportsMutation) {
     // Recursively delete all host nodes from the parent.
     // Detach refs and call componentWillUnmount() on the whole subtree.
-    unmountHostComponents(finishedRoot, current, renderPriorityLevel);
+    unmountHostComponents(
+      finishedRoot,
+      current,
+      nearestMountedAncestor,
+      renderPriorityLevel,
+    );
   } else {
     // Detach refs and call componentWillUnmount() on the whole subtree.
-    commitNestedUnmounts(finishedRoot, current, renderPriorityLevel);
+    commitNestedUnmounts(
+      finishedRoot,
+      current,
+      nearestMountedAncestor,
+      renderPriorityLevel,
+    );
   }
   const alternate = current.alternate;
   detachFiberMutation(current);
@@ -1556,13 +1599,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
             finishedWork,
           );
         }
-        if (enableDeprecatedFlareAPI) {
-          const prevListeners = oldProps.DEPRECATED_flareListeners;
-          const nextListeners = newProps.DEPRECATED_flareListeners;
-          if (prevListeners !== nextListeners) {
-            updateDeprecatedEventListeners(nextListeners, finishedWork, null);
-          }
-        }
       }
       return;
     }
@@ -1619,15 +1655,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case ScopeComponent: {
       if (enableScopeAPI) {
         const scopeInstance = finishedWork.stateNode;
-        if (enableDeprecatedFlareAPI) {
-          const newProps = finishedWork.memoizedProps;
-          const oldProps = current !== null ? current.memoizedProps : newProps;
-          const prevListeners = oldProps.DEPRECATED_flareListeners;
-          const nextListeners = newProps.DEPRECATED_flareListeners;
-          if (prevListeners !== nextListeners || current === null) {
-            updateDeprecatedEventListeners(nextListeners, finishedWork, null);
-          }
-        }
         prepareScopeUpdate(scopeInstance, finishedWork);
         return;
       }

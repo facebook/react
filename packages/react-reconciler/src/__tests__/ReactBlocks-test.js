@@ -102,7 +102,7 @@ describe('ReactBlocks', () => {
     }).toErrorDev(
       'Warning: Each child in a list should have a unique ' +
         '"key" prop.\n\nCheck the render method of `User`. See ' +
-        'https://fb.me/react-warning-keys for more information.\n' +
+        'https://reactjs.org/link/warning-keys for more information.\n' +
         '    in span (at **)\n' +
         '    in User (at **)\n' +
         '    in Suspense (at **)\n' +

@@ -1,0 +1,19 @@
+.DevTools {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+.TabContent {
+  flex: 1 1 100%;
+  overflow: auto;
+  -webkit-app-region: no-drag;
+}
+
+.DevTools, .DevTools * {
+  box-sizing: border-box;
+  -webkit-font-smoothing: var(--font-smoothing);
+}

@@ -10,14 +10,7 @@
 
 'use strict';
 
-function normalizeCodeLocInfo(str) {
-  return (
-    str &&
-    str.replace(/\n +(?:at|in) ([\S]+)[^\n]*/g, function(m, name) {
-      return '\n    in ' + name + ' (at **)';
-    })
-  );
-}
+import ReactVersion from 'shared/ReactVersion';
 
 describe('SchedulingProfiler', () => {
   let React;
@@ -40,6 +33,7 @@ describe('SchedulingProfiler', () => {
   beforeEach(() => {
     jest.resetModules();
     global.performance = createUserTimingPolyfill();
+    marks = [];
 
     React = require('react');
 
@@ -48,8 +42,6 @@ describe('SchedulingProfiler', () => {
     ReactNoop = require('react-noop-renderer');
 
     Scheduler = require('scheduler');
-
-    marks = [];
   });
 
   afterEach(() => {
@@ -63,10 +55,16 @@ describe('SchedulingProfiler', () => {
   });
 
   // @gate enableSchedulingProfiler
+  it('should log React version on initialization', () => {
+    expect(marks).toEqual([`--react-init-${ReactVersion}`]);
+  });
+
+  // @gate enableSchedulingProfiler
   it('should mark sync render without suspends or state updates', () => {
     ReactTestRenderer.create(<div />);
 
     expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
       '--schedule-render-1',
       '--render-start-1',
       '--render-stop',
@@ -81,7 +79,10 @@ describe('SchedulingProfiler', () => {
   it('should mark concurrent render without suspends or state updates', () => {
     ReactTestRenderer.create(<div />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-512']);
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+    ]);
 
     marks.splice(0);
 
@@ -114,6 +115,7 @@ describe('SchedulingProfiler', () => {
     expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
 
     expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
       '--schedule-render-512',
       '--render-start-512',
       '--render-yield',
@@ -134,9 +136,10 @@ describe('SchedulingProfiler', () => {
     );
 
     expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
       '--schedule-render-1',
       '--render-start-1',
-      '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
+      '--suspense-suspend-0-Example',
       '--render-stop',
       '--commit-start-1',
       '--layout-effects-start-1',
@@ -147,9 +150,7 @@ describe('SchedulingProfiler', () => {
     marks.splice(0);
 
     await fakeSuspensePromise;
-    expect(marks).toEqual([
-      '--suspense-resolved-0-Example-\n    at Example\n    at Suspense',
-    ]);
+    expect(marks).toEqual(['--suspense-resolved-0-Example']);
   });
 
   // @gate enableSchedulingProfiler
@@ -166,9 +167,10 @@ describe('SchedulingProfiler', () => {
     );
 
     expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
       '--schedule-render-1',
       '--render-start-1',
-      '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
+      '--suspense-suspend-0-Example',
       '--render-stop',
       '--commit-start-1',
       '--layout-effects-start-1',
@@ -179,9 +181,7 @@ describe('SchedulingProfiler', () => {
     marks.splice(0);
 
     await expect(fakeSuspensePromise).rejects.toThrow();
-    expect(marks).toEqual([
-      '--suspense-rejected-0-Example-\n    at Example\n    at Suspense',
-    ]);
+    expect(marks).toEqual(['--suspense-rejected-0-Example']);
   });
 
   // @gate enableSchedulingProfiler
@@ -198,7 +198,10 @@ describe('SchedulingProfiler', () => {
       {unstable_isConcurrent: true},
     );
 
-    expect(marks).toEqual(['--schedule-render-512']);
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+    ]);
 
     marks.splice(0);
 
@@ -206,7 +209,7 @@ describe('SchedulingProfiler', () => {
 
     expect(marks).toEqual([
       '--render-start-512',
-      '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
+      '--suspense-suspend-0-Example',
       '--render-stop',
       '--commit-start-512',
       '--layout-effects-start-512',
@@ -217,9 +220,7 @@ describe('SchedulingProfiler', () => {
     marks.splice(0);
 
     await fakeSuspensePromise;
-    expect(marks).toEqual([
-      '--suspense-resolved-0-Example-\n    at Example\n    at Suspense',
-    ]);
+    expect(marks).toEqual(['--suspense-resolved-0-Example']);
   });
 
   // @gate enableSchedulingProfiler
@@ -236,7 +237,10 @@ describe('SchedulingProfiler', () => {
       {unstable_isConcurrent: true},
     );
 
-    expect(marks).toEqual(['--schedule-render-512']);
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+    ]);
 
     marks.splice(0);
 
@@ -244,7 +248,7 @@ describe('SchedulingProfiler', () => {
 
     expect(marks).toEqual([
       '--render-start-512',
-      '--suspense-suspend-0-Example-\n    at Example\n    at Suspense',
+      '--suspense-suspend-0-Example',
       '--render-stop',
       '--commit-start-512',
       '--layout-effects-start-512',
@@ -255,9 +259,7 @@ describe('SchedulingProfiler', () => {
     marks.splice(0);
 
     await expect(fakeSuspensePromise).rejects.toThrow();
-    expect(marks).toEqual([
-      '--suspense-rejected-0-Example-\n    at Example\n    at Suspense',
-    ]);
+    expect(marks).toEqual(['--suspense-rejected-0-Example']);
   });
 
   // @gate enableSchedulingProfiler
@@ -274,18 +276,21 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-512']);
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+    ]);
 
     marks.splice(0);
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(marks.map(normalizeCodeLocInfo)).toEqual([
+    expect(marks).toEqual([
       '--render-start-512',
       '--render-stop',
       '--commit-start-512',
       '--layout-effects-start-512',
-      '--schedule-state-update-1-Example-\n    in Example (at **)',
+      '--schedule-state-update-1-Example',
       '--layout-effects-stop',
       '--render-start-1',
       '--render-stop',
@@ -308,18 +313,21 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-512']);
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+    ]);
 
     marks.splice(0);
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(marks.map(normalizeCodeLocInfo)).toEqual([
+    expect(marks).toEqual([
       '--render-start-512',
       '--render-stop',
       '--commit-start-512',
       '--layout-effects-start-512',
-      '--schedule-forced-update-1-Example-\n    in Example (at **)',
+      '--schedule-forced-update-1-Example',
       '--layout-effects-stop',
       '--render-start-1',
       '--render-stop',
@@ -343,7 +351,10 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-512']);
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+    ]);
 
     marks.splice(0);
 
@@ -351,8 +362,10 @@ describe('SchedulingProfiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    expect(marks.map(normalizeCodeLocInfo)).toContain(
-      '--schedule-state-update-1024-Example-\n    in Example (at **)',
+    gate(({old}) =>
+      old
+        ? expect(marks).toContain('--schedule-state-update-1024-Example')
+        : expect(marks).toContain('--schedule-state-update-512-Example'),
     );
   });
 
@@ -370,7 +383,10 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-512']);
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+    ]);
 
     marks.splice(0);
 
@@ -378,8 +394,10 @@ describe('SchedulingProfiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    expect(marks.map(normalizeCodeLocInfo)).toContain(
-      '--schedule-forced-update-1024-Example-\n    in Example (at **)',
+    gate(({old}) =>
+      old
+        ? expect(marks).toContain('--schedule-forced-update-1024-Example')
+        : expect(marks).toContain('--schedule-forced-update-512-Example'),
     );
   });
 
@@ -395,18 +413,21 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual(['--schedule-render-512']);
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
+      '--schedule-render-512',
+    ]);
 
     marks.splice(0);
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(marks.map(normalizeCodeLocInfo)).toEqual([
+    expect(marks).toEqual([
       '--render-start-512',
       '--render-stop',
       '--commit-start-512',
       '--layout-effects-start-512',
-      '--schedule-state-update-1-Example-\n    in Example (at **)',
+      '--schedule-state-update-1-Example',
       '--layout-effects-stop',
       '--render-start-1',
       '--render-stop',
@@ -429,7 +450,9 @@ describe('SchedulingProfiler', () => {
     ReactTestRenderer.act(() => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
-    expect(marks.map(normalizeCodeLocInfo)).toEqual([
+
+    expect(marks).toEqual([
+      `--react-init-${ReactVersion}`,
       '--schedule-render-512',
       '--render-start-512',
       '--render-stop',
@@ -438,7 +461,7 @@ describe('SchedulingProfiler', () => {
       '--layout-effects-stop',
       '--commit-stop',
       '--passive-effects-start-512',
-      '--schedule-state-update-1024-Example-\n    in Example (at **)',
+      '--schedule-state-update-1024-Example',
       '--passive-effects-stop',
       '--render-start-1024',
       '--render-stop',
@@ -461,8 +484,10 @@ describe('SchedulingProfiler', () => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 
-    expect(marks.map(normalizeCodeLocInfo)).toContain(
-      '--schedule-state-update-1024-Example-\n    in Example (at **)',
+    gate(({old}) =>
+      old
+        ? expect(marks).toContain('--schedule-state-update-1024-Example')
+        : expect(marks).toContain('--schedule-state-update-512-Example'),
     );
   });
 });
