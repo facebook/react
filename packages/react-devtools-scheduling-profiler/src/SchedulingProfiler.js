@@ -13,12 +13,9 @@ import * as React from 'react';
 import {useState} from 'react';
 
 import ImportButton from './ImportButton';
-import {ModalDialog} from './ModalDialog';
-import ReactLogo from './ReactLogo';
+import {ModalDialog} from 'react-devtools-shared/src/devtools/views/ModalDialog';
+import ReactLogo from 'react-devtools-shared/src/devtools/views/ReactLogo';
 
-import SettingsModalContextToggle from './Settings/SettingsModalContextToggle';
-import {SettingsModalContextController} from './Settings/SettingsModalContext';
-import SettingsModal from './Settings/SettingsModal';
 import CanvasPage from './CanvasPage';
 
 import profilerBrowser from './assets/profilerBrowser.png';
@@ -36,23 +33,19 @@ export function SchedulingProfiler(_: {||}) {
   );
 
   return (
-    <SettingsModalContextController>
-      <div className={styles.SchedulingProfiler}>
-        <div className={styles.Toolbar}>
-          <ReactLogo />
-          <span className={styles.AppName}>Concurrent Mode Profiler</span>
-          <div className={styles.VRule} />
-          <ImportButton onDataImported={setProfilerData} />
-          <div className={styles.Spacer} />
-          <SettingsModalContextToggle />
-        </div>
-        <div className={styles.Content}>
-          {view}
-          <ModalDialog />
-        </div>
-        <SettingsModal />
+    <div className={styles.SchedulingProfiler}>
+      <div className={styles.Toolbar}>
+        <ReactLogo />
+        <span className={styles.AppName}>Concurrent Mode Profiler</span>
+        <div className={styles.VRule} />
+        <ImportButton onDataImported={setProfilerData} />
+        <div className={styles.Spacer} />
       </div>
-    </SettingsModalContextController>
+      <div className={styles.Content}>
+        {view}
+        <ModalDialog />
+      </div>
+    </div>
   );
 }
 

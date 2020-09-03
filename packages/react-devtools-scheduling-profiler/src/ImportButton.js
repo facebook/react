@@ -13,9 +13,9 @@ import type {ReactProfilerData} from './types';
 import * as React from 'react';
 import {useCallback, useContext, useRef} from 'react';
 
-import Button from './Button';
-import ButtonIcon from './ButtonIcon';
-import {ModalDialogContext} from './ModalDialog';
+import Button from 'react-devtools-shared/src/devtools/views/Button';
+import ButtonIcon from 'react-devtools-shared/src/devtools/views/ButtonIcon';
+import {ModalDialogContext} from 'react-devtools-shared/src/devtools/views/ModalDialog';
 
 import preprocessData from './utils/preprocessData';
 import {readInputData} from './utils/readInputData';
