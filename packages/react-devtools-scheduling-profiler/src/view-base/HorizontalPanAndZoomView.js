@@ -18,54 +18,34 @@ import type {
   WheelWithMetaInteraction,
 } from './useCanvasInteraction';
 import type {Rect} from './geometry';
+import type {ScrollState} from './utils/scrollState';
 
 import {Surface} from './Surface';
 import {View} from './View';
 import {rectContainsPoint} from './geometry';
-import {clamp} from './utils/clamp';
 import {
-  MIN_ZOOM_LEVEL,
+  clampState,
+  moveStateToRange,
+  areScrollStatesEqual,
+  translateState,
+  zoomState,
+} from './utils/scrollState';
+import {
+  DEFAULT_ZOOM_LEVEL,
   MAX_ZOOM_LEVEL,
+  MIN_ZOOM_LEVEL,
   MOVE_WHEEL_DELTA_THRESHOLD,
 } from './constants';
 
-type HorizontalPanAndZoomState = $ReadOnly<{|
-  /** Horizontal offset; positive in the left direction */
-  offsetX: number,
-  zoomLevel: number,
-|}>;
-
 export type HorizontalPanAndZoomViewOnChangeCallback = (
-  state: HorizontalPanAndZoomState,
+  state: ScrollState,
   view: HorizontalPanAndZoomView,
 ) => void;
 
-function panAndZoomStatesAreEqual(
-  state1: HorizontalPanAndZoomState,
-  state2: HorizontalPanAndZoomState,
-): boolean {
-  return (
-    state1.offsetX === state2.offsetX && state1.zoomLevel === state2.zoomLevel
-  );
-}
-
-function zoomLevelAndIntrinsicWidthToFrameWidth(
-  zoomLevel: number,
-  intrinsicWidth: number,
-): number {
-  return intrinsicWidth * zoomLevel;
-}
-
 export class HorizontalPanAndZoomView extends View {
   _intrinsicContentWidth: number;
-
-  _panAndZoomState: HorizontalPanAndZoomState = {
-    offsetX: 0,
-    zoomLevel: 0.25,
-  };
-
   _isPanning = false;
-
+  _scrollState: ScrollState = {offset: 0, length: 0};
   _onStateChange: HorizontalPanAndZoomViewOnChangeCallback = () => {};
 
   constructor(
@@ -78,33 +58,42 @@ export class HorizontalPanAndZoomView extends View {
     super(surface, frame);
     this.addSubview(contentView);
     this._intrinsicContentWidth = intrinsicContentWidth;
+    this._setScrollState({
+      offset: 0,
+      length: intrinsicContentWidth * DEFAULT_ZOOM_LEVEL,
+    });
     if (onStateChange) this._onStateChange = onStateChange;
   }
 
   setFrame(newFrame: Rect) {
     super.setFrame(newFrame);
 
-    // Revalidate panAndZoomState
-    this._setStateAndInformCallbacksIfChanged(this._panAndZoomState);
+    // Revalidate scrollState
+    this._setStateAndInformCallbacksIfChanged(this._scrollState);
   }
 
-  setPanAndZoomState(proposedState: HorizontalPanAndZoomState) {
-    this._setPanAndZoomState(proposedState);
+  setScrollState(proposedState: ScrollState) {
+    this._setScrollState(proposedState);
   }
 
   /**
-   * Just sets pan and zoom state. Use `_setStateAndInformCallbacksIfChanged`
-   * if this view's callbacks should also be called.
+   * Just sets scroll state. Use `_setStateAndInformCallbacksIfChanged` if this
+   * view's callbacks should also be called.
    *
    * @returns Whether state was changed
    * @private
    */
-  _setPanAndZoomState(proposedState: HorizontalPanAndZoomState): boolean {
-    const clampedState = this._clampedProposedState(proposedState);
-    if (panAndZoomStatesAreEqual(clampedState, this._panAndZoomState)) {
+  _setScrollState(proposedState: ScrollState): boolean {
+    const clampedState = clampState({
+      state: proposedState,
+      minContentLength: this._intrinsicContentWidth * MIN_ZOOM_LEVEL,
+      maxContentLength: this._intrinsicContentWidth * MAX_ZOOM_LEVEL,
+      containerLength: this.frame.size.width,
+    });
+    if (areScrollStatesEqual(clampedState, this._scrollState)) {
       return false;
     }
-    this._panAndZoomState = clampedState;
+    this._scrollState = clampedState;
     this.setNeedsDisplay();
     return true;
   }
@@ -112,11 +101,9 @@ export class HorizontalPanAndZoomView extends View {
   /**
    * @private
    */
-  _setStateAndInformCallbacksIfChanged(
-    proposedState: HorizontalPanAndZoomState,
-  ) {
-    if (this._setPanAndZoomState(proposedState)) {
-      this._onStateChange(this._panAndZoomState, this);
+  _setStateAndInformCallbacksIfChanged(proposedState: ScrollState) {
+    if (this._setScrollState(proposedState)) {
+      this._onStateChange(this._scrollState, this);
     }
   }
 
@@ -133,17 +120,14 @@ export class HorizontalPanAndZoomView extends View {
   }
 
   layoutSubviews() {
-    const {offsetX, zoomLevel} = this._panAndZoomState;
+    const {offset, length} = this._scrollState;
     const proposedFrame = {
       origin: {
-        x: this.frame.origin.x + offsetX,
+        x: this.frame.origin.x + offset,
         y: this.frame.origin.y,
       },
       size: {
-        width: zoomLevelAndIntrinsicWidthToFrameWidth(
-          zoomLevel,
-          this._intrinsicContentWidth,
-        ),
+        width: length,
         height: this.frame.size.height,
       },
     };
@@ -157,27 +141,18 @@ export class HorizontalPanAndZoomView extends View {
    *
    * Does not inform callbacks of state change since this is a public API.
    */
-  zoomToRange(startX: number, endX: number) {
-    // Zoom and offset must be done separately, so that if the zoom level is
-    // clamped the offset will still be correct (unless it gets clamped too).
-    const zoomClampedState = this._clampedProposedStateZoomLevel({
-      ...this._panAndZoomState,
-      // Let:
-      //   I = intrinsic content width, i = zoom range = (endX - startX).
-      //   W = contentView's final zoomed width, w = this view's width
-      // Goal: we want the visible width w to only contain the requested range i.
-      // Derivation:
-      // (1)  i/I = w/W           (by intuitive definition of variables)
-      // (2)  W = zoomLevel * I   (definition of zoomLevel)
-      //      => zoomLevel = W/I  (algebraic manipulation)
-      //                   = w/i  (rearranging (1))
-      zoomLevel: this.frame.size.width / (endX - startX),
+  zoomToRange(rangeStart: number, rangeEnd: number) {
+    const newState = moveStateToRange({
+      state: this._scrollState,
+      rangeStart,
+      rangeEnd,
+      contentLength: this._intrinsicContentWidth,
+
+      minContentLength: this._intrinsicContentWidth * MIN_ZOOM_LEVEL,
+      maxContentLength: this._intrinsicContentWidth * MAX_ZOOM_LEVEL,
+      containerLength: this.frame.size.width,
     });
-    const offsetAdjustedState = this._clampedProposedStateOffsetX({
-      ...zoomClampedState,
-      offsetX: -startX * zoomClampedState.zoomLevel,
-    });
-    this._setPanAndZoomState(offsetAdjustedState);
+    this._setScrollState(newState);
   }
 
   _handleMouseDown(interaction: MouseDownInteraction) {
@@ -190,12 +165,12 @@ export class HorizontalPanAndZoomView extends View {
     if (!this._isPanning) {
       return;
     }
-    const {offsetX} = this._panAndZoomState;
-    const {movementX} = interaction.payload.event;
-    this._setStateAndInformCallbacksIfChanged({
-      ...this._panAndZoomState,
-      offsetX: offsetX + movementX,
+    const newState = translateState({
+      state: this._scrollState,
+      delta: interaction.payload.event.movementX,
+      containerLength: this.frame.size.width,
     });
+    this._setStateAndInformCallbacksIfChanged(newState);
   }
 
   _handleMouseUp(interaction: MouseUpInteraction) {
@@ -209,6 +184,7 @@ export class HorizontalPanAndZoomView extends View {
       location,
       delta: {deltaX, deltaY},
     } = interaction.payload;
+
     if (!rectContainsPoint(location, this.frame)) {
       return; // Not scrolling on view
     }
@@ -218,15 +194,16 @@ export class HorizontalPanAndZoomView extends View {
     if (absDeltaY > absDeltaX) {
       return; // Scrolling vertically
     }
-
     if (absDeltaX < MOVE_WHEEL_DELTA_THRESHOLD) {
       return;
     }
 
-    this._setStateAndInformCallbacksIfChanged({
-      ...this._panAndZoomState,
-      offsetX: this._panAndZoomState.offsetX - deltaX,
+    const newState = translateState({
+      state: this._scrollState,
+      delta: -deltaX,
+      containerLength: this.frame.size.width,
     });
+    this._setStateAndInformCallbacksIfChanged(newState);
   }
 
   _handleWheelZoom(
@@ -239,6 +216,7 @@ export class HorizontalPanAndZoomView extends View {
       location,
       delta: {deltaY},
     } = interaction.payload;
+
     if (!rectContainsPoint(location, this.frame)) {
       return; // Not scrolling on view
     }
@@ -248,28 +226,16 @@ export class HorizontalPanAndZoomView extends View {
       return;
     }
 
-    const zoomClampedState = this._clampedProposedStateZoomLevel({
-      ...this._panAndZoomState,
-      zoomLevel: this._panAndZoomState.zoomLevel * (1 + 0.005 * -deltaY),
+    const newState = zoomState({
+      state: this._scrollState,
+      multiplier: 1 + 0.005 * -deltaY,
+      fixedPoint: location.x - this._scrollState.offset,
+
+      minContentLength: this._intrinsicContentWidth * MIN_ZOOM_LEVEL,
+      maxContentLength: this._intrinsicContentWidth * MAX_ZOOM_LEVEL,
+      containerLength: this.frame.size.width,
     });
-
-    // Determine where the mouse is, and adjust the offset so that point stays
-    // centered after zooming.
-    const oldMouseXInFrame = location.x - zoomClampedState.offsetX;
-    const fractionalMouseX =
-      oldMouseXInFrame / this._contentView.frame.size.width;
-    const newContentWidth = zoomLevelAndIntrinsicWidthToFrameWidth(
-      zoomClampedState.zoomLevel,
-      this._intrinsicContentWidth,
-    );
-    const newMouseXInFrame = fractionalMouseX * newContentWidth;
-
-    const offsetAdjustedState = this._clampedProposedStateOffsetX({
-      ...zoomClampedState,
-      offsetX: location.x - newMouseXInFrame,
-    });
-
-    this._setStateAndInformCallbacksIfChanged(offsetAdjustedState);
+    this._setStateAndInformCallbacksIfChanged(newState);
   }
 
   handleInteraction(interaction: Interaction) {
@@ -292,51 +258,5 @@ export class HorizontalPanAndZoomView extends View {
         this._handleWheelZoom(interaction);
         break;
     }
-  }
-
-  /**
-   * @private
-   */
-  _clampedProposedStateZoomLevel(
-    proposedState: HorizontalPanAndZoomState,
-  ): HorizontalPanAndZoomState {
-    // Content-based min zoom level to ensure that contentView's width >= our width.
-    const minContentBasedZoomLevel =
-      this.frame.size.width / this._intrinsicContentWidth;
-    const minZoomLevel = Math.max(MIN_ZOOM_LEVEL, minContentBasedZoomLevel);
-    return {
-      ...proposedState,
-      zoomLevel: clamp(minZoomLevel, MAX_ZOOM_LEVEL, proposedState.zoomLevel),
-    };
-  }
-
-  /**
-   * @private
-   */
-  _clampedProposedStateOffsetX(
-    proposedState: HorizontalPanAndZoomState,
-  ): HorizontalPanAndZoomState {
-    const newContentWidth = zoomLevelAndIntrinsicWidthToFrameWidth(
-      proposedState.zoomLevel,
-      this._intrinsicContentWidth,
-    );
-    return {
-      ...proposedState,
-      offsetX: clamp(
-        -(newContentWidth - this.frame.size.width),
-        0,
-        proposedState.offsetX,
-      ),
-    };
-  }
-
-  /**
-   * @private
-   */
-  _clampedProposedState(
-    proposedState: HorizontalPanAndZoomState,
-  ): HorizontalPanAndZoomState {
-    const zoomClampedState = this._clampedProposedStateZoomLevel(proposedState);
-    return this._clampedProposedStateOffsetX(zoomClampedState);
   }
 }
