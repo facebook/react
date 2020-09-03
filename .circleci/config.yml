@@ -275,9 +275,9 @@ jobs:
     environment: *environment
     parallelism: 20
     steps:
-     - run:
-          name: Update npm
-          command: 'git checkout tags/v16.11.0 -b master'
+      - run:
+            name: Update npm
+            command: 'git checkout tags/v16.11.0 -b master'
       - attach_workspace: *attach_workspace
       - *restore_node_modules
       - run:
