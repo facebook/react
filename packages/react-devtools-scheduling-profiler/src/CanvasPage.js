@@ -52,17 +52,14 @@ import {
 import {COLORS} from './content-views/constants';
 
 import EventTooltip from './EventTooltip';
-import {ContextMenu, ContextMenuItem, useContextMenu} from './context';
+import ContextMenu from './context/ContextMenu';
+import ContextMenuItem from './context/ContextMenuItem';
+import useContextMenu from './context/useContextMenu';
 import {getBatchRange} from './utils/getBatchRange';
 
 import styles from './CanvasPage.css';
 
 const CONTEXT_MENU_ID = 'canvas';
-
-type ContextMenuContextData = {|
-  data: ReactProfilerData,
-  hoveredEvent: ReactHoverContextInfo | null,
-|};
 
 type Props = {|
   profilerData: ReactProfilerData,
@@ -284,7 +281,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
 
   useCanvasInteraction(canvasRef, interactor);
 
-  useContextMenu<ContextMenuContextData>({
+  useContextMenu({
     data: {
       data,
       hoveredEvent,
@@ -357,7 +354,10 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
         }
       });
     }
-  }, [hoveredEvent]);
+  }, [
+    hoveredEvent,
+    data, // Attach onHover callbacks when views are re-created on data change
+  ]);
 
   useLayoutEffect(() => {
     const {current: userTimingMarksView} = userTimingMarksViewRef;
@@ -396,7 +396,7 @@ function AutoSizedCanvas({data, height, width}: AutoSizedCanvasProps) {
     <Fragment>
       <canvas ref={canvasRef} height={height} width={width} />
       <ContextMenu id={CONTEXT_MENU_ID}>
-        {(contextData: ContextMenuContextData) => {
+        {contextData => {
           if (contextData.hoveredEvent == null) {
             return null;
           }

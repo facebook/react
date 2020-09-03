@@ -1,7 +1,7 @@
 {
   "private": true,
   "name": "react-devtools-scheduling-profiler",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "license": "MIT",
   "scripts": {
     "build": "cross-env NODE_ENV=production cross-env TARGET=remote webpack --config webpack.config.js",
@@ -18,6 +18,8 @@
   },
   "devDependencies": {
     "@pmmmwh/react-refresh-webpack-plugin": "^0.4.1",
+    "@reach/menu-button": "^0.11.2",
+    "@reach/tooltip": "^0.11.2",
     "babel-loader": "^8.1.0",
     "css-loader": "^4.2.1",
     "file-loader": "^6.0.0",
