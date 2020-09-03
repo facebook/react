@@ -17,6 +17,7 @@
     "regenerator-runtime": "^0.13.7"
   },
   "devDependencies": {
+    "@pmmmwh/react-refresh-webpack-plugin": "^0.4.1",
     "babel-loader": "^8.1.0",
     "css-loader": "^4.2.1",
     "file-loader": "^6.0.0",

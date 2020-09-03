@@ -3,22 +3,23 @@
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const ReactRefreshWebpackPlugin = require('@pmmmwh/react-refresh-webpack-plugin');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
   console.error('NODE_ENV not set');
   process.exit(1);
 }
+const __DEV__ = NODE_ENV === 'development';
 
 const TARGET = process.env.TARGET;
 if (!TARGET) {
   console.error('TARGET not set');
   process.exit(1);
 }
+const shouldUseDevServer = TARGET === 'local';
 
 const builtModulesDir = resolve(__dirname, '..', '..', 'build', 'node_modules');
-
-const __DEV__ = NODE_ENV === 'development';
 
 const imageInlineSizeLimit = 10000;
 
@@ -32,6 +33,7 @@ const config = {
     alias: {
       react: resolve(builtModulesDir, 'react'),
       'react-dom': resolve(builtModulesDir, 'react-dom'),
+      'react-refresh': resolve(builtModulesDir, 'react-refresh'),
     },
   },
   plugins: [
@@ -43,7 +45,8 @@ const config = {
     new HtmlWebpackPlugin({
       title: 'React Concurrent Mode Profiler',
     }),
-  ],
+    shouldUseDevServer && new ReactRefreshWebpackPlugin(),
+  ].filter(Boolean),
   module: {
     rules: [
       {
@@ -56,6 +59,9 @@ const config = {
             'react-devtools-shared',
             'babel.config.js',
           ),
+          plugins: shouldUseDevServer
+            ? [resolve(builtModulesDir, 'react-refresh/babel')]
+            : [],
         },
       },
       {
@@ -87,7 +93,7 @@ const config = {
   },
 };
 
-if (TARGET === 'local') {
+if (shouldUseDevServer) {
   config.devServer = {
     hot: true,
     port: 8080,
