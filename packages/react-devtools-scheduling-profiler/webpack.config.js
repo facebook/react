@@ -26,6 +26,18 @@ const DEVTOOLS_VERSION = getVersionString();
 
 const imageInlineSizeLimit = 10000;
 
+const babelOptions = {
+  configFile: resolve(
+    __dirname,
+    '..',
+    'react-devtools-shared',
+    'babel.config.js',
+  ),
+  plugins: shouldUseDevServer
+    ? [resolve(builtModulesDir, 'react-refresh/babel')]
+    : [],
+};
+
 const config = {
   mode: __DEV__ ? 'development' : 'production',
   devtool: __DEV__ ? 'cheap-module-eval-source-map' : false,
@@ -59,32 +71,14 @@ const config = {
           'worker-loader',
           {
             loader: 'babel-loader',
-            options: {
-              configFile: resolve(
-                __dirname,
-                '..',
-                'react-devtools-shared',
-                'babel.config.js',
-              ),
-              cacheDirectory: true,
-            },
+            options: babelOptions,
           },
         ],
       },
       {
         test: /\.js$/,
         loader: 'babel-loader',
-        options: {
-          configFile: resolve(
-            __dirname,
-            '..',
-            'react-devtools-shared',
-            'babel.config.js',
-          ),
-          plugins: shouldUseDevServer
-            ? [resolve(builtModulesDir, 'react-refresh/babel')]
-            : [],
-        },
+        options: babelOptions,
       },
       {
         test: /\.css$/,

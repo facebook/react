@@ -28,6 +28,13 @@
   text-align: center;
 }
 
+.ErrorMessage {
+  margin: 0.5rem 0;
+  color: var(--color-dim);
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+}
+
 .Row {
   display: flex;
   flex-direction: row;

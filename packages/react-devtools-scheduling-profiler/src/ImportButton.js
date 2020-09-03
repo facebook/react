@@ -7,65 +7,32 @@
  * @flow
  */
 
-import type {ReactProfilerData} from './types';
-import type {ImportWorkerOutputData} from './import-worker/import.worker';
-
 import * as React from 'react';
-import {useCallback, useContext, useRef} from 'react';
+import {useCallback, useRef} from 'react';
 
 import Button from 'react-devtools-shared/src/devtools/views/Button';
 import ButtonIcon from 'react-devtools-shared/src/devtools/views/ButtonIcon';
-import {ModalDialogContext} from 'react-devtools-shared/src/devtools/views/ModalDialog';
 
 import styles from './ImportButton.css';
-import ImportWorker from './import-worker/import.worker';
 
 type Props = {|
-  onDataImported: (profilerData: ReactProfilerData) => void,
+  onFileSelect: (file: File) => void,
 |};
 
-export default function ImportButton({onDataImported}: Props) {
+export default function ImportButton({onFileSelect}: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const {dispatch: modalDialogDispatch} = useContext(ModalDialogContext);
 
   const handleFiles = useCallback(() => {
     const input = inputRef.current;
     if (input === null) {
       return;
     }
-
     if (input.files.length > 0) {
-      const worker: Worker = new (ImportWorker: any)();
-      worker.onmessage = function(event) {
-        const data = ((event.data: any): ImportWorkerOutputData);
-        switch (data.status) {
-          case 'SUCCESS':
-            onDataImported(data.processedData);
-            break;
-          case 'ERROR':
-            modalDialogDispatch({
-              type: 'SHOW',
-              title: 'Import failed',
-              content: (
-                <>
-                  <div>The profiling data you selected cannot be imported.</div>
-                  {data.error !== null && (
-                    <div className={styles.ErrorMessage}>
-                      {data.error.message}
-                    </div>
-                  )}
-                </>
-              ),
-            });
-            break;
-        }
-      };
-      worker.postMessage({file: input.files[0]});
+      onFileSelect(input.files[0]);
     }
-
     // Reset input element to allow the same file to be re-imported
     input.value = '';
-  }, [onDataImported, modalDialogDispatch]);
+  }, [onFileSelect]);
 
   const uploadData = useCallback(() => {
     if (inputRef.current !== null) {
