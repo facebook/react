@@ -135,6 +135,5 @@ export const enableDiscreteEventFlushingChange = false;
 
 // https://github.com/facebook/react/pull/19654
 export const enablePassiveEventIntervention = true;
-export const disableOnScrollBubbling = true;
 
 export const enableEagerRootListeners = true;
