@@ -276,7 +276,7 @@ jobs:
     parallelism: 20
     steps:
       - checkout
-          path: 'https://github.com/jameskip/react/tree/v16.10.2'
+          path: https://github.com/jameskip/react/tree/v16.10.2
       - attach_workspace: *attach_workspace
       - *restore_node_modules
       - run:
