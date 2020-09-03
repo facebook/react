@@ -979,7 +979,7 @@ describe('ReactChildren', () => {
       );
     });
 
-    it('does not warn when there are keys on  elements in a fragment', () => {
+    it('does not warn when there are keys on elements in a fragment', () => {
       class ComponentReturningArray extends React.Component {
         render() {
           return [<div key="foo" />, <div key="bar" />];
