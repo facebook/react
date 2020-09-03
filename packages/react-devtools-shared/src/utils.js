@@ -262,14 +262,14 @@ export function getBreakOnConsoleErrors(): boolean {
   return false;
 }
 
-export function setEnableDoubleLogging(value: boolean): void {
+export function setsuppressDoubleLogging(value: boolean): void {
   localStorageSetItem(
     LOCAL_STORAGE_SHOULD_ENABLE_DOUBLE_LOGGING,
     JSON.stringify(value),
   );
 }
 
-export function getEnableDoubleLogging(): boolean {
+export function getsuppressDoubleLogging(): boolean {
   try {
     const raw = localStorageGetItem(LOCAL_STORAGE_SHOULD_ENABLE_DOUBLE_LOGGING);
     if (raw != null) {

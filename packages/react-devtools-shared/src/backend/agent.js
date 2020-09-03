@@ -446,11 +446,11 @@ export default class Agent extends EventEmitter<{|
   updateConsolePatchSettings = ({
     appendComponentStack,
     breakOnConsoleErrors,
-    enableDoubleLogging,
+    suppressDoubleLogging,
   }: {|
     appendComponentStack: boolean,
     breakOnConsoleErrors: boolean,
-    enableDoubleLogging: boolean,
+    suppressDoubleLogging: boolean,
   |}) => {
     // If the frontend preference has change,
     // or in the case of React Native- if the backend is just finding out the preference-

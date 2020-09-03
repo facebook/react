@@ -39,8 +39,8 @@ type Context = {|
   // Specified as a separate prop so it can trigger a re-render of FixedSizeList.
   lineHeight: number,
 
-  enableDoubleLogging: boolean,
-  setEnableDoubleLogging: (value: boolean) => void,
+  suppressDoubleLogging: boolean,
+  setsuppressDoubleLogging: (value: boolean) => void,
 
   appendComponentStack: boolean,
   setAppendComponentStack: (value: boolean) => void,
@@ -85,8 +85,8 @@ function SettingsContextController({
   );
 
   const [
-    enableDoubleLogging,
-    setEnableDoubleLogging,
+    suppressDoubleLogging,
+    setsuppressDoubleLogging,
   ] = useLocalStorage<boolean>(
     LOCAL_STORAGE_SHOULD_ENABLE_DOUBLE_LOGGING,
     false,
@@ -160,9 +160,14 @@ function SettingsContextController({
     bridge.send('updateConsolePatchSettings', {
       appendComponentStack,
       breakOnConsoleErrors,
-      enableDoubleLogging,
+      suppressDoubleLogging,
     });
-  }, [bridge, appendComponentStack, breakOnConsoleErrors, enableDoubleLogging]);
+  }, [
+    bridge,
+    appendComponentStack,
+    breakOnConsoleErrors,
+    suppressDoubleLogging,
+  ]);
 
   useEffect(() => {
     bridge.send('setTraceUpdatesEnabled', traceUpdatesEnabled);
@@ -172,7 +177,7 @@ function SettingsContextController({
     () => ({
       appendComponentStack,
       breakOnConsoleErrors,
-      enableDoubleLogging,
+      suppressDoubleLogging,
       displayDensity,
       lineHeight:
         displayDensity === 'compact'
@@ -180,7 +185,7 @@ function SettingsContextController({
           : COMFORTABLE_LINE_HEIGHT,
       setAppendComponentStack,
       setBreakOnConsoleErrors,
-      setEnableDoubleLogging,
+      setsuppressDoubleLogging,
       setDisplayDensity,
       setTheme,
       setTraceUpdatesEnabled,
@@ -191,10 +196,10 @@ function SettingsContextController({
       appendComponentStack,
       breakOnConsoleErrors,
       displayDensity,
-      enableDoubleLogging,
+      suppressDoubleLogging,
       setAppendComponentStack,
       setBreakOnConsoleErrors,
-      setEnableDoubleLogging,
+      setsuppressDoubleLogging,
       setDisplayDensity,
       setTheme,
       setTraceUpdatesEnabled,

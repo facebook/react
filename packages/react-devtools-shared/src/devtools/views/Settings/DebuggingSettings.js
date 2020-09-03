@@ -17,8 +17,8 @@ export default function DebuggingSettings(_: {||}) {
   const {
     appendComponentStack,
     breakOnConsoleErrors,
-    enableDoubleLogging,
-    setEnableDoubleLogging,
+    suppressDoubleLogging,
+    setsuppressDoubleLogging,
     setAppendComponentStack,
     setBreakOnConsoleErrors,
   } = useContext(SettingsContext);
@@ -41,12 +41,12 @@ export default function DebuggingSettings(_: {||}) {
         <label>
           <input
             type="checkbox"
-            checked={enableDoubleLogging}
+            checked={!suppressDoubleLogging}
             onChange={({currentTarget}) =>
-              setEnableDoubleLogging(currentTarget.checked)
+              setsuppressDoubleLogging(!currentTarget.checked)
             }
           />{' '}
-          Enable double logging
+          Suppress console during development-only second render pass
         </label>
       </div>
       <div className={styles.Setting}>

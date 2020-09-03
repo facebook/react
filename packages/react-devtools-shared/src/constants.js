@@ -31,7 +31,7 @@ export const LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS =
   'React::DevTools::breakOnConsoleErrors';
 
 export const LOCAL_STORAGE_SHOULD_ENABLE_DOUBLE_LOGGING =
-  'React::DevTools::enableDoubleLogging';
+  'React::DevTools::suppressDoubleLogging';
 
 export const LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY =
   'React::DevTools::appendComponentStack';
