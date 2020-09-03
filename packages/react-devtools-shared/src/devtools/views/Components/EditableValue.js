@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {Fragment, useRef} from 'react';
+import {Fragment} from 'react';
 import styles from './EditableValue.css';
 import {useEditableValue} from '../hooks';
 
@@ -27,7 +27,6 @@ export default function EditableValue({
   path,
   value,
 }: EditableValueProps) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
   const [state, dispatch] = useEditableValue(value);
   const {editableValue, hasPendingChanges, isValid, parsedValue} = state;
 
@@ -50,6 +49,12 @@ export default function EditableValue({
       editableValue: target.checked,
       externalValue: value,
     });
+
+    // Unlike <input type="text"> which has both an onChange and an onBlur,
+    // <input type="checkbox"> updates state *and* applies changes in a single event.
+    // So we read from target.checked rather than parsedValue (which has not yet updated).
+    // We also don't check isValid (because that hasn't changed yet either);
+    // we don't need to check it anyway, since target.checked is always a boolean.
     overrideValueFn(path, target.checked);
   };
 
@@ -93,7 +98,6 @@ export default function EditableValue({
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        ref={inputRef}
         type="text"
         value={editableValue}
       />
