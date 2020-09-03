@@ -32,7 +32,11 @@ export default function ImportButton({onDataImported}: Props) {
 
   const handleFiles = useCallback(async () => {
     const input = inputRef.current;
-    if (input !== null && input.files.length > 0) {
+    if (input === null) {
+      return;
+    }
+
+    if (input.files.length > 0) {
       try {
         const readFile = await readInputData(input.files[0]);
         const events: TimelineEvent[] = JSON.parse(readFile);
@@ -54,6 +58,9 @@ export default function ImportButton({onDataImported}: Props) {
         });
       }
     }
+
+    // Reset input element to allow the same file to be re-imported
+    input.value = '';
   }, [onDataImported, modalDialogDispatch]);
 
   const uploadData = useCallback(() => {
