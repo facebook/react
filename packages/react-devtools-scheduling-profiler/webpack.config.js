@@ -54,6 +54,24 @@ const config = {
   module: {
     rules: [
       {
+        test: /\.worker\.js$/,
+        use: [
+          'worker-loader',
+          {
+            loader: 'babel-loader',
+            options: {
+              configFile: resolve(
+                __dirname,
+                '..',
+                'react-devtools-shared',
+                'babel.config.js',
+              ),
+              cacheDirectory: true,
+            },
+          },
+        ],
+      },
+      {
         test: /\.js$/,
         loader: 'babel-loader',
         options: {
