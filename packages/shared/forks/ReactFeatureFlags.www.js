@@ -28,7 +28,6 @@ export const {
   enableDebugTracing,
   skipUnmountedBoundaries,
   enablePassiveEventIntervention,
-  disableOnScrollBubbling,
   enableEagerRootListeners,
 } = dynamicFeatureFlags;
 
