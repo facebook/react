@@ -86,6 +86,7 @@ const otherDiscreteEvents: Array<DOMEventName> = [
   'compositionstart',
   'compositionend',
   'compositionupdate',
+  'beforeinput',
 ];
 
 if (enableCreateEventHandleAPI) {

@@ -17,6 +17,7 @@ export type DOMEventName =
   // 'animationend |
   // 'animationstart' |
   | 'beforeblur' // Not a real event. This is used by event experiments.
+  | 'beforeinput'
   | 'canplay'
   | 'canplaythrough'
   | 'cancel'
