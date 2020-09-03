@@ -42,6 +42,7 @@ function createDataResourceFromImportedFile(file: File): ProfilerDataResource {
               reject(data.error);
               break;
           }
+          worker.terminate();
         };
         worker.postMessage({file});
       });
