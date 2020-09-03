@@ -13,7 +13,7 @@ aliases:
       keys:
         - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-node-modules
 
-  - &TEST_PARALLELISM 20
+  - &TEST_PARALLELISM 4
 
   - &attach_workspace
     at: build
@@ -247,7 +247,7 @@ jobs:
   yarn_build:
     docker: *docker
     environment: *environment
-    parallelism: 20
+    parallelism: 4
     steps:
       - checkout
       - *restore_node_modules
@@ -273,7 +273,7 @@ jobs:
   build_devtools_and_process_artifacts:
     docker: *docker
     environment: *environment
-    parallelism: 20
+    parallelism: 4
     steps:
       - run:
             name: Update npm
