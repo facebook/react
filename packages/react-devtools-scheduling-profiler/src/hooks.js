@@ -40,9 +40,8 @@ export function useBrowserTheme(): void {
   const theme = useMutableSource(darkModeMutableSource, getSnapshot, subscribe);
 
   useLayoutEffect(() => {
+    const documentElements = [((document.documentElement: any): HTMLElement)];
     if (enableDarkMode) {
-      const documentElements = [((document.documentElement: any): HTMLElement)];
-
       switch (theme) {
         case 'light':
           updateThemeVariables('light', documentElements);
@@ -53,6 +52,8 @@ export function useBrowserTheme(): void {
         default:
           throw Error(`Unsupported theme value "${theme}"`);
       }
+    } else {
+      updateThemeVariables('light', documentElements);
     }
   }, [theme]);
 }
