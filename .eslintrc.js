@@ -117,7 +117,7 @@ module.exports = {
           // Disabled because it's also used by the Hook type.
           // 'lastEffect',
         ],
-        new: ['subtreeTag'],
+        new: ['subtreeFlags'],
       },
     ],
   },

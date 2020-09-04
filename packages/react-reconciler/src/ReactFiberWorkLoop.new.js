@@ -51,7 +51,7 @@ import {
   scheduleSyncCallback,
 } from './SchedulerWithReactIntegration.new';
 import {
-  NoEffect as NoHookEffect,
+  NoFlags as NoHookEffect,
   Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {
@@ -121,7 +121,7 @@ import {
 } from './ReactWorkTags';
 import {LegacyRoot} from './ReactRootTags';
 import {
-  NoEffect,
+  NoFlags,
   Placement,
   Update,
   PlacementAndUpdate,
@@ -139,15 +139,15 @@ import {
   MutationMask,
   LayoutMask,
   PassiveMask,
-} from './ReactSideEffectTags';
+} from './ReactFiberFlags';
 import {
-  NoEffect as NoSubtreeTag,
-  BeforeMutation as BeforeMutationSubtreeTag,
-  Mutation as MutationSubtreeTag,
-  Layout as LayoutSubtreeTag,
-  Passive as PassiveSubtreeTag,
-  PassiveStatic as PassiveStaticSubtreeTag,
-} from './ReactSubtreeTags';
+  NoFlags as NoSubtreeFlags,
+  BeforeMutation as BeforeMutationSubtreeFlags,
+  Mutation as MutationSubtreeFlags,
+  Layout as LayoutSubtreeFlags,
+  Passive as PassiveSubtreeFlags,
+  PassiveStatic as PassiveStaticSubtreeFlags,
+} from './ReactSubtreeFlags';
 import {
   NoLanePriority,
   SyncLanePriority,
@@ -649,7 +649,7 @@ function markUpdateLaneFromFiberToRoot(
   if (__DEV__) {
     if (
       alternate === null &&
-      (sourceFiber.effectTag & (Placement | Hydrating)) !== NoEffect
+      (sourceFiber.flags & (Placement | Hydrating)) !== NoFlags
     ) {
       warnAboutUpdateOnNotYetMountedFiberInDEV(sourceFiber);
     }
@@ -664,7 +664,7 @@ function markUpdateLaneFromFiberToRoot(
       alternate.childLanes = mergeLanes(alternate.childLanes, lane);
     } else {
       if (__DEV__) {
-        if ((parent.effectTag & (Placement | Hydrating)) !== NoEffect) {
+        if ((parent.flags & (Placement | Hydrating)) !== NoFlags) {
           warnAboutUpdateOnNotYetMountedFiberInDEV(sourceFiber);
         }
       }
@@ -1705,7 +1705,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
     const returnFiber = completedWork.return;
 
     // Check if the work completed or if something threw.
-    if ((completedWork.effectTag & Incomplete) === NoEffect) {
+    if ((completedWork.flags & Incomplete) === NoFlags) {
       setCurrentDebugFiberInDEV(completedWork);
       let next;
       if (
@@ -1741,7 +1741,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         // back here again.
         // Since we're restarting, remove anything that is not a host effect
         // from the effect tag.
-        next.effectTag &= HostEffectMask;
+        next.flags &= HostEffectMask;
         workInProgress = next;
         return;
       }
@@ -1765,8 +1765,8 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
 
       if (returnFiber !== null) {
         // Mark the parent fiber as incomplete
-        returnFiber.effectTag |= Incomplete;
-        returnFiber.subtreeTag = NoSubtreeTag;
+        returnFiber.flags |= Incomplete;
+        returnFiber.subtreeFlags = NoSubtreeFlags;
         returnFiber.deletions = null;
       }
     }
@@ -1809,7 +1809,7 @@ function resetChildLanes(completedWork: Fiber) {
     completedWork.alternate.child === completedWork.child;
 
   let newChildLanes = NoLanes;
-  let subtreeTag = NoSubtreeTag;
+  let subtreeFlags = NoSubtreeFlags;
 
   if (!didBailout) {
     // Bubble up the earliest expiration time.
@@ -1826,23 +1826,23 @@ function resetChildLanes(completedWork: Fiber) {
           mergeLanes(child.lanes, child.childLanes),
         );
 
-        subtreeTag |= child.subtreeTag;
+        subtreeFlags |= child.subtreeFlags;
 
-        const effectTag = child.effectTag;
-        if ((effectTag & BeforeMutationMask) !== NoEffect) {
-          subtreeTag |= BeforeMutationSubtreeTag;
+        const flags = child.flags;
+        if ((flags & BeforeMutationMask) !== NoFlags) {
+          subtreeFlags |= BeforeMutationSubtreeFlags;
         }
-        if ((effectTag & MutationMask) !== NoEffect) {
-          subtreeTag |= MutationSubtreeTag;
+        if ((flags & MutationMask) !== NoFlags) {
+          subtreeFlags |= MutationSubtreeFlags;
         }
-        if ((effectTag & LayoutMask) !== NoEffect) {
-          subtreeTag |= LayoutSubtreeTag;
+        if ((flags & LayoutMask) !== NoFlags) {
+          subtreeFlags |= LayoutSubtreeFlags;
         }
-        if ((effectTag & PassiveMask) !== NoEffect) {
-          subtreeTag |= PassiveSubtreeTag;
+        if ((flags & PassiveMask) !== NoFlags) {
+          subtreeFlags |= PassiveSubtreeFlags;
         }
-        if ((effectTag & PassiveStatic) !== NoEffect) {
-          subtreeTag |= PassiveStaticSubtreeTag;
+        if ((flags & PassiveStatic) !== NoFlags) {
+          subtreeFlags |= PassiveStaticSubtreeFlags;
         }
 
         // When a fiber is cloned, its actualDuration is reset to 0. This value will
@@ -1879,30 +1879,30 @@ function resetChildLanes(completedWork: Fiber) {
           mergeLanes(child.lanes, child.childLanes),
         );
 
-        subtreeTag |= child.subtreeTag;
+        subtreeFlags |= child.subtreeFlags;
 
-        const effectTag = child.effectTag;
-        if ((effectTag & BeforeMutationMask) !== NoEffect) {
-          subtreeTag |= BeforeMutationSubtreeTag;
+        const flags = child.flags;
+        if ((flags & BeforeMutationMask) !== NoFlags) {
+          subtreeFlags |= BeforeMutationSubtreeFlags;
         }
-        if ((effectTag & MutationMask) !== NoEffect) {
-          subtreeTag |= MutationSubtreeTag;
+        if ((flags & MutationMask) !== NoFlags) {
+          subtreeFlags |= MutationSubtreeFlags;
         }
-        if ((effectTag & LayoutMask) !== NoEffect) {
-          subtreeTag |= LayoutSubtreeTag;
+        if ((flags & LayoutMask) !== NoFlags) {
+          subtreeFlags |= LayoutSubtreeFlags;
         }
-        if ((effectTag & PassiveMask) !== NoEffect) {
-          subtreeTag |= PassiveSubtreeTag;
+        if ((flags & PassiveMask) !== NoFlags) {
+          subtreeFlags |= PassiveSubtreeFlags;
         }
-        if ((effectTag & PassiveStatic) !== NoEffect) {
-          subtreeTag |= PassiveStaticSubtreeTag;
+        if ((flags & PassiveStatic) !== NoFlags) {
+          subtreeFlags |= PassiveStaticSubtreeFlags;
         }
 
         child = child.sibling;
       }
     }
 
-    completedWork.subtreeTag |= subtreeTag;
+    completedWork.subtreeFlags |= subtreeFlags;
   } else {
     // Bubble up the earliest expiration time.
     if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
@@ -1919,10 +1919,10 @@ function resetChildLanes(completedWork: Fiber) {
 
         // Preserve passive static flag even in the case of a bailout;
         // otherwise a subsequent unmount may bailout before calling destroy functions.
-        subtreeTag |= child.subtreeTag & PassiveStaticSubtreeTag;
-        const effectTag = child.effectTag;
-        if ((effectTag & PassiveStatic) !== NoEffect) {
-          subtreeTag |= PassiveStaticSubtreeTag;
+        subtreeFlags |= child.subtreeFlags & PassiveStaticSubtreeFlags;
+        const flags = child.flags;
+        if ((flags & PassiveStatic) !== NoFlags) {
+          subtreeFlags |= PassiveStaticSubtreeFlags;
         }
 
         treeBaseDuration += child.treeBaseDuration;
@@ -1951,17 +1951,17 @@ function resetChildLanes(completedWork: Fiber) {
 
         // Preserve passive static flag even in the case of a bailout;
         // otherwise a subsequent unmount may bailout before calling destroy functions.
-        subtreeTag |= child.subtreeTag & PassiveStaticSubtreeTag;
-        const effectTag = child.effectTag;
-        if ((effectTag & PassiveStatic) !== NoEffect) {
-          subtreeTag |= PassiveStaticSubtreeTag;
+        subtreeFlags |= child.subtreeFlags & PassiveStaticSubtreeFlags;
+        const flags = child.flags;
+        if ((flags & PassiveStatic) !== NoFlags) {
+          subtreeFlags |= PassiveStaticSubtreeFlags;
         }
 
         child = child.sibling;
       }
     }
 
-    completedWork.subtreeTag |= subtreeTag;
+    completedWork.subtreeFlags |= subtreeFlags;
   }
 
   completedWork.childLanes = newChildLanes;
@@ -2066,16 +2066,16 @@ function commitRootImpl(root, renderPriorityLevel) {
   // only other reason this optimization exists is because it affects profiling.
   // Reconsider whether this is necessary.
   const subtreeHasEffects =
-    (finishedWork.subtreeTag &
-      (BeforeMutationSubtreeTag |
-        MutationSubtreeTag |
-        LayoutSubtreeTag |
-        PassiveSubtreeTag)) !==
-    NoSubtreeTag;
+    (finishedWork.subtreeFlags &
+      (BeforeMutationSubtreeFlags |
+        MutationSubtreeFlags |
+        LayoutSubtreeFlags |
+        PassiveSubtreeFlags)) !==
+    NoSubtreeFlags;
   const rootHasEffect =
-    (finishedWork.effectTag &
+    (finishedWork.flags &
       (BeforeMutationMask | MutationMask | LayoutMask | PassiveMask)) !==
-    NoEffect;
+    NoFlags;
 
   if (subtreeHasEffects || rootHasEffect) {
     let previousLanePriority;
@@ -2152,8 +2152,8 @@ function commitRootImpl(root, renderPriorityLevel) {
 
     // If there are pending passive effects, schedule a callback to process them.
     if (
-      (finishedWork.subtreeTag & PassiveSubtreeTag) !== NoSubtreeTag ||
-      (finishedWork.effectTag & PassiveMask) !== NoEffect
+      (finishedWork.subtreeFlags & PassiveSubtreeFlags) !== NoSubtreeFlags ||
+      (finishedWork.flags & PassiveMask) !== NoFlags
     ) {
       if (!rootDoesHavePassiveEffects) {
         rootDoesHavePassiveEffects = true;
@@ -2306,8 +2306,9 @@ function commitBeforeMutationEffects(firstChild: Fiber) {
     }
 
     if (fiber.child !== null) {
-      const primarySubtreeTag = fiber.subtreeTag & BeforeMutationSubtreeTag;
-      if (primarySubtreeTag !== NoSubtreeTag) {
+      const primarySubtreeFlags =
+        fiber.subtreeFlags & BeforeMutationSubtreeFlags;
+      if (primarySubtreeFlags !== NoSubtreeFlags) {
         commitBeforeMutationEffects(fiber.child);
       }
     }
@@ -2333,7 +2334,7 @@ function commitBeforeMutationEffects(firstChild: Fiber) {
 
 function commitBeforeMutationEffectsImpl(fiber: Fiber) {
   const current = fiber.alternate;
-  const effectTag = fiber.effectTag;
+  const flags = fiber.flags;
 
   if (!shouldFireAfterActiveInstanceBlur && focusedInstanceHandle !== null) {
     // Check to see if the focused element was inside of a hidden (Suspense) subtree.
@@ -2348,13 +2349,13 @@ function commitBeforeMutationEffectsImpl(fiber: Fiber) {
     }
   }
 
-  if ((effectTag & Snapshot) !== NoEffect) {
+  if ((flags & Snapshot) !== NoFlags) {
     setCurrentDebugFiberInDEV(fiber);
     commitBeforeMutationEffectOnFiber(current, fiber);
     resetCurrentDebugFiberInDEV();
   }
 
-  if ((effectTag & Passive) !== NoEffect) {
+  if ((flags & Passive) !== NoFlags) {
     // If there are passive effects, schedule a callback to flush at
     // the earliest opportunity.
     if (!rootDoesHavePassiveEffects) {
@@ -2372,7 +2373,7 @@ function commitBeforeMutationEffectsDeletions(deletions: Array<Fiber>) {
     const fiber = deletions[i];
 
     // TODO (effects) It would be nice to avoid calling doesFiberContain()
-    // Maybe we can repurpose one of the subtreeTag positions for this instead?
+    // Maybe we can repurpose one of the subtreeFlags positions for this instead?
     // Use it to store which part of the tree the focused instance is in?
     // This assumes we can safely determine that instance during the "render" phase.
 
@@ -2401,8 +2402,8 @@ function commitMutationEffects(
     }
 
     if (fiber.child !== null) {
-      const primarySubtreeTag = fiber.subtreeTag & MutationSubtreeTag;
-      if (primarySubtreeTag !== NoSubtreeTag) {
+      const primarySubtreeFlags = fiber.subtreeFlags & MutationSubtreeFlags;
+      if (primarySubtreeFlags !== NoSubtreeFlags) {
         commitMutationEffects(fiber.child, root, renderPriorityLevel);
       }
     }
@@ -2438,12 +2439,12 @@ function commitMutationEffectsImpl(
   root: FiberRoot,
   renderPriorityLevel,
 ) {
-  const effectTag = fiber.effectTag;
-  if (effectTag & ContentReset) {
+  const flags = fiber.flags;
+  if (flags & ContentReset) {
     commitResetTextContent(fiber);
   }
 
-  if (effectTag & Ref) {
+  if (flags & Ref) {
     const current = fiber.alternate;
     if (current !== null) {
       commitDetachRef(current);
@@ -2461,15 +2462,15 @@ function commitMutationEffectsImpl(
   // updates, and deletions. To avoid needing to add a case for every possible
   // bitmap value, we remove the secondary effects from the effect tag and
   // switch on that value.
-  const primaryEffectTag = effectTag & (Placement | Update | Hydrating);
-  switch (primaryEffectTag) {
+  const primaryFlags = flags & (Placement | Update | Hydrating);
+  switch (primaryFlags) {
     case Placement: {
       commitPlacement(fiber);
       // Clear the "placement" from effect tag so that we know that this is
       // inserted, before any life-cycles like componentDidMount gets called.
       // TODO: findDOMNode doesn't rely on this any more but isMounted does
       // and isMounted is deprecated anyway so we should be able to kill this.
-      fiber.effectTag &= ~Placement;
+      fiber.flags &= ~Placement;
       break;
     }
     case PlacementAndUpdate: {
@@ -2477,7 +2478,7 @@ function commitMutationEffectsImpl(
       commitPlacement(fiber);
       // Clear the "placement" from effect tag so that we know that this is
       // inserted, before any life-cycles like componentDidMount gets called.
-      fiber.effectTag &= ~Placement;
+      fiber.flags &= ~Placement;
 
       // Update
       const current = fiber.alternate;
@@ -2485,11 +2486,11 @@ function commitMutationEffectsImpl(
       break;
     }
     case Hydrating: {
-      fiber.effectTag &= ~Hydrating;
+      fiber.flags &= ~Hydrating;
       break;
     }
     case HydratingAndUpdate: {
-      fiber.effectTag &= ~Hydrating;
+      fiber.flags &= ~Hydrating;
 
       // Update
       const current = fiber.alternate;
@@ -2559,8 +2560,8 @@ function commitLayoutEffects(
   let fiber = firstChild;
   while (fiber !== null) {
     if (fiber.child !== null) {
-      const primarySubtreeTag = fiber.subtreeTag & LayoutSubtreeTag;
-      if (primarySubtreeTag !== NoSubtreeTag) {
+      const primarySubtreeFlags = fiber.subtreeFlags & LayoutSubtreeFlags;
+      if (primarySubtreeFlags !== NoSubtreeFlags) {
         commitLayoutEffects(fiber.child, root, committedLanes);
       }
     }
@@ -2596,11 +2597,11 @@ function commitLayoutEffectsImpl(
   root: FiberRoot,
   committedLanes: Lanes,
 ) {
-  const effectTag = fiber.effectTag;
+  const flags = fiber.flags;
 
   setCurrentDebugFiberInDEV(fiber);
 
-  if (effectTag & (Update | Callback)) {
+  if (flags & (Update | Callback)) {
     const current = fiber.alternate;
     commitLayoutEffectOnFiber(root, current, fiber, committedLanes);
   }
@@ -2608,11 +2609,11 @@ function commitLayoutEffectsImpl(
   if (enableScopeAPI) {
     // TODO: This is a temporary solution that allowed us to transition away
     // from React Flare on www.
-    if (effectTag & Ref && fiber.tag !== ScopeComponent) {
+    if (flags & Ref && fiber.tag !== ScopeComponent) {
       commitAttachRef(fiber);
     }
   } else {
-    if (effectTag & Ref) {
+    if (flags & Ref) {
       commitAttachRef(fiber);
     }
   }
@@ -2661,13 +2662,13 @@ export function enqueuePendingPassiveProfilerEffect(fiber: Fiber): void {
 function flushPassiveMountEffects(firstChild: Fiber): void {
   let fiber = firstChild;
   while (fiber !== null) {
-    const primarySubtreeTag = fiber.subtreeTag & PassiveSubtreeTag;
+    const primarySubtreeFlags = fiber.subtreeFlags & PassiveSubtreeFlags;
 
-    if (fiber.child !== null && primarySubtreeTag !== NoSubtreeTag) {
+    if (fiber.child !== null && primarySubtreeFlags !== NoSubtreeFlags) {
       flushPassiveMountEffects(fiber.child);
     }
 
-    if ((fiber.effectTag & Update) !== NoEffect) {
+    if ((fiber.flags & Update) !== NoFlags) {
       setCurrentDebugFiberInDEV(fiber);
       commitPassiveEffectOnFiber(fiber);
       resetCurrentDebugFiberInDEV();
@@ -2694,17 +2695,17 @@ function flushPassiveUnmountEffects(firstChild: Fiber): void {
     const child = fiber.child;
     if (child !== null) {
       // If any children have passive effects then traverse the subtree.
-      // Note that this requires checking subtreeTag of the current Fiber,
-      // rather than the subtreeTag/effectsTag of the first child,
+      // Note that this requires checking subtreeFlags of the current Fiber,
+      // rather than the subtreeFlags/effectsTag of the first child,
       // since that would not cover passive effects in siblings.
-      const primarySubtreeTag = fiber.subtreeTag & PassiveSubtreeTag;
-      if (primarySubtreeTag !== NoSubtreeTag) {
+      const primarySubtreeFlags = fiber.subtreeFlags & PassiveSubtreeFlags;
+      if (primarySubtreeFlags !== NoSubtreeFlags) {
         flushPassiveUnmountEffects(child);
       }
     }
 
-    const primaryEffectTag = fiber.effectTag & Passive;
-    if (primaryEffectTag !== NoEffect) {
+    const primaryFlags = fiber.flags & Passive;
+    if (primaryFlags !== NoFlags) {
       setCurrentDebugFiberInDEV(fiber);
       commitPassiveWork(fiber);
       resetCurrentDebugFiberInDEV();
@@ -2718,10 +2719,13 @@ function flushPassiveUnmountEffectsInsideOfDeletedTree(
   fiberToDelete: Fiber,
   nearestMountedAncestor: Fiber,
 ): void {
-  if ((fiberToDelete.subtreeTag & PassiveStaticSubtreeTag) !== NoSubtreeTag) {
+  if (
+    (fiberToDelete.subtreeFlags & PassiveStaticSubtreeFlags) !==
+    NoSubtreeFlags
+  ) {
     // If any children have passive effects then traverse the subtree.
-    // Note that this requires checking subtreeTag of the current Fiber,
-    // rather than the subtreeTag/effectsTag of the first child,
+    // Note that this requires checking subtreeFlags of the current Fiber,
+    // rather than the subtreeFlags/effectsTag of the first child,
     // since that would not cover passive effects in siblings.
     let child = fiberToDelete.child;
     while (child !== null) {
@@ -2733,7 +2737,7 @@ function flushPassiveUnmountEffectsInsideOfDeletedTree(
     }
   }
 
-  if ((fiberToDelete.effectTag & PassiveStatic) !== NoEffect) {
+  if ((fiberToDelete.flags & PassiveStatic) !== NoFlags) {
     setCurrentDebugFiberInDEV(fiberToDelete);
     commitPassiveUnmount(fiberToDelete, nearestMountedAncestor);
     resetCurrentDebugFiberInDEV();
@@ -3162,7 +3166,7 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
       return;
     }
 
-    if ((fiber.effectTag & PassiveStatic) !== NoEffect) {
+    if ((fiber.flags & PassiveStatic) !== NoFlags) {
       const updateQueue: FunctionComponentUpdateQueue | null = (fiber.updateQueue: any);
       if (updateQueue !== null) {
         const lastEffect = updateQueue.lastEffect;

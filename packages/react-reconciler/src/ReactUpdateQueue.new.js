@@ -92,7 +92,7 @@ import {
   enterDisallowedContextReadInDEV,
   exitDisallowedContextReadInDEV,
 } from './ReactFiberNewContext.new';
-import {Callback, ShouldCapture, DidCapture} from './ReactSideEffectTags';
+import {Callback, ShouldCapture, DidCapture} from './ReactFiberFlags';
 
 import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
 
@@ -345,8 +345,8 @@ function getStateFromUpdate<State>(
       return payload;
     }
     case CaptureUpdate: {
-      workInProgress.effectTag =
-        (workInProgress.effectTag & ~ShouldCapture) | DidCapture;
+      workInProgress.flags =
+        (workInProgress.flags & ~ShouldCapture) | DidCapture;
     }
     // Intentional fallthrough
     case UpdateState: {
@@ -517,7 +517,7 @@ export function processUpdateQueue<State>(
         );
         const callback = update.callback;
         if (callback !== null) {
-          workInProgress.effectTag |= Callback;
+          workInProgress.flags |= Callback;
           const effects = queue.effects;
           if (effects === null) {
             queue.effects = [update];

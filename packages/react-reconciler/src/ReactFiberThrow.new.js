@@ -25,11 +25,11 @@ import {
 import {
   DidCapture,
   Incomplete,
-  NoEffect,
+  NoFlags,
   ShouldCapture,
   LifecycleEffectMask,
   ForceUpdateForLegacySuspense,
-} from './ReactSideEffectTags';
+} from './ReactFiberFlags';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.new';
 import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
@@ -184,7 +184,7 @@ function throwException(
   rootRenderLanes: Lanes,
 ) {
   // The source fiber did not complete.
-  sourceFiber.effectTag |= Incomplete;
+  sourceFiber.flags |= Incomplete;
 
   if (
     value !== null &&
@@ -255,13 +255,13 @@ function throwException(
         // inside a blocking mode tree. If the Suspense is outside of it, we
         // should *not* suspend the commit.
         if ((workInProgress.mode & BlockingMode) === NoMode) {
-          workInProgress.effectTag |= DidCapture;
-          sourceFiber.effectTag |= ForceUpdateForLegacySuspense;
+          workInProgress.flags |= DidCapture;
+          sourceFiber.flags |= ForceUpdateForLegacySuspense;
 
           // We're going to commit this fiber even though it didn't complete.
           // But we shouldn't call any lifecycle methods or callbacks. Remove
           // all lifecycle effect tags.
-          sourceFiber.effectTag &= ~(LifecycleEffectMask | Incomplete);
+          sourceFiber.flags &= ~(LifecycleEffectMask | Incomplete);
 
           if (sourceFiber.tag === ClassComponent) {
             const currentSourceFiber = sourceFiber.alternate;
@@ -332,7 +332,7 @@ function throwException(
 
         attachPingListener(root, wakeable, rootRenderLanes);
 
-        workInProgress.effectTag |= ShouldCapture;
+        workInProgress.flags |= ShouldCapture;
         workInProgress.lanes = rootRenderLanes;
 
         return;
@@ -363,7 +363,7 @@ function throwException(
     switch (workInProgress.tag) {
       case HostRoot: {
         const errorInfo = value;
-        workInProgress.effectTag |= ShouldCapture;
+        workInProgress.flags |= ShouldCapture;
         const lane = pickArbitraryLane(rootRenderLanes);
         workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
         const update = createRootErrorUpdate(workInProgress, errorInfo, lane);
@@ -376,13 +376,13 @@ function throwException(
         const ctor = workInProgress.type;
         const instance = workInProgress.stateNode;
         if (
-          (workInProgress.effectTag & DidCapture) === NoEffect &&
+          (workInProgress.flags & DidCapture) === NoFlags &&
           (typeof ctor.getDerivedStateFromError === 'function' ||
             (instance !== null &&
               typeof instance.componentDidCatch === 'function' &&
               !isAlreadyFailedLegacyErrorBoundary(instance)))
         ) {
-          workInProgress.effectTag |= ShouldCapture;
+          workInProgress.flags |= ShouldCapture;
           const lane = pickArbitraryLane(rootRenderLanes);
           workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
           // Schedule the error boundary to re-render using updated state
