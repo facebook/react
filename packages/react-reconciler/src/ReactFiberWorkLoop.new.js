@@ -139,15 +139,8 @@ import {
   MutationMask,
   LayoutMask,
   PassiveMask,
+  StaticMask,
 } from './ReactFiberFlags';
-import {
-  NoFlags as NoSubtreeFlags,
-  BeforeMutation as BeforeMutationSubtreeFlags,
-  Mutation as MutationSubtreeFlags,
-  Layout as LayoutSubtreeFlags,
-  Passive as PassiveSubtreeFlags,
-  PassiveStatic as PassiveStaticSubtreeFlags,
-} from './ReactSubtreeFlags';
 import {
   NoLanePriority,
   SyncLanePriority,
@@ -1766,7 +1759,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
       if (returnFiber !== null) {
         // Mark the parent fiber as incomplete
         returnFiber.flags |= Incomplete;
-        returnFiber.subtreeFlags = NoSubtreeFlags;
+        returnFiber.subtreeFlags = NoFlags;
         returnFiber.deletions = null;
       }
     }
@@ -1809,7 +1802,7 @@ function resetChildLanes(completedWork: Fiber) {
     completedWork.alternate.child === completedWork.child;
 
   let newChildLanes = NoLanes;
-  let subtreeFlags = NoSubtreeFlags;
+  let subtreeFlags = NoFlags;
 
   if (!didBailout) {
     // Bubble up the earliest expiration time.
@@ -1827,23 +1820,7 @@ function resetChildLanes(completedWork: Fiber) {
         );
 
         subtreeFlags |= child.subtreeFlags;
-
-        const flags = child.flags;
-        if ((flags & BeforeMutationMask) !== NoFlags) {
-          subtreeFlags |= BeforeMutationSubtreeFlags;
-        }
-        if ((flags & MutationMask) !== NoFlags) {
-          subtreeFlags |= MutationSubtreeFlags;
-        }
-        if ((flags & LayoutMask) !== NoFlags) {
-          subtreeFlags |= LayoutSubtreeFlags;
-        }
-        if ((flags & PassiveMask) !== NoFlags) {
-          subtreeFlags |= PassiveSubtreeFlags;
-        }
-        if ((flags & PassiveStatic) !== NoFlags) {
-          subtreeFlags |= PassiveStaticSubtreeFlags;
-        }
+        subtreeFlags |= child.flags;
 
         // When a fiber is cloned, its actualDuration is reset to 0. This value will
         // only be updated if work is done on the fiber (i.e. it doesn't bailout).
@@ -1880,23 +1857,7 @@ function resetChildLanes(completedWork: Fiber) {
         );
 
         subtreeFlags |= child.subtreeFlags;
-
-        const flags = child.flags;
-        if ((flags & BeforeMutationMask) !== NoFlags) {
-          subtreeFlags |= BeforeMutationSubtreeFlags;
-        }
-        if ((flags & MutationMask) !== NoFlags) {
-          subtreeFlags |= MutationSubtreeFlags;
-        }
-        if ((flags & LayoutMask) !== NoFlags) {
-          subtreeFlags |= LayoutSubtreeFlags;
-        }
-        if ((flags & PassiveMask) !== NoFlags) {
-          subtreeFlags |= PassiveSubtreeFlags;
-        }
-        if ((flags & PassiveStatic) !== NoFlags) {
-          subtreeFlags |= PassiveStaticSubtreeFlags;
-        }
+        subtreeFlags |= child.flags;
 
         child = child.sibling;
       }
@@ -1917,13 +1878,12 @@ function resetChildLanes(completedWork: Fiber) {
           mergeLanes(child.lanes, child.childLanes),
         );
 
-        // Preserve passive static flag even in the case of a bailout;
-        // otherwise a subsequent unmount may bailout before calling destroy functions.
-        subtreeFlags |= child.subtreeFlags & PassiveStaticSubtreeFlags;
-        const flags = child.flags;
-        if ((flags & PassiveStatic) !== NoFlags) {
-          subtreeFlags |= PassiveStaticSubtreeFlags;
-        }
+        // "Static" flags share the lifetime of the fiber/hook they belong to,
+        // so we should bubble those up even during a bailout. All the other
+        // flags have a lifetime only of a single render + commit, so we should
+        // ignore them.
+        subtreeFlags |= child.subtreeFlags & StaticMask;
+        subtreeFlags |= child.flags & StaticMask;
 
         treeBaseDuration += child.treeBaseDuration;
         child = child.sibling;
@@ -1949,13 +1909,12 @@ function resetChildLanes(completedWork: Fiber) {
           mergeLanes(child.lanes, child.childLanes),
         );
 
-        // Preserve passive static flag even in the case of a bailout;
-        // otherwise a subsequent unmount may bailout before calling destroy functions.
-        subtreeFlags |= child.subtreeFlags & PassiveStaticSubtreeFlags;
-        const flags = child.flags;
-        if ((flags & PassiveStatic) !== NoFlags) {
-          subtreeFlags |= PassiveStaticSubtreeFlags;
-        }
+        // "Static" flags share the lifetime of the fiber/hook they belong to,
+        // so we should bubble those up even during a bailout. All the other
+        // flags have a lifetime only of a single render + commit, so we should
+        // ignore them.
+        subtreeFlags |= child.subtreeFlags & StaticMask;
+        subtreeFlags |= child.flags & StaticMask;
 
         child = child.sibling;
       }
@@ -2067,11 +2026,8 @@ function commitRootImpl(root, renderPriorityLevel) {
   // Reconsider whether this is necessary.
   const subtreeHasEffects =
     (finishedWork.subtreeFlags &
-      (BeforeMutationSubtreeFlags |
-        MutationSubtreeFlags |
-        LayoutSubtreeFlags |
-        PassiveSubtreeFlags)) !==
-    NoSubtreeFlags;
+      (BeforeMutationMask | MutationMask | LayoutMask | PassiveMask)) !==
+    NoFlags;
   const rootHasEffect =
     (finishedWork.flags &
       (BeforeMutationMask | MutationMask | LayoutMask | PassiveMask)) !==
@@ -2152,7 +2108,7 @@ function commitRootImpl(root, renderPriorityLevel) {
 
     // If there are pending passive effects, schedule a callback to process them.
     if (
-      (finishedWork.subtreeFlags & PassiveSubtreeFlags) !== NoSubtreeFlags ||
+      (finishedWork.subtreeFlags & PassiveMask) !== NoFlags ||
       (finishedWork.flags & PassiveMask) !== NoFlags
     ) {
       if (!rootDoesHavePassiveEffects) {
@@ -2306,9 +2262,8 @@ function commitBeforeMutationEffects(firstChild: Fiber) {
     }
 
     if (fiber.child !== null) {
-      const primarySubtreeFlags =
-        fiber.subtreeFlags & BeforeMutationSubtreeFlags;
-      if (primarySubtreeFlags !== NoSubtreeFlags) {
+      const primarySubtreeFlags = fiber.subtreeFlags & BeforeMutationMask;
+      if (primarySubtreeFlags !== NoFlags) {
         commitBeforeMutationEffects(fiber.child);
       }
     }
@@ -2402,8 +2357,8 @@ function commitMutationEffects(
     }
 
     if (fiber.child !== null) {
-      const primarySubtreeFlags = fiber.subtreeFlags & MutationSubtreeFlags;
-      if (primarySubtreeFlags !== NoSubtreeFlags) {
+      const mutationFlags = fiber.subtreeFlags & MutationMask;
+      if (mutationFlags !== NoFlags) {
         commitMutationEffects(fiber.child, root, renderPriorityLevel);
       }
     }
@@ -2560,8 +2515,8 @@ function commitLayoutEffects(
   let fiber = firstChild;
   while (fiber !== null) {
     if (fiber.child !== null) {
-      const primarySubtreeFlags = fiber.subtreeFlags & LayoutSubtreeFlags;
-      if (primarySubtreeFlags !== NoSubtreeFlags) {
+      const primarySubtreeFlags = fiber.subtreeFlags & LayoutMask;
+      if (primarySubtreeFlags !== NoFlags) {
         commitLayoutEffects(fiber.child, root, committedLanes);
       }
     }
@@ -2662,9 +2617,9 @@ export function enqueuePendingPassiveProfilerEffect(fiber: Fiber): void {
 function flushPassiveMountEffects(firstChild: Fiber): void {
   let fiber = firstChild;
   while (fiber !== null) {
-    const primarySubtreeFlags = fiber.subtreeFlags & PassiveSubtreeFlags;
+    const primarySubtreeFlags = fiber.subtreeFlags & PassiveMask;
 
-    if (fiber.child !== null && primarySubtreeFlags !== NoSubtreeFlags) {
+    if (fiber.child !== null && primarySubtreeFlags !== NoFlags) {
       flushPassiveMountEffects(fiber.child);
     }
 
@@ -2698,8 +2653,8 @@ function flushPassiveUnmountEffects(firstChild: Fiber): void {
       // Note that this requires checking subtreeFlags of the current Fiber,
       // rather than the subtreeFlags/effectsTag of the first child,
       // since that would not cover passive effects in siblings.
-      const primarySubtreeFlags = fiber.subtreeFlags & PassiveSubtreeFlags;
-      if (primarySubtreeFlags !== NoSubtreeFlags) {
+      const passiveFlags = fiber.subtreeFlags & PassiveMask;
+      if (passiveFlags !== NoFlags) {
         flushPassiveUnmountEffects(child);
       }
     }
@@ -2719,10 +2674,7 @@ function flushPassiveUnmountEffectsInsideOfDeletedTree(
   fiberToDelete: Fiber,
   nearestMountedAncestor: Fiber,
 ): void {
-  if (
-    (fiberToDelete.subtreeFlags & PassiveStaticSubtreeFlags) !==
-    NoSubtreeFlags
-  ) {
+  if ((fiberToDelete.subtreeFlags & PassiveStatic) !== NoFlags) {
     // If any children have passive effects then traverse the subtree.
     // Note that this requires checking subtreeFlags of the current Fiber,
     // rather than the subtreeFlags/effectsTag of the first child,

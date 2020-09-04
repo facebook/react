@@ -71,6 +71,7 @@ import {
   Placement,
   Snapshot,
   Update,
+  PassiveMask,
 } from './ReactFiberFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
@@ -130,10 +131,6 @@ import {
   Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.new';
-import {
-  NoFlags as NoSubtreeFlags,
-  Passive as PassiveSubtreeFlags,
-} from './ReactSubtreeFlags';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -595,10 +592,7 @@ function commitLifeCycles(
         commitHookEffectListMount(HookLayout | HookHasEffect, finishedWork);
       }
 
-      if (
-        (finishedWork.subtreeFlags & PassiveSubtreeFlags) !==
-        NoSubtreeFlags
-      ) {
+      if ((finishedWork.subtreeFlags & PassiveMask) !== NoFlags) {
         schedulePassiveEffectCallback();
       }
       return;

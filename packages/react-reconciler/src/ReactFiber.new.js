@@ -30,7 +30,6 @@ import {
   enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
-import {NoFlags as NoSubtreeEffect} from './ReactSubtreeFlags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
 import {
   IndeterminateComponent,
@@ -145,7 +144,7 @@ function FiberNode(
 
   // Effects
   this.flags = NoFlags;
-  this.subtreeFlags = NoSubtreeEffect;
+  this.subtreeFlags = NoFlags;
   this.deletions = null;
 
   this.lanes = NoLanes;
@@ -284,7 +283,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     workInProgress.type = current.type;
 
     // We already have an alternate.
-    workInProgress.subtreeFlags = NoSubtreeEffect;
+    workInProgress.subtreeFlags = NoFlags;
     workInProgress.deletions = null;
 
     if (enableProfilerTimer) {
@@ -372,7 +371,7 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
     workInProgress.lanes = renderLanes;
 
     workInProgress.child = null;
-    workInProgress.subtreeFlags = NoSubtreeEffect;
+    workInProgress.subtreeFlags = NoFlags;
     workInProgress.memoizedProps = null;
     workInProgress.memoizedState = null;
     workInProgress.updateQueue = null;
