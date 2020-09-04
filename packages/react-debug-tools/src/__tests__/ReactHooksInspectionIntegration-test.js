@@ -11,6 +11,7 @@
 'use strict';
 
 let React;
+let PropTypes;
 let ReactTestRenderer;
 let Scheduler;
 let ReactDebugTools;
@@ -20,6 +21,7 @@ describe('ReactHooksInspectionIntegration', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
+    PropTypes = require('prop-types');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
     act = ReactTestRenderer.act;
@@ -333,6 +335,46 @@ describe('ReactHooksInspectionIntegration', () => {
         subHooks: [],
       },
     ]);
+  });
+
+  it('should inject legacy context which is not a hook', () => {
+    class LegacyContextProvider extends React.Component<any> {
+      static childContextTypes = {
+        string: PropTypes.string,
+      };
+
+      getChildContext() {
+        return {
+          string: 'abc',
+        };
+      }
+
+      render() {
+        return this.props.children;
+      }
+    }
+
+    function FunctionalLegacyContextConsumer(props, context) {
+      return <div>{context.string}</div>;
+    }
+    FunctionalLegacyContextConsumer.contextTypes = {
+      string: PropTypes.string,
+    };
+    const renderer = ReactTestRenderer.create(
+      <LegacyContextProvider>
+        <FunctionalLegacyContextConsumer />
+      </LegacyContextProvider>,
+    );
+
+    const childFiber = renderer.root
+      .findByType(FunctionalLegacyContextConsumer)
+      ._currentFiber();
+    const hasLegacyContext = !!childFiber.elementType.contextTypes;
+    if (hasLegacyContext) {
+      expect(() =>
+        ReactDebugTools.inspectHooksOfFiber(childFiber),
+      ).not.toThrow();
+    }
   });
 
   it('should inspect custom hooks', () => {
