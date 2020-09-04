@@ -273,11 +273,9 @@ export function resolveModelToJSON(
     value !== null &&
     value.$$typeof === REACT_ELEMENT_TYPE
   ) {
-    const prevDispatcher = ReactCurrentDispatcher.current;
     // TODO: Concatenate keys of parents onto children.
     const element: React$Element<any> = (value: any);
     try {
-      ReactCurrentDispatcher.current = Dispatcher;
       // Attempt to render the server component.
       value = attemptResolveElement(element);
     } catch (x) {
@@ -292,8 +290,6 @@ export function resolveModelToJSON(
         // Something errored. Don't bother encoding anything up to here.
         throw x;
       }
-    } finally {
-      ReactCurrentDispatcher.current = prevDispatcher;
     }
   }
 
@@ -355,6 +351,9 @@ function retrySegment(request: Request, segment: Segment): void {
 }
 
 function performWork(request: Request): void {
+  const prevDispatcher = ReactCurrentDispatcher.current;
+  ReactCurrentDispatcher.current = Dispatcher;
+
   const pingedSegments = request.pingedSegments;
   request.pingedSegments = [];
   for (let i = 0; i < pingedSegments.length; i++) {
@@ -364,6 +363,8 @@ function performWork(request: Request): void {
   if (request.flowing) {
     flushCompletedChunks(request);
   }
+
+  ReactCurrentDispatcher.current = prevDispatcher;
 }
 
 let reentrant = false;
