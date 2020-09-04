@@ -67,7 +67,6 @@ import {
   Snapshot,
   MutationMask,
 } from './ReactFiberFlags';
-import {NoFlags as NoSubtreeFlags, Mutation} from './ReactSubtreeFlags';
 import invariant from 'shared/invariant';
 
 import {
@@ -166,7 +165,7 @@ function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {
     if ((child.flags & MutationMask) !== NoFlags) {
       return false;
     }
-    if ((child.subtreeFlags & Mutation) !== NoSubtreeFlags) {
+    if ((child.subtreeFlags & MutationMask) !== NoFlags) {
       return false;
     }
     child = child.sibling;
