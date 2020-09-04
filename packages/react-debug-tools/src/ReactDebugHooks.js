@@ -707,12 +707,14 @@ export function inspectHooksOfFiber(
   const contextMap = new Map();
   try {
     if (fiber.tag === FunctionComponent) {
-      const legacyContext = setupContexts(
-        contextMap,
-        fiber,
-        enableLegacyContext,
-      );
-      return inspectHooks(type, props, currentDispatcher, legacyContext);
+      const hasLegacyContext = !!fiber.elementType.contextTypes;
+      if (hasLegacyContext) {
+        const legacyContext = getLegacyContext(fiber);
+        return inspectHooks(type, props, currentDispatcher, legacyContext);
+      } else {
+        setupContext(contextMap, fiber);
+        return inspectHooks(type, props, currentDispatcher);
+      }
     } else if (fiber.tag === ForwardRef) {
       setupContexts(contextMap, fiber);
       return inspectHooksOfForwardRef(
