@@ -16,7 +16,6 @@ import type {
   ReactProfilerData,
   ReactMeasure,
 } from './types';
-import type {ProfilerDataResource} from './SchedulingProfiler';
 
 import * as React from 'react';
 import {
@@ -63,11 +62,10 @@ import styles from './CanvasPage.css';
 const CONTEXT_MENU_ID = 'canvas';
 
 type Props = {|
-  dataResource: ProfilerDataResource,
+  profilerData: ReactProfilerData,
 |};
 
-function CanvasPage({dataResource}: Props) {
-  const profilerData = dataResource.read();
+function CanvasPage({profilerData}: Props) {
   return (
     <div
       className={styles.CanvasPage}

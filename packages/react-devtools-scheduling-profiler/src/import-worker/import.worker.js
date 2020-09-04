@@ -14,6 +14,7 @@ import type {ReactProfilerData} from '../types';
 
 import preprocessData from './preprocessData';
 import {readInputData} from './readInputData';
+import InvalidProfileError from './InvalidProfileError';
 
 declare var self: DedicatedWorkerGlobalScope;
 
@@ -23,7 +24,8 @@ type ImportWorkerInputData = {|
 
 export type ImportWorkerOutputData =
   | {|status: 'SUCCESS', processedData: ReactProfilerData|}
-  | {|status: 'ERROR', error: Error|};
+  | {|status: 'INVALID_PROFILE_ERROR', error: Error|}
+  | {|status: 'UNEXPECTED_ERROR', error: Error|};
 
 self.onmessage = async function(event: MessageEvent) {
   const {file} = ((event.data: any): ImportWorkerInputData);
@@ -32,7 +34,7 @@ self.onmessage = async function(event: MessageEvent) {
     const readFile = await readInputData(file);
     const events: TimelineEvent[] = JSON.parse(readFile);
     if (events.length === 0) {
-      throw new Error('No profiling data found in file.');
+      throw new InvalidProfileError('No profiling data found in file.');
     }
 
     self.postMessage({
@@ -40,9 +42,16 @@ self.onmessage = async function(event: MessageEvent) {
       processedData: preprocessData(events),
     });
   } catch (error) {
-    self.postMessage({
-      status: 'ERROR',
-      error,
-    });
+    if (error instanceof InvalidProfileError) {
+      self.postMessage({
+        status: 'INVALID_PROFILE_ERROR',
+        error,
+      });
+    } else {
+      self.postMessage({
+        status: 'UNEXPECTED_ERROR',
+        error,
+      });
+    }
   }
 };

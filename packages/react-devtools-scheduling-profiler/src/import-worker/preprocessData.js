@@ -22,6 +22,7 @@ import type {
 } from '../types';
 
 import {REACT_TOTAL_NUM_LANES} from '../constants';
+import InvalidProfileError from './InvalidProfileError';
 
 type MeasureStackElement = {|
   type: ReactMeasureType,
@@ -144,7 +145,7 @@ function throwIfIncomplete(
   if (lastIndex >= 0) {
     const last = stack[lastIndex];
     if (last.stopTime === undefined && last.type === type) {
-      throw new Error(
+      throw new InvalidProfileError(
         `Unexpected type "${type}" started before "${last.type}" completed.`,
       );
     }
@@ -369,7 +370,7 @@ function processTimelineEvent(
 
   // Unrecognized event
   else {
-    throw new Error(
+    throw new InvalidProfileError(
       `Unrecognized event ${JSON.stringify(
         event,
       )}! This is likely a bug in this profiler tool.`,
@@ -378,7 +379,16 @@ function processTimelineEvent(
 }
 
 function preprocessFlamechart(rawData: TimelineEvent[]): Flamechart {
-  const parsedData = importFromChromeTimeline(rawData, 'react-devtools');
+  let parsedData;
+  try {
+    parsedData = importFromChromeTimeline(rawData, 'react-devtools');
+  } catch (error) {
+    // Assume any Speedscope errors are caused by bad profiles
+    const errorToRethrow = new InvalidProfileError(error.message);
+    errorToRethrow.stack = error.stack;
+    throw errorToRethrow;
+  }
+
   const profile = parsedData.profiles[0]; // TODO: Choose the main CPU thread only
 
   const speedscopeFlamechart = new SpeedscopeFlamechart({
