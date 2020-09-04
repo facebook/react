@@ -25,7 +25,7 @@ const DEVTOOLS_VERSION = getVersionString();
 
 const config = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: false,
+  devtool: __DEV__ ? 'cheap-module-eval-source-map' : 'source-map',
   entry: {
     app: './src/app/index.js',
     devtools: './src/devtools.js',
