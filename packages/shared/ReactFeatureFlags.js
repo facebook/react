@@ -137,3 +137,5 @@ export const enableDiscreteEventFlushingChange = false;
 export const enablePassiveEventIntervention = true;
 
 export const enableEagerRootListeners = true;
+
+export const disableSchedulerTimeoutInWorkLoop = false;
