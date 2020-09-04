@@ -13,7 +13,10 @@ import {
   useLayoutEffect,
 } from 'react';
 
-import {updateThemeVariables} from 'react-devtools-shared/src/devtools/views/Settings/SettingsContext';
+import {
+  updateDisplayDensity,
+  updateThemeVariables,
+} from 'react-devtools-shared/src/devtools/views/Settings/SettingsContext';
 import {enableDarkMode} from './SchedulingProfilerFeatureFlags';
 
 export type BrowserTheme = 'dark' | 'light';
@@ -56,4 +59,11 @@ export function useBrowserTheme(): void {
       updateThemeVariables('light', documentElements);
     }
   }, [theme]);
+}
+
+export function useDisplayDensity(): void {
+  useLayoutEffect(() => {
+    const documentElements = [((document.documentElement: any): HTMLElement)];
+    updateDisplayDensity('comfortable', documentElements);
+  }, []);
 }
