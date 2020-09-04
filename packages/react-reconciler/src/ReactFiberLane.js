@@ -384,7 +384,21 @@ function computeExpirationTime(lane: Lane, currentTime: number) {
   const priority = return_highestLanePriority;
   if (priority >= InputContinuousLanePriority) {
     // User interactions should expire slightly more quickly.
-    return currentTime + 1000;
+    //
+    // NOTE: This is set to the corresponding constant as in Scheduler.js. When
+    // we made it larger, a product metric in www regressed, suggesting there's
+    // a user interaction that's being starved by a series of synchronous
+    // updates. If that theory is correct, the proper solution is to fix the
+    // starvation. However, this scenario supports the idea that expiration
+    // times are an important safeguard when starvation does happen.
+    //
+    // Also note that, in the case of user input specifically, this will soon no
+    // longer be an issue because we plan to make user input synchronous by
+    // default (until you enter `startTransition`, of course.)
+    //
+    // If weren't planning to make these updates synchronous soon anyway, I
+    // would probably make this number a configurable parameter.
+    return currentTime + 250;
   } else if (priority >= TransitionPriority) {
     return currentTime + 5000;
   } else {
