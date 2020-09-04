@@ -214,7 +214,7 @@ function updateStyleHelper(
   );
 }
 
-function updateDisplayDensity(
+export function updateDisplayDensity(
   displayDensity: DisplayDensity,
   documentElements: DocumentElements,
 ): void {

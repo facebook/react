@@ -8,13 +8,12 @@
  */
 
 import nullthrows from 'nullthrows';
+import InvalidProfileError from './InvalidProfileError';
 
 export const readInputData = (file: File): Promise<string> => {
   if (!file.name.endsWith('.json')) {
-    return Promise.reject(
-      new Error(
-        'Invalid file type. Only JSON performance profiles are supported',
-      ),
+    throw new InvalidProfileError(
+      'Invalid file type. Only JSON performance profiles are supported',
     );
   }
 
@@ -26,7 +25,7 @@ export const readInputData = (file: File): Promise<string> => {
       if (typeof result === 'string') {
         resolve(result);
       }
-      reject(new Error('Input file was not read as a string'));
+      reject(new InvalidProfileError('Input file was not read as a string'));
     };
 
     fileReader.onerror = () => reject(fileReader.error);

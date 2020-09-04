@@ -14,23 +14,21 @@ import '@reach/tooltip/styles.css';
 
 import * as React from 'react';
 
-import {ModalDialogContextController} from 'react-devtools-shared/src/devtools/views/ModalDialog';
 import {SchedulingProfiler} from './SchedulingProfiler';
-import {useBrowserTheme} from './hooks';
+import {useBrowserTheme, useDisplayDensity} from './hooks';
 
 import styles from './App.css';
 import 'react-devtools-shared/src/devtools/views/root.css';
 
 export default function App() {
   useBrowserTheme();
+  useDisplayDensity();
 
   return (
-    <ModalDialogContextController>
-      <div className={styles.DevTools}>
-        <div className={styles.TabContent}>
-          <SchedulingProfiler />
-        </div>
+    <div className={styles.DevTools}>
+      <div className={styles.TabContent}>
+        <SchedulingProfiler />
       </div>
-    </ModalDialogContextController>
+    </div>
   );
 }
