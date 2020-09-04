@@ -111,10 +111,6 @@ type ReactTypeOfSideEffectType = {|
   Placement: number,
 |};
 
-type VersionFlags = {|
-  enableLegacyContext: boolean,
-|};
-
 // Some environments (e.g. React Native / Hermes) don't support the performance API yet.
 
 const getCurrentTime =
@@ -277,14 +273,6 @@ export function getInternalReactConstants(
   // End of copied code.
   // **********************************************************
 
-  const versionFlags: VersionFlags = {
-    enableLegacyContext: true,
-  };
-
-  if (gte(version, '17.0.0')) {
-    versionFlags.enableLegacyContext = false;
-  }
-
   function getTypeSymbol(type: any): Symbol | number {
     const symbolOrNumber =
       typeof type === 'object' && type !== null ? type.$$typeof : type;
@@ -414,7 +402,6 @@ export function getInternalReactConstants(
     ReactPriorityLevels,
     ReactTypeOfWork,
     ReactTypeOfSideEffect,
-    versionFlags,
   };
 }
 
@@ -430,7 +417,6 @@ export function attach(
     ReactPriorityLevels,
     ReactTypeOfWork,
     ReactTypeOfSideEffect,
-    versionFlags,
   } = getInternalReactConstants(renderer.version);
   const {NoEffect, PerformedWork, Placement} = ReactTypeOfSideEffect;
   const {
@@ -2365,7 +2351,6 @@ export function attach(
         hooks = inspectHooksOfFiber(
           fiber,
           (renderer.currentDispatcherRef: any),
-          versionFlags.enableLegacyContext,
         );
       } finally {
         // Restore original console functionality.
