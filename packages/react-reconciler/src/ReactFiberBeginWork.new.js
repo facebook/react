@@ -64,6 +64,7 @@ import {
   Ref,
   Deletion,
   ForceUpdateForLegacySuspense,
+  StaticMask,
 } from './ReactFiberFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -2131,6 +2132,12 @@ function updateSuspenseFallbackChildren(
       currentPrimaryChildFragment,
       primaryChildProps,
     );
+
+    // Since we're reusing a current tree, we need to reuse the flags, too.
+    // (We don't do this in legacy mode, because in legacy mode we don't re-use
+    // the current tree; see previous branch.)
+    primaryChildFragment.subtreeFlags =
+      currentPrimaryChildFragment.subtreeFlags & StaticMask;
   }
   let fallbackChildFragment;
   if (currentFallbackChildFragment !== null) {

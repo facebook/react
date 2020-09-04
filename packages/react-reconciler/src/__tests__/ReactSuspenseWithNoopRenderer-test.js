@@ -3990,8 +3990,56 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await ReactNoop.act(async () => {
       root.render(<App show={true} />);
     });
-    // TODO: `act` should have flushed the placeholder
+    // TODO: `act` should have already flushed the placeholder, so this
+    // runAllTimers call should be unnecessary.
     jest.runAllTimers();
+    expect(Scheduler).toHaveYielded(['Suspend! [Async]', 'Loading...']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span hidden={true} prop="Child" />
+        <span prop="Loading..." />
+      </>,
+    );
+
+    await ReactNoop.act(async () => {
+      root.render(null);
+    });
+    expect(Scheduler).toHaveYielded(['Unmount Child']);
+  });
+
+  it('should fire effect clean-up when deleting suspended tree (legacy)', async () => {
+    const {useEffect} = React;
+
+    function App({show}) {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Child />
+          {show && <AsyncText text="Async" />}
+        </Suspense>
+      );
+    }
+
+    function Child() {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount Child');
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount Child');
+        };
+      }, []);
+      return <span prop="Child" />;
+    }
+
+    const root = ReactNoop.createLegacyRoot();
+
+    await ReactNoop.act(async () => {
+      root.render(<App show={false} />);
+    });
+    expect(Scheduler).toHaveYielded(['Mount Child']);
+    expect(root).toMatchRenderedOutput(<span prop="Child" />);
+
+    await ReactNoop.act(async () => {
+      root.render(<App show={true} />);
+    });
     expect(Scheduler).toHaveYielded(['Suspend! [Async]', 'Loading...']);
     expect(root).toMatchRenderedOutput(
       <>
