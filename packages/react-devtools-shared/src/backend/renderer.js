@@ -2252,24 +2252,22 @@ export function attach(
         if (!shouldHideContext) {
           context = stateNode.context;
         }
-      } else if (
-        tag === FunctionComponent &&
-        versionFlags.enableLegacyContext
-      ) {
-        // Try to extract legacyContext from stateless components
-        // which do not have stateNode
-        let current = fiber.return;
-        let childContextFound = false;
-        while (current !== null && childContextFound === false) {
-          if (
-            current.stateNode &&
-            current.stateNode.__reactInternalMemoizedMergedChildContext
-          ) {
-            childContextFound = true;
-            context =
-              current.stateNode.__reactInternalMemoizedMergedChildContext;
+      } else if (tag === FunctionComponent) {
+        const hasLegacyContext = !!fiber.elementType.contextTypes;
+        if (hasLegacyContext) {
+          let current = fiber.return;
+          let childContextFound = false;
+          while (current !== null && childContextFound === false) {
+            const instance = current.stateNode;
+            if (
+              instance &&
+              instance.__reactInternalMemoizedMergedChildContext
+            ) {
+              childContextFound = true;
+              context = instance.__reactInternalMemoizedMergedChildContext;
+            }
+            current = current.return;
           }
-          current = current.return;
         }
       }
     } else if (
