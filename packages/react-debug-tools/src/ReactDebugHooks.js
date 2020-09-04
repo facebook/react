@@ -716,7 +716,7 @@ export function inspectHooksOfFiber(
         return inspectHooks(type, props, currentDispatcher);
       }
     } else if (fiber.tag === ForwardRef) {
-      setupContexts(contextMap, fiber);
+      setupContext(contextMap, fiber);
       return inspectHooksOfForwardRef(
         type.render,
         props,
@@ -724,7 +724,7 @@ export function inspectHooksOfFiber(
         currentDispatcher,
       );
     } else {
-      setupContexts(contextMap, fiber);
+      setupContext(contextMap, fiber);
       return inspectHooks(type, props, currentDispatcher);
     }
   } finally {

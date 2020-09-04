@@ -126,7 +126,6 @@ export function getInternalReactConstants(
   ReactPriorityLevels: ReactPriorityLevelsType,
   ReactTypeOfSideEffect: ReactTypeOfSideEffectType,
   ReactTypeOfWork: WorkTagMap,
-  versionFlags: VersionFlags,
 |} {
   const ReactTypeOfSideEffect: ReactTypeOfSideEffectType = {
     NoEffect: 0b00,
