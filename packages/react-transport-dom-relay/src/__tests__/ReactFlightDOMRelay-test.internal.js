@@ -213,4 +213,22 @@ describe('ReactFlightDOMRelay', () => {
       },
     });
   });
+
+  it('can handle a subset of Hooks, with element as root', () => {
+    const {useMemo, useCallback} = React;
+    function Inner({x}) {
+      const foo = useMemo(() => x + x, [x]);
+      const bar = useCallback(() => 10 + foo, [foo]);
+      return bar();
+    }
+
+    function Foo() {
+      return <Inner x={2} />;
+    }
+    const transport = [];
+    ReactDOMFlightRelayServer.render(<Foo />, transport);
+
+    const model = readThrough(transport);
+    expect(model).toEqual(14);
+  });
 });
