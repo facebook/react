@@ -88,7 +88,7 @@ function createDehydrated(
   if (type === 'array' || type === 'typed_array') {
     dehydrated.size = data.length;
   } else if (type === 'object') {
-    dehydrated.size = Object.keys(data).length;
+    dehydrated.size = Reflect.ownKeys(data).length;
   }
 
   if (type === 'iterator' || type === 'typed_array') {
@@ -291,16 +291,17 @@ export function dehydrate(
         return createDehydrated(type, true, data, cleaned, path);
       } else {
         const object = {};
-        for (const name in data) {
+        Reflect.ownKeys(data).forEach((key) => {
+          const name = key.toString()
           object[name] = dehydrate(
-            data[name],
+            data[key],
             cleaned,
             unserializable,
             path.concat([name]),
             isPathAllowed,
             isPathAllowedCheck ? 1 : level + 1,
           );
-        }
+        })
         return object;
       }
 

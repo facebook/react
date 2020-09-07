@@ -530,7 +530,7 @@ describe('InspectedElementContext', () => {
       ['second', mapShallow],
     ]);
     const objectOfObjects = {
-      inner: {string: 'abc', number: 123, boolean: true},
+      inner: {str: 'ab', nb: 12, bool: true, [Symbol('sb')]: 'sb'},
     };
     const typedArray = Int8Array.from([100, -100, 0]);
     const arrayBuffer = typedArray.buffer;
@@ -723,12 +723,12 @@ describe('InspectedElementContext', () => {
     );
     expect(map_of_maps[meta.preview_short]).toBe('Map(2)');
 
-    expect(object_of_objects.inner[meta.size]).toBe(3);
+    expect(object_of_objects.inner[meta.size]).toBe(4);
     expect(object_of_objects.inner[meta.inspectable]).toBe(true);
     expect(object_of_objects.inner[meta.name]).toBe('');
     expect(object_of_objects.inner[meta.type]).toBe('object');
     expect(object_of_objects.inner[meta.preview_long]).toBe(
-      '{boolean: true, number: 123, string: "abc"}',
+      '{Symbol(sb): "sb", bool: true, nb: 12, str: "ab"}',
     );
     expect(object_of_objects.inner[meta.preview_short]).toBe('{…}');
 
