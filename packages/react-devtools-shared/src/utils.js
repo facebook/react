@@ -65,6 +65,17 @@ export function alphaSortKeys(
   }
 }
 
+export function getAllEnumerableKeys(
+  obj: Object,
+): Array<string | number | Symbol> {
+  const keys = [];
+  for (const key in obj) {
+    keys.push(key);
+  }
+
+  return keys.concat(Object.getOwnPropertySymbols(obj));
+}
+
 export function getDisplayName(
   type: Function,
   fallbackName: string = 'Anonymous',
@@ -660,7 +671,7 @@ export function formatDataForPreview(
       return data.toString();
     case 'object':
       if (showFormattedValue) {
-        const keys = Reflect.ownKeys(data).sort(alphaSortKeys);
+        const keys = getAllEnumerableKeys(data).sort(alphaSortKeys);
 
         let formatted = '';
         for (let i = 0; i < keys.length; i++) {

@@ -533,7 +533,7 @@ describe('InspectedElementContext', () => {
       inner: {string: 'abc', number: 123, boolean: true},
     };
     const objectWithSymbol = {
-      [Symbol('name')]: 'Hello World!',
+      [Symbol('name')]: 'hello',
     };
     const typedArray = Int8Array.from([100, -100, 0]);
     const arrayBuffer = typedArray.buffer;
@@ -737,7 +737,7 @@ describe('InspectedElementContext', () => {
     );
     expect(object_of_objects.inner[meta.preview_short]).toBe('{…}');
 
-    expect(object_with_symbol['Symbol(name)']).toBe('Hello World!');
+    expect(object_with_symbol['Symbol(name)']).toBe('hello');
 
     expect(proxy[meta.inspectable]).toBe(false);
     expect(proxy[meta.name]).toBe('function');

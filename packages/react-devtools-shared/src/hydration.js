@@ -10,6 +10,7 @@
 import {
   getDataType,
   getDisplayNameForReactElement,
+  getAllEnumerableKeys,
   getInObject,
   formatDataForPreview,
   setInObject,
@@ -88,7 +89,7 @@ function createDehydrated(
   if (type === 'array' || type === 'typed_array') {
     dehydrated.size = data.length;
   } else if (type === 'object') {
-    dehydrated.size = Reflect.ownKeys(data).length;
+    dehydrated.size = Object.keys(data).length;
   }
 
   if (type === 'iterator' || type === 'typed_array') {
@@ -291,7 +292,7 @@ export function dehydrate(
         return createDehydrated(type, true, data, cleaned, path);
       } else {
         const object = {};
-        Reflect.ownKeys(data).forEach(key => {
+        getAllEnumerableKeys(data).forEach(key => {
           const name = key.toString();
           object[name] = dehydrate(
             data[key],
