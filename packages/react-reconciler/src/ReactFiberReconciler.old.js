@@ -61,7 +61,6 @@ import {
   flushDiscreteUpdates,
   flushPassiveEffects,
   warnIfNotScopedWithMatchingAct,
-  warnIfUnmockedScheduler,
   IsThisRendererActing,
   act,
 } from './ReactFiberWorkLoop.old';
@@ -261,7 +260,6 @@ export function updateContainer(
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
     if ('undefined' !== typeof jest) {
-      warnIfUnmockedScheduler(current);
       warnIfNotScopedWithMatchingAct(current);
     }
   }

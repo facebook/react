@@ -68,8 +68,6 @@ export const enableFundamentalAPI = false;
 
 export const enableScopeAPI = true;
 
-export const warnAboutUnmockedScheduler = true;
-
 export const enableSuspenseCallback = true;
 
 export const enableComponentStackLocations = true;

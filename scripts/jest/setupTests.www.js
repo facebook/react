@@ -14,7 +14,6 @@ jest.mock('shared/ReactFeatureFlags', () => {
   // www configuration. Update those tests so that they work against the www
   // configuration, too. Then remove these overrides.
   wwwFlags.disableLegacyContext = defaultFlags.disableLegacyContext;
-  wwwFlags.warnAboutUnmockedScheduler = defaultFlags.warnAboutUnmockedScheduler;
   wwwFlags.disableJavaScriptURLs = defaultFlags.disableJavaScriptURLs;
 
   return wwwFlags;

@@ -14,6 +14,7 @@ let SchedulerTracing;
 let Scheduler;
 let act;
 let container;
+let log;
 
 jest.useRealTimers();
 
@@ -25,6 +26,12 @@ function sleep(period) {
   });
 }
 
+function flushLog() {
+  const prevLog = log;
+  log = [];
+  return prevLog;
+}
+
 describe('ReactTestUtils.act()', () => {
   // first we run all the tests with concurrent mode
   if (__EXPERIMENTAL__) {
@@ -33,18 +40,15 @@ describe('ReactTestUtils.act()', () => {
       concurrentRoot = ReactDOM.unstable_createRoot(dom);
       concurrentRoot.render(el);
     };
-
     const unmountConcurrent = _dom => {
       if (concurrentRoot !== null) {
         concurrentRoot.unmount();
         concurrentRoot = null;
       }
     };
-
     const rerenderConcurrent = el => {
       concurrentRoot.render(el);
     };
-
     runActTests(
       'concurrent mode',
       renderConcurrent,
@@ -79,18 +83,15 @@ describe('ReactTestUtils.act()', () => {
       blockingRoot = ReactDOM.unstable_createBlockingRoot(dom);
       blockingRoot.render(el);
     };
-
     const unmountBatched = dom => {
       if (blockingRoot !== null) {
         blockingRoot.unmount();
         blockingRoot = null;
       }
     };
-
     const rerenderBatched = el => {
       blockingRoot.render(el);
     };
-
     runActTests(
       'blocking mode',
       renderBatched,
@@ -125,6 +126,8 @@ describe('ReactTestUtils.act()', () => {
     });
 
     // @gate experimental
+    // @gate FIXME
+    // @gate __DEV__
     it('warns in blocking mode', () => {
       expect(() => {
         const root = ReactDOM.unstable_createBlockingRoot(
@@ -138,6 +141,8 @@ describe('ReactTestUtils.act()', () => {
     });
 
     // @gate experimental
+    // @gate FIXME
+    // @gate __DEV__
     it('warns in concurrent mode', () => {
       expect(() => {
         const root = ReactDOM.unstable_createRoot(
@@ -156,6 +161,7 @@ function runActTests(label, render, unmount, rerender) {
   describe(label, () => {
     beforeEach(() => {
       jest.resetModules();
+      jest.unmock('scheduler');
       React = require('react');
       ReactDOM = require('react-dom');
       ReactTestUtils = require('react-dom/test-utils');
@@ -164,6 +170,8 @@ function runActTests(label, render, unmount, rerender) {
       act = ReactTestUtils.act;
       container = document.createElement('div');
       document.body.appendChild(container);
+
+      log = [];
     });
 
     afterEach(() => {
@@ -172,10 +180,11 @@ function runActTests(label, render, unmount, rerender) {
     });
 
     describe('sync', () => {
+      // @gate __DEV__
       it('can use act to flush effects', () => {
         function App() {
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue(100);
+            log.push(100);
           });
           return null;
         }
@@ -184,14 +193,15 @@ function runActTests(label, render, unmount, rerender) {
           render(<App />, container);
         });
 
-        expect(Scheduler).toHaveYielded([100]);
+        expect(flushLog()).toEqual([100]);
       });
 
+      // @gate __DEV__
       it('flushes effects on every call', () => {
         function App() {
           const [ctr, setCtr] = React.useState(0);
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue(ctr);
+            log.push(ctr);
           });
           return (
             <button id="button" onClick={() => setCtr(x => x + 1)}>
@@ -203,7 +213,7 @@ function runActTests(label, render, unmount, rerender) {
         act(() => {
           render(<App />, container);
         });
-        expect(Scheduler).toHaveYielded([0]);
+        expect(flushLog()).toEqual([0]);
         const button = container.querySelector('#button');
         function click() {
           button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
@@ -215,14 +225,15 @@ function runActTests(label, render, unmount, rerender) {
           click();
         });
         // it consolidates the 3 updates, then fires the effect
-        expect(Scheduler).toHaveYielded([3]);
+        expect(flushLog()).toEqual([3]);
         act(click);
-        expect(Scheduler).toHaveYielded([4]);
+        expect(flushLog()).toEqual([4]);
         act(click);
-        expect(Scheduler).toHaveYielded([5]);
+        expect(flushLog()).toEqual([5]);
         expect(button.innerHTML).toBe('5');
       });
 
+      // @gate __DEV__
       it("should keep flushing effects until they're done", () => {
         function App() {
           const [ctr, setCtr] = React.useState(0);
@@ -241,10 +252,11 @@ function runActTests(label, render, unmount, rerender) {
         expect(container.innerHTML).toBe('5');
       });
 
+      // @gate __DEV__
       it('should flush effects only on exiting the outermost act', () => {
         function App() {
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue(0);
+            log.push(0);
           });
           return null;
         }
@@ -255,12 +267,13 @@ function runActTests(label, render, unmount, rerender) {
           });
           // the effect wouldn't have yielded yet because
           // we're still inside an act() scope
-          expect(Scheduler).toHaveYielded([]);
+          expect(flushLog()).toEqual([]);
         });
         // but after exiting the last one, effects get flushed
-        expect(Scheduler).toHaveYielded([0]);
+        expect(flushLog()).toEqual([0]);
       });
 
+      // @gate __DEV__
       it('warns if a setState is called outside of act(...)', () => {
         let setValue = null;
         function App() {
@@ -287,6 +300,7 @@ function runActTests(label, render, unmount, rerender) {
           jest.useRealTimers();
         });
 
+        // @gate __DEV__
         it('lets a ticker update', () => {
           function App() {
             const [toggle, setToggle] = React.useState(0);
@@ -309,6 +323,7 @@ function runActTests(label, render, unmount, rerender) {
           expect(container.innerHTML).toBe('1');
         });
 
+        // @gate __DEV__
         it('can use the async version to catch microtasks', async () => {
           function App() {
             const [toggle, setToggle] = React.useState(0);
@@ -331,6 +346,7 @@ function runActTests(label, render, unmount, rerender) {
           expect(container.innerHTML).toBe('1');
         });
 
+        // @gate __DEV__
         it('can handle cascading promises with fake timers', async () => {
           // this component triggers an effect, that waits a tick,
           // then sets state. repeats this 5 times.
@@ -354,6 +370,7 @@ function runActTests(label, render, unmount, rerender) {
           expect(container.innerHTML).toBe('5');
         });
 
+        // @gate __DEV__
         it('flushes immediate re-renders with act', () => {
           function App() {
             const [ctr, setCtr] = React.useState(0);
@@ -383,6 +400,7 @@ function runActTests(label, render, unmount, rerender) {
         });
       });
 
+      // @gate __DEV__
       it('warns if you return a value inside act', () => {
         expect(() => act(() => null)).toErrorDev(
           [
@@ -398,6 +416,7 @@ function runActTests(label, render, unmount, rerender) {
         );
       });
 
+      // @gate __DEV__
       it('warns if you try to await a sync .act call', () => {
         expect(() => act(() => {}).then(() => {})).toErrorDev(
           [
@@ -409,6 +428,7 @@ function runActTests(label, render, unmount, rerender) {
     });
 
     describe('asynchronous tests', () => {
+      // @gate __DEV__
       it('works with timeouts', async () => {
         function App() {
           const [ctr, setCtr] = React.useState(0);
@@ -426,13 +446,14 @@ function runActTests(label, render, unmount, rerender) {
 
         await act(async () => {
           render(<App />, container);
-          // flush a little to start the timer
-          expect(Scheduler).toFlushAndYield([]);
+        });
+        await act(async () => {
           await sleep(100);
         });
         expect(container.innerHTML).toBe('1');
       });
 
+      // @gate __DEV__
       it('flushes microtasks before exiting', async () => {
         function App() {
           const [ctr, setCtr] = React.useState(0);
@@ -455,19 +476,19 @@ function runActTests(label, render, unmount, rerender) {
         expect(container.innerHTML).toEqual('1');
       });
 
+      // @gate __DEV__
       it('warns if you do not await an act call', async () => {
         spyOnDevAndProd(console, 'error');
         act(async () => {});
         // it's annoying that we have to wait a tick before this warning comes in
         await sleep(0);
-        if (__DEV__) {
-          expect(console.error.calls.count()).toEqual(1);
-          expect(console.error.calls.argsFor(0)[0]).toMatch(
-            'You called act(async () => ...) without await.',
-          );
-        }
+        expect(console.error.calls.count()).toEqual(1);
+        expect(console.error.calls.argsFor(0)[0]).toMatch(
+          'You called act(async () => ...) without await.',
+        );
       });
 
+      // @gate __DEV__
       it('warns if you try to interleave multiple act calls', async () => {
         spyOnDevAndProd(console, 'error');
         // let's try to cheat and spin off a 'thread' with an act call
@@ -482,11 +503,13 @@ function runActTests(label, render, unmount, rerender) {
         });
 
         await sleep(150);
-        if (__DEV__) {
-          expect(console.error).toHaveBeenCalledTimes(1);
-        }
+        expect(console.error).toHaveBeenCalledTimes(1);
+        expect(console.error.calls.argsFor(0)[0]).toMatch(
+          'You seem to have overlapping act() calls',
+        );
       });
 
+      // @gate __DEV__
       it('async commits and effects are guaranteed to be flushed', async () => {
         function App() {
           const [state, setState] = React.useState(0);
@@ -498,7 +521,7 @@ function runActTests(label, render, unmount, rerender) {
             something();
           }, []);
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue(state);
+            log.push(state);
           });
           return state;
         }
@@ -508,10 +531,11 @@ function runActTests(label, render, unmount, rerender) {
         });
         // exiting act() drains effects and microtasks
 
-        expect(Scheduler).toHaveYielded([0, 1]);
+        expect(flushLog()).toEqual([0, 1]);
         expect(container.innerHTML).toBe('1');
       });
 
+      // @gate __DEV__
       it('can handle cascading promises', async () => {
         // this component triggers an effect, that waits a tick,
         // then sets state. repeats this 5 times.
@@ -522,7 +546,7 @@ function runActTests(label, render, unmount, rerender) {
             setState(x => x + 1);
           }
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue(state);
+            log.push(state);
             ticker();
           }, [Math.min(state, 4)]);
           return state;
@@ -532,13 +556,16 @@ function runActTests(label, render, unmount, rerender) {
           render(<App />, container);
         });
         // all 5 ticks present and accounted for
-        expect(Scheduler).toHaveYielded([0, 1, 2, 3, 4]);
+        expect(flushLog()).toEqual([0, 1, 2, 3, 4]);
         expect(container.innerHTML).toBe('5');
       });
     });
 
     describe('interaction tracing', () => {
+      // TODO: Remove this __DEV__ check. Will do in a later commit, since it
+      // affects whitespace.
       if (__DEV__) {
+        // @gate __DEV__
         it('should correctly trace interactions for sync roots', () => {
           let expectedInteraction;
 
@@ -619,6 +646,7 @@ function runActTests(label, render, unmount, rerender) {
     });
 
     describe('error propagation', () => {
+      // @gate __DEV__
       it('propagates errors - sync', () => {
         let err;
         try {
@@ -633,6 +661,7 @@ function runActTests(label, render, unmount, rerender) {
         }
       });
 
+      // @gate __DEV__
       it('should propagate errors from effects - sync', () => {
         function App() {
           React.useEffect(() => {
@@ -654,6 +683,7 @@ function runActTests(label, render, unmount, rerender) {
         }
       });
 
+      // @gate __DEV__
       it('propagates errors - async', async () => {
         let err;
         try {
@@ -669,10 +699,11 @@ function runActTests(label, render, unmount, rerender) {
         }
       });
 
+      // @gate __DEV__
       it('should cleanup after errors - sync', () => {
         function App() {
           React.useEffect(() => {
-            Scheduler.unstable_yieldValue('oh yes');
+            log.push('oh yes');
           });
           return null;
         }
@@ -690,15 +721,16 @@ function runActTests(label, render, unmount, rerender) {
           act(() => {
             render(<App />, container);
           });
-          expect(Scheduler).toHaveYielded(['oh yes']);
+          expect(flushLog()).toEqual(['oh yes']);
         }
       });
 
+      // @gate __DEV__
       it('should cleanup after errors - async', async () => {
         function App() {
           async function somethingAsync() {
             await null;
-            Scheduler.unstable_yieldValue('oh yes');
+            log.push('oh yes');
           }
           React.useEffect(() => {
             somethingAsync();
@@ -720,14 +752,15 @@ function runActTests(label, render, unmount, rerender) {
           await act(async () => {
             render(<App />, container);
           });
-          expect(Scheduler).toHaveYielded(['oh yes']);
+          expect(flushLog()).toEqual(['oh yes']);
         }
       });
     });
 
     describe('suspense', () => {
-      if (__DEV__ && __EXPERIMENTAL__) {
+      if (__EXPERIMENTAL__) {
         // todo - remove __DEV__ check once we start using testing builds
+        // @gate __DEV__
         it('triggers fallbacks if available', async () => {
           let resolved = false;
           let resolve;
@@ -803,19 +836,16 @@ function runActTests(label, render, unmount, rerender) {
       }
     });
     describe('warn in prod mode', () => {
+      // @gate !__DEV__
       it('warns if you try to use act() in prod mode', () => {
         const spy = spyOnDevAndProd(console, 'error');
 
         act(() => {});
 
-        if (!__DEV__) {
-          expect(console.error).toHaveBeenCalledTimes(1);
-          expect(console.error.calls.argsFor(0)[0]).toContain(
-            'act(...) is not supported in production builds of React',
-          );
-        } else {
-          expect(console.error).toHaveBeenCalledTimes(0);
-        }
+        expect(console.error).toHaveBeenCalledTimes(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'act(...) is not supported in production builds of React',
+        );
 
         spy.calls.reset();
         // does not warn twice

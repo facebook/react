@@ -23,7 +23,6 @@ import {
   enableProfilerTimer,
   enableProfilerCommitHooks,
   enableSchedulerTracing,
-  warnAboutUnmockedScheduler,
   deferRenderPhaseUpdateToNextBatch,
   decoupleUpdatePriorityFromScheduler,
   enableDebugTracing,
@@ -71,9 +70,6 @@ import {
   markRenderYielded,
   markRenderStopped,
 } from './SchedulingProfiler';
-
-// The scheduler is imported here *only* to detect whether it's been mocked
-import * as Scheduler from 'scheduler';
 
 import {__interactionsRef, __subscriberRef} from 'scheduler/tracing';
 
@@ -711,7 +707,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   }
 
   // Schedule a new callback.
-  let newCallbackNode;
+  let newCallbackNode = null;
   if (newCallbackPriority === SyncLanePriority) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
@@ -719,18 +715,30 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       performSyncWorkOnRoot.bind(null, root),
     );
   } else if (newCallbackPriority === SyncBatchedLanePriority) {
-    newCallbackNode = scheduleCallback(
-      ImmediateSchedulerPriority,
-      performSyncWorkOnRoot.bind(null, root),
-    );
+    const callback = performSyncWorkOnRoot.bind(null, root);
+    if (__DEV__ && isInsideThisAct) {
+      if (actCallbackQueue === null) {
+        actCallbackQueue = [callback];
+      } else {
+        actCallbackQueue.push(callback);
+      }
+    } else {
+      newCallbackNode = scheduleCallback(ImmediateSchedulerPriority, callback);
+    }
   } else {
     const schedulerPriorityLevel = lanePriorityToSchedulerPriority(
       newCallbackPriority,
     );
-    newCallbackNode = scheduleCallback(
-      schedulerPriorityLevel,
-      performConcurrentWorkOnRoot.bind(null, root),
-    );
+    const callback = performConcurrentWorkOnRoot.bind(null, root);
+    if (__DEV__ && isInsideThisAct) {
+      if (actCallbackQueue === null) {
+        actCallbackQueue = [callback];
+      } else {
+        actCallbackQueue.push(callback);
+      }
+    } else {
+      newCallbackNode = scheduleCallback(schedulerPriorityLevel, callback);
+    }
   }
 
   root.callbackPriority = newCallbackPriority;
@@ -876,6 +884,7 @@ function finishConcurrentRender(root, exitStatus, lanes) {
       if (
         includesOnlyRetries(lanes) &&
         // do not delay if we're inside an act() scope
+        // TODO: Move this to directly around the scheduleTimeout call
         !shouldForceFlushFallbacksInDEV()
       ) {
         // This render only included retries, no updates. Throttle committing
@@ -924,6 +933,7 @@ function finishConcurrentRender(root, exitStatus, lanes) {
         break;
       }
 
+      // TODO: Move this to directly around the scheduleTimeout call
       if (!shouldForceFlushFallbacksInDEV()) {
         // This is not a transition, but we did trigger an avoided state.
         // Schedule a placeholder to display after a short delay, using the Just
@@ -3369,46 +3379,6 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
 
 export const warnIfNotCurrentlyActingUpdatesInDev = warnIfNotCurrentlyActingUpdatesInDEV;
 
-// In tests, we want to enforce a mocked scheduler.
-let didWarnAboutUnmockedScheduler = false;
-// TODO Before we release concurrent mode, revisit this and decide whether a mocked
-// scheduler is the actual recommendation. The alternative could be a testing build,
-// a new lib, or whatever; we dunno just yet. This message is for early adopters
-// to get their tests right.
-
-export function warnIfUnmockedScheduler(fiber: Fiber) {
-  if (__DEV__) {
-    if (
-      didWarnAboutUnmockedScheduler === false &&
-      Scheduler.unstable_flushAllWithoutAsserting === undefined
-    ) {
-      if (fiber.mode & BlockingMode || fiber.mode & ConcurrentMode) {
-        didWarnAboutUnmockedScheduler = true;
-        console.error(
-          'In Concurrent or Sync modes, the "scheduler" module needs to be mocked ' +
-            'to guarantee consistent behaviour across tests and browsers. ' +
-            'For example, with jest: \n' +
-            // Break up requires to avoid accidentally parsing them as dependencies.
-            "jest.mock('scheduler', () => require" +
-            "('scheduler/unstable_mock'));\n\n" +
-            'For more info, visit https://reactjs.org/link/mock-scheduler',
-        );
-      } else if (warnAboutUnmockedScheduler === true) {
-        didWarnAboutUnmockedScheduler = true;
-        console.error(
-          'Starting from React v18, the "scheduler" module will need to be mocked ' +
-            'to guarantee consistent behaviour across tests and browsers. ' +
-            'For example, with jest: \n' +
-            // Break up requires to avoid accidentally parsing them as dependencies.
-            "jest.mock('scheduler', () => require" +
-            "('scheduler/unstable_mock'));\n\n" +
-            'For more info, visit https://reactjs.org/link/mock-scheduler',
-        );
-      }
-    }
-  }
-}
-
 function computeThreadID(root: FiberRoot, lane: Lane | Lanes) {
   // Interaction threads are unique per root and expiration time.
   // NOTE: Intentionally unsound cast. All that matters is that it's a number
@@ -3576,7 +3546,7 @@ function finishPendingInteractions(root, committedLanes) {
 // access to the same internals that we do here. Some trade offs in the
 // implementation no longer make sense.
 
-let isFlushingAct = false;
+let actCallbackQueue = null;
 let isInsideThisAct = false;
 
 function shouldForceFlushFallbacksInDEV() {
@@ -3584,50 +3554,52 @@ function shouldForceFlushFallbacksInDEV() {
   return __DEV__ && actingUpdatesScopeDepth > 0;
 }
 
-const flushMockScheduler = Scheduler.unstable_flushAllWithoutAsserting;
-const isSchedulerMocked = typeof flushMockScheduler === 'function';
-
-// Returns whether additional work was scheduled. Caller should keep flushing
-// until there's no work left.
-function flushActWork(): boolean {
-  if (flushMockScheduler !== undefined) {
-    const prevIsFlushing = isFlushingAct;
-    isFlushingAct = true;
+function flushActWorkAfterMicrotask(onDone: (err: ?Error) => void) {
+  enqueueTask(() => {
     try {
-      return flushMockScheduler();
-    } finally {
-      isFlushingAct = prevIsFlushing;
-    }
-  } else {
-    // No mock scheduler available. However, the only type of pending work is
-    // passive effects, which we control. So we can flush that.
-    const prevIsFlushing = isFlushingAct;
-    isFlushingAct = true;
-    try {
-      let didFlushWork = false;
-      while (flushPassiveEffects()) {
-        didFlushWork = true;
-      }
-      return didFlushWork;
-    } finally {
-      isFlushingAct = prevIsFlushing;
-    }
-  }
-}
-
-function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
-  try {
-    flushActWork();
-    enqueueTask(() => {
       if (flushActWork()) {
-        flushWorkAndMicroTasks(onDone);
+        flushActWorkAfterMicrotask(onDone);
       } else {
         onDone();
       }
-    });
-  } catch (err) {
-    onDone(err);
+    } catch (error) {
+      onDone(error);
+    }
+  });
+}
+
+// This is used when the `act` scope is not an async function.
+// TODO: Consider always requiring an async function.
+function flushActWork() {
+  if (flushActWorkImpl()) {
+    while (flushActWorkImpl()) {}
+    return true;
+  } else {
+    return false;
   }
+}
+function flushActWorkImpl() {
+  if (flushSyncCallbackQueue()) {
+    return true;
+  }
+
+  try {
+    while (actCallbackQueue !== null) {
+      while (actCallbackQueue.length > 0) {
+        let callback = actCallbackQueue[0];
+        do {
+          callback = callback();
+        } while (callback !== null);
+        actCallbackQueue.shift();
+      }
+      actCallbackQueue = null;
+      return true;
+    }
+  } finally {
+    actCallbackQueue = null;
+  }
+
+  return flushPassiveEffects();
 }
 
 // we track the 'depth' of the act() calls with this counter,
@@ -3640,6 +3612,7 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
   if (!__DEV__) {
     if (didWarnAboutUsingActInProd === false) {
       didWarnAboutUsingActInProd = true;
+      // TODO: Change this to an invariant before next major release
       // eslint-disable-next-line react-internal/no-production-logging
       console.error(
         'act(...) is not supported in production builds of React, and might not behave as expected.',
@@ -3717,8 +3690,7 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
           () => {
             if (
               actingUpdatesScopeDepth > 1 ||
-              (isSchedulerMocked === true &&
-                previousIsSomeRendererActing === true)
+              previousIsSomeRendererActing === true
             ) {
               onDone();
               resolve();
@@ -3726,7 +3698,8 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
             }
             // we're about to exit the act() scope,
             // now's the time to flush tasks/effects
-            flushWorkAndMicroTasks((err: ?Error) => {
+            flushActWork();
+            flushActWorkAfterMicrotask((err: ?Error) => {
               onDone();
               if (err) {
                 reject(err);
@@ -3757,7 +3730,7 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
     try {
       if (
         actingUpdatesScopeDepth === 1 &&
-        (isSchedulerMocked === false || previousIsSomeRendererActing === false)
+        previousIsSomeRendererActing === false
       ) {
         // we're about to exit the act() scope,
         // now's the time to flush effects
@@ -3773,6 +3746,7 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
     return {
       then(resolve) {
         if (__DEV__) {
+          // TODO: This warning needs to either not exist, or be rewritten.
           console.error(
             'Do not await the result of calling act(...) with sync logic, it is not a Promise.',
           );
