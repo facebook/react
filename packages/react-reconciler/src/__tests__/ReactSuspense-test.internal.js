@@ -21,7 +21,7 @@ describe('ReactSuspense', () => {
     ReactFeatureFlags.enableSchedulerTracing = true;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    act = ReactTestRenderer.act;
+    act = ReactTestRenderer.unstable_concurrentAct;
     Scheduler = require('scheduler');
     SchedulerTracing = require('scheduler/tracing');
     ReactCache = require('react-cache');
@@ -440,7 +440,7 @@ describe('ReactSuspense', () => {
         unstable_isConcurrent: true,
       });
 
-      await ReactTestRenderer.act(async () => {
+      await act(async () => {
         root.update(<App />);
         expect(Scheduler).toFlushAndYield([
           'shouldHideInParent: false',

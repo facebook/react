@@ -16,6 +16,7 @@ let ReactFeatureFlags;
 let Scheduler;
 let SchedulerTracing;
 let TestUtils;
+let act;
 let onInteractionScheduledWorkCompleted;
 let onInteractionTraced;
 let onWorkCanceled;
@@ -41,6 +42,8 @@ function loadModules() {
   Scheduler = require('scheduler');
   SchedulerTracing = require('scheduler/tracing');
   TestUtils = require('react-dom/test-utils');
+
+  act = TestUtils.unstable_concurrentAct;
 
   onInteractionScheduledWorkCompleted = jest.fn();
   onInteractionTraced = jest.fn();
@@ -118,7 +121,7 @@ describe('ReactDOMTracing', () => {
         const root = ReactDOM.createRoot(container);
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
-          TestUtils.act(() => {
+          act(() => {
             root.render(
               <React.Profiler id="test" onRender={onRender}>
                 <App />
@@ -190,7 +193,7 @@ describe('ReactDOMTracing', () => {
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
 
-          TestUtils.act(() => {
+          act(() => {
             root.render(
               <React.Profiler id="test" onRender={onRender}>
                 <App />
@@ -269,7 +272,7 @@ describe('ReactDOMTracing', () => {
         const root = ReactDOM.createRoot(container);
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
-          TestUtils.act(() => {
+          act(() => {
             root.render(
               <React.Profiler id="test" onRender={onRender}>
                 <App />
@@ -364,7 +367,7 @@ describe('ReactDOMTracing', () => {
         const root = ReactDOM.createRoot(container);
 
         // Schedule some idle work without any interactions.
-        TestUtils.act(() => {
+        act(() => {
           root.render(
             <React.Profiler id="test" onRender={onRender}>
               <App />
@@ -468,7 +471,7 @@ describe('ReactDOMTracing', () => {
         const container = document.createElement('div');
         const root = ReactDOM.createRoot(container);
 
-        TestUtils.act(() => {
+        act(() => {
           root.render(
             <React.Profiler id="test" onRender={onRender}>
               <App />
@@ -568,7 +571,7 @@ describe('ReactDOMTracing', () => {
 
         let interaction;
 
-        TestUtils.act(() => {
+        act(() => {
           SchedulerTracing.unstable_trace('initialization', 0, () => {
             interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
             // This render is only CPU bound. Nothing suspends.

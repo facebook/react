@@ -17,6 +17,7 @@ let ReactDOM;
 let ReactDOMServer;
 let Scheduler;
 let ReactTestUtils;
+let act;
 
 function dispatchEvent(element, type) {
   const event = document.createEvent('Event');
@@ -1236,6 +1237,7 @@ describe('DOMPluginEventSystem', () => {
             Scheduler = require('scheduler');
             ReactDOMServer = require('react-dom/server');
             ReactTestUtils = require('react-dom/test-utils');
+            act = ReactTestUtils.unstable_concurrentAct;
           });
 
           // @gate experimental
@@ -2674,7 +2676,7 @@ describe('DOMPluginEventSystem', () => {
 
             const root = ReactDOM.createRoot(container2);
 
-            ReactTestUtils.act(() => {
+            act(() => {
               root.render(<Component />);
             });
             jest.runAllTimers();
@@ -2686,7 +2688,7 @@ describe('DOMPluginEventSystem', () => {
             expect(onAfterBlur).toHaveBeenCalledTimes(0);
 
             suspend = true;
-            ReactTestUtils.act(() => {
+            act(() => {
               root.render(<Component />);
             });
             jest.runAllTimers();
@@ -2746,7 +2748,7 @@ describe('DOMPluginEventSystem', () => {
             document.body.appendChild(container2);
 
             const root = ReactDOM.createRoot(container2);
-            ReactTestUtils.act(() => {
+            act(() => {
               root.render(<Component />);
             });
 
@@ -2757,7 +2759,7 @@ describe('DOMPluginEventSystem', () => {
 
             // Suspend. This hides the input node, causing it to lose focus.
             suspend = true;
-            ReactTestUtils.act(() => {
+            act(() => {
               root.render(<Component />);
             });
 

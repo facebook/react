@@ -17,6 +17,7 @@ let ReactDOMServer;
 let ReactTestUtils;
 let Scheduler;
 let Suspense;
+let act;
 
 function dispatchMouseHoverEvent(to, from) {
   if (!to) {
@@ -101,6 +102,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
+    act = ReactTestUtils.unstable_concurrentAct;
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
   });
@@ -880,7 +882,7 @@ describe('ReactDOMServerSelectiveHydration', () => {
     const spanC = container.getElementsByTagName('span')[4];
 
     const root = ReactDOM.createRoot(container, {hydrate: true});
-    ReactTestUtils.act(() => {
+    act(() => {
       root.render(<App a="A" />);
 
       // Hydrate the shell.
