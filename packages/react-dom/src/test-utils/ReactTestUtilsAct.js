@@ -126,8 +126,9 @@ export function unstable_concurrentAct(scope: () => Thenable<mixed> | void) {
 }
 
 function flushActWork(resolve, reject) {
-  // TODO: Run timers to flush suspended fallbacks
-  // jest.runOnlyPendingTimers();
+  // Flush suspended fallbacks
+  // $FlowFixMe: Flow doesn't know about global Jest object
+  jest.runOnlyPendingTimers();
   enqueueTask(() => {
     try {
       const didFlushWork = Scheduler.unstable_flushAllWithoutAsserting();

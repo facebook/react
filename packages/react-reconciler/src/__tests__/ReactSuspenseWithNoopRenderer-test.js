@@ -575,7 +575,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         <Suspense fallback="Loading...">
           <Text text="Sibling" />
           {shouldSuspend ? (
-            <AsyncText ms={10000} text={'Step ' + step} />
+            <AsyncText text={'Step ' + step} />
           ) : (
             <Text text={'Step ' + step} />
           )}
@@ -2595,7 +2595,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           }
           return (
             <Suspense fallback={<Text text="Loading..." />}>
-              <AsyncText text={page} ms={5000} />
+              <AsyncText text={page} />
             </Suspense>
           );
         }
@@ -2616,8 +2616,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
 
       // Later we load the data.
-      Scheduler.unstable_advanceTime(5000);
-      await advanceTimers(5000);
+      await resolveText('A');
       expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
       expect(Scheduler).toFlushAndYield(['A']);
       expect(ReactNoop.getChildren()).toEqual([span('A')]);
@@ -2635,8 +2634,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
 
       // Later we load the data.
-      Scheduler.unstable_advanceTime(3000);
-      await advanceTimers(3000);
+      await resolveText('B');
       expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
       expect(Scheduler).toFlushAndYield(['B']);
       expect(ReactNoop.getChildren()).toEqual([span('B')]);
@@ -2754,12 +2752,14 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
+  // TODO: This test is specifically about avoided commits that suspend for a
+  // JND. We may remove this behavior.
   it("suspended commit remains suspended even if there's another update at same expiration", async () => {
     // Regression test
     function App({text}) {
       return (
         <Suspense fallback="Loading...">
-          <AsyncText ms={2000} text={text} />
+          <AsyncText text={text} />
         </Suspense>
       );
     }
@@ -2768,34 +2768,28 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await ReactNoop.act(async () => {
       root.render(<App text="Initial" />);
     });
+    expect(Scheduler).toHaveYielded(['Suspend! [Initial]']);
 
     // Resolve initial render
     await ReactNoop.act(async () => {
-      Scheduler.unstable_advanceTime(2000);
-      await advanceTimers(2000);
+      await resolveText('Initial');
     });
-    expect(Scheduler).toHaveYielded([
-      'Suspend! [Initial]',
-      'Promise resolved [Initial]',
-      'Initial',
-    ]);
+    expect(Scheduler).toHaveYielded(['Promise resolved [Initial]', 'Initial']);
     expect(root).toMatchRenderedOutput(<span prop="Initial" />);
 
-    // Update. Since showing a fallback would hide content that's already
-    // visible, it should suspend for a bit without committing.
     await ReactNoop.act(async () => {
+      // Update. Since showing a fallback would hide content that's already
+      // visible, it should suspend for a JND without committing.
       root.render(<App text="First update" />);
-
       expect(Scheduler).toFlushAndYield(['Suspend! [First update]']);
+
       // Should not display a fallback
       expect(root).toMatchRenderedOutput(<span prop="Initial" />);
-    });
 
-    // Update again. This should also suspend for a bit.
-    await ReactNoop.act(async () => {
+      // Update again. This should also suspend for a JND.
       root.render(<App text="Second update" />);
-
       expect(Scheduler).toFlushAndYield(['Suspend! [Second update]']);
+
       // Should not display a fallback
       expect(root).toMatchRenderedOutput(<span prop="Initial" />);
     });
@@ -3989,9 +3983,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await ReactNoop.act(async () => {
       root.render(<App show={true} />);
     });
-    // TODO: `act` should have already flushed the placeholder, so this
-    // runAllTimers call should be unnecessary.
-    jest.runAllTimers();
     expect(Scheduler).toHaveYielded(['Suspend! [Async]', 'Loading...']);
     expect(root).toMatchRenderedOutput(
       <>

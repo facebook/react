@@ -42,6 +42,7 @@ module.exports = {
 
     // jest
     expect: true,
+    jest: true,
   },
   parserOptions: {
     ecmaVersion: 2015,

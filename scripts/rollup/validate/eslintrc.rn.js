@@ -31,6 +31,9 @@ module.exports = {
     ArrayBuffer: true,
 
     TaskController: true,
+
+    // jest
+    jest: true,
   },
   parserOptions: {
     ecmaVersion: 5,
