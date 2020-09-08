@@ -530,7 +530,10 @@ describe('InspectedElementContext', () => {
       ['second', mapShallow],
     ]);
     const objectOfObjects = {
-      inner: {str: 'ab', nb: 12, bool: true, [Symbol('sb')]: 'sb'},
+      inner: {string: 'abc', number: 123, boolean: true},
+    };
+    const objectWithSymbol = {
+      [Symbol('name')]: 'Hello World!',
     };
     const typedArray = Int8Array.from([100, -100, 0]);
     const arrayBuffer = typedArray.buffer;
@@ -575,6 +578,7 @@ describe('InspectedElementContext', () => {
           map={mapShallow}
           map_of_maps={mapOfMaps}
           object_of_objects={objectOfObjects}
+          object_with_symbol={objectWithSymbol}
           proxy={proxyInstance}
           react_element={<span />}
           regexp={/abc/giu}
@@ -628,6 +632,7 @@ describe('InspectedElementContext', () => {
       map,
       map_of_maps,
       object_of_objects,
+      object_with_symbol,
       proxy,
       react_element,
       regexp,
@@ -723,14 +728,16 @@ describe('InspectedElementContext', () => {
     );
     expect(map_of_maps[meta.preview_short]).toBe('Map(2)');
 
-    expect(object_of_objects.inner[meta.size]).toBe(4);
+    expect(object_of_objects.inner[meta.size]).toBe(3);
     expect(object_of_objects.inner[meta.inspectable]).toBe(true);
     expect(object_of_objects.inner[meta.name]).toBe('');
     expect(object_of_objects.inner[meta.type]).toBe('object');
     expect(object_of_objects.inner[meta.preview_long]).toBe(
-      '{Symbol(sb): "sb", bool: true, nb: 12, str: "ab"}',
+      '{boolean: true, number: 123, string: "abc"}',
     );
     expect(object_of_objects.inner[meta.preview_short]).toBe('{…}');
+    
+    expect(object_with_symbol['Symbol(name)']).toBe('Hello World!');
 
     expect(proxy[meta.inspectable]).toBe(false);
     expect(proxy[meta.name]).toBe('function');
