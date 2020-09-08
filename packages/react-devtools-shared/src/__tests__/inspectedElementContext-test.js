@@ -736,7 +736,7 @@ describe('InspectedElementContext', () => {
       '{boolean: true, number: 123, string: "abc"}',
     );
     expect(object_of_objects.inner[meta.preview_short]).toBe('{…}');
-    
+
     expect(object_with_symbol['Symbol(name)']).toBe('Hello World!');
 
     expect(proxy[meta.inspectable]).toBe(false);
