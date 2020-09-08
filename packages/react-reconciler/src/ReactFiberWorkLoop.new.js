@@ -115,8 +115,6 @@ import {
   MemoComponent,
   SimpleMemoComponent,
   Block,
-  OffscreenComponent,
-  LegacyHiddenComponent,
   ScopeComponent,
 } from './ReactWorkTags';
 import {LegacyRoot} from './ReactRootTags';
@@ -139,7 +137,6 @@ import {
   MutationMask,
   LayoutMask,
   PassiveMask,
-  StaticMask,
 } from './ReactFiberFlags';
 import {
   NoLanePriority,
@@ -151,7 +148,6 @@ import {
   NoLane,
   SyncLane,
   SyncBatchedLane,
-  OffscreenLane,
   NoTimestamp,
   findUpdateLane,
   findTransitionLane,
@@ -290,7 +286,7 @@ let workInProgressRootRenderLanes: Lanes = NoLanes;
 //
 // Most things in the work loop should deal with workInProgressRootRenderLanes.
 // Most things in begin/complete phases should deal with subtreeRenderLanes.
-let subtreeRenderLanes: Lanes = NoLanes;
+export let subtreeRenderLanes: Lanes = NoLanes;
 const subtreeRenderLanesCursor: StackCursor<Lanes> = createCursor(NoLanes);
 
 // Whether to root completed, errored, suspended, etc.
@@ -1719,8 +1715,6 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         workInProgress = next;
         return;
       }
-
-      resetChildLanes(completedWork);
     } else {
       // This fiber did not complete because something threw. Pop values off
       // the stack without entering the complete phase. If this is a boundary,
@@ -1780,150 +1774,6 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
   if (workInProgressRootExitStatus === RootIncomplete) {
     workInProgressRootExitStatus = RootCompleted;
   }
-}
-
-function resetChildLanes(completedWork: Fiber) {
-  if (
-    // TODO: Move this check out of the hot path by moving `resetChildLanes`
-    // to switch statement in `completeWork`.
-    (completedWork.tag === LegacyHiddenComponent ||
-      completedWork.tag === OffscreenComponent) &&
-    completedWork.memoizedState !== null &&
-    !includesSomeLane(subtreeRenderLanes, (OffscreenLane: Lane)) &&
-    (completedWork.mode & ConcurrentMode) !== NoLanes
-  ) {
-    // The children of this component are hidden. Don't bubble their
-    // expiration times.
-    return;
-  }
-
-  const didBailout =
-    completedWork.alternate !== null &&
-    completedWork.alternate.child === completedWork.child;
-
-  let newChildLanes = NoLanes;
-  let subtreeFlags = NoFlags;
-
-  if (!didBailout) {
-    // Bubble up the earliest expiration time.
-    if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
-      // In profiling mode, resetChildExpirationTime is also used to reset
-      // profiler durations.
-      let actualDuration = completedWork.actualDuration;
-      let treeBaseDuration = ((completedWork.selfBaseDuration: any): number);
-
-      let child = completedWork.child;
-      while (child !== null) {
-        newChildLanes = mergeLanes(
-          newChildLanes,
-          mergeLanes(child.lanes, child.childLanes),
-        );
-
-        subtreeFlags |= child.subtreeFlags;
-        subtreeFlags |= child.flags;
-
-        // When a fiber is cloned, its actualDuration is reset to 0. This value will
-        // only be updated if work is done on the fiber (i.e. it doesn't bailout).
-        // When work is done, it should bubble to the parent's actualDuration. If
-        // the fiber has not been cloned though, (meaning no work was done), then
-        // this value will reflect the amount of time spent working on a previous
-        // render. In that case it should not bubble. We determine whether it was
-        // cloned by comparing the child pointer.
-        actualDuration += child.actualDuration;
-
-        treeBaseDuration += child.treeBaseDuration;
-        child = child.sibling;
-      }
-
-      const isTimedOutSuspense =
-        completedWork.tag === SuspenseComponent &&
-        completedWork.memoizedState !== null;
-      if (isTimedOutSuspense) {
-        // Don't count time spent in a timed out Suspense subtree as part of the base duration.
-        const primaryChildFragment = completedWork.child;
-        if (primaryChildFragment !== null) {
-          treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
-        }
-      }
-
-      completedWork.actualDuration = actualDuration;
-      completedWork.treeBaseDuration = treeBaseDuration;
-    } else {
-      let child = completedWork.child;
-      while (child !== null) {
-        newChildLanes = mergeLanes(
-          newChildLanes,
-          mergeLanes(child.lanes, child.childLanes),
-        );
-
-        subtreeFlags |= child.subtreeFlags;
-        subtreeFlags |= child.flags;
-
-        child = child.sibling;
-      }
-    }
-
-    completedWork.subtreeFlags |= subtreeFlags;
-  } else {
-    // Bubble up the earliest expiration time.
-    if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
-      // In profiling mode, resetChildExpirationTime is also used to reset
-      // profiler durations.
-      let treeBaseDuration = ((completedWork.selfBaseDuration: any): number);
-
-      let child = completedWork.child;
-      while (child !== null) {
-        newChildLanes = mergeLanes(
-          newChildLanes,
-          mergeLanes(child.lanes, child.childLanes),
-        );
-
-        // "Static" flags share the lifetime of the fiber/hook they belong to,
-        // so we should bubble those up even during a bailout. All the other
-        // flags have a lifetime only of a single render + commit, so we should
-        // ignore them.
-        subtreeFlags |= child.subtreeFlags & StaticMask;
-        subtreeFlags |= child.flags & StaticMask;
-
-        treeBaseDuration += child.treeBaseDuration;
-        child = child.sibling;
-      }
-
-      const isTimedOutSuspense =
-        completedWork.tag === SuspenseComponent &&
-        completedWork.memoizedState !== null;
-      if (isTimedOutSuspense) {
-        // Don't count time spent in a timed out Suspense subtree as part of the base duration.
-        const primaryChildFragment = completedWork.child;
-        if (primaryChildFragment !== null) {
-          treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
-        }
-      }
-
-      completedWork.treeBaseDuration = treeBaseDuration;
-    } else {
-      let child = completedWork.child;
-      while (child !== null) {
-        newChildLanes = mergeLanes(
-          newChildLanes,
-          mergeLanes(child.lanes, child.childLanes),
-        );
-
-        // "Static" flags share the lifetime of the fiber/hook they belong to,
-        // so we should bubble those up even during a bailout. All the other
-        // flags have a lifetime only of a single render + commit, so we should
-        // ignore them.
-        subtreeFlags |= child.subtreeFlags & StaticMask;
-        subtreeFlags |= child.flags & StaticMask;
-
-        child = child.sibling;
-      }
-    }
-
-    completedWork.subtreeFlags |= subtreeFlags;
-  }
-
-  completedWork.childLanes = newChildLanes;
 }
 
 function commitRoot(root) {
