@@ -24,11 +24,7 @@ import {
   LegacyHiddenComponent,
 } from './ReactWorkTags';
 import {DidCapture, NoFlags, ShouldCapture} from './ReactFiberFlags';
-import {NoMode, ProfileMode} from './ReactTypeOfMode';
-import {
-  enableSuspenseServerRenderer,
-  enableProfilerTimer,
-} from 'shared/ReactFeatureFlags';
+import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext.new';
 import {popSuspenseContext} from './ReactFiberSuspenseContext.new';
@@ -40,7 +36,6 @@ import {
 } from './ReactFiberContext.new';
 import {popProvider} from './ReactFiberNewContext.new';
 import {popRenderLanes} from './ReactFiberWorkLoop.new';
-import {transferActualDuration} from './ReactProfilerTimer.new';
 
 import invariant from 'shared/invariant';
 
@@ -54,12 +49,6 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       const flags = workInProgress.flags;
       if (flags & ShouldCapture) {
         workInProgress.flags = (flags & ~ShouldCapture) | DidCapture;
-        if (
-          enableProfilerTimer &&
-          (workInProgress.mode & ProfileMode) !== NoMode
-        ) {
-          transferActualDuration(workInProgress);
-        }
         return workInProgress;
       }
       return null;
@@ -100,12 +89,6 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       if (flags & ShouldCapture) {
         workInProgress.flags = (flags & ~ShouldCapture) | DidCapture;
         // Captured a suspense effect. Re-render the boundary.
-        if (
-          enableProfilerTimer &&
-          (workInProgress.mode & ProfileMode) !== NoMode
-        ) {
-          transferActualDuration(workInProgress);
-        }
         return workInProgress;
       }
       return null;

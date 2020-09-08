@@ -71,6 +71,7 @@ import {
   DidCapture,
   Snapshot,
   MutationMask,
+  PerformedWork,
   StaticMask,
 } from './ReactFiberFlags';
 import invariant from 'shared/invariant';
@@ -155,7 +156,10 @@ import {
 } from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber.new';
 import {createScopeInstance} from './ReactFiberScope.new';
-import {transferActualDuration} from './ReactProfilerTimer.new';
+import {
+  stopProfilerTimerIfRunning,
+  stopProfilerTimerIfRunningAndRecordDelta,
+} from './ReactProfilerTimer.new';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -681,112 +685,99 @@ function cutOffTailIfNeeded(
   }
 }
 
-function bubbleProperties(completedWork: Fiber) {
-  const didBailout =
-    completedWork.alternate !== null &&
-    completedWork.alternate.child === completedWork.child;
+export function bubbleProfilerDurationsAfterError(erroredWork: Fiber): void {
+  if (enableProfilerTimer) {
+    if ((erroredWork.mode & ProfileMode) !== NoMode) {
+      const parent = erroredWork.return;
+      if (parent !== null) {
+        // TODO (effects) Document
+        parent.actualDuration += erroredWork.actualDuration;
 
+        // TODO (effects) Document
+        parent.treeBaseDuration = 0;
+      }
+    }
+  }
+}
+
+// TODO (effects) Temorary method; replace with bubblePropertiesToParent
+function bubbleProperties(completedWork: Fiber): void {
+  bubblePropertiesFromChildren(completedWork);
+  bubblePropertiesToParent(completedWork);
+}
+
+function bubblePropertiesToParent(completedWork: Fiber): void {
+  const parent = completedWork.return;
+  if (parent !== null) {
+    const didBailout = (completeWork.flags & PerformedWork) !== NoFlags;
+    if (!didBailout) {
+      if (enableProfilerTimer) {
+        if ((completedWork.mode & ProfileMode) !== NoMode) {
+          stopProfilerTimerIfRunningAndRecordDelta(completedWork, true);
+
+          // At this point child base durations have already bubbled up to treeBaseDuration.
+          // Add our own base duration before bubbling further to the parent Fiber.
+          completedWork.treeBaseDuration += completedWork.selfBaseDuration;
+
+          // Bubble base durations to the parent.
+          parent.actualDuration += completedWork.actualDuration;
+          parent.treeBaseDuration += completedWork.treeBaseDuration;
+        }
+      }
+    } else {
+      if (enableProfilerTimer) {
+        if ((completedWork.mode & ProfileMode) !== NoMode) {
+          stopProfilerTimerIfRunning(completedWork);
+
+          parent.treeBaseDuration += completedWork.treeBaseDuration;
+        }
+      }
+    }
+  }
+}
+
+// TODO (effects) Move everything in this method into bubblePropertiesToParent
+function bubblePropertiesFromChildren(completedWork: Fiber): void {
   let newChildLanes = NoLanes;
   let subtreeFlags = NoFlags;
 
+  const didBailout =
+    completedWork.alternate !== null &&
+    completedWork.alternate.child === completedWork.child;
   if (!didBailout) {
-    // Bubble up the earliest expiration time.
-    if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
-      // In profiling mode, resetChildExpirationTime is also used to reset
-      // profiler durations.
-      let actualDuration = completedWork.actualDuration;
-      let treeBaseDuration = ((completedWork.selfBaseDuration: any): number);
+    let child = completedWork.child;
+    while (child !== null) {
+      newChildLanes = mergeLanes(
+        newChildLanes,
+        mergeLanes(child.lanes, child.childLanes),
+      );
 
-      let child = completedWork.child;
-      while (child !== null) {
-        newChildLanes = mergeLanes(
-          newChildLanes,
-          mergeLanes(child.lanes, child.childLanes),
-        );
+      subtreeFlags |= child.subtreeFlags;
+      subtreeFlags |= child.flags;
 
-        subtreeFlags |= child.subtreeFlags;
-        subtreeFlags |= child.flags;
-
-        // When a fiber is cloned, its actualDuration is reset to 0. This value will
-        // only be updated if work is done on the fiber (i.e. it doesn't bailout).
-        // When work is done, it should bubble to the parent's actualDuration. If
-        // the fiber has not been cloned though, (meaning no work was done), then
-        // this value will reflect the amount of time spent working on a previous
-        // render. In that case it should not bubble. We determine whether it was
-        // cloned by comparing the child pointer.
-        actualDuration += child.actualDuration;
-
-        treeBaseDuration += child.treeBaseDuration;
-        child = child.sibling;
-      }
-
-      completedWork.actualDuration = actualDuration;
-      completedWork.treeBaseDuration = treeBaseDuration;
-    } else {
-      let child = completedWork.child;
-      while (child !== null) {
-        newChildLanes = mergeLanes(
-          newChildLanes,
-          mergeLanes(child.lanes, child.childLanes),
-        );
-
-        subtreeFlags |= child.subtreeFlags;
-        subtreeFlags |= child.flags;
-
-        child = child.sibling;
-      }
+      child = child.sibling;
     }
-
-    completedWork.subtreeFlags |= subtreeFlags;
   } else {
-    // Bubble up the earliest expiration time.
-    if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
-      // In profiling mode, resetChildExpirationTime is also used to reset
-      // profiler durations.
-      let treeBaseDuration = ((completedWork.selfBaseDuration: any): number);
+    let child = completedWork.child;
+    while (child !== null) {
+      newChildLanes = mergeLanes(
+        newChildLanes,
+        mergeLanes(child.lanes, child.childLanes),
+      );
 
-      let child = completedWork.child;
-      while (child !== null) {
-        newChildLanes = mergeLanes(
-          newChildLanes,
-          mergeLanes(child.lanes, child.childLanes),
-        );
+      // "Static" flags share the lifetime of the fiber/hook they belong to,
+      // so we should bubble those up even during a bailout. All the other
+      // flags have a lifetime only of a single render + commit, so we should
+      // ignore them.
+      subtreeFlags |= child.subtreeFlags & StaticMask;
+      subtreeFlags |= child.flags & StaticMask;
 
-        // "Static" flags share the lifetime of the fiber/hook they belong to,
-        // so we should bubble those up even during a bailout. All the other
-        // flags have a lifetime only of a single render + commit, so we should
-        // ignore them.
-        subtreeFlags |= child.subtreeFlags & StaticMask;
-        subtreeFlags |= child.flags & StaticMask;
-
-        treeBaseDuration += child.treeBaseDuration;
-        child = child.sibling;
-      }
-
-      completedWork.treeBaseDuration = treeBaseDuration;
-    } else {
-      let child = completedWork.child;
-      while (child !== null) {
-        newChildLanes = mergeLanes(
-          newChildLanes,
-          mergeLanes(child.lanes, child.childLanes),
-        );
-
-        // "Static" flags share the lifetime of the fiber/hook they belong to,
-        // so we should bubble those up even during a bailout. All the other
-        // flags have a lifetime only of a single render + commit, so we should
-        // ignore them.
-        subtreeFlags |= child.subtreeFlags & StaticMask;
-        subtreeFlags |= child.flags & StaticMask;
-
-        child = child.sibling;
-      }
+      child = child.sibling;
     }
-
-    completedWork.subtreeFlags |= subtreeFlags;
   }
 
   completedWork.childLanes = newChildLanes;
+  completedWork.subtreeFlags |= subtreeFlags;
 }
 
 function completeWork(
@@ -1036,12 +1027,6 @@ function completeWork(
         // Something suspended. Re-render with the fallback children.
         workInProgress.lanes = renderLanes;
         // Do not reset the effect list.
-        if (
-          enableProfilerTimer &&
-          (workInProgress.mode & ProfileMode) !== NoMode
-        ) {
-          transferActualDuration(workInProgress);
-        }
         return workInProgress;
       }
 

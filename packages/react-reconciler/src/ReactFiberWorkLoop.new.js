@@ -179,7 +179,10 @@ import {
 } from './ReactFiberLane';
 import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork.new';
-import {completeWork} from './ReactFiberCompleteWork.new';
+import {
+  bubbleProfilerDurationsAfterError,
+  completeWork,
+} from './ReactFiberCompleteWork.new';
 import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork.new';
 import {
   throwException,
@@ -1382,9 +1385,16 @@ function handleError(root, thrownValue): void {
 
       if (enableProfilerTimer && erroredWork.mode & ProfileMode) {
         // Record the time spent rendering before an error was thrown. This
-        // avoids inaccurate Profiler durations in the case of a
-        // suspended render.
+        // avoids inaccurate Profiler durations in the case of a suspended render.
         stopProfilerTimerIfRunningAndRecordDelta(erroredWork, true);
+
+        const isSuspense =
+          thrownValue !== null &&
+          typeof thrownValue === 'object' &&
+          typeof thrownValue.then === 'function';
+        if (!isSuspense) {
+          bubbleProfilerDurationsAfterError(erroredWork);
+        }
       }
 
       throwException(
@@ -1696,18 +1706,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
     // Check if the work completed or if something threw.
     if ((completedWork.flags & Incomplete) === NoFlags) {
       setCurrentDebugFiberInDEV(completedWork);
-      let next;
-      if (
-        !enableProfilerTimer ||
-        (completedWork.mode & ProfileMode) === NoMode
-      ) {
-        next = completeWork(current, completedWork, subtreeRenderLanes);
-      } else {
-        startProfilerTimer(completedWork);
-        next = completeWork(current, completedWork, subtreeRenderLanes);
-        // Update render duration assuming we didn't error.
-        stopProfilerTimerIfRunningAndRecordDelta(completedWork, false);
-      }
+      const next = completeWork(current, completedWork, subtreeRenderLanes);
       resetCurrentDebugFiberInDEV();
 
       if (next !== null) {
@@ -1739,15 +1738,6 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
       ) {
         // Record the render duration for the fiber that errored.
         stopProfilerTimerIfRunningAndRecordDelta(completedWork, false);
-
-        // Include the time spent working on failed children before continuing.
-        let actualDuration = completedWork.actualDuration;
-        let child = completedWork.child;
-        while (child !== null) {
-          actualDuration += child.actualDuration;
-          child = child.sibling;
-        }
-        completedWork.actualDuration = actualDuration;
       }
 
       if (returnFiber !== null) {

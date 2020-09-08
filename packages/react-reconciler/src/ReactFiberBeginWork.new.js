@@ -1714,6 +1714,15 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       renderLanes,
     )
   ) {
+    if (enableProfilerTimer) {
+      if ((workInProgress.mode & ProfileMode) !== NoMode) {
+        if (current !== null) {
+          // TODO (effects) Document
+          workInProgress.actualDuration = current.actualDuration;
+        }
+      }
+    }
+
     // Something in this boundary's subtree already suspended. Switch to
     // rendering the fallback children.
     showFallback = true;
@@ -1990,10 +1999,9 @@ function mountSuspenseFallbackChildren(
     primaryChildFragment.pendingProps = primaryChildProps;
 
     if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
-      // Reset the durations from the first pass so they aren't included in the
-      // final amounts. This seems counterintuitive, since we're intentionally
-      // not measuring part of the render phase, but this makes it match what we
-      // do in Concurrent Mode.
+      // Reset the durations from the first pass so they aren't included in the final amounts.
+      // This seems counterintuitive, since we're intentionally not measuring part of the render phase,
+      // but this makes it match what we do in Concurrent Mode.
       primaryChildFragment.actualDuration = 0;
       primaryChildFragment.actualStartTime = -1;
       primaryChildFragment.selfBaseDuration = 0;
@@ -2111,10 +2119,9 @@ function updateSuspenseFallbackChildren(
     primaryChildFragment.pendingProps = primaryChildProps;
 
     if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
-      // Reset the durations from the first pass so they aren't included in the
-      // final amounts. This seems counterintuitive, since we're intentionally
-      // not measuring part of the render phase, but this makes it match what we
-      // do in Concurrent Mode.
+      // Reset the durations from the first pass so they aren't included in the final amounts.
+      // This seems counterintuitive, since we're intentionally not measuring part of the render phase,
+      // but this makes it match what we do in Concurrent Mode.
       primaryChildFragment.actualDuration = 0;
       primaryChildFragment.actualStartTime = -1;
       primaryChildFragment.selfBaseDuration =
@@ -2970,6 +2977,13 @@ function bailoutOnAlreadyFinishedWork(
 
   // Check if the children have any pending work.
   if (!includesSomeLane(renderLanes, workInProgress.childLanes)) {
+    if (enableProfilerTimer) {
+      if (current !== null) {
+        workInProgress.treeBaseDuration = current.treeBaseDuration;
+        workInProgress.selfBaseDuration = 0;
+      }
+    }
+
     // The children don't have any work either. We can skip them.
     // TODO: Once we add back resuming, we should check if the children are
     // a work-in-progress set. If so, we need to transfer their effects.

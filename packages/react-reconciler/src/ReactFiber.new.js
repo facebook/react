@@ -293,6 +293,10 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
       // But works for yielding (the common case) and should support resuming.
       workInProgress.actualDuration = 0;
       workInProgress.actualStartTime = -1;
+
+      // Reset treeBaseDuration when cloning.
+      // As each child completes rendering, its base durations will bubble up to the parent.
+      workInProgress.treeBaseDuration = 0;
     }
   }
 
@@ -322,11 +326,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   workInProgress.sibling = current.sibling;
   workInProgress.index = current.index;
   workInProgress.ref = current.ref;
-
-  if (enableProfilerTimer) {
-    workInProgress.selfBaseDuration = current.selfBaseDuration;
-    workInProgress.treeBaseDuration = current.treeBaseDuration;
-  }
 
   if (__DEV__) {
     workInProgress._debugNeedsRemount = current._debugNeedsRemount;
@@ -381,8 +380,8 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
     workInProgress.stateNode = null;
 
     if (enableProfilerTimer) {
-      // Note: We don't reset the actualTime counts. It's useful to accumulate
-      // actual time across multiple render passes.
+      // Note: We don't reset the actualTime counts.
+      // It's useful to accumulate actual time across multiple render passes.
       workInProgress.selfBaseDuration = 0;
       workInProgress.treeBaseDuration = 0;
     }
@@ -412,10 +411,10 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
           };
 
     if (enableProfilerTimer) {
-      // Note: We don't reset the actualTime counts. It's useful to accumulate
-      // actual time across multiple render passes.
-      workInProgress.selfBaseDuration = current.selfBaseDuration;
-      workInProgress.treeBaseDuration = current.treeBaseDuration;
+      // Note: We don't reset the actualTime counts.
+      // It's useful to accumulate actual time across multiple render passes.
+      workInProgress.selfBaseDuration = 0;
+      workInProgress.treeBaseDuration = 0;
     }
   }
 
