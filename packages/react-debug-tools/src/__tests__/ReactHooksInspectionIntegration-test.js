@@ -337,44 +337,60 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  it('should inject legacy context which is not a hook', () => {
-    class LegacyContextProvider extends React.Component<any> {
+  it('should be able to access functional legacy context during hook inspection', () => {
+    let contextValue;
+
+    class FirstLegacyContextProvider extends React.Component<any> {
       static childContextTypes = {
         string: PropTypes.string,
       };
-
       getChildContext() {
         return {
-          string: 'abc',
+          string: 'valid context',
         };
       }
+      render() {
+        return this.props.children;
+      }
+    }
 
+    class SecondLegacyContextProvider extends React.Component<any> {
+      static childContextTypes = {
+        string: PropTypes.string,
+      };
+      getChildContext() {
+        return {
+          string: 'invalid context',
+        };
+      }
       render() {
         return this.props.children;
       }
     }
 
     function FunctionalLegacyContextConsumer(props, context) {
+      contextValue = context.string;
       return <div>{context.string}</div>;
     }
     FunctionalLegacyContextConsumer.contextTypes = {
       string: PropTypes.string,
     };
+
     const renderer = ReactTestRenderer.create(
-      <LegacyContextProvider>
-        <FunctionalLegacyContextConsumer />
-      </LegacyContextProvider>,
+      <SecondLegacyContextProvider>
+        <FirstLegacyContextProvider>
+          <div>
+            <FunctionalLegacyContextConsumer />
+          </div>
+        </FirstLegacyContextProvider>
+      </SecondLegacyContextProvider>,
     );
 
     const childFiber = renderer.root
       .findByType(FunctionalLegacyContextConsumer)
       ._currentFiber();
-    const hasLegacyContext = !!childFiber.elementType.contextTypes;
-    if (hasLegacyContext) {
-      expect(() =>
-        ReactDebugTools.inspectHooksOfFiber(childFiber),
-      ).not.toThrow();
-    }
+    expect(() => ReactDebugTools.inspectHooksOfFiber(childFiber)).not.toThrow();
+    expect(contextValue).toBe('valid context');
   });
 
   it('should inspect custom hooks', () => {
