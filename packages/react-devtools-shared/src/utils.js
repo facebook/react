@@ -52,7 +52,10 @@ const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 // Try to reuse the already encoded strings.
 const encodedStringCache = new LRU({max: 1000});
 
-export function alphaSortKeys(a: string|number|Symbol, b: string|number|Symbol): number {
+export function alphaSortKeys(
+  a: string | number | Symbol,
+  b: string | number | Symbol,
+): number {
   if (a.toString() > b.toString()) {
     return 1;
   } else if (b.toString() > a.toString()) {
@@ -665,7 +668,10 @@ export function formatDataForPreview(
           if (i > 0) {
             formatted += ', ';
           }
-          formatted += `${key.toString()}: ${formatDataForPreview(data[key], false)}`;
+          formatted += `${key.toString()}: ${formatDataForPreview(
+            data[key],
+            false,
+          )}`;
           if (formatted.length > MAX_PREVIEW_STRING_LENGTH) {
             // Prevent doing a lot of unnecessary iteration...
             break;

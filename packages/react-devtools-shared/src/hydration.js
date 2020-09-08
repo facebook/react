@@ -291,8 +291,8 @@ export function dehydrate(
         return createDehydrated(type, true, data, cleaned, path);
       } else {
         const object = {};
-        Reflect.ownKeys(data).forEach((key) => {
-          const name = key.toString()
+        Reflect.ownKeys(data).forEach(key => {
+          const name = key.toString();
           object[name] = dehydrate(
             data[key],
             cleaned,
@@ -301,7 +301,7 @@ export function dehydrate(
             isPathAllowed,
             isPathAllowedCheck ? 1 : level + 1,
           );
-        })
+        });
         return object;
       }
 
