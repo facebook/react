@@ -21,7 +21,7 @@ import {
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
-  LOCAL_STORAGE_SHOULD_ENABLE_DOUBLE_LOGGING,
+  LOCAL_STORAGE_SHOULD_SUPPRESS_DOUBLE_LOGGING,
 } from 'react-devtools-shared/src/constants';
 import {useLocalStorage} from '../hooks';
 import {BridgeContext} from '../context';
@@ -88,7 +88,7 @@ function SettingsContextController({
     suppressDoubleLogging,
     setsuppressDoubleLogging,
   ] = useLocalStorage<boolean>(
-    LOCAL_STORAGE_SHOULD_ENABLE_DOUBLE_LOGGING,
+    LOCAL_STORAGE_SHOULD_SUPPRESS_DOUBLE_LOGGING,
     false,
   );
 

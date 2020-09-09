@@ -30,7 +30,7 @@ export const SESSION_STORAGE_RELOAD_AND_PROFILE_KEY =
 export const LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS =
   'React::DevTools::breakOnConsoleErrors';
 
-export const LOCAL_STORAGE_SHOULD_ENABLE_DOUBLE_LOGGING =
+export const LOCAL_STORAGE_SHOULD_SUPPRESS_DOUBLE_LOGGING =
   'React::DevTools::suppressDoubleLogging';
 
 export const LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY =
