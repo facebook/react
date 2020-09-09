@@ -14,6 +14,7 @@ let useState;
 let Suspense;
 let block;
 let readString;
+let resolvePromises;
 let Scheduler;
 
 describe('ReactBlocks', () => {
@@ -28,15 +29,16 @@ describe('ReactBlocks', () => {
     useState = React.useState;
     Suspense = React.Suspense;
     const cache = new Map();
+    let unresolved = [];
     readString = function(text) {
       let entry = cache.get(text);
       if (!entry) {
         entry = {
           promise: new Promise(resolve => {
-            setTimeout(() => {
+            unresolved.push(() => {
               entry.resolved = true;
               resolve();
-            }, 100);
+            });
           }),
           resolved: false,
         };
@@ -46,6 +48,12 @@ describe('ReactBlocks', () => {
         throw entry.promise;
       }
       return text;
+    };
+
+    resolvePromises = () => {
+      const res = unresolved;
+      unresolved = [];
+      res.forEach(r => r());
     };
   });
 
@@ -144,7 +152,7 @@ describe('ReactBlocks', () => {
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
 
     await ReactNoop.act(async () => {
-      jest.advanceTimersByTime(1000);
+      resolvePromises();
     });
 
     expect(ReactNoop).toMatchRenderedOutput(<span>Name: Sebastian</span>);
@@ -291,7 +299,7 @@ describe('ReactBlocks', () => {
       ReactNoop.render(<App Page={loadParent('Sebastian')} />);
     });
     await ReactNoop.act(async () => {
-      jest.advanceTimersByTime(1000);
+      resolvePromises();
     });
     expect(ReactNoop).toMatchRenderedOutput(<span>Name: Sebastian</span>);
   });
@@ -336,7 +344,7 @@ describe('ReactBlocks', () => {
     });
     await ReactNoop.act(async () => {
       _setSuspend(false);
-      jest.advanceTimersByTime(1000);
+      resolvePromises();
     });
     expect(ReactNoop).toMatchRenderedOutput(<span>Sebastian</span>);
   });
