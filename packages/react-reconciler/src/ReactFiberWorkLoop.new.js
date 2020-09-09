@@ -137,6 +137,7 @@ import {
   MutationMask,
   LayoutMask,
   PassiveMask,
+  StaticMask,
 } from './ReactFiberFlags';
 import {
   NoLanePriority,
@@ -1753,7 +1754,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
       if (returnFiber !== null) {
         // Mark the parent fiber as incomplete
         returnFiber.flags |= Incomplete;
-        returnFiber.subtreeFlags = NoFlags;
+        returnFiber.subtreeFlags &= StaticMask;
         returnFiber.deletions = null;
       }
     }

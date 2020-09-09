@@ -283,7 +283,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     workInProgress.type = current.type;
 
     // We already have an alternate.
-    workInProgress.subtreeFlags = NoFlags;
     workInProgress.deletions = null;
 
     if (enableProfilerTimer) {
@@ -299,6 +298,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   // Reset all effects except static ones.
   // Static effects are not specific to a render.
   workInProgress.flags = current.flags & StaticMask;
+  workInProgress.subtreeFlags = current.subtreeFlags & StaticMask;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
 

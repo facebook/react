@@ -72,6 +72,7 @@ import {
   Snapshot,
   MutationMask,
   StaticMask,
+  PerformedWork,
 } from './ReactFiberFlags';
 import invariant from 'shared/invariant';
 
@@ -684,40 +685,26 @@ function cutOffTailIfNeeded(
 function bubbleProperties(completedWork: Fiber): void {
   bubbleProfilerDurationsFromChildren(completedWork);
   bubbleLanesFromChildren(completedWork);
-  bubbleFlagsFromChildren(completedWork);
+  bubbleFlagsToParent(completedWork);
 }
 
 // TODO (effects) Temorary method; merge this into bubbleProperties once refactor is done.
-function bubbleFlagsFromChildren(completedWork: Fiber): void {
-  const didBailout =
-    completedWork.alternate !== null &&
-    completedWork.alternate.child === completedWork.child;
-
-  let subtreeFlags = NoFlags;
-
-  if (!didBailout) {
-    let child = completedWork.child;
-    while (child !== null) {
-      subtreeFlags |= child.subtreeFlags;
-      subtreeFlags |= child.flags;
-
-      child = child.sibling;
-    }
-  } else {
-    let child = completedWork.child;
-    while (child !== null) {
+function bubbleFlagsToParent(completedWork: Fiber): void {
+  const parent = completedWork.return;
+  if (parent !== null) {
+    const didBailout = (completeWork.flags & PerformedWork) !== NoFlags;
+    if (!didBailout) {
+      parent.subtreeFlags |= completedWork.subtreeFlags;
+      parent.subtreeFlags |= completedWork.flags;
+    } else {
       // "Static" flags share the lifetime of the fiber/hook they belong to,
-      // so we should bubble those up even during a bailout. All the other
-      // flags have a lifetime only of a single render + commit, so we should
-      // ignore them.
-      subtreeFlags |= child.subtreeFlags & StaticMask;
-      subtreeFlags |= child.flags & StaticMask;
-
-      child = child.sibling;
+      // so we should bubble those up even during a bailout.
+      // All the other flags have a lifetime only of a single render + commit,
+      // so we should ignore them.
+      parent.subtreeFlags |= completedWork.subtreeFlags & StaticMask;
+      parent.subtreeFlags |= completedWork.flags & StaticMask;
     }
   }
-
-  completedWork.subtreeFlags |= subtreeFlags;
 }
 
 // TODO (effects) Temorary method; merge this into bubbleProperties once refactor is done.
@@ -1205,7 +1192,7 @@ function completeWork(
                 // Rerender the whole list, but this time, we'll force fallbacks
                 // to stay in place.
                 // Reset the child fibers to their original state.
-                workInProgress.subtreeFlags = NoFlags;
+                workInProgress.subtreeFlags &= StaticMask;
                 resetChildFibers(workInProgress, renderLanes);
 
                 // Set up the Suspense Context to force suspense and immediately
