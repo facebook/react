@@ -7978,6 +7978,16 @@ new ESLintTester({
 }).run('react-hooks', ReactHooksESLintRule, tests);
 
 new ESLintTester({
-  parser: require.resolve('@typescript-eslint/parser'),
+  parser: require.resolve('@typescript-eslint/parser-v2'),
+  parserOptions,
+}).run('react-hooks', ReactHooksESLintRule, testsTypescript);
+
+new ESLintTester({
+  parser: require.resolve('@typescript-eslint/parser-v3'),
+  parserOptions,
+}).run('react-hooks', ReactHooksESLintRule, testsTypescript);
+
+new ESLintTester({
+  parser: require.resolve('@typescript-eslint/parser-v4'),
   parserOptions,
 }).run('react-hooks', ReactHooksESLintRule, testsTypescript);
