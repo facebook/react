@@ -1,3 +1,7 @@
+## 4.1.1
+* Improve support for optional chaining. ([@pfongkye](https://github.com/pfongkye) in [#19680](https://github.com/facebook/react/pull/19680))
+* Fix a false positive warning for TypeScript parameters. ([@NeoRaider](https://github.com/NeoRaider) in [#19751](https://github.com/facebook/react/pull/19751))
+
 ## 4.1.0
 * **New Violations:** Warn when dependencies change on every render. ([@captbaritone](https://github.com/captbaritone) in [#19590](https://github.com/facebook/react/pull/19590))
 
