@@ -12,11 +12,13 @@
 describe('ReactDOMEventListener', () => {
   let React;
   let ReactDOM;
+  let ReactDOMServer;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
   });
 
   describe('Propagation', () => {
@@ -792,6 +794,110 @@ describe('ReactDOMEventListener', () => {
       expect(log).toEqual([
         ['capture', 'grand'],
         ['capture', 'parent'],
+      ]);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  it('should subscribe to scroll during updates', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const log = [];
+    const onScroll = jest.fn(e =>
+      log.push(['bubble', e.currentTarget.className]),
+    );
+    const onScrollCapture = jest.fn(e =>
+      log.push(['capture', e.currentTarget.className]),
+    );
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div>
+          <div>
+            <div />
+          </div>
+        </div>,
+        container,
+      );
+      ReactDOM.render(
+        <div
+          className="grand"
+          onScroll={onScroll}
+          onScrollCapture={onScrollCapture}>
+          <div
+            className="parent"
+            onScroll={onScroll}
+            onScrollCapture={onScrollCapture}>
+            <div
+              className="child"
+              onScroll={onScroll}
+              onScrollCapture={onScrollCapture}
+              ref={ref}
+            />
+          </div>
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('scroll', {
+          bubbles: false,
+        }),
+      );
+      expect(log).toEqual([
+        ['capture', 'grand'],
+        ['capture', 'parent'],
+        ['capture', 'child'],
+        ['bubble', 'child'],
+      ]);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  // Regression test.
+  it('should subscribe to scroll during hydration', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const log = [];
+    const onScroll = jest.fn(e =>
+      log.push(['bubble', e.currentTarget.className]),
+    );
+    const onScrollCapture = jest.fn(e =>
+      log.push(['capture', e.currentTarget.className]),
+    );
+    const tree = (
+      <div
+        className="grand"
+        onScroll={onScroll}
+        onScrollCapture={onScrollCapture}>
+        <div
+          className="parent"
+          onScroll={onScroll}
+          onScrollCapture={onScrollCapture}>
+          <div
+            className="child"
+            onScroll={onScroll}
+            onScrollCapture={onScrollCapture}
+            ref={ref}
+          />
+        </div>
+      </div>
+    );
+    document.body.appendChild(container);
+    try {
+      container.innerHTML = ReactDOMServer.renderToString(tree);
+      ReactDOM.hydrate(tree, container);
+      ref.current.dispatchEvent(
+        new Event('scroll', {
+          bubbles: false,
+        }),
+      );
+      expect(log).toEqual([
+        ['capture', 'grand'],
+        ['capture', 'parent'],
+        ['capture', 'child'],
+        ['bubble', 'child'],
       ]);
     } finally {
       document.body.removeChild(container);
