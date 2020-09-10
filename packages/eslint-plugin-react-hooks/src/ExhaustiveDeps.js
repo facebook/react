@@ -406,7 +406,10 @@ export default {
             });
           }
 
-          if (dependencyNode.parent.type === 'TSTypeQuery') {
+          if (
+            dependencyNode.parent.type === 'TSTypeQuery' ||
+            dependencyNode.parent.type === 'TSTypeReference'
+          ) {
             continue;
           }
 
