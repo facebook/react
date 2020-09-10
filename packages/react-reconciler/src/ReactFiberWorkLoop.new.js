@@ -2623,7 +2623,7 @@ function flushPassiveMountEffects(firstChild: Fiber): void {
       flushPassiveMountEffects(fiber.child);
     }
 
-    if ((fiber.flags & Update) !== NoFlags) {
+    if ((fiber.flags & Passive) !== NoFlags) {
       setCurrentDebugFiberInDEV(fiber);
       commitPassiveEffectOnFiber(fiber);
       resetCurrentDebugFiberInDEV();

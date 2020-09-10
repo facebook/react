@@ -1241,7 +1241,7 @@ function mountEffect(
     }
   }
   return mountEffectImpl(
-    UpdateEffect | PassiveEffect | PassiveStaticEffect,
+    PassiveEffect | PassiveStaticEffect,
     HookPassive,
     create,
     deps,
@@ -1258,12 +1258,7 @@ function updateEffect(
       warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
     }
   }
-  return updateEffectImpl(
-    UpdateEffect | PassiveEffect,
-    HookPassive,
-    create,
-    deps,
-  );
+  return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
 function mountLayoutEffect(
@@ -1615,8 +1610,7 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
     const setId = mountState(id)[1];
 
     if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
-      currentlyRenderingFiber.flags |=
-        UpdateEffect | PassiveEffect | PassiveStaticEffect;
+      currentlyRenderingFiber.flags |= PassiveEffect | PassiveStaticEffect;
       pushEffect(
         HookHasEffect | HookPassive,
         () => {
