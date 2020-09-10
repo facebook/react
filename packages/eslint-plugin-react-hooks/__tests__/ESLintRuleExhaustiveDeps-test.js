@@ -7962,22 +7962,46 @@ if (!process.env.CI) {
   testsTypescript.invalid = testsTypescript.invalid.filter(predicate);
 }
 
-const parserOptions = {
-  ecmaVersion: 6,
-  sourceType: 'module',
-};
+describe('react-hooks', () => {
+  const parserOptions = {
+    ecmaVersion: 6,
+    sourceType: 'module',
+  };
 
-new ESLintTester({
-  parser: require.resolve('babel-eslint'),
-  parserOptions,
-}).run('react-hooks', ReactHooksESLintRule, tests);
+  new ESLintTester({
+    parser: require.resolve('babel-eslint'),
+    parserOptions,
+  }).run('parser: babel-eslint', ReactHooksESLintRule, tests);
 
-new ESLintTester({
-  parser: require.resolve('@babel/eslint-parser'),
-  parserOptions,
-}).run('react-hooks', ReactHooksESLintRule, tests);
+  new ESLintTester({
+    parser: require.resolve('@babel/eslint-parser'),
+    parserOptions,
+  }).run('parser: @babel/eslint-parser', ReactHooksESLintRule, tests);
 
-new ESLintTester({
-  parser: require.resolve('@typescript-eslint/parser'),
-  parserOptions,
-}).run('react-hooks', ReactHooksESLintRule, testsTypescript);
+  new ESLintTester({
+    parser: require.resolve('@typescript-eslint/parser-v2'),
+    parserOptions,
+  }).run(
+    'parser: @typescript-eslint/parser@2.x',
+    ReactHooksESLintRule,
+    testsTypescript
+  );
+
+  new ESLintTester({
+    parser: require.resolve('@typescript-eslint/parser-v3'),
+    parserOptions,
+  }).run(
+    'parser: @typescript-eslint/parser@3.x',
+    ReactHooksESLintRule,
+    testsTypescript
+  );
+
+  new ESLintTester({
+    parser: require.resolve('@typescript-eslint/parser-v4'),
+    parserOptions,
+  }).run(
+    'parser: @typescript-eslint/parser@4.x',
+    ReactHooksESLintRule,
+    testsTypescript
+  );
+});
