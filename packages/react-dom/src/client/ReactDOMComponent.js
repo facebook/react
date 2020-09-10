@@ -1086,6 +1086,8 @@ export function diffHydratedProperties(
         }
         if (!enableEagerRootListeners) {
           ensureListeningTo(rootContainerElement, propKey, domElement);
+        } else if (propKey === 'onScroll') {
+          listenToNonDelegatedEvent('scroll', domElement);
         }
       }
     } else if (
