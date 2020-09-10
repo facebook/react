@@ -22,7 +22,7 @@ import {registerTwoPhaseEvent} from '../EventRegistry';
 import getActiveElement from '../../client/getActiveElement';
 import {
   getNodeFromInstance,
-  getEventListenerMap,
+  getEventListenerSet,
 } from '../../client/ReactDOMComponentTree';
 import {hasSelectionCapabilities} from '../../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../../shared/HTMLNodeType';
@@ -154,7 +154,7 @@ function extractEvents(
   targetContainer: EventTarget,
 ) {
   if (!enableEagerRootListeners) {
-    const eventListenerMap = getEventListenerMap(targetContainer);
+    const eventListenerSet = getEventListenerSet(targetContainer);
     // Track whether all listeners exists for this plugin. If none exist, we do
     // not extract events. See #3639.
     if (
@@ -163,8 +163,8 @@ function extractEvents(
       // event attached from the onChange plugin and we don't expose an
       // onSelectionChange event from React.
       domEventName !== 'selectionchange' &&
-      !eventListenerMap.has('onSelect') &&
-      !eventListenerMap.has('onSelectCapture')
+      !eventListenerSet.has('onSelect') &&
+      !eventListenerSet.has('onSelectCapture')
     ) {
       return;
     }

@@ -1950,106 +1950,6 @@ describe('DOMPluginEventSystem', () => {
           });
 
           // @gate experimental
-          it('should correctly work for a basic "click" listener that upgrades', () => {
-            const clickEvent = jest.fn();
-            const buttonRef = React.createRef();
-            const button2Ref = React.createRef();
-            const setClick1 = ReactDOM.unstable_createEventHandle('click', {
-              passive: false,
-            });
-            const setClick2 = ReactDOM.unstable_createEventHandle('click', {
-              passive: true,
-            });
-
-            function Test2() {
-              React.useEffect(() => {
-                return setClick1(button2Ref.current, clickEvent);
-              });
-
-              return <button ref={button2Ref}>Click me!</button>;
-            }
-
-            function Test({extra}) {
-              React.useEffect(() => {
-                return setClick2(buttonRef.current, clickEvent);
-              });
-
-              return (
-                <>
-                  <button ref={buttonRef}>Click me!</button>
-                  {extra && <Test2 />}
-                </>
-              );
-            }
-
-            ReactDOM.render(<Test />, container);
-            Scheduler.unstable_flushAll();
-
-            let button = buttonRef.current;
-            dispatchClickEvent(button);
-            expect(clickEvent).toHaveBeenCalledTimes(1);
-
-            ReactDOM.render(<Test extra={true} />, container);
-            Scheduler.unstable_flushAll();
-
-            clickEvent.mockClear();
-
-            button = button2Ref.current;
-            dispatchClickEvent(button);
-            expect(clickEvent).toHaveBeenCalledTimes(1);
-          });
-
-          // @gate experimental
-          it('should correctly work for a basic "click" listener that upgrades #2', () => {
-            const clickEvent = jest.fn();
-            const buttonRef = React.createRef();
-            const button2Ref = React.createRef();
-            const setClick1 = ReactDOM.unstable_createEventHandle('click', {
-              passive: false,
-            });
-            const setClick2 = ReactDOM.unstable_createEventHandle('click', {
-              passive: undefined,
-            });
-
-            function Test2() {
-              React.useEffect(() => {
-                return setClick1(button2Ref.current, clickEvent);
-              });
-
-              return <button ref={button2Ref}>Click me!</button>;
-            }
-
-            function Test({extra}) {
-              React.useEffect(() => {
-                return setClick2(buttonRef.current, clickEvent);
-              });
-
-              return (
-                <>
-                  <button ref={buttonRef}>Click me!</button>
-                  {extra && <Test2 />}
-                </>
-              );
-            }
-
-            ReactDOM.render(<Test />, container);
-            Scheduler.unstable_flushAll();
-
-            let button = buttonRef.current;
-            dispatchClickEvent(button);
-            expect(clickEvent).toHaveBeenCalledTimes(1);
-
-            ReactDOM.render(<Test extra={true} />, container);
-            Scheduler.unstable_flushAll();
-
-            clickEvent.mockClear();
-
-            button = button2Ref.current;
-            dispatchClickEvent(button);
-            expect(clickEvent).toHaveBeenCalledTimes(1);
-          });
-
-          // @gate experimental
           it('should correctly work for a basic "click" window listener', () => {
             const log = [];
             const clickEvent = jest.fn(event => {
@@ -2391,109 +2291,15 @@ describe('DOMPluginEventSystem', () => {
           });
 
           // @gate experimental
-          it('handles propagation of custom user events', () => {
-            const buttonRef = React.createRef();
-            const divRef = React.createRef();
-            const log = [];
-            const onCustomEvent = jest.fn(e =>
-              log.push(['bubble', e.currentTarget]),
+          it('does not support custom user events', () => {
+            // With eager listeners, supporting custom events via this API doesn't make sense
+            // because we can't know a full list of them ahead of time. Let's check we throw
+            // since otherwise we'd end up with inconsistent behavior, like no portal bubbling.
+            expect(() => {
+              ReactDOM.unstable_createEventHandle('custom-event');
+            }).toThrow(
+              'Cannot call unstable_createEventHandle with "custom-event", as it is not an event known to React.',
             );
-            const onCustomEventCapture = jest.fn(e =>
-              log.push(['capture', e.currentTarget]),
-            );
-
-            let setCustomEventHandle;
-            if (gate(flags => flags.enableEagerRootListeners)) {
-              // With eager listeners, supporting custom events via this API doesn't make sense
-              // because we can't know a full list of them ahead of time. Let's check we throw
-              // since otherwise we'd end up with inconsistent behavior, like no portal bubbling.
-              expect(() => {
-                setCustomEventHandle = ReactDOM.unstable_createEventHandle(
-                  'custom-event',
-                );
-              }).toThrow(
-                'Cannot call unstable_createEventHandle with "custom-event", as it is not an event known to React.',
-              );
-            } else {
-              // Test that we get a warning when we don't provide an explicit priority
-              expect(() => {
-                setCustomEventHandle = ReactDOM.unstable_createEventHandle(
-                  'custom-event',
-                );
-              }).toWarnDev(
-                'Warning: The event "custom-event" provided to createEventHandle() does not have a known priority type. ' +
-                  'It is recommended to provide a "priority" option to specify a priority.',
-                {withoutStack: true},
-              );
-
-              setCustomEventHandle = ReactDOM.unstable_createEventHandle(
-                'custom-event',
-                {
-                  priority: 0, // Discrete
-                },
-              );
-
-              const setCustomCaptureHandle = ReactDOM.unstable_createEventHandle(
-                'custom-event',
-                {
-                  capture: true,
-                  priority: 0, // Discrete
-                },
-              );
-
-              const Test = () => {
-                React.useEffect(() => {
-                  const clearCustom1 = setCustomEventHandle(
-                    buttonRef.current,
-                    onCustomEvent,
-                  );
-                  const clearCustom2 = setCustomCaptureHandle(
-                    buttonRef.current,
-                    onCustomEventCapture,
-                  );
-                  const clearCustom3 = setCustomEventHandle(
-                    divRef.current,
-                    onCustomEvent,
-                  );
-                  const clearCustom4 = setCustomCaptureHandle(
-                    divRef.current,
-                    onCustomEventCapture,
-                  );
-
-                  return () => {
-                    clearCustom1();
-                    clearCustom2();
-                    clearCustom3();
-                    clearCustom4();
-                  };
-                });
-
-                return (
-                  <button ref={buttonRef}>
-                    <div ref={divRef}>Click me!</div>
-                  </button>
-                );
-              };
-
-              ReactDOM.render(<Test />, container);
-              Scheduler.unstable_flushAll();
-
-              const buttonElement = buttonRef.current;
-              dispatchEvent(buttonElement, 'custom-event');
-              expect(onCustomEvent).toHaveBeenCalledTimes(1);
-              expect(onCustomEventCapture).toHaveBeenCalledTimes(1);
-              expect(log[0]).toEqual(['capture', buttonElement]);
-              expect(log[1]).toEqual(['bubble', buttonElement]);
-
-              const divElement = divRef.current;
-              dispatchEvent(divElement, 'custom-event');
-              expect(onCustomEvent).toHaveBeenCalledTimes(3);
-              expect(onCustomEventCapture).toHaveBeenCalledTimes(3);
-              expect(log[2]).toEqual(['capture', buttonElement]);
-              expect(log[3]).toEqual(['capture', divElement]);
-              expect(log[4]).toEqual(['bubble', divElement]);
-              expect(log[5]).toEqual(['bubble', buttonElement]);
-            }
           });
 
           // @gate experimental
@@ -3211,12 +3017,14 @@ describe('DOMPluginEventSystem', () => {
             });
 
             // @gate experimental
-            it('should be able to register non-passive handlers for events affected by the intervention', () => {
+            it('should be able to register handlers for events affected by the intervention', () => {
               const rootContainer = document.createElement('div');
               container.appendChild(rootContainer);
 
+              const allEvents = [];
               const defaultPreventedEvents = [];
               const handler = e => {
+                allEvents.push(e.type);
                 if (e.defaultPrevented) defaultPreventedEvents.push(e.type);
               };
 
@@ -3227,15 +3035,11 @@ describe('DOMPluginEventSystem', () => {
               const ref = React.createRef();
               const setTouchStart = ReactDOM.unstable_createEventHandle(
                 'touchstart',
-                {passive: false},
               );
               const setTouchMove = ReactDOM.unstable_createEventHandle(
                 'touchmove',
-                {passive: false},
               );
-              const setWheel = ReactDOM.unstable_createEventHandle('wheel', {
-                passive: false,
-              });
+              const setWheel = ReactDOM.unstable_createEventHandle('wheel');
 
               function Component() {
                 React.useEffect(() => {
@@ -3264,11 +3068,17 @@ describe('DOMPluginEventSystem', () => {
               dispatchEvent(ref.current, 'touchmove');
               dispatchEvent(ref.current, 'wheel');
 
-              expect(defaultPreventedEvents).toEqual([
-                'touchstart',
-                'touchmove',
-                'wheel',
-              ]);
+              expect(allEvents).toEqual(['touchstart', 'touchmove', 'wheel']);
+              // These events are passive by default, so we can't preventDefault.
+              if (gate(flags => flags.enablePassiveEventIntervention)) {
+                expect(defaultPreventedEvents).toEqual([]);
+              } else {
+                expect(defaultPreventedEvents).toEqual([
+                  'touchstart',
+                  'touchmove',
+                  'wheel',
+                ]);
+              }
             });
           });
         });

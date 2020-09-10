@@ -20,7 +20,6 @@ import type {
   SuspenseInstance,
   Props,
 } from './ReactDOMHostConfig';
-import type {DOMEventName} from '../events/DOMEventNames';
 
 import {
   HostComponent,
@@ -43,16 +42,6 @@ const internalContainerInstanceKey = '__reactContainer$' + randomKey;
 const internalEventHandlersKey = '__reactEvents$' + randomKey;
 const internalEventHandlerListenersKey = '__reactListeners$' + randomKey;
 const internalEventHandlesSetKey = '__reactHandles$' + randomKey;
-
-export type ElementListenerMap = Map<
-  DOMEventName | string,
-  ElementListenerMapEntry | null,
->;
-
-export type ElementListenerMapEntry = {
-  passive: void | boolean,
-  listener: any => void,
-};
 
 export function precacheFiberNode(
   hostInst: Fiber,
@@ -207,12 +196,12 @@ export function updateFiberProps(
   (node: any)[internalPropsKey] = props;
 }
 
-export function getEventListenerMap(node: EventTarget): ElementListenerMap {
-  let elementListenerMap = (node: any)[internalEventHandlersKey];
-  if (elementListenerMap === undefined) {
-    elementListenerMap = (node: any)[internalEventHandlersKey] = new Map();
+export function getEventListenerSet(node: EventTarget): Set<string> {
+  let elementListenerSet = (node: any)[internalEventHandlersKey];
+  if (elementListenerSet === undefined) {
+    elementListenerSet = (node: any)[internalEventHandlersKey] = new Set();
   }
-  return elementListenerMap;
+  return elementListenerSet;
 }
 
 export function getFiberFromScopeInstance(

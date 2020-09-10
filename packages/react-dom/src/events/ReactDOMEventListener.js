@@ -8,7 +8,6 @@
  */
 
 import type {AnyNativeEvent} from '../events/PluginModuleType';
-import type {EventPriority} from 'shared/ReactTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
@@ -96,12 +95,8 @@ export function createEventListenerWrapperWithPriority(
   targetContainer: EventTarget,
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
-  priority?: EventPriority,
 ): Function {
-  const eventPriority =
-    priority === undefined
-      ? getEventPriorityForPluginSystem(domEventName)
-      : priority;
+  const eventPriority = getEventPriorityForPluginSystem(domEventName);
   let listenerWrapper;
   switch (eventPriority) {
     case DiscreteEvent:
