@@ -11,7 +11,7 @@
     "express": "^4.14.0",
     "ignore-styles": "^5.0.1",
     "import-export": "^1.0.1",
-    "node-fetch": "^1.6.3",
+    "node-fetch": "^2.6.1",
     "react": "link:../../build/node_modules/react",
     "react-dom": "link:../../build/node_modules/react-dom"
   },
