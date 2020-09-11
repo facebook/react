@@ -67,9 +67,43 @@ describe('ReactJSXElementValidator', () => {
     expect(() =>
       ReactTestUtils.renderIntoDocument(<ComponentWrapper />),
     ).toErrorDev(
+      // Prefer to show the source since we have it with JSX.
       'Each child in a list should have a unique "key" prop.' +
-        '\n\nCheck the render method of `InnerComponent`. ' +
-        'It was passed a child from ComponentWrapper. ',
+        '\n\nCheck the line ** in **. ' +
+        'See https://reactjs.org/link/warning-keys for more information.',
+    );
+  });
+
+  it('warns for keys for arrays with no owner or parent info', () => {
+    function Anonymous() {
+      return <div />;
+    }
+    Object.defineProperty(Anonymous, 'name', {value: undefined});
+
+    const divs = [<div />, <div />];
+
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<Anonymous>{divs}</Anonymous>);
+    }).toErrorDev(
+      // Prefer to show the source since we have it with JSX.
+      'Warning: Each child in a list should have a unique ' +
+        '"key" prop.\n\nCheck the line ** in **. ' +
+        'See https://reactjs.org/link/warning-keys for more information.\n' +
+        '    in div (at **)',
+    );
+  });
+
+  it('warns for keys for arrays of elements with no owner info', () => {
+    const divs = [<div />, <div />];
+
+    expect(() => {
+      ReactTestUtils.renderIntoDocument(<div>{divs}</div>);
+    }).toErrorDev(
+      'Warning: Each child in a list should have a unique ' +
+        // Prefer to show the source since we have it with JSX.
+        '"key" prop.\n\nCheck the line ** in **. See ' +
+        'https://reactjs.org/link/warning-keys for more information.\n' +
+        '    in div (at **)',
     );
   });
 
@@ -94,6 +128,49 @@ describe('ReactJSXElementValidator', () => {
   it('does not warn for arrays of elements with keys', () => {
     ReactTestUtils.renderIntoDocument(
       <Component>{[<Component key="#1" />, <Component key="#2" />]}</Component>,
+    );
+  });
+
+  it('warns for keys with component stack info', () => {
+    function Child() {
+      return <div>{[<div />, <div />]}</div>;
+    }
+
+    function Parent(props) {
+      return React.cloneElement(props.child);
+    }
+
+    function GrandParent() {
+      return <Parent child={<Child />} />;
+    }
+
+    expect(() => ReactTestUtils.renderIntoDocument(<GrandParent />)).toErrorDev(
+      'Warning: Each child in a list should have a unique ' +
+        '"key" prop.\n\nCheck the line ** in **. See ' +
+        // Prefer to show the source since we have it with JSX.
+        'https://reactjs.org/link/warning-keys for more information.\n' +
+        '    in div (at **)\n' +
+        '    in Child (at **)\n' +
+        '    in Parent (at **)\n' +
+        '    in GrandParent (at **)',
+    );
+  });
+
+  it('does not warn for keys when passing children down', () => {
+    function Wrapper(props) {
+      return (
+        <div>
+          {props.children}
+          <footer />
+        </div>
+      );
+    }
+
+    ReactTestUtils.renderIntoDocument(
+      <Wrapper>
+        <span />
+        <span />
+      </Wrapper>,
     );
   });
 
@@ -218,7 +295,7 @@ describe('ReactJSXElementValidator', () => {
         'components) but got: undefined. You likely forgot to export your ' +
         "component from the file it's defined in, or you might have mixed up " +
         'default and named imports.' +
-        '\n\nCheck your code at **.',
+        '\n\nCheck the line ** in **.',
       {withoutStack: true},
     );
     expect(
@@ -227,7 +304,7 @@ describe('ReactJSXElementValidator', () => {
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: null.' +
-        '\n\nCheck your code at **.',
+        '\n\nCheck the line ** in **.',
       {withoutStack: true},
     );
     expect(
@@ -236,7 +313,7 @@ describe('ReactJSXElementValidator', () => {
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: boolean.' +
-        '\n\nCheck your code at **.',
+        '\n\nCheck the line ** in **.',
       {withoutStack: true},
     );
     // No error expected

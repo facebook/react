@@ -72,7 +72,7 @@ function getSourceInfoErrorAddendum(source) {
   if (source !== undefined) {
     const fileName = source.fileName.replace(/^.*[\\\/]/, '');
     const lineNumber = source.lineNumber;
-    return '\n\nCheck your code at ' + fileName + ':' + lineNumber + '.';
+    return '\n\nCheck the line ' + lineNumber + ' in ' + fileName + '.';
   }
   return '';
 }
@@ -91,8 +91,13 @@ function getSourceInfoErrorAddendumForProps(elementProps) {
  */
 const ownerHasKeyUseWarning = {};
 
-function getCurrentComponentErrorInfo(parentType) {
-  let info = getDeclarationErrorAddendum();
+function getCurrentComponentErrorInfo(source, parentType) {
+  let info;
+  if (source != null) {
+    info = getSourceInfoErrorAddendum(source);
+  } else {
+    info = getDeclarationErrorAddendum();
+  }
 
   if (!info) {
     const parentName =
@@ -123,25 +128,30 @@ function validateExplicitKey(element, parentType) {
   }
   element._store.validated = true;
 
-  const currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
+  const currentComponentErrorInfo = getCurrentComponentErrorInfo(
+    element._source,
+    parentType,
+  );
   if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
     return;
   }
   ownerHasKeyUseWarning[currentComponentErrorInfo] = true;
 
-  // Usually the current owner is the offender, but if it accepts children as a
-  // property, it may be the creator of the child that's responsible for
-  // assigning it a key.
   let childOwner = '';
-  if (
-    element &&
-    element._owner &&
-    element._owner !== ReactCurrentOwner.current
-  ) {
-    // Give the component that originally created this child.
-    childOwner = ` It was passed a child from ${getComponentName(
-      element._owner.type,
-    )}.`;
+  if (element._source == null) {
+    // Usually the current owner is the offender, but if it accepts children as a
+    // property, it may be the creator of the child that's responsible for
+    // assigning it a key.
+    if (
+      element &&
+      element._owner &&
+      element._owner !== ReactCurrentOwner.current
+    ) {
+      // Give the component that originally created this child.
+      childOwner = ` It was passed a child from ${getComponentName(
+        element._owner.type,
+      )}.`;
+    }
   }
 
   if (__DEV__) {

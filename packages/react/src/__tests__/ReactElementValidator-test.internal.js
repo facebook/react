@@ -76,14 +76,16 @@ describe('ReactElementValidator', () => {
 
   it('warns for keys for arrays with no owner or parent info', () => {
     function Anonymous() {
-      return <div />;
+      return React.createElement('div');
     }
     Object.defineProperty(Anonymous, 'name', {value: undefined});
 
-    const divs = [<div />, <div />];
+    const divs = [React.createElement('div'), React.createElement('div')];
 
     expect(() => {
-      ReactTestUtils.renderIntoDocument(<Anonymous>{divs}</Anonymous>);
+      ReactTestUtils.renderIntoDocument(
+        React.createElement(Anonymous, null, divs),
+      );
     }).toErrorDev(
       'Warning: Each child in a list should have a unique ' +
         '"key" prop. See https://reactjs.org/link/warning-keys for more information.\n' +
@@ -92,57 +94,15 @@ describe('ReactElementValidator', () => {
   });
 
   it('warns for keys for arrays of elements with no owner info', () => {
-    const divs = [<div />, <div />];
+    const divs = [React.createElement('div'), React.createElement('div')];
 
     expect(() => {
-      ReactTestUtils.renderIntoDocument(<div>{divs}</div>);
+      ReactTestUtils.renderIntoDocument(React.createElement('div', null, divs));
     }).toErrorDev(
       'Warning: Each child in a list should have a unique ' +
         '"key" prop.\n\nCheck the top-level render call using <div>. See ' +
         'https://reactjs.org/link/warning-keys for more information.\n' +
         '    in div (at **)',
-    );
-  });
-
-  it('warns for keys with component stack info', () => {
-    function Component() {
-      return <div>{[<div />, <div />]}</div>;
-    }
-
-    function Parent(props) {
-      return React.cloneElement(props.child);
-    }
-
-    function GrandParent() {
-      return <Parent child={<Component />} />;
-    }
-
-    expect(() => ReactTestUtils.renderIntoDocument(<GrandParent />)).toErrorDev(
-      'Warning: Each child in a list should have a unique ' +
-        '"key" prop.\n\nCheck the render method of `Component`. See ' +
-        'https://reactjs.org/link/warning-keys for more information.\n' +
-        '    in div (at **)\n' +
-        '    in Component (at **)\n' +
-        '    in Parent (at **)\n' +
-        '    in GrandParent (at **)',
-    );
-  });
-
-  it('does not warn for keys when passing children down', () => {
-    function Wrapper(props) {
-      return (
-        <div>
-          {props.children}
-          <footer />
-        </div>
-      );
-    }
-
-    ReactTestUtils.renderIntoDocument(
-      <Wrapper>
-        <span />
-        <span />
-      </Wrapper>,
     );
   });
 
@@ -528,7 +488,7 @@ describe('ReactElementValidator', () => {
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: undefined. You likely forgot to export your ' +
         "component from the file it's defined in, or you might have mixed up " +
-        'default and named imports.\n\nCheck your code at **.',
+        'default and named imports.\n\nCheck the line ** in **.',
       {withoutStack: true},
     );
   });
