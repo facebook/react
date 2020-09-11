@@ -69,11 +69,21 @@ export function getAllEnumerableKeys(
   obj: Object,
 ): Array<string | number | Symbol> {
   const keys = [];
-  for (const key in obj) {
-    keys.push(key);
+  let current = obj;
+  while (current != null) {
+    const currentKeys = [
+      ...Object.keys(current),
+      ...Object.getOwnPropertySymbols(current),
+    ];
+    const descriptors = Object.getOwnPropertyDescriptors(current);
+    currentKeys.forEach(key => {
+      if (descriptors[key].enumerable) {
+        keys.push(key);
+      }
+    });
+    current = Object.getPrototypeOf(current);
   }
-
-  return keys.concat(Object.getOwnPropertySymbols(obj));
+  return keys;
 }
 
 export function getDisplayName(

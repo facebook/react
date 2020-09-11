@@ -941,6 +941,98 @@ describe('InspectedElementContext', () => {
     done();
   });
 
+  it('should support objects with with inherited keys', async done => {
+    const Example = () => null;
+
+    const base = Object.create(Object.prototype, {
+      value1: {
+        value: 1,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      [Symbol('value1')]: {
+        value: 1,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+    });
+
+    const object = Object.create(base, {
+      value2: {
+        value: 2,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      value3: {
+        value: 3,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      3: {
+        value: 3,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      [Symbol('value2')]: {
+        value: 2,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [Symbol('value3')]: {
+        value: 3,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+    });
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(<Example object={object} />, container),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let inspectedElement = null;
+
+    function Suspender({target}) {
+      const {getInspectedElement} = React.useContext(InspectedElementContext);
+      inspectedElement = getInspectedElement(id);
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={0}>
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>,
+        ),
+      false,
+    );
+
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot(`1: Inspected element ${id}`);
+    expect(inspectedElement.props.object).toEqual({
+      '3': 3,
+      'Symbol(value1)': 1,
+      'Symbol(value3)': 3,
+      value1: 1,
+      value2: 2,
+    });
+
+    done();
+  });
+
   it('should not dehydrate nested values until explicitly requested', async done => {
     const Example = () => {
       const [state] = React.useState({

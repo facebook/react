@@ -615,6 +615,25 @@ exports[`InspectedElementContext should support objects with overridden hasOwnPr
 }
 `;
 
+exports[`InspectedElementContext should support objects with with inherited keys: 1: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "object": {
+      "3": 3,
+      "value2": 2,
+      "Symbol(value3)": 3,
+      "value1": 1,
+      "Symbol(value1)": 1
+    }
+  },
+  "state": null
+}
+`;
+
 exports[`InspectedElementContext should support simple data types: 1: Initial inspection 1`] = `
 {
   "id": 2,

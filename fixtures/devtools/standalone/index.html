@@ -208,6 +208,57 @@
         return <ChildComponent customObject={new Custom()} />;
       }
 
+      const baseInheritedKeys = Object.create(Object.prototype, {
+      value1: {
+        value: 1,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      [Symbol('value1')]: {
+        value: 1,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+    });
+
+    const inheritedKeys = Object.create(baseInheritedKeys, {
+      value2: {
+        value: 2,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      value3: {
+        value: 3,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      3: {
+        value: 3,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      [Symbol('value2')]: {
+        value: 2,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [Symbol('value3')]: {
+        value: 3,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      });
+      function InheritedKeys() {
+        return <ChildComponent inheritedKeys={inheritedKeys} />;
+      }
+
       const object = {
         string: "abc",
         longString: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKJLMNOPQRSTUVWXYZ1234567890",
@@ -294,6 +345,7 @@
             <ObjectProps />
             <UnserializableProps />
             <CustomObject />
+            <InheritedKeys />
           </Fragment>
         );
       }
