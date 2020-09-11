@@ -7947,13 +7947,31 @@ const testsTypescriptEslintParserV4 = {
     // It doesn't use any explicit types but any JS is still valid TS.
     {
       code: normalizeIndent`
-        export const Foo = ({ Component }) => {
+        function Foo({ Component }) {
           React.useEffect(() => {
             console.log(<Component />);
           }, []);
         };
       `,
-      errors: [{message: ''}],
+      errors: [
+        {
+          message:
+            "React Hook React.useEffect has a missing dependency: 'Component'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [Component]',
+              output: normalizeIndent`
+              function Foo({ Component }) {
+                React.useEffect(() => {
+                  console.log(<Component />);
+                }, [Component]);
+              };
+            `,
+            },
+          ],
+        },
+      ],
     },
   ],
 };
