@@ -31,6 +31,7 @@ function normalizeIndent(strings) {
 // }
 // ***************************************************
 
+// Tests that are valid/invalid across all parsers
 const tests = {
   valid: [
     {
@@ -7505,6 +7506,7 @@ const tests = {
   ],
 };
 
+// Tests that are only valid/invalid across parsers supporting Flow
 const testsFlow = {
   valid: [
     // Ignore Generic Type Variables for arrow functions
@@ -7540,6 +7542,7 @@ const testsFlow = {
   ],
 };
 
+// Tests that are only valid/invalid across parsers supporting TypeScript
 const testsTypescript = {
   valid: [
     {
@@ -7936,6 +7939,25 @@ const testsTypescript = {
   ],
 };
 
+// Tests that are only valid/invalid for `@typescript-eslint/parser@4.x`
+const testsTypescriptEslintParserV4 = {
+  valid: [],
+  invalid: [
+    // TODO: Should also be invalid as part of the JS test suite i.e. be invalid with babel eslint parsers.
+    // It doesn't use any explicit types but any JS is still valid TS.
+    {
+      code: normalizeIndent`
+        export const Foo = ({ Component }) => {
+          React.useEffect(() => {
+            console.log(<Component />);
+          }, []);
+        };
+      `,
+      errors: [{message: ''}],
+    },
+  ],
+};
+
 // For easier local testing
 if (!process.env.CI) {
   let only = [];
@@ -7947,6 +7969,8 @@ if (!process.env.CI) {
     ...testsFlow.invalid,
     ...testsTypescript.valid,
     ...testsTypescript.invalid,
+    ...testsTypescriptEslintParserV4.valid,
+    ...testsTypescriptEslintParserV4.invalid,
   ].forEach(t => {
     if (t.skip) {
       delete t.skip;
@@ -8028,9 +8052,14 @@ describe('react-hooks', () => {
   new ESLintTester({
     parser: require.resolve('@typescript-eslint/parser-v4'),
     parserOptions,
-  }).run(
-    'parser: @typescript-eslint/parser@4.x',
-    ReactHooksESLintRule,
-    testsTypescriptEslintParser
-  );
+  }).run('parser: @typescript-eslint/parser@4.x', ReactHooksESLintRule, {
+    valid: [
+      ...testsTypescriptEslintParserV4.valid,
+      ...testsTypescriptEslintParser.valid,
+    ],
+    invalid: [
+      ...testsTypescriptEslintParserV4.invalid,
+      ...testsTypescriptEslintParser.invalid,
+    ],
+  });
 });
