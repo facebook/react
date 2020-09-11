@@ -1780,6 +1780,7 @@ function isNodeLike(val) {
 function isSameIdentifier(a, b) {
   return (
     (a.type === 'Identifier' || a.type === 'JSXIdentifier') &&
+    a.type === b.type &&
     a.name === b.name &&
     a.range[0] === b.range[0] &&
     a.range[1] === b.range[1]
