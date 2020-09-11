@@ -483,10 +483,7 @@ describe('InspectedElementContext', () => {
       },
     });
     act(() =>
-      ReactDOM.render(
-        <Example data={object} />,
-        document.createElement('div'),
-      ),
+      ReactDOM.render(<Example data={object} />, document.createElement('div')),
     );
 
     const id = ((store.getElementIDAtIndex(0): any): number);
