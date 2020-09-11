@@ -1322,16 +1322,6 @@ const tests = {
         }
       `,
     },
-    // Ignore Generic Type Variables for arrow functions
-    {
-      code: normalizeIndent`
-        function Example({ prop }) {
-          const bar = useEffect(<T>(a: T): Hello => {
-            prop();
-          }, [prop]);
-        }
-      `,
-    },
     // Ignore arguments keyword for arrow functions.
     {
       code: normalizeIndent`
@@ -7466,24 +7456,7 @@ const tests = {
         },
       ],
     },
-    {
-      code: normalizeIndent`
-        function Foo() {
-          const foo = ({}: any);
-          useMemo(() => {
-            console.log(foo);
-          }, [foo]);
-        }
-      `,
-      errors: [
-        {
-          message:
-            "The 'foo' object makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own useMemo() Hook.",
-          suggestions: undefined,
-        },
-      ],
-    },
+
     {
       code: normalizeIndent`
         function Foo() {
@@ -7525,6 +7498,41 @@ const tests = {
           message:
             "The 'foo' object makes the dependencies of useEffect Hook (at line 9) change on every render. " +
             "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ],
+    },
+  ],
+};
+
+const testsFlow = {
+  valid: [
+    // Ignore Generic Type Variables for arrow functions
+    {
+      code: normalizeIndent`
+        function Example({ prop }) {
+          const bar = useEffect(<T>(a: T): Hello => {
+            prop();
+          }, [prop]);
+        }
+      `,
+    },
+  ],
+  invalid: [
+    {
+      code: normalizeIndent`
+      function Foo() {
+        const foo = ({}: any);
+        useMemo(() => {
+          console.log(foo);
+        }, [foo]);
+      }
+    `,
+      errors: [
+        {
+          message:
+            "The 'foo' object makes the dependencies of useMemo Hook (at line 6) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
         },
       ],
@@ -7935,6 +7943,8 @@ if (!process.env.CI) {
   [
     ...tests.valid,
     ...tests.invalid,
+    ...testsFlow.valid,
+    ...testsFlow.invalid,
     ...testsTypescript.valid,
     ...testsTypescript.invalid,
   ].forEach(t => {
@@ -7958,25 +7968,44 @@ if (!process.env.CI) {
   };
   tests.valid = tests.valid.filter(predicate);
   tests.invalid = tests.invalid.filter(predicate);
+  testsFlow.valid = testsFlow.valid.filter(predicate);
+  testsFlow.invalid = testsFlow.invalid.filter(predicate);
   testsTypescript.valid = testsTypescript.valid.filter(predicate);
   testsTypescript.invalid = testsTypescript.invalid.filter(predicate);
 }
 
 describe('react-hooks', () => {
   const parserOptions = {
+    ecmaFeatures: {
+      jsx: true,
+    },
     ecmaVersion: 6,
     sourceType: 'module',
+  };
+
+  const testsBabelEslint = {
+    valid: [...testsFlow.valid, ...tests.valid],
+    invalid: [...testsFlow.invalid, ...tests.invalid],
   };
 
   new ESLintTester({
     parser: require.resolve('babel-eslint'),
     parserOptions,
-  }).run('parser: babel-eslint', ReactHooksESLintRule, tests);
+  }).run('parser: babel-eslint', ReactHooksESLintRule, testsBabelEslint);
 
   new ESLintTester({
     parser: require.resolve('@babel/eslint-parser'),
     parserOptions,
-  }).run('parser: @babel/eslint-parser', ReactHooksESLintRule, tests);
+  }).run(
+    'parser: @babel/eslint-parser',
+    ReactHooksESLintRule,
+    testsBabelEslint
+  );
+
+  const testsTypescriptEslintParser = {
+    valid: [...testsTypescript.valid, ...tests.valid],
+    invalid: [...testsTypescript.invalid, ...tests.invalid],
+  };
 
   new ESLintTester({
     parser: require.resolve('@typescript-eslint/parser-v2'),
@@ -7984,7 +8013,7 @@ describe('react-hooks', () => {
   }).run(
     'parser: @typescript-eslint/parser@2.x',
     ReactHooksESLintRule,
-    testsTypescript
+    testsTypescriptEslintParser
   );
 
   new ESLintTester({
@@ -7993,7 +8022,7 @@ describe('react-hooks', () => {
   }).run(
     'parser: @typescript-eslint/parser@3.x',
     ReactHooksESLintRule,
-    testsTypescript
+    testsTypescriptEslintParser
   );
 
   new ESLintTester({
@@ -8002,6 +8031,6 @@ describe('react-hooks', () => {
   }).run(
     'parser: @typescript-eslint/parser@4.x',
     ReactHooksESLintRule,
-    testsTypescript
+    testsTypescriptEslintParser
   );
 });
