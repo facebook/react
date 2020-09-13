@@ -150,7 +150,7 @@ describe('ReactDOMComponent', () => {
       ).toErrorDev(
         'Warning: Invalid value for prop `foo` on <div> tag. Either remove it ' +
           'from the element, or pass a string or number value to keep ' +
-          'it in the DOM. For details, see https://fb.me/react-attribute-behavior' +
+          'it in the DOM. For details, see https://reactjs.org/link/attribute-behavior ' +
           '\n    in div (at **)',
       );
     });
@@ -162,7 +162,7 @@ describe('ReactDOMComponent', () => {
       ).toErrorDev(
         'Warning: Invalid values for props `foo`, `baz` on <div> tag. Either remove ' +
           'them from the element, or pass a string or number value to keep ' +
-          'them in the DOM. For details, see https://fb.me/react-attribute-behavior' +
+          'them in the DOM. For details, see https://reactjs.org/link/attribute-behavior ' +
           '\n    in div (at **)',
       );
     });
@@ -1058,7 +1058,7 @@ describe('ReactDOMComponent', () => {
       expect(nodeValueSetter).toHaveBeenCalledTimes(3);
     });
 
-    it('should ignore attribute whitelist for elements with the "is" attribute', () => {
+    it('should ignore attribute list for elements with the "is" attribute', () => {
       const container = document.createElement('div');
       ReactDOM.render(<button is="test" cowabunga="chevynova" />, container);
       expect(container.firstChild.hasAttribute('cowabunga')).toBe(true);
@@ -1384,7 +1384,7 @@ describe('ReactDOMComponent', () => {
         mountComponent({dangerouslySetInnerHTML: '<span>Hi Jim!</span>'});
       }).toThrowError(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-          'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.',
+          'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
       );
     });
 
@@ -1393,7 +1393,7 @@ describe('ReactDOMComponent', () => {
         mountComponent({dangerouslySetInnerHTML: {foo: 'bar'}});
       }).toThrowError(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-          'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.',
+          'Please visit https://reactjs.org/link/dangerously-set-inner-html for more information.',
       );
     });
 
@@ -2714,31 +2714,23 @@ describe('ReactDOMComponent', () => {
 
       innerRef.current.click();
 
-      // The order we receive here is not ideal since it is expected that the
-      // capture listener fire before all bubble listeners. Other React apps
-      // might depend on this.
-      //
-      // @see https://github.com/facebook/react/pull/12919#issuecomment-395224674
-      if (
-        ReactFeatureFlags.enableModernEventSystem &
-        ReactFeatureFlags.enableLegacyFBSupport
-      ) {
+      if (ReactFeatureFlags.enableLegacyFBSupport) {
         // The order will change here, as the legacy FB support adds
         // the event listener onto the document after the one above has.
         expect(eventOrder).toEqual([
           'document capture',
-          'document bubble',
-          'inner capture',
-          'inner bubble',
           'outer capture',
+          'inner capture',
+          'document bubble',
+          'inner bubble',
           'outer bubble',
         ]);
       } else {
         expect(eventOrder).toEqual([
           'document capture',
+          'outer capture',
           'inner capture',
           'inner bubble',
-          'outer capture',
           'outer bubble',
           'document bubble',
         ]);

@@ -188,7 +188,7 @@ function InspectedElementContextController({children}: Props) {
 
               resource.write(element, inspectedElement);
 
-              // Schedule update with React if the curently-selected element has been invalidated.
+              // Schedule update with React if the currently-selected element has been invalidated.
               if (id === selectedElementID) {
                 setCurrentlyInspectedElement(inspectedElement);
               }
@@ -208,6 +208,9 @@ function InspectedElementContextController({children}: Props) {
             context,
             hooks,
             props,
+            rendererPackageName,
+            rendererVersion,
+            rootType,
             state,
             key,
           } = ((data.value: any): InspectedElementBackend);
@@ -220,6 +223,9 @@ function InspectedElementContextController({children}: Props) {
             hasLegacyContext,
             id,
             key,
+            rendererPackageName,
+            rendererVersion,
+            rootType,
             source,
             type,
             owners:
@@ -257,7 +263,7 @@ function InspectedElementContextController({children}: Props) {
             } else {
               resource.write(element, inspectedElement);
 
-              // Schedule update with React if the curently-selected element has been invalidated.
+              // Schedule update with React if the currently-selected element has been invalidated.
               if (id === selectedElementID) {
                 setCurrentlyInspectedElement(inspectedElement);
               }

@@ -161,8 +161,8 @@ export default class Agent extends EventEmitter<{|
     );
     bridge.addListener('shutdown', this.shutdown);
     bridge.addListener(
-      'updateAppendComponentStack',
-      this.updateAppendComponentStack,
+      'updateConsolePatchSettings',
+      this.updateConsolePatchSettings,
     );
     bridge.addListener('updateComponentFilters', this.updateComponentFilters);
     bridge.addListener('viewAttributeSource', this.viewAttributeSource);
@@ -443,13 +443,19 @@ export default class Agent extends EventEmitter<{|
     }
   };
 
-  updateAppendComponentStack = (appendComponentStack: boolean) => {
+  updateConsolePatchSettings = ({
+    appendComponentStack,
+    breakOnConsoleErrors,
+  }: {|
+    appendComponentStack: boolean,
+    breakOnConsoleErrors: boolean,
+  |}) => {
     // If the frontend preference has change,
     // or in the case of React Native- if the backend is just finding out the preference-
     // then install or uninstall the console overrides.
     // It's safe to call these methods multiple times, so we don't need to worry about that.
-    if (appendComponentStack) {
-      patchConsole();
+    if (appendComponentStack || breakOnConsoleErrors) {
+      patchConsole({appendComponentStack, breakOnConsoleErrors});
     } else {
       unpatchConsole();
     }

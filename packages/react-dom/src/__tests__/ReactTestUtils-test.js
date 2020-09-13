@@ -15,8 +15,6 @@ import * as ReactDOM from 'react-dom';
 import * as ReactDOMServer from 'react-dom/server';
 import * as ReactTestUtils from 'react-dom/test-utils';
 
-const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
 function getTestDocument(markup) {
   const doc = document.implementation.createHTMLDocument('');
   doc.open();
@@ -33,98 +31,6 @@ describe('ReactTestUtils', () => {
     expect(Object.keys(ReactTestUtils.Simulate).sort()).toMatchSnapshot();
   });
 
-  if (!ReactFeatureFlags.enableModernEventSystem) {
-    // SimulateNative API has been removed in the modern event system
-    it('SimulateNative should have locally attached media events', () => {
-      expect(Object.keys(ReactTestUtils.SimulateNative).sort()).toEqual([
-        'abort',
-        'animationEnd',
-        'animationIteration',
-        'animationStart',
-        'blur',
-        'canPlay',
-        'canPlayThrough',
-        'cancel',
-        'change',
-        'click',
-        'close',
-        'compositionEnd',
-        'compositionStart',
-        'compositionUpdate',
-        'contextMenu',
-        'copy',
-        'cut',
-        'doubleClick',
-        'drag',
-        'dragEnd',
-        'dragEnter',
-        'dragExit',
-        'dragLeave',
-        'dragOver',
-        'dragStart',
-        'drop',
-        'durationChange',
-        'emptied',
-        'encrypted',
-        'ended',
-        'error',
-        'focus',
-        'input',
-        'keyDown',
-        'keyPress',
-        'keyUp',
-        'load',
-        'loadStart',
-        'loadedData',
-        'loadedMetadata',
-        'mouseDown',
-        'mouseMove',
-        'mouseOut',
-        'mouseOver',
-        'mouseUp',
-        'paste',
-        'pause',
-        'play',
-        'playing',
-        'progress',
-        'rateChange',
-        'scroll',
-        'seeked',
-        'seeking',
-        'selectionChange',
-        'stalled',
-        'suspend',
-        'textInput',
-        'timeUpdate',
-        'toggle',
-        'touchCancel',
-        'touchEnd',
-        'touchMove',
-        'touchStart',
-        'transitionEnd',
-        'volumeChange',
-        'waiting',
-        'wheel',
-      ]);
-    });
-
-    it('SimulateNative should warn about deprecation', () => {
-      const container = document.createElement('div');
-      const node = ReactDOM.render(<div />, container);
-      expect(() =>
-        ReactTestUtils.SimulateNative.click(node),
-      ).toWarnDev(
-        'ReactTestUtils.SimulateNative is an undocumented API that does not match ' +
-          'how the browser dispatches events, and will be removed in a future major ' +
-          'version of React. If you rely on it for testing, consider attaching the root ' +
-          'DOM container to the document during the test, and then dispatching native browser ' +
-          'events by calling `node.dispatchEvent()` on the DOM nodes. Make sure to set ' +
-          'the `bubbles` flag to `true` when creating the native browser event.',
-        {withoutStack: true},
-      );
-    });
-  }
-
   it('gives Jest mocks a passthrough implementation with mockComponent()', () => {
     class MockedComponent extends React.Component {
       render() {
@@ -140,7 +46,7 @@ describe('ReactTestUtils', () => {
     ).toWarnDev(
       'ReactTestUtils.mockComponent() is deprecated. ' +
         'Use shallow rendering or jest.mock() instead.\n\n' +
-        'See https://fb.me/test-utils-mock-component for more information.',
+        'See https://reactjs.org/link/test-utils-mock-component for more information.',
       {withoutStack: true},
     );
 

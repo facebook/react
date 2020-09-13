@@ -481,7 +481,7 @@ describe('ReactNative', () => {
         'findHostInstance_DEPRECATED was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
-        'https://fb.me/react-strict-mode-find-node' +
+        'https://reactjs.org/link/strict-mode-find-node' +
         '\n    in RCTView (at **)' +
         '\n    in ContainsStrictModeChild (at **)',
     ]);
@@ -518,7 +518,7 @@ describe('ReactNative', () => {
         'findHostInstance_DEPRECATED was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
-        'https://fb.me/react-strict-mode-find-node' +
+        'https://reactjs.org/link/strict-mode-find-node' +
         '\n    in RCTView (at **)' +
         '\n    in IsInStrictMode (at **)',
     ]);
@@ -552,7 +552,7 @@ describe('ReactNative', () => {
         'findNodeHandle was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
-        'https://fb.me/react-strict-mode-find-node' +
+        'https://reactjs.org/link/strict-mode-find-node' +
         '\n    in RCTView (at **)' +
         '\n    in ContainsStrictModeChild (at **)',
     ]);
@@ -587,7 +587,7 @@ describe('ReactNative', () => {
         'findNodeHandle was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
-        'https://fb.me/react-strict-mode-find-node' +
+        'https://reactjs.org/link/strict-mode-find-node' +
         '\n    in RCTView (at **)' +
         '\n    in IsInStrictMode (at **)',
     ]);

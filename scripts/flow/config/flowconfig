@@ -1,6 +1,7 @@
 [ignore]
 .*/scripts/bench/.*
 .*/build/.*
+.*/.tempUserDataDir/.*
 
 # These shims are copied into external projects:
 .*/rollup/shims/facebook-www/.*

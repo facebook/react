@@ -211,6 +211,7 @@ export default class ProfilerStore extends EventEmitter<{|
         id: elementID,
         children: element.children.slice(0),
         displayName: element.displayName,
+        hocDisplayNames: element.hocDisplayNames,
         key: element.key,
         type: element.type,
       };

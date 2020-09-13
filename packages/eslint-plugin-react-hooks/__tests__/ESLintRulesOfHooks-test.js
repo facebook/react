@@ -752,9 +752,7 @@ const tests = {
       errors: [
         conditionalError('useState'),
         conditionalError('useState'),
-        // TODO: ideally this *should* warn, but ESLint
-        // doesn't plan full support for ?? until it advances.
-        // conditionalError('useState'),
+        conditionalError('useState'),
       ],
     },
     {

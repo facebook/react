@@ -21,7 +21,7 @@ env.beforeEach(() => {
   // it's too late for a test to mock the clipboard-js modules.
   jest.mock('clipboard-js', () => ({copy: global.mockClipboardCopy}));
 
-  // These files should be required (and re-reuired) before each test,
+  // These files should be required (and re-required) before each test,
   // rather than imported at the head of the module.
   // That's because we reset modules between tests,
   // which disconnects the DevTool's cache from the current dispatcher ref.

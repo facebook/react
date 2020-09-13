@@ -71,9 +71,9 @@ describe('DebugTracing', () => {
 
   // @gate experimental && build === 'development' && enableDebugTracing
   it('should log sync render with suspense', async () => {
-    const fakeSuspensPromise = Promise.resolve(true);
+    const fakeSuspensePromise = Promise.resolve(true);
     function Example() {
-      throw fakeSuspensPromise;
+      throw fakeSuspensePromise;
     }
 
     ReactTestRenderer.create(
@@ -85,22 +85,22 @@ describe('DebugTracing', () => {
     );
 
     expect(logs).toEqual([
-      'group: ⚛️ render (priority: immediate)',
+      'group: ⚛️ render (0b0000000000000000000000000000001)',
       'log: ⚛️ Example suspended',
-      'groupEnd: ⚛️ render (priority: immediate)',
+      'groupEnd: ⚛️ render (0b0000000000000000000000000000001)',
     ]);
 
     logs.splice(0);
 
-    await fakeSuspensPromise;
+    await fakeSuspensePromise;
     expect(logs).toEqual(['log: ⚛️ Example resolved']);
   });
 
   // @gate experimental && build === 'development' && enableDebugTracing
   it('should log concurrent render with suspense', async () => {
-    const fakeSuspensPromise = Promise.resolve(true);
+    const fakeSuspensePromise = Promise.resolve(true);
     function Example() {
-      throw fakeSuspensPromise;
+      throw fakeSuspensePromise;
     }
 
     ReactTestRenderer.create(
@@ -119,14 +119,14 @@ describe('DebugTracing', () => {
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expect(logs).toEqual([
-      'group: ⚛️ render (priority: normal)',
+      'group: ⚛️ render (0b0000000000000000000001000000000)',
       'log: ⚛️ Example suspended',
-      'groupEnd: ⚛️ render (priority: normal)',
+      'groupEnd: ⚛️ render (0b0000000000000000000001000000000)',
     ]);
 
     logs.splice(0);
 
-    await fakeSuspensPromise;
+    await fakeSuspensePromise;
     expect(logs).toEqual(['log: ⚛️ Example resolved']);
   });
 
@@ -156,11 +156,11 @@ describe('DebugTracing', () => {
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expect(logs).toEqual([
-      'group: ⚛️ commit (priority: normal)',
-      'group: ⚛️ layout effects (priority: immediate)',
-      'log: ⚛️ Example updated state (priority: immediate)',
-      'groupEnd: ⚛️ layout effects (priority: immediate)',
-      'groupEnd: ⚛️ commit (priority: normal)',
+      'group: ⚛️ commit (0b0000000000000000000001000000000)',
+      'group: ⚛️ layout effects (0b0000000000000000000001000000000)',
+      'log: ⚛️ Example updated state (0b0000000000000000000000000000001)',
+      'groupEnd: ⚛️ layout effects (0b0000000000000000000001000000000)',
+      'groupEnd: ⚛️ commit (0b0000000000000000000001000000000)',
     ]);
   });
 
@@ -192,10 +192,10 @@ describe('DebugTracing', () => {
     }).toErrorDev('Cannot update during an existing state transition');
 
     expect(logs).toEqual([
-      'group: ⚛️ render (priority: normal)',
-      'log: ⚛️ Example updated state (priority: normal)',
-      'log: ⚛️ Example updated state (priority: normal)',
-      'groupEnd: ⚛️ render (priority: normal)',
+      'group: ⚛️ render (0b0000000000000000000001000000000)',
+      'log: ⚛️ Example updated state (0b0000000000000000000010000000000)',
+      'log: ⚛️ Example updated state (0b0000000000000000000010000000000)',
+      'groupEnd: ⚛️ render (0b0000000000000000000001000000000)',
     ]);
   });
 
@@ -223,11 +223,11 @@ describe('DebugTracing', () => {
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expect(logs).toEqual([
-      'group: ⚛️ commit (priority: normal)',
-      'group: ⚛️ layout effects (priority: immediate)',
-      'log: ⚛️ Example updated state (priority: immediate)',
-      'groupEnd: ⚛️ layout effects (priority: immediate)',
-      'groupEnd: ⚛️ commit (priority: normal)',
+      'group: ⚛️ commit (0b0000000000000000000001000000000)',
+      'group: ⚛️ layout effects (0b0000000000000000000001000000000)',
+      'log: ⚛️ Example updated state (0b0000000000000000000000000000001)',
+      'groupEnd: ⚛️ layout effects (0b0000000000000000000001000000000)',
+      'groupEnd: ⚛️ commit (0b0000000000000000000001000000000)',
     ]);
   });
 
@@ -250,9 +250,9 @@ describe('DebugTracing', () => {
       );
     });
     expect(logs).toEqual([
-      'group: ⚛️ passive effects (priority: normal)',
-      'log: ⚛️ Example updated state (priority: normal)',
-      'groupEnd: ⚛️ passive effects (priority: normal)',
+      'group: ⚛️ passive effects (0b0000000000000000000001000000000)',
+      'log: ⚛️ Example updated state (0b0000000000000000000010000000000)',
+      'groupEnd: ⚛️ passive effects (0b0000000000000000000001000000000)',
     ]);
   });
 
@@ -275,10 +275,10 @@ describe('DebugTracing', () => {
       );
     });
     expect(logs).toEqual([
-      'group: ⚛️ render (priority: normal)',
-      'log: ⚛️ Example updated state (priority: normal)',
-      'log: ⚛️ Example updated state (priority: normal)', // debugRenderPhaseSideEffectsForStrictMode
-      'groupEnd: ⚛️ render (priority: normal)',
+      'group: ⚛️ render (0b0000000000000000000001000000000)',
+      'log: ⚛️ Example updated state (0b0000000000000000000010000000000)',
+      'log: ⚛️ Example updated state (0b0000000000000000000010000000000)', // debugRenderPhaseSideEffectsForStrictMode
+      'groupEnd: ⚛️ render (0b0000000000000000000001000000000)',
     ]);
   });
 
@@ -303,9 +303,9 @@ describe('DebugTracing', () => {
     expect(Scheduler).toFlushUntilNextPaint([]);
 
     expect(logs).toEqual([
-      'group: ⚛️ render (priority: normal)',
+      'group: ⚛️ render (0b0000000000000000000001000000000)',
       'log: Hello from user code',
-      'groupEnd: ⚛️ render (priority: normal)',
+      'groupEnd: ⚛️ render (0b0000000000000000000001000000000)',
     ]);
   });
 
@@ -319,9 +319,9 @@ describe('DebugTracing', () => {
       return didMount;
     }
 
-    const fakeSuspensPromise = new Promise(() => {});
+    const fakeSuspensePromise = new Promise(() => {});
     function ExampleThatSuspends() {
-      throw fakeSuspensPromise;
+      throw fakeSuspensePromise;
     }
 
     function Example() {

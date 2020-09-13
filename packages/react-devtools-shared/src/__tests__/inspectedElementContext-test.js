@@ -33,6 +33,9 @@ describe('InspectedElementContext', () => {
   let TestUtils;
   let TreeContextController;
 
+  let TestUtilsAct;
+  let TestRendererAct;
+
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
@@ -47,7 +50,9 @@ describe('InspectedElementContext', () => {
     ReactDOM = require('react-dom');
     PropTypes = require('prop-types');
     TestUtils = require('react-dom/test-utils');
+    TestUtilsAct = TestUtils.unstable_concurrentAct;
     TestRenderer = utils.requireTestRenderer();
+    TestRendererAct = TestUtils.unstable_concurrentAct;
 
     BridgeContext = require('react-devtools-shared/src/devtools/views/context')
       .BridgeContext;
@@ -549,6 +554,14 @@ describe('InspectedElementContext', () => {
     }
     const instance = new Class();
 
+    const proxyInstance = new Proxy(() => {}, {
+      get: function(_, name) {
+        return function() {
+          return null;
+        };
+      },
+    });
+
     const container = document.createElement('div');
     await utils.actAsync(() =>
       ReactDOM.render(
@@ -567,6 +580,7 @@ describe('InspectedElementContext', () => {
           map={mapShallow}
           map_of_maps={mapOfMaps}
           object_of_objects={objectOfObjects}
+          proxy={proxyInstance}
           react_element={<span />}
           regexp={/abc/giu}
           set={setShallow}
@@ -619,6 +633,7 @@ describe('InspectedElementContext', () => {
       map,
       map_of_maps,
       object_of_objects,
+      proxy,
       react_element,
       regexp,
       set,
@@ -721,6 +736,12 @@ describe('InspectedElementContext', () => {
       '{boolean: true, number: 123, string: "abc"}',
     );
     expect(object_of_objects.inner[meta.preview_short]).toBe('{…}');
+
+    expect(proxy[meta.inspectable]).toBe(false);
+    expect(proxy[meta.name]).toBe('function');
+    expect(proxy[meta.type]).toBe('function');
+    expect(proxy[meta.preview_long]).toBe('ƒ () {}');
+    expect(proxy[meta.preview_short]).toBe('ƒ () {}');
 
     expect(react_element[meta.inspectable]).toBe(false);
     expect(react_element[meta.name]).toBe('span');
@@ -983,8 +1004,8 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
 
     inspectedElement = null;
-    TestUtils.act(() => {
-      TestRenderer.act(() => {
+    TestUtilsAct(() => {
+      TestRendererAct(() => {
         getInspectedElementPath(id, ['props', 'nestedObject', 'a']);
         jest.runOnlyPendingTimers();
       });
@@ -993,8 +1014,8 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('2: Inspect props.nestedObject.a');
 
     inspectedElement = null;
-    TestUtils.act(() => {
-      TestRenderer.act(() => {
+    TestUtilsAct(() => {
+      TestRendererAct(() => {
         getInspectedElementPath(id, ['props', 'nestedObject', 'a', 'b', 'c']);
         jest.runOnlyPendingTimers();
       });
@@ -1005,8 +1026,8 @@ describe('InspectedElementContext', () => {
     );
 
     inspectedElement = null;
-    TestUtils.act(() => {
-      TestRenderer.act(() => {
+    TestUtilsAct(() => {
+      TestRendererAct(() => {
         getInspectedElementPath(id, [
           'props',
           'nestedObject',
@@ -1025,8 +1046,8 @@ describe('InspectedElementContext', () => {
     );
 
     inspectedElement = null;
-    TestUtils.act(() => {
-      TestRenderer.act(() => {
+    TestUtilsAct(() => {
+      TestRendererAct(() => {
         getInspectedElementPath(id, ['hooks', 0, 'value']);
         jest.runOnlyPendingTimers();
       });
@@ -1035,8 +1056,8 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('5: Inspect hooks.0.value');
 
     inspectedElement = null;
-    TestUtils.act(() => {
-      TestRenderer.act(() => {
+    TestUtilsAct(() => {
+      TestRendererAct(() => {
         getInspectedElementPath(id, ['hooks', 0, 'value', 'foo', 'bar']);
         jest.runOnlyPendingTimers();
       });
@@ -1092,8 +1113,8 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
 
     inspectedElement = null;
-    TestUtils.act(() => {
-      TestRenderer.act(() => {
+    TestUtilsAct(() => {
+      TestRendererAct(() => {
         getInspectedElementPath(id, ['props', 'set_of_sets', 0]);
         jest.runOnlyPendingTimers();
       });
@@ -1163,7 +1184,7 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
 
     inspectedElement = null;
-    TestRenderer.act(() => {
+    TestRendererAct(() => {
       getInspectedElementPath(id, ['props', 'nestedObject', 'a']);
       jest.runOnlyPendingTimers();
     });
@@ -1171,15 +1192,15 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('2: Inspect props.nestedObject.a');
 
     inspectedElement = null;
-    TestRenderer.act(() => {
+    TestRendererAct(() => {
       getInspectedElementPath(id, ['props', 'nestedObject', 'c']);
       jest.runOnlyPendingTimers();
     });
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot('3: Inspect props.nestedObject.c');
 
-    TestRenderer.act(() => {
-      TestUtils.act(() => {
+    TestRendererAct(() => {
+      TestUtilsAct(() => {
         ReactDOM.render(
           <Example
             nestedObject={{
@@ -1205,7 +1226,7 @@ describe('InspectedElementContext', () => {
       });
     });
 
-    TestRenderer.act(() => {
+    TestRendererAct(() => {
       inspectedElement = null;
       jest.advanceTimersByTime(1000);
     });
@@ -1265,7 +1286,7 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
 
-    TestUtils.act(() => {
+    TestUtilsAct(() => {
       ReactDOM.render(
         <Example
           nestedObject={{
@@ -1284,8 +1305,8 @@ describe('InspectedElementContext', () => {
 
     inspectedElement = null;
 
-    TestRenderer.act(() => {
-      TestUtils.act(() => {
+    TestRendererAct(() => {
+      TestUtilsAct(() => {
         getInspectedElementPath(id, ['props', 'nestedObject', 'a']);
         jest.runOnlyPendingTimers();
       });

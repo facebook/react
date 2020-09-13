@@ -13,10 +13,13 @@ describe('ReactFetchBrowser', () => {
   let ReactFetchBrowser;
 
   beforeEach(() => {
-    ReactFetchBrowser = require('react-fetch');
+    if (__EXPERIMENTAL__) {
+      ReactFetchBrowser = require('react-fetch');
+    }
   });
 
   // TODO: test something useful.
+  // @gate experimental
   it('exports something', () => {
     expect(ReactFetchBrowser.fetch).not.toBe(undefined);
   });

@@ -81,7 +81,7 @@ function getMousePosition(
   mouseEvent: SyntheticMouseEvent<*>,
 ) {
   if (relativeContainer !== null) {
-    // Positon within the nearest position:relative container.
+    // Position within the nearest position:relative container.
     let targetContainer = relativeContainer;
     while (targetContainer.parentElement != null) {
       if (targetContainer.style.position === 'relative') {

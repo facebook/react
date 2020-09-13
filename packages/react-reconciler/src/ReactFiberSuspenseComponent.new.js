@@ -11,7 +11,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {Lane} from './ReactFiberLane';
 import {SuspenseComponent, SuspenseListComponent} from './ReactWorkTags';
-import {NoEffect, DidCapture} from './ReactSideEffectTags';
+import {NoFlags, DidCapture} from './ReactFiberFlags';
 import {
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
@@ -41,19 +41,14 @@ export type SuspenseListRenderState = {|
   isBackwards: boolean,
   // The currently rendering tail row.
   rendering: null | Fiber,
-  // The absolute time when we started rendering the tail row.
+  // The absolute time when we started rendering the most recent tail row.
   renderingStartTime: number,
   // The last of the already rendered children.
   last: null | Fiber,
   // Remaining rows on the tail of the list.
   tail: null | Fiber,
-  // The absolute time in ms that we'll expire the tail rendering.
-  tailExpiration: number,
   // Tail insertions setting.
   tailMode: SuspenseListTailMode,
-  // Last Effect before we rendered the "rendering" item.
-  // Used to remove new effects added by the rendered item.
-  lastEffect: null | Fiber,
 |};
 
 export function shouldCaptureSuspense(
@@ -109,7 +104,7 @@ export function findFirstSuspended(row: Fiber): null | Fiber {
       // keep track of whether it suspended or not.
       node.memoizedProps.revealOrder !== undefined
     ) {
-      const didSuspend = (node.effectTag & DidCapture) !== NoEffect;
+      const didSuspend = (node.flags & DidCapture) !== NoFlags;
       if (didSuspend) {
         return node;
       }

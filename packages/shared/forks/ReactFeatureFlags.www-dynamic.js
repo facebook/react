@@ -14,15 +14,19 @@
 // with the __VARIANT__ set to `true`, and once set to `false`.
 
 export const warnAboutSpreadingKeyToJSX = __VARIANT__;
-export const enableComponentStackLocations = __VARIANT__;
 export const disableInputAttributeSyncing = __VARIANT__;
 export const enableFilterEmptyStringAttributesDOM = __VARIANT__;
-export const enableModernEventSystem = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
-export const enableDebugTracing = !__VARIANT__;
+export const decoupleUpdatePriorityFromScheduler = __VARIANT__;
+export const skipUnmountedBoundaries = __VARIANT__;
+export const enablePassiveEventIntervention = __VARIANT__;
+export const enableEagerRootListeners = !__VARIANT__;
 
-// Temporary flag, in case we need to re-enable this feature.
-export const disableHiddenPropDeprioritization = __VARIANT__;
+// Enable this flag to help with concurrent mode debugging.
+// It logs information to the console about React scheduling, rendering, and commit phases.
+//
+// NOTE: This feature will only work in DEV mode; all callsights are wrapped with __DEV__.
+export const enableDebugTracing = false;
 
 // This only has an effect in the new reconciler. But also, the new reconciler
 // is only enabled when __VARIANT__ is true. So this is set to the opposite of
@@ -44,3 +48,4 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 // to __VARIANT__.
 export const enableTrustedTypesIntegration = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;

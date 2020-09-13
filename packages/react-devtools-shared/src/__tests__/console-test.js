@@ -44,7 +44,10 @@ describe('console', () => {
 
     // Note the Console module only patches once,
     // so it's important to patch the test console before injection.
-    patchConsole();
+    patchConsole({
+      appendComponentStack: true,
+      breakOnWarn: false,
+    });
 
     const inject = global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject;
     global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject = internals => {
@@ -79,7 +82,10 @@ describe('console', () => {
   it('should only patch the console once', () => {
     const {error, warn} = fakeConsole;
 
-    patchConsole();
+    patchConsole({
+      appendComponentStack: true,
+      breakOnWarn: false,
+    });
 
     expect(fakeConsole.error).toBe(error);
     expect(fakeConsole.warn).toBe(warn);
@@ -330,7 +336,10 @@ describe('console', () => {
     expect(mockError.mock.calls[0]).toHaveLength(1);
     expect(mockError.mock.calls[0][0]).toBe('error');
 
-    patchConsole();
+    patchConsole({
+      appendComponentStack: true,
+      breakOnWarn: false,
+    });
     act(() => ReactDOM.render(<Child />, document.createElement('div')));
 
     expect(mockWarn).toHaveBeenCalledTimes(2);

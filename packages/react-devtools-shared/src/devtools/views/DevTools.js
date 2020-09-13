@@ -13,7 +13,7 @@ import '@reach/menu-button/styles.css';
 import '@reach/tooltip/styles.css';
 
 import * as React from 'react';
-import {useEffect, useMemo, useRef} from 'react';
+import {useEffect, useLayoutEffect, useMemo, useRef} from 'react';
 import Store from '../store';
 import {BridgeContext, ContextMenuContext, StoreContext} from './context';
 import Components from './Components/Components';
@@ -169,9 +169,10 @@ export default function DevTools({
     };
   }, [showTabBar]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     return () => {
       try {
+        // Shut the Bridge down synchronously (during unmount).
         bridge.shutdown();
       } catch (error) {
         // Attempting to use a disconnected port.

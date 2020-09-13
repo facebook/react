@@ -536,7 +536,7 @@ export default {
  * easy. For anonymous function expressions it is much harder. If you search for
  * `IsAnonymousFunctionDefinition()` in the ECMAScript spec you'll find places
  * where JS gives anonymous function expressions names. We roughly detect the
- * same AST nodes with some exceptions to better fit our usecase.
+ * same AST nodes with some exceptions to better fit our use case.
  */
 
 function getFunctionName(node) {

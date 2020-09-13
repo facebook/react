@@ -9,7 +9,10 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
-import type {ReactDOMEventHandleListener} from '../shared/ReactDOMTypes';
+import type {
+  ReactDOMEventHandle,
+  ReactDOMEventHandleListener,
+} from '../shared/ReactDOMTypes';
 import type {
   Container,
   TextInstance,
@@ -17,7 +20,7 @@ import type {
   SuspenseInstance,
   Props,
 } from './ReactDOMHostConfig';
-import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
+import type {DOMEventName} from '../events/DOMEventNames';
 
 import {
   HostComponent,
@@ -39,10 +42,11 @@ const internalPropsKey = '__reactProps$' + randomKey;
 const internalContainerInstanceKey = '__reactContainer$' + randomKey;
 const internalEventHandlersKey = '__reactEvents$' + randomKey;
 const internalEventHandlerListenersKey = '__reactListeners$' + randomKey;
+const internalEventHandlesSetKey = '__reactHandles$' + randomKey;
 
 export type ElementListenerMap = Map<
-  DOMTopLevelEventType | string,
-  ElementListenerMapEntry,
+  DOMEventName | string,
+  ElementListenerMapEntry | null,
 >;
 
 export type ElementListenerMapEntry = {
@@ -231,4 +235,26 @@ export function getEventHandlerListeners(
   scope: EventTarget | ReactScopeInstance,
 ): null | Set<ReactDOMEventHandleListener> {
   return (scope: any)[internalEventHandlerListenersKey] || null;
+}
+
+export function addEventHandleToTarget(
+  target: EventTarget | ReactScopeInstance,
+  eventHandle: ReactDOMEventHandle,
+): void {
+  let eventHandles = (target: any)[internalEventHandlesSetKey];
+  if (eventHandles === undefined) {
+    eventHandles = (target: any)[internalEventHandlesSetKey] = new Set();
+  }
+  eventHandles.add(eventHandle);
+}
+
+export function doesTargetHaveEventHandle(
+  target: EventTarget | ReactScopeInstance,
+  eventHandle: ReactDOMEventHandle,
+): boolean {
+  const eventHandles = (target: any)[internalEventHandlesSetKey];
+  if (eventHandles === undefined) {
+    return false;
+  }
+  return eventHandles.has(eventHandle);
 }

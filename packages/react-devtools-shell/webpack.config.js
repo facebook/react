@@ -39,6 +39,9 @@ const config = {
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },
   },
+  optimization: {
+    minimize: false,
+  },
   plugins: [
     new DefinePlugin({
       __DEV__,

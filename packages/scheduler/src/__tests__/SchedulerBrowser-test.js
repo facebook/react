@@ -42,7 +42,7 @@ describe('SchedulerBrowser', () => {
     );
 
     runtime = installMockBrowserRuntime();
-    performance = window.performance;
+    performance = global.performance;
     Scheduler = require('scheduler');
     cancelCallback = Scheduler.unstable_cancelCallback;
     scheduleCallback = Scheduler.unstable_scheduleCallback;
@@ -50,6 +50,8 @@ describe('SchedulerBrowser', () => {
   });
 
   afterEach(() => {
+    delete global.performance;
+
     if (!runtime.isLogEmpty()) {
       throw Error('Test exited without clearing log.');
     }
@@ -63,16 +65,16 @@ describe('SchedulerBrowser', () => {
 
     let eventLog = [];
 
-    const window = {};
-    global.window = window;
-
     let currentTime = 0;
 
-    window.performance = {
+    global.performance = {
       now() {
         return currentTime;
       },
     };
+
+    const window = {};
+    global.window = window;
 
     // TODO: Scheduler no longer requires these methods to be polyfilled. But
     // maybe we want to continue warning if they don't exist, to preserve the

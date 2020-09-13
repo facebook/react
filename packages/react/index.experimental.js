@@ -26,8 +26,8 @@ export {
   useReducer,
   useRef,
   useState,
-  useMutableSource,
-  createMutableSource,
+  useMutableSource as unstable_useMutableSource,
+  createMutableSource as unstable_createMutableSource,
   Fragment,
   Profiler,
   StrictMode,
@@ -42,8 +42,8 @@ export {
   // exposeConcurrentModeAPIs
   useTransition as unstable_useTransition,
   useDeferredValue as unstable_useDeferredValue,
+  startTransition as unstable_startTransition,
   SuspenseList as unstable_SuspenseList,
-  unstable_withSuspenseConfig,
   // enableBlocksAPI
   block as unstable_block,
   unstable_useOpaqueIdentifier,

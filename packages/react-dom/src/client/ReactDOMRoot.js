@@ -9,9 +9,8 @@
 
 import type {Container} from './ReactDOMHostConfig';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {MutableSource, ReactNodeList} from 'shared/ReactTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
-import {findHostInstanceWithNoPortals} from 'react-reconciler/src/ReactFiberReconciler';
 
 export type RootType = {
   render(children: ReactNodeList): void,
@@ -25,6 +24,7 @@ export type RootOptions = {
   hydrationOptions?: {
     onHydrated?: (suspenseNode: Comment) => void,
     onDeleted?: (suspenseNode: Comment) => void,
+    mutableSources?: Array<MutableSource<any>>,
     ...
   },
   ...
@@ -35,6 +35,7 @@ import {
   markContainerAsRoot,
   unmarkContainerAsRoot,
 } from './ReactDOMComponentTree';
+import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 import {eagerlyTrapReplayableEvents} from '../events/ReactDOMEventReplaying';
 import {
   ELEMENT_NODE,
@@ -47,15 +48,16 @@ import {ensureListeningTo} from './ReactDOMComponent';
 import {
   createContainer,
   updateContainer,
+  findHostInstanceWithNoPortals,
+  registerMutableSourceForHydration,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import invariant from 'shared/invariant';
+import {enableEagerRootListeners} from 'shared/ReactFeatureFlags';
 import {
   BlockingRoot,
   ConcurrentRoot,
   LegacyRoot,
 } from 'react-reconciler/src/ReactRootTags';
-
-import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
 
 function ReactDOMRoot(container: Container, options: void | RootOptions) {
   this._internalRoot = createRootImpl(container, ConcurrentRoot, options);
@@ -124,25 +126,45 @@ function createRootImpl(
   const hydrate = options != null && options.hydrate === true;
   const hydrationCallbacks =
     (options != null && options.hydrationOptions) || null;
+  const mutableSources =
+    (options != null &&
+      options.hydrationOptions != null &&
+      options.hydrationOptions.mutableSources) ||
+    null;
   const root = createContainer(container, tag, hydrate, hydrationCallbacks);
   markContainerAsRoot(root.current, container);
   const containerNodeType = container.nodeType;
 
-  if (hydrate && tag !== LegacyRoot) {
-    const doc =
-      containerNodeType === DOCUMENT_NODE ? container : container.ownerDocument;
-    // We need to cast this because Flow doesn't work
-    // with the hoisted containerNodeType. If we inline
-    // it, then Flow doesn't complain. We intentionally
-    // hoist it to reduce code-size.
-    eagerlyTrapReplayableEvents(container, ((doc: any): Document));
-  } else if (
-    enableModernEventSystem &&
-    containerNodeType !== DOCUMENT_FRAGMENT_NODE &&
-    containerNodeType !== DOCUMENT_NODE
-  ) {
-    ensureListeningTo(container, 'onMouseEnter');
+  if (enableEagerRootListeners) {
+    const rootContainerElement =
+      container.nodeType === COMMENT_NODE ? container.parentNode : container;
+    listenToAllSupportedEvents(rootContainerElement);
+  } else {
+    if (hydrate && tag !== LegacyRoot) {
+      const doc =
+        containerNodeType === DOCUMENT_NODE
+          ? container
+          : container.ownerDocument;
+      // We need to cast this because Flow doesn't work
+      // with the hoisted containerNodeType. If we inline
+      // it, then Flow doesn't complain. We intentionally
+      // hoist it to reduce code-size.
+      eagerlyTrapReplayableEvents(container, ((doc: any): Document));
+    } else if (
+      containerNodeType !== DOCUMENT_FRAGMENT_NODE &&
+      containerNodeType !== DOCUMENT_NODE
+    ) {
+      ensureListeningTo(container, 'onMouseEnter', null);
+    }
   }
+
+  if (mutableSources) {
+    for (let i = 0; i < mutableSources.length; i++) {
+      const mutableSource = mutableSources[i];
+      registerMutableSourceForHydration(root, mutableSource);
+    }
+  }
+
   return root;
 }
 

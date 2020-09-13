@@ -130,6 +130,7 @@ function recursivelyInitializeTree(
       id,
       children: node.children,
       displayName: node.displayName,
+      hocDisplayNames: node.hocDisplayNames,
       key: node.key,
       parentID,
       treeBaseDuration: ((dataForRoot.initialTreeBaseDurations.get(
@@ -208,6 +209,7 @@ function updateTree(
           const node: CommitTreeNode = {
             children: [],
             displayName: null,
+            hocDisplayNames: null,
             id,
             key: null,
             parentID: 0,
@@ -243,6 +245,7 @@ function updateTree(
           const node: CommitTreeNode = {
             children: [],
             displayName,
+            hocDisplayNames: null,
             id,
             key,
             parentID,

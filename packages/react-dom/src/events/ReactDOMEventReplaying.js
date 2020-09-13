@@ -7,17 +7,16 @@
  * @flow
  */
 
-import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
+import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
-import type {DOMTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
-import type {ElementListenerMap} from '../client/ReactDOMComponentTree';
+import type {DOMEventName} from '../events/DOMEventNames';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {LanePriority} from 'react-reconciler/src/ReactFiberLane';
 
 import {
-  enableDeprecatedFlareAPI,
   enableSelectiveHydration,
-  enableModernEventSystem,
+  enableEagerRootListeners,
 } from 'shared/ReactFeatureFlags';
 import {
   unstable_runWithPriority as runWithPriority,
@@ -34,9 +33,7 @@ import {attemptToDispatchEvent} from './ReactDOMEventListener';
 import {
   getInstanceFromNode,
   getClosestInstanceFromNode,
-  getEventListenerMap,
 } from '../client/ReactDOMComponentTree';
-import {unsafeCastDOMTopLevelTypeToString} from 'legacy-events/TopLevelEventTypes';
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
 
 let attemptSynchronousHydration: (fiber: Object) => void;
@@ -65,6 +62,20 @@ export function setAttemptHydrationAtCurrentPriority(
   attemptHydrationAtCurrentPriority = fn;
 }
 
+let getCurrentUpdatePriority: () => LanePriority;
+
+export function setGetCurrentUpdatePriority(fn: () => LanePriority) {
+  getCurrentUpdatePriority = fn;
+}
+
+let attemptHydrationAtPriority: <T>(priority: LanePriority, fn: () => T) => T;
+
+export function setAttemptHydrationAtPriority(
+  fn: <T>(priority: LanePriority, fn: () => T) => T,
+) {
+  attemptHydrationAtPriority = fn;
+}
+
 // TODO: Upgrade this definition once we're on a newer version of Flow that
 // has this definition built-in.
 type PointerEvent = Event & {
@@ -73,56 +84,12 @@ type PointerEvent = Event & {
   ...
 };
 
-import {
-  TOP_MOUSE_DOWN,
-  TOP_MOUSE_UP,
-  TOP_TOUCH_CANCEL,
-  TOP_TOUCH_END,
-  TOP_TOUCH_START,
-  TOP_AUX_CLICK,
-  TOP_DOUBLE_CLICK,
-  TOP_POINTER_CANCEL,
-  TOP_POINTER_DOWN,
-  TOP_POINTER_UP,
-  TOP_DRAG_END,
-  TOP_DRAG_START,
-  TOP_DROP,
-  TOP_COMPOSITION_END,
-  TOP_COMPOSITION_START,
-  TOP_KEY_DOWN,
-  TOP_KEY_PRESS,
-  TOP_KEY_UP,
-  TOP_INPUT,
-  TOP_TEXT_INPUT,
-  TOP_CLOSE,
-  TOP_CANCEL,
-  TOP_COPY,
-  TOP_CUT,
-  TOP_PASTE,
-  TOP_CLICK,
-  TOP_CHANGE,
-  TOP_CONTEXT_MENU,
-  TOP_RESET,
-  TOP_SUBMIT,
-  TOP_DRAG_ENTER,
-  TOP_DRAG_LEAVE,
-  TOP_MOUSE_OVER,
-  TOP_MOUSE_OUT,
-  TOP_POINTER_OVER,
-  TOP_POINTER_OUT,
-  TOP_GOT_POINTER_CAPTURE,
-  TOP_LOST_POINTER_CAPTURE,
-  TOP_FOCUS,
-  TOP_BLUR,
-} from './DOMTopLevelEventTypes';
-import {IS_REPLAYED, PLUGIN_EVENT_SYSTEM} from './EventSystemFlags';
-import {legacyListenToTopLevelEvent} from './DOMLegacyEventPluginSystem';
-import {listenToTopLevelEvent} from './DOMModernPluginEventSystem';
-import {addResponderEventSystemEvent} from './DeprecatedDOMEventResponderSystem';
+import {IS_REPLAYED} from './EventSystemFlags';
+import {listenToNativeEvent} from './DOMPluginEventSystem';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   nativeEvent: AnyNativeEvent,
   targetContainers: Array<EventTarget>,
@@ -149,6 +116,7 @@ type QueuedHydrationTarget = {|
   blockedOn: null | Container | SuspenseInstance,
   target: Node,
   priority: number,
+  lanePriority: LanePriority,
 |};
 const queuedExplicitHydrationTargets: Array<QueuedHydrationTarget> = [];
 
@@ -160,95 +128,61 @@ export function hasQueuedContinuousEvents(): boolean {
   return hasAnyQueuedContinuousEvents;
 }
 
-const discreteReplayableEvents = [
-  TOP_MOUSE_DOWN,
-  TOP_MOUSE_UP,
-  TOP_TOUCH_CANCEL,
-  TOP_TOUCH_END,
-  TOP_TOUCH_START,
-  TOP_AUX_CLICK,
-  TOP_DOUBLE_CLICK,
-  TOP_POINTER_CANCEL,
-  TOP_POINTER_DOWN,
-  TOP_POINTER_UP,
-  TOP_DRAG_END,
-  TOP_DRAG_START,
-  TOP_DROP,
-  TOP_COMPOSITION_END,
-  TOP_COMPOSITION_START,
-  TOP_KEY_DOWN,
-  TOP_KEY_PRESS,
-  TOP_KEY_UP,
-  TOP_INPUT,
-  TOP_TEXT_INPUT,
-  TOP_CLOSE,
-  TOP_CANCEL,
-  TOP_COPY,
-  TOP_CUT,
-  TOP_PASTE,
-  TOP_CLICK,
-  TOP_CHANGE,
-  TOP_CONTEXT_MENU,
-  TOP_RESET,
-  TOP_SUBMIT,
+const discreteReplayableEvents: Array<DOMEventName> = [
+  'mousedown',
+  'mouseup',
+  'touchcancel',
+  'touchend',
+  'touchstart',
+  'auxclick',
+  'dblclick',
+  'pointercancel',
+  'pointerdown',
+  'pointerup',
+  'dragend',
+  'dragstart',
+  'drop',
+  'compositionend',
+  'compositionstart',
+  'keydown',
+  'keypress',
+  'keyup',
+  'input',
+  'textInput', // Intentionally camelCase
+  'copy',
+  'cut',
+  'paste',
+  'click',
+  'change',
+  'contextmenu',
+  'reset',
+  'submit',
 ];
 
-const continuousReplayableEvents = [
-  TOP_FOCUS,
-  TOP_BLUR,
-  TOP_DRAG_ENTER,
-  TOP_DRAG_LEAVE,
-  TOP_MOUSE_OVER,
-  TOP_MOUSE_OUT,
-  TOP_POINTER_OVER,
-  TOP_POINTER_OUT,
-  TOP_GOT_POINTER_CAPTURE,
-  TOP_LOST_POINTER_CAPTURE,
+const continuousReplayableEvents: Array<DOMEventName> = [
+  'dragenter',
+  'dragleave',
+  'focusin',
+  'focusout',
+  'mouseover',
+  'mouseout',
+  'pointerover',
+  'pointerout',
+  'gotpointercapture',
+  'lostpointercapture',
 ];
 
-export function isReplayableDiscreteEvent(
-  eventType: DOMTopLevelEventType,
-): boolean {
+export function isReplayableDiscreteEvent(eventType: DOMEventName): boolean {
   return discreteReplayableEvents.indexOf(eventType) > -1;
 }
 
 function trapReplayableEventForContainer(
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   container: Container,
-  listenerMap: ElementListenerMap,
 ) {
-  listenToTopLevelEvent(
-    topLevelType,
-    ((container: any): Element),
-    listenerMap,
-    PLUGIN_EVENT_SYSTEM,
-  );
-}
-
-function trapReplayableEventForDocument(
-  topLevelType: DOMTopLevelEventType,
-  document: Document,
-  listenerMap: ElementListenerMap,
-) {
-  if (!enableModernEventSystem) {
-    legacyListenToTopLevelEvent(topLevelType, document, listenerMap);
-  }
-  if (enableDeprecatedFlareAPI) {
-    // Trap events for the responder system.
-    const topLevelTypeString = unsafeCastDOMTopLevelTypeToString(topLevelType);
-    // TODO: Ideally we shouldn't need these to be active but
-    // if we only have a passive listener, we at least need it
-    // to still pretend to be active so that Flare gets those
-    // events.
-    const activeEventKey = topLevelTypeString + '_active';
-    if (!listenerMap.has(activeEventKey)) {
-      const listener = addResponderEventSystemEvent(
-        document,
-        topLevelTypeString,
-        false,
-      );
-      listenerMap.set(activeEventKey, {passive: false, listener});
-    }
+  // When the flag is on, we do this in a unified codepath elsewhere.
+  if (!enableEagerRootListeners) {
+    listenToNativeEvent(domEventName, false, ((container: any): Element), null);
   }
 }
 
@@ -256,45 +190,29 @@ export function eagerlyTrapReplayableEvents(
   container: Container,
   document: Document,
 ) {
-  const listenerMapForDoc = getEventListenerMap(document);
-  let listenerMapForContainer;
-  if (enableModernEventSystem) {
-    listenerMapForContainer = getEventListenerMap(container);
+  // When the flag is on, we do this in a unified codepath elsewhere.
+  if (!enableEagerRootListeners) {
+    // Discrete
+    discreteReplayableEvents.forEach(domEventName => {
+      trapReplayableEventForContainer(domEventName, container);
+    });
+    // Continuous
+    continuousReplayableEvents.forEach(domEventName => {
+      trapReplayableEventForContainer(domEventName, container);
+    });
   }
-  // Discrete
-  discreteReplayableEvents.forEach(topLevelType => {
-    if (enableModernEventSystem) {
-      trapReplayableEventForContainer(
-        topLevelType,
-        container,
-        listenerMapForContainer,
-      );
-    }
-    trapReplayableEventForDocument(topLevelType, document, listenerMapForDoc);
-  });
-  // Continuous
-  continuousReplayableEvents.forEach(topLevelType => {
-    if (enableModernEventSystem) {
-      trapReplayableEventForContainer(
-        topLevelType,
-        container,
-        listenerMapForContainer,
-      );
-    }
-    trapReplayableEventForDocument(topLevelType, document, listenerMapForDoc);
-  });
 }
 
 function createQueuedReplayableEvent(
   blockedOn: null | Container | SuspenseInstance,
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): QueuedReplayableEvent {
   return {
     blockedOn,
-    topLevelType,
+    domEventName,
     eventSystemFlags: eventSystemFlags | IS_REPLAYED,
     nativeEvent,
     targetContainers: [targetContainer],
@@ -303,14 +221,14 @@ function createQueuedReplayableEvent(
 
 export function queueDiscreteEvent(
   blockedOn: null | Container | SuspenseInstance,
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
 ): void {
   const queuedEvent = createQueuedReplayableEvent(
     blockedOn,
-    topLevelType,
+    domEventName,
     eventSystemFlags,
     targetContainer,
     nativeEvent,
@@ -344,30 +262,30 @@ export function queueDiscreteEvent(
 
 // Resets the replaying for this type of continuous event to no event.
 export function clearIfContinuousEvent(
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   nativeEvent: AnyNativeEvent,
 ): void {
-  switch (topLevelType) {
-    case TOP_FOCUS:
-    case TOP_BLUR:
+  switch (domEventName) {
+    case 'focusin':
+    case 'focusout':
       queuedFocus = null;
       break;
-    case TOP_DRAG_ENTER:
-    case TOP_DRAG_LEAVE:
+    case 'dragenter':
+    case 'dragleave':
       queuedDrag = null;
       break;
-    case TOP_MOUSE_OVER:
-    case TOP_MOUSE_OUT:
+    case 'mouseover':
+    case 'mouseout':
       queuedMouse = null;
       break;
-    case TOP_POINTER_OVER:
-    case TOP_POINTER_OUT: {
+    case 'pointerover':
+    case 'pointerout': {
       const pointerId = ((nativeEvent: any): PointerEvent).pointerId;
       queuedPointers.delete(pointerId);
       break;
     }
-    case TOP_GOT_POINTER_CAPTURE:
-    case TOP_LOST_POINTER_CAPTURE: {
+    case 'gotpointercapture':
+    case 'lostpointercapture': {
       const pointerId = ((nativeEvent: any): PointerEvent).pointerId;
       queuedPointerCaptures.delete(pointerId);
       break;
@@ -378,7 +296,7 @@ export function clearIfContinuousEvent(
 function accumulateOrCreateContinuousQueuedReplayableEvent(
   existingQueuedEvent: null | QueuedReplayableEvent,
   blockedOn: null | Container | SuspenseInstance,
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
@@ -389,7 +307,7 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
   ) {
     const queuedEvent = createQueuedReplayableEvent(
       blockedOn,
-      topLevelType,
+      domEventName,
       eventSystemFlags,
       targetContainer,
       nativeEvent,
@@ -420,7 +338,7 @@ function accumulateOrCreateContinuousQueuedReplayableEvent(
 
 export function queueIfContinuousEvent(
   blockedOn: null | Container | SuspenseInstance,
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
@@ -428,44 +346,44 @@ export function queueIfContinuousEvent(
   // These set relatedTarget to null because the replayed event will be treated as if we
   // moved from outside the window (no target) onto the target once it hydrates.
   // Instead of mutating we could clone the event.
-  switch (topLevelType) {
-    case TOP_FOCUS: {
+  switch (domEventName) {
+    case 'focusin': {
       const focusEvent = ((nativeEvent: any): FocusEvent);
       queuedFocus = accumulateOrCreateContinuousQueuedReplayableEvent(
         queuedFocus,
         blockedOn,
-        topLevelType,
+        domEventName,
         eventSystemFlags,
         targetContainer,
         focusEvent,
       );
       return true;
     }
-    case TOP_DRAG_ENTER: {
+    case 'dragenter': {
       const dragEvent = ((nativeEvent: any): DragEvent);
       queuedDrag = accumulateOrCreateContinuousQueuedReplayableEvent(
         queuedDrag,
         blockedOn,
-        topLevelType,
+        domEventName,
         eventSystemFlags,
         targetContainer,
         dragEvent,
       );
       return true;
     }
-    case TOP_MOUSE_OVER: {
+    case 'mouseover': {
       const mouseEvent = ((nativeEvent: any): MouseEvent);
       queuedMouse = accumulateOrCreateContinuousQueuedReplayableEvent(
         queuedMouse,
         blockedOn,
-        topLevelType,
+        domEventName,
         eventSystemFlags,
         targetContainer,
         mouseEvent,
       );
       return true;
     }
-    case TOP_POINTER_OVER: {
+    case 'pointerover': {
       const pointerEvent = ((nativeEvent: any): PointerEvent);
       const pointerId = pointerEvent.pointerId;
       queuedPointers.set(
@@ -473,7 +391,7 @@ export function queueIfContinuousEvent(
         accumulateOrCreateContinuousQueuedReplayableEvent(
           queuedPointers.get(pointerId) || null,
           blockedOn,
-          topLevelType,
+          domEventName,
           eventSystemFlags,
           targetContainer,
           pointerEvent,
@@ -481,7 +399,7 @@ export function queueIfContinuousEvent(
       );
       return true;
     }
-    case TOP_GOT_POINTER_CAPTURE: {
+    case 'gotpointercapture': {
       const pointerEvent = ((nativeEvent: any): PointerEvent);
       const pointerId = pointerEvent.pointerId;
       queuedPointerCaptures.set(
@@ -489,7 +407,7 @@ export function queueIfContinuousEvent(
         accumulateOrCreateContinuousQueuedReplayableEvent(
           queuedPointerCaptures.get(pointerId) || null,
           blockedOn,
-          topLevelType,
+          domEventName,
           eventSystemFlags,
           targetContainer,
           pointerEvent,
@@ -519,9 +437,12 @@ function attemptExplicitHydrationTarget(
           // We're blocked on hydrating this boundary.
           // Increase its priority.
           queuedTarget.blockedOn = instance;
-          runWithPriority(queuedTarget.priority, () => {
-            attemptHydrationAtCurrentPriority(nearestMounted);
+          attemptHydrationAtPriority(queuedTarget.lanePriority, () => {
+            runWithPriority(queuedTarget.priority, () => {
+              attemptHydrationAtCurrentPriority(nearestMounted);
+            });
           });
+
           return;
         }
       } else if (tag === HostRoot) {
@@ -540,15 +461,17 @@ function attemptExplicitHydrationTarget(
 
 export function queueExplicitHydrationTarget(target: Node): void {
   if (enableSelectiveHydration) {
-    const priority = getCurrentPriorityLevel();
+    const schedulerPriority = getCurrentPriorityLevel();
+    const updateLanePriority = getCurrentUpdatePriority();
     const queuedTarget: QueuedHydrationTarget = {
       blockedOn: null,
       target: target,
-      priority: priority,
+      priority: schedulerPriority,
+      lanePriority: updateLanePriority,
     };
     let i = 0;
     for (; i < queuedExplicitHydrationTargets.length; i++) {
-      if (priority <= queuedExplicitHydrationTargets[i].priority) {
+      if (schedulerPriority <= queuedExplicitHydrationTargets[i].priority) {
         break;
       }
     }
@@ -569,7 +492,7 @@ function attemptReplayContinuousQueuedEvent(
   while (targetContainers.length > 0) {
     const targetContainer = targetContainers[0];
     const nextBlockedOn = attemptToDispatchEvent(
-      queuedEvent.topLevelType,
+      queuedEvent.domEventName,
       queuedEvent.eventSystemFlags,
       targetContainer,
       queuedEvent.nativeEvent,
@@ -618,7 +541,7 @@ function replayUnblockedEvents() {
     while (targetContainers.length > 0) {
       const targetContainer = targetContainers[0];
       const nextBlockedOn = attemptToDispatchEvent(
-        nextDiscreteEvent.topLevelType,
+        nextDiscreteEvent.domEventName,
         nextDiscreteEvent.eventSystemFlags,
         targetContainer,
         nextDiscreteEvent.nativeEvent,

@@ -131,7 +131,7 @@ export default function OwnerStack() {
 
   useLayoutEffect(() => {
     // If we're already overflowing, then we don't need to re-measure items.
-    // That's because once the owners stack is open, it can only get larger (by driling in).
+    // That's because once the owners stack is open, it can only get larger (by drilling in).
     // A totally new stack can only be reached by exiting this mode and re-entering it.
     if (elementsBarRef.current === null || isOverflowing) {
       return () => {};

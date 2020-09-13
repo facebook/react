@@ -18,7 +18,9 @@ describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOMFizzServer = require('react-dom/unstable-fizz');
+    if (__EXPERIMENTAL__) {
+      ReactDOMFizzServer = require('react-dom/unstable-fizz');
+    }
     Stream = require('stream');
   });
 
@@ -30,6 +32,7 @@ describe('ReactDOMFizzServer', () => {
     return writable;
   }
 
+  // @gate experimental
   it('should call pipeToNodeWritable', () => {
     const writable = getTestWritable();
     ReactDOMFizzServer.pipeToNodeWritable(<div>hello world</div>, writable);

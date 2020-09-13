@@ -27,7 +27,7 @@ describe('invertObject', () => {
     });
   });
 
-  it("should take the last value when there're duplications in vals", () => {
+  it('should take the last value when there are duplications in vals', () => {
     expect(
       invertObject({
         a: '3',

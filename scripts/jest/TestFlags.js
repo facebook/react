@@ -41,6 +41,9 @@ const environmentFlags = {
   experimental: __EXPERIMENTAL__,
   // Similarly, should stable imply "classic"?
   stable: !__EXPERIMENTAL__,
+
+  // Use this for tests that are known to be broken.
+  FIXME: false,
 };
 
 function getTestFlags() {
@@ -72,10 +75,6 @@ function getTestFlags() {
       modern: releaseChannel === 'modern',
       classic: releaseChannel === 'classic',
       www,
-
-      // Using this more specific flag so it's easier to clean up later
-      enableLegacyHiddenType:
-        featureFlags.enableNewReconciler === false || __EXPERIMENTAL__,
 
       ...featureFlags,
       ...environmentFlags,

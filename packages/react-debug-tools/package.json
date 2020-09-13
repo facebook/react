@@ -26,7 +26,7 @@
     "node": ">=0.10.0"
   },
   "peerDependencies": {
-    "react": "^16.0.0"
+    "react": "^17.0.0-alpha"
   },
   "dependencies": {
     "error-stack-parser": "^2.0.2",

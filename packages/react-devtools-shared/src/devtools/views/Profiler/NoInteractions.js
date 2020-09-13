@@ -24,7 +24,7 @@ export default function NoInteractions({
       <p>
         <a
           className={styles.Link}
-          href="http://fb.me/react-interaction-tracing"
+          href="https://reactjs.org/link/interaction-tracing"
           rel="noopener noreferrer"
           target="_blank">
           Learn more about the interaction tracing API here.
