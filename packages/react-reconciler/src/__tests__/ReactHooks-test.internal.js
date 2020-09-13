@@ -31,7 +31,7 @@ describe('ReactHooks', () => {
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
     ReactDOMServer = require('react-dom/server');
-    act = ReactTestRenderer.act;
+    act = ReactTestRenderer.unstable_concurrentAct;
   });
 
   if (__DEV__) {
@@ -782,7 +782,7 @@ describe('ReactHooks', () => {
     }
 
     const root = ReactTestRenderer.create(null);
-    ReactTestRenderer.act(() => {
+    act(() => {
       root.update(<Counter />);
     });
     expect(root).toMatchRenderedOutput('4');
@@ -806,7 +806,7 @@ describe('ReactHooks', () => {
     }
 
     const root = ReactTestRenderer.create(null);
-    ReactTestRenderer.act(() => {
+    act(() => {
       root.update(<Counter />);
     });
     expect(root).toMatchRenderedOutput('4');
@@ -829,7 +829,7 @@ describe('ReactHooks', () => {
     }
 
     const root = ReactTestRenderer.create(null);
-    ReactTestRenderer.act(() => {
+    act(() => {
       root.update(<Counter />);
     });
     expect(root).toMatchRenderedOutput('4');
@@ -1830,7 +1830,7 @@ describe('ReactHooks', () => {
       return null;
     }
 
-    ReactTestRenderer.act(() => {
+    act(() => {
       ReactTestRenderer.create(<A />);
     });
 

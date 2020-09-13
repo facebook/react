@@ -49,11 +49,11 @@ module.exports = function(initModules) {
   function asyncReactDOMRender(reactElement, domElement, forceHydrate) {
     return new Promise(resolve => {
       if (forceHydrate) {
-        ReactTestUtils.act(() => {
+        ReactTestUtils.unstable_concurrentAct(() => {
           ReactDOM.hydrate(reactElement, domElement);
         });
       } else {
-        ReactTestUtils.act(() => {
+        ReactTestUtils.unstable_concurrentAct(() => {
           ReactDOM.render(reactElement, domElement);
         });
       }

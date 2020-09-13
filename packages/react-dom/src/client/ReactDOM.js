@@ -37,6 +37,7 @@ import {
   attemptHydrationAtCurrentPriority,
   runWithPriority,
   getCurrentUpdateLanePriority,
+  act,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
@@ -183,7 +184,9 @@ const Internals = {
     enqueueStateRestore,
     restoreStateIfNeeded,
     flushPassiveEffects,
+    // TODO: These are related to `act`, not events. Move to separate key?
     IsThisRendererActing,
+    act,
   ],
 };
 

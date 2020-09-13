@@ -17,6 +17,7 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
+let act;
 let Scheduler;
 let useState;
 let useReducer;
@@ -43,6 +44,7 @@ function initModules() {
   ReactDOMServer = require('react-dom/server');
   ReactTestUtils = require('react-dom/test-utils');
   Scheduler = require('scheduler');
+  act = ReactTestUtils.unstable_concurrentAct;
   useState = React.useState;
   useReducer = React.useReducer;
   useEffect = React.useEffect;
@@ -1063,7 +1065,7 @@ describe('ReactDOMServerHooks', () => {
       expect(domNode.children.length).toEqual(1);
       expect(oldClientId).not.toBeNull();
 
-      await ReactTestUtils.act(async () => _setShowId(true));
+      await act(async () => _setShowId(true));
 
       expect(domNode.children.length).toEqual(2);
       expect(domNode.children[0].getAttribute('aria-labelledby')).toEqual(
@@ -1281,7 +1283,7 @@ describe('ReactDOMServerHooks', () => {
       const oldServerId = container.children[0].children[0].getAttribute('id');
       expect(oldServerId).not.toBeNull();
 
-      await ReactTestUtils.act(async () => {
+      await act(async () => {
         _setShowDiv(true);
       });
       expect(container.children[0].children.length).toEqual(2);
@@ -1322,7 +1324,7 @@ describe('ReactDOMServerHooks', () => {
       const oldServerId = container.children[0].children[0].getAttribute('id');
       expect(oldServerId).not.toBeNull();
 
-      await ReactTestUtils.act(async () => {
+      await act(async () => {
         _setShowDiv(true);
       });
       expect(container.children[0].children.length).toEqual(2);
@@ -1356,12 +1358,12 @@ describe('ReactDOMServerHooks', () => {
       document.body.append(container);
       container.innerHTML = ReactDOMServer.renderToString(<App />);
       const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
-      ReactTestUtils.act(() => {
+      act(() => {
         root.render(<App />);
       });
       expect(Scheduler).toHaveYielded(['App', 'App']);
       // The ID goes from not being used to being added to the page
-      ReactTestUtils.act(() => {
+      act(() => {
         _setShow(true);
       });
       expect(Scheduler).toHaveYielded(['App', 'App']);
@@ -1391,7 +1393,7 @@ describe('ReactDOMServerHooks', () => {
       ReactDOM.hydrate(<App />, container);
       expect(Scheduler).toHaveYielded(['App', 'App']);
       // The ID goes from not being used to being added to the page
-      ReactTestUtils.act(() => {
+      act(() => {
         _setShow(true);
       });
       expect(Scheduler).toHaveYielded(['App']);
@@ -1418,12 +1420,12 @@ describe('ReactDOMServerHooks', () => {
       document.body.append(container);
       container.innerHTML = ReactDOMServer.renderToString(<App />);
       const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
-      ReactTestUtils.act(() => {
+      act(() => {
         root.render(<App />);
       });
 
       // The ID goes from not being used to being added to the page
-      ReactTestUtils.act(() => {
+      act(() => {
         ReactDOM.flushSync(() => {
           _setShow(true);
         });
@@ -1518,7 +1520,7 @@ describe('ReactDOMServerHooks', () => {
       expect(child1Ref.current).toBe(null);
       expect(Scheduler).toHaveYielded([]);
 
-      ReactTestUtils.act(() => {
+      act(() => {
         _setShow(true);
 
         // State update should trigger the ID to update, which changes the props
@@ -1603,7 +1605,7 @@ describe('ReactDOMServerHooks', () => {
 
       suspend = true;
       const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
-      await ReactTestUtils.act(async () => {
+      await act(async () => {
         root.render(<App />);
       });
       jest.runAllTimers();
@@ -1616,7 +1618,7 @@ describe('ReactDOMServerHooks', () => {
         container.children[0].children[0].getAttribute('id'),
       ).not.toBeNull();
 
-      await ReactTestUtils.act(async () => {
+      await act(async () => {
         suspend = false;
         resolve();
         await promise;
@@ -1703,7 +1705,7 @@ describe('ReactDOMServerHooks', () => {
 
       suspend = false;
       const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
-      await ReactTestUtils.act(async () => {
+      await act(async () => {
         root.render(<App />);
       });
       jest.runAllTimers();
@@ -1968,7 +1970,7 @@ describe('ReactDOMServerHooks', () => {
       expect(Scheduler).toHaveYielded([]);
       expect(Scheduler).toFlushAndYield([]);
 
-      ReactTestUtils.act(() => {
+      act(() => {
         _setShow(false);
       });
 

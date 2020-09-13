@@ -44,7 +44,7 @@ describe('ReactErrorBoundaries', () => {
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactDOM = require('react-dom');
     React = require('react');
-    act = require('react-dom/test-utils').act;
+    act = require('react-dom/test-utils').unstable_concurrentAct;
     Scheduler = require('scheduler');
 
     BrokenConstructor = class extends React.Component {
