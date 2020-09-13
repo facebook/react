@@ -21,6 +21,25 @@ export function installHook(target: any): DevToolsHook | null {
     return null;
   }
 
+  function getMainWindow(target: any): any {
+    if (!canAccessParentWindow(target) || isMainWindow(target)) {
+      return target;
+    }
+    return getMainWindow(target.parent);
+  }
+
+  function isMainWindow(target: any): boolean {
+    return target.self === target.top;
+  }
+
+  function canAccessParentWindow(target: any): boolean {
+    try {
+      return !!target.parent.origin;
+    } catch (error) {
+      return false;
+    }
+  }
+
   function detectReactBuildType(renderer) {
     try {
       if (typeof renderer.version === 'string') {
@@ -282,30 +301,34 @@ export function installHook(target: any): DevToolsHook | null {
   const listeners = {};
   const renderers = new Map();
 
-  const hook: DevToolsHook = {
-    rendererInterfaces,
-    listeners,
+  let hook: DevToolsHook;
+  if (!canAccessParentWindow(target) || isMainWindow(target)) {
+    hook = {
+      rendererInterfaces,
+      listeners,
 
-    // Fast Refresh for web relies on this.
-    renderers,
+      // Fast Refresh for web relies on this.
+      renderers,
 
-    emit,
-    getFiberRoots,
-    inject,
-    on,
-    off,
-    sub,
+      emit,
+      getFiberRoots,
+      inject,
+      on,
+      off,
+      sub,
 
-    // This is a legacy flag.
-    // React v16 checks the hook for this to ensure DevTools is new enough.
-    supportsFiber: true,
+      // This is a legacy flag.
+      // React v16 checks the hook for this to ensure DevTools is new enough.
+      supportsFiber: true,
 
-    // React calls these methods.
-    checkDCE,
-    onCommitFiberUnmount,
-    onCommitFiberRoot,
-  };
-
+      // React calls these methods.
+      checkDCE,
+      onCommitFiberUnmount,
+      onCommitFiberRoot,
+    };
+  } else {
+    hook = getMainWindow(target).__REACT_DEVTOOLS_GLOBAL_HOOK__;
+  }
   Object.defineProperty(
     target,
     '__REACT_DEVTOOLS_GLOBAL_HOOK__',
