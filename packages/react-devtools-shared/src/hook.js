@@ -21,20 +21,20 @@ export function installHook(target: any): DevToolsHook | null {
     return null;
   }
 
-  function getMainWindow(target: any): any {
-    if (!canAccessParentWindow(target) || isMainWindow(target)) {
-      return target;
+  function getMainWindow(targetWindow: any): any {
+    if (!canAccessParentWindow(targetWindow) || isMainWindow(targetWindow)) {
+      return targetWindow;
     }
-    return getMainWindow(target.parent);
+    return getMainWindow(targetWindow.parent);
   }
 
-  function isMainWindow(target: any): boolean {
-    return target.self === target.top;
+  function isMainWindow(targetWindow: any): boolean {
+    return targetWindow.self === targetWindow.top;
   }
 
-  function canAccessParentWindow(target: any): boolean {
+  function canAccessParentWindow(targetWindow: any): boolean {
     try {
-      return !!target.parent.origin;
+      return !!targetWindow.parent.origin;
     } catch (error) {
       return false;
     }
