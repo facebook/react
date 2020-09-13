@@ -23,7 +23,7 @@ import {
   ContinuousEvent,
 } from 'shared/ReactTypes';
 
-import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
+import {enableBeforeAfterFocusEvents} from 'shared/ReactFeatureFlags';
 
 export const topLevelEventsToReactNames: Map<
   DOMEventName,
@@ -88,8 +88,12 @@ const otherDiscreteEvents: Array<DOMEventName> = [
   'compositionupdate',
 ];
 
-if (enableCreateEventHandleAPI) {
-  otherDiscreteEvents.push('beforeblur', 'afterblur');
+if (enableBeforeAfterFocusEvents) {
+  discreteEventPairsForSimpleEventPlugin.push(
+    ('beforeblur': DOMEventName),
+    'beforeBlur',
+  );
+  otherDiscreteEvents.push('afterblur');
 }
 
 // prettier-ignore

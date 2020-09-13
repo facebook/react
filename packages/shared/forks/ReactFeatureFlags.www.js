@@ -64,6 +64,8 @@ export const disableModulePatternComponents = true;
 
 export const enableCreateEventHandleAPI = true;
 
+export const enableBeforeAfterFocusEvents = true;
+
 export const enableFundamentalAPI = false;
 
 export const enableScopeAPI = true;
