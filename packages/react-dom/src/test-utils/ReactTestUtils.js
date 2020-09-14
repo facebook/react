@@ -18,7 +18,8 @@ import {
 import {SyntheticEvent} from '../events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
-import {unstable_concurrentAct} from './ReactTestUtilsAct';
+import {act} from './ReactTestUtilsPublicAct';
+import {unstable_concurrentAct} from './ReactTestUtilsInternalAct';
 import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,
@@ -33,9 +34,8 @@ const getFiberCurrentPropsFromNode = EventInternals[2];
 const enqueueStateRestore = EventInternals[3];
 const restoreStateIfNeeded = EventInternals[4];
 // const flushPassiveEffects = EventInternals[5];
-// TODO: These are related to `act`, not events. Move to separate key?
+// TODO: This is related to `act`, not events. Move to separate key?
 // const IsThisRendererActing = EventInternals[6];
-const act = EventInternals[7];
 
 function Event(suffix) {}
 
