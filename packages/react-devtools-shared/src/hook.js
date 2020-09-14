@@ -21,6 +21,25 @@ export function installHook(target: any): DevToolsHook | null {
     return null;
   }
 
+  function getMainWindow(targetWindow: any): any {
+    if (!canAccessParentWindow(targetWindow) || isMainWindow(targetWindow)) {
+      return targetWindow;
+    }
+    return getMainWindow(targetWindow.parent);
+  }
+
+  function isMainWindow(targetWindow: any): boolean {
+    return targetWindow.self === targetWindow.top;
+  }
+
+  function canAccessParentWindow(targetWindow: any): boolean {
+    try {
+      return !!targetWindow.parent.origin;
+    } catch (error) {
+      return false;
+    }
+  }
+
   function detectReactBuildType(renderer) {
     try {
       if (typeof renderer.version === 'string') {
@@ -282,30 +301,34 @@ export function installHook(target: any): DevToolsHook | null {
   const listeners = {};
   const renderers = new Map();
 
-  const hook: DevToolsHook = {
-    rendererInterfaces,
-    listeners,
+  let hook: DevToolsHook;
+  if (!canAccessParentWindow(target) || isMainWindow(target)) {
+    hook = {
+      rendererInterfaces,
+      listeners,
 
-    // Fast Refresh for web relies on this.
-    renderers,
+      // Fast Refresh for web relies on this.
+      renderers,
 
-    emit,
-    getFiberRoots,
-    inject,
-    on,
-    off,
-    sub,
+      emit,
+      getFiberRoots,
+      inject,
+      on,
+      off,
+      sub,
 
-    // This is a legacy flag.
-    // React v16 checks the hook for this to ensure DevTools is new enough.
-    supportsFiber: true,
+      // This is a legacy flag.
+      // React v16 checks the hook for this to ensure DevTools is new enough.
+      supportsFiber: true,
 
-    // React calls these methods.
-    checkDCE,
-    onCommitFiberUnmount,
-    onCommitFiberRoot,
-  };
-
+      // React calls these methods.
+      checkDCE,
+      onCommitFiberUnmount,
+      onCommitFiberRoot,
+    };
+  } else {
+    hook = getMainWindow(target).__REACT_DEVTOOLS_GLOBAL_HOOK__;
+  }
   Object.defineProperty(
     target,
     '__REACT_DEVTOOLS_GLOBAL_HOOK__',
