@@ -623,11 +623,11 @@ exports[`InspectedElementContext should support objects with with inherited keys
   "hooks": null,
   "props": {
     "object": {
-      "3": 3,
-      "value2": 2,
-      "Symbol(value3)": 3,
-      "value1": 1,
-      "Symbol(value1)": 1
+      "123": 3,
+      "enumerableString": 2,
+      "Symbol(enumerableSymbol)": 3,
+      "enumerableStringBase": 1,
+      "Symbol(enumerableSymbolBase)": 1
     }
   },
   "state": null

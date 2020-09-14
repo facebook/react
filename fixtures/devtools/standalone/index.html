@@ -209,54 +209,67 @@
       }
 
       const baseInheritedKeys = Object.create(Object.prototype, {
-      value1: {
+      enumerableStringBase: {
         value: 1,
         writable: true,
         enumerable: true,
         configurable: true,
       },
-      [Symbol('value1')]: {
+      [Symbol('enumerableSymbolBase')]: {
         value: 1,
         writable: true,
         enumerable: true,
+        configurable: true,
+      },
+      nonEnumerableStringBase: {
+        value: 1,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [Symbol('nonEnumerableSymbolBase')]: {
+        value: 1,
+        writable: true,
+        enumerable: false,
         configurable: true,
       },
     });
 
     const inheritedKeys = Object.create(baseInheritedKeys, {
-      value2: {
+      enumerableString: {
         value: 2,
         writable: true,
         enumerable: true,
         configurable: true,
       },
-      value3: {
+      nonEnumerableString: {
         value: 3,
         writable: true,
         enumerable: false,
         configurable: true,
       },
-      3: {
+      123: {
         value: 3,
         writable: true,
         enumerable: true,
         configurable: true,
       },
-      [Symbol('value2')]: {
+      [Symbol('nonEnumerableSymbol')]: {
         value: 2,
         writable: true,
         enumerable: false,
         configurable: true,
       },
-      [Symbol('value3')]: {
+      [Symbol('enumerableSymbol')]: {
         value: 3,
         writable: true,
         enumerable: true,
         configurable: true,
       },
       });
+
       function InheritedKeys() {
-        return <ChildComponent inheritedKeys={inheritedKeys} />;
+        return <ChildComponent data={inheritedKeys} />;
       }
 
       const object = {

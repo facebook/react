@@ -436,52 +436,65 @@ describe('InspectedElementContext', () => {
     const Example = () => null;
 
     const base = Object.create(Object.prototype, {
-      value1: {
+      enumerableStringBase: {
         value: 1,
         writable: true,
         enumerable: true,
         configurable: true,
       },
-      [Symbol('value1')]: {
+      [Symbol('enumerableSymbolBase')]: {
         value: 1,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      nonEnumerableStringBase: {
+        value: 1,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [Symbol('nonEnumerableSymbolBase')]: {
+        value: 1,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+    });
+
+    const object = Object.create(base, {
+      enumerableString: {
+        value: 2,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      nonEnumerableString: {
+        value: 3,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [123]: {
+        value: 3,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      [Symbol('nonEnumerableSymbol')]: {
+        value: 2,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [Symbol('enumerableSymbol')]: {
+        value: 3,
         writable: true,
         enumerable: true,
         configurable: true,
       },
     });
 
-    const object = Object.create(base, {
-      value2: {
-        value: 2,
-        writable: true,
-        enumerable: true,
-        configurable: true,
-      },
-      value3: {
-        value: 3,
-        writable: true,
-        enumerable: false,
-        configurable: true,
-      },
-      3: {
-        value: 3,
-        writable: true,
-        enumerable: true,
-        configurable: true,
-      },
-      [Symbol('value2')]: {
-        value: 2,
-        writable: true,
-        enumerable: false,
-        configurable: true,
-      },
-      [Symbol('value3')]: {
-        value: 3,
-        writable: true,
-        enumerable: true,
-        configurable: true,
-      },
-    });
     act(() =>
       ReactDOM.render(<Example data={object} />, document.createElement('div')),
     );
