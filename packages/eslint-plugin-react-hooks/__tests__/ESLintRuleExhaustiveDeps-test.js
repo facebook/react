@@ -1445,6 +1445,14 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function MyComponent({foo}) {
+          useCustomEffect(async () => foo, [foo]);
+        }
+      `,
+      options: [{additionalHooks: 'useCustomEffect'}],
+    },
   ],
   invalid: [
     {
@@ -7526,6 +7534,31 @@ const tests = {
             "The 'foo' object makes the dependencies of useEffect Hook (at line 9) change on every render. " +
             "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent({foo}) {
+          useCustomEffect(async () => foo, []);
+        }
+      `,
+      options: [{additionalHooks: 'useCustomEffect'}],
+      errors: [
+        {
+          message:
+            "React Hook useCustomEffect has a missing dependency: 'foo'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [foo]',
+              output: normalizeIndent`
+                function MyComponent({foo}) {
+                  useCustomEffect(async () => foo, [foo]);
+                }
+              `,
+            },
+          ],
         },
       ],
     },
