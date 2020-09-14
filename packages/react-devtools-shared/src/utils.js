@@ -52,14 +52,39 @@ const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 // Try to reuse the already encoded strings.
 const encodedStringCache = new LRU({max: 1000});
 
-export function alphaSortKeys(a: string, b: string): number {
-  if (a > b) {
+export function alphaSortKeys(
+  a: string | number | Symbol,
+  b: string | number | Symbol,
+): number {
+  if (a.toString() > b.toString()) {
     return 1;
-  } else if (b > a) {
+  } else if (b.toString() > a.toString()) {
     return -1;
   } else {
     return 0;
   }
+}
+
+export function getAllEnumerableKeys(
+  obj: Object,
+): Array<string | number | Symbol> {
+  const keys = [];
+  let current = obj;
+  while (current != null) {
+    const currentKeys = [
+      ...Object.keys(current),
+      ...Object.getOwnPropertySymbols(current),
+    ];
+    const descriptors = Object.getOwnPropertyDescriptors(current);
+    currentKeys.forEach(key => {
+      // $FlowFixMe: key can be a Symbol https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor
+      if (descriptors[key].enumerable) {
+        keys.push(key);
+      }
+    });
+    current = Object.getPrototypeOf(current);
+  }
+  return keys;
 }
 
 export function getDisplayName(
@@ -657,7 +682,7 @@ export function formatDataForPreview(
       return data.toString();
     case 'object':
       if (showFormattedValue) {
-        const keys = Object.keys(data).sort(alphaSortKeys);
+        const keys = getAllEnumerableKeys(data).sort(alphaSortKeys);
 
         let formatted = '';
         for (let i = 0; i < keys.length; i++) {
@@ -665,7 +690,10 @@ export function formatDataForPreview(
           if (i > 0) {
             formatted += ', ';
           }
-          formatted += `${key}: ${formatDataForPreview(data[key], false)}`;
+          formatted += `${key.toString()}: ${formatDataForPreview(
+            data[key],
+            false,
+          )}`;
           if (formatted.length > MAX_PREVIEW_STRING_LENGTH) {
             // Prevent doing a lot of unnecessary iteration...
             break;

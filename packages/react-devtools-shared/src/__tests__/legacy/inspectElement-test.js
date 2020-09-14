@@ -432,6 +432,81 @@ describe('InspectedElementContext', () => {
     done();
   });
 
+  it('should support objects with with inherited keys', async done => {
+    const Example = () => null;
+
+    const base = Object.create(Object.prototype, {
+      enumerableStringBase: {
+        value: 1,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      [Symbol('enumerableSymbolBase')]: {
+        value: 1,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      nonEnumerableStringBase: {
+        value: 1,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [Symbol('nonEnumerableSymbolBase')]: {
+        value: 1,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+    });
+
+    const object = Object.create(base, {
+      enumerableString: {
+        value: 2,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      nonEnumerableString: {
+        value: 3,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [123]: {
+        value: 3,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      [Symbol('nonEnumerableSymbol')]: {
+        value: 2,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [Symbol('enumerableSymbol')]: {
+        value: 3,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+    });
+
+    act(() =>
+      ReactDOM.render(<Example data={object} />, document.createElement('div')),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const inspectedElement = await read(id);
+
+    expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
+
+    done();
+  });
+
   it('should not dehydrate nested values until explicitly requested', async done => {
     const Example = () => null;
 

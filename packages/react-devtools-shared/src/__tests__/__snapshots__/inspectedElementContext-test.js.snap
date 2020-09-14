@@ -541,6 +541,9 @@ exports[`InspectedElementContext should support complex data types: 1: Inspected
     "object_of_objects": {
       "inner": {}
     },
+    "object_with_symbol": {
+      "Symbol(name)": "hello"
+    },
     "proxy": {},
     "react_element": {},
     "regexp": {},
@@ -606,6 +609,25 @@ exports[`InspectedElementContext should support objects with overridden hasOwnPr
     "object": {
       "name": "blah",
       "hasOwnProperty": true
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should support objects with with inherited keys: 1: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "object": {
+      "123": 3,
+      "enumerableString": 2,
+      "Symbol(enumerableSymbol)": 3,
+      "enumerableStringBase": 1,
+      "Symbol(enumerableSymbolBase)": 1
     }
   },
   "state": null

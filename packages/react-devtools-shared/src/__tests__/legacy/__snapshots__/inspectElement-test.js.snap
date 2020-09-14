@@ -236,6 +236,29 @@ Object {
 }
 `;
 
+exports[`InspectedElementContext should support objects with with inherited keys: 1: Initial inspection 1`] = `
+Object {
+  "id": 2,
+  "type": "full-data",
+  "value": {
+  "id": 2,
+  "owners": null,
+  "context": {},
+  "hooks": null,
+  "props": {
+    "data": {
+      "123": 3,
+      "enumerableString": 2,
+      "Symbol(enumerableSymbol)": 3,
+      "enumerableStringBase": 1,
+      "Symbol(enumerableSymbolBase)": 1
+    }
+  },
+  "state": null
+},
+}
+`;
+
 exports[`InspectedElementContext should support simple data types: 1: Initial inspection 1`] = `
 Object {
   "id": 2,
