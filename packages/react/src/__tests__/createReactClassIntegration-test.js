@@ -365,7 +365,7 @@ describe('create-react-class-integration', () => {
       expect(() => Component()).toThrow(),
     ).toErrorDev(
       'Warning: Something is calling a React component directly. Use a ' +
-        'factory or JSX instead. See: https://reactjs.org/warnings/legacy-factories.html',
+        'factory or JSX instead. See: https://fb.me/react-legacyfactory',
       {withoutStack: true},
     );
   });
