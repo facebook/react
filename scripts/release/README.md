@@ -20,6 +20,10 @@ The high level process of creating releases is [documented below](#process). Ind
 
 If this is your first time running the release scripts, go to the `scripts/release` directory and run `yarn` to install the dependencies.
 
+## Publishing Without Tags
+
+The sections below include meaningful `--tags` in the instructions. However, keep in mind that **the `--tags` arguments is optional**, and you can omit it if you don't want to tag the release on npm at all. This can be useful when preparing breaking changes.
+
 ## Publishing Next
 
 "Next" builds are meant to be lightweight and published often. In most cases, they can be published using artifacts built by Circle CI.
@@ -83,6 +87,9 @@ Once this step is complete, you're ready to publish the release:
 
 ```sh
 scripts/release/publish.js --tags latest
+
+# Or, if you want to bump "next" as well:
+scripts/release/publish.js --tags latest next
 ```
 
 If the OTP code expires while publishing, re-run this command and answer "y" to the questions about whether it was expected for already published packages.
@@ -168,5 +175,5 @@ Upon completion, this script provides instructions for tagging the Git commit th
 #### Example usage
 To publish a release to NPM as both `next` and `latest`:
 ```sh
-scripts/release/publish.js --tags latest
+scripts/release/publish.js --tags latest next
 ```

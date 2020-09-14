@@ -22,13 +22,7 @@ const ReactSharedInternals = {
 };
 
 if (__DEV__) {
-  Object.assign(ReactSharedInternals, {
-    // These should not be included in production.
-    ReactDebugCurrentFrame,
-    // Shim for React DOM 16.0.0 which still destructured (but not used) this.
-    // TODO: remove in React 17.0.
-    ReactComponentTreeHook: {},
-  });
+  ReactSharedInternals.ReactDebugCurrentFrame = ReactDebugCurrentFrame;
 }
 
 export default ReactSharedInternals;

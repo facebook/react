@@ -8,13 +8,12 @@
  */
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
 
 export let passiveBrowserEventsSupported = false;
 
 // Check if browser support events with passive listeners
 // https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#Safely_detecting_option_support
-if (enableDeprecatedFlareAPI && canUseDOM) {
+if (canUseDOM) {
   try {
     const options = {};
     // $FlowFixMe: Ignore Flow complaining about needing a value

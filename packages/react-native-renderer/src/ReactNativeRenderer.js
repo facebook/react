@@ -30,7 +30,7 @@ import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal
 import {
   setBatchingImplementation,
   batchedUpdates,
-} from 'legacy-events/ReactGenericBatching';
+} from './legacy-events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 // Module provided by RN:
 import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';

@@ -7,7 +7,7 @@
 
 import * as React from 'react';
 import {Suspense} from 'react';
-import {fetch} from 'react-data/fetch';
+import {fetch} from 'react-fetch';
 import {matchRoute} from './ServerRouter';
 import ProfileTimeline from './ProfileTimeline';
 import ProfileBio from './ProfileBio';

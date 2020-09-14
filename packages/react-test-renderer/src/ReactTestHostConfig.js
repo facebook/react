@@ -7,13 +7,8 @@
  * @flow
  */
 
-import type {
-  ReactEventResponder,
-  ReactEventResponderInstance,
-  ReactFundamentalComponentInstance,
-} from 'shared/ReactTypes';
+import type {ReactFundamentalComponentInstance} from 'shared/ReactTypes';
 
-import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
 import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 
 export type Type = string;
@@ -58,7 +53,6 @@ export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
 
-const EVENT_COMPONENT_CONTEXT = {};
 const NO_CONTEXT = {};
 const UPDATE_SIGNAL = {};
 const nodeToInstanceMap = new WeakMap();
@@ -161,19 +155,9 @@ export function createInstance(
   hostContext: Object,
   internalInstanceHandle: Object,
 ): Instance {
-  let propsToUse = props;
-  if (enableDeprecatedFlareAPI) {
-    if (props.DEPRECATED_flareListeners != null) {
-      // We want to remove the "DEPRECATED_flareListeners" prop
-      // as we don't want it in the test renderer's
-      // instance props.
-      const {DEPRECATED_flareListeners, ...otherProps} = props; // eslint-disable-line
-      propsToUse = otherProps;
-    }
-  }
   return {
     type,
-    props: propsToUse,
+    props,
     isHidden: false,
     children: [],
     internalInstanceHandle,
@@ -218,27 +202,12 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
 
-export function shouldDeprioritizeSubtree(type: string, props: Props): boolean {
-  return false;
-}
-
 export function createTextInstance(
   text: string,
   rootContainerInstance: Container,
   hostContext: Object,
   internalInstanceHandle: Object,
 ): TextInstance {
-  if (__DEV__) {
-    if (enableDeprecatedFlareAPI) {
-      if (hostContext === EVENT_COMPONENT_CONTEXT) {
-        console.error(
-          'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-            'Wrap the child text "%s" in an element.',
-          text,
-        );
-      }
-    }
-  }
   return {
     text,
     isHidden: false,
@@ -315,22 +284,6 @@ export function unhideTextInstance(
   textInstance.isHidden = false;
 }
 
-export function DEPRECATED_mountResponderInstance(
-  responder: ReactEventResponder<any, any>,
-  responderInstance: ReactEventResponderInstance<any, any>,
-  props: Object,
-  state: Object,
-  instance: Instance,
-) {
-  // noop
-}
-
-export function DEPRECATED_unmountResponderInstance(
-  responderInstance: ReactEventResponderInstance<any, any>,
-): void {
-  // noop
-}
-
 export function getFundamentalComponentInstance(
   fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
 ): Instance {
@@ -387,10 +340,6 @@ export function getInstanceFromNode(mockNode: Object) {
   return null;
 }
 
-export function beforeRemoveInstance(instance: any) {
-  // noop
-}
-
 let clientId: number = 0;
 export function makeClientId(): OpaqueIDType {
   return 'c_' + (clientId++).toString(36);
@@ -442,10 +391,6 @@ export function preparePortalMount(portalInstance: Instance): void {
 
 export function prepareScopeUpdate(scopeInstance: Object, inst: Object): void {
   nodeToInstanceMap.set(scopeInstance, inst);
-}
-
-export function prepareScopeUnmount(scopeInstance: Object): void {
-  nodeToInstanceMap.delete(scopeInstance);
 }
 
 export function getInstanceFromScope(scopeInstance: Object): null | Object {

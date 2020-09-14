@@ -7,7 +7,7 @@
 /* eslint-disable import/first */
 
 import * as React from 'react';
-import {fetch} from 'react-data/fetch';
+import {fetch} from 'react-fetch';
 
 // TODO: Replace with asset reference.
 import Link from '../client/Link';

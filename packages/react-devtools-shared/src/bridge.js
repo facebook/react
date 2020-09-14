@@ -85,6 +85,11 @@ type NativeStyleEditor_SetValueParams = {|
   value: string,
 |};
 
+type UpdateConsolePatchSettingsParams = {|
+  appendComponentStack: boolean,
+  breakOnConsoleErrors: boolean,
+|};
+
 type BackendEvents = {|
   extensionBackendInitialized: [],
   inspectedElement: [InspectedElementPayload],
@@ -133,8 +138,8 @@ type FrontendEvents = {|
   stopInspectingNative: [boolean],
   stopProfiling: [],
   storeAsGlobal: [StoreAsGlobalParams],
-  updateAppendComponentStack: [boolean],
   updateComponentFilters: [Array<ComponentFilter>],
+  updateConsolePatchSettings: [UpdateConsolePatchSettingsParams],
   viewAttributeSource: [ViewAttributeSourceParams],
   viewElementSource: [ElementAndRendererID],
 

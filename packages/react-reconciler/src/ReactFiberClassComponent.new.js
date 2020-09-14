@@ -12,10 +12,12 @@ import type {Lanes} from './ReactFiberLane';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 
 import * as React from 'react';
-import {Update, Snapshot} from './ReactSideEffectTags';
+import {Update, Snapshot} from './ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
+  enableDebugTracing,
+  enableSchedulingProfiler,
   warnAboutDeprecatedLifecycles,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
@@ -27,7 +29,7 @@ import invariant from 'shared/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
-import {StrictMode} from './ReactTypeOfMode';
+import {DebugTracingMode, StrictMode} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,
@@ -54,9 +56,13 @@ import {
   requestUpdateLane,
   scheduleUpdateOnFiber,
 } from './ReactFiberWorkLoop.new';
-import {requestCurrentSuspenseConfig} from './ReactFiberSuspenseConfig';
+import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
+import {
+  markForceUpdateScheduled,
+  markStateUpdateScheduled,
+} from './SchedulingProfiler';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -189,10 +195,9 @@ const classComponentUpdater = {
   enqueueSetState(inst, payload, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
-    const suspenseConfig = requestCurrentSuspenseConfig();
-    const lane = requestUpdateLane(fiber, suspenseConfig);
+    const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane, suspenseConfig);
+    const update = createUpdate(eventTime, lane);
     update.payload = payload;
     if (callback !== undefined && callback !== null) {
       if (__DEV__) {
@@ -203,14 +208,26 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleUpdateOnFiber(fiber, lane, eventTime);
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        if (fiber.mode & DebugTracingMode) {
+          const name = getComponentName(fiber.type) || 'Unknown';
+          logStateUpdateScheduled(name, lane, payload);
+        }
+      }
+    }
+
+    if (enableSchedulingProfiler) {
+      markStateUpdateScheduled(fiber, lane);
+    }
   },
   enqueueReplaceState(inst, payload, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
-    const suspenseConfig = requestCurrentSuspenseConfig();
-    const lane = requestUpdateLane(fiber, suspenseConfig);
+    const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane, suspenseConfig);
+    const update = createUpdate(eventTime, lane);
     update.tag = ReplaceState;
     update.payload = payload;
 
@@ -223,14 +240,26 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleUpdateOnFiber(fiber, lane, eventTime);
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        if (fiber.mode & DebugTracingMode) {
+          const name = getComponentName(fiber.type) || 'Unknown';
+          logStateUpdateScheduled(name, lane, payload);
+        }
+      }
+    }
+
+    if (enableSchedulingProfiler) {
+      markStateUpdateScheduled(fiber, lane);
+    }
   },
   enqueueForceUpdate(inst, callback) {
     const fiber = getInstance(inst);
     const eventTime = requestEventTime();
-    const suspenseConfig = requestCurrentSuspenseConfig();
-    const lane = requestUpdateLane(fiber, suspenseConfig);
+    const lane = requestUpdateLane(fiber);
 
-    const update = createUpdate(eventTime, lane, suspenseConfig);
+    const update = createUpdate(eventTime, lane);
     update.tag = ForceUpdate;
 
     if (callback !== undefined && callback !== null) {
@@ -242,6 +271,19 @@ const classComponentUpdater = {
 
     enqueueUpdate(fiber, update);
     scheduleUpdateOnFiber(fiber, lane, eventTime);
+
+    if (__DEV__) {
+      if (enableDebugTracing) {
+        if (fiber.mode & DebugTracingMode) {
+          const name = getComponentName(fiber.type) || 'Unknown';
+          logForceUpdateScheduled(name, lane);
+        }
+      }
+    }
+
+    if (enableSchedulingProfiler) {
+      markForceUpdateScheduled(fiber, lane);
+    }
   },
 };
 
@@ -683,7 +725,7 @@ function constructClassInstance(
             'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
               '%s uses %s but also contains the following legacy lifecycles:%s%s%s\n\n' +
               'The above lifecycles should be removed. Learn more about this warning here:\n' +
-              'https://fb.me/react-unsafe-component-lifecycles',
+              'https://reactjs.org/link/unsafe-component-lifecycles',
             componentName,
             newApiName,
             foundWillMountName !== null ? `\n  ${foundWillMountName}` : '',
@@ -848,7 +890,7 @@ function mountClassInstance(
   }
 
   if (typeof instance.componentDidMount === 'function') {
-    workInProgress.effectTag |= Update;
+    workInProgress.flags |= Update;
   }
 }
 
@@ -918,7 +960,7 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.effectTag |= Update;
+      workInProgress.flags |= Update;
     }
     return false;
   }
@@ -961,13 +1003,13 @@ function resumeMountClassInstance(
       }
     }
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.effectTag |= Update;
+      workInProgress.flags |= Update;
     }
   } else {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.effectTag |= Update;
+      workInProgress.flags |= Update;
     }
 
     // If shouldComponentUpdate returned false, we should still update the
@@ -1064,7 +1106,7 @@ function updateClassInstance(
         unresolvedOldProps !== current.memoizedProps ||
         oldState !== current.memoizedState
       ) {
-        workInProgress.effectTag |= Update;
+        workInProgress.flags |= Update;
       }
     }
     if (typeof instance.getSnapshotBeforeUpdate === 'function') {
@@ -1072,7 +1114,7 @@ function updateClassInstance(
         unresolvedOldProps !== current.memoizedProps ||
         oldState !== current.memoizedState
       ) {
-        workInProgress.effectTag |= Snapshot;
+        workInProgress.flags |= Snapshot;
       }
     }
     return false;
@@ -1116,10 +1158,10 @@ function updateClassInstance(
       }
     }
     if (typeof instance.componentDidUpdate === 'function') {
-      workInProgress.effectTag |= Update;
+      workInProgress.flags |= Update;
     }
     if (typeof instance.getSnapshotBeforeUpdate === 'function') {
-      workInProgress.effectTag |= Snapshot;
+      workInProgress.flags |= Snapshot;
     }
   } else {
     // If an update was already in progress, we should schedule an Update
@@ -1129,7 +1171,7 @@ function updateClassInstance(
         unresolvedOldProps !== current.memoizedProps ||
         oldState !== current.memoizedState
       ) {
-        workInProgress.effectTag |= Update;
+        workInProgress.flags |= Update;
       }
     }
     if (typeof instance.getSnapshotBeforeUpdate === 'function') {
@@ -1137,7 +1179,7 @@ function updateClassInstance(
         unresolvedOldProps !== current.memoizedProps ||
         oldState !== current.memoizedState
       ) {
-        workInProgress.effectTag |= Snapshot;
+        workInProgress.flags |= Snapshot;
       }
     }
 

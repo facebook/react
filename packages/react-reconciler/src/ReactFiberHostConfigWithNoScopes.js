@@ -23,5 +23,4 @@ function shim(...args: any) {
 
 // React Scopes (when unsupported)
 export const prepareScopeUpdate = shim;
-export const prepareScopeUnmount = shim;
 export const getInstanceFromScope = shim;

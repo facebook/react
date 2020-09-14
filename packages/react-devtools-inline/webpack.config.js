@@ -36,6 +36,9 @@ module.exports = {
     'react-is': 'react-is',
     scheduler: 'scheduler',
   },
+  optimization: {
+    minimize: false,
+  },
   plugins: [
     new DefinePlugin({
       __DEV__,

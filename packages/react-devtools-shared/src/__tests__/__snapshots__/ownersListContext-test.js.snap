@@ -78,6 +78,33 @@ Array [
 ]
 `;
 
+exports[`OwnersListContext should include all owners for a component wrapped in react memo: owners for "InnerComponent" 1`] = `
+Array [
+  Object {
+    "displayName": "Grandparent",
+    "hocDisplayNames": null,
+    "id": 2,
+    "type": 5,
+  },
+  Object {
+    "displayName": "InnerComponent",
+    "hocDisplayNames": Array [
+      "Memo",
+    ],
+    "id": 3,
+    "type": 8,
+  },
+  Object {
+    "displayName": "InnerComponent",
+    "hocDisplayNames": Array [
+      "ForwardRef",
+    ],
+    "id": 4,
+    "type": 6,
+  },
+]
+`;
+
 exports[`OwnersListContext should include the current element even if there are no other owners: mount 1`] = `
 [root]
     <Grandparent>

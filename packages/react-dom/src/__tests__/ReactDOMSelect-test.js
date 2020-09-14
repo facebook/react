@@ -507,7 +507,7 @@ describe('ReactDOMSelect', () => {
     expect(markup).not.toContain('<option selected="" value="monkey"');
   });
 
-  it('should not control defaultValue if readding options', () => {
+  it('should not control defaultValue if re-adding options', () => {
     const container = document.createElement('div');
 
     const node = ReactDOM.render(
@@ -693,7 +693,7 @@ describe('ReactDOMSelect', () => {
         '(specify either the value prop, or the defaultValue prop, but not ' +
         'both). Decide between using a controlled or uncontrolled select ' +
         'element and remove one of these props. More info: ' +
-        'https://fb.me/react-controlled-components',
+        'https://reactjs.org/link/controlled-components',
     );
 
     ReactTestUtils.renderIntoDocument(

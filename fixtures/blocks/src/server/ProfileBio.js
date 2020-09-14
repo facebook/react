@@ -7,7 +7,7 @@
 /* eslint-disable import/first */
 
 import * as React from 'react';
-import {fetch} from 'react-data/fetch';
+import {fetch} from 'react-fetch';
 
 export default function ProfileBio({userId}) {
   const user = fetch(`/users/${userId}`).json();

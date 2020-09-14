@@ -10,10 +10,6 @@ import Mode from 'art/modes/current';
 import invariant from 'shared/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
-import type {
-  ReactEventResponder,
-  ReactEventResponderInstance,
-} from 'shared/ReactTypes';
 
 const pooledTransform = new Transform();
 
@@ -323,10 +319,6 @@ export function resetTextContent(domElement) {
   // Noop
 }
 
-export function shouldDeprioritizeSubtree(type, props) {
-  return false;
-}
-
 export function getRootHostContext() {
   return NO_CONTEXT;
 }
@@ -433,22 +425,6 @@ export function clearContainer(container) {
   // TODO Implement this
 }
 
-export function DEPRECATED_mountResponderInstance(
-  responder: ReactEventResponder<any, any>,
-  responderInstance: ReactEventResponderInstance<any, any>,
-  props: Object,
-  state: Object,
-  instance: Object,
-) {
-  throw new Error('Not yet implemented.');
-}
-
-export function DEPRECATED_unmountResponderInstance(
-  responderInstance: ReactEventResponderInstance<any, any>,
-): void {
-  throw new Error('Not yet implemented.');
-}
-
 export function getFundamentalComponentInstance(fundamentalInstance) {
   throw new Error('Not yet implemented.');
 }
@@ -471,10 +447,6 @@ export function unmountFundamentalComponent(fundamentalInstance) {
 
 export function getInstanceFromNode(node) {
   throw new Error('Not yet implemented.');
-}
-
-export function beforeRemoveInstance(instance) {
-  // noop
 }
 
 export function isOpaqueHydratingObject(value: mixed): boolean {

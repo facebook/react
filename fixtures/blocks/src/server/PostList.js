@@ -8,7 +8,7 @@
 
 import * as React from 'react';
 import {Suspense, unstable_SuspenseList as SuspenseList} from 'react';
-import {preload} from 'react-data/fetch';
+import {preload} from 'react-fetch';
 import PostGlimmer from './PostGlimmer';
 import Post from './Post';
 

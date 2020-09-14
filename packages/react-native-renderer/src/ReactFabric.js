@@ -27,7 +27,7 @@ import {
 } from 'react-reconciler/src/ReactFiberReconciler';
 
 import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal';
-import {setBatchingImplementation} from 'legacy-events/ReactGenericBatching';
+import {setBatchingImplementation} from './legacy-events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 
 // Module provided by RN:

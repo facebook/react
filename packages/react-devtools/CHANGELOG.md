@@ -5,10 +5,51 @@
     Changes that have landed in master but are not yet released.
     Click to see more.
   </summary>
-  
-  <!-- Upcoming changes go here -->
 
+  <!-- Upcoming changes go here -->
 </details>
+
+## 4.8.2 (July 15, 2020)
+#### Bugfix
+* Fix broken `Suspense` heuristic ([bvaughn](https://github.com/bvaughn) in [#19373](https://github.com/facebook/react/pull/19373))
+* Fixed error with standalone in HTTPS mode ([b-ponomarenko](https://github.com/b-ponomarenko) in [#19336](https://github.com/facebook/react/pull/19336))
+* Disable DevTools minification ([bvaughn](https://github.com/bvaughn) in [#19369](https://github.com/facebook/react/pull/19369))
+
+## 4.8.1 (July 10, 2020)
+#### Bugfix
+* Fix break-on-warning to truly be off by default. ([gaearon](https://github.com/gaearon) in [#19309](https://github.com/facebook/react/pull/19309))
+
+## 4.8.0 (July 9, 2020)
+#### Features
+* Add SSL support to React devtools standalone ([ittaibaratz](https://github.com/ittaibaratz) in [#19191](https://github.com/facebook/react/pull/19191))
+* New break-on-warning feature (off by default) ([bvaughn](https://github.com/bvaughn) in [#19048](https://github.com/facebook/react/pull/19048))
+
+#### Bugfix
+* Updates Electron version for react-devtools to pull in several security fixes ([gsimone](https://github.com/gsimone) in [#19280](https://github.com/facebook/react/pull/19280))
+* Remove unnecessary tag end from CommitRanked view ([finico](https://github.com/finico) in [#19195](https://github.com/facebook/react/pull/19195))
+* Shutdown DevTools Bridge synchronously when unmounting ([bvaughn](https://github.com/bvaughn) in [#19180](https://github.com/facebook/react/pull/19180))
+
+## 4.7.0 (May 18, 2020)
+
+#### Features
+* Improved appended component stacks for third party warnings to be more like native ([bvaughn](https://github.com/bvaughn) in [#18656](https://github.com/facebook/react/pull/18656))
+* Improve inline search results by highlighting match on HOC badge ([bl00mber](https://github.com/bl00mber) in [#18802](https://github.com/facebook/react/pull/18802))
+* Add key badge to inspected element in right hand pane ([karlhorky]](https://github.com/karlhorky) in [#18737](https://github.com/facebook/react/pull/18737))
+* Improve Profiler snapshot selector drag-and-drop UX ([bl00mber](https://github.com/bl00mber) in [#18852](https://github.com/facebook/react/pull/18852))
+* Profiler tooltip now includes self duration to make it easier to scan times without requiring selection ([bvaughn](https://github.com/bvaughn) in [#18510](https://github.com/facebook/react/pull/18510))
+* Rendered by list also now highlights native elements on hover ([hristo-kanchev](https://github.com/hristo-kanchev) in [#18479](https://github.com/facebook/react/pull/18479))
+* Add in-page highlighting for mouse-over interactions in Profiler ([bl00mber](https://github.com/bl00mber) in [#18745](https://github.com/facebook/react/pull/18745))
+
+#### Bugfix
+* Fix Profiler bug "_Could not find commit data for root_" by resetting selected node on root change ([bl00mber](https://github.com/bl00mber) in [#18880](https://github.com/facebook/react/pull/18880))
+* Add `imported` flag to Profiling data to more reliably differentiate between imported and session data ([bl00mber](https://github.com/bl00mber) in [#18913](https://github.com/facebook/react/pull/18913))
+* Disable Profiler filtering to avoid edge case runtime error "_Cannot read property 'duration' of undefined_" ([bvaughn](https://github.com/bvaughn) in [#18862](https://github.com/facebook/react/pull/18862))
+* Fix Profiler bug "_cannot read property 'memoizedState' of null_" ([bvaughn](https://github.com/bvaughn) in [#18522](https://github.com/facebook/react/pull/18522))
+* Whitespace search results highlighting bug fix ([bvaughn](https://github.com/bvaughn) in [#18527](https://github.com/facebook/react/pull/18527))
+* Improved confusing Profiler tooltip text for components that did not render ([bvaughn](https://github.com/bvaughn) in [#18523](https://github.com/facebook/react/pull/18523))
+* Fix edge case performance issue when highlight elements enabled ([Faelivrinx](https://github.com/Faelivrinx) in [#18498](https://github.com/facebook/react/pull/18498))
+* Disabled Webpack auto polyfill for `setImmediate` ([bvaughn](https://github.com/bvaughn) in [#18860](https://github.com/facebook/react/pull/18860))
+* Fix mouse interactions for standalone DevTools on Linux ([bl00mber](https://github.com/bl00mber) in [#18772](https://github.com/facebook/react/pull/18772))
 
 ## 4.6.0 (March 26, 2020)
 

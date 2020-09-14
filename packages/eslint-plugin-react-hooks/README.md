@@ -18,7 +18,20 @@ npm install eslint-plugin-react-hooks --save-dev
 yarn add eslint-plugin-react-hooks --dev
 ```
 
-Then add it to your ESLint configuration:
+Then extend the recommended eslint config:
+
+```js
+{
+  "extends": [
+    // ...
+    "plugin:react-hooks/recommended"
+  ]
+}
+```
+
+### Custom Configuration
+
+If you want more fine-grained configuration, you can instead add a snippet like this to your ESLint configuration file:
 
 ```js
 {
@@ -34,16 +47,24 @@ Then add it to your ESLint configuration:
 }
 ```
 
-Or use the recommended config:
+
+## Advanced Configuration
+
+`exhaustive-deps` can be configured to validate dependencies of custom Hooks with the `additionalHooks` option.
+This option accepts a regex to match the names of custom Hooks that have dependencies.
 
 ```js
 {
-  "extends": [
+  "rules": {
     // ...
-    "plugin:react-hooks/recommended"
-  ]
+    "react-hooks/exhaustive-deps": ["warn", {
+      "additionalHooks": "(useMyCustomHook|useMyOtherCustomHook)"
+    }]
+  }
 }
 ```
+
+We suggest to use this option **very sparingly, if at all**. Generally saying, we recommend most custom Hooks to not use the dependencies argument, and instead provide a higher-level API that is more focused around a specific use case.
 
 ## Valid and Invalid Examples
 

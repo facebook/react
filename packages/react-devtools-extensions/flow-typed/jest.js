@@ -1164,7 +1164,7 @@ declare var expect: {
 };
 
 // TODO handle return type
-// http://jasmine.github.io/2.4/introduction.html#section-Spies
+// https://jasmine.github.io/2.4/introduction.html#section-Spies
 declare function spyOn(value: mixed, method: string): Object;
 
 /** Holds all functions related to manipulating test runner */

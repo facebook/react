@@ -460,7 +460,7 @@ describe('ReactChildren', () => {
     });
 
     function assertCalls() {
-      expect(callback).toHaveBeenCalledTimes(2, 0);
+      expect(callback).toHaveBeenCalledTimes(2);
       expect(callback).toHaveBeenCalledWith('a', 0);
       expect(callback).toHaveBeenCalledWith(13, 1);
       callback.mockClear();
@@ -974,12 +974,12 @@ describe('ReactChildren', () => {
       ).toErrorDev(
         'Warning: ' +
           'Each child in a list should have a unique "key" prop.' +
-          ' See https://fb.me/react-warning-keys for more information.' +
+          ' See https://reactjs.org/link/warning-keys for more information.' +
           '\n    in ComponentReturningArray (at **)',
       );
     });
 
-    it('does not warn when there are keys on  elements in a fragment', () => {
+    it('does not warn when there are keys on elements in a fragment', () => {
       class ComponentReturningArray extends React.Component {
         render() {
           return [<div key="foo" />, <div key="bar" />];
@@ -995,7 +995,7 @@ describe('ReactChildren', () => {
       ).toErrorDev(
         'Warning: ' +
           'Each child in a list should have a unique "key" prop.' +
-          ' See https://fb.me/react-warning-keys for more information.',
+          ' See https://reactjs.org/link/warning-keys for more information.',
         {withoutStack: true}, // There's nothing on the stack
       );
     });

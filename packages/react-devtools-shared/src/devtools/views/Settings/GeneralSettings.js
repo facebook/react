@@ -17,9 +17,7 @@ import styles from './SettingsShared.css';
 
 export default function GeneralSettings(_: {||}) {
   const {
-    appendComponentStack,
     displayDensity,
-    setAppendComponentStack,
     setDisplayDensity,
     setTheme,
     setTraceUpdatesEnabled,
@@ -70,19 +68,6 @@ export default function GeneralSettings(_: {||}) {
           </label>
         </div>
       )}
-
-      <div className={styles.Setting}>
-        <label>
-          <input
-            type="checkbox"
-            checked={appendComponentStack}
-            onChange={({currentTarget}) =>
-              setAppendComponentStack(currentTarget.checked)
-            }
-          />{' '}
-          Append component stacks to console warnings and errors.
-        </label>
-      </div>
 
       <div className={styles.ReleaseNotes}>
         <a

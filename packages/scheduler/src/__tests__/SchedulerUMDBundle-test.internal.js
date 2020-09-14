@@ -24,7 +24,7 @@ describe('Scheduling UMD bundle', () => {
   });
 
   function filterPrivateKeys(name) {
-    // Be very careful adding things to this whitelist!
+    // Be very careful adding things to this filter!
     // It's easy to introduce bugs by doing it:
     // https://github.com/facebook/react/issues/14904
     switch (name) {

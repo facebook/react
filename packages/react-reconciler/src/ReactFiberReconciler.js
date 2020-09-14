@@ -49,6 +49,9 @@ import {
   findBoundingRects as findBoundingRects_old,
   focusWithin as focusWithin_old,
   observeVisibleRects as observeVisibleRects_old,
+  registerMutableSourceForHydration as registerMutableSourceForHydration_old,
+  runWithPriority as runWithPriority_old,
+  getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
 } from './ReactFiberReconciler.old';
 
 import {
@@ -86,6 +89,9 @@ import {
   findBoundingRects as findBoundingRects_new,
   focusWithin as focusWithin_new,
   observeVisibleRects as observeVisibleRects_new,
+  registerMutableSourceForHydration as registerMutableSourceForHydration_new,
+  runWithPriority as runWithPriority_new,
+  getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
 } from './ReactFiberReconciler.new';
 
 export const createContainer = enableNewReconciler
@@ -137,6 +143,9 @@ export const attemptContinuousHydration = enableNewReconciler
 export const attemptHydrationAtCurrentPriority = enableNewReconciler
   ? attemptHydrationAtCurrentPriority_new
   : attemptHydrationAtCurrentPriority_old;
+export const getCurrentUpdateLanePriority = enableNewReconciler
+  ? getCurrentUpdateLanePriority_new
+  : getCurrentUpdateLanePriority_old;
 export const findHostInstance = enableNewReconciler
   ? findHostInstance_new
   : findHostInstance_old;
@@ -159,6 +168,8 @@ export const createPortal = enableNewReconciler
 export const createComponentSelector = enableNewReconciler
   ? createComponentSelector_new
   : createComponentSelector_old;
+
+//TODO: "psuedo" is spelled "pseudo"
 export const createHasPsuedoClassSelector = enableNewReconciler
   ? createHasPsuedoClassSelector_new
   : createHasPsuedoClassSelector_old;
@@ -186,3 +197,9 @@ export const focusWithin = enableNewReconciler
 export const observeVisibleRects = enableNewReconciler
   ? observeVisibleRects_new
   : observeVisibleRects_old;
+export const registerMutableSourceForHydration = enableNewReconciler
+  ? registerMutableSourceForHydration_new
+  : registerMutableSourceForHydration_old;
+export const runWithPriority = enableNewReconciler
+  ? runWithPriority_new
+  : runWithPriority_old;

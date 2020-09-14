@@ -10,26 +10,22 @@
 import type {Source} from 'shared/ReactElementType';
 import type {
   RefObject,
-  ReactEventResponder,
-  ReactEventResponderListener,
-  ReactEventResponderInstance,
   ReactContext,
   MutableSourceSubscribeFn,
   MutableSourceGetSnapshotFn,
+  MutableSourceVersion,
   MutableSource,
 } from 'shared/ReactTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {SideEffectTag} from './ReactSideEffectTags';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {Flags} from './ReactFiberFlags';
 import type {Lane, LanePriority, Lanes, LaneMap} from './ReactFiberLane';
 import type {HookType} from './ReactFiberHooks.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {SuspenseConfig, TimeoutConfig} from './ReactFiberSuspenseConfig';
 
 export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
 
@@ -40,23 +36,9 @@ export type ContextDependency<T> = {
   ...
 };
 
-export type Dependencies_old = {
-  expirationTime: ExpirationTime,
-  firstContext: ContextDependency<mixed> | null,
-  responders: Map<
-    ReactEventResponder<any, any>,
-    ReactEventResponderInstance<any, any>,
-  > | null,
-  ...
-};
-
-export type Dependencies_new = {
+export type Dependencies = {
   lanes: Lanes,
   firstContext: ContextDependency<mixed> | null,
-  responders: Map<
-    ReactEventResponder<any, any>,
-    ReactEventResponderInstance<any, any>,
-  > | null,
   ...
 };
 
@@ -124,8 +106,7 @@ export type Fiber = {|
   memoizedState: any,
 
   // Dependencies (contexts, events) for this fiber, if it has any
-  dependencies_new: Dependencies_new | null,
-  dependencies_old: Dependencies_old | null,
+  dependencies: Dependencies | null,
 
   // Bitfield that describes properties about the fiber and its subtree. E.g.
   // the ConcurrentMode flag indicates whether the subtree should be async-by-
@@ -136,7 +117,9 @@ export type Fiber = {|
   mode: TypeOfMode,
 
   // Effect
-  effectTag: SideEffectTag,
+  flags: Flags,
+  subtreeFlags: Flags,
+  deletions: Array<Fiber> | null,
 
   // Singly linked list fast path to the next fiber with side-effects.
   nextEffect: Fiber | null,
@@ -147,11 +130,6 @@ export type Fiber = {|
   firstEffect: Fiber | null,
   lastEffect: Fiber | null,
 
-  // Only used by old reconciler
-  expirationTime: ExpirationTime,
-  childExpirationTime: ExpirationTime,
-
-  // Only used by new reconciler
   lanes: Lanes,
   childLanes: Lanes,
 
@@ -218,41 +196,17 @@ type BaseFiberRootProperties = {|
   pendingContext: Object | null,
   // Determines if we should attempt to hydrate on the initial mount
   +hydrate: boolean,
-  // Node returned by Scheduler.scheduleCallback
+
+  // Used by useMutableSource hook to avoid tearing during hydration.
+  mutableSourceEagerHydrationData?: Array<
+    MutableSource<any> | MutableSourceVersion,
+  > | null,
+
+  // Node returned by Scheduler.scheduleCallback. Represents the next rendering
+  // task that the root will work on.
   callbackNode: *,
-
-  // Only used by old reconciler
-
-  // Expiration of the callback associated with this root
-  callbackExpirationTime: ExpirationTime,
-  // Priority of the callback associated with this root
-  callbackPriority_old: ReactPriorityLevel,
-
-  finishedExpirationTime: ExpirationTime,
-  // The earliest pending expiration time that exists in the tree
-  firstPendingTime: ExpirationTime,
-  // The latest pending expiration time that exists in the tree
-  lastPendingTime: ExpirationTime,
-  // The earliest suspended expiration time that exists in the tree
-  firstSuspendedTime: ExpirationTime,
-  // The latest suspended expiration time that exists in the tree
-  lastSuspendedTime: ExpirationTime,
-  // The next known expiration time after the suspended range
-  nextKnownPendingLevel: ExpirationTime,
-  // The latest time at which a suspended component pinged the root to
-  // render again
-  lastPingedTime: ExpirationTime,
-  lastExpiredTime: ExpirationTime,
-  // Used by useMutableSource hook to avoid tearing within this root
-  // when external, mutable sources are read from during render.
-  mutableSourceLastPendingUpdateTime: ExpirationTime,
-
-  // Only used by new reconciler
-
-  // Represents the next task that the root should work on, or the current one
-  // if it's already working.
-  callbackId: Lanes,
-  callbackPriority_new: LanePriority,
+  callbackPriority: LanePriority,
+  eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,
 
   pendingLanes: Lanes,
@@ -262,6 +216,9 @@ type BaseFiberRootProperties = {|
   mutableReadLanes: Lanes,
 
   finishedLanes: Lanes,
+
+  entangledLanes: Lanes,
+  entanglements: LaneMap<Lanes>,
 |};
 
 // The following attributes are only used by interaction tracing builds.
@@ -271,8 +228,7 @@ type BaseFiberRootProperties = {|
 type ProfilingOnlyFiberRootProperties = {|
   interactionThreadID: number,
   memoizedInteractions: Set<Interaction>,
-  pendingInteractionMap_new: Map<Lane | Lanes, Set<Interaction>>,
-  pendingInteractionMap_old: Map<ExpirationTime, Set<Interaction>>,
+  pendingInteractionMap: Map<Lane | Lanes, Set<Interaction>>,
 |};
 
 export type SuspenseHydrationCallbacks = {
@@ -333,18 +289,14 @@ export type Dispatcher = {|
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useResponder<E, C>(
-    responder: ReactEventResponder<E, C>,
-    props: Object,
-  ): ReactEventResponderListener<E, C>,
-  useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T,
-  useTransition(
-    config: SuspenseConfig | void | null,
-  ): [(() => void) => void, boolean],
+  useDeferredValue<T>(value: T): T,
+  useTransition(): [(() => void) => void, boolean],
   useMutableSource<Source, Snapshot>(
     source: MutableSource<Source>,
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
   useOpaqueIdentifier(): any,
+
+  unstable_isNewReconciler?: boolean,
 |};

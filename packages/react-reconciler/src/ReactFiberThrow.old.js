@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {ExpirationTime} from './ReactFiberExpirationTime.old';
+import type {Lane, Lanes} from './ReactFiberLane';
 import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue.old';
 import type {Wakeable} from 'shared/ReactTypes';
@@ -25,13 +25,17 @@ import {
 import {
   DidCapture,
   Incomplete,
-  NoEffect,
+  NoFlags,
   ShouldCapture,
   LifecycleEffectMask,
-} from './ReactSideEffectTags';
+  ForceUpdateForLegacySuspense,
+} from './ReactFiberFlags';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.old';
 import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
-import {enableDebugTracing} from 'shared/ReactFeatureFlags';
+import {
+  enableDebugTracing,
+  enableSchedulingProfiler,
+} from 'shared/ReactFeatureFlags';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
   enqueueCapturedUpdate,
@@ -55,17 +59,24 @@ import {
 } from './ReactFiberWorkLoop.old';
 import {logCapturedError} from './ReactFiberErrorLogger';
 import {logComponentSuspended} from './DebugTracing';
+import {markComponentSuspended} from './SchedulingProfiler';
 
-import {Sync} from './ReactFiberExpirationTime.old';
+import {
+  SyncLane,
+  NoTimestamp,
+  includesSomeLane,
+  mergeLanes,
+  pickArbitraryLane,
+} from './ReactFiberLane';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
 function createRootErrorUpdate(
   fiber: Fiber,
   errorInfo: CapturedValue<mixed>,
-  expirationTime: ExpirationTime,
+  lane: Lane,
 ): Update<mixed> {
-  const update = createUpdate(expirationTime, null);
+  const update = createUpdate(NoTimestamp, lane);
   // Unmount the root by rendering null.
   update.tag = CaptureUpdate;
   // Caution: React DevTools currently depends on this property
@@ -82,9 +93,9 @@ function createRootErrorUpdate(
 function createClassErrorUpdate(
   fiber: Fiber,
   errorInfo: CapturedValue<mixed>,
-  expirationTime: ExpirationTime,
+  lane: Lane,
 ): Update<mixed> {
-  const update = createUpdate(expirationTime, null);
+  const update = createUpdate(NoTimestamp, lane);
   update.tag = CaptureUpdate;
   const getDerivedStateFromError = fiber.type.getDerivedStateFromError;
   if (typeof getDerivedStateFromError === 'function') {
@@ -122,7 +133,7 @@ function createClassErrorUpdate(
           // If componentDidCatch is the only error boundary method defined,
           // then it needs to call setState to recover from errors.
           // If no state update is scheduled then the boundary will swallow the error.
-          if (fiber.expirationTime !== Sync) {
+          if (!includesSomeLane(fiber.lanes, (SyncLane: Lane))) {
             console.error(
               '%s: Error boundaries should implement getDerivedStateFromError(). ' +
                 'In that method, return a state update to display an error message or fallback UI.',
@@ -140,14 +151,10 @@ function createClassErrorUpdate(
   return update;
 }
 
-function attachPingListener(
-  root: FiberRoot,
-  renderExpirationTime: ExpirationTime,
-  wakeable: Wakeable,
-) {
-  // Attach a listener to the promise to "ping" the root and retry. But
-  // only if one does not already exist for the current render expiration
-  // time (which acts like a "thread ID" here).
+function attachPingListener(root: FiberRoot, wakeable: Wakeable, lanes: Lanes) {
+  // Attach a listener to the promise to "ping" the root and retry. But only if
+  // one does not already exist for the lanes we're currently rendering (which
+  // acts like a "thread ID" here).
   let pingCache = root.pingCache;
   let threadIDs;
   if (pingCache === null) {
@@ -161,15 +168,10 @@ function attachPingListener(
       pingCache.set(wakeable, threadIDs);
     }
   }
-  if (!threadIDs.has(renderExpirationTime)) {
+  if (!threadIDs.has(lanes)) {
     // Memoize using the thread ID to prevent redundant listeners.
-    threadIDs.add(renderExpirationTime);
-    const ping = pingSuspendedRoot.bind(
-      null,
-      root,
-      wakeable,
-      renderExpirationTime,
-    );
+    threadIDs.add(lanes);
+    const ping = pingSuspendedRoot.bind(null, root, wakeable, lanes);
     wakeable.then(ping, ping);
   }
 }
@@ -179,10 +181,10 @@ function throwException(
   returnFiber: Fiber,
   sourceFiber: Fiber,
   value: mixed,
-  renderExpirationTime: ExpirationTime,
+  rootRenderLanes: Lanes,
 ) {
   // The source fiber did not complete.
-  sourceFiber.effectTag |= Incomplete;
+  sourceFiber.flags |= Incomplete;
   // Its effect list is no longer valid.
   sourceFiber.firstEffect = sourceFiber.lastEffect = null;
 
@@ -203,6 +205,10 @@ function throwException(
       }
     }
 
+    if (enableSchedulingProfiler) {
+      markComponentSuspended(sourceFiber, wakeable);
+    }
+
     if ((sourceFiber.mode & BlockingMode) === NoMode) {
       // Reset the memoizedState to what it was before we attempted
       // to render it.
@@ -210,7 +216,7 @@ function throwException(
       if (currentSource) {
         sourceFiber.updateQueue = currentSource.updateQueue;
         sourceFiber.memoizedState = currentSource.memoizedState;
-        sourceFiber.expirationTime = currentSource.expirationTime;
+        sourceFiber.lanes = currentSource.lanes;
       } else {
         sourceFiber.updateQueue = null;
         sourceFiber.memoizedState = null;
@@ -251,12 +257,13 @@ function throwException(
         // inside a blocking mode tree. If the Suspense is outside of it, we
         // should *not* suspend the commit.
         if ((workInProgress.mode & BlockingMode) === NoMode) {
-          workInProgress.effectTag |= DidCapture;
+          workInProgress.flags |= DidCapture;
+          sourceFiber.flags |= ForceUpdateForLegacySuspense;
 
           // We're going to commit this fiber even though it didn't complete.
           // But we shouldn't call any lifecycle methods or callbacks. Remove
           // all lifecycle effect tags.
-          sourceFiber.effectTag &= ~(LifecycleEffectMask | Incomplete);
+          sourceFiber.flags &= ~(LifecycleEffectMask | Incomplete);
 
           if (sourceFiber.tag === ClassComponent) {
             const currentSourceFiber = sourceFiber.alternate;
@@ -269,7 +276,7 @@ function throwException(
               // When we try rendering again, we should not reuse the current fiber,
               // since it's known to be in an inconsistent state. Use a force update to
               // prevent a bail out.
-              const update = createUpdate(Sync, null);
+              const update = createUpdate(NoTimestamp, SyncLane);
               update.tag = ForceUpdate;
               enqueueUpdate(sourceFiber, update);
             }
@@ -277,7 +284,7 @@ function throwException(
 
           // The source fiber did not complete. Mark it with Sync priority to
           // indicate that it still has pending work.
-          sourceFiber.expirationTime = Sync;
+          sourceFiber.lanes = mergeLanes(sourceFiber.lanes, SyncLane);
 
           // Exit without suspending.
           return;
@@ -309,8 +316,8 @@ function throwException(
         // that we can show the initial loading state as quickly as possible.
         //
         // If we hit a "Delayed" case, such as when we'd switch from content back into
-        // a fallback, then we should always suspend/restart. SuspenseConfig applies to
-        // this case. If none is defined, JND is used instead.
+        // a fallback, then we should always suspend/restart. Transitions apply
+        // to this case. If none is defined, JND is used instead.
         //
         // If we're already showing a fallback and it gets "retried", allowing us to show
         // another level, but there's still an inner boundary that would show a fallback,
@@ -325,10 +332,10 @@ function throwException(
         // We want to ensure that a "busy" state doesn't get force committed. We want to
         // ensure that new initial loading states can commit as soon as possible.
 
-        attachPingListener(root, renderExpirationTime, wakeable);
+        attachPingListener(root, wakeable, rootRenderLanes);
 
-        workInProgress.effectTag |= ShouldCapture;
-        workInProgress.expirationTime = renderExpirationTime;
+        workInProgress.flags |= ShouldCapture;
+        workInProgress.lanes = rootRenderLanes;
 
         return;
       }
@@ -351,19 +358,17 @@ function throwException(
   // over and traverse parent path again, this time treating the exception
   // as an error.
   renderDidError();
+
   value = createCapturedValue(value, sourceFiber);
   let workInProgress = returnFiber;
   do {
     switch (workInProgress.tag) {
       case HostRoot: {
         const errorInfo = value;
-        workInProgress.effectTag |= ShouldCapture;
-        workInProgress.expirationTime = renderExpirationTime;
-        const update = createRootErrorUpdate(
-          workInProgress,
-          errorInfo,
-          renderExpirationTime,
-        );
+        workInProgress.flags |= ShouldCapture;
+        const lane = pickArbitraryLane(rootRenderLanes);
+        workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
+        const update = createRootErrorUpdate(workInProgress, errorInfo, lane);
         enqueueCapturedUpdate(workInProgress, update);
         return;
       }
@@ -373,19 +378,20 @@ function throwException(
         const ctor = workInProgress.type;
         const instance = workInProgress.stateNode;
         if (
-          (workInProgress.effectTag & DidCapture) === NoEffect &&
+          (workInProgress.flags & DidCapture) === NoFlags &&
           (typeof ctor.getDerivedStateFromError === 'function' ||
             (instance !== null &&
               typeof instance.componentDidCatch === 'function' &&
               !isAlreadyFailedLegacyErrorBoundary(instance)))
         ) {
-          workInProgress.effectTag |= ShouldCapture;
-          workInProgress.expirationTime = renderExpirationTime;
+          workInProgress.flags |= ShouldCapture;
+          const lane = pickArbitraryLane(rootRenderLanes);
+          workInProgress.lanes = mergeLanes(workInProgress.lanes, lane);
           // Schedule the error boundary to re-render using updated state
           const update = createClassErrorUpdate(
             workInProgress,
             errorInfo,
-            renderExpirationTime,
+            lane,
           );
           enqueueCapturedUpdate(workInProgress, update);
           return;

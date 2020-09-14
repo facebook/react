@@ -8,9 +8,9 @@
 'use strict';
 
 export default function(babel, opts = {}) {
-  if (typeof babel.getEnv === 'function') {
+  if (typeof babel.env === 'function') {
     // Only available in Babel 7.
-    const env = babel.getEnv();
+    const env = babel.env();
     if (env !== 'development' && !opts.skipEnvCheck) {
       throw new Error(
         'React Refresh Babel transform should only be enabled in development environment. ' +
@@ -140,9 +140,6 @@ export default function(babel, opts = {}) {
             } else if (calleeType === 'MemberExpression') {
               // Could be something like React.forwardRef(...)
               // Pass through.
-            } else {
-              // More complicated call.
-              return false;
             }
             break;
           }
@@ -171,6 +168,7 @@ export default function(babel, opts = {}) {
         for (let i = 0; i < referencePaths.length; i++) {
           const ref = referencePaths[i];
           if (
+            ref.node &&
             ref.node.type !== 'JSXIdentifier' &&
             ref.node.type !== 'Identifier'
           ) {
@@ -306,7 +304,7 @@ export default function(babel, opts = {}) {
     if (typeof require === 'function' && !opts.emitFullSignatures) {
       // Prefer to hash when we can (e.g. outside of ASTExplorer).
       // This makes it deterministically compact, even if there's
-      // e.g. a useState ininitalizer with some code inside.
+      // e.g. a useState initializer with some code inside.
       // We also need it for www that has transforms like cx()
       // that don't understand if something is part of a string.
       finalKey = require('crypto')
@@ -536,7 +534,7 @@ export default function(babel, opts = {}) {
 
           // Unlike with $RefreshReg$, this needs to work for nested
           // declarations too. So we need to search for a path where
-          // we can insert a statement rather than hardcoding it.
+          // we can insert a statement rather than hard coding it.
           let insertAfterPath = null;
           path.find(p => {
             if (p.parentPath.isBlock()) {

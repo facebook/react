@@ -17,7 +17,7 @@ export type OffscreenProps = {|
   //
   // Default mode is visible. Kind of a weird default for a component
   // called "Offscreen." Possible alt: <Visibility />?
-  mode?: 'hidden' | 'visible' | null | void,
+  mode?: 'hidden' | 'unstable-defer-without-hiding' | 'visible' | null | void,
   children?: ReactNodeList,
 |};
 

@@ -29,7 +29,7 @@ describe('ReactFresh', () => {
       ReactFreshRuntime.injectIntoGlobalHook(global);
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
-      act = require('react-dom/test-utils').act;
+      act = require('react-dom/test-utils').unstable_concurrentAct;
       createReactClass = require('create-react-class/factory')(
         React.Component,
         React.isValidElement,
@@ -73,6 +73,19 @@ describe('ReactFresh', () => {
   function $RefreshSig$(type, key, forceReset, getCustomHooks) {
     ReactFreshRuntime.setSignature(type, key, forceReset, getCustomHooks);
     return type;
+  }
+
+  // Note: This is based on a similar component we use in www. We can delete
+  // once the extra div wrapper is no longer neccessary.
+  function LegacyHiddenDiv({children, mode}) {
+    return (
+      <div hidden={mode === 'hidden'}>
+        <React.unstable_LegacyHidden
+          mode={mode === 'hidden' ? 'unstable-defer-without-hiding' : mode}>
+          {children}
+        </React.unstable_LegacyHidden>
+      </div>
+    );
   }
 
   it('can preserve state for compatible types', () => {
@@ -2417,9 +2430,9 @@ describe('ReactFresh', () => {
             Scheduler.unstable_yieldValue('App#layout');
           });
           return (
-            <div hidden={offscreen}>
+            <LegacyHiddenDiv mode={offscreen ? 'hidden' : 'visible'}>
               <Hello />
-            </div>
+            </LegacyHiddenDiv>
           );
         };
       });
@@ -3735,7 +3748,7 @@ describe('ReactFresh', () => {
       React = require('react');
       ReactDOM = require('react-dom');
       Scheduler = require('scheduler');
-      act = require('react-dom/test-utils').act;
+      act = require('react-dom/test-utils').unstable_concurrentAct;
 
       // Important! Inject into the global hook *after* ReactDOM runs:
       ReactFreshRuntime = require('react-refresh/runtime');

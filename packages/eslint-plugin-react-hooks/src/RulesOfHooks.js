@@ -481,7 +481,8 @@ export default {
                 `React Hook "${context.getSource(hook)}" is called in ` +
                 `function "${context.getSource(codePathFunctionName)}" ` +
                 'that is neither a React function component nor a custom ' +
-                'React Hook function.';
+                'React Hook function.' +
+                ' React component names must start with an uppercase letter.';
               context.report({node: hook, message});
             } else if (codePathNode.type === 'Program') {
               // These are dangerous if you have inline requires enabled.
@@ -535,7 +536,7 @@ export default {
  * easy. For anonymous function expressions it is much harder. If you search for
  * `IsAnonymousFunctionDefinition()` in the ECMAScript spec you'll find places
  * where JS gives anonymous function expressions names. We roughly detect the
- * same AST nodes with some exceptions to better fit our usecase.
+ * same AST nodes with some exceptions to better fit our use case.
  */
 
 function getFunctionName(node) {

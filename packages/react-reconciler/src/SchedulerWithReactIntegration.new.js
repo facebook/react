@@ -13,8 +13,16 @@ import type {ReactPriorityLevel} from './ReactInternalTypes';
 // CommonJS interop named imports.
 import * as Scheduler from 'scheduler';
 import {__interactionsRef} from 'scheduler/tracing';
-import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
+import {
+  enableSchedulerTracing,
+  decoupleUpdatePriorityFromScheduler,
+} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
+import {
+  SyncLanePriority,
+  getCurrentUpdateLanePriority,
+  setCurrentUpdateLanePriority,
+} from './ReactFiberLane';
 
 const {
   unstable_runWithPriority: Scheduler_runWithPriority,
@@ -41,7 +49,7 @@ if (enableSchedulerTracing) {
       'example, `react-dom/profiling`) without also replacing the ' +
       '`scheduler/tracing` module with `scheduler/tracing-profiling`. Your ' +
       'bundler might have a setting for aliasing both modules. Learn more at ' +
-      'http://fb.me/react-profiling',
+      'https://reactjs.org/link/profiling',
   );
 }
 
@@ -157,13 +165,13 @@ export function cancelCallback(callbackNode: mixed) {
   }
 }
 
-export function flushSyncCallbackQueue() {
+export function flushSyncCallbackQueue(): boolean {
   if (immediateQueueCallbackNode !== null) {
     const node = immediateQueueCallbackNode;
     immediateQueueCallbackNode = null;
     Scheduler_cancelCallback(node);
   }
-  flushSyncCallbackQueueImpl();
+  return flushSyncCallbackQueueImpl();
 }
 
 function flushSyncCallbackQueueImpl() {
@@ -171,31 +179,66 @@ function flushSyncCallbackQueueImpl() {
     // Prevent re-entrancy.
     isFlushingSyncQueue = true;
     let i = 0;
-    try {
-      const isSync = true;
-      const queue = syncQueue;
-      runWithPriority(ImmediatePriority, () => {
-        for (; i < queue.length; i++) {
-          let callback = queue[i];
-          do {
-            callback = callback(isSync);
-          } while (callback !== null);
+    if (decoupleUpdatePriorityFromScheduler) {
+      const previousLanePriority = getCurrentUpdateLanePriority();
+      try {
+        const isSync = true;
+        const queue = syncQueue;
+        setCurrentUpdateLanePriority(SyncLanePriority);
+        runWithPriority(ImmediatePriority, () => {
+          for (; i < queue.length; i++) {
+            let callback = queue[i];
+            do {
+              callback = callback(isSync);
+            } while (callback !== null);
+          }
+        });
+        syncQueue = null;
+      } catch (error) {
+        // If something throws, leave the remaining callbacks on the queue.
+        if (syncQueue !== null) {
+          syncQueue = syncQueue.slice(i + 1);
         }
-      });
-      syncQueue = null;
-    } catch (error) {
-      // If something throws, leave the remaining callbacks on the queue.
-      if (syncQueue !== null) {
-        syncQueue = syncQueue.slice(i + 1);
+        // Resume flushing in the next tick
+        Scheduler_scheduleCallback(
+          Scheduler_ImmediatePriority,
+          flushSyncCallbackQueue,
+        );
+        throw error;
+      } finally {
+        setCurrentUpdateLanePriority(previousLanePriority);
+        isFlushingSyncQueue = false;
       }
-      // Resume flushing in the next tick
-      Scheduler_scheduleCallback(
-        Scheduler_ImmediatePriority,
-        flushSyncCallbackQueue,
-      );
-      throw error;
-    } finally {
-      isFlushingSyncQueue = false;
+    } else {
+      try {
+        const isSync = true;
+        const queue = syncQueue;
+        runWithPriority(ImmediatePriority, () => {
+          for (; i < queue.length; i++) {
+            let callback = queue[i];
+            do {
+              callback = callback(isSync);
+            } while (callback !== null);
+          }
+        });
+        syncQueue = null;
+      } catch (error) {
+        // If something throws, leave the remaining callbacks on the queue.
+        if (syncQueue !== null) {
+          syncQueue = syncQueue.slice(i + 1);
+        }
+        // Resume flushing in the next tick
+        Scheduler_scheduleCallback(
+          Scheduler_ImmediatePriority,
+          flushSyncCallbackQueue,
+        );
+        throw error;
+      } finally {
+        isFlushingSyncQueue = false;
+      }
     }
+    return true;
+  } else {
+    return false;
   }
 }

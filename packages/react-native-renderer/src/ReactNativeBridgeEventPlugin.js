@@ -7,16 +7,16 @@
  * @flow
  */
 
-import type {AnyNativeEvent} from 'legacy-events/PluginModuleType';
-import type {TopLevelType} from 'legacy-events/TopLevelEventTypes';
-import SyntheticEvent from 'legacy-events/SyntheticEvent';
+import type {AnyNativeEvent} from './legacy-events/PluginModuleType';
+import type {TopLevelType} from './legacy-events/TopLevelEventTypes';
+import SyntheticEvent from './legacy-events/SyntheticEvent';
 import invariant from 'shared/invariant';
 
 // Module provided by RN:
 import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
-import accumulateInto from 'legacy-events/accumulateInto';
+import accumulateInto from './legacy-events/accumulateInto';
 import getListener from './ReactNativeGetListener';
-import forEachAccumulated from 'legacy-events/forEachAccumulated';
+import forEachAccumulated from './legacy-events/forEachAccumulated';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
 
 const {

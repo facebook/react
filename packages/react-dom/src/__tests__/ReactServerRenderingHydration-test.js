@@ -83,7 +83,7 @@ describe('ReactDOMServerHydration', () => {
         instance = ReactDOM.render(<TestComponent name="x" />, element);
       }).toWarnDev(
         'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
-          'will stop working in React v17. Replace the ReactDOM.render() call ' +
+          'will stop working in React v18. Replace the ReactDOM.render() call ' +
           'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
         {withoutStack: true},
       );

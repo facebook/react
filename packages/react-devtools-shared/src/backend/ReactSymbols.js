@@ -58,9 +58,6 @@ export const PROFILER_SYMBOL_STRING = 'Symbol(react.profiler)';
 export const PROVIDER_NUMBER = 0xeacd;
 export const PROVIDER_SYMBOL_STRING = 'Symbol(react.provider)';
 
-export const RESPONDER_NUMBER = 0xead6;
-export const RESPONDER_SYMBOL_STRING = 'Symbol(react.responder)';
-
 export const SCOPE_NUMBER = 0xead7;
 export const SCOPE_SYMBOL_STRING = 'Symbol(react.scope)';
 

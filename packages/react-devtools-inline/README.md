@@ -85,7 +85,7 @@ initializeBackend(contentWindow);
 
 // React application can be injected into <iframe> at any time now...
 // Note that this would need to be done via <script> tag injection,
-// as setting the src of the <iframe> would load a new page (withou the injected backend).
+// as setting the src of the <iframe> would load a new page (without the injected backend).
 
 // Initialize DevTools UI to listen to the hook we just installed.
 // This returns a React component we can render anywhere in the parent window.
@@ -107,7 +107,7 @@ Sandboxed `iframe`s are also supported but require more complex initialization.
 ```js
 import { activate, initialize } from "react-devtools-inline/backend";
 
-// The DevTooks hook needs to be installed before React is even required!
+// The DevTools hook needs to be installed before React is even required!
 // The safest way to do this is probably to install it in a separate script tag.
 initialize(window);
 

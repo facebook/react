@@ -541,6 +541,7 @@ exports[`InspectedElementContext should support complex data types: 1: Inspected
     "object_of_objects": {
       "inner": {}
     },
+    "proxy": {},
     "react_element": {},
     "regexp": {},
     "set": {

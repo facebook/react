@@ -13,10 +13,13 @@ describe('ReactCache', () => {
   let ReactCache;
 
   beforeEach(() => {
-    ReactCache = require('react/unstable-cache');
+    if (__EXPERIMENTAL__) {
+      ReactCache = require('react/unstable-cache');
+    }
   });
 
   // TODO: test something useful.
+  // @gate experimental
   it('exports something', () => {
     expect(ReactCache.readCache).not.toBe(undefined);
   });

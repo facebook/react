@@ -25,8 +25,13 @@ function SuspenseTree() {
       <PrimaryFallbackTest initialSuspend={true} />
       <NestedSuspenseTest />
       <SuspenseListTest />
+      <EmptySuspense />
     </Fragment>
   );
+}
+
+function EmptySuspense() {
+  return <Suspense />;
 }
 
 function PrimaryFallbackTest({initialSuspend}) {
