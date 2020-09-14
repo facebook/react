@@ -728,7 +728,20 @@ function runActTests(label, render, unmount, rerender) {
     describe('suspense', () => {
       if (__DEV__ && __EXPERIMENTAL__) {
         // todo - remove __DEV__ check once we start using testing builds
+
         it('triggers fallbacks if available', async () => {
+          if (label !== 'legacy mode') {
+            // FIXME: Support for Blocking* and Concurrent Mode were
+            // intentionally removed from the public version of `act`. It will
+            // be added back in a future major version, before Blocking and and
+            // Concurrent Mode are officially released. Consider disabling all
+            // non-Legacy tests in this suite until then.
+            //
+            // *Blocking Mode actually does happen to work, though
+            // not "officially" since it's an unreleased feature.
+            return;
+          }
+
           let resolved = false;
           let resolve;
           const promise = new Promise(_resolve => {
