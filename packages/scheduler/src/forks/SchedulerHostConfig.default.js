@@ -85,7 +85,7 @@ if (
     // option to rely on it in the future?
     const requestAnimationFrame = window.requestAnimationFrame;
     const cancelAnimationFrame = window.cancelAnimationFrame;
-    // TODO: Remove fb.me link
+
     if (typeof requestAnimationFrame !== 'function') {
       // Using console['error'] to evade Babel and ESLint
       console['error'](
