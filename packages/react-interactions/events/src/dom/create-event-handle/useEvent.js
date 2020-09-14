@@ -25,8 +25,6 @@ export default function useEvent(
   event: string,
   options?: {|
     capture?: boolean,
-    passive?: boolean,
-    priority?: 0 | 1 | 2,
   |},
 ): UseEventHandle {
   const handleRef = useRef<UseEventHandle | null>(null);

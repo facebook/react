@@ -9,9 +9,14 @@
 
 import type {DOMEventName} from './DOMEventNames';
 
-import {enableEagerRootListeners} from 'shared/ReactFeatureFlags';
+import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 
 export const allNativeEvents: Set<DOMEventName> = new Set();
+
+if (enableCreateEventHandleAPI) {
+  allNativeEvents.add('beforeblur');
+  allNativeEvents.add('afterblur');
+}
 
 /**
  * Mapping from registration name to event name
@@ -60,9 +65,7 @@ export function registerDirectEvent(
     }
   }
 
-  if (enableEagerRootListeners) {
-    for (let i = 0; i < dependencies.length; i++) {
-      allNativeEvents.add(dependencies[i]);
-    }
+  for (let i = 0; i < dependencies.length; i++) {
+    allNativeEvents.add(dependencies[i]);
   }
 }
