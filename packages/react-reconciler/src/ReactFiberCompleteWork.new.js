@@ -684,7 +684,7 @@ function cutOffTailIfNeeded(
 
 function bubbleProperties(completedWork: Fiber): void {
   bubbleProfilerDurationsFromChildren(completedWork);
-  bubbleLanesFromChildren(completedWork);
+  bubbleLanesToParent(completedWork);
   bubbleFlagsToParent(completedWork);
 }
 
@@ -707,20 +707,18 @@ function bubbleFlagsToParent(completedWork: Fiber): void {
   }
 }
 
+// TODO (effects) Broken Suspense problem;
+// We aren't calling bubbleLanesToParent() for the Suspended components which means OffscreenLane doesn't bubble up.
+
 // TODO (effects) Temorary method; merge this into bubbleProperties once refactor is done.
-function bubbleLanesFromChildren(completedWork: Fiber): void {
-  let newChildLanes = NoLanes;
-  let child = completedWork.child;
-  while (child !== null) {
-    newChildLanes = mergeLanes(
-      newChildLanes,
-      mergeLanes(child.lanes, child.childLanes),
+function bubbleLanesToParent(completedWork: Fiber): void {
+  const parent = completedWork.return;
+  if (parent !== null) {
+    parent.childLanes = mergeLanes(
+      parent.childLanes,
+      mergeLanes(completedWork.lanes, completedWork.childLanes),
     );
-
-    child = child.sibling;
   }
-
-  completedWork.childLanes = newChildLanes;
 }
 
 // TODO (effects) Temorary method; merge this into bubbleProperties once refactor is done.
@@ -1014,6 +1012,8 @@ function completeWork(
         ) {
           transferActualDuration(workInProgress);
         }
+        // TODO (effects) Comment about why
+        // bubbleProperties(workInProgress);
         return workInProgress;
       }
 
@@ -1204,6 +1204,7 @@ function completeWork(
                     ForceSuspenseFallback,
                   ),
                 );
+                bubbleProperties(workInProgress);
                 return workInProgress.child;
               }
               row = row.sibling;
@@ -1332,6 +1333,7 @@ function completeWork(
           suspenseContext = setDefaultShallowSuspenseContext(suspenseContext);
         }
         pushSuspenseContext(workInProgress, suspenseContext);
+        bubbleProperties(next);
         // Do a pass over the next row.
         return next;
       }
@@ -1439,13 +1441,13 @@ function completeWork(
       }
 
       // Don't bubble properties for hidden children.
-      if (
-        !nextIsHidden ||
-        includesSomeLane(subtreeRenderLanes, (OffscreenLane: Lane)) ||
-        (workInProgress.mode & ConcurrentMode) === NoLanes
-      ) {
-        bubbleProperties(workInProgress);
-      }
+      // if (
+      //   !nextIsHidden ||
+      //   includesSomeLane(subtreeRenderLanes, (OffscreenLane: Lane)) ||
+      //   (workInProgress.mode & ConcurrentMode) === NoLanes
+      // ) {
+      bubbleProperties(workInProgress);
+      // }
 
       return null;
     }

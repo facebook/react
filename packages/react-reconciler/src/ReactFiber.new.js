@@ -299,7 +299,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   // Static effects are not specific to a render.
   workInProgress.flags = current.flags & StaticMask;
   workInProgress.subtreeFlags = current.subtreeFlags & StaticMask;
-  workInProgress.childLanes = current.childLanes;
+  workInProgress.childLanes = NoLanes;
   workInProgress.lanes = current.lanes;
 
   workInProgress.child = current.child;
@@ -388,7 +388,7 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
     }
   } else {
     // Reset to the cloned values that createWorkInProgress would've.
-    workInProgress.childLanes = current.childLanes;
+    workInProgress.childLanes = NoLanes;
     workInProgress.lanes = current.lanes;
 
     workInProgress.child = current.child;

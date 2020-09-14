@@ -150,6 +150,7 @@ import {
   SyncLane,
   SyncBatchedLane,
   NoTimestamp,
+  OffscreenLane,
   findUpdateLane,
   findTransitionLane,
   findRetryLane,

@@ -1883,7 +1883,7 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           prevOffscreenState === null
             ? mountSuspenseOffscreenState(renderLanes)
             : updateSuspenseOffscreenState(prevOffscreenState, renderLanes);
-        primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
+        primaryChildFragment.childLanes = workInProgress.childLanes = getRemainingWorkInPrimaryTree(
           current,
           renderLanes,
         );
@@ -1920,7 +1920,8 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
           prevOffscreenState === null
             ? mountSuspenseOffscreenState(renderLanes)
             : updateSuspenseOffscreenState(prevOffscreenState, renderLanes);
-        primaryChildFragment.childLanes = getRemainingWorkInPrimaryTree(
+        // TODO (effects) Document
+        primaryChildFragment.childLanes = workInProgress.childLanes = getRemainingWorkInPrimaryTree(
           current,
           renderLanes,
         );
@@ -1988,6 +1989,18 @@ function mountSuspenseFallbackChildren(
     primaryChildFragment = progressedPrimaryFragment;
     primaryChildFragment.childLanes = NoLanes;
     primaryChildFragment.pendingProps = primaryChildProps;
+
+    // TODO (effects) This is tricky because by the time we are resetting the childLanes here
+    // they have already bubbled to the parent SuspenseComponent and its parent also
+    // (during the previous complete phase bubbling back up to Suspense).
+    //
+    // Compare this to the old fork, where we will restart work on the Suspense node
+    // before bubbling higher (and letting the values leak out).
+    //
+    // We could reset childLanes for the parent SuspenseComponent safely,
+    // but we can't reset childLanes for its parent without potentially erasing sibling updates.
+    // Instead we need to prevent the childLanes from bubbling in the first place during a suspend.
+    workInProgress.childLanes = NoLanes;
 
     if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
       // Reset the durations from the first pass so they aren't included in the
@@ -2109,6 +2122,9 @@ function updateSuspenseFallbackChildren(
     primaryChildFragment = progressedPrimaryFragment;
     primaryChildFragment.childLanes = NoLanes;
     primaryChildFragment.pendingProps = primaryChildProps;
+
+    // TODO (effects)
+    workInProgress.childLanes = NoLanes;
 
     if (enableProfilerTimer && workInProgress.mode & ProfileMode) {
       // Reset the durations from the first pass so they aren't included in the
@@ -2969,7 +2985,7 @@ function bailoutOnAlreadyFinishedWork(
   markSkippedUpdateLanes(workInProgress.lanes);
 
   // Check if the children have any pending work.
-  if (!includesSomeLane(renderLanes, workInProgress.childLanes)) {
+  if (!includesSomeLane(renderLanes, current.childLanes)) {
     // The children don't have any work either. We can skip them.
     // TODO: Once we add back resuming, we should check if the children are
     // a work-in-progress set. If so, we need to transfer their effects.
@@ -3118,7 +3134,7 @@ function beginWork(
             // Profiler should only call onRender when one of its descendants actually rendered.
             const hasChildWork = includesSomeLane(
               renderLanes,
-              workInProgress.childLanes,
+              current.childLanes,
             );
             if (hasChildWork) {
               workInProgress.flags |= Update;
@@ -3197,9 +3213,15 @@ function beginWork(
         case SuspenseListComponent: {
           const didSuspendBefore = (current.flags & DidCapture) !== NoFlags;
 
+// TODO current.childLanes is right; workInProgress.childLanes is wrong.
+// Presumably we bubbled something up that we shouldn't have then.
+// Maybet his is a variation of the Suspense thing earlier?
+// Either we need to reset (or not copy)?
+// Or maybe we need to *set* or update in this case?
           const hasChildWork = includesSomeLane(
             renderLanes,
-            workInProgress.childLanes,
+            // workInProgress.childLanes,
+            current.childLanes, // This causes a loop for some tests
           );
 
           if (didSuspendBefore) {
