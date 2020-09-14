@@ -40,7 +40,7 @@ const babelOptions = {
 
 const config = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-eval-source-map' : false,
+  devtool: __DEV__ ? 'cheap-module-eval-source-map' : 'source-map',
   entry: {
     app: './src/index.js',
   },
