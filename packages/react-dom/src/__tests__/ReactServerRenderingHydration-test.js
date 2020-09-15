@@ -81,9 +81,9 @@ describe('ReactDOMServerHydration', () => {
 
       expect(() => {
         instance = ReactDOM.render(<TestComponent name="x" />, element);
-      }).toLowPriorityWarnDev(
+      }).toWarnDev(
         'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
-          'will stop working in React v17. Replace the ReactDOM.render() call ' +
+          'will stop working in React v18. Replace the ReactDOM.render() call ' +
           'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
         {withoutStack: true},
       );
@@ -104,9 +104,7 @@ describe('ReactDOMServerHydration', () => {
       element.innerHTML = lastMarkup;
       expect(() => {
         instance = ReactDOM.render(<TestComponent name="y" />, element);
-      }).toWarnDev('Text content did not match. Server: "x" Client: "y"', {
-        withoutStack: true,
-      });
+      }).toErrorDev('Text content did not match. Server: "x" Client: "y"');
       expect(mountCount).toEqual(4);
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);
@@ -189,9 +187,7 @@ describe('ReactDOMServerHydration', () => {
       element.innerHTML = lastMarkup;
       expect(() => {
         instance = ReactDOM.hydrate(<TestComponent name="y" />, element);
-      }).toWarnDev('Text content did not match. Server: "x" Client: "y"', {
-        withoutStack: true,
-      });
+      }).toErrorDev('Text content did not match. Server: "x" Client: "y"');
       expect(mountCount).toEqual(4);
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);
@@ -252,9 +248,8 @@ describe('ReactDOMServerHydration', () => {
 
     expect(() =>
       ReactDOM.hydrate(<button autoFocus={false}>client</button>, element),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Text content did not match. Server: "server" Client: "client"',
-      {withoutStack: true},
     );
 
     expect(element.firstChild.focus).not.toHaveBeenCalled();
@@ -275,11 +270,10 @@ describe('ReactDOMServerHydration', () => {
         />,
         element,
       ),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Prop `style` did not match. Server: ' +
         '"text-decoration:none;color:black;height:10px" Client: ' +
         '"text-decoration:none;color:white;height:10px"',
-      {withoutStack: true},
     );
   });
 
@@ -323,11 +317,10 @@ describe('ReactDOMServerHydration', () => {
         />,
         element,
       ),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Prop `style` did not match. Server: ' +
         '"text-decoration: none; color: black; height: 10px;" Client: ' +
         '"text-decoration:none;color:black;height:10px"',
-      {withoutStack: true},
     );
   });
 
@@ -362,14 +355,12 @@ describe('ReactDOMServerHydration', () => {
     const element = document.createElement('div');
     expect(() => {
       element.innerHTML = ReactDOMServer.renderToString(markup);
-    }).toLowPriorityWarnDev(['componentWillMount has been renamed'], {
-      withoutStack: true,
-    });
+    }).toWarnDev('componentWillMount has been renamed');
     expect(element.textContent).toBe('Hi');
 
     expect(() => {
       ReactDOM.hydrate(markup, element);
-    }).toLowPriorityWarnDev(['componentWillMount has been renamed'], {
+    }).toWarnDev('componentWillMount has been renamed', {
       withoutStack: true,
     });
     expect(element.textContent).toBe('Hi');
@@ -500,11 +491,12 @@ describe('ReactDOMServerHydration', () => {
     expect(element.textContent).toBe('Hello world');
   });
 
+  // @gate experimental
   it('does not re-enter hydration after committing the first one', () => {
-    let finalHTML = ReactDOMServer.renderToString(<div />);
-    let container = document.createElement('div');
+    const finalHTML = ReactDOMServer.renderToString(<div />);
+    const container = document.createElement('div');
     container.innerHTML = finalHTML;
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<div />);
     Scheduler.unstable_flushAll();
     root.render(null);
@@ -515,148 +507,98 @@ describe('ReactDOMServerHydration', () => {
     Scheduler.unstable_flushAll();
   });
 
-  it('does not invoke an event on a concurrent hydrating node until it commits', () => {
-    function Sibling({text}) {
-      Scheduler.unstable_yieldValue('Sibling');
-      return <span>Sibling</span>;
-    }
+  it('Suspense + hydration in legacy mode', () => {
+    const element = document.createElement('div');
+    element.innerHTML = '<div>Hello World</div>';
+    const div = element.firstChild;
+    const ref = React.createRef();
+    expect(() =>
+      ReactDOM.hydrate(
+        <React.Suspense fallback={null}>
+          <div ref={ref}>Hello World</div>
+        </React.Suspense>,
+        element,
+      ),
+    ).toErrorDev(
+      'Warning: Did not expect server HTML to contain a <div> in <div>.',
+      {withoutStack: true},
+    );
 
-    function Sibling2({text}) {
-      Scheduler.unstable_yieldValue('Sibling2');
-      return null;
-    }
-
-    let clicks = 0;
-
-    function Button() {
-      Scheduler.unstable_yieldValue('Button');
-      let [clicked, setClicked] = React.useState(false);
-      if (clicked) {
-        return null;
-      }
-      return (
-        <a
-          onClick={() => {
-            setClicked(true);
-            clicks++;
-          }}>
-          Click me
-        </a>
-      );
-    }
-
-    function App() {
-      return (
-        <div>
-          <Button />
-          <Sibling />
-          <Sibling2 />
-        </div>
-      );
-    }
-
-    let finalHTML = ReactDOMServer.renderToString(<App />);
-    let container = document.createElement('div');
-    container.innerHTML = finalHTML;
-    expect(Scheduler).toHaveYielded(['Button', 'Sibling', 'Sibling2']);
-
-    // We need this to be in the document since we'll dispatch events on it.
-    document.body.appendChild(container);
-
-    let a = container.getElementsByTagName('a')[0];
-
-    // Hydrate asynchronously.
-    let root = ReactDOM.unstable_createRoot(container, {hydrate: true});
-    root.render(<App />);
-
-    // We haven't started hydrating yet.
-    a.click();
-    // Clicking should not invoke the event yet because we haven't committed
-    // the hydration yet.
-    expect(clicks).toBe(0);
-
-    // Flush part way through the render.
-    if (__DEV__) {
-      // In DEV effects gets double invoked.
-      expect(Scheduler).toFlushAndYieldThrough(['Button', 'Button', 'Sibling']);
-    } else {
-      expect(Scheduler).toFlushAndYieldThrough(['Button', 'Sibling']);
-    }
-
-    expect(container.textContent).toBe('Click meSibling');
-
-    // We're now partially hydrated.
-    a.click();
-    // Clicking should not invoke the event yet because we haven't committed
-    // the hydration yet.
-    expect(clicks).toBe(0);
-
-    // Finish the rest of the hydration.
-    if (__DEV__) {
-      // In DEV effects gets double invoked.
-      expect(Scheduler).toFlushAndYield(['Sibling2', 'Button', 'Button']);
-    } else {
-      expect(Scheduler).toFlushAndYield(['Sibling2', 'Button']);
-    }
-
-    // We should have picked up both events now.
-    expect(clicks).toBe(2);
-
-    expect(container.textContent).toBe('Sibling');
-
-    document.body.removeChild(container);
+    // The content should've been client rendered and replaced the
+    // existing div.
+    expect(ref.current).not.toBe(div);
+    // The HTML should be the same though.
+    expect(element.innerHTML).toBe('<div>Hello World</div>');
   });
 
-  it('does not invoke an event on a parent tree when a subtree is hydrating', () => {
-    let clicks = 0;
-    let childSlotRef = React.createRef();
+  it('Suspense + hydration in legacy mode with no fallback', () => {
+    const element = document.createElement('div');
+    element.innerHTML = '<div>Hello World</div>';
+    const div = element.firstChild;
+    const ref = React.createRef();
+    ReactDOM.hydrate(
+      <React.Suspense>
+        <div ref={ref}>Hello World</div>
+      </React.Suspense>,
+      element,
+    );
 
-    function Parent() {
-      return <div onClick={() => clicks++} ref={childSlotRef} />;
-    }
+    // Because this didn't have a fallback, it was hydrated as if it's
+    // not a Suspense boundary.
+    expect(ref.current).toBe(div);
+    expect(element.innerHTML).toBe('<div>Hello World</div>');
+  });
 
-    function App() {
-      return (
-        <div>
-          <a>Click me</a>
-        </div>
+  // regression test for https://github.com/facebook/react/issues/17170
+  it('should not warn if dangerouslySetInnerHtml=undefined', () => {
+    const domElement = document.createElement('div');
+    const reactElement = (
+      <div dangerouslySetInnerHTML={undefined}>
+        <p>Hello, World!</p>
+      </div>
+    );
+    const markup = ReactDOMServer.renderToStaticMarkup(reactElement);
+    domElement.innerHTML = markup;
+
+    ReactDOM.hydrate(reactElement, domElement);
+
+    expect(domElement.innerHTML).toEqual(markup);
+  });
+
+  it('should warn if innerHTML mismatches with dangerouslySetInnerHTML=undefined and children on the client', () => {
+    const domElement = document.createElement('div');
+    const markup = ReactDOMServer.renderToStaticMarkup(
+      <div dangerouslySetInnerHTML={{__html: '<p>server</p>'}} />,
+    );
+    domElement.innerHTML = markup;
+
+    expect(() => {
+      ReactDOM.hydrate(
+        <div dangerouslySetInnerHTML={undefined}>
+          <p>client</p>
+        </div>,
+        domElement,
       );
-    }
 
-    let finalHTML = ReactDOMServer.renderToString(<App />);
+      expect(domElement.innerHTML).not.toEqual(markup);
+    }).toErrorDev(
+      'Warning: Text content did not match. Server: "server" Client: "client"',
+    );
+  });
 
-    let parentContainer = document.createElement('div');
-    let childContainer = document.createElement('div');
+  it('should warn if innerHTML mismatches with dangerouslySetInnerHTML=undefined on the client', () => {
+    const domElement = document.createElement('div');
+    const markup = ReactDOMServer.renderToStaticMarkup(
+      <div dangerouslySetInnerHTML={{__html: '<p>server</p>'}} />,
+    );
+    domElement.innerHTML = markup;
 
-    // We need this to be in the document since we'll dispatch events on it.
-    document.body.appendChild(parentContainer);
+    expect(() => {
+      ReactDOM.hydrate(<div dangerouslySetInnerHTML={undefined} />, domElement);
 
-    // We're going to use a different root as a parent.
-    // This lets us detect whether an event goes through React's event system.
-    let parentRoot = ReactDOM.unstable_createRoot(parentContainer);
-    parentRoot.render(<Parent />);
-    Scheduler.unstable_flushAll();
-
-    childSlotRef.current.appendChild(childContainer);
-
-    childContainer.innerHTML = finalHTML;
-
-    let a = childContainer.getElementsByTagName('a')[0];
-
-    // Hydrate asynchronously.
-    let root = ReactDOM.unstable_createRoot(childContainer, {hydrate: true});
-    root.render(<App />);
-    // Nothing has rendered so far.
-
-    a.click();
-    expect(clicks).toBe(0);
-
-    Scheduler.unstable_flushAll();
-
-    // We're now full hydrated.
-
-    expect(clicks).toBe(1);
-
-    document.body.removeChild(parentContainer);
+      expect(domElement.innerHTML).not.toEqual(markup);
+    }).toErrorDev(
+      'Warning: Did not expect server HTML to contain a <p> in <div>',
+    );
   });
 });

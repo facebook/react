@@ -7,18 +7,27 @@
  * @flow
  */
 
-import React, {Fragment, useDebugValue, useState} from 'react';
+import * as React from 'react';
+import {Fragment, useDebugValue, useState} from 'react';
 
 const div = document.createElement('div');
-const exmapleFunction = () => {};
+const exampleFunction = () => {};
 const typedArray = new Uint8Array(3);
 typedArray[0] = 1;
 typedArray[1] = 2;
 typedArray[2] = 3;
 
 const arrayOfArrays = [
-  [['a', 'b', 'c'], ['d', 'e', 'f'], ['h', 'i', 'j']],
-  [['k', 'l', 'm'], ['n', 'o', 'p'], ['q', 'r', 's']],
+  [
+    ['a', 'b', 'c'],
+    ['d', 'e', 'f'],
+    ['h', 'i', 'j'],
+  ],
+  [
+    ['k', 'l', 'm'],
+    ['n', 'o', 'p'],
+    ['q', 'r', 's'],
+  ],
   [['t', 'u', 'v'], ['w', 'x', 'y'], ['z']],
   [],
 ];
@@ -103,7 +112,7 @@ export default function Hydration() {
       <h1>Hydration</h1>
       <DehydratableProps
         html_element={div}
-        fn={exmapleFunction}
+        fn={exampleFunction}
         symbol={Symbol('symbol')}
         react_element={<span />}
         array_buffer={typedArray.buffer}

@@ -5,9 +5,4 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-const ReactFreshRuntime = require('./src/ReactFreshRuntime');
-
-// This is hacky but makes it work with both Rollup and Jest.
-module.exports = ReactFreshRuntime.default || ReactFreshRuntime;
+export * from './src/ReactFreshRuntime';

@@ -98,7 +98,7 @@ describe('CSSPropertyOperations', () => {
 
     const root = document.createElement('div');
 
-    expect(() => ReactDOM.render(<Comp />, root)).toWarnDev(
+    expect(() => ReactDOM.render(<Comp />, root)).toErrorDev(
       'Warning: Unsupported style property background-color. Did you mean backgroundColor?' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
@@ -121,7 +121,7 @@ describe('CSSPropertyOperations', () => {
     const root = document.createElement('div');
     ReactDOM.render(<Comp />, root);
 
-    expect(() => ReactDOM.render(<Comp style={styles} />, root)).toWarnDev([
+    expect(() => ReactDOM.render(<Comp style={styles} />, root)).toErrorDev([
       'Warning: Unsupported style property -ms-transform. Did you mean msTransform?' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
@@ -150,7 +150,7 @@ describe('CSSPropertyOperations', () => {
 
     const root = document.createElement('div');
 
-    expect(() => ReactDOM.render(<Comp />, root)).toWarnDev([
+    expect(() => ReactDOM.render(<Comp />, root)).toErrorDev([
       // msTransform is correct already and shouldn't warn
       'Warning: Unsupported vendor-prefixed style property oTransform. ' +
         'Did you mean OTransform?' +
@@ -183,7 +183,7 @@ describe('CSSPropertyOperations', () => {
 
     const root = document.createElement('div');
 
-    expect(() => ReactDOM.render(<Comp />, root)).toWarnDev([
+    expect(() => ReactDOM.render(<Comp />, root)).toErrorDev([
       "Warning: Style property values shouldn't contain a semicolon. " +
         'Try "backgroundColor: blue" instead.' +
         '\n    in div (at **)' +
@@ -206,7 +206,7 @@ describe('CSSPropertyOperations', () => {
 
     const root = document.createElement('div');
 
-    expect(() => ReactDOM.render(<Comp />, root)).toWarnDev(
+    expect(() => ReactDOM.render(<Comp />, root)).toErrorDev(
       'Warning: `NaN` is an invalid value for the `fontSize` css style property.' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
@@ -235,7 +235,7 @@ describe('CSSPropertyOperations', () => {
 
     const root = document.createElement('div');
 
-    expect(() => ReactDOM.render(<Comp />, root)).toWarnDev(
+    expect(() => ReactDOM.render(<Comp />, root)).toErrorDev(
       'Warning: `Infinity` is an invalid value for the `fontSize` css style property.' +
         '\n    in div (at **)' +
         '\n    in Comp (at **)',
@@ -245,13 +245,13 @@ describe('CSSPropertyOperations', () => {
   it('should not add units to CSS custom properties', () => {
     class Comp extends React.Component {
       render() {
-        return <div style={{'--foo': 5}} />;
+        return <div style={{'--foo': '5'}} />;
       }
     }
 
     const root = document.createElement('div');
     ReactDOM.render(<Comp />, root);
 
-    expect(root.children[0].style.Foo).toEqual('5');
+    expect(root.children[0].style.getPropertyValue('--foo')).toEqual('5');
   });
 });

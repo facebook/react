@@ -31,7 +31,7 @@ ignoreErrors([
   'Warning: Unsafe lifecycle methods',
   'Warning: %s is deprecated in StrictMode.', // findDOMNode
 ]);
-ignoreWarnings(['Warning: componentWillReceiveProps is deprecated']);
+ignoreWarnings(['Warning: componentWillReceiveProps has been renamed']);
 
 const roots = [];
 

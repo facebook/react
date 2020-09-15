@@ -42,6 +42,7 @@
   padding: 0.25rem 0.5rem;
   color: var(--color-text);
 }
+
 .Commit:focus,
 .Commit:hover {
   outline: none;
@@ -52,25 +53,7 @@
   background-color: var(--color-background-selected);
   color: var(--color-text-selected);
 }
+
 .CurrentCommit:focus {
   outline: none;
-}
-
-.WhatChangedItem {
-  margin-top: 0.25rem;
-}
-
-.WhatChangedKey {
-  font-family: var(--font-family-monospace);
-  font-size: var(--font-size-monospace-small);
-  line-height: 1;
-}
-.WhatChangedKey:first-of-type::before {
-  content: ' (';
-}
-.WhatChangedKey::after {
-  content: ', ';
-}
-.WhatChangedKey:last-of-type::after {
-  content: ')';
 }

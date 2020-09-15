@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {
+import * as React from 'react';
+import {
   createContext,
   forwardRef,
   lazy,
@@ -35,9 +36,16 @@ function FunctionComponent() {
 
 const MemoFunctionComponent = memo(FunctionComponent);
 
-const ForwardRefComponent = forwardRef((props, ref) => (
+const ForwardRefComponentWithAnonymousFunction = forwardRef((props, ref) => (
   <ClassComponent ref={ref} {...props} />
 ));
+const ForwardRefComponent = forwardRef(function NamedInnerFunction(props, ref) {
+  return <ClassComponent ref={ref} {...props} />;
+});
+const ForwardRefComponentWithCustomDisplayName = forwardRef((props, ref) => (
+  <ClassComponent ref={ref} {...props} />
+));
+ForwardRefComponentWithCustomDisplayName.displayName = 'Custom';
 
 const LazyComponent = lazy(() =>
   Promise.resolve({
@@ -58,6 +66,8 @@ export default function ElementTypes() {
             <FunctionComponent />
             <MemoFunctionComponent />
             <ForwardRefComponent />
+            <ForwardRefComponentWithAnonymousFunction />
+            <ForwardRefComponentWithCustomDisplayName />
             <LazyComponent />
           </Suspense>
         </StrictMode>

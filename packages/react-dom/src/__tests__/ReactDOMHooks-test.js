@@ -32,8 +32,8 @@ describe('ReactDOMHooks', () => {
   });
 
   it('can ReactDOM.render() from useEffect', () => {
-    let container2 = document.createElement('div');
-    let container3 = document.createElement('div');
+    const container2 = document.createElement('div');
+    const container3 = document.createElement('div');
 
     function Example1({n}) {
       React.useEffect(() => {
@@ -105,6 +105,7 @@ describe('ReactDOMHooks', () => {
     expect(labelRef.current.innerHTML).toBe('abc');
   });
 
+  // @gate experimental
   it('should not bail out when an update is scheduled from within an event handler in Concurrent Mode', () => {
     const {createRef, useCallback, useState} = React;
 

@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {memo, useCallback} from 'react';
+import * as React from 'react';
+import {memo, useCallback} from 'react';
 import {areEqual} from 'react-window';
 import {getGradientColor} from './utils';
 
@@ -19,6 +20,7 @@ type Props = {
   data: ItemData,
   index: number,
   style: Object,
+  ...
 };
 
 function InteractionListItem({data: itemData, index, style}: Props) {
@@ -41,12 +43,9 @@ function InteractionListItem({data: itemData, index, style}: Props) {
     throw Error(`Could not find interaction #${index}`);
   }
 
-  const handleClick = useCallback(
-    () => {
-      selectInteraction(interaction.id);
-    },
-    [interaction, selectInteraction],
-  );
+  const handleClick = useCallback(() => {
+    selectInteraction(interaction.id);
+  }, [interaction, selectInteraction]);
 
   const commits = interactionCommits.get(interaction.id) || [];
 

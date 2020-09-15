@@ -18,34 +18,44 @@ const configTemplate = fs
   .readFileSync(__dirname + '/config/flowconfig')
   .toString();
 
-function writeConfig(renderer, isFizzSupported) {
+function writeConfig(renderer, rendererInfo, isServerSupported) {
   const folder = __dirname + '/' + renderer;
   mkdirp.sync(folder);
 
-  const fizzRenderer = isFizzSupported ? renderer : 'custom';
+  const serverRenderer = isServerSupported ? renderer : 'custom';
+
+  const ignoredPaths = [];
+
+  inlinedHostConfigs.forEach(otherRenderer => {
+    if (otherRenderer === rendererInfo) {
+      return;
+    }
+    otherRenderer.paths.forEach(otherPath => {
+      if (rendererInfo.paths.indexOf(otherPath) !== -1) {
+        return;
+      }
+      ignoredPaths.push(`.*/packages/${otherPath}`);
+    });
+
+    if (otherRenderer.shortName !== serverRenderer) {
+      ignoredPaths.push(
+        `.*/packages/.*/forks/.*.${otherRenderer.shortName}.js`,
+      );
+    }
+  });
+
   const config = configTemplate
     .replace(
       '%REACT_RENDERER_FLOW_OPTIONS%',
       `
-module.name_mapper='react-reconciler/inline.${renderer}$$' -> 'react-reconciler/inline-typed'
 module.name_mapper='ReactFiberHostConfig$$' -> 'forks/ReactFiberHostConfig.${renderer}'
-module.name_mapper='react-stream/inline.${renderer}$$' -> 'react-stream/inline-typed'
-module.name_mapper='ReactFizzHostConfig$$' -> 'forks/ReactFizzHostConfig.${fizzRenderer}'
-module.name_mapper='ReactFizzFormatConfig$$' -> 'forks/ReactFizzFormatConfig.${fizzRenderer}'
+module.name_mapper='ReactServerStreamConfig$$' -> 'forks/ReactServerStreamConfig.${serverRenderer}'
+module.name_mapper='ReactServerFormatConfig$$' -> 'forks/ReactServerFormatConfig.${serverRenderer}'
+module.name_mapper='ReactFlightServerConfig$$' -> 'forks/ReactFlightServerConfig.${serverRenderer}'
+module.name_mapper='ReactFlightClientHostConfig$$' -> 'forks/ReactFlightClientHostConfig.${serverRenderer}'
     `.trim(),
     )
-    .replace(
-      '%REACT_RENDERER_FLOW_IGNORES%',
-      renderer === 'dom' || renderer === 'dom-browser'
-        ? ''
-        : // If we're not checking DOM, ignore the DOM package since it
-          // won't be consistent.
-          `
-    .*/packages/react-dom/.*
-    .*/packages/.*/forks/.*.dom.js
-    .*/packages/.*/forks/.*.dom-browser.js
-    `.trim(),
-    );
+    .replace('%REACT_RENDERER_FLOW_IGNORES%', ignoredPaths.join('\n'));
 
   const disclaimer = `
 # ---------------------------------------------------------------#
@@ -78,6 +88,10 @@ ${disclaimer}
 // so that we can run those checks in parallel if we want.
 inlinedHostConfigs.forEach(rendererInfo => {
   if (rendererInfo.isFlowTyped) {
-    writeConfig(rendererInfo.shortName, rendererInfo.isFizzSupported);
+    writeConfig(
+      rendererInfo.shortName,
+      rendererInfo,
+      rendererInfo.isServerSupported,
+    );
   }
 });

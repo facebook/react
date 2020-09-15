@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/* eslint-disable react-internal/warning-and-invariant-args */
+/* eslint-disable react-internal/invariant-args */
 
 'use strict';
 
@@ -15,7 +15,7 @@ import invariant from 'shared/invariant';
 
 // Map of viewTag -> {children: [childTag], parent: ?parentTag}
 const roots = [];
-let views = new Map();
+const views = new Map();
 
 function autoCreateRoot(tag) {
   // Seriously, this is how we distinguish roots in RN.
@@ -60,8 +60,6 @@ function removeChild(parent, child) {
 
 const RCTUIManager = {
   __dumpHierarchyForJestTestsOnly: function() {
-    return roots.map(tag => dumpSubtree(tag, 0)).join('\n');
-
     function dumpSubtree(tag, indent) {
       const info = views.get(tag);
       let out = '';
@@ -73,6 +71,7 @@ const RCTUIManager = {
       }
       return out;
     }
+    return roots.map(tag => dumpSubtree(tag, 0)).join('\n');
   },
   clearJSResponder: jest.fn(),
   createView: jest.fn(function createView(reactTag, viewName, rootTag, props) {

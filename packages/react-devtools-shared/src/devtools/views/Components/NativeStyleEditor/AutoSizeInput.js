@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {Fragment, useLayoutEffect, useRef} from 'react';
+import * as React from 'react';
+import {Fragment, useLayoutEffect, useRef} from 'react';
 import styles from './AutoSizeInput.css';
 
 type Props = {
@@ -15,6 +16,7 @@ type Props = {
   onFocus?: (event: FocusEvent) => void,
   placeholder?: string,
   value: any,
+  ...
 };
 
 export default function AutoSizeInput({
@@ -65,27 +67,24 @@ export default function AutoSizeInput({
   }, []);
 
   // Resize input any time text changes
-  useLayoutEffect(
-    () => {
-      if (hiddenDivRef.current === null) {
-        return;
-      }
+  useLayoutEffect(() => {
+    if (hiddenDivRef.current === null) {
+      return;
+    }
 
-      const scrollWidth = hiddenDivRef.current.getBoundingClientRect().width;
-      if (!scrollWidth) {
-        return;
-      }
+    const scrollWidth = hiddenDivRef.current.getBoundingClientRect().width;
+    if (!scrollWidth) {
+      return;
+    }
 
-      // Adding an extra pixel avoids a slight horizontal scroll when changing text selection/cursor.
-      // Not sure why this is, but the old DevTools did a similar thing.
-      const targetWidth = Math.ceil(scrollWidth) + 1;
+    // Adding an extra pixel avoids a slight horizontal scroll when changing text selection/cursor.
+    // Not sure why this is, but the old DevTools did a similar thing.
+    const targetWidth = Math.ceil(scrollWidth) + 1;
 
-      if (inputRef.current !== null) {
-        inputRef.current.style.width = `${targetWidth}px`;
-      }
-    },
-    [value],
-  );
+    if (inputRef.current !== null) {
+      inputRef.current.style.width = `${targetWidth}px`;
+    }
+  }, [value]);
 
   const isEmpty = value === '' || value === '""';
 

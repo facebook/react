@@ -10,13 +10,14 @@
 let React;
 let ReactDOM;
 let ReactART;
+let TestUtils;
 let ARTSVGMode;
 let ARTCurrentMode;
-let TestUtils;
 let TestRenderer;
 let ARTTest;
 
 global.__DEV__ = process.env.NODE_ENV !== 'production';
+global.__EXPERIMENTAL__ = process.env.RELEASE_CHANNEL === 'experimental';
 
 expect.extend(require('../toWarnDev'));
 
@@ -28,10 +29,10 @@ beforeEach(() => {
   jest.resetModules();
   React = require('react');
   ReactDOM = require('react-dom');
+  TestUtils = require('react-dom/test-utils');
   ReactART = require('react-art');
   ARTSVGMode = require('art/modes/svg');
   ARTCurrentMode = require('art/modes/current');
-  TestUtils = require('react-dom/test-utils');
   TestRenderer = require('react-test-renderer');
 
   ARTCurrentMode.setCurrent(ARTSVGMode);
@@ -70,7 +71,7 @@ beforeEach(() => {
 
 it("doesn't warn when you use the right act + renderer: dom", () => {
   TestUtils.act(() => {
-    TestUtils.renderIntoDocument(<App />);
+    ReactDOM.render(<App />, document.createElement('div'));
   });
 });
 
@@ -98,7 +99,7 @@ it('resets correctly across renderers', () => {
 it('warns when using the wrong act version - test + dom: render', () => {
   expect(() => {
     TestRenderer.act(() => {
-      TestUtils.renderIntoDocument(<App />);
+      ReactDOM.render(<App />, document.createElement('div'));
     });
   }).toWarnDev(["It looks like you're using the wrong act()"], {
     withoutStack: true,
@@ -112,12 +113,14 @@ it('warns when using the wrong act version - test + dom: updates', () => {
     setCtr = _setCtr;
     return ctr;
   }
-  TestUtils.renderIntoDocument(<Counter />);
+  ReactDOM.render(<Counter />, document.createElement('div'));
   expect(() => {
     TestRenderer.act(() => {
       setCtr(1);
     });
-  }).toWarnDev(["It looks like you're using the wrong act()"]);
+  }).toWarnDev(["It looks like you're using the wrong act()"], {
+    withoutStack: true,
+  });
 });
 
 it('warns when using the wrong act version - dom + test: .create()', () => {
@@ -153,12 +156,14 @@ it('warns when using the wrong act version - dom + test: updates', () => {
     TestUtils.act(() => {
       setCtr(1);
     });
-  }).toWarnDev(["It looks like you're using the wrong act()"]);
+  }).toWarnDev(["It looks like you're using the wrong act()"], {
+    withoutStack: true,
+  });
 });
 
 it('does not warn when nesting react-act inside react-dom', () => {
   TestUtils.act(() => {
-    TestUtils.renderIntoDocument(<ARTTest />);
+    ReactDOM.render(<ARTTest />, document.createElement('div'));
   });
 });
 
@@ -176,19 +181,21 @@ it("doesn't warn if you use nested acts from different renderers", () => {
   });
 });
 
-it('warns when using createRoot() + .render', () => {
-  const root = ReactDOM.unstable_createRoot(document.createElement('div'));
-  expect(() => {
-    TestRenderer.act(() => {
-      root.render(<App />);
-    });
-  }).toWarnDev(
-    [
-      'In Concurrent or Sync modes, the "scheduler" module needs to be mocked',
-      "It looks like you're using the wrong act()",
-    ],
-    {
-      withoutStack: true,
-    }
-  );
-});
+if (__EXPERIMENTAL__) {
+  it('warns when using createRoot() + .render', () => {
+    const root = ReactDOM.unstable_createRoot(document.createElement('div'));
+    expect(() => {
+      TestRenderer.act(() => {
+        root.render(<App />);
+      });
+    }).toWarnDev(
+      [
+        'In Concurrent or Sync modes, the "scheduler" module needs to be mocked',
+        "It looks like you're using the wrong act()",
+      ],
+      {
+        withoutStack: true,
+      }
+    );
+  });
+}

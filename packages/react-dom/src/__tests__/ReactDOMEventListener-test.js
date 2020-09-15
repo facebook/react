@@ -12,35 +12,13 @@
 describe('ReactDOMEventListener', () => {
   let React;
   let ReactDOM;
+  let ReactDOMServer;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-  });
-
-  it('should dispatch events from outside React tree', () => {
-    const mock = jest.fn();
-
-    const container = document.createElement('div');
-    const node = ReactDOM.render(<div onMouseEnter={mock} />, container);
-    const otherNode = document.createElement('h1');
-    document.body.appendChild(container);
-    document.body.appendChild(otherNode);
-
-    try {
-      otherNode.dispatchEvent(
-        new MouseEvent('mouseout', {
-          bubbles: true,
-          cancelable: true,
-          relatedTarget: node,
-        }),
-      );
-      expect(mock).toBeCalled();
-    } finally {
-      document.body.removeChild(container);
-      document.body.removeChild(otherNode);
-    }
+    ReactDOMServer = require('react-dom/server');
   });
 
   describe('Propagation', () => {
@@ -189,9 +167,19 @@ describe('ReactDOMEventListener', () => {
         // The first call schedules a render of '1' into the 'Child'.
         // However, we're batching so it isn't flushed yet.
         expect(mock.mock.calls[0][0]).toBe('Child');
-        // The first call schedules a render of '2' into the 'Child'.
-        // We're still batching so it isn't flushed yet either.
-        expect(mock.mock.calls[1][0]).toBe('Child');
+        // As we have two roots, it means we have two event listeners.
+        // This also means we enter the event batching phase twice,
+        // flushing the child to be 1.
+
+        // We don't have any good way of knowing if another event will
+        // occur because another event handler might invoke
+        // stopPropagation() along the way. After discussions internally
+        // with Sebastian, it seems that for now over-flushing should
+        // be fine, especially as the new event system is a breaking
+        // change anyway. We can maybe revisit this later as part of
+        // the work to refine this in the scheduler (maybe by leveraging
+        // isInputPending?).
+        expect(mock.mock.calls[1][0]).toBe('1');
         // By the time we leave the handler, the second update is flushed.
         expect(childNode.textContent).toBe('2');
       } finally {
@@ -292,9 +280,9 @@ describe('ReactDOMEventListener', () => {
     document.body.removeChild(container);
   });
 
-  // This is a special case for submit and reset events as they are listened on
-  // at the element level and not the document.
-  // @see https://github.com/facebook/react/pull/13462
+  // This tests an implementation detail that submit/reset events are listened to
+  // at the document level, which is necessary for event replaying to work.
+  // They bubble in all modern browsers.
   it('should not receive submit events if native, interim DOM handler prevents it', () => {
     const container = document.createElement('div');
     document.body.appendChild(container);
@@ -330,8 +318,8 @@ describe('ReactDOMEventListener', () => {
         }),
       );
 
-      expect(handleSubmit).toHaveBeenCalled();
-      expect(handleReset).toHaveBeenCalled();
+      expect(handleSubmit).not.toHaveBeenCalled();
+      expect(handleReset).not.toHaveBeenCalled();
     } finally {
       document.body.removeChild(container);
     }
@@ -362,12 +350,6 @@ describe('ReactDOMEventListener', () => {
           bubbles: false,
         }),
       );
-      // Historically, we happened to not support onLoadStart
-      // on <img>, and this test documents that lack of support.
-      // If we decide to support it in the future, we should change
-      // this line to expect 1 call. Note that fixing this would
-      // be simple but would require attaching a handler to each
-      // <img>. So far nobody asked us for it.
       expect(handleImgLoadStart).toHaveBeenCalledTimes(0);
 
       videoRef.current.dispatchEvent(
@@ -386,7 +368,9 @@ describe('ReactDOMEventListener', () => {
     document.body.appendChild(container);
 
     const videoRef = React.createRef();
-    const handleVideoPlay = jest.fn(); // We'll test this one.
+    // We'll test this event alone.
+    const handleVideoPlay = jest.fn();
+    const handleVideoPlayDelegated = jest.fn();
     const mediaEvents = {
       onAbort() {},
       onCanPlay() {},
@@ -413,23 +397,63 @@ describe('ReactDOMEventListener', () => {
       onWaiting() {},
     };
 
-    const originalAddEventListener = document.addEventListener;
+    const originalDocAddEventListener = document.addEventListener;
+    const originalRootAddEventListener = container.addEventListener;
     document.addEventListener = function(type) {
-      throw new Error(
-        `Did not expect to add a top-level listener for the "${type}" event.`,
-      );
+      switch (type) {
+        case 'selectionchange':
+          break;
+        default:
+          throw new Error(
+            `Did not expect to add a document-level listener for the "${type}" event.`,
+          );
+      }
+    };
+    container.addEventListener = function(type, fn, options) {
+      if (options && (options === true || options.capture)) {
+        return;
+      }
+      switch (type) {
+        case 'abort':
+        case 'canplay':
+        case 'canplaythrough':
+        case 'durationchange':
+        case 'emptied':
+        case 'encrypted':
+        case 'ended':
+        case 'error':
+        case 'loadeddata':
+        case 'loadedmetadata':
+        case 'loadstart':
+        case 'pause':
+        case 'play':
+        case 'playing':
+        case 'progress':
+        case 'ratechange':
+        case 'seeked':
+        case 'seeking':
+        case 'stalled':
+        case 'suspend':
+        case 'timeupdate':
+        case 'volumechange':
+        case 'waiting':
+          throw new Error(
+            `Did not expect to add a root-level listener for the "${type}" event.`,
+          );
+        default:
+          break;
+      }
     };
 
     try {
       // We expect that mounting this tree will
       // *not* attach handlers for any top-level events.
       ReactDOM.render(
-        <div>
+        <div onPlay={handleVideoPlayDelegated}>
           <video ref={videoRef} {...mediaEvents} onPlay={handleVideoPlay} />
           <audio {...mediaEvents}>
             <source {...mediaEvents} />
           </audio>
-          <form onReset={() => {}} onSubmit={() => {}} />
         </div>,
         container,
       );
@@ -441,8 +465,12 @@ describe('ReactDOMEventListener', () => {
         }),
       );
       expect(handleVideoPlay).toHaveBeenCalledTimes(1);
+      // Unlike browsers, we delegate media events.
+      // (This doesn't make a lot of sense but it would be a breaking change not to.)
+      expect(handleVideoPlayDelegated).toHaveBeenCalledTimes(1);
     } finally {
-      document.addEventListener = originalAddEventListener;
+      document.addEventListener = originalDocAddEventListener;
+      container.addEventListener = originalRootAddEventListener;
       document.body.removeChild(container);
     }
   });
@@ -469,6 +497,408 @@ describe('ReactDOMEventListener', () => {
       );
 
       expect(handleLoad).toHaveBeenCalledTimes(1);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  // Unlike browsers, we delegate media events.
+  // (This doesn't make a lot of sense but it would be a breaking change not to.)
+  it('should delegate media events even without a direct listener', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const handleVideoPlayDelegated = jest.fn();
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div onPlay={handleVideoPlayDelegated}>
+          {/* Intentionally no handler on the target: */}
+          <video ref={ref} />
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('play', {
+          bubbles: false,
+        }),
+      );
+      // Regression test: ensure React tree delegation still works
+      // even if the actual DOM element did not have a handler.
+      expect(handleVideoPlayDelegated).toHaveBeenCalledTimes(1);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  it('should delegate dialog events even without a direct listener', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const onCancel = jest.fn();
+    const onClose = jest.fn();
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div onCancel={onCancel} onClose={onClose}>
+          {/* Intentionally no handler on the target: */}
+          <dialog ref={ref} />
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('close', {
+          bubbles: false,
+        }),
+      );
+      ref.current.dispatchEvent(
+        new Event('cancel', {
+          bubbles: false,
+        }),
+      );
+      // Regression test: ensure React tree delegation still works
+      // even if the actual DOM element did not have a handler.
+      expect(onCancel).toHaveBeenCalledTimes(1);
+      expect(onClose).toHaveBeenCalledTimes(1);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  it('should bubble non-native bubbling toggle events', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const onToggle = jest.fn();
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div onToggle={onToggle}>
+          <details ref={ref} onToggle={onToggle} />
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('toggle', {
+          bubbles: false,
+        }),
+      );
+      expect(onToggle).toHaveBeenCalledTimes(2);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  it('should bubble non-native bubbling cancel/close events', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const onCancel = jest.fn();
+    const onClose = jest.fn();
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div onCancel={onCancel} onClose={onClose}>
+          <dialog ref={ref} onCancel={onCancel} onClose={onClose} />
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('cancel', {
+          bubbles: false,
+        }),
+      );
+      ref.current.dispatchEvent(
+        new Event('close', {
+          bubbles: false,
+        }),
+      );
+      expect(onCancel).toHaveBeenCalledTimes(2);
+      expect(onClose).toHaveBeenCalledTimes(2);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  it('should bubble non-native bubbling media events events', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const onPlay = jest.fn();
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div onPlay={onPlay}>
+          <video ref={ref} onPlay={onPlay} />
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('play', {
+          bubbles: false,
+        }),
+      );
+      expect(onPlay).toHaveBeenCalledTimes(2);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  it('should bubble non-native bubbling invalid events', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const onInvalid = jest.fn();
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <form onInvalid={onInvalid}>
+          <input ref={ref} onInvalid={onInvalid} />
+        </form>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('invalid', {
+          bubbles: false,
+        }),
+      );
+      expect(onInvalid).toHaveBeenCalledTimes(2);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  it('should handle non-bubbling capture events correctly', () => {
+    const container = document.createElement('div');
+    const innerRef = React.createRef();
+    const outerRef = React.createRef();
+    const onPlayCapture = jest.fn(e => log.push(e.currentTarget));
+    const log = [];
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div ref={outerRef} onPlayCapture={onPlayCapture}>
+          <div onPlayCapture={onPlayCapture}>
+            <div ref={innerRef} onPlayCapture={onPlayCapture} />
+          </div>
+        </div>,
+        container,
+      );
+      innerRef.current.dispatchEvent(
+        new Event('play', {
+          bubbles: false,
+        }),
+      );
+      expect(onPlayCapture).toHaveBeenCalledTimes(3);
+      expect(log).toEqual([
+        outerRef.current,
+        outerRef.current.firstChild,
+        innerRef.current,
+      ]);
+      outerRef.current.dispatchEvent(
+        new Event('play', {
+          bubbles: false,
+        }),
+      );
+      expect(onPlayCapture).toHaveBeenCalledTimes(4);
+      expect(log).toEqual([
+        outerRef.current,
+        outerRef.current.firstChild,
+        innerRef.current,
+        outerRef.current,
+      ]);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  // We're moving towards aligning more closely with the browser.
+  // Currently we emulate bubbling for all non-bubbling events except scroll.
+  // We may expand this list in the future, removing emulated bubbling altogether.
+  it('should not emulate bubbling of scroll events', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const log = [];
+    const onScroll = jest.fn(e =>
+      log.push(['bubble', e.currentTarget.className]),
+    );
+    const onScrollCapture = jest.fn(e =>
+      log.push(['capture', e.currentTarget.className]),
+    );
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div
+          className="grand"
+          onScroll={onScroll}
+          onScrollCapture={onScrollCapture}>
+          <div
+            className="parent"
+            onScroll={onScroll}
+            onScrollCapture={onScrollCapture}>
+            <div
+              className="child"
+              onScroll={onScroll}
+              onScrollCapture={onScrollCapture}
+              ref={ref}
+            />
+          </div>
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('scroll', {
+          bubbles: false,
+        }),
+      );
+      expect(log).toEqual([
+        ['capture', 'grand'],
+        ['capture', 'parent'],
+        ['capture', 'child'],
+        ['bubble', 'child'],
+      ]);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  // We're moving towards aligning more closely with the browser.
+  // Currently we emulate bubbling for all non-bubbling events except scroll.
+  // We may expand this list in the future, removing emulated bubbling altogether.
+  it('should not emulate bubbling of scroll events (no own handler)', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const log = [];
+    const onScroll = jest.fn(e =>
+      log.push(['bubble', e.currentTarget.className]),
+    );
+    const onScrollCapture = jest.fn(e =>
+      log.push(['capture', e.currentTarget.className]),
+    );
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div
+          className="grand"
+          onScroll={onScroll}
+          onScrollCapture={onScrollCapture}>
+          <div
+            className="parent"
+            onScroll={onScroll}
+            onScrollCapture={onScrollCapture}>
+            {/* Intentionally no handler on the child: */}
+            <div className="child" ref={ref} />
+          </div>
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('scroll', {
+          bubbles: false,
+        }),
+      );
+      expect(log).toEqual([
+        ['capture', 'grand'],
+        ['capture', 'parent'],
+      ]);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  it('should subscribe to scroll during updates', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const log = [];
+    const onScroll = jest.fn(e =>
+      log.push(['bubble', e.currentTarget.className]),
+    );
+    const onScrollCapture = jest.fn(e =>
+      log.push(['capture', e.currentTarget.className]),
+    );
+    document.body.appendChild(container);
+    try {
+      ReactDOM.render(
+        <div>
+          <div>
+            <div />
+          </div>
+        </div>,
+        container,
+      );
+      ReactDOM.render(
+        <div
+          className="grand"
+          onScroll={onScroll}
+          onScrollCapture={onScrollCapture}>
+          <div
+            className="parent"
+            onScroll={onScroll}
+            onScrollCapture={onScrollCapture}>
+            <div
+              className="child"
+              onScroll={onScroll}
+              onScrollCapture={onScrollCapture}
+              ref={ref}
+            />
+          </div>
+        </div>,
+        container,
+      );
+      ref.current.dispatchEvent(
+        new Event('scroll', {
+          bubbles: false,
+        }),
+      );
+      expect(log).toEqual([
+        ['capture', 'grand'],
+        ['capture', 'parent'],
+        ['capture', 'child'],
+        ['bubble', 'child'],
+      ]);
+    } finally {
+      document.body.removeChild(container);
+    }
+  });
+
+  // Regression test.
+  it('should subscribe to scroll during hydration', () => {
+    const container = document.createElement('div');
+    const ref = React.createRef();
+    const log = [];
+    const onScroll = jest.fn(e =>
+      log.push(['bubble', e.currentTarget.className]),
+    );
+    const onScrollCapture = jest.fn(e =>
+      log.push(['capture', e.currentTarget.className]),
+    );
+    const tree = (
+      <div
+        className="grand"
+        onScroll={onScroll}
+        onScrollCapture={onScrollCapture}>
+        <div
+          className="parent"
+          onScroll={onScroll}
+          onScrollCapture={onScrollCapture}>
+          <div
+            className="child"
+            onScroll={onScroll}
+            onScrollCapture={onScrollCapture}
+            ref={ref}
+          />
+        </div>
+      </div>
+    );
+    document.body.appendChild(container);
+    try {
+      container.innerHTML = ReactDOMServer.renderToString(tree);
+      ReactDOM.hydrate(tree, container);
+      ref.current.dispatchEvent(
+        new Event('scroll', {
+          bubbles: false,
+        }),
+      );
+      expect(log).toEqual([
+        ['capture', 'grand'],
+        ['capture', 'parent'],
+        ['capture', 'child'],
+        ['bubble', 'child'],
+      ]);
     } finally {
       document.body.removeChild(container);
     }

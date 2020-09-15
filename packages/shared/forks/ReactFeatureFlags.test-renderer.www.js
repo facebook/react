@@ -7,45 +7,53 @@
  * @flow
  */
 
-import invariant from 'shared/invariant';
-
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
-import typeof * as PersistentFeatureFlagsType from './ReactFeatureFlags.persistent';
+import typeof * as ExportsType from './ReactFeatureFlags.test-renderer.www';
 
-export const debugRenderPhaseSideEffects = false;
 export const debugRenderPhaseSideEffectsForStrictMode = false;
-export const enableUserTimingAPI = __DEV__;
+export const enableDebugTracing = false;
+export const enableSchedulingProfiler = false;
 export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = __PROFILE__;
+export const enableProfilerCommitHooks = false;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
-export const enableStableConcurrentModeAPIs = false;
+export const enableBlocksAPI = false;
+export const enableLazyElements = false;
 export const enableSchedulerDebugging = false;
-export const warnAboutDeprecatedSetNativeProps = false;
 export const disableJavaScriptURLs = false;
-export const enableFlareAPI = true;
+export const disableInputAttributeSyncing = false;
 export const enableFundamentalAPI = false;
 export const enableScopeAPI = true;
-export const enableJSXTransformAPI = true;
+export const enableCreateEventHandleAPI = false;
 export const warnAboutUnmockedScheduler = true;
-export const flushSuspenseFallbacksInTests = true;
-export const enableUserBlockingEvents = false;
 export const enableSuspenseCallback = true;
 export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const warnAboutStringRefs = false;
 export const disableLegacyContext = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const enableTrustedTypesIntegration = false;
+export const disableTextareaChildren = false;
+export const disableModulePatternComponents = true;
+export const warnUnstableRenderSubtreeIntoContainer = false;
+export const warnAboutSpreadingKeyToJSX = false;
+export const enableComponentStackLocations = true;
+export const enableLegacyFBSupport = false;
+export const enableFilterEmptyStringAttributesDOM = false;
+export const skipUnmountedBoundaries = false;
 
-// Only used in www builds.
-export function addUserTimingListener() {
-  invariant(false, 'Not implemented.');
-}
+export const enableNewReconciler = false;
+export const deferRenderPhaseUpdateToNextBatch = true;
+export const decoupleUpdatePriorityFromScheduler = false;
+export const enableDiscreteEventFlushingChange = false;
+export const enablePassiveEventIntervention = true;
+export const enableEagerRootListeners = true;
+export const disableSchedulerTimeoutInWorkLoop = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;
 // eslint-disable-next-line no-unused-expressions
-(null: Check<PersistentFeatureFlagsType, FeatureFlagsType>);
+(null: Check<ExportsType, FeatureFlagsType>);

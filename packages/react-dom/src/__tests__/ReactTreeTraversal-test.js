@@ -203,6 +203,9 @@ describe('ReactTreeTraversal', () => {
       expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
 
+    // The modern event system attaches event listeners to roots so the
+    // event below is being triggered on a node that React does not listen
+    // to any more. Instead we should fire mouseover.
     it('should enter from the window', () => {
       const enterNode = document.getElementById('P_P1_C1__DIV');
 
@@ -212,11 +215,11 @@ describe('ReactTreeTraversal', () => {
         ['P_P1_C1__DIV', 'mouseenter'],
       ];
 
-      outerNode1.dispatchEvent(
-        new MouseEvent('mouseout', {
+      enterNode.dispatchEvent(
+        new MouseEvent('mouseover', {
           bubbles: true,
           cancelable: true,
-          relatedTarget: enterNode,
+          relatedTarget: outerNode1,
         }),
       );
 
@@ -228,11 +231,11 @@ describe('ReactTreeTraversal', () => {
 
       const expectedCalls = [['P', 'mouseenter']];
 
-      outerNode1.dispatchEvent(
-        new MouseEvent('mouseout', {
+      enterNode.dispatchEvent(
+        new MouseEvent('mouseover', {
           bubbles: true,
           cancelable: true,
-          relatedTarget: enterNode,
+          relatedTarget: outerNode1,
         }),
       );
 

@@ -13,6 +13,7 @@ module.exports = {
     WeakMap: true,
     WeakSet: true,
     Uint16Array: true,
+    Reflect: true,
     // Vendor specific
     MSApp: true,
     __REACT_DEVTOOLS_GLOBAL_HOOK__: true,
@@ -23,6 +24,7 @@ module.exports = {
     module: true,
     define: true,
     require: true,
+    globalThis: true,
     global: true,
     // Trusted Types
     trustedTypes: true,
@@ -31,6 +33,19 @@ module.exports = {
     SharedArrayBuffer: true,
     Int32Array: true,
     ArrayBuffer: true,
+
+    TaskController: true,
+
+    // Flight
+    Uint8Array: true,
+    Promise: true,
+
+    // Flight Webpack
+    __webpack_chunk_load__: true,
+    __webpack_require__: true,
+
+    // jest
+    jest: true,
   },
   parserOptions: {
     ecmaVersion: 5,

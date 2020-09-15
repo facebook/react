@@ -7,7 +7,7 @@
 // It exists to share code between the Node release scripts and CI bash scripts.
 
 // IMPORTANT:
-// Changes below should be mirrored in ./create-canary-commands/add-build-info-json.js
+// Changes below should be mirrored in ./build-release-locally-commands/add-build-info-json.js
 
 const {exec} = require('child_process');
 const {existsSync} = require('fs');

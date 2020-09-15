@@ -99,7 +99,7 @@ function jsonChildrenToJSXChildren(jsonChildren) {
     if (jsonChildren.length === 1) {
       return jsonChildToJSXChild(jsonChildren[0]);
     } else if (jsonChildren.length > 1) {
-      let jsxChildren = [];
+      const jsxChildren = [];
       let allJSXChildrenAreStrings = true;
       let jsxChildrenString = '';
       for (let i = 0; i < jsonChildren.length; i++) {

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-/* eslint-disable react-internal/warning-and-invariant-args */
+/* eslint-disable react-internal/invariant-args */
 
 'use strict';
 
@@ -28,7 +28,7 @@ function dumpSubtree(info, indent) {
 
 const RCTFabricUIManager = {
   __dumpChildSetForJestTestsOnly: function(childSet) {
-    let result = [];
+    const result = [];
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const child of childSet) {
       result.push(dumpSubtree(child, 0));
@@ -36,7 +36,7 @@ const RCTFabricUIManager = {
     return result.join('\n');
   },
   __dumpHierarchyForJestTestsOnly: function() {
-    let result = [];
+    const result = [];
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const [rootTag, childSet] of roots) {
       result.push(rootTag);

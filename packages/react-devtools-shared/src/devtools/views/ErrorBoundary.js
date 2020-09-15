@@ -7,11 +7,18 @@
  * @flow
  */
 
-import React, {Component} from 'react';
+import * as React from 'react';
+import {Component} from 'react';
+import Button from './Button';
+import ButtonIcon from './ButtonIcon';
+import Icon from './Icon';
 import styles from './ErrorBoundary.css';
+import Store from 'react-devtools-shared/src/devtools/store';
 
 type Props = {|
   children: React$Node,
+  onRetry?: (store: Store) => void,
+  store: Store,
 |};
 
 type State = {|
@@ -21,13 +28,15 @@ type State = {|
   hasError: boolean,
 |};
 
+const InitialState: State = {
+  callStack: null,
+  componentStack: null,
+  errorMessage: null,
+  hasError: false,
+};
+
 export default class ErrorBoundary extends Component<Props, State> {
-  state: State = {
-    callStack: null,
-    componentStack: null,
-    errorMessage: null,
-    hasError: false,
-  };
+  state: State = InitialState;
 
   componentDidCatch(error: any, {componentStack}: any) {
     const errorMessage =
@@ -84,17 +93,30 @@ export default class ErrorBoundary extends Component<Props, State> {
       return (
         <div className={styles.ErrorBoundary}>
           <div className={styles.Header}>
-            An error was thrown: "{errorMessage}"
+            Uncaught Error: {errorMessage || ''}
           </div>
-          {bugURL && (
-            <a
-              href={bugURL}
-              rel="noopener noreferrer"
-              target="_blank"
-              title="Report bug">
-              Report this issue
-            </a>
-          )}
+          <div className={styles.IconAndLinkRow}>
+            <Button
+              className={styles.RetryButton}
+              title="Retry"
+              onClick={this.handleRetry}>
+              <ButtonIcon className={styles.RetryIcon} type="reload" />
+              Retry
+            </Button>
+            {bugURL && (
+              <>
+                <Icon className={styles.ReportIcon} type="bug" />
+                <a
+                  className={styles.ReportLink}
+                  href={bugURL}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                  title="Report bug">
+                  Report this issue
+                </a>
+              </>
+            )}
+          </div>
           {!!callStack && (
             <div className={styles.Stack}>
               The error was thrown {callStack.trim()}
@@ -111,4 +133,13 @@ export default class ErrorBoundary extends Component<Props, State> {
 
     return children;
   }
+
+  handleRetry = () => {
+    const {onRetry, store} = this.props;
+    if (typeof onRetry === 'function') {
+      onRetry(store);
+    }
+
+    this.setState(InitialState);
+  };
 }

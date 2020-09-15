@@ -28,7 +28,7 @@ module.exports = ({cwd}, isStableRelease) => {
     `;
   } else {
     message = theme`
-      {caution A canary release candidate has been prepared!}
+      {caution A "next" release candidate has been prepared!}
 
       You can review the contents of this release in {path build/node_modules/}
 

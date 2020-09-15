@@ -9,7 +9,7 @@
 module.exports = function stripUnusedImports(pureExternalModules) {
   return {
     name: 'scripts/rollup/plugins/strip-unused-imports',
-    transformBundle(code) {
+    renderChunk(code) {
       pureExternalModules.forEach(module => {
         // Ideally this would use a negative lookbehind: (?<!= *)
         // But this isn't supported by the Node <= 8.9.

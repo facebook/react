@@ -7,7 +7,7 @@
  * @flow
  */
 
-import EventEmitter from 'events';
+import EventEmitter from '../events';
 import {inspect} from 'util';
 import {
   TREE_OPERATION_ADD,
@@ -53,6 +53,7 @@ type Config = {|
   supportsNativeInspection?: boolean,
   supportsReloadAndProfile?: boolean,
   supportsProfiling?: boolean,
+  supportsTraceUpdates?: boolean,
 |};
 
 export type Capabilities = {|
@@ -125,6 +126,7 @@ export default class Store extends EventEmitter<{|
   _supportsNativeInspection: boolean = true;
   _supportsProfiling: boolean = false;
   _supportsReloadAndProfile: boolean = false;
+  _supportsTraceUpdates: boolean = false;
 
   _unsupportedRendererVersionDetected: boolean = false;
 
@@ -157,6 +159,7 @@ export default class Store extends EventEmitter<{|
         supportsNativeInspection,
         supportsProfiling,
         supportsReloadAndProfile,
+        supportsTraceUpdates,
       } = config;
       this._supportsNativeInspection = supportsNativeInspection !== false;
       if (supportsProfiling) {
@@ -164,6 +167,9 @@ export default class Store extends EventEmitter<{|
       }
       if (supportsReloadAndProfile) {
         this._supportsReloadAndProfile = true;
+      }
+      if (supportsTraceUpdates) {
+        this._supportsTraceUpdates = true;
       }
     }
 
@@ -336,12 +342,15 @@ export default class Store extends EventEmitter<{|
   get supportsProfiling(): boolean {
     return this._supportsProfiling;
   }
-
   get supportsReloadAndProfile(): boolean {
     // Does the DevTools shell support reloading and eagerly injecting the renderer interface?
     // And if so, can the backend use the localStorage API?
     // Both of these are required for the reload-and-profile feature to work.
     return this._supportsReloadAndProfile && this._isBackendStorageAPISupported;
+  }
+
+  get supportsTraceUpdates(): boolean {
+    return this._supportsTraceUpdates;
   }
 
   get unsupportedRendererVersionDetected(): boolean {
@@ -355,15 +364,13 @@ export default class Store extends EventEmitter<{|
   getElementAtIndex(index: number): Element | null {
     if (index < 0 || index >= this.numElements) {
       console.warn(
-        `Invalid index ${index} specified; store contains ${
-          this.numElements
-        } items.`,
+        `Invalid index ${index} specified; store contains ${this.numElements} items.`,
       );
 
       return null;
     }
 
-    // Find wich root this element is in...
+    // Find which root this element is in...
     let rootID;
     let root;
     let rootWeight = 0;
@@ -472,7 +479,7 @@ export default class Store extends EventEmitter<{|
 
   getOwnersListForElement(ownerID: number): Array<Element> {
     const list = [];
-    let element = this._idToElement.get(ownerID);
+    const element = this._idToElement.get(ownerID);
     if (element != null) {
       list.push({
         ...element,

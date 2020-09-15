@@ -7,7 +7,7 @@
  * @flow
  */
 
-import React from 'react';
+import * as React from 'react';
 
 class Custom {
   _number = 42;

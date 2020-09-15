@@ -1,6 +1,12 @@
 'use strict';
 
-const {existsSync, readdirSync, unlinkSync} = require('fs');
+const {
+  existsSync,
+  readdirSync,
+  unlinkSync,
+  readFileSync,
+  writeFileSync,
+} = require('fs');
 const Bundles = require('./bundles');
 const {
   asyncCopyTo,
@@ -10,6 +16,7 @@ const {
 } = require('./utils');
 
 const {
+  NODE_ES2015,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -34,29 +41,28 @@ function getPackageName(name) {
   return name;
 }
 
-function getBundleOutputPaths(bundleType, filename, packageName) {
+function getBundleOutputPath(bundleType, filename, packageName) {
   switch (bundleType) {
+    case NODE_ES2015:
+      return `build/node_modules/${packageName}/cjs/${filename}`;
     case NODE_DEV:
     case NODE_PROD:
     case NODE_PROFILING:
-      return [`build/node_modules/${packageName}/cjs/${filename}`];
+      return `build/node_modules/${packageName}/cjs/${filename}`;
     case UMD_DEV:
     case UMD_PROD:
     case UMD_PROFILING:
-      return [
-        `build/node_modules/${packageName}/umd/${filename}`,
-        `build/dist/${filename}`,
-      ];
+      return `build/node_modules/${packageName}/umd/${filename}`;
     case FB_WWW_DEV:
     case FB_WWW_PROD:
     case FB_WWW_PROFILING:
-      return [`build/facebook-www/${filename}`];
+      return `build/facebook-www/${filename}`;
     case RN_OSS_DEV:
     case RN_OSS_PROD:
     case RN_OSS_PROFILING:
       switch (packageName) {
         case 'react-native-renderer':
-          return [`build/react-native/implementations/${filename}`];
+          return `build/react-native/implementations/${filename}`;
         default:
           throw new Error('Unknown RN package.');
       }
@@ -64,13 +70,15 @@ function getBundleOutputPaths(bundleType, filename, packageName) {
     case RN_FB_PROD:
     case RN_FB_PROFILING:
       switch (packageName) {
+        case 'scheduler':
+        case 'react':
+        case 'react-test-renderer':
+          return `build/facebook-react-native/${packageName}/cjs/${filename}`;
         case 'react-native-renderer':
-          return [
-            `build/react-native/implementations/${filename.replace(
-              /\.js$/,
-              '.fb.js'
-            )}`,
-          ];
+          return `build/react-native/implementations/${filename.replace(
+            /\.js$/,
+            '.fb.js'
+          )}`;
         default:
           throw new Error('Unknown RN package.');
       }
@@ -87,16 +95,14 @@ async function copyWWWShims() {
 }
 
 async function copyRNShims() {
-  const reactTypesBuildTarget = 'build/react-native/shims/ReactTypes.js';
-  await Promise.all([
-    // React Native
-    asyncCopyTo(`${__dirname}/shims/react-native`, 'build/react-native/shims'),
-    asyncCopyTo(require.resolve('shared/ReactTypes.js'), reactTypesBuildTarget),
-    asyncCopyTo(
-      require.resolve('react-native-renderer/src/ReactNativeTypes.js'),
-      'build/react-native/shims/ReactNativeTypes.js'
-    ),
-  ]);
+  await asyncCopyTo(
+    `${__dirname}/shims/react-native`,
+    'build/react-native/shims'
+  );
+  await asyncCopyTo(
+    require.resolve('react-native-renderer/src/ReactNativeTypes.js'),
+    'build/react-native/shims/ReactNativeTypes.js'
+  );
 }
 
 async function copyAllShims() {
@@ -122,6 +128,56 @@ function getTarOptions(tgzName, packageName) {
   };
 }
 
+let entryPointsToHasBundle = new Map();
+// eslint-disable-next-line no-for-of-loops/no-for-of-loops
+for (const bundle of Bundles.bundles) {
+  let hasBundle = entryPointsToHasBundle.get(bundle.entry);
+  if (!hasBundle) {
+    entryPointsToHasBundle.set(bundle.entry, bundle.bundleTypes.length > 0);
+  }
+}
+
+function filterOutEntrypoints(name) {
+  // Remove entry point files that are not built in this configuration.
+  let jsonPath = `build/node_modules/${name}/package.json`;
+  let packageJSON = JSON.parse(readFileSync(jsonPath));
+  let files = packageJSON.files;
+  if (!Array.isArray(files)) {
+    throw new Error('expected all package.json files to contain a files field');
+  }
+  let changed = false;
+  for (let i = 0; i < files.length; i++) {
+    let filename = files[i];
+    let entry =
+      filename === 'index.js'
+        ? name
+        : name + '/' + filename.replace(/\.js$/, '');
+    let hasBundle = entryPointsToHasBundle.get(entry);
+    if (hasBundle === undefined) {
+      // This entry doesn't exist in the bundles. Check if something similar exists.
+      hasBundle =
+        entryPointsToHasBundle.get(entry + '.node') ||
+        entryPointsToHasBundle.get(entry + '.browser');
+    }
+    if (hasBundle === undefined) {
+      // This doesn't exist in the bundles. It's an extra file.
+    } else if (hasBundle === true) {
+      // This is built in this release channel.
+    } else {
+      // This doesn't have any bundleTypes in this release channel.
+      // Let's remove it.
+      files.splice(i, 1);
+      i--;
+      unlinkSync(`build/node_modules/${name}/${filename}`);
+      changed = true;
+    }
+  }
+  if (changed) {
+    let newJSON = JSON.stringify(packageJSON, null, '  ');
+    writeFileSync(jsonPath, newJSON);
+  }
+}
+
 async function prepareNpmPackage(name) {
   await Promise.all([
     asyncCopyTo('LICENSE', `build/node_modules/${name}/LICENSE`),
@@ -135,9 +191,10 @@ async function prepareNpmPackage(name) {
     ),
     asyncCopyTo(`packages/${name}/npm`, `build/node_modules/${name}`),
   ]);
-  const tgzName = (await asyncExecuteCommand(
-    `npm pack build/node_modules/${name}`
-  )).trim();
+  filterOutEntrypoints(name);
+  const tgzName = (
+    await asyncExecuteCommand(`npm pack build/node_modules/${name}`)
+  ).trim();
   await asyncRimRaf(`build/node_modules/${name}`);
   await asyncExtractTar(getTarOptions(tgzName, name));
   unlinkSync(tgzName);
@@ -157,6 +214,6 @@ async function prepareNpmPackages() {
 module.exports = {
   copyAllShims,
   getPackageName,
-  getBundleOutputPaths,
+  getBundleOutputPath,
   prepareNpmPackages,
 };

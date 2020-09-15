@@ -37,6 +37,15 @@ invariant(condition, 'Do not override existing functions.');
     ).toMatchSnapshot();
   });
 
+  it('should throw if invariant is not in an expression statement', () => {
+    expect(() => {
+      transform(`
+import invariant from 'shared/invariant';
+cond && invariant(condition, 'Do not override existing functions.');
+`);
+    }).toThrow('invariant() cannot be called from expression context');
+  });
+
   it('should support invariant calls with args', () => {
     expect(
       transform(`

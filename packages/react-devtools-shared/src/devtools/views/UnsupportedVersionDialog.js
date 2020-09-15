@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {Fragment, useContext, useEffect, useState} from 'react';
+import * as React from 'react';
+import {Fragment, useContext, useEffect, useState} from 'react';
 import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
 import {ModalDialogContext} from './ModalDialog';
 import {StoreContext} from './context';
@@ -22,35 +23,32 @@ export default function UnsupportedVersionDialog(_: {||}) {
   const store = useContext(StoreContext);
   const [state, setState] = useState<DAILOG_STATE>('dialog-not-shown');
 
-  useEffect(
-    () => {
-      if (state === 'dialog-not-shown') {
-        const showDialog = () => {
-          batchedUpdates(() => {
-            setState('show-dialog');
-            dispatch({
-              canBeDismissed: true,
-              type: 'SHOW',
-              content: <DialogContent />,
-            });
+  useEffect(() => {
+    if (state === 'dialog-not-shown') {
+      const showDialog = () => {
+        batchedUpdates(() => {
+          setState('show-dialog');
+          dispatch({
+            canBeDismissed: true,
+            type: 'SHOW',
+            content: <DialogContent />,
           });
-        };
+        });
+      };
 
-        if (store.unsupportedRendererVersionDetected) {
-          showDialog();
-        } else {
-          store.addListener('unsupportedRendererVersionDetected', showDialog);
-          return () => {
-            store.removeListener(
-              'unsupportedRendererVersionDetected',
-              showDialog,
-            );
-          };
-        }
+      if (store.unsupportedRendererVersionDetected) {
+        showDialog();
+      } else {
+        store.addListener('unsupportedRendererVersionDetected', showDialog);
+        return () => {
+          store.removeListener(
+            'unsupportedRendererVersionDetected',
+            showDialog,
+          );
+        };
       }
-    },
-    [state, store],
-  );
+    }
+  }, [state, store]);
 
   return null;
 }
@@ -74,7 +72,8 @@ function DialogContent(_: {||}) {
               rel="noopener noreferrer"
               href={UNSUPPORTED_VERSION_URL}>
               install an older version of the extension
-            </a>.
+            </a>
+            .
           </p>
         </div>
       </div>

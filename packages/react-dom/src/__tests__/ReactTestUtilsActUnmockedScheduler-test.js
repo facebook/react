@@ -64,7 +64,7 @@ it('can use act to flush effects', () => {
 
 it('flushes effects on every call', () => {
   function App() {
-    let [ctr, setCtr] = React.useState(0);
+    const [ctr, setCtr] = React.useState(0);
     React.useEffect(() => {
       yields.push(ctr);
     });
@@ -100,9 +100,9 @@ it('flushes effects on every call', () => {
   expect(button.innerHTML).toEqual('5');
 });
 
-it("should keep flushing effects until the're done", () => {
+it("should keep flushing effects until they're done", () => {
   function App() {
-    let [ctr, setCtr] = React.useState(0);
+    const [ctr, setCtr] = React.useState(0);
     React.useEffect(() => {
       if (ctr < 5) {
         setCtr(x => x + 1);
@@ -142,18 +142,15 @@ it('can handle cascading promises', async () => {
   // this component triggers an effect, that waits a tick,
   // then sets state. repeats this 5 times.
   function App() {
-    let [state, setState] = React.useState(0);
+    const [state, setState] = React.useState(0);
     async function ticker() {
       await null;
       setState(x => x + 1);
     }
-    React.useEffect(
-      () => {
-        yields.push(state);
-        ticker();
-      },
-      [Math.min(state, 4)],
-    );
+    React.useEffect(() => {
+      yields.push(state);
+      ticker();
+    }, [Math.min(state, 4)]);
     return state;
   }
 

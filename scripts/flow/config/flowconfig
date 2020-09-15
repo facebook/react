@@ -1,5 +1,7 @@
 [ignore]
 .*/scripts/bench/.*
+.*/build/.*
+.*/.tempUserDataDir/.*
 
 # These shims are copied into external projects:
 .*/rollup/shims/facebook-www/.*
@@ -10,26 +12,32 @@
 .*/node_modules/chrome-devtools-frontend/.*
 .*/node_modules/devtools-timeline-model/.*
 .*/node_modules/create-react-class/.*
+.*/node_modules/react-native-web/.*
 .*/__mocks__/.*
 .*/__tests__/.*
+
+# TODO: noop should get its own inlinedHostConfig entry
+.*/packages/react-noop-renderer/.*
 
 %REACT_RENDERER_FLOW_IGNORES%
 
 [include]
-../../../node_modules/
-../../../packages/
-../../../scripts/
+./node_modules/
+./packages/
+./scripts/
 
 [libs]
-../../../node_modules/fbjs/flow/lib/dev.js
-../environment.js
-../react-devtools.js
-../react-native-host-hooks.js
+./node_modules/fbjs/flow/lib/dev.js
+./scripts/flow/environment.js
+./scripts/flow/react-devtools.js
+./scripts/flow/react-native-host-hooks.js
+./scripts/flow/react-relay-hooks.js
 
 [lints]
 untyped-type-import=error
 
 [options]
+server.max_workers=4
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
 
@@ -49,4 +57,4 @@ suppress_comment=\\(.\\|\n\\)*\\$FlowFixedInNextDeploy
 suppress_comment=\\(.\\|\n\\)*\\$FlowExpectedError
 
 [version]
-^0.72.0
+^0.97.0

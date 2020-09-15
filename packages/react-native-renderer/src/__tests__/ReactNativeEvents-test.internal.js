@@ -68,7 +68,8 @@ beforeEach(() => {
     .RCTEventEmitter;
   React = require('react');
   ReactNative = require('react-native-renderer');
-  ResponderEventPlugin = require('legacy-events/ResponderEventPlugin').default;
+  ResponderEventPlugin = require('react-native-renderer/src/legacy-events/ResponderEventPlugin')
+    .default;
   UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
     .UIManager;
   createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
@@ -83,7 +84,7 @@ it('fails to register the same event name with different types', () => {
     }
 
     // This view config has the same bubbling and direct event name
-    // which will fail to register in developement.
+    // which will fail to register in development.
     return {
       uiViewClassName: 'InvalidEvents',
       validAttributes: {
@@ -455,4 +456,73 @@ it('handles events without target', () => {
     'two responder start',
     'two responder end',
   ]);
+});
+
+it('dispatches event with target as instance', () => {
+  const EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
+
+  const View = fakeRequireNativeComponent('View', {id: true});
+
+  function getViewById(id) {
+    return UIManager.createView.mock.calls.find(
+      args => args[3] && args[3].id === id,
+    )[0];
+  }
+
+  const ref1 = React.createRef();
+  const ref2 = React.createRef();
+
+  ReactNative.render(
+    <View id="parent">
+      <View
+        ref={ref1}
+        id="one"
+        onResponderStart={event => {
+          expect(ref1.current).not.toBeNull();
+          // Check for referential equality
+          expect(ref1.current).toBe(event.target);
+          expect(ref1.current).toBe(event.currentTarget);
+        }}
+        onStartShouldSetResponder={() => true}
+      />
+      <View
+        ref={ref2}
+        id="two"
+        onResponderStart={event => {
+          expect(ref2.current).not.toBeNull();
+          // Check for referential equality
+          expect(ref2.current).toBe(event.target);
+          expect(ref2.current).toBe(event.currentTarget);
+        }}
+        onStartShouldSetResponder={() => true}
+      />
+    </View>,
+    1,
+  );
+
+  EventEmitter.receiveTouches(
+    'topTouchStart',
+    [{target: getViewById('one'), identifier: 17}],
+    [0],
+  );
+
+  EventEmitter.receiveTouches(
+    'topTouchEnd',
+    [{target: getViewById('one'), identifier: 17}],
+    [0],
+  );
+
+  EventEmitter.receiveTouches(
+    'topTouchStart',
+    [{target: getViewById('two'), identifier: 18}],
+    [0],
+  );
+
+  EventEmitter.receiveTouches(
+    'topTouchEnd',
+    [{target: getViewById('two'), identifier: 18}],
+    [0],
+  );
+
+  expect.assertions(6);
 });

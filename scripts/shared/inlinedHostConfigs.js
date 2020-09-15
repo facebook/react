@@ -9,48 +9,109 @@
 module.exports = [
   {
     shortName: 'dom',
-    entryPoints: ['react-dom', 'react-dom/unstable-fizz.node'],
+    entryPoints: [
+      'react-dom',
+      'react-dom/testing',
+      'react-dom/unstable-fizz.node',
+      'react-transport-dom-webpack/server.node',
+      'react-transport-dom-webpack/server-runtime',
+      'react-transport-dom-webpack',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom/unstable-fizz',
+      'react-dom/unstable-fizz.node',
+      'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/unstable-fizz.node
+      'react-transport-dom-webpack',
+      'react-transport-dom-webpack/server',
+      'react-transport-dom-webpack/server.node',
+      'react-transport-dom-webpack/server-runtime',
+      'react-transport-dom-webpack/src/ReactFlightDOMServerNode.js', // react-transport-dom-webpack/server.browser
+      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+      'react-interactions',
+    ],
     isFlowTyped: true,
-    isFizzSupported: true,
+    isServerSupported: true,
   },
   {
     shortName: 'dom-browser',
-    entryPoints: ['react-dom/unstable-fizz.browser'],
+    entryPoints: [
+      'react-dom',
+      'react-dom/testing',
+      'react-dom/unstable-fizz.browser',
+      'react-transport-dom-webpack/server.browser',
+      'react-transport-dom-webpack/server-runtime',
+      'react-transport-dom-webpack',
+    ],
+    paths: [
+      'react-dom',
+      'react-dom/testing',
+      'react-dom/unstable-fizz.browser',
+      'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/unstable-fizz.browser
+      'react-transport-dom-webpack',
+      'react-transport-dom-webpack/server.browser',
+      'react-transport-dom-webpack/server-runtime',
+      'react-transport-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-transport-dom-webpack/server.browser
+      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+    ],
     isFlowTyped: true,
-    isFizzSupported: true,
+    isServerSupported: true,
   },
   {
     shortName: 'art',
     entryPoints: ['react-art'],
+    paths: ['react-art'],
     isFlowTyped: false, // TODO: type it.
-    isFizzSupported: false,
+    isServerSupported: false,
   },
   {
     shortName: 'native',
     entryPoints: ['react-native-renderer'],
+    paths: ['react-native-renderer'],
     isFlowTyped: true,
-    isFizzSupported: false,
+    isServerSupported: false,
   },
   {
     shortName: 'fabric',
     entryPoints: ['react-native-renderer/fabric'],
+    paths: ['react-native-renderer'],
     isFlowTyped: true,
-    isFizzSupported: false,
+    isServerSupported: false,
   },
   {
     shortName: 'test',
     entryPoints: ['react-test-renderer'],
+    paths: ['react-test-renderer'],
     isFlowTyped: true,
-    isFizzSupported: false,
+    isServerSupported: false,
+  },
+  {
+    shortName: 'dom-relay',
+    entryPoints: [
+      'react-transport-dom-relay',
+      'react-transport-dom-relay/server',
+      'react-transport-dom-relay/server-runtime',
+    ],
+    paths: ['react-dom', 'react-transport-dom-relay'],
+    isFlowTyped: true,
+    isServerSupported: true,
   },
   {
     shortName: 'custom',
     entryPoints: [
       'react-reconciler',
-      'react-reconciler/persistent',
-      'react-stream',
+      'react-client/flight',
+      'react-server',
+      'react-server/flight',
+      'react-server/flight-server-runtime',
+    ],
+    paths: [
+      'react-client/flight',
+      'react-server/flight',
+      'react-server/flight-server-runtime',
+      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
     ],
     isFlowTyped: true,
-    isFizzSupported: true,
+    isServerSupported: true,
   },
 ];

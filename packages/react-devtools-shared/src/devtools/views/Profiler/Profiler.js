@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {Fragment, useContext} from 'react';
+import * as React from 'react';
+import {Fragment, useContext} from 'react';
 import {ModalDialog} from '../ModalDialog';
 import {ProfilerContext} from './ProfilerContext';
 import TabBar from '../TabBar';
@@ -27,6 +28,7 @@ import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/Set
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
 import {SettingsModalContextController} from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContext';
 import portaledContent from '../portaledContent';
+import Store from '../../store';
 
 import styles from './Profiler.css';
 
@@ -174,10 +176,10 @@ const ProfilingNotSupported = () => (
       Learn more at{' '}
       <a
         className={styles.Link}
-        href="https://fb.me/react-profiling"
+        href="https://reactjs.org/link/profiling"
         rel="noopener noreferrer"
         target="_blank">
-        fb.me/react-profiling
+        reactjs.org/link/profiling
       </a>
       .
     </p>
@@ -200,4 +202,10 @@ const RecordingInProgress = () => (
   </div>
 );
 
-export default portaledContent(Profiler);
+function onErrorRetry(store: Store) {
+  // If an error happened in the Profiler,
+  // we should clear data on retry (or it will just happen again).
+  store.profilerStore.profilingData = null;
+}
+
+export default portaledContent(Profiler, onErrorRetry);

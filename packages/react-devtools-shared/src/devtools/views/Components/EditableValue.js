@@ -7,9 +7,8 @@
  * @flow
  */
 
-import React, {Fragment, useRef} from 'react';
-import Button from '../Button';
-import ButtonIcon from '../ButtonIcon';
+import * as React from 'react';
+import {Fragment} from 'react';
 import styles from './EditableValue.css';
 import {useEditableValue} from '../hooks';
 
@@ -28,7 +27,6 @@ export default function EditableValue({
   path,
   value,
 }: EditableValueProps) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
   const [state, dispatch] = useEditableValue(value);
   const {editableValue, hasPendingChanges, isValid, parsedValue} = state;
 
@@ -45,21 +43,40 @@ export default function EditableValue({
       externalValue: value,
     });
 
+  const handleCheckBoxToggle = ({target}) => {
+    dispatch({
+      type: 'UPDATE',
+      editableValue: target.checked,
+      externalValue: value,
+    });
+
+    // Unlike <input type="text"> which has both an onChange and an onBlur,
+    // <input type="checkbox"> updates state *and* applies changes in a single event.
+    // So we read from target.checked rather than parsedValue (which has not yet updated).
+    // We also don't check isValid (because that hasn't changed yet either);
+    // we don't need to check it anyway, since target.checked is always a boolean.
+    overrideValueFn(path, target.checked);
+  };
+
   const handleKeyDown = event => {
     // Prevent keydown events from e.g. change selected element in the tree
     event.stopPropagation();
 
     switch (event.key) {
       case 'Enter':
-        if (isValid && hasPendingChanges) {
-          overrideValueFn(path, parsedValue);
-        }
+        applyChanges();
         break;
       case 'Escape':
         reset();
         break;
       default:
         break;
+    }
+  };
+
+  const applyChanges = () => {
+    if (isValid && hasPendingChanges) {
+      overrideValueFn(path, parsedValue);
     }
   };
 
@@ -70,25 +87,27 @@ export default function EditableValue({
     placeholder = 'Enter valid JSON';
   }
 
+  const isBool = parsedValue === true || parsedValue === false;
+
   return (
     <Fragment>
       <input
         autoComplete="new-password"
         className={`${isValid ? styles.Input : styles.Invalid} ${className}`}
+        onBlur={applyChanges}
         onChange={handleChange}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        ref={inputRef}
         type="text"
         value={editableValue}
       />
-      {hasPendingChanges && (
-        <Button
-          className={styles.ResetButton}
-          onClick={reset}
-          title="Reset value">
-          <ButtonIcon type="undo" />
-        </Button>
+      {isBool && (
+        <input
+          className={styles.Checkbox}
+          checked={parsedValue}
+          type="checkbox"
+          onChange={handleCheckBoxToggle}
+        />
       )}
     </Fragment>
   );

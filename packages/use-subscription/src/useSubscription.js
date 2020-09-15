@@ -67,61 +67,58 @@ export function useSubscription<Value>({
   // This also has an added benefit when multiple components are subscribed to the same source:
   // It allows each of the event handlers to safely schedule work without potentially removing an another handler.
   // (Learn more at https://codesandbox.io/s/k0yvr5970o)
-  useEffect(
-    () => {
-      let didUnsubscribe = false;
+  useEffect(() => {
+    let didUnsubscribe = false;
 
-      const checkForUpdates = () => {
-        // It's possible that this callback will be invoked even after being unsubscribed,
-        // if it's removed as a result of a subscription event/update.
-        // In this case, React will log a DEV warning about an update from an unmounted component.
-        // We can avoid triggering that warning with this check.
-        if (didUnsubscribe) {
-          return;
+    const checkForUpdates = () => {
+      // It's possible that this callback will be invoked even after being unsubscribed,
+      // if it's removed as a result of a subscription event/update.
+      // In this case, React will log a DEV warning about an update from an unmounted component.
+      // We can avoid triggering that warning with this check.
+      if (didUnsubscribe) {
+        return;
+      }
+
+      // We use a state updater function to avoid scheduling work for a stale source.
+      // However it's important to eagerly read the currently value,
+      // so that all scheduled work shares the same value (in the event of multiple subscriptions).
+      // This avoids visual "tearing" when a mutation happens during a (concurrent) render.
+      const value = getCurrentValue();
+
+      setState(prevState => {
+        // Ignore values from stale sources!
+        // Since we subscribe an unsubscribe in a passive effect,
+        // it's possible that this callback will be invoked for a stale (previous) subscription.
+        // This check avoids scheduling an update for that stale subscription.
+        if (
+          prevState.getCurrentValue !== getCurrentValue ||
+          prevState.subscribe !== subscribe
+        ) {
+          return prevState;
         }
 
-        // We use a state updater function to avoid scheduling work for a stale source.
-        // However it's important to eagerly read the currently value,
-        // so that all scheduled work shares the same value (in the event of multiple subscriptions).
-        // This avoids visual "tearing" when a mutation happens during a (concurrent) render.
-        const value = getCurrentValue();
+        // Some subscriptions will auto-invoke the handler, even if the value hasn't changed.
+        // If the value hasn't changed, no update is needed.
+        // Return state as-is so React can bail out and avoid an unnecessary render.
+        if (prevState.value === value) {
+          return prevState;
+        }
 
-        setState(prevState => {
-          // Ignore values from stale sources!
-          // Since we subscribe an unsubscribe in a passive effect,
-          // it's possible that this callback will be invoked for a stale (previous) subscription.
-          // This check avoids scheduling an update for that stale subscription.
-          if (
-            prevState.getCurrentValue !== getCurrentValue ||
-            prevState.subscribe !== subscribe
-          ) {
-            return prevState;
-          }
+        return {...prevState, value};
+      });
+    };
+    const unsubscribe = subscribe(checkForUpdates);
 
-          // Some subscriptions will auto-invoke the handler, even if the value hasn't changed.
-          // If the value hasn't changed, no update is needed.
-          // Return state as-is so React can bail out and avoid an unnecessary render.
-          if (prevState.value === value) {
-            return prevState;
-          }
+    // Because we're subscribing in a passive effect,
+    // it's possible that an update has occurred between render and our effect handler.
+    // Check for this and schedule an update if work has occurred.
+    checkForUpdates();
 
-          return {...prevState, value};
-        });
-      };
-      const unsubscribe = subscribe(checkForUpdates);
-
-      // Because we're subscribing in a passive effect,
-      // it's possible that an update has occurred between render and our effect handler.
-      // Check for this and schedule an update if work has occurred.
-      checkForUpdates();
-
-      return () => {
-        didUnsubscribe = true;
-        unsubscribe();
-      };
-    },
-    [getCurrentValue, subscribe],
-  );
+    return () => {
+      didUnsubscribe = true;
+      unsubscribe();
+    };
+  }, [getCurrentValue, subscribe]);
 
   // Return the current value for our caller to use while rendering.
   return valueToReturn;

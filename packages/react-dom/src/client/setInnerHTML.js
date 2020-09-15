@@ -9,8 +9,6 @@
 
 import {Namespaces} from '../shared/DOMNamespaces';
 import createMicrosoftUnsafeLocalFunction from '../shared/createMicrosoftUnsafeLocalFunction';
-import warning from 'shared/warning';
-import type {TrustedValue} from './ToStringValue';
 import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 
 // SVG temp container for IE lacking innerHTML
@@ -25,22 +23,23 @@ let reusableSVGContainer;
  */
 const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
   node: Element,
-  html: string | TrustedValue,
+  html: {valueOf(): {toString(): string, ...}, ...},
 ): void {
   if (node.namespaceURI === Namespaces.svg) {
     if (__DEV__) {
       if (enableTrustedTypesIntegration) {
         // TODO: reconsider the text of this warning and when it should show
         // before enabling the feature flag.
-        warning(
-          typeof trustedTypes === 'undefined',
-          "Using 'dangerouslySetInnerHTML' in an svg element with " +
-            'Trusted Types enabled in an Internet Explorer will cause ' +
-            'the trusted value to be converted to string. Assigning string ' +
-            "to 'innerHTML' will throw an error if Trusted Types are enforced. " +
-            "You can try to wrap your svg element inside a div and use 'dangerouslySetInnerHTML' " +
-            'on the enclosing div instead.',
-        );
+        if (typeof trustedTypes !== 'undefined') {
+          console.error(
+            "Using 'dangerouslySetInnerHTML' in an svg element with " +
+              'Trusted Types enabled in an Internet Explorer will cause ' +
+              'the trusted value to be converted to string. Assigning string ' +
+              "to 'innerHTML' will throw an error if Trusted Types are enforced. " +
+              "You can try to wrap your svg element inside a div and use 'dangerouslySetInnerHTML' " +
+              'on the enclosing div instead.',
+          );
+        }
       }
     }
     if (!('innerHTML' in node)) {

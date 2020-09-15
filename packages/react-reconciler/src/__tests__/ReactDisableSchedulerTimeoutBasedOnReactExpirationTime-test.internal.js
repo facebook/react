@@ -10,7 +10,7 @@ describe('ReactSuspenseList', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactFeatureFlags.disableSchedulerTimeoutBasedOnReactExpirationTime = true;
     React = require('react');
@@ -29,14 +29,14 @@ describe('ReactSuspenseList', () => {
 
   function createAsyncText(text) {
     let resolved = false;
-    let Component = function() {
+    const Component = function() {
       if (!resolved) {
         Scheduler.unstable_yieldValue('Suspend! [' + text + ']');
         throw promise;
       }
       return <Text text={text} />;
     };
-    let promise = new Promise(resolve => {
+    const promise = new Promise(resolve => {
       Component.resolve = function() {
         resolved = true;
         return resolve();

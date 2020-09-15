@@ -55,4 +55,4 @@ class IframeSubtree extends React.Component {
   }
 }
 
-export default (ReactDOM.createPortal ? IframePortal : IframeSubtree);
+export default ReactDOM.createPortal ? IframePortal : IframeSubtree;

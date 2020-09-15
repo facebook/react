@@ -281,7 +281,7 @@ describe('ReactTestRenderer', () => {
       }
     }
     ReactTestRenderer.create(<Baz />);
-    expect(() => ReactTestRenderer.create(<Foo />)).toWarnDev(
+    expect(() => ReactTestRenderer.create(<Foo />)).toErrorDev(
       'Warning: Function components cannot be given refs. Attempts ' +
         'to access this ref will fail. ' +
         'Did you mean to use React.forwardRef()?\n\n' +
@@ -1012,7 +1012,7 @@ describe('ReactTestRenderer', () => {
     const Context = React.createContext(null);
     const Indirection = React.Fragment;
     const App = () => (
-      <Context.Provider>
+      <Context.Provider value={null}>
         <Indirection>
           <Context.Consumer>{() => null}</Context.Consumer>
         </Indirection>
@@ -1021,5 +1021,15 @@ describe('ReactTestRenderer', () => {
     ReactNoop.render(<App />);
     expect(Scheduler).toFlushWithoutYielding();
     ReactTestRenderer.create(<App />);
+  });
+
+  it('calling findByType() with an invalid component will fall back to "Unknown" for component name', () => {
+    const App = () => null;
+    const renderer = ReactTestRenderer.create(<App />);
+    const NonComponent = {};
+
+    expect(() => {
+      renderer.root.findByType(NonComponent);
+    }).toThrowError(`No instances found with node type: "Unknown"`);
   });
 });

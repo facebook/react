@@ -8,7 +8,7 @@
  * @flow strict-local
  */
 
-/* eslint-disable react-internal/warning-and-invariant-args */
+/* eslint-disable react-internal/invariant-args */
 
 'use strict';
 
@@ -20,8 +20,21 @@ import type {
 const invariant = require('invariant');
 
 // Event configs
-const customBubblingEventTypes = {};
-const customDirectEventTypes = {};
+const customBubblingEventTypes: {
+  [eventName: string]: $ReadOnly<{|
+    phasedRegistrationNames: $ReadOnly<{|
+      captured: string,
+      bubbled: string,
+    |}>,
+  |}>,
+  ...,
+} = {};
+const customDirectEventTypes: {
+  [eventName: string]: $ReadOnly<{|
+    registrationName: string,
+  |}>,
+  ...,
+} = {};
 
 exports.customBubblingEventTypes = customBubblingEventTypes;
 exports.customDirectEventTypes = customDirectEventTypes;

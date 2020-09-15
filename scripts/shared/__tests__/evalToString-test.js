@@ -7,10 +7,9 @@
 'use strict';
 
 const evalToString = require('../evalToString');
-const babylon = require('babylon');
+const parser = require('@babel/parser');
 
-const parse = source =>
-  babylon.parse(`(${source});`).program.body[0].expression; // quick way to get an exp node
+const parse = source => parser.parse(`(${source});`).program.body[0].expression; // quick way to get an exp node
 
 const parseAndEval = source => evalToString(parse(source));
 

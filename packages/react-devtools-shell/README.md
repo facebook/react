@@ -2,14 +2,9 @@ Harness for testing local changes to the `react-devtools-inline` and `react-devt
 
 ## Development
 
-This target should be run in parallel with the `react-devtools-inline` package. The first step then is to watch for changes to that target:
-```sh
-cd packages/react-devtools-inline 
+This target should be run in parallel with the `react-devtools-inline` package. The first step then is to run that target following the instructions in the [`react-devtools-inline` README](https://github.com/facebook/react/blob/master/packages/react-devtools-inline/README.md).
 
-yarn start
-```
-
-Next, watch for changes to the test harness:
+The test harness can then be run as follows:
 ```sh
 cd packages/react-devtools-shell
 

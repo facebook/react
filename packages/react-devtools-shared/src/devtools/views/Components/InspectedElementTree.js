@@ -8,7 +8,8 @@
  */
 
 import {copy} from 'clipboard-js';
-import React, {useCallback, useState} from 'react';
+import * as React from 'react';
+import {useCallback, useState} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import KeyValue from './KeyValue';
@@ -26,6 +27,7 @@ type Props = {|
   inspectPath?: InspectPath,
   label: string,
   overrideValueFn?: ?OverrideValueFn,
+  pathRoot: string,
   showWhenEmpty?: boolean,
   canAddEntries?: boolean,
 |};
@@ -35,6 +37,7 @@ export default function InspectedElementTree({
   inspectPath,
   label,
   overrideValueFn,
+  pathRoot,
   canAddEntries = false,
   showWhenEmpty = false,
 }: Props) {
@@ -88,6 +91,7 @@ export default function InspectedElementTree({
             <KeyValue
               key={name}
               alphaSort={true}
+              pathRoot={pathRoot}
               depth={1}
               inspectPath={inspectPath}
               name={name}

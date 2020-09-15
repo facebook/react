@@ -16,58 +16,65 @@ describe('ReactSuspense', () => {
   beforeEach(() => {
     jest.resetModules();
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
     ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
     ReactFeatureFlags.enableSchedulerTracing = true;
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
-    act = ReactTestRenderer.act;
+    act = ReactTestRenderer.unstable_concurrentAct;
     Scheduler = require('scheduler');
     SchedulerTracing = require('scheduler/tracing');
     ReactCache = require('react-cache');
 
     Suspense = React.Suspense;
 
-    TextResource = ReactCache.unstable_createResource(([text, ms = 0]) => {
-      let listeners = null;
-      let status = 'pending';
-      let value = null;
-      return {
-        then(resolve, reject) {
-          switch (status) {
-            case 'pending': {
-              if (listeners === null) {
-                listeners = [{resolve, reject}];
-                setTimeout(() => {
-                  if (textResourceShouldFail) {
-                    Scheduler.unstable_yieldValue(`Promise rejected [${text}]`);
-                    status = 'rejected';
-                    value = new Error('Failed to load: ' + text);
-                    listeners.forEach(listener => listener.reject(value));
-                  } else {
-                    Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
-                    status = 'resolved';
-                    value = text;
-                    listeners.forEach(listener => listener.resolve(value));
-                  }
-                }, ms);
-              } else {
-                listeners.push({resolve, reject});
+    TextResource = ReactCache.unstable_createResource(
+      ([text, ms = 0]) => {
+        let listeners = null;
+        let status = 'pending';
+        let value = null;
+        return {
+          then(resolve, reject) {
+            switch (status) {
+              case 'pending': {
+                if (listeners === null) {
+                  listeners = [{resolve, reject}];
+                  setTimeout(() => {
+                    if (textResourceShouldFail) {
+                      Scheduler.unstable_yieldValue(
+                        `Promise rejected [${text}]`,
+                      );
+                      status = 'rejected';
+                      value = new Error('Failed to load: ' + text);
+                      listeners.forEach(listener => listener.reject(value));
+                    } else {
+                      Scheduler.unstable_yieldValue(
+                        `Promise resolved [${text}]`,
+                      );
+                      status = 'resolved';
+                      value = text;
+                      listeners.forEach(listener => listener.resolve(value));
+                    }
+                  }, ms);
+                } else {
+                  listeners.push({resolve, reject});
+                }
+                break;
               }
-              break;
+              case 'resolved': {
+                resolve(value);
+                break;
+              }
+              case 'rejected': {
+                reject(value);
+                break;
+              }
             }
-            case 'resolved': {
-              resolve(value);
-              break;
-            }
-            case 'rejected': {
-              reject(value);
-              break;
-            }
-          }
-        },
-      };
-    }, ([text, ms]) => text);
+          },
+        };
+      },
+      ([text, ms]) => text,
+    );
     textResourceShouldFail = false;
   });
 
@@ -192,7 +199,7 @@ describe('ReactSuspense', () => {
 
   it('interrupts current render if promise resolves before current render phase', () => {
     let didResolve = false;
-    let listeners = [];
+    const listeners = [];
 
     const thenable = {
       then(resolve) {
@@ -315,6 +322,7 @@ describe('ReactSuspense', () => {
     },
   );
 
+  // @gate experimental
   it(
     'interrupts current render when something suspends with a ' +
       "delay and we've already skipped over a lower priority update in " +
@@ -350,15 +358,17 @@ describe('ReactSuspense', () => {
       // This update will suspend.
       root.update(<App shouldSuspend={true} step={1} />);
 
-      // Need to move into the next async bucket.
-      Scheduler.unstable_advanceTime(1000);
-      // Do a bit of work, then interrupt to trigger a restart.
+      // Do a bit of work
       expect(Scheduler).toFlushAndYieldThrough(['A1']);
-      interrupt();
 
-      // Schedule another update. This will have lower priority because of
-      // the interrupt trick above.
-      root.update(<App shouldSuspend={false} step={2} />);
+      // Schedule another update. This will have lower priority because it's
+      // a transition.
+      React.unstable_startTransition(() => {
+        root.update(<App shouldSuspend={false} step={2} />);
+      });
+
+      // Interrupt to trigger a restart.
+      interrupt();
 
       expect(Scheduler).toFlushAndYieldThrough([
         // Should have restarted the first update, because of the interruption
@@ -382,6 +392,7 @@ describe('ReactSuspense', () => {
     },
   );
 
+  // @gate experimental
   it(
     'interrupts current render when something suspends with a ' +
       "delay and we've already bailed out lower priority update in " +
@@ -429,7 +440,7 @@ describe('ReactSuspense', () => {
         unstable_isConcurrent: true,
       });
 
-      await ReactTestRenderer.act(async () => {
+      await act(async () => {
         root.update(<App />);
         expect(Scheduler).toFlushAndYield([
           'shouldHideInParent: false',
@@ -443,16 +454,17 @@ describe('ReactSuspense', () => {
         setShouldSuspend(true);
 
         // Need to move into the next async bucket.
-        Scheduler.unstable_advanceTime(1000);
         // Do a bit of work, then interrupt to trigger a restart.
         expect(Scheduler).toFlushAndYieldThrough(['A']);
         interrupt();
         // Should not have committed loading state
         expect(root).toMatchRenderedOutput('ABC');
 
-        // Schedule another update. This will have lower priority because of
-        // the interrupt trick above.
-        setShouldHideInParent(true);
+        // Schedule another update. This will have lower priority because it's
+        // a transition.
+        React.unstable_startTransition(() => {
+          setShouldHideInParent(true);
+        });
 
         expect(Scheduler).toFlushAndYieldThrough([
           // Should have restarted the first update, because of the interruption
@@ -608,6 +620,233 @@ describe('ReactSuspense', () => {
       'AsyncText suspended while rendering, but no fallback UI was specified.',
     );
     expect(Scheduler).toHaveYielded(['Suspend! [Hi]', 'Suspend! [Hi]']);
+  });
+
+  it('updates memoized child of suspense component when context updates (simple memo)', () => {
+    const {useContext, createContext, useState, memo} = React;
+
+    const ValueContext = createContext(null);
+
+    const MemoizedChild = memo(function MemoizedChild() {
+      const text = useContext(ValueContext);
+      try {
+        TextResource.read([text, 1000]);
+        Scheduler.unstable_yieldValue(text);
+        return text;
+      } catch (promise) {
+        if (typeof promise.then === 'function') {
+          Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+        } else {
+          Scheduler.unstable_yieldValue(`Error! [${text}]`);
+        }
+        throw promise;
+      }
+    });
+
+    let setValue;
+    function App() {
+      const [value, _setValue] = useState('default');
+      setValue = _setValue;
+
+      return (
+        <ValueContext.Provider value={value}>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <MemoizedChild />
+          </Suspense>
+        </ValueContext.Provider>
+      );
+    }
+
+    const root = ReactTestRenderer.create(<App />, {
+      unstable_isConcurrent: true,
+    });
+    expect(Scheduler).toFlushAndYield(['Suspend! [default]', 'Loading...']);
+    jest.advanceTimersByTime(1000);
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
+    expect(Scheduler).toFlushAndYield(['default']);
+    expect(root).toMatchRenderedOutput('default');
+
+    act(() => setValue('new value'));
+    expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
+    jest.advanceTimersByTime(1000);
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
+    expect(Scheduler).toFlushAndYield(['new value']);
+    expect(root).toMatchRenderedOutput('new value');
+  });
+
+  it('updates memoized child of suspense component when context updates (manual memo)', () => {
+    const {useContext, createContext, useState, memo} = React;
+
+    const ValueContext = createContext(null);
+
+    const MemoizedChild = memo(
+      function MemoizedChild() {
+        const text = useContext(ValueContext);
+        try {
+          TextResource.read([text, 1000]);
+          Scheduler.unstable_yieldValue(text);
+          return text;
+        } catch (promise) {
+          if (typeof promise.then === 'function') {
+            Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+          } else {
+            Scheduler.unstable_yieldValue(`Error! [${text}]`);
+          }
+          throw promise;
+        }
+      },
+      function areEqual(prevProps, nextProps) {
+        return true;
+      },
+    );
+
+    let setValue;
+    function App() {
+      const [value, _setValue] = useState('default');
+      setValue = _setValue;
+
+      return (
+        <ValueContext.Provider value={value}>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <MemoizedChild />
+          </Suspense>
+        </ValueContext.Provider>
+      );
+    }
+
+    const root = ReactTestRenderer.create(<App />, {
+      unstable_isConcurrent: true,
+    });
+    expect(Scheduler).toFlushAndYield(['Suspend! [default]', 'Loading...']);
+    jest.advanceTimersByTime(1000);
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
+    expect(Scheduler).toFlushAndYield(['default']);
+    expect(root).toMatchRenderedOutput('default');
+
+    act(() => setValue('new value'));
+    expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
+    jest.advanceTimersByTime(1000);
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
+    expect(Scheduler).toFlushAndYield(['new value']);
+    expect(root).toMatchRenderedOutput('new value');
+  });
+
+  it('updates memoized child of suspense component when context updates (function)', () => {
+    const {useContext, createContext, useState} = React;
+
+    const ValueContext = createContext(null);
+
+    function MemoizedChild() {
+      const text = useContext(ValueContext);
+      try {
+        TextResource.read([text, 1000]);
+        Scheduler.unstable_yieldValue(text);
+        return text;
+      } catch (promise) {
+        if (typeof promise.then === 'function') {
+          Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+        } else {
+          Scheduler.unstable_yieldValue(`Error! [${text}]`);
+        }
+        throw promise;
+      }
+    }
+
+    let setValue;
+    function App({children}) {
+      const [value, _setValue] = useState('default');
+      setValue = _setValue;
+
+      return (
+        <ValueContext.Provider value={value}>{children}</ValueContext.Provider>
+      );
+    }
+
+    const root = ReactTestRenderer.create(
+      <App>
+        <Suspense fallback={<Text text="Loading..." />}>
+          <MemoizedChild />
+        </Suspense>
+      </App>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+    expect(Scheduler).toFlushAndYield(['Suspend! [default]', 'Loading...']);
+    jest.advanceTimersByTime(1000);
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
+    expect(Scheduler).toFlushAndYield(['default']);
+    expect(root).toMatchRenderedOutput('default');
+
+    act(() => setValue('new value'));
+    expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
+    jest.advanceTimersByTime(1000);
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
+    expect(Scheduler).toFlushAndYield(['new value']);
+    expect(root).toMatchRenderedOutput('new value');
+  });
+
+  it('updates memoized child of suspense component when context updates (forwardRef)', () => {
+    const {forwardRef, useContext, createContext, useState} = React;
+
+    const ValueContext = createContext(null);
+
+    const MemoizedChild = forwardRef(() => {
+      const text = useContext(ValueContext);
+      try {
+        TextResource.read([text, 1000]);
+        Scheduler.unstable_yieldValue(text);
+        return text;
+      } catch (promise) {
+        if (typeof promise.then === 'function') {
+          Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+        } else {
+          Scheduler.unstable_yieldValue(`Error! [${text}]`);
+        }
+        throw promise;
+      }
+    });
+
+    let setValue;
+    function App({children}) {
+      const [value, _setValue] = useState('default');
+      setValue = _setValue;
+
+      return (
+        <ValueContext.Provider value={value}>{children}</ValueContext.Provider>
+      );
+    }
+
+    const root = ReactTestRenderer.create(
+      <App>
+        <Suspense fallback={<Text text="Loading..." />}>
+          <MemoizedChild />
+        </Suspense>
+      </App>,
+      {
+        unstable_isConcurrent: true,
+      },
+    );
+    expect(Scheduler).toFlushAndYield(['Suspend! [default]', 'Loading...']);
+    jest.advanceTimersByTime(1000);
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
+    expect(Scheduler).toFlushAndYield(['default']);
+    expect(root).toMatchRenderedOutput('default');
+
+    act(() => setValue('new value'));
+    expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
+    jest.advanceTimersByTime(1000);
+
+    expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
+    expect(Scheduler).toFlushAndYield(['new value']);
+    expect(root).toMatchRenderedOutput('new value');
   });
 
   describe('outside concurrent mode', () => {
@@ -884,12 +1123,9 @@ describe('ReactSuspense', () => {
       function AsyncTextWithEffect(props) {
         const text = props.text;
 
-        useLayoutEffect(
-          () => {
-            Scheduler.unstable_yieldValue('Did commit: ' + text);
-          },
-          [text],
-        );
+        useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('Did commit: ' + text);
+        }, [text]);
 
         try {
           TextResource.read([props.text, props.ms]);
@@ -970,7 +1206,7 @@ describe('ReactSuspense', () => {
       expect(root).toMatchRenderedOutput('Step: 3');
     });
 
-    it('does not remount the fallback while suspended children resolve in sync mode', () => {
+    it('does not remount the fallback while suspended children resolve in legacy mode', () => {
       let mounts = 0;
       class ShouldMountOnce extends React.Component {
         componentDidMount() {
@@ -1212,7 +1448,7 @@ describe('ReactSuspense', () => {
       ]);
     });
 
-    it('should call onInteractionScheduledWorkCompleted after suspending', done => {
+    it('should call onInteractionScheduledWorkCompleted after suspending', () => {
       const subscriber = {
         onInteractionScheduledWorkCompleted: jest.fn(),
         onInteractionTraced: jest.fn(),
@@ -1270,13 +1506,11 @@ describe('ReactSuspense', () => {
         jest.advanceTimersByTime(1000);
 
         expect(Scheduler).toHaveYielded(['Promise resolved [C]']);
-        expect(Scheduler).toFlushExpired([
+        expect(Scheduler).toFlushAndYield([
           // Even though the promise for C was thrown three times, we should only
           // re-render once.
           'C',
         ]);
-
-        done();
       });
 
       expect(
@@ -1320,6 +1554,223 @@ describe('ReactSuspense', () => {
 
       root.update(<App name="world" />);
       jest.advanceTimersByTime(1000);
+    });
+
+    it('updates memoized child of suspense component when context updates (simple memo)', () => {
+      const {useContext, createContext, useState, memo} = React;
+
+      const ValueContext = createContext(null);
+
+      const MemoizedChild = memo(function MemoizedChild() {
+        const text = useContext(ValueContext);
+        try {
+          TextResource.read([text, 1000]);
+          Scheduler.unstable_yieldValue(text);
+          return text;
+        } catch (promise) {
+          if (typeof promise.then === 'function') {
+            Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+          } else {
+            Scheduler.unstable_yieldValue(`Error! [${text}]`);
+          }
+          throw promise;
+        }
+      });
+
+      let setValue;
+      function App() {
+        const [value, _setValue] = useState('default');
+        setValue = _setValue;
+
+        return (
+          <ValueContext.Provider value={value}>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <MemoizedChild />
+            </Suspense>
+          </ValueContext.Provider>
+        );
+      }
+
+      const root = ReactTestRenderer.create(<App />);
+      expect(Scheduler).toHaveYielded(['Suspend! [default]', 'Loading...']);
+      jest.advanceTimersByTime(1000);
+
+      expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
+      expect(Scheduler).toFlushExpired(['default']);
+      expect(root).toMatchRenderedOutput('default');
+
+      act(() => setValue('new value'));
+      expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
+      jest.advanceTimersByTime(1000);
+
+      expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
+      expect(Scheduler).toFlushExpired(['new value']);
+      expect(root).toMatchRenderedOutput('new value');
+    });
+
+    it('updates memoized child of suspense component when context updates (manual memo)', () => {
+      const {useContext, createContext, useState, memo} = React;
+
+      const ValueContext = createContext(null);
+
+      const MemoizedChild = memo(
+        function MemoizedChild() {
+          const text = useContext(ValueContext);
+          try {
+            TextResource.read([text, 1000]);
+            Scheduler.unstable_yieldValue(text);
+            return text;
+          } catch (promise) {
+            if (typeof promise.then === 'function') {
+              Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+            } else {
+              Scheduler.unstable_yieldValue(`Error! [${text}]`);
+            }
+            throw promise;
+          }
+        },
+        function areEqual(prevProps, nextProps) {
+          return true;
+        },
+      );
+
+      let setValue;
+      function App() {
+        const [value, _setValue] = useState('default');
+        setValue = _setValue;
+
+        return (
+          <ValueContext.Provider value={value}>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <MemoizedChild />
+            </Suspense>
+          </ValueContext.Provider>
+        );
+      }
+
+      const root = ReactTestRenderer.create(<App />);
+      expect(Scheduler).toHaveYielded(['Suspend! [default]', 'Loading...']);
+      jest.advanceTimersByTime(1000);
+
+      expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
+      expect(Scheduler).toFlushExpired(['default']);
+      expect(root).toMatchRenderedOutput('default');
+
+      act(() => setValue('new value'));
+      expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
+      jest.advanceTimersByTime(1000);
+
+      expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
+      expect(Scheduler).toFlushExpired(['new value']);
+      expect(root).toMatchRenderedOutput('new value');
+    });
+
+    it('updates memoized child of suspense component when context updates (function)', () => {
+      const {useContext, createContext, useState} = React;
+
+      const ValueContext = createContext(null);
+
+      function MemoizedChild() {
+        const text = useContext(ValueContext);
+        try {
+          TextResource.read([text, 1000]);
+          Scheduler.unstable_yieldValue(text);
+          return text;
+        } catch (promise) {
+          if (typeof promise.then === 'function') {
+            Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+          } else {
+            Scheduler.unstable_yieldValue(`Error! [${text}]`);
+          }
+          throw promise;
+        }
+      }
+
+      let setValue;
+      function App({children}) {
+        const [value, _setValue] = useState('default');
+        setValue = _setValue;
+
+        return (
+          <ValueContext.Provider value={value}>
+            {children}
+          </ValueContext.Provider>
+        );
+      }
+
+      const root = ReactTestRenderer.create(
+        <App>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <MemoizedChild />
+          </Suspense>
+        </App>,
+      );
+      expect(Scheduler).toHaveYielded(['Suspend! [default]', 'Loading...']);
+      jest.advanceTimersByTime(1000);
+
+      expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
+      expect(Scheduler).toFlushExpired(['default']);
+      expect(root).toMatchRenderedOutput('default');
+
+      act(() => setValue('new value'));
+      expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
+      jest.advanceTimersByTime(1000);
+
+      expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
+      expect(Scheduler).toFlushExpired(['new value']);
+      expect(root).toMatchRenderedOutput('new value');
+    });
+
+    it('updates memoized child of suspense component when context updates (forwardRef)', () => {
+      const {forwardRef, useContext, createContext, useState} = React;
+
+      const ValueContext = createContext(null);
+
+      const MemoizedChild = forwardRef(function MemoizedChild() {
+        const text = useContext(ValueContext);
+        try {
+          TextResource.read([text, 1000]);
+          Scheduler.unstable_yieldValue(text);
+          return text;
+        } catch (promise) {
+          if (typeof promise.then === 'function') {
+            Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+          } else {
+            Scheduler.unstable_yieldValue(`Error! [${text}]`);
+          }
+          throw promise;
+        }
+      });
+
+      let setValue;
+      function App() {
+        const [value, _setValue] = useState('default');
+        setValue = _setValue;
+
+        return (
+          <ValueContext.Provider value={value}>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <MemoizedChild />
+            </Suspense>
+          </ValueContext.Provider>
+        );
+      }
+
+      const root = ReactTestRenderer.create(<App />);
+      expect(Scheduler).toHaveYielded(['Suspend! [default]', 'Loading...']);
+      jest.advanceTimersByTime(1000);
+
+      expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
+      expect(Scheduler).toFlushExpired(['default']);
+      expect(root).toMatchRenderedOutput('default');
+
+      act(() => setValue('new value'));
+      expect(Scheduler).toHaveYielded(['Suspend! [new value]', 'Loading...']);
+      jest.advanceTimersByTime(1000);
+
+      expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
+      expect(Scheduler).toFlushExpired(['new value']);
+      expect(root).toMatchRenderedOutput('new value');
     });
   });
 });

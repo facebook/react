@@ -21,7 +21,8 @@ Be sure to run this function *before* importing e.g. `react`, `react-dom`, `reac
 The `config` object may contain:
 * `host: string` (defaults to "localhost") - Websocket will connect to this host.
 * `port: number` (defaults to `8097`) - Websocket will connect to this port.
-* `websocket: Websocket` - Custom websocked to use. Overrides `host` and `port` settings if provided.
+* `useHttps: boolean` (defaults to `false`) - Websocked should use a secure protocol (wss).
+* `websocket: Websocket` - Custom websocket to use. Overrides `host` and `port` settings if provided.
 * `resolveRNStyle: (style: number) => ?Object` - Used by the React Native style plug-in.
 * `isAppActive: () => boolean` - If provided, DevTools will poll this method and wait until it returns true before connecting to React.
 
@@ -36,6 +37,24 @@ require("react-devtools-core/standalone")
     // This callback is optional...
   })
   .startServer(port);
+```
+
+Renders DevTools interface into a DOM node over SSL using a custom host name (Default is localhost).
+
+```js
+const host = 'dev.server.com';
+const options = {
+  key: fs.readFileSync('test/fixtures/keys/agent2-key.pem'),
+  cert: fs.readFileSync('test/fixtures/keys/agent2-cert.pem')
+};
+
+
+require("react-devtools-core/standalone")
+  .setContentDOMNode(document.getElementById("container"))
+  .setStatusListener(status => {
+    // This callback is optional...
+  })
+  .startServer(port, host, options);
 ```
 
 Reference the `react-devtools` package for a complete integration example.

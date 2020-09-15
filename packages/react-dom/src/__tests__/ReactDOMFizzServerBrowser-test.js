@@ -20,14 +20,16 @@ describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactDOMFizzServer = require('react-dom/unstable-fizz.browser');
+    if (__EXPERIMENTAL__) {
+      ReactDOMFizzServer = require('react-dom/unstable-fizz.browser');
+    }
   });
 
   async function readResult(stream) {
-    let reader = stream.getReader();
+    const reader = stream.getReader();
     let result = '';
     while (true) {
-      let {done, value} = await reader.read();
+      const {done, value} = await reader.read();
       if (done) {
         return result;
       }
@@ -35,11 +37,12 @@ describe('ReactDOMFizzServer', () => {
     }
   }
 
+  // @gate experimental
   it('should call renderToReadableStream', async () => {
-    let stream = ReactDOMFizzServer.renderToReadableStream(
+    const stream = ReactDOMFizzServer.renderToReadableStream(
       <div>hello world</div>,
     );
-    let result = await readResult(stream);
+    const result = await readResult(stream);
     expect(result).toBe('<div>hello world</div>');
   });
 });

@@ -29,10 +29,10 @@ const run = async ({cwd, packages, skipPackages}) => {
     }
 
     for (let dependency in dependencies) {
-      // Do we depend on a package thas has been skipped?
+      // Do we depend on a package that has been skipped?
       if (skipPackages.includes(dependency)) {
         const version = dependencies[dependency];
-        // Do we depend on a version of the package than has not been published to NPM?
+        // Do we depend on a version of the package that has not been published to NPM?
         const info = await execRead(`npm view ${dependency}@${version}`);
         if (!info) {
           console.log(

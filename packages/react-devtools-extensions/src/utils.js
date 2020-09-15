@@ -2,38 +2,6 @@
 
 const IS_CHROME = navigator.userAgent.indexOf('Firefox') < 0;
 
-export function createViewElementSource(bridge: Bridge, store: Store) {
-  return function viewElementSource(id) {
-    const rendererID = store.getRendererIDForElement(id);
-    if (rendererID != null) {
-      // Ask the renderer interface to determine the component function,
-      // and store it as a global variable on the window
-      bridge.send('viewElementSource', {id, rendererID});
-
-      setTimeout(() => {
-        // Ask Chrome to display the location of the component function,
-        // or a render method if it is a Class (ideally Class instance, not type)
-        // assuming the renderer found one.
-        chrome.devtools.inspectedWindow.eval(`
-          if (window.$type != null) {
-            if (
-              window.$type &&
-              window.$type.prototype &&
-              window.$type.prototype.isReactComponent
-            ) {
-              // inspect Component.render, not constructor
-              inspect(window.$type.prototype.render);
-            } else {
-              // inspect Functional Component
-              inspect(window.$type);
-            }
-          }
-        `);
-      }, 100);
-    }
-  };
-}
-
 export type BrowserName = 'Chrome' | 'Firefox';
 
 export function getBrowserName(): BrowserName {

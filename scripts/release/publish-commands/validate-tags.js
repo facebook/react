@@ -7,7 +7,7 @@ const {join} = require('path');
 const theme = require('../theme');
 
 const run = async ({cwd, packages, tags}) => {
-  // Prevent a canary release from ever being published as @latest
+  // Prevent a "next" release from ever being published as @latest
   // All canaries share a version number, so it's okay to check any of them.
   const arbitraryPackageName = packages[0];
   const packageJSONPath = join(
@@ -18,17 +18,42 @@ const run = async ({cwd, packages, tags}) => {
     'package.json'
   );
   const {version} = await readJson(packageJSONPath);
+  const isExperimentalVersion = version.indexOf('experimental') !== -1;
   if (version.indexOf('0.0.0') === 0) {
     if (tags.includes('latest')) {
+      if (isExperimentalVersion) {
+        console.log(
+          theme`{error Experimental release} {version ${version}} {error cannot be tagged as} {tag latest}`
+        );
+      } else {
+        console.log(
+          theme`{error Next release} {version ${version}} {error cannot be tagged as} {tag latest}`
+        );
+      }
+      process.exit(1);
+    }
+    if (tags.includes('next') && isExperimentalVersion) {
       console.log(
-        theme`{error Canary release} {version ${version}} {error cannot be tagged as} {tag latest}`
+        theme`{error Experimental release} {version ${version}} {error cannot be tagged as} {tag next}`
+      );
+      process.exit(1);
+    }
+    if (tags.includes('experimental') && !isExperimentalVersion) {
+      console.log(
+        theme`{error Next release} {version ${version}} {error cannot be tagged as} {tag experimental}`
       );
       process.exit(1);
     }
   } else {
-    if (tags.includes('canary')) {
+    if (!tags.includes('latest')) {
       console.log(
-        theme`{error Stable release} {version ${version}} {error cannot be tagged as} {tag canary}`
+        theme`{error Stable release} {version ${version}} {error must always be tagged as} {tag latest}`
+      );
+      process.exit(1);
+    }
+    if (tags.includes('experimental')) {
+      console.log(
+        theme`{error Stable release} {version ${version}} {error cannot be tagged as} {tag experimental}`
       );
       process.exit(1);
     }

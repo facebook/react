@@ -13,18 +13,19 @@
 //
 // Changes to search state may impact tree state.
 // For example, updating the selected search result also updates the tree's selected value.
-// Search does not fundamanetally change the tree though.
+// Search does not fundamentally change the tree though.
 // It is also possible to update the selected tree value independently.
 //
 // Changes to owners state mask search and tree values.
-// When owners statck is not empty, search is temporarily disabnled,
+// When owners stack is not empty, search is temporarily disabled,
 // and tree values (e.g. num elements, selected element) are masked.
 // Both tree and search values are restored when the owners stack is cleared.
 //
 // For this reason, changes to the tree context are processed in sequence: tree -> search -> owners
 // This enables each section to potentially override (or mask) previous values.
 
-import React, {
+import * as React from 'react';
+import {
   createContext,
   useCallback,
   useContext,
@@ -48,6 +49,7 @@ import type {Element} from './types';
 export type StateContext = {|
   // Tree
   numElements: number,
+  ownerSubtreeLeafElementID: number | null,
   selectedElementID: number | null,
   selectedElementIndex: number | null,
 
@@ -91,15 +93,27 @@ type ACTION_SELECT_ELEMENT_BY_ID = {|
 type ACTION_SELECT_NEXT_ELEMENT_IN_TREE = {|
   type: 'SELECT_NEXT_ELEMENT_IN_TREE',
 |};
+type ACTION_SELECT_NEXT_SIBLING_IN_TREE = {|
+  type: 'SELECT_NEXT_SIBLING_IN_TREE',
+|};
+type ACTION_SELECT_OWNER = {|
+  type: 'SELECT_OWNER',
+  payload: number,
+|};
 type ACTION_SELECT_PARENT_ELEMENT_IN_TREE = {|
   type: 'SELECT_PARENT_ELEMENT_IN_TREE',
 |};
 type ACTION_SELECT_PREVIOUS_ELEMENT_IN_TREE = {|
   type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE',
 |};
-type ACTION_SELECT_OWNER = {|
-  type: 'SELECT_OWNER',
-  payload: number,
+type ACTION_SELECT_PREVIOUS_SIBLING_IN_TREE = {|
+  type: 'SELECT_PREVIOUS_SIBLING_IN_TREE',
+|};
+type ACTION_SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE = {|
+  type: 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE',
+|};
+type ACTION_SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE = {|
+  type: 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE',
 |};
 type ACTION_SET_SEARCH_TEXT = {|
   type: 'SET_SEARCH_TEXT',
@@ -118,9 +132,13 @@ type Action =
   | ACTION_SELECT_ELEMENT_AT_INDEX
   | ACTION_SELECT_ELEMENT_BY_ID
   | ACTION_SELECT_NEXT_ELEMENT_IN_TREE
+  | ACTION_SELECT_NEXT_SIBLING_IN_TREE
+  | ACTION_SELECT_OWNER
   | ACTION_SELECT_PARENT_ELEMENT_IN_TREE
   | ACTION_SELECT_PREVIOUS_ELEMENT_IN_TREE
-  | ACTION_SELECT_OWNER
+  | ACTION_SELECT_PREVIOUS_SIBLING_IN_TREE
+  | ACTION_SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE
+  | ACTION_SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE
   | ACTION_SET_SEARCH_TEXT
   | ACTION_UPDATE_INSPECTED_ELEMENT_ID;
 
@@ -139,6 +157,7 @@ TreeDispatcherContext.displayName = 'TreeDispatcherContext';
 type State = {|
   // Tree
   numElements: number,
+  ownerSubtreeLeafElementID: number | null,
   selectedElementID: number | null,
   selectedElementIndex: number | null,
 
@@ -156,7 +175,13 @@ type State = {|
 |};
 
 function reduceTreeState(store: Store, state: State, action: Action): State {
-  let {numElements, ownerID, selectedElementIndex, selectedElementID} = state;
+  let {
+    numElements,
+    ownerSubtreeLeafElementID,
+    selectedElementIndex,
+    selectedElementID,
+  } = state;
+  const ownerID = state.ownerID;
 
   let lookupIDForIndex = true;
 
@@ -185,6 +210,8 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         }
         break;
       case 'SELECT_CHILD_ELEMENT_IN_TREE':
+        ownerSubtreeLeafElementID = null;
+
         if (selectedElementIndex !== null) {
           const selectedElement = store.getElementAtIndex(
             ((selectedElementIndex: any): number),
@@ -203,9 +230,13 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         }
         break;
       case 'SELECT_ELEMENT_AT_INDEX':
+        ownerSubtreeLeafElementID = null;
+
         selectedElementIndex = (action: ACTION_SELECT_ELEMENT_AT_INDEX).payload;
         break;
       case 'SELECT_ELEMENT_BY_ID':
+        ownerSubtreeLeafElementID = null;
+
         // Skip lookup in this case; it would be redundant.
         // It might also cause problems if the specified element was inside of a (not yet expanded) subtree.
         lookupIDForIndex = false;
@@ -217,6 +248,8 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
             : store.getIndexOfElementID(selectedElementID);
         break;
       case 'SELECT_NEXT_ELEMENT_IN_TREE':
+        ownerSubtreeLeafElementID = null;
+
         if (
           selectedElementIndex === null ||
           selectedElementIndex + 1 >= numElements
@@ -226,12 +259,80 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
           selectedElementIndex++;
         }
         break;
-      case 'SELECT_PARENT_ELEMENT_IN_TREE':
+      case 'SELECT_NEXT_SIBLING_IN_TREE':
+        ownerSubtreeLeafElementID = null;
+
         if (selectedElementIndex !== null) {
           const selectedElement = store.getElementAtIndex(
             ((selectedElementIndex: any): number),
           );
-          if (selectedElement !== null && selectedElement.parentID !== null) {
+          if (selectedElement !== null && selectedElement.parentID !== 0) {
+            const parent = store.getElementByID(selectedElement.parentID);
+            if (parent !== null) {
+              const {children} = parent;
+              const selectedChildIndex = children.indexOf(selectedElement.id);
+              const nextChildID =
+                selectedChildIndex < children.length - 1
+                  ? children[selectedChildIndex + 1]
+                  : children[0];
+              selectedElementIndex = store.getIndexOfElementID(nextChildID);
+            }
+          }
+        }
+        break;
+      case 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE':
+        if (selectedElementIndex !== null) {
+          if (
+            ownerSubtreeLeafElementID !== null &&
+            ownerSubtreeLeafElementID !== selectedElementID
+          ) {
+            const leafElement = store.getElementByID(ownerSubtreeLeafElementID);
+            if (leafElement !== null) {
+              let currentElement = leafElement;
+              while (currentElement !== null) {
+                if (currentElement.ownerID === selectedElementID) {
+                  selectedElementIndex = store.getIndexOfElementID(
+                    currentElement.id,
+                  );
+                  break;
+                } else if (currentElement.ownerID !== 0) {
+                  currentElement = store.getElementByID(currentElement.ownerID);
+                }
+              }
+            }
+          }
+        }
+        break;
+      case 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE':
+        if (selectedElementIndex !== null) {
+          if (ownerSubtreeLeafElementID === null) {
+            // If this is the first time we're stepping through the owners tree,
+            // pin the current component as the owners list leaf.
+            // This will enable us to step back down to this component.
+            ownerSubtreeLeafElementID = selectedElementID;
+          }
+
+          const selectedElement = store.getElementAtIndex(
+            ((selectedElementIndex: any): number),
+          );
+          if (selectedElement !== null && selectedElement.ownerID !== 0) {
+            const ownerIndex = store.getIndexOfElementID(
+              selectedElement.ownerID,
+            );
+            if (ownerIndex !== null) {
+              selectedElementIndex = ownerIndex;
+            }
+          }
+        }
+        break;
+      case 'SELECT_PARENT_ELEMENT_IN_TREE':
+        ownerSubtreeLeafElementID = null;
+
+        if (selectedElementIndex !== null) {
+          const selectedElement = store.getElementAtIndex(
+            ((selectedElementIndex: any): number),
+          );
+          if (selectedElement !== null && selectedElement.parentID !== 0) {
             const parentIndex = store.getIndexOfElementID(
               selectedElement.parentID,
             );
@@ -242,10 +343,33 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         }
         break;
       case 'SELECT_PREVIOUS_ELEMENT_IN_TREE':
+        ownerSubtreeLeafElementID = null;
+
         if (selectedElementIndex === null || selectedElementIndex === 0) {
           selectedElementIndex = numElements - 1;
         } else {
           selectedElementIndex--;
+        }
+        break;
+      case 'SELECT_PREVIOUS_SIBLING_IN_TREE':
+        ownerSubtreeLeafElementID = null;
+
+        if (selectedElementIndex !== null) {
+          const selectedElement = store.getElementAtIndex(
+            ((selectedElementIndex: any): number),
+          );
+          if (selectedElement !== null && selectedElement.parentID !== 0) {
+            const parent = store.getElementByID(selectedElement.parentID);
+            if (parent !== null) {
+              const {children} = parent;
+              const selectedChildIndex = children.indexOf(selectedElement.id);
+              const nextChildID =
+                selectedChildIndex > 0
+                  ? children[selectedChildIndex - 1]
+                  : children[children.length - 1];
+              selectedElementIndex = store.getIndexOfElementID(nextChildID);
+            }
+          }
         }
         break;
       default:
@@ -269,6 +393,7 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
     ...state,
 
     numElements,
+    ownerSubtreeLeafElementID,
     selectedElementIndex,
     selectedElementID,
   };
@@ -276,13 +401,13 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
 
 function reduceSearchState(store: Store, state: State, action: Action): State {
   let {
-    ownerID,
     searchIndex,
     searchResults,
     searchText,
     selectedElementID,
     selectedElementIndex,
   } = state;
+  const ownerID = state.ownerID;
 
   const prevSearchIndex = searchIndex;
   const prevSearchText = searchText;
@@ -451,10 +576,8 @@ function reduceOwnersState(store: Store, state: State, action: Action): State {
     selectedElementIndex,
     ownerID,
     ownerFlatTree,
-    searchIndex,
-    searchResults,
-    searchText,
   } = state;
+  const {searchIndex, searchResults, searchText} = state;
 
   let prevSelectedElementIndex = selectedElementIndex;
 
@@ -653,8 +776,12 @@ function TreeContextController({
         case 'SELECT_ELEMENT_BY_ID':
         case 'SELECT_CHILD_ELEMENT_IN_TREE':
         case 'SELECT_NEXT_ELEMENT_IN_TREE':
+        case 'SELECT_NEXT_SIBLING_IN_TREE':
+        case 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE':
+        case 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE':
         case 'SELECT_PARENT_ELEMENT_IN_TREE':
         case 'SELECT_PREVIOUS_ELEMENT_IN_TREE':
+        case 'SELECT_PREVIOUS_SIBLING_IN_TREE':
         case 'SELECT_OWNER':
         case 'UPDATE_INSPECTED_ELEMENT_ID':
         case 'SET_SEARCH_TEXT':
@@ -687,6 +814,7 @@ function TreeContextController({
   const [state, dispatch] = useReducer(reducer, {
     // Tree
     numElements: store.numElements,
+    ownerSubtreeLeafElementID: null,
     selectedElementID:
       defaultSelectedElementID == null ? null : defaultSelectedElementID,
     selectedElementIndex:
@@ -718,65 +846,56 @@ function TreeContextController({
   );
 
   // Listen for host element selections.
-  useEffect(
-    () => {
-      const handleSelectFiber = (id: number) =>
-        dispatchWrapper({type: 'SELECT_ELEMENT_BY_ID', payload: id});
-      bridge.addListener('selectFiber', handleSelectFiber);
-      return () => bridge.removeListener('selectFiber', handleSelectFiber);
-    },
-    [bridge, dispatchWrapper],
-  );
+  useEffect(() => {
+    const handleSelectFiber = (id: number) =>
+      dispatchWrapper({type: 'SELECT_ELEMENT_BY_ID', payload: id});
+    bridge.addListener('selectFiber', handleSelectFiber);
+    return () => bridge.removeListener('selectFiber', handleSelectFiber);
+  }, [bridge, dispatchWrapper]);
 
   // If a newly-selected search result or inspection selection is inside of a collapsed subtree, auto expand it.
   // This needs to be a layout effect to avoid temporarily flashing an incorrect selection.
   const prevSelectedElementID = useRef<number | null>(null);
-  useLayoutEffect(
-    () => {
-      if (state.selectedElementID !== prevSelectedElementID.current) {
-        prevSelectedElementID.current = state.selectedElementID;
+  useLayoutEffect(() => {
+    if (state.selectedElementID !== prevSelectedElementID.current) {
+      prevSelectedElementID.current = state.selectedElementID;
 
-        if (state.selectedElementID !== null) {
-          let element = store.getElementByID(state.selectedElementID);
-          if (element !== null && element.parentID > 0) {
-            store.toggleIsCollapsed(element.parentID, false);
-          }
+      if (state.selectedElementID !== null) {
+        const element = store.getElementByID(state.selectedElementID);
+        if (element !== null && element.parentID > 0) {
+          store.toggleIsCollapsed(element.parentID, false);
         }
       }
-    },
-    [state.selectedElementID, store],
-  );
+    }
+  }, [state.selectedElementID, store]);
 
   // Mutations to the underlying tree may impact this context (e.g. search results, selection state).
-  useEffect(
-    () => {
-      const handleStoreMutated = ([addedElementIDs, removedElementIDs]: [
-        Array<number>,
-        Map<number, number>,
-      ]) => {
-        dispatchWrapper({
-          type: 'HANDLE_STORE_MUTATION',
-          payload: [addedElementIDs, removedElementIDs],
-        });
-      };
+  useEffect(() => {
+    const handleStoreMutated = ([addedElementIDs, removedElementIDs]: [
+      Array<number>,
+      Map<number, number>,
+    ]) => {
+      dispatchWrapper({
+        type: 'HANDLE_STORE_MUTATION',
+        payload: [addedElementIDs, removedElementIDs],
+      });
+    };
 
-      // Since this is a passive effect, the tree may have been mutated before our initial subscription.
-      if (store.revision !== initialRevision) {
-        // At the moment, we can treat this as a mutation.
-        // We don't know which Elements were newly added/removed, but that should be okay in this case.
-        // It would only impact the search state, which is unlikely to exist yet at this point.
-        dispatchWrapper({
-          type: 'HANDLE_STORE_MUTATION',
-          payload: [[], new Map()],
-        });
-      }
+    // Since this is a passive effect, the tree may have been mutated before our initial subscription.
+    if (store.revision !== initialRevision) {
+      // At the moment, we can treat this as a mutation.
+      // We don't know which Elements were newly added/removed, but that should be okay in this case.
+      // It would only impact the search state, which is unlikely to exist yet at this point.
+      dispatchWrapper({
+        type: 'HANDLE_STORE_MUTATION',
+        payload: [[], new Map()],
+      });
+    }
 
-      store.addListener('mutated', handleStoreMutated);
+    store.addListener('mutated', handleStoreMutated);
 
-      return () => store.removeListener('mutated', handleStoreMutated);
-    },
-    [dispatchWrapper, initialRevision, store],
-  );
+    return () => store.removeListener('mutated', handleStoreMutated);
+  }, [dispatchWrapper, initialRevision, store]);
 
   return (
     <TreeStateContext.Provider value={state}>

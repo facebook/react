@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {useCallback, useContext, useMemo} from 'react';
+import * as React from 'react';
+import {useCallback, useContext, useMemo} from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import {FixedSizeList} from 'react-window';
 import {ProfilerContext} from './ProfilerContext';
@@ -87,45 +88,42 @@ function Interactions({height, width}: {|height: number, width: number|}) {
     [interactions, selectedInteractionID, selectInteraction],
   );
 
-  const itemData = useMemo<ItemData>(
-    () => {
-      const interactionCommitSize = parseInt(
-        getComputedStyle((document.body: any)).getPropertyValue(
-          '--interaction-commit-size',
-        ),
-        10,
-      );
-      const interactionLabelWidth = parseInt(
-        getComputedStyle((document.body: any)).getPropertyValue(
-          '--interaction-label-width',
-        ),
-        10,
-      );
+  const itemData = useMemo<ItemData>(() => {
+    const interactionCommitSize = parseInt(
+      getComputedStyle((document.body: any)).getPropertyValue(
+        '--interaction-commit-size',
+      ),
+      10,
+    );
+    const interactionLabelWidth = parseInt(
+      getComputedStyle((document.body: any)).getPropertyValue(
+        '--interaction-label-width',
+      ),
+      10,
+    );
 
-      const labelWidth = Math.min(interactionLabelWidth, width / 5);
-      const timelineWidth = width - labelWidth - interactionCommitSize;
+    const labelWidth = Math.min(interactionLabelWidth, width / 5);
+    const timelineWidth = width - labelWidth - interactionCommitSize;
 
-      return {
-        chartData,
-        dataForRoot,
-        labelWidth,
-        scaleX: scale(0, chartData.lastInteractionTime, 0, timelineWidth),
-        selectedInteractionID,
-        selectCommitIndex,
-        selectInteraction,
-        selectTab,
-      };
-    },
-    [
+    return {
       chartData,
       dataForRoot,
+      labelWidth,
+      scaleX: scale(0, chartData.lastInteractionTime, 0, timelineWidth),
       selectedInteractionID,
       selectCommitIndex,
       selectInteraction,
       selectTab,
-      width,
-    ],
-  );
+    };
+  }, [
+    chartData,
+    dataForRoot,
+    selectedInteractionID,
+    selectCommitIndex,
+    selectInteraction,
+    selectTab,
+    width,
+  ]);
 
   // If a commit contains no fibers with an actualDuration > 0,
   // Display a fallback message.

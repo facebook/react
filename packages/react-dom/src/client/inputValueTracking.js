@@ -7,12 +7,12 @@
  * @flow
  */
 
-type ValueTracker = {
+type ValueTracker = {|
   getValue(): string,
   setValue(value: string): void,
   stopTracking(): void,
-};
-type WrapperState = {_valueTracker?: ?ValueTracker};
+|};
+type WrapperState = {_valueTracker?: ?ValueTracker, ...};
 type ElementWithValueTracker = HTMLInputElement & WrapperState;
 
 function isCheckable(elem: HTMLInputElement) {

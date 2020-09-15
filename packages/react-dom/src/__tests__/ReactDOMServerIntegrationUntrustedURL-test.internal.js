@@ -139,7 +139,7 @@ function runTests(itRenders, itRejectsRendering, expectToReject) {
   );
 
   it('rejects a javascript protocol href if it is added during an update', () => {
-    let container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<a href="thisisfine">click me</a>, container);
     expectToReject(() => {
       ReactDOM.render(<a href="javascript:notfine">click me</a>, container);
@@ -170,7 +170,7 @@ describe('ReactDOMServerIntegration - Untrusted URLs', () => {
   });
 
   runTests(itRenders, itRenders, fn =>
-    expect(fn).toWarnDev(
+    expect(fn).toErrorDev(
       'Warning: A future version of React will block javascript: URLs as a security precaution. ' +
         'Use event handlers instead if you can. If you need to generate unsafe HTML try using ' +
         'dangerouslySetInnerHTML instead. React was passed "javascript:notfine".\n' +
@@ -244,13 +244,13 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
     }
 
     let toStringCalls = 0;
-    let firstIsSafe = {
+    const firstIsSafe = {
       toString() {
         // This tries to avoid the validation by pretending to be safe
         // the first times it is called and then becomes dangerous.
         toStringCalls++;
         if (toStringCalls <= expectedToStringCalls) {
-          return 'https://fb.me/';
+          return 'https://reactjs.org/';
         }
         return 'javascript:notfine';
       },
@@ -258,11 +258,11 @@ describe('ReactDOMServerIntegration - Untrusted URLs - disableJavaScriptURLs', (
 
     const e = await render(<a href={firstIsSafe} />);
     expect(toStringCalls).toBe(expectedToStringCalls);
-    expect(e.href).toBe('https://fb.me/');
+    expect(e.href).toBe('https://reactjs.org/');
   });
 
   it('rejects a javascript protocol href if it is added during an update twice', () => {
-    let container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<a href="thisisfine">click me</a>, container);
     expectToReject(() => {
       ReactDOM.render(<a href="javascript:notfine">click me</a>, container);

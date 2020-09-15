@@ -41,8 +41,8 @@ describe('ReactDOMTextComponent', () => {
     );
     let nodes = filterOutComments(inst.childNodes);
 
-    let foo = nodes[1];
-    let bar = nodes[2];
+    const foo = nodes[1];
+    const bar = nodes[2];
     expect(foo.data).toBe('foo');
     expect(bar.data).toBe('bar');
 
@@ -75,7 +75,7 @@ describe('ReactDOMTextComponent', () => {
     );
 
     let childNodes = filterOutComments(inst.childNodes);
-    let childDiv = childNodes[1];
+    const childDiv = childNodes[1];
 
     inst = ReactDOM.render(
       <div>
@@ -200,8 +200,8 @@ describe('ReactDOMTextComponent', () => {
       el,
     );
 
-    let childNodes = filterOutComments(inst.childNodes);
-    let textNode = childNodes[1];
+    const childNodes = filterOutComments(inst.childNodes);
+    const textNode = childNodes[1];
     textNode.textContent = 'foo';
     inst.insertBefore(
       document.createTextNode('bar'),
@@ -237,8 +237,8 @@ describe('ReactDOMTextComponent', () => {
       el,
     );
 
-    let childNodes = filterOutComments(inst.childNodes);
-    let textNode = childNodes[3];
+    const childNodes = filterOutComments(inst.childNodes);
+    const textNode = childNodes[3];
     textNode.textContent = 'foo';
     inst.insertBefore(
       document.createTextNode('bar'),
@@ -248,7 +248,7 @@ describe('ReactDOMTextComponent', () => {
       document.createTextNode('baz'),
       childNodes[3].nextSibling,
     );
-    let secondTextNode = childNodes[5];
+    const secondTextNode = childNodes[5];
     secondTextNode.textContent = 'bar';
     inst.insertBefore(
       document.createTextNode('foo'),

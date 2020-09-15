@@ -53,11 +53,11 @@ var maxSigned31BitInt = 1073741823;
 // Times out immediately
 var IMMEDIATE_PRIORITY_TIMEOUT = -1;
 // Eventually times out
-var USER_BLOCKING_PRIORITY = 250;
+var USER_BLOCKING_PRIORITY_TIMEOUT = 250;
 var NORMAL_PRIORITY_TIMEOUT = 5000;
 var LOW_PRIORITY_TIMEOUT = 10000;
 // Never times out
-var IDLE_PRIORITY = maxSigned31BitInt;
+var IDLE_PRIORITY_TIMEOUT = maxSigned31BitInt;
 
 // Tasks are stored on a min heap
 var taskQueue = [];
@@ -147,7 +147,7 @@ function flushWork(hasTimeRemaining, initialTime) {
         throw error;
       }
     } else {
-      // No catch in prod codepath.
+      // No catch in prod code path.
       return workLoop(hasTimeRemaining, initialTime);
     }
   } finally {
@@ -177,7 +177,7 @@ function workLoop(hasTimeRemaining, initialTime) {
       break;
     }
     const callback = currentTask.callback;
-    if (callback !== null) {
+    if (typeof callback === 'function') {
       currentTask.callback = null;
       currentPriorityLevel = currentTask.priorityLevel;
       const didUserCallbackTimeout = currentTask.expirationTime <= currentTime;
@@ -206,7 +206,7 @@ function workLoop(hasTimeRemaining, initialTime) {
   if (currentTask !== null) {
     return true;
   } else {
-    let firstTimer = peek(timerQueue);
+    const firstTimer = peek(timerQueue);
     if (firstTimer !== null) {
       requestHostTimeout(handleTimeout, firstTimer.startTime - currentTime);
     }
@@ -276,27 +276,10 @@ function unstable_wrapCallback(callback) {
   };
 }
 
-function timeoutForPriorityLevel(priorityLevel) {
-  switch (priorityLevel) {
-    case ImmediatePriority:
-      return IMMEDIATE_PRIORITY_TIMEOUT;
-    case UserBlockingPriority:
-      return USER_BLOCKING_PRIORITY;
-    case IdlePriority:
-      return IDLE_PRIORITY;
-    case LowPriority:
-      return LOW_PRIORITY_TIMEOUT;
-    case NormalPriority:
-    default:
-      return NORMAL_PRIORITY_TIMEOUT;
-  }
-}
-
 function unstable_scheduleCallback(priorityLevel, callback, options) {
   var currentTime = getCurrentTime();
 
   var startTime;
-  var timeout;
   if (typeof options === 'object' && options !== null) {
     var delay = options.delay;
     if (typeof delay === 'number' && delay > 0) {
@@ -304,13 +287,28 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     } else {
       startTime = currentTime;
     }
-    timeout =
-      typeof options.timeout === 'number'
-        ? options.timeout
-        : timeoutForPriorityLevel(priorityLevel);
   } else {
-    timeout = timeoutForPriorityLevel(priorityLevel);
     startTime = currentTime;
+  }
+
+  var timeout;
+  switch (priorityLevel) {
+    case ImmediatePriority:
+      timeout = IMMEDIATE_PRIORITY_TIMEOUT;
+      break;
+    case UserBlockingPriority:
+      timeout = USER_BLOCKING_PRIORITY_TIMEOUT;
+      break;
+    case IdlePriority:
+      timeout = IDLE_PRIORITY_TIMEOUT;
+      break;
+    case LowPriority:
+      timeout = LOW_PRIORITY_TIMEOUT;
+      break;
+    case NormalPriority:
+    default:
+      timeout = NORMAL_PRIORITY_TIMEOUT;
+      break;
   }
 
   var expirationTime = startTime + timeout;
@@ -395,21 +393,6 @@ function unstable_getCurrentPriorityLevel() {
   return currentPriorityLevel;
 }
 
-function unstable_shouldYield() {
-  const currentTime = getCurrentTime();
-  advanceTimers(currentTime);
-  const firstTask = peek(taskQueue);
-  return (
-    (firstTask !== currentTask &&
-      currentTask !== null &&
-      firstTask !== null &&
-      firstTask.callback !== null &&
-      firstTask.startTime <= currentTime &&
-      firstTask.expirationTime < currentTask.expirationTime) ||
-    shouldYieldToHost()
-  );
-}
-
 const unstable_requestPaint = requestPaint;
 
 export {
@@ -424,7 +407,7 @@ export {
   unstable_cancelCallback,
   unstable_wrapCallback,
   unstable_getCurrentPriorityLevel,
-  unstable_shouldYield,
+  shouldYieldToHost as unstable_shouldYield,
   unstable_requestPaint,
   unstable_continueExecution,
   unstable_pauseExecution,

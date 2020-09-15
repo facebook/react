@@ -13,7 +13,7 @@ import {
   createRequest,
   startWork,
   startFlowing,
-} from 'react-stream/inline.dom-browser';
+} from 'react-server/src/ReactFizzServer';
 
 function renderToReadableStream(children: ReactNodeList): ReadableStream {
   let request;
@@ -23,12 +23,10 @@ function renderToReadableStream(children: ReactNodeList): ReadableStream {
       startWork(request);
     },
     pull(controller) {
-      startFlowing(request, controller.desiredSize);
+      startFlowing(request);
     },
     cancel(reason) {},
   });
 }
 
-export default {
-  renderToReadableStream,
-};
+export {renderToReadableStream};

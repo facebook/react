@@ -42,7 +42,7 @@ describe('ReactDOM unknown attribute', () => {
     });
 
     it('changes values true, false to null, and also warns once', () => {
-      expect(() => testUnknownAttributeAssignment(true, null)).toWarnDev(
+      expect(() => testUnknownAttributeAssignment(true, null)).toErrorDev(
         'Received `true` for a non-boolean attribute `unknown`.\n\n' +
           'If you want to write it to the DOM, pass a string instead: ' +
           'unknown="true" or unknown={value.toString()}.\n' +
@@ -71,7 +71,7 @@ describe('ReactDOM unknown attribute', () => {
     });
 
     it('coerces NaN to strings and warns', () => {
-      expect(() => testUnknownAttributeAssignment(NaN, 'NaN')).toWarnDev(
+      expect(() => testUnknownAttributeAssignment(NaN, 'NaN')).toErrorDev(
         'Warning: Received NaN for the `unknown` attribute. ' +
           'If this is expected, cast the value to a string.\n' +
           '    in div (at **)',
@@ -90,10 +90,10 @@ describe('ReactDOM unknown attribute', () => {
     });
 
     it('removes symbols and warns', () => {
-      expect(() => testUnknownAttributeRemoval(Symbol('foo'))).toWarnDev(
+      expect(() => testUnknownAttributeRemoval(Symbol('foo'))).toErrorDev(
         'Warning: Invalid value for prop `unknown` on <div> tag. Either remove it ' +
           'from the element, or pass a string or number value to keep it ' +
-          'in the DOM. For details, see https://fb.me/react-attribute-behavior\n' +
+          'in the DOM. For details, see https://reactjs.org/link/attribute-behavior \n' +
           '    in div (at **)',
       );
     });
@@ -101,11 +101,11 @@ describe('ReactDOM unknown attribute', () => {
     it('removes functions and warns', () => {
       expect(() =>
         testUnknownAttributeRemoval(function someFunction() {}),
-      ).toWarnDev(
+      ).toErrorDev(
         'Warning: Invalid value for prop `unknown` on <div> tag. Either remove ' +
           'it from the element, or pass a string or number value to ' +
           'keep it in the DOM. For details, see ' +
-          'https://fb.me/react-attribute-behavior\n' +
+          'https://reactjs.org/link/attribute-behavior \n' +
           '    in div (at **)',
       );
     });
@@ -115,7 +115,7 @@ describe('ReactDOM unknown attribute', () => {
 
       expect(() =>
         ReactDOM.render(<div helloWorld="something" />, el),
-      ).toWarnDev(
+      ).toErrorDev(
         'React does not recognize the `helloWorld` prop on a DOM element. ' +
           'If you intentionally want it to appear in the DOM as a custom ' +
           'attribute, spell it as lowercase `helloworld` instead. ' +

@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {
+import * as React from 'react';
+import {
   useCallback,
   useContext,
   useEffect,
@@ -229,13 +230,10 @@ export default function ComponentsSettings(_: {||}) {
   // The Store will avoid doing any expensive work unless they've changed.
   // We just want to batch the work in the event that they do change.
   const componentFiltersRef = useRef<Array<ComponentFilter>>(componentFilters);
-  useEffect(
-    () => {
-      componentFiltersRef.current = componentFilters;
-      return () => {};
-    },
-    [componentFilters],
-  );
+  useEffect(() => {
+    componentFiltersRef.current = componentFilters;
+    return () => {};
+  }, [componentFilters]);
   useEffect(
     () => () => {
       store.componentFilters = [...componentFiltersRef.current];
@@ -282,8 +280,8 @@ export default function ComponentsSettings(_: {||}) {
                     componentFilter.isValid === false
                       ? 'Filter invalid'
                       : componentFilter.isEnabled
-                        ? 'Filter enabled'
-                        : 'Filter disabled'
+                      ? 'Filter enabled'
+                      : 'Filter disabled'
                   }>
                   <ToggleIcon
                     isEnabled={componentFilter.isEnabled}

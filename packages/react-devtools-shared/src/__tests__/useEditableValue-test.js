@@ -23,6 +23,24 @@ describe('useEditableValue', () => {
     useEditableValue = require('../devtools/views/hooks').useEditableValue;
   });
 
+  it('should not cause a loop with values like NaN', () => {
+    let state;
+
+    function Example({value = NaN}) {
+      const tuple = useEditableValue(value);
+      state = tuple[0];
+      return null;
+    }
+
+    const container = document.createElement('div');
+    ReactDOM.render(<Example />, container);
+    expect(state.editableValue).toEqual('NaN');
+    expect(state.externalValue).toEqual(NaN);
+    expect(state.parsedValue).toEqual(NaN);
+    expect(state.hasPendingChanges).toBe(false);
+    expect(state.isValid).toBe(true);
+  });
+
   it('should override editable state when external props are updated', () => {
     let state;
 

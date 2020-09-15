@@ -14,18 +14,17 @@ const packages = readdirSync(packagesRoot).filter(dir => {
     return false;
   }
   const packagePath = join(packagesRoot, dir, 'package.json');
-  return statSync(packagePath).isFile();
+  let stat;
+  try {
+    stat = statSync(packagePath);
+  } catch (err) {
+    return false;
+  }
+  return stat.isFile();
 });
 
 // Create a module map to point React packages to the build output
 const moduleNameMapper = {};
-
-// Allow bundle tests to read (but not write!) default feature flags.
-// This lets us determine whether we're running in different modes
-// without making relevant tests internal-only.
-moduleNameMapper[
-  '^shared/ReactFeatureFlags'
-] = `<rootDir>/packages/shared/forks/ReactFeatureFlags.readonly`;
 
 // Map packages to bundles
 packages.forEach(name => {
@@ -36,6 +35,11 @@ packages.forEach(name => {
     `^${name}\/([^\/]+)$`
   ] = `<rootDir>/build/node_modules/${name}/$1`;
 });
+
+// Allow tests to import shared code (e.g. feature flags, getStackByFiberInDevAndProd)
+moduleNameMapper['^shared/([^/]+)$'] = '<rootDir>/packages/shared/$1';
+moduleNameMapper['^react-reconciler/([^/]+)$'] =
+  '<rootDir>/packages/react-reconciler/$1';
 
 module.exports = Object.assign({}, baseConfig, {
   // Redirect imports to the compiled bundles
@@ -60,8 +64,9 @@ module.exports = Object.assign({}, baseConfig, {
       '../../packages/react-devtools-shared/src/__tests__/setupEnv.js'
     ),
   ],
-  // TODO (Jest v24) Rename "setupFilesAfterEnv" after Jest upgrade
-  setupTestFrameworkScriptFile: require.resolve(
-    '../../packages/react-devtools-shared/src/__tests__/setupTests.js'
-  ),
+  setupFilesAfterEnv: [
+    require.resolve(
+      '../../packages/react-devtools-shared/src/__tests__/setupTests.js'
+    ),
+  ],
 });

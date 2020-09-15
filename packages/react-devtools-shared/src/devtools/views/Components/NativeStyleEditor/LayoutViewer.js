@@ -7,7 +7,7 @@
  * @flow
  */
 
-import React from 'react';
+import * as React from 'react';
 import styles from './LayoutViewer.css';
 
 import type {Layout} from './types';

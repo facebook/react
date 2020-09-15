@@ -20,9 +20,14 @@ function startActivation(contentWindow: window) {
         // so it's safe to cleanup after we've received it.
         contentWindow.removeEventListener('message', onMessage);
 
-        const {appendComponentStack, componentFilters} = data;
+        const {
+          appendComponentStack,
+          breakOnConsoleErrors,
+          componentFilters,
+        } = data;
 
         contentWindow.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = appendComponentStack;
+        contentWindow.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ = breakOnConsoleErrors;
         contentWindow.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = componentFilters;
 
         // TRICKY
@@ -33,6 +38,7 @@ function startActivation(contentWindow: window) {
         // but it doesn't really hurt anything to store them there too.
         if (contentWindow !== window) {
           window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = appendComponentStack;
+          window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ = breakOnConsoleErrors;
           window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = componentFilters;
         }
 
@@ -73,17 +79,18 @@ function finishActivation(contentWindow: window) {
   const agent = new Agent(bridge);
 
   const hook = contentWindow.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+  if (hook) {
+    initBackend(hook, agent, contentWindow);
 
-  initBackend(hook, agent, contentWindow);
-
-  // Setup React Native style editor if a renderer like react-native-web has injected it.
-  if (hook.resolveRNStyle) {
-    setupNativeStyleEditor(
-      bridge,
-      agent,
-      hook.resolveRNStyle,
-      hook.nativeStyleEditorValidAttributes,
-    );
+    // Setup React Native style editor if a renderer like react-native-web has injected it.
+    if (hook.resolveRNStyle) {
+      setupNativeStyleEditor(
+        bridge,
+        agent,
+        hook.resolveRNStyle,
+        hook.nativeStyleEditorValidAttributes,
+      );
+    }
   }
 }
 

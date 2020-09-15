@@ -177,20 +177,22 @@ describe('ReactDOMComponentTree', () => {
 
     const component = <Controlled />;
     const instance = ReactDOM.render(component, container);
-    expect(() => simulateInput(instance.a, finishValue)).toWarnDev(
-      'Warning: A component is changing an uncontrolled input of ' +
-        'type text to be controlled. Input elements should not ' +
-        'switch from uncontrolled to controlled (or vice versa). ' +
+    expect(() => simulateInput(instance.a, finishValue)).toErrorDev(
+      'Warning: A component is changing an uncontrolled input to be controlled. ' +
+        'This is likely caused by the value changing from undefined to ' +
+        'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
         'element for the lifetime of the component. More info: ' +
-        'https://fb.me/react-controlled-components',
+        'https://reactjs.org/link/controlled-components',
     );
   });
 
   it('finds instance of node that is attempted to be unmounted', () => {
     const component = <div />;
     const node = ReactDOM.render(<div>{component}</div>, container);
-    expect(() => ReactDOM.unmountComponentAtNode(node)).toWarnDev(
+    expect(() =>
+      ReactDOM.unmountComponentAtNode(node),
+    ).toErrorDev(
       "unmountComponentAtNode(): The node you're attempting to unmount " +
         'was rendered by React and is not a top-level container. You may ' +
         'have accidentally passed in a React root node instead of its ' +
@@ -207,7 +209,9 @@ describe('ReactDOMComponentTree', () => {
     );
     const anotherComponent = <div />;
     const instance = ReactDOM.render(component, container);
-    expect(() => ReactDOM.render(anotherComponent, instance)).toWarnDev(
+    expect(() =>
+      ReactDOM.render(anotherComponent, instance),
+    ).toErrorDev(
       'render(...): Replacing React-rendered children with a new root ' +
         'component. If you intended to update the children of this node, ' +
         'you should instead have the existing children update their state ' +

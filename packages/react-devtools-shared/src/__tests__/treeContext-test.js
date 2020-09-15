@@ -268,6 +268,208 @@ describe('TreeListContext', () => {
 
       done();
     });
+
+    it('should navigate next/previous sibling and skip over children in between', () => {
+      const Grandparent = () => (
+        <React.Fragment>
+          <Parent numChildren={1} />
+          <Parent numChildren={3} />
+          <Parent numChildren={2} />
+        </React.Fragment>
+      );
+      const Parent = ({numChildren}) =>
+        new Array(numChildren)
+          .fill(true)
+          .map((_, index) => <Child key={index} />);
+      const Child = () => null;
+
+      utils.act(() =>
+        ReactDOM.render(<Grandparent />, document.createElement('div')),
+      );
+
+      /*
+       * 0  ▾ <Grandparent>
+       * 1    ▾ <Parent>
+       * 2        <Child key="0">
+       * 3    ▾ <Parent>
+       * 4        <Child key="0">
+       * 5        <Child key="1">
+       * 6        <Child key="2">
+       * 7    ▾ <Parent>
+       * 8        <Child key="0">
+       * 9        <Child key="1">
+       */
+
+      expect(store).toMatchSnapshot('0: mount');
+
+      let renderer;
+      utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
+
+      const firstParentID = ((store.getElementIDAtIndex(1): any): number);
+
+      utils.act(() =>
+        dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: firstParentID}),
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.selectedElementIndex).toBe(1);
+
+      utils.act(() => dispatch({type: 'SELECT_NEXT_SIBLING_IN_TREE'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.selectedElementIndex).toBe(3);
+
+      utils.act(() => dispatch({type: 'SELECT_NEXT_SIBLING_IN_TREE'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.selectedElementIndex).toBe(7);
+
+      utils.act(() => dispatch({type: 'SELECT_NEXT_SIBLING_IN_TREE'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.selectedElementIndex).toBe(1);
+
+      utils.act(() => dispatch({type: 'SELECT_PREVIOUS_SIBLING_IN_TREE'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.selectedElementIndex).toBe(7);
+
+      utils.act(() => dispatch({type: 'SELECT_PREVIOUS_SIBLING_IN_TREE'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.selectedElementIndex).toBe(3);
+
+      utils.act(() => dispatch({type: 'SELECT_PREVIOUS_SIBLING_IN_TREE'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.selectedElementIndex).toBe(1);
+    });
+
+    it('should navigate the owner hierarchy', () => {
+      const Wrapper = ({children}) => children;
+      const Grandparent = () => (
+        <React.Fragment>
+          <Wrapper>
+            <Parent numChildren={1} />
+          </Wrapper>
+          <Wrapper>
+            <Parent numChildren={3} />
+          </Wrapper>
+          <Wrapper>
+            <Parent numChildren={2} />
+          </Wrapper>
+        </React.Fragment>
+      );
+      const Parent = ({numChildren}) =>
+        new Array(numChildren)
+          .fill(true)
+          .map((_, index) => <Child key={index} />);
+      const Child = () => null;
+
+      utils.act(() =>
+        ReactDOM.render(<Grandparent />, document.createElement('div')),
+      );
+
+      /*
+       *  0  ▾ <Grandparent>
+       *  1    ▾ <Wrapper>
+       *  2      ▾ <Parent>
+       *  3          <Child key="0">
+       *  4    ▾ <Wrapper>
+       *  5      ▾ <Parent>
+       *  6          <Child key="0">
+       *  7          <Child key="1">
+       *  8          <Child key="2">
+       *  9    ▾ <Wrapper>
+       * 10      ▾ <Parent>
+       * 11          <Child key="0">
+       * 12          <Child key="1">
+       */
+
+      expect(store).toMatchSnapshot('0: mount');
+
+      let renderer;
+      utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
+
+      const childID = ((store.getElementIDAtIndex(7): any): number);
+      utils.act(() =>
+        dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: childID}),
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.ownerSubtreeLeafElementID).toBeNull();
+      expect(state.selectedElementIndex).toBe(7);
+
+      // Basic navigation test
+      utils.act(() =>
+        dispatch({type: 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE'}),
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.ownerSubtreeLeafElementID).toBe(childID);
+      expect(state.selectedElementIndex).toBe(5);
+
+      utils.act(() =>
+        dispatch({type: 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE'}),
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.selectedElementIndex).toBe(0);
+
+      utils.act(() =>
+        dispatch({type: 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE'}),
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.selectedElementIndex).toBe(0); // noop since we're at the top
+
+      utils.act(() =>
+        dispatch({type: 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE'}),
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.selectedElementIndex).toBe(5);
+
+      utils.act(() =>
+        dispatch({type: 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE'}),
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.selectedElementIndex).toBe(7);
+
+      utils.act(() =>
+        dispatch({type: 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE'}),
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.selectedElementIndex).toBe(7); // noop since we're at the leaf node
+
+      // Other navigational actions should clear out the temporary owner chain.
+      utils.act(() => dispatch({type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.selectedElementIndex).toBe(6);
+      expect(state.ownerSubtreeLeafElementID).toBeNull();
+
+      const parentID = ((store.getElementIDAtIndex(5): any): number);
+      utils.act(() =>
+        dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: parentID}),
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.ownerSubtreeLeafElementID).toBeNull();
+      expect(state.selectedElementIndex).toBe(5);
+
+      // It should not be possible to navigate beyond the owner chain leaf.
+      utils.act(() =>
+        dispatch({type: 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE'}),
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.ownerSubtreeLeafElementID).toBe(parentID);
+      expect(state.selectedElementIndex).toBe(0);
+
+      utils.act(() =>
+        dispatch({type: 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE'}),
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.selectedElementIndex).toBe(0); // noop since we're at the top
+
+      utils.act(() =>
+        dispatch({type: 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE'}),
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.selectedElementIndex).toBe(5);
+
+      utils.act(() =>
+        dispatch({type: 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE'}),
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state.selectedElementIndex).toBe(5); // noop since we're at the leaf node
+    });
   });
 
   describe('search state', () => {
@@ -482,7 +684,7 @@ describe('TreeListContext', () => {
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
       expect(state).toMatchSnapshot('1: initial state');
 
-      let parentID = ((store.getElementIDAtIndex(1): any): number);
+      const parentID = ((store.getElementIDAtIndex(1): any): number);
       utils.act(() => dispatch({type: 'SELECT_OWNER', payload: parentID}));
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('2: parent owners tree');
@@ -507,7 +709,7 @@ describe('TreeListContext', () => {
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
       expect(state).toMatchSnapshot('1: initial state');
 
-      let parentID = ((store.getElementIDAtIndex(1): any): number);
+      const parentID = ((store.getElementIDAtIndex(1): any): number);
       utils.act(() => dispatch({type: 'SELECT_OWNER', payload: parentID}));
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('2: parent owners tree');
@@ -545,7 +747,7 @@ describe('TreeListContext', () => {
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
       expect(state).toMatchSnapshot('1: initial state');
 
-      let childID = ((store.getElementIDAtIndex(1): any): number);
+      const childID = ((store.getElementIDAtIndex(1): any): number);
       utils.act(() => dispatch({type: 'SELECT_OWNER', payload: childID}));
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('2: child owners tree');
@@ -553,7 +755,7 @@ describe('TreeListContext', () => {
       await utils.actAsync(() => ReactDOM.render(<Parent />, container));
       expect(state).toMatchSnapshot('3: remove child');
 
-      let parentID = ((store.getElementIDAtIndex(0): any): number);
+      const parentID = ((store.getElementIDAtIndex(0): any): number);
       utils.act(() => dispatch({type: 'SELECT_OWNER', payload: parentID}));
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('4: parent owners tree');

@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {useCallback, useContext, useMemo} from 'react';
+import * as React from 'react';
+import {useCallback, useContext, useMemo} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import {BridgeContext, StoreContext} from '../context';
@@ -39,22 +40,20 @@ export default function ReloadAndProfileButton() {
     }),
     [store],
   );
-  const {recordChangeDescriptions, supportsReloadAndProfile} = useSubscription<
-    SubscriptionData,
-  >(subscription);
+  const {
+    recordChangeDescriptions,
+    supportsReloadAndProfile,
+  } = useSubscription<SubscriptionData>(subscription);
 
-  const reloadAndProfile = useCallback(
-    () => {
-      // TODO If we want to support reload-and-profile for e.g. React Native,
-      // we might need to also start profiling here before reloading the app (since DevTools itself isn't reloaded).
-      // We'd probably want to do this before reloading though, to avoid sending a message on a disconnected port in the browser.
-      // For now, let's just skip doing it entirely to avoid paying snapshot costs for data we don't need.
-      // startProfiling();
+  const reloadAndProfile = useCallback(() => {
+    // TODO If we want to support reload-and-profile for e.g. React Native,
+    // we might need to also start profiling here before reloading the app (since DevTools itself isn't reloaded).
+    // We'd probably want to do this before reloading though, to avoid sending a message on a disconnected port in the browser.
+    // For now, let's just skip doing it entirely to avoid paying snapshot costs for data we don't need.
+    // startProfiling();
 
-      bridge.send('reloadAndProfile', recordChangeDescriptions);
-    },
-    [bridge, recordChangeDescriptions],
-  );
+    bridge.send('reloadAndProfile', recordChangeDescriptions);
+  }, [bridge, recordChangeDescriptions]);
 
   if (!supportsReloadAndProfile) {
     return null;

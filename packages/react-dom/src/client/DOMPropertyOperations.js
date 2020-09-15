@@ -16,9 +16,11 @@ import {
   OVERLOADED_BOOLEAN,
 } from '../shared/DOMProperty';
 import sanitizeURL from '../shared/sanitizeURL';
-import {toStringOrTrustedType} from './ToStringValue';
-import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
-import {setAttribute, setAttributeNS} from './setAttribute';
+import {
+  disableJavaScriptURLs,
+  enableTrustedTypesIntegration,
+} from 'shared/ReactFeatureFlags';
+import {isOpaqueHydratingObject} from './ReactDOMHostConfig';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
 
@@ -106,6 +108,13 @@ export function getValueForAttribute(
     if (!isAttributeNameSafe(name)) {
       return;
     }
+
+    // If the object is an opaque reference ID, it's expected that
+    // the next prop is different than the server value, so just return
+    // expected
+    if (isOpaqueHydratingObject(expected)) {
+      return expected;
+    }
     if (!node.hasAttribute(name)) {
       return expected === undefined ? undefined : null;
     }
@@ -144,7 +153,10 @@ export function setValueForProperty(
       if (value === null) {
         node.removeAttribute(attributeName);
       } else {
-        setAttribute(node, attributeName, toStringOrTrustedType(value));
+        node.setAttribute(
+          attributeName,
+          enableTrustedTypesIntegration ? (value: any) : '' + (value: any),
+        );
       }
     }
     return;
@@ -176,15 +188,19 @@ export function setValueForProperty(
     } else {
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
-      attributeValue = toStringOrTrustedType(value);
+      if (enableTrustedTypesIntegration) {
+        attributeValue = (value: any);
+      } else {
+        attributeValue = '' + (value: any);
+      }
       if (propertyInfo.sanitizeURL) {
         sanitizeURL(attributeValue.toString());
       }
     }
     if (attributeNamespace) {
-      setAttributeNS(node, attributeNamespace, attributeName, attributeValue);
+      node.setAttributeNS(attributeNamespace, attributeName, attributeValue);
     } else {
-      setAttribute(node, attributeName, attributeValue);
+      node.setAttribute(attributeName, attributeValue);
     }
   }
 }

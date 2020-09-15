@@ -24,12 +24,14 @@ function getInstanceFromTag(tag) {
 }
 
 function getTagFromInstance(inst) {
-  let tag = inst.stateNode._nativeTag;
+  let nativeInstance = inst.stateNode;
+  let tag = nativeInstance._nativeTag;
   if (tag === undefined) {
-    tag = inst.stateNode.canonical._nativeTag;
+    nativeInstance = nativeInstance.canonical;
+    tag = nativeInstance._nativeTag;
   }
   invariant(tag, 'All native instances should have a tag.');
-  return tag;
+  return nativeInstance;
 }
 
 export {

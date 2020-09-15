@@ -8,15 +8,19 @@
  */
 
 import type {
+  MutableSource,
+  MutableSourceGetSnapshotFn,
+  MutableSourceSubscribeFn,
   ReactContext,
-  ReactEventResponder,
-  ReactEventResponderListener,
 } from 'shared/ReactTypes';
+import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
+
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
-import {REACT_RESPONDER_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
+
+type BasicStateAction<S> = (S => S) | S;
+type Dispatch<A> = A => void;
 
 function resolveDispatcher() {
   const dispatcher = ReactCurrentDispatcher.current;
@@ -27,7 +31,7 @@ function resolveDispatcher() {
       '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
       '2. You might be breaking the Rules of Hooks\n' +
       '3. You might have more than one copy of React in the same app\n' +
-      'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+      'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
   );
   return dispatcher;
 }
@@ -35,21 +39,22 @@ function resolveDispatcher() {
 export function useContext<T>(
   Context: ReactContext<T>,
   unstable_observedBits: number | boolean | void,
-) {
+): T {
   const dispatcher = resolveDispatcher();
   if (__DEV__) {
-    warning(
-      unstable_observedBits === undefined,
-      'useContext() second argument is reserved for future ' +
-        'use in React. Passing it is not supported. ' +
-        'You passed: %s.%s',
-      unstable_observedBits,
-      typeof unstable_observedBits === 'number' && Array.isArray(arguments[2])
-        ? '\n\nDid you call array.map(useContext)? ' +
-          'Calling Hooks inside a loop is not supported. ' +
-          'Learn more at https://fb.me/rules-of-hooks'
-        : '',
-    );
+    if (unstable_observedBits !== undefined) {
+      console.error(
+        'useContext() second argument is reserved for future ' +
+          'use in React. Passing it is not supported. ' +
+          'You passed: %s.%s',
+        unstable_observedBits,
+        typeof unstable_observedBits === 'number' && Array.isArray(arguments[2])
+          ? '\n\nDid you call array.map(useContext)? ' +
+              'Calling Hooks inside a loop is not supported. ' +
+              'Learn more at https://reactjs.org/link/rules-of-hooks'
+          : '',
+      );
+    }
 
     // TODO: add a more generic warning for invalid values.
     if ((Context: any)._context !== undefined) {
@@ -57,14 +62,12 @@ export function useContext<T>(
       // Don't deduplicate because this legitimately causes bugs
       // and nobody should be using this in existing code.
       if (realContext.Consumer === Context) {
-        warning(
-          false,
+        console.error(
           'Calling useContext(Context.Consumer) is not supported, may cause bugs, and will be ' +
             'removed in a future major release. Did you mean to call useContext(Context) instead?',
         );
       } else if (realContext.Provider === Context) {
-        warning(
-          false,
+        console.error(
           'Calling useContext(Context.Provider) is not supported. ' +
             'Did you mean to call useContext(Context) instead?',
         );
@@ -74,7 +77,9 @@ export function useContext<T>(
   return dispatcher.useContext(Context, unstable_observedBits);
 }
 
-export function useState<S>(initialState: (() => S) | S) {
+export function useState<S>(
+  initialState: (() => S) | S,
+): [S, Dispatch<BasicStateAction<S>>] {
   const dispatcher = resolveDispatcher();
   return dispatcher.useState(initialState);
 }
@@ -83,58 +88,61 @@ export function useReducer<S, I, A>(
   reducer: (S, A) => S,
   initialArg: I,
   init?: I => S,
-) {
+): [S, Dispatch<A>] {
   const dispatcher = resolveDispatcher();
   return dispatcher.useReducer(reducer, initialArg, init);
 }
 
-export function useRef<T>(initialValue: T): {current: T} {
+export function useRef<T>(initialValue: T): {|current: T|} {
   const dispatcher = resolveDispatcher();
   return dispatcher.useRef(initialValue);
 }
 
 export function useEffect(
   create: () => (() => void) | void,
-  inputs: Array<mixed> | void | null,
-) {
+  deps: Array<mixed> | void | null,
+): void {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useEffect(create, inputs);
+  return dispatcher.useEffect(create, deps);
 }
 
 export function useLayoutEffect(
   create: () => (() => void) | void,
-  inputs: Array<mixed> | void | null,
-) {
+  deps: Array<mixed> | void | null,
+): void {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useLayoutEffect(create, inputs);
+  return dispatcher.useLayoutEffect(create, deps);
 }
 
-export function useCallback(
-  callback: () => mixed,
-  inputs: Array<mixed> | void | null,
-) {
+export function useCallback<T>(
+  callback: T,
+  deps: Array<mixed> | void | null,
+): T {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useCallback(callback, inputs);
+  return dispatcher.useCallback(callback, deps);
 }
 
-export function useMemo(
-  create: () => mixed,
-  inputs: Array<mixed> | void | null,
-) {
+export function useMemo<T>(
+  create: () => T,
+  deps: Array<mixed> | void | null,
+): T {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useMemo(create, inputs);
+  return dispatcher.useMemo(create, deps);
 }
 
 export function useImperativeHandle<T>(
-  ref: {current: T | null} | ((inst: T | null) => mixed) | null | void,
+  ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
   create: () => T,
-  inputs: Array<mixed> | void | null,
+  deps: Array<mixed> | void | null,
 ): void {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useImperativeHandle(ref, create, inputs);
+  return dispatcher.useImperativeHandle(ref, create, deps);
 }
 
-export function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
+export function useDebugValue<T>(
+  value: T,
+  formatterFn: ?(value: T) => mixed,
+): void {
   if (__DEV__) {
     const dispatcher = resolveDispatcher();
     return dispatcher.useDebugValue(value, formatterFn);
@@ -143,20 +151,26 @@ export function useDebugValue(value: any, formatterFn: ?(value: any) => any) {
 
 export const emptyObject = {};
 
-export function useResponder(
-  responder: ReactEventResponder<any, any>,
-  listenerProps: ?Object,
-): ?ReactEventResponderListener<any, any> {
+export function useTransition(): [(() => void) => void, boolean] {
   const dispatcher = resolveDispatcher();
-  if (__DEV__) {
-    if (responder == null || responder.$$typeof !== REACT_RESPONDER_TYPE) {
-      warning(
-        false,
-        'useResponder: invalid first argument. Expected an event responder, but instead got %s',
-        responder,
-      );
-      return;
-    }
-  }
-  return dispatcher.useResponder(responder, listenerProps || emptyObject);
+  return dispatcher.useTransition();
+}
+
+export function useDeferredValue<T>(value: T): T {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useDeferredValue(value);
+}
+
+export function useOpaqueIdentifier(): OpaqueIDType | void {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useOpaqueIdentifier();
+}
+
+export function useMutableSource<Source, Snapshot>(
+  source: MutableSource<Source>,
+  getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+  subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+): Snapshot {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.useMutableSource(source, getSnapshot, subscribe);
 }

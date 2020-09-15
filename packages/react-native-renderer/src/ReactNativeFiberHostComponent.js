@@ -7,7 +7,9 @@
  * @flow
  */
 
+import type {ElementRef} from 'react';
 import type {
+  HostComponent,
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
@@ -28,33 +30,31 @@ import {
   warnForStyleProps,
 } from './NativeMethodsMixinUtils';
 
-import warningWithoutStack from 'shared/warningWithoutStack';
-import {warnAboutDeprecatedSetNativeProps} from 'shared/ReactFeatureFlags';
-
-/**
- * This component defines the same methods as NativeMethodsMixin but without the
- * findNodeHandle wrapper. This wrapper is unnecessary for HostComponent views
- * and would also result in a circular require.js dependency (since
- * ReactNativeFiber depends on this component and NativeMethodsMixin depends on
- * ReactNativeFiber).
- */
 class ReactNativeFiberHostComponent {
   _children: Array<Instance | number>;
   _nativeTag: number;
+  _internalFiberInstanceHandleDEV: Object;
   viewConfig: ReactNativeBaseComponentViewConfig<>;
 
-  constructor(tag: number, viewConfig: ReactNativeBaseComponentViewConfig<>) {
+  constructor(
+    tag: number,
+    viewConfig: ReactNativeBaseComponentViewConfig<>,
+    internalInstanceHandleDEV: Object,
+  ) {
     this._nativeTag = tag;
     this._children = [];
     this.viewConfig = viewConfig;
+    if (__DEV__) {
+      this._internalFiberInstanceHandleDEV = internalInstanceHandleDEV;
+    }
   }
 
   blur() {
-    TextInputState.blurTextInput(this._nativeTag);
+    TextInputState.blurTextInput(this);
   }
 
   focus() {
-    TextInputState.focusTextInput(this._nativeTag);
+    TextInputState.focusTextInput(this);
   }
 
   measure(callback: MeasureOnSuccessCallback) {
@@ -72,7 +72,7 @@ class ReactNativeFiberHostComponent {
   }
 
   measureLayout(
-    relativeToNativeNode: number | ReactNativeFiberHostComponent,
+    relativeToNativeNode: number | ElementRef<HostComponent<mixed>>,
     onSuccess: MeasureLayoutOnSuccessCallback,
     onFail?: () => void /* currently unused */,
   ) {
@@ -81,24 +81,19 @@ class ReactNativeFiberHostComponent {
     if (typeof relativeToNativeNode === 'number') {
       // Already a node handle
       relativeNode = relativeToNativeNode;
-    } else if (relativeToNativeNode._nativeTag) {
-      relativeNode = relativeToNativeNode._nativeTag;
-    } else if (
-      /* $FlowFixMe canonical doesn't exist on the node.
-       I think this branch is dead and will remove it in a followup */
-      relativeToNativeNode.canonical &&
-      relativeToNativeNode.canonical._nativeTag
-    ) {
-      /* $FlowFixMe canonical doesn't exist on the node.
-       I think this branch is dead and will remove it in a followup */
-      relativeNode = relativeToNativeNode.canonical._nativeTag;
+    } else {
+      const nativeNode: ReactNativeFiberHostComponent = (relativeToNativeNode: any);
+      if (nativeNode._nativeTag) {
+        relativeNode = nativeNode._nativeTag;
+      }
     }
 
     if (relativeNode == null) {
-      warningWithoutStack(
-        false,
-        'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
-      );
+      if (__DEV__) {
+        console.error(
+          'Warning: ref.measureLayout must be called with a node handle or a ref to a native component.',
+        );
+      }
 
       return;
     }
@@ -113,15 +108,6 @@ class ReactNativeFiberHostComponent {
 
   setNativeProps(nativeProps: Object) {
     if (__DEV__) {
-      if (warnAboutDeprecatedSetNativeProps) {
-        warningWithoutStack(
-          false,
-          'Warning: Calling ref.setNativeProps(nativeProps) ' +
-            'is deprecated and will be removed in a future release. ' +
-            'Use the setNativeProps export from the react-native package instead.' +
-            "\n\timport {setNativeProps} from 'react-native';\n\tsetNativeProps(ref, nativeProps);\n",
-        );
-      }
       warnForStyleProps(nativeProps, this.viewConfig.validAttributes);
     }
 

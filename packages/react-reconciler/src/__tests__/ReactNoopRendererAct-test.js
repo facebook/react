@@ -9,7 +9,6 @@
 
 // sanity tests for ReactNoop.act()
 
-jest.useRealTimers();
 const React = require('react');
 const ReactNoop = require('react-noop-renderer');
 const Scheduler = require('scheduler');
@@ -21,7 +20,7 @@ describe('ReactNoop.act()', () => {
       return null;
     }
 
-    let calledLog = [];
+    const calledLog = [];
     ReactNoop.act(() => {
       ReactNoop.render(
         <App
@@ -37,7 +36,7 @@ describe('ReactNoop.act()', () => {
 
   it('should work with async/await', async () => {
     function App() {
-      let [ctr, setCtr] = React.useState(0);
+      const [ctr, setCtr] = React.useState(0);
       async function someAsyncFunction() {
         Scheduler.unstable_yieldValue('stage 1');
         await null;

@@ -1,6 +1,6 @@
 'use strict';
 
-const jestDiff = require('jest-diff');
+const jestDiff = require('jest-diff').default;
 
 function toContainNoInteractions(actualSet) {
   return {
@@ -77,9 +77,7 @@ function toMatchInteractions(actualSetOrArray, expectedSetOrArray) {
   if (actualArray.length !== expectedArray.length) {
     return {
       message: () =>
-        `Expected ${expectedArray.length} interactions but there were ${
-          actualArray.length
-        }`,
+        `Expected ${expectedArray.length} interactions but there were ${actualArray.length}`,
       pass: false,
     };
   }

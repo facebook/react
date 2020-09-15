@@ -7,23 +7,30 @@
  * @flow
  */
 
-import React, {forwardRef, useCallback, useContext, useMemo} from 'react';
+import * as React from 'react';
+import {forwardRef, useCallback, useContext, useMemo, useState} from 'react';
 import AutoSizer from 'react-virtualized-auto-sizer';
 import {FixedSizeList} from 'react-window';
 import {ProfilerContext} from './ProfilerContext';
 import NoCommitData from './NoCommitData';
 import CommitFlamegraphListItem from './CommitFlamegraphListItem';
+import HoveredFiberInfo from './HoveredFiberInfo';
 import {scale} from './utils';
+import {useHighlightNativeElement} from '../hooks';
 import {StoreContext} from '../context';
 import {SettingsContext} from '../Settings/SettingsContext';
+import Tooltip from './Tooltip';
 
 import styles from './CommitFlamegraph.css';
 
+import type {TooltipFiberData} from './HoveredFiberInfo';
 import type {ChartData, ChartNode} from './FlamegraphChartBuilder';
 import type {CommitTree} from './types';
 
 export type ItemData = {|
   chartData: ChartData,
+  onElementMouseEnter: (fiberData: TooltipFiberData) => void,
+  onElementMouseLeave: () => void,
   scaleX: (value: number, fallbackValue: number) => number,
   selectedChartNode: ChartNode | null,
   selectedChartNodeIndex: number,
@@ -91,39 +98,56 @@ type Props = {|
 |};
 
 function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
+  const [
+    hoveredFiberData,
+    setHoveredFiberData,
+  ] = useState<TooltipFiberData | null>(null);
   const {lineHeight} = useContext(SettingsContext);
   const {selectFiber, selectedFiberID} = useContext(ProfilerContext);
+  const {
+    highlightNativeElement,
+    clearHighlightNativeElement,
+  } = useHighlightNativeElement();
 
-  const selectedChartNodeIndex = useMemo<number>(
-    () => {
-      if (selectedFiberID === null) {
-        return 0;
-      }
-      // The selected node might not be in the tree for this commit,
-      // so it's important that we have a fallback plan.
-      const depth = chartData.idToDepthMap.get(selectedFiberID);
-      return depth !== undefined ? depth - 1 : 0;
+  const selectedChartNodeIndex = useMemo<number>(() => {
+    if (selectedFiberID === null) {
+      return 0;
+    }
+    // The selected node might not be in the tree for this commit,
+    // so it's important that we have a fallback plan.
+    const depth = chartData.idToDepthMap.get(selectedFiberID);
+    return depth !== undefined ? depth - 1 : 0;
+  }, [chartData, selectedFiberID]);
+
+  const selectedChartNode = useMemo(() => {
+    if (selectedFiberID !== null) {
+      return (
+        chartData.rows[selectedChartNodeIndex].find(
+          chartNode => chartNode.id === selectedFiberID,
+        ) || null
+      );
+    }
+    return null;
+  }, [chartData, selectedFiberID, selectedChartNodeIndex]);
+
+  const handleElementMouseEnter = useCallback(
+    ({id, name}) => {
+      highlightNativeElement(id); // Highlight last hovered element.
+      setHoveredFiberData({id, name}); // Set hovered fiber data for tooltip
     },
-    [chartData, selectedFiberID],
+    [highlightNativeElement],
   );
 
-  const selectedChartNode = useMemo(
-    () => {
-      if (selectedFiberID !== null) {
-        return (
-          chartData.rows[selectedChartNodeIndex].find(
-            chartNode => chartNode.id === selectedFiberID,
-          ) || null
-        );
-      }
-      return null;
-    },
-    [chartData, selectedFiberID, selectedChartNodeIndex],
-  );
+  const handleElementMouseLeave = useCallback(() => {
+    clearHighlightNativeElement(); // clear highlighting of element on mouse leave
+    setHoveredFiberData(null); // clear hovered fiber data for tooltip
+  }, [clearHighlightNativeElement]);
 
   const itemData = useMemo<ItemData>(
     () => ({
       chartData,
+      onElementMouseEnter: handleElementMouseEnter,
+      onElementMouseLeave: handleElementMouseLeave,
       scaleX: scale(
         0,
         selectedChartNode !== null
@@ -137,19 +161,38 @@ function CommitFlamegraph({chartData, commitTree, height, width}: Props) {
       selectFiber,
       width,
     }),
-    [chartData, selectedChartNode, selectedChartNodeIndex, selectFiber, width],
+    [
+      chartData,
+      handleElementMouseEnter,
+      handleElementMouseLeave,
+      selectedChartNode,
+      selectedChartNodeIndex,
+      selectFiber,
+      width,
+    ],
+  );
+
+  // Tooltip used to show summary of fiber info on hover
+  const tooltipLabel = useMemo(
+    () =>
+      hoveredFiberData !== null ? (
+        <HoveredFiberInfo fiberData={hoveredFiberData} />
+      ) : null,
+    [hoveredFiberData],
   );
 
   return (
-    <FixedSizeList
-      height={height}
-      innerElementType={InnerElementType}
-      itemCount={chartData.depth}
-      itemData={itemData}
-      itemSize={lineHeight}
-      width={width}>
-      {CommitFlamegraphListItem}
-    </FixedSizeList>
+    <Tooltip label={tooltipLabel}>
+      <FixedSizeList
+        height={height}
+        innerElementType={InnerElementType}
+        itemCount={chartData.depth}
+        itemData={itemData}
+        itemSize={lineHeight}
+        width={width}>
+        {CommitFlamegraphListItem}
+      </FixedSizeList>
+    </Tooltip>
   );
 }
 

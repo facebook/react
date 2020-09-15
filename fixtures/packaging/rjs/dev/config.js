@@ -7,6 +7,7 @@ module.exports = {
     react: '../../../../build/node_modules/react/umd/react.development',
     'react-dom':
       '../../../../build/node_modules/react-dom/umd/react-dom.development',
-    schedule: '../../../../build/dist/schedule.development',
+    schedule:
+      '../../../../build/node_modules/scheduler/umd/schedule.development',
   },
 };

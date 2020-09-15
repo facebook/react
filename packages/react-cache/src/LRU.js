@@ -77,7 +77,7 @@ export function createLRU<T>(limit: number) {
     }
   }
 
-  function add(value: T, onDelete: () => mixed): Entry<T> {
+  function add(value: Object, onDelete: () => mixed): Entry<Object> {
     const entry = {
       value,
       onDelete,

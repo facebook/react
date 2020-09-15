@@ -21,9 +21,9 @@ export const sharedProfilingBuffer = enableProfiling
     typeof SharedArrayBuffer === 'function'
     ? new SharedArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT)
     : // $FlowFixMe Flow doesn't know about ArrayBuffer
-      typeof ArrayBuffer === 'function'
-      ? new ArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT)
-      : null // Don't crash the init path on IE9
+    typeof ArrayBuffer === 'function'
+    ? new ArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT)
+    : null // Don't crash the init path on IE9
   : null;
 
 const profilingState =
@@ -69,7 +69,8 @@ function logEvent(entries) {
     if (eventLogIndex + 1 > eventLogSize) {
       eventLogSize *= 2;
       if (eventLogSize > MAX_EVENT_LOG_SIZE) {
-        console.error(
+        // Using console['error'] to evade Babel and ESLint
+        console['error'](
           "Scheduler Profiling: Event log exceeded maximum size. Don't " +
             'forget to call `stopLoggingProfilingEvents()`.',
         );
@@ -102,14 +103,21 @@ export function stopLoggingProfilingEvents(): ArrayBuffer | null {
 }
 
 export function markTaskStart(
-  task: {id: number, priorityLevel: PriorityLevel},
-  time: number,
+  task: {
+    id: number,
+    priorityLevel: PriorityLevel,
+    ...
+  },
+  ms: number,
 ) {
   if (enableProfiling) {
     profilingState[QUEUE_SIZE]++;
 
     if (eventLog !== null) {
-      logEvent([TaskStartEvent, time, task.id, task.priorityLevel]);
+      // performance.now returns a float, representing milliseconds. When the
+      // event is logged, it's coerced to an int. Convert to microseconds to
+      // maintain extra degrees of precision.
+      logEvent([TaskStartEvent, ms * 1000, task.id, task.priorityLevel]);
     }
   }
 }
@@ -118,8 +126,9 @@ export function markTaskCompleted(
   task: {
     id: number,
     priorityLevel: PriorityLevel,
+    ...
   },
-  time: number,
+  ms: number,
 ) {
   if (enableProfiling) {
     profilingState[PRIORITY] = NoPriority;
@@ -127,7 +136,7 @@ export function markTaskCompleted(
     profilingState[QUEUE_SIZE]--;
 
     if (eventLog !== null) {
-      logEvent([TaskCompleteEvent, time, task.id]);
+      logEvent([TaskCompleteEvent, ms * 1000, task.id]);
     }
   }
 }
@@ -136,14 +145,15 @@ export function markTaskCanceled(
   task: {
     id: number,
     priorityLevel: PriorityLevel,
+    ...
   },
-  time: number,
+  ms: number,
 ) {
   if (enableProfiling) {
     profilingState[QUEUE_SIZE]--;
 
     if (eventLog !== null) {
-      logEvent([TaskCancelEvent, time, task.id]);
+      logEvent([TaskCancelEvent, ms * 1000, task.id]);
     }
   }
 }
@@ -152,8 +162,9 @@ export function markTaskErrored(
   task: {
     id: number,
     priorityLevel: PriorityLevel,
+    ...
   },
-  time: number,
+  ms: number,
 ) {
   if (enableProfiling) {
     profilingState[PRIORITY] = NoPriority;
@@ -161,14 +172,18 @@ export function markTaskErrored(
     profilingState[QUEUE_SIZE]--;
 
     if (eventLog !== null) {
-      logEvent([TaskErrorEvent, time, task.id]);
+      logEvent([TaskErrorEvent, ms * 1000, task.id]);
     }
   }
 }
 
 export function markTaskRun(
-  task: {id: number, priorityLevel: PriorityLevel},
-  time: number,
+  task: {
+    id: number,
+    priorityLevel: PriorityLevel,
+    ...
+  },
+  ms: number,
 ) {
   if (enableProfiling) {
     runIdCounter++;
@@ -178,37 +193,37 @@ export function markTaskRun(
     profilingState[CURRENT_RUN_ID] = runIdCounter;
 
     if (eventLog !== null) {
-      logEvent([TaskRunEvent, time, task.id, runIdCounter]);
+      logEvent([TaskRunEvent, ms * 1000, task.id, runIdCounter]);
     }
   }
 }
 
-export function markTaskYield(task: {id: number}, time: number) {
+export function markTaskYield(task: {id: number, ...}, ms: number) {
   if (enableProfiling) {
     profilingState[PRIORITY] = NoPriority;
     profilingState[CURRENT_TASK_ID] = 0;
     profilingState[CURRENT_RUN_ID] = 0;
 
     if (eventLog !== null) {
-      logEvent([TaskYieldEvent, time, task.id, runIdCounter]);
+      logEvent([TaskYieldEvent, ms * 1000, task.id, runIdCounter]);
     }
   }
 }
 
-export function markSchedulerSuspended(time: number) {
+export function markSchedulerSuspended(ms: number) {
   if (enableProfiling) {
     mainThreadIdCounter++;
 
     if (eventLog !== null) {
-      logEvent([SchedulerSuspendEvent, time, mainThreadIdCounter]);
+      logEvent([SchedulerSuspendEvent, ms * 1000, mainThreadIdCounter]);
     }
   }
 }
 
-export function markSchedulerUnsuspended(time: number) {
+export function markSchedulerUnsuspended(ms: number) {
   if (enableProfiling) {
     if (eventLog !== null) {
-      logEvent([SchedulerResumeEvent, time, mainThreadIdCounter]);
+      logEvent([SchedulerResumeEvent, ms * 1000, mainThreadIdCounter]);
     }
   }
 }

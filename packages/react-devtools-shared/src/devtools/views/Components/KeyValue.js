@@ -7,14 +7,16 @@
  * @flow
  */
 
-import React, {useEffect, useRef, useState} from 'react';
-import type {Element} from 'react';
+import * as React from 'react';
+import {useEffect, useRef, useState} from 'react';
 import EditableValue from './EditableValue';
 import ExpandCollapseToggle from './ExpandCollapseToggle';
 import {alphaSortEntries, getMetaValueLabel} from '../utils';
 import {meta} from '../../../hydration';
+import useContextMenu from '../../ContextMenu/useContextMenu';
 import styles from './KeyValue.css';
 
+import type {Element} from 'react';
 import type {InspectPath} from './SelectedElement';
 
 type OverrideValueFn = (path: Array<string | number>, value: any) => void;
@@ -28,6 +30,7 @@ type KeyValueProps = {|
   name: string,
   overrideValueFn?: ?OverrideValueFn,
   path: Array<any>,
+  pathRoot: string,
   value: any,
 |};
 
@@ -40,10 +43,12 @@ export default function KeyValue({
   name,
   overrideValueFn,
   path,
+  pathRoot,
   value,
 }: KeyValueProps) {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const prevIsOpenRef = useRef(isOpen);
+  const contextMenuTriggerRef = useRef(null);
 
   const isInspectable =
     value !== null &&
@@ -51,22 +56,33 @@ export default function KeyValue({
     value[meta.inspectable] &&
     value[meta.size] !== 0;
 
-  useEffect(
-    () => {
-      if (
-        isInspectable &&
-        isOpen &&
-        !prevIsOpenRef.current &&
-        typeof inspectPath === 'function'
-      ) {
-        inspectPath(path);
-      }
-      prevIsOpenRef.current = isOpen;
-    },
-    [inspectPath, isInspectable, isOpen, path],
-  );
+  useEffect(() => {
+    if (
+      isInspectable &&
+      isOpen &&
+      !prevIsOpenRef.current &&
+      typeof inspectPath === 'function'
+    ) {
+      inspectPath(path);
+    }
+    prevIsOpenRef.current = isOpen;
+  }, [inspectPath, isInspectable, isOpen, path]);
 
   const toggleIsOpen = () => setIsOpen(prevIsOpen => !prevIsOpen);
+
+  useContextMenu({
+    data: {
+      path: [pathRoot, ...path],
+      type:
+        value !== null &&
+        typeof value === 'object' &&
+        hasOwnProperty.call(value, meta.type)
+          ? value[meta.type]
+          : typeof value,
+    },
+    id: 'SelectedElement',
+    ref: contextMenuTriggerRef,
+  });
 
   const dataType = typeof value;
   const isSimpleType =
@@ -95,7 +111,13 @@ export default function KeyValue({
     const isEditable = typeof overrideValueFn === 'function' && !isReadOnly;
 
     children = (
-      <div key="root" className={styles.Item} hidden={hidden} style={style}>
+      <div
+        key="root"
+        path={path}
+        className={styles.Item}
+        hidden={hidden}
+        ref={contextMenuTriggerRef}
+        style={style}>
         <div className={styles.ExpandCollapseToggleSpacer} />
         <span className={isEditable ? styles.EditableName : styles.Name}>
           {name}
@@ -112,11 +134,16 @@ export default function KeyValue({
       </div>
     );
   } else if (
-    value.hasOwnProperty(meta.type) &&
-    !value.hasOwnProperty(meta.unserializable)
+    hasOwnProperty.call(value, meta.type) &&
+    !hasOwnProperty.call(value, meta.unserializable)
   ) {
     children = (
-      <div key="root" className={styles.Item} hidden={hidden} style={style}>
+      <div
+        ref={contextMenuTriggerRef}
+        key="root"
+        className={styles.Item}
+        hidden={hidden}
+        style={style}>
         {isInspectable ? (
           <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
         ) : (
@@ -127,12 +154,17 @@ export default function KeyValue({
           onClick={isInspectable ? toggleIsOpen : undefined}>
           {name}
         </span>
-        <span className={styles.Value}>{getMetaValueLabel(value)}</span>
+        <span
+          className={styles.Value}
+          onClick={isInspectable ? toggleIsOpen : undefined}>
+          {getMetaValueLabel(value)}
+        </span>
       </div>
     );
   } else {
     if (Array.isArray(value)) {
       const hasChildren = value.length > 0;
+      const displayName = getMetaValueLabel(value);
 
       children = value.map((innerValue, index) => (
         <KeyValue
@@ -145,11 +177,13 @@ export default function KeyValue({
           name={index}
           overrideValueFn={overrideValueFn}
           path={path.concat(index)}
+          pathRoot={pathRoot}
           value={value[index]}
         />
       ));
       children.unshift(
         <div
+          ref={contextMenuTriggerRef}
           key={`${depth}-root`}
           className={styles.Item}
           hidden={hidden}
@@ -164,9 +198,10 @@ export default function KeyValue({
             onClick={hasChildren ? toggleIsOpen : undefined}>
             {name}
           </span>
-          <span>
-            Array{' '}
-            {hasChildren ? '' : <span className={styles.Empty}>(empty)</span>}
+          <span
+            className={styles.Value}
+            onClick={hasChildren ? toggleIsOpen : undefined}>
+            {displayName}
           </span>
         </div>,
       );
@@ -180,11 +215,9 @@ export default function KeyValue({
       }
 
       const hasChildren = entries.length > 0;
-      const displayName = value.hasOwnProperty(meta.unserializable)
-        ? getMetaValueLabel(value)
-        : 'Object';
+      const displayName = getMetaValueLabel(value);
 
-      let areChildrenReadOnly = isReadOnly || !!value[meta.readonly];
+      const areChildrenReadOnly = isReadOnly || !!value[meta.readonly];
       children = entries.map<Element<any>>(([key, keyValue]) => (
         <KeyValue
           key={key}
@@ -196,11 +229,13 @@ export default function KeyValue({
           name={key}
           overrideValueFn={overrideValueFn}
           path={path.concat(key)}
+          pathRoot={pathRoot}
           value={keyValue}
         />
       ));
       children.unshift(
         <div
+          ref={contextMenuTriggerRef}
           key={`${depth}-root`}
           className={styles.Item}
           hidden={hidden}
@@ -215,9 +250,10 @@ export default function KeyValue({
             onClick={hasChildren ? toggleIsOpen : undefined}>
             {name}
           </span>
-          <span>
-            {`${displayName || ''} `}
-            {hasChildren ? '' : <span className={styles.Empty}>(empty)</span>}
+          <span
+            className={styles.Value}
+            onClick={hasChildren ? toggleIsOpen : undefined}>
+            {displayName}
           </span>
         </div>,
       );

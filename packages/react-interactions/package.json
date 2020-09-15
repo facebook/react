@@ -14,15 +14,12 @@
     "README.md",
     "events/README.md",
     "events/context-menu.js",
-    "events/drag.js",
     "events/focus.js",
     "events/hover.js",
     "events/input.js",
     "events/keyboard.js",
     "events/press.js",
     "events/press-legacy.js",
-    "events/scroll.js",
-    "events/swipe.js",
     "events/tap.js",
     "build-info.json",
     "cjs/",
@@ -41,7 +38,7 @@
     "loose-envify": "^1.1.0"
   },
   "peerDependencies": {
-    "react": "^16.0.0"
+    "react": "^17.0.0-alpha"
   },
   "browserify": {
     "transform": [

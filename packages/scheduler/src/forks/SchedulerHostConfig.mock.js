@@ -192,6 +192,12 @@ export function unstable_flushAll(): void {
 }
 
 export function unstable_yieldValue(value: mixed): void {
+  // eslint-disable-next-line react-internal/no-production-logging
+  if (console.log.name === 'disabledLog') {
+    // If console.log has been patched, we assume we're in render
+    // replaying and we ignore any values yielding in the second pass.
+    return;
+  }
   if (yieldedValues === null) {
     yieldedValues = [value];
   } else {
@@ -200,14 +206,17 @@ export function unstable_yieldValue(value: mixed): void {
 }
 
 export function unstable_advanceTime(ms: number) {
+  // eslint-disable-next-line react-internal/no-production-logging
+  if (console.log.name === 'disabledLog') {
+    // If console.log has been patched, we assume we're in render
+    // replaying and we ignore any time advancing in the second pass.
+    return;
+  }
   currentTime += ms;
-  if (!isFlushing) {
-    if (scheduledTimeout !== null && timeoutTime <= currentTime) {
-      scheduledTimeout(currentTime);
-      timeoutTime = -1;
-      scheduledTimeout = null;
-    }
-    unstable_flushExpired();
+  if (scheduledTimeout !== null && timeoutTime <= currentTime) {
+    scheduledTimeout(currentTime);
+    timeoutTime = -1;
+    scheduledTimeout = null;
   }
 }
 

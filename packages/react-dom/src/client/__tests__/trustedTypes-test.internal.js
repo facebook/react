@@ -22,7 +22,12 @@ describe('when Trusted Types are available in global object', () => {
     container = document.createElement('div');
     const fakeTTObjects = new Set();
     window.trustedTypes = {
-      isHTML: value => fakeTTObjects.has(value),
+      isHTML: function(value) {
+        if (this !== window.trustedTypes) {
+          throw new Error(this);
+        }
+        return fakeTTObjects.has(value);
+      },
       isScript: () => false,
       isScriptURL: () => false,
     };
@@ -49,7 +54,7 @@ describe('when Trusted Types are available in global object', () => {
   });
 
   it('should not stringify trusted values for dangerouslySetInnerHTML', () => {
-    let innerHTMLDescriptor = Object.getOwnPropertyDescriptor(
+    const innerHTMLDescriptor = Object.getOwnPropertyDescriptor(
       Element.prototype,
       'innerHTML',
     );
@@ -92,7 +97,7 @@ describe('when Trusted Types are available in global object', () => {
   });
 
   it('should not stringify trusted values for setAttribute (unknown attribute)', () => {
-    let setAttribute = Element.prototype.setAttribute;
+    const setAttribute = Element.prototype.setAttribute;
     try {
       const setAttributeCalls = [];
       Element.prototype.setAttribute = function(name, value) {
@@ -120,7 +125,7 @@ describe('when Trusted Types are available in global object', () => {
   });
 
   it('should not stringify trusted values for setAttribute (known attribute)', () => {
-    let setAttribute = Element.prototype.setAttribute;
+    const setAttribute = Element.prototype.setAttribute;
     try {
       const setAttributeCalls = [];
       Element.prototype.setAttribute = function(name, value) {
@@ -148,7 +153,7 @@ describe('when Trusted Types are available in global object', () => {
   });
 
   it('should not stringify trusted values for setAttributeNS', () => {
-    let setAttributeNS = Element.prototype.setAttributeNS;
+    const setAttributeNS = Element.prototype.setAttributeNS;
     try {
       const setAttributeNSCalls = [];
       Element.prototype.setAttributeNS = function(ns, name, value) {
@@ -211,7 +216,7 @@ describe('when Trusted Types are available in global object', () => {
       }
       expect(() => {
         ReactDOM.render(<Component />, container);
-      }).toWarnDev(
+      }).toErrorDev(
         "Warning: Using 'dangerouslySetInnerHTML' in an svg element with " +
           'Trusted Types enabled in an Internet Explorer will cause ' +
           'the trusted value to be converted to string. Assigning string ' +
@@ -226,7 +231,7 @@ describe('when Trusted Types are available in global object', () => {
   it('should warn once when rendering script tag in jsx on client', () => {
     expect(() => {
       ReactDOM.render(<script>alert("I am not executed")</script>, container);
-    }).toWarnDev(
+    }).toErrorDev(
       'Warning: Encountered a script tag while rendering React component. ' +
         'Scripts inside React components are never executed when rendering ' +
         'on the client. Consider using template tag instead ' +

@@ -7,7 +7,8 @@
  * @flow
  */
 
-import React, {Fragment, useCallback, useState} from 'react';
+import * as React from 'react';
+import {Fragment, useCallback, useState} from 'react';
 import ListItem from './ListItem';
 import styles from './List.css';
 
@@ -28,23 +29,20 @@ export default function List(props: Props) {
   ]);
   const [uid, setUID] = useState<number>(4);
 
-  const handleClick = useCallback(
-    () => {
-      if (newItemText !== '') {
-        setItems([
-          ...items,
-          {
-            id: uid,
-            isComplete: false,
-            text: newItemText,
-          },
-        ]);
-        setUID(uid + 1);
-        setNewItemText('');
-      }
-    },
-    [newItemText, items, uid],
-  );
+  const handleClick = useCallback(() => {
+    if (newItemText !== '') {
+      setItems([
+        ...items,
+        {
+          id: uid,
+          isComplete: false,
+          text: newItemText,
+        },
+      ]);
+      setUID(uid + 1);
+      setNewItemText('');
+    }
+  }, [newItemText, items, uid]);
 
   const handleKeyPress = useCallback(
     event => {

@@ -71,8 +71,10 @@ class Header extends React.Component {
                 <option value="/text-inputs">Text Inputs</option>
                 <option value="/number-inputs">Number Input</option>
                 <option value="/password-inputs">Password Input</option>
+                <option value="/email-inputs">Email Input</option>
                 <option value="/selects">Selects</option>
                 <option value="/textareas">Textareas</option>
+                <option value="/progress">Progress</option>
                 <option value="/input-change-events">
                   Input change events
                 </option>
@@ -86,6 +88,7 @@ class Header extends React.Component {
                 <option value="/mouse-events">Mouse Events</option>
                 <option value="/selection-events">Selection Events</option>
                 <option value="/suspense">Suspense</option>
+                <option value="/form-state">Form State</option>
               </select>
             </label>
             <label htmlFor="global_version">

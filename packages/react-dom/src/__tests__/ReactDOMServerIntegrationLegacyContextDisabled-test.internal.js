@@ -69,7 +69,7 @@ describe('ReactDOMServerIntegrationLegacyContextDisabled', () => {
       }
     }
 
-    let lifecycleContextLog = [];
+    const lifecycleContextLog = [];
     class LegacyClsConsumer extends React.Component {
       static contextTypes = {
         foo() {},
@@ -113,7 +113,7 @@ describe('ReactDOMServerIntegrationLegacyContextDisabled', () => {
   });
 
   itRenders('modern context', async render => {
-    let Ctx = React.createContext();
+    const Ctx = React.createContext();
 
     class Provider extends React.Component {
       render() {
@@ -131,7 +131,7 @@ describe('ReactDOMServerIntegrationLegacyContextDisabled', () => {
       }
     }
 
-    let lifecycleContextLog = [];
+    const lifecycleContextLog = [];
     class ContextTypeConsumer extends React.Component {
       static contextType = Ctx;
       shouldComponentUpdate(nextProps, nextState, nextContext) {

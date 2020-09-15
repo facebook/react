@@ -59,7 +59,9 @@ describe('ReactMount', () => {
       }
     }
 
-    expect(() => ReactTestUtils.renderIntoDocument(Component)).toWarnDev(
+    expect(() =>
+      ReactTestUtils.renderIntoDocument(Component),
+    ).toErrorDev(
       'Functions are not valid as a React child. ' +
         'This may happen if you return a Component instead of <Component /> from render. ' +
         'Or maybe you meant to call this function rather than return it.',
@@ -125,7 +127,9 @@ describe('ReactMount', () => {
     const container = document.createElement('container');
     container.innerHTML = ReactDOMServer.renderToString(<div />) + ' ';
 
-    expect(() => ReactDOM.hydrate(<div />, container)).toWarnDev(
+    expect(() =>
+      ReactDOM.hydrate(<div />, container),
+    ).toErrorDev(
       'Did not expect server HTML to contain the text node " " in <container>.',
       {withoutStack: true},
     );
@@ -135,9 +139,8 @@ describe('ReactMount', () => {
     const container = document.createElement('container');
     container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
 
-    expect(() => ReactDOM.hydrate(<div />, container)).toWarnDev(
+    expect(() => ReactDOM.hydrate(<div />, container)).toErrorDev(
       'Did not expect server HTML to contain the text node " " in <container>.',
-      {withoutStack: true},
     );
   });
 
@@ -154,7 +157,7 @@ describe('ReactMount', () => {
 
     expect(() =>
       ReactDOM.render(<div />, iFrame.contentDocument.body),
-    ).toWarnDev(
+    ).toErrorDev(
       'Rendering components directly into document.body is discouraged',
       {withoutStack: true},
     );
@@ -172,10 +175,9 @@ describe('ReactMount', () => {
         <div>This markup contains an nbsp entity: &nbsp; client text</div>,
         div,
       ),
-    ).toWarnDev(
+    ).toErrorDev(
       'Server: "This markup contains an nbsp entity:   server text" ' +
         'Client: "This markup contains an nbsp entity:   client text"',
-      {withoutStack: true},
     );
   });
 
@@ -197,7 +199,9 @@ describe('ReactMount', () => {
     // Test that blasting away children throws a warning
     const rootNode = container.firstChild;
 
-    expect(() => ReactDOM.render(<span />, rootNode)).toWarnDev(
+    expect(() =>
+      ReactDOM.render(<span />, rootNode),
+    ).toErrorDev(
       'Warning: render(...): Replacing React-rendered children with a new ' +
         'root component. If you intended to update the children of this node, ' +
         'you should instead have the existing children update their state and ' +
@@ -225,7 +229,9 @@ describe('ReactMount', () => {
     // Make sure ReactDOM and ReactDOMOther are different copies
     expect(ReactDOM).not.toEqual(ReactDOMOther);
 
-    expect(() => ReactDOMOther.unmountComponentAtNode(container)).toWarnDev(
+    expect(() =>
+      ReactDOMOther.unmountComponentAtNode(container),
+    ).toErrorDev(
       "Warning: unmountComponentAtNode(): The node you're attempting to unmount " +
         'was rendered by another copy of React.',
       {withoutStack: true},

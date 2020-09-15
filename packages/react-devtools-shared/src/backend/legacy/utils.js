@@ -19,7 +19,7 @@ export function decorate(object: Object, attr: string, fn: Function): Function {
 
 export function decorateMany(
   source: Object,
-  fns: {[attr: string]: Function},
+  fns: {[attr: string]: Function, ...},
 ): Object {
   const olds = {};
   for (const name in fns) {
@@ -29,7 +29,7 @@ export function decorateMany(
 }
 
 export function restoreMany(source: Object, olds: Object): void {
-  for (let name in olds) {
+  for (const name in olds) {
     source[name] = olds[name];
   }
 }

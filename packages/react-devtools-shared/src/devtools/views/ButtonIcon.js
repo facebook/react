@@ -7,7 +7,7 @@
  * @flow
  */
 
-import React from 'react';
+import * as React from 'react';
 import styles from './ButtonIcon.css';
 
 export type IconType =
