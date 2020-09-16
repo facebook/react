@@ -18,6 +18,7 @@ let performance;
 let cancelCallback;
 let scheduleCallback;
 let NormalPriority;
+let UserBlockingPriority;
 
 // The Scheduler implementation uses browser APIs like `MessageChannel` and
 // `setTimeout` to schedule work on the main thread. Most of our tests treat
@@ -47,6 +48,7 @@ describe('SchedulerBrowser', () => {
     cancelCallback = Scheduler.unstable_cancelCallback;
     scheduleCallback = Scheduler.unstable_scheduleCallback;
     NormalPriority = Scheduler.unstable_NormalPriority;
+    UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
   });
 
   afterEach(() => {
@@ -176,6 +178,66 @@ describe('SchedulerBrowser', () => {
 
     runtime.fireMessageEvent();
     runtime.assertLog(['Message Event', 'Continuation']);
+  });
+
+  it('continuations should yield after deadline', () => {
+    function expensiveWork() {
+      runtime.log(`Continuation at ${performance.now()}ms`);
+
+      if (performance.now() >= 400) {
+        runtime.log(`Task finished at ${performance.now()}ms`);
+        return null;
+      }
+
+      runtime.advanceTime(100);
+      return expensiveWork;
+    }
+
+    scheduleCallback(UserBlockingPriority, () => {
+      runtime.log(`Task at ${performance.now()}ms`);
+      return expensiveWork;
+    });
+
+    runtime.assertLog(['Post Message']);
+
+    runtime.fireMessageEvent();
+    runtime.assertLog([
+      'Message Event',
+      'Task at 0ms',
+      'Continuation at 0ms',
+      'Post Message',
+    ]);
+
+    runtime.fireMessageEvent();
+    runtime.assertLog([
+      'Message Event',
+      'Continuation at 100ms',
+      'Post Message',
+    ]);
+
+    runtime.fireMessageEvent();
+    runtime.assertLog([
+      'Message Event',
+      'Continuation at 200ms',
+      'Post Message',
+    ]);
+
+    // The original task has expired and the browser wants us to yield back
+    // for other work. Schedule the continuation back to the browser to free up
+    // the event loop.
+    runtime.fireMessageEvent();
+    runtime.assertLog([
+      'Message Event',
+      'Continuation at 300ms',
+      'Post Message',
+    ]);
+
+    runtime.fireMessageEvent();
+    runtime.assertLog([
+      'Message Event',
+      'Continuation at 400ms',
+      'Task finished at 400ms',
+    ]);
   });
 
   it('multiple tasks', () => {

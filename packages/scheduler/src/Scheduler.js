@@ -187,6 +187,11 @@ function workLoop(hasTimeRemaining, initialTime) {
       if (typeof continuationCallback === 'function') {
         currentTask.callback = continuationCallback;
         markTaskYield(currentTask, currentTime);
+        if (!hasTimeRemaining || shouldYieldToHost()) {
+          // We've reached the deadline.
+          // Schedule the continuation to prevent starvation.
+          break;
+        }
       } else {
         if (enableProfiling) {
           markTaskCompleted(currentTask, currentTime);
