@@ -302,7 +302,10 @@ export function installHook(target: any): DevToolsHook | null {
   const renderers = new Map();
 
   let hook: DevToolsHook;
-  if (!canAccessParentWindow(target) || isMainWindow(target)) {
+  if (canAccessParentWindow(target) && !isMainWindow(target)) {
+    hook = getMainWindow(target).__REACT_DEVTOOLS_GLOBAL_HOOK__;
+  }
+  if (!hook) {
     hook = {
       rendererInterfaces,
       listeners,
@@ -326,8 +329,6 @@ export function installHook(target: any): DevToolsHook | null {
       onCommitFiberUnmount,
       onCommitFiberRoot,
     };
-  } else {
-    hook = getMainWindow(target).__REACT_DEVTOOLS_GLOBAL_HOOK__;
   }
   Object.defineProperty(
     target,
