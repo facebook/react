@@ -134,7 +134,7 @@ describe('Scheduler', () => {
   });
 
   it('regression test: work loop should respect `shouldYield`', () => {
-    // In the regression, an expred task would post a continuation, but the
+    // In the regression, an expired task would post a continuation, but the
     // work loop would keep calling into the task even after the frame deadline
     // had passed, because it expected an expired task to finish
     // without yielding.
