@@ -51,7 +51,6 @@ import {
   enableLegacyFBSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
-  enablePassiveEventIntervention,
   enableEagerRootListeners,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -481,7 +480,7 @@ function addTrappedEventListener(
   // If passive option is not supported, then the event will be
   // active and not passive.
   let isPassiveListener = undefined;
-  if (enablePassiveEventIntervention && passiveBrowserEventsSupported) {
+  if (passiveBrowserEventsSupported) {
     // Browsers introduced an intervention, making these events
     // passive by default on document. React doesn't bind them
     // to document anymore, but changing this now would undo

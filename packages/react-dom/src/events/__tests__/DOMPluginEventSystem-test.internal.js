@@ -3070,15 +3070,7 @@ describe('DOMPluginEventSystem', () => {
 
               expect(allEvents).toEqual(['touchstart', 'touchmove', 'wheel']);
               // These events are passive by default, so we can't preventDefault.
-              if (gate(flags => flags.enablePassiveEventIntervention)) {
-                expect(defaultPreventedEvents).toEqual([]);
-              } else {
-                expect(defaultPreventedEvents).toEqual([
-                  'touchstart',
-                  'touchmove',
-                  'wheel',
-                ]);
-              }
+              expect(defaultPreventedEvents).toEqual([]);
             });
           });
         });

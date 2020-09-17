@@ -534,21 +534,17 @@ describe('SimpleEventPlugin', function() {
         container,
       );
 
-      if (gate(flags => flags.enablePassiveEventIntervention)) {
-        if (gate(flags => flags.enableEagerRootListeners)) {
-          expect(passiveEvents).toEqual([
-            'touchstart',
-            'touchstart',
-            'touchmove',
-            'touchmove',
-            'wheel',
-            'wheel',
-          ]);
-        } else {
-          expect(passiveEvents).toEqual(['touchstart', 'touchmove', 'wheel']);
-        }
+      if (gate(flags => flags.enableEagerRootListeners)) {
+        expect(passiveEvents).toEqual([
+          'touchstart',
+          'touchstart',
+          'touchmove',
+          'touchmove',
+          'wheel',
+          'wheel',
+        ]);
       } else {
-        expect(passiveEvents).toEqual([]);
+        expect(passiveEvents).toEqual(['touchstart', 'touchmove', 'wheel']);
       }
     });
   });
