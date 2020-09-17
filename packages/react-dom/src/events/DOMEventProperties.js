@@ -89,6 +89,10 @@ const otherDiscreteEvents: Array<DOMEventName> = [
 ];
 
 if (enableCreateEventHandleAPI) {
+  // Special case: these two events don't have on* React handler
+  // and are only accessible via the createEventHandle API.
+  topLevelEventsToReactNames.set('beforeblur', null);
+  topLevelEventsToReactNames.set('afterblur', null);
   otherDiscreteEvents.push('beforeblur', 'afterblur');
 }
 
@@ -202,7 +206,7 @@ export function getEventPriorityForListenerSystem(
   if (__DEV__) {
     console.warn(
       'The event "%s" provided to createEventHandle() does not have a known priority type.' +
-        ' It is recommended to provide a "priority" option to specify a priority.',
+        ' This is likely a bug in React.',
       type,
     );
   }

@@ -37,32 +37,6 @@ const isMac =
     ? /^Mac/.test(window.navigator.platform)
     : false;
 
-const canUseDOM: boolean = !!(
-  typeof window !== 'undefined' &&
-  typeof window.document !== 'undefined' &&
-  typeof window.document.createElement !== 'undefined'
-);
-
-let passiveBrowserEventsSupported = false;
-
-// Check if browser support events with passive listeners
-// https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#Safely_detecting_option_support
-if (canUseDOM) {
-  try {
-    const options = {};
-    // $FlowFixMe: Ignore Flow complaining about needing a value
-    Object.defineProperty(options, 'passive', {
-      get: function() {
-        passiveBrowserEventsSupported = true;
-      },
-    });
-    window.addEventListener('test', options, options);
-    window.removeEventListener('test', options, options);
-  } catch (e) {
-    passiveBrowserEventsSupported = false;
-  }
-}
-
 const hasPointerEvents =
   typeof window !== 'undefined' && window.PointerEvent != null;
 
@@ -78,20 +52,13 @@ const globalFocusVisibleEvents = hasPointerEvents
       'touchend',
     ];
 
-const passiveObject = {passive: true};
-const passiveObjectWithPriority = {passive: true, priority: 0};
-
 // Global state for tracking focus visible and emulation of mouse
 let isGlobalFocusVisible = true;
 let hasTrackedGlobalFocusVisible = false;
 
 function trackGlobalFocusVisible() {
   globalFocusVisibleEvents.forEach(type => {
-    window.addEventListener(
-      type,
-      handleGlobalFocusVisibleEvent,
-      passiveBrowserEventsSupported ? {capture: true, passive: true} : true,
-    );
+    window.addEventListener(type, handleGlobalFocusVisibleEvent, true);
   });
 }
 
@@ -171,9 +138,9 @@ function setFocusVisibleListeners(
 
 function useFocusVisibleInputHandles() {
   return [
-    useEvent('mousedown', passiveObject),
-    useEvent(hasPointerEvents ? 'pointerdown' : 'touchstart', passiveObject),
-    useEvent('keydown', passiveObject),
+    useEvent('mousedown'),
+    useEvent(hasPointerEvents ? 'pointerdown' : 'touchstart'),
+    useEvent('keydown'),
   ];
 }
 
@@ -200,8 +167,8 @@ export function useFocus(
   const stateRef = useRef<null | {isFocused: boolean, isFocusVisible: boolean}>(
     {isFocused: false, isFocusVisible: false},
   );
-  const focusHandle = useEvent('focusin', passiveObjectWithPriority);
-  const blurHandle = useEvent('focusout', passiveObjectWithPriority);
+  const focusHandle = useEvent('focusin');
+  const blurHandle = useEvent('focusout');
   const focusVisibleHandles = useFocusVisibleInputHandles();
 
   useLayoutEffect(() => {
@@ -297,10 +264,10 @@ export function useFocusWithin<T>(
   const stateRef = useRef<null | {isFocused: boolean, isFocusVisible: boolean}>(
     {isFocused: false, isFocusVisible: false},
   );
-  const focusHandle = useEvent('focusin', passiveObjectWithPriority);
-  const blurHandle = useEvent('focusout', passiveObjectWithPriority);
-  const afterBlurHandle = useEvent('afterblur', passiveObject);
-  const beforeBlurHandle = useEvent('beforeblur', passiveObject);
+  const focusHandle = useEvent('focusin');
+  const blurHandle = useEvent('focusout');
+  const afterBlurHandle = useEvent('afterblur');
+  const beforeBlurHandle = useEvent('beforeblur');
   const focusVisibleHandles = useFocusVisibleInputHandles();
 
   const useFocusWithinRef = useCallback(

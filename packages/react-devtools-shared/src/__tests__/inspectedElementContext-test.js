@@ -537,6 +537,9 @@ describe('InspectedElementContext', () => {
     const objectOfObjects = {
       inner: {string: 'abc', number: 123, boolean: true},
     };
+    const objectWithSymbol = {
+      [Symbol('name')]: 'hello',
+    };
     const typedArray = Int8Array.from([100, -100, 0]);
     const arrayBuffer = typedArray.buffer;
     const dataView = new DataView(arrayBuffer);
@@ -580,6 +583,7 @@ describe('InspectedElementContext', () => {
           map={mapShallow}
           map_of_maps={mapOfMaps}
           object_of_objects={objectOfObjects}
+          object_with_symbol={objectWithSymbol}
           proxy={proxyInstance}
           react_element={<span />}
           regexp={/abc/giu}
@@ -633,6 +637,7 @@ describe('InspectedElementContext', () => {
       map,
       map_of_maps,
       object_of_objects,
+      object_with_symbol,
       proxy,
       react_element,
       regexp,
@@ -736,6 +741,8 @@ describe('InspectedElementContext', () => {
       '{boolean: true, number: 123, string: "abc"}',
     );
     expect(object_of_objects.inner[meta.preview_short]).toBe('{…}');
+
+    expect(object_with_symbol['Symbol(name)']).toBe('hello');
 
     expect(proxy[meta.inspectable]).toBe(false);
     expect(proxy[meta.name]).toBe('function');
@@ -935,6 +942,111 @@ describe('InspectedElementContext', () => {
       false,
     );
     expect(didFinish).toBe(true);
+
+    done();
+  });
+
+  it('should support objects with with inherited keys', async done => {
+    const Example = () => null;
+
+    const base = Object.create(Object.prototype, {
+      enumerableStringBase: {
+        value: 1,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      [Symbol('enumerableSymbolBase')]: {
+        value: 1,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      nonEnumerableStringBase: {
+        value: 1,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [Symbol('nonEnumerableSymbolBase')]: {
+        value: 1,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+    });
+
+    const object = Object.create(base, {
+      enumerableString: {
+        value: 2,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      nonEnumerableString: {
+        value: 3,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [123]: {
+        value: 3,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      [Symbol('nonEnumerableSymbol')]: {
+        value: 2,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [Symbol('enumerableSymbol')]: {
+        value: 3,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+    });
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(<Example object={object} />, container),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let inspectedElement = null;
+
+    function Suspender({target}) {
+      const {getInspectedElement} = React.useContext(InspectedElementContext);
+      inspectedElement = getInspectedElement(id);
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={0}>
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>,
+        ),
+      false,
+    );
+
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot(`1: Inspected element ${id}`);
+    expect(inspectedElement.props.object).toEqual({
+      123: 3,
+      'Symbol(enumerableSymbol)': 3,
+      'Symbol(enumerableSymbolBase)': 1,
+      enumerableString: 2,
+      enumerableStringBase: 1,
+    });
 
     done();
   });
