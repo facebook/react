@@ -47,7 +47,7 @@
   padding-left: 0.75rem;
 }
 
-.AddEntry {
+.ToggleSuspenseRow {
   padding-left: 1rem;
   white-space: nowrap;
   display: flex;

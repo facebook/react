@@ -13,35 +13,41 @@ import {useCallback, useContext, useRef, useState} from 'react';
 import {BridgeContext, StoreContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
-import EditableValue from './EditableValue';
 import ExpandCollapseToggle from './ExpandCollapseToggle';
-import {InspectedElementContext} from './InspectedElementContext';
 import KeyValue from './KeyValue';
 import {getMetaValueLabel, serializeHooksForCopy} from '../utils';
-import styles from './HooksTree.css';
+import Store from '../../store';
+import styles from './InspectedElementHooksTree.css';
 import useContextMenu from '../../ContextMenu/useContextMenu';
 import {meta} from '../../../hydration';
 
-import type {InspectPath} from './SelectedElement';
+import type {InspectedElement} from './types';
+import type {GetInspectedElementPath} from './InspectedElementContext';
 import type {HooksNode, HooksTree} from 'react-debug-tools/src/ReactDebugHooks';
+import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
 type HooksTreeViewProps = {|
-  canEditHooks: boolean,
-  hooks: HooksTree | null,
-  id: number,
+  bridge: FrontendBridge,
+  getInspectedElementPath: GetInspectedElementPath,
+  inspectedElement: InspectedElement,
+  store: Store,
 |};
 
-export function HooksTreeView({canEditHooks, hooks, id}: HooksTreeViewProps) {
-  const {getInspectedElementPath} = useContext(InspectedElementContext);
-  const inspectPath = useCallback(
-    (path: Array<string | number>) => {
-      getInspectedElementPath(id, ['hooks', ...path]);
-    },
-    [getInspectedElementPath, id],
-  );
-  const handleCopy = useCallback(() => copy(serializeHooksForCopy(hooks)), [
+export function InspectedElementHooksTree({
+  bridge,
+  getInspectedElementPath,
+  inspectedElement,
+  store,
+}: HooksTreeViewProps) {
+  const {
+    canEditHooks,
+    canEditHooksAndDeletePaths,
+    canEditHooksAndRenamePaths,
     hooks,
-  ]);
+    id,
+  } = inspectedElement;
+
+  const handleCopy = () => copy(serializeHooksForCopy(hooks));
 
   if (hooks === null) {
     return null;
@@ -56,9 +62,12 @@ export function HooksTreeView({canEditHooks, hooks, id}: HooksTreeViewProps) {
         </div>
         <InnerHooksTreeView
           canEditHooks={canEditHooks}
+          canEditHooksAndDeletePaths={canEditHooksAndDeletePaths}
+          canEditHooksAndRenamePaths={canEditHooksAndRenamePaths}
           hooks={hooks}
           id={id}
-          inspectPath={inspectPath}
+          getInspectedElementPath={getInspectedElementPath}
+          inspectedElement={inspectedElement}
           path={[]}
         />
       </div>
@@ -68,17 +77,23 @@ export function HooksTreeView({canEditHooks, hooks, id}: HooksTreeViewProps) {
 
 type InnerHooksTreeViewProps = {|
   canEditHooks: boolean,
+  canEditHooksAndDeletePaths: boolean,
+  canEditHooksAndRenamePaths: boolean,
+  getInspectedElementPath: GetInspectedElementPath,
   hooks: HooksTree,
   id: number,
-  inspectPath: InspectPath,
+  inspectedElement: InspectedElement,
   path: Array<string | number>,
 |};
 
 export function InnerHooksTreeView({
   canEditHooks,
+  canEditHooksAndDeletePaths,
+  canEditHooksAndRenamePaths,
+  getInspectedElementPath,
   hooks,
   id,
-  inspectPath,
+  inspectedElement,
   path,
 }: InnerHooksTreeViewProps) {
   // $FlowFixMe "Missing type annotation for U" whatever that means
@@ -86,9 +101,12 @@ export function InnerHooksTreeView({
     <HookView
       key={index}
       canEditHooks={canEditHooks}
+      canEditHooksAndDeletePaths={canEditHooksAndDeletePaths}
+      canEditHooksAndRenamePaths={canEditHooksAndRenamePaths}
+      getInspectedElementPath={getInspectedElementPath}
       hook={hooks[index]}
       id={id}
-      inspectPath={inspectPath}
+      inspectedElement={inspectedElement}
       path={path.concat([index])}
     />
   ));
@@ -96,14 +114,36 @@ export function InnerHooksTreeView({
 
 type HookViewProps = {|
   canEditHooks: boolean,
+  canEditHooksAndDeletePaths: boolean,
+  canEditHooksAndRenamePaths: boolean,
+  getInspectedElementPath: GetInspectedElementPath,
   hook: HooksNode,
   id: number,
-  inspectPath: InspectPath,
+  inspectedElement: InspectedElement,
   path: Array<string | number>,
 |};
 
-function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
+function HookView({
+  canEditHooks,
+  canEditHooksAndDeletePaths,
+  canEditHooksAndRenamePaths,
+  getInspectedElementPath,
+  hook,
+  id,
+  inspectedElement,
+  path,
+}: HookViewProps) {
   const {name, id: hookID, isStateEditable, subHooks, value} = hook;
+  const {
+    canEditFunctionPropsDeletePaths,
+    canEditFunctionPropsRenamePaths,
+  } = inspectedElement;
+
+  const isReadOnly = hookID == null || !isStateEditable;
+
+  const canDeletePaths = !isReadOnly && canEditFunctionPropsDeletePaths;
+  const canEditValues = !isReadOnly;
+  const canRenamePaths = !isReadOnly && canEditFunctionPropsRenamePaths;
 
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
@@ -127,7 +167,7 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
           ? hook[(meta.type: any)]
           : typeof value,
     },
-    id: 'SelectedElement',
+    id: 'InspectedElement',
     ref: contextMenuTriggerRef,
   });
 
@@ -144,6 +184,10 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
       </div>
     );
   }
+
+  // Certain hooks are not editable at all (as identified by react-debug-tools).
+  // Primative hook names (e.g. the "State" name for useState) are also never editable.
+  const canRenamePathsAtDepth = depth => isStateEditable && depth > 1;
 
   const isCustomHook = subHooks.length > 0;
 
@@ -175,19 +219,28 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
     const subHooksView = Array.isArray(subHooks) ? (
       <InnerHooksTreeView
         canEditHooks={canEditHooks}
+        getInspectedElementPath={getInspectedElementPath}
         hooks={subHooks}
         id={id}
-        inspectPath={inspectPath}
+        inspectedElement={inspectedElement}
         path={path.concat(['subHooks'])}
       />
     ) : (
       <KeyValue
-        depth={1}
         alphaSort={false}
-        inspectPath={inspectPath}
+        bridge={bridge}
+        canDeletePaths={canDeletePaths}
+        canEditValues={canEditValues}
+        canRenamePaths={canRenamePaths}
+        canRenamePathsAtDepth={canRenamePathsAtDepth}
+        depth={1}
+        getInspectedElementPath={getInspectedElementPath}
+        hookID={hookID}
+        inspectedElement={inspectedElement}
         name="subHooks"
         path={path.concat(['subHooks'])}
-        pathRoot="hooks"
+        store={store}
+        type="hooks"
         value={subHooks}
       />
     );
@@ -208,12 +261,20 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
           </div>
           <div className={styles.Children} hidden={!isOpen}>
             <KeyValue
-              depth={1}
               alphaSort={false}
-              inspectPath={inspectPath}
+              bridge={bridge}
+              canDeletePaths={canDeletePaths}
+              canEditValues={canEditValues}
+              canRenamePaths={canRenamePaths}
+              canRenamePathsAtDepth={canRenamePathsAtDepth}
+              depth={1}
+              getInspectedElementPath={getInspectedElementPath}
+              hookID={hookID}
+              inspectedElement={inspectedElement}
               name="DebugValue"
               path={path.concat(['value'])}
               pathRoot="hooks"
+              store={store}
               value={value}
             />
             {subHooksView}
@@ -242,41 +303,24 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
       );
     }
   } else {
-    let overrideValueFn = null;
-    // TODO Maybe read editable value from debug hook?
-    if (canEditHooks && isStateEditable && hookID !== null) {
-      overrideValueFn = (
-        absolutePath: Array<string | number>,
-        newValue: any,
-      ) => {
-        const rendererID = store.getRendererIDForElement(id);
-        if (rendererID !== null) {
-          bridge.send('overrideHookState', {
-            id,
-            hookID,
-            // Hooks override function expects a relative path for the specified hook (id),
-            // starting with its id within the (flat) hooks list structure.
-            // This relative path does not include the fake tree structure DevTools uses for display,
-            // so it's important that we remove that part of the path before sending the update.
-            path: absolutePath.slice(path.length + 1),
-            rendererID,
-            value: newValue,
-          });
-        }
-      };
-    }
-
     if (isComplexDisplayValue) {
       return (
         <div className={styles.Hook}>
           <KeyValue
-            depth={1}
             alphaSort={false}
-            inspectPath={inspectPath}
+            bridge={bridge}
+            canDeletePaths={canDeletePaths}
+            canEditValues={canEditValues}
+            canRenamePaths={canRenamePaths}
+            canRenamePathsAtDepth={canRenamePathsAtDepth}
+            depth={1}
+            getInspectedElementPath={getInspectedElementPath}
+            hookID={hookID}
+            inspectedElement={inspectedElement}
             name={name}
-            overrideValueFn={overrideValueFn}
             path={path.concat(['value'])}
             pathRoot="hooks"
+            store={store}
             value={value}
           />
         </div>
@@ -284,27 +328,22 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
     } else {
       return (
         <div className={styles.Hook}>
-          <div ref={contextMenuTriggerRef} className={styles.NameValueRow}>
-            <span className={styles.ExpandCollapseToggleSpacer} />
-            <span
-              className={
-                typeof overrideValueFn === 'function'
-                  ? styles.EditableName
-                  : styles.Name
-              }>
-              {name}
-            </span>
-            {typeof overrideValueFn === 'function' ? (
-              <EditableValue
-                overrideValueFn={overrideValueFn}
-                path={[]}
-                value={value}
-              />
-            ) : (
-              // $FlowFixMe Cannot create span element because in property children
-              <span className={styles.Value}>{displayValue}</span>
-            )}
-          </div>
+          <KeyValue
+            alphaSort={false}
+            bridge={bridge}
+            canDeletePaths={false}
+            canEditValues={canEditValues}
+            canRenamePaths={false}
+            depth={1}
+            getInspectedElementPath={getInspectedElementPath}
+            hookID={hookID}
+            inspectedElement={inspectedElement}
+            name={name}
+            path={[]}
+            pathRoot="hooks"
+            store={store}
+            value={value}
+          />
         </div>
       );
     }
@@ -312,4 +351,4 @@ function HookView({canEditHooks, hook, id, inspectPath, path}: HookViewProps) {
 }
 
 // $FlowFixMe
-export default React.memo(HooksTreeView);
+export default React.memo(InspectedElementHooksTree);

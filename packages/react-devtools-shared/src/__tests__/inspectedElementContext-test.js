@@ -1705,7 +1705,7 @@ describe('InspectedElementContext', () => {
     done();
   });
 
-  it('display complex values of useDebugValue', async done => {
+  it('should display complex values of useDebugValue', async done => {
     let getInspectedElementPath: GetInspectedElementPath = ((null: any): GetInspectedElementPath);
     let inspectedElement = null;
     function Suspender({target}) {

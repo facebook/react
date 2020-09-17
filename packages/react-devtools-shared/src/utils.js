@@ -374,6 +374,45 @@ export function getInObject(object: Object, path: Array<string | number>): any {
   }, object);
 }
 
+export function deletePathInObject(
+  object: Object,
+  path: Array<string | number>,
+) {
+  const length = path.length;
+  const last = path[length - 1];
+  if (object != null) {
+    const parent = getInObject(object, path.slice(0, length - 1));
+    if (parent) {
+      if (Array.isArray(parent)) {
+        parent.splice(((last: any): number), 1);
+      } else {
+        delete parent[last];
+      }
+    }
+  }
+}
+
+export function renamePathInObject(
+  object: Object,
+  oldPath: Array<string | number>,
+  newPath: Array<string | number>,
+) {
+  const length = oldPath.length;
+  if (object != null) {
+    const parent = getInObject(object, oldPath.slice(0, length - 1));
+    if (parent) {
+      const lastOld = oldPath[length - 1];
+      const lastNew = newPath[length - 1];
+      parent[lastNew] = parent[lastOld];
+      if (Array.isArray(parent)) {
+        parent.splice(((lastOld: any): number), 1);
+      } else {
+        delete parent[lastOld];
+      }
+    }
+  }
+}
+
 export function setInObject(
   object: Object,
   path: Array<string | number>,

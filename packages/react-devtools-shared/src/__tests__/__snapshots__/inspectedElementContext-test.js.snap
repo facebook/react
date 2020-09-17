@@ -1,34 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`InspectedElementContext display complex values of useDebugValue: DisplayedComplexValue 1`] = `
-{
-  "id": 2,
-  "owners": null,
-  "context": null,
-  "hooks": [
-    {
-      "id": null,
-      "isStateEditable": false,
-      "name": "DebuggableHook",
-      "value": {
-        "foo": 2
-      },
-      "subHooks": [
-        {
-          "id": 0,
-          "isStateEditable": true,
-          "name": "State",
-          "value": 1,
-          "subHooks": []
-        }
-      ]
-    }
-  ],
-  "props": {},
-  "state": null
-}
-`;
-
 exports[`InspectedElementContext should dehydrate complex nested values when requested: 1: Initially inspect element 1`] = `
 {
   "id": 2,
@@ -61,6 +32,35 @@ exports[`InspectedElementContext should dehydrate complex nested values when req
       "1": {}
     }
   },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should display complex values of useDebugValue: DisplayedComplexValue 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": [
+    {
+      "id": null,
+      "isStateEditable": false,
+      "name": "DebuggableHook",
+      "value": {
+        "foo": 2
+      },
+      "subHooks": [
+        {
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "value": 1,
+          "subHooks": []
+        }
+      ]
+    }
+  ],
+  "props": {},
   "state": null
 }
 `;
