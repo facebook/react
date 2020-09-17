@@ -133,6 +133,26 @@ describe('Scheduler', () => {
     ]);
   });
 
+  it('regression test: work loop should respect `shouldYield`', () => {
+    // In the regression, an expred task would post a continuation, but the
+    // work loop would keep calling into the task even after the frame deadline
+    // had passed, because it expected an expired task to finish
+    // without yielding.
+    scheduleCallback(NormalPriority, () => {
+      // Expire the task
+      Scheduler.unstable_advanceTime(10000);
+      Scheduler.unstable_yieldValue('Done');
+      const continuation = () => {
+        // `shouldYield` will always return true
+        if (Scheduler.unstable_shouldYield()) {
+          return continuation;
+        }
+      };
+      return continuation;
+    });
+    expect(Scheduler).toFlushAndYieldThrough(['Done']);
+  });
+
   it('has a default expiration of ~5 seconds', () => {
     scheduleCallback(NormalPriority, () => Scheduler.unstable_yieldValue('A'));
 
