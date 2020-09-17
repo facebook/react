@@ -212,6 +212,9 @@ export const nonDelegatedEvents: Set<DOMEventName> = new Set([
   'load',
   'scroll',
   'toggle',
+  // Although the dblclick event can bubble, delegating it causes observable issues
+  // so we intentionally don't delegate it: https://github.com/facebook/react/issues/19841
+  'dblclick',
   // In order to reduce bytes, we insert the above array of media events
   // into this Set. Note: the "error" event isn't an exclusive media event,
   // and can occur on other elements too. Rather than duplicate that event,
@@ -375,16 +378,14 @@ export function listenToNativeEvent(
     !isCapturePhaseListener &&
     nonDelegatedEvents.has(domEventName)
   ) {
-    // For all non-delegated events, apart from scroll, we attach
-    // their event listeners to the respective elements that their
-    // events fire on. That means we can skip this step, as event
-    // listener has already been added previously. However, we
-    // special case the scroll event because the reality is that any
-    // element can scroll.
-    // TODO: ideally, we'd eventually apply the same logic to all
-    // events from the nonDelegatedEvents list. Then we can remove
-    // this special case and use the same logic for all events.
-    if (domEventName !== 'scroll') {
+    // We hit this path when we try to lazily attach a listener
+    // for a non-delegated event. Usually it would not be necessary
+    // because we have already attached it directly on node creation.
+    // However, we don't do that for scroll or double click because
+    // we don't want to add these handlers without need. So they still
+    // require lazy registration.
+    // TODO: this branch should probably be removed with the eager flag.
+    if (domEventName !== 'scroll' && domEventName !== 'dblclick') {
       return;
     }
     eventSystemFlags |= IS_NON_DELEGATED;

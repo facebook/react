@@ -197,23 +197,6 @@ describe('ReactDOMEventListener', () => {
       });
     });
 
-    it('onDoubleClick', () => {
-      testNativeBubblingEvent({
-        type: 'div',
-        reactEvent: 'onDoubleClick',
-        reactEventType: 'dblclick',
-        nativeEvent: 'dblclick',
-        dispatch(node) {
-          node.dispatchEvent(
-            new KeyboardEvent('dblclick', {
-              bubbles: true,
-              cancelable: true,
-            }),
-          );
-        },
-      });
-    });
-
     it('onDrag', () => {
       testNativeBubblingEvent({
         type: 'div',
@@ -1242,6 +1225,28 @@ describe('ReactDOMEventListener', () => {
     });
   });
 
+  describe('bubbling events that are not delegated', () => {
+    // Although this event bubbles both in React and in the browser,
+    // it is not delegated because delegating it causes click delays:
+    // https://github.com/facebook/react/issues/19841
+    it('onDoubleClick', () => {
+      testNativeBubblingEventWithoutDelegation({
+        type: 'div',
+        reactEvent: 'onDoubleClick',
+        reactEventType: 'dblclick',
+        nativeEvent: 'dblclick',
+        dispatch(node) {
+          node.dispatchEvent(
+            new KeyboardEvent('dblclick', {
+              bubbles: true,
+              cancelable: true,
+            }),
+          );
+        },
+      });
+    });
+  });
+
   // The tests for these events are currently very limited
   // because they are fully synthetic, and so they don't
   // work very well across different roots. For now, we'll
@@ -1807,6 +1812,19 @@ describe('ReactDOMEventListener', () => {
     testReactStopPropagationInOuterCapturePhase(config);
     testReactStopPropagationInInnerCapturePhase(config);
     testReactStopPropagationInInnerBubblePhase(config);
+    testNativeStopPropagationInOuterCapturePhase(config);
+    testNativeStopPropagationInInnerCapturePhase(config);
+  }
+
+  // Events that bubble in React and in the browser,
+  // but for some reason we can't use delegation for them.
+  function testNativeBubblingEventWithoutDelegation(config) {
+    testNativeBubblingEventWithTargetListener(config);
+    testNativeBubblingEventWithoutTargetListener(config);
+    testReactStopPropagationInOuterCapturePhase(config);
+    testReactStopPropagationInInnerCapturePhase(config);
+    testReactStopPropagationInInnerBubblePhase(config);
+    testReactStopPropagationInOuterBubblePhase(config);
     testNativeStopPropagationInOuterCapturePhase(config);
     testNativeStopPropagationInInnerCapturePhase(config);
   }

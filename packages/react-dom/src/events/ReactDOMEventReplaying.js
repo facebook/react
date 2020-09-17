@@ -135,7 +135,10 @@ const discreteReplayableEvents: Array<DOMEventName> = [
   'touchend',
   'touchstart',
   'auxclick',
-  'dblclick',
+  // Intentionally don't listen to the dblclick event
+  // because delegating it causes observable side effects:
+  // https://github.com/facebook/react/issues/19841
+  // 'dblclick',
   'pointercancel',
   'pointerdown',
   'pointerup',

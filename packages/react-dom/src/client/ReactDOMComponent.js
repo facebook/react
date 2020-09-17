@@ -373,6 +373,8 @@ function setInitialDOMProperties(
           ensureListeningTo(rootContainerElement, propKey, domElement);
         } else if (propKey === 'onScroll') {
           listenToNonDelegatedEvent('scroll', domElement);
+        } else if (propKey === 'onDoubleClick') {
+          listenToNonDelegatedEvent('dblclick', domElement);
         }
       }
     } else if (nextProp != null) {
@@ -836,6 +838,8 @@ export function diffProperties(
           ensureListeningTo(rootContainerElement, propKey, domElement);
         } else if (propKey === 'onScroll') {
           listenToNonDelegatedEvent('scroll', domElement);
+        } else if (propKey === 'onDoubleClick') {
+          listenToNonDelegatedEvent('dblclick', domElement);
         }
       }
       if (!updatePayload && lastProp !== nextProp) {
@@ -1088,6 +1092,8 @@ export function diffHydratedProperties(
           ensureListeningTo(rootContainerElement, propKey, domElement);
         } else if (propKey === 'onScroll') {
           listenToNonDelegatedEvent('scroll', domElement);
+        } else if (propKey === 'onDoubleClick') {
+          listenToNonDelegatedEvent('dblclick', domElement);
         }
       }
     } else if (
