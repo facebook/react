@@ -301,10 +301,7 @@ export function installHook(target: any): DevToolsHook | null {
   const listeners = {};
   const renderers = new Map();
 
-  let hook: DevToolsHook;
-  if (canAccessParentWindow(target) && !isMainWindow(target)) {
-    hook = getMainWindow(target).__REACT_DEVTOOLS_GLOBAL_HOOK__;
-  }
+  let hook: DevToolsHook = getMainWindow(target).__REACT_DEVTOOLS_GLOBAL_HOOK__;
   if (!hook) {
     hook = {
       rendererInterfaces,
