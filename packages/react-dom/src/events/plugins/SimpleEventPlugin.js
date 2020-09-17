@@ -49,7 +49,8 @@ import {IS_CAPTURE_PHASE} from '../EventSystemFlags';
 
 import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 
-let lastBubblePhaseEvent: AnyNativeEvent | null = null;
+let lastEvent: AnyNativeEvent | null = null;
+let lastInCapturePhase: boolean | null = null;
 
 function extractEvents(
   dispatchQueue: DispatchQueue,
@@ -61,10 +62,12 @@ function extractEvents(
   targetContainer: EventTarget,
 ): void {
   const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
-  const prevBubblePhaseEvent = lastBubblePhaseEvent;
-  if (!inCapturePhase) {
-    lastBubblePhaseEvent = nativeEvent;
-  }
+
+  const prevEvent = lastEvent;
+  const prevInCapturePhase = lastInCapturePhase;
+  lastEvent = nativeEvent;
+  lastInCapturePhase = inCapturePhase;
+
   const reactName = topLevelEventsToReactNames.get(domEventName);
   if (reactName === undefined) {
     return;
@@ -116,13 +119,12 @@ function extractEvents(
       EventInterface = MouseEventInterface;
       break;
     case 'dblclick':
-      if (!inCapturePhase && prevBubblePhaseEvent === nativeEvent) {
+      if (prevInCapturePhase === inCapturePhase && prevEvent === nativeEvent) {
         // This event is special because it doesn't use delegation
         // (due to https://github.com/facebook/react/issues/19841)
         // but it bubbles in the browser, so we might "see" it many
-        // times as it traverses upwards natively. Since React has
-        // already bubbled it through its own tree the first time
-        // it was encountered, we deduplicate it.
+        // times as it traverses in either direction natively.
+        // If React has already seen it, deduplicate it.
         return;
       }
       EventInterface = MouseEventInterface;

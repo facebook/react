@@ -298,18 +298,22 @@ function dispatchEventsForPlugins(
 export function listenToNonDelegatedEvent(
   domEventName: DOMEventName,
   targetElement: Element,
+  isCapturePhaseListener: boolean = false,
 ): void {
-  const isCapturePhaseListener = false;
   const listenerSet = getEventListenerSet(targetElement);
   const listenerSetKey = getListenerSetKey(
     domEventName,
     isCapturePhaseListener,
   );
   if (!listenerSet.has(listenerSetKey)) {
+    let eventSystemFlags = IS_NON_DELEGATED;
+    if (isCapturePhaseListener) {
+      eventSystemFlags |= IS_CAPTURE_PHASE;
+    }
     addTrappedEventListener(
       targetElement,
       domEventName,
-      IS_NON_DELEGATED,
+      eventSystemFlags,
       isCapturePhaseListener,
     );
     listenerSet.add(listenerSetKey);
@@ -341,12 +345,17 @@ export function listenToAllSupportedEvents(rootContainerElement: EventTarget) {
           null,
         );
       }
-      listenToNativeEvent(
-        domEventName,
-        true,
-        ((rootContainerElement: any): Element),
-        null,
-      );
+      // Listening to dblclick triggers click delays on iOS,
+      // so we attach events to the nodes directly even for
+      // capture phase listeners.
+      if (domEventName !== 'dblclick') {
+        listenToNativeEvent(
+          domEventName,
+          true,
+          ((rootContainerElement: any): Element),
+          null,
+        );
+      }
     });
   }
 }

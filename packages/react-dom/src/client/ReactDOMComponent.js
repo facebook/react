@@ -375,6 +375,8 @@ function setInitialDOMProperties(
           listenToNonDelegatedEvent('scroll', domElement);
         } else if (propKey === 'onDoubleClick') {
           listenToNonDelegatedEvent('dblclick', domElement);
+        } else if (propKey === 'onDoubleClickCapture') {
+          listenToNonDelegatedEvent('dblclick', domElement, true);
         }
       }
     } else if (nextProp != null) {
@@ -840,6 +842,8 @@ export function diffProperties(
           listenToNonDelegatedEvent('scroll', domElement);
         } else if (propKey === 'onDoubleClick') {
           listenToNonDelegatedEvent('dblclick', domElement);
+        } else if (propKey === 'onDoubleClickCapture') {
+          listenToNonDelegatedEvent('dblclick', domElement, true);
         }
       }
       if (!updatePayload && lastProp !== nextProp) {
@@ -1094,6 +1098,8 @@ export function diffHydratedProperties(
           listenToNonDelegatedEvent('scroll', domElement);
         } else if (propKey === 'onDoubleClick') {
           listenToNonDelegatedEvent('dblclick', domElement);
+        } else if (propKey === 'onDoubleClickCapture') {
+          listenToNonDelegatedEvent('dblclick', domElement, true);
         }
       }
     } else if (
