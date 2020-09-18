@@ -439,7 +439,11 @@ export function getDataType(data: Object): DataType {
     case 'boolean':
       return 'boolean';
     case 'function':
-      return 'function';
+      if (data()[Symbol.iterator]() === 'data') {
+        return 'opaque_iterable';
+      } else {
+        return 'function';
+      } 
     case 'number':
       if (Number.isNaN(data)) {
         return 'nan';
@@ -461,10 +465,7 @@ export function getDataType(data: Object): DataType {
         // If it doesn't error, we know it's an ArrayBuffer,
         // but this seems kind of awkward and expensive.
         return 'array_buffer';
-      }else if (data()[Symbol.iterator]() === 'data') {
-        return 'opaque_iterable';
-      }
-       else if (typeof data[Symbol.iterator] === 'function') {
+      } else if (typeof data[Symbol.iterator] === 'function') {
         return 'iterable';
       } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
