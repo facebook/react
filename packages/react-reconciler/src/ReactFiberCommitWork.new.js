@@ -71,6 +71,7 @@ import {
   Placement,
   Snapshot,
   Update,
+  Callback,
   PassiveMask,
 } from './ReactFiberFlags';
 import getComponentName from 'shared/getComponentName';
@@ -792,10 +793,17 @@ function commitLifeCycles(
       if (enableProfilerTimer) {
         const {onCommit, onRender} = finishedWork.memoizedProps;
         const {effectDuration} = finishedWork.stateNode;
+        const flags = finishedWork.flags;
 
         const commitTime = getCommitTime();
 
-        if (typeof onRender === 'function') {
+        const OnRenderFlag = Update;
+        const OnCommitFlag = Callback;
+
+        if (
+          (flags & OnRenderFlag) !== NoFlags &&
+          typeof onRender === 'function'
+        ) {
           if (enableSchedulerTracing) {
             onRender(
               finishedWork.memoizedProps.id,
@@ -819,7 +827,10 @@ function commitLifeCycles(
         }
 
         if (enableProfilerCommitHooks) {
-          if (typeof onCommit === 'function') {
+          if (
+            (flags & OnCommitFlag) !== NoFlags &&
+            typeof onCommit === 'function'
+          ) {
             if (enableSchedulerTracing) {
               onCommit(
                 finishedWork.memoizedProps.id,
