@@ -10,13 +10,17 @@
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
-describe('editable props and state', () => {
+describe('editing interface', () => {
   let PropTypes;
   let React;
   let ReactDOM;
   let bridge: FrontendBridge;
   let store: Store;
   let utils;
+
+  const flushPendingUpdates = () => {
+    jest.runOnlyPendingTimers();
+  };
 
   beforeEach(() => {
     utils = require('./utils');
@@ -108,7 +112,7 @@ describe('editable props and state', () => {
           type: 'props',
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideProps(classID, ['shallow'], 'updated');
@@ -162,7 +166,8 @@ describe('editable props and state', () => {
       });
     });
 
-    it('should still support overriding props values with legacy backend methods', async () => {
+    // Tests the combination of older frontend (DevTools UI) with newer backend (embedded within a renderer).
+    it('should still support overriding prop values with legacy backend methods', async () => {
       await mountTestApp();
 
       function overrideProps(id, path, value) {
@@ -173,7 +178,7 @@ describe('editable props and state', () => {
           rendererID,
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideProps(classID, ['object', 'nested'], 'updated');
@@ -207,7 +212,7 @@ describe('editable props and state', () => {
           rendererID,
           type: 'props',
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       renamePath(classID, ['shallow'], ['after']);
@@ -257,7 +262,7 @@ describe('editable props and state', () => {
           type: 'props',
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideProps(classID, ['new'], 'value');
@@ -336,7 +341,7 @@ describe('editable props and state', () => {
           rendererID,
           type: 'props',
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       deletePath(classID, ['shallow']);
@@ -432,7 +437,7 @@ describe('editable props and state', () => {
           type: 'state',
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideState(['shallow'], 'updated');
@@ -457,6 +462,7 @@ describe('editable props and state', () => {
       });
     });
 
+    // Tests the combination of older frontend (DevTools UI) with newer backend (embedded within a renderer).
     it('should still support overriding state values with legacy backend methods', async () => {
       await mountTestApp();
 
@@ -468,7 +474,7 @@ describe('editable props and state', () => {
           rendererID,
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideState(['array', 1], 'updated');
@@ -491,7 +497,7 @@ describe('editable props and state', () => {
           rendererID,
           type: 'state',
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       renamePath(['shallow'], ['after']);
@@ -525,7 +531,7 @@ describe('editable props and state', () => {
           type: 'state',
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideState(['new'], 'value');
@@ -572,7 +578,7 @@ describe('editable props and state', () => {
           rendererID,
           type: 'state',
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       deletePath(['shallow']);
@@ -647,7 +653,7 @@ describe('editable props and state', () => {
           type: 'hooks',
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideHookState(['shallow'], 'updated');
@@ -678,7 +684,8 @@ describe('editable props and state', () => {
       });
     });
 
-    it('should still support overriding hooks values with legacy backend methods', async () => {
+    // Tests the combination of older frontend (DevTools UI) with newer backend (embedded within a renderer).
+    it('should still support overriding hook values with legacy backend methods', async () => {
       await mountTestApp();
 
       function overrideHookState(path, value) {
@@ -690,7 +697,7 @@ describe('editable props and state', () => {
           rendererID,
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideHookState(['shallow'], 'updated');
@@ -716,7 +723,7 @@ describe('editable props and state', () => {
           rendererID,
           type: 'hooks',
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       renamePath(['shallow'], ['after']);
@@ -751,7 +758,7 @@ describe('editable props and state', () => {
           type: 'hooks',
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideHookState(['new'], 'value');
@@ -799,7 +806,7 @@ describe('editable props and state', () => {
           rendererID,
           type: 'hooks',
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       deletePath(['shallow']);
@@ -907,7 +914,7 @@ describe('editable props and state', () => {
           type: 'context',
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideContext(['shallow'], 'updated');
@@ -938,6 +945,7 @@ describe('editable props and state', () => {
       });
     });
 
+    // Tests the combination of older frontend (DevTools UI) with newer backend (embedded within a renderer).
     it('should still support overriding context values with legacy backend methods', async () => {
       await mountTestApp();
 
@@ -954,7 +962,7 @@ describe('editable props and state', () => {
           rendererID,
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideContext(['object', 'nested'], 'updated');
@@ -985,7 +993,7 @@ describe('editable props and state', () => {
           rendererID,
           type: 'context',
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       renamePath(['shallow'], ['after']);
@@ -1024,7 +1032,7 @@ describe('editable props and state', () => {
           type: 'context',
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideContext(['new'], 'value');
@@ -1076,7 +1084,7 @@ describe('editable props and state', () => {
           rendererID,
           type: 'context',
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       deletePath(['shallow']);

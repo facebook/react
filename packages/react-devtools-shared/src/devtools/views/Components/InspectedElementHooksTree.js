@@ -39,13 +39,7 @@ export function InspectedElementHooksTree({
   inspectedElement,
   store,
 }: HooksTreeViewProps) {
-  const {
-    canEditHooks,
-    canEditHooksAndDeletePaths,
-    canEditHooksAndRenamePaths,
-    hooks,
-    id,
-  } = inspectedElement;
+  const {hooks, id} = inspectedElement;
 
   const handleCopy = () => copy(serializeHooksForCopy(hooks));
 
@@ -61,9 +55,6 @@ export function InspectedElementHooksTree({
           </Button>
         </div>
         <InnerHooksTreeView
-          canEditHooks={canEditHooks}
-          canEditHooksAndDeletePaths={canEditHooksAndDeletePaths}
-          canEditHooksAndRenamePaths={canEditHooksAndRenamePaths}
           hooks={hooks}
           id={id}
           getInspectedElementPath={getInspectedElementPath}
@@ -76,9 +67,6 @@ export function InspectedElementHooksTree({
 }
 
 type InnerHooksTreeViewProps = {|
-  canEditHooks: boolean,
-  canEditHooksAndDeletePaths: boolean,
-  canEditHooksAndRenamePaths: boolean,
   getInspectedElementPath: GetInspectedElementPath,
   hooks: HooksTree,
   id: number,
@@ -87,9 +75,6 @@ type InnerHooksTreeViewProps = {|
 |};
 
 export function InnerHooksTreeView({
-  canEditHooks,
-  canEditHooksAndDeletePaths,
-  canEditHooksAndRenamePaths,
   getInspectedElementPath,
   hooks,
   id,
@@ -100,9 +85,6 @@ export function InnerHooksTreeView({
   return hooks.map((hook, index) => (
     <HookView
       key={index}
-      canEditHooks={canEditHooks}
-      canEditHooksAndDeletePaths={canEditHooksAndDeletePaths}
-      canEditHooksAndRenamePaths={canEditHooksAndRenamePaths}
       getInspectedElementPath={getInspectedElementPath}
       hook={hooks[index]}
       id={id}
@@ -113,9 +95,6 @@ export function InnerHooksTreeView({
 }
 
 type HookViewProps = {|
-  canEditHooks: boolean,
-  canEditHooksAndDeletePaths: boolean,
-  canEditHooksAndRenamePaths: boolean,
   getInspectedElementPath: GetInspectedElementPath,
   hook: HooksNode,
   id: number,
@@ -124,26 +103,24 @@ type HookViewProps = {|
 |};
 
 function HookView({
-  canEditHooks,
-  canEditHooksAndDeletePaths,
-  canEditHooksAndRenamePaths,
   getInspectedElementPath,
   hook,
   id,
   inspectedElement,
   path,
 }: HookViewProps) {
-  const {name, id: hookID, isStateEditable, subHooks, value} = hook;
   const {
-    canEditFunctionPropsDeletePaths,
-    canEditFunctionPropsRenamePaths,
+    canEditHooks,
+    canEditHooksAndDeletePaths,
+    canEditHooksAndRenamePaths,
   } = inspectedElement;
+  const {name, id: hookID, isStateEditable, subHooks, value} = hook;
 
   const isReadOnly = hookID == null || !isStateEditable;
 
-  const canDeletePaths = !isReadOnly && canEditFunctionPropsDeletePaths;
-  const canEditValues = !isReadOnly;
-  const canRenamePaths = !isReadOnly && canEditFunctionPropsRenamePaths;
+  const canDeletePaths = !isReadOnly && canEditHooksAndDeletePaths;
+  const canEditValues = !isReadOnly && canEditHooks;
+  const canRenamePaths = !isReadOnly && canEditHooksAndRenamePaths;
 
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
@@ -218,7 +195,6 @@ function HookView({
   if (isCustomHook) {
     const subHooksView = Array.isArray(subHooks) ? (
       <InnerHooksTreeView
-        canEditHooks={canEditHooks}
         getInspectedElementPath={getInspectedElementPath}
         hooks={subHooks}
         id={id}

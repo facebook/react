@@ -10,7 +10,7 @@
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
 
-describe('editable props and state', () => {
+describe('editing interface', () => {
   let PropTypes;
   let React;
   let ReactDOM;
@@ -21,6 +21,10 @@ describe('editable props and state', () => {
     callback();
 
     jest.runAllTimers(); // Flush Bridge operations
+  };
+
+  const flushPendingUpdates = () => {
+    jest.runOnlyPendingTimers();
   };
 
   beforeEach(() => {
@@ -92,7 +96,7 @@ describe('editable props and state', () => {
           type: 'props',
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideProps(['shallow'], 'updated');
@@ -133,7 +137,7 @@ describe('editable props and state', () => {
           rendererID,
           type: 'props',
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       renamePath(['shallow'], ['after']);
@@ -166,7 +170,7 @@ describe('editable props and state', () => {
           type: 'props',
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideProps(['new'], 'value');
@@ -213,7 +217,7 @@ describe('editable props and state', () => {
           rendererID,
           type: 'props',
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       deletePath(['shallow']);
@@ -290,7 +294,7 @@ describe('editable props and state', () => {
           type: 'state',
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideState(['shallow'], 'updated');
@@ -327,7 +331,7 @@ describe('editable props and state', () => {
           rendererID,
           type: 'state',
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       renamePath(['shallow'], ['after']);
@@ -361,7 +365,7 @@ describe('editable props and state', () => {
           type: 'state',
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideState(['new'], 'value');
@@ -408,7 +412,7 @@ describe('editable props and state', () => {
           rendererID,
           type: 'state',
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       deletePath(['shallow']);
@@ -511,7 +515,7 @@ describe('editable props and state', () => {
           type: 'context',
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideContext(['shallow'], 'updated');
@@ -555,7 +559,7 @@ describe('editable props and state', () => {
           rendererID,
           type: 'context',
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       renamePath(['shallow'], ['after']);
@@ -590,7 +594,7 @@ describe('editable props and state', () => {
           type: 'context',
           value,
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       overrideContext(['new'], 'value');
@@ -638,7 +642,7 @@ describe('editable props and state', () => {
           rendererID,
           type: 'context',
         });
-        jest.runOnlyPendingTimers();
+        flushPendingUpdates();
       }
 
       deletePath(['shallow']);
