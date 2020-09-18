@@ -400,7 +400,8 @@ export type DataType =
   | 'html_all_collection'
   | 'html_element'
   | 'infinity'
-  | 'iterator'
+  | 'iterable'
+  | 'opaque_iterable' 
   | 'nan'
   | 'null'
   | 'number'
@@ -460,8 +461,11 @@ export function getDataType(data: Object): DataType {
         // If it doesn't error, we know it's an ArrayBuffer,
         // but this seems kind of awkward and expensive.
         return 'array_buffer';
-      } else if (typeof data[Symbol.iterator] === 'function') {
-        return 'iterator';
+      }else if (data()[Symbol.iterator]() === 'data') {
+        return 'opaque_iterable';
+      }
+       else if (typeof data[Symbol.iterator] === 'function') {
+        return 'iterable';
       } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
       } else {
@@ -638,7 +642,7 @@ export function formatDataForPreview(
       } else {
         return shortName;
       }
-    case 'iterator':
+    case 'iterable':
       const name = data.constructor.name;
       if (showFormattedValue) {
         // TRICKY
