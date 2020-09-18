@@ -191,9 +191,9 @@ import {
   commitPlacement,
   commitWork,
   commitDeletion,
-  commitPassiveUnmount,
-  commitPassiveWork,
-  commitPassiveLifeCycles as commitPassiveEffectOnFiber,
+  commitPassiveUnmount as commitPassiveUnmountOnFiber,
+  commitPassiveUnmountInsideDeletedTree as commitPassiveUnmountInsideDeletedTreeOnFiber,
+  commitPassiveMount as commitPassiveMountOnFiber,
   commitDetachRef,
   commitAttachRef,
   commitResetTextContent,
@@ -2458,9 +2458,27 @@ function flushPassiveMountEffects(root, firstChild: Fiber): void {
     }
 
     if ((fiber.flags & Passive) !== NoFlags) {
-      setCurrentDebugFiberInDEV(fiber);
-      commitPassiveEffectOnFiber(root, fiber);
-      resetCurrentDebugFiberInDEV();
+      if (__DEV__) {
+        setCurrentDebugFiberInDEV(fiber);
+        invokeGuardedCallback(
+          null,
+          commitPassiveMountOnFiber,
+          null,
+          root,
+          fiber,
+        );
+        if (hasCaughtError()) {
+          const error = clearCaughtError();
+          captureCommitPhaseError(fiber, fiber.return, error);
+        }
+        resetCurrentDebugFiberInDEV();
+      } else {
+        try {
+          commitPassiveMountOnFiber(root, fiber);
+        } catch (error) {
+          captureCommitPhaseError(fiber, fiber.return, error);
+        }
+      }
     }
 
     fiber = fiber.sibling;
@@ -2496,7 +2514,7 @@ function flushPassiveUnmountEffects(firstChild: Fiber): void {
     const primaryFlags = fiber.flags & Passive;
     if (primaryFlags !== NoFlags) {
       setCurrentDebugFiberInDEV(fiber);
-      commitPassiveWork(fiber);
+      commitPassiveUnmountInsideDeletedTreeOnFiber(fiber);
       resetCurrentDebugFiberInDEV();
     }
 
@@ -2525,7 +2543,7 @@ function flushPassiveUnmountEffectsInsideOfDeletedTree(
 
   if ((fiberToDelete.flags & PassiveStatic) !== NoFlags) {
     setCurrentDebugFiberInDEV(fiberToDelete);
-    commitPassiveUnmount(fiberToDelete, nearestMountedAncestor);
+    commitPassiveUnmountOnFiber(fiberToDelete, nearestMountedAncestor);
     resetCurrentDebugFiberInDEV();
   }
 }
