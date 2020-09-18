@@ -25,7 +25,7 @@ import {
   localStorageGetItem,
   localStorageSetItem,
 } from 'react-devtools-shared/src/storage';
-import SelectedElement from './SelectedElement';
+import InspectedElement from './InspectedElement';
 import {ModalDialog} from '../ModalDialog';
 import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/SettingsModal';
 import {NativeStyleContextController} from './NativeStyleEditor/context';
@@ -165,10 +165,10 @@ function Components(_: {||}) {
               <div className={styles.ResizeBarWrapper}>
                 <div onMouseDown={onResizeStart} className={styles.ResizeBar} />
               </div>
-              <div className={styles.SelectedElementWrapper}>
+              <div className={styles.InspectedElementWrapper}>
                 <NativeStyleContextController>
                   <Suspense fallback={<Loading />}>
-                    <SelectedElement />
+                    <InspectedElement />
                   </Suspense>
                 </NativeStyleContextController>
               </div>

@@ -38,12 +38,38 @@ type HighlightElementInDOM = {|
 type OverrideValue = {|
   ...ElementAndRendererID,
   path: Array<string | number>,
+  wasForwarded?: boolean,
   value: any,
 |};
 
 type OverrideHookState = {|
   ...OverrideValue,
   hookID: number,
+|};
+
+type PathType = 'props' | 'hooks' | 'state' | 'context';
+
+type DeletePath = {|
+  ...ElementAndRendererID,
+  type: PathType,
+  hookID?: ?number,
+  path: Array<string | number>,
+|};
+
+type RenamePath = {|
+  ...ElementAndRendererID,
+  type: PathType,
+  hookID?: ?number,
+  oldPath: Array<string | number>,
+  newPath: Array<string | number>,
+|};
+
+type OverrideValueAtPath = {|
+  ...ElementAndRendererID,
+  type: PathType,
+  hookID?: ?number,
+  path: Array<string | number>,
+  value: any,
 |};
 
 type OverrideSuspense = {|
@@ -117,19 +143,18 @@ type BackendEvents = {|
 type FrontendEvents = {|
   clearNativeElementHighlight: [],
   copyElementPath: [CopyElementPathParams],
+  deletePath: [DeletePath],
   getOwnersList: [ElementAndRendererID],
   getProfilingData: [{|rendererID: RendererID|}],
   getProfilingStatus: [],
   highlightNativeElement: [HighlightElementInDOM],
   inspectElement: [InspectElementParams],
   logElementToConsole: [ElementAndRendererID],
-  overrideContext: [OverrideValue],
-  overrideHookState: [OverrideHookState],
-  overrideProps: [OverrideValue],
-  overrideState: [OverrideValue],
   overrideSuspense: [OverrideSuspense],
+  overrideValueAtPath: [OverrideValueAtPath],
   profilingData: [ProfilingDataBackend],
   reloadAndProfile: [boolean],
+  renamePath: [RenamePath],
   selectFiber: [number],
   setTraceUpdatesEnabled: [boolean],
   shutdown: [],
@@ -147,6 +172,21 @@ type FrontendEvents = {|
   NativeStyleEditor_measure: [ElementAndRendererID],
   NativeStyleEditor_renameAttribute: [NativeStyleEditor_RenameAttributeParams],
   NativeStyleEditor_setValue: [NativeStyleEditor_SetValueParams],
+
+  // Temporarily support newer standalone front-ends sending commands to older embedded backends.
+  // We do this because React Native embeds the React DevTools backend,
+  // but cannot control which version of the frontend users use.
+  //
+  // Note that nothing in the newer backend actually listens to these events,
+  // but the new frontend still dispatches them (in case older backends are listening to them instead).
+  //
+  // Note that this approach does no support the combination of a newer backend with an older frontend.
+  // It would be more work to suppot both approaches (and not run handlers twice)
+  // so I chose to support the more likely/common scenario (and the one more difficult for an end user to "fix").
+  overrideContext: [OverrideValue],
+  overrideHookState: [OverrideHookState],
+  overrideProps: [OverrideValue],
+  overrideState: [OverrideValue],
 |};
 
 class Bridge<
@@ -171,6 +211,11 @@ class Bridge<
       wall.listen((message: Message) => {
         (this: any).emit(message.event, message.payload);
       }) || null;
+
+    // Temporarily support older standalone front-ends sending commands to newer embedded backends.
+    // We do this because React Native embeds the React DevTools backend,
+    // but cannot control which version of the frontend users use.
+    this.addListener('overrideValueAtPath', this.overrideValueAtPath);
   }
 
   // Listening directly to the wall isn't advised.
@@ -265,6 +310,55 @@ class Bridge<
       // flushing in a loop as long as messages continue to be added. Once no
       // more are, the timer expires.
       this._timeoutID = setTimeout(this._flush, BATCH_DURATION);
+    }
+  };
+
+  // Temporarily support older standalone backends by forwarding "overrideValueAtPath" commands
+  // to the older message types they may be listening to.
+  overrideValueAtPath = ({
+    id,
+    path,
+    rendererID,
+    type,
+    value,
+  }: OverrideValueAtPath) => {
+    switch (type) {
+      case 'context':
+        this.send('overrideContext', {
+          id,
+          path,
+          rendererID,
+          wasForwarded: true,
+          value,
+        });
+        break;
+      case 'hooks':
+        this.send('overrideHookState', {
+          id,
+          path,
+          rendererID,
+          wasForwarded: true,
+          value,
+        });
+        break;
+      case 'props':
+        this.send('overrideProps', {
+          id,
+          path,
+          rendererID,
+          wasForwarded: true,
+          value,
+        });
+        break;
+      case 'state':
+        this.send('overrideState', {
+          id,
+          path,
+          rendererID,
+          wasForwarded: true,
+          value,
+        });
+        break;
     }
   };
 }

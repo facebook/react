@@ -26,15 +26,23 @@ import {
   ElementTypeSuspenseList,
 } from 'react-devtools-shared/src/types';
 import {
+  deletePathInObject,
   getDisplayName,
   getDefaultComponentFilters,
   getInObject,
   getUID,
+  renamePathInObject,
   setInObject,
   utfEncodeString,
 } from 'react-devtools-shared/src/utils';
 import {sessionStorageGetItem} from 'react-devtools-shared/src/storage';
-import {cleanForBridge, copyToClipboard, copyWithSet} from './utils';
+import {
+  cleanForBridge,
+  copyToClipboard,
+  copyWithDelete,
+  copyWithRename,
+  copyWithSet,
+} from './utils';
 import {
   __DEBUG__,
   SESSION_STORAGE_RELOAD_AND_PROFILE_KEY,
@@ -452,7 +460,11 @@ export function attach(
 
   const {
     overrideHookState,
+    overrideHookStateDeletePath,
+    overrideHookStateRenamePath,
     overrideProps,
+    overridePropsDeletePath,
+    overridePropsRenamePath,
     setSuspenseHandler,
     scheduleUpdate,
   } = renderer;
@@ -2360,11 +2372,19 @@ export function attach(
     return {
       id,
 
-      // Does the current renderer support editable hooks?
+      // Does the current renderer support editable hooks and function props?
       canEditHooks: typeof overrideHookState === 'function',
-
-      // Does the current renderer support editable function props?
       canEditFunctionProps: typeof overrideProps === 'function',
+
+      // Does the current renderer support advanced editing interface?
+      canEditHooksAndDeletePaths:
+        typeof overrideHookStateDeletePath === 'function',
+      canEditHooksAndRenamePaths:
+        typeof overrideHookStateRenamePath === 'function',
+      canEditFunctionPropsDeletePaths:
+        typeof overridePropsDeletePath === 'function',
+      canEditFunctionPropsRenamePaths:
+        typeof overridePropsRenamePath === 'function',
 
       canToggleSuspense:
         supportsTogglingSuspense &&
@@ -2687,60 +2707,181 @@ export function attach(
     }
   }
 
-  function setInHook(
+  function deletePath(
+    type: 'context' | 'hooks' | 'props' | 'state',
     id: number,
-    index: number,
+    hookID: ?number,
+    path: Array<string | number>,
+  ): void {
+    const fiber = findCurrentFiberUsingSlowPathById(id);
+    if (fiber !== null) {
+      const instance = fiber.stateNode;
+
+      switch (type) {
+        case 'context':
+          // To simplify hydration and display of primitive context values (e.g. number, string)
+          // the inspectElement() method wraps context in a {value: ...} object.
+          // We need to remove the first part of the path (the "value") before continuing.
+          path = path.slice(1);
+
+          switch (fiber.tag) {
+            case ClassComponent:
+              if (path.length === 0) {
+                // Simple context value (noop)
+              } else {
+                deletePathInObject(instance.context, path);
+              }
+              instance.forceUpdate();
+              break;
+            case FunctionComponent:
+              // Function components using legacy context are not editable
+              // because there's no instance on which to create a cloned, mutated context.
+              break;
+          }
+          break;
+        case 'hooks':
+          if (typeof overrideHookStateDeletePath === 'function') {
+            overrideHookStateDeletePath(fiber, ((hookID: any): number), path);
+          }
+          break;
+        case 'props':
+          if (instance === null) {
+            if (typeof overridePropsDeletePath === 'function') {
+              overridePropsDeletePath(fiber, path);
+            }
+          } else {
+            fiber.pendingProps = copyWithDelete(instance.props, path);
+            instance.forceUpdate();
+          }
+          break;
+        case 'state':
+          deletePathInObject(instance.state, path);
+          instance.forceUpdate();
+          break;
+      }
+    }
+  }
+
+  function renamePath(
+    type: 'context' | 'hooks' | 'props' | 'state',
+    id: number,
+    hookID: ?number,
+    oldPath: Array<string | number>,
+    newPath: Array<string | number>,
+  ): void {
+    const fiber = findCurrentFiberUsingSlowPathById(id);
+    if (fiber !== null) {
+      const instance = fiber.stateNode;
+
+      switch (type) {
+        case 'context':
+          // To simplify hydration and display of primitive context values (e.g. number, string)
+          // the inspectElement() method wraps context in a {value: ...} object.
+          // We need to remove the first part of the path (the "value") before continuing.
+          oldPath = oldPath.slice(1);
+          newPath = newPath.slice(1);
+
+          switch (fiber.tag) {
+            case ClassComponent:
+              if (oldPath.length === 0) {
+                // Simple context value (noop)
+              } else {
+                renamePathInObject(instance.context, oldPath, newPath);
+              }
+              instance.forceUpdate();
+              break;
+            case FunctionComponent:
+              // Function components using legacy context are not editable
+              // because there's no instance on which to create a cloned, mutated context.
+              break;
+          }
+          break;
+        case 'hooks':
+          if (typeof overrideHookStateRenamePath === 'function') {
+            overrideHookStateRenamePath(
+              fiber,
+              ((hookID: any): number),
+              oldPath,
+              newPath,
+            );
+          }
+          break;
+        case 'props':
+          if (instance === null) {
+            if (typeof overridePropsRenamePath === 'function') {
+              overridePropsRenamePath(fiber, oldPath, newPath);
+            }
+          } else {
+            fiber.pendingProps = copyWithRename(
+              instance.props,
+              oldPath,
+              newPath,
+            );
+            instance.forceUpdate();
+          }
+          break;
+        case 'state':
+          renamePathInObject(instance.state, oldPath, newPath);
+          instance.forceUpdate();
+          break;
+      }
+    }
+  }
+
+  function overrideValueAtPath(
+    type: 'context' | 'hooks' | 'props' | 'state',
+    id: number,
+    hookID: ?number,
     path: Array<string | number>,
     value: any,
-  ) {
-    const fiber = findCurrentFiberUsingSlowPathById(id);
-    if (fiber !== null) {
-      if (typeof overrideHookState === 'function') {
-        overrideHookState(fiber, index, path, value);
-      }
-    }
-  }
-
-  function setInProps(id: number, path: Array<string | number>, value: any) {
+  ): void {
     const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber !== null) {
       const instance = fiber.stateNode;
-      if (instance === null) {
-        if (typeof overrideProps === 'function') {
-          overrideProps(fiber, path, value);
-        }
-      } else {
-        fiber.pendingProps = copyWithSet(instance.props, path, value);
-        instance.forceUpdate();
+
+      switch (type) {
+        case 'context':
+          // To simplify hydration and display of primitive context values (e.g. number, string)
+          // the inspectElement() method wraps context in a {value: ...} object.
+          // We need to remove the first part of the path (the "value") before continuing.
+          path = path.slice(1);
+
+          switch (fiber.tag) {
+            case ClassComponent:
+              if (path.length === 0) {
+                // Simple context value
+                instance.context = value;
+              } else {
+                setInObject(instance.context, path, value);
+              }
+              instance.forceUpdate();
+              break;
+            case FunctionComponent:
+              // Function components using legacy context are not editable
+              // because there's no instance on which to create a cloned, mutated context.
+              break;
+          }
+          break;
+        case 'hooks':
+          if (typeof overrideHookState === 'function') {
+            overrideHookState(fiber, ((hookID: any): number), path, value);
+          }
+          break;
+        case 'props':
+          if (instance === null) {
+            if (typeof overrideProps === 'function') {
+              overrideProps(fiber, path, value);
+            }
+          } else {
+            fiber.pendingProps = copyWithSet(instance.props, path, value);
+            instance.forceUpdate();
+          }
+          break;
+        case 'state':
+          setInObject(instance.state, path, value);
+          instance.forceUpdate();
+          break;
       }
-    }
-  }
-
-  function setInState(id: number, path: Array<string | number>, value: any) {
-    const fiber = findCurrentFiberUsingSlowPathById(id);
-    if (fiber !== null) {
-      const instance = fiber.stateNode;
-      setInObject(instance.state, path, value);
-      instance.forceUpdate();
-    }
-  }
-
-  function setInContext(id: number, path: Array<string | number>, value: any) {
-    // To simplify hydration and display of primitive context values (e.g. number, string)
-    // the inspectElement() method wraps context in a {value: ...} object.
-    // We need to remove the first part of the path (the "value") before continuing.
-    path = path.slice(1);
-
-    const fiber = findCurrentFiberUsingSlowPathById(id);
-    if (fiber !== null) {
-      const instance = fiber.stateNode;
-      if (path.length === 0) {
-        // Simple context value
-        instance.context = value;
-      } else {
-        setInObject(instance.context, path, value);
-      }
-      instance.forceUpdate();
     }
   }
 
@@ -3192,6 +3333,7 @@ export function attach(
   return {
     cleanup,
     copyElementPath,
+    deletePath,
     findNativeNodesForFiberID,
     flushInitialOperations,
     getBestMatchForTrackedPath,
@@ -3208,11 +3350,9 @@ export function attach(
     prepareViewAttributeSource,
     prepareViewElementSource,
     overrideSuspense,
+    overrideValueAtPath,
+    renamePath,
     renderer,
-    setInContext,
-    setInHook,
-    setInProps,
-    setInState,
     setTraceUpdatesEnabled,
     setTrackedPath,
     startProfiling,

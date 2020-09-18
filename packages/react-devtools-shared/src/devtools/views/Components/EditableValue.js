@@ -16,14 +16,14 @@ type OverrideValueFn = (path: Array<string | number>, value: any) => void;
 
 type EditableValueProps = {|
   className?: string,
-  overrideValueFn: OverrideValueFn,
+  overrideValue: OverrideValueFn,
   path: Array<string | number>,
   value: any,
 |};
 
 export default function EditableValue({
   className = '',
-  overrideValueFn,
+  overrideValue,
   path,
   value,
 }: EditableValueProps) {
@@ -55,7 +55,7 @@ export default function EditableValue({
     // So we read from target.checked rather than parsedValue (which has not yet updated).
     // We also don't check isValid (because that hasn't changed yet either);
     // we don't need to check it anyway, since target.checked is always a boolean.
-    overrideValueFn(path, target.checked);
+    overrideValue(path, target.checked);
   };
 
   const handleKeyDown = event => {
@@ -76,7 +76,7 @@ export default function EditableValue({
 
   const applyChanges = () => {
     if (isValid && hasPendingChanges) {
-      overrideValueFn(path, parsedValue);
+      overrideValue(path, parsedValue);
     }
   };
 

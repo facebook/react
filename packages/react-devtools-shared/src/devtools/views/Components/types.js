@@ -59,11 +59,15 @@ export type OwnersList = {|
 export type InspectedElement = {|
   id: number,
 
-  // Does the current renderer support editable hooks?
+  // Does the current renderer support editable hooks and function props?
   canEditHooks: boolean,
-
-  // Does the current renderer support editable function props?
   canEditFunctionProps: boolean,
+
+  // Does the current renderer support advanced editing interface?
+  canEditHooksAndDeletePaths: boolean,
+  canEditHooksAndRenamePaths: boolean,
+  canEditFunctionPropsDeletePaths: boolean,
+  canEditFunctionPropsRenamePaths: boolean,
 
   // Is this Suspense, and can its value be overridden now?
   canToggleSuspense: boolean,
