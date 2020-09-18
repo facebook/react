@@ -1436,6 +1436,138 @@ const tests = {
         }
       `,
     },
+    /**
+     * JSX-dependencies support tests
+     */
+    {
+      code: normalizeIndent`
+        function Example({component: Component}) {
+          const memoized = useMemo(() => ({
+            render: () => <Component />
+          }), [Component]);
+
+          return memoized.render();
+        }
+      `,
+    },
+    // HTML-elements are not React components and
+    // must not be in the dependencies list
+    {
+      code: normalizeIndent`
+        function Example({component: Component}) {
+          const memoized = useMemo(() => ({
+            render: () => (
+              <div>
+                <Component />
+              </div>
+            )
+          }), [Component]);
+
+          return memoized.render();
+        }
+      `,
+    },
+    // If JSX-component is in the return statement,
+    // it must be in the dependencies list also
+    {
+      code: normalizeIndent`
+        function Example({component: Component}) {
+          const memoized = useMemo(() => ({
+            render: () => {
+              return <Component />;
+            }
+          }), [Component]);
+
+          return memoized.render();
+        }
+      `,
+    },
+    // If the Component is used twice or more,
+    // it must be declared as a dependency only once
+    {
+      code: normalizeIndent`
+        function Example({component: Component}) {
+          const memoized = useMemo(() => ({
+            render: () => {
+              return (
+                <div>
+                  <Component />
+                  <Component />
+                </div>
+              );
+            }
+          }), [Component]);
+
+          return memoized.render();
+        }
+      `,
+    },
+    // React Fragments are not hook dependencies
+    {
+      code: normalizeIndent`
+        function Example({component: Component}) {
+          const memoized = useMemo(() => ({
+            render: () => (
+              <Fragment>
+                <Component />
+              </Fragment>
+            )
+          }), [Component]);
+
+          return memoized.render();
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function Example({component: Component}) {
+          const memoized = useMemo(() => ({
+            render: () => (
+              <>
+                <div />
+                <Component />
+              </>
+            )
+          }), [Component]);
+
+          return memoized.render();
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function Example({component: Component}) {
+          const memoized = useMemo(() => ({
+            render: () => (
+              <React.Fragment>
+                <Component />
+              </React.Fragment>
+            )
+          }), [Component]);
+
+          return memoized.render();
+        }
+      `,
+    },
+    // Also check Fragments in the return statement
+    {
+      code: normalizeIndent`
+        function Example({component: Component}) {
+          const memoized = useMemo(() => ({
+            render: () => {
+              return (
+                <>
+                  <div />
+                  <Component />
+                </>
+              );
+            }
+          }), [Component]);
+
+          return memoized.render();
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -7500,6 +7632,73 @@ const tests = {
             "The 'foo' object makes the dependencies of useEffect Hook (at line 9) change on every render. " +
             "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
+        },
+      ],
+    },
+    /**
+     * JSX-dependencies support tests
+     */
+    {
+      code: normalizeIndent`
+        function Example({component: UnknownComponent}) {
+          const memoized = useMemo(() => ({
+            render: () => <UnknownComponent/>
+          }), []);
+
+          return memoized.render();
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useMemo has a missing dependency: 'UnknownComponent'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [UnknownComponent]',
+              output: normalizeIndent`
+                function Example({component: UnknownComponent}) {
+                  const memoized = useMemo(() => ({
+                    render: () => <UnknownComponent/>
+                  }), [UnknownComponent]);
+
+                  return memoized.render();
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function Example({component: Component}) {
+          const memoized = useMemo(() => ({
+            render: () => null
+          }), [Component]);
+
+          return memoized.render();
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useMemo has an unnecessary dependency: 'Component'. " +
+            'Either exclude it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: []',
+              output: normalizeIndent`
+                function Example({component: Component}) {
+                  const memoized = useMemo(() => ({
+                    render: () => null
+                  }), []);
+
+                  return memoized.render();
+                }
+              `,
+            },
+          ],
         },
       ],
     },

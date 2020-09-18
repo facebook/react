@@ -61,6 +61,7 @@ import {
   ContentReset,
   DidCapture,
   Update,
+  Passive,
   Ref,
   Deletion,
   ForceUpdateForLegacySuspense,
@@ -674,7 +675,8 @@ function updateProfiler(
   renderLanes: Lanes,
 ) {
   if (enableProfilerTimer) {
-    workInProgress.flags |= Update;
+    // TODO: Only call onRender et al if subtree has effects
+    workInProgress.flags |= Update | Passive;
 
     // Reset effect durations for the next eventual effect phase.
     // These are reset during render to allow the DevTools commit hook a chance to read them,
@@ -3116,12 +3118,13 @@ function beginWork(
         case Profiler:
           if (enableProfilerTimer) {
             // Profiler should only call onRender when one of its descendants actually rendered.
+            // TODO: Only call onRender et al if subtree has effects
             const hasChildWork = includesSomeLane(
               renderLanes,
               workInProgress.childLanes,
             );
             if (hasChildWork) {
-              workInProgress.flags |= Update;
+              workInProgress.flags |= Passive | Update;
             }
 
             // Reset effect durations for the next eventual effect phase.

@@ -442,9 +442,101 @@ export default {
           }
         }
 
+        gatherJSXDependencies(currentScope);
+
         for (const childScope of currentScope.childScopes) {
           gatherDependenciesRecursively(childScope);
         }
+      }
+
+      function gatherJSXDependencies(currentScope) {
+        if (currentScope.type !== 'function') return;
+
+        const {body} = currentScope.block;
+        const JSXComponents = [];
+
+        // check JSXElement/JSXFragment for arrow functions
+        // and BlockStatement for traditional functions
+        switch (body.type) {
+          case 'JSXElement':
+          case 'JSXFragment':
+            findJSXComponents(body);
+            break;
+          case 'BlockStatement':
+            const bodyElements = [].concat(body.body);
+
+            bodyElements.forEach(element => {
+              if (
+                element.type === 'ReturnStatement' &&
+                (element.argument.type === 'JSXElement' ||
+                  isFragment(element.argument))
+              ) {
+                findJSXComponents(element.argument);
+              }
+            });
+            break;
+          default:
+            break;
+        }
+
+        function isHTMLElement(name) {
+          return /^[a-z]/.test(name);
+        }
+
+        function isFragment(element) {
+          // <> </>
+          if (element.type === 'JSXFragment') return true;
+
+          if (element.type !== 'JSXElement') return false;
+
+          const name = element.openingElement.name;
+
+          // <Fragment> </Fragment>
+          return (
+            name.name === 'Fragment' ||
+            // <React.Fragment> </React.Fragment>
+            (name.type === 'JSXMemberExpression' &&
+              name.object.name === 'React' &&
+              name.object.type === 'JSXIdentifier' &&
+              name.property.name === 'Fragment' &&
+              name.property.type === 'JSXIdentifier')
+          );
+        }
+
+        // check JSX elements tree
+        function findJSXComponents(element) {
+          const elements = [element];
+
+          while (elements.length) {
+            const current = elements.shift();
+
+            if (!isFragment(current)) {
+              const {openingElement} = current;
+              const elementName = openingElement.name.name;
+
+              if (
+                !isHTMLElement(elementName) &&
+                !JSXComponents.includes(elementName)
+              ) {
+                JSXComponents.push(elementName);
+              }
+            }
+
+            const {children} = current;
+
+            children.forEach(child => {
+              if (child.type === 'JSXElement') {
+                elements.push(child);
+              }
+            });
+          }
+        }
+
+        JSXComponents.forEach(component =>
+          dependencies.set(component, {
+            references: [],
+          }),
+        );
       }
 
       // Warn about accessing .current in cleanup effects.
@@ -535,6 +627,7 @@ export default {
           if (setStateInsideEffectWithoutDeps) {
             return;
           }
+
           references.forEach(reference => {
             if (setStateInsideEffectWithoutDeps) {
               return;
@@ -939,7 +1032,10 @@ export default {
           // Is this a variable from top scope?
           const topScopeRef = componentScope.set.get(missingDep);
           const usedDep = dependencies.get(missingDep);
-          if (usedDep.references[0].resolved !== topScopeRef) {
+          if (
+            usedDep.references.length === 0 ||
+            usedDep.references[0].resolved !== topScopeRef
+          ) {
             return;
           }
           // Is this a destructured prop?
