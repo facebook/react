@@ -525,4 +525,25 @@ describe('ReactElement', () => {
     expect(React.isValidElement(element)).toBe(true);
     expect(React.isValidElement(cloned)).toBe(true);
   });
+
+  it('throws when two siblings have different Symbols for the same value as the key', () => {
+    const container = document.createElement('div');
+    const uniq = originalSymbol('uniq');
+    const uniq2 = originalSymbol('uniq');
+    const App = () => {
+      return (
+        <>
+          <div key={uniq2} />
+          <div key={uniq}>
+            <h1>Hello</h1>
+          </div>
+        </>
+      );
+    };
+    expect(() => {
+      ReactDOM.render(<App />, container);
+    }).toErrorDev(
+      'Warning: Encountered two children with the same key, `Symbol(uniq)`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.',
+    );
+  });
 });
