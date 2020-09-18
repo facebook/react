@@ -45,6 +45,7 @@ import {
 import {localStorageGetItem, localStorageSetItem} from './storage';
 import {meta} from './hydration';
 import type {ComponentFilter, ElementType} from './types';
+import {symbol} from 'prop-types';
 
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 
@@ -376,7 +377,6 @@ export type DataType =
   | 'html_element'
   | 'infinity'
   | 'iterator'
-  | 'opaque_iterator'
   | 'nan'
   | 'null'
   | 'number'
@@ -436,8 +436,6 @@ export function getDataType(data: Object): DataType {
         // If it doesn't error, we know it's an ArrayBuffer,
         // but this seems kind of awkward and expensive.
         return 'array_buffer';
-      } else if (data[Symbol.iterator]() === 'data') {
-        return 'opaque_iterator';
       } else if (typeof data[Symbol.iterator] === 'function') {
         return 'iterator';
       } else if (data.constructor && data.constructor.name === 'RegExp') {
@@ -618,6 +616,11 @@ export function formatDataForPreview(
       }
     case 'iterator':
       const name = data.constructor.name;
+      // We check if the the generator returns itself.
+      // If it does, we want to avoid iterating over it.
+      if (typeof data[Symbol.iterator]()) {
+        return `${name}(${data.size})`;
+      }
       if (showFormattedValue) {
         // TRICKY
         // Don't use [...spread] syntax for this purpose.
@@ -656,8 +659,6 @@ export function formatDataForPreview(
       } else {
         return `${name}(${data.size})`;
       }
-    case 'opaque_iterator':
-      return `${data.constructor.name}(${data.size})`;
     case 'date':
       return data.toString();
     case 'object':
