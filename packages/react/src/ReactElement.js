@@ -225,7 +225,9 @@ export function jsx(type, config, maybeKey) {
   }
 
   if (hasValidKey(config)) {
-    key = '' + config.key;
+    // key = typeof config.key === 'symbol' ? config.key.toString() : '' + config.key;
+    key =
+      typeof config.key === 'symbol' ? config.key.toString() : '' + config.key;
   }
 
   if (hasValidRef(config)) {
@@ -289,7 +291,8 @@ export function jsxDEV(type, config, maybeKey, source, self) {
   }
 
   if (hasValidKey(config)) {
-    key = '' + config.key;
+    key =
+      typeof config.key === 'symbol' ? config.key.toString() : '' + config.key;
   }
 
   if (hasValidRef(config)) {
@@ -365,7 +368,10 @@ export function createElement(type, config, children) {
       }
     }
     if (hasValidKey(config)) {
-      key = '' + config.key;
+      key =
+        typeof config.key === 'symbol'
+          ? config.key.toString()
+          : '' + config.key;
     }
 
     self = config.__self === undefined ? null : config.__self;
@@ -498,7 +504,10 @@ export function cloneElement(element, config, children) {
       owner = ReactCurrentOwner.current;
     }
     if (hasValidKey(config)) {
-      key = '' + config.key;
+      key =
+        typeof config.key === 'symbol'
+          ? config.key.toString()
+          : '' + config.key;
     }
 
     // Remaining properties override existing props

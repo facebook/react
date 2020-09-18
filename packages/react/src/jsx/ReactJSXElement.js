@@ -226,7 +226,8 @@ export function jsx(type, config, maybeKey) {
   }
 
   if (hasValidKey(config)) {
-    key = '' + config.key;
+    key =
+      typeof config.key === 'symbol' ? config.key.toString() : '' + config.key;
   }
 
   if (hasValidRef(config)) {
@@ -291,7 +292,10 @@ export function jsxDEV(type, config, maybeKey, source, self) {
     }
 
     if (hasValidKey(config)) {
-      key = '' + config.key;
+      key =
+        typeof config.key === 'symbol'
+          ? config.key.toString()
+          : '' + config.key;
     }
 
     if (hasValidRef(config)) {

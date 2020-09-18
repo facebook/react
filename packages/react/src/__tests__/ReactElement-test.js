@@ -497,4 +497,32 @@ describe('ReactElement', () => {
     const jsonElement = JSON.stringify(React.createElement('div'));
     expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
   });
+  it('does not crash when a Symbol is provided as the unique key', () => {
+    const container = document.createElement('div');
+    const uniq = originalSymbol('uniq');
+    const App = () => {
+      return (
+        <div key={uniq}>
+          <h1>Hello</h1>
+        </div>
+      );
+    };
+    ReactDOM.render(<App />, container);
+    const element = React.createElement('div', {key: uniq});
+    const cloned = React.cloneElement(
+      {
+        $$typeof: 60103,
+        type: 'div',
+        key: undefined,
+        ref: null,
+        props: {},
+        _owner: null,
+        _store: {},
+      },
+      {key: uniq},
+    );
+    expect(container.innerHTML).toBe('<div><h1>Hello</h1></div>');
+    expect(React.isValidElement(element)).toBe(true);
+    expect(React.isValidElement(cloned)).toBe(true);
+  });
 });

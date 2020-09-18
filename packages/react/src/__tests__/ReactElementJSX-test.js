@@ -415,4 +415,13 @@ describe('ReactElement.jsx', () => {
     // TODO: an explicit expect for no warning?
     ReactDOM.render(JSXRuntime.jsx(Parent, {}), container);
   });
+  it('does not crash when a Symbol is provided as the unique key', () => {
+    const container = document.createElement('div');
+    const uniq = originalSymbol('uniq');
+    const App = () => {
+      return JSXRuntime.jsx('div', {key: uniq});
+    };
+    ReactDOM.render(<App />, container);
+    expect(container.innerHTML).toBe('<div></div>');
+  });
 });
