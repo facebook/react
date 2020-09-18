@@ -657,7 +657,7 @@ export function formatDataForPreview(
         return `${name}(${data.size})`;
       }
     case 'opaque_iterator':
-      return `${name}(${data.size})`;
+      return `${data.constructor.name}(${data.size})`;
     case 'date':
       return data.toString();
     case 'object':
