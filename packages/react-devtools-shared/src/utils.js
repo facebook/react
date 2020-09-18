@@ -618,7 +618,7 @@ export function formatDataForPreview(
       const name = data.constructor.name;
       // We check if the the generator returns itself.
       // If it does, we want to avoid iterating over it.
-      if (typeof data[Symbol.iterator]()) {
+      if (typeof data[Symbol.iterator]() === 'object') {
         return `${name}(${data.size})`;
       }
       if (showFormattedValue) {
