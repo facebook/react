@@ -710,6 +710,29 @@ describe('ReactHooks', () => {
     });
   });
 
+  it('warns if deps argument passed to useEffect changed size between renders', () => {
+    const {useEffect} = React;
+
+    function App(props) {
+      useEffect(() => {}, props.deps);
+      return null;
+    }
+    let renderer = null;
+    act(() => {
+      renderer = ReactTestRenderer.create(<App deps={[Symbol('symbol')]} />);
+    });
+    expect(() => {
+      act(() => {
+        renderer.update(<App deps={[Symbol('symbol'), Symbol('symbol')]} />);
+      });
+    }).toErrorDev([
+      'Warning: The final argument passed to useEffect changed size between renders. The order and size of this array must remain constant.\n\n' +
+        'Previous: [Symbol(symbol)]\n' +
+        'Incoming: [Symbol(symbol), Symbol(symbol)]\n' +
+        '    in App (at **)',
+    ]);
+  });
+
   it('warns if deps is not an array for useImperativeHandle', () => {
     const {useImperativeHandle} = React;
 

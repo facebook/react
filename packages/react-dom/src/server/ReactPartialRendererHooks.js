@@ -61,6 +61,16 @@ let isInHookUserCodeInDev = false;
 // In DEV, this is the name of the currently executing primitive hook
 let currentHookNameInDev: ?string;
 
+function joinArray(collection: Array<mixed>, separator: string = ''): string {
+  let concatenatedString: string = '';
+  for (let i = 0; i < collection.length - 1; i++) {
+    // eslint-disable-next-line react-internal/no-primitive-constructors
+    concatenatedString += String(collection[i]) + separator;
+  }
+  // eslint-disable-next-line react-internal/no-primitive-constructors
+  return concatenatedString + String(collection[collection.length - 1]);
+}
+
 function resolveCurrentlyRenderingComponent(): Object {
   invariant(
     currentlyRenderingComponent !== null,
@@ -110,8 +120,8 @@ function areHookInputsEqual(
           'Previous: %s\n' +
           'Incoming: %s',
         currentHookNameInDev,
-        `[${nextDeps.join(', ')}]`,
-        `[${prevDeps.join(', ')}]`,
+        `[${joinArray(nextDeps, ', ')}]`,
+        `[${joinArray(prevDeps, ', ')}]`,
       );
     }
   }
