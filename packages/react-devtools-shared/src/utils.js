@@ -439,11 +439,7 @@ export function getDataType(data: Object): DataType {
     case 'boolean':
       return 'boolean';
     case 'function':
-      //if (data()[Symbol.iterator]() === 'data') {
-      //  return 'opaque_iterable';
-      //} else {
       return 'function';
-      //}
     case 'number':
       if (Number.isNaN(data)) {
         return 'nan';
