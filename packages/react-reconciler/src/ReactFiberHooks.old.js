@@ -195,6 +195,10 @@ let ignorePreviousDependencies: boolean = false;
 
 function joinArray(collection: Array<mixed>, separator: string = ''): string {
   let concatenatedString: string = '';
+
+  if (collection.length === 0) {
+    return concatenatedString;
+  }
   for (let i = 0; i < collection.length - 1; i++) {
     // eslint-disable-next-line react-internal/no-primitive-constructors
     concatenatedString += String(collection[i]) + separator;
