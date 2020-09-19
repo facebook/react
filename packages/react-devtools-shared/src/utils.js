@@ -465,7 +465,7 @@ export function getDataType(data: Object): DataType {
         // If it doesn't error, we know it's an ArrayBuffer,
         // but this seems kind of awkward and expensive.
         return 'array_buffer';
-      } else if (data()[Symbol.iterator] === 'data') {
+      } else if (data[Symbol.iterator] === 'data') {
         return 'opaque_iterator';
       } else if (typeof data[Symbol.iterator] === 'function') {
         return 'iterator';
