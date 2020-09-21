@@ -47,6 +47,7 @@ import {readContext} from './ReactFiberNewContext.old';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
+  PassiveStatic as PassiveStaticEffect,
 } from './ReactFiberFlags';
 import {
   HasEffect as HookHasEffect,
@@ -1240,7 +1241,7 @@ function mountEffect(
     }
   }
   return mountEffectImpl(
-    UpdateEffect | PassiveEffect,
+    PassiveEffect | PassiveStaticEffect,
     HookPassive,
     create,
     deps,
@@ -1257,12 +1258,7 @@ function updateEffect(
       warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
     }
   }
-  return updateEffectImpl(
-    UpdateEffect | PassiveEffect,
-    HookPassive,
-    create,
-    deps,
-  );
+  return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
 function mountLayoutEffect(
@@ -1614,7 +1610,7 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
     const setId = mountState(id)[1];
 
     if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
-      currentlyRenderingFiber.flags |= UpdateEffect | PassiveEffect;
+      currentlyRenderingFiber.flags |= PassiveEffect | PassiveStaticEffect;
       pushEffect(
         HookHasEffect | HookPassive,
         () => {
