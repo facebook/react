@@ -7,6 +7,11 @@ aliases:
   - &environment
     TZ: /usr/share/zoneinfo/America/Los_Angeles
 
+  - &restore_yarn_cache
+    restore_cache:
+      name: Restore yarn cache
+      key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
+
   - &restore_node_modules
     restore_cache:
       name: Restore node_modules cache
@@ -52,9 +57,7 @@ jobs:
       - run:
           name: Nodejs Version
           command: node --version
-      - restore_cache:
-          name: Restore yarn cache
-          key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
+      - *restore_yarn_cache
       - run:
           name: Install Packages
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
@@ -273,17 +276,42 @@ jobs:
   build_devtools_and_process_artifacts:
     docker: *docker
     environment: *environment
-    parallelism: 20
     steps:
       - checkout
       - attach_workspace: *attach_workspace
+      - *restore_yarn_cache
       - *restore_node_modules
+      - run:
+          name: Install Packages
+          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
       - run:
           environment:
             RELEASE_CHANNEL: experimental
           command: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
       - store_artifacts:
           path: ./build/devtools.tgz
+
+  build_devtools_scheduling_profiler:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - *restore_yarn_cache
+      - *restore_node_modules
+      - run:
+          name: Install Packages
+          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
+      - run:
+          name: Build and archive
+          command: |
+            mkdir -p build/devtools
+            cd packages/react-devtools-scheduling-profiler
+            yarn build
+            cd dist
+            tar -zcvf ../../../build/devtools-scheduling-profiler.tgz .
+      - store_artifacts:
+          path: ./build/devtools-scheduling-profiler.tgz
 
   # These jobs are named differently so we can distinguish the stable and
   # and experimental artifacts
@@ -517,10 +545,12 @@ workflows:
       - yarn_test_build_devtools:
           requires:
             - yarn_build
-      # FIXME: Temporarily disabled to unblock master.
-      # - build_devtools_and_process_artifacts:
-      #     requires:
-      #       - yarn_build
+      - build_devtools_and_process_artifacts:
+          requires:
+            - yarn_build
+      - build_devtools_scheduling_profiler:
+          requires:
+            - yarn_build
 
   fuzz_tests:
     triggers:
