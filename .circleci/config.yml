@@ -7,21 +7,11 @@ aliases:
   - &environment
     TZ: /usr/share/zoneinfo/America/Los_Angeles
 
-  - &restore_root_node_modules
+  - &restore_node_modules
     restore_cache:
-      name: Restore root node_modules cache
+      name: Restore node_modules cache
       keys:
-        - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-root-node-modules
-  - &restore_devtools_node_modules
-    restore_cache:
-      name: Restore DevTools node_modules cache
-      keys:
-        - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-devtools-node-modules
-  - &restore_package_node_modules
-    restore_cache:
-      name: Restore other packages node_modules cache
-      keys:
-        - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-package-node-modules
+        - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-node-modules
 
   - &TEST_PARALLELISM 20
 
@@ -34,9 +24,7 @@ aliases:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: node ./scripts/rollup/consolidateBundleSizes.js
       - run: ./scripts/circleci/pack_and_store_artifact.sh
       - store_artifacts:
@@ -78,62 +66,15 @@ jobs:
           key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
           paths:
             - ~/.cache/yarn
-      # Store node_modules for all jobs in this workflow so that they don't
-      # need to each run a yarn install for each job. This will speed up all
-      # jobs run on this branch with the same lockfile. Split into multiple
-      # caches as there's a limited number of paths per cache.
-      # Cache keys are per branch. A `yarn install` in setup is required.
       - save_cache:
-          name: Save root node_modules cache
-          key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-root-node-modules
+          # Store node_modules for all jobs in this workflow so that they don't
+          # need to each run a yarn install for each job. This will speed up
+          # all jobs run on this branch with the same lockfile.
+          name: Save node_modules cache
+          # This cache key is per branch, a yarn install in setup is required.
+          key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-node-modules
           paths:
             - node_modules
-      - save_cache:
-          name: Save DevTools node_modules cache
-          key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-devtools-node-modules
-          paths:
-            # Packages manually listed because glob patterns are not supported;
-            # see # https://circleci.com/docs/2.0/configuration-reference/#save_cache
-            # Regenerate with `ls packages | grep 'devtools' | awk '{print "- packages/" $0 "/node_modules"}'`
-            - packages/react-devtools/node_modules
-            - packages/react-devtools-core/node_modules
-            - packages/react-devtools-extensions/node_modules
-            - packages/react-devtools-inline/node_modules
-            - packages/react-devtools-scheduling-profiler/node_modules
-            - packages/react-devtools-shared/node_modules
-            - packages/react-devtools-shell/node_modules
-      - save_cache:
-          name: Save other packages node_modules cache
-          key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-package-node-modules
-          paths:
-            # Packages manually listed because glob patterns are not supported;
-            # see # https://circleci.com/docs/2.0/configuration-reference/#save_cache
-            # Regenerate with `ls packages | grep -v 'devtools' | awk '{print "- packages/" $0 "/node_modules"}'`
-            - packages/create-subscription/node_modules
-            - packages/dom-event-testing-library/node_modules
-            - packages/eslint-plugin-react-hooks/node_modules
-            - packages/jest-mock-scheduler/node_modules
-            - packages/jest-react/node_modules
-            - packages/react/node_modules
-            - packages/react-art/node_modules
-            - packages/react-cache/node_modules
-            - packages/react-client/node_modules
-            - packages/react-debug-tools/node_modules
-            - packages/react-dom/node_modules
-            - packages/react-fetch/node_modules
-            - packages/react-interactions/node_modules
-            - packages/react-is/node_modules
-            - packages/react-native-renderer/node_modules
-            - packages/react-noop-renderer/node_modules
-            - packages/react-reconciler/node_modules
-            - packages/react-refresh/node_modules
-            - packages/react-server/node_modules
-            - packages/react-test-renderer/node_modules
-            - packages/react-transport-dom-relay/node_modules
-            - packages/react-transport-dom-webpack/node_modules
-            - packages/scheduler/node_modules
-            - packages/shared/node_modules
-            - packages/use-subscription/node_modules
 
   yarn_lint:
     docker: *docker
@@ -141,9 +82,7 @@ jobs:
 
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: node ./scripts/prettier/index
       - run: node ./scripts/tasks/eslint
       - run: ./scripts/circleci/check_license.sh
@@ -156,9 +95,7 @@ jobs:
 
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: node ./scripts/tasks/flow-ci
 
   RELEASE_CHANNEL_stable_yarn_test:
@@ -168,9 +105,7 @@ jobs:
 
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --release-channel=stable --ci
 
   yarn_test:
@@ -179,9 +114,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --ci
 
   RELEASE_CHANNEL_stable_yarn_test_www:
@@ -190,9 +123,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --release-channel=www-classic --ci
 
   RELEASE_CHANNEL_stable_yarn_test_www_variant:
@@ -201,9 +132,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --release-channel=www-classic --variant --ci
 
   RELEASE_CHANNEL_stable_yarn_test_prod_www:
@@ -212,9 +141,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --release-channel=www-classic --prod --ci
 
   RELEASE_CHANNEL_stable_yarn_test_prod_www_variant:
@@ -223,9 +150,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --release-channel=www-classic --prod --variant --ci
 
   yarn_test_www:
@@ -234,9 +159,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --release-channel=www-modern --ci
 
   yarn_test_www_variant:
@@ -245,9 +168,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --release-channel=www-modern --variant --ci
 
   yarn_test_prod_www:
@@ -256,9 +177,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --release-channel=www-modern --prod --ci
 
   yarn_test_prod_www_variant:
@@ -267,9 +186,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --release-channel=www-modern --prod --variant --ci
 
   RELEASE_CHANNEL_stable_yarn_test_persistent:
@@ -279,9 +196,7 @@ jobs:
 
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --release-channel=stable --persistent --ci
 
   RELEASE_CHANNEL_stable_yarn_test_prod:
@@ -291,9 +206,7 @@ jobs:
 
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --release-channel=stable --prod --ci
 
   yarn_test_prod:
@@ -302,9 +215,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --release-channel=experimental --prod --ci
 
   RELEASE_CHANNEL_stable_yarn_build:
@@ -313,9 +224,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run:
           environment:
             RELEASE_CHANNEL: stable
@@ -341,9 +250,7 @@ jobs:
     parallelism: 20
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run:
           environment:
             RELEASE_CHANNEL: experimental
@@ -369,9 +276,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run:
           environment:
             RELEASE_CHANNEL: experimental
@@ -390,9 +295,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       # This runs in the process_artifacts job, too, but it's faster to run
       # this step in both jobs instead of running the jobs sequentially
       - run: node ./scripts/rollup/consolidateBundleSizes.js
@@ -407,9 +310,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       # This runs in the process_artifacts job, too, but it's faster to run
       # this step in both jobs instead of running the jobs sequentially
       - run: node ./scripts/rollup/consolidateBundleSizes.js
@@ -424,9 +325,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn lint-build
       - run: scripts/circleci/check_minified_errors.sh
 
@@ -436,9 +335,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run:
           environment:
             RELEASE_CHANNEL: stable
@@ -452,9 +349,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --release-channel=stable --build --ci
 
   yarn_test_build:
@@ -464,9 +359,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --release-channel=experimental --build --ci
 
   yarn_test_build_devtools:
@@ -475,9 +368,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --project=devtools --build --ci
 
   RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
@@ -486,9 +377,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run:
           name: Run DOM fixture tests
           environment:
@@ -504,9 +393,7 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run:
           name: Run fuzz tests
           command: |
@@ -520,9 +407,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --release-channel=stable --build --prod --ci
 
   yarn_test_build_prod:
@@ -532,9 +417,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_root_node_modules
-      - *restore_devtools_node_modules
-      - *restore_package_node_modules
+      - *restore_node_modules
       - run: yarn test --release-channel=experimental --build --prod --ci
 
 workflows:
