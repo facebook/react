@@ -24,9 +24,3 @@ mv ./firefox/build/ReactDevTools.zip ../../build/devtools/firefox-extension.zip
 # Compress all DevTools artifacts into a single tarball for easy download
 cd ../../build/devtools
 tar -zcvf ../devtools.tgz .
-
-# Build separate scheduling profiler artifact as it is deployed separately.
-cd ../../packages/react-devtools-scheduling-profiler
-yarn build
-cd dist
-tar -zcvf ../../../build/devtools-scheduling-profiler.tgz .

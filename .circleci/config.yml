@@ -290,6 +290,25 @@ jobs:
           command: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
       - store_artifacts:
           path: ./build/devtools.tgz
+
+  build_devtools_scheduling_profiler:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace: *attach_workspace
+      - *restore_yarn_cache
+      - *restore_node_modules
+      - run:
+          name: Install Packages
+          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
+      - run:
+          command: |
+            mkdir -p build/devtools
+            cd packages/react-devtools-scheduling-profiler
+            yarn build
+            cd dist
+            tar -zcvf ../../../build/devtools-scheduling-profiler.tgz .
       - store_artifacts:
           path: ./build/devtools-scheduling-profiler.tgz
 
@@ -526,6 +545,9 @@ workflows:
           requires:
             - yarn_build
       - build_devtools_and_process_artifacts:
+          requires:
+            - yarn_build
+      - build_devtools_scheduling_profiler:
           requires:
             - yarn_build
 
