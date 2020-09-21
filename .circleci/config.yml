@@ -312,6 +312,24 @@ jobs:
             tar -zcvf ../../../build/devtools-scheduling-profiler.tgz .
       - store_artifacts:
           path: ./build/devtools-scheduling-profiler.tgz
+      - persist_to_workspace:
+          root: packages/react-devtools-scheduling-profiler
+          paths:
+            - dist
+  
+  deploy_devtools_scheduling_profiler:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: packages/react-devtools-scheduling-profiler
+      - *restore_node_modules
+      - run:
+          name: Deploy
+          command: |
+            cd packages/react-devtools-scheduling-profiler
+            yarn vercel deploy dist --prod --confirm --token $SCHEDULING_PROFILER_DEPLOY_VERCEL_TOKEN
 
   # These jobs are named differently so we can distinguish the stable and
   # and experimental artifacts
@@ -551,6 +569,13 @@ workflows:
       - build_devtools_scheduling_profiler:
           requires:
             - yarn_build
+      - deploy_devtools_scheduling_profiler:
+          requires:
+            - build_devtools_scheduling_profiler
+          filters:
+            branches:
+              only:
+                - master
 
   fuzz_tests:
     triggers:
