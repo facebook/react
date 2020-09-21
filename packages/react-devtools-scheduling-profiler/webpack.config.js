@@ -27,12 +27,7 @@ const DEVTOOLS_VERSION = getVersionString();
 const imageInlineSizeLimit = 10000;
 
 const babelOptions = {
-  configFile: resolve(
-    __dirname,
-    '..',
-    'react-devtools-shared',
-    'babel.config.js',
-  ),
+  configFile: resolve(__dirname, 'babel.config.js'),
   plugins: shouldUseDevServer
     ? [resolve(builtModulesDir, 'react-refresh/babel')]
     : [],
