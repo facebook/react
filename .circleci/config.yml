@@ -303,6 +303,7 @@ jobs:
           name: Install Packages
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
       - run:
+          name: Build and archive
           command: |
             mkdir -p build/devtools
             cd packages/react-devtools-scheduling-profiler
