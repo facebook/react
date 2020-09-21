@@ -7,6 +7,11 @@ aliases:
   - &environment
     TZ: /usr/share/zoneinfo/America/Los_Angeles
 
+  - &restore_yarn_cache
+    restore_cache:
+      name: Restore yarn cache
+      key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
+
   - &restore_node_modules
     restore_cache:
       name: Restore node_modules cache
@@ -52,9 +57,7 @@ jobs:
       - run:
           name: Nodejs Version
           command: node --version
-      - restore_cache:
-          name: Restore yarn cache
-          key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
+      - *restore_yarn_cache
       - run:
           name: Install Packages
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
@@ -276,7 +279,11 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
+      - *restore_yarn_cache
       - *restore_node_modules
+      - run:
+          name: Install Packages
+          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
       - run:
           environment:
             RELEASE_CHANNEL: experimental
