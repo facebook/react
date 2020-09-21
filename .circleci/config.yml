@@ -290,6 +290,8 @@ jobs:
           command: ./scripts/circleci/pack_and_store_devtools_artifacts.sh
       - store_artifacts:
           path: ./build/devtools.tgz
+      - store_artifacts:
+          path: ./build/devtools-scheduling-profiler.tgz
 
   # These jobs are named differently so we can distinguish the stable and
   # and experimental artifacts
