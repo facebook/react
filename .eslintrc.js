@@ -111,13 +111,8 @@ module.exports = {
     'react-internal/no-cross-fork-types': [
       ERROR,
       {
-        old: [
-          'firstEffect',
-          'nextEffect',
-          // Disabled because it's also used by the Hook type.
-          // 'lastEffect',
-        ],
-        new: ['subtreeFlags'],
+        old: [],
+        new: [],
       },
     ],
   },
