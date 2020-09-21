@@ -1,31 +1,42 @@
+const chromeManifest = require('../react-devtools-extensions/chrome/manifest.json');
+const firefoxManifest = require('../react-devtools-extensions/firefox/manifest.json');
+
+const minChromeVersion = parseInt(chromeManifest.minimum_chrome_version, 10);
+const minFirefoxVersion = parseInt(
+  firefoxManifest.applications.gecko.strict_min_version,
+  10,
+);
+validateVersion(minChromeVersion);
+validateVersion(minFirefoxVersion);
+
+function validateVersion(version) {
+  if (version > 0 && version < 200) {
+    return;
+  }
+  throw new Error('Suspicious browser version in manifest: ' + version);
+}
+
 module.exports = api => {
   const isTest = api.env('test');
-
+  const targets = {};
+  if (isTest) {
+    targets.node = 'current';
+  } else {
+    targets.chrome = minChromeVersion.toString();
+    targets.firefox = minFirefoxVersion.toString();
+    // We won't support IE because that'll double profile import times.
+  }
   const plugins = [
     ['@babel/plugin-transform-flow-strip-types'],
     ['@babel/plugin-proposal-class-properties', {loose: false}],
-
-    // The plugins below fix compilation errors on Webpack 4.
-    // See: https://github.com/webpack/webpack/issues/10227
-    // TODO: Remove once we're on Webpack 5.
-    ['@babel/plugin-proposal-optional-chaining'],
-    ['@babel/plugin-proposal-nullish-coalescing-operator'],
   ];
   if (process.env.NODE_ENV !== 'production') {
     plugins.push(['@babel/plugin-transform-react-jsx-source']);
   }
-
   return {
     plugins,
     presets: [
-      [
-        '@babel/preset-env',
-        {
-          targets: isTest
-            ? {node: 'current'}
-            : 'last 2 Chrome versions, last 2 Firefox versions',
-        },
-      ],
+      ['@babel/preset-env', {targets}],
       '@babel/preset-react',
       '@babel/preset-flow',
     ],
