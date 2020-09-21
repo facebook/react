@@ -11,6 +11,7 @@
 'use strict';
 
 let React;
+let PropTypes;
 let ReactTestRenderer;
 let Scheduler;
 let ReactDebugTools;
@@ -20,6 +21,7 @@ describe('ReactHooksInspectionIntegration', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
+    PropTypes = require('prop-types');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
     act = ReactTestRenderer.unstable_concurrentAct;
@@ -333,6 +335,62 @@ describe('ReactHooksInspectionIntegration', () => {
         subHooks: [],
       },
     ]);
+  });
+
+  it('should be able to access functional legacy context during hook inspection', () => {
+    let contextValue;
+
+    class FirstLegacyContextProvider extends React.Component<any> {
+      static childContextTypes = {
+        string: PropTypes.string,
+      };
+      getChildContext() {
+        return {
+          string: 'valid context',
+        };
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+
+    class SecondLegacyContextProvider extends React.Component<any> {
+      static childContextTypes = {
+        string: PropTypes.string,
+      };
+      getChildContext() {
+        return {
+          string: 'invalid context',
+        };
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+
+    function FunctionalLegacyContextConsumer(props, context) {
+      contextValue = context.string;
+      return <div>{context.string}</div>;
+    }
+    FunctionalLegacyContextConsumer.contextTypes = {
+      string: PropTypes.string,
+    };
+
+    const renderer = ReactTestRenderer.create(
+      <SecondLegacyContextProvider>
+        <FirstLegacyContextProvider>
+          <div>
+            <FunctionalLegacyContextConsumer />
+          </div>
+        </FirstLegacyContextProvider>
+      </SecondLegacyContextProvider>,
+    );
+
+    const childFiber = renderer.root
+      .findByType(FunctionalLegacyContextConsumer)
+      ._currentFiber();
+    expect(() => ReactDebugTools.inspectHooksOfFiber(childFiber)).not.toThrow();
+    expect(contextValue).toBe('valid context');
   });
 
   it('should inspect custom hooks', () => {

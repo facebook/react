@@ -125,6 +125,7 @@ function getFiberFlags(fiber: Fiber): number {
 }
 
 // Some environments (e.g. React Native / Hermes) don't support the performance API yet.
+
 const getCurrentTime =
   typeof performance === 'object' && typeof performance.now === 'function'
     ? () => performance.now()
@@ -2266,6 +2267,23 @@ export function attach(
 
         if (!shouldHideContext) {
           context = stateNode.context;
+        }
+      } else if (tag === FunctionComponent) {
+        const hasLegacyContext = !!fiber.elementType.contextTypes;
+        if (hasLegacyContext) {
+          let current = fiber.return;
+          let childContextFound = false;
+          while (current !== null && childContextFound === false) {
+            const instance = current.stateNode;
+            if (
+              instance &&
+              instance.__reactInternalMemoizedMergedChildContext
+            ) {
+              childContextFound = true;
+              context = instance.__reactInternalMemoizedMergedChildContext;
+            }
+            current = current.return;
+          }
         }
       }
     } else if (

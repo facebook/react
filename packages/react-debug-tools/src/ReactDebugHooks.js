@@ -568,9 +568,10 @@ function processDebugValues(
 }
 
 export function inspectHooks<Props>(
-  renderFunction: Props => React$Node,
+  renderFunction: (Props, any) => React$Node,
   props: Props,
   currentDispatcher: ?CurrentDispatcherRef,
+  legacyContext: any,
 ): HooksTree {
   // DevTools will pass the current renderer's injected dispatcher.
   // Other apps might compile debug hooks as part of their app though.
@@ -584,7 +585,11 @@ export function inspectHooks<Props>(
   let ancestorStackError;
   try {
     ancestorStackError = new Error();
-    renderFunction(props);
+    if (legacyContext) {
+      renderFunction(props, legacyContext);
+    } else {
+      renderFunction(props);
+    }
   } finally {
     readHookLog = hookLog;
     hookLog = [];
@@ -594,7 +599,22 @@ export function inspectHooks<Props>(
   return buildTree(rootStack, readHookLog);
 }
 
-function setupContexts(contextMap: Map<ReactContext<any>, any>, fiber: Fiber) {
+function getLegacyContext(fiber: Fiber): Object | null {
+  const hasLegacyContext = !!fiber.elementType.contextTypes;
+  if (hasLegacyContext) {
+    let current = fiber;
+    while (current !== null) {
+      const instance = current.stateNode;
+      if (instance && instance.__reactInternalMemoizedMergedChildContext) {
+        return instance.__reactInternalMemoizedMergedChildContext;
+      }
+      current = current.return;
+    }
+  }
+  return null;
+}
+
+function setupContext(contextMap: Map<ReactContext<any>, any>, fiber: Fiber) {
   let current = fiber;
   while (current) {
     if (current.tag === ContextProvider) {
@@ -686,16 +706,27 @@ export function inspectHooksOfFiber(
   currentHook = (fiber.memoizedState: Hook);
   const contextMap = new Map();
   try {
-    setupContexts(contextMap, fiber);
-    if (fiber.tag === ForwardRef) {
+    if (fiber.tag === FunctionComponent) {
+      const hasLegacyContext = !!fiber.elementType.contextTypes;
+      if (hasLegacyContext) {
+        const legacyContext = getLegacyContext(fiber);
+        return inspectHooks(type, props, currentDispatcher, legacyContext);
+      } else {
+        setupContext(contextMap, fiber);
+        return inspectHooks(type, props, currentDispatcher);
+      }
+    } else if (fiber.tag === ForwardRef) {
+      setupContext(contextMap, fiber);
       return inspectHooksOfForwardRef(
         type.render,
         props,
         fiber.ref,
         currentDispatcher,
       );
+    } else {
+      setupContext(contextMap, fiber);
+      return inspectHooks(type, props, currentDispatcher);
     }
-    return inspectHooks(type, props, currentDispatcher);
   } finally {
     currentHook = null;
     restoreContexts(contextMap);
