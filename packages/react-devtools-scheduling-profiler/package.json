@@ -26,6 +26,7 @@
     "html-webpack-plugin": "^4.3.0",
     "style-loader": "^1.2.1",
     "url-loader": "^4.1.0",
+    "vercel": "^20.1.0",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12",
     "webpack-dev-server": "^3.11.0",
