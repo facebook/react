@@ -736,7 +736,7 @@ describe('ChangeEventPlugin', () => {
 
     // @gate experimental
     it('mouse enter/leave should be user-blocking but not discrete', async () => {
-      const {act} = TestUtils;
+      const {unstable_concurrentAct: act} = TestUtils;
       const {useState} = React;
 
       const root = ReactDOM.unstable_createRoot(container);

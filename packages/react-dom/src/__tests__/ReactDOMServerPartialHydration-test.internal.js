@@ -79,7 +79,7 @@ describe('ReactDOMServerPartialHydration', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    act = require('react-dom/test-utils').act;
+    act = require('react-dom/test-utils').unstable_concurrentAct;
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
@@ -913,9 +913,8 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(container.textContent).toBe('Hello');
 
     // Render an update with a long timeout.
-    React.unstable_withSuspenseConfig(
-      () => root.render(<App text="Hi" className="hi" />),
-      {timeoutMs: 5000},
+    React.unstable_startTransition(() =>
+      root.render(<App text="Hi" className="hi" />),
     );
 
     // This shouldn't force the fallback yet.

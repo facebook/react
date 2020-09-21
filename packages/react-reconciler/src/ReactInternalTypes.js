@@ -19,15 +19,13 @@ import type {
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {SideEffectTag} from './ReactSideEffectTags';
-import type {SubtreeTag} from './ReactSubtreeTags';
+import type {Flags} from './ReactFiberFlags';
 import type {Lane, LanePriority, Lanes, LaneMap} from './ReactFiberLane';
 import type {HookType} from './ReactFiberHooks.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {SuspenseConfig, TimeoutConfig} from './ReactFiberSuspenseConfig';
 
 export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
 
@@ -119,8 +117,8 @@ export type Fiber = {|
   mode: TypeOfMode,
 
   // Effect
-  effectTag: SideEffectTag,
-  subtreeTag: SubtreeTag,
+  flags: Flags,
+  subtreeFlags: Flags,
   deletions: Array<Fiber> | null,
 
   // Singly linked list fast path to the next fiber with side-effects.
@@ -291,10 +289,8 @@ export type Dispatcher = {|
     deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
-  useDeferredValue<T>(value: T, config: TimeoutConfig | void | null): T,
-  useTransition(
-    config: SuspenseConfig | void | null,
-  ): [(() => void) => void, boolean],
+  useDeferredValue<T>(value: T): T,
+  useTransition(): [(() => void) => void, boolean],
   useMutableSource<Source, Snapshot>(
     source: MutableSource<Source>,
     getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,

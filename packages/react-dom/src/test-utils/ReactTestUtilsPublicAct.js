@@ -15,25 +15,30 @@ import enqueueTask from 'shared/enqueueTask';
 import * as Scheduler from 'scheduler';
 
 // Keep in sync with ReactDOM.js, and ReactTestUtils.js:
-const [
-  /* eslint-disable no-unused-vars */
-  getInstanceFromNode,
-  getNodeFromInstance,
-  getFiberCurrentPropsFromNode,
-  enqueueStateRestore,
-  restoreStateIfNeeded,
-  /* eslint-enable no-unused-vars */
-  flushPassiveEffects,
-  IsThisRendererActing,
-] = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
+const EventInternals =
+  ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.Events;
+// const getInstanceFromNode = EventInternals[0];
+// const getNodeFromInstance = EventInternals[1];
+// const getFiberCurrentPropsFromNode = EventInternals[2];
+// const enqueueStateRestore = EventInternals[3];
+// const restoreStateIfNeeded = EventInternals[4];
+const flushPassiveEffects = EventInternals[5];
+const IsThisRendererActing = EventInternals[6];
 
 const batchedUpdates = ReactDOM.unstable_batchedUpdates;
 
 const {IsSomeRendererActing} = ReactSharedInternals;
 
-// this implementation should be exactly the same in
-// ReactTestUtilsAct.js, ReactTestRendererAct.js, createReactNoop.js
+// This is the public version of `ReactTestUtils.act`. It is implemented in
+// "userspace" (i.e. not the reconciler), so that it doesn't add to the
+// production bundle size.
+// TODO: Remove this implementation of `act` in favor of the one exported by
+// the reconciler. To do this, we must first drop support for `act` in
+// production mode.
 
+// TODO: Remove support for the mock scheduler build, which was only added for
+// the purposes of internal testing. Internal tests should use
+// `unstable_concurrentAct` instead.
 const isSchedulerMocked =
   typeof Scheduler.unstable_flushAllWithoutAsserting === 'function';
 const flushWork =
@@ -68,7 +73,7 @@ function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
 let actingUpdatesScopeDepth = 0;
 let didWarnAboutUsingActInProd = false;
 
-function act(callback: () => Thenable<mixed>): Thenable<void> {
+export function act(callback: () => Thenable<mixed>): Thenable<void> {
   if (!__DEV__) {
     if (didWarnAboutUsingActInProd === false) {
       didWarnAboutUsingActInProd = true;
@@ -210,5 +215,3 @@ function act(callback: () => Thenable<mixed>): Thenable<void> {
     };
   }
 }
-
-export default act;

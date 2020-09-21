@@ -11,7 +11,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {Lane} from './ReactFiberLane';
 import {SuspenseComponent, SuspenseListComponent} from './ReactWorkTags';
-import {NoEffect, DidCapture} from './ReactSideEffectTags';
+import {NoFlags, DidCapture} from './ReactFiberFlags';
 import {
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
@@ -104,7 +104,7 @@ export function findFirstSuspended(row: Fiber): null | Fiber {
       // keep track of whether it suspended or not.
       node.memoizedProps.revealOrder !== undefined
     ) {
-      const didSuspend = (node.effectTag & DidCapture) !== NoEffect;
+      const didSuspend = (node.flags & DidCapture) !== NoFlags;
       if (didSuspend) {
         return node;
       }

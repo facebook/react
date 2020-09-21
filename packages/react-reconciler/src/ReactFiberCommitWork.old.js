@@ -62,12 +62,12 @@ import {
   clearCaughtError,
 } from 'shared/ReactErrorUtils';
 import {
-  NoEffect,
+  NoFlags,
   ContentReset,
   Placement,
   Snapshot,
   Update,
-} from './ReactSideEffectTags';
+} from './ReactFiberFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 
@@ -119,7 +119,7 @@ import {
   enqueuePendingPassiveProfilerEffect,
 } from './ReactFiberWorkLoop.old';
 import {
-  NoEffect as NoHookEffect,
+  NoFlags as NoHookEffect,
   HasEffect as HookHasEffect,
   Layout as HookLayout,
   Passive as HookPassive,
@@ -234,7 +234,7 @@ function commitBeforeMutationLifeCycles(
       return;
     }
     case ClassComponent: {
-      if (finishedWork.effectTag & Snapshot) {
+      if (finishedWork.flags & Snapshot) {
         if (current !== null) {
           const prevProps = current.memoizedProps;
           const prevState = current.memoizedState;
@@ -293,7 +293,7 @@ function commitBeforeMutationLifeCycles(
     }
     case HostRoot: {
       if (supportsMutation) {
-        if (finishedWork.effectTag & Snapshot) {
+        if (finishedWork.flags & Snapshot) {
           const root = finishedWork.stateNode;
           clearContainer(root.containerInfo);
         }
@@ -410,7 +410,7 @@ export function commitPassiveEffectDurations(
 ): void {
   if (enableProfilerTimer && enableProfilerCommitHooks) {
     // Only Profilers with work in their subtree will have an Update effect scheduled.
-    if ((finishedWork.effectTag & Update) !== NoEffect) {
+    if ((finishedWork.flags & Update) !== NoFlags) {
       switch (finishedWork.tag) {
         case Profiler: {
           const {passiveEffectDuration} = finishedWork.stateNode;
@@ -494,7 +494,7 @@ function commitLifeCycles(
     }
     case ClassComponent: {
       const instance = finishedWork.stateNode;
-      if (finishedWork.effectTag & Update) {
+      if (finishedWork.flags & Update) {
         if (current === null) {
           // We could update instance props and state here,
           // but instead we rely on them being set during last render.
@@ -670,7 +670,7 @@ function commitLifeCycles(
       // (eg DOM renderer may schedule auto-focus for inputs and form controls).
       // These effects should only be committed when components are first mounted,
       // aka when there is no current/alternate.
-      if (current === null && finishedWork.effectTag & Update) {
+      if (current === null && finishedWork.flags & Update) {
         const type = finishedWork.type;
         const props = finishedWork.memoizedProps;
         commitMount(instance, type, props, finishedWork);
@@ -1148,7 +1148,7 @@ function getHostSibling(fiber: Fiber): ?Instance {
     ) {
       // If it is not host node and, we might have a host node inside it.
       // Try to search down until we find one.
-      if (node.effectTag & Placement) {
+      if (node.flags & Placement) {
         // If we don't have a child, try the siblings instead.
         continue siblings;
       }
@@ -1162,7 +1162,7 @@ function getHostSibling(fiber: Fiber): ?Instance {
       }
     }
     // Check if this host node is stable or about to be placed.
-    if (!(node.effectTag & Placement)) {
+    if (!(node.flags & Placement)) {
       // Found it!
       return node.stateNode;
     }
@@ -1207,11 +1207,11 @@ function commitPlacement(finishedWork: Fiber): void {
           'in React. Please file an issue.',
       );
   }
-  if (parentFiber.effectTag & ContentReset) {
+  if (parentFiber.flags & ContentReset) {
     // Reset the text content of the parent before doing any insertions
     resetTextContent(parent);
     // Clear ContentReset from the effect tag
-    parentFiber.effectTag &= ~ContentReset;
+    parentFiber.flags &= ~ContentReset;
   }
 
   const before = getHostSibling(finishedWork);

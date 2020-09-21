@@ -22,6 +22,7 @@ import {
   StrictMode,
   Suspense,
 } from 'react-is';
+import {REACT_SUSPENSE_LIST_TYPE as SuspenseList} from 'shared/ReactSymbols';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
@@ -43,7 +44,6 @@ import {
 } from 'react-devtools-shared/src/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
 import {meta} from './hydration';
-
 import type {ComponentFilter, ElementType} from './types';
 
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
@@ -52,14 +52,39 @@ const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 // Try to reuse the already encoded strings.
 const encodedStringCache = new LRU({max: 1000});
 
-export function alphaSortKeys(a: string, b: string): number {
-  if (a > b) {
+export function alphaSortKeys(
+  a: string | number | Symbol,
+  b: string | number | Symbol,
+): number {
+  if (a.toString() > b.toString()) {
     return 1;
-  } else if (b > a) {
+  } else if (b.toString() > a.toString()) {
     return -1;
   } else {
     return 0;
   }
+}
+
+export function getAllEnumerableKeys(
+  obj: Object,
+): Array<string | number | Symbol> {
+  const keys = [];
+  let current = obj;
+  while (current != null) {
+    const currentKeys = [
+      ...Object.keys(current),
+      ...Object.getOwnPropertySymbols(current),
+    ];
+    const descriptors = Object.getOwnPropertyDescriptors(current);
+    currentKeys.forEach(key => {
+      // $FlowFixMe: key can be a Symbol https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor
+      if (descriptors[key].enumerable) {
+        keys.push(key);
+      }
+    });
+    current = Object.getPrototypeOf(current);
+  }
+  return keys;
 }
 
 export function getDisplayName(
@@ -349,6 +374,45 @@ export function getInObject(object: Object, path: Array<string | number>): any {
   }, object);
 }
 
+export function deletePathInObject(
+  object: Object,
+  path: Array<string | number>,
+) {
+  const length = path.length;
+  const last = path[length - 1];
+  if (object != null) {
+    const parent = getInObject(object, path.slice(0, length - 1));
+    if (parent) {
+      if (Array.isArray(parent)) {
+        parent.splice(((last: any): number), 1);
+      } else {
+        delete parent[last];
+      }
+    }
+  }
+}
+
+export function renamePathInObject(
+  object: Object,
+  oldPath: Array<string | number>,
+  newPath: Array<string | number>,
+) {
+  const length = oldPath.length;
+  if (object != null) {
+    const parent = getInObject(object, oldPath.slice(0, length - 1));
+    if (parent) {
+      const lastOld = oldPath[length - 1];
+      const lastNew = newPath[length - 1];
+      parent[lastNew] = parent[lastOld];
+      if (Array.isArray(parent)) {
+        parent.splice(((lastOld: any): number), 1);
+      } else {
+        delete parent[lastOld];
+      }
+    }
+  }
+}
+
 export function setInObject(
   object: Object,
   path: Array<string | number>,
@@ -489,12 +553,16 @@ export function getDisplayNameForReactElement(
       return 'StrictMode';
     case Suspense:
       return 'Suspense';
+    case SuspenseList:
+      return 'SuspenseList';
     default:
       const {type} = element;
       if (typeof type === 'string') {
         return type;
-      } else if (type != null) {
+      } else if (typeof type === 'function') {
         return getDisplayName(type, 'Anonymous');
+      } else if (type != null) {
+        return 'NotImplementedInDevtools';
       } else {
         return 'Element';
       }
@@ -653,7 +721,7 @@ export function formatDataForPreview(
       return data.toString();
     case 'object':
       if (showFormattedValue) {
-        const keys = Object.keys(data).sort(alphaSortKeys);
+        const keys = getAllEnumerableKeys(data).sort(alphaSortKeys);
 
         let formatted = '';
         for (let i = 0; i < keys.length; i++) {
@@ -661,7 +729,10 @@ export function formatDataForPreview(
           if (i > 0) {
             formatted += ', ';
           }
-          formatted += `${key}: ${formatDataForPreview(data[key], false)}`;
+          formatted += `${key.toString()}: ${formatDataForPreview(
+            data[key],
+            false,
+          )}`;
           if (formatted.length > MAX_PREVIEW_STRING_LENGTH) {
             // Prevent doing a lot of unnecessary iteration...
             break;

@@ -389,14 +389,11 @@ describe('SimpleEventPlugin', function() {
             <button
               ref={el => (button = el)}
               onClick={() => {
-                React.unstable_withSuspenseConfig(
-                  () => {
-                    this.setState(state => ({
-                      lowPriCount: state.lowPriCount + 1,
-                    }));
-                  },
-                  {timeoutMs: 5000},
-                );
+                React.unstable_startTransition(() => {
+                  this.setState(state => ({
+                    lowPriCount: state.lowPriCount + 1,
+                  }));
+                });
               }}>
               {text}
             </button>
@@ -537,21 +534,17 @@ describe('SimpleEventPlugin', function() {
         container,
       );
 
-      if (gate(flags => flags.enablePassiveEventIntervention)) {
-        if (gate(flags => flags.enableEagerRootListeners)) {
-          expect(passiveEvents).toEqual([
-            'touchstart',
-            'touchstart',
-            'touchmove',
-            'touchmove',
-            'wheel',
-            'wheel',
-          ]);
-        } else {
-          expect(passiveEvents).toEqual(['touchstart', 'touchmove', 'wheel']);
-        }
+      if (gate(flags => flags.enableEagerRootListeners)) {
+        expect(passiveEvents).toEqual([
+          'touchstart',
+          'touchstart',
+          'touchmove',
+          'touchmove',
+          'wheel',
+          'wheel',
+        ]);
       } else {
-        expect(passiveEvents).toEqual([]);
+        expect(passiveEvents).toEqual(['touchstart', 'touchmove', 'wheel']);
       }
     });
   });

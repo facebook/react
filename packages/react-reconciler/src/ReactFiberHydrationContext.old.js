@@ -24,7 +24,7 @@ import {
   HostRoot,
   SuspenseComponent,
 } from './ReactWorkTags';
-import {Deletion, Placement, Hydrating} from './ReactSideEffectTags';
+import {Deletion, Placement, Hydrating} from './ReactFiberFlags';
 import invariant from 'shared/invariant';
 
 import {
@@ -124,7 +124,7 @@ function deleteHydratableInstance(
   const childToDelete = createFiberFromHostInstanceForDeletion();
   childToDelete.stateNode = instance;
   childToDelete.return = returnFiber;
-  childToDelete.effectTag = Deletion;
+  childToDelete.flags = Deletion;
 
   // This might seem like it belongs on progressedFirstDeletion. However,
   // these children are not part of the reconciliation list of children.
@@ -140,7 +140,7 @@ function deleteHydratableInstance(
 }
 
 function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
-  fiber.effectTag = (fiber.effectTag & ~Hydrating) | Placement;
+  fiber.flags = (fiber.flags & ~Hydrating) | Placement;
   if (__DEV__) {
     switch (returnFiber.tag) {
       case HostRoot: {

@@ -12,9 +12,8 @@
   flex: 0 0 auto;
   cursor: default;
 }
-.EditableName:after,
-.Name:after {
-  content: ': ';
+
+.AfterName {
   color: var(--color-text);
   margin-right: 0.5rem;
 }
@@ -39,4 +38,9 @@
 
 .Empty {
   color: var(--color-dimmer);
+}
+
+.DeleteArrayItemButton {
+  padding: 0;
+  margin-right: 0.125rem;
 }

@@ -21,7 +21,7 @@ describe('ReactUpdates', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
-    act = ReactTestUtils.act;
+    act = ReactTestUtils.unstable_concurrentAct;
     Scheduler = require('scheduler');
   });
 

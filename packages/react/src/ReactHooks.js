@@ -151,16 +151,14 @@ export function useDebugValue<T>(
 
 export const emptyObject = {};
 
-export function useTransition(
-  config: ?Object,
-): [(() => void) => void, boolean] {
+export function useTransition(): [(() => void) => void, boolean] {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useTransition(config);
+  return dispatcher.useTransition();
 }
 
-export function useDeferredValue<T>(value: T, config: ?Object): T {
+export function useDeferredValue<T>(value: T): T {
   const dispatcher = resolveDispatcher();
-  return dispatcher.useDeferredValue(value, config);
+  return dispatcher.useDeferredValue(value);
 }
 
 export function useOpaqueIdentifier(): OpaqueIDType | void {

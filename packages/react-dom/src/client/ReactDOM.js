@@ -183,6 +183,7 @@ const Internals = {
     enqueueStateRestore,
     restoreStateIfNeeded,
     flushPassiveEffects,
+    // TODO: This is related to `act`, not events. Move to separate key?
     IsThisRendererActing,
   ],
 };

@@ -212,7 +212,6 @@ export function propagateContextChange(
             const update = createUpdate(
               NoTimestamp,
               pickArbitraryLane(renderLanes),
-              null,
             );
             update.tag = ForceUpdate;
             // TODO: Because we don't have a work-in-progress, this will add the

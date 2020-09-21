@@ -32,7 +32,14 @@
     "main.html",
     "panel.html",
     "build/react_devtools_backend.js",
-    "build/renderer.js"
+    "build/renderer.js",
+    "build/background.js.map",
+    "build/contentScript.js.map",
+    "build/injectGlobalHook.js.map",
+    "build/main.js.map",
+    "build/panel.js.map",
+    "build/renderer.js.map",
+    "build/react_devtools_backend.js.map"
   ],
 
   "background": {

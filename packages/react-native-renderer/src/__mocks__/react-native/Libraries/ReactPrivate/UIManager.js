@@ -60,8 +60,6 @@ function removeChild(parent, child) {
 
 const RCTUIManager = {
   __dumpHierarchyForJestTestsOnly: function() {
-    return roots.map(tag => dumpSubtree(tag, 0)).join('\n');
-
     function dumpSubtree(tag, indent) {
       const info = views.get(tag);
       let out = '';
@@ -73,6 +71,7 @@ const RCTUIManager = {
       }
       return out;
     }
+    return roots.map(tag => dumpSubtree(tag, 0)).join('\n');
   },
   clearJSResponder: jest.fn(),
   createView: jest.fn(function createView(reactTag, viewName, rootTag, props) {

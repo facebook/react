@@ -728,7 +728,20 @@ function runActTests(label, render, unmount, rerender) {
     describe('suspense', () => {
       if (__DEV__ && __EXPERIMENTAL__) {
         // todo - remove __DEV__ check once we start using testing builds
+
         it('triggers fallbacks if available', async () => {
+          if (label !== 'legacy mode') {
+            // FIXME: Support for Blocking* and Concurrent Mode were
+            // intentionally removed from the public version of `act`. It will
+            // be added back in a future major version, before Blocking and and
+            // Concurrent Mode are officially released. Consider disabling all
+            // non-Legacy tests in this suite until then.
+            //
+            // *Blocking Mode actually does happen to work, though
+            // not "officially" since it's an unreleased feature.
+            return;
+          }
+
           let resolved = false;
           let resolve;
           const promise = new Promise(_resolve => {
@@ -771,18 +784,24 @@ function runActTests(label, render, unmount, rerender) {
           expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
 
           // trigger a suspendy update with a delay
-          React.unstable_withSuspenseConfig(
-            () => {
-              act(() => {
-                rerender(<App suspend={true} />);
-              });
-            },
-            {timeout: 5000},
-          );
-          // the spinner shows up regardless
-          expect(
-            document.querySelector('[data-test-id=spinner]'),
-          ).not.toBeNull();
+          React.unstable_startTransition(() => {
+            act(() => {
+              rerender(<App suspend={true} />);
+            });
+          });
+
+          if (label === 'concurrent mode') {
+            // In Concurrent Mode, refresh transitions delay indefinitely.
+            expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
+          } else {
+            // In Legacy Mode and Blocking Mode, all fallbacks are forced to
+            // display, even during a refresh transition.
+            // TODO: Consider delaying indefinitely in Blocking Mode, to match
+            // Concurrent Mode semantics.
+            expect(
+              document.querySelector('[data-test-id=spinner]'),
+            ).not.toBeNull();
+          }
 
           // resolve the promise
           await act(async () => {

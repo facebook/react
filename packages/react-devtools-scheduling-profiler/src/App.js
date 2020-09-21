@@ -7,22 +7,28 @@
  * @flow
  */
 
-import type {ReactProfilerData} from './types';
+// Reach styles need to come before any component styles.
+// This makes overriding the styles simpler.
+import '@reach/menu-button/styles.css';
+import '@reach/tooltip/styles.css';
 
 import * as React from 'react';
-import {useState} from 'react';
 
-import ImportPage from './ImportPage';
-import CanvasPage from './CanvasPage';
+import {SchedulingProfiler} from './SchedulingProfiler';
+import {useBrowserTheme, useDisplayDensity} from './hooks';
+
+import styles from './App.css';
+import 'react-devtools-shared/src/devtools/views/root.css';
 
 export default function App() {
-  const [profilerData, setProfilerData] = useState<ReactProfilerData | null>(
-    null,
-  );
+  useBrowserTheme();
+  useDisplayDensity();
 
-  if (profilerData) {
-    return <CanvasPage profilerData={profilerData} />;
-  } else {
-    return <ImportPage onDataImported={setProfilerData} />;
-  }
+  return (
+    <div className={styles.DevTools}>
+      <div className={styles.TabContent}>
+        <SchedulingProfiler />
+      </div>
+    </div>
+  );
 }

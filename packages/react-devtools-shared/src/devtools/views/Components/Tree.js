@@ -130,7 +130,11 @@ export default function Tree(props: Props) {
       switch (event.key) {
         case 'ArrowDown':
           event.preventDefault();
-          dispatch({type: 'SELECT_NEXT_ELEMENT_IN_TREE'});
+          if (event.altKey) {
+            dispatch({type: 'SELECT_NEXT_SIBLING_IN_TREE'});
+          } else {
+            dispatch({type: 'SELECT_NEXT_ELEMENT_IN_TREE'});
+          }
           break;
         case 'ArrowLeft':
           event.preventDefault();
@@ -139,10 +143,16 @@ export default function Tree(props: Props) {
               ? store.getElementByID(selectedElementID)
               : null;
           if (element !== null) {
-            if (element.children.length > 0 && !element.isCollapsed) {
-              store.toggleIsCollapsed(element.id, true);
+            if (event.altKey) {
+              if (element.ownerID !== null) {
+                dispatch({type: 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE'});
+              }
             } else {
-              dispatch({type: 'SELECT_PARENT_ELEMENT_IN_TREE'});
+              if (element.children.length > 0 && !element.isCollapsed) {
+                store.toggleIsCollapsed(element.id, true);
+              } else {
+                dispatch({type: 'SELECT_PARENT_ELEMENT_IN_TREE'});
+              }
             }
           }
           break;
@@ -153,16 +163,24 @@ export default function Tree(props: Props) {
               ? store.getElementByID(selectedElementID)
               : null;
           if (element !== null) {
-            if (element.children.length > 0 && element.isCollapsed) {
-              store.toggleIsCollapsed(element.id, false);
+            if (event.altKey) {
+              dispatch({type: 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE'});
             } else {
-              dispatch({type: 'SELECT_CHILD_ELEMENT_IN_TREE'});
+              if (element.children.length > 0 && element.isCollapsed) {
+                store.toggleIsCollapsed(element.id, false);
+              } else {
+                dispatch({type: 'SELECT_CHILD_ELEMENT_IN_TREE'});
+              }
             }
           }
           break;
         case 'ArrowUp':
           event.preventDefault();
-          dispatch({type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE'});
+          if (event.altKey) {
+            dispatch({type: 'SELECT_PREVIOUS_SIBLING_IN_TREE'});
+          } else {
+            dispatch({type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE'});
+          }
           break;
         default:
           return;

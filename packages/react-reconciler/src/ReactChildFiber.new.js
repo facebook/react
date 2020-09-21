@@ -15,7 +15,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 
 import getComponentName from 'shared/getComponentName';
-import {Deletion, Placement} from './ReactSideEffectTags';
+import {Deletion, Placement} from './ReactFiberFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -280,7 +280,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     const deletions = returnFiber.deletions;
     if (deletions === null) {
       returnFiber.deletions = [childToDelete];
-      returnFiber.effectTag |= Deletion;
+      returnFiber.flags |= Deletion;
     } else {
       deletions.push(childToDelete);
     }
@@ -350,7 +350,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       const oldIndex = current.index;
       if (oldIndex < lastPlacedIndex) {
         // This is a move.
-        newFiber.effectTag = Placement;
+        newFiber.flags = Placement;
         return lastPlacedIndex;
       } else {
         // This item can stay in place.
@@ -358,7 +358,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       }
     } else {
       // This is an insertion.
-      newFiber.effectTag = Placement;
+      newFiber.flags = Placement;
       return lastPlacedIndex;
     }
   }
@@ -367,7 +367,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     // This is simpler for the single child case. We only need to do a
     // placement for inserting new children.
     if (shouldTrackSideEffects && newFiber.alternate === null) {
-      newFiber.effectTag = Placement;
+      newFiber.flags = Placement;
     }
     return newFiber;
   }

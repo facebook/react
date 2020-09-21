@@ -21,6 +21,7 @@ import {
   REACT_PROVIDER_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
 } from 'shared/ReactSymbols';
 import isValidElementType from 'shared/isValidElementType';
 
@@ -36,6 +37,7 @@ export function typeOf(object: any) {
           case REACT_PROFILER_TYPE:
           case REACT_STRICT_MODE_TYPE:
           case REACT_SUSPENSE_TYPE:
+          case REACT_SUSPENSE_LIST_TYPE:
             return type;
           default:
             const $$typeofType = type && type.$$typeof;

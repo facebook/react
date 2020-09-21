@@ -74,9 +74,9 @@ const {key_new} = obj;
       errors: [{message: oldAccessWarning}],
     },
     {
-      code: 'const subtreeTag = obj.subtreeTag;',
+      code: 'const subtreeFlags = obj.subtreeFlags;',
       filename: 'ReactFiberWorkLoop.old.js',
-      options: [{new: ['subtreeTag']}],
+      options: [{new: ['subtreeFlags']}],
       errors: [{message: newAccessWarning}],
     },
     {

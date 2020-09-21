@@ -16,7 +16,13 @@ module.exports = {
   // Stop ESLint from looking for a configuration file in parent folders
   root: true,
 
-  plugins: ['jest', 'no-for-of-loops', 'react', 'react-internal'],
+  plugins: [
+    'jest',
+    'no-for-of-loops',
+    'no-function-declare-after-return',
+    'react',
+    'react-internal',
+  ],
 
   parser: 'babel-eslint',
   parserOptions: {
@@ -91,6 +97,9 @@ module.exports = {
     // You can disable this rule for code that isn't shipped (e.g. build scripts and tests).
     'no-for-of-loops/no-for-of-loops': ERROR,
 
+    // Prevent function declarations after return statements
+    'no-function-declare-after-return/no-function-declare-after-return': ERROR,
+
     // CUSTOM RULES
     // the second argument of warning/invariant should be a literal string
     'react-internal/no-primitive-constructors': ERROR,
@@ -108,7 +117,7 @@ module.exports = {
           // Disabled because it's also used by the Hook type.
           // 'lastEffect',
         ],
-        new: ['subtreeTag'],
+        new: ['subtreeFlags'],
       },
     ],
   },

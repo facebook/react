@@ -22,7 +22,7 @@ describe('ReactHooksInspectionIntegration', () => {
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
-    act = ReactTestRenderer.act;
+    act = ReactTestRenderer.unstable_concurrentAct;
     ReactDebugTools = require('react-debug-tools');
   });
 

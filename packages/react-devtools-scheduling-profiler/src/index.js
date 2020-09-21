@@ -15,9 +15,10 @@ import {unstable_createRoot as createRoot} from 'react-dom';
 import nullthrows from 'nullthrows';
 import App from './App';
 
-import './index.css';
+import styles from './index.css';
 
 const container = document.createElement('div');
+container.className = styles.Container;
 container.id = 'root';
 
 const body = nullthrows(document.body, 'Expect document.body to exist');

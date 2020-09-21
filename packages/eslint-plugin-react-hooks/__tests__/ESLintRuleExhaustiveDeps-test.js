@@ -31,6 +31,7 @@ function normalizeIndent(strings) {
 // }
 // ***************************************************
 
+// Tests that are valid/invalid across all parsers
 const tests = {
   valid: [
     {
@@ -603,6 +604,10 @@ const tests = {
           const [state4, dispatch2] = React.useReducer();
           const [state5, maybeSetState] = useFunnyState();
           const [state6, maybeDispatch] = useFunnyReducer();
+          const [startTransition1] = useTransition();
+          const [startTransition2, isPending2] = useTransition();
+          const [startTransition3] = React.useTransition();
+          const [startTransition4, isPending4] = React.useTransition();
           const mySetState = useCallback(() => {}, []);
           let myDispatch = useCallback(() => {}, []);
 
@@ -616,6 +621,10 @@ const tests = {
             setState2();
             dispatch1();
             dispatch2();
+            startTransition1();
+            startTransition2();
+            startTransition3();
+            startTransition4();
 
             // Dynamic
             console.log(state1);
@@ -624,6 +633,8 @@ const tests = {
             console.log(state4);
             console.log(state5);
             console.log(state6);
+            console.log(isPending2);
+            console.log(isPending4);
             mySetState();
             myDispatch();
 
@@ -634,6 +645,7 @@ const tests = {
             // Dynamic
             state1, state2, state3, state4, state5, state6,
             maybeRef1, maybeRef2,
+            isPending2, isPending4,
 
             // Not sure; assume dynamic
             mySetState, myDispatch,
@@ -1308,16 +1320,6 @@ const tests = {
             window.addEventListener('resize', handleResize);
             return () => window.removeEventListener('resize', handleResize);
           });
-        }
-      `,
-    },
-    // Ignore Generic Type Variables for arrow functions
-    {
-      code: normalizeIndent`
-        function Example({ prop }) {
-          const bar = useEffect(<T>(a: T): Hello => {
-            prop();
-          }, [prop]);
         }
       `,
     },
@@ -7455,24 +7457,7 @@ const tests = {
         },
       ],
     },
-    {
-      code: normalizeIndent`
-        function Foo() {
-          const foo = ({}: any);
-          useMemo(() => {
-            console.log(foo);
-          }, [foo]);
-        }
-      `,
-      errors: [
-        {
-          message:
-            "The 'foo' object makes the dependencies of useMemo Hook (at line 6) change on every render. " +
-            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own useMemo() Hook.",
-          suggestions: undefined,
-        },
-      ],
-    },
+
     {
       code: normalizeIndent`
         function Foo() {
@@ -7521,6 +7506,43 @@ const tests = {
   ],
 };
 
+// Tests that are only valid/invalid across parsers supporting Flow
+const testsFlow = {
+  valid: [
+    // Ignore Generic Type Variables for arrow functions
+    {
+      code: normalizeIndent`
+        function Example({ prop }) {
+          const bar = useEffect(<T>(a: T): Hello => {
+            prop();
+          }, [prop]);
+        }
+      `,
+    },
+  ],
+  invalid: [
+    {
+      code: normalizeIndent`
+      function Foo() {
+        const foo = ({}: any);
+        useMemo(() => {
+          console.log(foo);
+        }, [foo]);
+      }
+    `,
+      errors: [
+        {
+          message:
+            "The 'foo' object makes the dependencies of useMemo Hook (at line 6) change on every render. " +
+            "Move it inside the useMemo callback. Alternatively, wrap the initialization of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ],
+    },
+  ],
+};
+
+// Tests that are only valid/invalid across parsers supporting TypeScript
 const testsTypescript = {
   valid: [
     {
@@ -7917,6 +7939,43 @@ const testsTypescript = {
   ],
 };
 
+// Tests that are only valid/invalid for `@typescript-eslint/parser@4.x`
+const testsTypescriptEslintParserV4 = {
+  valid: [],
+  invalid: [
+    // TODO: Should also be invalid as part of the JS test suite i.e. be invalid with babel eslint parsers.
+    // It doesn't use any explicit types but any JS is still valid TS.
+    {
+      code: normalizeIndent`
+        function Foo({ Component }) {
+          React.useEffect(() => {
+            console.log(<Component />);
+          }, []);
+        };
+      `,
+      errors: [
+        {
+          message:
+            "React Hook React.useEffect has a missing dependency: 'Component'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [Component]',
+              output: normalizeIndent`
+              function Foo({ Component }) {
+                React.useEffect(() => {
+                  console.log(<Component />);
+                }, [Component]);
+              };
+            `,
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};
+
 // For easier local testing
 if (!process.env.CI) {
   let only = [];
@@ -7924,8 +7983,12 @@ if (!process.env.CI) {
   [
     ...tests.valid,
     ...tests.invalid,
+    ...testsFlow.valid,
+    ...testsFlow.invalid,
     ...testsTypescript.valid,
     ...testsTypescript.invalid,
+    ...testsTypescriptEslintParserV4.valid,
+    ...testsTypescriptEslintParserV4.invalid,
   ].forEach(t => {
     if (t.skip) {
       delete t.skip;
@@ -7947,21 +8010,74 @@ if (!process.env.CI) {
   };
   tests.valid = tests.valid.filter(predicate);
   tests.invalid = tests.invalid.filter(predicate);
+  testsFlow.valid = testsFlow.valid.filter(predicate);
+  testsFlow.invalid = testsFlow.invalid.filter(predicate);
   testsTypescript.valid = testsTypescript.valid.filter(predicate);
   testsTypescript.invalid = testsTypescript.invalid.filter(predicate);
 }
 
-const parserOptions = {
-  ecmaVersion: 6,
-  sourceType: 'module',
-};
+describe('react-hooks', () => {
+  const parserOptions = {
+    ecmaFeatures: {
+      jsx: true,
+    },
+    ecmaVersion: 6,
+    sourceType: 'module',
+  };
 
-new ESLintTester({
-  parser: require.resolve('babel-eslint'),
-  parserOptions,
-}).run('react-hooks', ReactHooksESLintRule, tests);
+  const testsBabelEslint = {
+    valid: [...testsFlow.valid, ...tests.valid],
+    invalid: [...testsFlow.invalid, ...tests.invalid],
+  };
 
-new ESLintTester({
-  parser: require.resolve('@typescript-eslint/parser'),
-  parserOptions,
-}).run('react-hooks', ReactHooksESLintRule, testsTypescript);
+  new ESLintTester({
+    parser: require.resolve('babel-eslint'),
+    parserOptions,
+  }).run('parser: babel-eslint', ReactHooksESLintRule, testsBabelEslint);
+
+  new ESLintTester({
+    parser: require.resolve('@babel/eslint-parser'),
+    parserOptions,
+  }).run(
+    'parser: @babel/eslint-parser',
+    ReactHooksESLintRule,
+    testsBabelEslint
+  );
+
+  const testsTypescriptEslintParser = {
+    valid: [...testsTypescript.valid, ...tests.valid],
+    invalid: [...testsTypescript.invalid, ...tests.invalid],
+  };
+
+  new ESLintTester({
+    parser: require.resolve('@typescript-eslint/parser-v2'),
+    parserOptions,
+  }).run(
+    'parser: @typescript-eslint/parser@2.x',
+    ReactHooksESLintRule,
+    testsTypescriptEslintParser
+  );
+
+  new ESLintTester({
+    parser: require.resolve('@typescript-eslint/parser-v3'),
+    parserOptions,
+  }).run(
+    'parser: @typescript-eslint/parser@3.x',
+    ReactHooksESLintRule,
+    testsTypescriptEslintParser
+  );
+
+  new ESLintTester({
+    parser: require.resolve('@typescript-eslint/parser-v4'),
+    parserOptions,
+  }).run('parser: @typescript-eslint/parser@4.x', ReactHooksESLintRule, {
+    valid: [
+      ...testsTypescriptEslintParserV4.valid,
+      ...testsTypescriptEslintParser.valid,
+    ],
+    invalid: [
+      ...testsTypescriptEslintParserV4.invalid,
+      ...testsTypescriptEslintParser.invalid,
+    ],
+  });
+});

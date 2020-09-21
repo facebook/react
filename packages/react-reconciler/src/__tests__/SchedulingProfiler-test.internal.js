@@ -447,7 +447,7 @@ describe('SchedulingProfiler', () => {
       return didMount;
     }
 
-    ReactTestRenderer.act(() => {
+    ReactTestRenderer.unstable_concurrentAct(() => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 
@@ -480,7 +480,7 @@ describe('SchedulingProfiler', () => {
       return didRender;
     }
 
-    ReactTestRenderer.act(() => {
+    ReactTestRenderer.unstable_concurrentAct(() => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 
