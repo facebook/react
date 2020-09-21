@@ -90,13 +90,13 @@ export const warnAboutSpreadingKeyToJSX = false;
 
 export const enableComponentStackLocations = true;
 
-export const enableNewReconciler = false;
+export const enableNewReconciler = true;
 
 // Errors that are thrown while unmounting (or after in the case of passive effects)
 // should bypass any error boundaries that are also unmounting (or have unmounted)
 // and be handled by the nearest still-mounted boundary.
 // If there are no still-mounted boundaries, the errors should be rethrown.
-export const skipUnmountedBoundaries = false;
+export const skipUnmountedBoundaries = true;
 
 // --------------------------
 // Future APIs to be deprecated

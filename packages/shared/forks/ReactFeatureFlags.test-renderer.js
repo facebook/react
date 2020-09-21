@@ -42,9 +42,9 @@ export const warnAboutSpreadingKeyToJSX = false;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
-export const skipUnmountedBoundaries = false;
+export const skipUnmountedBoundaries = true;
 
-export const enableNewReconciler = false;
+export const enableNewReconciler = true;
 export const deferRenderPhaseUpdateToNextBatch = true;
 export const decoupleUpdatePriorityFromScheduler = false;
 export const enableDiscreteEventFlushingChange = false;
