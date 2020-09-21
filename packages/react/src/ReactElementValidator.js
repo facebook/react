@@ -211,7 +211,6 @@ function validatePropTypes(element) {
     if (type === null || type === undefined || typeof type === 'string') {
       return;
     }
-    const name = getComponentName(type);
     let propTypes;
     if (typeof type === 'function') {
       propTypes = type.propTypes;
@@ -227,9 +226,13 @@ function validatePropTypes(element) {
       return;
     }
     if (propTypes) {
+      // Intentionally inside to avoid triggering lazy initializers:
+      const name = getComponentName(type);
       checkPropTypes(propTypes, element.props, 'prop', name, element);
     } else if (type.PropTypes !== undefined && !propTypesMisspellWarningShown) {
       propTypesMisspellWarningShown = true;
+      // Intentionally inside to avoid triggering lazy initializers:
+      const name = getComponentName(type);
       console.error(
         'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
         name || 'Unknown',

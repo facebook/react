@@ -415,4 +415,18 @@ describe('ReactElement.jsx', () => {
     // TODO: an explicit expect for no warning?
     ReactDOM.render(JSXRuntime.jsx(Parent, {}), container);
   });
+
+  it('does not call lazy initializers eagerly', () => {
+    let didCall = false;
+    const Lazy = React.lazy(() => {
+      didCall = true;
+      return {then() {}};
+    });
+    if (__DEV__) {
+      JSXDEVRuntime.jsxDEV(Lazy, {});
+    } else {
+      JSXRuntime.jsx(Lazy, {});
+    }
+    expect(didCall).toBe(false);
+  });
 });
