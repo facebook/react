@@ -200,6 +200,19 @@ exports[`InspectedElementContext should inspect the currently selected element: 
 }
 `;
 
+exports[`InspectedElementContext should not consume iterables while inspecting: 1: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "prop": {}
+  },
+  "state": null
+}
+`;
+
 exports[`InspectedElementContext should not dehydrate nested values until explicitly requested: 1: Initially inspect element 1`] = `
 {
   "id": 2,

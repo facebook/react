@@ -397,6 +397,36 @@ describe('InspectedElementContext', () => {
     done();
   });
 
+  it('should not consume iterables while inspecting', async done => {
+    const Example = () => null;
+
+    function* generator() {
+      yield 1;
+      yield 2;
+    }
+
+    const iteratable = generator();
+
+    act(() =>
+      ReactDOM.render(
+        <Example iteratable={iteratable} />,
+        document.createElement('div'),
+      ),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const inspectedElement = await read(id);
+
+    expect(inspectedElement).toMatchSnapshot('1: Initial inspection');
+
+    // Inspecting should not consume the iterable.
+    expect(iteratable.next().value).toEqual(1);
+    expect(iteratable.next().value).toEqual(2);
+    expect(iteratable.next().value).toBeUndefined();
+
+    done();
+  });
+
   it('should support custom objects with enumerable properties and getters', async done => {
     class CustomData {
       _number = 42;
