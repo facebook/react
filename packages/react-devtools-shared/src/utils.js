@@ -45,7 +45,6 @@ import {
 import {localStorageGetItem, localStorageSetItem} from './storage';
 import {meta} from './hydration';
 import type {ComponentFilter, ElementType} from './types';
-import {symbol} from 'prop-types';
 
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 
@@ -617,10 +616,11 @@ export function formatDataForPreview(
     case 'iterator':
       const name = data.constructor.name;
       // We check if the the generator returns itself.
-      // If it does, we want to avoid iterating over it.
+      // If it does, we want to avoid to iterate over it
       if (typeof data[Symbol.iterator]() === 'object') {
         return `${name}(${data.size})`;
       }
+
       if (showFormattedValue) {
         // TRICKY
         // Don't use [...spread] syntax for this purpose.
