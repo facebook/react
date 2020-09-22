@@ -45,7 +45,7 @@ const run = async ({cwd, packages, tags}) => {
       process.exit(1);
     }
   } else {
-    if (!tags.includes('latest')) {
+    if (version.indexOf('-') === -1 && !tags.includes('latest')) {
       console.log(
         theme`{error Stable release} {version ${version}} {error must always be tagged as} {tag latest}`
       );
