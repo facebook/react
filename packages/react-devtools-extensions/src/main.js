@@ -70,6 +70,7 @@ function createPanelIfReactLoaded() {
 
       let componentsPortalContainer = null;
       let profilerPortalContainer = null;
+      let schedulingProfilerPortalContainer = null;
 
       let cloneStyleTags = null;
       let mostRecentOverrideTab = null;
@@ -215,6 +216,7 @@ function createPanelIfReactLoaded() {
               enabledInspectedElementContextMenu: true,
               overrideTab,
               profilerPortalContainer,
+              schedulingProfilerPortalContainer,
               showTabBar: false,
               store,
               warnIfUnsupportedVersionDetected: true,
@@ -341,6 +343,28 @@ function createPanelIfReactLoaded() {
             if (profilerPortalContainer != null) {
               ensureInitialHTMLIsCleared(profilerPortalContainer);
               render('profiler');
+              panel.injectStyles(cloneStyleTags);
+            }
+          });
+        },
+      );
+
+      chrome.devtools.panels.create(
+        isChrome ? '⚛️ Scheduling Profiler' : 'Scheduling Profiler',
+        '',
+        'panel.html',
+        extensionPanel => {
+          extensionPanel.onShown.addListener(panel => {
+            if (currentPanel === panel) {
+              return;
+            }
+
+            currentPanel = panel;
+            schedulingProfilerPortalContainer = panel.container;
+
+            if (schedulingProfilerPortalContainer != null) {
+              ensureInitialHTMLIsCleared(schedulingProfilerPortalContainer);
+              render('scheduling-profiler');
               panel.injectStyles(cloneStyleTags);
             }
           });

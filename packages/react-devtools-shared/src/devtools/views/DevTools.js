@@ -197,7 +197,10 @@ export default function DevTools({
             <SettingsContextController
               browserTheme={browserTheme}
               componentsPortalContainer={componentsPortalContainer}
-              profilerPortalContainer={profilerPortalContainer}>
+              profilerPortalContainer={profilerPortalContainer}
+              schedulingProfilerPortalContainer={
+                schedulingProfilerPortalContainer
+              }>
               <ViewElementSourceContext.Provider value={viewElementSource}>
                 <TreeContextController>
                   <ProfilerContextController>

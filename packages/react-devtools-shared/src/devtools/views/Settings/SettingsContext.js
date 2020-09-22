@@ -61,6 +61,7 @@ type Props = {|
   children: React$Node,
   componentsPortalContainer?: Element,
   profilerPortalContainer?: Element,
+  schedulingProfilerPortalContainer?: Element,
 |};
 
 function SettingsContextController({
@@ -68,6 +69,7 @@ function SettingsContextController({
   children,
   componentsPortalContainer,
   profilerPortalContainer,
+  schedulingProfilerPortalContainer,
 }: Props) {
   const bridge = useContext(BridgeContext);
 
@@ -111,8 +113,18 @@ function SettingsContextController({
           .documentElement: any): HTMLElement),
       );
     }
+    if (schedulingProfilerPortalContainer != null) {
+      array.push(
+        ((schedulingProfilerPortalContainer.ownerDocument
+          .documentElement: any): HTMLElement),
+      );
+    }
     return array;
-  }, [componentsPortalContainer, profilerPortalContainer]);
+  }, [
+    componentsPortalContainer,
+    profilerPortalContainer,
+    schedulingProfilerPortalContainer,
+  ]);
 
   useLayoutEffect(() => {
     switch (displayDensity) {
