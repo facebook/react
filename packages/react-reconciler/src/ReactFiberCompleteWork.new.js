@@ -77,6 +77,7 @@ import {
   LayoutMask,
   PassiveMask,
   StaticMask,
+  PerformedWork,
 } from './ReactFiberFlags';
 import invariant from 'shared/invariant';
 
@@ -987,9 +988,13 @@ function completeWork(
         const flags = workInProgress.flags;
         let newFlags = flags;
 
-        // Call onRender any time this fiber or its subtree are worked on, even
-        // if there are no effects
-        newFlags |= OnRenderFlag;
+        // Call onRender any time this fiber or its subtree are worked on.
+        if (
+          (flags & PerformedWork) !== NoFlags ||
+          (subtreeFlags & PerformedWork) !== NoFlags
+        ) {
+          newFlags |= OnRenderFlag;
+        }
 
         // Call onCommit only if the subtree contains layout work, or if it
         // contains deletions, since those might result in unmount work, which
