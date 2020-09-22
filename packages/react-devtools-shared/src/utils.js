@@ -440,6 +440,7 @@ export type DataType =
   | 'html_element'
   | 'infinity'
   | 'iterator'
+  | 'opaque_iterator'
   | 'nan'
   | 'null'
   | 'number'
@@ -500,7 +501,9 @@ export function getDataType(data: Object): DataType {
         // but this seems kind of awkward and expensive.
         return 'array_buffer';
       } else if (typeof data[Symbol.iterator] === 'function') {
-        return 'iterator';
+        return data[Symbol.iterator]() === data
+          ? 'opaque_iterator'
+          : 'iterator';
       } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
       } else {
@@ -679,6 +682,7 @@ export function formatDataForPreview(
       }
     case 'iterator':
       const name = data.constructor.name;
+
       if (showFormattedValue) {
         // TRICKY
         // Don't use [...spread] syntax for this purpose.
@@ -717,6 +721,9 @@ export function formatDataForPreview(
       } else {
         return `${name}(${data.size})`;
       }
+    case 'opaque_iterator': {
+      return data[Symbol.toStringTag];
+    }
     case 'date':
       return data.toString();
     case 'object':

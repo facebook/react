@@ -266,6 +266,16 @@ export function dehydrate(
         return unserializableValue;
       }
 
+    case 'opaque_iterator':
+      cleaned.push(path);
+      return {
+        inspectable: false,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
+        name: data[Symbol.toStringTag],
+        type,
+      };
+
     case 'date':
       cleaned.push(path);
       return {
