@@ -376,6 +376,7 @@ export type DataType =
   | 'html_element'
   | 'infinity'
   | 'iterator'
+  | 'opaque_iterator'
   | 'nan'
   | 'null'
   | 'number'
@@ -437,6 +438,8 @@ export function getDataType(data: Object): DataType {
         return 'array_buffer';
       } else if (typeof data[Symbol.iterator] === 'function') {
         return 'iterator';
+      } else if (data[Symbol.iterator] === 'data') {
+        return 'opaque_iterator';
       } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
       } else {
@@ -615,11 +618,6 @@ export function formatDataForPreview(
       }
     case 'iterator':
       const name = data.constructor.name;
-      // We check if the the generator returns itself.
-      // If it does, we want to avoid to iterate over it
-      if (typeof data[Symbol.iterator]() === 'object') {
-        return `${name}(${data.size})`;
-      }
 
       if (showFormattedValue) {
         // TRICKY
@@ -659,6 +657,9 @@ export function formatDataForPreview(
       } else {
         return `${name}(${data.size})`;
       }
+    case 'opaque_iterator': {
+      return `${data.constructor.name}(${data.size})`;
+    }
     case 'date':
       return data.toString();
     case 'object':
