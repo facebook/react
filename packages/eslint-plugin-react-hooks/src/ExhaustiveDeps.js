@@ -9,6 +9,8 @@
 
 'use strict';
 
+const estraverse = require('estraverse');
+
 export default {
   meta: {
     type: 'suggestion',
@@ -449,85 +451,51 @@ export default {
         }
       }
 
-      function gatherJSXDependencies(currentScope) {
-        if (currentScope.type !== 'function') return;
+      gatherJSXDependencies(node);
 
-        const {body} = currentScope.block;
+      function gatherJSXDependencies(rootNode) {
         const JSXComponents = [];
 
-        // check JSXElement/JSXFragment for arrow functions
-        // and BlockStatement for traditional functions
-        switch (body.type) {
-          case 'JSXElement':
-          case 'JSXFragment':
-            findJSXComponents(body);
-            break;
-          case 'BlockStatement':
-            const bodyElements = [].concat(body.body);
-
-            bodyElements.forEach(element => {
-              if (
-                element.type === 'ReturnStatement' &&
-                (element.argument.type === 'JSXElement' ||
-                  isFragment(element.argument))
-              ) {
-                findJSXComponents(element.argument);
-              }
-            });
-            break;
-          default:
-            break;
-        }
+        estraverse.traverse(rootNode, {
+          enter: function(currentNode) {
+            const {name, type} = currentNode;
+            if (isJSXComponent(name, type) && !JSXComponents.includes(name)) {
+              JSXComponents.push(name);
+            }
+          },
+          // a list of all JSX keys and its attributes that can contain
+          // other JSX elements and identifiers
+          keys: {
+            JSXElement: [
+              'type',
+              'openingElement',
+              'closingElement',
+              'children',
+            ],
+            JSXFragment: ['children'],
+            JSXAttribute: ['name', 'value'],
+            JSXIdentifier: ['name', 'type'],
+            JSXOpeningElement: ['name', 'attributes'],
+            JSXClosingElement: ['name'],
+            JSXNamespacedName: ['namespace', 'name'],
+            JSXSpreadAttribute: ['argument'],
+            JSXMemberExpression: ['object'],
+            JSXExpressionContainer: ['expression'],
+          },
+          fallback: () => [], // just skip all unknown nodes, otherwise there will be an exception
+        });
 
         function isHTMLElement(name) {
           return /^[a-z]/.test(name);
         }
 
-        function isFragment(element) {
-          // <> </>
-          if (element.type === 'JSXFragment') return true;
-
-          if (element.type !== 'JSXElement') return false;
-
-          const name = element.openingElement.name;
-
-          // <Fragment> </Fragment>
+        function isJSXComponent(name, type) {
           return (
-            name.name === 'Fragment' ||
-            // <React.Fragment> </React.Fragment>
-            (name.type === 'JSXMemberExpression' &&
-              name.object.name === 'React' &&
-              name.object.type === 'JSXIdentifier' &&
-              name.property.name === 'Fragment' &&
-              name.property.type === 'JSXIdentifier')
+            type === 'JSXIdentifier' &&
+            name !== 'Fragment' &&
+            name !== 'React' &&
+            !isHTMLElement(name)
           );
-        }
-
-        // check JSX elements tree
-        function findJSXComponents(element) {
-          const elements = [element];
-
-          while (elements.length) {
-            const current = elements.shift();
-
-            if (!isFragment(current)) {
-              const {openingElement} = current;
-              const elementName = openingElement.name.name;
-
-              if (
-                !isHTMLElement(elementName) &&
-                !JSXComponents.includes(elementName)
-              ) {
-                JSXComponents.push(elementName);
-              }
-            }
-
-            current.children.forEach(child => {
-              if (child.type === 'JSXElement') {
-                elements.push(child);
-              }
-            });
-          }
         }
 
         JSXComponents.forEach(component =>

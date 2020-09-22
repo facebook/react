@@ -1568,6 +1568,69 @@ const tests = {
         }
       `,
     },
+    // check JSXAttribute
+    {
+      code: normalizeIndent`
+        function Example({component: Component, attribute}) {
+          const memoized = useMemo(() => ({
+            render: () => <Component attribute={attribute} />
+          }), [Component, attribute]);
+
+          return memoized.render();
+        }
+      `,
+    },
+    // check the JSX in a JSXAttribute
+    {
+      code: normalizeIndent`
+        function Example({
+          component: Component,
+          anotherComponent: AnotherComponent,
+        }) {
+          const memoized = useMemo(() => ({
+            render: () => <Component comp={AnotherComponent} />
+          }), [AnotherComponent, Component]);
+
+          return memoized.render();
+        }
+      `,
+    },
+    // check JSXSpreadAttribute
+    {
+      code: normalizeIndent`
+        function Example({component: Component, props}) {
+          const memoized = useMemo(() => ({
+            render: () => <Component {...props} />
+          }), [Component, props]);
+
+          return memoized.render();
+        }
+      `,
+    },
+    // check JSXExpressionContainer
+    {
+      code: normalizeIndent`
+        function Example({component: Component, text}) {
+          const memoized = useMemo(() => ({
+            render: () => <Component>{text}</Component>
+          }), [Component, text]);
+
+          return memoized.render();
+        }
+      `,
+    },
+    // check JSXMemberExpression
+    {
+      code: normalizeIndent`
+        function Example({component: Component}) {
+          const memoized = useMemo(() => ({
+            render: () => <Component.Foo />
+          }), [Component]);
+
+          return memoized.render();
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -7693,6 +7756,179 @@ const tests = {
                   const memoized = useMemo(() => ({
                     render: () => null
                   }), []);
+
+                  return memoized.render();
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    // check JSXExpressionContainer and JSXAttribute
+    {
+      code: normalizeIndent`
+        function Example({component: Component, attribute}) {
+          const memoized = useMemo(() => ({
+            render: () => <Component attribute={attribute} />
+          }), [Component]);
+
+          return memoized.render();
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useMemo has a missing dependency: 'attribute'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc:
+                'Update the dependencies array to be: [Component, attribute]',
+              output: normalizeIndent`
+                function Example({component: Component, attribute}) {
+                  const memoized = useMemo(() => ({
+                    render: () => <Component attribute={attribute} />
+                  }), [Component, attribute]);
+
+                  return memoized.render();
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    // check the JSX in a JSXAttribute
+    {
+      code: normalizeIndent`
+        function Example({
+          component: Component,
+          anotherComponent: AnotherComponent,
+        }) {
+          const memoized = useMemo(() => ({
+            render: () => <Component comp={AnotherComponent} />
+          }), [Component]);
+
+          return memoized.render();
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useMemo has a missing dependency: 'AnotherComponent'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc:
+                'Update the dependencies array to be: [AnotherComponent, Component]',
+              output: normalizeIndent`
+                function Example({
+                  component: Component,
+                  anotherComponent: AnotherComponent,
+                }) {
+                  const memoized = useMemo(() => ({
+                    render: () => <Component comp={AnotherComponent} />
+                  }), [AnotherComponent, Component]);
+
+                  return memoized.render();
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    // check JSXSpreadAttribute
+    {
+      code: normalizeIndent`
+        function Example({component: Component, props}) {
+          const memoized = useMemo(() => ({
+            render: () => <Component {...props} />
+          }), [Component]);
+
+          return memoized.render();
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useMemo has a missing dependency: 'props'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [Component, props]',
+              output: normalizeIndent`
+                function Example({component: Component, props}) {
+                  const memoized = useMemo(() => ({
+                    render: () => <Component {...props} />
+                  }), [Component, props]);
+
+                  return memoized.render();
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    // check JSXExpressionContainer
+    {
+      code: normalizeIndent`
+        function Example({component: Component, text}) {
+          const memoized = useMemo(() => ({
+            render: () => <Component>{text}</Component>
+          }), [Component]);
+
+          return memoized.render();
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useMemo has a missing dependency: 'text'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [Component, text]',
+              output: normalizeIndent`
+                function Example({component: Component, text}) {
+                  const memoized = useMemo(() => ({
+                    render: () => <Component>{text}</Component>
+                  }), [Component, text]);
+
+                  return memoized.render();
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    // check JSXMemberExpression
+    {
+      code: normalizeIndent`
+        function Example({component: Component}) {
+          const memoized = useMemo(() => ({
+            render: () => <Component.Foo />
+          }), []);
+
+          return memoized.render();
+        }
+      `,
+      errors: [
+        {
+          message:
+            "React Hook useMemo has a missing dependency: 'Component'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [Component]',
+              output: normalizeIndent`
+                function Example({component: Component}) {
+                  const memoized = useMemo(() => ({
+                    render: () => <Component.Foo />
+                  }), [Component]);
 
                   return memoized.render();
                 }
