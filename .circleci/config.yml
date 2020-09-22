@@ -572,10 +572,10 @@ workflows:
       - deploy_devtools_scheduling_profiler:
           requires:
             - build_devtools_scheduling_profiler
-          # filters:
-          #   branches:
-          #     only:
-          #       - master
+          filters:
+            branches:
+              only:
+                - master
 
   fuzz_tests:
     triggers:
