@@ -56,7 +56,7 @@ function createDataResourceFromImportedFile(file: File): DataResource {
   );
 }
 
-export function SchedulingProfiler(_: {||}) {
+export function SchedulingProfiler({showAppInfo}: {|showAppInfo?: boolean|}) {
   const [dataResource, setDataResource] = useState<DataResource | null>(null);
 
   const handleFileSelect = useCallback((file: File) => {
@@ -66,9 +66,13 @@ export function SchedulingProfiler(_: {||}) {
   return (
     <div className={styles.SchedulingProfiler}>
       <div className={styles.Toolbar}>
-        <ReactLogo />
-        <span className={styles.AppName}>Concurrent Mode Profiler</span>
-        <div className={styles.VRule} />
+        {showAppInfo && (
+          <>
+            <ReactLogo />
+            <span className={styles.AppName}>Concurrent Mode Profiler</span>
+            <div className={styles.VRule} />
+          </>
+        )}
         <ImportButton onFileSelect={handleFileSelect} />
         <div className={styles.Spacer} />
       </div>
