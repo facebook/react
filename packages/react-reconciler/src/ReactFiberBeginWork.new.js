@@ -1148,6 +1148,9 @@ function updateHostComponent(
     workInProgress.flags |= ContentReset;
   }
 
+  // React DevTools reads this flag.
+  workInProgress.flags |= PerformedWork;
+
   markRef(current, workInProgress);
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;

@@ -362,24 +362,33 @@ describe('Profiler', () => {
 
         Scheduler.unstable_advanceTime(20); // 10 -> 30
 
-        // Updating a parent should report a re-render,
-        // since React technically did a little bit of work between the Profiler and the bailed out subtree.
         renderer.update(<App />);
 
-        expect(callback).toHaveBeenCalledTimes(1);
+        if (gate(flags => flags.new)) {
+          // None of the Profiler's subtree was rendered because App bailed out before the Profiler.
+          // So we expect onRender not to be called.
+          expect(callback).not.toHaveBeenCalled();
+        } else {
+          // Updating a parent reports a re-render,
+          // since React technically did a little bit of work between the Profiler and the bailed out subtree.
+          // This is not optimal but it's how the old reconciler fork works.
+          expect(callback).toHaveBeenCalledTimes(1);
 
-        call = callback.mock.calls[0];
+          call = callback.mock.calls[0];
 
-        expect(call).toHaveLength(enableSchedulerTracing ? 7 : 6);
-        expect(call[0]).toBe('test');
-        expect(call[1]).toBe('update');
-        expect(call[2]).toBe(0); // actual time
-        expect(call[3]).toBe(10); // base time
-        expect(call[4]).toBe(30); // start time
-        expect(call[5]).toBe(30); // commit time
-        expect(call[6]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
+          expect(call).toHaveLength(enableSchedulerTracing ? 7 : 6);
+          expect(call[0]).toBe('test');
+          expect(call[1]).toBe('update');
+          expect(call[2]).toBe(0); // actual time
+          expect(call[3]).toBe(10); // base time
+          expect(call[4]).toBe(30); // start time
+          expect(call[5]).toBe(30); // commit time
+          expect(call[6]).toEqual(
+            enableSchedulerTracing ? new Set() : undefined,
+          ); // interaction events
 
-        callback.mockReset();
+          callback.mockReset();
+        }
 
         Scheduler.unstable_advanceTime(20); // 30 -> 50
 
