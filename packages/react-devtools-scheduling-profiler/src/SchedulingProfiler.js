@@ -14,6 +14,7 @@ import type {ImportWorkerOutputData} from './import-worker/import.worker';
 import * as React from 'react';
 import {Suspense, useCallback, useState} from 'react';
 import {createResource} from 'react-devtools-shared/src/devtools/cache';
+import portaledContent from 'react-devtools-shared/src/devtools/views/portaledContent';
 import ReactLogo from 'react-devtools-shared/src/devtools/views/ReactLogo';
 
 import ImportButton from './ImportButton';
@@ -143,3 +144,5 @@ const DataResourceComponent = ({
   }
   return <CanvasPage profilerData={dataOrError} />;
 };
+
+export default portaledContent(SchedulingProfiler);

@@ -15,6 +15,15 @@ const __DEV__ = true; // NODE_ENV === 'development';
 
 const DEVTOOLS_VERSION = getVersionString();
 
+const babelOptions = {
+  configFile: resolve(
+    __dirname,
+    '..',
+    'react-devtools-shared',
+    'babel.config.js',
+  ),
+};
+
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
   devtool: __DEV__ ? 'eval-cheap-source-map' : 'source-map',
@@ -52,16 +61,24 @@ module.exports = {
   module: {
     rules: [
       {
+        test: /\.worker\.js$/,
+        use: [
+          {
+            loader: 'worker-loader',
+            options: {
+              inline: 'no-fallback',
+            },
+          },
+          {
+            loader: 'babel-loader',
+            options: babelOptions,
+          },
+        ],
+      },
+      {
         test: /\.js$/,
         loader: 'babel-loader',
-        options: {
-          configFile: resolve(
-            __dirname,
-            '..',
-            'react-devtools-shared',
-            'babel.config.js',
-          ),
-        },
+        options: babelOptions,
       },
       {
         test: /\.css$/,
@@ -78,6 +95,13 @@ module.exports = {
             },
           },
         ],
+      },
+      {
+        test: [/\.bmp$/, /\.gif$/, /\.jpe?g$/, /\.png$/],
+        loader: 'url-loader',
+        options: {
+          limit: true, // Inline image assets
+        },
       },
     ],
   },
