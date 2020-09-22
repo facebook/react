@@ -20,6 +20,7 @@ let ReactTestRendererAct;
 let SchedulerTracing;
 let AdvanceTime;
 let AsyncText;
+let ComponentWithPassiveEffect;
 let Text;
 let TextResource;
 let resourcePromise;
@@ -101,6 +102,12 @@ function loadModules({
   Text = ({text}) => {
     Scheduler.unstable_yieldValue(`Text [${text}]`);
     return text;
+  };
+
+  ComponentWithPassiveEffect = () => {
+    // Intentionally schedule a passive effect so the onPostCommit hook will be called.
+    React.useEffect(() => {});
+    return null;
   };
 }
 
@@ -2622,251 +2629,256 @@ describe('Profiler', () => {
             <React.Fragment>
               <Yield value="first" />
               {this.state.count}
+              <ComponentWithPassiveEffect count={this.state.count} />
               <Yield value="last" />
             </React.Fragment>
           );
         }
       }
 
-      Scheduler.unstable_advanceTime(1);
+      ReactTestRendererAct(() => {
+        Scheduler.unstable_advanceTime(1);
 
-      const interactionCreation = {
-        id: 0,
-        name: 'creation event',
-        timestamp: Scheduler.unstable_now(),
-      };
+        const interactionCreation = {
+          id: 0,
+          name: 'creation event',
+          timestamp: Scheduler.unstable_now(),
+        };
 
-      const onPostCommit = jest.fn(() => {
-        Scheduler.unstable_yieldValue('onPostCommit');
+        const onPostCommit = jest.fn(() => {
+          Scheduler.unstable_yieldValue('onPostCommit');
+        });
+        let renderer;
+        SchedulerTracing.unstable_trace(
+          interactionCreation.name,
+          Scheduler.unstable_now(),
+          () => {
+            renderer = ReactTestRenderer.create(
+              <React.Profiler id="test-profiler" onPostCommit={onPostCommit}>
+                <Example />
+              </React.Profiler>,
+              {
+                unstable_isConcurrent: true,
+              },
+            );
+          },
+        );
+
+        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+          interactionCreation,
+        );
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+
+        // The scheduler/tracing package will notify of work started for the default thread,
+        // But React shouldn't notify until it's been flushed.
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
+        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+
+        // Work may have been scheduled multiple times.
+        // We only care that the subscriber was notified at least once.
+        // As for the thread ID- the actual value isn't important, only that there was one.
+        expect(onWorkScheduled).toHaveBeenCalled();
+        expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
+          interactionCreation,
+        ]);
+        expect(onWorkScheduled.mock.calls[0][1] > 0).toBe(true);
+
+        // Mount
+        expect(Scheduler).toFlushAndYield(['first', 'last', 'onPostCommit']);
+        expect(onPostCommit).toHaveBeenCalledTimes(1);
+        let call = onPostCommit.mock.calls[0];
+        expect(call[0]).toEqual('test-profiler');
+        expect(call[3]).toEqual(Scheduler.unstable_now());
+        if (ReactFeatureFlags.enableSchedulerTracing) {
+          expect(call[4]).toMatchInteractions([interactionCreation]);
+        }
+
+        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(interactionCreation);
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
+        expect(
+          getWorkForReactThreads(onWorkStarted)[0][0],
+        ).toMatchInteractions([interactionCreation]);
+        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(1);
+        expect(
+          getWorkForReactThreads(onWorkStopped)[0][0],
+        ).toMatchInteractions([interactionCreation]);
+
+        onPostCommit.mockClear();
+        onWorkScheduled.mockClear();
+        onWorkStarted.mockClear();
+        onWorkStopped.mockClear();
+
+        Scheduler.unstable_advanceTime(3);
+
+        let didRunCallback = false;
+
+        const interactionOne = {
+          id: 1,
+          name: 'initial event',
+          timestamp: Scheduler.unstable_now(),
+        };
+        SchedulerTracing.unstable_trace(
+          interactionOne.name,
+          Scheduler.unstable_now(),
+          () => {
+            instance.setState({count: 1});
+
+            // Update state again to verify our traced interaction isn't registered twice
+            instance.setState({count: 2});
+
+            // The scheduler/tracing package will notify of work started for the default thread,
+            // But React shouldn't notify until it's been flushed.
+            expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
+            expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+
+            // Work may have been scheduled multiple times.
+            // We only care that the subscriber was notified at least once.
+            // As for the thread ID- the actual value isn't important, only that there was one.
+            expect(onWorkScheduled).toHaveBeenCalled();
+            expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
+              interactionOne,
+            ]);
+            expect(onWorkScheduled.mock.calls[0][1] > 0).toBe(true);
+
+            expect(Scheduler).toFlushAndYieldThrough(['first']);
+            expect(onPostCommit).not.toHaveBeenCalled();
+
+            expect(onInteractionTraced).toHaveBeenCalledTimes(2);
+            expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+              interactionOne,
+            );
+            expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(
+              1,
+            );
+            expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
+            expect(
+              getWorkForReactThreads(onWorkStarted)[0][0],
+            ).toMatchInteractions([interactionOne]);
+            expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+
+            expect(Scheduler).toFlushAndYield(['last', 'onPostCommit']);
+            expect(onPostCommit).toHaveBeenCalledTimes(1);
+
+            call = onPostCommit.mock.calls[0];
+            expect(call[0]).toEqual('test-profiler');
+            expect(call[3]).toEqual(Scheduler.unstable_now());
+            if (ReactFeatureFlags.enableSchedulerTracing) {
+              expect(call[4]).toMatchInteractions([interactionOne]);
+            }
+
+            didRunCallback = true;
+
+            expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
+            expect(
+              getWorkForReactThreads(onWorkStarted)[0][0],
+            ).toMatchInteractions([interactionOne]);
+            expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(1);
+            expect(
+              getWorkForReactThreads(onWorkStopped)[0][0],
+            ).toMatchInteractions([interactionOne]);
+          },
+        );
+
+        expect(didRunCallback).toBe(true);
+
+        onPostCommit.mockClear();
+        onWorkScheduled.mockClear();
+        onWorkStarted.mockClear();
+        onWorkStopped.mockClear();
+
+        Scheduler.unstable_advanceTime(17);
+
+        // Verify that updating state again does not re-log our interaction.
+        instance.setState({count: 3});
+        expect(Scheduler).toFlushAndYield(['first', 'last', 'onPostCommit']);
+
+        expect(onPostCommit).toHaveBeenCalledTimes(1);
+        call = onPostCommit.mock.calls[0];
+        expect(call[0]).toEqual('test-profiler');
+        expect(call[3]).toEqual(Scheduler.unstable_now());
+        if (ReactFeatureFlags.enableSchedulerTracing) {
+          expect(call[4]).toMatchInteractions([]);
+        }
+
+        expect(onInteractionTraced).toHaveBeenCalledTimes(2);
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(interactionOne);
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
+        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+
+        onPostCommit.mockClear();
+
+        Scheduler.unstable_advanceTime(3);
+
+        // Verify that root updates are also associated with traced events.
+        const interactionTwo = {
+          id: 2,
+          name: 'root update event',
+          timestamp: Scheduler.unstable_now(),
+        };
+        SchedulerTracing.unstable_trace(
+          interactionTwo.name,
+          Scheduler.unstable_now(),
+          () => {
+            renderer.update(
+              <React.Profiler id="test-profiler" onPostCommit={onPostCommit}>
+                <Example />
+              </React.Profiler>,
+            );
+          },
+        );
+
+        expect(onInteractionTraced).toHaveBeenCalledTimes(3);
+        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+          interactionTwo,
+        );
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
+
+        // The scheduler/tracing package will notify of work started for the default thread,
+        // But React shouldn't notify until it's been flushed.
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
+        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+
+        // Work may have been scheduled multiple times.
+        // We only care that the subscriber was notified at least once.
+        // As for the thread ID- the actual value isn't important, only that there was one.
+        expect(onWorkScheduled).toHaveBeenCalled();
+        expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
+          interactionTwo,
+        ]);
+        expect(onWorkScheduled.mock.calls[0][1] > 0).toBe(true);
+
+        expect(Scheduler).toFlushAndYield(['first', 'last', 'onPostCommit']);
+
+        expect(onPostCommit).toHaveBeenCalledTimes(1);
+        call = onPostCommit.mock.calls[0];
+        expect(call[0]).toEqual('test-profiler');
+        expect(call[3]).toEqual(Scheduler.unstable_now());
+        if (ReactFeatureFlags.enableSchedulerTracing) {
+          expect(call[4]).toMatchInteractions([interactionTwo]);
+        }
+
+        expect(onInteractionTraced).toHaveBeenCalledTimes(3);
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(3);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(interactionTwo);
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
+        expect(
+          getWorkForReactThreads(onWorkStarted)[0][0],
+        ).toMatchInteractions([interactionTwo]);
+        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(1);
+        expect(
+          getWorkForReactThreads(onWorkStopped)[0][0],
+        ).toMatchInteractions([interactionTwo]);
       });
-      let renderer;
-      SchedulerTracing.unstable_trace(
-        interactionCreation.name,
-        Scheduler.unstable_now(),
-        () => {
-          renderer = ReactTestRenderer.create(
-            <React.Profiler id="test-profiler" onPostCommit={onPostCommit}>
-              <Example />
-            </React.Profiler>,
-            {
-              unstable_isConcurrent: true,
-            },
-          );
-        },
-      );
-
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-        interactionCreation,
-      );
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-
-      // The scheduler/tracing package will notify of work started for the default thread,
-      // But React shouldn't notify until it's been flushed.
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
-
-      // Work may have been scheduled multiple times.
-      // We only care that the subscriber was notified at least once.
-      // As for the thread ID- the actual value isn't important, only that there was one.
-      expect(onWorkScheduled).toHaveBeenCalled();
-      expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
-        interactionCreation,
-      ]);
-      expect(onWorkScheduled.mock.calls[0][1] > 0).toBe(true);
-
-      // Mount
-      expect(Scheduler).toFlushAndYield(['first', 'last', 'onPostCommit']);
-      expect(onPostCommit).toHaveBeenCalledTimes(1);
-      let call = onPostCommit.mock.calls[0];
-      expect(call[0]).toEqual('test-profiler');
-      expect(call[3]).toEqual(Scheduler.unstable_now());
-      if (ReactFeatureFlags.enableSchedulerTracing) {
-        expect(call[4]).toMatchInteractions([interactionCreation]);
-      }
-
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-      expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interactionCreation);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-      expect(getWorkForReactThreads(onWorkStarted)[0][0]).toMatchInteractions([
-        interactionCreation,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(1);
-      expect(getWorkForReactThreads(onWorkStopped)[0][0]).toMatchInteractions([
-        interactionCreation,
-      ]);
-
-      onPostCommit.mockClear();
-      onWorkScheduled.mockClear();
-      onWorkStarted.mockClear();
-      onWorkStopped.mockClear();
-
-      Scheduler.unstable_advanceTime(3);
-
-      let didRunCallback = false;
-
-      const interactionOne = {
-        id: 1,
-        name: 'initial event',
-        timestamp: Scheduler.unstable_now(),
-      };
-      SchedulerTracing.unstable_trace(
-        interactionOne.name,
-        Scheduler.unstable_now(),
-        () => {
-          instance.setState({count: 1});
-
-          // Update state again to verify our traced interaction isn't registered twice
-          instance.setState({count: 2});
-
-          // The scheduler/tracing package will notify of work started for the default thread,
-          // But React shouldn't notify until it's been flushed.
-          expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
-          expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
-
-          // Work may have been scheduled multiple times.
-          // We only care that the subscriber was notified at least once.
-          // As for the thread ID- the actual value isn't important, only that there was one.
-          expect(onWorkScheduled).toHaveBeenCalled();
-          expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
-            interactionOne,
-          ]);
-          expect(onWorkScheduled.mock.calls[0][1] > 0).toBe(true);
-
-          expect(Scheduler).toFlushAndYieldThrough(['first']);
-          expect(onPostCommit).not.toHaveBeenCalled();
-
-          expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-          expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-            interactionOne,
-          );
-          expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-          expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-          expect(
-            getWorkForReactThreads(onWorkStarted)[0][0],
-          ).toMatchInteractions([interactionOne]);
-          expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
-
-          expect(Scheduler).toFlushAndYield(['last', 'onPostCommit']);
-          expect(onPostCommit).toHaveBeenCalledTimes(1);
-
-          call = onPostCommit.mock.calls[0];
-          expect(call[0]).toEqual('test-profiler');
-          expect(call[3]).toEqual(Scheduler.unstable_now());
-          if (ReactFeatureFlags.enableSchedulerTracing) {
-            expect(call[4]).toMatchInteractions([interactionOne]);
-          }
-
-          didRunCallback = true;
-
-          expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-          expect(
-            getWorkForReactThreads(onWorkStarted)[0][0],
-          ).toMatchInteractions([interactionOne]);
-          expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(1);
-          expect(
-            getWorkForReactThreads(onWorkStopped)[0][0],
-          ).toMatchInteractions([interactionOne]);
-        },
-      );
-
-      expect(didRunCallback).toBe(true);
-
-      onPostCommit.mockClear();
-      onWorkScheduled.mockClear();
-      onWorkStarted.mockClear();
-      onWorkStopped.mockClear();
-
-      Scheduler.unstable_advanceTime(17);
-
-      // Verify that updating state again does not re-log our interaction.
-      instance.setState({count: 3});
-      expect(Scheduler).toFlushAndYield(['first', 'last', 'onPostCommit']);
-
-      expect(onPostCommit).toHaveBeenCalledTimes(1);
-      call = onPostCommit.mock.calls[0];
-      expect(call[0]).toEqual('test-profiler');
-      expect(call[3]).toEqual(Scheduler.unstable_now());
-      if (ReactFeatureFlags.enableSchedulerTracing) {
-        expect(call[4]).toMatchInteractions([]);
-      }
-
-      expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
-      expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interactionOne);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
-
-      onPostCommit.mockClear();
-
-      Scheduler.unstable_advanceTime(3);
-
-      // Verify that root updates are also associated with traced events.
-      const interactionTwo = {
-        id: 2,
-        name: 'root update event',
-        timestamp: Scheduler.unstable_now(),
-      };
-      SchedulerTracing.unstable_trace(
-        interactionTwo.name,
-        Scheduler.unstable_now(),
-        () => {
-          renderer.update(
-            <React.Profiler id="test-profiler" onPostCommit={onPostCommit}>
-              <Example />
-            </React.Profiler>,
-          );
-        },
-      );
-
-      expect(onInteractionTraced).toHaveBeenCalledTimes(3);
-      expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-        interactionTwo,
-      );
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
-
-      // The scheduler/tracing package will notify of work started for the default thread,
-      // But React shouldn't notify until it's been flushed.
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
-
-      // Work may have been scheduled multiple times.
-      // We only care that the subscriber was notified at least once.
-      // As for the thread ID- the actual value isn't important, only that there was one.
-      expect(onWorkScheduled).toHaveBeenCalled();
-      expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
-        interactionTwo,
-      ]);
-      expect(onWorkScheduled.mock.calls[0][1] > 0).toBe(true);
-
-      expect(Scheduler).toFlushAndYield(['first', 'last', 'onPostCommit']);
-
-      expect(onPostCommit).toHaveBeenCalledTimes(1);
-      call = onPostCommit.mock.calls[0];
-      expect(call[0]).toEqual('test-profiler');
-      expect(call[3]).toEqual(Scheduler.unstable_now());
-      if (ReactFeatureFlags.enableSchedulerTracing) {
-        expect(call[4]).toMatchInteractions([interactionTwo]);
-      }
-
-      expect(onInteractionTraced).toHaveBeenCalledTimes(3);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(3);
-      expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interactionTwo);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-      expect(getWorkForReactThreads(onWorkStarted)[0][0]).toMatchInteractions([
-        interactionTwo,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(1);
-      expect(getWorkForReactThreads(onWorkStopped)[0][0]).toMatchInteractions([
-        interactionTwo,
-      ]);
     });
 
     it('should not mark an interaction complete while passive effects are outstanding', () => {
@@ -2921,7 +2933,7 @@ describe('Profiler', () => {
         render() {
           first = this;
           Scheduler.unstable_yieldValue('FirstComponent');
-          return null;
+          return <ComponentWithPassiveEffect count={this.state.count} />;
         }
       }
       let second;
@@ -2930,165 +2942,176 @@ describe('Profiler', () => {
         render() {
           second = this;
           Scheduler.unstable_yieldValue('SecondComponent');
-          return null;
+          return <ComponentWithPassiveEffect count={this.state.count} />;
         }
       }
 
       Scheduler.unstable_advanceTime(5);
 
-      const renderer = ReactTestRenderer.create(
-        <React.Profiler id="test" onPostCommit={onPostCommit}>
-          <FirstComponent />
-          <SecondComponent />
-        </React.Profiler>,
-        {unstable_isConcurrent: true},
-      );
+      ReactTestRendererAct(() => {
+        const renderer = ReactTestRenderer.create(
+          <React.Profiler id="test" onPostCommit={onPostCommit}>
+            <FirstComponent />
+            <SecondComponent />
+          </React.Profiler>,
+          {unstable_isConcurrent: true},
+        );
 
-      // Initial mount.
-      expect(Scheduler).toFlushAndYield([
-        'FirstComponent',
-        'SecondComponent',
-        'onPostCommit',
-      ]);
+        // Initial mount.
+        expect(Scheduler).toFlushAndYield([
+          'FirstComponent',
+          'SecondComponent',
+          'onPostCommit',
+        ]);
 
-      expect(onInteractionTraced).not.toHaveBeenCalled();
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(onInteractionTraced).not.toHaveBeenCalled();
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
-      onPostCommit.mockClear();
+        onPostCommit.mockClear();
 
-      Scheduler.unstable_advanceTime(100);
+        Scheduler.unstable_advanceTime(100);
 
-      const interactionLowPri = {
-        id: 0,
-        name: 'lowPri',
-        timestamp: Scheduler.unstable_now(),
-      };
+        const interactionLowPri = {
+          id: 0,
+          name: 'lowPri',
+          timestamp: Scheduler.unstable_now(),
+        };
 
-      SchedulerTracing.unstable_trace(
-        interactionLowPri.name,
-        Scheduler.unstable_now(),
-        () => {
-          // Render a partially update, but don't finish.
-          first.setState({count: 1});
+        SchedulerTracing.unstable_trace(
+          interactionLowPri.name,
+          Scheduler.unstable_now(),
+          () => {
+            // Render a partially update, but don't finish.
+            first.setState({count: 1});
 
-          expect(onWorkScheduled).toHaveBeenCalled();
-          expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
-            interactionLowPri,
-          ]);
+            expect(onWorkScheduled).toHaveBeenCalled();
+            expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
+              interactionLowPri,
+            ]);
 
-          expect(Scheduler).toFlushAndYieldThrough(['FirstComponent']);
-          expect(onPostCommit).not.toHaveBeenCalled();
+            expect(Scheduler).toFlushAndYieldThrough(['FirstComponent']);
+            expect(onPostCommit).not.toHaveBeenCalled();
 
-          expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-          expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-            interactionLowPri,
-          );
-          expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-          expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-          expect(
-            getWorkForReactThreads(onWorkStarted)[0][0],
-          ).toMatchInteractions([interactionLowPri]);
-          expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
-
-          Scheduler.unstable_advanceTime(100);
-
-          const interactionHighPri = {
-            id: 1,
-            name: 'highPri',
-            timestamp: Scheduler.unstable_now(),
-          };
-
-          // Interrupt with higher priority work.
-          // This simulates a total of 37ms of actual render time.
-          renderer.unstable_flushSync(() => {
-            SchedulerTracing.unstable_trace(
-              interactionHighPri.name,
-              Scheduler.unstable_now(),
-              () => {
-                second.setState({count: 1});
-
-                expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-                expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-                  interactionHighPri,
-                );
-                expect(
-                  onInteractionScheduledWorkCompleted,
-                ).not.toHaveBeenCalled();
-
-                expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-                expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
-              },
+            expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+            expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+              interactionLowPri,
             );
-          });
+            expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+            expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
+            expect(
+              getWorkForReactThreads(onWorkStarted)[0][0],
+            ).toMatchInteractions([interactionLowPri]);
+            expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
 
-          // Profiler tag causes passive effects to be scheduled,
-          // so the interactions are still not completed.
-          expect(Scheduler).toHaveYielded(['SecondComponent']);
-          expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-          expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-          expect(Scheduler).toFlushAndYieldThrough(['onPostCommit']);
+            Scheduler.unstable_advanceTime(100);
 
-          expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-          expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-          expect(
-            onInteractionScheduledWorkCompleted,
-          ).toHaveBeenLastNotifiedOfInteraction(interactionHighPri);
+            const interactionHighPri = {
+              id: 1,
+              name: 'highPri',
+              timestamp: Scheduler.unstable_now(),
+            };
 
-          // Verify the high priority update was associated with the high priority event.
-          expect(onPostCommit).toHaveBeenCalledTimes(1);
-          let call = onPostCommit.mock.calls[0];
-          expect(call[0]).toEqual('test');
-          expect(call[3]).toEqual(Scheduler.unstable_now());
-          expect(call[4]).toMatchInteractions(
-            ReactFeatureFlags.enableSchedulerTracing
-              ? [interactionLowPri, interactionHighPri]
-              : [],
-          );
+            // Interrupt with higher priority work.
+            // This simulates a total of 37ms of actual render time.
+            renderer.unstable_flushSync(() => {
+              SchedulerTracing.unstable_trace(
+                interactionHighPri.name,
+                Scheduler.unstable_now(),
+                () => {
+                  second.setState({count: 1});
 
-          onPostCommit.mockClear();
+                  expect(onInteractionTraced).toHaveBeenCalledTimes(2);
+                  expect(
+                    onInteractionTraced,
+                  ).toHaveBeenLastNotifiedOfInteraction(interactionHighPri);
+                  expect(
+                    onInteractionScheduledWorkCompleted,
+                  ).not.toHaveBeenCalled();
 
-          Scheduler.unstable_advanceTime(100);
+                  expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
+                  expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+                },
+              );
+            });
 
-          // Resume the original low priority update, with rebased state.
-          // Verify the low priority update was retained.
-          expect(Scheduler).toFlushAndYield(['FirstComponent', 'onPostCommit']);
-          expect(onPostCommit).toHaveBeenCalledTimes(1);
-          call = onPostCommit.mock.calls[0];
-          expect(call[0]).toEqual('test');
-          expect(call[3]).toEqual(Scheduler.unstable_now());
-          expect(call[4]).toMatchInteractions(
-            ReactFeatureFlags.enableSchedulerTracing ? [interactionLowPri] : [],
-          );
+            // Profiler tag causes passive effects to be scheduled,
+            // so the interactions are still not completed.
+            expect(Scheduler).toHaveYielded(['SecondComponent']);
+            expect(onInteractionTraced).toHaveBeenCalledTimes(2);
+            expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+            expect(Scheduler).toFlushAndYieldThrough(['onPostCommit']);
 
-          expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-          expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+            expect(onInteractionTraced).toHaveBeenCalledTimes(2);
+            expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(
+              1,
+            );
+            expect(
+              onInteractionScheduledWorkCompleted,
+            ).toHaveBeenLastNotifiedOfInteraction(interactionHighPri);
 
-          // Work might be started multiple times before being completed.
-          // This is okay; it's part of the scheduler/tracing contract.
-          expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(3);
-          expect(
-            getWorkForReactThreads(onWorkStarted)[1][0],
-          ).toMatchInteractions([interactionLowPri, interactionHighPri]);
-          expect(
-            getWorkForReactThreads(onWorkStarted)[2][0],
-          ).toMatchInteractions([interactionLowPri]);
-          expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
-          expect(
-            getWorkForReactThreads(onWorkStopped)[0][0],
-          ).toMatchInteractions([interactionLowPri, interactionHighPri]);
-          expect(
-            getWorkForReactThreads(onWorkStopped)[1][0],
-          ).toMatchInteractions([interactionLowPri]);
-        },
-      );
+            // Verify the high priority update was associated with the high priority event.
+            expect(onPostCommit).toHaveBeenCalledTimes(1);
+            let call = onPostCommit.mock.calls[0];
+            expect(call[0]).toEqual('test');
+            expect(call[3]).toEqual(Scheduler.unstable_now());
+            expect(call[4]).toMatchInteractions(
+              ReactFeatureFlags.enableSchedulerTracing
+                ? [interactionLowPri, interactionHighPri]
+                : [],
+            );
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
-      expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interactionLowPri);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(3);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
+            onPostCommit.mockClear();
+
+            Scheduler.unstable_advanceTime(100);
+
+            // Resume the original low priority update, with rebased state.
+            // Verify the low priority update was retained.
+            expect(Scheduler).toFlushAndYield([
+              'FirstComponent',
+              'onPostCommit',
+            ]);
+            expect(onPostCommit).toHaveBeenCalledTimes(1);
+            call = onPostCommit.mock.calls[0];
+            expect(call[0]).toEqual('test');
+            expect(call[3]).toEqual(Scheduler.unstable_now());
+            expect(call[4]).toMatchInteractions(
+              ReactFeatureFlags.enableSchedulerTracing
+                ? [interactionLowPri]
+                : [],
+            );
+
+            expect(onInteractionTraced).toHaveBeenCalledTimes(2);
+            expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(
+              1,
+            );
+
+            // Work might be started multiple times before being completed.
+            // This is okay; it's part of the scheduler/tracing contract.
+            expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(3);
+            expect(
+              getWorkForReactThreads(onWorkStarted)[1][0],
+            ).toMatchInteractions([interactionLowPri, interactionHighPri]);
+            expect(
+              getWorkForReactThreads(onWorkStarted)[2][0],
+            ).toMatchInteractions([interactionLowPri]);
+            expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
+            expect(
+              getWorkForReactThreads(onWorkStopped)[0][0],
+            ).toMatchInteractions([interactionLowPri, interactionHighPri]);
+            expect(
+              getWorkForReactThreads(onWorkStopped)[1][0],
+            ).toMatchInteractions([interactionLowPri]);
+          },
+        );
+
+        expect(onInteractionTraced).toHaveBeenCalledTimes(2);
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(interactionLowPri);
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(3);
+        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
+      });
     });
 
     it('should trace work spawned by a commit phase lifecycle and setState callback', () => {
@@ -3110,7 +3133,7 @@ describe('Profiler', () => {
         render() {
           instance = this;
           Scheduler.unstable_yieldValue('Example:' + this.state.count);
-          return null;
+          return <ComponentWithPassiveEffect count={this.state.count} />;
         }
       }
 
@@ -3124,214 +3147,217 @@ describe('Profiler', () => {
       const onPostCommit = jest.fn(() => {
         Scheduler.unstable_yieldValue('onPostCommit');
       });
-      let firstCommitTime = Scheduler.unstable_now();
-      SchedulerTracing.unstable_trace(
-        interactionOne.name,
-        Scheduler.unstable_now(),
-        () => {
-          ReactTestRenderer.create(
-            <React.Profiler id="test" onPostCommit={onPostCommit}>
-              <Example />
-            </React.Profiler>,
-            {unstable_isConcurrent: true},
-          );
-        },
-      );
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-        interactionOne,
-      );
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+      ReactTestRendererAct(() => {
+        let firstCommitTime = Scheduler.unstable_now();
+        SchedulerTracing.unstable_trace(
+          interactionOne.name,
+          Scheduler.unstable_now(),
+          () => {
+            ReactTestRenderer.create(
+              <React.Profiler id="test" onPostCommit={onPostCommit}>
+                <Example />
+              </React.Profiler>,
+              {unstable_isConcurrent: true},
+            );
+          },
+        );
 
-      expect(Scheduler).toFlushAndYield([
-        'Example:0',
-        'onPostCommit',
-        'Example:1',
-        'onPostCommit',
-      ]);
+        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+          interactionOne,
+        );
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
+        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-      expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interactionOne);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(2);
-      expect(getWorkForReactThreads(onWorkStarted)[0][0]).toMatchInteractions([
-        interactionOne,
-      ]);
-      expect(getWorkForReactThreads(onWorkStarted)[1][0]).toMatchInteractions([
-        interactionOne,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
-      expect(getWorkForReactThreads(onWorkStopped)[0][0]).toMatchInteractions([
-        interactionOne,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)[1][0]).toMatchInteractions([
-        interactionOne,
-      ]);
+        expect(Scheduler).toFlushAndYield([
+          'Example:0',
+          'onPostCommit',
+          'Example:1',
+          'onPostCommit',
+        ]);
 
-      expect(onPostCommit).toHaveBeenCalledTimes(2);
-      let call = onPostCommit.mock.calls[0];
-      expect(call[0]).toEqual('test');
-      expect(call[3]).toEqual(firstCommitTime);
-      expect(call[4]).toMatchInteractions(
-        ReactFeatureFlags.enableSchedulerTracing ? [interactionOne] : [],
-      );
-      call = onPostCommit.mock.calls[1];
-      expect(call[0]).toEqual('test');
-      expect(call[3]).toEqual(Scheduler.unstable_now());
-      expect(call[4]).toMatchInteractions(
-        ReactFeatureFlags.enableSchedulerTracing ? [interactionOne] : [],
-      );
+        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(interactionOne);
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(2);
+        expect(
+          getWorkForReactThreads(onWorkStarted)[0][0],
+        ).toMatchInteractions([interactionOne]);
+        expect(
+          getWorkForReactThreads(onWorkStarted)[1][0],
+        ).toMatchInteractions([interactionOne]);
+        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
+        expect(
+          getWorkForReactThreads(onWorkStopped)[0][0],
+        ).toMatchInteractions([interactionOne]);
+        expect(
+          getWorkForReactThreads(onWorkStopped)[1][0],
+        ).toMatchInteractions([interactionOne]);
 
-      onPostCommit.mockClear();
+        expect(onPostCommit).toHaveBeenCalledTimes(2);
+        let call = onPostCommit.mock.calls[0];
+        expect(call[0]).toEqual('test');
+        expect(call[3]).toEqual(firstCommitTime);
+        expect(call[4]).toMatchInteractions(
+          ReactFeatureFlags.enableSchedulerTracing ? [interactionOne] : [],
+        );
+        call = onPostCommit.mock.calls[1];
+        expect(call[0]).toEqual('test');
+        expect(call[3]).toEqual(Scheduler.unstable_now());
+        expect(call[4]).toMatchInteractions(
+          ReactFeatureFlags.enableSchedulerTracing ? [interactionOne] : [],
+        );
 
-      const interactionTwo = {
-        id: 1,
-        name: 'componentDidUpdate test',
-        timestamp: Scheduler.unstable_now(),
-      };
+        onPostCommit.mockClear();
 
-      // Cause an traced, async update
-      SchedulerTracing.unstable_trace(
-        interactionTwo.name,
-        Scheduler.unstable_now(),
-        () => {
-          instance.setState({count: 2});
-        },
-      );
-      expect(onPostCommit).not.toHaveBeenCalled();
-      expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-      expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-        interactionTwo,
-      );
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(2);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
+        const interactionTwo = {
+          id: 1,
+          name: 'componentDidUpdate test',
+          timestamp: Scheduler.unstable_now(),
+        };
 
-      Scheduler.unstable_advanceTime(5);
+        // Cause an traced, async update
+        SchedulerTracing.unstable_trace(
+          interactionTwo.name,
+          Scheduler.unstable_now(),
+          () => {
+            instance.setState({count: 2});
+          },
+        );
+        expect(onPostCommit).not.toHaveBeenCalled();
+        expect(onInteractionTraced).toHaveBeenCalledTimes(2);
+        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+          interactionTwo,
+        );
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(2);
+        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(2);
 
-      // Flush async work (outside of traced scope)
-      // This will cause an intentional cascading update from did-update
-      firstCommitTime = Scheduler.unstable_now();
-      expect(Scheduler).toFlushAndYield([
-        'Example:2',
-        'onPostCommit',
-        'Example:3',
-        'onPostCommit',
-      ]);
+        Scheduler.unstable_advanceTime(5);
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
-      expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interactionTwo);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(4);
-      expect(getWorkForReactThreads(onWorkStarted)[2][0]).toMatchInteractions([
-        interactionTwo,
-      ]);
-      expect(getWorkForReactThreads(onWorkStarted)[3][0]).toMatchInteractions([
-        interactionTwo,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(4);
-      expect(getWorkForReactThreads(onWorkStopped)[2][0]).toMatchInteractions([
-        interactionTwo,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)[3][0]).toMatchInteractions([
-        interactionTwo,
-      ]);
+        // Flush async work (outside of traced scope)
+        // This will cause an intentional cascading update from did-update
+        firstCommitTime = Scheduler.unstable_now();
+        expect(Scheduler).toFlushAndYield([
+          'Example:2',
+          'onPostCommit',
+          'Example:3',
+          'onPostCommit',
+        ]);
 
-      // Verify the cascading commit is associated with the origin event
-      expect(onPostCommit).toHaveBeenCalledTimes(2);
-      call = onPostCommit.mock.calls[0];
-      expect(call[0]).toEqual('test');
-      expect(call[3]).toEqual(firstCommitTime);
-      expect(call[4]).toMatchInteractions(
-        ReactFeatureFlags.enableSchedulerTracing ? [interactionTwo] : [],
-      );
-      call = onPostCommit.mock.calls[1];
-      expect(call[0]).toEqual('test');
-      expect(call[3]).toEqual(Scheduler.unstable_now());
-      expect(call[4]).toMatchInteractions(
-        ReactFeatureFlags.enableSchedulerTracing ? [interactionTwo] : [],
-      );
+        expect(onInteractionTraced).toHaveBeenCalledTimes(2);
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(interactionTwo);
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(4);
+        expect(
+          getWorkForReactThreads(onWorkStarted)[2][0],
+        ).toMatchInteractions([interactionTwo]);
+        expect(
+          getWorkForReactThreads(onWorkStarted)[3][0],
+        ).toMatchInteractions([interactionTwo]);
+        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(4);
+        expect(
+          getWorkForReactThreads(onWorkStopped)[2][0],
+        ).toMatchInteractions([interactionTwo]);
+        expect(
+          getWorkForReactThreads(onWorkStopped)[3][0],
+        ).toMatchInteractions([interactionTwo]);
 
-      onPostCommit.mockClear();
+        // Verify the cascading commit is associated with the origin event
+        expect(onPostCommit).toHaveBeenCalledTimes(2);
+        call = onPostCommit.mock.calls[0];
+        expect(call[0]).toEqual('test');
+        expect(call[3]).toEqual(firstCommitTime);
+        expect(call[4]).toMatchInteractions(
+          ReactFeatureFlags.enableSchedulerTracing ? [interactionTwo] : [],
+        );
+        call = onPostCommit.mock.calls[1];
+        expect(call[0]).toEqual('test');
+        expect(call[3]).toEqual(Scheduler.unstable_now());
+        expect(call[4]).toMatchInteractions(
+          ReactFeatureFlags.enableSchedulerTracing ? [interactionTwo] : [],
+        );
 
-      const interactionThree = {
-        id: 2,
-        name: 'setState callback test',
-        timestamp: Scheduler.unstable_now(),
-      };
+        onPostCommit.mockClear();
 
-      // Cause a cascading update from the setState callback
-      function callback() {
-        instance.setState({count: 6});
-      }
-      SchedulerTracing.unstable_trace(
-        interactionThree.name,
-        Scheduler.unstable_now(),
-        () => {
-          instance.setState({count: 5}, callback);
-        },
-      );
-      expect(onPostCommit).not.toHaveBeenCalled();
+        const interactionThree = {
+          id: 2,
+          name: 'setState callback test',
+          timestamp: Scheduler.unstable_now(),
+        };
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(3);
-      expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-        interactionThree,
-      );
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(4);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(4);
+        // Cause a cascading update from the setState callback
+        function callback() {
+          instance.setState({count: 6});
+        }
+        SchedulerTracing.unstable_trace(
+          interactionThree.name,
+          Scheduler.unstable_now(),
+          () => {
+            instance.setState({count: 5}, callback);
+          },
+        );
+        expect(onPostCommit).not.toHaveBeenCalled();
 
-      // Flush async work (outside of traced scope)
-      // This will cause an intentional cascading update from the setState callback
-      firstCommitTime = Scheduler.unstable_now();
-      expect(Scheduler).toFlushAndYield([
-        'Example:5',
-        'onPostCommit',
-        'Example:6',
-        'onPostCommit',
-      ]);
+        expect(onInteractionTraced).toHaveBeenCalledTimes(3);
+        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+          interactionThree,
+        );
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(2);
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(4);
+        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(4);
 
-      expect(onInteractionTraced).toHaveBeenCalledTimes(3);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(3);
-      expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interactionThree);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(6);
-      expect(getWorkForReactThreads(onWorkStarted)[4][0]).toMatchInteractions([
-        interactionThree,
-      ]);
-      expect(getWorkForReactThreads(onWorkStarted)[5][0]).toMatchInteractions([
-        interactionThree,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(6);
-      expect(getWorkForReactThreads(onWorkStopped)[4][0]).toMatchInteractions([
-        interactionThree,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)[5][0]).toMatchInteractions([
-        interactionThree,
-      ]);
+        // Flush async work (outside of traced scope)
+        // This will cause an intentional cascading update from the setState callback
+        firstCommitTime = Scheduler.unstable_now();
+        expect(Scheduler).toFlushAndYield([
+          'Example:5',
+          'onPostCommit',
+          'Example:6',
+          'onPostCommit',
+        ]);
 
-      // Verify the cascading commit is associated with the origin event
-      expect(onPostCommit).toHaveBeenCalledTimes(2);
-      call = onPostCommit.mock.calls[0];
-      expect(call[0]).toEqual('test');
-      expect(call[3]).toEqual(firstCommitTime);
-      expect(call[4]).toMatchInteractions(
-        ReactFeatureFlags.enableSchedulerTracing ? [interactionThree] : [],
-      );
-      call = onPostCommit.mock.calls[1];
-      expect(call[0]).toEqual('test');
-      expect(call[3]).toEqual(Scheduler.unstable_now());
-      expect(call[4]).toMatchInteractions(
-        ReactFeatureFlags.enableSchedulerTracing ? [interactionThree] : [],
-      );
+        expect(onInteractionTraced).toHaveBeenCalledTimes(3);
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(3);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(interactionThree);
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(6);
+        expect(
+          getWorkForReactThreads(onWorkStarted)[4][0],
+        ).toMatchInteractions([interactionThree]);
+        expect(
+          getWorkForReactThreads(onWorkStarted)[5][0],
+        ).toMatchInteractions([interactionThree]);
+        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(6);
+        expect(
+          getWorkForReactThreads(onWorkStopped)[4][0],
+        ).toMatchInteractions([interactionThree]);
+        expect(
+          getWorkForReactThreads(onWorkStopped)[5][0],
+        ).toMatchInteractions([interactionThree]);
+
+        // Verify the cascading commit is associated with the origin event
+        expect(onPostCommit).toHaveBeenCalledTimes(2);
+        call = onPostCommit.mock.calls[0];
+        expect(call[0]).toEqual('test');
+        expect(call[3]).toEqual(firstCommitTime);
+        expect(call[4]).toMatchInteractions(
+          ReactFeatureFlags.enableSchedulerTracing ? [interactionThree] : [],
+        );
+        call = onPostCommit.mock.calls[1];
+        expect(call[0]).toEqual('test');
+        expect(call[3]).toEqual(Scheduler.unstable_now());
+        expect(call[4]).toMatchInteractions(
+          ReactFeatureFlags.enableSchedulerTracing ? [interactionThree] : [],
+        );
+      });
     });
 
     it('should trace interactions associated with a parent component state update', () => {
@@ -3343,7 +3369,7 @@ describe('Profiler', () => {
       class Child extends React.Component {
         render() {
           Scheduler.unstable_yieldValue('Child:' + this.props.count);
-          return null;
+          return <ComponentWithPassiveEffect count={this.props.count} />;
         }
       }
 
@@ -3363,56 +3389,58 @@ describe('Profiler', () => {
 
       Scheduler.unstable_advanceTime(1);
 
-      ReactTestRenderer.create(<Parent />, {
-        unstable_isConcurrent: true,
+      ReactTestRendererAct(() => {
+        ReactTestRenderer.create(<Parent />, {
+          unstable_isConcurrent: true,
+        });
+        expect(Scheduler).toFlushAndYield(['Child:0', 'onPostCommit']);
+        onPostCommit.mockClear();
+
+        const interaction = {
+          id: 0,
+          name: 'parent interaction',
+          timestamp: Scheduler.unstable_now(),
+        };
+
+        SchedulerTracing.unstable_trace(
+          interaction.name,
+          Scheduler.unstable_now(),
+          () => {
+            parentInstance.setState({count: 1});
+          },
+        );
+
+        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+          interaction,
+        );
+        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
+        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+
+        expect(onPostCommit).not.toHaveBeenCalled();
+        expect(Scheduler).toFlushAndYield(['Child:1', 'onPostCommit']);
+        expect(onPostCommit).toHaveBeenCalledTimes(1);
+        const call = onPostCommit.mock.calls[0];
+        expect(call[0]).toEqual('test-profiler');
+        expect(call[4]).toMatchInteractions(
+          ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
+        );
+
+        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+        expect(
+          onInteractionScheduledWorkCompleted,
+        ).toHaveBeenLastNotifiedOfInteraction(interaction);
+        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
+        expect(
+          getWorkForReactThreads(onWorkStarted)[0][0],
+        ).toMatchInteractions([interaction]);
+        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(1);
+        expect(
+          getWorkForReactThreads(onWorkStopped)[0][0],
+        ).toMatchInteractions([interaction]);
       });
-      expect(Scheduler).toFlushAndYield(['Child:0', 'onPostCommit']);
-      onPostCommit.mockClear();
-
-      const interaction = {
-        id: 0,
-        name: 'parent interaction',
-        timestamp: Scheduler.unstable_now(),
-      };
-
-      SchedulerTracing.unstable_trace(
-        interaction.name,
-        Scheduler.unstable_now(),
-        () => {
-          parentInstance.setState({count: 1});
-        },
-      );
-
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-        interaction,
-      );
-      expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
-
-      expect(onPostCommit).not.toHaveBeenCalled();
-      expect(Scheduler).toFlushAndYield(['Child:1', 'onPostCommit']);
-      expect(onPostCommit).toHaveBeenCalledTimes(1);
-      const call = onPostCommit.mock.calls[0];
-      expect(call[0]).toEqual('test-profiler');
-      expect(call[4]).toMatchInteractions(
-        ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
-      );
-
-      expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-      expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-      expect(
-        onInteractionScheduledWorkCompleted,
-      ).toHaveBeenLastNotifiedOfInteraction(interaction);
-      expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(1);
-      expect(getWorkForReactThreads(onWorkStarted)[0][0]).toMatchInteractions([
-        interaction,
-      ]);
-      expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(1);
-      expect(getWorkForReactThreads(onWorkStopped)[0][0]).toMatchInteractions([
-        interaction,
-      ]);
     });
 
     describe('suspense', () => {
@@ -3443,76 +3471,79 @@ describe('Profiler', () => {
         const onPostCommit = jest.fn(() => {
           Scheduler.unstable_yieldValue('onPostCommit');
         });
-        SchedulerTracing.unstable_trace(
-          interaction.name,
-          Scheduler.unstable_now(),
-          () => {
-            ReactNoop.render(
-              <React.Profiler id="test-profiler" onPostCommit={onPostCommit}>
-                <React.Suspense fallback={<Text text="Loading..." />}>
-                  <AsyncText text="Async" ms={20000} />
-                </React.Suspense>
-                <Text text="Sync" />
-                <Monkey ref={monkey} />
-              </React.Profiler>,
-            );
-          },
-        );
+        ReactNoop.act(async () => {
+          SchedulerTracing.unstable_trace(
+            interaction.name,
+            Scheduler.unstable_now(),
+            () => {
+              ReactNoop.render(
+                <React.Profiler id="test-profiler" onPostCommit={onPostCommit}>
+                  <React.Suspense fallback={<Text text="Loading..." />}>
+                    <AsyncText text="Async" ms={20000} />
+                  </React.Suspense>
+                  <Text text="Sync" />
+                  <Monkey ref={monkey} />
+                  <ComponentWithPassiveEffect />
+                </React.Profiler>,
+              );
+            },
+          );
 
-        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-        expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
-          interaction,
-        );
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
-        expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
+          expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+          expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+            interaction,
+          );
+          expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+          expect(getWorkForReactThreads(onWorkStarted)).toHaveLength(0);
+          expect(getWorkForReactThreads(onWorkStopped)).toHaveLength(0);
 
-        expect(Scheduler).toFlushAndYield([
-          'Suspend [Async]',
-          'Text [Loading...]',
-          'Text [Sync]',
-          'Monkey',
-          'onPostCommit',
-        ]);
-        // Should have committed the placeholder.
-        expect(ReactNoop.getChildrenAsJSX()).toEqual('Loading...Sync');
-        expect(onPostCommit).toHaveBeenCalledTimes(1);
+          expect(Scheduler).toFlushAndYield([
+            'Suspend [Async]',
+            'Text [Loading...]',
+            'Text [Sync]',
+            'Monkey',
+            'onPostCommit',
+          ]);
+          // Should have committed the placeholder.
+          expect(ReactNoop.getChildrenAsJSX()).toEqual('Loading...Sync');
+          expect(onPostCommit).toHaveBeenCalledTimes(1);
 
-        let call = onPostCommit.mock.calls[0];
-        expect(call[0]).toEqual('test-profiler');
-        expect(call[4]).toMatchInteractions(
-          ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
-        );
+          let call = onPostCommit.mock.calls[0];
+          expect(call[0]).toEqual('test-profiler');
+          expect(call[4]).toMatchInteractions(
+            ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
+          );
 
-        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-        expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+          expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+          expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
-        // An unrelated update in the middle shouldn't affect things...
-        monkey.current.forceUpdate();
-        expect(Scheduler).toFlushAndYield(['Monkey', 'onPostCommit']);
-        expect(onPostCommit).toHaveBeenCalledTimes(2);
+          // An unrelated update in the middle shouldn't affect things...
+          monkey.current.forceUpdate();
+          expect(Scheduler).toFlushAndYield(['Monkey', 'onPostCommit']);
+          expect(onPostCommit).toHaveBeenCalledTimes(2);
 
-        // Once the promise resolves, we render the suspended view
-        await awaitableAdvanceTimers(20000);
-        expect(Scheduler).toHaveYielded(['Promise resolved [Async]']);
-        expect(Scheduler).toFlushAndYield([
-          'AsyncText [Async]',
-          'onPostCommit',
-        ]);
-        expect(ReactNoop.getChildrenAsJSX()).toEqual('AsyncSync');
-        expect(onPostCommit).toHaveBeenCalledTimes(3);
+          // Once the promise resolves, we render the suspended view
+          await awaitableAdvanceTimers(20000);
+          expect(Scheduler).toHaveYielded(['Promise resolved [Async]']);
+          expect(Scheduler).toFlushAndYield([
+            'AsyncText [Async]',
+            'onPostCommit',
+          ]);
+          expect(ReactNoop.getChildrenAsJSX()).toEqual('AsyncSync');
+          expect(onPostCommit).toHaveBeenCalledTimes(3);
 
-        call = onPostCommit.mock.calls[2];
-        expect(call[0]).toEqual('test-profiler');
-        expect(call[4]).toMatchInteractions(
-          ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
-        );
+          call = onPostCommit.mock.calls[2];
+          expect(call[0]).toEqual('test-profiler');
+          expect(call[4]).toMatchInteractions(
+            ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
+          );
 
-        expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-        expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
-        expect(
-          onInteractionScheduledWorkCompleted,
-        ).toHaveBeenLastNotifiedOfInteraction(interaction);
+          expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+          expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
+          expect(
+            onInteractionScheduledWorkCompleted,
+          ).toHaveBeenLastNotifiedOfInteraction(interaction);
+        });
       });
 
       it('does not prematurely complete for suspended sync renders', async () => {
@@ -3533,6 +3564,7 @@ describe('Profiler', () => {
               <React.Profiler id="app" onPostCommit={onPostCommit}>
                 <React.Suspense fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={500} />
+                  <ComponentWithPassiveEffect />
                 </React.Suspense>
               </React.Profiler>,
             );
@@ -3594,6 +3626,7 @@ describe('Profiler', () => {
           () => {
             ReactTestRenderer.create(
               <React.Profiler id="app" onPostCommit={onPostCommit}>
+                <ComponentWithPassiveEffect />
                 <React.Suspense fallback={<Text text="loading" />}>
                   <AsyncComponentWithCascadingWork text="loaded" ms={500} />
                 </React.Suspense>
@@ -3616,7 +3649,16 @@ describe('Profiler', () => {
 
         wrappedCascadingFn();
         expect(Scheduler).toHaveYielded(['onPostCommit', 'render']);
-        expect(Scheduler).toFlushAndYield(['onPostCommit']);
+
+        // The new reconciler does not call onPostCommit again
+        // because the resolved suspended subtree doesn't contain any passive effects.
+        // If <AsyncComponentWithCascadingWork> or its decendents had a passive effect,
+        // onPostCommit would be called again.
+        if (gate(flags => flags.new)) {
+          expect(Scheduler).toFlushAndYield([]);
+        } else {
+          expect(Scheduler).toFlushAndYield(['onPostCommit']);
+        }
 
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
@@ -3631,15 +3673,15 @@ describe('Profiler', () => {
           timestamp: Scheduler.unstable_now(),
         };
 
-        const onPostCommit = jest.fn(() => {
-          Scheduler.unstable_yieldValue('onPostCommit');
+        const onCommit = jest.fn(() => {
+          Scheduler.unstable_yieldValue('onCommit');
         });
         SchedulerTracing.unstable_trace(
           interaction.name,
           interaction.timestamp,
           () => {
             ReactTestRenderer.create(
-              <React.Profiler id="app" onPostCommit={onPostCommit}>
+              <React.Profiler id="app" onCommit={onCommit}>
                 <React.Suspense fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={500} />
                 </React.Suspense>
@@ -3657,7 +3699,7 @@ describe('Profiler', () => {
         expect(Scheduler).toFlushAndYield([
           'Suspend [loaded]',
           'Text [loading]',
-          'onPostCommit',
+          'onCommit',
         ]);
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
@@ -3665,10 +3707,7 @@ describe('Profiler', () => {
         await awaitableAdvanceTimers(500);
 
         expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
-        expect(Scheduler).toFlushAndYield([
-          'AsyncText [loaded]',
-          'onPostCommit',
-        ]);
+        expect(Scheduler).toFlushAndYield(['AsyncText [loaded]', 'onCommit']);
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
           onInteractionScheduledWorkCompleted,
@@ -3682,15 +3721,15 @@ describe('Profiler', () => {
           timestamp: Scheduler.unstable_now(),
         };
 
-        const onPostCommit = jest.fn(() => {
-          Scheduler.unstable_yieldValue('onPostCommit');
+        const onCommit = jest.fn(() => {
+          Scheduler.unstable_yieldValue('onCommit');
         });
         SchedulerTracing.unstable_trace(
           interaction.name,
           interaction.timestamp,
           () => {
             ReactTestRenderer.create(
-              <React.Profiler id="app" onPostCommit={onPostCommit}>
+              <React.Profiler id="app" onCommit={onCommit}>
                 <React.Suspense fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={100} />
                 </React.Suspense>
@@ -3702,7 +3741,7 @@ describe('Profiler', () => {
         expect(Scheduler).toFlushAndYield([
           'Suspend [loaded]',
           'Text [loading]',
-          'onPostCommit',
+          'onCommit',
         ]);
 
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
@@ -3710,10 +3749,7 @@ describe('Profiler', () => {
         jest.advanceTimersByTime(100);
         await resourcePromise;
         expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
-        expect(Scheduler).toFlushAndYield([
-          'AsyncText [loaded]',
-          'onPostCommit',
-        ]);
+        expect(Scheduler).toFlushAndYield(['AsyncText [loaded]', 'onCommit']);
 
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
@@ -3738,6 +3774,7 @@ describe('Profiler', () => {
           () => {
             renderer = ReactTestRenderer.create(
               <React.Profiler id="app" onPostCommit={onPostCommit}>
+                <ComponentWithPassiveEffect />
                 <React.Suspense fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={100} />
                 </React.Suspense>
@@ -3776,6 +3813,7 @@ describe('Profiler', () => {
             () => {
               renderer.update(
                 <React.Profiler id="app" onPostCommit={onPostCommit}>
+                  <ComponentWithPassiveEffect />
                   <React.Suspense fallback={<Text text="loading" />}>
                     <AsyncText text="loaded" ms={100} />
                   </React.Suspense>
@@ -3842,15 +3880,15 @@ describe('Profiler', () => {
           timestamp: Scheduler.unstable_now(),
         };
 
-        const onPostCommit = jest.fn(() => {
-          Scheduler.unstable_yieldValue('onPostCommit');
+        const onCommit = jest.fn(() => {
+          Scheduler.unstable_yieldValue('onCommit');
         });
         SchedulerTracing.unstable_trace(
           initialRenderInteraction.name,
           initialRenderInteraction.timestamp,
           () => {
             renderer.update(
-              <React.Profiler id="app" onPostCommit={onPostCommit}>
+              <React.Profiler id="app" onCommit={onCommit}>
                 <React.Suspense fallback={<Text text="loading" />}>
                   <AsyncText text="loaded" ms={100} />
                 </React.Suspense>
@@ -3866,7 +3904,7 @@ describe('Profiler', () => {
         ]);
 
         expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-        expect(onPostCommit).not.toHaveBeenCalled();
+        expect(onCommit).not.toHaveBeenCalled();
 
         Scheduler.unstable_advanceTime(50);
         jest.advanceTimersByTime(50);
@@ -3885,7 +3923,7 @@ describe('Profiler', () => {
             highPriUpdateInteraction.timestamp,
             () => {
               renderer.update(
-                <React.Profiler id="app" onPostCommit={onPostCommit}>
+                <React.Profiler id="app" onCommit={onCommit}>
                   <React.Suspense fallback={<Text text="loading" />}>
                     <AsyncText text="loaded" ms={100} />
                   </React.Suspense>
@@ -3899,15 +3937,15 @@ describe('Profiler', () => {
           'Suspend [loaded]',
           'Text [loading]',
           'Text [updated]',
+          'onCommit',
         ]);
-        expect(Scheduler).toFlushAndYieldThrough(['onPostCommit']);
         expect(renderer.toJSON()).toEqual(['loading', 'updated']);
 
-        expect(onPostCommit).toHaveBeenCalledTimes(1);
-        expect(onPostCommit.mock.calls[0][4]).toMatchInteractions([
+        expect(onCommit).toHaveBeenCalledTimes(1);
+        expect(onCommit.mock.calls[0][4]).toMatchInteractions([
           highPriUpdateInteraction,
         ]);
-        onPostCommit.mockClear();
+        onCommit.mockClear();
 
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(0);
 
@@ -3915,14 +3953,11 @@ describe('Profiler', () => {
         jest.advanceTimersByTime(50);
         await originalPromise;
         expect(Scheduler).toHaveYielded(['Promise resolved [loaded]']);
-        expect(Scheduler).toFlushAndYield([
-          'AsyncText [loaded]',
-          'onPostCommit',
-        ]);
+        expect(Scheduler).toFlushAndYield(['AsyncText [loaded]', 'onCommit']);
         expect(renderer.toJSON()).toEqual(['loaded', 'updated']);
 
-        expect(onPostCommit).toHaveBeenCalledTimes(1);
-        expect(onPostCommit.mock.calls[0][4]).toMatchInteractions([
+        expect(onCommit).toHaveBeenCalledTimes(1);
+        expect(onCommit.mock.calls[0][4]).toMatchInteractions([
           highPriUpdateInteraction,
         ]);
 
@@ -3961,15 +3996,15 @@ describe('Profiler', () => {
           }
         };
 
-        const onPostCommit = jest.fn(() => {
-          Scheduler.unstable_yieldValue('onPostCommit');
+        const onCommit = jest.fn(() => {
+          Scheduler.unstable_yieldValue('onCommit');
         });
         SchedulerTracing.unstable_trace(
           interaction.name,
           Scheduler.unstable_now(),
           () => {
             ReactNoop.render(
-              <React.Profiler id="test-profiler" onPostCommit={onPostCommit}>
+              <React.Profiler id="test-profiler" onCommit={onCommit}>
                 <React.Suspense fallback={<Text text="Loading..." />}>
                   <AsyncText text="Async" ms={20000} />
                 </React.Suspense>
@@ -3991,13 +4026,13 @@ describe('Profiler', () => {
           'Suspend [Async]',
           'Text [Loading...]',
           'Text [Sync]',
-          'onPostCommit',
+          'onCommit',
         ]);
         // Should have committed the placeholder.
         expect(ReactNoop.getChildrenAsJSX()).toEqual('Loading...Sync');
-        expect(onPostCommit).toHaveBeenCalledTimes(1);
+        expect(onCommit).toHaveBeenCalledTimes(1);
 
-        let call = onPostCommit.mock.calls[0];
+        let call = onCommit.mock.calls[0];
         expect(call[0]).toEqual('test-profiler');
         expect(call[4]).toMatchInteractions(
           ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
@@ -4013,15 +4048,12 @@ describe('Profiler', () => {
         // Once the promise resolves, we render the suspended view
         await awaitableAdvanceTimers(20000);
         expect(Scheduler).toHaveYielded(['Promise resolved [Async]']);
-        expect(Scheduler).toFlushAndYield([
-          'AsyncText [Async]',
-          'onPostCommit',
-        ]);
+        expect(Scheduler).toFlushAndYield(['AsyncText [Async]', 'onCommit']);
         expect(ReactNoop.getChildrenAsJSX()).toEqual('AsyncSync');
-        expect(onPostCommit).toHaveBeenCalledTimes(2);
+        expect(onCommit).toHaveBeenCalledTimes(2);
 
         // No interactions should be associated with this update.
-        call = onPostCommit.mock.calls[1];
+        call = onCommit.mock.calls[1];
         expect(call[0]).toEqual('test-profiler');
         expect(call[4]).toMatchInteractions([]);
       });

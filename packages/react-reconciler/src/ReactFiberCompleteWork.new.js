@@ -67,10 +67,15 @@ import {
 import {
   Ref,
   Update,
+  Callback,
+  Passive,
+  Deletion,
   NoFlags,
   DidCapture,
   Snapshot,
   MutationMask,
+  LayoutMask,
+  PassiveMask,
   StaticMask,
 } from './ReactFiberFlags';
 import invariant from 'shared/invariant';
@@ -787,6 +792,8 @@ function bubbleProperties(completedWork: Fiber) {
   }
 
   completedWork.childLanes = newChildLanes;
+
+  return didBailout;
 }
 
 function completeWork(
@@ -804,7 +811,6 @@ function completeWork(
     case ForwardRef:
     case Fragment:
     case Mode:
-    case Profiler:
     case ContextConsumer:
     case MemoComponent:
       bubbleProperties(workInProgress);
@@ -964,6 +970,53 @@ function completeWork(
         }
       }
       bubbleProperties(workInProgress);
+      return null;
+    }
+    case Profiler: {
+      const didBailout = bubbleProperties(workInProgress);
+      if (!didBailout) {
+        // Use subtreeFlags to determine which commit callbacks should fire.
+        // TODO: Move this logic to the commit phase, since we already check if
+        // a fiber's subtree contains effects. Refactor the commit phase's
+        // depth-first traversal so that we can put work tag-specific logic
+        // before or after committing a subtree's effects.
+        const OnRenderFlag = Update;
+        const OnCommitFlag = Callback;
+        const OnPostCommitFlag = Passive;
+        const subtreeFlags = workInProgress.subtreeFlags;
+        const flags = workInProgress.flags;
+        let newFlags = flags;
+
+        // Call onRender any time this fiber or its subtree are worked on, even
+        // if there are no effects
+        newFlags |= OnRenderFlag;
+
+        // Call onCommit only if the subtree contains layout work, or if it
+        // contains deletions, since those might result in unmount work, which
+        // we include in the same measure.
+        // TODO: Can optimize by using a static flag to track whether a tree
+        // contains layout effects, like we do for passive effects.
+        if (
+          (flags & (LayoutMask | Deletion)) !== NoFlags ||
+          (subtreeFlags & (LayoutMask | Deletion)) !== NoFlags
+        ) {
+          newFlags |= OnCommitFlag;
+        }
+
+        // Call onPostCommit only if the subtree contains passive work.
+        // Don't have to check for deletions, because Deletion is already
+        // a passive flag.
+        if (
+          (flags & PassiveMask) !== NoFlags ||
+          (subtreeFlags & PassiveMask) !== NoFlags
+        ) {
+          newFlags |= OnPostCommitFlag;
+        }
+        workInProgress.flags = newFlags;
+      } else {
+        // This fiber and its subtree bailed out, so don't fire any callbacks.
+      }
+
       return null;
     }
     case SuspenseComponent: {
