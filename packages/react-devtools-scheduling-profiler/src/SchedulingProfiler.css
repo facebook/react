@@ -8,6 +8,7 @@
   font-size: var(--font-size-sans-normal);
   background-color: var(--color-background);
   color: var(--color-text);
+  border-top: 1px solid var(--color-border);
 }
 
 .SchedulingProfiler, .SchedulingProfiler * {
