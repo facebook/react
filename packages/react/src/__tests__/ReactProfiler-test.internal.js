@@ -3477,16 +3477,16 @@ describe('Profiler', () => {
           }
         }
 
-        const onPostCommit = jest.fn(() => {
-          Scheduler.unstable_yieldValue('onPostCommit');
+        const onCommit = jest.fn(() => {
+          Scheduler.unstable_yieldValue('onCommit');
         });
-        ReactNoop.act(async () => {
+        await ReactNoop.act(async () => {
           SchedulerTracing.unstable_trace(
             interaction.name,
             Scheduler.unstable_now(),
             () => {
               ReactNoop.render(
-                <React.Profiler id="test-profiler" onPostCommit={onPostCommit}>
+                <React.Profiler id="test-profiler" onCommit={onCommit}>
                   <React.Suspense fallback={<Text text="Loading..." />}>
                     <AsyncText text="Async" ms={20000} />
                   </React.Suspense>
@@ -3511,13 +3511,13 @@ describe('Profiler', () => {
             'Text [Loading...]',
             'Text [Sync]',
             'Monkey',
-            'onPostCommit',
+            'onCommit',
           ]);
           // Should have committed the placeholder.
           expect(ReactNoop.getChildrenAsJSX()).toEqual('Loading...Sync');
-          expect(onPostCommit).toHaveBeenCalledTimes(1);
+          expect(onCommit).toHaveBeenCalledTimes(1);
 
-          let call = onPostCommit.mock.calls[0];
+          let call = onCommit.mock.calls[0];
           expect(call[0]).toEqual('test-profiler');
           expect(call[4]).toMatchInteractions(
             ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
@@ -3528,20 +3528,17 @@ describe('Profiler', () => {
 
           // An unrelated update in the middle shouldn't affect things...
           monkey.current.forceUpdate();
-          expect(Scheduler).toFlushAndYield(['Monkey', 'onPostCommit']);
-          expect(onPostCommit).toHaveBeenCalledTimes(2);
+          expect(Scheduler).toFlushAndYield(['Monkey', 'onCommit']);
+          expect(onCommit).toHaveBeenCalledTimes(2);
 
           // Once the promise resolves, we render the suspended view
           await awaitableAdvanceTimers(20000);
           expect(Scheduler).toHaveYielded(['Promise resolved [Async]']);
-          expect(Scheduler).toFlushAndYield([
-            'AsyncText [Async]',
-            'onPostCommit',
-          ]);
+          expect(Scheduler).toFlushAndYield(['AsyncText [Async]', 'onCommit']);
           expect(ReactNoop.getChildrenAsJSX()).toEqual('AsyncSync');
-          expect(onPostCommit).toHaveBeenCalledTimes(3);
+          expect(onCommit).toHaveBeenCalledTimes(3);
 
-          call = onPostCommit.mock.calls[2];
+          call = onCommit.mock.calls[2];
           expect(call[0]).toEqual('test-profiler');
           expect(call[4]).toMatchInteractions(
             ReactFeatureFlags.enableSchedulerTracing ? [interaction] : [],
