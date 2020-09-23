@@ -27,7 +27,7 @@ export default function App() {
   return (
     <div className={styles.DevTools}>
       <div className={styles.TabContent}>
-        <SchedulingProfiler showAppInfo />
+        <SchedulingProfiler showAppInfo={true} />
       </div>
     </div>
   );
