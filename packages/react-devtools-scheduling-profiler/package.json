@@ -22,7 +22,7 @@
     "@reach/tooltip": "^0.11.2",
     "babel-loader": "^8.1.0",
     "css-loader": "^4.2.1",
-    "file-loader": "^6.0.0",
+    "file-loader": "^6.1.0",
     "html-webpack-plugin": "^4.3.0",
     "style-loader": "^1.2.1",
     "url-loader": "^4.1.0",
