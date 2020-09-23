@@ -377,7 +377,6 @@ let shouldFireAfterActiveInstanceBlur: boolean = false;
 
 // Used to avoid traversing the return path to find the nearest Profiler ancestor during commit.
 let nearestProfilerOnStack: Fiber | null = null;
-export let penultimateProfilerOnStack: Fiber | null = null;
 
 export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
@@ -2368,11 +2367,10 @@ function commitLayoutEffects(
 ) {
   let fiber = firstChild;
   while (fiber !== null) {
-    let prevPenultimateProfiler = null;
+    let prevProfilerOnStack = null;
     if (enableProfilerTimer && enableProfilerCommitHooks) {
       if (fiber.tag === Profiler) {
-        prevPenultimateProfiler = penultimateProfilerOnStack;
-        penultimateProfilerOnStack = nearestProfilerOnStack;
+        prevProfilerOnStack = nearestProfilerOnStack;
         nearestProfilerOnStack = fiber;
       }
     }
@@ -2409,8 +2407,14 @@ function commitLayoutEffects(
 
     if (enableProfilerTimer && enableProfilerCommitHooks) {
       if (fiber.tag === Profiler) {
-        nearestProfilerOnStack = penultimateProfilerOnStack;
-        penultimateProfilerOnStack = prevPenultimateProfiler;
+        // Propagate layout effect durations to the next nearest Profiler ancestor.
+        // Do not reset these values until the next render so DevTools has a chance to read them first.
+        if (prevProfilerOnStack !== null) {
+          prevProfilerOnStack.stateNode.effectDuration +=
+            fiber.stateNode.effectDuration;
+        }
+
+        nearestProfilerOnStack = prevProfilerOnStack;
       }
     }
 
@@ -2475,11 +2479,10 @@ export function flushPassiveEffects(): boolean {
 function flushPassiveMountEffects(root, firstChild: Fiber): void {
   let fiber = firstChild;
   while (fiber !== null) {
-    let prevPenultimateProfiler = null;
+    let prevProfilerOnStack = null;
     if (enableProfilerTimer && enableProfilerCommitHooks) {
       if (fiber.tag === Profiler) {
-        prevPenultimateProfiler = penultimateProfilerOnStack;
-        penultimateProfilerOnStack = nearestProfilerOnStack;
+        prevProfilerOnStack = nearestProfilerOnStack;
         nearestProfilerOnStack = fiber;
       }
     }
@@ -2516,8 +2519,14 @@ function flushPassiveMountEffects(root, firstChild: Fiber): void {
 
     if (enableProfilerTimer && enableProfilerCommitHooks) {
       if (fiber.tag === Profiler) {
-        nearestProfilerOnStack = penultimateProfilerOnStack;
-        penultimateProfilerOnStack = prevPenultimateProfiler;
+        // Bubble times to the next nearest ancestor Profiler.
+        // After we process that Profiler, we'll bubble further up.
+        if (prevProfilerOnStack !== null) {
+          prevProfilerOnStack.stateNode.passiveEffectDuration +=
+            fiber.stateNode.passiveEffectDuration;
+        }
+
+        nearestProfilerOnStack = prevProfilerOnStack;
       }
     }
 
