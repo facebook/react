@@ -7,4 +7,4 @@
  * @flow
  */
 
-export const enableDarkMode = false;
+export const enableSchedulingProfilerDarkMode = false;
