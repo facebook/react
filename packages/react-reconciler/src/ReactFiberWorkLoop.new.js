@@ -22,6 +22,7 @@ import {
   enableSuspenseServerRenderer,
   replayFailedUnitOfWorkWithInvokeGuardedCallback,
   enableProfilerTimer,
+  enableProfilerCommitHooks,
   enableSchedulerTracing,
   warnAboutUnmockedScheduler,
   deferRenderPhaseUpdateToNextBatch,
@@ -116,6 +117,7 @@ import {
   SimpleMemoComponent,
   Block,
   ScopeComponent,
+  Profiler,
 } from './ReactWorkTags';
 import {LegacyRoot} from './ReactRootTags';
 import {
@@ -372,6 +374,10 @@ let isFlushingPassiveEffects = false;
 
 let focusedInstanceHandle: null | Fiber = null;
 let shouldFireAfterActiveInstanceBlur: boolean = false;
+
+// Used to avoid traversing the return path to find the nearest Profiler ancestor during commit.
+let nearestProfilerOnStack: Fiber | null = null;
+export let penultimateProfilerOnStack: Fiber | null = null;
 
 export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
@@ -2362,6 +2368,15 @@ function commitLayoutEffects(
 ) {
   let fiber = firstChild;
   while (fiber !== null) {
+    let prevPenultimateProfiler = null;
+    if (enableProfilerTimer && enableProfilerCommitHooks) {
+      if (fiber.tag === Profiler) {
+        prevPenultimateProfiler = penultimateProfilerOnStack;
+        penultimateProfilerOnStack = nearestProfilerOnStack;
+        nearestProfilerOnStack = fiber;
+      }
+    }
+
     if (fiber.child !== null) {
       const primarySubtreeFlags = fiber.subtreeFlags & LayoutMask;
       if (primarySubtreeFlags !== NoFlags) {
@@ -2391,6 +2406,14 @@ function commitLayoutEffects(
         captureCommitPhaseError(fiber, fiber.return, error);
       }
     }
+
+    if (enableProfilerTimer && enableProfilerCommitHooks) {
+      if (fiber.tag === Profiler) {
+        nearestProfilerOnStack = penultimateProfilerOnStack;
+        penultimateProfilerOnStack = prevPenultimateProfiler;
+      }
+    }
+
     fiber = fiber.sibling;
   }
 }
@@ -2452,6 +2475,15 @@ export function flushPassiveEffects(): boolean {
 function flushPassiveMountEffects(root, firstChild: Fiber): void {
   let fiber = firstChild;
   while (fiber !== null) {
+    let prevPenultimateProfiler = null;
+    if (enableProfilerTimer && enableProfilerCommitHooks) {
+      if (fiber.tag === Profiler) {
+        prevPenultimateProfiler = penultimateProfilerOnStack;
+        penultimateProfilerOnStack = nearestProfilerOnStack;
+        nearestProfilerOnStack = fiber;
+      }
+    }
+
     const primarySubtreeFlags = fiber.subtreeFlags & PassiveMask;
 
     if (fiber.child !== null && primarySubtreeFlags !== NoFlags) {
@@ -2479,6 +2511,13 @@ function flushPassiveMountEffects(root, firstChild: Fiber): void {
         } catch (error) {
           captureCommitPhaseError(fiber, fiber.return, error);
         }
+      }
+    }
+
+    if (enableProfilerTimer && enableProfilerCommitHooks) {
+      if (fiber.tag === Profiler) {
+        nearestProfilerOnStack = penultimateProfilerOnStack;
+        penultimateProfilerOnStack = prevPenultimateProfiler;
       }
     }
 

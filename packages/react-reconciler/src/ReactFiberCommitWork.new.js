@@ -121,6 +121,7 @@ import {
   resolveRetryWakeable,
   markCommitTimeOfFallback,
   schedulePassiveEffectCallback,
+  penultimateProfilerOnStack,
 } from './ReactFiberWorkLoop.new';
 import {
   NoFlags as NoHookEffect,
@@ -427,15 +428,9 @@ function commitProfilerPassiveEffect(
 
         // Bubble times to the next nearest ancestor Profiler.
         // After we process that Profiler, we'll bubble further up.
-        // TODO: Use JS Stack instead
-        let parentFiber = finishedWork.return;
-        while (parentFiber !== null) {
-          if (parentFiber.tag === Profiler) {
-            const parentStateNode = parentFiber.stateNode;
-            parentStateNode.passiveEffectDuration += passiveEffectDuration;
-            break;
-          }
-          parentFiber = parentFiber.return;
+        if (penultimateProfilerOnStack !== null) {
+          const stateNode = penultimateProfilerOnStack.stateNode;
+          stateNode.passiveEffectDuration += passiveEffectDuration;
         }
         break;
       }
@@ -736,15 +731,9 @@ function commitLifeCycles(
 
           // Propagate layout effect durations to the next nearest Profiler ancestor.
           // Do not reset these values until the next render so DevTools has a chance to read them first.
-          // TODO: Use JS Stack instead
-          let parentFiber = finishedWork.return;
-          while (parentFiber !== null) {
-            if (parentFiber.tag === Profiler) {
-              const parentStateNode = parentFiber.stateNode;
-              parentStateNode.effectDuration += effectDuration;
-              break;
-            }
-            parentFiber = parentFiber.return;
+          if (penultimateProfilerOnStack !== null) {
+            const stateNode = penultimateProfilerOnStack.stateNode;
+            stateNode.effectDuration += effectDuration;
           }
         }
       }
