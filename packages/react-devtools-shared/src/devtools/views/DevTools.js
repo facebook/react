@@ -14,11 +14,12 @@ import '@reach/tooltip/styles.css';
 
 import * as React from 'react';
 import {useEffect, useLayoutEffect, useMemo, useRef} from 'react';
+import SchedulingProfiler from 'react-devtools-scheduling-profiler/src/SchedulingProfiler';
+import {enableIntegratedSchedulingProfiler} from '../../DevToolsFeatureFlags';
 import Store from '../store';
 import {BridgeContext, ContextMenuContext, StoreContext} from './context';
 import Components from './Components/Components';
 import Profiler from './Profiler/Profiler';
-import SchedulingProfiler from 'react-devtools-scheduling-profiler/src/SchedulingProfiler';
 import TabBar from './TabBar';
 import {SettingsContextController} from './Settings/SettingsContext';
 import {TreeContextController} from './Components/TreeContext';
@@ -97,7 +98,9 @@ const schedulingProfilerTab = {
   title: 'React Scheduling Profiler',
 };
 
-const tabs = [componentsTab, profilerTab, schedulingProfilerTab];
+const tabs = enableIntegratedSchedulingProfiler
+  ? [componentsTab, profilerTab, schedulingProfilerTab]
+  : [componentsTab, profilerTab];
 
 export default function DevTools({
   bridge,

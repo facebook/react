@@ -17,6 +17,7 @@ import {
   localStorageSetItem,
 } from 'react-devtools-shared/src/storage';
 import DevTools from 'react-devtools-shared/src/devtools/views/DevTools';
+import {enableIntegratedSchedulingProfiler} from 'react-devtools-shared/src/DevToolsFeatureFlags';
 
 const LOCAL_STORAGE_SUPPORTS_PROFILING_KEY =
   'React::DevTools::supportsProfiling';
@@ -349,27 +350,29 @@ function createPanelIfReactLoaded() {
         },
       );
 
-      chrome.devtools.panels.create(
-        isChrome ? '⚛️ Scheduling Profiler' : 'Scheduling Profiler',
-        '',
-        'panel.html',
-        extensionPanel => {
-          extensionPanel.onShown.addListener(panel => {
-            if (currentPanel === panel) {
-              return;
-            }
+      if (enableIntegratedSchedulingProfiler) {
+        chrome.devtools.panels.create(
+          isChrome ? '⚛️ Scheduling Profiler' : 'Scheduling Profiler',
+          '',
+          'panel.html',
+          extensionPanel => {
+            extensionPanel.onShown.addListener(panel => {
+              if (currentPanel === panel) {
+                return;
+              }
 
-            currentPanel = panel;
-            schedulingProfilerPortalContainer = panel.container;
+              currentPanel = panel;
+              schedulingProfilerPortalContainer = panel.container;
 
-            if (schedulingProfilerPortalContainer != null) {
-              ensureInitialHTMLIsCleared(schedulingProfilerPortalContainer);
-              render('scheduling-profiler');
-              panel.injectStyles(cloneStyleTags);
-            }
-          });
-        },
-      );
+              if (schedulingProfilerPortalContainer != null) {
+                ensureInitialHTMLIsCleared(schedulingProfilerPortalContainer);
+                render('scheduling-profiler');
+                panel.injectStyles(cloneStyleTags);
+              }
+            });
+          },
+        );
+      }
 
       chrome.devtools.network.onNavigated.removeListener(checkPageForReact);
 
