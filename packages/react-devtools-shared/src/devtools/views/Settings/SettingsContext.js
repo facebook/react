@@ -26,6 +26,7 @@ import {useLocalStorage} from '../hooks';
 import {BridgeContext} from '../context';
 
 import type {BrowserTheme} from '../DevTools';
+import {enableSchedulingProfilerDarkMode} from '../../../DevToolsFeatureFlags';
 
 export type DisplayDensity = 'comfortable' | 'compact';
 export type Theme = 'auto' | 'light' | 'dark';
@@ -140,18 +141,46 @@ function SettingsContextController({
   }, [displayDensity, documentElements]);
 
   useLayoutEffect(() => {
-    switch (theme) {
-      case 'light':
-        updateThemeVariables('light', documentElements);
-        break;
-      case 'dark':
-        updateThemeVariables('dark', documentElements);
-        break;
-      case 'auto':
-        updateThemeVariables(browserTheme, documentElements);
-        break;
-      default:
-        throw Error(`Unsupported theme value "${theme}"`);
+    if (enableSchedulingProfilerDarkMode) {
+      switch (theme) {
+        case 'light':
+          updateThemeVariables('light', documentElements);
+          break;
+        case 'dark':
+          updateThemeVariables('dark', documentElements);
+          break;
+        case 'auto':
+          updateThemeVariables(browserTheme, documentElements);
+          break;
+        default:
+          throw Error(`Unsupported theme value "${theme}"`);
+      }
+    } else {
+      const schedulingProfilerDocumentElement =
+        schedulingProfilerPortalContainer != null
+          ? ((schedulingProfilerPortalContainer.ownerDocument
+              .documentElement: any): HTMLElement)
+          : null;
+      if (schedulingProfilerDocumentElement) {
+        updateThemeVariables('light', [schedulingProfilerDocumentElement]);
+      }
+
+      const otherDocumentElements = documentElements.filter(
+        element => element !== schedulingProfilerDocumentElement,
+      );
+      switch (theme) {
+        case 'light':
+          updateThemeVariables('light', otherDocumentElements);
+          break;
+        case 'dark':
+          updateThemeVariables('dark', otherDocumentElements);
+          break;
+        case 'auto':
+          updateThemeVariables(browserTheme, otherDocumentElements);
+          break;
+        default:
+          throw Error(`Unsupported theme value "${theme}"`);
+      }
     }
   }, [browserTheme, theme, documentElements]);
 

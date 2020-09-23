@@ -8,4 +8,12 @@
  */
 
 export const enableIntegratedSchedulingProfiler = false;
+
+/**
+ * Enables dark mode in https://react-devtools-scheduling-profiler.vercel.app
+ * and the scheduling profiler browser extension panel.
+ *
+ * This flag does *not* disable dark mode in the scheduling profiler tabs in
+ * the `react-devtools-shell` and `react-devtools-core` packages.
+ */
 export const enableSchedulingProfilerDarkMode = false;
