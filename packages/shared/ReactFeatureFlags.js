@@ -135,6 +135,4 @@ export const enableDiscreteEventFlushingChange = false;
 
 export const enableEagerRootListeners = true;
 
-export const disableSchedulerTimeoutInWorkLoop = false;
-
 export const enableDoubleInvokingEffects = false;
