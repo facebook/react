@@ -48,3 +48,5 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 export const enableTrustedTypesIntegration = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
+
+export const enableDoubleInvokingEffects = false;
