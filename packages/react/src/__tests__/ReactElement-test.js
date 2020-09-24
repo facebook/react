@@ -508,7 +508,7 @@ describe('ReactElement', () => {
       );
     };
     ReactDOM.render(<App />, container);
-    const element = React.createElement('div', {key: uniq});
+    const element = React.createElement('div', {}, uniq);
     const cloned = React.cloneElement(
       {
         $$typeof: 60103,
@@ -519,7 +519,7 @@ describe('ReactElement', () => {
         _owner: null,
         _store: {},
       },
-      {key: uniq},
+      uniq,
     );
     expect(container.innerHTML).toBe('<div><h1>Hello</h1></div>');
     expect(React.isValidElement(element)).toBe(true);

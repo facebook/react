@@ -221,7 +221,7 @@ export function jsx(type, config, maybeKey) {
   // <div {...props} key="Hi" />, because we aren't currently able to tell if
   // key is explicitly declared to be undefined or not.
   if (maybeKey !== undefined) {
-    key = '' + maybeKey;
+    key = typeof maybeKey === 'symbol' ? maybeKey.toString() : '' + maybeKey;
   }
 
   if (hasValidKey(config)) {
@@ -287,7 +287,7 @@ export function jsxDEV(type, config, maybeKey, source, self) {
   // <div {...props} key="Hi" />, because we aren't currently able to tell if
   // key is explicitly declared to be undefined or not.
   if (maybeKey !== undefined) {
-    key = '' + maybeKey;
+    key = typeof maybeKey === 'symbol' ? maybeKey.toString() : '' + maybeKey;
   }
 
   if (hasValidKey(config)) {

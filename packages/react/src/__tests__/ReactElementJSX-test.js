@@ -419,7 +419,7 @@ describe('ReactElement.jsx', () => {
     const container = document.createElement('div');
     const uniq = originalSymbol('uniq');
     const App = () => {
-      return JSXRuntime.jsx('div', {key: uniq});
+      return JSXRuntime.jsx('div', {}, uniq);
     };
     ReactDOM.render(<App />, container);
     expect(container.innerHTML).toBe('<div></div>');
