@@ -15,11 +15,131 @@ type EventInterfaceType = {
   [propName: string]: 0 | ((event: {[propName: string]: mixed}) => mixed),
 };
 
+function functionThatReturnsTrue() {
+  return true;
+}
+
+function functionThatReturnsFalse() {
+  return false;
+}
+
+// This is intentionally a factory so that we have different returned constructors.
+// If we had a single constructor, it would be megamorphic and engines would deopt.
+function createSyntheticEvent(Interface: EventInterfaceType) {
+  /**
+   * Synthetic events are dispatched by event plugins, typically in response to a
+   * top-level event delegation handler.
+   *
+   * These systems should generally use pooling to reduce the frequency of garbage
+   * collection. The system should check `isPersistent` to determine whether the
+   * event should be released into the pool after being dispatched. Users that
+   * need a persisted event should invoke `persist`.
+   *
+   * Synthetic events (and subclasses) implement the DOM Level 3 Events API by
+   * normalizing browser quirks. Subclasses do not necessarily have to implement a
+   * DOM interface; custom application-specific events can also subclass this.
+   */
+  function SyntheticBaseEvent(
+    reactName: string | null,
+    reactEventType: string,
+    targetInst: Fiber,
+    nativeEvent: {[propName: string]: mixed},
+    nativeEventTarget: null | EventTarget,
+  ) {
+    this._reactName = reactName;
+    this._targetInst = targetInst;
+    this.type = reactEventType;
+    this.nativeEvent = nativeEvent;
+    this.target = nativeEventTarget;
+    this.currentTarget = null;
+
+    for (const propName in Interface) {
+      if (!Interface.hasOwnProperty(propName)) {
+        continue;
+      }
+      const normalize = Interface[propName];
+      if (normalize) {
+        this[propName] = normalize(nativeEvent);
+      } else {
+        this[propName] = nativeEvent[propName];
+      }
+    }
+
+    const defaultPrevented =
+      nativeEvent.defaultPrevented != null
+        ? nativeEvent.defaultPrevented
+        : nativeEvent.returnValue === false;
+    if (defaultPrevented) {
+      this.isDefaultPrevented = functionThatReturnsTrue;
+    } else {
+      this.isDefaultPrevented = functionThatReturnsFalse;
+    }
+    this.isPropagationStopped = functionThatReturnsFalse;
+    return this;
+  }
+
+  Object.assign(SyntheticBaseEvent.prototype, {
+    preventDefault: function() {
+      this.defaultPrevented = true;
+      const event = this.nativeEvent;
+      if (!event) {
+        return;
+      }
+
+      if (event.preventDefault) {
+        event.preventDefault();
+        // $FlowFixMe - flow is not aware of `unknown` in IE
+      } else if (typeof event.returnValue !== 'unknown') {
+        event.returnValue = false;
+      }
+      this.isDefaultPrevented = functionThatReturnsTrue;
+    },
+
+    stopPropagation: function() {
+      const event = this.nativeEvent;
+      if (!event) {
+        return;
+      }
+
+      if (event.stopPropagation) {
+        event.stopPropagation();
+        // $FlowFixMe - flow is not aware of `unknown` in IE
+      } else if (typeof event.cancelBubble !== 'unknown') {
+        // The ChangeEventPlugin registers a "propertychange" event for
+        // IE. This event does not support bubbling or cancelling, and
+        // any references to cancelBubble throw "Member not found".  A
+        // typeof check of "unknown" circumvents this issue (and is also
+        // IE specific).
+        event.cancelBubble = true;
+      }
+
+      this.isPropagationStopped = functionThatReturnsTrue;
+    },
+
+    /**
+     * We release all dispatched `SyntheticEvent`s after each event loop, adding
+     * them back into the pool. This allows a way to hold onto a reference that
+     * won't be added back into the pool.
+     */
+    persist: function() {
+      // Modern event system doesn't use pooling.
+    },
+
+    /**
+     * Checks if this event should be released back into the pool.
+     *
+     * @return {boolean} True if this should not be released, false otherwise.
+     */
+    isPersistent: functionThatReturnsTrue,
+  });
+  return SyntheticBaseEvent;
+}
+
 /**
  * @interface Event
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-const EventInterface: EventInterfaceType = {
+const EventInterface = {
   eventPhase: 0,
   bubbles: 0,
   cancelable: 0,
@@ -29,128 +149,14 @@ const EventInterface: EventInterfaceType = {
   defaultPrevented: 0,
   isTrusted: 0,
 };
+export const SyntheticEvent = createSyntheticEvent(EventInterface);
 
-function functionThatReturnsTrue() {
-  return true;
-}
-
-function functionThatReturnsFalse() {
-  return false;
-}
-
-/**
- * Synthetic events are dispatched by event plugins, typically in response to a
- * top-level event delegation handler.
- *
- * These systems should generally use pooling to reduce the frequency of garbage
- * collection. The system should check `isPersistent` to determine whether the
- * event should be released into the pool after being dispatched. Users that
- * need a persisted event should invoke `persist`.
- *
- * Synthetic events (and subclasses) implement the DOM Level 3 Events API by
- * normalizing browser quirks. Subclasses do not necessarily have to implement a
- * DOM interface; custom application-specific events can also subclass this.
- */
-export function SyntheticEvent(
-  reactName: string | null,
-  reactEventType: string,
-  targetInst: Fiber,
-  nativeEvent: {[propName: string]: mixed},
-  nativeEventTarget: null | EventTarget,
-  Interface: EventInterfaceType = EventInterface,
-) {
-  this._reactName = reactName;
-  this._targetInst = targetInst;
-  this.type = reactEventType;
-  this.nativeEvent = nativeEvent;
-  this.target = nativeEventTarget;
-  this.currentTarget = null;
-
-  for (const propName in Interface) {
-    if (!Interface.hasOwnProperty(propName)) {
-      continue;
-    }
-    const normalize = Interface[propName];
-    if (normalize) {
-      this[propName] = normalize(nativeEvent);
-    } else {
-      this[propName] = nativeEvent[propName];
-    }
-  }
-
-  const defaultPrevented =
-    nativeEvent.defaultPrevented != null
-      ? nativeEvent.defaultPrevented
-      : nativeEvent.returnValue === false;
-  if (defaultPrevented) {
-    this.isDefaultPrevented = functionThatReturnsTrue;
-  } else {
-    this.isDefaultPrevented = functionThatReturnsFalse;
-  }
-  this.isPropagationStopped = functionThatReturnsFalse;
-  return this;
-}
-
-Object.assign(SyntheticEvent.prototype, {
-  preventDefault: function() {
-    this.defaultPrevented = true;
-    const event = this.nativeEvent;
-    if (!event) {
-      return;
-    }
-
-    if (event.preventDefault) {
-      event.preventDefault();
-      // $FlowFixMe - flow is not aware of `unknown` in IE
-    } else if (typeof event.returnValue !== 'unknown') {
-      event.returnValue = false;
-    }
-    this.isDefaultPrevented = functionThatReturnsTrue;
-  },
-
-  stopPropagation: function() {
-    const event = this.nativeEvent;
-    if (!event) {
-      return;
-    }
-
-    if (event.stopPropagation) {
-      event.stopPropagation();
-      // $FlowFixMe - flow is not aware of `unknown` in IE
-    } else if (typeof event.cancelBubble !== 'unknown') {
-      // The ChangeEventPlugin registers a "propertychange" event for
-      // IE. This event does not support bubbling or cancelling, and
-      // any references to cancelBubble throw "Member not found".  A
-      // typeof check of "unknown" circumvents this issue (and is also
-      // IE specific).
-      event.cancelBubble = true;
-    }
-
-    this.isPropagationStopped = functionThatReturnsTrue;
-  },
-
-  /**
-   * We release all dispatched `SyntheticEvent`s after each event loop, adding
-   * them back into the pool. This allows a way to hold onto a reference that
-   * won't be added back into the pool.
-   */
-  persist: function() {
-    // Modern event system doesn't use pooling.
-  },
-
-  /**
-   * Checks if this event should be released back into the pool.
-   *
-   * @return {boolean} True if this should not be released, false otherwise.
-   */
-  isPersistent: functionThatReturnsTrue,
-});
-
-export const UIEventInterface: EventInterfaceType = {
+const UIEventInterface: EventInterfaceType = {
   ...EventInterface,
   view: 0,
   detail: 0,
 };
+export const SyntheticUIEvent = createSyntheticEvent(UIEventInterface);
 
 let lastMovementX;
 let lastMovementY;
@@ -173,7 +179,7 @@ function updateMouseMovementPolyfillState(event) {
  * @interface MouseEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-export const MouseEventInterface: EventInterfaceType = {
+const MouseEventInterface: EventInterfaceType = {
   ...UIEventInterface,
   screenX: 0,
   screenY: 0,
@@ -213,42 +219,48 @@ export const MouseEventInterface: EventInterfaceType = {
     return lastMovementY;
   },
 };
+export const SyntheticMouseEvent = createSyntheticEvent(MouseEventInterface);
 
 /**
  * @interface DragEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-export const DragEventInterface: EventInterfaceType = {
+const DragEventInterface: EventInterfaceType = {
   ...MouseEventInterface,
   dataTransfer: 0,
 };
+export const SyntheticDragEvent = createSyntheticEvent(DragEventInterface);
 
 /**
  * @interface FocusEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-export const FocusEventInterface: EventInterfaceType = {
+const FocusEventInterface: EventInterfaceType = {
   ...UIEventInterface,
   relatedTarget: 0,
 };
+export const SyntheticFocusEvent = createSyntheticEvent(FocusEventInterface);
 
 /**
  * @interface Event
  * @see http://www.w3.org/TR/css3-animations/#AnimationEvent-interface
  * @see https://developer.mozilla.org/en-US/docs/Web/API/AnimationEvent
  */
-export const AnimationEventInterface: EventInterfaceType = {
+const AnimationEventInterface: EventInterfaceType = {
   ...EventInterface,
   animationName: 0,
   elapsedTime: 0,
   pseudoElement: 0,
 };
+export const SyntheticAnimationEvent = createSyntheticEvent(
+  AnimationEventInterface,
+);
 
 /**
  * @interface Event
  * @see http://www.w3.org/TR/clipboard-apis/
  */
-export const ClipboardEventInterface: EventInterfaceType = {
+const ClipboardEventInterface: EventInterfaceType = {
   ...EventInterface,
   clipboardData: function(event) {
     return 'clipboardData' in event
@@ -256,15 +268,21 @@ export const ClipboardEventInterface: EventInterfaceType = {
       : window.clipboardData;
   },
 };
+export const SyntheticClipboardEvent = createSyntheticEvent(
+  ClipboardEventInterface,
+);
 
 /**
  * @interface Event
  * @see http://www.w3.org/TR/DOM-Level-3-Events/#events-compositionevents
  */
-export const CompositionEventInterface: EventInterfaceType = {
+const CompositionEventInterface: EventInterfaceType = {
   ...EventInterface,
   data: 0,
 };
+export const SyntheticCompositionEvent = createSyntheticEvent(
+  CompositionEventInterface,
+);
 
 /**
  * @interface Event
@@ -272,7 +290,7 @@ export const CompositionEventInterface: EventInterfaceType = {
  *      /#events-inputevents
  */
 // Happens to share the same list for now.
-export const InputEventInterface: EventInterfaceType = CompositionEventInterface;
+export const SyntheticInputEvent = SyntheticCompositionEvent;
 
 /**
  * Normalization of deprecated HTML5 `key` values
@@ -402,7 +420,7 @@ function getEventModifierState(nativeEvent) {
  * @interface KeyboardEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-export const KeyboardEventInterface = {
+const KeyboardEventInterface = {
   ...UIEventInterface,
   key: getEventKey,
   code: 0,
@@ -451,12 +469,15 @@ export const KeyboardEventInterface = {
     return 0;
   },
 };
+export const SyntheticKeyboardEvent = createSyntheticEvent(
+  KeyboardEventInterface,
+);
 
 /**
  * @interface PointerEvent
  * @see http://www.w3.org/TR/pointerevents/
  */
-export const PointerEventInterface = {
+const PointerEventInterface = {
   ...MouseEventInterface,
   pointerId: 0,
   width: 0,
@@ -469,12 +490,15 @@ export const PointerEventInterface = {
   pointerType: 0,
   isPrimary: 0,
 };
+export const SyntheticPointerEvent = createSyntheticEvent(
+  PointerEventInterface,
+);
 
 /**
  * @interface TouchEvent
  * @see http://www.w3.org/TR/touch-events/
  */
-export const TouchEventInterface = {
+const TouchEventInterface = {
   ...UIEventInterface,
   touches: 0,
   targetTouches: 0,
@@ -485,24 +509,28 @@ export const TouchEventInterface = {
   shiftKey: 0,
   getModifierState: getEventModifierState,
 };
+export const SyntheticTouchEvent = createSyntheticEvent(TouchEventInterface);
 
 /**
  * @interface Event
  * @see http://www.w3.org/TR/2009/WD-css3-transitions-20090320/#transition-events-
  * @see https://developer.mozilla.org/en-US/docs/Web/API/TransitionEvent
  */
-export const TransitionEventInterface = {
+const TransitionEventInterface = {
   ...EventInterface,
   propertyName: 0,
   elapsedTime: 0,
   pseudoElement: 0,
 };
+export const SyntheticTransitionEvent = createSyntheticEvent(
+  TransitionEventInterface,
+);
 
 /**
  * @interface WheelEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-export const WheelEventInterface = {
+const WheelEventInterface = {
   ...MouseEventInterface,
   deltaX(event) {
     return 'deltaX' in event
@@ -531,3 +559,4 @@ export const WheelEventInterface = {
   // ~40 pixels, for DOM_DELTA_SCREEN (2) it is 87.5% of viewport size.
   deltaMode: 0,
 };
+export const SyntheticWheelEvent = createSyntheticEvent(WheelEventInterface);

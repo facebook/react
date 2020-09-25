@@ -14,11 +14,7 @@ import type {EventSystemFlags} from '../EventSystemFlags';
 
 import {registerDirectEvent} from '../EventRegistry';
 import {IS_REPLAYED} from 'react-dom/src/events/EventSystemFlags';
-import {
-  SyntheticEvent,
-  MouseEventInterface,
-  PointerEventInterface,
-} from '../SyntheticEvent';
+import {SyntheticMouseEvent, SyntheticPointerEvent} from '../SyntheticEvent';
 import {
   getClosestInstanceFromNode,
   getNodeFromInstance,
@@ -123,12 +119,12 @@ function extractEvents(
     return;
   }
 
-  let eventInterface = MouseEventInterface;
+  let SyntheticEventCtor = SyntheticMouseEvent;
   let leaveEventType = 'onMouseLeave';
   let enterEventType = 'onMouseEnter';
   let eventTypePrefix = 'mouse';
   if (domEventName === 'pointerout' || domEventName === 'pointerover') {
-    eventInterface = PointerEventInterface;
+    SyntheticEventCtor = SyntheticPointerEvent;
     leaveEventType = 'onPointerLeave';
     enterEventType = 'onPointerEnter';
     eventTypePrefix = 'pointer';
@@ -137,13 +133,12 @@ function extractEvents(
   const fromNode = from == null ? win : getNodeFromInstance(from);
   const toNode = to == null ? win : getNodeFromInstance(to);
 
-  const leave = new SyntheticEvent(
+  const leave = new SyntheticEventCtor(
     leaveEventType,
     eventTypePrefix + 'leave',
     from,
     nativeEvent,
     nativeEventTarget,
-    eventInterface,
   );
   leave.target = fromNode;
   leave.relatedTarget = toNode;
@@ -154,13 +149,12 @@ function extractEvents(
   // the first ancestor. Next time, we will ignore the event.
   const nativeTargetInst = getClosestInstanceFromNode((nativeEventTarget: any));
   if (nativeTargetInst === targetInst) {
-    const enterEvent: KnownReactSyntheticEvent = new SyntheticEvent(
+    const enterEvent: KnownReactSyntheticEvent = new SyntheticEventCtor(
       enterEventType,
       eventTypePrefix + 'enter',
       to,
       nativeEvent,
       nativeEventTarget,
-      eventInterface,
     );
     enterEvent.target = toNode;
     enterEvent.relatedTarget = fromNode;
