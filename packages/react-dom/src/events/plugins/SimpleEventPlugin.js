@@ -15,6 +15,7 @@ import type {EventSystemFlags} from '../EventSystemFlags';
 
 import {
   SyntheticEvent,
+  EventInterface,
   AnimationEventInterface,
   ClipboardEventInterface,
   FocusEventInterface,
@@ -62,7 +63,7 @@ function extractEvents(
   if (reactName === undefined) {
     return;
   }
-  let EventInterface;
+  let eventInterface = EventInterface;
   let reactEventType = domEventName;
   switch (domEventName) {
     case 'keypress':
@@ -75,19 +76,19 @@ function extractEvents(
     /* falls through */
     case 'keydown':
     case 'keyup':
-      EventInterface = KeyboardEventInterface;
+      eventInterface = KeyboardEventInterface;
       break;
     case 'focusin':
       reactEventType = 'focus';
-      EventInterface = FocusEventInterface;
+      eventInterface = FocusEventInterface;
       break;
     case 'focusout':
       reactEventType = 'blur';
-      EventInterface = FocusEventInterface;
+      eventInterface = FocusEventInterface;
       break;
     case 'beforeblur':
     case 'afterblur':
-      EventInterface = FocusEventInterface;
+      eventInterface = FocusEventInterface;
       break;
     case 'click':
       // Firefox creates a click event on right mouse clicks. This removes the
@@ -106,7 +107,7 @@ function extractEvents(
     case 'mouseout':
     case 'mouseover':
     case 'contextmenu':
-      EventInterface = MouseEventInterface;
+      eventInterface = MouseEventInterface;
       break;
     case 'drag':
     case 'dragend':
@@ -116,32 +117,32 @@ function extractEvents(
     case 'dragover':
     case 'dragstart':
     case 'drop':
-      EventInterface = DragEventInterface;
+      eventInterface = DragEventInterface;
       break;
     case 'touchcancel':
     case 'touchend':
     case 'touchmove':
     case 'touchstart':
-      EventInterface = TouchEventInterface;
+      eventInterface = TouchEventInterface;
       break;
     case ANIMATION_END:
     case ANIMATION_ITERATION:
     case ANIMATION_START:
-      EventInterface = AnimationEventInterface;
+      eventInterface = AnimationEventInterface;
       break;
     case TRANSITION_END:
-      EventInterface = TransitionEventInterface;
+      eventInterface = TransitionEventInterface;
       break;
     case 'scroll':
-      EventInterface = UIEventInterface;
+      eventInterface = UIEventInterface;
       break;
     case 'wheel':
-      EventInterface = WheelEventInterface;
+      eventInterface = WheelEventInterface;
       break;
     case 'copy':
     case 'cut':
     case 'paste':
-      EventInterface = ClipboardEventInterface;
+      eventInterface = ClipboardEventInterface;
       break;
     case 'gotpointercapture':
     case 'lostpointercapture':
@@ -151,7 +152,7 @@ function extractEvents(
     case 'pointerout':
     case 'pointerover':
     case 'pointerup':
-      EventInterface = PointerEventInterface;
+      eventInterface = PointerEventInterface;
       break;
     default:
       // Unknown event. This is used by createEventHandle.
@@ -163,7 +164,7 @@ function extractEvents(
     null,
     nativeEvent,
     nativeEventTarget,
-    EventInterface,
+    eventInterface,
   );
 
   const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;

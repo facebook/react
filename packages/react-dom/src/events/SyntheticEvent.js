@@ -19,7 +19,7 @@ type EventInterfaceType = {
  * @interface Event
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-const EventInterface: EventInterfaceType = {
+export const EventInterface: EventInterfaceType = {
   eventPhase: 0,
   bubbles: 0,
   cancelable: 0,
@@ -57,7 +57,7 @@ export function SyntheticEvent(
   targetInst: Fiber,
   nativeEvent: {[propName: string]: mixed},
   nativeEventTarget: null | EventTarget,
-  Interface: EventInterfaceType = EventInterface,
+  Interface: EventInterfaceType,
 ) {
   this._reactName = reactName;
   this._targetInst = targetInst;

@@ -15,7 +15,7 @@ import {
   HostComponent,
   HostText,
 } from 'react-reconciler/src/ReactWorkTags';
-import {SyntheticEvent} from '../events/SyntheticEvent';
+import {SyntheticEvent, EventInterface} from '../events/SyntheticEvent';
 import invariant from 'shared/invariant';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import {act} from './ReactTestUtilsPublicAct';
@@ -589,6 +589,7 @@ function makeSimulator(eventType) {
       targetInst,
       fakeNativeEvent,
       domNode,
+      EventInterface,
     );
 
     // Since we aren't using pooling, always persist the event. This will make
