@@ -13,7 +13,7 @@ import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
 import {canUseDOM} from 'shared/ExecutionEnvironment';
-import {SyntheticEvent, EventInterface} from '../../events/SyntheticEvent';
+import {SyntheticEvent} from '../../events/SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
 import shallowEqual from 'shared/shallowEqual';
 import {enableEagerRootListeners} from 'shared/ReactFeatureFlags';
@@ -119,7 +119,6 @@ function constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget) {
       null,
       nativeEvent,
       nativeEventTarget,
-      EventInterface,
     );
     syntheticEvent.target = activeElement;
 

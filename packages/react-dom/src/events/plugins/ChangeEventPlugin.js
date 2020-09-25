@@ -12,7 +12,7 @@ import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
 import {registerTwoPhaseEvent} from '../EventRegistry';
-import {SyntheticEvent, EventInterface} from '../SyntheticEvent';
+import {SyntheticEvent} from '../SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
 import {canUseDOM} from 'shared/ExecutionEnvironment';
 
@@ -55,7 +55,6 @@ function createAndAccumulateChangeEvent(
     null,
     nativeEvent,
     target,
-    EventInterface,
   );
   // Flag this event loop as needing state restore.
   enqueueStateRestore(((target: any): Node));
