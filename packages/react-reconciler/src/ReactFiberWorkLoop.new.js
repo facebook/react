@@ -2563,7 +2563,7 @@ function flushPassiveUnmountEffects(firstChild: Fiber): void {
     const primaryFlags = fiber.flags & Passive;
     if (primaryFlags !== NoFlags) {
       setCurrentDebugFiberInDEV(fiber);
-      commitPassiveUnmountInsideDeletedTreeOnFiber(fiber);
+      commitPassiveUnmountOnFiber(fiber);
       resetCurrentDebugFiberInDEV();
     }
 
@@ -2592,7 +2592,10 @@ function flushPassiveUnmountEffectsInsideOfDeletedTree(
 
   if ((fiberToDelete.flags & PassiveStatic) !== NoFlags) {
     setCurrentDebugFiberInDEV(fiberToDelete);
-    commitPassiveUnmountOnFiber(fiberToDelete, nearestMountedAncestor);
+    commitPassiveUnmountInsideDeletedTreeOnFiber(
+      fiberToDelete,
+      nearestMountedAncestor,
+    );
     resetCurrentDebugFiberInDEV();
   }
 }

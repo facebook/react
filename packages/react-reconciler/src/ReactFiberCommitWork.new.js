@@ -1764,7 +1764,7 @@ function commitResetTextContent(current: Fiber): void {
   resetTextContent(current.stateNode);
 }
 
-function commitPassiveUnmountInsideDeletedTree(finishedWork: Fiber): void {
+function commitPassiveUnmount(finishedWork: Fiber): void {
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
@@ -1794,7 +1794,7 @@ function commitPassiveUnmountInsideDeletedTree(finishedWork: Fiber): void {
   }
 }
 
-function commitPassiveUnmount(
+function commitPassiveUnmountInsideDeletedTree(
   current: Fiber,
   nearestMountedAncestor: Fiber | null,
 ): void {
