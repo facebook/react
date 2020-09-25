@@ -50,10 +50,9 @@ export default function useEvent(
         clears.set(target, clear);
       },
       clear(): void {
-        const clearsArr = Array.from(clears.values());
-        for (let i = 0; i < clearsArr.length; i++) {
-          clearsArr[i]();
-        }
+        clears.forEach(c => {
+          c();
+        });
         clears.clear();
       },
     };
