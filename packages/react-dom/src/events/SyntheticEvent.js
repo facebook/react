@@ -23,19 +23,9 @@ function functionThatReturnsFalse() {
   return false;
 }
 
-type SyntheticEventCtor = (
-  reactName: string | null,
-  reactEventType: string,
-  targetInst: Fiber,
-  nativeEvent: {[propName: string]: mixed},
-  nativeEventTarget: null | EventTarget,
-) => void;
-
 // This is intentionally a factory so that we have different returned constructors.
 // If we had a single constructor, it would be megamorphic and engines would deopt.
-function createSyntheticEvent(
-  Interface: EventInterfaceType,
-): SyntheticEventCtor {
+function createSyntheticEvent(Interface: EventInterfaceType) {
   /**
    * Synthetic events are dispatched by event plugins, typically in response to a
    * top-level event delegation handler.
@@ -85,6 +75,7 @@ function createSyntheticEvent(
       this.isDefaultPrevented = functionThatReturnsFalse;
     }
     this.isPropagationStopped = functionThatReturnsFalse;
+    return this;
   }
 
   Object.assign(SyntheticBaseEvent.prototype, {
@@ -158,18 +149,14 @@ const EventInterface = {
   defaultPrevented: 0,
   isTrusted: 0,
 };
-export const SyntheticEvent: SyntheticEventCtor = createSyntheticEvent(
-  EventInterface,
-);
+export const SyntheticEvent = createSyntheticEvent(EventInterface);
 
 const UIEventInterface: EventInterfaceType = {
   ...EventInterface,
   view: 0,
   detail: 0,
 };
-export const SyntheticUIEvent: SyntheticEventCtor = createSyntheticEvent(
-  UIEventInterface,
-);
+export const SyntheticUIEvent = createSyntheticEvent(UIEventInterface);
 
 let lastMovementX;
 let lastMovementY;
@@ -232,9 +219,7 @@ const MouseEventInterface: EventInterfaceType = {
     return lastMovementY;
   },
 };
-export const SyntheticMouseEvent: SyntheticEventCtor = createSyntheticEvent(
-  MouseEventInterface,
-);
+export const SyntheticMouseEvent = createSyntheticEvent(MouseEventInterface);
 
 /**
  * @interface DragEvent
@@ -244,9 +229,7 @@ const DragEventInterface: EventInterfaceType = {
   ...MouseEventInterface,
   dataTransfer: 0,
 };
-export const SyntheticDragEvent: SyntheticEventCtor = createSyntheticEvent(
-  DragEventInterface,
-);
+export const SyntheticDragEvent = createSyntheticEvent(DragEventInterface);
 
 /**
  * @interface FocusEvent
@@ -256,9 +239,7 @@ const FocusEventInterface: EventInterfaceType = {
   ...UIEventInterface,
   relatedTarget: 0,
 };
-export const SyntheticFocusEvent: SyntheticEventCtor = createSyntheticEvent(
-  FocusEventInterface,
-);
+export const SyntheticFocusEvent = createSyntheticEvent(FocusEventInterface);
 
 /**
  * @interface Event
@@ -271,7 +252,7 @@ const AnimationEventInterface: EventInterfaceType = {
   elapsedTime: 0,
   pseudoElement: 0,
 };
-export const SyntheticAnimationEvent: SyntheticEventCtor = createSyntheticEvent(
+export const SyntheticAnimationEvent = createSyntheticEvent(
   AnimationEventInterface,
 );
 
@@ -287,7 +268,7 @@ const ClipboardEventInterface: EventInterfaceType = {
       : window.clipboardData;
   },
 };
-export const SyntheticClipboardEvent: SyntheticEventCtor = createSyntheticEvent(
+export const SyntheticClipboardEvent = createSyntheticEvent(
   ClipboardEventInterface,
 );
 
@@ -299,7 +280,7 @@ const CompositionEventInterface: EventInterfaceType = {
   ...EventInterface,
   data: 0,
 };
-export const SyntheticCompositionEvent: SyntheticEventCtor = createSyntheticEvent(
+export const SyntheticCompositionEvent = createSyntheticEvent(
   CompositionEventInterface,
 );
 
@@ -309,7 +290,7 @@ export const SyntheticCompositionEvent: SyntheticEventCtor = createSyntheticEven
  *      /#events-inputevents
  */
 // Happens to share the same list for now.
-export const SyntheticInputEvent: SyntheticEventCtor = SyntheticCompositionEvent;
+export const SyntheticInputEvent = SyntheticCompositionEvent;
 
 /**
  * Normalization of deprecated HTML5 `key` values
@@ -488,7 +469,7 @@ const KeyboardEventInterface = {
     return 0;
   },
 };
-export const SyntheticKeyboardEvent: SyntheticEventCtor = createSyntheticEvent(
+export const SyntheticKeyboardEvent = createSyntheticEvent(
   KeyboardEventInterface,
 );
 
@@ -509,7 +490,7 @@ const PointerEventInterface = {
   pointerType: 0,
   isPrimary: 0,
 };
-export const SyntheticPointerEvent: SyntheticEventCtor = createSyntheticEvent(
+export const SyntheticPointerEvent = createSyntheticEvent(
   PointerEventInterface,
 );
 
@@ -528,9 +509,7 @@ const TouchEventInterface = {
   shiftKey: 0,
   getModifierState: getEventModifierState,
 };
-export const SyntheticTouchEvent: SyntheticEventCtor = createSyntheticEvent(
-  TouchEventInterface,
-);
+export const SyntheticTouchEvent = createSyntheticEvent(TouchEventInterface);
 
 /**
  * @interface Event
@@ -543,7 +522,7 @@ const TransitionEventInterface = {
   elapsedTime: 0,
   pseudoElement: 0,
 };
-export const SyntheticTransitionEvent: SyntheticEventCtor = createSyntheticEvent(
+export const SyntheticTransitionEvent = createSyntheticEvent(
   TransitionEventInterface,
 );
 
@@ -580,6 +559,4 @@ const WheelEventInterface = {
   // ~40 pixels, for DOM_DELTA_SCREEN (2) it is 87.5% of viewport size.
   deltaMode: 0,
 };
-export const SyntheticWheelEvent: SyntheticEventCtor = createSyntheticEvent(
-  WheelEventInterface,
-);
+export const SyntheticWheelEvent = createSyntheticEvent(WheelEventInterface);
