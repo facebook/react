@@ -740,17 +740,22 @@ export function accumulateSinglePhaseListeners(
     const {stateNode, tag} = instance;
     // Handle listeners that are on HostComponents (i.e. <div>)
     if (tag === HostComponent && stateNode !== null) {
-      const currentTarget = stateNode;
-      lastHostComponent = currentTarget;
+      lastHostComponent = stateNode;
 
       // createEventHandle listeners
       if (enableCreateEventHandleAPI) {
-        const eventHandlerListeners = getEventHandlerListeners(currentTarget);
+        const eventHandlerListeners = getEventHandlerListeners(
+          lastHostComponent,
+        );
         if (eventHandlerListeners !== null) {
           eventHandlerListeners.forEach(entry => {
             if (entry.type === targetType && entry.capture === inCapturePhase) {
               listeners.push(
-                createDispatchListener(instance, entry.callback, currentTarget),
+                createDispatchListener(
+                  instance,
+                  entry.callback,
+                  (lastHostComponent: any),
+                ),
               );
             }
           });
@@ -762,7 +767,7 @@ export function accumulateSinglePhaseListeners(
         const listener = getListener(instance, reactEventName);
         if (listener != null) {
           listeners.push(
-            createDispatchListener(instance, listener, currentTarget),
+            createDispatchListener(instance, listener, lastHostComponent),
           );
         }
       }
@@ -778,7 +783,6 @@ export function accumulateSinglePhaseListeners(
       const eventHandlerListeners = getEventHandlerListeners(
         reactScopeInstance,
       );
-      const lastCurrentTarget = ((lastHostComponent: any): Element);
       if (eventHandlerListeners !== null) {
         eventHandlerListeners.forEach(entry => {
           if (entry.type === targetType && entry.capture === inCapturePhase) {
@@ -786,7 +790,7 @@ export function accumulateSinglePhaseListeners(
               createDispatchListener(
                 instance,
                 entry.callback,
-                lastCurrentTarget,
+                (lastHostComponent: any),
               ),
             );
           }
