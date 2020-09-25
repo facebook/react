@@ -226,23 +226,25 @@ function extractCompositionEvent(
     }
   }
 
-  const event = new SyntheticCompositionEvent(
-    eventType,
-    domEventName,
-    null,
-    nativeEvent,
-    nativeEventTarget,
-  );
-  accumulateTwoPhaseListeners(targetInst, dispatchQueue, event);
-
-  if (fallbackData) {
-    // Inject data generated from fallback path into the synthetic event.
-    // This matches the property of native CompositionEventInterface.
-    event.data = fallbackData;
-  } else {
-    const customData = getDataFromCustomEvent(nativeEvent);
-    if (customData !== null) {
-      event.data = customData;
+  const listeners = accumulateTwoPhaseListeners(targetInst, eventType);
+  if (listeners.length > 0) {
+    const event = new SyntheticCompositionEvent(
+      eventType,
+      domEventName,
+      null,
+      nativeEvent,
+      nativeEventTarget,
+    );
+    dispatchQueue.push({event, listeners});
+    if (fallbackData) {
+      // Inject data generated from fallback path into the synthetic event.
+      // This matches the property of native CompositionEventInterface.
+      event.data = fallbackData;
+    } else {
+      const customData = getDataFromCustomEvent(nativeEvent);
+      if (customData !== null) {
+        event.data = customData;
+      }
     }
   }
 }
@@ -394,15 +396,18 @@ function extractBeforeInputEvent(
     return null;
   }
 
-  const event = new SyntheticInputEvent(
-    'onBeforeInput',
-    'beforeinput',
-    null,
-    nativeEvent,
-    nativeEventTarget,
-  );
-  accumulateTwoPhaseListeners(targetInst, dispatchQueue, event);
-  event.data = chars;
+  const listeners = accumulateTwoPhaseListeners(targetInst, 'onBeforeInput');
+  if (listeners.length > 0) {
+    const event = new SyntheticInputEvent(
+      'onBeforeInput',
+      'beforeinput',
+      null,
+      nativeEvent,
+      nativeEventTarget,
+    );
+    dispatchQueue.push({event, listeners});
+    event.data = chars;
+  }
 }
 
 /**

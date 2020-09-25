@@ -113,20 +113,21 @@ function constructSelectEvent(dispatchQueue, nativeEvent, nativeEventTarget) {
   if (!lastSelection || !shallowEqual(lastSelection, currentSelection)) {
     lastSelection = currentSelection;
 
-    const syntheticEvent = new SyntheticEvent(
-      'onSelect',
-      'select',
-      null,
-      nativeEvent,
-      nativeEventTarget,
-    );
-    syntheticEvent.target = activeElement;
-
-    accumulateTwoPhaseListeners(
+    const listeners = accumulateTwoPhaseListeners(
       activeElementInst,
-      dispatchQueue,
-      syntheticEvent,
+      'onSelect',
     );
+    if (listeners.length > 0) {
+      const event = new SyntheticEvent(
+        'onSelect',
+        'select',
+        null,
+        nativeEvent,
+        nativeEventTarget,
+      );
+      dispatchQueue.push({event, listeners});
+      event.target = activeElement;
+    }
   }
 }
 
