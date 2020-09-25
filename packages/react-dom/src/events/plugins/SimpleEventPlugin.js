@@ -63,7 +63,7 @@ function extractEvents(
     return;
   }
   let SyntheticEventCtor = SyntheticEvent;
-  let reactEventType = domEventName;
+  let reactEventType: string = domEventName;
   switch (domEventName) {
     case 'keypress':
       // Firefox creates a keypress event for function keys too. This removes
@@ -157,25 +157,30 @@ function extractEvents(
       // Unknown event. This is used by createEventHandle.
       break;
   }
-  const event = new SyntheticEventCtor(
-    reactName,
-    reactEventType,
-    null,
-    nativeEvent,
-    nativeEventTarget,
-  );
 
   const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
   if (
     enableCreateEventHandleAPI &&
     eventSystemFlags & IS_EVENT_HANDLE_NON_MANAGED_NODE
   ) {
-    accumulateEventHandleNonManagedNodeListeners(
-      dispatchQueue,
-      event,
+    const listeners = accumulateEventHandleNonManagedNodeListeners(
+      // TODO: this cast may not make sense for events like
+      // "focus" where React listens to e.g. "focusin".
+      ((reactEventType: any): DOMEventName),
       targetContainer,
       inCapturePhase,
     );
+    if (listeners.length > 0) {
+      // Intentionally create event lazily.
+      const event = new SyntheticEventCtor(
+        reactName,
+        reactEventType,
+        null,
+        nativeEvent,
+        nativeEventTarget,
+      );
+      dispatchQueue.push({event, listeners});
+    }
   } else {
     // Some events don't bubble in the browser.
     // In the past, React has always bubbled them, but this can be surprising.
@@ -189,13 +194,24 @@ function extractEvents(
       // This is a breaking change that can wait until React 18.
       domEventName === 'scroll';
 
-    accumulateSinglePhaseListeners(
+    const listeners = accumulateSinglePhaseListeners(
       targetInst,
-      dispatchQueue,
-      event,
+      reactName,
+      nativeEvent.type,
       inCapturePhase,
       accumulateTargetOnly,
     );
+    if (listeners.length > 0) {
+      // Intentionally create event lazily.
+      const event = new SyntheticEventCtor(
+        reactName,
+        reactEventType,
+        null,
+        nativeEvent,
+        nativeEventTarget,
+      );
+      dispatchQueue.push({event, listeners});
+    }
   }
 }
 

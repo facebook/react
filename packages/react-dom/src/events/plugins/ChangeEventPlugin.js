@@ -49,16 +49,19 @@ function createAndAccumulateChangeEvent(
   nativeEvent,
   target,
 ) {
-  const event = new SyntheticEvent(
-    'onChange',
-    'change',
-    null,
-    nativeEvent,
-    target,
-  );
   // Flag this event loop as needing state restore.
   enqueueStateRestore(((target: any): Node));
-  accumulateTwoPhaseListeners(inst, dispatchQueue, event);
+  const listeners = accumulateTwoPhaseListeners(inst, 'onChange');
+  if (listeners.length > 0) {
+    const event = new SyntheticEvent(
+      'onChange',
+      'change',
+      null,
+      nativeEvent,
+      target,
+    );
+    dispatchQueue.push({event, listeners});
+  }
 }
 /**
  * For IE shims
