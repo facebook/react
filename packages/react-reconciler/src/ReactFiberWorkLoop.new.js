@@ -128,7 +128,6 @@ import {
   Ref,
   ContentReset,
   Snapshot,
-  Callback,
   Passive,
   PassiveStatic,
   Incomplete,
@@ -192,7 +191,6 @@ import {
 } from './ReactFiberThrow.new';
 import {
   commitBeforeMutationLifeCycles as commitBeforeMutationEffectOnFiber,
-  commitLifeCycles as commitLayoutEffectOnFiber,
   commitPlacement,
   commitWork,
   commitDeletion,
@@ -207,6 +205,7 @@ import {
   invokePassiveEffectMountInDEV,
   invokeLayoutEffectUnmountInDEV,
   invokePassiveEffectUnmountInDEV,
+  recursivelyCommitLayoutEffects,
 } from './ReactFiberCommitWork.new';
 import {enqueueUpdate} from './ReactUpdateQueue.new';
 import {resetContextDependencies} from './ReactFiberNewContext.new';
@@ -327,6 +326,9 @@ let workInProgressRootRenderTargetTime: number = Infinity;
 // suspense heuristics and opt out of rendering more content.
 const RENDER_TIMEOUT_MS = 500;
 
+// Used to avoid traversing the return path to find the nearest Profiler ancestor during commit.
+let nearestProfilerOnStack: Fiber | null = null;
+
 function resetRenderTimer() {
   workInProgressRootRenderTargetTime = now() + RENDER_TIMEOUT_MS;
 }
@@ -374,9 +376,6 @@ let isFlushingPassiveEffects = false;
 
 let focusedInstanceHandle: null | Fiber = null;
 let shouldFireAfterActiveInstanceBlur: boolean = false;
-
-// Used to avoid traversing the return path to find the nearest Profiler ancestor during commit.
-let nearestProfilerOnStack: Fiber | null = null;
 
 export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
@@ -1942,7 +1941,7 @@ function commitRootImpl(root, renderPriorityLevel) {
       markLayoutEffectsStarted(lanes);
     }
 
-    commitLayoutEffects(finishedWork, root, lanes);
+    recursivelyCommitLayoutEffects(finishedWork, root, lanes);
 
     if (__DEV__) {
       if (enableDebugTracing) {
@@ -2358,97 +2357,6 @@ export function schedulePassiveEffectCallback() {
       return null;
     });
   }
-}
-
-function commitLayoutEffects(
-  firstChild: Fiber,
-  root: FiberRoot,
-  committedLanes: Lanes,
-) {
-  let fiber = firstChild;
-  while (fiber !== null) {
-    let prevProfilerOnStack = null;
-    if (enableProfilerTimer && enableProfilerCommitHooks) {
-      if (fiber.tag === Profiler) {
-        prevProfilerOnStack = nearestProfilerOnStack;
-        nearestProfilerOnStack = fiber;
-      }
-    }
-
-    if (fiber.child !== null) {
-      const primarySubtreeFlags = fiber.subtreeFlags & LayoutMask;
-      if (primarySubtreeFlags !== NoFlags) {
-        commitLayoutEffects(fiber.child, root, committedLanes);
-      }
-    }
-
-    if (__DEV__) {
-      setCurrentDebugFiberInDEV(fiber);
-      invokeGuardedCallback(
-        null,
-        commitLayoutEffectsImpl,
-        null,
-        fiber,
-        root,
-        committedLanes,
-      );
-      if (hasCaughtError()) {
-        const error = clearCaughtError();
-        captureCommitPhaseError(fiber, fiber.return, error);
-      }
-      resetCurrentDebugFiberInDEV();
-    } else {
-      try {
-        commitLayoutEffectsImpl(fiber, root, committedLanes);
-      } catch (error) {
-        captureCommitPhaseError(fiber, fiber.return, error);
-      }
-    }
-
-    if (enableProfilerTimer && enableProfilerCommitHooks) {
-      if (fiber.tag === Profiler) {
-        // Propagate layout effect durations to the next nearest Profiler ancestor.
-        // Do not reset these values until the next render so DevTools has a chance to read them first.
-        if (prevProfilerOnStack !== null) {
-          prevProfilerOnStack.stateNode.effectDuration +=
-            fiber.stateNode.effectDuration;
-        }
-
-        nearestProfilerOnStack = prevProfilerOnStack;
-      }
-    }
-
-    fiber = fiber.sibling;
-  }
-}
-
-function commitLayoutEffectsImpl(
-  fiber: Fiber,
-  root: FiberRoot,
-  committedLanes: Lanes,
-) {
-  const flags = fiber.flags;
-
-  setCurrentDebugFiberInDEV(fiber);
-
-  if (flags & (Update | Callback)) {
-    const current = fiber.alternate;
-    commitLayoutEffectOnFiber(root, current, fiber, committedLanes);
-  }
-
-  if (enableScopeAPI) {
-    // TODO: This is a temporary solution that allowed us to transition away
-    // from React Flare on www.
-    if (flags & Ref && fiber.tag !== ScopeComponent) {
-      commitAttachRef(fiber);
-    }
-  } else {
-    if (flags & Ref) {
-      commitAttachRef(fiber);
-    }
-  }
-
-  resetCurrentDebugFiberInDEV();
 }
 
 export function flushPassiveEffects(): boolean {
