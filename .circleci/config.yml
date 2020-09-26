@@ -428,11 +428,7 @@ jobs:
       - checkout
       - attach_workspace: *attach_workspace
       - *restore_node_modules
-      - run: git checkout v<< parameters.react-version >> # packages/react packages/shared
-      - run: yarn
-      - run: yarn build-for-devtools
-      - run: git reset --hard $CIRCLE_SHA1
-      - run: yarn
+      - run: yarn add react@<< parameters.react-version >> react-dom@<< parameters.react-version >> react-is@<< parameters.react-version >> react-test-renderer@<< parameters.react-version >> --modules-folder build/node_modules -W
       - run: yarn test --project=devtools --build --ci
 
   RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
