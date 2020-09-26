@@ -482,97 +482,97 @@ jobs:
 
 workflows:
   version: 2.1
-  # stable:
-  #   jobs:
-  #     - setup
-  #     - yarn_lint:
-  #         requires:
-  #           - setup
-  #     - yarn_flow:
-  #         requires:
-  #           - setup
-  #     - RELEASE_CHANNEL_stable_yarn_test:
-  #         requires:
-  #           - setup
-  #     - RELEASE_CHANNEL_stable_yarn_test_prod:
-  #         requires:
-  #           - setup
-  #     - RELEASE_CHANNEL_stable_yarn_test_persistent:
-  #         requires:
-  #           - setup
-  #     - RELEASE_CHANNEL_stable_yarn_test_www:
-  #         requires:
-  #           - setup
-  #     - RELEASE_CHANNEL_stable_yarn_test_www_variant:
-  #         requires:
-  #           - setup
-  #     - RELEASE_CHANNEL_stable_yarn_test_prod_www:
-  #         requires:
-  #           - setup
-  #     - RELEASE_CHANNEL_stable_yarn_test_prod_www_variant:
-  #         requires:
-  #           - setup
-  #     - RELEASE_CHANNEL_stable_yarn_build:
-  #         requires:
-  #           - setup
-  #     - process_artifacts:
-  #         requires:
-  #           - RELEASE_CHANNEL_stable_yarn_build
-  #     - sizebot_stable:
-  #         requires:
-  #           - RELEASE_CHANNEL_stable_yarn_build
-  #     - RELEASE_CHANNEL_stable_yarn_lint_build:
-  #         requires:
-  #           - RELEASE_CHANNEL_stable_yarn_build
-  #     - RELEASE_CHANNEL_stable_yarn_test_build:
-  #         requires:
-  #           - RELEASE_CHANNEL_stable_yarn_build
-  #     - RELEASE_CHANNEL_stable_yarn_test_build_prod:
-  #         requires:
-  #           - RELEASE_CHANNEL_stable_yarn_build
-  #     - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
-  #         requires:
-  #           - RELEASE_CHANNEL_stable_yarn_build
+  stable:
+    jobs:
+      - setup
+      - yarn_lint:
+          requires:
+            - setup
+      - yarn_flow:
+          requires:
+            - setup
+      - RELEASE_CHANNEL_stable_yarn_test:
+          requires:
+            - setup
+      - RELEASE_CHANNEL_stable_yarn_test_prod:
+          requires:
+            - setup
+      - RELEASE_CHANNEL_stable_yarn_test_persistent:
+          requires:
+            - setup
+      - RELEASE_CHANNEL_stable_yarn_test_www:
+          requires:
+            - setup
+      - RELEASE_CHANNEL_stable_yarn_test_www_variant:
+          requires:
+            - setup
+      - RELEASE_CHANNEL_stable_yarn_test_prod_www:
+          requires:
+            - setup
+      - RELEASE_CHANNEL_stable_yarn_test_prod_www_variant:
+          requires:
+            - setup
+      - RELEASE_CHANNEL_stable_yarn_build:
+          requires:
+            - setup
+      - process_artifacts:
+          requires:
+            - RELEASE_CHANNEL_stable_yarn_build
+      - sizebot_stable:
+          requires:
+            - RELEASE_CHANNEL_stable_yarn_build
+      - RELEASE_CHANNEL_stable_yarn_lint_build:
+          requires:
+            - RELEASE_CHANNEL_stable_yarn_build
+      - RELEASE_CHANNEL_stable_yarn_test_build:
+          requires:
+            - RELEASE_CHANNEL_stable_yarn_build
+      - RELEASE_CHANNEL_stable_yarn_test_build_prod:
+          requires:
+            - RELEASE_CHANNEL_stable_yarn_build
+      - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
+          requires:
+            - RELEASE_CHANNEL_stable_yarn_build
 
   experimental:
     jobs:
       - setup
-      # - yarn_test:
-      #     requires:
-      #       - setup
-      # - yarn_test_prod:
-      #     requires:
-      #       - setup
-      # - yarn_test_www:
-      #     requires:
-      #       - setup
-      # - yarn_test_www_variant:
-      #     requires:
-      #       - setup
-      # - yarn_test_prod_www:
-      #     requires:
-      #       - setup
-      # - yarn_test_prod_www_variant:
-      #     requires:
-      #       - setup
+      - yarn_test:
+          requires:
+            - setup
+      - yarn_test_prod:
+          requires:
+            - setup
+      - yarn_test_www:
+          requires:
+            - setup
+      - yarn_test_www_variant:
+          requires:
+            - setup
+      - yarn_test_prod_www:
+          requires:
+            - setup
+      - yarn_test_prod_www_variant:
+          requires:
+            - setup
       - yarn_build:
           requires:
             - setup
-      # - process_artifacts_experimental:
-      #     requires:
-      #       - yarn_build
-      # - sizebot_experimental:
-      #     requires:
-      #       - yarn_build
-      # - yarn_test_build:
-      #     requires:
-      #       - yarn_build
-      # - yarn_test_build_prod:
-      #     requires:
-      #       - yarn_build
-      # - yarn_lint_build:
-      #     requires:
-      #       - yarn_build
+      - process_artifacts_experimental:
+          requires:
+            - yarn_build
+      - sizebot_experimental:
+          requires:
+            - yarn_build
+      - yarn_test_build:
+          requires:
+            - yarn_build
+      - yarn_test_build_prod:
+          requires:
+            - yarn_build
+      - yarn_lint_build:
+          requires:
+            - yarn_build
       - yarn_test_build_devtools:
           requires:
             - yarn_build
@@ -634,19 +634,19 @@ workflows:
                 - '16.13.1'
           requires:
             - yarn_build
-      # - build_devtools_and_process_artifacts:
-      #     requires:
-      #       - yarn_build
-      # - build_devtools_scheduling_profiler:
-      #     requires:
-      #       - yarn_build
-      # - deploy_devtools_scheduling_profiler:
-      #     requires:
-      #       - build_devtools_scheduling_profiler
-      #     filters:
-      #       branches:
-      #         only:
-      #           - master
+      - build_devtools_and_process_artifacts:
+          requires:
+            - yarn_build
+      - build_devtools_scheduling_profiler:
+          requires:
+            - yarn_build
+      - deploy_devtools_scheduling_profiler:
+          requires:
+            - build_devtools_scheduling_profiler
+          filters:
+            branches:
+              only:
+                - master
 
   fuzz_tests:
     triggers:
