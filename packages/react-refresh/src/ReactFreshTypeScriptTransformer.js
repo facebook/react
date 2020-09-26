@@ -225,12 +225,14 @@ export default function(opts = {}, ts = require('typescript')) {
             );
             // @ts-ignore
             context.addInitializationStatement(createHooksTracker);
-            const callTracker = ts.createExpressionStatement(
-              ts.createCall(hooksTracker, void 0, []),
-            );
+            const callTracker = ts.createCall(hooksTracker, void 0, []);
             const nextBody = ts.isBlock(node.body)
-              ? updateStatements(node.body, r => [callTracker, ...r])
-              : ts.createBlock([callTracker, ts.createReturn(node.body)]);
+              ? updateStatements(node.body, r => [
+                  ts.createExpressionStatement(callTracker),
+                  ...r,
+                ])
+              : ts.createComma(callTracker, node.body);
+            // @ts-ignore
             const newFunction = updateBody(node, nextBody);
             if (ts.isFunctionDeclaration(newFunction)) {
               if (newFunction.name) {
