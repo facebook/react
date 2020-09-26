@@ -158,7 +158,7 @@ function useReducer<S, I, A>(
 
 function useRef<T>(initialValue: T): {|current: T|} {
   const hook = nextHook();
-  const ref = hook !== null ? hook.memoizedState : {current: initialValue};
+  const ref = hook !== null ? {...hook.memoizedState} : {current: initialValue};
   hookLog.push({
     primitive: 'Ref',
     stackError: new Error(),

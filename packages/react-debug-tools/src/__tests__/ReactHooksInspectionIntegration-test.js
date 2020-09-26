@@ -268,6 +268,97 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
+  it('should inspect useref without override ref', () => {
+    let current = null;
+    let prevCurrent = null;
+    function Foo(props) {
+      const updateCountRef = React.useRef(0);
+      updateCountRef.current++;
+
+      const [state, setState] = React.useState('A');
+
+      const cbRef = React.useRef();
+      cbRef.current = () => {
+        setState(c => String.fromCharCode(c.charCodeAt(0) + 1));
+      };
+      prevCurrent = current;
+      current = cbRef.current;
+      const handler = () => cbRef.current();
+
+      return (
+        <div className="App">
+          <button onClick={handler}>
+            Component updates {updateCountRef.current} times
+          </button>
+          <p>Current state value: {state}</p>
+        </div>
+      );
+    }
+    let renderer;
+    act(() => {
+      renderer = ReactTestRenderer.create(<Foo prop="prop" />);
+    });
+
+    let childFiber = renderer.root.findByType(Foo)._currentFiber();
+
+    const {onClick: updateStates} = renderer.root.findByType('button').props;
+
+    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    expect(tree[2]).toEqual(
+      [
+        {
+          isStateEditable: false,
+          id: 0,
+          name: 'Ref',
+          value: 2,
+          subHooks: [],
+        },
+        {
+          isStateEditable: true,
+          id: 1,
+          name: 'State',
+          value: 'A',
+          subHooks: [],
+        },
+        {
+          isStateEditable: false,
+          id: 2,
+          name: 'Ref',
+          subHooks: [],
+          value: prevCurrent,
+        },
+      ][2],
+    );
+
+    act(updateStates);
+
+    childFiber = renderer.root.findByType(Foo)._currentFiber();
+    tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+
+    expect(tree).toEqual([
+      {
+        isStateEditable: false,
+        id: 0,
+        name: 'Ref',
+        value: 2,
+        subHooks: [],
+      },
+      {
+        isStateEditable: true,
+        id: 1,
+        name: 'State',
+        value: 'B',
+        subHooks: [],
+      },
+      {
+        isStateEditable: false,
+        id: 2,
+        name: 'Ref',
+        value: prevCurrent,
+        subHooks: [],
+      },
+    ]);
+  });
   it('should inspect the value of the current provider in useContext', () => {
     const MyContext = React.createContext('default');
     function Foo(props) {
