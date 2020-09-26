@@ -107,7 +107,10 @@ _b = $RefreshSig$();
 import FancyHook from 'fancy';
 export default function App() {
     _b();
+    var _a;
+    _a = $RefreshSig$();
     function useFancyState() {
+        _a();
         const [foo, setFoo] = React.useState(0);
         useFancyEffect();
         return foo;

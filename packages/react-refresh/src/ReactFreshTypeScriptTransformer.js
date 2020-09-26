@@ -200,7 +200,7 @@ export default function(opts = {}, ts = require('typescript')) {
           // @ts-ignore
           if (containingHooks.has(node)) {
             // @ts-ignore
-            /** @type {FunctionLikeDeclaration} */ const f = node;
+            /** @type {FunctionLikeDeclaration} */ const f = result;
             if (!f.body) return result;
             const hooksTracker = createTempVariable();
             const createHooksTracker = ts.createExpressionStatement(
