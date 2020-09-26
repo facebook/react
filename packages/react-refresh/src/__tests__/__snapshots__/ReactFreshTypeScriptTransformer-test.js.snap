@@ -1,0 +1,507 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReactFreshTypeScriptTransformer can handle implicit arrow returns 1`] = `
+export default () => useContext(X);
+export const Foo = () => useContext(X);
+c0 = Foo;
+module.exports = () => useContext(X);
+const Bar = () => useContext(X);
+c1 = Bar;
+const Baz = memo(c2 = () => useContext(X));
+c3 = Baz;
+const Qux = () => (0, useContext(X));
+c4 = Qux;
+$RefreshReg$(c0, "Foo");
+var c0;
+$RefreshReg$(c1, "Bar");
+var c1;
+$RefreshReg$(c2, "Baz$memo");
+var c2;
+$RefreshReg$(c3, "Baz");
+var c3;
+$RefreshReg$(c4, "Qux");
+var c4;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer does not consider require-like methods to be HOCs 1`] = `
+const A = require('A');
+const B = foo ? require('X') : require('Y');
+const C = requireCond(gk, 'C');
+const D = import('D');
+export default function App() {
+    return (<div>
+      <A />
+      <B />
+      <C />
+      <D />
+    </div>);
+}
+c0 = App;
+$RefreshReg$(c0, "App");
+var c0;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer generates signatures for function declarations calling hooks 1`] = `
+export default function App() {
+    const [foo, setFoo] = useState(0);
+    React.useEffect(() => { });
+    return <h1>{foo}</h1>;
+}
+c0 = App;
+$RefreshReg$(c0, "App");
+var c0;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer generates signatures for function expressions calling hooks 1`] = `
+export const A = React.memo(c0 = React.forwardRef(c1 = (props, ref) => {
+    const [foo, setFoo] = useState(0);
+    React.useEffect(() => { });
+    return <h1 ref={ref}>{foo}</h1>;
+}));
+c2 = A;
+export const B = React.memo(c3 = React.forwardRef(c4 = function (props, ref) {
+    const [foo, setFoo] = useState(0);
+    React.useEffect(() => { });
+    return <h1 ref={ref}>{foo}</h1>;
+}));
+c5 = B;
+function hoc() {
+    return function Inner() {
+        const [foo, setFoo] = useState(0);
+        React.useEffect(() => { });
+        return <h1 ref={ref}>{foo}</h1>;
+    };
+}
+export let C = hoc();
+$RefreshReg$(c1, "A$React.memo$React.forwardRef");
+var c1;
+$RefreshReg$(c0, "A$React.memo");
+var c0;
+$RefreshReg$(c2, "A");
+var c2;
+$RefreshReg$(c4, "B$React.memo$React.forwardRef");
+var c4;
+$RefreshReg$(c3, "B$React.memo");
+var c3;
+$RefreshReg$(c5, "B");
+var c5;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer generates valid signature for exotic ways to call Hooks 1`] = `
+import FancyHook from 'fancy';
+export default function App() {
+    function useFancyState() {
+        const [foo, setFoo] = React.useState(0);
+        useFancyEffect();
+        return foo;
+    }
+    const bar = useFancyState();
+    const baz = FancyHook.useThing();
+    React.useState();
+    useThePlatform();
+    return <h1>{bar}{baz}</h1>;
+}
+c0 = App;
+$RefreshReg$(c0, "App");
+var c0;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer ignores HOC definitions 1`] = `
+let connect = () => {
+    function Comp() {
+        const handleClick = () => { };
+        return <h1 onClick={handleClick}>Hi</h1>;
+    }
+    return Comp;
+};
+function withRouter() {
+    return function Child() {
+        const handleClick = () => { };
+        return <h1 onClick={handleClick}>Hi</h1>;
+    };
+}
+;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer ignores complex definitions 1`] = `
+let A = foo ? () => {
+    return <h1>Hi</h1>;
+} : null;
+const B = (function Foo() {
+    return <h1>Hi</h1>;
+})();
+let C = () => () => {
+    return <h1>Hi</h1>;
+};
+c0 = C;
+let D = bar && (() => {
+    return <h1>Hi</h1>;
+});
+$RefreshReg$(c0, "C");
+var c0;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer ignores higher-order functions that are not HOCs 1`] = `
+const throttledAlert = throttle(c0 = function () {
+    alert('Hi');
+});
+const TooComplex = (function () { return hello; })(() => { });
+if (cond) {
+    const Foo = thing(() => { });
+}
+$RefreshReg$(c0, "throttledAlert$throttle");
+var c0;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer ignores unnamed function declarations 1`] = `
+export default function () { }
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer includes custom hooks into the signatures 1`] = `
+function useFancyState() {
+    const [foo, setFoo] = React.useState(0);
+    useFancyEffect();
+    return foo;
+}
+const useFancyEffect = () => {
+    React.useEffect(() => { });
+};
+export default function App() {
+    const bar = useFancyState();
+    return <h1>{bar}</h1>;
+}
+c0 = App;
+$RefreshReg$(c0, "App");
+var c0;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer includes custom hooks into the signatures when commonjs target is used 1`] = `
+import { useFancyState } from './hooks';
+export default function App() {
+    const bar = useFancyState();
+    return <h1>{bar}</h1>;
+}
+c0 = App;
+$RefreshReg$(c0, "App");
+var c0;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer only registers pascal case functions 1`] = `
+function hello() {
+    return 2 * 2;
+}
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer registers capitalized identifiers in HOC calls 1`] = `
+function Foo() {
+    return <h1>Hi</h1>;
+}
+c0 = Foo;
+export default c2 = hoc(Foo);
+export const A = hoc(Foo);
+c4 = A;
+const B = hoc(Foo);
+c6 = B;
+$RefreshReg$(c0, "Foo");
+var c0;
+$RefreshReg$(c2, "%default%");
+var c2;
+$RefreshReg$(c4, "A");
+var c4;
+$RefreshReg$(c6, "B");
+var c6;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer registers identifiers used in JSX at definition site 1`] = `
+import A from './A';
+import Store from './Store';
+Store.subscribe();
+const Header = styled.div \`color: red\`;
+c0 = Header;
+const StyledFactory1 = styled('div') \`color: hotpink\`;
+c1 = StyledFactory1;
+const StyledFactory2 = styled('div')({ color: 'hotpink' });
+c2 = StyledFactory2;
+const StyledFactory3 = styled(A)({ color: 'hotpink' });
+c3 = StyledFactory3;
+const FunnyFactory = funny.factory \`\`;
+let Alias1 = A;
+let Alias2 = A.Foo;
+const Dict = {};
+function Foo() {
+    return (<div><A /><B /><StyledFactory1 /><StyledFactory2 /><StyledFactory3 /><Alias1 /><Alias2 /><Header /><Dict.X /></div>);
+}
+c4 = Foo;
+const B = hoc(A);
+c5 = B;
+// This is currently registered as a false positive:
+const NotAComponent = wow(A);
+c7 = NotAComponent;
+$RefreshReg$(c0, "Header");
+var c0;
+$RefreshReg$(c1, "StyledFactory1");
+var c1;
+$RefreshReg$(c2, "StyledFactory2");
+var c2;
+$RefreshReg$(c3, "StyledFactory3");
+var c3;
+$RefreshReg$(c4, "Foo");
+var c4;
+$RefreshReg$(c5, "B");
+var c5;
+$RefreshReg$(c7, "NotAComponent");
+var c7;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer registers identifiers used in React.createElement at definition site 1`] = `
+import A from './A';
+import Store from './Store';
+Store.subscribe();
+const Header = styled.div \`color: red\`;
+c0 = Header;
+const StyledFactory1 = styled('div') \`color: hotpink\`;
+c1 = StyledFactory1;
+const StyledFactory2 = styled('div')({ color: 'hotpink' });
+c2 = StyledFactory2;
+const StyledFactory3 = styled(A)({ color: 'hotpink' });
+c3 = StyledFactory3;
+const FunnyFactory = funny.factory \`\`;
+let Alias1 = A;
+let Alias2 = A.Foo;
+const Dict = {};
+function Foo() {
+    return [
+        React.createElement(A),
+        React.createElement(B),
+        React.createElement(StyledFactory1),
+        React.createElement(StyledFactory2),
+        React.createElement(StyledFactory3),
+        React.createElement(Alias1),
+        React.createElement(Alias2),
+        jsx(Header),
+        React.createElement(Dict.X),
+    ];
+}
+c4 = Foo;
+React.createContext(Store);
+const B = hoc(A);
+c5 = B;
+// This is currently registered as a false positive:
+const NotAComponent = wow(A);
+c7 = NotAComponent;
+$RefreshReg$(c0, "Header");
+var c0;
+$RefreshReg$(c1, "StyledFactory1");
+var c1;
+$RefreshReg$(c2, "StyledFactory2");
+var c2;
+$RefreshReg$(c3, "StyledFactory3");
+var c3;
+$RefreshReg$(c4, "Foo");
+var c4;
+$RefreshReg$(c5, "B");
+var c5;
+$RefreshReg$(c7, "NotAComponent");
+var c7;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer registers likely HOCs with inline functions 1`] = `
+const A = forwardRef(c0 = function () {
+    return <h1>Foo</h1>;
+});
+c1 = A;
+const B = memo(c2 = React.forwardRef(c3 = () => {
+    return <h1>Foo</h1>;
+}));
+c4 = B;
+export default c7 = React.memo(c5 = forwardRef(c6 = (props, ref) => {
+    return <h1>Foo</h1>;
+}));
+$RefreshReg$(c0, "A$forwardRef");
+var c0;
+$RefreshReg$(c1, "A");
+var c1;
+$RefreshReg$(c3, "B$memo$React.forwardRef");
+var c3;
+$RefreshReg$(c2, "B$memo");
+var c2;
+$RefreshReg$(c4, "B");
+var c4;
+$RefreshReg$(c6, "%default%$React.memo$forwardRef");
+var c6;
+$RefreshReg$(c5, "%default%$React.memo");
+var c5;
+$RefreshReg$(c7, "%default%");
+var c7;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer registers likely HOCs with inline functions 2`] = `
+export default c2 = React.memo(c0 = forwardRef(c1 = function (props, ref) {
+    return <h1>Foo</h1>;
+}));
+$RefreshReg$(c1, "%default%$React.memo$forwardRef");
+var c1;
+$RefreshReg$(c0, "%default%$React.memo");
+var c0;
+$RefreshReg$(c2, "%default%");
+var c2;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer registers likely HOCs with inline functions 3`] = `
+export default c2 = React.memo(c0 = forwardRef(c1 = function Named(props, ref) {
+    return <h1>Foo</h1>;
+}));
+$RefreshReg$(c1, "%default%$React.memo$forwardRef");
+var c1;
+$RefreshReg$(c0, "%default%$React.memo");
+var c0;
+$RefreshReg$(c2, "%default%");
+var c2;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer registers top-level exported function declarations 1`] = `
+export function Hello() {
+    function handleClick() { }
+    return <h1 onClick={handleClick}>Hi</h1>;
+}
+c0 = Hello;
+export default function Bar() {
+    return <Hello />;
+}
+c1 = Bar;
+function Baz() {
+    return <h1>OK</h1>;
+}
+c2 = Baz;
+const NotAComp = 'hi';
+export { Baz, NotAComp };
+export function sum() { }
+export const Bad = 42;
+$RefreshReg$(c0, "Hello");
+var c0;
+$RefreshReg$(c1, "Bar");
+var c1;
+$RefreshReg$(c2, "Baz");
+var c2;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer registers top-level exported named arrow functions 1`] = `
+export const Hello = () => {
+    function handleClick() { }
+    return <h1 onClick={handleClick}>Hi</h1>;
+};
+c0 = Hello;
+export let Bar = (props) => <Hello />;
+c1 = Bar;
+export default () => {
+    // This one should be ignored.
+    // You should name your components.
+    return <Hello />;
+};
+$RefreshReg$(c0, "Hello");
+var c0;
+$RefreshReg$(c1, "Bar");
+var c1;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer registers top-level function declarations 1`] = `
+function Hello() {
+    function handleClick() { }
+    return <h1 onClick={handleClick}>Hi</h1>;
+}
+c0 = Hello;
+function Bar() {
+    return <Hello />;
+}
+c1 = Bar;
+$RefreshReg$(c0, "Hello");
+var c0;
+$RefreshReg$(c1, "Bar");
+var c1;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer registers top-level variable declarations with arrow functions 1`] = `
+let Hello = () => {
+    const handleClick = () => { };
+    return <h1 onClick={handleClick}>Hi</h1>;
+};
+c0 = Hello;
+const Bar = () => {
+    return <Hello />;
+};
+c1 = Bar;
+var Baz = () => <div />;
+c2 = Baz;
+var sum = () => { };
+$RefreshReg$(c0, "Hello");
+var c0;
+$RefreshReg$(c1, "Bar");
+var c1;
+$RefreshReg$(c2, "Baz");
+var c2;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer registers top-level variable declarations with function expressions 1`] = `
+let Hello = function () {
+    function handleClick() { }
+    return <h1 onClick={handleClick}>Hi</h1>;
+};
+c0 = Hello;
+const Bar = function Baz() {
+    return <Hello />;
+};
+c1 = Bar;
+function sum() { }
+let Baz = 10;
+var Qux;
+$RefreshReg$(c0, "Hello");
+var c0;
+$RefreshReg$(c1, "Bar");
+var c1;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer uses custom identifiers for $RefreshReg$ and $RefreshSig$ 1`] = `
+export default function Bar() {
+    useContext(X);
+    return <Foo />;
+}
+c0 = Bar;
+;
+import.meta.refreshReg(c0, "Bar");
+var c0;
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer uses original function declaration if it get reassigned 1`] = `
+function Hello() {
+    return <h1>Hi</h1>;
+}
+c0 = Hello;
+Hello = connect(Hello);
+$RefreshReg$(c0, "Hello");
+var c0;
+
+`;
