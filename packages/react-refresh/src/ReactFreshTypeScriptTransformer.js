@@ -138,7 +138,7 @@ export default function(opts = {}, ts = require('typescript')) {
         // Recursive case, if it is x(y(...)), recursive with y(...) to get inner expr
         const arg = callExpr.arguments[0];
         if (ts.isCallExpression(arg)) {
-          const nextNameHint = nameHint + '$' + callExpr.expression.getText();
+          const nextNameHint = nameHint + '$' + printNode(callExpr.expression);
           const innerResult = registerHigherOrderFunction(arg, nextNameHint);
           afterStatements.push(createRegister(uniq, nextNameHint));
           return ts.updateCall(callExpr, callExpr.expression, void 0, [
@@ -155,7 +155,7 @@ export default function(opts = {}, ts = require('typescript')) {
           throw new Error('Please call isHOCLike first');
         if (ts.isIdentifier(arg)) return callExpr;
         afterStatements.push(
-          createRegister(uniq, nameHint + '$' + callExpr.expression.getText()),
+          createRegister(uniq, nameHint + '$' + printNode(callExpr.expression)),
         );
         return ts.updateCall(callExpr, callExpr.expression, void 0, [
           ts.createAssignment(uniq, hooksSignatureMap.get(arg) || arg),
@@ -252,6 +252,8 @@ export default function(opts = {}, ts = require('typescript')) {
               ]);
               hooksSignatureMap.set(newFunction, wrapped);
               node = newFunction;
+              if (findAncestor(oldNode.parent, ts.isFunctionLike))
+                node = wrapped;
             }
           }
           return updateStatements(node, addSignatureReport);
@@ -285,6 +287,10 @@ export default function(opts = {}, ts = require('typescript')) {
           file.languageVariant === ts.LanguageVariant.JSX ||
           file.text.includes('use')
         );
+      }
+
+      function printNode(/** @type {Node} */ node) {
+        return ts.createPrinter().printNode(ts.EmitHint.Expression, node, file);
       }
     };
   };

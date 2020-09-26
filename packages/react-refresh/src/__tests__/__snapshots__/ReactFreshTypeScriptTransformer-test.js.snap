@@ -84,12 +84,12 @@ _f = B;
 function hoc() {
     var _a;
     _a = $RefreshSig$();
-    return function Inner() {
+    return _a(function Inner() {
         _a();
         const [foo, setFoo] = useState(0);
         React.useEffect(() => { });
         return <h1 ref={ref}>{foo}</h1>;
-    };
+    }, "__TODO__", false);
 }
 export let C = hoc();
 $RefreshReg$(_b, "A$React.memo$React.forwardRef");
