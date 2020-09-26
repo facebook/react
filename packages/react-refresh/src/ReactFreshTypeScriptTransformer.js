@@ -10,6 +10,7 @@ export default function(opts = {}, ts = require('typescript')) {
     return file => {
       if (file.isDeclarationFile) return file;
       if (!containHooksLikeOrJSX()) return file;
+      const globalDisableForceRefresh = file.text.includes('@refresh reset'); // TODO: change to scan comment?
 
       /** @type {Set<string>} */ const topLevelDeclaredName = new Set();
       // Collect top level local declarations
@@ -25,7 +26,7 @@ export default function(opts = {}, ts = require('typescript')) {
           }
         }
       }
-      const {nextFile, usedComponent: usedJSXElementLike} = tractJSXUsage(); // ! This is a deep visit to the AST tree
+      const {nextFile, usedJSXElementLike, hooksSignatureMap} = tractJSXUsage(); // ! This is a deep visit to the AST tree
       file = nextFile;
 
       context.startLexicalEnvironment();
@@ -50,7 +51,10 @@ export default function(opts = {}, ts = require('typescript')) {
             // fast fail
             if (unwantedComponentLikeDefinition(init)) continue;
             const variable = declaration.name.text;
-            if (usedJSXElementLike.has(variable) || ts.isFunctionLike(init)) {
+            if (
+              usedJSXElementLike.has(variable) ||
+              isFunctionExpressionLikeOrFunctionDeclaration(init)
+            ) {
               registerComponentAfterCurrent(variable, deferredAppendStatements);
               continue;
             }
@@ -101,16 +105,10 @@ export default function(opts = {}, ts = require('typescript')) {
           }
         }
       }
-      return ts.updateSourceFileNode(
-        file,
+      return updateStatements(file, () =>
         (context.endLexicalEnvironment() || []).concat(
           nextStatements.concat(afterStatements),
         ),
-        false,
-        file.referencedFiles,
-        file.typeReferenceDirectives,
-        file.hasNoDefaultLib,
-        file.libReferenceDirectives,
       );
 
       function registerComponentAfterCurrent(
@@ -150,14 +148,17 @@ export default function(opts = {}, ts = require('typescript')) {
         }
 
         // Base case, it is x(function () {...}) or x(() => ...) or x(Identifier)
-        if (!ts.isFunctionLike(arg) && !ts.isIdentifier(arg))
+        if (
+          !isFunctionExpressionLikeOrFunctionDeclaration(arg) &&
+          !ts.isIdentifier(arg)
+        )
           throw new Error('Please call isHOCLike first');
         if (ts.isIdentifier(arg)) return callExpr;
         afterStatements.push(
           createRegister(uniq, nameHint + '$' + callExpr.expression.getText()),
         );
         return ts.updateCall(callExpr, callExpr.expression, void 0, [
-          ts.createAssignment(uniq, arg),
+          ts.createAssignment(uniq, hooksSignatureMap.get(arg) || arg),
           ...callExpr.arguments.slice(1),
         ]);
       }
@@ -168,8 +169,17 @@ export default function(opts = {}, ts = require('typescript')) {
        * ! This function does not consider variable shadowing !
        */
       function tractJSXUsage() {
-        /** @type {Set<string>} */ const usedComponent = new Set();
-        /** @type {Set<FunctionLikeDeclaration>} */ const containingHooks = new Set();
+        /** @type {Set<string>} */ const usedJSXElementLike = new Set();
+        /** @type {Map<HandledFunction, CallExpression[]>} */ const containingHooksOldMap = new Map();
+        /** @type {Map<HandledFunction, CallExpression>} */ const hooksSignatureMap = new Map();
+        function trackHooks(
+          /** @type {HandledFunction} */ comp,
+          /** @type {CallExpression} */ call,
+        ) {
+          const arr = containingHooksOldMap.get(comp) || [];
+          arr.push(call);
+          containingHooksOldMap.set(comp, arr);
+        }
         function visitor(/** @type {Node} */ node) {
           // Collect JSX create info
           // <abc /> or <abc>
@@ -177,31 +187,34 @@ export default function(opts = {}, ts = require('typescript')) {
             const tag = node.tagName;
             if (ts.isIdentifier(tag) && !isIntrinsicElement(tag)) {
               const name = tag.text;
-              if (topLevelDeclaredName.has(name)) usedComponent.add(name);
+              if (topLevelDeclaredName.has(name)) usedJSXElementLike.add(name);
             }
             // Not tracking other kinds of tagNames like <A.B /> or <A:B />
           } else if (isJSXConstructingCallExpr(node)) {
             const arg0 = node.arguments[0];
             if (arg0 && ts.isIdentifier(arg0)) {
               const name = arg0.text;
-              if (topLevelDeclaredName.has(name)) usedComponent.add(name);
+              if (topLevelDeclaredName.has(name)) usedJSXElementLike.add(name);
             }
           }
           if (isReactHooksCall(node)) {
             // @ts-ignore
-            /** @type {FunctionLikeDeclaration} */ const parent = findAncestor(
+            /** @type {HandledFunction} */ const parent = findAncestor(
               node,
-              ts.isFunctionLike,
+              isFunctionExpressionLikeOrFunctionDeclaration,
             );
-            if (parent) containingHooks.add(parent);
+            if (parent) trackHooks(parent, node);
           }
+          const oldNode = node;
           // Collect hooks
-          const result = ts.visitEachChild(node, visitor, context);
+          node = ts.visitEachChild(node, visitor, context);
           // @ts-ignore
-          if (containingHooks.has(node)) {
-            // @ts-ignore
-            /** @type {FunctionLikeDeclaration} */ const f = result;
-            if (!f.body) return result;
+          const hooksCalls = containingHooksOldMap.get(oldNode);
+          if (
+            hooksCalls &&
+            isFunctionExpressionLikeOrFunctionDeclaration(node) &&
+            node.body
+          ) {
             const hooksTracker = createTempVariable();
             const createHooksTracker = ts.createExpressionStatement(
               ts.createBinary(
@@ -215,16 +228,54 @@ export default function(opts = {}, ts = require('typescript')) {
             const callTracker = ts.createExpressionStatement(
               ts.createCall(hooksTracker, void 0, []),
             );
-            const nextBody = ts.isBlock(f.body)
-              ? ts.updateBlock(f.body, [callTracker, ...f.body.statements])
-              : ts.createBlock([callTracker, ts.createReturn(f.body)]);
-            return updateBody(node, nextBody);
+            const nextBody = ts.isBlock(node.body)
+              ? updateStatements(node.body, r => [callTracker, ...r])
+              : ts.createBlock([callTracker, ts.createReturn(node.body)]);
+            const newFunction = updateBody(node, nextBody);
+            if (ts.isFunctionDeclaration(newFunction)) {
+              if (newFunction.name) {
+                const wrapped = ts.createCall(hooksTracker, void 0, [
+                  newFunction.name,
+                  ts.createLiteral('__TODO__'),
+                  ts.createLiteral(globalDisableForceRefresh),
+                ]);
+                hooksSignatureMap.set(newFunction, wrapped);
+              }
+              node = newFunction;
+            } else {
+              const wrapped = ts.createCall(hooksTracker, void 0, [
+                newFunction,
+                ts.createLiteral('__TODO__'),
+                ts.createLiteral(globalDisableForceRefresh),
+              ]);
+              hooksSignatureMap.set(newFunction, wrapped);
+              node = newFunction;
+            }
           }
-          return result;
+          return updateStatements(node, addSignatureReport);
         }
+        function addSignatureReport(
+          /** @type {ReadonlyArray<Statement>} */ statements,
+        ) {
+          /** @type {Statement[]} */ const next = [];
+          for (const statement of statements) {
+            // @ts-ignore
+            const signatureReport = hooksSignatureMap.get(statement);
+            next.push(statement);
+            if (signatureReport)
+              next.push(ts.createExpressionStatement(signatureReport));
+          }
+          return next;
+        }
+
+        const nextFile = updateStatements(
+          ts.visitEachChild(file, visitor, context),
+          addSignatureReport,
+        );
         return {
-          nextFile: ts.visitEachChild(file, visitor, context),
-          usedComponent,
+          nextFile,
+          usedJSXElementLike,
+          hooksSignatureMap,
         };
       }
       function containHooksLikeOrJSX() {
@@ -236,6 +287,41 @@ export default function(opts = {}, ts = require('typescript')) {
     };
   };
 
+  /**
+   * @template {Node} T
+   * @returns {T}
+   */
+  function updateStatements(
+    /** @type {T} */ node,
+    /** @type {(s: import('typescript').NodeArray<Statement>) => readonly Statement[]} */ f,
+  ) {
+    if (ts.isSourceFile(node))
+      // @ts-ignore
+      return ts.updateSourceFileNode(
+        node,
+        f(node.statements),
+        node.isDeclarationFile,
+        node.referencedFiles,
+        node.typeReferenceDirectives,
+        node.hasNoDefaultLib,
+        node.libReferenceDirectives,
+      );
+    if (ts.isCaseClause(node))
+      // @ts-ignore
+      return ts.updateCaseClause(node, node.expression, f(node.statements));
+    if (ts.isDefaultClause(node))
+      // @ts-ignore
+      return ts.updateDefaultClause(node, f(node.statements));
+    if (ts.isModuleBlock(node))
+      // @ts-ignore
+      return ts.updateModuleBlock(node, f(node.statements));
+    if (ts.isBlock(node))
+      // @ts-ignore
+      return ts.updateBlock(node, f(node.statements));
+    return node;
+  }
+
+  /** @returns {HandledFunction} */
   function updateBody(
     /** @type {Node} */ node,
     /** @type {import('typescript').Block} */ nextBody,
@@ -274,6 +360,7 @@ export default function(opts = {}, ts = require('typescript')) {
         nextBody,
       );
     }
+    // @ts-ignore
     return node;
   }
 
@@ -293,6 +380,7 @@ export default function(opts = {}, ts = require('typescript')) {
     return false;
   }
 
+  /** @returns {expr is CallExpression} */
   function isReactHooksCall(/** @type {Node} */ expr) {
     if (!ts.isCallExpression(expr)) return false;
     const callee = expr.expression;
@@ -354,9 +442,19 @@ export default function(opts = {}, ts = require('typescript')) {
       } else return false;
     }
     const isValidHOCArg =
-      ts.isFunctionLike(expr) ||
+      isFunctionExpressionLikeOrFunctionDeclaration(expr) ||
       (ts.isIdentifier(expr) && !startsWithLowerCase(expr.text));
     return isValidHOCArg;
+  }
+
+  /** @returns {node is HandledFunction} */
+  function isFunctionExpressionLikeOrFunctionDeclaration(
+    /** @type {Node} */ node,
+  ) {
+    if (ts.isFunctionDeclaration(node)) return true;
+    if (ts.isArrowFunction(node)) return true;
+    if (ts.isFunctionExpression(node)) return true;
+    return false;
   }
   /**
    * Return `refreshReg(id, "name");`
@@ -397,4 +495,4 @@ function startsWithLowerCase(str) {
 /** @typedef {import('typescript').Identifier} Identifier */
 /** @typedef {import('typescript').Expression} Expression */
 /** @typedef {import('typescript').SourceFile} SourceFile */
-/** @typedef {import('typescript').FunctionLikeDeclaration} FunctionLikeDeclaration */
+/** @typedef {import('typescript').FunctionDeclaration | import('typescript').FunctionExpression | import('typescript').ArrowFunction} HandledFunction */

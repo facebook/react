@@ -15,7 +15,7 @@ _a = Foo;
 module.exports = () => { _h(); return useContext(X); };
 const Bar = () => { _j(); return useContext(X); };
 _b = Bar;
-const Baz = memo(_c = () => { _k(); return useContext(X); });
+const Baz = memo(_c = _k(() => { _k(); return useContext(X); }, "__TODO__", false));
 _d = Baz;
 const Qux = () => { _l(); return (0, useContext(X)); };
 _e = Qux;
@@ -57,6 +57,7 @@ export default function App() {
     return <h1>{foo}</h1>;
 }
 _a = App;
+_b(App, "__TODO__", false);
 $RefreshReg$(_a, "App");
 
 `;
@@ -66,19 +67,19 @@ var _a, _b, _c, _d, _e, _f;
 var _g, _h;
 _g = $RefreshSig$();
 _h = $RefreshSig$();
-export const A = React.memo(_a = React.forwardRef(_b = (props, ref) => {
+export const A = React.memo(_a = React.forwardRef(_b = _g((props, ref) => {
     _g();
     const [foo, setFoo] = useState(0);
     React.useEffect(() => { });
     return <h1 ref={ref}>{foo}</h1>;
-}));
+}, "__TODO__", false)));
 _c = A;
-export const B = React.memo(_d = React.forwardRef(_e = function (props, ref) {
+export const B = React.memo(_d = React.forwardRef(_e = _h(function (props, ref) {
     _h();
     const [foo, setFoo] = useState(0);
     React.useEffect(() => { });
     return <h1 ref={ref}>{foo}</h1>;
-}));
+}, "__TODO__", false)));
 _f = B;
 function hoc() {
     var _a;
@@ -115,6 +116,7 @@ export default function App() {
         useFancyEffect();
         return foo;
     }
+    _a(useFancyState, "__TODO__", false);
     const bar = useFancyState();
     const baz = FancyHook.useThing();
     React.useState();
@@ -122,6 +124,7 @@ export default function App() {
     return <h1>{bar}{baz}</h1>;
 }
 _a = App;
+_b(App, "__TODO__", false);
 $RefreshReg$(_a, "App");
 
 `;
@@ -193,6 +196,7 @@ function useFancyState() {
     useFancyEffect();
     return foo;
 }
+_b(useFancyState, "__TODO__", false);
 const useFancyEffect = () => {
     _c();
     React.useEffect(() => { });
@@ -203,6 +207,7 @@ export default function App() {
     return <h1>{bar}</h1>;
 }
 _a = App;
+_d(App, "__TODO__", false);
 $RefreshReg$(_a, "App");
 
 `;
@@ -218,6 +223,7 @@ export default function App() {
     return <h1>{bar}</h1>;
 }
 _a = App;
+_b(App, "__TODO__", false);
 $RefreshReg$(_a, "App");
 
 `;
@@ -485,6 +491,7 @@ export default function Bar() {
     return <Foo />;
 }
 _a = Bar;
+_b(Bar, "__TODO__", false);
 ;
 import.meta.refreshReg(_a, "Bar");
 
