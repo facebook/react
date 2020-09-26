@@ -10,14 +10,14 @@ _j = $RefreshSig$();
 _k = $RefreshSig$();
 _l = $RefreshSig$();
 export default () => (_f(), useContext(X));
-export const Foo = () => (_g(), useContext(X));
+export const Foo = _g(() => (_g(), useContext(X)), "__TODO__", false);
 _a = Foo;
 module.exports = () => (_h(), useContext(X));
-const Bar = () => (_j(), useContext(X));
+const Bar = _j(() => (_j(), useContext(X)), "__TODO__", false);
 _b = Bar;
 const Baz = memo(_c = _k(() => (_k(), useContext(X)), "__TODO__", false));
 _d = Baz;
-const Qux = () => (_l(), (0, useContext(X)));
+const Qux = _l(() => (_l(), (0, useContext(X))), "__TODO__", false);
 _e = Qux;
 $RefreshReg$(_a, "Foo");
 $RefreshReg$(_b, "Bar");
@@ -197,10 +197,10 @@ function useFancyState() {
     return foo;
 }
 _b(useFancyState, "__TODO__", false);
-const useFancyEffect = () => {
+const useFancyEffect = _c(() => {
     _c();
     React.useEffect(() => { });
-};
+}, "__TODO__", false);
 export default function App() {
     _d();
     const bar = useFancyState();

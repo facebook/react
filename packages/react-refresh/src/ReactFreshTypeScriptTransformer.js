@@ -48,14 +48,30 @@ export default function(opts = {}, ts = require('typescript')) {
             // Not handle complex declaration. e.g. [a, b] = [() => ..., () => ...]
             // or declaration without initializer
             if (!ts.isIdentifier(declaration.name) || !init) continue;
-            // fast fail
-            if (unwantedComponentLikeDefinition(init)) continue;
             const variable = declaration.name.text;
             if (
               usedJSXElementLike.has(variable) ||
               isFunctionExpressionLikeOrFunctionDeclaration(init)
             ) {
-              registerComponentAfterCurrent(variable, deferredAppendStatements);
+              if (!unwantedComponentLikeDefinition(init))
+                registerComponentAfterCurrent(
+                  variable,
+                  deferredAppendStatements,
+                );
+              if (
+                isFunctionExpressionLikeOrFunctionDeclaration(init) &&
+                hooksSignatureMap.has(init)
+              ) {
+                nextDeclarationList.pop(); // replace the decl
+                nextDeclarationList.push(
+                  ts.updateVariableDeclaration(
+                    declaration,
+                    declaration.name,
+                    declaration.type,
+                    hooksSignatureMap.get(init),
+                  ),
+                );
+              }
               continue;
             }
             if (isHOCLike(init)) {
