@@ -71,11 +71,11 @@ const C = requireCond(gk, 'C');
 const D = import('D');
 export default function App() {
   return <div>
-              <A />
-              <B />
-              <C />
-              <D />
-            </div>;
+      <A />
+      <B />
+      <C />
+      <D />
+    </div>;
 }
 _c = App;
 
