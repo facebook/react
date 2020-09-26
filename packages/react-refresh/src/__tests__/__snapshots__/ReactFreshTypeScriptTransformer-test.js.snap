@@ -236,25 +236,25 @@ function hello() {
 `;
 
 exports[`ReactFreshTypeScriptTransformer registers capitalized identifiers in HOC calls 1`] = `
-var _a, _b, _c, _d, _e, _f, _g;
+var _a, _b, _c, _d;
 function Foo() {
     return <h1>Hi</h1>;
 }
 _a = Foo;
-export default _c = hoc(Foo);
+export default _b = hoc(Foo);
 export const A = hoc(Foo);
-_e = A;
+_c = A;
 const B = hoc(Foo);
-_g = B;
+_d = B;
 $RefreshReg$(_a, "Foo");
-$RefreshReg$(_c, "%default%");
-$RefreshReg$(_e, "A");
-$RefreshReg$(_g, "B");
+$RefreshReg$(_b, "%default%");
+$RefreshReg$(_c, "A");
+$RefreshReg$(_d, "B");
 
 `;
 
 exports[`ReactFreshTypeScriptTransformer registers identifiers used in JSX at definition site 1`] = `
-var _a, _b, _c, _d, _e, _f, _g, _h;
+var _a, _b, _c, _d, _e, _f, _g;
 import A from './A';
 import Store from './Store';
 Store.subscribe();
@@ -278,19 +278,19 @@ const B = hoc(A);
 _f = B;
 // This is currently registered as a false positive:
 const NotAComponent = wow(A);
-_h = NotAComponent;
+_g = NotAComponent;
 $RefreshReg$(_a, "Header");
 $RefreshReg$(_b, "StyledFactory1");
 $RefreshReg$(_c, "StyledFactory2");
 $RefreshReg$(_d, "StyledFactory3");
 $RefreshReg$(_e, "Foo");
 $RefreshReg$(_f, "B");
-$RefreshReg$(_h, "NotAComponent");
+$RefreshReg$(_g, "NotAComponent");
 
 `;
 
 exports[`ReactFreshTypeScriptTransformer registers identifiers used in React.createElement at definition site 1`] = `
-var _a, _b, _c, _d, _e, _f, _g, _h;
+var _a, _b, _c, _d, _e, _f, _g;
 import A from './A';
 import Store from './Store';
 Store.subscribe();
@@ -325,14 +325,14 @@ const B = hoc(A);
 _f = B;
 // This is currently registered as a false positive:
 const NotAComponent = wow(A);
-_h = NotAComponent;
+_g = NotAComponent;
 $RefreshReg$(_a, "Header");
 $RefreshReg$(_b, "StyledFactory1");
 $RefreshReg$(_c, "StyledFactory2");
 $RefreshReg$(_d, "StyledFactory3");
 $RefreshReg$(_e, "Foo");
 $RefreshReg$(_f, "B");
-$RefreshReg$(_h, "NotAComponent");
+$RefreshReg$(_g, "NotAComponent");
 
 `;
 

@@ -150,15 +150,15 @@ export default function(opts = {}, ts = require('typescript')) {
        * @returns {import('typescript').BinaryExpression | CallExpression}
        */
       function registerHigherOrderFunction(callExpr, nameHint) {
-        const uniq = createTempVariable();
         // Recursive case, if it is x(y(...)), recursive with y(...) to get inner expr
         const arg = callExpr.arguments[0];
         if (ts.isCallExpression(arg)) {
+          const tempVar = createTempVariable();
           const nextNameHint = nameHint + '$' + printNode(callExpr.expression);
           const innerResult = registerHigherOrderFunction(arg, nextNameHint);
-          afterStatements.push(createRegister(uniq, nextNameHint));
+          afterStatements.push(createRegister(tempVar, nextNameHint));
           return ts.updateCall(callExpr, callExpr.expression, void 0, [
-            ts.createAssignment(uniq, innerResult),
+            ts.createAssignment(tempVar, innerResult),
             ...callExpr.arguments.slice(1),
           ]);
         }
@@ -170,11 +170,15 @@ export default function(opts = {}, ts = require('typescript')) {
         )
           throw new Error('Please call isHOCLike first');
         if (ts.isIdentifier(arg)) return callExpr;
+        const tempVar = createTempVariable();
         afterStatements.push(
-          createRegister(uniq, nameHint + '$' + printNode(callExpr.expression)),
+          createRegister(
+            tempVar,
+            nameHint + '$' + printNode(callExpr.expression),
+          ),
         );
         return ts.updateCall(callExpr, callExpr.expression, void 0, [
-          ts.createAssignment(uniq, hooksSignatureMap.get(arg) || arg),
+          ts.createAssignment(tempVar, hooksSignatureMap.get(arg) || arg),
           ...callExpr.arguments.slice(1),
         ]);
       }
