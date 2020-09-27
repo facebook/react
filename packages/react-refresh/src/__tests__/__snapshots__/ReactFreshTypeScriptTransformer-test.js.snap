@@ -9,7 +9,7 @@ _h = $RefreshSig$();
 _j = $RefreshSig$();
 _k = $RefreshSig$();
 _l = $RefreshSig$();
-export default () => (_f(), useContext(X));
+export default _f(() => (_f(), useContext(X)), \`useContext{}\`);
 export const Foo = _g(() => (_g(), useContext(X)), \`useContext{}\`);
 _a = Foo;
 module.exports = () => (_h(), useContext(X));

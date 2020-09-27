@@ -107,18 +107,32 @@ export default function(opts = {}, ts = require('typescript')) {
               node.expression,
               '%default%',
             );
-            const uniq = createTempVariable();
-            afterStatements.push(createRegister(uniq, '%default%'));
+            const temp = createTempVariable();
+            afterStatements.push(createRegister(temp, '%default%'));
             nextStatements.pop();
             nextStatements.push(
               ts.updateExportAssignment(
                 node,
                 node.decorators,
                 node.modifiers,
-                ts.createAssignment(uniq, inner),
+                ts.createAssignment(temp, inner),
               ),
             );
             continue;
+          } else if (
+            isFunctionExpressionLikeOrFunctionDeclaration(node.expression)
+          ) {
+            if (hooksSignatureMap.has(node.expression)) {
+              nextStatements.pop();
+              nextStatements.push(
+                ts.updateExportAssignment(
+                  node,
+                  node.decorators,
+                  node.modifiers,
+                  hooksSignatureMap.get(node.expression),
+                ),
+              );
+            }
           }
         }
       }
