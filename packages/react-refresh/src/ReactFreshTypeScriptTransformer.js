@@ -297,52 +297,31 @@ export default function(opts = {}, ts = require('typescript')) {
             );
             const requireForceRefresh =
               forceRefresh || globalRequireForceRefresh;
-            const requireForceRefreshExpr =
-              requireForceRefresh || hooksArray.length
-                ? ts.createLiteral(requireForceRefresh)
-                : undefined;
-            const hooksSignatureExpr = ts.createNoSubstitutionTemplateLiteral(
-              hooksSignature,
-              hooksSignature,
-            );
-            const hooksTrackExpr = hooksArray.length
-              ? ts.createArrowFunction(
-                  void 0,
-                  void 0,
-                  [],
-                  void 0,
-                  ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-                  ts.createArrayLiteral(hooksArray),
-                )
-              : undefined;
             if (ts.isFunctionDeclaration(newFunction)) {
               if (newFunction.name) {
-                const wrapped = ts.createCall(
-                  hooksTracker,
-                  void 0,
-                  [
+                hooksSignatureMap.set(
+                  newFunction,
+                  createHooksRegisterCall(
+                    hooksTracker,
                     newFunction.name,
-                    hooksSignatureExpr,
-                    requireForceRefreshExpr,
-                    hooksTrackExpr,
-                  ].filter(Boolean),
+                    hooksSignature,
+                    requireForceRefresh,
+                    hooksArray,
+                  ),
                 );
-                hooksSignatureMap.set(newFunction, wrapped);
               }
               node = newFunction;
             } else {
-              const wrapped = ts.createCall(
+              const wrapped = createHooksRegisterCall(
                 hooksTracker,
-                void 0,
-                [
-                  newFunction,
-                  hooksSignatureExpr,
-                  requireForceRefreshExpr,
-                  hooksTrackExpr,
-                ].filter(Boolean),
+                newFunction,
+                hooksSignature,
+                requireForceRefresh,
+                hooksArray,
               );
               hooksSignatureMap.set(newFunction, wrapped);
               node = newFunction;
+              // if it is an inner decl, we can update it safely
               if (findAncestor(oldNode.parent, ts.isFunctionLike))
                 node = wrapped;
             }
@@ -696,7 +675,6 @@ export default function(opts = {}, ts = require('typescript')) {
     return false;
   }
   /**
-   * Return `refreshReg(id, "name");`
    * @param {Identifier} id
    * @param {string} name
    */
@@ -704,6 +682,40 @@ export default function(opts = {}, ts = require('typescript')) {
     return ts.createExpressionStatement(
       ts.createCall(refreshReg, void 0, [id, ts.createLiteral(name)]),
     );
+  }
+  /**
+   * @param {Identifier} instance The identifier of the sig instance
+   * @param {Expression} component The binding component
+   * @param {string} signature The signature of the function
+   * @param {boolean} forceRefresh Does forceRefresh enabled?
+   * @param {Expression[]} trackers A list of custom hooks references
+   */
+  function createHooksRegisterCall(
+    instance,
+    component,
+    signature,
+    forceRefresh,
+    trackers,
+  ) {
+    const args = [component];
+    if (signature.includes('\n'))
+      args.push(ts.createNoSubstitutionTemplateLiteral(signature, signature));
+    else args.push(ts.createLiteral(signature));
+
+    if (forceRefresh || trackers.length)
+      args.push(ts.createLiteral(forceRefresh));
+    if (trackers.length)
+      args.push(
+        ts.createArrowFunction(
+          void 0,
+          void 0,
+          void 0,
+          void 0,
+          ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+          ts.createArrayLiteral(trackers),
+        ),
+      );
+    return ts.createCall(instance, void 0, args);
   }
   /**
    * If the call expression seems like "jsx(...)" or "xyz.jsx(...)"

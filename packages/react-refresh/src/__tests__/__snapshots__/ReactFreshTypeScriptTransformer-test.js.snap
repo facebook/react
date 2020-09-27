@@ -9,19 +9,19 @@ _h = $RefreshSig$();
 _j = $RefreshSig$();
 _k = $RefreshSig$();
 _l = $RefreshSig$();
-export default _f(() => (_f(), useContext(X)), \`useContext{}\`);
-export const Foo = _g(() => (_g(), useContext(X)), \`useContext{}\`);
+export default _f(() => (_f(), useContext(X)), "useContext{}");
+export const Foo = _g(() => (_g(), useContext(X)), "useContext{}");
 _a = Foo;
 $RefreshReg$(_a, "Foo");
 module.exports = () => (_h(), useContext(X));
-const Bar = _j(() => (_j(), useContext(X)), \`useContext{}\`);
+const Bar = _j(() => (_j(), useContext(X)), "useContext{}");
 _b = Bar;
 $RefreshReg$(_b, "Bar");
-const Baz = memo(_c = _k(() => (_k(), useContext(X)), \`useContext{}\`));
+const Baz = memo(_c = _k(() => (_k(), useContext(X)), "useContext{}"));
 $RefreshReg$(_c, "Baz$memo");
 _d = Baz;
 $RefreshReg$(_d, "Baz");
-const Qux = _l(() => (_l(), (0, useContext(X))), \`useContext{}\`);
+const Qux = _l(() => (_l(), (0, useContext(X))), "useContext{}");
 _e = Qux;
 $RefreshReg$(_e, "Qux");
 
@@ -209,7 +209,7 @@ useFancyEffect{}\`, false, () => [useFancyEffect]);
 const useFancyEffect = _c(() => {
     _c();
     React.useEffect(() => { });
-}, \`useEffect{}\`);
+}, "useEffect{}");
 export default function App() {
     _d();
     const bar = useFancyState();
@@ -217,7 +217,7 @@ export default function App() {
 }
 _a = App;
 $RefreshReg$(_a, "App");
-_d(App, \`useFancyState{bar}\`, false, () => [useFancyState]);
+_d(App, "useFancyState{bar}", false, () => [useFancyState]);
 
 `;
 
@@ -233,7 +233,7 @@ export default function App() {
 }
 _a = App;
 $RefreshReg$(_a, "App");
-_b(App, \`useFancyState{bar}\`, false, () => [useFancyState]);
+_b(App, "useFancyState{bar}", false, () => [useFancyState]);
 
 `;
 
@@ -639,12 +639,12 @@ function ImperativeHandle(props, ref) {
 }
 _a = ImperativeHandle;
 $RefreshReg$(_a, "ImperativeHandle");
-_d(ImperativeHandle, \`useImperativeHandle{v}\`);
+_d(ImperativeHandle, "useImperativeHandle{v}");
 ImperativeHandle = forwardRef(ImperativeHandle);
 const HOC = forwardRef(_b = _e(function (props, ref) {
     _e();
     const v = useImperativeHandle(ref, () => ({ a }));
-}, \`useImperativeHandle{v}\`));
+}, "useImperativeHandle{v}"));
 $RefreshReg$(_b, "HOC$forwardRef");
 _c = HOC;
 $RefreshReg$(_c, "HOC");
@@ -658,7 +658,7 @@ _b = $RefreshSig$();
 function LayoutEffect() { _b(); const v = useLayoutEffect(ref); }
 _a = LayoutEffect;
 $RefreshReg$(_a, "LayoutEffect");
-_b(LayoutEffect, \`useLayoutEffect{v}\`);
+_b(LayoutEffect, "useLayoutEffect{v}");
 
 `;
 
@@ -669,7 +669,7 @@ _b = $RefreshSig$();
 function DebugValue() { _b(); const v = useDebugValue(ref, f); }
 _a = DebugValue;
 $RefreshReg$(_a, "DebugValue");
-_b(DebugValue, \`useDebugValue{v}\`);
+_b(DebugValue, "useDebugValue{v}");
 
 `;
 
@@ -716,8 +716,8 @@ _b = $RefreshSig$();
 _c = $RefreshSig$();
 _d = $RefreshSig$();
 function useLocal() { _b(); return useState(0); }
-_b(useLocal, \`useState{(0)}\`);
-const useLocal2 = _c(() => (_c(), useLocal()), \`useLocal{}\`, false, () => [useLocal]);
+_b(useLocal, "useState{(0)}");
+const useLocal2 = _c(() => (_c(), useLocal()), "useLocal{}", false, () => [useLocal]);
 function App() { _d(); useLocal(useLocal2()); }
 _a = App;
 $RefreshReg$(_a, "App");
@@ -736,8 +736,8 @@ function App() {
     _a = $RefreshSig$();
     _b = $RefreshSig$();
     function useLocal() { _a(); return useState(0); }
-    _a(useLocal, \`useState{(0)}\`);
-    const useLocal2 = _b(() => (_b(), useLocal()), \`useLocal{}\`, false, () => [useLocal]);
+    _a(useLocal, "useState{(0)}");
+    const useLocal2 = _b(() => (_b(), useLocal()), "useLocal{}", false, () => [useLocal]);
     useLocal(useLocal2());
 }
 _a = App;
@@ -757,7 +757,7 @@ function App() {
 }
 _a = App;
 $RefreshReg$(_a, "App");
-_b(App, \`useDeclarationNotFound{}\`, true);
+_b(App, "useDeclarationNotFound{}", true);
 
 `;
 
@@ -772,7 +772,7 @@ export default function Bar() {
 }
 _a = Bar;
 import.meta.refreshReg(_a, "Bar");
-_b(Bar, \`useContext{}\`);
+_b(Bar, "useContext{}");
 ;
 
 `;
