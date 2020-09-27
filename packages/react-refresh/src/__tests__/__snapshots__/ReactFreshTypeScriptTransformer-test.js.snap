@@ -689,6 +689,78 @@ $RefreshReg$(_a, "A");
 
 `;
 
+exports[`ReactFreshTypeScriptTransformer should track custom hooks 1`] = `
+var _a;
+var _b;
+_b = $RefreshSig$();
+import { useImport } from 'path';
+import useImportDefault from 'path';
+import { a as useAliasImport } from 'path';
+import ReactUse from 'react-use';
+import * as all from 'react-use';
+function App() { _b(); useImport(useImportDefault(useAliasImport(ReactUse.useTimer(all.useA())))); }
+_a = App;
+_b(App, \`useImport{}
+useImportDefault{}
+useAliasImport{}
+ReactUse.useTimer{}
+all.useA{}\`, true, () => [useImport, useImportDefault]);
+$RefreshReg$(_a, "App");
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer should track custom hooks 2`] = `
+var _a;
+var _b, _c, _d;
+_b = $RefreshSig$();
+_c = $RefreshSig$();
+_d = $RefreshSig$();
+function useLocal() { _b(); return useState(0); }
+_b(useLocal, \`useState{(0)}\`, false);
+const useLocal2 = _c(() => (_c(), useLocal()), \`useLocal{}\`, false, () => [useLocal]);
+function App() { _d(); useLocal(useLocal2()); }
+_a = App;
+_d(App, \`useLocal{}
+useLocal2{}\`, false, () => [useLocal, useLocal2]);
+$RefreshReg$(_a, "App");
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer should track custom hooks 3`] = `
+var _a;
+var _b;
+_b = $RefreshSig$();
+function App() {
+    _b();
+    var _a, _b;
+    _a = $RefreshSig$();
+    _b = $RefreshSig$();
+    function useLocal() { _a(); return useState(0); }
+    _a(useLocal, \`useState{(0)}\`, false);
+    const useLocal2 = _b(() => (_b(), useLocal()), \`useLocal{}\`, false, () => [useLocal]);
+    useLocal(useLocal2());
+}
+_a = App;
+_b(App, \`useLocal{}
+useLocal2{}\`, true);
+$RefreshReg$(_a, "App");
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer should track custom hooks 4`] = `
+var _a;
+var _b;
+_b = $RefreshSig$();
+function App() {
+    _b();
+    useDeclarationNotFound();
+}
+_a = App;
+_b(App, \`useDeclarationNotFound{}\`, true);
+$RefreshReg$(_a, "App");
+
+`;
+
 exports[`ReactFreshTypeScriptTransformer uses custom identifiers for $RefreshReg$ and $RefreshSig$ 1`] = `
 var _a;
 var _b;

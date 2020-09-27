@@ -846,6 +846,132 @@ var _c;
 $RefreshReg$(_c, "A");
 `;
 
+exports[`ReactFreshBabelPlugin should track custom hooks 1`] = `
+var _s = $RefreshSig$();
+
+import { useImport } from 'path';
+import useImportDefault from 'path';
+import { a as useAliasImport } from 'path';
+import ReactUse from 'react-use';
+import * as all from 'react-use';
+
+function App() {
+  _s();
+
+  useImport(useImportDefault(useAliasImport(ReactUse.useTimer(all.useA()))));
+}
+
+_s(App, "useImport{}\\nuseImportDefault{}\\nuseAliasImport{}\\nuseTimer{}\\nuseA{}", false, function () {
+  return [useImport, useImportDefault, useAliasImport, ReactUse.useTimer, all.useA];
+});
+
+_c = App;
+
+var _c;
+
+$RefreshReg$(_c, "App");
+`;
+
+exports[`ReactFreshBabelPlugin should track custom hooks 2`] = `
+var _s = $RefreshSig$(),
+    _s2 = $RefreshSig$(),
+    _s3 = $RefreshSig$();
+
+function useLocal() {
+  _s();
+
+  return useState(0);
+}
+
+_s(useLocal, "useState{(0)}");
+
+const useLocal2 = () => {
+  _s2();
+
+  return useLocal();
+};
+
+_s2(useLocal2, "useLocal{}", false, function () {
+  return [useLocal];
+});
+
+function App() {
+  _s3();
+
+  useLocal(useLocal2());
+}
+
+_s3(App, "useLocal{}\\nuseLocal2{}", false, function () {
+  return [useLocal, useLocal2];
+});
+
+_c = App;
+
+var _c;
+
+$RefreshReg$(_c, "App");
+`;
+
+exports[`ReactFreshBabelPlugin should track custom hooks 3`] = `
+var _s3 = $RefreshSig$();
+
+function App() {
+  _s3();
+
+  var _s = $RefreshSig$(),
+      _s2 = $RefreshSig$();
+
+  function useLocal() {
+    _s();
+
+    return useState(0);
+  }
+
+  _s(useLocal, "useState{(0)}");
+
+  const useLocal2 = () => {
+    _s2();
+
+    return useLocal();
+  };
+
+  _s2(useLocal2, "useLocal{}", false, function () {
+    return [useLocal];
+  });
+
+  useLocal(useLocal2());
+} // hooks in App should not be trackable and force refresh (3rd param be true)
+
+
+_s3(App, "useLocal{}\\nuseLocal2{}", false, function () {
+  return [useLocal, useLocal2];
+});
+
+_c = App;
+
+var _c;
+
+$RefreshReg$(_c, "App");
+`;
+
+exports[`ReactFreshBabelPlugin should track custom hooks 4`] = `
+var _s = $RefreshSig$();
+
+function App() {
+  _s();
+
+  useDeclarationNotFound();
+}
+
+_s(App, "useDeclarationNotFound{}", true);
+
+_c = App;
+
+var _c;
+
+$RefreshReg$(_c, "App");
+`;
+
 exports[`ReactFreshBabelPlugin uses custom identifiers for $RefreshReg$ and $RefreshSig$ 1`] = `
 var _s = import.meta.refreshSig();
 

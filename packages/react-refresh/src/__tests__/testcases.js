@@ -513,6 +513,36 @@ addTestCase(
 }`,
 );
 
+addTestCase('should track custom hooks', [
+  `
+  import {useImport} from 'path'
+  import useImportDefault from 'path'
+  import {a as useAliasImport} from 'path'
+  import ReactUse from 'react-use'
+  import * as all from 'react-use'
+
+  function App() { useImport(useImportDefault(useAliasImport(ReactUse.useTimer(all.useA())))) }
+`,
+  `
+function useLocal() { return useState(0) }
+const useLocal2 = () => useLocal()
+function App() { useLocal(useLocal2()) }
+`,
+  `
+function App() {
+  function useLocal() { return useState(0) }
+  const useLocal2 = () => useLocal()
+  useLocal(useLocal2())
+}
+// hooks in App should not be trackable and force refresh (3rd param be true)
+`,
+  `
+function App() {
+  useDeclarationNotFound()
+}
+`,
+]);
+
 /**
  *
  * @param {string} name Test case name
