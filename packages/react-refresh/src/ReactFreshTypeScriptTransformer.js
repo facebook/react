@@ -259,9 +259,12 @@ export default function(opts = {}, ts = require('typescript')) {
             const {force: forceRefresh, hooks: hooksArray} = needForceRefresh(
               hooksCalls,
             );
-            const requireForceRefreshExpr = ts.createLiteral(
-              forceRefresh || globalRequireForceRefresh,
-            );
+            const requireForceRefresh =
+              forceRefresh || globalRequireForceRefresh;
+            const requireForceRefreshExpr =
+              requireForceRefresh || hooksArray.length
+                ? ts.createLiteral(requireForceRefresh)
+                : undefined;
             const hooksSignatureExpr = ts.createNoSubstitutionTemplateLiteral(
               hooksSignature,
               hooksSignature,

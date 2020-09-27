@@ -10,14 +10,14 @@ _j = $RefreshSig$();
 _k = $RefreshSig$();
 _l = $RefreshSig$();
 export default () => (_f(), useContext(X));
-export const Foo = _g(() => (_g(), useContext(X)), \`useContext{}\`, false);
+export const Foo = _g(() => (_g(), useContext(X)), \`useContext{}\`);
 _a = Foo;
 module.exports = () => (_h(), useContext(X));
-const Bar = _j(() => (_j(), useContext(X)), \`useContext{}\`, false);
+const Bar = _j(() => (_j(), useContext(X)), \`useContext{}\`);
 _b = Bar;
-const Baz = memo(_c = _k(() => (_k(), useContext(X)), \`useContext{}\`, false));
+const Baz = memo(_c = _k(() => (_k(), useContext(X)), \`useContext{}\`));
 _d = Baz;
-const Qux = _l(() => (_l(), (0, useContext(X))), \`useContext{}\`, false);
+const Qux = _l(() => (_l(), (0, useContext(X))), \`useContext{}\`);
 _e = Qux;
 $RefreshReg$(_a, "Foo");
 $RefreshReg$(_b, "Bar");
@@ -58,7 +58,7 @@ export default function App() {
 }
 _a = App;
 _b(App, \`useState{[foo, setFoo](0)}
-useEffect{}\`, false);
+useEffect{}\`);
 $RefreshReg$(_a, "App");
 
 `;
@@ -74,7 +74,7 @@ export const A = React.memo(_a = React.forwardRef(_b = _g((props, ref) => {
     React.useEffect(() => { });
     return <h1 ref={ref}>{foo}</h1>;
 }, \`useState{[foo, setFoo](0)}
-useEffect{}\`, false)));
+useEffect{}\`)));
 _c = A;
 export const B = React.memo(_d = React.forwardRef(_e = _h(function (props, ref) {
     _h();
@@ -82,7 +82,7 @@ export const B = React.memo(_d = React.forwardRef(_e = _h(function (props, ref) 
     React.useEffect(() => { });
     return <h1 ref={ref}>{foo}</h1>;
 }, \`useState{[foo, setFoo](0)}
-useEffect{}\`, false)));
+useEffect{}\`)));
 _f = B;
 function hoc() {
     var _a;
@@ -93,7 +93,7 @@ function hoc() {
         React.useEffect(() => { });
         return <h1 ref={ref}>{foo}</h1>;
     }, \`useState{[foo, setFoo](0)}
-useEffect{}\`, false);
+useEffect{}\`);
 }
 export let C = hoc();
 $RefreshReg$(_b, "A$React.memo$React.forwardRef");
@@ -209,7 +209,7 @@ useFancyEffect{}\`, false, () => [useFancyEffect]);
 const useFancyEffect = _c(() => {
     _c();
     React.useEffect(() => { });
-}, \`useEffect{}\`, false);
+}, \`useEffect{}\`);
 export default function App() {
     _d();
     const bar = useFancyState();
@@ -517,7 +517,7 @@ useState{{ 0: y, 1: z, length }(() => {
     multiple();
     line();
     expression();
-})}\`, false);
+})}\`);
 $RefreshReg$(_a, "StateTest");
 
 `;
@@ -535,7 +535,7 @@ export function RefTest() {
 _a = RefTest;
 _b(RefTest, \`useRef{ref}
 useRef{ref2}
-useRef{{ current }}\`, false);
+useRef{{ current }}\`);
 $RefreshReg$(_a, "RefTest");
 
 `;
@@ -557,7 +557,7 @@ _a = EffectTest;
 _b(EffectTest, \`useEffect{rtn}
 useEffect{}
 useEffect{}
-useEffect{}\`, false);
+useEffect{}\`);
 $RefreshReg$(_a, "EffectTest");
 
 `;
@@ -575,7 +575,7 @@ export function ContextTest() {
 _a = ContextTest;
 _b(ContextTest, \`useContext{ctx}
 useContext{{ val }}
-useContext{}\`, false);
+useContext{}\`);
 $RefreshReg$(_a, "ContextTest");
 
 `;
@@ -591,7 +591,7 @@ export function ReducerTest() {
 }
 _a = ReducerTest;
 _b(ReducerTest, \`useReducer{[state, dispatch](initArg)}
-useReducer{}\`, false);
+useReducer{}\`);
 $RefreshReg$(_a, "ReducerTest");
 
 `;
@@ -607,7 +607,7 @@ export function CallbackTest() {
 }
 _a = CallbackTest;
 _b(CallbackTest, \`useCallback{x}
-useCallback{}\`, false);
+useCallback{}\`);
 $RefreshReg$(_a, "CallbackTest");
 
 `;
@@ -623,7 +623,7 @@ export function MemoTest() {
 }
 _a = MemoTest;
 _b(MemoTest, \`useMemo{x}
-useMemo{}\`, false);
+useMemo{}\`);
 $RefreshReg$(_a, "MemoTest");
 
 `;
@@ -638,12 +638,12 @@ function ImperativeHandle(props, ref) {
     const v = useImperativeHandle(ref, () => ({ a }));
 }
 _a = ImperativeHandle;
-_d(ImperativeHandle, \`useImperativeHandle{v}\`, false);
+_d(ImperativeHandle, \`useImperativeHandle{v}\`);
 ImperativeHandle = forwardRef(ImperativeHandle);
 const HOC = forwardRef(_b = _e(function (props, ref) {
     _e();
     const v = useImperativeHandle(ref, () => ({ a }));
-}, \`useImperativeHandle{v}\`, false));
+}, \`useImperativeHandle{v}\`));
 _c = HOC;
 $RefreshReg$(_a, "ImperativeHandle");
 $RefreshReg$(_b, "HOC$forwardRef");
@@ -657,7 +657,7 @@ var _b;
 _b = $RefreshSig$();
 function LayoutEffect() { _b(); const v = useLayoutEffect(ref); }
 _a = LayoutEffect;
-_b(LayoutEffect, \`useLayoutEffect{v}\`, false);
+_b(LayoutEffect, \`useLayoutEffect{v}\`);
 $RefreshReg$(_a, "LayoutEffect");
 
 `;
@@ -668,7 +668,7 @@ var _b;
 _b = $RefreshSig$();
 function DebugValue() { _b(); const v = useDebugValue(ref, f); }
 _a = DebugValue;
-_b(DebugValue, \`useDebugValue{v}\`, false);
+_b(DebugValue, \`useDebugValue{v}\`);
 $RefreshReg$(_a, "DebugValue");
 
 `;
@@ -716,7 +716,7 @@ _b = $RefreshSig$();
 _c = $RefreshSig$();
 _d = $RefreshSig$();
 function useLocal() { _b(); return useState(0); }
-_b(useLocal, \`useState{(0)}\`, false);
+_b(useLocal, \`useState{(0)}\`);
 const useLocal2 = _c(() => (_c(), useLocal()), \`useLocal{}\`, false, () => [useLocal]);
 function App() { _d(); useLocal(useLocal2()); }
 _a = App;
@@ -736,7 +736,7 @@ function App() {
     _a = $RefreshSig$();
     _b = $RefreshSig$();
     function useLocal() { _a(); return useState(0); }
-    _a(useLocal, \`useState{(0)}\`, false);
+    _a(useLocal, \`useState{(0)}\`);
     const useLocal2 = _b(() => (_b(), useLocal()), \`useLocal{}\`, false, () => [useLocal]);
     useLocal(useLocal2());
 }
@@ -771,7 +771,7 @@ export default function Bar() {
     return <Foo />;
 }
 _a = Bar;
-_b(Bar, \`useContext{}\`, false);
+_b(Bar, \`useContext{}\`);
 ;
 import.meta.refreshReg(_a, "Bar");
 
