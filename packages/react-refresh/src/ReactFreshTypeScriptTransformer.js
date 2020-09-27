@@ -23,7 +23,10 @@ export default function(opts = {}, ts = require('typescript')) {
   return context => {
     return file => {
       if (file.isDeclarationFile) return file;
-      if (!containHooksLikeOrJSX()) return file;
+      const containHooksLikeOrJSX =
+        file.languageVariant === ts.LanguageVariant.JSX ||
+        file.text.includes('use');
+      if (!containHooksLikeOrJSX) return file;
       const globalRequireForceRefresh = file.text.includes('@refresh reset'); // TODO: change to scan comment?
 
       /** @type {Set<string>} */ const topLevelDeclaredName = new Set();
@@ -41,402 +44,415 @@ export default function(opts = {}, ts = require('typescript')) {
         }
       }
       // track all JSX usage and transform non-top level hooks
-      const {nextFile, usedAsJSXElement, hooksSignatureMap} = visitDeep();
+      const {nextFile, usedAsJSXElement, hooksSignatureMap} = visitDeep(
+        file,
+        topLevelDeclaredName,
+        globalRequireForceRefresh,
+      );
       file = nextFile;
 
       return updateStatements(file, statements =>
-        ts.visitLexicalEnvironment(statements, visitTopLevel, context),
+        ts.visitLexicalEnvironment(
+          statements,
+          node => visitTopLevel(usedAsJSXElement, hooksSignatureMap, node),
+          context,
+        ),
       );
+    };
 
-      /** @return {import('typescript').VisitResult<Node>} */
-      // Only visit top level declaration to find possible components
-      function visitTopLevel(/** @type {Node} */ node) {
-        if (ts.isFunctionDeclaration(node)) {
-          if (!node.name || !node.body) return node;
-          return [node, ...registerComponent(node.name)];
-        } else if (ts.isVariableStatement(node)) {
-          /** @type {Statement[]} */ const deferredStatements = [];
-          const nextDeclarationList = ts.visitEachChild(
-            node.declarationList,
-            declaration => {
-              if (!ts.isVariableDeclaration(declaration)) return declaration;
-              const init = declaration.initializer;
-              // Not handle complex declaration. e.g. [a, b] = [() => ..., () => ...]
-              // or declaration without initializer
-              if (!ts.isIdentifier(declaration.name) || !init)
-                return declaration;
-              const declarationUsedAsJSX = usedAsJSXElement.has(
-                declaration.name.text,
-              );
-              if (
-                declarationUsedAsJSX ||
-                isFunctionExpressionLikeOrFunctionDeclaration(init)
-              ) {
-                if (!unwantedComponentLikeDefinition(init)) {
-                  deferredStatements.push(
-                    ...registerComponent(declaration.name),
-                  );
-                }
-                if (
-                  isFunctionExpressionLikeOrFunctionDeclaration(init) &&
-                  hooksSignatureMap.has(init)
-                ) {
-                  return ts.updateVariableDeclaration(
-                    declaration,
-                    declaration.name,
-                    declaration.type,
-                    hooksSignatureMap.get(init),
-                  );
-                }
-                return declaration;
+    /** @return {import('typescript').VisitResult<Node>} */
+    // Only visit top level declaration to find possible components
+    function visitTopLevel(
+      /** @type {ReadonlySet<string>} */ usedAsJSXElement,
+      /** @type {Map<HandledFunction, CallExpression>} */ hooksSignatureMap,
+      /** @type {Node} */ node,
+    ) {
+      if (ts.isFunctionDeclaration(node)) {
+        if (!node.name || !node.body) return node;
+        return [node, ...registerComponent(node.name)];
+      } else if (ts.isVariableStatement(node)) {
+        /** @type {Statement[]} */ const deferredStatements = [];
+        const nextDeclarationList = ts.visitEachChild(
+          node.declarationList,
+          declaration => {
+            if (!ts.isVariableDeclaration(declaration)) return declaration;
+            const init = declaration.initializer;
+            // Not handle complex declaration. e.g. [a, b] = [() => ..., () => ...]
+            // or declaration without initializer
+            if (!ts.isIdentifier(declaration.name) || !init) return declaration;
+            const declarationUsedAsJSX = usedAsJSXElement.has(
+              declaration.name.text,
+            );
+            if (
+              declarationUsedAsJSX ||
+              isFunctionExpressionLikeOrFunctionDeclaration(init)
+            ) {
+              if (!unwantedComponentLikeDefinition(init)) {
+                deferredStatements.push(...registerComponent(declaration.name));
               }
-              if (isHigherOrderComponentLike(init)) {
-                const {registers, call} = registerHigherOrderComponent(
-                  init,
-                  declaration.name.text,
-                );
-                deferredStatements.push(
-                  ...registers,
-                  ...registerComponent(declaration.name),
-                );
+              if (
+                isFunctionExpressionLikeOrFunctionDeclaration(init) &&
+                hooksSignatureMap.has(init)
+              ) {
                 return ts.updateVariableDeclaration(
                   declaration,
                   declaration.name,
                   declaration.type,
-                  call,
+                  hooksSignatureMap.get(init),
                 );
               }
               return declaration;
-            },
-            context,
-          );
-          return [
-            ts.updateVariableStatement(
-              node,
-              node.modifiers,
-              nextDeclarationList,
-            ),
-            ...deferredStatements,
-          ];
-        } else if (ts.isExportAssignment(node)) {
-          if (isHigherOrderComponentLike(node.expression)) {
-            const {registers, call} = registerHigherOrderComponent(
-              node.expression,
-              '%default%',
-            );
-            const temp = createTempVariable();
-            return [
-              ts.updateExportAssignment(
-                node,
-                node.decorators,
-                node.modifiers,
-                ts.createAssignment(temp, call),
-              ),
-              createComponentRegisterCall(temp, '%default%'),
-              ...registers,
-            ];
-          } else if (
-            isFunctionExpressionLikeOrFunctionDeclaration(node.expression)
-          ) {
-            if (hooksSignatureMap.has(node.expression)) {
-              return ts.updateExportAssignment(
-                node,
-                node.decorators,
-                node.modifiers,
-                hooksSignatureMap.get(node.expression),
+            }
+            if (isHigherOrderComponentLike(init)) {
+              const {registers, call} = registerHigherOrderComponent(
+                hooksSignatureMap,
+                init,
+                declaration.name.text,
+              );
+              deferredStatements.push(
+                ...registers,
+                ...registerComponent(declaration.name),
+              );
+              return ts.updateVariableDeclaration(
+                declaration,
+                declaration.name,
+                declaration.type,
+                call,
               );
             }
+            return declaration;
+          },
+          context,
+        );
+        return [
+          ts.updateVariableStatement(node, node.modifiers, nextDeclarationList),
+          ...deferredStatements,
+        ];
+      } else if (ts.isExportAssignment(node)) {
+        if (isHigherOrderComponentLike(node.expression)) {
+          const {registers, call} = registerHigherOrderComponent(
+            hooksSignatureMap,
+            node.expression,
+            '%default%',
+          );
+          const temp = createTempVariable();
+          return [
+            ts.updateExportAssignment(
+              node,
+              node.decorators,
+              node.modifiers,
+              ts.createAssignment(temp, call),
+            ),
+            createComponentRegisterCall(temp, '%default%'),
+            ...registers,
+          ];
+        } else if (
+          isFunctionExpressionLikeOrFunctionDeclaration(node.expression)
+        ) {
+          if (hooksSignatureMap.has(node.expression)) {
+            return ts.updateExportAssignment(
+              node,
+              node.decorators,
+              node.modifiers,
+              hooksSignatureMap.get(node.expression),
+            );
           }
         }
-        return node;
       }
+      return node;
+    }
 
-      function registerComponent(/** @type {Identifier} */ name) {
-        if (!startsWithLowerCase(name.text)) {
-          const temp = createTempVariable();
-          // uniq = name
-          const assignment = ts.createAssignment(
-            temp,
-            ts.createIdentifier(name.text),
-          );
-          // $reg$(uniq, "name")
-          return [
-            ts.createExpressionStatement(assignment),
-            createComponentRegisterCall(temp, name.text),
-          ];
-        }
-        return [];
+    function registerComponent(/** @type {Identifier} */ name) {
+      if (!startsWithLowerCase(name.text)) {
+        const temp = createTempVariable();
+        // uniq = name
+        const assignment = ts.createAssignment(
+          temp,
+          ts.createIdentifier(name.text),
+        );
+        // $reg$(uniq, "name")
+        return [
+          ts.createExpressionStatement(assignment),
+          createComponentRegisterCall(temp, name.text),
+        ];
       }
-      /**
-       * Please call isHOCLike before call this function
-       * @param {CallExpression} callExpr Current visiting
-       * @param {string} nameHint
-       * @returns {{call: CallExpression, registers: Statement[]}}
-       */
-      function registerHigherOrderComponent(callExpr, nameHint) {
-        // Recursive case, if it is x(y(...)), recursive with y(...) to get inner expr
-        const arg0 = callExpr.arguments[0];
-        if (ts.isCallExpression(arg0)) {
-          const tempVar = createTempVariable();
-          const nextNameHint = nameHint + '$' + printNode(callExpr.expression);
-          const {registers, call: innerResult} = registerHigherOrderComponent(
-            arg0,
-            nextNameHint,
-          );
-          return {
-            call: ts.updateCall(callExpr, callExpr.expression, void 0, [
-              ts.createAssignment(tempVar, innerResult),
-              ...callExpr.arguments.slice(1),
-            ]),
-            registers: registers.concat(
-              createComponentRegisterCall(tempVar, nextNameHint),
-            ),
-          };
-        }
-
-        // Base case, it is x(function () {...}) or x(() => ...) or x(Identifier)
-        if (
-          !isFunctionExpressionLikeOrFunctionDeclaration(arg0) &&
-          !ts.isIdentifier(arg0)
-        ) {
-          throw new Error(
-            'This is an error of react-refresh/typescript. Please report this problem: Call isHOC before register it',
-          );
-        }
-        if (ts.isIdentifier(arg0)) return {call: callExpr, registers: []};
+      return [];
+    }
+    /**
+     * Please call isHOCLike before call this function
+     * @param {ReadonlyMap<HandledFunction, CallExpression>} hooksSignatureMap
+     * @param {CallExpression} callExpr Current visiting
+     * @param {string} nameHint
+     * @returns {{call: CallExpression, registers: Statement[]}}
+     */
+    function registerHigherOrderComponent(
+      hooksSignatureMap,
+      callExpr,
+      nameHint,
+    ) {
+      // Recursive case, if it is x(y(...)), recursive with y(...) to get inner expr
+      const arg0 = callExpr.arguments[0];
+      if (ts.isCallExpression(arg0)) {
         const tempVar = createTempVariable();
+        const nextNameHint = nameHint + '$' + printNode(callExpr.expression);
+        const {registers, call: innerResult} = registerHigherOrderComponent(
+          hooksSignatureMap,
+          arg0,
+          nextNameHint,
+        );
         return {
           call: ts.updateCall(callExpr, callExpr.expression, void 0, [
-            ts.createAssignment(tempVar, hooksSignatureMap.get(arg0) || arg0),
+            ts.createAssignment(tempVar, innerResult),
             ...callExpr.arguments.slice(1),
           ]),
-          registers: [
-            createComponentRegisterCall(
-              tempVar,
-              nameHint + '$' + printNode(callExpr.expression),
-            ),
-          ],
+          registers: registers.concat(
+            createComponentRegisterCall(tempVar, nextNameHint),
+          ),
         };
       }
-      function createTempVariable() {
-        return ts.createTempVariable(context.hoistVariableDeclaration);
+
+      // Base case, it is x(function () {...}) or x(() => ...) or x(Identifier)
+      if (
+        !isFunctionExpressionLikeOrFunctionDeclaration(arg0) &&
+        !ts.isIdentifier(arg0)
+      ) {
+        throw new Error(
+          'This is an error of react-refresh/typescript. Please report this problem: Call isHOC before register it',
+        );
       }
-      /**
-       * ! This function does not consider variable shadowing !
-       * @returns {{nextFile: SourceFile, usedAsJSXElement: ReadonlySet<string>, hooksSignatureMap: ReadonlyMap<HandledFunction, CallExpression>}}
-       */
-      function visitDeep() {
-        /** @type {Set<string>} */ const usedAsJSXElement = new Set();
-        /** @type {Map<HandledFunction, CallExpression[]>} */ const containingHooksOldMap = new Map();
-        /** @type {Map<HandledFunction, CallExpression>} */ const hooksSignatureMap = new Map();
-        function trackHooks(
-          /** @type {HandledFunction} */ comp,
-          /** @type {CallExpression} */ call,
-        ) {
-          const arr = containingHooksOldMap.get(comp) || [];
-          arr.push(call);
-          containingHooksOldMap.set(comp, arr);
+      if (ts.isIdentifier(arg0)) return {call: callExpr, registers: []};
+      const tempVar = createTempVariable();
+      return {
+        call: ts.updateCall(callExpr, callExpr.expression, void 0, [
+          ts.createAssignment(tempVar, hooksSignatureMap.get(arg0) || arg0),
+          ...callExpr.arguments.slice(1),
+        ]),
+        registers: [
+          createComponentRegisterCall(
+            tempVar,
+            nameHint + '$' + printNode(callExpr.expression),
+          ),
+        ],
+      };
+    }
+    function createTempVariable() {
+      return ts.createTempVariable(context.hoistVariableDeclaration);
+    }
+    /**
+     * ! This function does not consider variable shadowing !
+     */
+    /**
+     * @param {SourceFile} file
+     * @param {ReadonlySet<string>} topLevelDeclaredName
+     * @param {boolean} globalRequireForceRefresh
+     */
+    function visitDeep(file, topLevelDeclaredName, globalRequireForceRefresh) {
+      /** @type {Set<string>} */ const usedAsJSXElement = new Set();
+      /** @type {Map<HandledFunction, CallExpression[]>} */ const containingHooksOldMap = new Map();
+      /** @type {Map<HandledFunction, CallExpression>} */ const hooksSignatureMap = new Map();
+      function trackHooks(
+        /** @type {HandledFunction} */ comp,
+        /** @type {CallExpression} */ call,
+      ) {
+        const arr = containingHooksOldMap.get(comp) || [];
+        arr.push(call);
+        containingHooksOldMap.set(comp, arr);
+      }
+      function visitor(/** @type {Node} */ node) {
+        // Collect JSX create info
+        // <abc /> or <abc>
+        if (ts.isJsxOpeningLikeElement(node)) {
+          const tag = node.tagName;
+          if (ts.isIdentifier(tag) && !isIntrinsicElement(tag)) {
+            const name = tag.text;
+            if (topLevelDeclaredName.has(name)) usedAsJSXElement.add(name);
+          }
+          // Not tracking other kinds of tagNames like <A.B /> or <A:B />
+        } else if (isJSXConstructingCallExpr(node)) {
+          const arg0 = node.arguments[0];
+          if (arg0 && ts.isIdentifier(arg0)) {
+            const name = arg0.text;
+            if (topLevelDeclaredName.has(name)) usedAsJSXElement.add(name);
+          }
         }
-        function visitor(/** @type {Node} */ node) {
-          // Collect JSX create info
-          // <abc /> or <abc>
-          if (ts.isJsxOpeningLikeElement(node)) {
-            const tag = node.tagName;
-            if (ts.isIdentifier(tag) && !isIntrinsicElement(tag)) {
-              const name = tag.text;
-              if (topLevelDeclaredName.has(name)) usedAsJSXElement.add(name);
-            }
-            // Not tracking other kinds of tagNames like <A.B /> or <A:B />
-          } else if (isJSXConstructingCallExpr(node)) {
-            const arg0 = node.arguments[0];
-            if (arg0 && ts.isIdentifier(arg0)) {
-              const name = arg0.text;
-              if (topLevelDeclaredName.has(name)) usedAsJSXElement.add(name);
-            }
-          }
-          if (isReactHooksCall(node)) {
-            // @ts-ignore
-            /** @type {HandledFunction} */ const parent = findAncestor(
-              node,
-              isFunctionExpressionLikeOrFunctionDeclaration,
-            );
-            if (parent) trackHooks(parent, node);
-          }
-          const oldNode = node;
-          // Collect hooks
-          node = ts.visitEachChild(node, visitor, context);
+        if (isReactHooksCall(node)) {
           // @ts-ignore
-          const hooksCalls = containingHooksOldMap.get(oldNode);
-          if (
-            hooksCalls &&
-            isFunctionExpressionLikeOrFunctionDeclaration(node) &&
-            node.body
-          ) {
-            const hooksTracker = createTempVariable();
-            const createHooksTracker = ts.createExpressionStatement(
-              ts.createBinary(
-                hooksTracker,
-                ts.createToken(ts.SyntaxKind.EqualsToken),
-                ts.createCall(refreshSig, undefined, []),
-              ),
-            );
-            // @ts-ignore
-            context.addInitializationStatement(createHooksTracker);
-            const callTracker = ts.createCall(hooksTracker, void 0, []);
-            const nextBody = ts.isBlock(node.body)
-              ? updateStatements(node.body, r => [
-                  ts.createExpressionStatement(callTracker),
-                  ...r,
-                ])
-              : ts.createComma(callTracker, node.body);
-            // @ts-ignore
-            const newFunction = updateBody(node, nextBody);
-            const hooksSignature = hooksCallsToSignature(hooksCalls);
-            const {force: forceRefresh, hooks: hooksArray} = needForceRefresh(
-              hooksCalls,
-            );
-            const requireForceRefresh =
-              forceRefresh || globalRequireForceRefresh;
-            if (ts.isFunctionDeclaration(newFunction)) {
-              if (newFunction.name) {
-                hooksSignatureMap.set(
-                  newFunction,
-                  createHooksRegisterCall(
-                    hooksTracker,
-                    newFunction.name,
-                    hooksSignature,
-                    requireForceRefresh,
-                    hooksArray,
-                  ),
-                );
-              }
-              node = newFunction;
-            } else {
-              const wrapped = createHooksRegisterCall(
-                hooksTracker,
-                newFunction,
-                hooksSignature,
-                requireForceRefresh,
-                hooksArray,
-              );
-              hooksSignatureMap.set(newFunction, wrapped);
-              node = newFunction;
-              // if it is an inner decl, we can update it safely
-              if (findAncestor(oldNode.parent, ts.isFunctionLike))
-                node = wrapped;
-            }
-          }
-          return updateStatements(node, addSignatureReport);
+          /** @type {HandledFunction} */ const parent = findAncestor(
+            node,
+            isFunctionExpressionLikeOrFunctionDeclaration,
+          );
+          if (parent) trackHooks(parent, node);
         }
-        function addSignatureReport(
-          /** @type {ReadonlyArray<Statement>} */ statements,
+        const oldNode = node;
+        // Collect hooks
+        node = ts.visitEachChild(node, visitor, context);
+        // @ts-ignore
+        const hooksCalls = containingHooksOldMap.get(oldNode);
+        if (
+          hooksCalls &&
+          isFunctionExpressionLikeOrFunctionDeclaration(node) &&
+          node.body
         ) {
-          /** @type {Statement[]} */ const next = [];
-          for (const statement of statements) {
-            // @ts-ignore
-            const signatureReport = hooksSignatureMap.get(statement);
-            next.push(statement);
-            if (signatureReport)
-              next.push(ts.createExpressionStatement(signatureReport));
-          }
-          return next;
-        }
-
-        const nextFile = updateStatements(
-          ts.visitEachChild(file, visitor, context),
-          addSignatureReport,
-        );
-        return {
-          nextFile,
-          usedAsJSXElement,
-          hooksSignatureMap,
-        };
-      }
-      function containHooksLikeOrJSX() {
-        return (
-          file.languageVariant === ts.LanguageVariant.JSX ||
-          file.text.includes('use')
-        );
-      }
-
-      function printNode(/** @type {Node} */ node) {
-        return printer.printNode(ts.EmitHint.Unspecified, node, file);
-      }
-      function hooksCallsToSignature(/** @type {CallExpression[]} */ calls) {
-        const signature = calls
-          .map(x => {
-            let assignTarget = '';
-            if (x.parent && ts.isVariableDeclaration(x.parent)) {
-              assignTarget = printNode(x.parent.name);
+          const hooksTracker = createTempVariable();
+          const createHooksTracker = ts.createExpressionStatement(
+            ts.createBinary(
+              hooksTracker,
+              ts.createToken(ts.SyntaxKind.EqualsToken),
+              ts.createCall(refreshSig, undefined, []),
+            ),
+          );
+          // @ts-ignore
+          context.addInitializationStatement(createHooksTracker);
+          const callTracker = ts.createCall(hooksTracker, void 0, []);
+          const nextBody = ts.isBlock(node.body)
+            ? updateStatements(node.body, r => [
+                ts.createExpressionStatement(callTracker),
+                ...r,
+              ])
+            : ts.createComma(callTracker, node.body);
+          // @ts-ignore
+          const newFunction = updateBody(node, nextBody);
+          const hooksSignature = hooksCallsToSignature(hooksCalls);
+          const {force: forceRefresh, hooks: hooksArray} = needForceRefresh(
+            hooksCalls,
+          );
+          const requireForceRefresh = forceRefresh || globalRequireForceRefresh;
+          if (ts.isFunctionDeclaration(newFunction)) {
+            if (newFunction.name) {
+              hooksSignatureMap.set(
+                newFunction,
+                createHooksRegisterCall(
+                  hooksTracker,
+                  newFunction.name,
+                  hooksSignature,
+                  requireForceRefresh,
+                  hooksArray,
+                ),
+              );
             }
-
-            let hooksName = printNode(x.expression);
-            let shouldCaptureArgs = 0; // bit-wise parameter position
-            if (ts.isPropertyAccessExpression(x.expression)) {
-              const left = x.expression.expression;
-              if (ts.isIdentifier(left) && left.text === 'React') {
-                hooksName = printNode(x.expression.name);
-              }
-            }
-            if (hooksName === 'useState') shouldCaptureArgs = 1 << 0;
-            else if (hooksName === 'useReducer') shouldCaptureArgs = 1 << 1;
-
-            const args = x.arguments.reduce((last, val, index) => {
-              if ((1 << index) & shouldCaptureArgs) {
-                if (last) last += ',';
-                last += printNode(val);
-              }
-              return last;
-            }, '');
-            return `${hooksName}{${assignTarget}${args ? `(${args})` : ''}}`;
-          })
-          .join('\n');
-
-        if (typeof require === 'function' && !opts.emitFullSignatures) {
-          // Prefer to hash when we can (e.g. outside of ASTExplorer).
-          // This makes it deterministically compact, even if there's
-          // e.g. a useState initializer with some code inside.
-          // We also need it for www that has transforms like cx()
-          // that don't understand if something is part of a string.
-          try {
-            return require('crypto')
-              .createHash('sha1')
-              .update(signature)
-              .digest('base64');
-          } catch (e) {}
-        }
-        return signature;
-      }
-      function needForceRefresh(/** @type {CallExpression[]} */ calls) {
-        /** @type {Expression[]} */ const externalHooks = [];
-        return {
-          hooks: externalHooks,
-          force: calls.some(x => {
-            const ownerFunction = findAncestor(
-              x,
-              isFunctionExpressionLikeOrFunctionDeclaration,
+            node = newFunction;
+          } else {
+            const wrapped = createHooksRegisterCall(
+              hooksTracker,
+              newFunction,
+              hooksSignature,
+              requireForceRefresh,
+              hooksArray,
             );
-            const callee = x.expression;
-            if (ts.isPropertyAccessExpression(callee)) {
-              const left = callee.expression;
-              if (ts.isIdentifier(left)) {
-                if (left.text === 'React') return false;
-                const hasDecl = hasDeclarationInScope(ownerFunction, left.text);
-                if (hasDecl) externalHooks.push(callee);
-                return !hasDecl;
-              }
-              return true;
-            } else if (ts.isIdentifier(callee)) {
-              if (isBuiltinHook(callee.text)) return false;
-              const hasDecl = hasDeclarationInScope(ownerFunction, callee.text);
+            hooksSignatureMap.set(newFunction, wrapped);
+            node = newFunction;
+            // if it is an inner decl, we can update it safely
+            if (findAncestor(oldNode.parent, ts.isFunctionLike)) node = wrapped;
+          }
+        }
+        return updateStatements(node, addSignatureReport);
+      }
+      function addSignatureReport(
+        /** @type {ReadonlyArray<Statement>} */ statements,
+      ) {
+        /** @type {Statement[]} */ const next = [];
+        for (const statement of statements) {
+          // @ts-ignore
+          const signatureReport = hooksSignatureMap.get(statement);
+          next.push(statement);
+          if (signatureReport)
+            next.push(ts.createExpressionStatement(signatureReport));
+        }
+        return next;
+      }
+
+      const nextFile = updateStatements(
+        ts.visitEachChild(file, visitor, context),
+        addSignatureReport,
+      );
+      return {
+        nextFile,
+        usedAsJSXElement,
+        hooksSignatureMap,
+      };
+    }
+
+    function printNode(/** @type {Node} */ node) {
+      try {
+        return node.getText();
+      } catch {
+        return '';
+      }
+    }
+    function hooksCallsToSignature(/** @type {CallExpression[]} */ calls) {
+      const signature = calls
+        .map(x => {
+          let assignTarget = '';
+          if (x.parent && ts.isVariableDeclaration(x.parent)) {
+            assignTarget = printNode(x.parent.name);
+          }
+
+          let hooksName = printNode(x.expression);
+          let shouldCaptureArgs = 0; // bit-wise parameter position
+          if (ts.isPropertyAccessExpression(x.expression)) {
+            const left = x.expression.expression;
+            if (ts.isIdentifier(left) && left.text === 'React') {
+              hooksName = printNode(x.expression.name);
+            }
+          }
+          if (hooksName === 'useState') shouldCaptureArgs = 1 << 0;
+          else if (hooksName === 'useReducer') shouldCaptureArgs = 1 << 1;
+
+          const args = x.arguments.reduce((last, val, index) => {
+            if ((1 << index) & shouldCaptureArgs) {
+              if (last) last += ',';
+              last += printNode(val);
+            }
+            return last;
+          }, '');
+          return `${hooksName}{${assignTarget}${args ? `(${args})` : ''}}`;
+        })
+        .join('\n');
+
+      if (typeof require === 'function' && !opts.emitFullSignatures) {
+        // Prefer to hash when we can (e.g. outside of ASTExplorer).
+        // This makes it deterministically compact, even if there's
+        // e.g. a useState initializer with some code inside.
+        // We also need it for www that has transforms like cx()
+        // that don't understand if something is part of a string.
+        try {
+          return require('crypto')
+            .createHash('sha1')
+            .update(signature)
+            .digest('base64');
+        } catch (e) {}
+      }
+      return signature;
+    }
+    function needForceRefresh(/** @type {CallExpression[]} */ calls) {
+      /** @type {Expression[]} */ const externalHooks = [];
+      return {
+        hooks: externalHooks,
+        force: calls.some(x => {
+          const ownerFunction = findAncestor(
+            x,
+            isFunctionExpressionLikeOrFunctionDeclaration,
+          );
+          const callee = x.expression;
+          if (ts.isPropertyAccessExpression(callee)) {
+            const left = callee.expression;
+            if (ts.isIdentifier(left)) {
+              if (left.text === 'React') return false;
+              const hasDecl = hasDeclarationInScope(ownerFunction, left.text);
               if (hasDecl) externalHooks.push(callee);
               return !hasDecl;
             }
             return true;
-          }),
-        };
-      }
-    };
+          } else if (ts.isIdentifier(callee)) {
+            if (isBuiltinHook(callee.text)) return false;
+            const hasDecl = hasDeclarationInScope(ownerFunction, callee.text);
+            if (hasDecl) externalHooks.push(callee);
+            return !hasDecl;
+          }
+          return true;
+        }),
+      };
+    }
   };
 
   /**

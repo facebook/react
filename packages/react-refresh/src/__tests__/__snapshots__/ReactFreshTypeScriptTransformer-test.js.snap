@@ -513,12 +513,12 @@ _b(StateTest, \`useState{a(0)}
 useState{[b](complex + expression.f())}
 useState{[c, d]}
 useState{[[e], f]([0])}
-useState{{ 0: y, 1: z, length }(() => {
-    a();
-    multiple();
-    line();
-    expression();
-})}\`);
+useState{{0: y, 1: z, length}(() => {
+    a()
+    multiple()
+    line()
+    expression()
+  })}\`);
 
 `;
 
@@ -536,7 +536,7 @@ _a = RefTest;
 $RefreshReg$(_a, "RefTest");
 _b(RefTest, \`useRef{ref}
 useRef{ref2}
-useRef{{ current }}\`);
+useRef{{current}}\`);
 
 `;
 
@@ -575,7 +575,7 @@ export function ContextTest() {
 _a = ContextTest;
 $RefreshReg$(_a, "ContextTest");
 _b(ContextTest, \`useContext{ctx}
-useContext{{ val }}
+useContext{{val}}
 useContext{}\`);
 
 `;
