@@ -34,7 +34,10 @@ describe('ReactFreshTypeScriptTransformer', () => {
       const cases = typeof item.cases === 'string' ? [item.cases] : item.cases;
       for (const code of cases) {
         expect(
-          transform(code, item.options && item.options.typescript),
+          transform(code, {
+            emitFullSignatures: true,
+            ...(item.options && item.options.typescript),
+          }),
         ).toMatchSnapshot();
       }
     });
