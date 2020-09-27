@@ -1,9 +1,22 @@
 /**
+ * Create a ReactRefresh transformer for TypeScript.
+ *
+ * This transformer should run in the before stage.
+ *
+ * This transformer requires TypeScript to be at least 3.9.
+ *
  * @param {opt} opts Options
  * @param {ts} ts TypeScript compiler
  * @returns {import('typescript').TransformerFactory<SourceFile>}
  */
 export default function(opts = {}, ts = require('typescript')) {
+  {
+    const [major, minor] = ts.version.split('.');
+    const num = parseInt(major);
+    const msg = 'TypeScript should be at least 3.9';
+    if (num < 3) throw new Error(msg);
+    if (num === 3 && parseInt(minor) !== 9) throw new Error(msg);
+  }
   const printer = ts.createPrinter();
   const refreshReg = ts.createIdentifier(opts.refreshReg || '$RefreshReg$');
   const refreshSig = ts.createIdentifier(opts.refreshSig || '$RefreshSig$');
@@ -27,19 +40,20 @@ export default function(opts = {}, ts = require('typescript')) {
           }
         }
       }
-      const {nextFile, usedJSXElementLike, hooksSignatureMap} = tractJSXUsage(); // ! This is a deep visit to the AST tree
+      // track all JSX usage and transform non-top level hooks
+      const {nextFile, usedAsJSXElement, hooksSignatureMap} = visitDeep();
       file = nextFile;
 
-      context.startLexicalEnvironment();
-      /** @type {Statement[]} */ const nextStatements = [];
-      /** @type {Statement[]} */ const afterStatements = [];
+      return updateStatements(file, () =>
+        ts.visitLexicalEnvironment(file.statements, visitTopLevel, context),
+      );
+
+      /** @return {import('typescript').VisitResult<Node>} */
       // Only visit top level declaration to find possible components
-      for (const node of file.statements) {
-        nextStatements.push(node);
+      function visitTopLevel(/** @type {Node} */ node) {
         if (ts.isFunctionDeclaration(node)) {
-          if (!node.name) continue;
-          registerComponentAfterCurrent(node.name.text);
-          continue;
+          if (!node.name) return node;
+          return [node, ...registerComponentAfterCurrent(node.name.text)];
         } else if (ts.isVariableStatement(node)) {
           /** @type {import('typescript').VariableDeclaration[]} */ const nextDeclarationList = [];
           /** @type {Statement[]} */ const deferredAppendStatements = [];
@@ -51,13 +65,12 @@ export default function(opts = {}, ts = require('typescript')) {
             if (!ts.isIdentifier(declaration.name) || !init) continue;
             const variable = declaration.name.text;
             if (
-              usedJSXElementLike.has(variable) ||
+              usedAsJSXElement.has(variable) ||
               isFunctionExpressionLikeOrFunctionDeclaration(init)
             ) {
               if (!unwantedComponentLikeDefinition(init))
-                registerComponentAfterCurrent(
-                  variable,
-                  deferredAppendStatements,
+                deferredAppendStatements.push(
+                  ...registerComponentAfterCurrent(variable),
                 );
               if (
                 isFunctionExpressionLikeOrFunctionDeclaration(init) &&
@@ -77,20 +90,26 @@ export default function(opts = {}, ts = require('typescript')) {
             }
             if (isHOCLike(init)) {
               nextDeclarationList.pop(); // replace the decl
+              const {append, expr} = registerHigherOrderFunction(
+                init,
+                variable,
+              );
               nextDeclarationList.push(
                 ts.updateVariableDeclaration(
                   declaration,
                   declaration.name,
                   declaration.type,
-                  registerHigherOrderFunction(init, variable),
+                  expr,
                 ),
               );
-              registerComponentAfterCurrent(variable, deferredAppendStatements);
+              deferredAppendStatements.push(
+                ...append,
+                ...registerComponentAfterCurrent(variable),
+              );
               continue;
             }
           }
-          nextStatements.pop();
-          nextStatements.push(
+          return [
             ts.updateVariableStatement(
               node,
               node.modifiers,
@@ -100,52 +119,41 @@ export default function(opts = {}, ts = require('typescript')) {
               ),
             ),
             ...deferredAppendStatements,
-          );
+          ];
         } else if (ts.isExportAssignment(node)) {
           if (isHOCLike(node.expression)) {
-            const inner = registerHigherOrderFunction(
+            const {append, expr} = registerHigherOrderFunction(
               node.expression,
               '%default%',
             );
             const temp = createTempVariable();
-            afterStatements.push(createRegister(temp, '%default%'));
-            nextStatements.pop();
-            nextStatements.push(
+            return [
               ts.updateExportAssignment(
                 node,
                 node.decorators,
                 node.modifiers,
-                ts.createAssignment(temp, inner),
+                ts.createAssignment(temp, expr),
               ),
-            );
-            continue;
+              createRegister(temp, '%default%'),
+              ...append,
+            ];
           } else if (
             isFunctionExpressionLikeOrFunctionDeclaration(node.expression)
           ) {
             if (hooksSignatureMap.has(node.expression)) {
-              nextStatements.pop();
-              nextStatements.push(
-                ts.updateExportAssignment(
-                  node,
-                  node.decorators,
-                  node.modifiers,
-                  hooksSignatureMap.get(node.expression),
-                ),
+              return ts.updateExportAssignment(
+                node,
+                node.decorators,
+                node.modifiers,
+                hooksSignatureMap.get(node.expression),
               );
             }
           }
         }
+        return node;
       }
-      return updateStatements(file, () =>
-        (context.endLexicalEnvironment() || []).concat(
-          nextStatements.concat(afterStatements),
-        ),
-      );
 
-      function registerComponentAfterCurrent(
-        /** @type {string} */ name,
-        statements = nextStatements,
-      ) {
+      function registerComponentAfterCurrent(/** @type {string} */ name) {
         if (!startsWithLowerCase(name)) {
           const uniq = createTempVariable();
           // uniq = each
@@ -153,16 +161,20 @@ export default function(opts = {}, ts = require('typescript')) {
             uniq,
             ts.createIdentifier(name),
           );
-          statements.push(ts.createExpressionStatement(assignment));
           // $reg$(uniq, "each")
-          afterStatements.push(createRegister(uniq, name));
+          // afterStatements.push();
+          return [
+            ts.createExpressionStatement(assignment),
+            createRegister(uniq, name),
+          ];
         }
+        return [];
       }
       /**
        * Please call isHOCLike before call this function
        * @param {CallExpression} callExpr Current visiting
        * @param {string} nameHint
-       * @returns {import('typescript').BinaryExpression | CallExpression}
+       * @returns {{expr: import('typescript').BinaryExpression | CallExpression, append: Statement[]}}
        */
       function registerHigherOrderFunction(callExpr, nameHint) {
         // Recursive case, if it is x(y(...)), recursive with y(...) to get inner expr
@@ -170,12 +182,14 @@ export default function(opts = {}, ts = require('typescript')) {
         if (ts.isCallExpression(arg)) {
           const tempVar = createTempVariable();
           const nextNameHint = nameHint + '$' + printNode(callExpr.expression);
-          const innerResult = registerHigherOrderFunction(arg, nextNameHint);
-          afterStatements.push(createRegister(tempVar, nextNameHint));
-          return ts.updateCall(callExpr, callExpr.expression, void 0, [
-            ts.createAssignment(tempVar, innerResult),
-            ...callExpr.arguments.slice(1),
-          ]);
+          const {append, expr} = registerHigherOrderFunction(arg, nextNameHint);
+          return {
+            expr: ts.updateCall(callExpr, callExpr.expression, void 0, [
+              ts.createAssignment(tempVar, expr),
+              ...callExpr.arguments.slice(1),
+            ]),
+            append: append.concat(createRegister(tempVar, nextNameHint)),
+          };
         }
 
         // Base case, it is x(function () {...}) or x(() => ...) or x(Identifier)
@@ -184,18 +198,20 @@ export default function(opts = {}, ts = require('typescript')) {
           !ts.isIdentifier(arg)
         )
           throw new Error('Please call isHOCLike first');
-        if (ts.isIdentifier(arg)) return callExpr;
+        if (ts.isIdentifier(arg)) return {expr: callExpr, append: []};
         const tempVar = createTempVariable();
-        afterStatements.push(
-          createRegister(
-            tempVar,
-            nameHint + '$' + printNode(callExpr.expression),
-          ),
-        );
-        return ts.updateCall(callExpr, callExpr.expression, void 0, [
-          ts.createAssignment(tempVar, hooksSignatureMap.get(arg) || arg),
-          ...callExpr.arguments.slice(1),
-        ]);
+        return {
+          expr: ts.updateCall(callExpr, callExpr.expression, void 0, [
+            ts.createAssignment(tempVar, hooksSignatureMap.get(arg) || arg),
+            ...callExpr.arguments.slice(1),
+          ]),
+          append: [
+            createRegister(
+              tempVar,
+              nameHint + '$' + printNode(callExpr.expression),
+            ),
+          ],
+        };
       }
       function createTempVariable() {
         return ts.createTempVariable(context.hoistVariableDeclaration);
@@ -203,8 +219,8 @@ export default function(opts = {}, ts = require('typescript')) {
       /**
        * ! This function does not consider variable shadowing !
        */
-      function tractJSXUsage() {
-        /** @type {Set<string>} */ const usedJSXElementLike = new Set();
+      function visitDeep() {
+        /** @type {Set<string>} */ const usedAsJSXElement = new Set();
         /** @type {Map<HandledFunction, CallExpression[]>} */ const containingHooksOldMap = new Map();
         /** @type {Map<HandledFunction, CallExpression>} */ const hooksSignatureMap = new Map();
         function trackHooks(
@@ -222,14 +238,14 @@ export default function(opts = {}, ts = require('typescript')) {
             const tag = node.tagName;
             if (ts.isIdentifier(tag) && !isIntrinsicElement(tag)) {
               const name = tag.text;
-              if (topLevelDeclaredName.has(name)) usedJSXElementLike.add(name);
+              if (topLevelDeclaredName.has(name)) usedAsJSXElement.add(name);
             }
             // Not tracking other kinds of tagNames like <A.B /> or <A:B />
           } else if (isJSXConstructingCallExpr(node)) {
             const arg0 = node.arguments[0];
             if (arg0 && ts.isIdentifier(arg0)) {
               const name = arg0.text;
-              if (topLevelDeclaredName.has(name)) usedJSXElementLike.add(name);
+              if (topLevelDeclaredName.has(name)) usedAsJSXElement.add(name);
             }
           }
           if (isReactHooksCall(node)) {
@@ -347,7 +363,7 @@ export default function(opts = {}, ts = require('typescript')) {
         );
         return {
           nextFile,
-          usedJSXElementLike,
+          usedAsJSXElement,
           hooksSignatureMap,
         };
       }

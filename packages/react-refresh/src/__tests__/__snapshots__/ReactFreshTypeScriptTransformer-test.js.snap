@@ -12,17 +12,17 @@ _l = $RefreshSig$();
 export default _f(() => (_f(), useContext(X)), \`useContext{}\`);
 export const Foo = _g(() => (_g(), useContext(X)), \`useContext{}\`);
 _a = Foo;
+$RefreshReg$(_a, "Foo");
 module.exports = () => (_h(), useContext(X));
 const Bar = _j(() => (_j(), useContext(X)), \`useContext{}\`);
 _b = Bar;
+$RefreshReg$(_b, "Bar");
 const Baz = memo(_c = _k(() => (_k(), useContext(X)), \`useContext{}\`));
+$RefreshReg$(_c, "Baz$memo");
 _d = Baz;
+$RefreshReg$(_d, "Baz");
 const Qux = _l(() => (_l(), (0, useContext(X))), \`useContext{}\`);
 _e = Qux;
-$RefreshReg$(_a, "Foo");
-$RefreshReg$(_b, "Bar");
-$RefreshReg$(_c, "Baz$memo");
-$RefreshReg$(_d, "Baz");
 $RefreshReg$(_e, "Qux");
 
 `;
@@ -57,9 +57,9 @@ export default function App() {
     return <h1>{foo}</h1>;
 }
 _a = App;
+$RefreshReg$(_a, "App");
 _b(App, \`useState{[foo, setFoo](0)}
 useEffect{}\`);
-$RefreshReg$(_a, "App");
 
 `;
 
@@ -75,7 +75,10 @@ export const A = React.memo(_a = React.forwardRef(_b = _g((props, ref) => {
     return <h1 ref={ref}>{foo}</h1>;
 }, \`useState{[foo, setFoo](0)}
 useEffect{}\`)));
+$RefreshReg$(_b, "A$React.memo$React.forwardRef");
+$RefreshReg$(_a, "A$React.memo");
 _c = A;
+$RefreshReg$(_c, "A");
 export const B = React.memo(_d = React.forwardRef(_e = _h(function (props, ref) {
     _h();
     const [foo, setFoo] = useState(0);
@@ -83,7 +86,10 @@ export const B = React.memo(_d = React.forwardRef(_e = _h(function (props, ref) 
     return <h1 ref={ref}>{foo}</h1>;
 }, \`useState{[foo, setFoo](0)}
 useEffect{}\`)));
+$RefreshReg$(_e, "B$React.memo$React.forwardRef");
+$RefreshReg$(_d, "B$React.memo");
 _f = B;
+$RefreshReg$(_f, "B");
 function hoc() {
     var _a;
     _a = $RefreshSig$();
@@ -96,12 +102,6 @@ function hoc() {
 useEffect{}\`);
 }
 export let C = hoc();
-$RefreshReg$(_b, "A$React.memo$React.forwardRef");
-$RefreshReg$(_a, "A$React.memo");
-$RefreshReg$(_c, "A");
-$RefreshReg$(_e, "B$React.memo$React.forwardRef");
-$RefreshReg$(_d, "B$React.memo");
-$RefreshReg$(_f, "B");
 
 `;
 
@@ -129,11 +129,11 @@ useFancyEffect{}\`, true);
     return <h1>{bar}{baz}</h1>;
 }
 _a = App;
+$RefreshReg$(_a, "App");
 _b(App, \`useFancyState{bar}
 FancyHook.useThing{baz}
 useState{}
 useThePlatform{}\`, true);
-$RefreshReg$(_a, "App");
 
 `;
 
@@ -167,10 +167,10 @@ let C = () => () => {
     return <h1>Hi</h1>;
 };
 _a = C;
+$RefreshReg$(_a, "C");
 let D = bar && (() => {
     return <h1>Hi</h1>;
 });
-$RefreshReg$(_a, "C");
 
 `;
 
@@ -179,11 +179,11 @@ var _a;
 const throttledAlert = throttle(_a = function () {
     alert('Hi');
 });
+$RefreshReg$(_a, "throttledAlert$throttle");
 const TooComplex = (function () { return hello; })(() => { });
 if (cond) {
     const Foo = thing(() => { });
 }
-$RefreshReg$(_a, "throttledAlert$throttle");
 
 `;
 
@@ -216,8 +216,8 @@ export default function App() {
     return <h1>{bar}</h1>;
 }
 _a = App;
-_d(App, \`useFancyState{bar}\`, false, () => [useFancyState]);
 $RefreshReg$(_a, "App");
+_d(App, \`useFancyState{bar}\`, false, () => [useFancyState]);
 
 `;
 
@@ -232,8 +232,8 @@ export default function App() {
     return <h1>{bar}</h1>;
 }
 _a = App;
-_b(App, \`useFancyState{bar}\`, false, () => [useFancyState]);
 $RefreshReg$(_a, "App");
+_b(App, \`useFancyState{bar}\`, false, () => [useFancyState]);
 
 `;
 
@@ -250,14 +250,14 @@ function Foo() {
     return <h1>Hi</h1>;
 }
 _a = Foo;
+$RefreshReg$(_a, "Foo");
 export default _b = hoc(Foo);
+$RefreshReg$(_b, "%default%");
 export const A = hoc(Foo);
 _c = A;
+$RefreshReg$(_c, "A");
 const B = hoc(Foo);
 _d = B;
-$RefreshReg$(_a, "Foo");
-$RefreshReg$(_b, "%default%");
-$RefreshReg$(_c, "A");
 $RefreshReg$(_d, "B");
 
 `;
@@ -269,12 +269,16 @@ import Store from './Store';
 Store.subscribe();
 const Header = styled.div \`color: red\`;
 _a = Header;
+$RefreshReg$(_a, "Header");
 const StyledFactory1 = styled('div') \`color: hotpink\`;
 _b = StyledFactory1;
+$RefreshReg$(_b, "StyledFactory1");
 const StyledFactory2 = styled('div')({ color: 'hotpink' });
 _c = StyledFactory2;
+$RefreshReg$(_c, "StyledFactory2");
 const StyledFactory3 = styled(A)({ color: 'hotpink' });
 _d = StyledFactory3;
+$RefreshReg$(_d, "StyledFactory3");
 const FunnyFactory = funny.factory \`\`;
 let Alias1 = A;
 let Alias2 = A.Foo;
@@ -283,17 +287,13 @@ function Foo() {
     return (<div><A /><B /><StyledFactory1 /><StyledFactory2 /><StyledFactory3 /><Alias1 /><Alias2 /><Header /><Dict.X /></div>);
 }
 _e = Foo;
+$RefreshReg$(_e, "Foo");
 const B = hoc(A);
 _f = B;
+$RefreshReg$(_f, "B");
 // This is currently registered as a false positive:
 const NotAComponent = wow(A);
 _g = NotAComponent;
-$RefreshReg$(_a, "Header");
-$RefreshReg$(_b, "StyledFactory1");
-$RefreshReg$(_c, "StyledFactory2");
-$RefreshReg$(_d, "StyledFactory3");
-$RefreshReg$(_e, "Foo");
-$RefreshReg$(_f, "B");
 $RefreshReg$(_g, "NotAComponent");
 
 `;
@@ -305,12 +305,16 @@ import Store from './Store';
 Store.subscribe();
 const Header = styled.div \`color: red\`;
 _a = Header;
+$RefreshReg$(_a, "Header");
 const StyledFactory1 = styled('div') \`color: hotpink\`;
 _b = StyledFactory1;
+$RefreshReg$(_b, "StyledFactory1");
 const StyledFactory2 = styled('div')({ color: 'hotpink' });
 _c = StyledFactory2;
+$RefreshReg$(_c, "StyledFactory2");
 const StyledFactory3 = styled(A)({ color: 'hotpink' });
 _d = StyledFactory3;
+$RefreshReg$(_d, "StyledFactory3");
 const FunnyFactory = funny.factory \`\`;
 let Alias1 = A;
 let Alias2 = A.Foo;
@@ -329,18 +333,14 @@ function Foo() {
     ];
 }
 _e = Foo;
+$RefreshReg$(_e, "Foo");
 React.createContext(Store);
 const B = hoc(A);
 _f = B;
+$RefreshReg$(_f, "B");
 // This is currently registered as a false positive:
 const NotAComponent = wow(A);
 _g = NotAComponent;
-$RefreshReg$(_a, "Header");
-$RefreshReg$(_b, "StyledFactory1");
-$RefreshReg$(_c, "StyledFactory2");
-$RefreshReg$(_d, "StyledFactory3");
-$RefreshReg$(_e, "Foo");
-$RefreshReg$(_f, "B");
 $RefreshReg$(_g, "NotAComponent");
 
 `;
@@ -350,22 +350,22 @@ var _a, _b, _c, _d, _e, _f, _g, _h;
 const A = forwardRef(_a = function () {
     return <h1>Foo</h1>;
 });
+$RefreshReg$(_a, "A$forwardRef");
 _b = A;
+$RefreshReg$(_b, "A");
 const B = memo(_c = React.forwardRef(_d = () => {
     return <h1>Foo</h1>;
 }));
+$RefreshReg$(_d, "B$memo$React.forwardRef");
+$RefreshReg$(_c, "B$memo");
 _e = B;
+$RefreshReg$(_e, "B");
 export default _h = React.memo(_f = forwardRef(_g = (props, ref) => {
     return <h1>Foo</h1>;
 }));
-$RefreshReg$(_a, "A$forwardRef");
-$RefreshReg$(_b, "A");
-$RefreshReg$(_d, "B$memo$React.forwardRef");
-$RefreshReg$(_c, "B$memo");
-$RefreshReg$(_e, "B");
+$RefreshReg$(_h, "%default%");
 $RefreshReg$(_g, "%default%$React.memo$forwardRef");
 $RefreshReg$(_f, "%default%$React.memo");
-$RefreshReg$(_h, "%default%");
 
 `;
 
@@ -374,9 +374,9 @@ var _a, _b, _c;
 export default _c = React.memo(_a = forwardRef(_b = function (props, ref) {
     return <h1>Foo</h1>;
 }));
+$RefreshReg$(_c, "%default%");
 $RefreshReg$(_b, "%default%$React.memo$forwardRef");
 $RefreshReg$(_a, "%default%$React.memo");
-$RefreshReg$(_c, "%default%");
 
 `;
 
@@ -385,9 +385,9 @@ var _a, _b, _c;
 export default _c = React.memo(_a = forwardRef(_b = function Named(props, ref) {
     return <h1>Foo</h1>;
 }));
+$RefreshReg$(_c, "%default%");
 $RefreshReg$(_b, "%default%$React.memo$forwardRef");
 $RefreshReg$(_a, "%default%$React.memo");
-$RefreshReg$(_c, "%default%");
 
 `;
 
@@ -398,21 +398,21 @@ export function Hello() {
     return <h1 onClick={handleClick}>Hi</h1>;
 }
 _a = Hello;
+$RefreshReg$(_a, "Hello");
 export default function Bar() {
     return <Hello />;
 }
 _b = Bar;
+$RefreshReg$(_b, "Bar");
 function Baz() {
     return <h1>OK</h1>;
 }
 _c = Baz;
+$RefreshReg$(_c, "Baz");
 const NotAComp = 'hi';
 export { Baz, NotAComp };
 export function sum() { }
 export const Bad = 42;
-$RefreshReg$(_a, "Hello");
-$RefreshReg$(_b, "Bar");
-$RefreshReg$(_c, "Baz");
 
 `;
 
@@ -423,15 +423,15 @@ export const Hello = () => {
     return <h1 onClick={handleClick}>Hi</h1>;
 };
 _a = Hello;
+$RefreshReg$(_a, "Hello");
 export let Bar = (props) => <Hello />;
 _b = Bar;
+$RefreshReg$(_b, "Bar");
 export default () => {
     // This one should be ignored.
     // You should name your components.
     return <Hello />;
 };
-$RefreshReg$(_a, "Hello");
-$RefreshReg$(_b, "Bar");
 
 `;
 
@@ -442,11 +442,11 @@ function Hello() {
     return <h1 onClick={handleClick}>Hi</h1>;
 }
 _a = Hello;
+$RefreshReg$(_a, "Hello");
 function Bar() {
     return <Hello />;
 }
 _b = Bar;
-$RefreshReg$(_a, "Hello");
 $RefreshReg$(_b, "Bar");
 
 `;
@@ -458,16 +458,16 @@ let Hello = () => {
     return <h1 onClick={handleClick}>Hi</h1>;
 };
 _a = Hello;
+$RefreshReg$(_a, "Hello");
 const Bar = () => {
     return <Hello />;
 };
 _b = Bar;
+$RefreshReg$(_b, "Bar");
 var Baz = () => <div />;
 _c = Baz;
-var sum = () => { };
-$RefreshReg$(_a, "Hello");
-$RefreshReg$(_b, "Bar");
 $RefreshReg$(_c, "Baz");
+var sum = () => { };
 
 `;
 
@@ -478,15 +478,15 @@ let Hello = function () {
     return <h1 onClick={handleClick}>Hi</h1>;
 };
 _a = Hello;
+$RefreshReg$(_a, "Hello");
 const Bar = function Baz() {
     return <Hello />;
 };
 _b = Bar;
+$RefreshReg$(_b, "Bar");
 function sum() { }
 let Baz = 10;
 var Qux;
-$RefreshReg$(_a, "Hello");
-$RefreshReg$(_b, "Bar");
 
 `;
 
@@ -508,6 +508,7 @@ export function StateTest() {
     });
 }
 _a = StateTest;
+$RefreshReg$(_a, "StateTest");
 _b(StateTest, \`useState{a(0)}
 useState{[b](complex + expression.f())}
 useState{[c, d]}
@@ -518,7 +519,6 @@ useState{{ 0: y, 1: z, length }(() => {
     line();
     expression();
 })}\`);
-$RefreshReg$(_a, "StateTest");
 
 `;
 
@@ -533,10 +533,10 @@ export function RefTest() {
     const { current } = React.useRef();
 }
 _a = RefTest;
+$RefreshReg$(_a, "RefTest");
 _b(RefTest, \`useRef{ref}
 useRef{ref2}
 useRef{{ current }}\`);
-$RefreshReg$(_a, "RefTest");
 
 `;
 
@@ -554,11 +554,11 @@ export function EffectTest() {
     useEffect(() => (sideEffect(), () => undo()));
 }
 _a = EffectTest;
+$RefreshReg$(_a, "EffectTest");
 _b(EffectTest, \`useEffect{rtn}
 useEffect{}
 useEffect{}
 useEffect{}\`);
-$RefreshReg$(_a, "EffectTest");
 
 `;
 
@@ -573,10 +573,10 @@ export function ContextTest() {
     useContext(expr3);
 }
 _a = ContextTest;
+$RefreshReg$(_a, "ContextTest");
 _b(ContextTest, \`useContext{ctx}
 useContext{{ val }}
 useContext{}\`);
-$RefreshReg$(_a, "ContextTest");
 
 `;
 
@@ -590,9 +590,9 @@ export function ReducerTest() {
     useReducer();
 }
 _a = ReducerTest;
+$RefreshReg$(_a, "ReducerTest");
 _b(ReducerTest, \`useReducer{[state, dispatch](initArg)}
 useReducer{}\`);
-$RefreshReg$(_a, "ReducerTest");
 
 `;
 
@@ -606,9 +606,9 @@ export function CallbackTest() {
     const [p] = [useCallback(a, [a, b])];
 }
 _a = CallbackTest;
+$RefreshReg$(_a, "CallbackTest");
 _b(CallbackTest, \`useCallback{x}
 useCallback{}\`);
-$RefreshReg$(_a, "CallbackTest");
 
 `;
 
@@ -622,9 +622,9 @@ export function MemoTest() {
     const [p] = [useMemo(a, [a, b])];
 }
 _a = MemoTest;
+$RefreshReg$(_a, "MemoTest");
 _b(MemoTest, \`useMemo{x}
 useMemo{}\`);
-$RefreshReg$(_a, "MemoTest");
 
 `;
 
@@ -638,15 +638,15 @@ function ImperativeHandle(props, ref) {
     const v = useImperativeHandle(ref, () => ({ a }));
 }
 _a = ImperativeHandle;
+$RefreshReg$(_a, "ImperativeHandle");
 _d(ImperativeHandle, \`useImperativeHandle{v}\`);
 ImperativeHandle = forwardRef(ImperativeHandle);
 const HOC = forwardRef(_b = _e(function (props, ref) {
     _e();
     const v = useImperativeHandle(ref, () => ({ a }));
 }, \`useImperativeHandle{v}\`));
-_c = HOC;
-$RefreshReg$(_a, "ImperativeHandle");
 $RefreshReg$(_b, "HOC$forwardRef");
+_c = HOC;
 $RefreshReg$(_c, "HOC");
 
 `;
@@ -657,8 +657,8 @@ var _b;
 _b = $RefreshSig$();
 function LayoutEffect() { _b(); const v = useLayoutEffect(ref); }
 _a = LayoutEffect;
-_b(LayoutEffect, \`useLayoutEffect{v}\`);
 $RefreshReg$(_a, "LayoutEffect");
+_b(LayoutEffect, \`useLayoutEffect{v}\`);
 
 `;
 
@@ -668,8 +668,8 @@ var _b;
 _b = $RefreshSig$();
 function DebugValue() { _b(); const v = useDebugValue(ref, f); }
 _a = DebugValue;
-_b(DebugValue, \`useDebugValue{v}\`);
 $RefreshReg$(_a, "DebugValue");
+_b(DebugValue, \`useDebugValue{v}\`);
 
 `;
 
@@ -683,9 +683,9 @@ function A() {
     useCustom();
 }
 _a = A;
+$RefreshReg$(_a, "A");
 _b(A, \`useCustom{[x]}
 useCustom{}\`, true);
-$RefreshReg$(_a, "A");
 
 `;
 
@@ -700,12 +700,12 @@ import ReactUse from 'react-use';
 import * as all from 'react-use';
 function App() { _b(); useImport(useImportDefault(useAliasImport(ReactUse.useTimer(all.useA())))); }
 _a = App;
+$RefreshReg$(_a, "App");
 _b(App, \`useImport{}
 useImportDefault{}
 useAliasImport{}
 ReactUse.useTimer{}
 all.useA{}\`, false, () => [useImport, useImportDefault, useAliasImport, ReactUse.useTimer, all.useA]);
-$RefreshReg$(_a, "App");
 
 `;
 
@@ -720,9 +720,9 @@ _b(useLocal, \`useState{(0)}\`);
 const useLocal2 = _c(() => (_c(), useLocal()), \`useLocal{}\`, false, () => [useLocal]);
 function App() { _d(); useLocal(useLocal2()); }
 _a = App;
+$RefreshReg$(_a, "App");
 _d(App, \`useLocal{}
 useLocal2{}\`, false, () => [useLocal, useLocal2]);
-$RefreshReg$(_a, "App");
 
 `;
 
@@ -741,9 +741,9 @@ function App() {
     useLocal(useLocal2());
 }
 _a = App;
+$RefreshReg$(_a, "App");
 _b(App, \`useLocal{}
 useLocal2{}\`, true);
-$RefreshReg$(_a, "App");
 
 `;
 
@@ -756,8 +756,8 @@ function App() {
     useDeclarationNotFound();
 }
 _a = App;
-_b(App, \`useDeclarationNotFound{}\`, true);
 $RefreshReg$(_a, "App");
+_b(App, \`useDeclarationNotFound{}\`, true);
 
 `;
 
@@ -771,9 +771,9 @@ export default function Bar() {
     return <Foo />;
 }
 _a = Bar;
+import.meta.refreshReg(_a, "Bar");
 _b(Bar, \`useContext{}\`);
 ;
-import.meta.refreshReg(_a, "Bar");
 
 `;
 
@@ -783,7 +783,7 @@ function Hello() {
     return <h1>Hi</h1>;
 }
 _a = Hello;
-Hello = connect(Hello);
 $RefreshReg$(_a, "Hello");
+Hello = connect(Hello);
 
 `;
