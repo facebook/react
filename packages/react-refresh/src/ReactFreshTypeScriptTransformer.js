@@ -460,7 +460,7 @@ export default function(opts = {}, ts = require('typescript')) {
           if (namedImport.name.text === name) return true;
         } else if (namedImport && ts.isNamedImports(namedImport)) {
           const hasBinding = namedImport.elements.some(
-            x => (x.propertyName || x.name).text === name,
+            x => x.name.text === name,
           );
           if (hasBinding) return true;
         }

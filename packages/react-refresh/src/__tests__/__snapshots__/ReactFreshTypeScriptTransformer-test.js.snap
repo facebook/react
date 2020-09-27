@@ -704,7 +704,7 @@ _b(App, \`useImport{}
 useImportDefault{}
 useAliasImport{}
 ReactUse.useTimer{}
-all.useA{}\`, true, () => [useImport, useImportDefault]);
+all.useA{}\`, false, () => [useImport, useImportDefault, useAliasImport, ReactUse.useTimer, all.useA]);
 $RefreshReg$(_a, "App");
 
 `;
