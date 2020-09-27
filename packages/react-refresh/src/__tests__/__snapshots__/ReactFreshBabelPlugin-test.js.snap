@@ -771,7 +771,7 @@ function ImperativeHandle(props, ref) {
   }));
 }
 
-_s(ImperativeHandle, "useImperativeHandle{v}", true);
+_s(ImperativeHandle, "useImperativeHandle{v}");
 
 _c = ImperativeHandle;
 ImperativeHandle = forwardRef(ImperativeHandle);
@@ -781,7 +781,7 @@ const HOC = forwardRef(_c2 = _s2(function (props, ref) {
   const v = useImperativeHandle(ref, () => ({
     a
   }));
-}, "useImperativeHandle{v}", true));
+}, "useImperativeHandle{v}"));
 _c3 = HOC;
 
 var _c, _c2, _c3;

@@ -11,7 +11,7 @@ export default function(opts = {}, ts = require('typescript')) {
     return file => {
       if (file.isDeclarationFile) return file;
       if (!containHooksLikeOrJSX()) return file;
-      const globalDisableForceRefresh = file.text.includes('@refresh reset'); // TODO: change to scan comment?
+      const globalRequireForceRefresh = file.text.includes('@refresh reset'); // TODO: change to scan comment?
 
       /** @type {Set<string>} */ const topLevelDeclaredName = new Set();
       // Collect top level local declarations
@@ -256,28 +256,52 @@ export default function(opts = {}, ts = require('typescript')) {
             // @ts-ignore
             const newFunction = updateBody(node, nextBody);
             const hooksSignature = hooksCallsToSignature(hooksCalls);
+            const {force: forceRefresh, hooks: hooksArray} = needForceRefresh(
+              hooksCalls,
+            );
+            const requireForceRefreshExpr = ts.createLiteral(
+              forceRefresh || globalRequireForceRefresh,
+            );
+            const hooksSignatureExpr = ts.createNoSubstitutionTemplateLiteral(
+              hooksSignature,
+              hooksSignature,
+            );
+            const hooksTrackExpr = hooksArray.length
+              ? ts.createArrowFunction(
+                  void 0,
+                  void 0,
+                  [],
+                  void 0,
+                  ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+                  ts.createArrayLiteral(hooksArray),
+                )
+              : undefined;
             if (ts.isFunctionDeclaration(newFunction)) {
               if (newFunction.name) {
-                const wrapped = ts.createCall(hooksTracker, void 0, [
-                  newFunction.name,
-                  ts.createNoSubstitutionTemplateLiteral(
-                    hooksSignature,
-                    hooksSignature,
-                  ),
-                  ts.createLiteral(globalDisableForceRefresh),
-                ]);
+                const wrapped = ts.createCall(
+                  hooksTracker,
+                  void 0,
+                  [
+                    newFunction.name,
+                    hooksSignatureExpr,
+                    requireForceRefreshExpr,
+                    hooksTrackExpr,
+                  ].filter(Boolean),
+                );
                 hooksSignatureMap.set(newFunction, wrapped);
               }
               node = newFunction;
             } else {
-              const wrapped = ts.createCall(hooksTracker, void 0, [
-                newFunction,
-                ts.createNoSubstitutionTemplateLiteral(
-                  hooksSignature,
-                  hooksSignature,
-                ),
-                ts.createLiteral(globalDisableForceRefresh),
-              ]);
+              const wrapped = ts.createCall(
+                hooksTracker,
+                void 0,
+                [
+                  newFunction,
+                  hooksSignatureExpr,
+                  requireForceRefreshExpr,
+                  hooksTrackExpr,
+                ].filter(Boolean),
+              );
               hooksSignatureMap.set(newFunction, wrapped);
               node = newFunction;
               if (findAncestor(oldNode.parent, ts.isFunctionLike))
@@ -350,8 +374,103 @@ export default function(opts = {}, ts = require('typescript')) {
           })
           .join('\n');
       }
+      function needForceRefresh(/** @type {CallExpression[]} */ calls) {
+        /** @type {Expression[]} */ const externalHooks = [];
+        return {
+          hooks: externalHooks,
+          force: calls.some(x => {
+            const ownerFunction = findAncestor(
+              x,
+              isFunctionExpressionLikeOrFunctionDeclaration,
+            );
+            const callee = x.expression;
+            if (ts.isPropertyAccessExpression(callee)) {
+              const left = callee.expression;
+              if (ts.isIdentifier(left)) {
+                if (left.text === 'React') return false;
+                const hasDecl = hasDeclarationInScope(ownerFunction, left.text);
+                if (hasDecl) externalHooks.push(callee);
+                return !hasDecl;
+              }
+              return true;
+            } else if (ts.isIdentifier(callee)) {
+              if (isBuiltinHook(callee.text)) return false;
+              const hasDecl = hasDeclarationInScope(ownerFunction, callee.text);
+              if (hasDecl) externalHooks.push(callee);
+              return !hasDecl;
+            }
+            return true;
+          }),
+        };
+      }
     };
   };
+
+  /**
+   * @param {string} hookName
+   */
+  function isBuiltinHook(hookName) {
+    switch (hookName) {
+      case 'useState':
+      case 'useReducer':
+      case 'useEffect':
+      case 'useLayoutEffect':
+      case 'useMemo':
+      case 'useCallback':
+      case 'useRef':
+      case 'useContext':
+      case 'useImperativeHandle':
+      case 'useDebugValue':
+        return true;
+      default:
+        return false;
+    }
+  }
+
+  function hasDeclarationInScope(
+    /** @type {Node} */ node,
+    /** @type {string} */ name,
+  ) {
+    while (node) {
+      if (ts.isSourceFile(node) && hasDeclaration(node.statements, name))
+        return true;
+      if (ts.isBlock(node) && hasDeclaration(node.statements, name))
+        return true;
+      node = node.parent;
+    }
+    return false;
+  }
+  // This function does not consider uncommon and unrecommended practice like declare use var in a inner scope
+  function hasDeclaration(
+    /** @type {readonly Statement[]} */ nodes,
+    /** @type {string} */ name,
+  ) {
+    for (const node of nodes) {
+      if (ts.isVariableStatement(node)) {
+        for (const decl of node.declarationList.declarations) {
+          // binding pattern not checked
+          if (ts.isIdentifier(decl.name) && decl.name.text === name)
+            return true;
+        }
+      } else if (ts.isImportDeclaration(node)) {
+        const defaultImport = node.importClause.name;
+        const namedImport = node.importClause.namedBindings;
+        if (defaultImport && defaultImport.text === name) return true;
+        if (namedImport && ts.isNamespaceImport(namedImport)) {
+          if (namedImport.name.text === name) return true;
+        } else if (namedImport && ts.isNamedImports(namedImport)) {
+          const hasBinding = namedImport.elements.some(
+            x => (x.propertyName || x.name).text === name,
+          );
+          if (hasBinding) return true;
+        }
+      } else if (ts.isFunctionDeclaration(node)) {
+        if (!node.body) continue;
+        if (node.name && node.name.text === name) return true;
+      }
+    }
+    return false;
+  }
 
   /**
    * @template {Node} T

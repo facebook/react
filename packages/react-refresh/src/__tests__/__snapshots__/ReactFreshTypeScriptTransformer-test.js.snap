@@ -121,7 +121,7 @@ export default function App() {
         return foo;
     }
     _a(useFancyState, \`useState{[foo, setFoo](0)}
-useFancyEffect{}\`, false);
+useFancyEffect{}\`, true);
     const bar = useFancyState();
     const baz = FancyHook.useThing();
     React.useState();
@@ -132,7 +132,7 @@ _a = App;
 _b(App, \`useFancyState{bar}
 FancyHook.useThing{baz}
 useState{}
-useThePlatform{}\`, false);
+useThePlatform{}\`, true);
 $RefreshReg$(_a, "App");
 
 `;
@@ -205,7 +205,7 @@ function useFancyState() {
     return foo;
 }
 _b(useFancyState, \`useState{[foo, setFoo](0)}
-useFancyEffect{}\`, false);
+useFancyEffect{}\`, false, () => [useFancyEffect]);
 const useFancyEffect = _c(() => {
     _c();
     React.useEffect(() => { });
@@ -216,7 +216,7 @@ export default function App() {
     return <h1>{bar}</h1>;
 }
 _a = App;
-_d(App, \`useFancyState{bar}\`, false);
+_d(App, \`useFancyState{bar}\`, false, () => [useFancyState]);
 $RefreshReg$(_a, "App");
 
 `;
@@ -232,7 +232,7 @@ export default function App() {
     return <h1>{bar}</h1>;
 }
 _a = App;
-_b(App, \`useFancyState{bar}\`, false);
+_b(App, \`useFancyState{bar}\`, false, () => [useFancyState]);
 $RefreshReg$(_a, "App");
 
 `;
@@ -684,7 +684,7 @@ function A() {
 }
 _a = A;
 _b(A, \`useCustom{[x]}
-useCustom{}\`, false);
+useCustom{}\`, true);
 $RefreshReg$(_a, "A");
 
 `;
