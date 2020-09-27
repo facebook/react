@@ -4,6 +4,7 @@
  * @returns {import('typescript').TransformerFactory<SourceFile>}
  */
 export default function(opts = {}, ts = require('typescript')) {
+  const printer = ts.createPrinter();
   const refreshReg = ts.createIdentifier(opts.refreshReg || '$RefreshReg$');
   const refreshSig = ts.createIdentifier(opts.refreshSig || '$RefreshSig$');
   return context => {
@@ -254,11 +255,15 @@ export default function(opts = {}, ts = require('typescript')) {
               : ts.createComma(callTracker, node.body);
             // @ts-ignore
             const newFunction = updateBody(node, nextBody);
+            const hooksSignature = hooksCallsToSignature(hooksCalls);
             if (ts.isFunctionDeclaration(newFunction)) {
               if (newFunction.name) {
                 const wrapped = ts.createCall(hooksTracker, void 0, [
                   newFunction.name,
-                  ts.createLiteral('__TODO__'),
+                  ts.createNoSubstitutionTemplateLiteral(
+                    hooksSignature,
+                    hooksSignature,
+                  ),
                   ts.createLiteral(globalDisableForceRefresh),
                 ]);
                 hooksSignatureMap.set(newFunction, wrapped);
@@ -267,7 +272,10 @@ export default function(opts = {}, ts = require('typescript')) {
             } else {
               const wrapped = ts.createCall(hooksTracker, void 0, [
                 newFunction,
-                ts.createLiteral('__TODO__'),
+                ts.createNoSubstitutionTemplateLiteral(
+                  hooksSignature,
+                  hooksSignature,
+                ),
                 ts.createLiteral(globalDisableForceRefresh),
               ]);
               hooksSignatureMap.set(newFunction, wrapped);
@@ -310,7 +318,37 @@ export default function(opts = {}, ts = require('typescript')) {
       }
 
       function printNode(/** @type {Node} */ node) {
-        return ts.createPrinter().printNode(ts.EmitHint.Expression, node, file);
+        return printer.printNode(ts.EmitHint.Unspecified, node, file);
+      }
+      function hooksCallsToSignature(/** @type {CallExpression[]} */ calls) {
+        return calls
+          .map(x => {
+            let assignTarget = '';
+            if (x.parent && ts.isVariableDeclaration(x.parent)) {
+              assignTarget = printNode(x.parent.name);
+            }
+
+            let hooksName = printNode(x.expression);
+            let shouldCaptureArgs = 0; // bit-wise parameter position
+            if (ts.isPropertyAccessExpression(x.expression)) {
+              const left = x.expression.expression;
+              if (ts.isIdentifier(left) && left.text === 'React') {
+                hooksName = printNode(x.expression.name);
+              }
+            }
+            if (hooksName === 'useState') shouldCaptureArgs = 1 << 0;
+            else if (hooksName === 'useReducer') shouldCaptureArgs = 1 << 1;
+
+            const args = x.arguments.reduce((last, val, index) => {
+              if ((1 << index) & shouldCaptureArgs) {
+                if (last) last += ',';
+                last += printNode(val);
+              }
+              return last;
+            }, '');
+            return `${hooksName}{${assignTarget}${args ? `(${args})` : ''}}`;
+          })
+          .join('\n');
       }
     };
   };

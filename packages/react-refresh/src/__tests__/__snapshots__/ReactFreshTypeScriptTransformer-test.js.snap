@@ -10,14 +10,14 @@ _j = $RefreshSig$();
 _k = $RefreshSig$();
 _l = $RefreshSig$();
 export default () => (_f(), useContext(X));
-export const Foo = _g(() => (_g(), useContext(X)), "__TODO__", false);
+export const Foo = _g(() => (_g(), useContext(X)), \`useContext{}\`, false);
 _a = Foo;
 module.exports = () => (_h(), useContext(X));
-const Bar = _j(() => (_j(), useContext(X)), "__TODO__", false);
+const Bar = _j(() => (_j(), useContext(X)), \`useContext{}\`, false);
 _b = Bar;
-const Baz = memo(_c = _k(() => (_k(), useContext(X)), "__TODO__", false));
+const Baz = memo(_c = _k(() => (_k(), useContext(X)), \`useContext{}\`, false));
 _d = Baz;
-const Qux = _l(() => (_l(), (0, useContext(X))), "__TODO__", false);
+const Qux = _l(() => (_l(), (0, useContext(X))), \`useContext{}\`, false);
 _e = Qux;
 $RefreshReg$(_a, "Foo");
 $RefreshReg$(_b, "Bar");
@@ -57,7 +57,8 @@ export default function App() {
     return <h1>{foo}</h1>;
 }
 _a = App;
-_b(App, "__TODO__", false);
+_b(App, \`useState{[foo, setFoo](0)}
+useEffect{}\`, false);
 $RefreshReg$(_a, "App");
 
 `;
@@ -72,14 +73,16 @@ export const A = React.memo(_a = React.forwardRef(_b = _g((props, ref) => {
     const [foo, setFoo] = useState(0);
     React.useEffect(() => { });
     return <h1 ref={ref}>{foo}</h1>;
-}, "__TODO__", false)));
+}, \`useState{[foo, setFoo](0)}
+useEffect{}\`, false)));
 _c = A;
 export const B = React.memo(_d = React.forwardRef(_e = _h(function (props, ref) {
     _h();
     const [foo, setFoo] = useState(0);
     React.useEffect(() => { });
     return <h1 ref={ref}>{foo}</h1>;
-}, "__TODO__", false)));
+}, \`useState{[foo, setFoo](0)}
+useEffect{}\`, false)));
 _f = B;
 function hoc() {
     var _a;
@@ -89,7 +92,8 @@ function hoc() {
         const [foo, setFoo] = useState(0);
         React.useEffect(() => { });
         return <h1 ref={ref}>{foo}</h1>;
-    }, "__TODO__", false);
+    }, \`useState{[foo, setFoo](0)}
+useEffect{}\`, false);
 }
 export let C = hoc();
 $RefreshReg$(_b, "A$React.memo$React.forwardRef");
@@ -116,7 +120,8 @@ export default function App() {
         useFancyEffect();
         return foo;
     }
-    _a(useFancyState, "__TODO__", false);
+    _a(useFancyState, \`useState{[foo, setFoo](0)}
+useFancyEffect{}\`, false);
     const bar = useFancyState();
     const baz = FancyHook.useThing();
     React.useState();
@@ -124,7 +129,10 @@ export default function App() {
     return <h1>{bar}{baz}</h1>;
 }
 _a = App;
-_b(App, "__TODO__", false);
+_b(App, \`useFancyState{bar}
+FancyHook.useThing{baz}
+useState{}
+useThePlatform{}\`, false);
 $RefreshReg$(_a, "App");
 
 `;
@@ -196,18 +204,19 @@ function useFancyState() {
     useFancyEffect();
     return foo;
 }
-_b(useFancyState, "__TODO__", false);
+_b(useFancyState, \`useState{[foo, setFoo](0)}
+useFancyEffect{}\`, false);
 const useFancyEffect = _c(() => {
     _c();
     React.useEffect(() => { });
-}, "__TODO__", false);
+}, \`useEffect{}\`, false);
 export default function App() {
     _d();
     const bar = useFancyState();
     return <h1>{bar}</h1>;
 }
 _a = App;
-_d(App, "__TODO__", false);
+_d(App, \`useFancyState{bar}\`, false);
 $RefreshReg$(_a, "App");
 
 `;
@@ -223,7 +232,7 @@ export default function App() {
     return <h1>{bar}</h1>;
 }
 _a = App;
-_b(App, "__TODO__", false);
+_b(App, \`useFancyState{bar}\`, false);
 $RefreshReg$(_a, "App");
 
 `;
@@ -481,6 +490,205 @@ $RefreshReg$(_b, "Bar");
 
 `;
 
+exports[`ReactFreshTypeScriptTransformer should generate signature for built-in hooks 1`] = `
+var _a;
+var _b;
+_b = $RefreshSig$();
+export function StateTest() {
+    _b();
+    const a = useState(0, extra);
+    const [b] = useState(complex + expression.f());
+    const [c, d] = React.useState();
+    const [[e], f] = useState([0]);
+    const { 0: y, 1: z, length } = useState(() => {
+        a();
+        multiple();
+        line();
+        expression();
+    });
+}
+_a = StateTest;
+_b(StateTest, \`useState{a(0)}
+useState{[b](complex + expression.f())}
+useState{[c, d]}
+useState{[[e], f]([0])}
+useState{{ 0: y, 1: z, length }(() => {
+    a();
+    multiple();
+    line();
+    expression();
+})}\`, false);
+$RefreshReg$(_a, "StateTest");
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer should generate signature for built-in hooks 2`] = `
+var _a;
+var _b;
+_b = $RefreshSig$();
+export function RefTest() {
+    _b();
+    const ref = useRef();
+    const ref2 = useRef(complex.expr(1), extra);
+    const { current } = React.useRef();
+}
+_a = RefTest;
+_b(RefTest, \`useRef{ref}
+useRef{ref2}
+useRef{{ current }}\`, false);
+$RefreshReg$(_a, "RefTest");
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer should generate signature for built-in hooks 3`] = `
+var _a;
+var _b;
+_b = $RefreshSig$();
+export function EffectTest() {
+    _b();
+    const rtn = useEffect();
+    useEffect(expr, [deps]);
+    useEffect(() => {
+        do_some();
+    });
+    useEffect(() => (sideEffect(), () => undo()));
+}
+_a = EffectTest;
+_b(EffectTest, \`useEffect{rtn}
+useEffect{}
+useEffect{}
+useEffect{}\`, false);
+$RefreshReg$(_a, "EffectTest");
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer should generate signature for built-in hooks 4`] = `
+var _a;
+var _b;
+_b = $RefreshSig$();
+export function ContextTest() {
+    _b();
+    const ctx = useContext(expr);
+    const { val } = useContext(expr2, extra);
+    useContext(expr3);
+}
+_a = ContextTest;
+_b(ContextTest, \`useContext{ctx}
+useContext{{ val }}
+useContext{}\`, false);
+$RefreshReg$(_a, "ContextTest");
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer should generate signature for built-in hooks 5`] = `
+var _a;
+var _b;
+_b = $RefreshSig$();
+export function ReducerTest() {
+    _b();
+    const [state, dispatch] = useReducer(reducer, initArg, init, extra);
+    useReducer();
+}
+_a = ReducerTest;
+_b(ReducerTest, \`useReducer{[state, dispatch](initArg)}
+useReducer{}\`, false);
+$RefreshReg$(_a, "ReducerTest");
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer should generate signature for built-in hooks 6`] = `
+var _a;
+var _b;
+_b = $RefreshSig$();
+export function CallbackTest() {
+    _b();
+    const x = useCallback(() => { });
+    const [p] = [useCallback(a, [a, b])];
+}
+_a = CallbackTest;
+_b(CallbackTest, \`useCallback{x}
+useCallback{}\`, false);
+$RefreshReg$(_a, "CallbackTest");
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer should generate signature for built-in hooks 7`] = `
+var _a;
+var _b;
+_b = $RefreshSig$();
+export function MemoTest() {
+    _b();
+    const x = useMemo(() => { });
+    const [p] = [useMemo(a, [a, b])];
+}
+_a = MemoTest;
+_b(MemoTest, \`useMemo{x}
+useMemo{}\`, false);
+$RefreshReg$(_a, "MemoTest");
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer should generate signature for built-in hooks 8`] = `
+var _a, _b, _c;
+var _d, _e;
+_d = $RefreshSig$();
+_e = $RefreshSig$();
+function ImperativeHandle(props, ref) {
+    _d();
+    const v = useImperativeHandle(ref, () => ({ a }));
+}
+_a = ImperativeHandle;
+_d(ImperativeHandle, \`useImperativeHandle{v}\`, false);
+ImperativeHandle = forwardRef(ImperativeHandle);
+const HOC = forwardRef(_b = _e(function (props, ref) {
+    _e();
+    const v = useImperativeHandle(ref, () => ({ a }));
+}, \`useImperativeHandle{v}\`, false));
+_c = HOC;
+$RefreshReg$(_a, "ImperativeHandle");
+$RefreshReg$(_b, "HOC$forwardRef");
+$RefreshReg$(_c, "HOC");
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer should generate signature for built-in hooks 9`] = `
+var _a;
+var _b;
+_b = $RefreshSig$();
+function LayoutEffect() { _b(); const v = useLayoutEffect(ref); }
+_a = LayoutEffect;
+_b(LayoutEffect, \`useLayoutEffect{v}\`, false);
+$RefreshReg$(_a, "LayoutEffect");
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer should generate signature for built-in hooks 10`] = `
+var _a;
+var _b;
+_b = $RefreshSig$();
+function DebugValue() { _b(); const v = useDebugValue(ref, f); }
+_a = DebugValue;
+_b(DebugValue, \`useDebugValue{v}\`, false);
+$RefreshReg$(_a, "DebugValue");
+
+`;
+
+exports[`ReactFreshTypeScriptTransformer should generate signature for custom hooks 1`] = `
+var _a;
+var _b;
+_b = $RefreshSig$();
+function A() {
+    _b();
+    const [x] = useCustom(1, 2, 3);
+    useCustom();
+}
+_a = A;
+_b(A, \`useCustom{[x]}
+useCustom{}\`, false);
+$RefreshReg$(_a, "A");
+
+`;
+
 exports[`ReactFreshTypeScriptTransformer uses custom identifiers for $RefreshReg$ and $RefreshSig$ 1`] = `
 var _a;
 var _b;
@@ -491,7 +699,7 @@ export default function Bar() {
     return <Foo />;
 }
 _a = Bar;
-_b(Bar, "__TODO__", false);
+_b(Bar, \`useContext{}\`, false);
 ;
 import.meta.refreshReg(_a, "Bar");
 

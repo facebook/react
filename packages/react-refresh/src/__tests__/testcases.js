@@ -448,6 +448,71 @@ addTestCase(
   },
 );
 
+addTestCase('should generate signature for built-in hooks', [
+  `
+export function StateTest() {
+  const a = useState(0, extra)
+  const [b] = useState(complex + expression.f())
+  const [c, d] = React.useState()
+  const [[e], f] = useState([0])
+  const {0: y, 1: z, length} = useState(() => {
+    a()
+    multiple()
+    line()
+    expression()
+  })
+}`,
+  `export function RefTest() {
+  const ref = useRef()
+  const ref2 = useRef(complex.expr(1), extra)
+  const {current} = React.useRef()
+}`,
+  `export function EffectTest() {
+    const rtn = useEffect()
+    useEffect(expr, [deps])
+    useEffect(() => {
+      do_some()
+    })
+    useEffect(() => (sideEffect(), () => undo()))
+}`,
+  `export function ContextTest() {
+  const ctx = useContext(expr)
+  const {val} = useContext(expr2, extra)
+  useContext(expr3)
+}`,
+  `export function ReducerTest() {
+  const [state, dispatch] = useReducer(reducer, initArg, init, extra)
+  useReducer()
+}`,
+  `export function CallbackTest() {
+  const x = useCallback(() => {})
+  const [p] = [useCallback(a, [a, b])]
+}`,
+  `export function MemoTest() {
+  const x = useMemo(() => {})
+  const [p] = [useMemo(a, [a, b])]
+}`,
+  `function ImperativeHandle(props, ref) {
+  const v = useImperativeHandle(ref, () => ({a}))
+}
+ImperativeHandle = forwardRef(ImperativeHandle)
+
+const HOC = forwardRef(function (props, ref) {
+  const v = useImperativeHandle(ref, () => ({a}))
+})
+`,
+  `function LayoutEffect() { const v = useLayoutEffect(ref) } `,
+  `function DebugValue() { const v = useDebugValue(ref, f) } `,
+]);
+
+addTestCase(
+  'should generate signature for custom hooks',
+  `function A() {
+  const [x] = useCustom(1, 2, 3)
+  useCustom()
+}`,
+);
+
 /**
  *
  * @param {string} name Test case name

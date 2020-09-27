@@ -604,6 +604,248 @@ $RefreshReg$(_c, "Hello");
 $RefreshReg$(_c2, "Bar");
 `;
 
+exports[`ReactFreshBabelPlugin should generate signature for built-in hooks 1`] = `
+var _s = $RefreshSig$();
+
+export function StateTest() {
+  _s();
+
+  const a = useState(0, extra);
+  const [b] = useState(complex + expression.f());
+  const [c, d] = React.useState();
+  const [[e], f] = useState([0]);
+  const {
+    0: y,
+    1: z,
+    length
+  } = useState(() => {
+    a();
+    multiple();
+    line();
+    expression();
+  });
+}
+
+_s(StateTest, "useState{a(0)}\\nuseState{[b](complex + expression.f())}\\nuseState{[c, d]}\\nuseState{[[e], f]([0])}\\nuseState{{0: y, 1: z, length}(() => {\\n    a()\\n    multiple()\\n    line()\\n    expression()\\n  })}");
+
+_c = StateTest;
+
+var _c;
+
+$RefreshReg$(_c, "StateTest");
+`;
+
+exports[`ReactFreshBabelPlugin should generate signature for built-in hooks 2`] = `
+var _s = $RefreshSig$();
+
+export function RefTest() {
+  _s();
+
+  const ref = useRef();
+  const ref2 = useRef(complex.expr(1), extra);
+  const {
+    current
+  } = React.useRef();
+}
+
+_s(RefTest, "useRef{ref}\\nuseRef{ref2}\\nuseRef{{current}}");
+
+_c = RefTest;
+
+var _c;
+
+$RefreshReg$(_c, "RefTest");
+`;
+
+exports[`ReactFreshBabelPlugin should generate signature for built-in hooks 3`] = `
+var _s = $RefreshSig$();
+
+export function EffectTest() {
+  _s();
+
+  const rtn = useEffect();
+  useEffect(expr, [deps]);
+  useEffect(() => {
+    do_some();
+  });
+  useEffect(() => (sideEffect(), () => undo()));
+}
+
+_s(EffectTest, "useEffect{rtn}\\nuseEffect{}\\nuseEffect{}\\nuseEffect{}");
+
+_c = EffectTest;
+
+var _c;
+
+$RefreshReg$(_c, "EffectTest");
+`;
+
+exports[`ReactFreshBabelPlugin should generate signature for built-in hooks 4`] = `
+var _s = $RefreshSig$();
+
+export function ContextTest() {
+  _s();
+
+  const ctx = useContext(expr);
+  const {
+    val
+  } = useContext(expr2, extra);
+  useContext(expr3);
+}
+
+_s(ContextTest, "useContext{ctx}\\nuseContext{{val}}\\nuseContext{}");
+
+_c = ContextTest;
+
+var _c;
+
+$RefreshReg$(_c, "ContextTest");
+`;
+
+exports[`ReactFreshBabelPlugin should generate signature for built-in hooks 5`] = `
+var _s = $RefreshSig$();
+
+export function ReducerTest() {
+  _s();
+
+  const [state, dispatch] = useReducer(reducer, initArg, init, extra);
+  useReducer();
+}
+
+_s(ReducerTest, "useReducer{[state, dispatch](initArg)}\\nuseReducer{}");
+
+_c = ReducerTest;
+
+var _c;
+
+$RefreshReg$(_c, "ReducerTest");
+`;
+
+exports[`ReactFreshBabelPlugin should generate signature for built-in hooks 6`] = `
+var _s = $RefreshSig$();
+
+export function CallbackTest() {
+  _s();
+
+  const x = useCallback(() => {});
+  const [p] = [useCallback(a, [a, b])];
+}
+
+_s(CallbackTest, "useCallback{x}\\nuseCallback{}");
+
+_c = CallbackTest;
+
+var _c;
+
+$RefreshReg$(_c, "CallbackTest");
+`;
+
+exports[`ReactFreshBabelPlugin should generate signature for built-in hooks 7`] = `
+var _s = $RefreshSig$();
+
+export function MemoTest() {
+  _s();
+
+  const x = useMemo(() => {});
+  const [p] = [useMemo(a, [a, b])];
+}
+
+_s(MemoTest, "useMemo{x}\\nuseMemo{}");
+
+_c = MemoTest;
+
+var _c;
+
+$RefreshReg$(_c, "MemoTest");
+`;
+
+exports[`ReactFreshBabelPlugin should generate signature for built-in hooks 8`] = `
+var _s = $RefreshSig$(),
+    _s2 = $RefreshSig$();
+
+function ImperativeHandle(props, ref) {
+  _s();
+
+  const v = useImperativeHandle(ref, () => ({
+    a
+  }));
+}
+
+_s(ImperativeHandle, "useImperativeHandle{v}", true);
+
+_c = ImperativeHandle;
+ImperativeHandle = forwardRef(ImperativeHandle);
+const HOC = forwardRef(_c2 = _s2(function (props, ref) {
+  _s2();
+
+  const v = useImperativeHandle(ref, () => ({
+    a
+  }));
+}, "useImperativeHandle{v}", true));
+_c3 = HOC;
+
+var _c, _c2, _c3;
+
+$RefreshReg$(_c, "ImperativeHandle");
+$RefreshReg$(_c2, "HOC$forwardRef");
+$RefreshReg$(_c3, "HOC");
+`;
+
+exports[`ReactFreshBabelPlugin should generate signature for built-in hooks 9`] = `
+var _s = $RefreshSig$();
+
+function LayoutEffect() {
+  _s();
+
+  const v = useLayoutEffect(ref);
+}
+
+_s(LayoutEffect, "useLayoutEffect{v}");
+
+_c = LayoutEffect;
+
+var _c;
+
+$RefreshReg$(_c, "LayoutEffect");
+`;
+
+exports[`ReactFreshBabelPlugin should generate signature for built-in hooks 10`] = `
+var _s = $RefreshSig$();
+
+function DebugValue() {
+  _s();
+
+  const v = useDebugValue(ref, f);
+}
+
+_s(DebugValue, "useDebugValue{v}");
+
+_c = DebugValue;
+
+var _c;
+
+$RefreshReg$(_c, "DebugValue");
+`;
+
+exports[`ReactFreshBabelPlugin should generate signature for custom hooks 1`] = `
+var _s = $RefreshSig$();
+
+function A() {
+  _s();
+
+  const [x] = useCustom(1, 2, 3);
+  useCustom();
+}
+
+_s(A, "useCustom{[x]}\\nuseCustom{}", true);
+
+_c = A;
+
+var _c;
+
+$RefreshReg$(_c, "A");
+`;
+
 exports[`ReactFreshBabelPlugin uses custom identifiers for $RefreshReg$ and $RefreshSig$ 1`] = `
 var _s = import.meta.refreshSig();
 
