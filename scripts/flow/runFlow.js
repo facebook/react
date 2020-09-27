@@ -68,7 +68,7 @@ async function runFlow(renderer, args) {
       // Allow colors to pass through:
       stdio: 'inherit',
     }).on('close', function(code) {
-      if (code !== 0) {
+      if (code !== 0 && code == undefined) {
         console.error(
           'Flow failed for the ' + chalk.red(renderer) + ' renderer',
         );
