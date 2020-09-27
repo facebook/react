@@ -52,8 +52,8 @@ export default function(opts = {}, ts = require('typescript')) {
       // Only visit top level declaration to find possible components
       function visitTopLevel(/** @type {Node} */ node) {
         if (ts.isFunctionDeclaration(node)) {
-          if (!node.name) return node;
-          return [node, ...registerComponentAfterCurrent(node.name.text)];
+          if (!node.name || !node.body) return node;
+          return [node, ...registerComponent(node.name)];
         } else if (ts.isVariableStatement(node)) {
           /** @type {import('typescript').VariableDeclaration[]} */ const nextDeclarationList = [];
           /** @type {Statement[]} */ const deferredAppendStatements = [];
@@ -70,7 +70,7 @@ export default function(opts = {}, ts = require('typescript')) {
             ) {
               if (!unwantedComponentLikeDefinition(init))
                 deferredAppendStatements.push(
-                  ...registerComponentAfterCurrent(variable),
+                  ...registerComponent(declaration.name),
                 );
               if (
                 isFunctionExpressionLikeOrFunctionDeclaration(init) &&
@@ -88,12 +88,12 @@ export default function(opts = {}, ts = require('typescript')) {
               }
               continue;
             }
-            if (isHOCLike(init)) {
+            if (isHigherOrderComponentLike(init)) {
               nextDeclarationList.pop(); // replace the decl
-              const {append, expr} = registerHigherOrderFunction(
-                init,
-                variable,
-              );
+              const {
+                registers: append,
+                call: expr,
+              } = registerHigherOrderComponent(init, variable);
               nextDeclarationList.push(
                 ts.updateVariableDeclaration(
                   declaration,
@@ -104,7 +104,7 @@ export default function(opts = {}, ts = require('typescript')) {
               );
               deferredAppendStatements.push(
                 ...append,
-                ...registerComponentAfterCurrent(variable),
+                ...registerComponent(declaration.name),
               );
               continue;
             }
@@ -121,8 +121,8 @@ export default function(opts = {}, ts = require('typescript')) {
             ...deferredAppendStatements,
           ];
         } else if (ts.isExportAssignment(node)) {
-          if (isHOCLike(node.expression)) {
-            const {append, expr} = registerHigherOrderFunction(
+          if (isHigherOrderComponentLike(node.expression)) {
+            const {registers, call} = registerHigherOrderComponent(
               node.expression,
               '%default%',
             );
@@ -132,10 +132,10 @@ export default function(opts = {}, ts = require('typescript')) {
                 node,
                 node.decorators,
                 node.modifiers,
-                ts.createAssignment(temp, expr),
+                ts.createAssignment(temp, call),
               ),
-              createRegister(temp, '%default%'),
-              ...append,
+              createComponentRegisterCall(temp, '%default%'),
+              ...registers,
             ];
           } else if (
             isFunctionExpressionLikeOrFunctionDeclaration(node.expression)
@@ -153,19 +153,18 @@ export default function(opts = {}, ts = require('typescript')) {
         return node;
       }
 
-      function registerComponentAfterCurrent(/** @type {string} */ name) {
-        if (!startsWithLowerCase(name)) {
-          const uniq = createTempVariable();
-          // uniq = each
+      function registerComponent(/** @type {Identifier} */ name) {
+        if (!startsWithLowerCase(name.text)) {
+          const temp = createTempVariable();
+          // uniq = name
           const assignment = ts.createAssignment(
-            uniq,
-            ts.createIdentifier(name),
+            temp,
+            ts.createIdentifier(name.text),
           );
-          // $reg$(uniq, "each")
-          // afterStatements.push();
+          // $reg$(uniq, "name")
           return [
             ts.createExpressionStatement(assignment),
-            createRegister(uniq, name),
+            createComponentRegisterCall(temp, name.text),
           ];
         }
         return [];
@@ -174,39 +173,47 @@ export default function(opts = {}, ts = require('typescript')) {
        * Please call isHOCLike before call this function
        * @param {CallExpression} callExpr Current visiting
        * @param {string} nameHint
-       * @returns {{expr: import('typescript').BinaryExpression | CallExpression, append: Statement[]}}
+       * @returns {{call: CallExpression, registers: Statement[]}}
        */
-      function registerHigherOrderFunction(callExpr, nameHint) {
+      function registerHigherOrderComponent(callExpr, nameHint) {
         // Recursive case, if it is x(y(...)), recursive with y(...) to get inner expr
-        const arg = callExpr.arguments[0];
-        if (ts.isCallExpression(arg)) {
+        const arg0 = callExpr.arguments[0];
+        if (ts.isCallExpression(arg0)) {
           const tempVar = createTempVariable();
           const nextNameHint = nameHint + '$' + printNode(callExpr.expression);
-          const {append, expr} = registerHigherOrderFunction(arg, nextNameHint);
+          const {registers, call: innerResult} = registerHigherOrderComponent(
+            arg0,
+            nextNameHint,
+          );
           return {
-            expr: ts.updateCall(callExpr, callExpr.expression, void 0, [
-              ts.createAssignment(tempVar, expr),
+            call: ts.updateCall(callExpr, callExpr.expression, void 0, [
+              ts.createAssignment(tempVar, innerResult),
               ...callExpr.arguments.slice(1),
             ]),
-            append: append.concat(createRegister(tempVar, nextNameHint)),
+            registers: registers.concat(
+              createComponentRegisterCall(tempVar, nextNameHint),
+            ),
           };
         }
 
         // Base case, it is x(function () {...}) or x(() => ...) or x(Identifier)
         if (
-          !isFunctionExpressionLikeOrFunctionDeclaration(arg) &&
-          !ts.isIdentifier(arg)
-        )
-          throw new Error('Please call isHOCLike first');
-        if (ts.isIdentifier(arg)) return {expr: callExpr, append: []};
+          !isFunctionExpressionLikeOrFunctionDeclaration(arg0) &&
+          !ts.isIdentifier(arg0)
+        ) {
+          throw new Error(
+            'This is an error of react-refresh/typescript. Please report this problem: Call isHOC before register it',
+          );
+        }
+        if (ts.isIdentifier(arg0)) return {call: callExpr, registers: []};
         const tempVar = createTempVariable();
         return {
-          expr: ts.updateCall(callExpr, callExpr.expression, void 0, [
-            ts.createAssignment(tempVar, hooksSignatureMap.get(arg) || arg),
+          call: ts.updateCall(callExpr, callExpr.expression, void 0, [
+            ts.createAssignment(tempVar, hooksSignatureMap.get(arg0) || arg0),
             ...callExpr.arguments.slice(1),
           ]),
-          append: [
-            createRegister(
+          registers: [
+            createComponentRegisterCall(
               tempVar,
               nameHint + '$' + printNode(callExpr.expression),
             ),
@@ -661,7 +668,7 @@ export default function(opts = {}, ts = require('typescript')) {
    * @param {Expression} outExpr
    * @returns {outExpr is CallExpression}
    */
-  function isHOCLike(outExpr) {
+  function isHigherOrderComponentLike(outExpr) {
     let expr = outExpr;
     if (!ts.isCallExpression(outExpr)) return false;
     while (ts.isCallExpression(expr) && !isImportOrRequireLike(expr)) {
@@ -694,7 +701,7 @@ export default function(opts = {}, ts = require('typescript')) {
    * @param {Identifier} id
    * @param {string} name
    */
-  function createRegister(id, name) {
+  function createComponentRegisterCall(id, name) {
     return ts.createExpressionStatement(
       ts.createCall(refreshReg, void 0, [id, ts.createLiteral(name)]),
     );
