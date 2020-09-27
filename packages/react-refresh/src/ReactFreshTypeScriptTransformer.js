@@ -44,8 +44,8 @@ export default function(opts = {}, ts = require('typescript')) {
       const {nextFile, usedAsJSXElement, hooksSignatureMap} = visitDeep();
       file = nextFile;
 
-      return updateStatements(file, () =>
-        ts.visitLexicalEnvironment(file.statements, visitTopLevel, context),
+      return updateStatements(file, statements =>
+        ts.visitLexicalEnvironment(statements, visitTopLevel, context),
       );
 
       /** @return {import('typescript').VisitResult<Node>} */
@@ -55,70 +55,68 @@ export default function(opts = {}, ts = require('typescript')) {
           if (!node.name || !node.body) return node;
           return [node, ...registerComponent(node.name)];
         } else if (ts.isVariableStatement(node)) {
-          /** @type {import('typescript').VariableDeclaration[]} */ const nextDeclarationList = [];
-          /** @type {Statement[]} */ const deferredAppendStatements = [];
-          for (const declaration of node.declarationList.declarations) {
-            nextDeclarationList.push(declaration);
-            const init = declaration.initializer;
-            // Not handle complex declaration. e.g. [a, b] = [() => ..., () => ...]
-            // or declaration without initializer
-            if (!ts.isIdentifier(declaration.name) || !init) continue;
-            const variable = declaration.name.text;
-            if (
-              usedAsJSXElement.has(variable) ||
-              isFunctionExpressionLikeOrFunctionDeclaration(init)
-            ) {
-              if (!unwantedComponentLikeDefinition(init))
-                deferredAppendStatements.push(
-                  ...registerComponent(declaration.name),
-                );
+          /** @type {Statement[]} */ const deferredStatements = [];
+          const nextDeclarationList = ts.visitEachChild(
+            node.declarationList,
+            declaration => {
+              if (!ts.isVariableDeclaration(declaration)) return declaration;
+              const init = declaration.initializer;
+              // Not handle complex declaration. e.g. [a, b] = [() => ..., () => ...]
+              // or declaration without initializer
+              if (!ts.isIdentifier(declaration.name) || !init)
+                return declaration;
+              const declarationUsedAsJSX = usedAsJSXElement.has(
+                declaration.name.text,
+              );
               if (
-                isFunctionExpressionLikeOrFunctionDeclaration(init) &&
-                hooksSignatureMap.has(init)
+                declarationUsedAsJSX ||
+                isFunctionExpressionLikeOrFunctionDeclaration(init)
               ) {
-                nextDeclarationList.pop(); // replace the decl
-                nextDeclarationList.push(
-                  ts.updateVariableDeclaration(
+                if (!unwantedComponentLikeDefinition(init)) {
+                  deferredStatements.push(
+                    ...registerComponent(declaration.name),
+                  );
+                }
+                if (
+                  isFunctionExpressionLikeOrFunctionDeclaration(init) &&
+                  hooksSignatureMap.has(init)
+                ) {
+                  return ts.updateVariableDeclaration(
                     declaration,
                     declaration.name,
                     declaration.type,
                     hooksSignatureMap.get(init),
-                  ),
-                );
+                  );
+                }
+                return declaration;
               }
-              continue;
-            }
-            if (isHigherOrderComponentLike(init)) {
-              nextDeclarationList.pop(); // replace the decl
-              const {
-                registers: append,
-                call: expr,
-              } = registerHigherOrderComponent(init, variable);
-              nextDeclarationList.push(
-                ts.updateVariableDeclaration(
+              if (isHigherOrderComponentLike(init)) {
+                const {registers, call} = registerHigherOrderComponent(
+                  init,
+                  declaration.name.text,
+                );
+                deferredStatements.push(
+                  ...registers,
+                  ...registerComponent(declaration.name),
+                );
+                return ts.updateVariableDeclaration(
                   declaration,
                   declaration.name,
                   declaration.type,
-                  expr,
-                ),
-              );
-              deferredAppendStatements.push(
-                ...append,
-                ...registerComponent(declaration.name),
-              );
-              continue;
-            }
-          }
+                  call,
+                );
+              }
+              return declaration;
+            },
+            context,
+          );
           return [
             ts.updateVariableStatement(
               node,
               node.modifiers,
-              ts.updateVariableDeclarationList(
-                node.declarationList,
-                nextDeclarationList,
-              ),
+              nextDeclarationList,
             ),
-            ...deferredAppendStatements,
+            ...deferredStatements,
           ];
         } else if (ts.isExportAssignment(node)) {
           if (isHigherOrderComponentLike(node.expression)) {
@@ -225,6 +223,7 @@ export default function(opts = {}, ts = require('typescript')) {
       }
       /**
        * ! This function does not consider variable shadowing !
+       * @returns {{nextFile: SourceFile, usedAsJSXElement: ReadonlySet<string>, hooksSignatureMap: ReadonlyMap<HandledFunction, CallExpression>}}
        */
       function visitDeep() {
         /** @type {Set<string>} */ const usedAsJSXElement = new Set();
