@@ -846,6 +846,38 @@ var _c;
 $RefreshReg$(_c, "A");
 `;
 
+exports[`ReactFreshBabelPlugin should recognize reset comment 1`] = `
+var _s = $RefreshSig$(),
+    _s2 = $RefreshSig$();
+
+// @refresh reset
+function App() {
+  _s();
+
+  useState(0);
+} // Should not be reset?
+
+
+_s(App, "useState{(0)}", true);
+
+_c = App;
+
+function Not() {
+  _s2();
+
+  useState(0);
+}
+
+_s2(Not, "useState{(0)}", true);
+
+_c2 = Not;
+
+var _c, _c2;
+
+$RefreshReg$(_c, "App");
+$RefreshReg$(_c2, "Not");
+`;
+
 exports[`ReactFreshBabelPlugin should track custom hooks 1`] = `
 var _s = $RefreshSig$();
 
