@@ -12,6 +12,11 @@ import {
   createFactoryWithValidation,
   cloneElementWithValidation,
 } from './ReactElementValidator';
+import {
+  createElement as createElementProd,
+  createFactory as createFactoryProd,
+  cloneElement as cloneElementProd,
+} from './ReactElement';
 
 const createElement = __DEV__ ? createElementWithValidation : createElementProd;
 const cloneElement = __DEV__ ? cloneElementWithValidation : cloneElementProd;
