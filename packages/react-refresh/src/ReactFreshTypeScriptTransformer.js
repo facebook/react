@@ -6,10 +6,10 @@
  * This transformer requires TypeScript to be at least 3.9.
  *
  * @param {opt} opts Options
- * @param {ts} ts TypeScript compiler
  * @returns {import('typescript').TransformerFactory<SourceFile>}
  */
-export default function(opts = {}, ts = require('typescript')) {
+export default function(opts = {}) {
+  const ts = opts.ts || require('typescript');
   {
     const [major, minor] = ts.version.split('.');
     const num = parseInt(major);
@@ -17,7 +17,6 @@ export default function(opts = {}, ts = require('typescript')) {
     if (num < 3) throw new Error(msg);
     if (num === 3 && parseInt(minor) !== 9) throw new Error(msg);
   }
-  const printer = ts.createPrinter();
   const refreshReg = ts.createIdentifier(opts.refreshReg || '$RefreshReg$');
   const refreshSig = ts.createIdentifier(opts.refreshSig || '$RefreshSig$');
   return context => {
@@ -754,7 +753,7 @@ function startsWithLowerCase(str) {
   return str[0].toLowerCase() === str[0];
 }
 
-/** @typedef {{refreshReg?: string, refreshSig?: string, emitFullSignatures?: boolean}} opt */
+/** @typedef {{refreshReg?: string, refreshSig?: string, emitFullSignatures?: boolean, ts?: ts}} opt */
 /** @typedef {import('typescript')} ts */
 /** @typedef {import('typescript').Node} Node */
 /** @typedef {import('typescript').Statement} Statement */
