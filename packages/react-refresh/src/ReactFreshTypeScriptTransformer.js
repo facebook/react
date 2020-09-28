@@ -261,13 +261,11 @@ export default function(opts = {}) {
       };
     }
     function createTempVariable() {
-      const id = ts.createFileLevelUniqueName('$c' + uniqueName++);
-      return context.hoistVariableDeclaration(id), id;
-      // return factory.createTempVariable(
-      //   context.hoistVariableDeclaration,
-      //   // @ts-ignore the second parameter "reservedInNestedScopes?: boolean" has a private signature
-      //   true,
-      // );
+      return factory.createTempVariable(
+        context.hoistVariableDeclaration,
+        // @ts-ignore the second parameter "reservedInNestedScopes?: boolean" has a private signature
+        true,
+      );
     }
     /**
      * ! This function does not consider variable shadowing !
