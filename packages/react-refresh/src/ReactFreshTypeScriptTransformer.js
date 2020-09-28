@@ -17,9 +17,14 @@ export default function(opts = {}) {
     if (num < 3) throw new Error(msg);
     if (num === 3 && parseInt(minor) !== 9) throw new Error(msg);
   }
-  const refreshReg = ts.createIdentifier(opts.refreshReg || '$RefreshReg$');
-  const refreshSig = ts.createIdentifier(opts.refreshSig || '$RefreshSig$');
   return context => {
+    const {factory} = context;
+    const refreshReg = factory.createIdentifier(
+      opts.refreshReg || '$RefreshReg$',
+    );
+    const refreshSig = factory.createIdentifier(
+      opts.refreshSig || '$RefreshSig$',
+    );
     let uniqueName = 0;
     return file => {
       if (file.isDeclarationFile) return file;
@@ -94,9 +99,10 @@ export default function(opts = {}) {
                 isFunctionExpressionLikeOrFunctionDeclaration(init) &&
                 hooksSignatureMap.has(init)
               ) {
-                return ts.updateVariableDeclaration(
+                return factory.updateVariableDeclaration(
                   declaration,
                   declaration.name,
+                  undefined,
                   declaration.type,
                   hooksSignatureMap.get(init),
                 );
@@ -113,9 +119,10 @@ export default function(opts = {}) {
                 ...registers,
                 ...registerComponent(declaration.name),
               );
-              return ts.updateVariableDeclaration(
+              return factory.updateVariableDeclaration(
                 declaration,
                 declaration.name,
+                undefined,
                 declaration.type,
                 call,
               );
@@ -125,7 +132,11 @@ export default function(opts = {}) {
           context,
         );
         return [
-          ts.updateVariableStatement(node, node.modifiers, nextDeclarationList),
+          factory.updateVariableStatement(
+            node,
+            node.modifiers,
+            nextDeclarationList,
+          ),
           ...deferredStatements,
         ];
       } else if (ts.isExportAssignment(node)) {
@@ -137,11 +148,11 @@ export default function(opts = {}) {
           );
           const temp = createTempVariable();
           return [
-            ts.updateExportAssignment(
+            factory.updateExportAssignment(
               node,
               node.decorators,
               node.modifiers,
-              ts.createAssignment(temp, call),
+              factory.createAssignment(temp, call),
             ),
             createComponentRegisterCall(temp, '%default%'),
             ...registers,
@@ -151,7 +162,7 @@ export default function(opts = {}) {
         ) {
           const expr = hooksSignatureMap.get(node.expression);
           if (expr) {
-            return ts.updateExportAssignment(
+            return factory.updateExportAssignment(
               node,
               node.decorators,
               node.modifiers,
@@ -167,13 +178,13 @@ export default function(opts = {}) {
       if (!startsWithLowerCase(name.text)) {
         const temp = createTempVariable();
         // uniq = name
-        const assignment = ts.createAssignment(
+        const assignment = factory.createAssignment(
           temp,
-          ts.createIdentifier(name.text),
+          factory.createIdentifier(name.text),
         );
         // $reg$(uniq, "name")
         return [
-          ts.createExpressionStatement(assignment),
+          factory.createExpressionStatement(assignment),
           createComponentRegisterCall(temp, name.text),
         ];
       }
@@ -202,10 +213,15 @@ export default function(opts = {}) {
           nextNameHint,
         );
         return {
-          call: ts.updateCall(callExpr, callExpr.expression, void 0, [
-            ts.createAssignment(tempVar, innerResult),
-            ...callExpr.arguments.slice(1),
-          ]),
+          call: factory.updateCallExpression(
+            callExpr,
+            callExpr.expression,
+            void 0,
+            [
+              factory.createAssignment(tempVar, innerResult),
+              ...callExpr.arguments.slice(1),
+            ],
+          ),
           registers: registers.concat(
             createComponentRegisterCall(tempVar, nextNameHint),
           ),
@@ -224,10 +240,18 @@ export default function(opts = {}) {
       if (ts.isIdentifier(arg0)) return {call: callExpr, registers: []};
       const tempVar = createTempVariable();
       return {
-        call: ts.updateCall(callExpr, callExpr.expression, void 0, [
-          ts.createAssignment(tempVar, hooksSignatureMap.get(arg0) || arg0),
-          ...callExpr.arguments.slice(1),
-        ]),
+        call: factory.updateCallExpression(
+          callExpr,
+          callExpr.expression,
+          void 0,
+          [
+            factory.createAssignment(
+              tempVar,
+              hooksSignatureMap.get(arg0) || arg0,
+            ),
+            ...callExpr.arguments.slice(1),
+          ],
+        ),
         registers: [
           createComponentRegisterCall(
             tempVar,
@@ -238,8 +262,12 @@ export default function(opts = {}) {
     }
     function createTempVariable() {
       const id = ts.createFileLevelUniqueName('$c' + uniqueName++);
-      context.hoistVariableDeclaration(id);
-      return id;
+      return context.hoistVariableDeclaration(id), id;
+      // return factory.createTempVariable(
+      //   context.hoistVariableDeclaration,
+      //   // @ts-ignore the second parameter "reservedInNestedScopes?: boolean" has a private signature
+      //   true,
+      // );
     }
     /**
      * ! This function does not consider variable shadowing !
@@ -297,22 +325,26 @@ export default function(opts = {}) {
           node.body
         ) {
           const hooksTracker = createTempVariable();
-          const createHooksTracker = ts.createExpressionStatement(
-            ts.createBinary(
+          const createHooksTracker = factory.createExpressionStatement(
+            factory.createBinaryExpression(
               hooksTracker,
-              ts.createToken(ts.SyntaxKind.EqualsToken),
-              ts.createCall(refreshSig, undefined, []),
+              factory.createToken(ts.SyntaxKind.EqualsToken),
+              factory.createCallExpression(refreshSig, undefined, []),
             ),
           );
           // @ts-ignore
           context.addInitializationStatement(createHooksTracker);
-          const callTracker = ts.createCall(hooksTracker, void 0, []);
+          const callTracker = factory.createCallExpression(
+            hooksTracker,
+            void 0,
+            [],
+          );
           const nextBody = ts.isBlock(node.body)
             ? updateStatements(node.body, r => [
-                ts.createExpressionStatement(callTracker),
+                factory.createExpressionStatement(callTracker),
                 ...r,
               ])
-            : ts.createComma(callTracker, node.body);
+            : factory.createComma(callTracker, node.body);
           // @ts-ignore
           const newFunction = updateBody(node, nextBody);
           const hooksSignature = hooksCallsToSignature(hooksCalls);
@@ -359,7 +391,7 @@ export default function(opts = {}) {
           const signatureReport = hooksSignatureMap.get(statement);
           next.push(statement);
           if (signatureReport)
-            next.push(ts.createExpressionStatement(signatureReport));
+            next.push(factory.createExpressionStatement(signatureReport));
         }
         return next;
       }
@@ -457,6 +489,146 @@ export default function(opts = {}) {
         }),
       };
     }
+    /**
+     * @param {Identifier} instance The identifier of the sig instance
+     * @param {Expression} component The binding component
+     * @param {string} signature The signature of the function
+     * @param {boolean} forceRefresh Does forceRefresh enabled?
+     * @param {Expression[]} trackers A list of custom hooks references
+     */
+    function createHooksRegisterCall(
+      instance,
+      component,
+      signature,
+      forceRefresh,
+      trackers,
+    ) {
+      const args = [component];
+      if (signature.includes('\n'))
+        args.push(
+          factory.createNoSubstitutionTemplateLiteral(signature, signature),
+        );
+      else args.push(factory.createStringLiteral(signature));
+
+      if (forceRefresh || trackers.length)
+        args.push(forceRefresh ? factory.createTrue() : factory.createFalse());
+      if (trackers.length)
+        args.push(
+          factory.createArrowFunction(
+            void 0,
+            void 0,
+            [],
+            void 0,
+            factory.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
+            factory.createArrayLiteralExpression(trackers),
+          ),
+        );
+      return factory.createCallExpression(instance, void 0, args);
+    }
+    /**
+     * @param {Identifier} id
+     * @param {string} name
+     */
+    function createComponentRegisterCall(id, name) {
+      return factory.createExpressionStatement(
+        factory.createCallExpression(refreshReg, void 0, [
+          id,
+          factory.createStringLiteral(name),
+        ]),
+      );
+    }
+    /**
+     * @template {Node} T
+     * @returns {T}
+     */
+    function updateStatements(
+      /** @type {T} */ node,
+      /** @type {(s: import('typescript').NodeArray<Statement>) => readonly Statement[]} */ f,
+    ) {
+      if (ts.isSourceFile(node)) {
+        const sf = factory.updateSourceFile(
+          node,
+          f(node.statements),
+          node.isDeclarationFile,
+          node.referencedFiles,
+          node.typeReferenceDirectives,
+          node.hasNoDefaultLib,
+          node.libReferenceDirectives,
+        );
+        // @ts-ignore
+        return sf;
+      }
+      if (ts.isCaseClause(node)) {
+        const caseClause = factory.updateCaseClause(
+          node,
+          node.expression,
+          f(node.statements),
+        );
+        // @ts-ignore
+        return caseClause;
+      }
+      if (ts.isDefaultClause(node)) {
+        const defaultClause = factory.updateDefaultClause(
+          node,
+          f(node.statements),
+        );
+        // @ts-ignore
+        return defaultClause;
+      }
+      if (ts.isModuleBlock(node)) {
+        const modBlock = factory.updateModuleBlock(node, f(node.statements));
+        // @ts-ignore
+        return modBlock;
+      }
+      if (ts.isBlock(node)) {
+        const block = factory.updateBlock(node, f(node.statements));
+        // @ts-ignore
+        return block;
+      }
+      return node;
+    }
+    /** @returns {HandledFunction} */
+    function updateBody(
+      /** @type {Node} */ node,
+      /** @type {import('typescript').Block} */ nextBody,
+    ) {
+      if (ts.isFunctionDeclaration(node)) {
+        return factory.updateFunctionDeclaration(
+          node,
+          node.decorators,
+          node.modifiers,
+          node.asteriskToken,
+          node.name,
+          node.typeParameters,
+          node.parameters,
+          node.type,
+          nextBody,
+        );
+      } else if (ts.isFunctionExpression(node)) {
+        return factory.updateFunctionExpression(
+          node,
+          node.modifiers,
+          node.asteriskToken,
+          node.name,
+          node.typeParameters,
+          node.parameters,
+          node.type,
+          nextBody,
+        );
+      } else if (ts.isArrowFunction(node)) {
+        return factory.updateArrowFunction(
+          node,
+          node.modifiers,
+          node.typeParameters,
+          node.parameters,
+          node.type,
+          node.equalsGreaterThanToken,
+          nextBody,
+        );
+      }
+      // @ts-ignore
+      return node;
+    }
   };
 
   /**
@@ -524,83 +696,6 @@ export default function(opts = {}) {
       }
     }
     return false;
-  }
-
-  /**
-   * @template {Node} T
-   * @returns {T}
-   */
-  function updateStatements(
-    /** @type {T} */ node,
-    /** @type {(s: import('typescript').NodeArray<Statement>) => readonly Statement[]} */ f,
-  ) {
-    if (ts.isSourceFile(node))
-      // @ts-ignore
-      return ts.updateSourceFileNode(
-        node,
-        f(node.statements),
-        node.isDeclarationFile,
-        node.referencedFiles,
-        node.typeReferenceDirectives,
-        node.hasNoDefaultLib,
-        node.libReferenceDirectives,
-      );
-    if (ts.isCaseClause(node))
-      // @ts-ignore
-      return ts.updateCaseClause(node, node.expression, f(node.statements));
-    if (ts.isDefaultClause(node))
-      // @ts-ignore
-      return ts.updateDefaultClause(node, f(node.statements));
-    if (ts.isModuleBlock(node))
-      // @ts-ignore
-      return ts.updateModuleBlock(node, f(node.statements));
-    if (ts.isBlock(node))
-      // @ts-ignore
-      return ts.updateBlock(node, f(node.statements));
-    return node;
-  }
-
-  /** @returns {HandledFunction} */
-  function updateBody(
-    /** @type {Node} */ node,
-    /** @type {import('typescript').Block} */ nextBody,
-  ) {
-    if (ts.isFunctionDeclaration(node)) {
-      return ts.updateFunctionDeclaration(
-        node,
-        node.decorators,
-        node.modifiers,
-        node.asteriskToken,
-        node.name,
-        node.typeParameters,
-        node.parameters,
-        node.type,
-        nextBody,
-      );
-    } else if (ts.isFunctionExpression(node)) {
-      return ts.updateFunctionExpression(
-        node,
-        node.modifiers,
-        node.asteriskToken,
-        node.name,
-        node.typeParameters,
-        node.parameters,
-        node.type,
-        nextBody,
-      );
-    } else if (ts.isArrowFunction(node)) {
-      return ts.updateArrowFunction(
-        node,
-        node.modifiers,
-        node.typeParameters,
-        node.parameters,
-        node.type,
-        node.equalsGreaterThanToken,
-        nextBody,
-      );
-    }
-    // @ts-ignore
-    return node;
   }
 
   function isIntrinsicElement(/** @type {Identifier} */ id) {
@@ -697,49 +792,6 @@ export default function(opts = {}) {
     if (ts.isArrowFunction(node)) return true;
     if (ts.isFunctionExpression(node)) return true;
     return false;
-  }
-  /**
-   * @param {Identifier} id
-   * @param {string} name
-   */
-  function createComponentRegisterCall(id, name) {
-    return ts.createExpressionStatement(
-      ts.createCall(refreshReg, void 0, [id, ts.createLiteral(name)]),
-    );
-  }
-  /**
-   * @param {Identifier} instance The identifier of the sig instance
-   * @param {Expression} component The binding component
-   * @param {string} signature The signature of the function
-   * @param {boolean} forceRefresh Does forceRefresh enabled?
-   * @param {Expression[]} trackers A list of custom hooks references
-   */
-  function createHooksRegisterCall(
-    instance,
-    component,
-    signature,
-    forceRefresh,
-    trackers,
-  ) {
-    const args = [component];
-    if (signature.includes('\n'))
-      args.push(ts.createNoSubstitutionTemplateLiteral(signature, signature));
-    else args.push(ts.createLiteral(signature));
-
-    if (forceRefresh || trackers.length)
-      args.push(ts.createLiteral(forceRefresh));
-    if (trackers.length)
-      args.push(
-        ts.createArrowFunction(
-          void 0,
-          void 0,
-          [],
-          void 0,
-          ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
-          ts.createArrayLiteral(trackers),
-        ),
-      );
-    return ts.createCall(instance, void 0, args);
   }
   /**
    * If the call expression seems like "jsx(...)" or "xyz.jsx(...)"

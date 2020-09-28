@@ -27,6 +27,6 @@
     "node": ">=0.10.0"
   },
   "devDependencies": {
-    "typescript": "^3.9"
+    "typescript": "^4.0"
   }
 }
