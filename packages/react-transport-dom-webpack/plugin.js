@@ -7,4 +7,4 @@
  * @flow
  */
 
-export {default} from './src/ReactFlightWebpackPlugin';
+export { default } from './src/ReactFlightWebpackPlugin';

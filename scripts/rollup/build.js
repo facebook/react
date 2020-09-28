@@ -1,11 +1,11 @@
 'use strict';
 
 const rollup = require('rollup');
-const babel = require('rollup-plugin-babel');
+const babel = require('@rollup/plugin-babel').babel;
 const closure = require('./plugins/closure-plugin');
-const commonjs = require('rollup-plugin-commonjs');
+const commonjs = require('@rollup/plugin-commonjs');
 const prettier = require('rollup-plugin-prettier');
-const replace = require('rollup-plugin-replace');
+const replace = require('@rollup/plugin-replace');
 const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
 const path = require('path');
@@ -21,8 +21,8 @@ const useForks = require('./plugins/use-forks-plugin');
 const stripUnusedImports = require('./plugins/strip-unused-imports');
 const extractErrorCodes = require('../error-codes/extract-errors');
 const Packaging = require('./packaging');
-const {asyncRimRaf} = require('./utils');
-const codeFrame = require('babel-code-frame');
+const { asyncRimRaf } = require('./utils');
+const codeFrame = require('@babel/code-frame');
 const Wrappers = require('./wrappers');
 
 const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
@@ -63,7 +63,7 @@ const {
   RN_FB_PROFILING,
 } = Bundles.bundleTypes;
 
-const {getFilename} = Bundles;
+const { getFilename } = Bundles;
 
 function parseRequestedNames(names, toCase) {
   let result = [];
@@ -115,22 +115,22 @@ const closureOptions = {
 const babelPlugins = [
   // These plugins filter out non-ES2015.
   '@babel/plugin-transform-flow-strip-types',
-  ['@babel/plugin-proposal-class-properties', {loose: true}],
+  ['@babel/plugin-proposal-class-properties', { loose: true }],
   'syntax-trailing-function-commas',
   // These use loose mode which avoids embedding a runtime.
   // TODO: Remove object spread from the source. Prefer Object.assign instead.
   [
     '@babel/plugin-proposal-object-rest-spread',
-    {loose: true, useBuiltIns: true},
+    { loose: true, useBuiltIns: true },
   ],
-  ['@babel/plugin-transform-template-literals', {loose: true}],
+  ['@babel/plugin-transform-template-literals', { loose: true }],
   // TODO: Remove for...of from the source. It requires a runtime to be embedded.
   '@babel/plugin-transform-for-of',
   // TODO: Remove array spread from the source. Prefer .apply instead.
-  ['@babel/plugin-transform-spread', {loose: true, useBuiltIns: true}],
+  ['@babel/plugin-transform-spread', { loose: true, useBuiltIns: true }],
   '@babel/plugin-transform-parameters',
   // TODO: Remove array destructuring from the source. Requires runtime.
-  ['@babel/plugin-transform-destructuring', {loose: true, useBuiltIns: true}],
+  ['@babel/plugin-transform-destructuring', { loose: true, useBuiltIns: true }],
 ];
 
 const babelToES5Plugins = [
@@ -140,7 +140,7 @@ const babelToES5Plugins = [
   '@babel/plugin-transform-block-scoped-functions',
   '@babel/plugin-transform-shorthand-properties',
   '@babel/plugin-transform-computed-properties',
-  ['@babel/plugin-transform-block-scoping', {throwIfClosureRequired: true}],
+  ['@babel/plugin-transform-block-scoping', { throwIfClosureRequired: true }],
 ];
 
 function getBabelConfig(
@@ -156,6 +156,7 @@ function getBabelConfig(
     exclude: '/**/node_modules/**',
     babelrc: false,
     configFile: false,
+    babelHelpers: "bundled",
     presets: [],
     plugins: [...babelPlugins],
   };
@@ -195,7 +196,7 @@ function getBabelConfig(
           [
             require('../error-codes/transform-error-messages'),
             // Preserve full error messages in React Native build
-            {noMinify: true},
+            { noMinify: true },
           ],
         ]),
       });
@@ -233,6 +234,7 @@ function getRollupOutputOptions(
     globals,
     freeze: !isProduction,
     interop: false,
+    exports: 'auto',
     name: globalName,
     sourcemap: false,
     esModule: false,
@@ -319,7 +321,7 @@ function forbidFBJSImports() {
       if (/^fbjs\//.test(importee)) {
         throw new Error(
           `Don't import ${importee} (found in ${importer}). ` +
-            `Use the utilities in packages/shared/ instead.`
+          `Use the utilities in packages/shared/ instead.`
         );
       }
     },
@@ -411,25 +413,25 @@ function getPlugins(
     isUMDBundle && entry === 'react-art' && commonjs(),
     // Apply dead code elimination and/or minification.
     isProduction &&
-      closure(
-        Object.assign({}, closureOptions, {
-          // Don't let it create global variables in the browser.
-          // https://github.com/facebook/react/issues/10909
-          assume_function_wrapper: !isUMDBundle,
-          renaming: !shouldStayReadable,
-        })
-      ),
+    closure(
+      Object.assign({}, closureOptions, {
+        // Don't let it create global variables in the browser.
+        // https://github.com/facebook/react/issues/10909
+        assume_function_wrapper: !isUMDBundle,
+        renaming: !shouldStayReadable,
+      })
+    ),
     // HACK to work around the fact that Rollup isn't removing unused, pure-module imports.
     // Note that this plugin must be called after closure applies DCE.
     isProduction && stripUnusedImports(pureExternalModules),
     // Add the whitespace back if necessary.
     shouldStayReadable &&
-      prettier({
-        parser: 'babel',
-        singleQuote: false,
-        trailingComma: 'none',
-        bracketSpacing: true,
-      }),
+    prettier({
+      parser: 'babel',
+      singleQuote: false,
+      trailingComma: 'none',
+      bracketSpacing: true,
+    }),
     // License and haste headers, top-level `if` blocks.
     {
       renderChunk(source) {
@@ -564,14 +566,14 @@ async function createBundle(bundle, bundleType) {
   }
 
   const importSideEffects = Modules.getImportSideEffects();
-  const pureExternalModules = Object.keys(importSideEffects).filter(
+  const moduleSideEffects = Object.keys(importSideEffects).filter(
     module => !importSideEffects[module]
   );
 
   const rollupConfig = {
     input: resolvedEntry,
     treeshake: {
-      pureExternalModules,
+      moduleSideEffects,
     },
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
@@ -591,12 +593,13 @@ async function createBundle(bundle, bundleType) {
       bundleType,
       bundle.global,
       bundle.moduleType,
-      pureExternalModules,
+      moduleSideEffects,
       bundle
     ),
     output: {
       externalLiveBindings: false,
       freeze: false,
+      exports: 'auto',
       interop: false,
       esModule: false,
     },
@@ -659,10 +662,10 @@ function handleRollupWarning(warning) {
     if (typeof importSideEffects[externalModule] !== 'boolean') {
       throw new Error(
         'An external module "' +
-          externalModule +
-          '" is used in a DEV-only code path ' +
-          'but we do not know if it is safe to omit an unused require() to it in production. ' +
-          'Please add it to the `importSideEffects` list in `scripts/rollup/modules.js`.'
+        externalModule +
+        '" is used in a DEV-only code path ' +
+        'but we do not know if it is safe to omit an unused require() to it in production. ' +
+        'Please add it to the `importSideEffects` list in `scripts/rollup/modules.js`.'
       );
     }
     // Don't warn. We will remove side effectless require() in a later pass.
@@ -697,7 +700,7 @@ function handleRollupError(error) {
   );
   console.error(error.stack);
   if (error.loc && error.loc.file) {
-    const {file, line, column} = error.loc;
+    const { file, line, column } = error.loc;
     // This looks like an error from Rollup, e.g. missing export.
     // We'll use the accurate line numbers provided by Rollup but
     // use Babel code frame because it looks nicer.
@@ -776,8 +779,8 @@ async function buildEverything() {
   if (shouldExtractErrors) {
     console.warn(
       '\nWarning: this build was created with --extract-errors enabled.\n' +
-        'this will result in extremely slow builds and should only be\n' +
-        'used when the error map needs to be rebuilt.\n'
+      'this will result in extremely slow builds and should only be\n' +
+      'used when the error map needs to be rebuilt.\n'
     );
   }
 }
