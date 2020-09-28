@@ -28,7 +28,6 @@ export const {
   enableDebugTracing,
   skipUnmountedBoundaries,
   enableEagerRootListeners,
-  disableSchedulerTimeoutInWorkLoop,
   enableDoubleInvokingEffects,
 } = dynamicFeatureFlags;
 

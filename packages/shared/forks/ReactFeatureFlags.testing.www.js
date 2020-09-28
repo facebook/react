@@ -49,7 +49,6 @@ export const deferRenderPhaseUpdateToNextBatch = true;
 export const decoupleUpdatePriorityFromScheduler = false;
 export const enableDiscreteEventFlushingChange = true;
 export const enableEagerRootListeners = true;
-export const disableSchedulerTimeoutInWorkLoop = false;
 
 export const enableDoubleInvokingEffects = false;
 

@@ -30,7 +30,6 @@ import {
   enableSchedulingProfiler,
   enableScopeAPI,
   skipUnmountedBoundaries,
-  disableSchedulerTimeoutInWorkLoop,
   enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -745,7 +744,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
 // This is the entry point for every concurrent task, i.e. anything that
 // goes through Scheduler.
-function performConcurrentWorkOnRoot(root, didTimeout) {
+function performConcurrentWorkOnRoot(root) {
   // Since we know we're in a React event, we can clear the current
   // event time. The next update will compute a new event time.
   currentEventTime = NoTimestamp;
@@ -782,18 +781,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   );
   if (lanes === NoLanes) {
     // Defensive coding. This is never expected to happen.
-    return null;
-  }
-
-  // TODO: We only check `didTimeout` defensively, to account for a Scheduler
-  // bug we're still investigating. Once the bug in Scheduler is fixed,
-  // we can remove this, since we track expiration ourselves.
-  if (!disableSchedulerTimeoutInWorkLoop && didTimeout) {
-    // Something expired. Flush synchronously until there's no expired
-    // work left.
-    markRootExpired(root, lanes);
-    // This will schedule a synchronous callback.
-    ensureRootIsScheduled(root, now());
     return null;
   }
 
