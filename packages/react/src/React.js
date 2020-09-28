@@ -49,20 +49,11 @@ import {
   useDeferredValue,
   useOpaqueIdentifier,
 } from './ReactHooks';
-import {
-  createElementWithValidation,
-  createFactoryWithValidation,
-  cloneElementWithValidation,
-} from './ReactElementValidator';
+import {createElement, cloneElement, createFactory} from './ReactElementCreator';
 import {createMutableSource} from './ReactMutableSource';
 import ReactSharedInternals from './ReactSharedInternals';
 import {createFundamental} from './ReactFundamental';
 import {startTransition} from './ReactStartTransition';
-
-// TODO: Move this branching into the other module instead and just re-export.
-const createElement = __DEV__ ? createElementWithValidation : createElementProd;
-const cloneElement = __DEV__ ? cloneElementWithValidation : cloneElementProd;
-const createFactory = __DEV__ ? createFactoryWithValidation : createFactoryProd;
 
 const Children = {
   map,
