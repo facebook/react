@@ -52,7 +52,6 @@
     "eslint-config-prettier": "^6.9.0",
     "eslint-plugin-babel": "^5.3.0",
     "eslint-plugin-flowtype": "^2.25.0",
-    "eslint-plugin-jest": "^22.15.0",
     "eslint-plugin-no-for-of-loops": "^1.0.0",
     "eslint-plugin-no-function-declare-after-return": "^1.0.0",
     "eslint-plugin-react": "^6.7.1",
@@ -65,11 +64,6 @@
     "google-closure-compiler": "^20200517.0.0",
     "gzip-size": "^5.1.1",
     "jasmine-check": "^1.0.0-rc.0",
-    "jest": "^25.2.7",
-    "jest-cli": "^25.2.7",
-    "jest-diff": "^25.2.6",
-    "jest-environment-jsdom-sixteen": "^1.0.3",
-    "jest-snapshot-serializer-raw": "^1.1.0",
     "minimatch": "^3.0.4",
     "minimist": "^1.2.3",
     "mkdirp": "^0.5.1",
@@ -133,5 +127,13 @@
     "version-check": "node ./scripts/tasks/version-check.js",
     "merge-fork": "node ./scripts/merge-fork/merge-fork.js",
     "replace-fork": "node ./scripts/merge-fork/replace-fork.js"
+  },
+  "dependencies": {
+    "eslint-plugin-jest": "^24.0.2",
+    "jest": "^26.4.2",
+    "jest-cli": "^26.4.2",
+    "jest-diff": "^26.4.2",
+    "jest-environment-jsdom": "^26.3.0",
+    "jest-snapshot-serializer-raw": "^1.1.0"
   }
 }

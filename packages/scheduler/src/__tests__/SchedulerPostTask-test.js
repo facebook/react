@@ -33,7 +33,7 @@ describe('SchedulerPostTask', () => {
 
     // Un-mock scheduler
     jest.mock('scheduler', () =>
-      require.requireActual('scheduler/unstable_post_task'),
+      jest.requireActual('scheduler/unstable_post_task'),
     );
 
     runtime = installMockBrowserRuntime();
@@ -83,20 +83,20 @@ describe('SchedulerPostTask', () => {
     const scheduler = {};
     global.scheduler = scheduler;
 
-    scheduler.postTask = function(callback, {priority, signal}) {
+    scheduler.postTask = function (callback, { priority, signal }) {
       const id = idCounter++;
       log(
         `Post Task ${id} [${priority === undefined ? '<default>' : priority}]`,
       );
       const controller = signal._controller;
       return new Promise((resolve, reject) => {
-        taskQueue.set(controller, {id, callback, resolve, reject});
+        taskQueue.set(controller, { id, callback, resolve, reject });
       });
     };
 
     global.TaskController = class TaskController {
       constructor() {
-        this.signal = {_controller: this};
+        this.signal = { _controller: this };
       }
       abort() {
         const task = taskQueue.get(this);
@@ -125,7 +125,7 @@ describe('SchedulerPostTask', () => {
       // delete the continuation task.
       const prevTaskQueue = taskQueue;
       taskQueue = new Map();
-      for (const [, {id, callback, resolve}] of prevTaskQueue) {
+      for (const [, { id, callback, resolve }] of prevTaskQueue) {
         log(`Task ${id} Fired`);
         callback(false);
         resolve();

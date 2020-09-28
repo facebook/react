@@ -34,9 +34,9 @@ describe('SchedulerBrowser', () => {
     jest.resetModules();
 
     // Un-mock scheduler
-    jest.mock('scheduler', () => require.requireActual('scheduler'));
+    jest.mock('scheduler', () => jest.requireActual('scheduler'));
     jest.mock('scheduler/src/SchedulerHostConfig', () =>
-      require.requireActual(
+      jest.requireActual(
         'scheduler/src/forks/SchedulerHostConfig.default.js',
       ),
     );
@@ -79,7 +79,7 @@ describe('SchedulerBrowser', () => {
     // TODO: Scheduler no longer requires these methods to be polyfilled. But
     // maybe we want to continue warning if they don't exist, to preserve the
     // option to rely on it in the future?
-    window.requestAnimationFrame = window.cancelAnimationFrame = () => {};
+    window.requestAnimationFrame = window.cancelAnimationFrame = () => { };
 
     window.setTimeout = (cb, delay) => {
       const id = timerIDCounter++;
