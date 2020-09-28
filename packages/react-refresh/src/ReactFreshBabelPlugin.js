@@ -7,21 +7,21 @@
 
 'use strict';
 
-export default function (babel, opts = {}) {
+export default function(babel, opts = {}) {
   if (typeof babel.env === 'function') {
     // Only available in Babel 7.
     const env = babel.env();
     if (env !== 'development' && !opts.skipEnvCheck) {
       throw new Error(
         'React Refresh Babel transform should only be enabled in development environment. ' +
-        'Instead, the environment is: "' +
-        env +
-        '". If you want to override this check, pass {skipEnvCheck: true} as plugin options.',
+          'Instead, the environment is: "' +
+          env +
+          '". If you want to override this check, pass {skipEnvCheck: true} as plugin options.',
       );
     }
   }
 
-  const { types: t } = babel;
+  const {types: t} = babel;
   const refreshReg = t.identifier(opts.refreshReg || '$RefreshReg$');
   const refreshSig = t.identifier(opts.refreshSig || '$RefreshSig$');
 
@@ -274,7 +274,7 @@ export default function (babel, opts = {}) {
   }
 
   function createArgumentsForSignature(node, signature, scope) {
-    const { key, customHooks } = signature;
+    const {key, customHooks} = signature;
 
     let forceReset = hasForceResetComment(scope.path);
     const customHooksInScope = [];
@@ -738,7 +738,7 @@ export default function (babel, opts = {}) {
           registrationsByProgramPath.delete(path);
           const declarators = [];
           path.pushContainer('body', t.variableDeclaration('var', declarators));
-          registrations.forEach(({ handle, persistentID }) => {
+          registrations.forEach(({handle, persistentID}) => {
             path.pushContainer(
               'body',
               t.expressionStatement(

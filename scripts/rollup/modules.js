@@ -1,7 +1,7 @@
 'use strict';
 
 const forks = require('./forks');
-const { UMD_DEV, UMD_PROD, UMD_PROFILING } = require('./bundles').bundleTypes;
+const {UMD_DEV, UMD_PROD, UMD_PROFILING} = require('./bundles').bundleTypes;
 
 // For any external that is used in a DEV-only condition, explicitly
 // specify whether it has side effects during import or not. This lets
@@ -17,7 +17,7 @@ const importSideEffects = Object.freeze({
   'react/jsx-dev-runtime': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-fetch/node': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-dom': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
-  'react': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  react: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.
