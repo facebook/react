@@ -26,9 +26,7 @@ describe('SchedulerNoDOM', () => {
     // Un-mock scheduler
     jest.mock('scheduler', () => jest.requireActual('scheduler'));
     jest.mock('scheduler/src/SchedulerHostConfig', () =>
-      jest.requireActual(
-        'scheduler/src/forks/SchedulerHostConfig.default.js',
-      ),
+      jest.requireActual('scheduler/src/forks/SchedulerHostConfig.default.js'),
     );
 
     Scheduler = require('scheduler');

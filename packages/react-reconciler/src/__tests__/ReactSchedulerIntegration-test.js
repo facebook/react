@@ -55,7 +55,7 @@ describe('ReactSchedulerIntegration', () => {
 
   // Note: This is based on a similar component we use in www. We can delete
   // once the extra div wrapper is no longer necessary.
-  function LegacyHiddenDiv({ children, mode }) {
+  function LegacyHiddenDiv({children, mode}) {
     return (
       <div hidden={mode === 'hidden'}>
         <React.unstable_LegacyHidden
@@ -130,7 +130,7 @@ describe('ReactSchedulerIntegration', () => {
   });
 
   it('layout effects have immediate priority', () => {
-    const { useLayoutEffect } = React;
+    const {useLayoutEffect} = React;
     function ReadPriority() {
       Scheduler.unstable_yieldValue(
         'Render priority: ' + getCurrentPriorityAsString(),
@@ -151,8 +151,8 @@ describe('ReactSchedulerIntegration', () => {
   });
 
   it('passive effects never have higher than normal priority', async () => {
-    const { useEffect } = React;
-    function ReadPriority({ step }) {
+    const {useEffect} = React;
+    function ReadPriority({step}) {
       Scheduler.unstable_yieldValue(
         `Render priority: ${getCurrentPriorityAsString()}`,
       );
@@ -204,8 +204,8 @@ describe('ReactSchedulerIntegration', () => {
   });
 
   it('passive effects have correct priority even if they are flushed early', async () => {
-    const { useEffect } = React;
-    function ReadPriority({ step }) {
+    const {useEffect} = React;
+    function ReadPriority({step}) {
       Scheduler.unstable_yieldValue(
         `Render priority [step ${step}]: ${getCurrentPriorityAsString()}`,
       );
@@ -232,8 +232,8 @@ describe('ReactSchedulerIntegration', () => {
   });
 
   it('passive effect clean-up functions have correct priority even when component is deleted', async () => {
-    const { useEffect } = React;
-    function ReadPriority({ step }) {
+    const {useEffect} = React;
+    function ReadPriority({step}) {
       useEffect(() => {
         return () => {
           Scheduler.unstable_yieldValue(
@@ -277,8 +277,8 @@ describe('ReactSchedulerIntegration', () => {
   });
 
   it('passive effects are called before Normal-pri scheduled in layout effects', async () => {
-    const { useEffect, useLayoutEffect } = React;
-    function Effects({ step }) {
+    const {useEffect, useLayoutEffect} = React;
+    function Effects({step}) {
       useLayoutEffect(() => {
         Scheduler.unstable_yieldValue('Layout Effect');
         Scheduler.unstable_scheduleCallback(NormalPriority, () =>
@@ -321,7 +321,7 @@ describe('ReactSchedulerIntegration', () => {
   });
 
   it('after completing a level of work, infers priority of the next batch based on its expiration time', () => {
-    function App({ label }) {
+    function App({label}) {
       Scheduler.unstable_yieldValue(
         `${label} [${getCurrentPriorityAsString()}]`,
       );
@@ -366,12 +366,12 @@ describe('ReactSchedulerIntegration', () => {
 
   // @gate experimental
   it('idle updates are not blocked by offscreen work', async () => {
-    function Text({ text }) {
+    function Text({text}) {
       Scheduler.unstable_yieldValue(text);
       return text;
     }
 
-    function App({ label }) {
+    function App({label}) {
       return (
         <>
           <Text text={`Visible: ` + label} />
@@ -423,7 +423,7 @@ describe('ReactSchedulerIntegration', () => {
 
 describe(
   'regression test: does not infinite loop if `shouldYield` returns ' +
-  'true after a partial tree expires',
+    'true after a partial tree expires',
   () => {
     let logDuringShouldYield = false;
 
@@ -463,11 +463,11 @@ describe(
       // (The next test in this suite covers the same case. The difference is
       // that this test only uses public APIs, whereas the next test mocks
       // `shouldYield` to check when it is called.)
-      function Text({ text }) {
+      function Text({text}) {
         return text;
       }
 
-      function App({ step }) {
+      function App({step}) {
         return (
           <>
             <Text text="A" />
@@ -501,12 +501,12 @@ describe(
       // specifically to test that React is resilient to the behavior of a
       // Scheduler API. That being said, feel free to rewrite or delete this
       // test if/when the API changes.
-      function Text({ text }) {
+      function Text({text}) {
         Scheduler.unstable_yieldValue(text);
         return text;
       }
 
-      function App({ step }) {
+      function App({step}) {
         return (
           <>
             <Text text="A" />

@@ -8,7 +8,7 @@
 'use strict';
 
 const babel = require('@babel/core');
-const { wrap } = require('jest-snapshot-serializer-raw');
+const {wrap} = require('jest-snapshot-serializer-raw');
 const freshPlugin = require('react-refresh/babel');
 
 function transform(input, options = {}) {
@@ -519,9 +519,9 @@ describe('ReactFreshBabelPlugin', () => {
       }),
     ).toThrowError(
       'React Refresh Babel transform should only be enabled in development environment. ' +
-      'Instead, the environment is: "' +
-      envName +
-      '". If you want to override this check, pass {skipEnvCheck: true} as plugin options.',
+        'Instead, the environment is: "' +
+        envName +
+        '". If you want to override this check, pass {skipEnvCheck: true} as plugin options.',
     );
   });
 });
