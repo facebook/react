@@ -415,13 +415,17 @@ describe('ReactElement.jsx', () => {
     // TODO: an explicit expect for no warning?
     ReactDOM.render(JSXRuntime.jsx(Parent, {}), container);
   });
-  it('does not crash when a Symbol is provided as the unique key', () => {
+  it('warns dev, but does not crash when a Symbol is provided as the unique key', () => {
     const container = document.createElement('div');
     const uniq = originalSymbol('uniq');
     const App = () => {
       return JSXRuntime.jsx('div', {}, uniq);
     };
-    ReactDOM.render(<App />, container);
+    expect(() => {
+      ReactDOM.render(<App />, container);
+    }).toWarnDev(
+      'Warning: React expects unique keys to be of type string or number. Other types will be automatically converted to strings, and may cause unexpected behavior',
+    );
     expect(container.innerHTML).toBe('<div></div>');
   });
 });

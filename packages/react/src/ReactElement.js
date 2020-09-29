@@ -222,12 +222,33 @@ export function jsx(type, config, maybeKey) {
   // key is explicitly declared to be undefined or not.
   if (maybeKey !== undefined) {
     key = typeof maybeKey === 'symbol' ? maybeKey.toString() : '' + maybeKey;
+    if (__DEV__) {
+      if (
+        maybeKey &&
+        typeof maybeKey !== 'string' &&
+        typeof maybeKey !== 'number'
+      ) {
+        console.warn(
+          'React expects unique keys to be of type string or number. Other types will be automatically converted to strings, and may cause unexpected behavior',
+        );
+      }
+    }
   }
 
   if (hasValidKey(config)) {
-    // key = typeof config.key === 'symbol' ? config.key.toString() : '' + config.key;
     key =
       typeof config.key === 'symbol' ? config.key.toString() : '' + config.key;
+    if (__DEV__) {
+      if (
+        config.key &&
+        typeof config.key !== 'string' &&
+        typeof config.key !== 'number'
+      ) {
+        console.warn(
+          'React expects unique keys to be of type string or number. Other types will be automatically converted to strings, and may cause unexpected behavior',
+        );
+      }
+    }
   }
 
   if (hasValidRef(config)) {
@@ -288,11 +309,26 @@ export function jsxDEV(type, config, maybeKey, source, self) {
   // key is explicitly declared to be undefined or not.
   if (maybeKey !== undefined) {
     key = typeof maybeKey === 'symbol' ? maybeKey.toString() : '' + maybeKey;
+    if (__DEV__) {
+      if (typeof maybeKey !== 'string' && typeof maybeKey !== 'number') {
+        console.warn(
+          'Warning: React expects unique keys to be of type string or number. Other types will be automatically converted to strings, and may cause unexpected behavior',
+        );
+      }
+    }
   }
 
   if (hasValidKey(config)) {
     key =
       typeof config.key === 'symbol' ? config.key.toString() : '' + config.key;
+    if (__DEV__) {
+      if (typeof config.key !== 'string' && typeof config.key !== 'number') {
+        console.log('key', config.key, typeof config.key);
+        console.warn(
+          'Warning: React expects unique keys to be of type string or number. Other types will be automatically converted to strings, and may cause unexpected behavior',
+        );
+      }
+    }
   }
 
   if (hasValidRef(config)) {
@@ -372,6 +408,17 @@ export function createElement(type, config, children) {
         typeof config.key === 'symbol'
           ? config.key.toString()
           : '' + config.key;
+      if (__DEV__) {
+        if (
+          config.key &&
+          typeof config.key !== 'string' &&
+          typeof config.key !== 'number'
+        ) {
+          console.warn(
+            'React expects unique keys to be of type string or number. Other types will be automatically converted to strings, and may cause unexpected behavior',
+          );
+        }
+      }
     }
 
     self = config.__self === undefined ? null : config.__self;
@@ -508,6 +555,17 @@ export function cloneElement(element, config, children) {
         typeof config.key === 'symbol'
           ? config.key.toString()
           : '' + config.key;
+      if (__DEV__) {
+        if (
+          config.key &&
+          typeof config.key !== 'string' &&
+          typeof config.key !== 'number'
+        ) {
+          console.warn(
+            'React expects unique keys to be of type string or number. Other types will be automatically converted to strings, and may cause unexpected behavior',
+          );
+        }
+      }
     }
 
     // Remaining properties override existing props

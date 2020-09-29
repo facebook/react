@@ -16,6 +16,8 @@ let ReactTestUtils;
 describe('ReactElement', () => {
   let ComponentClass;
   let originalSymbol;
+  let originalError;
+  let originalWarn;
 
   beforeEach(() => {
     jest.resetModules();
@@ -23,6 +25,8 @@ describe('ReactElement', () => {
     // Delete the native Symbol if we have one to ensure we test the
     // unpolyfilled environment.
     originalSymbol = global.Symbol;
+    originalWarn = console.warn;
+    originalError = console.error;
     global.Symbol = undefined;
 
     React = require('react');
@@ -39,6 +43,8 @@ describe('ReactElement', () => {
 
   afterEach(() => {
     global.Symbol = originalSymbol;
+    console.warn = originalWarn;
+    console.error = originalError;
   });
 
   it('uses the fallback value when in an environment without Symbol', () => {
@@ -497,7 +503,7 @@ describe('ReactElement', () => {
     const jsonElement = JSON.stringify(React.createElement('div'));
     expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
   });
-  it('does not crash when a Symbol is provided as the unique key', () => {
+  it('warns dev, but does not crash when a Symbol is provided as the unique key', () => {
     const container = document.createElement('div');
     const uniq = originalSymbol('uniq');
     const App = () => {
@@ -507,7 +513,12 @@ describe('ReactElement', () => {
         </div>
       );
     };
-    ReactDOM.render(<App />, container);
+    expect(() => {
+      ReactDOM.render(<App />, container);
+    }).toWarnDev(
+      'React expects unique keys to be of type string or number. Other types will be automatically converted to strings, and may cause unexpected behavior',
+    );
+
     const element = React.createElement('div', {}, uniq);
     const cloned = React.cloneElement(
       {
@@ -527,6 +538,11 @@ describe('ReactElement', () => {
   });
 
   it('throws when two siblings have different Symbols for the same value as the key', () => {
+    const consoleOutput = [];
+    const mockedWarn = output => consoleOutput.push(output);
+    console.warn = mockedWarn;
+    console.error = mockedWarn;
+
     const container = document.createElement('div');
     const uniq = originalSymbol('uniq');
     const uniq2 = originalSymbol('uniq');
@@ -540,10 +556,11 @@ describe('ReactElement', () => {
         </>
       );
     };
-    expect(() => {
-      ReactDOM.render(<App />, container);
-    }).toErrorDev(
-      'Warning: Encountered two children with the same key, `Symbol(uniq)`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.',
-    );
+    ReactDOM.render(<App />, container);
+    expect(consoleOutput).toStrictEqual([
+      'Warning: React expects unique keys to be of type string or number. Other types will be automatically converted to strings, and may cause unexpected behavior%s',
+      'Warning: React expects unique keys to be of type string or number. Other types will be automatically converted to strings, and may cause unexpected behavior%s',
+      'Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s',
+    ]);
   });
 });
