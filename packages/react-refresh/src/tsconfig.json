@@ -1,0 +1,4 @@
+{
+  "compilerOptions": {"checkJs": true, "noEmit": true, "allowJs": true, "strict": true},
+  "files": ["./ReactFreshTypeScriptTransformer.js"]
+}
