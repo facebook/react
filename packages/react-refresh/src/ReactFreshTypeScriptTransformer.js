@@ -20,6 +20,7 @@ export default function(opts = {}) {
   const refreshReg = ts.createIdentifier(opts.refreshReg || '$RefreshReg$');
   const refreshSig = ts.createIdentifier(opts.refreshSig || '$RefreshSig$');
   return context => {
+    let uniqueName = 0;
     return file => {
       if (file.isDeclarationFile) return file;
       const containHooksLikeOrJSX =
@@ -235,7 +236,9 @@ export default function(opts = {}) {
       };
     }
     function createTempVariable() {
-      return ts.createTempVariable(context.hoistVariableDeclaration);
+      const id = ts.createFileLevelUniqueName('$c' + uniqueName++);
+      context.hoistVariableDeclaration(id);
+      return id;
     }
     /**
      * ! This function does not consider variable shadowing !
