@@ -149,12 +149,13 @@ export default function(opts = {}) {
         } else if (
           isFunctionExpressionLikeOrFunctionDeclaration(node.expression)
         ) {
-          if (hooksSignatureMap.has(node.expression)) {
+          const expr = hooksSignatureMap.get(node.expression);
+          if (expr) {
             return ts.updateExportAssignment(
               node,
               node.decorators,
               node.modifiers,
-              hooksSignatureMap.get(node.expression),
+              expr,
             );
           }
         }
@@ -436,6 +437,7 @@ export default function(opts = {}) {
             isFunctionExpressionLikeOrFunctionDeclaration,
           );
           const callee = x.expression;
+          if (!ownerFunction) return true;
           if (ts.isPropertyAccessExpression(callee)) {
             const left = callee.expression;
             if (ts.isIdentifier(left)) {
@@ -504,8 +506,9 @@ export default function(opts = {}) {
             return true;
         }
       } else if (ts.isImportDeclaration(node)) {
-        const defaultImport = node.importClause.name;
-        const namedImport = node.importClause.namedBindings;
+        const clause = node.importClause;
+        const defaultImport = clause && clause.name;
+        const namedImport = clause && clause.namedBindings;
         if (defaultImport && defaultImport.text === name) return true;
         if (namedImport && ts.isNamespaceImport(namedImport)) {
           if (namedImport.name.text === name) return true;
@@ -645,7 +648,10 @@ export default function(opts = {}) {
     return undefined;
   }
 
-  /** If it return true, don't track it even it is used as JSX component */
+  /**
+   * If it return true, don't track it even it is used as JSX component
+   * @return {boolean}
+   */
   function unwantedComponentLikeDefinition(/** @type {Expression} */ expr) {
     if (isImportOrRequireLike(expr)) return true;
     // `const A = B.X` or `const A = X`
@@ -727,7 +733,7 @@ export default function(opts = {}) {
         ts.createArrowFunction(
           void 0,
           void 0,
-          void 0,
+          [],
           void 0,
           ts.createToken(ts.SyntaxKind.EqualsGreaterThanToken),
           ts.createArrayLiteral(trackers),
