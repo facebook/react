@@ -1941,7 +1941,27 @@ function commitRootImpl(root, renderPriorityLevel) {
       markLayoutEffectsStarted(lanes);
     }
 
-    recursivelyCommitLayoutEffects(finishedWork, root, lanes);
+    if (__DEV__) {
+      setCurrentDebugFiberInDEV(finishedWork);
+      invokeGuardedCallback(
+        null,
+        recursivelyCommitLayoutEffects,
+        null,
+        finishedWork,
+        root,
+      );
+      if (hasCaughtError()) {
+        const error = clearCaughtError();
+        captureCommitPhaseErrorOnRoot(finishedWork, finishedWork, error);
+      }
+      resetCurrentDebugFiberInDEV();
+    } else {
+      try {
+        recursivelyCommitLayoutEffects(finishedWork, root);
+      } catch (error) {
+        captureCommitPhaseErrorOnRoot(finishedWork, finishedWork, error);
+      }
+    }
 
     if (__DEV__) {
       if (enableDebugTracing) {
@@ -2257,8 +2277,7 @@ function commitMutationEffectsImpl(
       commitDetachRef(current);
     }
     if (enableScopeAPI) {
-      // TODO: This is a temporary solution that allowed us to transition away
-      // from React Flare on www.
+      // TODO: This is a temporary solution that allowed us to transition away from React Flare on www.
       if (fiber.tag === ScopeComponent) {
         commitAttachRef(fiber);
       }

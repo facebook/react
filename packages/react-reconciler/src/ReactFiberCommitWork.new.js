@@ -17,7 +17,6 @@ import type {
 } from './ReactFiberHostConfig';
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
@@ -77,6 +76,7 @@ import {
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import {
+  current as currentDebugFiberInDEV,
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
@@ -442,10 +442,10 @@ function commitProfilerPassiveEffect(
 
 function recursivelyCommitLayoutEffects(
   finishedWork: Fiber,
-  root: FiberRoot,
-  committedLanes: Lanes,
+  finishedRoot: FiberRoot,
 ) {
-  switch (finishedWork.tag) {
+  const {flags, tag} = finishedWork;
+  switch (tag) {
     case Profiler: {
       let prevProfilerOnStack = null;
       if (enableProfilerTimer && enableProfilerCommitHooks) {
@@ -458,31 +458,65 @@ function recursivelyCommitLayoutEffects(
         const primaryFlags = child.flags & LayoutMask;
         const primarySubtreeFlags = child.subtreeFlags & LayoutMask;
         if (primaryFlags !== NoFlags || primarySubtreeFlags !== NoFlags) {
-          recursivelyCommitLayoutEffects(child, root, committedLanes);
+          if (__DEV__) {
+            const prevCurrentFiberInDEV = currentDebugFiberInDEV;
+            setCurrentDebugFiberInDEV(child);
+            invokeGuardedCallback(
+              null,
+              recursivelyCommitLayoutEffects,
+              null,
+              child,
+              finishedRoot,
+            );
+            if (hasCaughtError()) {
+              const error = clearCaughtError();
+              captureCommitPhaseError(child, finishedWork, error);
+            }
+            if (prevCurrentFiberInDEV !== null) {
+              setCurrentDebugFiberInDEV(prevCurrentFiberInDEV);
+            } else {
+              resetCurrentDebugFiberInDEV();
+            }
+          } else {
+            try {
+              recursivelyCommitLayoutEffects(child, finishedRoot);
+            } catch (error) {
+              captureCommitPhaseError(child, finishedWork, error);
+            }
+          }
         }
         child = child.sibling;
       }
 
-      if (__DEV__) {
-        setCurrentDebugFiberInDEV(finishedWork);
-        invokeGuardedCallback(
-          null,
-          commitLayoutEffectsForFiber,
-          null,
-          finishedWork,
-          root,
-          committedLanes,
-        );
-        if (hasCaughtError()) {
-          const error = clearCaughtError();
-          captureCommitPhaseError(finishedWork, finishedWork.return, error);
-        }
-        resetCurrentDebugFiberInDEV();
-      } else {
-        try {
-          commitLayoutEffectsForFiber(finishedWork, root, committedLanes);
-        } catch (error) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error);
+      const primaryFlags = flags & (Update | Callback);
+      if (primaryFlags !== NoFlags) {
+        if (enableProfilerTimer) {
+          if (__DEV__) {
+            const prevCurrentFiberInDEV = currentDebugFiberInDEV;
+            setCurrentDebugFiberInDEV(finishedWork);
+            invokeGuardedCallback(
+              null,
+              commitLayoutEffectsForProfiler,
+              null,
+              finishedWork,
+              finishedRoot,
+            );
+            if (hasCaughtError()) {
+              const error = clearCaughtError();
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
+            }
+            if (prevCurrentFiberInDEV !== null) {
+              setCurrentDebugFiberInDEV(prevCurrentFiberInDEV);
+            } else {
+              resetCurrentDebugFiberInDEV();
+            }
+          } else {
+            try {
+              commitLayoutEffectsForProfiler(finishedWork, finishedRoot);
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
+            }
+          }
         }
       }
 
@@ -510,349 +544,107 @@ function recursivelyCommitLayoutEffects(
         const primaryFlags = child.flags & LayoutMask;
         const primarySubtreeFlags = child.subtreeFlags & LayoutMask;
         if (primaryFlags !== NoFlags || primarySubtreeFlags !== NoFlags) {
-          recursivelyCommitLayoutEffects(child, root, committedLanes);
+          if (__DEV__) {
+            const prevCurrentFiberInDEV = currentDebugFiberInDEV;
+            setCurrentDebugFiberInDEV(child);
+            invokeGuardedCallback(
+              null,
+              recursivelyCommitLayoutEffects,
+              null,
+              child,
+              finishedRoot,
+            );
+            if (hasCaughtError()) {
+              const error = clearCaughtError();
+              captureCommitPhaseError(child, finishedWork, error);
+            }
+            if (prevCurrentFiberInDEV !== null) {
+              setCurrentDebugFiberInDEV(prevCurrentFiberInDEV);
+            } else {
+              resetCurrentDebugFiberInDEV();
+            }
+          } else {
+            try {
+              recursivelyCommitLayoutEffects(child, finishedRoot);
+            } catch (error) {
+              captureCommitPhaseError(child, finishedWork, error);
+            }
+          }
         }
         child = child.sibling;
       }
 
-      if (__DEV__) {
-        setCurrentDebugFiberInDEV(finishedWork);
-        invokeGuardedCallback(
-          null,
-          commitLayoutEffectsForFiber,
-          null,
-          finishedWork,
-          root,
-          committedLanes,
-        );
-        if (hasCaughtError()) {
-          const error = clearCaughtError();
-          captureCommitPhaseError(finishedWork, finishedWork.return, error);
-        }
-        resetCurrentDebugFiberInDEV();
-      } else {
-        try {
-          commitLayoutEffectsForFiber(finishedWork, root, committedLanes);
-        } catch (error) {
-          captureCommitPhaseError(finishedWork, finishedWork.return, error);
+      const primaryFlags = flags & (Update | Callback);
+      if (primaryFlags !== NoFlags) {
+        switch (tag) {
+          case FunctionComponent:
+          case ForwardRef:
+          case SimpleMemoComponent:
+          case Block: {
+            if (
+              enableProfilerTimer &&
+              enableProfilerCommitHooks &&
+              finishedWork.mode & ProfileMode
+            ) {
+              try {
+                startLayoutEffectTimer();
+                commitHookEffectListMount(
+                  HookLayout | HookHasEffect,
+                  finishedWork,
+                );
+              } finally {
+                recordLayoutEffectDuration(finishedWork);
+              }
+            } else {
+              commitHookEffectListMount(
+                HookLayout | HookHasEffect,
+                finishedWork,
+              );
+            }
+
+            if ((finishedWork.subtreeFlags & PassiveMask) !== NoFlags) {
+              schedulePassiveEffectCallback();
+            }
+            break;
+          }
+          case ClassComponent: {
+            // NOTE: Layout effect durations are measured within this function.
+            commitLayoutEffectsForClassComponent(finishedWork);
+            break;
+          }
+          case HostRoot: {
+            commitLayoutEffectsForHostRoot(finishedWork);
+            break;
+          }
+          case HostComponent: {
+            commitLayoutEffectsForHostComponent(finishedWork);
+            break;
+          }
+          case SuspenseComponent: {
+            commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
+            break;
+          }
+          case FundamentalComponent:
+          case HostPortal:
+          case HostText:
+          case IncompleteClassComponent:
+          case LegacyHiddenComponent:
+          case OffscreenComponent:
+          case ScopeComponent:
+          case SuspenseListComponent: {
+            // We have no life-cycles associated with these component types.
+            break;
+          }
+          default: {
+            invariant(
+              false,
+              'This unit of work tag should not have side-effects. This error is ' +
+                'likely caused by a bug in React. Please file an issue.',
+            );
+          }
         }
       }
       break;
-    }
-  }
-}
-
-function commitLayoutEffectsForFiber(
-  finishedWork: Fiber,
-  finishedRoot: FiberRoot,
-  committedLanes: Lanes,
-) {
-  const {alternate: current, flags, tag} = finishedWork;
-
-  if (flags & (Update | Callback)) {
-    switch (tag) {
-      case FunctionComponent:
-      case ForwardRef:
-      case SimpleMemoComponent:
-      case Block: {
-        // At this point layout effects have already been destroyed (during mutation phase).
-        // This is done to prevent sibling component effects from interfering with each other,
-        // e.g. a destroy function in one component should never override a ref set
-        // by a create function in another component during the same commit.
-        if (
-          enableProfilerTimer &&
-          enableProfilerCommitHooks &&
-          finishedWork.mode & ProfileMode
-        ) {
-          try {
-            startLayoutEffectTimer();
-            commitHookEffectListMount(HookLayout | HookHasEffect, finishedWork);
-          } finally {
-            recordLayoutEffectDuration(finishedWork);
-          }
-        } else {
-          commitHookEffectListMount(HookLayout | HookHasEffect, finishedWork);
-        }
-
-        if ((finishedWork.subtreeFlags & PassiveMask) !== NoFlags) {
-          schedulePassiveEffectCallback();
-        }
-        break;
-      }
-      case ClassComponent: {
-        const instance = finishedWork.stateNode;
-        if (flags & Update) {
-          if (current === null) {
-            // We could update instance props and state here,
-            // but instead we rely on them being set during last render.
-            // TODO: revisit this when we implement resuming.
-            if (__DEV__) {
-              if (
-                finishedWork.type === finishedWork.elementType &&
-                !didWarnAboutReassigningProps
-              ) {
-                if (instance.props !== finishedWork.memoizedProps) {
-                  console.error(
-                    'Expected %s props to match memoized props before ' +
-                      'componentDidMount. ' +
-                      'This might either be because of a bug in React, or because ' +
-                      'a component reassigns its own `this.props`. ' +
-                      'Please file an issue.',
-                    getComponentName(finishedWork.type) || 'instance',
-                  );
-                }
-                if (instance.state !== finishedWork.memoizedState) {
-                  console.error(
-                    'Expected %s state to match memoized state before ' +
-                      'componentDidMount. ' +
-                      'This might either be because of a bug in React, or because ' +
-                      'a component reassigns its own `this.state`. ' +
-                      'Please file an issue.',
-                    getComponentName(finishedWork.type) || 'instance',
-                  );
-                }
-              }
-            }
-            if (
-              enableProfilerTimer &&
-              enableProfilerCommitHooks &&
-              finishedWork.mode & ProfileMode
-            ) {
-              try {
-                startLayoutEffectTimer();
-                instance.componentDidMount();
-              } finally {
-                recordLayoutEffectDuration(finishedWork);
-              }
-            } else {
-              instance.componentDidMount();
-            }
-          } else {
-            const prevProps =
-              finishedWork.elementType === finishedWork.type
-                ? current.memoizedProps
-                : resolveDefaultProps(finishedWork.type, current.memoizedProps);
-            const prevState = current.memoizedState;
-            // We could update instance props and state here,
-            // but instead we rely on them being set during last render.
-            // TODO: revisit this when we implement resuming.
-            if (__DEV__) {
-              if (
-                finishedWork.type === finishedWork.elementType &&
-                !didWarnAboutReassigningProps
-              ) {
-                if (instance.props !== finishedWork.memoizedProps) {
-                  console.error(
-                    'Expected %s props to match memoized props before ' +
-                      'componentDidUpdate. ' +
-                      'This might either be because of a bug in React, or because ' +
-                      'a component reassigns its own `this.props`. ' +
-                      'Please file an issue.',
-                    getComponentName(finishedWork.type) || 'instance',
-                  );
-                }
-                if (instance.state !== finishedWork.memoizedState) {
-                  console.error(
-                    'Expected %s state to match memoized state before ' +
-                      'componentDidUpdate. ' +
-                      'This might either be because of a bug in React, or because ' +
-                      'a component reassigns its own `this.state`. ' +
-                      'Please file an issue.',
-                    getComponentName(finishedWork.type) || 'instance',
-                  );
-                }
-              }
-            }
-            if (
-              enableProfilerTimer &&
-              enableProfilerCommitHooks &&
-              finishedWork.mode & ProfileMode
-            ) {
-              try {
-                startLayoutEffectTimer();
-                instance.componentDidUpdate(
-                  prevProps,
-                  prevState,
-                  instance.__reactInternalSnapshotBeforeUpdate,
-                );
-              } finally {
-                recordLayoutEffectDuration(finishedWork);
-              }
-            } else {
-              instance.componentDidUpdate(
-                prevProps,
-                prevState,
-                instance.__reactInternalSnapshotBeforeUpdate,
-              );
-            }
-          }
-        }
-
-        // TODO: I think this is now always non-null by the time it reaches the
-        // commit phase. Consider removing the type check.
-        const updateQueue: UpdateQueue<
-          *,
-        > | null = (finishedWork.updateQueue: any);
-        if (updateQueue !== null) {
-          if (__DEV__) {
-            if (
-              finishedWork.type === finishedWork.elementType &&
-              !didWarnAboutReassigningProps
-            ) {
-              if (instance.props !== finishedWork.memoizedProps) {
-                console.error(
-                  'Expected %s props to match memoized props before ' +
-                    'processing the update queue. ' +
-                    'This might either be because of a bug in React, or because ' +
-                    'a component reassigns its own `this.props`. ' +
-                    'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
-                );
-              }
-              if (instance.state !== finishedWork.memoizedState) {
-                console.error(
-                  'Expected %s state to match memoized state before ' +
-                    'processing the update queue. ' +
-                    'This might either be because of a bug in React, or because ' +
-                    'a component reassigns its own `this.state`. ' +
-                    'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
-                );
-              }
-            }
-          }
-          // We could update instance props and state here,
-          // but instead we rely on them being set during last render.
-          // TODO: revisit this when we implement resuming.
-          commitUpdateQueue(finishedWork, updateQueue, instance);
-        }
-        break;
-      }
-      case HostRoot: {
-        // TODO: I think this is now always non-null by the time it reaches the
-        // commit phase. Consider removing the type check.
-        const updateQueue: UpdateQueue<
-          *,
-        > | null = (finishedWork.updateQueue: any);
-        if (updateQueue !== null) {
-          let instance = null;
-          if (finishedWork.child !== null) {
-            switch (finishedWork.child.tag) {
-              case HostComponent:
-                instance = getPublicInstance(finishedWork.child.stateNode);
-                break;
-              case ClassComponent:
-                instance = finishedWork.child.stateNode;
-                break;
-            }
-          }
-          commitUpdateQueue(finishedWork, updateQueue, instance);
-        }
-        break;
-      }
-      case HostComponent: {
-        const instance: Instance = finishedWork.stateNode;
-
-        // Renderers may schedule work to be done after host components are mounted
-        // (eg DOM renderer may schedule auto-focus for inputs and form controls).
-        // These effects should only be committed when components are first mounted,
-        // aka when there is no current/alternate.
-        if (current === null && flags & Update) {
-          const type = finishedWork.type;
-          const props = finishedWork.memoizedProps;
-          commitMount(instance, type, props, finishedWork);
-        }
-
-        break;
-      }
-      case HostText: {
-        // We have no life-cycles associated with text.
-        break;
-      }
-      case HostPortal: {
-        // We have no life-cycles associated with portals.
-        break;
-      }
-      case Profiler: {
-        if (enableProfilerTimer) {
-          const {onCommit, onRender} = finishedWork.memoizedProps;
-          const {effectDuration} = finishedWork.stateNode;
-
-          const commitTime = getCommitTime();
-
-          const OnRenderFlag = Update;
-          const OnCommitFlag = Callback;
-
-          if (
-            (flags & OnRenderFlag) !== NoFlags &&
-            typeof onRender === 'function'
-          ) {
-            if (enableSchedulerTracing) {
-              onRender(
-                finishedWork.memoizedProps.id,
-                current === null ? 'mount' : 'update',
-                finishedWork.actualDuration,
-                finishedWork.treeBaseDuration,
-                finishedWork.actualStartTime,
-                commitTime,
-                finishedRoot.memoizedInteractions,
-              );
-            } else {
-              onRender(
-                finishedWork.memoizedProps.id,
-                current === null ? 'mount' : 'update',
-                finishedWork.actualDuration,
-                finishedWork.treeBaseDuration,
-                finishedWork.actualStartTime,
-                commitTime,
-              );
-            }
-          }
-
-          if (enableProfilerCommitHooks) {
-            if (
-              (flags & OnCommitFlag) !== NoFlags &&
-              typeof onCommit === 'function'
-            ) {
-              if (enableSchedulerTracing) {
-                onCommit(
-                  finishedWork.memoizedProps.id,
-                  current === null ? 'mount' : 'update',
-                  effectDuration,
-                  commitTime,
-                  finishedRoot.memoizedInteractions,
-                );
-              } else {
-                onCommit(
-                  finishedWork.memoizedProps.id,
-                  current === null ? 'mount' : 'update',
-                  effectDuration,
-                  commitTime,
-                );
-              }
-            }
-          }
-        }
-        break;
-      }
-      case SuspenseComponent: {
-        commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
-        break;
-      }
-      case SuspenseListComponent:
-      case IncompleteClassComponent:
-      case FundamentalComponent:
-      case ScopeComponent:
-      case OffscreenComponent:
-      case LegacyHiddenComponent:
-        break;
-
-      default:
-        invariant(
-          false,
-          'This unit of work tag should not have side-effects. This error is ' +
-            'likely caused by a bug in React. Please file an issue.',
-        );
     }
   }
 
@@ -865,6 +657,254 @@ function commitLayoutEffectsForFiber(
     if (flags & Ref) {
       commitAttachRef(finishedWork);
     }
+  }
+}
+
+function commitLayoutEffectsForProfiler(
+  finishedWork: Fiber,
+  finishedRoot: FiberRoot,
+) {
+  if (enableProfilerTimer) {
+    const flags = finishedWork.flags;
+    const current = finishedWork.alternate;
+
+    const {onCommit, onRender} = finishedWork.memoizedProps;
+    const {effectDuration} = finishedWork.stateNode;
+
+    const commitTime = getCommitTime();
+
+    const OnRenderFlag = Update;
+    const OnCommitFlag = Callback;
+
+    if ((flags & OnRenderFlag) !== NoFlags && typeof onRender === 'function') {
+      if (enableSchedulerTracing) {
+        onRender(
+          finishedWork.memoizedProps.id,
+          current === null ? 'mount' : 'update',
+          finishedWork.actualDuration,
+          finishedWork.treeBaseDuration,
+          finishedWork.actualStartTime,
+          commitTime,
+          finishedRoot.memoizedInteractions,
+        );
+      } else {
+        onRender(
+          finishedWork.memoizedProps.id,
+          current === null ? 'mount' : 'update',
+          finishedWork.actualDuration,
+          finishedWork.treeBaseDuration,
+          finishedWork.actualStartTime,
+          commitTime,
+        );
+      }
+    }
+
+    if (enableProfilerCommitHooks) {
+      if (
+        (flags & OnCommitFlag) !== NoFlags &&
+        typeof onCommit === 'function'
+      ) {
+        if (enableSchedulerTracing) {
+          onCommit(
+            finishedWork.memoizedProps.id,
+            current === null ? 'mount' : 'update',
+            effectDuration,
+            commitTime,
+            finishedRoot.memoizedInteractions,
+          );
+        } else {
+          onCommit(
+            finishedWork.memoizedProps.id,
+            current === null ? 'mount' : 'update',
+            effectDuration,
+            commitTime,
+          );
+        }
+      }
+    }
+  }
+}
+
+function commitLayoutEffectsForClassComponent(finishedWork: Fiber) {
+  const instance = finishedWork.stateNode;
+  const current = finishedWork.alternate;
+  if (finishedWork.flags & Update) {
+    if (current === null) {
+      // We could update instance props and state here,
+      // but instead we rely on them being set during last render.
+      // TODO: revisit this when we implement resuming.
+      if (__DEV__) {
+        if (
+          finishedWork.type === finishedWork.elementType &&
+          !didWarnAboutReassigningProps
+        ) {
+          if (instance.props !== finishedWork.memoizedProps) {
+            console.error(
+              'Expected %s props to match memoized props before ' +
+                'componentDidMount. ' +
+                'This might either be because of a bug in React, or because ' +
+                'a component reassigns its own `this.props`. ' +
+                'Please file an issue.',
+              getComponentName(finishedWork.type) || 'instance',
+            );
+          }
+          if (instance.state !== finishedWork.memoizedState) {
+            console.error(
+              'Expected %s state to match memoized state before ' +
+                'componentDidMount. ' +
+                'This might either be because of a bug in React, or because ' +
+                'a component reassigns its own `this.state`. ' +
+                'Please file an issue.',
+              getComponentName(finishedWork.type) || 'instance',
+            );
+          }
+        }
+      }
+      if (
+        enableProfilerTimer &&
+        enableProfilerCommitHooks &&
+        finishedWork.mode & ProfileMode
+      ) {
+        try {
+          startLayoutEffectTimer();
+          instance.componentDidMount();
+        } finally {
+          recordLayoutEffectDuration(finishedWork);
+        }
+      } else {
+        instance.componentDidMount();
+      }
+    } else {
+      const prevProps =
+        finishedWork.elementType === finishedWork.type
+          ? current.memoizedProps
+          : resolveDefaultProps(finishedWork.type, current.memoizedProps);
+      const prevState = current.memoizedState;
+      // We could update instance props and state here,
+      // but instead we rely on them being set during last render.
+      // TODO: revisit this when we implement resuming.
+      if (__DEV__) {
+        if (
+          finishedWork.type === finishedWork.elementType &&
+          !didWarnAboutReassigningProps
+        ) {
+          if (instance.props !== finishedWork.memoizedProps) {
+            console.error(
+              'Expected %s props to match memoized props before ' +
+                'componentDidUpdate. ' +
+                'This might either be because of a bug in React, or because ' +
+                'a component reassigns its own `this.props`. ' +
+                'Please file an issue.',
+              getComponentName(finishedWork.type) || 'instance',
+            );
+          }
+          if (instance.state !== finishedWork.memoizedState) {
+            console.error(
+              'Expected %s state to match memoized state before ' +
+                'componentDidUpdate. ' +
+                'This might either be because of a bug in React, or because ' +
+                'a component reassigns its own `this.state`. ' +
+                'Please file an issue.',
+              getComponentName(finishedWork.type) || 'instance',
+            );
+          }
+        }
+      }
+      if (
+        enableProfilerTimer &&
+        enableProfilerCommitHooks &&
+        finishedWork.mode & ProfileMode
+      ) {
+        try {
+          startLayoutEffectTimer();
+          instance.componentDidUpdate(
+            prevProps,
+            prevState,
+            instance.__reactInternalSnapshotBeforeUpdate,
+          );
+        } finally {
+          recordLayoutEffectDuration(finishedWork);
+        }
+      } else {
+        instance.componentDidUpdate(
+          prevProps,
+          prevState,
+          instance.__reactInternalSnapshotBeforeUpdate,
+        );
+      }
+    }
+  }
+
+  // TODO: I think this is now always non-null by the time it reaches the
+  // commit phase. Consider removing the type check.
+  const updateQueue: UpdateQueue<*> | null = (finishedWork.updateQueue: any);
+  if (updateQueue !== null) {
+    if (__DEV__) {
+      if (
+        finishedWork.type === finishedWork.elementType &&
+        !didWarnAboutReassigningProps
+      ) {
+        if (instance.props !== finishedWork.memoizedProps) {
+          console.error(
+            'Expected %s props to match memoized props before ' +
+              'processing the update queue. ' +
+              'This might either be because of a bug in React, or because ' +
+              'a component reassigns its own `this.props`. ' +
+              'Please file an issue.',
+            getComponentName(finishedWork.type) || 'instance',
+          );
+        }
+        if (instance.state !== finishedWork.memoizedState) {
+          console.error(
+            'Expected %s state to match memoized state before ' +
+              'processing the update queue. ' +
+              'This might either be because of a bug in React, or because ' +
+              'a component reassigns its own `this.state`. ' +
+              'Please file an issue.',
+            getComponentName(finishedWork.type) || 'instance',
+          );
+        }
+      }
+    }
+    // We could update instance props and state here,
+    // but instead we rely on them being set during last render.
+    // TODO: revisit this when we implement resuming.
+    commitUpdateQueue(finishedWork, updateQueue, instance);
+  }
+}
+
+function commitLayoutEffectsForHostRoot(finishedWork: Fiber) {
+  // TODO: I think this is now always non-null by the time it reaches the
+  // commit phase. Consider removing the type check.
+  const updateQueue: UpdateQueue<*> | null = (finishedWork.updateQueue: any);
+  if (updateQueue !== null) {
+    let instance = null;
+    if (finishedWork.child !== null) {
+      switch (finishedWork.child.tag) {
+        case HostComponent:
+          instance = getPublicInstance(finishedWork.child.stateNode);
+          break;
+        case ClassComponent:
+          instance = finishedWork.child.stateNode;
+          break;
+      }
+    }
+    commitUpdateQueue(finishedWork, updateQueue, instance);
+  }
+}
+
+function commitLayoutEffectsForHostComponent(finishedWork: Fiber) {
+  const instance: Instance = finishedWork.stateNode;
+  const current = finishedWork.alternate;
+
+  // Renderers may schedule work to be done after host components are mounted
+  // (eg DOM renderer may schedule auto-focus for inputs and form controls).
+  // These effects should only be committed when components are first mounted,
+  // aka when there is no current/alternate.
+  if (current === null && finishedWork.flags & Update) {
+    const type = finishedWork.type;
+    const props = finishedWork.memoizedProps;
+    commitMount(instance, type, props, finishedWork);
   }
 }
 
