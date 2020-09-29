@@ -490,6 +490,20 @@ var Qux;
 
 `;
 
+exports[`ReactFreshTypeScriptTransformer should correctly compile when downgrade 1`] = `
+var $c0;
+$c0 = $RefreshSig$();
+import { useT } from 'path';
+export function useA() {
+    var _a;
+    $c0();
+    const data = useT();
+    return (_a = data === null || data === void 0 ? void 0 : data.address) !== null && _a !== void 0 ? _a : '';
+}
+$c0(useA, "BHMWiLFX1S0sU8Y04q/J5c/Z4J8=", false, () => [useT]);
+
+`;
+
 exports[`ReactFreshTypeScriptTransformer should generate signature for built-in hooks 1`] = `
 var $c1;
 var $c0;

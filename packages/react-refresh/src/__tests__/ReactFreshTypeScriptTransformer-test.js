@@ -15,12 +15,13 @@ const sharedTests = require('./testcases');
 /**
  * @param {string} input
  */
-function transform(input, options) {
+function transform(input, options, co) {
   return wrap(
     ts.transpileModule(input, {
       compilerOptions: {
         target: ts.ScriptTarget.ESNext,
         jsx: ts.JsxEmit.Preserve,
+        ...(co || {}),
       },
       fileName: 'test.jsx',
       transformers: {before: [tsTransformer(options)]},
@@ -42,4 +43,19 @@ describe('ReactFreshTypeScriptTransformer', () => {
       }
     });
   }
+  it('should correctly compile when downgrade', () => {
+    expect(
+      transform(
+        `
+    import { useT } from 'path'
+export function useA() {
+    const data = useT()
+    return data?.address ?? ''
+}
+`,
+        {},
+        {target: ts.ScriptTarget.ES2015},
+      ),
+    ).toMatchSnapshot();
+  });
 });
