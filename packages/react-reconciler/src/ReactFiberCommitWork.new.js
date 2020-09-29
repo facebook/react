@@ -455,9 +455,8 @@ function recursivelyCommitLayoutEffects(
 
       let child = finishedWork.child;
       while (child !== null) {
-        const primaryFlags = child.flags & LayoutMask;
-        const primarySubtreeFlags = child.subtreeFlags & LayoutMask;
-        if (primaryFlags !== NoFlags || primarySubtreeFlags !== NoFlags) {
+        const primarySubtreeFlags = finishedWork.subtreeFlags & LayoutMask;
+        if (primarySubtreeFlags !== NoFlags) {
           if (__DEV__) {
             const prevCurrentFiberInDEV = currentDebugFiberInDEV;
             setCurrentDebugFiberInDEV(child);
@@ -541,9 +540,8 @@ function recursivelyCommitLayoutEffects(
     default: {
       let child = finishedWork.child;
       while (child !== null) {
-        const primaryFlags = child.flags & LayoutMask;
-        const primarySubtreeFlags = child.subtreeFlags & LayoutMask;
-        if (primaryFlags !== NoFlags || primarySubtreeFlags !== NoFlags) {
+        const primarySubtreeFlags = finishedWork.subtreeFlags & LayoutMask;
+        if (primarySubtreeFlags !== NoFlags) {
           if (__DEV__) {
             const prevCurrentFiberInDEV = currentDebugFiberInDEV;
             setCurrentDebugFiberInDEV(child);
@@ -644,18 +642,18 @@ function recursivelyCommitLayoutEffects(
           }
         }
       }
-      break;
-    }
-  }
 
-  if (enableScopeAPI) {
-    // TODO: This is a temporary solution that allowed us to transition away from React Flare on www.
-    if (flags & Ref && tag !== ScopeComponent) {
-      commitAttachRef(finishedWork);
-    }
-  } else {
-    if (flags & Ref) {
-      commitAttachRef(finishedWork);
+      if (enableScopeAPI) {
+        // TODO: This is a temporary solution that allowed us to transition away from React Flare on www.
+        if (flags & Ref && tag !== ScopeComponent) {
+          commitAttachRef(finishedWork);
+        }
+      } else {
+        if (flags & Ref) {
+          commitAttachRef(finishedWork);
+        }
+      }
+      break;
     }
   }
 }
