@@ -557,10 +557,14 @@ describe('ReactElement', () => {
       );
     };
     ReactDOM.render(<App />, container);
-    expect(consoleOutput).toStrictEqual([
-      'Warning: React expects unique keys to be of type string or number. Other types will be automatically converted to strings, and may cause unexpected behavior%s',
-      'Warning: React expects unique keys to be of type string or number. Other types will be automatically converted to strings, and may cause unexpected behavior%s',
-      'Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s',
-    ]);
+    if (__DEV__) {
+      expect(consoleOutput).toStrictEqual([
+        'Warning: React expects unique keys to be of type string or number. Other types will be automatically converted to strings, and may cause unexpected behavior%s',
+        'Warning: React expects unique keys to be of type string or number. Other types will be automatically converted to strings, and may cause unexpected behavior%s',
+        'Warning: Encountered two children with the same key, `%s`. Keys should be unique so that components maintain their identity across updates. Non-unique keys may cause children to be duplicated and/or omitted — the behavior is unsupported and could change in a future version.%s',
+      ]);
+    } else {
+      expect(consoleOutput).toStrictEqual([]);
+    }
   });
 });
