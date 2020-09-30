@@ -99,7 +99,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
       // display a custom default popup when React is *not* detected.
       // It is specified in the manifest.
       let reactBuildType = request.reactBuildType;
-      if (sender.url.indexOf('facebook.github.io/react') !== -1) {
+      if (sender.url.indexOf('reactjs.org') !== -1) {
         // Cheat: We use the development version on the website because
         // it is better for interactive examples. However we're going
         // to get misguided bug reports if the extension highlights it
