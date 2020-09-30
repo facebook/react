@@ -173,7 +173,7 @@ First we find which root contains the index:
 let rootID;
 let root;
 let rootWeight = 0;
-for (let i = 0; i < this._roots.length; i++) {
+for (let i = 0; i < this._roots.length; i += 1) {
   rootID = this._roots[i];
   root = this._idToElement.get(rootID);
   if (root.children.length === 0) {
@@ -196,7 +196,7 @@ Then we traverse the tree to find the element:
 let currentElement = this._idToElement.get(firstChildID);
 let currentWeight = rootWeight;
 while (index !== currentWeight) {
-  for (let i = 0; i < currentElement.children.length; i++) {
+  for (let i = 0; i < currentElement.children.length; i += 1) {
     const childID = currentElement.children[i];
     const child = this._idToElement.get(childID);
     const { weight } = child;

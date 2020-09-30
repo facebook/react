@@ -169,10 +169,10 @@ function updateTree(
   const stringTable = [
     null, // ID = 0 corresponds to the null string.
   ];
-  const stringTableSize = operations[i++];
+  const stringTableSize = operations[i += 1];
   const stringTableEnd = i + stringTableSize;
   while (i < stringTableEnd) {
-    const nextLength = operations[i++];
+    const nextLength = operations[i += 1];
     const nextString = utfDecodeString(
       (operations.slice(i, i + nextLength): any),
     );
@@ -199,8 +199,8 @@ function updateTree(
         }
 
         if (type === ElementTypeRoot) {
-          i++; // supportsProfiling flag
-          i++; // hasOwnerMetadata flag
+          i += 1; // supportsProfiling flag
+          i += 1; // hasOwnerMetadata flag
 
           if (__DEBUG__) {
             debug('Add', `new root fiber ${id}`);
@@ -220,17 +220,17 @@ function updateTree(
           nodes.set(id, node);
         } else {
           const parentID = ((operations[i]: any): number);
-          i++;
+          i += 1;
 
-          i++; // ownerID
+          i += 1; // ownerID
 
           const displayNameStringID = operations[i];
           const displayName = stringTable[displayNameStringID];
-          i++;
+          i += 1;
 
           const keyStringID = operations[i];
           const key = stringTable[keyStringID];
-          i++;
+          i += 1;
 
           if (__DEBUG__) {
             debug(
@@ -263,7 +263,7 @@ function updateTree(
 
         for (let removeIndex = 0; removeIndex < removeLength; removeIndex++) {
           id = ((operations[i]: any): number);
-          i++;
+          i += 1;
 
           if (!nodes.has(id)) {
             throw new Error(

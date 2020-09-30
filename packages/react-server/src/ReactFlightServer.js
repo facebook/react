@@ -356,7 +356,7 @@ function performWork(request: Request): void {
 
   const pingedSegments = request.pingedSegments;
   request.pingedSegments = [];
-  for (let i = 0; i < pingedSegments.length; i++) {
+  for (let i = 0; i < pingedSegments.length; i += 1) {
     const segment = pingedSegments[i];
     retrySegment(request, segment);
   }
@@ -378,24 +378,24 @@ function flushCompletedChunks(request: Request): void {
   try {
     const jsonChunks = request.completedJSONChunks;
     let i = 0;
-    for (; i < jsonChunks.length; i++) {
+    for (; i < jsonChunks.length; i += 1) {
       request.pendingChunks--;
       const chunk = jsonChunks[i];
       if (!writeChunk(destination, chunk)) {
         request.flowing = false;
-        i++;
+        i += 1;
         break;
       }
     }
     jsonChunks.splice(0, i);
     const errorChunks = request.completedErrorChunks;
     i = 0;
-    for (; i < errorChunks.length; i++) {
+    for (; i < errorChunks.length; i += 1) {
       request.pendingChunks--;
       const chunk = errorChunks[i];
       if (!writeChunk(destination, chunk)) {
         request.flowing = false;
-        i++;
+        i += 1;
         break;
       }
     }

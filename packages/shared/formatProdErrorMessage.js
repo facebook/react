@@ -12,7 +12,7 @@
 
 function formatProdErrorMessage(code) {
   let url = 'https://reactjs.org/docs/error-decoder.html?invariant=' + code;
-  for (let i = 1; i < arguments.length; i++) {
+  for (let i = 1; i < arguments.length; i += 1) {
     url += '&args[]=' + encodeURIComponent(arguments[i]);
   }
   return (

@@ -1697,7 +1697,7 @@ describe('ReactIncrementalErrorHandling', () => {
   it('provides component stack even if overriding prepareStackTrace', () => {
     Error.prepareStackTrace = function(error, callsites) {
       const stack = ['An error occurred:', error.message];
-      for (let i = 0; i < callsites.length; i++) {
+      for (let i = 0; i < callsites.length; i += 1) {
         const callsite = callsites[i];
         stack.push(
           '\t' + callsite.getFunctionName(),

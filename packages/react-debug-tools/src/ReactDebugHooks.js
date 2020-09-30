@@ -83,7 +83,7 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       readHookLog = hookLog;
       hookLog = [];
     }
-    for (let i = 0; i < readHookLog.length; i++) {
+    for (let i = 0; i < readHookLog.length; i += 1) {
       const hook = readHookLog[i];
       cache.set(hook.primitive, ErrorStackParser.parse(hook.stackError));
     }
@@ -346,7 +346,7 @@ let mostLikelyAncestorIndex = 0;
 
 function findSharedIndex(hookStack, rootStack, rootIndex) {
   const source = rootStack[rootIndex].source;
-  hookSearch: for (let i = 0; i < hookStack.length; i++) {
+  hookSearch: for (let i = 0; i < hookStack.length; i += 1) {
     if (hookStack[i].source === source) {
       // This looks like a match. Validate that the rest of both stack match up.
       for (
@@ -376,7 +376,7 @@ function findCommonAncestorIndex(rootStack, hookStack) {
   }
   // If the most likely one wasn't a hit, try any other frame to see if it is shared.
   // If that takes more than 5 frames, something probably went wrong.
-  for (let i = 0; i < rootStack.length && i < 5; i++) {
+  for (let i = 0; i < rootStack.length && i < 5; i += 1) {
     rootIndex = findSharedIndex(hookStack, rootStack, i);
     if (rootIndex !== -1) {
       mostLikelyAncestorIndex = i;
@@ -406,7 +406,7 @@ function findPrimitiveIndex(hookStack, hook) {
   if (primitiveStack === undefined) {
     return -1;
   }
-  for (let i = 0; i < primitiveStack.length && i < hookStack.length; i++) {
+  for (let i = 0; i < primitiveStack.length && i < hookStack.length; i += 1) {
     if (primitiveStack[i].source !== hookStack[i].source) {
       // If the next two frames are functions called `useX` then we assume that they're part of the
       // wrappers that the React packager or other packages adds around the dispatcher.
@@ -414,13 +414,13 @@ function findPrimitiveIndex(hookStack, hook) {
         i < hookStack.length - 1 &&
         isReactWrapper(hookStack[i].functionName, hook.primitive)
       ) {
-        i++;
+        i += 1;
       }
       if (
         i < hookStack.length - 1 &&
         isReactWrapper(hookStack[i].functionName, hook.primitive)
       ) {
-        i++;
+        i += 1;
       }
       return i;
     }
@@ -465,7 +465,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
   let levelChildren = rootChildren;
   let nativeHookID = 0;
   const stackOfChildren = [];
-  for (let i = 0; i < readHookLog.length; i++) {
+  for (let i = 0; i < readHookLog.length; i += 1) {
     const hook = readHookLog[i];
     const stack = parseTrimmedStack(rootStack, hook);
     if (stack !== null) {
@@ -544,7 +544,7 @@ function processDebugValues(
 ): void {
   const debugValueHooksNodes: Array<HooksNode> = [];
 
-  for (let i = 0; i < hooksTree.length; i++) {
+  for (let i = 0; i < hooksTree.length; i += 1) {
     const hooksNode = hooksTree[i];
     if (hooksNode.name === 'DebugValue' && hooksNode.subHooks.length === 0) {
       hooksTree.splice(i, 1);

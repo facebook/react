@@ -248,7 +248,7 @@ function warnOnHookMismatchInDev(currentHookName: HookType) {
 
         const secondColumnStart = 30;
 
-        for (let i = 0; i <= ((hookTypesUpdateIndexDev: any): number); i++) {
+        for (let i = 0; i <= ((hookTypesUpdateIndexDev: any): number); i += 1) {
           const oldHookName = hookTypesDev[i];
           const newHookName =
             i === ((hookTypesUpdateIndexDev: any): number)
@@ -334,7 +334,7 @@ function areHookInputsEqual(
       );
     }
   }
-  for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+  for (let i = 0; i < prevDeps.length && i < nextDeps.length; i += 1) {
     if (is(nextDeps[i], prevDeps[i])) {
       continue;
     }

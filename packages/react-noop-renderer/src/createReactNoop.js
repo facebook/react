@@ -983,7 +983,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
         children: Array<Instance | TextInstance>,
         depth,
       ) {
-        for (let i = 0; i < children.length; i++) {
+        for (let i = 0; i < children.length; i += 1) {
           const child = children[i];
           const indent = '  '.repeat(depth);
           if (typeof child.text === 'string') {

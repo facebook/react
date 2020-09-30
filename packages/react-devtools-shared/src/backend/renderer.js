@@ -1038,14 +1038,14 @@ export function attach(
     // This enables roots to be mapped to renderers,
     // Which in turn enables fiber props, states, and hooks to be inspected.
     let i = 0;
-    operations[i++] = rendererID;
-    operations[i++] = currentRootID; // Use this ID in case the root was unmounted!
+    operations[i += 1] = rendererID;
+    operations[i += 1] = currentRootID; // Use this ID in case the root was unmounted!
 
     // Now fill in the string table.
     // [stringTableLength, str1Length, ...str1, str2Length, ...str2, ...]
-    operations[i++] = pendingStringTableLength;
+    operations[i += 1] = pendingStringTableLength;
     pendingStringTable.forEach((value, key) => {
-      operations[i++] = key.length;
+      operations[i += 1] = key.length;
       const encodedKey = utfEncodeString(key);
       for (let j = 0; j < encodedKey.length; j++) {
         operations[i + j] = encodedKey[j];
@@ -1055,14 +1055,14 @@ export function attach(
 
     if (numUnmountIDs > 0) {
       // All unmounts except roots are batched in a single message.
-      operations[i++] = TREE_OPERATION_REMOVE;
+      operations[i += 1] = TREE_OPERATION_REMOVE;
       // The first number is how many unmounted IDs we're gonna send.
-      operations[i++] = numUnmountIDs;
+      operations[i += 1] = numUnmountIDs;
       // Fill in the real unmounts in the reverse order.
       // They were inserted parents-first by React, but we want children-first.
       // So we traverse our array backwards.
       for (let j = pendingRealUnmountedIDs.length - 1; j >= 0; j--) {
-        operations[i++] = pendingRealUnmountedIDs[j];
+        operations[i += 1] = pendingRealUnmountedIDs[j];
       }
       // Fill in the simulated unmounts (hidden Suspense subtrees) in their order.
       // (We want children to go before parents.)
@@ -1076,7 +1076,7 @@ export function attach(
       // The root ID should always be unmounted last.
       if (pendingUnmountedRootID !== null) {
         operations[i] = pendingUnmountedRootID;
-        i++;
+        i += 1;
       }
     }
     // Fill in the rest of the operations.
@@ -1458,7 +1458,7 @@ export function attach(
     pushOperation(TREE_OPERATION_REORDER_CHILDREN);
     pushOperation(getFiberID(getPrimaryFiber(fiber)));
     pushOperation(numChildren);
-    for (let i = 0; i < nextChildren.length; i++) {
+    for (let i = 0; i < nextChildren.length; i += 1) {
       pushOperation(nextChildren[i]);
     }
   }
@@ -2480,7 +2480,7 @@ export function attach(
       if (!current) {
         return false;
       }
-      for (let i = 0; i < path.length; i++) {
+      for (let i = 0; i < path.length; i += 1) {
         current = current[path[i]];
         if (!current) {
           return false;
@@ -3211,7 +3211,7 @@ export function attach(
     let child = fiber.child;
     // Go at most three levels deep into direct children
     // while searching for a child that has a displayName.
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 3; i += 1) {
       if (child === null) {
         break;
       }

@@ -369,7 +369,7 @@ function updateNamedCousins(rootNode, props) {
       'input[name=' + JSON.stringify('' + name) + '][type="radio"]',
     );
 
-    for (let i = 0; i < group.length; i++) {
+    for (let i = 0; i < group.length; i += 1) {
       const otherNode = ((group[i]: any): HTMLInputElement);
       if (otherNode === rootNode || otherNode.form !== rootNode.form) {
         continue;

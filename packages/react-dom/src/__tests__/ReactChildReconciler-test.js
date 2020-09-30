@@ -33,7 +33,7 @@ describe('ReactChildReconciler', () => {
               value: i < array.length ? array[i] : undefined,
               done: i === array.length,
             };
-            i++;
+            i += 1;
             return next;
           },
         };

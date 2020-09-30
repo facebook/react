@@ -23,7 +23,7 @@ function wrapWithHoc(Component, index) {
 }
 
 function wrapWithNested(Component, times) {
-  for (let i = 0; i < times; i++) {
+  for (let i = 0; i < times; i += 1) {
     Component = wrapWithHoc(Component, i);
   }
 

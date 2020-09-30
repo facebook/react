@@ -43,7 +43,7 @@ describe('ReactCompositeComponent', () => {
     if (keysA.length !== keysB.length) {
       return false;
     }
-    for (let i = 0; i < keysA.length; i++) {
+    for (let i = 0; i < keysA.length; i += 1) {
       if (
         !hasOwnProperty.call(objB, keysA[i]) ||
         !Object.is(objA[keysA[i]], objB[keysA[i]])

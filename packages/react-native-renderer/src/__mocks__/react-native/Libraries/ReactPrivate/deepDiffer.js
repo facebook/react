@@ -59,7 +59,7 @@ const deepDiffer = function(
     if (two.length !== len) {
       return true;
     }
-    for (let ii = 0; ii < len; ii++) {
+    for (let ii = 0; ii < len; ii += 1) {
       if (deepDiffer(one[ii], two[ii], maxDepth - 1, options)) {
         return true;
       }

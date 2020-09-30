@@ -128,7 +128,7 @@ export function utfEncodeString(string: string): Array<number> {
   }
 
   const encoded = new Array(string.length);
-  for (let i = 0; i < string.length; i++) {
+  for (let i = 0; i < string.length; i += 1) {
     encoded[i] = string.codePointAt(i);
   }
   encodedStringCache.set(string, encoded);
@@ -148,10 +148,10 @@ export function printOperationsArray(operations: Array<number>) {
   const stringTable = [
     null, // ID = 0 corresponds to the null string.
   ];
-  const stringTableSize = operations[i++];
+  const stringTableSize = operations[i += 1];
   const stringTableEnd = i + stringTableSize;
   while (i < stringTableEnd) {
-    const nextLength = operations[i++];
+    const nextLength = operations[i += 1];
     const nextString = utfDecodeString(
       (operations.slice(i, i + nextLength): any),
     );
@@ -172,19 +172,19 @@ export function printOperationsArray(operations: Array<number>) {
         if (type === ElementTypeRoot) {
           logs.push(`Add new root node ${id}`);
 
-          i++; // supportsProfiling
-          i++; // hasOwnerMetadata
+          i += 1; // supportsProfiling
+          i += 1; // hasOwnerMetadata
         } else {
           const parentID = ((operations[i]: any): number);
-          i++;
+          i += 1;
 
-          i++; // ownerID
+          i += 1; // ownerID
 
           const displayNameStringID = operations[i];
           const displayName = stringTable[displayNameStringID];
-          i++;
+          i += 1;
 
-          i++; // key
+          i += 1; // key
 
           logs.push(
             `Add node ${id} (${displayName || 'null'}) as child of ${parentID}`,
@@ -645,7 +645,7 @@ export function formatDataForPreview(
     case 'array':
       if (showFormattedValue) {
         let formatted = '';
-        for (let i = 0; i < data.length; i++) {
+        for (let i = 0; i < data.length; i += 1) {
           if (i > 0) {
             formatted += ', ';
           }
@@ -666,7 +666,7 @@ export function formatDataForPreview(
       const shortName = `${data.constructor.name}(${data.length})`;
       if (showFormattedValue) {
         let formatted = '';
-        for (let i = 0; i < data.length; i++) {
+        for (let i = 0; i < data.length; i += 1) {
           if (i > 0) {
             formatted += ', ';
           }
@@ -691,7 +691,7 @@ export function formatDataForPreview(
         const array = Array.from(data);
 
         let formatted = '';
-        for (let i = 0; i < array.length; i++) {
+        for (let i = 0; i < array.length; i += 1) {
           const entryOrEntries = array[i];
 
           if (i > 0) {
@@ -731,7 +731,7 @@ export function formatDataForPreview(
         const keys = getAllEnumerableKeys(data).sort(alphaSortKeys);
 
         let formatted = '';
-        for (let i = 0; i < keys.length; i++) {
+        for (let i = 0; i < keys.length; i += 1) {
           const key = keys[i];
           if (i > 0) {
             formatted += ', ';

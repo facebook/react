@@ -106,7 +106,7 @@ describe('Component stack trace displaying', () => {
         const stack = args[args.length - 1];
         const expected = fileNames[fileName];
         expect(stack).toContain(`at ${expected}:`);
-        i++;
+        i += 1;
       }
     }
   });

@@ -79,7 +79,7 @@ export function executeDispatchesInOrder(event) {
     validateEventDispatches(event);
   }
   if (Array.isArray(dispatchListeners)) {
-    for (let i = 0; i < dispatchListeners.length; i++) {
+    for (let i = 0; i < dispatchListeners.length; i += 1) {
       if (event.isPropagationStopped()) {
         break;
       }
@@ -107,7 +107,7 @@ function executeDispatchesInOrderStopAtTrueImpl(event) {
     validateEventDispatches(event);
   }
   if (Array.isArray(dispatchListeners)) {
-    for (let i = 0; i < dispatchListeners.length; i++) {
+    for (let i = 0; i < dispatchListeners.length; i += 1) {
       if (event.isPropagationStopped()) {
         break;
       }

@@ -789,7 +789,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (__DEV__) {
       // First, validate keys.
       let knownKeys = null;
-      for (let i = 0; i < newChildren.length; i++) {
+      for (let i = 0; i < newChildren.length; i += 1) {
         const child = newChildren[i];
         knownKeys = warnOnInvalidKey(child, knownKeys, returnFiber);
       }

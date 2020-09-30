@@ -470,7 +470,7 @@ export function queueExplicitHydrationTarget(target: Node): void {
       lanePriority: updateLanePriority,
     };
     let i = 0;
-    for (; i < queuedExplicitHydrationTargets.length; i++) {
+    for (; i < queuedExplicitHydrationTargets.length; i += 1) {
       if (schedulerPriority <= queuedExplicitHydrationTargets[i].priority) {
         break;
       }
@@ -599,7 +599,7 @@ export function retryIfBlockedOn(
     // This is a exponential search for each boundary that commits. I think it's
     // worth it because we expect very few discrete events to queue up and once
     // we are actually fully unblocked it will be fast to replay them.
-    for (let i = 1; i < queuedDiscreteEvents.length; i++) {
+    for (let i = 1; i < queuedDiscreteEvents.length; i += 1) {
       const queuedEvent = queuedDiscreteEvents[i];
       if (queuedEvent.blockedOn === unblocked) {
         queuedEvent.blockedOn = null;
@@ -621,7 +621,7 @@ export function retryIfBlockedOn(
   queuedPointers.forEach(unblock);
   queuedPointerCaptures.forEach(unblock);
 
-  for (let i = 0; i < queuedExplicitHydrationTargets.length; i++) {
+  for (let i = 0; i < queuedExplicitHydrationTargets.length; i += 1) {
     const queuedTarget = queuedExplicitHydrationTargets[i];
     if (queuedTarget.blockedOn === unblocked) {
       queuedTarget.blockedOn = null;

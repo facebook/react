@@ -18,7 +18,7 @@ export function parseHookPathForEdit(
   path: Array<string | number>,
 ): Array<string | number> {
   let index = 0;
-  for (let i = 0; i < path.length; i++) {
+  for (let i = 0; i < path.length; i += 1) {
     if (path[i] === 'value') {
       index = i + 1;
       break;

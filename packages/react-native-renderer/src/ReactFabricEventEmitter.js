@@ -38,7 +38,7 @@ function extractPluginEvents(
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
   let events = null;
   const legacyPlugins = ((plugins: any): Array<LegacyPluginModule<Event>>);
-  for (let i = 0; i < legacyPlugins.length; i++) {
+  for (let i = 0; i < legacyPlugins.length; i += 1) {
     // Not every plugin in the ordering may be loaded at runtime.
     const possiblePlugin: LegacyPluginModule<AnyNativeEvent> = legacyPlugins[i];
     if (possiblePlugin) {

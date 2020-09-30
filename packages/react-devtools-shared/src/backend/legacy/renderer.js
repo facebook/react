@@ -192,7 +192,7 @@ export function attach(
     if (a.length !== b.length) {
       return false;
     }
-    for (let i = 0; i < a.length; i++) {
+    for (let i = 0; i < a.length; i += 1) {
       if (a[i] !== b[i]) {
         return false;
       }
@@ -419,7 +419,7 @@ export function attach(
     pushOperation(id);
     const nextChildIDs = nextChildren.map(getID);
     pushOperation(nextChildIDs.length);
-    for (let i = 0; i < nextChildIDs.length; i++) {
+    for (let i = 0; i < nextChildIDs.length; i += 1) {
       pushOperation(nextChildIDs[i]);
     }
   }
@@ -503,14 +503,14 @@ export function attach(
     // This enables roots to be mapped to renderers,
     // Which in turn enables fiber properations, states, and hooks to be inspected.
     let i = 0;
-    operations[i++] = rendererID;
-    operations[i++] = rootID;
+    operations[i += 1] = rendererID;
+    operations[i += 1] = rootID;
 
     // Now fill in the string table.
     // [stringTableLength, str1Length, ...str1, str2Length, ...str2, ...]
-    operations[i++] = pendingStringTableLength;
+    operations[i += 1] = pendingStringTableLength;
     pendingStringTable.forEach((value, key) => {
-      operations[i++] = key.length;
+      operations[i += 1] = key.length;
       const encodedKey = utfEncodeString(key);
       for (let j = 0; j < encodedKey.length; j++) {
         operations[i + j] = encodedKey[j];
@@ -520,17 +520,17 @@ export function attach(
 
     if (numUnmountIDs > 0) {
       // All unmounts except roots are batched in a single message.
-      operations[i++] = TREE_OPERATION_REMOVE;
+      operations[i += 1] = TREE_OPERATION_REMOVE;
       // The first number is how many unmounted IDs we're gonna send.
-      operations[i++] = numUnmountIDs;
+      operations[i += 1] = numUnmountIDs;
       // Fill in the unmounts
       for (let j = 0; j < pendingUnmountedIDs.length; j++) {
-        operations[i++] = pendingUnmountedIDs[j];
+        operations[i += 1] = pendingUnmountedIDs[j];
       }
       // The root ID should always be unmounted last.
       if (pendingUnmountedRootID !== null) {
         operations[i] = pendingUnmountedRootID;
-        i++;
+        i += 1;
       }
     }
 
@@ -606,7 +606,7 @@ export function attach(
       if (!current) {
         return false;
       }
-      for (let i = 0; i < path.length; i++) {
+      for (let i = 0; i < path.length; i += 1) {
         current = current[path[i]];
         if (!current) {
           return false;

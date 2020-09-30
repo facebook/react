@@ -264,7 +264,7 @@ export default class Store extends EventEmitter<{|
     let haveEnabledFiltersChanged =
       prevEnabledComponentFilters.length !== nextEnabledComponentFilters.length;
     if (!haveEnabledFiltersChanged) {
-      for (let i = 0; i < nextEnabledComponentFilters.length; i++) {
+      for (let i = 0; i < nextEnabledComponentFilters.length; i += 1) {
         const prevFilter = prevEnabledComponentFilters[i];
         const nextFilter = nextEnabledComponentFilters[i];
         if (shallowDiffers(prevFilter, nextFilter)) {
@@ -374,7 +374,7 @@ export default class Store extends EventEmitter<{|
     let rootID;
     let root;
     let rootWeight = 0;
-    for (let i = 0; i < this._roots.length; i++) {
+    for (let i = 0; i < this._roots.length; i += 1) {
       rootID = this._roots[i];
       root = ((this._idToElement.get(rootID): any): Element);
       if (root.children.length === 0) {
@@ -392,7 +392,7 @@ export default class Store extends EventEmitter<{|
     let currentWeight = rootWeight - 1;
     while (index !== currentWeight) {
       const numChildren = currentElement.children.length;
-      for (let i = 0; i < numChildren; i++) {
+      for (let i = 0; i < numChildren; i += 1) {
         const childID = currentElement.children[i];
         const child = ((this._idToElement.get(childID): any): Element);
         const childWeight = child.isCollapsed ? 1 : child.weight;
@@ -443,7 +443,7 @@ export default class Store extends EventEmitter<{|
       const current = ((this._idToElement.get(currentID): any): Element);
 
       const {children} = current;
-      for (let i = 0; i < children.length; i++) {
+      for (let i = 0; i < children.length; i += 1) {
         const childID = children[i];
         if (childID === previousID) {
           break;
@@ -465,7 +465,7 @@ export default class Store extends EventEmitter<{|
 
     // At this point, the current ID is a root (from the previous loop).
     // We also need to offset the index by previous root weights.
-    for (let i = 0; i < this._roots.length; i++) {
+    for (let i = 0; i < this._roots.length; i += 1) {
       const rootID = this._roots[i];
       if (rootID === currentID) {
         break;
@@ -724,10 +724,10 @@ export default class Store extends EventEmitter<{|
     const stringTable = [
       null, // ID = 0 corresponds to the null string.
     ];
-    const stringTableSize = operations[i++];
+    const stringTableSize = operations[i += 1];
     const stringTableEnd = i + stringTableSize;
     while (i < stringTableEnd) {
-      const nextLength = operations[i++];
+      const nextLength = operations[i += 1];
       const nextString = utfDecodeString(
         (operations.slice(i, i + nextLength): any),
       );
@@ -758,10 +758,10 @@ export default class Store extends EventEmitter<{|
             }
 
             const supportsProfiling = operations[i] > 0;
-            i++;
+            i += 1;
 
             const hasOwnerMetadata = operations[i] > 0;
-            i++;
+            i += 1;
 
             this._roots = this._roots.concat(id);
             this._rootIDToRendererID.set(id, rendererID);
@@ -787,18 +787,18 @@ export default class Store extends EventEmitter<{|
             haveRootsChanged = true;
           } else {
             parentID = ((operations[i]: any): number);
-            i++;
+            i += 1;
 
             ownerID = ((operations[i]: any): number);
-            i++;
+            i += 1;
 
             const displayNameStringID = operations[i];
             const displayName = stringTable[displayNameStringID];
-            i++;
+            i += 1;
 
             const keyStringID = operations[i];
             const key = stringTable[keyStringID];
-            i++;
+            i += 1;
 
             if (__DEBUG__) {
               debug(

@@ -88,7 +88,7 @@ function convertModelToJSON(
   if (typeof json === 'object' && json !== null) {
     if (Array.isArray(json)) {
       const jsonArray: Array<JSONValue> = [];
-      for (let i = 0; i < json.length; i++) {
+      for (let i = 0; i < json.length; i += 1) {
         jsonArray[i] = convertModelToJSON(request, json, '' + i, json[i]);
       }
       return jsonArray;

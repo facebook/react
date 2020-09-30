@@ -51,7 +51,7 @@ export function validateContextBounds(
   // fill it in without leaving any holes to ensure that the VM optimizes
   // this as non-holey index properties.
   // (Note: If `react` package is < 16.6, _threadCount is undefined.)
-  for (let i = context._threadCount | 0; i <= threadID; i++) {
+  for (let i = context._threadCount | 0; i <= threadID; i += 1) {
     // We assume that this is the same as the defaultValue which might not be
     // true if we're rendering inside a secondary renderer but they are
     // secondary because these use cases are very rare.

@@ -84,7 +84,7 @@ module.exports = function(initModules) {
       );
       if (console.error.calls.count() > 0) {
         console.log(`We saw these warnings:`);
-        for (let i = 0; i < console.error.calls.count(); i++) {
+        for (let i = 0; i < console.error.calls.count(); i += 1) {
           console.log(...console.error.calls.argsFor(i));
         }
       }
