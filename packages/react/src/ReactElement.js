@@ -323,7 +323,6 @@ export function jsxDEV(type, config, maybeKey, source, self) {
       typeof config.key === 'symbol' ? config.key.toString() : '' + config.key;
     if (__DEV__) {
       if (typeof config.key !== 'string' && typeof config.key !== 'number') {
-        console.log('key', config.key, typeof config.key);
         console.warn(
           'Warning: React expects unique keys to be of type string or number. Other types will be automatically converted to strings, and may cause unexpected behavior',
         );
