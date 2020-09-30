@@ -35,7 +35,9 @@ export const {
 // It's not used anywhere in production yet.
 
 export const enableProfilerTimer = __PROFILE__;
-export const enableProfilerCommitHooks = __PROFILE__;
+
+// Temporarily disable commit hooks flag to verify it does not cause a regression.
+export const enableProfilerCommitHooks = false;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler = __PROFILE__;
