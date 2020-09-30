@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ReactNodeList, Wakeable} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {Lane} from './ReactFiberLane';
@@ -16,6 +17,16 @@ import {
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
 } from './ReactFiberHostConfig';
+
+export type SuspenseProps = {|
+  children?: ReactNodeList,
+  fallback?: ReactNodeList,
+
+  // TODO: Add "unstable_" prefix?
+  suspenseCallback?: (Set<Wakeable> | null) => mixed,
+
+  unstable_expectedLoadTime?: number,
+|};
 
 // A null SuspenseState represents an unsuspended normal Suspense boundary.
 // A non-null SuspenseState means that it is blocked for one reason or another.
