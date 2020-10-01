@@ -5,8 +5,8 @@
   "description": "Jest matchers and utilities for testing the scheduler package.",
   "main": "index.js",
   "repository": {
-    "type" : "git",
-    "url" : "https://github.com/facebook/react.git",
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
     "directory": "packages/jest-mock-scheduler"
   },
   "keywords": [
@@ -19,7 +19,7 @@
   },
   "homepage": "https://reactjs.org/",
   "peerDependencies": {
-    "jest": "^23.0.1 || ^24.0.0 || ^25.1.0",
+    "jest": "^23.0.1 || ^24.0.0 || ^25.1.0 || ^26.4.2",
     "scheduler": "^0.15.0"
   },
   "files": [

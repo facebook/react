@@ -84,7 +84,7 @@ describe('ReactTestRenderer.act()', () => {
     });
 
     it('should not flush effects without also flushing microtasks', async () => {
-      const {useEffect, useReducer} = React;
+      const { useEffect, useReducer } = React;
 
       const alreadyResolvedPromise = Promise.resolve();
 
@@ -93,6 +93,7 @@ describe('ReactTestRenderer.act()', () => {
         const [step, proceed] = useReducer(s => (s === 3 ? 3 : s + 1), 1);
         useEffect(() => {
           Scheduler.unstable_yieldValue('Effect');
+          // eslint-disable-next-line jest/valid-expect-in-promise
           alreadyResolvedPromise.then(() => {
             Scheduler.unstable_yieldValue('Microtask');
             proceed();

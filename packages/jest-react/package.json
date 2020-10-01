@@ -19,7 +19,7 @@
   },
   "homepage": "https://reactjs.org/",
   "peerDependencies": {
-    "jest": "^23.0.1 || ^24.0.0 || ^25.1.0",
+    "jest": "^23.0.1 || ^24.0.0 || ^25.1.0 || ^26.4.2",
     "react": "^17.0.0-alpha",
     "react-test-renderer": "^17.0.0-alpha"
   },
