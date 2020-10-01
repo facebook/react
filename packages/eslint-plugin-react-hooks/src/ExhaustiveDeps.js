@@ -444,23 +444,41 @@ export default {
           }
         }
 
-        gatherJSXDependencies(currentScope);
-
         for (const childScope of currentScope.childScopes) {
           gatherDependenciesRecursively(childScope);
         }
       }
 
-      gatherJSXDependencies(node);
+      // Collect variables from all pure scopes, because parent scope variables
+      // does not include child scope variables
+      const pureScopeVariables = getVariablesFromScopeSet(pureScopes);
+
+      function getVariablesFromScopeSet(scopes) {
+        let variables = [];
+
+        scopes.forEach(currentScope => {
+          variables = variables.concat(...currentScope.variables);
+        });
+
+        return variables.map(variable => variable.name);
+      }
+
+      // Gather JSX Components and check if they came from pure scopes variables or not.
+      // If so, they are dependencies
+      gatherJSXDependencies(scope.block);
 
       function gatherJSXDependencies(rootNode) {
-        const JSXComponents = [];
-
         estraverse.traverse(rootNode, {
           enter: function(currentNode) {
             const {name, type} = currentNode;
-            if (isJSXComponent(name, type) && !JSXComponents.includes(name)) {
-              JSXComponents.push(name);
+            if (
+              isJSXComponent(name, type) &&
+              isPureScopeDependency(name) &&
+              !dependencies.has(name)
+            ) {
+              dependencies.set(name, {
+                references: [],
+              });
             }
           },
           // a list of all JSX keys and its attributes that can contain
@@ -490,19 +508,12 @@ export default {
         }
 
         function isJSXComponent(name, type) {
-          return (
-            type === 'JSXIdentifier' &&
-            name !== 'Fragment' &&
-            name !== 'React' &&
-            !isHTMLElement(name)
-          );
+          return type === 'JSXIdentifier' && !isHTMLElement(name);
         }
 
-        JSXComponents.forEach(component =>
-          dependencies.set(component, {
-            references: [],
-          }),
-        );
+        function isPureScopeDependency(dependencyKey) {
+          return pureScopeVariables.includes(dependencyKey);
+        }
       }
 
       // Warn about accessing .current in cleanup effects.
