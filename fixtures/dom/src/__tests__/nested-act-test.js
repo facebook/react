@@ -58,11 +58,7 @@ describe('mocked scheduler', () => {
   beforeEach(() => {
     jest.resetModules();
     jest.mock('scheduler', () => {
-      if (jest.requireActual) {
-        jest.requireActual('scheduler/unstable_mock')
-      } else {
-        require.requireActual('scheduler/unstable_mock')
-      }
+      return jest.requireActual('scheduler/unstable_mock');
     });
     React = require('react');
     DOMAct = require('react-dom/test-utils').act;

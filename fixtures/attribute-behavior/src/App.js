@@ -9,7 +9,7 @@ import FileSaver from 'file-saver';
 import {
   inject as injectErrorOverlay,
   uninject as uninjectErrorOverlay,
-} from 'react-error-overlay/lib/overlay';
+} from 'react-error-overlay/lib';
 
 import attributes from './attributes';
 

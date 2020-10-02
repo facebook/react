@@ -7,12 +7,12 @@
     "glamor": "^2.20.40",
     "react": "^15.6.1",
     "react-dom": "^15.6.1",
-    "react-scripts": "1.0.11",
+    "react-error-overlay": "^6.0.7",
+    "react-scripts": "3.4.3",
     "react-virtualized": "^9.9.0"
   },
   "scripts": {
-    "prestart":
-      "cp ../../build/node_modules/react/umd/react.development.js public/ && cp ../../build/node_modules/react-dom/umd/react-dom.development.js public/ && cp ../../build/node_modules/react-dom/umd/react-dom-server.browser.development.js public/",
+    "prestart": "cp ../../build/node_modules/react/umd/react.development.js public/ && cp ../../build/node_modules/react-dom/umd/react-dom.development.js public/ && cp ../../build/node_modules/react-dom/umd/react-dom-server.browser.development.js public/",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",

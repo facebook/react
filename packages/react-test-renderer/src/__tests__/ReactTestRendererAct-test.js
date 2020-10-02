@@ -84,7 +84,7 @@ describe('ReactTestRenderer.act()', () => {
     });
 
     it('should not flush effects without also flushing microtasks', async () => {
-      const { useEffect, useReducer } = React;
+      const {useEffect, useReducer} = React;
 
       const alreadyResolvedPromise = Promise.resolve();
 

@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
-    "react-scripts": "^1.0.11"
+    "react-scripts": "^3.4.3"
   },
   "dependencies": {
     "@babel/standalone": "^7.0.0",
