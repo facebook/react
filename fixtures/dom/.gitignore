@@ -21,5 +21,4 @@ public/react-dom-test-utils.production.min.js
 
 # misc
 .DS_Store
-.env
 npm-debug.log
