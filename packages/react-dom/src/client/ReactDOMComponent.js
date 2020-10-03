@@ -112,11 +112,6 @@ let normalizeHTML;
 
 if (__DEV__) {
   warnedUnknownTags = {
-    // Chrome is the only major browser not shipping <time>. But as of July
-    // 2017 it intends to ship it due to widespread usage. We intentionally
-    // *don't* warn for <time> even if it's unrecognized by Chrome because
-    // it soon will be, and many apps have been using it anyway.
-    time: true,
     // There are working polyfills for <dialog>. Let people use it.
     dialog: true,
     // Electron ships a custom <webview> tag to display external web content in
