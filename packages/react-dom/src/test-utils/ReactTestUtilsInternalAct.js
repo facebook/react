@@ -10,7 +10,7 @@
 import type {Thenable} from 'shared/ReactTypes';
 
 import * as ReactDOM from 'react-dom';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
 import * as Scheduler from 'scheduler';
 

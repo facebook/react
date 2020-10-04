@@ -34,7 +34,7 @@ import {
 } from 'react-reconciler/src/ReactFiberReconciler';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import {has as hasInstance} from 'shared/ReactInstanceMap';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;

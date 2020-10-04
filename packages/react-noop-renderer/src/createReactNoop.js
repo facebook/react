@@ -27,7 +27,7 @@ import {
   LegacyRoot,
 } from 'react-reconciler/src/ReactRootTags';
 
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
 const {IsSomeRendererActing} = ReactSharedInternals;
 

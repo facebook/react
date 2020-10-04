@@ -46,7 +46,7 @@ import {
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import ReactVersion from 'shared/ReactVersion';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
 
 import {getPublicInstance} from './ReactTestHostConfig';

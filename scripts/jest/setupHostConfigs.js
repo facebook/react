@@ -88,12 +88,6 @@ inlinedHostConfigs.forEach(rendererInfo => {
   });
 });
 
-// Make it possible to import this module inside
-// the React package itself.
-jest.mock('shared/ReactSharedInternals', () =>
-  require.requireActual('shared/src/ReactSharedInternals')
-);
-
 jest.mock('scheduler', () => require.requireActual('scheduler/unstable_mock'));
 jest.mock('scheduler/src/SchedulerHostConfig', () =>
   require.requireActual('scheduler/src/forks/SchedulerHostConfig.mock.js')

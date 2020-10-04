@@ -23,7 +23,7 @@ import {
 
 import {disableLogs, reenableLogs} from './ConsolePatchingDev';
 
-import ReactCurrentDispatcher from './ReactSharedInternals';
+import ReactCurrentDispatcher from './src/ReactSharedInternals';
 
 let prefix;
 export function describeBuiltInComponentFrame(

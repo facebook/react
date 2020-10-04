@@ -47,7 +47,7 @@ import {
 } from 'shared/ReactSymbols';
 
 import * as React from 'react';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import invariant from 'shared/invariant';
 
 type ReactJSONValue =

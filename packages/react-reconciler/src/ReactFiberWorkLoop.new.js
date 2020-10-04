@@ -33,7 +33,7 @@ import {
   skipUnmountedBoundaries,
   enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import invariant from 'shared/invariant';
 
 import {

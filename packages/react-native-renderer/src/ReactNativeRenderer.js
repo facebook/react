@@ -41,7 +41,7 @@ import {
   getInspectorDataForViewAtPoint,
 } from './ReactNativeFiberInspector';
 import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;

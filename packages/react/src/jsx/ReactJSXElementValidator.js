@@ -27,7 +27,7 @@ import {jsxDEV} from './ReactJSXElement';
 
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;

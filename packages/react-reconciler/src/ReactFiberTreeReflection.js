@@ -14,7 +14,7 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import invariant from 'shared/invariant';
 
 import {get as getInstance} from 'shared/ReactInstanceMap';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import getComponentName from 'shared/getComponentName';
 import {
   ClassComponent,

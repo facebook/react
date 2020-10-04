@@ -61,26 +61,6 @@ const forks = Object.freeze({
     return 'react-shallow-renderer/esm/index.js';
   },
 
-  // Without this fork, importing `shared/ReactSharedInternals` inside
-  // the `react` package itself would not work due to a cyclical dependency.
-  'shared/ReactSharedInternals': (bundleType, entry, dependencies) => {
-    if (entry === 'react') {
-      return 'shared/src/ReactSharedInternals';
-    }
-    if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
-      // React internals are unavailable if we can't reference the package.
-      // We return an error because we only want to throw if this module gets used.
-      return new Error(
-        'Cannot use a module that depends on ReactSharedInternals ' +
-          'from "' +
-          entry +
-          '" because it does not declare "react" in the package ' +
-          'dependencies or peerDependencies.'
-      );
-    }
-    return null;
-  },
-
   // We have a few forks for different environments.
   'shared/ReactFeatureFlags': (bundleType, entry) => {
     switch (entry) {

@@ -16,7 +16,7 @@ import * as React from 'react';
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import {
   warnAboutDeprecatedLifecycles,
   disableLegacyContext,

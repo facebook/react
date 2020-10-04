@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactInternalTypes';
 
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import getComponentName from 'shared/getComponentName';
 

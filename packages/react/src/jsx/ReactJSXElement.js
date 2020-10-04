@@ -6,7 +6,7 @@
  */
 
 import getComponentName from 'shared/getComponentName';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
