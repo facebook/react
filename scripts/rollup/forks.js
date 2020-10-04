@@ -65,7 +65,7 @@ const forks = Object.freeze({
   // the `react` package itself would not work due to a cyclical dependency.
   'shared/ReactSharedInternals': (bundleType, entry, dependencies) => {
     if (entry === 'react') {
-      return 'react/src/ReactSharedInternals';
+      return 'shared/src/ReactSharedInternals';
     }
     if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
       // React internals are unavailable if we can't reference the package.
@@ -224,7 +224,7 @@ const forks = Object.freeze({
 
   // In FB bundles, we preserve an inline require to ReactCurrentOwner.
   // See the explanation in FB version of ReactCurrentOwner in www:
-  'react/src/ReactCurrentOwner': (bundleType, entry) => {
+  'shared/src/ReactCurrentOwner': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
@@ -237,7 +237,7 @@ const forks = Object.freeze({
 
   // Similarly, we preserve an inline require to ReactCurrentDispatcher.
   // See the explanation in FB version of ReactCurrentDispatcher in www:
-  'react/src/ReactCurrentDispatcher': (bundleType, entry) => {
+  'shared/src/ReactCurrentDispatcher': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
@@ -248,7 +248,7 @@ const forks = Object.freeze({
     }
   },
 
-  'react/src/ReactSharedInternals.js': (bundleType, entry) => {
+  'shared/src/ReactSharedInternals.js': (bundleType, entry) => {
     switch (bundleType) {
       case UMD_DEV:
       case UMD_PROD:

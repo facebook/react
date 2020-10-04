@@ -8,9 +8,9 @@
 import assign from 'object-assign';
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
-import ReactCurrentOwner from './ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 import IsSomeRendererActing from './IsSomeRendererActing';
+import ReactCurrentOwner from './ReactCurrentOwner';
 
 const ReactSharedInternals = {
   ReactCurrentDispatcher,

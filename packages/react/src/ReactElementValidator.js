@@ -24,15 +24,15 @@ import {
 import {warnAboutSpreadingKeyToJSX} from 'shared/ReactFeatureFlags';
 import checkPropTypes from 'shared/checkPropTypes';
 
-import ReactCurrentOwner from './ReactCurrentOwner';
 import {
   isValidElement,
   createElement,
   cloneElement,
   jsxDEV,
 } from './ReactElement';
-import {setExtraStackFrame} from './ReactDebugCurrentFrame';
+import {setExtraStackFrame} from 'shared/src/ReactDebugCurrentFrame';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
+import ReactCurrentOwner from 'shared/src/ReactCurrentOwner';
 
 function setCurrentlyValidatingElement(element) {
   if (__DEV__) {

@@ -55,7 +55,7 @@ import {
   cloneElementWithValidation,
 } from './ReactElementValidator';
 import {createMutableSource} from './ReactMutableSource';
-import ReactSharedInternals from './ReactSharedInternals';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import {createFundamental} from './ReactFundamental';
 import {startTransition} from './ReactStartTransition';
 
@@ -102,6 +102,7 @@ export {
   cloneElement,
   isValidElement,
   ReactVersion as version,
+  // TODO: remove this and only export from shared, but need to fix `yarn build` failure that demands the symbol be here
   ReactSharedInternals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   // Deprecated behind disableCreateFactory
   createFactory,
