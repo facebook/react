@@ -8,7 +8,12 @@
  */
 
 import type {FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
-import type {Lane, LanePriority, Lanes, LaneMap} from 'shared/ReactInternalTypes';
+import type {
+  Lane,
+  LanePriority,
+  Lanes,
+  LaneMap,
+} from 'shared/ReactInternalTypes';
 import invariant from 'shared/src/invariant';
 
 import {

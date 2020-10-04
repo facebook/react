@@ -7,7 +7,10 @@
  * @flow
  */
 
-import type {MutableSource, MutableSourceGetVersionFn} from 'shared/src/ReactTypes';
+import type {
+  MutableSource,
+  MutableSourceGetVersionFn,
+} from 'shared/src/ReactTypes';
 
 export function createMutableSource<Source: $NonMaybeType<mixed>>(
   source: Source,

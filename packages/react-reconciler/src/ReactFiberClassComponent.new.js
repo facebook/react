@@ -23,7 +23,10 @@ import {
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
 import {isMounted} from './ReactFiberTreeReflection';
-import {get as getInstance, set as setInstance} from 'shared/src/ReactInstanceMap';
+import {
+  get as getInstance,
+  set as setInstance,
+} from 'shared/src/ReactInstanceMap';
 import shallowEqual from 'shared/src/shallowEqual';
 import getComponentName from 'shared/src/getComponentName';
 import invariant from 'shared/src/invariant';
