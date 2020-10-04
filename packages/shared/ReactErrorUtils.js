@@ -7,7 +7,7 @@
  * @flow
  */
 
-import invariant from 'shared/invariant';
+import invariant from './invariant';
 import invokeGuardedCallbackImpl from './invokeGuardedCallbackImpl';
 
 // Used by Fiber to simulate a try-catch.

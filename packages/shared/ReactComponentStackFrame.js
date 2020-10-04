@@ -7,8 +7,8 @@
  * @flow
  */
 
-import type {Source} from 'shared/ReactElementType';
-import type {LazyComponent} from 'react/src/ReactLazy';
+import type {Source} from './ReactElementType';
+import type {LazyComponent} from './src/ReactLazy';
 
 import {enableComponentStackLocations} from './ReactFeatureFlags';
 
@@ -19,7 +19,7 @@ import {
   REACT_MEMO_TYPE,
   REACT_BLOCK_TYPE,
   REACT_LAZY_TYPE,
-} from 'shared/ReactSymbols';
+} from './ReactSymbols';
 
 import {disableLogs, reenableLogs} from './ConsolePatchingDev';
 

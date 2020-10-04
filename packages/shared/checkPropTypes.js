@@ -9,9 +9,9 @@
 
 const loggedTypeFailures = {};
 
-import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
+import {describeUnknownElementTypeFrameInDEV} from './ReactComponentStackFrame';
 
-import ReactSharedInternals from 'shared/src/ReactSharedInternals';
+import ReactSharedInternals from './src/ReactSharedInternals';
 
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 

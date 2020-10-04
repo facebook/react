@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {LazyComponent} from './ReactLazy';
+import type {LazyComponent} from 'shared/src/ReactLazy';
 
 import {
   REACT_LAZY_TYPE,

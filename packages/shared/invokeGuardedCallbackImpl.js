@@ -7,7 +7,7 @@
  * @flow
  */
 
-import invariant from 'shared/invariant';
+import invariant from './invariant';
 
 function invokeGuardedCallbackProd<A, B, C, D, E, F, Context>(
   name: string | null,

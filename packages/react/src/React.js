@@ -31,7 +31,7 @@ import {
   isValidElement,
 } from './ReactElement';
 import {createContext} from './ReactContext';
-import {lazy} from './ReactLazy';
+import {lazy} from 'shared/src/ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
 import {block} from './ReactBlock';

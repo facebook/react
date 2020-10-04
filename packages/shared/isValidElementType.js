@@ -24,7 +24,7 @@ import {
   REACT_BLOCK_TYPE,
   REACT_SERVER_BLOCK_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
-} from 'shared/ReactSymbols';
+} from './ReactSymbols';
 import {enableScopeAPI} from './ReactFeatureFlags';
 
 export default function isValidElementType(type: mixed) {

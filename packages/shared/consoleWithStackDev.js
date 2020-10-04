@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import ReactSharedInternals from 'shared/src/ReactSharedInternals';
+import ReactSharedInternals from './src/ReactSharedInternals';
 
 // In DEV, calls to console.warn and console.error get replaced
 // by calls to these methods by a Babel plugin.
