@@ -20,7 +20,7 @@ import type {FiberRoot} from './ReactInternalTypes';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Wakeable} from 'shared/src/ReactTypes';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
@@ -61,7 +61,7 @@ import {
   invokeGuardedCallback,
   hasCaughtError,
   clearCaughtError,
-} from 'shared/ReactErrorUtils';
+} from 'shared/src/ReactErrorUtils';
 import {
   NoFlags,
   ContentReset,
@@ -73,8 +73,8 @@ import {
   PassiveMask,
   Ref,
 } from './ReactFiberFlags';
-import getComponentName from 'shared/getComponentName';
-import invariant from 'shared/invariant';
+import getComponentName from 'shared/src/getComponentName';
+import invariant from 'shared/src/invariant';
 import {
   current as currentDebugFiberInDEV,
   resetCurrentFiber as resetCurrentDebugFiberInDEV,

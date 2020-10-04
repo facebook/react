@@ -13,7 +13,7 @@ import {
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
-import getComponentName from 'shared/getComponentName';
+import getComponentName from 'shared/src/getComponentName';
 import {StrictMode} from './ReactTypeOfMode';
 
 type FiberArray = Array<Fiber>;

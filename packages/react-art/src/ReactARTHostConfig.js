@@ -7,7 +7,7 @@
 
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
 

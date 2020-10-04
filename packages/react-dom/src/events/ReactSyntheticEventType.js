@@ -9,7 +9,7 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {EventPriority} from 'shared/ReactTypes';
+import type {EventPriority} from 'shared/src/ReactTypes';
 import type {DOMEventName} from './DOMEventNames';
 
 export type DispatchConfig = {|

@@ -42,7 +42,7 @@ import {popProvider} from './ReactFiberNewContext.old';
 import {popRenderLanes} from './ReactFiberWorkLoop.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
   switch (workInProgress.tag) {

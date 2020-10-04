@@ -7,11 +7,11 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
+import type {Thenable} from 'shared/src/ReactTypes';
 
 import * as ReactDOM from 'react-dom';
 import ReactSharedInternals from 'shared/src/ReactSharedInternals';
-import enqueueTask from 'shared/enqueueTask';
+import enqueueTask from 'shared/src/enqueueTask';
 import * as Scheduler from 'scheduler';
 
 // Keep in sync with ReactDOM.js, and ReactTestUtils.js:

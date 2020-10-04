@@ -14,7 +14,7 @@ import type {
   LegacyPluginModule,
 } from './PluginModuleType';
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 type NamesToPlugins = {
   [key: PluginName]: LegacyPluginModule<AnyNativeEvent>,

@@ -193,7 +193,7 @@ const forks = Object.freeze({
     return 'scheduler/src/forks/SchedulerHostConfig.default';
   },
 
-  'shared/consoleWithStackDev': (bundleType, entry) => {
+  'shared/src/consoleWithStackDev': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
         return 'shared/forks/consoleWithStackDev.www.js';
@@ -240,7 +240,7 @@ const forks = Object.freeze({
   },
 
   // Different wrapping/reporting for caught errors.
-  'shared/invokeGuardedCallbackImpl': (bundleType, entry) => {
+  'shared/src/invokeGuardedCallbackImpl': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:

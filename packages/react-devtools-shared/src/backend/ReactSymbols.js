@@ -7,8 +7,8 @@
  * @flow
  */
 
-// This list should be kept updated to reflect additions to 'shared/ReactSymbols'.
-// DevTools can't import symbols from 'shared/ReactSymbols' directly for two reasons:
+// This list should be kept updated to reflect additions to 'shared/src/ReactSymbols'.
+// DevTools can't import symbols from 'shared/src/ReactSymbols' directly for two reasons:
 // 1. DevTools requires symbols which may have been deleted in more recent versions (e.g. concurrent mode)
 // 2. DevTools must support both Symbol and numeric forms of each symbol;
 //    Since e.g. standalone DevTools runs in a separate process, it can't rely on its own ES capabilities.

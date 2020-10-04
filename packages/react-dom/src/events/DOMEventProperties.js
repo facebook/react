@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {EventPriority} from 'shared/ReactTypes';
+import type {EventPriority} from 'shared/src/ReactTypes';
 import type {DOMEventName} from './DOMEventNames';
 
 import {registerTwoPhaseEvent} from './EventRegistry';
@@ -21,7 +21,7 @@ import {
   DiscreteEvent,
   UserBlockingEvent,
   ContinuousEvent,
-} from 'shared/ReactTypes';
+} from 'shared/src/ReactTypes';
 
 import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 

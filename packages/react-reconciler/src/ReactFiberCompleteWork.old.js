@@ -12,7 +12,7 @@ import type {Lanes} from './ReactFiberLane';
 import type {
   ReactFundamentalComponentInstance,
   ReactScopeInstance,
-} from 'shared/ReactTypes';
+} from 'shared/src/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {
   Instance,
@@ -60,7 +60,7 @@ import {
 } from './ReactWorkTags';
 import {NoMode, BlockingMode, ProfileMode} from './ReactTypeOfMode';
 import {Ref, Update, NoFlags, DidCapture, Snapshot} from './ReactFiberFlags';
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 import {
   createInstance,

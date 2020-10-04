@@ -14,7 +14,7 @@ let ReactErrorUtils;
 describe('ReactErrorUtils', () => {
   beforeEach(() => {
     // TODO: can we express this test with only public API?
-    ReactErrorUtils = require('shared/ReactErrorUtils');
+    ReactErrorUtils = require('shared/src/ReactErrorUtils');
   });
 
   it(`it should rethrow caught errors`, () => {
@@ -127,9 +127,9 @@ describe('ReactErrorUtils', () => {
   });
 
   it('handles nested errors in separate renderers', () => {
-    const ReactErrorUtils1 = require('shared/ReactErrorUtils');
+    const ReactErrorUtils1 = require('shared/src/ReactErrorUtils');
     jest.resetModules();
-    const ReactErrorUtils2 = require('shared/ReactErrorUtils');
+    const ReactErrorUtils2 = require('shared/src/ReactErrorUtils');
     expect(ReactErrorUtils1).not.toEqual(ReactErrorUtils2);
 
     const ops = [];
@@ -177,7 +177,7 @@ describe('ReactErrorUtils', () => {
     const ops = [];
     jest.resetModules();
     jest.mock(
-      'shared/invokeGuardedCallbackImpl',
+      'shared/src/invokeGuardedCallbackImpl',
       () =>
         function invokeGuardedCallback(name, func, context, a) {
           ops.push(a);
@@ -188,7 +188,7 @@ describe('ReactErrorUtils', () => {
           }
         },
     );
-    ReactErrorUtils = require('shared/ReactErrorUtils');
+    ReactErrorUtils = require('shared/src/ReactErrorUtils');
 
     try {
       const err = new Error('foo');
@@ -204,7 +204,7 @@ describe('ReactErrorUtils', () => {
       expect(() => ReactErrorUtils.rethrowCaughtError()).toThrow(err);
       expect(ops).toEqual(['somearg']);
     } finally {
-      jest.unmock('shared/invokeGuardedCallbackImpl');
+      jest.unmock('shared/src/invokeGuardedCallbackImpl');
     }
   });
 });

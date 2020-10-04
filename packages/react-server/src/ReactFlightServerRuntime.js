@@ -11,7 +11,7 @@ import type {BlockRenderFunction} from 'react/src/ReactBlock';
 
 import type {ModuleReference} from './ReactFlightServerConfig';
 
-import {REACT_SERVER_BLOCK_TYPE} from 'shared/ReactSymbols';
+import {REACT_SERVER_BLOCK_TYPE} from 'shared/src/ReactSymbols';
 
 export type ServerBlockComponent<Props, Data> =
   | [

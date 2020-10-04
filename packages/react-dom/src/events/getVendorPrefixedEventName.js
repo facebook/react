@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {canUseDOM} from 'shared/ExecutionEnvironment';
+import {canUseDOM} from 'shared/src/ExecutionEnvironment';
 
 /**
  * Generate a mapping of standard vendor prefixes using the defined style property and event name.

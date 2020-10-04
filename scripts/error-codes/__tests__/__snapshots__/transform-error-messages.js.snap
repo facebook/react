@@ -1,7 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`error transform should correctly transform invariants that are not in the error codes map 1`] = `
-"import invariant from 'shared/invariant';
+"import invariant from 'shared/src/invariant';
 
 /*FIXME (minify-errors-in-prod): Unminified error message in production build!*/
 if (!condition) {
@@ -10,7 +10,7 @@ if (!condition) {
 `;
 
 exports[`error transform should handle escaped characters 1`] = `
-"import invariant from 'shared/invariant';
+"import invariant from 'shared/src/invariant';
 
 /*FIXME (minify-errors-in-prod): Unminified error message in production build!*/
 if (!condition) {
@@ -19,8 +19,8 @@ if (!condition) {
 `;
 
 exports[`error transform should replace simple invariant calls 1`] = `
-"import _formatProdErrorMessage from \\"shared/formatProdErrorMessage\\";
-import invariant from 'shared/invariant';
+"import _formatProdErrorMessage from \\"shared/src/formatProdErrorMessage\\";
+import invariant from 'shared/src/invariant';
 
 if (!condition) {
   {
@@ -30,8 +30,8 @@ if (!condition) {
 `;
 
 exports[`error transform should support invariant calls with a concatenated template string and args 1`] = `
-"import _formatProdErrorMessage from \\"shared/formatProdErrorMessage\\";
-import invariant from 'shared/invariant';
+"import _formatProdErrorMessage from \\"shared/src/formatProdErrorMessage\\";
+import invariant from 'shared/src/invariant';
 
 if (!condition) {
   {
@@ -41,8 +41,8 @@ if (!condition) {
 `;
 
 exports[`error transform should support invariant calls with args 1`] = `
-"import _formatProdErrorMessage from \\"shared/formatProdErrorMessage\\";
-import invariant from 'shared/invariant';
+"import _formatProdErrorMessage from \\"shared/src/formatProdErrorMessage\\";
+import invariant from 'shared/src/invariant';
 
 if (!condition) {
   {
@@ -52,7 +52,7 @@ if (!condition) {
 `;
 
 exports[`error transform should support noMinify option 1`] = `
-"import invariant from 'shared/invariant';
+"import invariant from 'shared/src/invariant';
 
 if (!condition) {
   throw Error(\\"Do not override existing functions.\\");

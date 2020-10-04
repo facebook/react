@@ -10,7 +10,7 @@
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
 import type {Fiber, FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList} from 'shared/src/ReactTypes';
 
 import {DidCapture} from './ReactFiberFlags';
 

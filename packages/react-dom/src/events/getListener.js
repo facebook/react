@@ -9,7 +9,7 @@
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {Props} from '../client/ReactDOMHostConfig';
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 import {getFiberCurrentPropsFromNode} from '../client/ReactDOMComponentTree';
 
 function isInteractive(tag: string): boolean {

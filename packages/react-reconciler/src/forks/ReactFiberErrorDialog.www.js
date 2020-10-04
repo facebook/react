@@ -12,7 +12,7 @@ import type {CapturedValue} from '../ReactCapturedValue';
 
 import {ClassComponent} from '../ReactWorkTags';
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 // Provided by www
 const ReactFiberErrorDialogWWW = require('ReactFiberErrorDialog');

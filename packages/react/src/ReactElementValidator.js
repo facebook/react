@@ -12,17 +12,17 @@
  * that support it.
  */
 
-import isValidElementType from 'shared/isValidElementType';
-import getComponentName from 'shared/getComponentName';
+import isValidElementType from 'shared/src/isValidElementType';
+import getComponentName from 'shared/src/getComponentName';
 import {
   getIteratorFn,
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_ELEMENT_TYPE,
-} from 'shared/ReactSymbols';
+} from 'shared/src/ReactSymbols';
 import {warnAboutSpreadingKeyToJSX} from 'shared/ReactFeatureFlags';
-import checkPropTypes from 'shared/checkPropTypes';
+import checkPropTypes from 'shared/src/checkPropTypes';
 
 import {
   isValidElement,
@@ -31,7 +31,7 @@ import {
   jsxDEV,
 } from './ReactElement';
 import {setExtraStackFrame} from 'shared/src/ReactDebugCurrentFrame';
-import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
+import {describeUnknownElementTypeFrameInDEV} from 'shared/src/ReactComponentStackFrame';
 import ReactCurrentOwner from 'shared/src/ReactCurrentOwner';
 
 function setCurrentlyValidatingElement(element) {

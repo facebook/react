@@ -13,7 +13,7 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   ReactProviderType,
-} from 'shared/ReactTypes';
+} from 'shared/src/ReactTypes';
 import type {
   Fiber,
   Dispatcher as DispatcherType,
@@ -24,7 +24,7 @@ import {NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 import ErrorStackParser from 'error-stack-parser';
 import ReactSharedInternals from 'shared/src/ReactSharedInternals';
-import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
+import {REACT_OPAQUE_ID_TYPE} from 'shared/src/ReactSymbols';
 import {
   FunctionComponent,
   SimpleMemoComponent,

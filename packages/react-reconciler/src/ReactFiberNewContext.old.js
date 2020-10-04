@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactContext} from 'shared/ReactTypes';
+import type {ReactContext} from 'shared/src/ReactTypes';
 import type {Fiber, ContextDependency} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.old';
 import type {Lanes} from './ReactFiberLane';
@@ -29,8 +29,8 @@ import {
   pickArbitraryLane,
 } from './ReactFiberLane';
 
-import invariant from 'shared/invariant';
-import is from 'shared/objectIs';
+import invariant from 'shared/src/invariant';
+import is from 'shared/src/objectIs';
 import {createUpdate, enqueueUpdate, ForceUpdate} from './ReactUpdateQueue.old';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';

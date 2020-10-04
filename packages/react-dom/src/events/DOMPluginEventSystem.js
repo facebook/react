@@ -56,7 +56,7 @@ import {
 import {
   invokeGuardedCallbackAndCatchFirstError,
   rethrowCaughtError,
-} from 'shared/ReactErrorUtils';
+} from 'shared/src/ReactErrorUtils';
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 import {createEventListenerWrapperWithPriority} from './ReactDOMEventListener';
 import {

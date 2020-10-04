@@ -254,7 +254,7 @@ describe('ReactSuspense', () => {
 
       const errors = [];
       let hasCaughtError = false;
-      jest.mock('shared/ReactErrorUtils', () => ({
+      jest.mock('shared/src/ReactErrorUtils', () => ({
         invokeGuardedCallback(name, fn, context, ...args) {
           try {
             return fn.call(context, ...args);

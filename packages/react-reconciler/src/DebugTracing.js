@@ -8,7 +8,7 @@
  */
 
 import type {Lane, Lanes} from './ReactFiberLane';
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Wakeable} from 'shared/src/ReactTypes';
 
 import {enableDebugTracing} from 'shared/ReactFeatureFlags';
 

@@ -12,7 +12,7 @@ import type {
   ReactScopeInstance,
   ReactContext,
   ReactScopeQuery,
-} from 'shared/ReactTypes';
+} from 'shared/src/ReactTypes';
 
 import {
   getPublicInstance,

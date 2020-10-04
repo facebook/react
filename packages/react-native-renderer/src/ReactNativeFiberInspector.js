@@ -14,9 +14,9 @@ import {
   findCurrentHostFiber,
   findCurrentFiberUsingSlowPath,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
-import getComponentName from 'shared/getComponentName';
+import getComponentName from 'shared/src/getComponentName';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 // Module provided by RN:
 import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 

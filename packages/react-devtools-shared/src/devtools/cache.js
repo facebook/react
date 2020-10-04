@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Thenable} from 'shared/ReactTypes';
+import type {Thenable} from 'shared/src/ReactTypes';
 
 import * as React from 'react';
 import {createContext} from 'react';

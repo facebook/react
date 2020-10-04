@@ -44,11 +44,11 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
-} from 'shared/ReactSymbols';
+} from 'shared/src/ReactSymbols';
 
 import * as React from 'react';
 import ReactSharedInternals from 'shared/src/ReactSharedInternals';
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 type ReactJSONValue =
   | string

@@ -31,7 +31,7 @@ describe('error transform', () => {
   it('should replace simple invariant calls', () => {
     expect(
       transform(`
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 invariant(condition, 'Do not override existing functions.');
 `)
     ).toMatchSnapshot();
@@ -40,7 +40,7 @@ invariant(condition, 'Do not override existing functions.');
   it('should throw if invariant is not in an expression statement', () => {
     expect(() => {
       transform(`
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 cond && invariant(condition, 'Do not override existing functions.');
 `);
     }).toThrow('invariant() cannot be called from expression context');
@@ -49,7 +49,7 @@ cond && invariant(condition, 'Do not override existing functions.');
   it('should support invariant calls with args', () => {
     expect(
       transform(`
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 invariant(condition, 'Expected %s target to be an array; got %s', foo, bar);
 `)
     ).toMatchSnapshot();
@@ -58,7 +58,7 @@ invariant(condition, 'Expected %s target to be an array; got %s', foo, bar);
   it('should support invariant calls with a concatenated template string and args', () => {
     expect(
       transform(`
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 invariant(condition, 'Expected a component class, ' + 'got %s.' + '%s', Foo, Bar);
 `)
     ).toMatchSnapshot();
@@ -67,7 +67,7 @@ invariant(condition, 'Expected a component class, ' + 'got %s.' + '%s', Foo, Bar
   it('should correctly transform invariants that are not in the error codes map', () => {
     expect(
       transform(`
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 invariant(condition, 'This is not a real error message.');
 `)
     ).toMatchSnapshot();
@@ -76,7 +76,7 @@ invariant(condition, 'This is not a real error message.');
   it('should handle escaped characters', () => {
     expect(
       transform(`
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 invariant(condition, 'What\\'s up?');
 `)
     ).toMatchSnapshot();
@@ -86,7 +86,7 @@ invariant(condition, 'What\\'s up?');
     expect(
       transform(
         `
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 invariant(condition, 'Do not override existing functions.');
 `,
         {noMinify: true}

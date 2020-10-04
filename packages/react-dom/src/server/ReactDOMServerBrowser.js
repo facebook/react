@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import ReactVersion from 'shared/ReactVersion';
-import invariant from 'shared/invariant';
+import ReactVersion from 'shared/src/ReactVersion';
+import invariant from 'shared/src/invariant';
 
 import {renderToString, renderToStaticMarkup} from './ReactDOMStringRenderer';
 

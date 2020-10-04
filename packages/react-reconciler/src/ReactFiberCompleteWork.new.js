@@ -12,7 +12,7 @@ import type {Lanes, Lane} from './ReactFiberLane';
 import type {
   ReactFundamentalComponentInstance,
   ReactScopeInstance,
-} from 'shared/ReactTypes';
+} from 'shared/src/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {
   Instance,
@@ -79,7 +79,7 @@ import {
   StaticMask,
   PerformedWork,
 } from './ReactFiberFlags';
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 import {
   createInstance,

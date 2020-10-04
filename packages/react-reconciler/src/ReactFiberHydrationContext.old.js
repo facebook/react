@@ -25,7 +25,7 @@ import {
   SuspenseComponent,
 } from './ReactWorkTags';
 import {Deletion, Placement, Hydrating} from './ReactFiberFlags';
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 import {
   createFiberFromHostInstanceForDeletion,

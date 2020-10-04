@@ -14,7 +14,7 @@ import type {EventSystemFlags} from '../EventSystemFlags';
 import {registerTwoPhaseEvent} from '../EventRegistry';
 import {SyntheticEvent} from '../SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
-import {canUseDOM} from 'shared/ExecutionEnvironment';
+import {canUseDOM} from 'shared/src/ExecutionEnvironment';
 
 import getEventTarget from '../getEventTarget';
 import isEventSupported from '../isEventSupported';

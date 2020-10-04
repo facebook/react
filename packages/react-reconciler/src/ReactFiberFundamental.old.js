@@ -11,7 +11,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {
   ReactFundamentalImpl,
   ReactFundamentalComponentInstance,
-} from 'shared/ReactTypes';
+} from 'shared/src/ReactTypes';
 
 export function createFundamentalStateInstance<C, H>(
   currentFiber: Fiber,

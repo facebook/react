@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 const instanceCache = new Map();
 const instanceProps = new Map();

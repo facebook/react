@@ -13,9 +13,9 @@ import type {StackCursor} from './ReactFiberStack.old';
 import {isFiberMounted} from './ReactFiberTreeReflection';
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
 import {ClassComponent, HostRoot} from './ReactWorkTags';
-import getComponentName from 'shared/getComponentName';
-import invariant from 'shared/invariant';
-import checkPropTypes from 'shared/checkPropTypes';
+import getComponentName from 'shared/src/getComponentName';
+import invariant from 'shared/src/invariant';
+import checkPropTypes from 'shared/src/checkPropTypes';
 
 import {createCursor, push, pop} from './ReactFiberStack.old';
 

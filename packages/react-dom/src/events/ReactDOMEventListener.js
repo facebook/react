@@ -47,7 +47,7 @@ import {
   UserBlockingEvent,
   ContinuousEvent,
   DiscreteEvent,
-} from 'shared/ReactTypes';
+} from 'shared/src/ReactTypes';
 import {getEventPriorityForPluginSystem} from './DOMEventProperties';
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 import {

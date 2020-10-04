@@ -8,9 +8,9 @@
  */
 
 import type {Source} from './ReactElementType';
-import type {LazyComponent} from './src/ReactLazy';
+import type {LazyComponent} from './ReactLazy';
 
-import {enableComponentStackLocations} from './ReactFeatureFlags';
+import {enableComponentStackLocations} from '../ReactFeatureFlags';
 
 import {
   REACT_SUSPENSE_TYPE,
@@ -23,7 +23,7 @@ import {
 
 import {disableLogs, reenableLogs} from './ConsolePatchingDev';
 
-import ReactCurrentDispatcher from './src/ReactSharedInternals';
+import ReactCurrentDispatcher from './ReactSharedInternals';
 
 let prefix;
 export function describeBuiltInComponentFrame(

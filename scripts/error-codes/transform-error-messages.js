@@ -120,7 +120,7 @@ module.exports = function(babel) {
           // Import ReactErrorProd
           const formatProdErrorMessageIdentifier = helperModuleImports.addDefault(
             path,
-            'shared/formatProdErrorMessage',
+            'shared/src/formatProdErrorMessage',
             {nameHint: 'formatProdErrorMessage'}
           );
 

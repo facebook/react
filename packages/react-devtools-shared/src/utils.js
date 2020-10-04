@@ -22,7 +22,7 @@ import {
   StrictMode,
   Suspense,
 } from 'react-is';
-import {REACT_SUSPENSE_LIST_TYPE as SuspenseList} from 'shared/ReactSymbols';
+import {REACT_SUSPENSE_LIST_TYPE as SuspenseList} from 'shared/src/ReactSymbols';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,

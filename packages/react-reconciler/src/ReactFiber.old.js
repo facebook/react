@@ -13,7 +13,7 @@ import type {
   ReactPortal,
   ReactFundamentalComponent,
   ReactScope,
-} from 'shared/ReactTypes';
+} from 'shared/src/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
@@ -22,7 +22,7 @@ import type {Lanes} from './ReactFiberLane';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {OffscreenProps} from './ReactFiberOffscreenComponent';
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 import {
   enableProfilerTimer,
   enableFundamentalAPI,
@@ -57,7 +57,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
 } from './ReactWorkTags';
-import getComponentName from 'shared/getComponentName';
+import getComponentName from 'shared/src/getComponentName';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
 import {
@@ -91,7 +91,7 @@ import {
   REACT_BLOCK_TYPE,
   REACT_OFFSCREEN_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
-} from 'shared/ReactSymbols';
+} from 'shared/src/ReactSymbols';
 
 export type {Fiber};
 

@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {invokeGuardedCallbackAndCatchFirstError} from 'shared/ReactErrorUtils';
-import invariant from 'shared/invariant';
+import {invokeGuardedCallbackAndCatchFirstError} from 'shared/src/ReactErrorUtils';
+import invariant from 'shared/src/invariant';
 
 export let getFiberCurrentPropsFromNode = null;
 export let getInstanceFromNode = null;

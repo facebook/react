@@ -12,7 +12,7 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
-} from 'shared/ReactTypes';
+} from 'shared/src/ReactTypes';
 import type {Fiber, Dispatcher} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookFlags} from './ReactHookEffectTags';
@@ -64,9 +64,9 @@ import {
   markSkippedUpdateLanes,
 } from './ReactFiberWorkLoop.old';
 
-import invariant from 'shared/invariant';
-import getComponentName from 'shared/getComponentName';
-import is from 'shared/objectIs';
+import invariant from 'shared/src/invariant';
+import getComponentName from 'shared/src/getComponentName';
+import is from 'shared/src/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
 import {
   UserBlockingPriority,

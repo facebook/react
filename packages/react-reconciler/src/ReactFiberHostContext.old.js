@@ -11,7 +11,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.old';
 import type {Container, HostContext} from './ReactFiberHostConfig';
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 import {getChildHostContext, getRootHostContext} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.old';

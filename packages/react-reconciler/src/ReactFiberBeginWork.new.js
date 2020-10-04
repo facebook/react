@@ -7,13 +7,13 @@
  * @flow
  */
 
-import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
+import type {ReactProviderType, ReactContext} from 'shared/src/ReactTypes';
 import type {BlockComponent} from 'react/src/ReactBlock';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
-import type {MutableSource} from 'shared/ReactTypes';
+import type {MutableSource} from 'shared/src/ReactTypes';
 import type {
   SuspenseState,
   SuspenseListRenderState,
@@ -25,7 +25,7 @@ import type {
   OffscreenState,
 } from './ReactFiberOffscreenComponent';
 
-import checkPropTypes from 'shared/checkPropTypes';
+import checkPropTypes from 'shared/src/checkPropTypes';
 
 import {
   IndeterminateComponent,
@@ -78,11 +78,11 @@ import {
   enableScopeAPI,
   enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
-import invariant from 'shared/invariant';
-import shallowEqual from 'shared/shallowEqual';
-import getComponentName from 'shared/getComponentName';
+import invariant from 'shared/src/invariant';
+import shallowEqual from 'shared/src/shallowEqual';
+import getComponentName from 'shared/src/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
-import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
+import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/src/ReactSymbols';
 import {
   getCurrentFiberOwnerNameInDevOrNull,
   setIsRendering,
@@ -203,7 +203,7 @@ import {
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {setWorkInProgressVersion} from './ReactMutableSource.new';
 
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
+import {disableLogs, reenableLogs} from 'shared/src/ConsolePatchingDev';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 

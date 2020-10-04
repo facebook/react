@@ -6,7 +6,7 @@
  *
  * @flow
  */
-import {REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
+import {REACT_FRAGMENT_TYPE} from 'shared/src/ReactSymbols';
 import {
   jsxWithValidationStatic,
   jsxWithValidationDynamic,

@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import getComponentName from 'shared/getComponentName';
-import invariant from 'shared/invariant';
-import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import getComponentName from 'shared/src/getComponentName';
+import invariant from 'shared/src/invariant';
+import {REACT_ELEMENT_TYPE} from 'shared/src/ReactSymbols';
 
 import ReactCurrentOwner from 'shared/src/ReactCurrentOwner';
 

@@ -21,7 +21,7 @@ import type {
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
 

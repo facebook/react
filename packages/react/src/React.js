@@ -7,7 +7,7 @@
  * @flow
  */
 
-import ReactVersion from 'shared/ReactVersion';
+import ReactVersion from 'shared/src/ReactVersion';
 import {
   REACT_FRAGMENT_TYPE,
   REACT_DEBUG_TRACING_MODE_TYPE,
@@ -17,7 +17,7 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
   REACT_SCOPE_TYPE,
-} from 'shared/ReactSymbols';
+} from 'shared/src/ReactSymbols';
 
 import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 

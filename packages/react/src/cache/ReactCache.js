@@ -6,10 +6,10 @@
  * @flow
  */
 
-import type {ReactContext} from 'shared/ReactTypes';
+import type {ReactContext} from 'shared/src/ReactTypes';
 
 import {createContext} from 'react';
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 type Cache = {|
   resources: Map<any, any>,

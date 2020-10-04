@@ -15,7 +15,7 @@ import {ClassComponent} from '../ReactWorkTags';
 // Module provided by RN:
 import {ReactFiberErrorDialog as RNImpl} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 invariant(
   typeof RNImpl.showErrorDialog === 'function',

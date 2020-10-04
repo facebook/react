@@ -10,12 +10,12 @@
 import type {ThreadID} from './ReactThreadIDAllocator';
 import type {ReactElement} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
-import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
+import type {ReactProvider, ReactContext} from 'shared/src/ReactTypes';
 
 import * as React from 'react';
-import invariant from 'shared/invariant';
-import getComponentName from 'shared/getComponentName';
-import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
+import invariant from 'shared/src/invariant';
+import getComponentName from 'shared/src/getComponentName';
+import {describeUnknownElementTypeFrameInDEV} from 'shared/src/ReactComponentStackFrame';
 import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import {
   warnAboutDeprecatedLifecycles,
@@ -42,7 +42,7 @@ import {
   REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
-} from 'shared/ReactSymbols';
+} from 'shared/src/ReactSymbols';
 
 import {
   emptyObject,

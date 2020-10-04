@@ -8,12 +8,12 @@
  */
 
 import type {ThreadID} from './ReactThreadIDAllocator';
-import type {ReactContext} from 'shared/ReactTypes';
+import type {ReactContext} from 'shared/src/ReactTypes';
 
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
-import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
-import getComponentName from 'shared/getComponentName';
-import checkPropTypes from 'shared/checkPropTypes';
+import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/src/ReactSymbols';
+import getComponentName from 'shared/src/getComponentName';
+import checkPropTypes from 'shared/src/checkPropTypes';
 
 let didWarnAboutInvalidateContextType;
 if (__DEV__) {

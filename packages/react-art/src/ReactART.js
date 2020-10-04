@@ -6,7 +6,7 @@
  */
 
 import * as React from 'react';
-import ReactVersion from 'shared/ReactVersion';
+import ReactVersion from 'shared/src/ReactVersion';
 import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import {
   createContainer,

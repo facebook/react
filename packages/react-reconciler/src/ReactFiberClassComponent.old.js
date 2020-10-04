@@ -22,11 +22,11 @@ import {
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
 import {isMounted} from './ReactFiberTreeReflection';
-import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
-import shallowEqual from 'shared/shallowEqual';
-import getComponentName from 'shared/getComponentName';
-import invariant from 'shared/invariant';
-import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
+import {get as getInstance, set as setInstance} from 'shared/src/ReactInstanceMap';
+import shallowEqual from 'shared/src/shallowEqual';
+import getComponentName from 'shared/src/getComponentName';
+import invariant from 'shared/src/invariant';
+import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/src/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
 import {DebugTracingMode, StrictMode} from './ReactTypeOfMode';
@@ -58,7 +58,7 @@ import {
 } from './ReactFiberWorkLoop.old';
 import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
+import {disableLogs, reenableLogs} from 'shared/src/ConsolePatchingDev';
 import {
   markForceUpdateScheduled,
   markStateUpdateScheduled,

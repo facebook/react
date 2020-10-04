@@ -9,7 +9,7 @@
 
 import type {TouchedViewDataAtPoint} from './ReactNativeTypes';
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 // Modules provided by RN:
 import {

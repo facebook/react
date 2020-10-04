@@ -5,10 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import getComponentName from 'shared/getComponentName';
+import getComponentName from 'shared/src/getComponentName';
 import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 
-import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import {REACT_ELEMENT_TYPE} from 'shared/src/ReactSymbols';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 

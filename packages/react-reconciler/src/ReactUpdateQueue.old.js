@@ -99,9 +99,9 @@ import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags
 import {StrictMode} from './ReactTypeOfMode';
 import {markSkippedUpdateLanes} from './ReactFiberWorkLoop.old';
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
+import {disableLogs, reenableLogs} from 'shared/src/ConsolePatchingDev';
 
 export type Update<State> = {|
   // TODO: Temporary field. Will remove this by storing a map of

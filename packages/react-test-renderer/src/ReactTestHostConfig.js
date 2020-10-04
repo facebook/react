@@ -7,9 +7,9 @@
  * @flow
  */
 
-import type {ReactFundamentalComponentInstance} from 'shared/ReactTypes';
+import type {ReactFundamentalComponentInstance} from 'shared/src/ReactTypes';
 
-import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
+import {REACT_OPAQUE_ID_TYPE} from 'shared/src/ReactSymbols';
 
 export type Type = string;
 export type Props = Object;

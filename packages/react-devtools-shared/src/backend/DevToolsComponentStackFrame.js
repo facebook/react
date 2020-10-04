@@ -33,7 +33,7 @@ import {
 
 // These methods are safe to import from shared;
 // there is no React-specific logic here.
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
+import {disableLogs, reenableLogs} from 'shared/src/ConsolePatchingDev';
 
 let prefix;
 export function describeBuiltInComponentFrame(

@@ -8,13 +8,13 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {ReactPortal} from 'shared/ReactTypes';
+import type {ReactPortal} from 'shared/src/ReactTypes';
 import type {BlockComponent} from 'react/src/ReactBlock';
 import type {LazyComponent} from 'react/src/ReactLazy';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 
-import getComponentName from 'shared/getComponentName';
+import getComponentName from 'shared/src/getComponentName';
 import {Placement, Deletion} from './ReactFiberFlags';
 import {
   getIteratorFn,
@@ -23,7 +23,7 @@ import {
   REACT_PORTAL_TYPE,
   REACT_LAZY_TYPE,
   REACT_BLOCK_TYPE,
-} from 'shared/ReactSymbols';
+} from 'shared/src/ReactSymbols';
 import {
   FunctionComponent,
   ClassComponent,
@@ -34,7 +34,7 @@ import {
   SimpleMemoComponent,
   Block,
 } from './ReactWorkTags';
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 import {
   warnAboutStringRefs,
   enableBlocksAPI,

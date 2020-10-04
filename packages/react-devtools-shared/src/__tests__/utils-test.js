@@ -14,7 +14,7 @@ import {
 import {
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_STRICT_MODE_TYPE as StrictMode,
-} from 'shared/ReactSymbols';
+} from 'shared/src/ReactSymbols';
 import {createElement} from 'react/src/ReactElement';
 
 describe('utils', () => {

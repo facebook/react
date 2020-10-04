@@ -13,7 +13,7 @@ let formatProdErrorMessage;
 describe('ReactErrorProd', () => {
   beforeEach(() => {
     jest.resetModules();
-    formatProdErrorMessage = require('shared/formatProdErrorMessage').default;
+    formatProdErrorMessage = require('shared/src/formatProdErrorMessage').default;
   });
 
   it('should throw with the correct number of `%s`s in the URL', () => {

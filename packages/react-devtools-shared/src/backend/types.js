@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactContext} from 'shared/ReactTypes';
+import type {ReactContext} from 'shared/src/ReactTypes';
 import type {Source} from 'shared/ReactElementType';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {

@@ -21,7 +21,7 @@ import type {Lanes} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Wakeable} from 'shared/src/ReactTypes';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 
@@ -60,7 +60,7 @@ import {
   invokeGuardedCallback,
   hasCaughtError,
   clearCaughtError,
-} from 'shared/ReactErrorUtils';
+} from 'shared/src/ReactErrorUtils';
 import {
   NoFlags,
   ContentReset,
@@ -68,8 +68,8 @@ import {
   Snapshot,
   Update,
 } from './ReactFiberFlags';
-import getComponentName from 'shared/getComponentName';
-import invariant from 'shared/invariant';
+import getComponentName from 'shared/src/getComponentName';
+import invariant from 'shared/src/invariant';
 
 import {onCommitUnmount} from './ReactFiberDevToolsHook.old';
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';

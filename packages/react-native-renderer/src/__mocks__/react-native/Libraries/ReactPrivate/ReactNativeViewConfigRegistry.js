@@ -16,7 +16,7 @@ import type {
   ViewConfigGetter,
 } from './ReactNativeTypes';
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 // Event configs
 const customBubblingEventTypes = {};

@@ -8,7 +8,7 @@
  */
 
 import type {DOMEventName} from '../events/DOMEventNames';
-import type {ReactScopeInstance} from 'shared/ReactTypes';
+import type {ReactScopeInstance} from 'shared/src/ReactTypes';
 import type {
   ReactDOMEventHandle,
   ReactDOMEventHandleListener,
@@ -34,7 +34,7 @@ import {
   enableCreateEventHandleAPI,
   enableEagerRootListeners,
 } from 'shared/ReactFeatureFlags';
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 type EventHandleOptions = {|
   capture?: boolean,

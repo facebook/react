@@ -29,7 +29,7 @@ import {
 import accumulateInto from './accumulateInto';
 import forEachAccumulated from './forEachAccumulated';
 import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 /**
  * Instance of element that should respond to touch/move types of interactions,
