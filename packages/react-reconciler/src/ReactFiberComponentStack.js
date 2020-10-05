@@ -7,8 +7,6 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
-
 import {
   HostComponent,
   LazyComponent,
@@ -20,12 +18,13 @@ import {
   SimpleMemoComponent,
   Block,
   ClassComponent,
-} from './ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import {
   describeBuiltInComponentFrame,
   describeFunctionComponentFrame,
   describeClassComponentFrame,
 } from 'shared/src/ReactComponentStackFrame';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 function describeFiber(fiber: Fiber): string {
   const owner: null | Function = __DEV__

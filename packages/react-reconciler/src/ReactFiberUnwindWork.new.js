@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 
@@ -22,9 +21,9 @@ import {
   SuspenseListComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from './ReactWorkTags';
-import {DidCapture, NoFlags, ShouldCapture} from './ReactFiberFlags';
-import {NoMode, ProfileMode} from './ReactTypeOfMode';
+} from 'shared/src/ReactWorkTags';
+import {DidCapture, NoFlags, ShouldCapture} from 'shared/src/ReactFiberFlags';
+import {NoMode, ProfileMode} from 'shared/src/ReactTypeOfMode';
 import {
   enableSuspenseServerRenderer,
   enableProfilerTimer,
@@ -43,6 +42,7 @@ import {popRenderLanes} from './ReactFiberWorkLoop.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
 
 import invariant from 'shared/src/invariant';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
   switch (workInProgress.tag) {

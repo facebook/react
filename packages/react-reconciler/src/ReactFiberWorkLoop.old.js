@@ -8,7 +8,7 @@
  */
 
 import type {Thenable, Wakeable} from 'shared/src/ReactTypes';
-import type {Fiber, FiberRoot} from './ReactInternalTypes';
+import type {FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
@@ -98,7 +98,7 @@ import {
   ProfileMode,
   BlockingMode,
   ConcurrentMode,
-} from './ReactTypeOfMode';
+} from 'shared/src/ReactTypeOfMode';
 import {
   HostRoot,
   IndeterminateComponent,
@@ -113,7 +113,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   ScopeComponent,
-} from './ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import {LegacyRoot} from './ReactRootTags';
 import {
   NoFlags,
@@ -132,7 +132,7 @@ import {
   HostEffectMask,
   Hydrating,
   HydratingAndUpdate,
-} from './ReactFiberFlags';
+} from 'shared/src/ReactFiberFlags';
 import {
   NoLanePriority,
   SyncLanePriority,
@@ -236,6 +236,7 @@ import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
 // Used by `act`
 import enqueueTask from 'shared/src/enqueueTask';
 import {doesFiberContain} from './ReactFiberTreeReflection';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const ceil = Math.ceil;
 

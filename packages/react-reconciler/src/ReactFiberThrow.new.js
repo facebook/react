@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lane, Lanes} from './ReactFiberLane';
 import type {CapturedValue} from './ReactCapturedValue';
@@ -21,7 +20,7 @@ import {
   HostRoot,
   SuspenseComponent,
   IncompleteClassComponent,
-} from './ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import {
   DidCapture,
   Incomplete,
@@ -29,9 +28,9 @@ import {
   ShouldCapture,
   LifecycleEffectMask,
   ForceUpdateForLegacySuspense,
-} from './ReactFiberFlags';
+} from 'shared/src/ReactFiberFlags';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.new';
-import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
+import {NoMode, BlockingMode, DebugTracingMode} from 'shared/src/ReactTypeOfMode';
 import {
   enableDebugTracing,
   enableSchedulingProfiler,
@@ -68,6 +67,7 @@ import {
   mergeLanes,
   pickArbitraryLane,
 } from './ReactFiberLane';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 

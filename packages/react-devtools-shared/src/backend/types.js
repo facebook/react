@@ -8,14 +8,14 @@
  */
 
 import type {ReactContext} from 'shared/src/ReactTypes';
-import type {Source} from 'shared/ReactElementType';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {Source} from 'shared/src/ReactElementType';
 import type {
   ComponentFilter,
   ElementType,
 } from 'react-devtools-shared/src/types';
 import type {Interaction} from 'react-devtools-shared/src/devtools/views/Profiler/types';
 import type {ResolveNativeStyle} from 'react-devtools-shared/src/backend/NativeStyleEditor/setupNativeStyleEditor';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 type BundleType =
   | 0 // PROD

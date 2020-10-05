@@ -9,10 +9,11 @@
 
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
-import type {Fiber, FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
+import type {FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
 import type {ReactNodeList} from 'shared/src/ReactTypes';
 
-import {DidCapture} from './ReactFiberFlags';
+import {DidCapture} from 'shared/src/ReactFiberFlags';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 

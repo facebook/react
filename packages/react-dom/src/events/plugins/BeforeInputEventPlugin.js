@@ -8,7 +8,6 @@
  */
 
 import type {DOMEventName} from '../../events/DOMEventNames';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {AnyNativeEvent} from '../../events/PluginModuleType';
 import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
@@ -26,6 +25,7 @@ import {
   SyntheticInputEvent,
 } from '../SyntheticEvent';
 import {accumulateTwoPhaseListeners} from '../DOMPluginEventSystem';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
 const START_KEYCODE = 229;

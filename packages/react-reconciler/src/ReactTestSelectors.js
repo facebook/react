@@ -7,11 +7,10 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {Instance} from './ReactFiberHostConfig';
 
 import invariant from 'shared/src/invariant';
-import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
+import {HostComponent, HostText} from 'shared/src/ReactWorkTags';
 import getComponentName from 'shared/src/getComponentName';
 import {
   findFiberRoot,
@@ -24,6 +23,7 @@ import {
   setupIntersectionObserver,
   supportsTestSelectors,
 } from './ReactFiberHostConfig';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 let COMPONENT_TYPE = 0b000;
 let HAS_PSEUDO_CLASS_TYPE = 0b001;

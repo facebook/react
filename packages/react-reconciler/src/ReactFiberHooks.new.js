@@ -13,7 +13,7 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
 } from 'shared/src/ReactTypes';
-import type {Fiber, Dispatcher} from './ReactInternalTypes';
+import type {Dispatcher} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
@@ -29,7 +29,7 @@ import {
   enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
 
-import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
+import {NoMode, BlockingMode, DebugTracingMode} from 'shared/src/ReactTypeOfMode';
 import {
   NoLane,
   NoLanes,
@@ -51,7 +51,7 @@ import {
   PassiveStatic as PassiveStaticEffect,
   MountLayoutDev as MountLayoutDevEffect,
   MountPassiveDev as MountPassiveDevEffect,
-} from './ReactFiberFlags';
+} from 'shared/src/ReactFiberFlags';
 import {
   HasEffect as HookHasEffect,
   Layout as HookLayout,
@@ -93,6 +93,7 @@ import {
 import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 

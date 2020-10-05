@@ -8,7 +8,7 @@
  */
 
 import type {ReactContext} from 'shared/src/ReactTypes';
-import type {Fiber, ContextDependency} from './ReactInternalTypes';
+import type {ContextDependency} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.old';
 import type {Lanes} from './ReactFiberLane';
 
@@ -19,7 +19,7 @@ import {
   ContextProvider,
   ClassComponent,
   DehydratedFragment,
-} from './ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import {
   NoLanes,
   NoTimestamp,
@@ -34,6 +34,7 @@ import is from 'shared/src/objectIs';
 import {createUpdate, enqueueUpdate, ForceUpdate} from './ReactUpdateQueue.old';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
 

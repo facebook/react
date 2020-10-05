@@ -7,9 +7,8 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
-
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 export type CapturedValue<T> = {|
   value: T,

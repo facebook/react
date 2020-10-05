@@ -1,4 +1,4 @@
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {Fiber} from './ReactInternalTypes';
 
 /**
  * Keeps track of the current owner.

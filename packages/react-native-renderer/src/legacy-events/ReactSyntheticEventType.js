@@ -8,9 +8,9 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {EventPriority} from 'shared/src/ReactTypes';
 import type {TopLevelType} from './TopLevelEventTypes';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 export type DispatchConfig = {|
   dependencies?: Array<TopLevelType>,

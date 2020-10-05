@@ -23,7 +23,7 @@ import {
 import {accumulateEnterLeaveTwoPhaseListeners} from '../DOMPluginEventSystem';
 import type {KnownReactSyntheticEvent} from '../ReactSyntheticEventType';
 
-import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
+import {HostComponent, HostText} from 'shared/src/ReactWorkTags';
 import {getNearestMountedFiber} from 'react-reconciler/src/ReactFiberTreeReflection';
 
 function registerEvents() {

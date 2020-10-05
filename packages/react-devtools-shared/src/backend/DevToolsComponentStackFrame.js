@@ -12,8 +12,8 @@
 // while still maintaining support for multiple renderer versions
 // (which use different values for ReactTypeOfWork).
 
-import type {Source} from 'shared/ReactElementType';
-import type {LazyComponent} from 'react/src/ReactLazy';
+import type {Source} from 'shared/src/ReactElementType';
+import type {LazyComponent} from 'shared/src/ReactLazy';
 import type {CurrentDispatcherRef} from './types';
 
 import {

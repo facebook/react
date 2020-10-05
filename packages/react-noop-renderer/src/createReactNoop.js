@@ -14,7 +14,6 @@
  * environment.
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {UpdateQueue} from 'react-reconciler/src/ReactUpdateQueue';
 import type {ReactNodeList, Thenable} from 'shared/src/ReactTypes';
 import type {RootTag} from 'react-reconciler/src/ReactRootTags';
@@ -29,6 +28,7 @@ import {
 
 import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import enqueueTask from 'shared/src/enqueueTask';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 const {IsSomeRendererActing} = ReactSharedInternals;
 
 type Container = {

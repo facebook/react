@@ -84,7 +84,6 @@
 // regardless of priority. Intermediate state may vary according to system
 // resources, but the final state is always the same.
 
-import type {Fiber} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 
 import {NoLane, NoLanes, isSubsetOfLanes, mergeLanes} from './ReactFiberLane';
@@ -92,16 +91,17 @@ import {
   enterDisallowedContextReadInDEV,
   exitDisallowedContextReadInDEV,
 } from './ReactFiberNewContext.new';
-import {Callback, ShouldCapture, DidCapture} from './ReactFiberFlags';
+import {Callback, ShouldCapture, DidCapture} from 'shared/src/ReactFiberFlags';
 
 import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
 
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictMode} from 'shared/src/ReactTypeOfMode';
 import {markSkippedUpdateLanes} from './ReactFiberWorkLoop.new';
 
 import invariant from 'shared/src/invariant';
 
 import {disableLogs, reenableLogs} from 'shared/src/ConsolePatchingDev';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 export type Update<State> = {|
   // TODO: Temporary field. Will remove this by storing a map of

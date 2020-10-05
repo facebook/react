@@ -7,11 +7,10 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
-
 import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import {getStackByFiberInDevAndProd} from './ReactFiberComponentStack';
 import getComponentName from 'shared/src/getComponentName';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 

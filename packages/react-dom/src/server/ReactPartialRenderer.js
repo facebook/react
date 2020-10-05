@@ -8,8 +8,8 @@
  */
 
 import type {ThreadID} from './ReactThreadIDAllocator';
-import type {ReactElement} from 'shared/ReactElementType';
-import type {LazyComponent} from 'react/src/ReactLazy';
+import type {ReactElement} from 'shared/src/ReactElementType';
+import type {LazyComponent} from 'shared/src/ReactLazy';
 import type {ReactProvider, ReactContext} from 'shared/src/ReactTypes';
 
 import * as React from 'react';

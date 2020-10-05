@@ -13,7 +13,7 @@ import type {
   LanePriority,
   Lanes,
   LaneMap,
-} from 'shared/ReactInternalTypes';
+} from 'shared/src/ReactInternalTypes';
 import invariant from 'shared/src/invariant';
 
 import {
@@ -816,3 +816,11 @@ function clz32Fallback(lanes: Lanes | Lane) {
   }
   return (31 - ((log(lanes) / LN2) | 0)) | 0;
 }
+
+export type {
+  Lane,
+  LanePriority,
+  Lanes,
+  LaneMap,
+};
+

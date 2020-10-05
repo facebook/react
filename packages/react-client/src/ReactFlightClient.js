@@ -9,7 +9,7 @@
 
 import type {Wakeable} from 'shared/src/ReactTypes';
 import type {BlockComponent, BlockRenderFunction} from 'react/src/ReactBlock';
-import type {LazyComponent} from 'react/src/ReactLazy';
+import type {LazyComponent} from 'shared/src/ReactLazy';
 
 import type {
   ModuleReference,

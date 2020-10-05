@@ -7,8 +7,8 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
 import type {CapturedValue} from './ReactCapturedValue';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 // This module is forked in different environments.
 // By default, return `true` to log errors to the console.

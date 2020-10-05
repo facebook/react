@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {
   ReactFundamentalComponentInstance,
@@ -57,13 +56,13 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from './ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import {
   NoMode,
   BlockingMode,
   ConcurrentMode,
   ProfileMode,
-} from './ReactTypeOfMode';
+} from 'shared/src/ReactTypeOfMode';
 import {
   Ref,
   Update,
@@ -78,7 +77,7 @@ import {
   PassiveMask,
   StaticMask,
   PerformedWork,
-} from './ReactFiberFlags';
+} from 'shared/src/ReactFiberFlags';
 import invariant from 'shared/src/invariant';
 
 import {
@@ -162,6 +161,7 @@ import {
 import {resetChildFibers} from './ReactChildFiber.new';
 import {createScopeInstance} from './ReactFiberScope.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into

@@ -15,7 +15,6 @@ import type {
   ChildSet,
   UpdatePayload,
 } from './ReactFiberHostConfig';
-import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
@@ -56,7 +55,7 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from './ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import {
   invokeGuardedCallback,
   hasCaughtError,
@@ -72,7 +71,7 @@ import {
   LayoutMask,
   PassiveMask,
   Ref,
-} from './ReactFiberFlags';
+} from 'shared/src/ReactFiberFlags';
 import getComponentName from 'shared/src/getComponentName';
 import invariant from 'shared/src/invariant';
 import {
@@ -89,7 +88,7 @@ import {
   recordPassiveEffectDuration,
   startPassiveEffectTimer,
 } from './ReactProfilerTimer.new';
-import {ProfileMode} from './ReactTypeOfMode';
+import {ProfileMode} from 'shared/src/ReactTypeOfMode';
 import {commitUpdateQueue} from './ReactUpdateQueue.new';
 import {
   getPublicInstance,
@@ -134,6 +133,7 @@ import {
   Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.new';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 // Used to avoid traversing the return path to find the nearest Profiler ancestor during commit.
 let nearestProfilerOnStack: Fiber | null = null;

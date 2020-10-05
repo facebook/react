@@ -15,7 +15,6 @@ import type {
   ChildSet,
   UpdatePayload,
 } from './ReactFiberHostConfig';
-import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
@@ -55,7 +54,7 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from './ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import {
   invokeGuardedCallback,
   hasCaughtError,
@@ -67,7 +66,7 @@ import {
   Placement,
   Snapshot,
   Update,
-} from './ReactFiberFlags';
+} from 'shared/src/ReactFiberFlags';
 import getComponentName from 'shared/src/getComponentName';
 import invariant from 'shared/src/invariant';
 
@@ -78,7 +77,7 @@ import {
   recordLayoutEffectDuration,
   startLayoutEffectTimer,
 } from './ReactProfilerTimer.old';
-import {ProfileMode} from './ReactTypeOfMode';
+import {ProfileMode} from 'shared/src/ReactTypeOfMode';
 import {commitUpdateQueue} from './ReactUpdateQueue.old';
 import {
   getPublicInstance,
@@ -125,6 +124,7 @@ import {
   Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.old';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {

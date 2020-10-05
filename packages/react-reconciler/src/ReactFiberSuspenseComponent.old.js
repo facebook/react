@@ -8,15 +8,15 @@
  */
 
 import type {ReactNodeList, Wakeable} from 'shared/src/ReactTypes';
-import type {Fiber} from './ReactInternalTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {Lane} from './ReactFiberLane';
-import {SuspenseComponent, SuspenseListComponent} from './ReactWorkTags';
-import {NoFlags, DidCapture} from './ReactFiberFlags';
+import {SuspenseComponent, SuspenseListComponent} from 'shared/src/ReactWorkTags';
+import {NoFlags, DidCapture} from 'shared/src/ReactFiberFlags';
 import {
   isSuspenseInstancePending,
   isSuspenseInstanceFallback,
 } from './ReactFiberHostConfig';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 export type SuspenseProps = {|
   children?: ReactNodeList,

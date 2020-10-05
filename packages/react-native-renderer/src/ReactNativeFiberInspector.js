@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {TouchedViewDataAtPoint, InspectorData} from './ReactNativeTypes';
 
 import {
@@ -15,12 +14,13 @@ import {
   findCurrentFiberUsingSlowPath,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 import getComponentName from 'shared/src/getComponentName';
-import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
+import {HostComponent} from 'shared/src/ReactWorkTags';
 import invariant from 'shared/src/invariant';
 // Module provided by RN:
 import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const emptyObject = {};
 if (__DEV__) {

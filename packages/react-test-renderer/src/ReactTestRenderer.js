@@ -8,7 +8,6 @@
  */
 
 import type {Thenable} from 'shared/src/ReactTypes';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Instance, TextInstance} from './ReactTestHostConfig';
 
@@ -42,7 +41,7 @@ import {
   Block,
   IncompleteClassComponent,
   ScopeComponent,
-} from 'react-reconciler/src/ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import invariant from 'shared/src/invariant';
 import getComponentName from 'shared/src/getComponentName';
 import ReactVersion from 'shared/src/ReactVersion';
@@ -51,6 +50,7 @@ import enqueueTask from 'shared/src/enqueueTask';
 
 import {getPublicInstance} from './ReactTestHostConfig';
 import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const {IsSomeRendererActing} = ReactSharedInternals;
 

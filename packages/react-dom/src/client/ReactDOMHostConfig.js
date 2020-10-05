@@ -8,7 +8,7 @@
  */
 
 import type {DOMEventName} from '../events/DOMEventNames';
-import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   BoundingRect,
   IntersectionObserverOptions,
@@ -69,11 +69,12 @@ import {
   enableScopeAPI,
   enableEagerRootListeners,
 } from 'shared/ReactFeatureFlags';
-import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
+import {HostComponent, HostText} from 'shared/src/ReactWorkTags';
 import {
   listenToReactEvent,
   listenToAllSupportedEvents,
 } from '../events/DOMPluginEventSystem';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 export type Type = string;
 export type Props = {

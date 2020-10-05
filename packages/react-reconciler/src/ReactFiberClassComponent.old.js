@@ -7,12 +7,11 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane';
+import type {Fiber, Lanes} from 'shared/src/ReactInternalTypes';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
 
 import * as React from 'react';
-import {Update, Snapshot} from './ReactFiberFlags';
+import {Update, Snapshot} from 'shared/src/ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
@@ -32,7 +31,7 @@ import invariant from 'shared/src/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/src/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
-import {DebugTracingMode, StrictMode} from './ReactTypeOfMode';
+import {DebugTracingMode, StrictMode} from 'shared/src/ReactTypeOfMode';
 
 import {
   enqueueUpdate,

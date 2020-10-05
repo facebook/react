@@ -12,7 +12,6 @@
 // while still maintaining support for multiple renderer versions
 // (which use different values for ReactTypeOfWork).
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {CurrentDispatcherRef, WorkTagMap} from './types';
 
 import {
@@ -20,6 +19,7 @@ import {
   describeFunctionComponentFrame,
   describeClassComponentFrame,
 } from './DevToolsComponentStackFrame';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 function describeFiber(
   workTagMap: WorkTagMap,

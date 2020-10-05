@@ -14,7 +14,7 @@ import {
   FunctionComponent,
   HostComponent,
   HostText,
-} from 'react-reconciler/src/ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import {SyntheticEvent} from '../events/SyntheticEvent';
 import invariant from 'shared/src/invariant';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';

@@ -19,7 +19,6 @@ import type {
   KnownReactSyntheticEvent,
   ReactSyntheticEvent,
 } from './ReactSyntheticEventType';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
 import {registrationNameDependencies, allNativeEvents} from './EventRegistry';
 import {
@@ -34,7 +33,7 @@ import {
   HostComponent,
   HostText,
   ScopeComponent,
-} from 'react-reconciler/src/ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 
 import getEventTarget from './getEventTarget';
 import {
@@ -71,6 +70,7 @@ import * as ChangeEventPlugin from './plugins/ChangeEventPlugin';
 import * as EnterLeaveEventPlugin from './plugins/EnterLeaveEventPlugin';
 import * as SelectEventPlugin from './plugins/SelectEventPlugin';
 import * as SimpleEventPlugin from './plugins/SimpleEventPlugin';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 type DispatchListener = {|
   instance: null | Fiber,

@@ -17,7 +17,7 @@ import {ReactNativeViewConfigRegistry} from 'react-native/Libraries/ReactPrivate
 import accumulateInto from './legacy-events/accumulateInto';
 import getListener from './ReactNativeGetListener';
 import forEachAccumulated from './legacy-events/forEachAccumulated';
-import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
+import {HostComponent} from 'shared/src/ReactWorkTags';
 
 const {
   customBubblingEventTypes,

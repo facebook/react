@@ -7,15 +7,14 @@
  * @flow
  */
 
-import type {ReactElement} from 'shared/ReactElementType';
+import type {ReactElement} from 'shared/src/ReactElementType';
 import type {ReactPortal} from 'shared/src/ReactTypes';
 import type {BlockComponent} from 'react/src/ReactBlock';
-import type {LazyComponent} from 'react/src/ReactLazy';
-import type {Fiber} from './ReactInternalTypes';
+import type {LazyComponent} from 'shared/src/ReactLazy';
 import type {Lanes} from './ReactFiberLane';
 
 import getComponentName from 'shared/src/getComponentName';
-import {Deletion, Placement} from './ReactFiberFlags';
+import {Deletion, Placement} from 'shared/src/ReactFiberFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -33,7 +32,7 @@ import {
   Fragment,
   SimpleMemoComponent,
   Block,
-} from './ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import invariant from 'shared/src/invariant';
 import {
   warnAboutStringRefs,
@@ -51,7 +50,8 @@ import {
 } from './ReactFiber.new';
 import {emptyRefsObject} from './ReactFiberClassComponent.new';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.new';
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictMode} from 'shared/src/ReactTypeOfMode';
+import type {Fiber} from './ReactFiber.new';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;

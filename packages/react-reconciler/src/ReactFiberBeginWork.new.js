@@ -9,8 +9,7 @@
 
 import type {ReactProviderType, ReactContext} from 'shared/src/ReactTypes';
 import type {BlockComponent} from 'react/src/ReactBlock';
-import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
-import type {Fiber} from './ReactInternalTypes';
+import type {LazyComponent as LazyComponentType} from 'shared/src/ReactLazy';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {MutableSource} from 'shared/src/ReactTypes';
@@ -52,7 +51,7 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from './ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import {
   NoFlags,
   PerformedWork,
@@ -64,7 +63,7 @@ import {
   Deletion,
   ForceUpdateForLegacySuspense,
   StaticMask,
-} from './ReactFiberFlags';
+} from 'shared/src/ReactFiberFlags';
 import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
@@ -123,7 +122,7 @@ import {
   ProfileMode,
   StrictMode,
   BlockingMode,
-} from './ReactTypeOfMode';
+} from 'shared/src/ReactTypeOfMode';
 import {
   shouldSetTextContent,
   isSuspenseInstancePending,
@@ -204,6 +203,7 @@ import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {setWorkInProgressVersion} from './ReactMutableSource.new';
 
 import {disableLogs, reenableLogs} from 'shared/src/ConsolePatchingDev';
+import type {Fiber} from './ReactFiber.new';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 

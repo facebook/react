@@ -8,7 +8,6 @@
  */
 
 import type {AnyNativeEvent} from './legacy-events/PluginModuleType';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {LegacyPluginModule} from './legacy-events/PluginModuleType';
 import type {ReactSyntheticEvent} from './legacy-events/ReactSyntheticEventType';
 import type {TopLevelType} from './legacy-events/TopLevelEventTypes';
@@ -21,6 +20,7 @@ import getListener from './ReactNativeGetListener';
 import accumulateInto from './legacy-events/accumulateInto';
 
 import {getInstanceFromNode} from './ReactNativeComponentTree';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 export {getListener, registrationNameModules as registrationNames};
 

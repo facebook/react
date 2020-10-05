@@ -7,12 +7,11 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 
 import * as React from 'react';
-import {Update, Snapshot, MountLayoutDev} from './ReactFiberFlags';
+import {Update, Snapshot, MountLayoutDev} from 'shared/src/ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
@@ -33,7 +32,7 @@ import invariant from 'shared/src/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/src/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
-import {DebugTracingMode, StrictMode} from './ReactTypeOfMode';
+import {DebugTracingMode, StrictMode} from 'shared/src/ReactTypeOfMode';
 
 import {
   enqueueUpdate,
@@ -67,6 +66,7 @@ import {
   markForceUpdateScheduled,
   markStateUpdateScheduled,
 } from './SchedulingProfiler';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;

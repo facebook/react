@@ -7,14 +7,13 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
-
 import {
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
 import getComponentName from 'shared/src/getComponentName';
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictMode} from 'shared/src/ReactTypeOfMode';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 type FiberArray = Array<Fiber>;
 type FiberToFiberComponentsMap = Map<Fiber, FiberArray>;

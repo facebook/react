@@ -6,11 +6,11 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {Props} from '../client/ReactDOMHostConfig';
 
 import invariant from 'shared/src/invariant';
 import {getFiberCurrentPropsFromNode} from '../client/ReactDOMComponentTree';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 function isInteractive(tag: string): boolean {
   return (
