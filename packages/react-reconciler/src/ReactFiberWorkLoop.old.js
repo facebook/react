@@ -29,7 +29,6 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   enableScopeAPI,
-  skipUnmountedBoundaries,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -2019,7 +2018,7 @@ function commitRootImpl(root, renderPriorityLevel) {
         if (hasCaughtError()) {
           invariant(nextEffect !== null, 'Should be working on an effect.');
           const error = clearCaughtError();
-          captureCommitPhaseError(nextEffect, nextEffect.return, error);
+          captureCommitPhaseError(nextEffect, error);
           nextEffect = nextEffect.nextEffect;
         }
       } else {
@@ -2027,7 +2026,7 @@ function commitRootImpl(root, renderPriorityLevel) {
           commitBeforeMutationEffects();
         } catch (error) {
           invariant(nextEffect !== null, 'Should be working on an effect.');
-          captureCommitPhaseError(nextEffect, nextEffect.return, error);
+          captureCommitPhaseError(nextEffect, error);
           nextEffect = nextEffect.nextEffect;
         }
       }
@@ -2056,7 +2055,7 @@ function commitRootImpl(root, renderPriorityLevel) {
         if (hasCaughtError()) {
           invariant(nextEffect !== null, 'Should be working on an effect.');
           const error = clearCaughtError();
-          captureCommitPhaseError(nextEffect, nextEffect.return, error);
+          captureCommitPhaseError(nextEffect, error);
           nextEffect = nextEffect.nextEffect;
         }
       } else {
@@ -2064,7 +2063,7 @@ function commitRootImpl(root, renderPriorityLevel) {
           commitMutationEffects(root, renderPriorityLevel);
         } catch (error) {
           invariant(nextEffect !== null, 'Should be working on an effect.');
-          captureCommitPhaseError(nextEffect, nextEffect.return, error);
+          captureCommitPhaseError(nextEffect, error);
           nextEffect = nextEffect.nextEffect;
         }
       }
@@ -2091,7 +2090,7 @@ function commitRootImpl(root, renderPriorityLevel) {
         if (hasCaughtError()) {
           invariant(nextEffect !== null, 'Should be working on an effect.');
           const error = clearCaughtError();
-          captureCommitPhaseError(nextEffect, nextEffect.return, error);
+          captureCommitPhaseError(nextEffect, error);
           nextEffect = nextEffect.nextEffect;
         }
       } else {
@@ -2099,7 +2098,7 @@ function commitRootImpl(root, renderPriorityLevel) {
           commitLayoutEffects(root, lanes);
         } catch (error) {
           invariant(nextEffect !== null, 'Should be working on an effect.');
-          captureCommitPhaseError(nextEffect, nextEffect.return, error);
+          captureCommitPhaseError(nextEffect, error);
           nextEffect = nextEffect.nextEffect;
         }
       }
@@ -2373,12 +2372,7 @@ function commitMutationEffects(
         break;
       }
       case Deletion: {
-        commitDeletion(
-          root,
-          nextEffect,
-          nextEffect.return,
-          renderPriorityLevel,
-        );
+        commitDeletion(root, nextEffect, renderPriorityLevel);
         break;
       }
     }
@@ -2589,7 +2583,7 @@ function flushPassiveEffectsImpl() {
         if (hasCaughtError()) {
           invariant(fiber !== null, 'Should be working on an effect.');
           const error = clearCaughtError();
-          captureCommitPhaseError(fiber, fiber.return, error);
+          captureCommitPhaseError(fiber, error);
         }
         resetCurrentDebugFiberInDEV();
       } else {
@@ -2610,7 +2604,7 @@ function flushPassiveEffectsImpl() {
           }
         } catch (error) {
           invariant(fiber !== null, 'Should be working on an effect.');
-          captureCommitPhaseError(fiber, fiber.return, error);
+          captureCommitPhaseError(fiber, error);
         }
       }
     }
@@ -2637,7 +2631,7 @@ function flushPassiveEffectsImpl() {
       if (hasCaughtError()) {
         invariant(fiber !== null, 'Should be working on an effect.');
         const error = clearCaughtError();
-        captureCommitPhaseError(fiber, fiber.return, error);
+        captureCommitPhaseError(fiber, error);
       }
       resetCurrentDebugFiberInDEV();
     } else {
@@ -2659,7 +2653,7 @@ function flushPassiveEffectsImpl() {
         }
       } catch (error) {
         invariant(fiber !== null, 'Should be working on an effect.');
-        captureCommitPhaseError(fiber, fiber.return, error);
+        captureCommitPhaseError(fiber, error);
       }
     }
   }
@@ -2758,11 +2752,7 @@ function captureCommitPhaseErrorOnRoot(
   }
 }
 
-export function captureCommitPhaseError(
-  sourceFiber: Fiber,
-  nearestMountedAncestor: Fiber | null,
-  error: mixed,
-) {
+export function captureCommitPhaseError(sourceFiber: Fiber, error: mixed) {
   if (sourceFiber.tag === HostRoot) {
     // Error was thrown at the root. There is no parent, so the root
     // itself should capture it.
@@ -2770,12 +2760,7 @@ export function captureCommitPhaseError(
     return;
   }
 
-  let fiber = null;
-  if (skipUnmountedBoundaries) {
-    fiber = nearestMountedAncestor;
-  } else {
-    fiber = sourceFiber.return;
-  }
+  let fiber = sourceFiber.return;
 
   while (fiber !== null) {
     if (fiber.tag === HostRoot) {
