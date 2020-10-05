@@ -14,9 +14,7 @@ import type {
   ReactContext,
   ReactProviderType,
 } from 'shared/src/ReactTypes';
-import type {
-  Dispatcher as DispatcherType,
-} from 'shared/src/ReactInternalTypes';
+import type {Dispatcher as DispatcherType} from 'shared/src/ReactInternalTypes';
 import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 
 import {NoMode} from 'shared/src/ReactTypeOfMode';

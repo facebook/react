@@ -14,11 +14,25 @@ import type {
   ReactContext,
 } from 'shared/src/ReactTypes';
 import type {FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
-import type {Dispatcher, Fiber, HookType, Lane, Lanes} from 'shared/src/ReactInternalTypes';
+import type {
+  Dispatcher,
+  Fiber,
+  HookType,
+  Lane,
+  Lanes,
+} from 'shared/src/ReactInternalTypes';
 import type {HookFlags} from './ReactHookEffectTags';
-import {HasEffect as HookHasEffect, Layout as HookLayout, Passive as HookPassive,} from './ReactHookEffectTags';
+import {
+  HasEffect as HookHasEffect,
+  Layout as HookLayout,
+  Passive as HookPassive,
+} from './ReactHookEffectTags';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
-import {makeClientId, makeClientIdInDEV, makeOpaqueHydratingObject,} from './ReactFiberHostConfig';
+import {
+  makeClientId,
+  makeClientIdInDEV,
+  makeOpaqueHydratingObject,
+} from './ReactFiberHostConfig';
 
 import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import {
@@ -28,7 +42,11 @@ import {
   enableSchedulingProfiler,
 } from 'shared/ReactFeatureFlags';
 
-import {BlockingMode, DebugTracingMode, NoMode} from 'shared/src/ReactTypeOfMode';
+import {
+  BlockingMode,
+  DebugTracingMode,
+  NoMode,
+} from 'shared/src/ReactTypeOfMode';
 import {
   DefaultLanePriority,
   getCurrentUpdateLanePriority,
@@ -44,7 +62,10 @@ import {
   setCurrentUpdateLanePriority,
 } from './ReactFiberLane';
 import {readContext} from './ReactFiberNewContext.old';
-import {Passive as PassiveEffect, Update as UpdateEffect,} from 'shared/src/ReactFiberFlags';
+import {
+  Passive as PassiveEffect,
+  Update as UpdateEffect,
+} from 'shared/src/ReactFiberFlags';
 import {
   getWorkInProgressRoot,
   markSkippedUpdateLanes,

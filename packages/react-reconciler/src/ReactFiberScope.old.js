@@ -20,7 +20,11 @@ import {
 } from './ReactFiberHostConfig';
 import {isFiberSuspenseAndTimedOut} from './ReactFiberTreeReflection';
 
-import {HostComponent, ScopeComponent, ContextProvider} from 'shared/src/ReactWorkTags';
+import {
+  HostComponent,
+  ScopeComponent,
+  ContextProvider,
+} from 'shared/src/ReactWorkTags';
 import {enableScopeAPI} from 'shared/ReactFeatureFlags';
 import type {Fiber} from 'shared/src/ReactInternalTypes';
 

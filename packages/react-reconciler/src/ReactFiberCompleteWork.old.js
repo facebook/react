@@ -58,7 +58,13 @@ import {
   LegacyHiddenComponent,
 } from 'shared/src/ReactWorkTags';
 import {NoMode, BlockingMode, ProfileMode} from 'shared/src/ReactTypeOfMode';
-import {Ref, Update, NoFlags, DidCapture, Snapshot} from 'shared/src/ReactFiberFlags';
+import {
+  Ref,
+  Update,
+  NoFlags,
+  DidCapture,
+  Snapshot,
+} from 'shared/src/ReactFiberFlags';
 import invariant from 'shared/src/invariant';
 
 import {

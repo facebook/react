@@ -30,7 +30,11 @@ import {
   ForceUpdateForLegacySuspense,
 } from 'shared/src/ReactFiberFlags';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.old';
-import {NoMode, BlockingMode, DebugTracingMode} from 'shared/src/ReactTypeOfMode';
+import {
+  NoMode,
+  BlockingMode,
+  DebugTracingMode,
+} from 'shared/src/ReactTypeOfMode';
 import {
   enableDebugTracing,
   enableSchedulingProfiler,

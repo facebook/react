@@ -7,13 +7,28 @@
  * @flow
  */
 
-import type {MutableSource, MutableSourceVersion, ReactContext, Wakeable,} from 'shared/src/ReactTypes';
-import type {NoTimeout, SuspenseInstance, TimeoutHandle} from './ReactFiberHostConfig';
-import type {Fiber, Lane, LaneMap, LanePriority, Lanes,} from 'shared/src/ReactInternalTypes';
+import type {
+  MutableSource,
+  MutableSourceVersion,
+  ReactContext,
+  Wakeable,
+} from 'shared/src/ReactTypes';
+import type {
+  NoTimeout,
+  SuspenseInstance,
+  TimeoutHandle,
+} from './ReactFiberHostConfig';
+import type {
+  Fiber,
+  Lane,
+  LaneMap,
+  LanePriority,
+  Lanes,
+} from 'shared/src/ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {Interaction} from 'scheduler/src/Tracing';
 
-export type * from 'shared/src/ReactInternalTypes'
+export type * from 'shared/src/ReactInternalTypes';
 
 export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
 

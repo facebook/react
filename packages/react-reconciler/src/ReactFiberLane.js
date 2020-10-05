@@ -817,10 +817,4 @@ function clz32Fallback(lanes: Lanes | Lane) {
   return (31 - ((log(lanes) / LN2) | 0)) | 0;
 }
 
-export type {
-  Lane,
-  LanePriority,
-  Lanes,
-  LaneMap,
-};
-
+export type {Lane, LanePriority, Lanes, LaneMap};

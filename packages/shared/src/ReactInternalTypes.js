@@ -12,9 +12,9 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
-  RefObject
+  RefObject,
 } from './ReactTypes';
-import type {Source} from './ReactElementType'
+import type {Source} from './ReactElementType';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Flags} from './ReactFiberFlags';
@@ -57,48 +57,47 @@ export type Dependencies = {
   ...
 };
 
-
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 export type Dispatcher = {|
   readContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
+    context: ReactContext<T>,
+    observedBits: void | number | boolean,
   ): T,
   useState<S>(initialState: (() => S) | S): [S, Dispatch<BasicStateAction<S>>],
   useReducer<S, I, A>(
-      reducer: (S, A) => S,
-      initialArg: I,
-      init?: (I) => S,
+    reducer: (S, A) => S,
+    initialArg: I,
+    init?: (I) => S,
   ): [S, Dispatch<A>],
   useContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
+    context: ReactContext<T>,
+    observedBits: void | number | boolean,
   ): T,
   useRef<T>(initialValue: T): {|current: T|},
   useEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+    create: () => (() => void) | void,
+    deps: Array<mixed> | void | null,
   ): void,
   useLayoutEffect(
-      create: () => (() => void) | void,
-      deps: Array<mixed> | void | null,
+    create: () => (() => void) | void,
+    deps: Array<mixed> | void | null,
   ): void,
   useCallback<T>(callback: T, deps: Array<mixed> | void | null): T,
   useMemo<T>(nextCreate: () => T, deps: Array<mixed> | void | null): T,
   useImperativeHandle<T>(
-      ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
-      create: () => T,
-      deps: Array<mixed> | void | null,
+    ref: {|current: T | null|} | ((inst: T | null) => mixed) | null | void,
+    create: () => T,
+    deps: Array<mixed> | void | null,
   ): void,
   useDebugValue<T>(value: T, formatterFn: ?(value: T) => mixed): void,
   useDeferredValue<T>(value: T): T,
   useTransition(): [(() => void) => void, boolean],
   useMutableSource<Source, Snapshot>(
-      source: MutableSource<Source>,
-      getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
-      subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
+    source: MutableSource<Source>,
+    getSnapshot: MutableSourceGetSnapshotFn<Source, Snapshot>,
+    subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
   useOpaqueIdentifier(): any,
 
@@ -106,20 +105,20 @@ export type Dispatcher = {|
 |};
 
 export type HookType =
-    | 'useState'
-    | 'useReducer'
-    | 'useContext'
-    | 'useRef'
-    | 'useEffect'
-    | 'useLayoutEffect'
-    | 'useCallback'
-    | 'useMemo'
-    | 'useImperativeHandle'
-    | 'useDebugValue'
-    | 'useDeferredValue'
-    | 'useTransition'
-    | 'useMutableSource'
-    | 'useOpaqueIdentifier';
+  | 'useState'
+  | 'useReducer'
+  | 'useContext'
+  | 'useRef'
+  | 'useEffect'
+  | 'useLayoutEffect'
+  | 'useCallback'
+  | 'useMemo'
+  | 'useImperativeHandle'
+  | 'useDebugValue'
+  | 'useDeferredValue'
+  | 'useTransition'
+  | 'useMutableSource'
+  | 'useOpaqueIdentifier';
 
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
@@ -170,9 +169,9 @@ export type Fiber = {|
   // The ref last used to attach this node.
   // I'll avoid adding an owner field for prod and model that as functions.
   ref:
-      | null
-      | (((handle: mixed) => void) & { _stringRef: ?string, ... })
-      | RefObject,
+    | null
+    | (((handle: mixed) => void) & {_stringRef: ?string, ...})
+    | RefObject,
 
   // Input is the data coming into process this fiber. Arguments. Props.
   pendingProps: any, // This type will be more specific once we overload the tag.
