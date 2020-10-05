@@ -85,16 +85,23 @@ export default function SnapshotSelector(_: Props) {
   }
 
   let label = null;
-  const onCommitInputChange = useCallback((event) => {
-    const value = parseInt(event.target.value, 10)
-    if (!isNaN(value)) {
-      const filteredIndex = Math.min(Math.max(value - 1, 0), numFilteredCommits - 1);
-      selectCommitIndex(filteredCommitIndices[filteredIndex]);
-    }
-  }, [numFilteredCommits, selectCommitIndex, filteredCommitIndices]);
+  const onCommitInputChange = useCallback(
+    event => {
+      const value = parseInt(event.target.value, 10);
+      if (!isNaN(value)) {
+        const filteredIndex = Math.min(
+          Math.max(value - 1, 0),
+          numFilteredCommits - 1,
+        );
+        selectCommitIndex(filteredCommitIndices[filteredIndex]);
+      }
+    },
+    [numFilteredCommits, selectCommitIndex, filteredCommitIndices],
+  );
   if (numFilteredCommits > 0) {
     const numFilteredCommitsString = `${numFilteredCommits}`;
-    const selectedFilteredCommitIndexString = `${selectedFilteredCommitIndex + 1}`
+    const selectedFilteredCommitIndexString = `${selectedFilteredCommitIndex +
+      1}`;
     const input = (
       <input
         className={styles.Input}
@@ -104,8 +111,13 @@ export default function SnapshotSelector(_: Props) {
         value={selectedFilteredCommitIndexString}
         onChange={onCommitInputChange}
         size={numFilteredCommitsString.length}
-      />);
-    label = (<Fragment>{input} / {numFilteredCommitsString}</Fragment>)
+      />
+    );
+    label = (
+      <Fragment>
+        {input} / {numFilteredCommitsString}
+      </Fragment>
+    );
   }
 
   const viewNextCommit = useCallback(() => {
