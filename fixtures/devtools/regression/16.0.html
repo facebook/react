@@ -5,6 +5,12 @@
     <title>React 16.0</title>
     <link rel="stylesheet" href="styles.css" />
 
+    <script type="text/javascript">
+      // Enable DevTools to inspect React inside of an <iframe>
+      // This must run before React is loaded
+      __REACT_DEVTOOLS_GLOBAL_HOOK__ = parent.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    </script>
+
     <script src="https://unpkg.com/react@16.0/umd/react.development.js"></script>
     <script src="https://unpkg.com/react-dom@16.0/umd/react-dom.development.js"></script>
     
