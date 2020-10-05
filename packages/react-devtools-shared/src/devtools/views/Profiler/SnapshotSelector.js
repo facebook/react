@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {Fragment, useCallback, useContext, useMemo} from 'react';
+import {Fragment, useCallback, useContext, useMemo, useRef} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import {ProfilerContext} from './ProfilerContext';
@@ -85,7 +85,20 @@ export default function SnapshotSelector(_: Props) {
   }
 
   let label = null;
-  const onCommitInputChange = useCallback(
+  const commitInputRef = useRef(null);
+  const handleCommitInputKeyDown = useCallback(event => {
+    switch (event.key) {
+      case 'Enter':
+        event.stopPropagation();
+        if (commitInputRef.current) {
+          commitInputRef.current.blur();
+        }
+        break;
+      default:
+        break;
+    }
+  }, []);
+  const handleCommitInputChange = useCallback(
     event => {
       const value = parseInt(event.target.value, 10);
       if (!isNaN(value)) {
@@ -104,13 +117,15 @@ export default function SnapshotSelector(_: Props) {
       1}`;
     const input = (
       <input
+        ref={commitInputRef}
         className={styles.Input}
         type="text"
         inputMode="numeric"
         pattern="[0-9]*"
         value={selectedFilteredCommitIndexString}
-        onChange={onCommitInputChange}
         size={numFilteredCommitsString.length}
+        onChange={handleCommitInputChange}
+        onKeyDown={handleCommitInputKeyDown}
       />
     );
     label = (
