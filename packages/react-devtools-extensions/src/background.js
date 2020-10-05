@@ -98,18 +98,7 @@ chrome.runtime.onMessage.addListener((request, sender) => {
       // We use browserAction instead of pageAction because this lets us
       // display a custom default popup when React is *not* detected.
       // It is specified in the manifest.
-      let reactBuildType = request.reactBuildType;
-      if (sender.url.indexOf('facebook.github.io/react') !== -1) {
-        // Cheat: We use the development version on the website because
-        // it is better for interactive examples. However we're going
-        // to get misguided bug reports if the extension highlights it
-        // as using the dev version. We're just going to special case
-        // our own documentation and cheat. It is acceptable to use dev
-        // version of React in React docs, but not in any other case.
-        reactBuildType = 'production';
-      }
-
-      setIconAndPopup(reactBuildType, sender.tab.id);
+      setIconAndPopup(request.reactBuildType, sender.tab.id);
     }
   }
 });
