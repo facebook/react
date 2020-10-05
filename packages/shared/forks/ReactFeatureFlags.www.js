@@ -35,10 +35,7 @@ export const {
 // It's not used anywhere in production yet.
 
 export const enableProfilerTimer = __PROFILE__;
-
-// Temporarily disable commit hooks flag to verify it does not cause a regression.
-// TODO (brian) Re-enable this flag if performance is mostly neutral.
-export const enableProfilerCommitHooks = false;
+export const enableProfilerCommitHooks = __PROFILE__;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler = __PROFILE__;
