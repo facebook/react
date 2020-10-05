@@ -11,11 +11,9 @@
 export default function(opts = {}) {
   const ts = opts.ts || require('typescript');
   {
-    const [major, minor] = ts.version.split('.');
-    const num = parseInt(major);
-    const msg = 'TypeScript should be at least 3.9';
-    if (num < 3) throw new Error(msg);
-    if (num === 3 && parseInt(minor) !== 9) throw new Error(msg);
+    const [major] = ts.version.split('.');
+    if (parseInt(major) < 4)
+      throw new Error('TypeScript should be at least 4.0');
   }
   return context => {
     const {factory} = context;
