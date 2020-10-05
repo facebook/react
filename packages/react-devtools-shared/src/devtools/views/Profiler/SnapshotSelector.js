@@ -85,14 +85,27 @@ export default function SnapshotSelector(_: Props) {
   }
 
   let label = null;
+  const onCommitInputChange = useCallback((event) => {
+    const value = parseInt(event.target.value, 10)
+    if (!isNaN(value)) {
+      const filteredIndex = Math.min(Math.max(value - 1, 0), numFilteredCommits - 1);
+      selectCommitIndex(filteredCommitIndices[filteredIndex]);
+    }
+  }, [numFilteredCommits, selectCommitIndex, filteredCommitIndices]);
   if (numFilteredCommits > 0) {
-    label =
-      `${selectedFilteredCommitIndex + 1}`.padStart(
-        `${numFilteredCommits}`.length,
-        '0',
-      ) +
-      ' / ' +
-      numFilteredCommits;
+    const numFilteredCommitsString = `${numFilteredCommits}`;
+    const selectedFilteredCommitIndexString = `${selectedFilteredCommitIndex + 1}`
+    const input = (
+      <input
+        className={styles.Input}
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={selectedFilteredCommitIndexString}
+        onChange={onCommitInputChange}
+        size={numFilteredCommitsString.length}
+      />);
+    label = (<Fragment>{input} / {numFilteredCommitsString}</Fragment>)
   }
 
   const viewNextCommit = useCallback(() => {
