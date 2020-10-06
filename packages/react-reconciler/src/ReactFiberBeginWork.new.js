@@ -1066,10 +1066,6 @@ function updateHostRoot(current, workInProgress, renderLanes) {
   // Caution: React DevTools currently depends on this property
   // being called "element".
   const nextChildren = nextState.element;
-  if (nextChildren === prevChildren) {
-    resetHydrationState();
-    return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
-  }
   const root: FiberRoot = workInProgress.stateNode;
   if (root.hydrate && enterHydrationState(workInProgress)) {
     // If we don't have any current children this might be the first pass.
