@@ -511,10 +511,10 @@ workflows:
       - RELEASE_CHANNEL_stable_yarn_lint_build:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
-      - RELEASE_CHANNEL_stable_yarn_test_build:
+      - yarn_test-stable_build:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
-      - RELEASE_CHANNEL_stable_yarn_test_build_prod:
+      - yarn_test-stable_build_prod:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
       - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
