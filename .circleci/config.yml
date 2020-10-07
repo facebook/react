@@ -120,41 +120,41 @@ jobs:
       - *restore_node_modules
       - run: yarn test --ci
 
-  yarn_test-www-classic:
+  yarn_test-classic:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_node_modules
-      - run: yarn test-www-classic --ci
+      - run: yarn test-classic --ci
 
-  yarn_test-www-classic_variant:
+  yarn_test-classic_variant:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_node_modules
-      - run: yarn test-www-classic --variant --ci
+      - run: yarn test-classic --variant --ci
 
-  yarn_test-www-classic_prod:
+  yarn_test-classic_prod:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_node_modules
-      - run: yarn test-www-classic --prod --ci
+      - run: yarn test-classic --prod --ci
 
-  yarn_test-www-classic_prod_variant:
+  yarn_test-classic_prod_variant:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_node_modules
-      - run: yarn test-www-classic --prod --variant --ci
+      - run: yarn test-classic --prod --variant --ci
 
   yarn_test-www:
     docker: *docker
@@ -487,16 +487,16 @@ workflows:
       - yarn_test-stable_persistent:
           requires:
             - setup
-      - yarn_test-www-classic:
+      - yarn_test-classic:
           requires:
             - setup
-      - yarn_test-www-classic_variant:
+      - yarn_test-classic_variant:
           requires:
             - setup
-      - yarn_test-www-classic_prod:
+      - yarn_test-classic_prod:
           requires:
             - setup
-      - yarn_test-www-classic_prod_variant:
+      - yarn_test-classic_prod_variant:
           requires:
             - setup
       - RELEASE_CHANNEL_stable_yarn_build:

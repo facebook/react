@@ -114,7 +114,7 @@
     "test": "node ./scripts/jest/jest-cli.js",
     "test-stable": "node ./scripts/jest/jest-cli.js --release-channel=stable",
     "test-www": "node ./scripts/jest/jest-cli.js --release-channel=www-modern",
-    "test-www-classic": "node ./scripts/jest/jest-cli.js --release-channel=www-classic",
+    "test-classic": "node ./scripts/jest/jest-cli.js --release-channel=www-classic",
     "test-www-variant": "yarn test --deprecated 'yarn test-www --variant'",
     "test-prod-www": "yarn test --deprecated 'yarn test-www --prod'",
     "test-prod-www-variant": "yarn test --deprecated 'yarn test-www --prod --variant'",
