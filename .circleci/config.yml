@@ -530,16 +530,16 @@ workflows:
       - yarn_test_prod:
           requires:
             - setup
-      - yarn_test_www:
+      - yarn_test-www:
           requires:
             - setup
-      - yarn_test_www_variant:
+      - yarn_test-www_variant:
           requires:
             - setup
-      - yarn_test_prod_www:
+      - yarn_test-www_prod:
           requires:
             - setup
-      - yarn_test_prod_www_variant:
+      - yarn_test-www_prod_variant:
           requires:
             - setup
       - yarn_build:
