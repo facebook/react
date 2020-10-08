@@ -218,7 +218,16 @@ function isSimpleObject(object): boolean {
   const names = Object.getOwnPropertyNames(object);
   for (let i = 0; i < names.length; i++) {
     const descriptor = Object.getOwnPropertyDescriptor(object, names[i]);
-    if (!descriptor || !descriptor.enumerable) {
+    if (!descriptor) {
+      return false;
+    }
+    if (!descriptor.enumerable) {
+      if ((names[i] === 'key' || names[i] === 'ref') && typeof descriptor.get === 'function') {
+        // React adds key and ref getters to props objects to issue warnings.
+        // Those getters will not be transferred to the client, but that's ok,
+        // so we'll special case them.
+        continue;
+      }
       return false;
     }
   }

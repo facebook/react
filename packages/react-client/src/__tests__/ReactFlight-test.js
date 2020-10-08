@@ -217,6 +217,15 @@ describe('ReactFlight', () => {
     );
   });
 
+  it('should NOT warn in DEV for key/ref getters', () => {
+    const transport = ReactNoopFlightServer.render(
+      <div key="a" ref={() => {}} />,
+    );
+    act(() => {
+      ReactNoop.render(ReactNoopFlightClient.read(transport));
+    });
+  });
+
   it('should warn in DEV if an object with symbols is passed to a host component', () => {
     expect(() => {
       const transport = ReactNoopFlightServer.render(
