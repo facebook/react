@@ -133,6 +133,4 @@ export const decoupleUpdatePriorityFromScheduler = false;
 
 export const enableDiscreteEventFlushingChange = false;
 
-export const enableEagerRootListeners = true;
-
 export const enableDoubleInvokingEffects = false;

@@ -27,7 +27,6 @@ export const {
   decoupleUpdatePriorityFromScheduler,
   enableDebugTracing,
   skipUnmountedBoundaries,
-  enableEagerRootListeners,
   enableDoubleInvokingEffects,
 } = dynamicFeatureFlags;
 

@@ -21,7 +21,7 @@ import type {
 } from './ReactSyntheticEventType';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
-import {registrationNameDependencies, allNativeEvents} from './EventRegistry';
+import {allNativeEvents} from './EventRegistry';
 import {
   IS_CAPTURE_PHASE,
   IS_EVENT_HANDLE_NON_MANAGED_NODE,
@@ -51,7 +51,6 @@ import {
   enableLegacyFBSupport,
   enableCreateEventHandleAPI,
   enableScopeAPI,
-  enableEagerRootListeners,
 } from 'shared/ReactFeatureFlags';
 import {
   invokeGuardedCallbackAndCatchFirstError,
@@ -320,32 +319,30 @@ const listeningMarker =
     .slice(2);
 
 export function listenToAllSupportedEvents(rootContainerElement: EventTarget) {
-  if (enableEagerRootListeners) {
-    if ((rootContainerElement: any)[listeningMarker]) {
-      // Performance optimization: don't iterate through events
-      // for the same portal container or root node more than once.
-      // TODO: once we remove the flag, we may be able to also
-      // remove some of the bookkeeping maps used for laziness.
-      return;
-    }
-    (rootContainerElement: any)[listeningMarker] = true;
-    allNativeEvents.forEach(domEventName => {
-      if (!nonDelegatedEvents.has(domEventName)) {
-        listenToNativeEvent(
-          domEventName,
-          false,
-          ((rootContainerElement: any): Element),
-          null,
-        );
-      }
+  if ((rootContainerElement: any)[listeningMarker]) {
+    // Performance optimization: don't iterate through events
+    // for the same portal container or root node more than once.
+    // TODO: once we remove the flag, we may be able to also
+    // remove some of the bookkeeping maps used for laziness.
+    return;
+  }
+  (rootContainerElement: any)[listeningMarker] = true;
+  allNativeEvents.forEach(domEventName => {
+    if (!nonDelegatedEvents.has(domEventName)) {
       listenToNativeEvent(
         domEventName,
-        true,
+        false,
         ((rootContainerElement: any): Element),
         null,
       );
-    });
-  }
+    }
+    listenToNativeEvent(
+      domEventName,
+      true,
+      ((rootContainerElement: any): Element),
+      null,
+    );
+  });
 }
 
 export function listenToNativeEvent(
@@ -408,60 +405,6 @@ export function listenToNativeEvent(
       isCapturePhaseListener,
     );
     listenerSet.add(listenerSetKey);
-  }
-}
-
-export function listenToReactEvent(
-  reactEvent: string,
-  rootContainerElement: Element,
-  targetElement: Element | null,
-): void {
-  if (!enableEagerRootListeners) {
-    const dependencies = registrationNameDependencies[reactEvent];
-    const dependenciesLength = dependencies.length;
-    // If the dependencies length is 1, that means we're not using a polyfill
-    // plugin like ChangeEventPlugin, BeforeInputPlugin, EnterLeavePlugin
-    // and SelectEventPlugin. We always use the native bubble event phase for
-    // these plugins and emulate two phase event dispatching. SimpleEventPlugin
-    // always only has a single dependency and SimpleEventPlugin events also
-    // use either the native capture event phase or bubble event phase, there
-    // is no emulation (except for focus/blur, but that will be removed soon).
-    const isPolyfillEventPlugin = dependenciesLength !== 1;
-
-    if (isPolyfillEventPlugin) {
-      const listenerSet = getEventListenerSet(rootContainerElement);
-      // When eager listeners are off, this Set has a dual purpose: it both
-      // captures which native listeners we registered (e.g. "click__bubble")
-      // and *React* lazy listeners (e.g. "onClick") so we don't do extra checks.
-      // This second usage does not exist in the eager mode.
-      if (!listenerSet.has(reactEvent)) {
-        listenerSet.add(reactEvent);
-        for (let i = 0; i < dependenciesLength; i++) {
-          listenToNativeEvent(
-            dependencies[i],
-            false,
-            rootContainerElement,
-            targetElement,
-          );
-        }
-      }
-    } else {
-      const isCapturePhaseListener =
-        reactEvent.substr(-7) === 'Capture' &&
-        // Edge case: onGotPointerCapture and onLostPointerCapture
-        // end with "Capture" but that's part of their event names.
-        // The Capture versions would end with CaptureCapture.
-        // So we have to check against that.
-        // This check works because none of the events we support
-        // end with "Pointer".
-        reactEvent.substr(-14, 7) !== 'Pointer';
-      listenToNativeEvent(
-        dependencies[0],
-        isCapturePhaseListener,
-        rootContainerElement,
-        targetElement,
-      );
-    }
   }
 }
 

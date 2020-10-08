@@ -49,7 +49,6 @@ export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
 export const decoupleUpdatePriorityFromScheduler = false;
 export const enableDiscreteEventFlushingChange = false;
-export const enableEagerRootListeners = true;
 
 export const enableDoubleInvokingEffects = false;
 
