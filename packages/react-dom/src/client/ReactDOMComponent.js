@@ -61,12 +61,7 @@ import {
   shouldRemoveAttribute,
 } from '../shared/DOMProperty';
 import assertValidProps from '../shared/assertValidProps';
-import {
-  DOCUMENT_NODE,
-  ELEMENT_NODE,
-  COMMENT_NODE,
-  DOCUMENT_FRAGMENT_NODE,
-} from '../shared/HTMLNodeType';
+import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
 import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
@@ -74,12 +69,8 @@ import {validateProperties as validateInputProperties} from '../shared/ReactDOMN
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 
+import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 import {
-  enableTrustedTypesIntegration,
-  enableEagerRootListeners,
-} from 'shared/ReactFeatureFlags';
-import {
-  listenToReactEvent,
   mediaEventTypes,
   listenToNonDelegatedEvent,
 } from '../events/DOMPluginEventSystem';
@@ -253,39 +244,6 @@ if (__DEV__) {
   };
 }
 
-export function ensureListeningTo(
-  rootContainerInstance: Element | Node,
-  reactPropEvent: string,
-  targetElement: Element | null,
-): void {
-  if (!enableEagerRootListeners) {
-    // If we have a comment node, then use the parent node,
-    // which should be an element.
-    const rootContainerElement =
-      rootContainerInstance.nodeType === COMMENT_NODE
-        ? rootContainerInstance.parentNode
-        : rootContainerInstance;
-    if (__DEV__) {
-      if (
-        rootContainerElement == null ||
-        (rootContainerElement.nodeType !== ELEMENT_NODE &&
-          // This is to support rendering into a ShadowRoot:
-          rootContainerElement.nodeType !== DOCUMENT_FRAGMENT_NODE)
-      ) {
-        console.error(
-          'ensureListeningTo(): received a container that was not an element node. ' +
-            'This is likely a bug in React. Please file an issue.',
-        );
-      }
-    }
-    listenToReactEvent(
-      reactPropEvent,
-      ((rootContainerElement: any): Element),
-      targetElement,
-    );
-  }
-}
-
 function getOwnerDocumentFromRootContainer(
   rootContainerElement: Element | Document,
 ): Document {
@@ -364,9 +322,7 @@ function setInitialDOMProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        if (!enableEagerRootListeners) {
-          ensureListeningTo(rootContainerElement, propKey, domElement);
-        } else if (propKey === 'onScroll') {
+        if (propKey === 'onScroll') {
           listenToNonDelegatedEvent('scroll', domElement);
         }
       }
@@ -577,11 +533,6 @@ export function setInitialProperties(
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
-      if (!enableEagerRootListeners) {
-        // For controlled components we always need to ensure we're listening
-        // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange', domElement);
-      }
       break;
     case 'option':
       ReactDOMOptionValidateProps(domElement, rawProps);
@@ -593,11 +544,6 @@ export function setInitialProperties(
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
-      if (!enableEagerRootListeners) {
-        // For controlled components we always need to ensure we're listening
-        // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange', domElement);
-      }
       break;
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
@@ -605,11 +551,6 @@ export function setInitialProperties(
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
-      if (!enableEagerRootListeners) {
-        // For controlled components we always need to ensure we're listening
-        // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange', domElement);
-      }
       break;
     default:
       props = rawProps;
@@ -827,9 +768,7 @@ export function diffProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        if (!enableEagerRootListeners) {
-          ensureListeningTo(rootContainerElement, propKey, domElement);
-        } else if (propKey === 'onScroll') {
+        if (propKey === 'onScroll') {
           listenToNonDelegatedEvent('scroll', domElement);
         }
       }
@@ -983,11 +922,6 @@ export function diffHydratedProperties(
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
-      if (!enableEagerRootListeners) {
-        // For controlled components we always need to ensure we're listening
-        // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange', domElement);
-      }
       break;
     case 'option':
       ReactDOMOptionValidateProps(domElement, rawProps);
@@ -997,22 +931,12 @@ export function diffHydratedProperties(
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
-      if (!enableEagerRootListeners) {
-        // For controlled components we always need to ensure we're listening
-        // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange', domElement);
-      }
       break;
     case 'textarea':
       ReactDOMTextareaInitWrapperState(domElement, rawProps);
       // We listen to this event in case to ensure emulated bubble
       // listeners still fire for the invalid event.
       listenToNonDelegatedEvent('invalid', domElement);
-      if (!enableEagerRootListeners) {
-        // For controlled components we always need to ensure we're listening
-        // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange', domElement);
-      }
       break;
   }
 
@@ -1079,9 +1003,7 @@ export function diffHydratedProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        if (!enableEagerRootListeners) {
-          ensureListeningTo(rootContainerElement, propKey, domElement);
-        } else if (propKey === 'onScroll') {
+        if (propKey === 'onScroll') {
           listenToNonDelegatedEvent('scroll', domElement);
         }
       }

@@ -516,36 +516,16 @@ describe('SimpleEventPlugin', function() {
         return nativeAddEventListener.apply(this, arguments);
       };
 
-      ReactDOM.render(
-        <div
-          // Affected by the intervention:
-          // https://github.com/facebook/react/issues/19651
-          onTouchStart={() => {}}
-          onTouchMove={() => {}}
-          onWheel={() => {}}
-          // A few events that should be unaffected:
-          onClick={() => {}}
-          onScroll={() => {}}
-          onTouchEnd={() => {}}
-          onChange={() => {}}
-          onPointerDown={() => {}}
-          onPointerMove={() => {}}
-        />,
-        container,
-      );
+      ReactDOM.render(<div />, container);
 
-      if (gate(flags => flags.enableEagerRootListeners)) {
-        expect(passiveEvents).toEqual([
-          'touchstart',
-          'touchstart',
-          'touchmove',
-          'touchmove',
-          'wheel',
-          'wheel',
-        ]);
-      } else {
-        expect(passiveEvents).toEqual(['touchstart', 'touchmove', 'wheel']);
-      }
+      expect(passiveEvents).toEqual([
+        'touchstart',
+        'touchstart',
+        'touchmove',
+        'touchmove',
+        'wheel',
+        'wheel',
+      ]);
     });
   });
 });

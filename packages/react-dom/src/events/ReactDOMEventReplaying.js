@@ -14,10 +14,7 @@ import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {LanePriority} from 'react-reconciler/src/ReactFiberLane';
 
-import {
-  enableSelectiveHydration,
-  enableEagerRootListeners,
-} from 'shared/ReactFeatureFlags';
+import {enableSelectiveHydration} from 'shared/ReactFeatureFlags';
 import {
   unstable_runWithPriority as runWithPriority,
   unstable_scheduleCallback as scheduleCallback,
@@ -85,7 +82,6 @@ type PointerEvent = Event & {
 };
 
 import {IS_REPLAYED} from './EventSystemFlags';
-import {listenToNativeEvent} from './DOMPluginEventSystem';
 
 type QueuedReplayableEvent = {|
   blockedOn: null | Container | SuspenseInstance,
@@ -159,48 +155,8 @@ const discreteReplayableEvents: Array<DOMEventName> = [
   'submit',
 ];
 
-const continuousReplayableEvents: Array<DOMEventName> = [
-  'dragenter',
-  'dragleave',
-  'focusin',
-  'focusout',
-  'mouseover',
-  'mouseout',
-  'pointerover',
-  'pointerout',
-  'gotpointercapture',
-  'lostpointercapture',
-];
-
 export function isReplayableDiscreteEvent(eventType: DOMEventName): boolean {
   return discreteReplayableEvents.indexOf(eventType) > -1;
-}
-
-function trapReplayableEventForContainer(
-  domEventName: DOMEventName,
-  container: Container,
-) {
-  // When the flag is on, we do this in a unified codepath elsewhere.
-  if (!enableEagerRootListeners) {
-    listenToNativeEvent(domEventName, false, ((container: any): Element), null);
-  }
-}
-
-export function eagerlyTrapReplayableEvents(
-  container: Container,
-  document: Document,
-) {
-  // When the flag is on, we do this in a unified codepath elsewhere.
-  if (!enableEagerRootListeners) {
-    // Discrete
-    discreteReplayableEvents.forEach(domEventName => {
-      trapReplayableEventForContainer(domEventName, container);
-    });
-    // Continuous
-    continuousReplayableEvents.forEach(domEventName => {
-      trapReplayableEventForContainer(domEventName, container);
-    });
-  }
 }
 
 function createQueuedReplayableEvent(
