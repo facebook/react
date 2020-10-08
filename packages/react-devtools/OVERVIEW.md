@@ -49,20 +49,22 @@ Later operations will reference strings by a one-based index. For example, `1` w
 
 #### Adding a root node
 
-Adding a root to the tree requires sending 4 numbers:
+Adding a root to the tree requires sending 5 numbers:
 
 1. add operation constant (`1`)
 1. fiber id
-1. element type constant (`8 === ElementTypeRoot`)
+1. element type constant (`11 === ElementTypeRoot`)
 1. profiling supported flag
+1. owner metadata flag
 
 For example, adding a root fiber with an id of 1:
 ```js
 [
   1, // add operation
   1, // fiber id
-  8, // ElementTypeRoot
+  11, // ElementTypeRoot
   1, // this root's renderer supports profiling
+  1, // this root has owner metadata
 ]
 ```
 
