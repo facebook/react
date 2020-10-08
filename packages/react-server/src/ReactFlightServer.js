@@ -188,6 +188,50 @@ function escapeStringValue(value: string): string {
   }
 }
 
+function isObjectPrototype(object): boolean {
+  if (!object) {
+    return false;
+  }
+  // $FlowFixMe
+  const ObjectPrototype = Object.prototype;
+  if (object === ObjectPrototype) {
+    return true;
+  }
+  // It might be an object from a different Realm which is
+  // still just a plain simple object.
+  if (Object.getPrototypeOf(object)) {
+    return false;
+  }
+  const names = Object.getOwnPropertyNames(object);
+  for (let i = 0; i < names.length; i++) {
+    if (!(names[i] in ObjectPrototype)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function isSimpleObject(object): boolean {
+  if (!isObjectPrototype(Object.getPrototypeOf(object))) {
+    return false;
+  }
+  const names = Object.getOwnPropertyNames(object);
+  for (let i = 0; i < names.length; i++) {
+    const descriptor = Object.getOwnPropertyDescriptor(object, names[i]);
+    if (!descriptor || !descriptor.enumerable) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function objectName(object): string {
+  const name = Object.prototype.toString.call(object);
+  return name.replace(/^\[object (.*)\]$/, function(m, p0) {
+    return p0;
+  });
+}
+
 function describeKeyForErrorMessage(key: string): string {
   const encodedKey = JSON.stringify(key);
   return '"' + key + '"' === encodedKey ? key : encodedKey;
@@ -204,13 +248,10 @@ function describeValueForErrorMessage(value: ReactModel): string {
       if (isArray(value)) {
         return '[...]';
       }
-      let name = Object.prototype.toString.call(value);
+      const name = objectName(value);
       if (name === '[object Object]') {
         return '{...}';
       }
-      name = name.replace(/^\[object (.*)\]$/, function(m, p0) {
-        return p0;
-      });
       return name;
     }
     case 'function':
@@ -246,7 +287,7 @@ function describeObjectForErrorMessage(
     let str = '{';
     // $FlowFixMe: Should be refined by now.
     const object: {+[key: string | number]: ReactModel} = objectOrArray;
-    const names = Object.getOwnPropertyNames(object);
+    const names = Object.keys(object);
     for (let i = 0; i < names.length; i++) {
       if (i > 0) {
         str += ', ';
@@ -272,6 +313,21 @@ export function resolveModelToJSON(
   key: string,
   value: ReactModel,
 ): ReactJSONValue {
+  if (__DEV__) {
+    // $FlowFixMe
+    const originalValue = parent[key];
+    if (typeof originalValue === 'object' && originalValue !== value) {
+      console.error(
+        'Only plain objects can be passed to client components from server components. ' +
+          'Objects with toJSON methods are not supported. Convert it manually ' +
+          'to a simple value before passing it to props. ' +
+          'Remove %s from these props: %s',
+        describeKeyForErrorMessage(key),
+        describeObjectForErrorMessage(parent),
+      );
+    }
+  }
+
   // Special Symbols
   switch (value) {
     case REACT_ELEMENT_TYPE:
@@ -371,8 +427,38 @@ export function resolveModelToJSON(
 
   if (typeof value === 'object') {
     if (__DEV__) {
-      if (value !== null) {
-        return value;
+      if (value !== null && !isArray(value)) {
+        // Verify that this is a simple plain object.
+        if (objectName(value) !== 'Object') {
+          console.error(
+            'Only plain objects can be passed to client components from server components. ' +
+              'Built-ins like %s are not supported. ' +
+              'Remove %s from these props: %s',
+            objectName(value),
+            describeKeyForErrorMessage(key),
+            describeObjectForErrorMessage(parent),
+          );
+        } else if (!isSimpleObject(value)) {
+          console.error(
+            'Only plain objects can be passed to client components from server components. ' +
+              'Classes or other objects with methods are not supported. ' +
+              'Remove %s from these props: %s',
+            describeKeyForErrorMessage(key),
+            describeObjectForErrorMessage(parent),
+          );
+        } else if (Object.getOwnPropertySymbols) {
+          const symbols = Object.getOwnPropertySymbols(value);
+          if (symbols.length > 0) {
+            console.error(
+              'Only plain objects can be passed to client components from server components. ' +
+                'Objects with symbol properties like %s are not supported. ' +
+                'Remove %s from these props: %s',
+              symbols[0].description,
+              describeKeyForErrorMessage(key),
+              describeObjectForErrorMessage(parent),
+            );
+          }
+        }
       }
     }
     return value;
