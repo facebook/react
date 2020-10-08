@@ -119,6 +119,15 @@ export function createRequest(
 function attemptResolveElement(element: React$Element<any>): ReactModel {
   const type = element.type;
   const props = element.props;
+  if (element.ref !== null && element.ref !== undefined) {
+    // When the ref moves to the regular props object this will implicitly
+    // throw for functions. We could probably relax it to a DEV warning for other
+    // cases.
+    invariant(
+      false,
+      'Refs cannot be used in server components, nor passed to client components.',
+    );
+  }
   if (typeof type === 'function') {
     // This is a server-side component.
     return type(props);
@@ -153,7 +162,11 @@ function attemptResolveElement(element: React$Element<any>): ReactModel {
       }
     }
   }
-  invariant(false, 'Unsupported type.');
+  invariant(
+    false,
+    'Unsupported server component type: %s',
+    describeValueForErrorMessage(type),
+  );
 }
 
 function pingSegment(request: Request, segment: Segment): void {
@@ -222,7 +235,10 @@ function isSimpleObject(object): boolean {
       return false;
     }
     if (!descriptor.enumerable) {
-      if ((names[i] === 'key' || names[i] === 'ref') && typeof descriptor.get === 'function') {
+      if (
+        (names[i] === 'key' || names[i] === 'ref') &&
+        typeof descriptor.get === 'function'
+      ) {
         // React adds key and ref getters to props objects to issue warnings.
         // Those getters will not be transferred to the client, but that's ok,
         // so we'll special case them.
