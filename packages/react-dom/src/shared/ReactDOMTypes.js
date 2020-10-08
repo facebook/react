@@ -10,7 +10,7 @@
 import type {
   ReactFundamentalComponentInstance,
   ReactScopeInstance,
-} from 'shared/ReactTypes';
+} from 'shared/src/ReactTypes';
 import type {DOMEventName} from '../events/DOMEventNames';
 
 export type ReactDOMFundamentalComponentInstance = ReactFundamentalComponentInstance<

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import ReactVersion from 'shared/ReactVersion';
+import ReactVersion from 'shared/src/ReactVersion';
 import {
   REACT_FRAGMENT_TYPE,
   REACT_DEBUG_TRACING_MODE_TYPE,
@@ -17,7 +17,9 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
   REACT_SCOPE_TYPE,
-} from 'shared/ReactSymbols';
+} from 'shared/src/ReactSymbols';
+
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 
 import {Component, PureComponent} from './ReactBaseClasses';
 import {createRef} from './ReactCreateRef';
@@ -29,7 +31,7 @@ import {
   isValidElement,
 } from './ReactElement';
 import {createContext} from './ReactContext';
-import {lazy} from './ReactLazy';
+import {lazy} from 'shared/src/ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
 import {block} from './ReactBlock';
@@ -55,7 +57,6 @@ import {
   cloneElementWithValidation,
 } from './ReactElementValidator';
 import {createMutableSource} from './ReactMutableSource';
-import ReactSharedInternals from './ReactSharedInternals';
 import {createFundamental} from './ReactFundamental';
 import {startTransition} from './ReactStartTransition';
 
@@ -102,6 +103,7 @@ export {
   cloneElement,
   isValidElement,
   ReactVersion as version,
+  // TODO: remove this and only export from react/index, but need to fix `yarn build` failure that demands the symbol be here
   ReactSharedInternals as __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
   // Deprecated behind disableCreateFactory
   createFactory,

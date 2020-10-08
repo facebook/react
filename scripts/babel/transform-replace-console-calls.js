@@ -17,7 +17,7 @@ module.exports = function replaceConsoleCalls(babel) {
         helperModuleImports.addNamed(
           path,
           'error',
-          'shared/consoleWithStackDev',
+          'shared/src/consoleWithStackDev',
           {nameHint: 'consoleError'}
         )
       );
@@ -33,7 +33,7 @@ module.exports = function replaceConsoleCalls(babel) {
         helperModuleImports.addNamed(
           path,
           'warn',
-          'shared/consoleWithStackDev',
+          'shared/src/consoleWithStackDev',
           {nameHint: 'consoleWarn'}
         )
       );

@@ -61,26 +61,6 @@ const forks = Object.freeze({
     return 'react-shallow-renderer/esm/index.js';
   },
 
-  // Without this fork, importing `shared/ReactSharedInternals` inside
-  // the `react` package itself would not work due to a cyclical dependency.
-  'shared/ReactSharedInternals': (bundleType, entry, dependencies) => {
-    if (entry === 'react') {
-      return 'react/src/ReactSharedInternals';
-    }
-    if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
-      // React internals are unavailable if we can't reference the package.
-      // We return an error because we only want to throw if this module gets used.
-      return new Error(
-        'Cannot use a module that depends on ReactSharedInternals ' +
-          'from "' +
-          entry +
-          '" because it does not declare "react" in the package ' +
-          'dependencies or peerDependencies.'
-      );
-    }
-    return null;
-  },
-
   // We have a few forks for different environments.
   'shared/ReactFeatureFlags': (bundleType, entry) => {
     switch (entry) {
@@ -213,7 +193,7 @@ const forks = Object.freeze({
     return 'scheduler/src/forks/SchedulerHostConfig.default';
   },
 
-  'shared/consoleWithStackDev': (bundleType, entry) => {
+  'shared/src/consoleWithStackDev': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
         return 'shared/forks/consoleWithStackDev.www.js';
@@ -224,7 +204,7 @@ const forks = Object.freeze({
 
   // In FB bundles, we preserve an inline require to ReactCurrentOwner.
   // See the explanation in FB version of ReactCurrentOwner in www:
-  'react/src/ReactCurrentOwner': (bundleType, entry) => {
+  'shared/src/ReactCurrentOwner': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
@@ -237,7 +217,7 @@ const forks = Object.freeze({
 
   // Similarly, we preserve an inline require to ReactCurrentDispatcher.
   // See the explanation in FB version of ReactCurrentDispatcher in www:
-  'react/src/ReactCurrentDispatcher': (bundleType, entry) => {
+  'shared/src/ReactCurrentDispatcher': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
@@ -248,7 +228,7 @@ const forks = Object.freeze({
     }
   },
 
-  'react/src/ReactSharedInternals.js': (bundleType, entry) => {
+  'shared/src/ReactSharedInternals.js': (bundleType, entry) => {
     switch (bundleType) {
       case UMD_DEV:
       case UMD_PROD:
@@ -260,7 +240,7 @@ const forks = Object.freeze({
   },
 
   // Different wrapping/reporting for caught errors.
-  'shared/invokeGuardedCallbackImpl': (bundleType, entry) => {
+  'shared/src/invokeGuardedCallbackImpl': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:

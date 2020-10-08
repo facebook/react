@@ -11,7 +11,7 @@
 // indices can be used to reference a tightly packed array. As opposed to being used in a Map.
 // The first allocated index is 1.
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 export type ThreadID = number;
 

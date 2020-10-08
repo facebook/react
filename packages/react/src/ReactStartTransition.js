@@ -7,7 +7,7 @@
  * @flow
  */
 
-import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
+import ReactCurrentBatchConfig from 'shared/src/ReactCurrentBatchConfig';
 
 export function startTransition(scope: () => void) {
   const prevTransition = ReactCurrentBatchConfig.transition;

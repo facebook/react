@@ -12,15 +12,15 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
-} from 'shared/ReactTypes';
-import type {Fiber, Dispatcher} from './ReactInternalTypes';
+} from 'shared/src/ReactTypes';
+import type {Dispatcher} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
 
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import {
   enableDebugTracing,
   enableSchedulingProfiler,
@@ -29,7 +29,11 @@ import {
   enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
 
-import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
+import {
+  NoMode,
+  BlockingMode,
+  DebugTracingMode,
+} from 'shared/src/ReactTypeOfMode';
 import {
   NoLane,
   NoLanes,
@@ -51,7 +55,7 @@ import {
   PassiveStatic as PassiveStaticEffect,
   MountLayoutDev as MountLayoutDevEffect,
   MountPassiveDev as MountPassiveDevEffect,
-} from './ReactFiberFlags';
+} from 'shared/src/ReactFiberFlags';
 import {
   HasEffect as HookHasEffect,
   Layout as HookLayout,
@@ -68,9 +72,9 @@ import {
   markSkippedUpdateLanes,
 } from './ReactFiberWorkLoop.new';
 
-import invariant from 'shared/invariant';
-import getComponentName from 'shared/getComponentName';
-import is from 'shared/objectIs';
+import invariant from 'shared/src/invariant';
+import getComponentName from 'shared/src/getComponentName';
+import is from 'shared/src/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.new';
 import {
   UserBlockingPriority,
@@ -93,6 +97,7 @@ import {
 import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 

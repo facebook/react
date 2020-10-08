@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {REACT_MEMO_TYPE} from 'shared/ReactSymbols';
+import {REACT_MEMO_TYPE} from 'shared/src/ReactSymbols';
 
-import isValidElementType from 'shared/isValidElementType';
+import isValidElementType from 'shared/src/isValidElementType';
 
 export function memo<Props>(
   type: React$ElementType,

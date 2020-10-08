@@ -7,17 +7,16 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
-
 import {
   enableProfilerTimer,
   enableProfilerCommitHooks,
 } from 'shared/ReactFeatureFlags';
-import {Profiler} from './ReactWorkTags';
+import {Profiler} from 'shared/src/ReactWorkTags';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
 import * as Scheduler from 'scheduler';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const {unstable_now: now} = Scheduler;
 

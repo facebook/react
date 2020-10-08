@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber, SuspenseHydrationCallbacks} from './ReactInternalTypes';
+import type {SuspenseHydrationCallbacks} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {
@@ -17,8 +17,8 @@ import type {
   PublicInstance,
 } from './ReactFiberHostConfig';
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
-import {FundamentalComponent} from './ReactWorkTags';
-import type {ReactNodeList} from 'shared/ReactTypes';
+import {FundamentalComponent} from 'shared/src/ReactWorkTags';
+import type {ReactNodeList} from 'shared/src/ReactTypes';
 import type {Lane, LanePriority} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 
@@ -26,17 +26,17 @@ import {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
 } from './ReactFiberTreeReflection';
-import {get as getInstance} from 'shared/ReactInstanceMap';
+import {get as getInstance} from 'shared/src/ReactInstanceMap';
 import {
   HostComponent,
   ClassComponent,
   HostRoot,
   SuspenseComponent,
-} from './ReactWorkTags';
-import getComponentName from 'shared/getComponentName';
-import invariant from 'shared/invariant';
+} from 'shared/src/ReactWorkTags';
+import getComponentName from 'shared/src/getComponentName';
+import invariant from 'shared/src/invariant';
 import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import {getPublicInstance} from './ReactFiberHostConfig';
 import {
   findCurrentUnmaskedContext,
@@ -72,7 +72,7 @@ import {
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictMode} from 'shared/src/ReactTypeOfMode';
 import {
   SyncLane,
   InputDiscreteHydrationLane,
@@ -90,6 +90,7 @@ import {
   findHostInstancesForRefresh,
 } from './ReactFiberHotReloading.new';
 import {markRenderScheduled} from './SchedulingProfiler';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 export {registerMutableSourceForHydration} from './ReactMutableSource.new';
 export {createPortal} from './ReactPortal';

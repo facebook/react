@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList} from 'shared/src/ReactTypes';
 import type {Lanes} from './ReactFiberLane';
 
 export type OffscreenProps = {|

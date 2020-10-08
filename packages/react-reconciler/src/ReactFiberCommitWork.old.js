@@ -15,13 +15,12 @@ import type {
   ChildSet,
   UpdatePayload,
 } from './ReactFiberHostConfig';
-import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Wakeable} from 'shared/src/ReactTypes';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 
@@ -55,21 +54,21 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from './ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import {
   invokeGuardedCallback,
   hasCaughtError,
   clearCaughtError,
-} from 'shared/ReactErrorUtils';
+} from 'shared/src/ReactErrorUtils';
 import {
   NoFlags,
   ContentReset,
   Placement,
   Snapshot,
   Update,
-} from './ReactFiberFlags';
-import getComponentName from 'shared/getComponentName';
-import invariant from 'shared/invariant';
+} from 'shared/src/ReactFiberFlags';
+import getComponentName from 'shared/src/getComponentName';
+import invariant from 'shared/src/invariant';
 
 import {onCommitUnmount} from './ReactFiberDevToolsHook.old';
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
@@ -78,7 +77,7 @@ import {
   recordLayoutEffectDuration,
   startLayoutEffectTimer,
 } from './ReactProfilerTimer.old';
-import {ProfileMode} from './ReactTypeOfMode';
+import {ProfileMode} from 'shared/src/ReactTypeOfMode';
 import {commitUpdateQueue} from './ReactUpdateQueue.old';
 import {
   getPublicInstance,
@@ -125,6 +124,7 @@ import {
   Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.old';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {

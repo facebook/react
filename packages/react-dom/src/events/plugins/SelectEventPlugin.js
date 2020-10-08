@@ -12,10 +12,10 @@ import type {DOMEventName} from '../DOMEventNames';
 import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
 
-import {canUseDOM} from 'shared/ExecutionEnvironment';
+import {canUseDOM} from 'shared/src/ExecutionEnvironment';
 import {SyntheticEvent} from '../../events/SyntheticEvent';
 import isTextInputElement from '../isTextInputElement';
-import shallowEqual from 'shared/shallowEqual';
+import shallowEqual from 'shared/src/shallowEqual';
 import {enableEagerRootListeners} from 'shared/ReactFeatureFlags';
 
 import {registerTwoPhaseEvent} from '../EventRegistry';

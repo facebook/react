@@ -7,10 +7,10 @@
  * @flow
  */
 
-import type {Source} from 'shared/ReactElementType';
-import type {LazyComponent} from 'react/src/ReactLazy';
+import type {Source} from './ReactElementType';
+import type {LazyComponent} from './ReactLazy';
 
-import {enableComponentStackLocations} from 'shared/ReactFeatureFlags';
+import {enableComponentStackLocations} from '../ReactFeatureFlags';
 
 import {
   REACT_SUSPENSE_TYPE,
@@ -19,13 +19,11 @@ import {
   REACT_MEMO_TYPE,
   REACT_BLOCK_TYPE,
   REACT_LAZY_TYPE,
-} from 'shared/ReactSymbols';
+} from './ReactSymbols';
 
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
+import {disableLogs, reenableLogs} from './ConsolePatchingDev';
 
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-
-const {ReactCurrentDispatcher} = ReactSharedInternals;
+import ReactCurrentDispatcher from './ReactSharedInternals';
 
 let prefix;
 export function describeBuiltInComponentFrame(

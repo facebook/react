@@ -7,11 +7,10 @@
  * @flow
  */
 
-import type {ReactElement} from 'shared/ReactElementType';
-import type {Fiber} from './ReactInternalTypes';
+import type {ReactElement} from 'shared/src/ReactElementType';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Instance} from './ReactFiberHostConfig';
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNodeList} from 'shared/src/ReactTypes';
 
 import {
   flushSync,
@@ -30,12 +29,13 @@ import {
   HostRoot,
   MemoComponent,
   SimpleMemoComponent,
-} from './ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
-} from 'shared/ReactSymbols';
+} from 'shared/src/ReactSymbols';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 export type Family = {|
   current: any,

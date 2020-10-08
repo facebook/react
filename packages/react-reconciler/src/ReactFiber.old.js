@@ -7,29 +7,28 @@
  * @flow
  */
 
-import type {ReactElement} from 'shared/ReactElementType';
+import type {ReactElement} from 'shared/src/ReactElementType';
 import type {
   ReactFragment,
   ReactPortal,
   ReactFundamentalComponent,
   ReactScope,
-} from 'shared/ReactTypes';
-import type {Fiber} from './ReactInternalTypes';
+} from 'shared/src/ReactTypes';
 import type {RootTag} from './ReactRootTags';
-import type {WorkTag} from './ReactWorkTags';
-import type {TypeOfMode} from './ReactTypeOfMode';
+import type {WorkTag} from 'shared/src/ReactWorkTags';
+import type {TypeOfMode} from 'shared/src/ReactTypeOfMode';
 import type {Lanes} from './ReactFiberLane';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {OffscreenProps} from './ReactFiberOffscreenComponent';
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 import {
   enableProfilerTimer,
   enableFundamentalAPI,
   enableScopeAPI,
   enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
-import {NoFlags, Placement} from './ReactFiberFlags';
+import {NoFlags, Placement} from 'shared/src/ReactFiberFlags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
 import {
   IndeterminateComponent,
@@ -56,8 +55,8 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from './ReactWorkTags';
-import getComponentName from 'shared/getComponentName';
+} from 'shared/src/ReactWorkTags';
+import getComponentName from 'shared/src/getComponentName';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
 import {
@@ -73,7 +72,7 @@ import {
   ProfileMode,
   StrictMode,
   BlockingMode,
-} from './ReactTypeOfMode';
+} from 'shared/src/ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
@@ -91,7 +90,8 @@ import {
   REACT_BLOCK_TYPE,
   REACT_OFFSCREEN_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
-} from 'shared/ReactSymbols';
+} from 'shared/src/ReactSymbols';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 export type {Fiber};
 

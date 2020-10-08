@@ -10,7 +10,7 @@
 
 'use strict';
 
-import ReactVersion from 'shared/ReactVersion';
+import ReactVersion from 'shared/src/ReactVersion';
 
 describe('SchedulingProfiler', () => {
   let React;

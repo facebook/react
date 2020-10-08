@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Source} from 'shared/ReactElementType';
+import type {Source} from 'shared/src/ReactElementType';
 import type {
   Dehydrated,
   Unserializable,

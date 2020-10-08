@@ -7,13 +7,12 @@
  * @flow
  */
 
-import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
+import type {ReactProviderType, ReactContext} from 'shared/src/ReactTypes';
 import type {BlockComponent} from 'react/src/ReactBlock';
-import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
-import type {Fiber} from './ReactInternalTypes';
+import type {LazyComponent as LazyComponentType} from 'shared/src/ReactLazy';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
-import type {MutableSource} from 'shared/ReactTypes';
+import type {MutableSource} from 'shared/src/ReactTypes';
 import type {
   SuspenseState,
   SuspenseListRenderState,
@@ -25,7 +24,7 @@ import type {
   OffscreenState,
 } from './ReactFiberOffscreenComponent';
 
-import checkPropTypes from 'shared/checkPropTypes';
+import checkPropTypes from 'shared/src/checkPropTypes';
 
 import {
   IndeterminateComponent,
@@ -52,7 +51,7 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from './ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import {
   NoFlags,
   PerformedWork,
@@ -64,8 +63,8 @@ import {
   Ref,
   Deletion,
   ForceUpdateForLegacySuspense,
-} from './ReactFiberFlags';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
+} from 'shared/src/ReactFiberFlags';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
@@ -78,11 +77,11 @@ import {
   enableScopeAPI,
   enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
-import invariant from 'shared/invariant';
-import shallowEqual from 'shared/shallowEqual';
-import getComponentName from 'shared/getComponentName';
+import invariant from 'shared/src/invariant';
+import shallowEqual from 'shared/src/shallowEqual';
+import getComponentName from 'shared/src/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
-import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
+import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/src/ReactSymbols';
 import {
   getCurrentFiberOwnerNameInDevOrNull,
   setIsRendering,
@@ -123,7 +122,7 @@ import {
   ProfileMode,
   StrictMode,
   BlockingMode,
-} from './ReactTypeOfMode';
+} from 'shared/src/ReactTypeOfMode';
 import {
   shouldSetTextContent,
   isSuspenseInstancePending,
@@ -203,7 +202,8 @@ import {
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {setWorkInProgressVersion} from './ReactMutableSource.old';
 
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
+import {disableLogs, reenableLogs} from 'shared/src/ConsolePatchingDev';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 

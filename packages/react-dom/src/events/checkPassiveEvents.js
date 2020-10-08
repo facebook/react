@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {canUseDOM} from 'shared/ExecutionEnvironment';
+import {canUseDOM} from 'shared/src/ExecutionEnvironment';
 
 export let passiveBrowserEventsSupported = false;
 

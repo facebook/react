@@ -9,8 +9,8 @@
 import type {
   ReactFundamentalImpl,
   ReactFundamentalComponent,
-} from 'shared/ReactTypes';
-import {REACT_FUNDAMENTAL_TYPE} from 'shared/ReactSymbols';
+} from 'shared/src/ReactTypes';
+import {REACT_FUNDAMENTAL_TYPE} from 'shared/src/ReactSymbols';
 import {hasBadMapPolyfill} from './BadMapPolyfill';
 
 export function createFundamental<C, H>(

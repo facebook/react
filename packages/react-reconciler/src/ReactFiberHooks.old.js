@@ -12,74 +12,82 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
-} from 'shared/ReactTypes';
-import type {Fiber, Dispatcher} from './ReactInternalTypes';
-import type {Lanes, Lane} from './ReactFiberLane';
+} from 'shared/src/ReactTypes';
+import type {FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
+import type {
+  Dispatcher,
+  Fiber,
+  HookType,
+  Lane,
+  Lanes,
+} from 'shared/src/ReactInternalTypes';
 import type {HookFlags} from './ReactHookEffectTags';
-import type {ReactPriorityLevel} from './ReactInternalTypes';
-import type {FiberRoot} from './ReactInternalTypes';
-import type {OpaqueIDType} from './ReactFiberHostConfig';
-
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-import {
-  enableDebugTracing,
-  enableSchedulingProfiler,
-  enableNewReconciler,
-  decoupleUpdatePriorityFromScheduler,
-} from 'shared/ReactFeatureFlags';
-
-import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
-import {
-  NoLane,
-  NoLanes,
-  InputContinuousLanePriority,
-  isSubsetOfLanes,
-  mergeLanes,
-  removeLanes,
-  markRootEntangled,
-  markRootMutableRead,
-  getCurrentUpdateLanePriority,
-  setCurrentUpdateLanePriority,
-  higherLanePriority,
-  DefaultLanePriority,
-} from './ReactFiberLane';
-import {readContext} from './ReactFiberNewContext.old';
-import {
-  Update as UpdateEffect,
-  Passive as PassiveEffect,
-} from './ReactFiberFlags';
 import {
   HasEffect as HookHasEffect,
   Layout as HookLayout,
   Passive as HookPassive,
 } from './ReactHookEffectTags';
-import {
-  getWorkInProgressRoot,
-  scheduleUpdateOnFiber,
-  requestUpdateLane,
-  requestEventTime,
-  warnIfNotCurrentlyActingEffectsInDEV,
-  warnIfNotCurrentlyActingUpdatesInDev,
-  warnIfNotScopedWithMatchingAct,
-  markSkippedUpdateLanes,
-} from './ReactFiberWorkLoop.old';
-
-import invariant from 'shared/invariant';
-import getComponentName from 'shared/getComponentName';
-import is from 'shared/objectIs';
-import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
-import {
-  UserBlockingPriority,
-  NormalPriority,
-  runWithPriority,
-  getCurrentPriorityLevel,
-} from './SchedulerWithReactIntegration.old';
-import {getIsHydrating} from './ReactFiberHydrationContext.old';
+import type {OpaqueIDType} from './ReactFiberHostConfig';
 import {
   makeClientId,
   makeClientIdInDEV,
   makeOpaqueHydratingObject,
 } from './ReactFiberHostConfig';
+
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
+import {
+  decoupleUpdatePriorityFromScheduler,
+  enableDebugTracing,
+  enableNewReconciler,
+  enableSchedulingProfiler,
+} from 'shared/ReactFeatureFlags';
+
+import {
+  BlockingMode,
+  DebugTracingMode,
+  NoMode,
+} from 'shared/src/ReactTypeOfMode';
+import {
+  DefaultLanePriority,
+  getCurrentUpdateLanePriority,
+  higherLanePriority,
+  InputContinuousLanePriority,
+  isSubsetOfLanes,
+  markRootEntangled,
+  markRootMutableRead,
+  mergeLanes,
+  NoLane,
+  NoLanes,
+  removeLanes,
+  setCurrentUpdateLanePriority,
+} from './ReactFiberLane';
+import {readContext} from './ReactFiberNewContext.old';
+import {
+  Passive as PassiveEffect,
+  Update as UpdateEffect,
+} from 'shared/src/ReactFiberFlags';
+import {
+  getWorkInProgressRoot,
+  markSkippedUpdateLanes,
+  requestEventTime,
+  requestUpdateLane,
+  scheduleUpdateOnFiber,
+  warnIfNotCurrentlyActingEffectsInDEV,
+  warnIfNotCurrentlyActingUpdatesInDev,
+  warnIfNotScopedWithMatchingAct,
+} from './ReactFiberWorkLoop.old';
+
+import invariant from 'shared/src/invariant';
+import getComponentName from 'shared/src/getComponentName';
+import is from 'shared/src/objectIs';
+import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
+import {
+  getCurrentPriorityLevel,
+  NormalPriority,
+  runWithPriority,
+  UserBlockingPriority,
+} from './SchedulerWithReactIntegration.old';
+import {getIsHydrating} from './ReactFiberHydrationContext.old';
 import {
   getWorkInProgressVersion,
   markSourceAsDirty,
@@ -107,22 +115,6 @@ type UpdateQueue<S, A> = {|
   lastRenderedReducer: ((S, A) => S) | null,
   lastRenderedState: S | null,
 |};
-
-export type HookType =
-  | 'useState'
-  | 'useReducer'
-  | 'useContext'
-  | 'useRef'
-  | 'useEffect'
-  | 'useLayoutEffect'
-  | 'useCallback'
-  | 'useMemo'
-  | 'useImperativeHandle'
-  | 'useDebugValue'
-  | 'useDeferredValue'
-  | 'useTransition'
-  | 'useMutableSource'
-  | 'useOpaqueIdentifier';
 
 let didWarnAboutMismatchedHooksForComponent;
 let didWarnAboutUseOpaqueIdentifier;

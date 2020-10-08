@@ -7,7 +7,7 @@
  * @flow
  */
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';

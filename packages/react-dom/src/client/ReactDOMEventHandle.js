@@ -8,7 +8,7 @@
  */
 
 import type {DOMEventName} from '../events/DOMEventNames';
-import type {ReactScopeInstance} from 'shared/ReactTypes';
+import type {ReactScopeInstance} from 'shared/src/ReactTypes';
 import type {
   ReactDOMEventHandle,
   ReactDOMEventHandleListener,
@@ -26,7 +26,7 @@ import {
 import {ELEMENT_NODE, COMMENT_NODE} from '../shared/HTMLNodeType';
 import {listenToNativeEvent} from '../events/DOMPluginEventSystem';
 
-import {HostRoot, HostPortal} from 'react-reconciler/src/ReactWorkTags';
+import {HostRoot, HostPortal} from 'shared/src/ReactWorkTags';
 import {IS_EVENT_HANDLE_NON_MANAGED_NODE} from '../events/EventSystemFlags';
 
 import {
@@ -34,7 +34,7 @@ import {
   enableCreateEventHandleAPI,
   enableEagerRootListeners,
 } from 'shared/ReactFeatureFlags';
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 type EventHandleOptions = {|
   capture?: boolean,

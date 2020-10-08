@@ -7,12 +7,11 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 
 import * as React from 'react';
-import {Update, Snapshot, MountLayoutDev} from './ReactFiberFlags';
+import {Update, Snapshot, MountLayoutDev} from 'shared/src/ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
@@ -23,14 +22,17 @@ import {
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
 import {isMounted} from './ReactFiberTreeReflection';
-import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
-import shallowEqual from 'shared/shallowEqual';
-import getComponentName from 'shared/getComponentName';
-import invariant from 'shared/invariant';
-import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
+import {
+  get as getInstance,
+  set as setInstance,
+} from 'shared/src/ReactInstanceMap';
+import shallowEqual from 'shared/src/shallowEqual';
+import getComponentName from 'shared/src/getComponentName';
+import invariant from 'shared/src/invariant';
+import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/src/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
-import {DebugTracingMode, StrictMode} from './ReactTypeOfMode';
+import {DebugTracingMode, StrictMode} from 'shared/src/ReactTypeOfMode';
 
 import {
   enqueueUpdate,
@@ -59,11 +61,12 @@ import {
 } from './ReactFiberWorkLoop.new';
 import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 
-import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
+import {disableLogs, reenableLogs} from 'shared/src/ConsolePatchingDev';
 import {
   markForceUpdateScheduled,
   markStateUpdateScheduled,
 } from './SchedulingProfiler';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;

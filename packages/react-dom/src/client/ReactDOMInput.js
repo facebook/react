@@ -9,7 +9,7 @@
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 import {setValueForProperty} from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';

@@ -28,7 +28,7 @@ import {
   getContainerFromFiber,
   getSuspenseInstanceFromFiber,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
-import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
+import {HostRoot, SuspenseComponent} from 'shared/src/ReactWorkTags';
 import {
   type EventSystemFlags,
   IS_CAPTURE_PHASE,
@@ -47,7 +47,7 @@ import {
   UserBlockingEvent,
   ContinuousEvent,
   DiscreteEvent,
-} from 'shared/ReactTypes';
+} from 'shared/src/ReactTypes';
 import {getEventPriorityForPluginSystem} from './DOMEventProperties';
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 import {

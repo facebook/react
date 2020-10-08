@@ -7,10 +7,10 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.old';
 
 import {createCursor, push, pop} from './ReactFiberStack.old';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 export opaque type SuspenseContext = number;
 export opaque type SubtreeSuspenseContext: SuspenseContext = number;

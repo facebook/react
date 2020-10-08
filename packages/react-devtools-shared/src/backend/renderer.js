@@ -77,7 +77,6 @@ import {
   MEMO_SYMBOL_STRING,
 } from './ReactSymbols';
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   ChangeDescription,
   CommitDataBackend,
@@ -100,6 +99,7 @@ import type {
   ComponentFilter,
   ElementType,
 } from 'react-devtools-shared/src/types';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
 type getTypeSymbolType = (type: any) => Symbol | number;

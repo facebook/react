@@ -7,11 +7,11 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {CurrentDispatcherRef, ReactRenderer, WorkTagMap} from './types';
 
 import {getInternalReactConstants} from './renderer';
 import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const APPEND_STACK_TO_METHODS = ['error', 'trace', 'warn'];
 

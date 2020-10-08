@@ -7,9 +7,9 @@
  * @flow
  */
 
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Wakeable} from 'shared/src/ReactTypes';
 import type {BlockComponent, BlockRenderFunction} from 'react/src/ReactBlock';
-import type {LazyComponent} from 'react/src/ReactLazy';
+import type {LazyComponent} from 'shared/src/ReactLazy';
 
 import type {
   ModuleReference,
@@ -29,7 +29,7 @@ import {
   REACT_LAZY_TYPE,
   REACT_BLOCK_TYPE,
   REACT_ELEMENT_TYPE,
-} from 'shared/ReactSymbols';
+} from 'shared/src/ReactSymbols';
 
 export type JSONValue =
   | number

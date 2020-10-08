@@ -11,7 +11,7 @@
 
 // Mock of the Native Hooks
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 const roots = new Map();
 const allocatedTags = new Set();

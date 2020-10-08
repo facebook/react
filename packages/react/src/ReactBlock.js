@@ -7,14 +7,14 @@
  * @flow
  */
 
-import type {LazyComponent} from './ReactLazy';
+import type {LazyComponent} from 'shared/src/ReactLazy';
 
 import {
   REACT_LAZY_TYPE,
   REACT_BLOCK_TYPE,
   REACT_MEMO_TYPE,
   REACT_FORWARD_REF_TYPE,
-} from 'shared/ReactSymbols';
+} from 'shared/src/ReactSymbols';
 
 type BlockLoadFunction<Args: Iterable<any>, Data> = (...args: Args) => Data;
 export type BlockRenderFunction<Props, Data> = (

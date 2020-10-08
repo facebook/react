@@ -24,8 +24,8 @@ import {
   REACT_BLOCK_TYPE,
   REACT_SERVER_BLOCK_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
-} from 'shared/ReactSymbols';
-import {enableScopeAPI} from './ReactFeatureFlags';
+} from './ReactSymbols';
+import {enableScopeAPI} from '../ReactFeatureFlags';
 
 export default function isValidElementType(type: mixed) {
   if (typeof type === 'string' || typeof type === 'function') {

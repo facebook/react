@@ -7,8 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {ReactScopeInstance} from 'shared/ReactTypes';
+import type {ReactScopeInstance} from 'shared/src/ReactTypes';
 import type {
   ReactDOMEventHandle,
   ReactDOMEventHandleListener,
@@ -26,12 +25,13 @@ import {
   HostText,
   HostRoot,
   SuspenseComponent,
-} from 'react-reconciler/src/ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 
 import {getParentSuspenseInstance} from './ReactDOMHostConfig';
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 import {enableScopeAPI} from 'shared/ReactFeatureFlags';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const randomKey = Math.random()
   .toString(36)

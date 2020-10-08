@@ -14,13 +14,13 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
-} from 'shared/ReactTypes';
+} from 'shared/src/ReactTypes';
 import type PartialRenderer from './ReactPartialRenderer';
 
 import {validateContextBounds} from './ReactPartialRendererContext';
 
-import invariant from 'shared/invariant';
-import is from 'shared/objectIs';
+import invariant from 'shared/src/invariant';
+import is from 'shared/src/objectIs';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;

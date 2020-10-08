@@ -1,5 +1,8 @@
 {
   "private": true,
   "name": "shared",
-  "version": "0.0.0"
+  "version": "0.0.0",
+  "dependencies": {
+    "object-assign": "^4.1.1"
+  }
 }

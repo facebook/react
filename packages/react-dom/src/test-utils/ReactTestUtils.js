@@ -8,22 +8,22 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import {findCurrentFiberUsingSlowPath} from 'react-reconciler/src/ReactFiberTreeReflection';
-import {get as getInstance} from 'shared/ReactInstanceMap';
+import {get as getInstance} from 'shared/src/ReactInstanceMap';
 import {
   ClassComponent,
   FunctionComponent,
   HostComponent,
   HostText,
-} from 'react-reconciler/src/ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import {SyntheticEvent} from '../events/SyntheticEvent';
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 import {act} from './ReactTestUtilsPublicAct';
 import {unstable_concurrentAct} from './ReactTestUtilsInternalAct';
 import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,
-} from 'shared/ReactErrorUtils';
+} from 'shared/src/ReactErrorUtils';
 
 // Keep in sync with ReactDOM.js, and ReactTestUtilsAct.js:
 const EventInternals =

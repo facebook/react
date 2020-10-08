@@ -7,7 +7,7 @@
  * @flow
  */
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 import {disableJavaScriptURLs} from 'shared/ReactFeatureFlags';
 
 // A javascript: URL can contain leading C0 control or \u0020 SPACE,

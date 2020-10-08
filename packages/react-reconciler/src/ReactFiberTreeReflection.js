@@ -7,15 +7,14 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
 import type {Container, SuspenseInstance} from './ReactFiberHostConfig';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
-import {get as getInstance} from 'shared/ReactInstanceMap';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-import getComponentName from 'shared/getComponentName';
+import {get as getInstance} from 'shared/src/ReactInstanceMap';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
+import getComponentName from 'shared/src/getComponentName';
 import {
   ClassComponent,
   HostComponent,
@@ -24,9 +23,10 @@ import {
   HostText,
   FundamentalComponent,
   SuspenseComponent,
-} from './ReactWorkTags';
-import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
+} from 'shared/src/ReactWorkTags';
+import {NoFlags, Placement, Hydrating} from 'shared/src/ReactFiberFlags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 

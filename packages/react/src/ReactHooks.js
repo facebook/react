@@ -12,12 +12,12 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
-} from 'shared/ReactTypes';
+} from 'shared/src/ReactTypes';
 import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
-import ReactCurrentDispatcher from './ReactCurrentDispatcher';
+import ReactCurrentDispatcher from 'shared/src/ReactCurrentDispatcher';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;

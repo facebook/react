@@ -8,7 +8,6 @@
  */
 
 import type {DOMEventName} from '../../events/DOMEventNames';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {AnyNativeEvent} from '../../events/PluginModuleType';
 import type {DispatchQueue} from '../DOMPluginEventSystem';
 import type {EventSystemFlags} from '../EventSystemFlags';
@@ -48,6 +47,7 @@ import getEventCharCode from '../getEventCharCode';
 import {IS_CAPTURE_PHASE} from '../EventSystemFlags';
 
 import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 function extractEvents(
   dispatchQueue: DispatchQueue,

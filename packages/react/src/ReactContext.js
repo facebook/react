@@ -7,9 +7,9 @@
  * @flow
  */
 
-import {REACT_PROVIDER_TYPE, REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
+import {REACT_PROVIDER_TYPE, REACT_CONTEXT_TYPE} from 'shared/src/ReactSymbols';
 
-import type {ReactContext} from 'shared/ReactTypes';
+import type {ReactContext} from 'shared/src/ReactTypes';
 
 export function createContext<T>(
   defaultValue: T,

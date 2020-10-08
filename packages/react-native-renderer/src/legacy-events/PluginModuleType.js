@@ -7,12 +7,12 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
 } from './ReactSyntheticEventType';
 import type {TopLevelType} from './TopLevelEventTypes';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 export type EventTypes = {[key: string]: DispatchConfig, ...};
 

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 // Renderers that don't support test selectors
 // can re-export everything from this module.

@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import {REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
+import {REACT_ELEMENT_TYPE, REACT_FRAGMENT_TYPE} from 'shared/src/ReactSymbols';
 
-import invariant from 'shared/invariant';
+import invariant from 'shared/src/invariant';
 
 function captureAssertion(fn) {
   // Trick to use a Jest matcher inside another Jest matcher. `fn` contains an

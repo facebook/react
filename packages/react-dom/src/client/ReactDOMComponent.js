@@ -12,7 +12,7 @@ import {
   possibleRegistrationNames,
 } from '../events/EventRegistry';
 
-import {canUseDOM} from 'shared/ExecutionEnvironment';
+import {canUseDOM} from 'shared/src/ExecutionEnvironment';
 
 import {
   getValueForAttribute,
@@ -72,7 +72,7 @@ import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
-import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
+import {REACT_OPAQUE_ID_TYPE} from 'shared/src/ReactSymbols';
 
 import {
   enableTrustedTypesIntegration,

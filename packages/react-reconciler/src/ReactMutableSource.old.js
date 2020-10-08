@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {MutableSource, MutableSourceVersion} from 'shared/ReactTypes';
+import type {MutableSource, MutableSourceVersion} from 'shared/src/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';

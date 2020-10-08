@@ -15,12 +15,11 @@ import type {
   ChildSet,
   UpdatePayload,
 } from './ReactFiberHostConfig';
-import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Wakeable} from 'shared/src/ReactTypes';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
@@ -56,12 +55,12 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from './ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import {
   invokeGuardedCallback,
   hasCaughtError,
   clearCaughtError,
-} from 'shared/ReactErrorUtils';
+} from 'shared/src/ReactErrorUtils';
 import {
   NoFlags,
   ContentReset,
@@ -72,9 +71,9 @@ import {
   LayoutMask,
   PassiveMask,
   Ref,
-} from './ReactFiberFlags';
-import getComponentName from 'shared/getComponentName';
-import invariant from 'shared/invariant';
+} from 'shared/src/ReactFiberFlags';
+import getComponentName from 'shared/src/getComponentName';
+import invariant from 'shared/src/invariant';
 import {
   current as currentDebugFiberInDEV,
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
@@ -89,7 +88,7 @@ import {
   recordPassiveEffectDuration,
   startPassiveEffectTimer,
 } from './ReactProfilerTimer.new';
-import {ProfileMode} from './ReactTypeOfMode';
+import {ProfileMode} from 'shared/src/ReactTypeOfMode';
 import {commitUpdateQueue} from './ReactUpdateQueue.new';
 import {
   getPublicInstance,
@@ -134,6 +133,7 @@ import {
   Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.new';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 // Used to avoid traversing the return path to find the nearest Profiler ancestor during commit.
 let nearestProfilerOnStack: Fiber | null = null;

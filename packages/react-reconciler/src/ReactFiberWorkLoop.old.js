@@ -7,8 +7,8 @@
  * @flow
  */
 
-import type {Thenable, Wakeable} from 'shared/ReactTypes';
-import type {Fiber, FiberRoot} from './ReactInternalTypes';
+import type {Thenable, Wakeable} from 'shared/src/ReactTypes';
+import type {FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
@@ -30,8 +30,8 @@ import {
   enableSchedulingProfiler,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
-import ReactSharedInternals from 'shared/ReactSharedInternals';
-import invariant from 'shared/invariant';
+import ReactSharedInternals from 'shared/src/ReactSharedInternals';
+import invariant from 'shared/src/invariant';
 
 import {
   scheduleCallback,
@@ -97,7 +97,7 @@ import {
   ProfileMode,
   BlockingMode,
   ConcurrentMode,
-} from './ReactTypeOfMode';
+} from 'shared/src/ReactTypeOfMode';
 import {
   HostRoot,
   IndeterminateComponent,
@@ -112,7 +112,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   ScopeComponent,
-} from './ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import {LegacyRoot} from './ReactRootTags';
 import {
   NoFlags,
@@ -131,7 +131,7 @@ import {
   HostEffectMask,
   Hydrating,
   HydratingAndUpdate,
-} from './ReactFiberFlags';
+} from 'shared/src/ReactFiberFlags';
 import {
   NoLanePriority,
   SyncLanePriority,
@@ -216,7 +216,7 @@ import {
 } from './ReactProfilerTimer.old';
 
 // DEV stuff
-import getComponentName from 'shared/getComponentName';
+import getComponentName from 'shared/src/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
 import {
   isRendering as ReactCurrentDebugFiberIsRenderingInDEV,
@@ -228,13 +228,14 @@ import {
   invokeGuardedCallback,
   hasCaughtError,
   clearCaughtError,
-} from 'shared/ReactErrorUtils';
+} from 'shared/src/ReactErrorUtils';
 import {onCommitRoot as onCommitRootDevTools} from './ReactFiberDevToolsHook.old';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
 
 // Used by `act`
-import enqueueTask from 'shared/enqueueTask';
+import enqueueTask from 'shared/src/enqueueTask';
 import {doesFiberContain} from './ReactFiberTreeReflection';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const ceil = Math.ceil;
 

@@ -7,12 +7,11 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
 import type {
   ReactScopeInstance,
   ReactContext,
   ReactScopeQuery,
-} from 'shared/ReactTypes';
+} from 'shared/src/ReactTypes';
 
 import {
   getPublicInstance,
@@ -21,8 +20,13 @@ import {
 } from './ReactFiberHostConfig';
 import {isFiberSuspenseAndTimedOut} from './ReactFiberTreeReflection';
 
-import {HostComponent, ScopeComponent, ContextProvider} from './ReactWorkTags';
+import {
+  HostComponent,
+  ScopeComponent,
+  ContextProvider,
+} from 'shared/src/ReactWorkTags';
 import {enableScopeAPI} from 'shared/ReactFeatureFlags';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {
   return ((((fiber.child: any): Fiber).sibling: any): Fiber).child;

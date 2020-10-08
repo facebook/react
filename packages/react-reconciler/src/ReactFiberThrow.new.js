@@ -7,21 +7,20 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lane, Lanes} from './ReactFiberLane';
 import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue.new';
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Wakeable} from 'shared/src/ReactTypes';
 import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
 
-import getComponentName from 'shared/getComponentName';
+import getComponentName from 'shared/src/getComponentName';
 import {
   ClassComponent,
   HostRoot,
   SuspenseComponent,
   IncompleteClassComponent,
-} from './ReactWorkTags';
+} from 'shared/src/ReactWorkTags';
 import {
   DidCapture,
   Incomplete,
@@ -29,9 +28,13 @@ import {
   ShouldCapture,
   LifecycleEffectMask,
   ForceUpdateForLegacySuspense,
-} from './ReactFiberFlags';
+} from 'shared/src/ReactFiberFlags';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.new';
-import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
+import {
+  NoMode,
+  BlockingMode,
+  DebugTracingMode,
+} from 'shared/src/ReactTypeOfMode';
 import {
   enableDebugTracing,
   enableSchedulingProfiler,
@@ -68,6 +71,7 @@ import {
   mergeLanes,
   pickArbitraryLane,
 } from './ReactFiberLane';
+import type {Fiber} from 'shared/src/ReactInternalTypes';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 

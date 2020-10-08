@@ -22,8 +22,8 @@ import {
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
-} from 'shared/ReactSymbols';
-import isValidElementType from 'shared/isValidElementType';
+} from 'shared/src/ReactSymbols';
+import isValidElementType from 'shared/src/isValidElementType';
 
 export function typeOf(object: any) {
   if (typeof object === 'object' && object !== null) {
