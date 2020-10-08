@@ -232,7 +232,7 @@ export default {
             if (id.elements[1] === resolved.identifiers[0]) {
               if (name === 'useState') {
                 const references = resolved.references;
-                for (let i = 0; i < references.length; i++) {
+                for (let i = 0; i < references.length; i += 1) {
                   setStateCallSites.set(
                     references[i].identifier,
                     id.elements[0],
@@ -244,7 +244,7 @@ export default {
             } else if (id.elements[0] === resolved.identifiers[0]) {
               if (name === 'useState') {
                 const references = resolved.references;
-                for (let i = 0; i < references.length; i++) {
+                for (let i = 0; i < references.length; i += 1) {
                   stateVariables.add(references[i].identifier);
                 }
               }
@@ -286,7 +286,7 @@ export default {
         const childScopes = componentScope.childScopes;
         let fnScope = null;
         let i;
-        for (i = 0; i < childScopes.length; i++) {
+        for (i = 0; i < childScopes.length; i += 1) {
           const childScope = childScopes[i];
           const childScopeBlock = childScope.block;
           if (
@@ -308,7 +308,7 @@ export default {
         }
         // Does this function capture any values
         // that are in pure scopes (aka render)?
-        for (i = 0; i < fnScope.through.length; i++) {
+        for (i = 0; i < fnScope.through.length; i += 1) {
           const ref = fnScope.through[i];
           if (ref.resolved == null) {
             continue;
@@ -454,7 +454,7 @@ export default {
           // Is React managing this ref or us?
           // Let's see if we can find a .current assignment.
           let foundCurrentAssignment = false;
-          for (let i = 0; i < references.length; i++) {
+          for (let i = 0; i < references.length; i += 1) {
             const {identifier} = references[i];
             const {parent} = identifier;
             if (
@@ -824,7 +824,7 @@ export default {
       function formatDependency(path) {
         const members = path.split('.');
         let finalPath = '';
-        for (let i = 0; i < members.length; i++) {
+        for (let i = 0; i < members.length; i += 1) {
           if (i !== 0) {
             const pathSoFar = members.slice(0, i + 1).join('.');
             const isOptional = optionalChains.get(pathSoFar) === true;
@@ -896,7 +896,7 @@ export default {
           return;
         }
         let isPropsOnlyUsedInMembers = true;
-        for (let i = 0; i < refs.length; i++) {
+        for (let i = 0; i < refs.length; i += 1) {
           const ref = refs[i];
           const id = fastFindReferenceWithParent(
             componentScope.block,
@@ -950,7 +950,7 @@ export default {
           // Was it called in at least one case? Then it's a function.
           let isFunctionCall = false;
           let id;
-          for (let i = 0; i < usedDep.references.length; i++) {
+          for (let i = 0; i < usedDep.references.length; i += 1) {
             id = usedDep.references[i].identifier;
             if (
               id != null &&
@@ -989,7 +989,7 @@ export default {
           const references = usedDep.references;
           let id;
           let maybeCall;
-          for (let i = 0; i < references.length; i++) {
+          for (let i = 0; i < references.length; i += 1) {
             id = references[i].identifier;
             maybeCall = id.parent;
             // Try to see if we have setState(someExpr(missingDep)).
@@ -1524,7 +1524,7 @@ function scanForConstructions({
 
   function isUsedOutsideOfHook(ref) {
     let foundWriteExpr = false;
-    for (let i = 0; i < ref.references.length; i++) {
+    for (let i = 0; i < ref.references.length; i += 1) {
       const reference = ref.references[i];
       if (reference.writeExpr) {
         if (foundWriteExpr) {
@@ -1755,7 +1755,7 @@ function fastFindReferenceWithParent(start, target) {
 
 function joinEnglish(arr) {
   let s = '';
-  for (let i = 0; i < arr.length; i++) {
+  for (let i = 0; i < arr.length; i += 1) {
     s += arr[i];
     if (i === 0 && arr.length === 2) {
       s += ' and ';

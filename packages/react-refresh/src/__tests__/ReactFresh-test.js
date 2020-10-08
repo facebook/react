@@ -1901,12 +1901,12 @@ describe('ReactFresh', () => {
 
       // First, check that each tree handles remounts in isolation.
       ReactDOM.render(null, container);
-      for (let i = 0; i < trees.length; i++) {
+      for (let i = 0; i < trees.length; i += 1) {
         runRemountingStressTest(trees[i]);
       }
 
       // Then check that each tree is resilient to updates from another tree.
-      for (let i = 0; i < trees.length; i++) {
+      for (let i = 0; i < trees.length; i += 1) {
         for (let j = 0; j < trees.length; j++) {
           ReactDOM.render(null, container);
           // Intentionally don't clean up between the tests:

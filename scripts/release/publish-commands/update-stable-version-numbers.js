@@ -16,7 +16,7 @@ const run = async ({cwd, packages, skipPackages, tags}) => {
   const packagesPath = join(cwd, 'packages');
 
   // Update package versions and dependencies (in source) to mirror what was published to NPM.
-  for (let i = 0; i < packages.length; i++) {
+  for (let i = 0; i < packages.length; i += 1) {
     const packageName = packages[i];
     const publishedPackageJSON = await readJson(
       join(nodeModulesPath, packageName, 'package.json')

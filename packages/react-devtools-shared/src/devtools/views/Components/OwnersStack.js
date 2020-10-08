@@ -138,7 +138,7 @@ export default function OwnerStack() {
     }
 
     let totalWidth = 0;
-    for (let i = 0; i < owners.length; i++) {
+    for (let i = 0; i < owners.length; i += 1) {
       const element = elementsBarRef.current.children[i];
       const computedStyle = getComputedStyle(element);
 

@@ -787,7 +787,7 @@ class App extends React.Component {
       // However caching them between runs won't work for the same attribute names
       // because warnings will be deduplicated. As a result, we only share globals
       // between different attribute names.
-      for (let i = 0; i < pool.length; i++) {
+      for (let i = 0; i < pool.length; i += 1) {
         if (!pool[i].testedAttributes.has(attribute.name)) {
           pool[i].testedAttributes.add(attribute.name);
           return pool[i].globals;

@@ -170,7 +170,7 @@ function validateChildKeys(node, parentType) {
     return;
   }
   if (Array.isArray(node)) {
-    for (let i = 0; i < node.length; i++) {
+    for (let i = 0; i < node.length; i += 1) {
       const child = node[i];
       if (isValidElement(child)) {
         validateExplicitKey(child, parentType);
@@ -257,7 +257,7 @@ function validatePropTypes(element) {
 function validateFragmentProps(fragment) {
   if (__DEV__) {
     const keys = Object.keys(fragment.props);
-    for (let i = 0; i < keys.length; i++) {
+    for (let i = 0; i < keys.length; i += 1) {
       const key = keys[i];
       if (key !== 'children' && key !== 'key') {
         setCurrentlyValidatingElement(fragment);
@@ -354,7 +354,7 @@ export function jsxWithValidation(
     if (children !== undefined) {
       if (isStaticChildren) {
         if (Array.isArray(children)) {
-          for (let i = 0; i < children.length; i++) {
+          for (let i = 0; i < children.length; i += 1) {
             validateChildKeys(children[i], type);
           }
 
@@ -473,7 +473,7 @@ export function createElementWithValidation(type, props, children) {
   // (Rendering will throw with a helpful message and as soon as the type is
   // fixed, the key warnings will appear.)
   if (validType) {
-    for (let i = 2; i < arguments.length; i++) {
+    for (let i = 2; i < arguments.length; i += 1) {
       validateChildKeys(arguments[i], type);
     }
   }
@@ -522,7 +522,7 @@ export function createFactoryWithValidation(type) {
 
 export function cloneElementWithValidation(element, props, children) {
   const newElement = cloneElement.apply(this, arguments);
-  for (let i = 2; i < arguments.length; i++) {
+  for (let i = 2; i < arguments.length; i += 1) {
     validateChildKeys(arguments[i], newElement.type);
   }
   validatePropTypes(newElement);

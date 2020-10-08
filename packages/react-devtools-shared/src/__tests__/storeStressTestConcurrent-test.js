@@ -143,7 +143,7 @@ describe('StoreStressConcurrent', () => {
     ];
 
     // 5. Test fresh mount for each case.
-    for (let i = 0; i < cases.length; i++) {
+    for (let i = 0; i < cases.length; i += 1) {
       // Ensure fresh mount.
       container = document.createElement('div');
       // $FlowFixMe
@@ -178,7 +178,7 @@ describe('StoreStressConcurrent', () => {
     container = document.createElement('div');
     // $FlowFixMe
     root = ReactDOM.unstable_createRoot(container);
-    for (let i = 0; i < cases.length; i++) {
+    for (let i = 0; i < cases.length; i += 1) {
       // Verify mounting 'abcde'.
       act(() => root.render(<Parent>{cases[i]}</Parent>));
       expect(container.textContent).toMatch('abcde');
@@ -244,7 +244,7 @@ describe('StoreStressConcurrent', () => {
     let container = document.createElement('div');
     // $FlowFixMe
     let root = ReactDOM.unstable_createRoot(container);
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       act(() => root.render(<Root>{steps[i]}</Root>));
       // We snapshot each step once so it doesn't regress.
       snapshots.push(print(store));
@@ -312,7 +312,7 @@ describe('StoreStressConcurrent', () => {
     `);
 
     // 2. Verify that we can update from every step to every other step and back.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         container = document.createElement('div');
         // $FlowFixMe
@@ -329,7 +329,7 @@ describe('StoreStressConcurrent', () => {
     }
 
     // 3. Same test as above, but this time we wrap children in a host component.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         container = document.createElement('div');
         // $FlowFixMe
@@ -406,7 +406,7 @@ describe('StoreStressConcurrent', () => {
     let container = document.createElement('div');
     // $FlowFixMe
     let root = ReactDOM.unstable_createRoot(container);
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       act(() =>
         root.render(
           <Root>
@@ -507,7 +507,7 @@ describe('StoreStressConcurrent', () => {
     `);
 
     // 2. Verify check Suspense can render same steps as initial fallback content.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       act(() =>
         root.render(
           <Root>
@@ -527,7 +527,7 @@ describe('StoreStressConcurrent', () => {
     }
 
     // 3. Verify we can update from each step to each step in primary mode.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -573,7 +573,7 @@ describe('StoreStressConcurrent', () => {
     }
 
     // 4. Verify we can update from each step to each step in fallback mode.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -631,7 +631,7 @@ describe('StoreStressConcurrent', () => {
     }
 
     // 5. Verify we can update from each step to each step when moving primary -> fallback.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -681,7 +681,7 @@ describe('StoreStressConcurrent', () => {
     }
 
     // 6. Verify we can update from each step to each step when moving fallback -> primary.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -735,7 +735,7 @@ describe('StoreStressConcurrent', () => {
     }
 
     // 7. Verify we can update from each step to each step when toggling Suspense.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -895,7 +895,7 @@ describe('StoreStressConcurrent', () => {
     let container = document.createElement('div');
     // $FlowFixMe
     let root = ReactDOM.unstable_createRoot(container);
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       act(() =>
         root.render(
           <Root>
@@ -917,7 +917,7 @@ describe('StoreStressConcurrent', () => {
     // We don't actually assert here because the tree includes <MaybeSuspend>
     // which is different from the snapshots above. So we take more snapshots.
     const fallbackSnapshots = [];
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       act(() =>
         root.render(
           <Root>
@@ -1046,7 +1046,7 @@ describe('StoreStressConcurrent', () => {
     `);
 
     // 3. Verify we can update from each step to each step in primary mode.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -1098,7 +1098,7 @@ describe('StoreStressConcurrent', () => {
     }
 
     // 4. Verify we can update from each step to each step in fallback mode.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -1165,7 +1165,7 @@ describe('StoreStressConcurrent', () => {
     }
 
     // 5. Verify we can update from each step to each step when moving primary -> fallback.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -1217,7 +1217,7 @@ describe('StoreStressConcurrent', () => {
     }
 
     // 6. Verify we can update from each step to each step when moving fallback -> primary.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -1269,7 +1269,7 @@ describe('StoreStressConcurrent', () => {
     }
 
     // 7. Verify we can update from each step to each step when toggling Suspense.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');

@@ -28,7 +28,7 @@ describe('ReactFlightDOMRelay', () => {
 
   function readThrough(data) {
     const response = ReactDOMFlightRelayClient.createResponse();
-    for (let i = 0; i < data.length; i++) {
+    for (let i = 0; i < data.length; i += 1) {
       const chunk = data[i];
       if (chunk.type === 'json') {
         ReactDOMFlightRelayClient.resolveModel(response, chunk.id, chunk.json);

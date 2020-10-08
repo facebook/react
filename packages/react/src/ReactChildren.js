@@ -143,7 +143,7 @@ function mapIntoArray(
     nameSoFar === '' ? SEPARATOR : nameSoFar + SUBSEPARATOR;
 
   if (Array.isArray(children)) {
-    for (let i = 0; i < children.length; i++) {
+    for (let i = 0; i < children.length; i += 1) {
       child = children[i];
       nextName = nextNamePrefix + getElementKey(child, i);
       subtreeCount += mapIntoArray(

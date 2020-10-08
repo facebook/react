@@ -32,7 +32,7 @@ const chunkCache: Map<string, null | Promise<any> | Error> = new Map();
 // This function doesn't suspend.
 export function preloadModule<T>(moduleData: ModuleReference<T>): void {
   const chunks = moduleData.chunks;
-  for (let i = 0; i < chunks.length; i++) {
+  for (let i = 0; i < chunks.length; i += 1) {
     const chunkId = chunks[i];
     const entry = chunkCache.get(chunkId);
     if (entry === undefined) {
@@ -49,7 +49,7 @@ export function preloadModule<T>(moduleData: ModuleReference<T>): void {
 // Increase priority if necessary.
 export function requireModule<T>(moduleData: ModuleReference<T>): T {
   const chunks = moduleData.chunks;
-  for (let i = 0; i < chunks.length; i++) {
+  for (let i = 0; i < chunks.length; i += 1) {
     const chunkId = chunks[i];
     const entry = chunkCache.get(chunkId);
     if (entry !== null) {

@@ -15,7 +15,7 @@ const run = async ({cwd, dry, tempDirectory}) => {
   // NPM pack all built packages.
   // We do this to ensure that the package.json files array is correct.
   const builtPackages = readdirSync(join(tempDirectory, 'build/node_modules/'));
-  for (let i = 0; i < builtPackages.length; i++) {
+  for (let i = 0; i < builtPackages.length; i += 1) {
     await exec(`npm pack ./${builtPackages[i]}`, {
       cwd: `${tempDirectory}/build/node_modules/`,
     });
@@ -30,7 +30,7 @@ const run = async ({cwd, dry, tempDirectory}) => {
 
   // Unpack packages and prepare to publish.
   const compressedPackages = readdirSync(join(cwd, 'build/node_modules/'));
-  for (let i = 0; i < compressedPackages.length; i++) {
+  for (let i = 0; i < compressedPackages.length; i += 1) {
     await exec(
       `tar -zxvf ./build/node_modules/${compressedPackages[i]} -C ./build/node_modules/`,
       {cwd}

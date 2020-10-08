@@ -2164,7 +2164,7 @@ function commitRootImpl(root, renderPriorityLevel) {
       if (spawnedWorkDuringRender !== null) {
         const expirationTimes = spawnedWorkDuringRender;
         spawnedWorkDuringRender = null;
-        for (let i = 0; i < expirationTimes.length; i++) {
+        for (let i = 0; i < expirationTimes.length; i += 1) {
           scheduleInteractions(
             root,
             expirationTimes[i],
@@ -2681,7 +2681,7 @@ function flushPassiveEffectsImpl() {
   if (enableProfilerTimer && enableProfilerCommitHooks) {
     const profilerEffects = pendingPassiveProfilerEffects;
     pendingPassiveProfilerEffects = [];
-    for (let i = 0; i < profilerEffects.length; i++) {
+    for (let i = 0; i < profilerEffects.length; i += 1) {
       const fiber = ((profilerEffects[i]: any): Fiber);
       commitPassiveEffectDurations(root, fiber);
     }

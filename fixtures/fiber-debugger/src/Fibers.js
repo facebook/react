@@ -176,7 +176,7 @@ function Edge(props) {
     return null;
   }
 
-  for (var i = 1; i < points.length; i++) {
+  for (var i = 1; i < points.length; i += 1) {
     path += 'L' + points[i].x + ' ' + points[i].y + ' ';
     if (!points[i].x || !points[i].y) {
       return null;

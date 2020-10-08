@@ -598,7 +598,7 @@ export function commitUpdateQueue<State>(
   const effects = finishedQueue.effects;
   finishedQueue.effects = null;
   if (effects !== null) {
-    for (let i = 0; i < effects.length; i++) {
+    for (let i = 0; i < effects.length; i += 1) {
       const effect = effects[i];
       const callback = effect.callback;
       if (callback !== null) {

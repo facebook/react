@@ -143,7 +143,7 @@ function git(args) {
       warn(`Base commit is broken: ${baseCommit}`);
       return;
     }
-    for (let i = 0; i < statuses.length; i++) {
+    for (let i = 0; i < statuses.length; i += 1) {
       const status = statuses[i];
       if (status.context === `ci/circleci: ${artifactsJobName}`) {
         if (status.state === 'success') {
@@ -169,7 +169,7 @@ function git(args) {
     );
     const baseArtifactsInfo = await baseArtifactsInfoResponse.json();
 
-    for (let i = 0; i < baseArtifactsInfo.length; i++) {
+    for (let i = 0; i < baseArtifactsInfo.length; i += 1) {
       const info = baseArtifactsInfo[i];
       if (info.path.endsWith('bundle-sizes.json')) {
         const resultsResponse = await fetch(info.url);

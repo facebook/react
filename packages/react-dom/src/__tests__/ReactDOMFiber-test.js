@@ -1185,7 +1185,7 @@ describe('ReactDOMFiber', () => {
     if (__DEV__) {
       // TODO: this warning shouldn't be firing in the first place if user didn't call it.
       const errorCalls = console.error.calls.count();
-      for (let i = 0; i < errorCalls; i++) {
+      for (let i = 0; i < errorCalls; i += 1) {
         expect(console.error.calls.argsFor(i)[0]).toMatch(
           'unstable_flushDiscreteUpdates: Cannot flush updates when React is already rendering.',
         );

@@ -43,7 +43,7 @@ const run = async ({cwd, packages, tags}) => {
 
       console.log();
       console.log('Version numbers have been updated in the following files:');
-      for (let i = 0; i < packages.length; i++) {
+      for (let i = 0; i < packages.length; i += 1) {
         const packageName = packages[i];
         console.log(theme.path`• packages/%s/package.json`, packageName);
       }
@@ -84,7 +84,7 @@ const run = async ({cwd, packages, tags}) => {
     console.log(
       theme`\nThe GitHub release should also include links to the following artifacts:`
     );
-    for (let i = 0; i < packages.length; i++) {
+    for (let i = 0; i < packages.length; i += 1) {
       const packageName = packages[i];
       if (existsSync(join(nodeModulesPath, packageName, 'umd'))) {
         const {version: packageVersion} = readJsonSync(

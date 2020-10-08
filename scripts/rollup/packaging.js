@@ -146,7 +146,7 @@ function filterOutEntrypoints(name) {
     throw new Error('expected all package.json files to contain a files field');
   }
   let changed = false;
-  for (let i = 0; i < files.length; i++) {
+  for (let i = 0; i < files.length; i += 1) {
     let filename = files[i];
     let entry =
       filename === 'index.js'

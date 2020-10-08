@@ -751,7 +751,7 @@ describe('Store', () => {
         ReactDOM.render(<Grandparent />, document.createElement('div')),
       );
 
-      for (let i = 0; i < store.numElements; i++) {
+      for (let i = 0; i < store.numElements; i += 1) {
         expect(store.getIndexOfElementID(store.getElementIDAtIndex(i))).toBe(i);
       }
     });
@@ -766,7 +766,7 @@ describe('Store', () => {
         ReactDOM.render(<Grandparent />, document.createElement('div'));
       });
 
-      for (let i = 0; i < store.numElements; i++) {
+      for (let i = 0; i < store.numElements; i += 1) {
         expect(store.getIndexOfElementID(store.getElementIDAtIndex(i))).toBe(i);
       }
     });
@@ -786,7 +786,7 @@ describe('Store', () => {
         ),
       );
 
-      for (let i = 0; i < store.numElements; i++) {
+      for (let i = 0; i < store.numElements; i += 1) {
         expect(store.getIndexOfElementID(store.getElementIDAtIndex(i))).toBe(i);
       }
     });
@@ -813,7 +813,7 @@ describe('Store', () => {
         );
       });
 
-      for (let i = 0; i < store.numElements; i++) {
+      for (let i = 0; i < store.numElements; i += 1) {
         expect(store.getIndexOfElementID(store.getElementIDAtIndex(i))).toBe(i);
       }
     });

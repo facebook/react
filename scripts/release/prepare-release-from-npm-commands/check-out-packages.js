@@ -29,7 +29,7 @@ const run = async ({cwd, local, packages, version}) => {
   const nodeModulesPath = join(cwd, 'build/node_modules');
 
   // Checkout "next" release from NPM for all local packages
-  for (let i = 0; i < packages.length; i++) {
+  for (let i = 0; i < packages.length; i += 1) {
     const packageName = packages[i];
 
     // We previously used `npm install` for this,

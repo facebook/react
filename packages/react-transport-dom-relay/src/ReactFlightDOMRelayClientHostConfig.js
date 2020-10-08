@@ -35,7 +35,7 @@ function parseModelRecursively(response: Response, parentObj, value) {
   }
   if (typeof value === 'object' && value !== null) {
     if (Array.isArray(value)) {
-      for (let i = 0; i < value.length; i++) {
+      for (let i = 0; i < value.length; i += 1) {
         (value: any)[i] = parseModelRecursively(response, value, value[i]);
       }
       return parseModelTuple(response, value);

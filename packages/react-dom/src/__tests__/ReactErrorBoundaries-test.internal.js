@@ -1799,7 +1799,7 @@ describe('ReactErrorBoundaries', () => {
   it("doesn't get into inconsistent state during reorders", () => {
     function getAMixOfNormalAndBrokenRenderElements() {
       const elements = [];
-      for (let i = 0; i < 100; i++) {
+      for (let i = 0; i < 100; i += 1) {
         elements.push(<Normal key={i} />);
       }
       elements.push(<MaybeBrokenRender key={100} />);

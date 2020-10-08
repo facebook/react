@@ -12,7 +12,7 @@ const theme = require('../theme');
 const run = async ({cwd, dry, packages, tags}, otp) => {
   clear();
 
-  for (let i = 0; i < packages.length; i++) {
+  for (let i = 0; i < packages.length; i += 1) {
     const packageName = packages[i];
     const packagePath = join(cwd, 'build/node_modules', packageName);
     const {version} = readJsonSync(join(packagePath, 'package.json'));

@@ -23,7 +23,7 @@ const validate = async () => {
         return 'No iframes were found.';
       }
 
-      for (let i = 0; i < iframes.length; i++) {
+      for (let i = 0; i < iframes.length; i += 1) {
         const iframe = iframes[i];
         // Don't include the <script> Babel tag
         const container = iframe.contentDocument.body.getElementsByTagName(

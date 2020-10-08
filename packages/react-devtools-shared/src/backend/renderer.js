@@ -1458,7 +1458,7 @@ export function attach(
     pushOperation(TREE_OPERATION_REORDER_CHILDREN);
     pushOperation(getFiberID(getPrimaryFiber(fiber)));
     pushOperation(numChildren);
-    for (let i = 0; i < nextChildren.length; i++) {
+    for (let i = 0; i < nextChildren.length; i += 1) {
       pushOperation(nextChildren[i]);
     }
   }
@@ -2480,7 +2480,7 @@ export function attach(
       if (!current) {
         return false;
       }
-      for (let i = 0; i < path.length; i++) {
+      for (let i = 0; i < path.length; i += 1) {
         current = current[path[i]];
         if (!current) {
           return false;
@@ -3211,7 +3211,7 @@ export function attach(
     let child = fiber.child;
     // Go at most three levels deep into direct children
     // while searching for a child that has a displayName.
-    for (let i = 0; i < 3; i++) {
+    for (let i = 0; i < 3; i += 1) {
       if (child === null) {
         break;
       }

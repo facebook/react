@@ -75,7 +75,7 @@ export default function SidebarSelectedFiberInfo(_: Props) {
 
   const listItems = [];
   let i = 0;
-  for (i = 0; i < commitIndices.length; i++) {
+  for (i = 0; i < commitIndices.length; i += 1) {
     const commitIndex = commitIndices[i];
 
     const {duration, timestamp} = profilerStore.getCommitData(

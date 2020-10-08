@@ -192,7 +192,7 @@ export function attach(
     if (a.length !== b.length) {
       return false;
     }
-    for (let i = 0; i < a.length; i++) {
+    for (let i = 0; i < a.length; i += 1) {
       if (a[i] !== b[i]) {
         return false;
       }
@@ -419,7 +419,7 @@ export function attach(
     pushOperation(id);
     const nextChildIDs = nextChildren.map(getID);
     pushOperation(nextChildIDs.length);
-    for (let i = 0; i < nextChildIDs.length; i++) {
+    for (let i = 0; i < nextChildIDs.length; i += 1) {
       pushOperation(nextChildIDs[i]);
     }
   }
@@ -606,7 +606,7 @@ export function attach(
       if (!current) {
         return false;
       }
-      for (let i = 0; i < path.length; i++) {
+      for (let i = 0; i < path.length; i += 1) {
         current = current[path[i]];
         if (!current) {
           return false;

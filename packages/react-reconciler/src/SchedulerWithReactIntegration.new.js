@@ -186,7 +186,7 @@ function flushSyncCallbackQueueImpl() {
         const queue = syncQueue;
         setCurrentUpdateLanePriority(SyncLanePriority);
         runWithPriority(ImmediatePriority, () => {
-          for (; i < queue.length; i++) {
+          for (; i < queue.length; i += 1) {
             let callback = queue[i];
             do {
               callback = callback(isSync);
@@ -214,7 +214,7 @@ function flushSyncCallbackQueueImpl() {
         const isSync = true;
         const queue = syncQueue;
         runWithPriority(ImmediatePriority, () => {
-          for (; i < queue.length; i++) {
+          for (; i < queue.length; i += 1) {
             let callback = queue[i];
             do {
               callback = callback(isSync);

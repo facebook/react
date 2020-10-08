@@ -82,7 +82,7 @@ export default class Clock extends PureComponent {
 
   render() {
     const paths = new Array(FRAMES);
-    for (let i = 0; i < FRAMES; i++) {
+    for (let i = 0; i < FRAMES; i += 1) {
       paths.push(<path className="arcHand" key={i} />);
     }
     return (

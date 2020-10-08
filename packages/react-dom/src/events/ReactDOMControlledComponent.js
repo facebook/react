@@ -73,7 +73,7 @@ export function restoreStateIfNeeded() {
 
   restoreStateOfTarget(target);
   if (queuedTargets) {
-    for (let i = 0; i < queuedTargets.length; i++) {
+    for (let i = 0; i < queuedTargets.length; i += 1) {
       restoreStateOfTarget(queuedTargets[i]);
     }
   }

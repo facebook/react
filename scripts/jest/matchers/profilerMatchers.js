@@ -56,7 +56,7 @@ function toMatchInteractions(actualSetOrArray, expectedSetOrArray) {
     };
   }
 
-  for (let i = 0; i < actualArray.length; i++) {
+  for (let i = 0; i < actualArray.length; i += 1) {
     const result = toMatchInteraction(actualArray[i], expectedArray[i]);
     if (result.pass === false) {
       return result;

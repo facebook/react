@@ -1136,7 +1136,7 @@ export function getTextContent(fiber: Fiber): string | null {
     case HostComponent:
       let textContent = '';
       const childNodes = fiber.stateNode.childNodes;
-      for (let i = 0; i < childNodes.length; i++) {
+      for (let i = 0; i < childNodes.length; i += 1) {
         const childNode = childNodes[i];
         if (childNode.nodeType === Node.TEXT_NODE) {
           textContent += childNode.textContent;

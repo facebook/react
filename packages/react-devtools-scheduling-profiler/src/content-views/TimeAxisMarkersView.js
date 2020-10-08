@@ -58,7 +58,7 @@ export class TimeAxisMarkersView extends View {
   // Time wise, they represent intervals of e.g. 1s, 500ms, 200ms, 100ms, 50ms, 20ms.
   // Based on zoom, we should determine which amount to actually show.
   _getTimeTickInterval(scaleFactor: number): number {
-    for (let i = 0; i < INTERVAL_TIMES.length; i++) {
+    for (let i = 0; i < INTERVAL_TIMES.length; i += 1) {
       const currentInterval = INTERVAL_TIMES[i];
       const intervalWidth = durationToWidth(currentInterval, scaleFactor);
       if (intervalWidth > MIN_INTERVAL_SIZE_PX) {

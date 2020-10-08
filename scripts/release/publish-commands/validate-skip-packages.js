@@ -47,7 +47,7 @@ const run = async ({cwd, packages, skipPackages}) => {
 
   // Make sure none of the other packages depend on a skipped package,
   // unless the dependency has already been published to NPM.
-  for (let i = 0; i < packages.length; i++) {
+  for (let i = 0; i < packages.length; i += 1) {
     const name = packages[i];
     const {dependencies, peerDependencies} = await readPackageJSON(cwd, name);
 

@@ -264,7 +264,7 @@ export default class Store extends EventEmitter<{|
     let haveEnabledFiltersChanged =
       prevEnabledComponentFilters.length !== nextEnabledComponentFilters.length;
     if (!haveEnabledFiltersChanged) {
-      for (let i = 0; i < nextEnabledComponentFilters.length; i++) {
+      for (let i = 0; i < nextEnabledComponentFilters.length; i += 1) {
         const prevFilter = prevEnabledComponentFilters[i];
         const nextFilter = nextEnabledComponentFilters[i];
         if (shallowDiffers(prevFilter, nextFilter)) {
@@ -374,7 +374,7 @@ export default class Store extends EventEmitter<{|
     let rootID;
     let root;
     let rootWeight = 0;
-    for (let i = 0; i < this._roots.length; i++) {
+    for (let i = 0; i < this._roots.length; i += 1) {
       rootID = this._roots[i];
       root = ((this._idToElement.get(rootID): any): Element);
       if (root.children.length === 0) {
@@ -392,7 +392,7 @@ export default class Store extends EventEmitter<{|
     let currentWeight = rootWeight - 1;
     while (index !== currentWeight) {
       const numChildren = currentElement.children.length;
-      for (let i = 0; i < numChildren; i++) {
+      for (let i = 0; i < numChildren; i += 1) {
         const childID = currentElement.children[i];
         const child = ((this._idToElement.get(childID): any): Element);
         const childWeight = child.isCollapsed ? 1 : child.weight;
@@ -443,7 +443,7 @@ export default class Store extends EventEmitter<{|
       const current = ((this._idToElement.get(currentID): any): Element);
 
       const {children} = current;
-      for (let i = 0; i < children.length; i++) {
+      for (let i = 0; i < children.length; i += 1) {
         const childID = children[i];
         if (childID === previousID) {
           break;
@@ -465,7 +465,7 @@ export default class Store extends EventEmitter<{|
 
     // At this point, the current ID is a root (from the previous loop).
     // We also need to offset the index by previous root weights.
-    for (let i = 0; i < this._roots.length; i++) {
+    for (let i = 0; i < this._roots.length; i += 1) {
       const rootID = this._roots[i];
       if (rootID === currentID) {
         break;

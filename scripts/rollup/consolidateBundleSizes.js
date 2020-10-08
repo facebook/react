@@ -11,7 +11,7 @@ const BUILD_DIR = path.join(__dirname, '../../build');
 const filenames = fs.readdirSync(path.join(BUILD_DIR, 'sizes'));
 
 let bundleSizes = [];
-for (let i = 0; i < filenames.length; i++) {
+for (let i = 0; i < filenames.length; i += 1) {
   const filename = filenames[i];
   if (filename.endsWith('.json')) {
     const json = fs.readFileSync(path.join(BUILD_DIR, 'sizes', filename));

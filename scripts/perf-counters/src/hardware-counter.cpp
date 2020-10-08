@@ -213,7 +213,7 @@ void HardwareCounter::reset() {
     m_storeCounter->reset();
     m_loadCounter->reset();
   }
-  for (unsigned i = 0; i < m_counters.size(); i++) {
+  for (unsigned i = 0; i < m_counters.size(); i += 1) {
     m_counters[i]->reset();
   }
 }
@@ -298,7 +298,7 @@ static int findEvent(const char *event, struct PerfTable *t,
                      int len, int *match_len) {
   int i;
 
-  for (i = 0; i < len; i++) {
+  for (i = 0; i < len; i += 1) {
     if (!strncmp(event, t[i].name, strlen(t[i].name))) {
       *match_len = strlen(t[i].name);
       return i;
@@ -392,7 +392,7 @@ bool HardwareCounter::addPerfEvent(const char* event) {
 
 bool HardwareCounter::eventExists(const char *event) {
   // hopefully m_counters set is small, so a linear scan does not hurt
-  for(unsigned i = 0; i < m_counters.size(); i++) {
+  for(unsigned i = 0; i < m_counters.size(); i += 1) {
     if (!strcmp(event, m_counters[i]->m_desc.c_str())) {
       return true;
     }
@@ -443,7 +443,7 @@ void HardwareCounter::getPerfEvents(PerfEventCallback f, void* data) {
     f(s_loads, getLoadCount(), data);
     f(s_stores, getStoreCount(), data);
   }
-  for (unsigned i = 0; i < m_counters.size(); i++) {
+  for (unsigned i = 0; i < m_counters.size(); i += 1) {
     f(m_counters[i]->m_desc, m_counters[i]->read(), data);
   }
 }

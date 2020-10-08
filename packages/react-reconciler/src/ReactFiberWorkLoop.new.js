@@ -2030,7 +2030,7 @@ function commitRootImpl(root, renderPriorityLevel) {
       if (spawnedWorkDuringRender !== null) {
         const expirationTimes = spawnedWorkDuringRender;
         spawnedWorkDuringRender = null;
-        for (let i = 0; i < expirationTimes.length; i++) {
+        for (let i = 0; i < expirationTimes.length; i += 1) {
           scheduleInteractions(
             root,
             expirationTimes[i],
@@ -2196,7 +2196,7 @@ function commitBeforeMutationEffectsImpl(fiber: Fiber) {
 }
 
 function commitBeforeMutationEffectsDeletions(deletions: Array<Fiber>) {
-  for (let i = 0; i < deletions.length; i++) {
+  for (let i = 0; i < deletions.length; i += 1) {
     const fiber = deletions[i];
 
     // TODO (effects) It would be nice to avoid calling doesFiberContain()
@@ -2337,7 +2337,7 @@ function commitMutationEffectsDeletions(
   root: FiberRoot,
   renderPriorityLevel,
 ) {
-  for (let i = 0; i < deletions.length; i++) {
+  for (let i = 0; i < deletions.length; i += 1) {
     const childToDelete = deletions[i];
     if (__DEV__) {
       invokeGuardedCallback(
@@ -2466,7 +2466,7 @@ function flushPassiveUnmountEffects(firstChild: Fiber): void {
   while (fiber !== null) {
     const deletions = fiber.deletions;
     if (deletions !== null) {
-      for (let i = 0; i < deletions.length; i++) {
+      for (let i = 0; i < deletions.length; i += 1) {
         const fiberToDelete = deletions[i];
         flushPassiveUnmountEffectsInsideOfDeletedTree(fiberToDelete, fiber);
 

@@ -349,7 +349,7 @@ export function getFindAllNodesFailureDescription(
 
   if (maxSelectorIndex < selectors.length) {
     const unmatchedNames = [];
-    for (let i = maxSelectorIndex; i < selectors.length; i++) {
+    for (let i = maxSelectorIndex; i < selectors.length; i += 1) {
       unmatchedNames.push(selectorToString(selectors[i]));
     }
 
@@ -382,7 +382,7 @@ export function findBoundingRects(
   const instanceRoots = findAllNodes(hostRoot, selectors);
 
   const boundingRects: Array<BoundingRect> = [];
-  for (let i = 0; i < instanceRoots.length; i++) {
+  for (let i = 0; i < instanceRoots.length; i += 1) {
     boundingRects.push(getBoundingRect(instanceRoots[i]));
   }
 

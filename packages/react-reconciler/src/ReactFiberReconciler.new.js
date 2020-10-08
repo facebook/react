@@ -541,7 +541,7 @@ if (__DEV__) {
       console.warn('copyWithRename() expects paths of the same length');
       return;
     } else {
-      for (let i = 0; i < newPath.length - 1; i++) {
+      for (let i = 0; i < newPath.length - 1; i += 1) {
         if (oldPath[i] !== newPath[i]) {
           console.warn(
             'copyWithRename() expects paths to be the same except for the deepest key',

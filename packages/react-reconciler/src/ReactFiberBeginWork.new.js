@@ -2584,7 +2584,7 @@ function validateSuspenseListChildren(
       children !== false
     ) {
       if (Array.isArray(children)) {
-        for (let i = 0; i < children.length; i++) {
+        for (let i = 0; i < children.length; i += 1) {
           if (!validateSuspenseListNestedChild(children[i], i)) {
             return;
           }
