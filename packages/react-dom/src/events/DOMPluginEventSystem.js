@@ -363,37 +363,12 @@ export function listenToNativeEvent(
   ) {
     target = (rootContainerElement: any).ownerDocument;
   }
-  // If the event can be delegated (or is capture phase), we can
-  // register it to the root container. Otherwise, we should
-  // register the event to the target element and mark it as
-  // a non-delegated event.
-  if (
-    targetElement !== null &&
-    !isCapturePhaseListener &&
-    nonDelegatedEvents.has(domEventName)
-  ) {
-    // For all non-delegated events, apart from scroll, we attach
-    // their event listeners to the respective elements that their
-    // events fire on. That means we can skip this step, as event
-    // listener has already been added previously. However, we
-    // special case the scroll event because the reality is that any
-    // element can scroll.
-    // TODO: ideally, we'd eventually apply the same logic to all
-    // events from the nonDelegatedEvents list. Then we can remove
-    // this special case and use the same logic for all events.
-    if (domEventName !== 'scroll') {
-      return;
-    }
-    eventSystemFlags |= IS_NON_DELEGATED;
-    target = targetElement;
-  }
+
   const listenerSet = getEventListenerSet(target);
   const listenerSetKey = getListenerSetKey(
     domEventName,
     isCapturePhaseListener,
   );
-  // If the listener entry is empty or we should upgrade, then
-  // we need to trap an event listener onto the target.
   if (!listenerSet.has(listenerSetKey)) {
     if (isCapturePhaseListener) {
       eventSystemFlags |= IS_CAPTURE_PHASE;
