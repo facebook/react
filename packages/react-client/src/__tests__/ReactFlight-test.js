@@ -165,9 +165,15 @@ describe('ReactFlight', () => {
       return <div foo={Symbol('foo')} />;
     }
 
+    const ref = React.createRef();
+    function RefProp() {
+      return <div ref={ref} />;
+    }
+
     const event = ReactNoopFlightServer.render(<EventHandlerProp />);
     const fn = ReactNoopFlightServer.render(<FunctionProp />);
     const symbol = ReactNoopFlightServer.render(<SymbolProp />);
+    const refs = ReactNoopFlightServer.render(<RefProp />);
 
     function Client({transport}) {
       return ReactNoopFlightClient.read(transport);
@@ -184,6 +190,9 @@ describe('ReactFlight', () => {
           </ErrorBoundary>
           <ErrorBoundary expectedMessage="Symbol values (foo) cannot be passed to client components.">
             <Client transport={symbol} />
+          </ErrorBoundary>
+          <ErrorBoundary expectedMessage="Refs cannot be used in server components, nor passed to client components.">
+            <Client transport={refs} />
           </ErrorBoundary>
         </>,
       );
@@ -215,6 +224,13 @@ describe('ReactFlight', () => {
         'Built-ins like Math are not supported.',
       {withoutStack: true},
     );
+  });
+
+  it('should NOT warn in DEV for key getters', () => {
+    const transport = ReactNoopFlightServer.render(<div key="a" />);
+    act(() => {
+      ReactNoop.render(ReactNoopFlightClient.read(transport));
+    });
   });
 
   it('should warn in DEV if an object with symbols is passed to a host component', () => {

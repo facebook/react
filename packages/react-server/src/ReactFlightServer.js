@@ -119,6 +119,15 @@ export function createRequest(
 function attemptResolveElement(element: React$Element<any>): ReactModel {
   const type = element.type;
   const props = element.props;
+  if (element.ref !== null && element.ref !== undefined) {
+    // When the ref moves to the regular props object this will implicitly
+    // throw for functions. We could probably relax it to a DEV warning for other
+    // cases.
+    invariant(
+      false,
+      'Refs cannot be used in server components, nor passed to client components.',
+    );
+  }
   if (typeof type === 'function') {
     // This is a server-side component.
     return type(props);
@@ -153,7 +162,11 @@ function attemptResolveElement(element: React$Element<any>): ReactModel {
       }
     }
   }
-  invariant(false, 'Unsupported type.');
+  invariant(
+    false,
+    'Unsupported server component type: %s',
+    describeValueForErrorMessage(type),
+  );
 }
 
 function pingSegment(request: Request, segment: Segment): void {
@@ -218,7 +231,19 @@ function isSimpleObject(object): boolean {
   const names = Object.getOwnPropertyNames(object);
   for (let i = 0; i < names.length; i++) {
     const descriptor = Object.getOwnPropertyDescriptor(object, names[i]);
-    if (!descriptor || !descriptor.enumerable) {
+    if (!descriptor) {
+      return false;
+    }
+    if (!descriptor.enumerable) {
+      if (
+        (names[i] === 'key' || names[i] === 'ref') &&
+        typeof descriptor.get === 'function'
+      ) {
+        // React adds key and ref getters to props objects to issue warnings.
+        // Those getters will not be transferred to the client, but that's ok,
+        // so we'll special case them.
+        continue;
+      }
       return false;
     }
   }
@@ -249,7 +274,7 @@ function describeValueForErrorMessage(value: ReactModel): string {
         return '[...]';
       }
       const name = objectName(value);
-      if (name === '[object Object]') {
+      if (name === 'Object') {
         return '{...}';
       }
       return name;
@@ -266,6 +291,7 @@ function describeObjectForErrorMessage(
   objectOrArray:
     | {+[key: string | number]: ReactModel}
     | $ReadOnlyArray<ReactModel>,
+  expandedName?: string,
 ): string {
   if (isArray(objectOrArray)) {
     let str = '[';
@@ -279,7 +305,16 @@ function describeObjectForErrorMessage(
         str += '...';
         break;
       }
-      str += describeValueForErrorMessage(array[i]);
+      const value = array[i];
+      if (
+        '' + i === expandedName &&
+        typeof value === 'object' &&
+        value !== null
+      ) {
+        str += describeObjectForErrorMessage(value);
+      } else {
+        str += describeValueForErrorMessage(value);
+      }
     }
     str += ']';
     return str;
@@ -297,10 +332,17 @@ function describeObjectForErrorMessage(
         break;
       }
       const name = names[i];
-      str +=
-        describeKeyForErrorMessage(name) +
-        ': ' +
-        describeValueForErrorMessage(object[name]);
+      str += describeKeyForErrorMessage(name) + ': ';
+      const value = object[name];
+      if (
+        name === expandedName &&
+        typeof value === 'object' &&
+        value !== null
+      ) {
+        str += describeObjectForErrorMessage(value);
+      } else {
+        str += describeValueForErrorMessage(value);
+      }
     }
     str += '}';
     return str;
@@ -444,7 +486,7 @@ export function resolveModelToJSON(
               'Classes or other objects with methods are not supported. ' +
               'Remove %s from these props: %s',
             describeKeyForErrorMessage(key),
-            describeObjectForErrorMessage(parent),
+            describeObjectForErrorMessage(parent, key),
           );
         } else if (Object.getOwnPropertySymbols) {
           const symbols = Object.getOwnPropertySymbols(value);
@@ -455,7 +497,7 @@ export function resolveModelToJSON(
                 'Remove %s from these props: %s',
               symbols[0].description,
               describeKeyForErrorMessage(key),
-              describeObjectForErrorMessage(parent),
+              describeObjectForErrorMessage(parent, key),
             );
           }
         }
