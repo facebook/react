@@ -81,7 +81,7 @@ if (__DEV__) {
     ) {
       // If document doesn't exist we know for sure we will crash in this method
       // when we call document.createEvent(). However this can cause confusing
-      // errors: https://github.com/facebookincubator/create-react-app/issues/3482
+      // errors: https://github.com/facebook/create-react-app/issues/3482
       // So we preemptively throw with a better message instead.
       invariant(
         typeof document !== 'undefined',
