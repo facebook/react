@@ -78,7 +78,7 @@ export function getAllEnumerableKeys(
     const descriptors = Object.getOwnPropertyDescriptors(current);
     currentKeys.forEach(key => {
       // $FlowFixMe: key can be a Symbol https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor
-      if (descriptors[key].enumerable) {
+      if (descriptors[key] && descriptors[key].enumerable) {
         keys.push(key);
       }
     });
@@ -451,7 +451,8 @@ export type DataType =
   | 'symbol'
   | 'typed_array'
   | 'undefined'
-  | 'unknown';
+  | 'unknown'
+  | 'window';
 
 /**
  * Get a enhanced/artificial type string based on the object instance
@@ -461,6 +462,10 @@ export function getDataType(data: Object): DataType {
     return 'null';
   } else if (data === undefined) {
     return 'undefined';
+  }
+
+  if (data.self === data && data.parent && data.top) {
+    return 'window';
   }
 
   if (isElement(data)) {
@@ -749,6 +754,8 @@ export function formatDataForPreview(
       } else {
         return '{…}';
       }
+    case 'window':
+      return 'Window';
     case 'boolean':
     case 'number':
     case 'infinity':

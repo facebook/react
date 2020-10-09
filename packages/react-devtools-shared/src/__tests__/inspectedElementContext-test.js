@@ -521,6 +521,12 @@ describe('InspectedElementContext', () => {
     const Example = () => null;
 
     const arrayOfArrays = [[['abc', 123, true], []]];
+
+    // Todo: Uncomment if this feature is implemented https://github.com/jsdom/jsdom/issues/1892
+    // const iframe = document.createElement('iframe');
+    // iframe.setAttribute('sandbox', '');
+    // window.document.body.appendChild(iframe);
+
     const div = document.createElement('div');
     const exampleFunction = () => {};
     const exampleDateISO = '2019-12-31T23:42:42.000Z';
@@ -591,6 +597,8 @@ describe('InspectedElementContext', () => {
           set_of_sets={setOfSets}
           symbol={Symbol('symbol')}
           typed_array={typedArray}
+          // Todo: Uncomment if this feature is implemented https://github.com/jsdom/jsdom/issues/1892
+          //window_element={iframe.contentWindow}
         />,
         container,
       ),
@@ -645,6 +653,8 @@ describe('InspectedElementContext', () => {
       set_of_sets,
       symbol,
       typed_array,
+      // Todo: Uncomment if this feature is implemented https://github.com/jsdom/jsdom/issues/1892
+      //window_element,
     } = (inspectedElement: any).props;
 
     expect(anonymous_fn[meta.inspectable]).toBe(false);
@@ -792,6 +802,13 @@ describe('InspectedElementContext', () => {
     expect(typed_array[2]).toBe(0);
     expect(typed_array[meta.preview_long]).toBe('Int8Array(3) [100, -100, 0]');
     expect(typed_array[meta.preview_short]).toBe('Int8Array(3)');
+
+    // Todo: Uncomment if this feature is implemented https://github.com/jsdom/jsdom/issues/1892
+    // expect(window_element[meta.inspectable]).toBe(false);
+    // expect(window_element[meta.name]).toBe('Window');
+    // expect(window_element[meta.type]).toBe('window');
+    // expect(window_element[meta.preview_long]).toBe('Window');
+    // expect(window_element[meta.preview_short]).toBe('Window');
 
     done();
   });
