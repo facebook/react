@@ -316,9 +316,8 @@ export function listenToNativeEvent(
   domEventName: DOMEventName,
   isCapturePhaseListener: boolean,
   rootContainerElement: EventTarget,
-  targetElement: Element | null,
-  eventSystemFlags?: EventSystemFlags = 0,
 ): void {
+  let eventSystemFlags = 0;
   let target = rootContainerElement;
 
   // selectionchange needs to be attached to the document
@@ -331,6 +330,33 @@ export function listenToNativeEvent(
     target = (rootContainerElement: any).ownerDocument;
   }
 
+  const listenerSet = getEventListenerSet(target);
+  const listenerSetKey = getListenerSetKey(
+    domEventName,
+    isCapturePhaseListener,
+  );
+  if (!listenerSet.has(listenerSetKey)) {
+    if (isCapturePhaseListener) {
+      eventSystemFlags |= IS_CAPTURE_PHASE;
+    }
+    addTrappedEventListener(
+      target,
+      domEventName,
+      eventSystemFlags,
+      isCapturePhaseListener,
+    );
+    listenerSet.add(listenerSetKey);
+  }
+}
+
+// This is only used by createEventHandle when the
+// target is not a DOM element. E.g. window.
+export function listenToNativeEventForNonManagedEventTarget(
+  domEventName: DOMEventName,
+  isCapturePhaseListener: boolean,
+  target: EventTarget,
+): void {
+  let eventSystemFlags = IS_EVENT_HANDLE_NON_MANAGED_NODE;
   const listenerSet = getEventListenerSet(target);
   const listenerSetKey = getListenerSetKey(
     domEventName,
@@ -371,14 +397,12 @@ export function listenToAllSupportedEvents(rootContainerElement: EventTarget) {
         domEventName,
         false,
         ((rootContainerElement: any): Element),
-        null,
       );
     }
     listenToNativeEvent(
       domEventName,
       true,
       ((rootContainerElement: any): Element),
-      null,
     );
   });
 }
