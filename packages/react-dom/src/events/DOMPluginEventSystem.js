@@ -397,7 +397,7 @@ export function listenToAllSupportedEvents(rootContainerElement: EventTarget) {
     const ownerDocument =
       (rootContainerElement: any).nodeType === DOCUMENT_NODE
         ? rootContainerElement
-        : rootContainerElement.ownerDocument;
+        : (rootContainerElement: any).ownerDocument;
     if (ownerDocument !== null) {
       // The selectionchange event also needs deduplication
       // but it is attached to the document.
