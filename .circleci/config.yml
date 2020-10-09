@@ -88,6 +88,7 @@ jobs:
       - *restore_node_modules
       - run: node ./scripts/prettier/index
       - run: node ./scripts/tasks/eslint
+      - run: node ./scripts/rollup/validate/tmp
       - run: ./scripts/circleci/check_license.sh
       - run: ./scripts/circleci/check_modules.sh
       - run: ./scripts/circleci/test_print_warnings.sh
@@ -316,7 +317,7 @@ jobs:
           root: packages/react-devtools-scheduling-profiler
           paths:
             - dist
-  
+
   deploy_devtools_scheduling_profiler:
     docker: *docker
     environment: *environment
