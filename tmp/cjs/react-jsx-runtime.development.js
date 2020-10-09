@@ -1,4 +1,4 @@
-/** @license React v15.7.0
+/** @license React v0.14.10
  * react-jsx-runtime.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -14,7 +14,6 @@ if (process.env.NODE_ENV !== "production") {
 'use strict';
 
 var React = require('react');
-var ReactComponentTreeHook = require('../lib/ReactComponentTreeHook');
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -97,10 +96,6 @@ function printWarning(level, format, args) {
   // update consoleWithStackDev.www.js as well.
   {
     var stack = '';
-
-    if (currentlyValidatingElement) {
-      stack += ReactComponentTreeHook.getCurrentStackAddendum(currentlyValidatingElement)
-    }
 
     if (stack !== '') {
       format += '%s';
