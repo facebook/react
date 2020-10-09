@@ -240,6 +240,45 @@ describe('ReactDoubleInvokeEvents', () => {
     expect(Scheduler).toHaveYielded([]);
   });
 
+  it('passes the right context to class component lifecycles', () => {
+    class App extends React.PureComponent {
+      test() {}
+
+      componentDidMount() {
+        this.test();
+        Scheduler.unstable_yieldValue('componentDidMount');
+      }
+
+      componentDidUpdate() {
+        this.test();
+        Scheduler.unstable_yieldValue('componentDidUpdate');
+      }
+
+      componentWillUnmount() {
+        this.test();
+        Scheduler.unstable_yieldValue('componentWillUnmount');
+      }
+
+      render() {
+        return null;
+      }
+    }
+
+    ReactNoop.act(() => {
+      ReactNoop.render(<App />);
+    });
+
+    if (__DEV__ && __VARIANT__) {
+      expect(Scheduler).toHaveYielded([
+        'componentDidMount',
+        'componentWillUnmount',
+        'componentDidMount',
+      ]);
+    } else {
+      expect(Scheduler).toHaveYielded(['componentDidMount']);
+    }
+  });
+
   it('double invoking works for class components', () => {
     class App extends React.PureComponent {
       componentDidMount() {

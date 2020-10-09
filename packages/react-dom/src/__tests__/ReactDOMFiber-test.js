@@ -1040,7 +1040,6 @@ describe('ReactDOMFiber', () => {
     expect(ops).toEqual([]);
   });
 
-  // @gate enableEagerRootListeners
   it('listens to events that do not exist in the Portal subtree', () => {
     const onClick = jest.fn();
 

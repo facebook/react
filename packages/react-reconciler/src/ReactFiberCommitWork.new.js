@@ -2044,7 +2044,7 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
       }
       case ClassComponent: {
         const instance = fiber.stateNode;
-        invokeGuardedCallback(null, instance.componentDidMount, null);
+        invokeGuardedCallback(null, instance.componentDidMount, instance);
         if (hasCaughtError()) {
           const mountError = clearCaughtError();
           captureCommitPhaseError(fiber, fiber.return, mountError);
@@ -2103,18 +2103,7 @@ function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
       case ClassComponent: {
         const instance = fiber.stateNode;
         if (typeof instance.componentWillUnmount === 'function') {
-          invokeGuardedCallback(
-            null,
-            safelyCallComponentWillUnmount,
-            null,
-            fiber,
-            instance,
-            fiber.return,
-          );
-          if (hasCaughtError()) {
-            const unmountError = clearCaughtError();
-            captureCommitPhaseError(fiber, fiber.return, unmountError);
-          }
+          safelyCallComponentWillUnmount(fiber, instance, fiber.return);
         }
         break;
       }
