@@ -312,39 +312,6 @@ export function listenToNonDelegatedEvent(
   }
 }
 
-const listeningMarker =
-  '_reactListening' +
-  Math.random()
-    .toString(36)
-    .slice(2);
-
-export function listenToAllSupportedEvents(rootContainerElement: EventTarget) {
-  if ((rootContainerElement: any)[listeningMarker]) {
-    // Performance optimization: don't iterate through events
-    // for the same portal container or root node more than once.
-    // TODO: once we remove the flag, we may be able to also
-    // remove some of the bookkeeping maps used for laziness.
-    return;
-  }
-  (rootContainerElement: any)[listeningMarker] = true;
-  allNativeEvents.forEach(domEventName => {
-    if (!nonDelegatedEvents.has(domEventName)) {
-      listenToNativeEvent(
-        domEventName,
-        false,
-        ((rootContainerElement: any): Element),
-        null,
-      );
-    }
-    listenToNativeEvent(
-      domEventName,
-      true,
-      ((rootContainerElement: any): Element),
-      null,
-    );
-  });
-}
-
 export function listenToNativeEvent(
   domEventName: DOMEventName,
   isCapturePhaseListener: boolean,
@@ -381,6 +348,39 @@ export function listenToNativeEvent(
     );
     listenerSet.add(listenerSetKey);
   }
+}
+
+const listeningMarker =
+  '_reactListening' +
+  Math.random()
+    .toString(36)
+    .slice(2);
+
+export function listenToAllSupportedEvents(rootContainerElement: EventTarget) {
+  if ((rootContainerElement: any)[listeningMarker]) {
+    // Performance optimization: don't iterate through events
+    // for the same portal container or root node more than once.
+    // TODO: once we remove the flag, we may be able to also
+    // remove some of the bookkeeping maps used for laziness.
+    return;
+  }
+  (rootContainerElement: any)[listeningMarker] = true;
+  allNativeEvents.forEach(domEventName => {
+    if (!nonDelegatedEvents.has(domEventName)) {
+      listenToNativeEvent(
+        domEventName,
+        false,
+        ((rootContainerElement: any): Element),
+        null,
+      );
+    }
+    listenToNativeEvent(
+      domEventName,
+      true,
+      ((rootContainerElement: any): Element),
+      null,
+    );
+  });
 }
 
 function addTrappedEventListener(
