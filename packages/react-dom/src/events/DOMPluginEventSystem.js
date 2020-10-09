@@ -324,7 +324,7 @@ export function listenToNonDelegatedEvent(
 export function listenToNativeEvent(
   domEventName: DOMEventName,
   isCapturePhaseListener: boolean,
-  rootContainerElement: EventTarget,
+  target: EventTarget,
 ): void {
   if (__DEV__) {
     if (nonDelegatedEvents.has(domEventName) && !isCapturePhaseListener) {
@@ -337,35 +337,15 @@ export function listenToNativeEvent(
   }
 
   let eventSystemFlags = 0;
-  let target = rootContainerElement;
-
-  // selectionchange needs to be attached to the document
-  // otherwise it won't capture incoming events that are only
-  // triggered on the document directly.
-  if (
-    domEventName === 'selectionchange' &&
-    (rootContainerElement: any).nodeType !== DOCUMENT_NODE
-  ) {
-    target = (rootContainerElement: any).ownerDocument;
+  if (isCapturePhaseListener) {
+    eventSystemFlags |= IS_CAPTURE_PHASE;
   }
-
-  const listenerSet = getEventListenerSet(target);
-  const listenerSetKey = getListenerSetKey(
+  addTrappedEventListener(
+    target,
     domEventName,
+    eventSystemFlags,
     isCapturePhaseListener,
   );
-  if (!listenerSet.has(listenerSetKey)) {
-    if (isCapturePhaseListener) {
-      eventSystemFlags |= IS_CAPTURE_PHASE;
-    }
-    addTrappedEventListener(
-      target,
-      domEventName,
-      eventSystemFlags,
-      isCapturePhaseListener,
-    );
-    listenerSet.add(listenerSetKey);
-  }
 }
 
 // This is only used by createEventHandle when the
@@ -402,28 +382,31 @@ const listeningMarker =
     .slice(2);
 
 export function listenToAllSupportedEvents(rootContainerElement: EventTarget) {
-  if ((rootContainerElement: any)[listeningMarker]) {
-    // Performance optimization: don't iterate through events
-    // for the same portal container or root node more than once.
-    // TODO: once we remove the flag, we may be able to also
-    // remove some of the bookkeeping maps used for laziness.
-    return;
-  }
-  (rootContainerElement: any)[listeningMarker] = true;
-  allNativeEvents.forEach(domEventName => {
-    if (!nonDelegatedEvents.has(domEventName)) {
-      listenToNativeEvent(
-        domEventName,
-        false,
-        ((rootContainerElement: any): Element),
-      );
+  if (!(rootContainerElement: any)[listeningMarker]) {
+    (rootContainerElement: any)[listeningMarker] = true;
+    allNativeEvents.forEach(domEventName => {
+      // We handle selectionchange separately because it
+      // doesn't bubble and needs to be on the document.
+      if (domEventName !== 'selectionchange') {
+        if (!nonDelegatedEvents.has(domEventName)) {
+          listenToNativeEvent(domEventName, false, rootContainerElement);
+        }
+        listenToNativeEvent(domEventName, true, rootContainerElement);
+      }
+    });
+    const ownerDocument =
+      (rootContainerElement: any).nodeType === DOCUMENT_NODE
+        ? rootContainerElement
+        : rootContainerElement.ownerDocument;
+    if (ownerDocument !== null) {
+      // The selectionchange event also needs deduplication
+      // but it is attached to the document.
+      if (!(ownerDocument: any)[listeningMarker]) {
+        (ownerDocument: any)[listeningMarker] = true;
+        listenToNativeEvent('selectionchange', false, ownerDocument);
+      }
     }
-    listenToNativeEvent(
-      domEventName,
-      true,
-      ((rootContainerElement: any): Element),
-    );
-  });
+  }
 }
 
 function addTrappedEventListener(

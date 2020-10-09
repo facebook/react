@@ -996,6 +996,6 @@ describe('ReactDOMEventListener', () => {
       document.addEventListener = originalDocAddEventListener;
     }
 
-    expect(log).toEqual([false, true]);
+    expect(log).toEqual([false]);
   });
 });
