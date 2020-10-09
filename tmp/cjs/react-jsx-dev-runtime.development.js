@@ -1,4 +1,4 @@
-/** @license React v16.14.0
+/** @license React v15.7.0
  * react-jsx-dev-runtime.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -14,7 +14,7 @@ if (process.env.NODE_ENV !== "production") {
 'use strict';
 
 var React = require('react');
-var _assign = require('object-assign');
+var ReactComponentTreeHook = require('../lib/ReactComponentTreeHook');
 
 // ATTENTION
 // When adding new symbols to this file,
@@ -82,8 +82,6 @@ function getIteratorFn(maybeIterable) {
   return null;
 }
 
-var ReactSharedInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-
 function error(format) {
   {
     for (var _len2 = arguments.length, args = new Array(_len2 > 1 ? _len2 - 1 : 0), _key2 = 1; _key2 < _len2; _key2++) {
@@ -98,16 +96,11 @@ function printWarning(level, format, args) {
   // When changing this logic, you might want to also
   // update consoleWithStackDev.www.js as well.
   {
-    var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
     var stack = '';
 
     if (currentlyValidatingElement) {
-      var name = getComponentName(currentlyValidatingElement.type);
-      var owner = currentlyValidatingElement._owner;
-      stack += describeComponentFrame(name, currentlyValidatingElement._source, owner && getComponentName(owner.type));
+      stack += ReactComponentTreeHook.getCurrentStackAddendum(currentlyValidatingElement)
     }
-
-    stack += ReactDebugCurrentFrame.getStackAddendum();
 
 
     if (stack !== '') {
@@ -266,7 +259,6 @@ function getComponentName(type) {
   return null;
 }
 var loggedTypeFailures = {};
-var ReactDebugCurrentFrame = ReactSharedInternals.ReactDebugCurrentFrame;
 var currentlyValidatingElement = null;
 
 function setCurrentlyValidatingElement(element) {
@@ -321,7 +313,7 @@ function checkPropTypes(typeSpecs, values, location, componentName, element) {
   }
 }
 
-var ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
+var ReactCurrentOwner = require('../lib/ReactCurrentOwner');
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 var RESERVED_PROPS = {
   key: true,
@@ -556,8 +548,7 @@ function jsxDEV(type, config, maybeKey, source, self) {
   }
 }
 
-var ReactCurrentOwner$1 = ReactSharedInternals.ReactCurrentOwner;
-var ReactDebugCurrentFrame$1 = ReactSharedInternals.ReactDebugCurrentFrame;
+var ReactCurrentOwner$1 = require('../lib/ReactCurrentOwner');
 
 function setCurrentlyValidatingElement$1(element) {
   currentlyValidatingElement = element;
