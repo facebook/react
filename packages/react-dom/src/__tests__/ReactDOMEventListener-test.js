@@ -973,4 +973,29 @@ describe('ReactDOMEventListener', () => {
       document.body.removeChild(container);
     }
   });
+
+  it('should not subscribe to selectionchange twice', () => {
+    const log = [];
+
+    const originalDocAddEventListener = document.addEventListener;
+    document.addEventListener = function(type, fn, options) {
+      switch (type) {
+        case 'selectionchange':
+          log.push(options);
+          break;
+        default:
+          throw new Error(
+            `Did not expect to add a document-level listener for the "${type}" event.`,
+          );
+      }
+    };
+    try {
+      ReactDOM.render(<input />, document.createElement('div'));
+      ReactDOM.render(<input />, document.createElement('div'));
+    } finally {
+      document.addEventListener = originalDocAddEventListener;
+    }
+
+    expect(log).toEqual([false, true]);
+  });
 });
