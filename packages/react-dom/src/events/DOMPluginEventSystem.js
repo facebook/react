@@ -295,6 +295,15 @@ export function listenToNonDelegatedEvent(
   domEventName: DOMEventName,
   targetElement: Element,
 ): void {
+  if (__DEV__) {
+    if (!nonDelegatedEvents.has(domEventName)) {
+      console.error(
+        'Did not expect a listenToNonDelegatedEvent() call for "%s". ' +
+          'This is a bug in React. Please file an issue.',
+        domEventName,
+      );
+    }
+  }
   const isCapturePhaseListener = false;
   const listenerSet = getEventListenerSet(targetElement);
   const listenerSetKey = getListenerSetKey(
@@ -317,6 +326,16 @@ export function listenToNativeEvent(
   isCapturePhaseListener: boolean,
   rootContainerElement: EventTarget,
 ): void {
+  if (__DEV__) {
+    if (nonDelegatedEvents.has(domEventName) && !isCapturePhaseListener) {
+      console.error(
+        'Did not expect a listenToNativeEvent() call for "%s" in the bubble phase. ' +
+          'This is a bug in React. Please file an issue.',
+        domEventName,
+      );
+    }
+  }
+
   let eventSystemFlags = 0;
   let target = rootContainerElement;
 
