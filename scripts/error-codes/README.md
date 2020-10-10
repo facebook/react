@@ -1,5 +1,5 @@
 The error code system substitutes React's error messages with error IDs to
-provide a better debugging support in production. Check out the blog post
+provide better debugging support in production. Check out the blog post
 [here](https://reactjs.org/blog/2016/07/11/introducing-reacts-error-code-system.html).
 
 - [`codes.json`](https://github.com/facebook/react/blob/master/scripts/error-codes/codes.json)
@@ -8,7 +8,7 @@ provide a better debugging support in production. Check out the blog post
   our documentation. This file is append-only, which means an existing code in
   the file will never be changed/removed.
 - [`extract-errors.js`](https://github.com/facebook/react/blob/master/scripts/error-codes/extract-errors.js)
-  is an node script that traverses our codebase and updates `codes.json`. You
+  is a node script that traverses our codebase and updates `codes.json`. You
   can test it by running `yarn extract-errors`.
 - [`transform-error-messages`](https://github.com/facebook/react/blob/master/scripts/error-codes/transform-error-messages.js)
   is a Babel pass that rewrites error messages to IDs for a production
