@@ -34,7 +34,7 @@ import {
   getInstanceFromNode,
   getClosestInstanceFromNode,
 } from '../client/ReactDOMComponentTree';
-import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
+import {HostRoot, SuspenseComponent} from 'shared/ReactWorkTags';
 
 let attemptSynchronousHydration: (fiber: Object) => void;
 

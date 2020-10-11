@@ -10,7 +10,7 @@
 import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
 import type {BlockComponent} from 'react/src/ReactBlock';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {MutableSource} from 'shared/ReactTypes';
@@ -52,7 +52,7 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from './ReactWorkTags';
+} from 'shared/ReactWorkTags';
 import {
   NoFlags,
   PerformedWork,
@@ -64,7 +64,7 @@ import {
   Ref,
   Deletion,
   ForceUpdateForLegacySuspense,
-} from './ReactFiberFlags';
+} from 'shared/ReactFiberFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
@@ -123,7 +123,7 @@ import {
   ProfileMode,
   StrictMode,
   BlockingMode,
-} from './ReactTypeOfMode';
+} from 'shared/ReactTypeOfMode';
 import {
   shouldSetTextContent,
   isSuspenseInstancePending,

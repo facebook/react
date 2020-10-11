@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.new';
 
 import {createCursor, push, pop} from './ReactFiberStack.new';

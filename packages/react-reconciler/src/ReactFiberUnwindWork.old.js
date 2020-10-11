@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
@@ -22,9 +22,9 @@ import {
   SuspenseListComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from './ReactWorkTags';
-import {DidCapture, NoFlags, ShouldCapture} from './ReactFiberFlags';
-import {NoMode, ProfileMode} from './ReactTypeOfMode';
+} from 'shared/ReactWorkTags';
+import {DidCapture, NoFlags, ShouldCapture} from 'shared/ReactFiberFlags';
+import {NoMode, ProfileMode} from 'shared/ReactTypeOfMode';
 import {
   enableSuspenseServerRenderer,
   enableProfilerTimer,

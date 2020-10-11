@@ -84,7 +84,7 @@
 // regardless of priority. Intermediate state may vary according to system
 // resources, but the final state is always the same.
 
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 
 import {NoLane, NoLanes, isSubsetOfLanes, mergeLanes} from './ReactFiberLane';
@@ -92,11 +92,11 @@ import {
   enterDisallowedContextReadInDEV,
   exitDisallowedContextReadInDEV,
 } from './ReactFiberNewContext.old';
-import {Callback, ShouldCapture, DidCapture} from './ReactFiberFlags';
+import {Callback, ShouldCapture, DidCapture} from 'shared/ReactFiberFlags';
 
 import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
 
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictMode} from 'shared/ReactTypeOfMode';
 import {markSkippedUpdateLanes} from './ReactFiberWorkLoop.old';
 
 import invariant from 'shared/invariant';

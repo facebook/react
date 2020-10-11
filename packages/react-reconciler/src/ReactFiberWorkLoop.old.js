@@ -8,9 +8,10 @@
  */
 
 import type {Thenable, Wakeable} from 'shared/ReactTypes';
-import type {Fiber, FiberRoot} from './ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
+import type {FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
-import type {ReactPriorityLevel} from './ReactInternalTypes';
+import type {ReactPriorityLevel} from 'shared/ReactInternalTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {Effect as HookEffect} from './ReactFiberHooks.old';
@@ -98,7 +99,7 @@ import {
   ProfileMode,
   BlockingMode,
   ConcurrentMode,
-} from './ReactTypeOfMode';
+} from 'shared/ReactTypeOfMode';
 import {
   HostRoot,
   IndeterminateComponent,
@@ -113,7 +114,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   ScopeComponent,
-} from './ReactWorkTags';
+} from 'shared/ReactWorkTags';
 import {LegacyRoot} from './ReactRootTags';
 import {
   NoFlags,
@@ -132,7 +133,7 @@ import {
   HostEffectMask,
   Hydrating,
   HydratingAndUpdate,
-} from './ReactFiberFlags';
+} from 'shared/ReactFiberFlags';
 import {
   NoLanePriority,
   SyncLanePriority,

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 
 import {
   HostComponent,
@@ -20,7 +20,7 @@ import {
   SimpleMemoComponent,
   Block,
   ClassComponent,
-} from './ReactWorkTags';
+} from 'shared/ReactWorkTags';
 import {
   describeBuiltInComponentFrame,
   describeFunctionComponentFrame,

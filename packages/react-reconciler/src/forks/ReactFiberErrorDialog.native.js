@@ -10,7 +10,7 @@
 import type {Fiber} from '../ReactFiber.old';
 import type {CapturedValue} from '../ReactCapturedValue';
 
-import {ClassComponent} from '../ReactWorkTags';
+import {ClassComponent} from 'shared/ReactWorkTags';
 
 // Module provided by RN:
 import {ReactFiberErrorDialog as RNImpl} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';

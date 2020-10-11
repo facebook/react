@@ -17,10 +17,10 @@ import type {
 import type {
   Fiber,
   Dispatcher as DispatcherType,
-} from 'react-reconciler/src/ReactInternalTypes';
+} from 'shared/ReactInternalTypes';
 import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 
-import {NoMode} from 'react-reconciler/src/ReactTypeOfMode';
+import {NoMode} from 'shared/ReactTypeOfMode';
 
 import ErrorStackParser from 'error-stack-parser';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -31,7 +31,7 @@ import {
   ContextProvider,
   ForwardRef,
   Block,
-} from 'react-reconciler/src/ReactWorkTags';
+} from 'shared/ReactWorkTags';
 
 type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
 

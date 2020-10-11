@@ -8,7 +8,7 @@
  */
 
 import type {Thenable} from 'shared/ReactTypes';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Instance, TextInstance} from './ReactTestHostConfig';
 
@@ -42,7 +42,7 @@ import {
   Block,
   IncompleteClassComponent,
   ScopeComponent,
-} from 'react-reconciler/src/ReactWorkTags';
+} from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import ReactVersion from 'shared/ReactVersion';

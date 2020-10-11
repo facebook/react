@@ -8,7 +8,8 @@
  */
 
 import type {DOMEventName} from '../events/DOMEventNames';
-import type {Fiber, FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
+import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   BoundingRect,
   IntersectionObserverOptions,
@@ -69,7 +70,7 @@ import {
   enableScopeAPI,
   enableEagerRootListeners,
 } from 'shared/ReactFeatureFlags';
-import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
+import {HostComponent, HostText} from 'shared/ReactWorkTags';
 import {
   listenToReactEvent,
   listenToAllSupportedEvents,

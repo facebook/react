@@ -13,10 +13,10 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
 } from 'shared/ReactTypes';
-import type {Fiber, Dispatcher} from './ReactInternalTypes';
+import type {Fiber, Dispatcher} from 'shared/ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookFlags} from './ReactHookEffectTags';
-import type {ReactPriorityLevel} from './ReactInternalTypes';
+import type {ReactPriorityLevel} from 'shared/ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
 
@@ -29,7 +29,7 @@ import {
   enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
 
-import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
+import {NoMode, BlockingMode, DebugTracingMode} from 'shared/ReactTypeOfMode';
 import {
   NoLane,
   NoLanes,
@@ -51,7 +51,7 @@ import {
   PassiveStatic as PassiveStaticEffect,
   MountLayoutDev as MountLayoutDevEffect,
   MountPassiveDev as MountPassiveDevEffect,
-} from './ReactFiberFlags';
+} from 'shared/ReactFiberFlags';
 import {
   HasEffect as HookHasEffect,
   Layout as HookLayout,

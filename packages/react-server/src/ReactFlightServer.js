@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
+import type {Dispatcher as DispatcherType} from 'shared/ReactInternalTypes';
 import type {
   Destination,
   Chunk,

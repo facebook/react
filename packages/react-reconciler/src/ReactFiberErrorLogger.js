@@ -7,11 +7,11 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 import type {CapturedValue} from './ReactCapturedValue';
 
 import {showErrorDialog} from './ReactFiberErrorDialog';
-import {ClassComponent} from './ReactWorkTags';
+import {ClassComponent} from 'shared/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
 export function logCapturedError(

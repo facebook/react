@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 import type {
   ReactFundamentalComponentInstance,
@@ -57,9 +57,15 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from './ReactWorkTags';
-import {NoMode, BlockingMode, ProfileMode} from './ReactTypeOfMode';
-import {Ref, Update, NoFlags, DidCapture, Snapshot} from './ReactFiberFlags';
+} from 'shared/ReactWorkTags';
+import {NoMode, BlockingMode, ProfileMode} from 'shared/ReactTypeOfMode';
+import {
+  Ref,
+  Update,
+  NoFlags,
+  DidCapture,
+  Snapshot,
+} from 'shared/ReactFiberFlags';
 import invariant from 'shared/invariant';
 
 import {

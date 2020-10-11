@@ -7,13 +7,13 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 
 import {
   enableProfilerTimer,
   enableProfilerCommitHooks,
 } from 'shared/ReactFeatureFlags';
-import {Profiler} from './ReactWorkTags';
+import {Profiler} from 'shared/ReactWorkTags';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.

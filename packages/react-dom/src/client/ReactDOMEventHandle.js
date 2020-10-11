@@ -26,7 +26,7 @@ import {
 import {ELEMENT_NODE, COMMENT_NODE} from '../shared/HTMLNodeType';
 import {listenToNativeEvent} from '../events/DOMPluginEventSystem';
 
-import {HostRoot, HostPortal} from 'react-reconciler/src/ReactWorkTags';
+import {HostRoot, HostPortal} from 'shared/ReactWorkTags';
 import {IS_EVENT_HANDLE_NON_MANAGED_NODE} from '../events/EventSystemFlags';
 
 import {

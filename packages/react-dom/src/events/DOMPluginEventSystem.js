@@ -19,7 +19,7 @@ import type {
   KnownReactSyntheticEvent,
   ReactSyntheticEvent,
 } from './ReactSyntheticEventType';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 
 import {registrationNameDependencies, allNativeEvents} from './EventRegistry';
 import {
@@ -34,7 +34,7 @@ import {
   HostComponent,
   HostText,
   ScopeComponent,
-} from 'react-reconciler/src/ReactWorkTags';
+} from 'shared/ReactWorkTags';
 
 import getEventTarget from './getEventTarget';
 import {

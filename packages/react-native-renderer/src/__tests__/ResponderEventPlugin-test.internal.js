@@ -12,7 +12,7 @@
 // This test is a hot mess. It heavily uses internals and relies on DOM even
 // though the responder plugin is only used in React Native. Sadness ensues.
 // The coverage is valuable though, so we will keep it for now.
-const {HostComponent} = require('react-reconciler/src/ReactWorkTags');
+const {HostComponent} = require('shared/ReactWorkTags');
 
 let EventBatching;
 let EventPluginUtils;

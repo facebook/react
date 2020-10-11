@@ -9,7 +9,7 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
-import ReactCurrentOwner from './ReactCurrentOwner';
+import ReactCurrentOwner from 'shared/ReactCurrentOwner';
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
 

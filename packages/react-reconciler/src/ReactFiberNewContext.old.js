@@ -8,7 +8,7 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
-import type {Fiber, ContextDependency} from './ReactInternalTypes';
+import type {Fiber, ContextDependency} from 'shared/ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.old';
 import type {Lanes} from './ReactFiberLane';
 
@@ -19,7 +19,7 @@ import {
   ContextProvider,
   ClassComponent,
   DehydratedFragment,
-} from './ReactWorkTags';
+} from 'shared/ReactWorkTags';
 import {
   NoLanes,
   NoTimestamp,

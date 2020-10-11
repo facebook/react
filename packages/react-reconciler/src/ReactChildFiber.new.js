@@ -11,11 +11,11 @@ import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
 import type {BlockComponent} from 'react/src/ReactBlock';
 import type {LazyComponent} from 'react/src/ReactLazy';
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 
 import getComponentName from 'shared/getComponentName';
-import {Deletion, Placement} from './ReactFiberFlags';
+import {Deletion, Placement} from 'shared/ReactFiberFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -33,7 +33,7 @@ import {
   Fragment,
   SimpleMemoComponent,
   Block,
-} from './ReactWorkTags';
+} from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 import {
   warnAboutStringRefs,
@@ -51,7 +51,7 @@ import {
 } from './ReactFiber.new';
 import {emptyRefsObject} from './ReactFiberClassComponent.new';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.new';
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictMode} from 'shared/ReactTypeOfMode';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;

@@ -8,11 +8,11 @@
 import assign from 'object-assign';
 import * as Scheduler from 'scheduler';
 import * as SchedulerTracing from 'scheduler/tracing';
-import ReactCurrentDispatcher from '../ReactCurrentDispatcher';
-import ReactCurrentOwner from '../ReactCurrentOwner';
+import ReactCurrentDispatcher from 'shared/ReactCurrentDispatcher';
+import ReactCurrentOwner from 'shared/ReactCurrentOwner';
 import ReactDebugCurrentFrame from '../ReactDebugCurrentFrame';
-import IsSomeRendererActing from '../IsSomeRendererActing';
-import ReactCurrentBatchConfig from '../ReactCurrentBatchConfig';
+import IsSomeRendererActing from 'shared/IsSomeRendererActing';
+import ReactCurrentBatchConfig from 'shared/ReactCurrentBatchConfig';
 
 const ReactSharedInternals = {
   ReactCurrentDispatcher,

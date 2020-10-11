@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lane, Lanes} from './ReactFiberLane';
 import type {CapturedValue} from './ReactCapturedValue';
@@ -21,7 +21,7 @@ import {
   HostRoot,
   SuspenseComponent,
   IncompleteClassComponent,
-} from './ReactWorkTags';
+} from 'shared/ReactWorkTags';
 import {
   DidCapture,
   Incomplete,
@@ -29,9 +29,9 @@ import {
   ShouldCapture,
   LifecycleEffectMask,
   ForceUpdateForLegacySuspense,
-} from './ReactFiberFlags';
+} from 'shared/ReactFiberFlags';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.old';
-import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
+import {NoMode, BlockingMode, DebugTracingMode} from 'shared/ReactTypeOfMode';
 import {
   enableDebugTracing,
   enableSchedulingProfiler,

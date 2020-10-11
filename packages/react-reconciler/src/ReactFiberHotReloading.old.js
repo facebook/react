@@ -8,7 +8,7 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Instance} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
@@ -30,7 +30,7 @@ import {
   HostRoot,
   MemoComponent,
   SimpleMemoComponent,
-} from './ReactWorkTags';
+} from 'shared/ReactWorkTags';
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,

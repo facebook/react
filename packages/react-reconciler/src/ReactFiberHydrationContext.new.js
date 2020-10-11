@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 import type {
   Instance,
   TextInstance,
@@ -23,8 +23,8 @@ import {
   HostText,
   HostRoot,
   SuspenseComponent,
-} from './ReactWorkTags';
-import {Deletion, Hydrating, Placement} from './ReactFiberFlags';
+} from 'shared/ReactWorkTags';
+import {Deletion, Hydrating, Placement} from 'shared/ReactFiberFlags';
 import invariant from 'shared/invariant';
 
 import {

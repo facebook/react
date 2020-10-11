@@ -18,7 +18,7 @@ import type {
 } from 'react-native-renderer/src/ReactNativeTypes';
 import type {RNTopLevelEventType} from 'react-native-renderer/src/legacy-events/TopLevelEventTypes';
 import type {CapturedError} from 'react-reconciler/src/ReactCapturedValue';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 
 type DeepDifferOptions = {|+unsafelyIgnoreFunctions?: boolean|};
 

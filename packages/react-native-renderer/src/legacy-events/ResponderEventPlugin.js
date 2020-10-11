@@ -28,7 +28,7 @@ import {
 } from './ResponderTopLevelEventTypes';
 import accumulateInto from './accumulateInto';
 import forEachAccumulated from './forEachAccumulated';
-import {HostComponent} from 'react-reconciler/src/ReactWorkTags';
+import {HostComponent} from 'shared/ReactWorkTags';
 import invariant from 'shared/invariant';
 
 /**

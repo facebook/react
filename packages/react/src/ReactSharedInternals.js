@@ -6,11 +6,11 @@
  */
 
 import assign from 'object-assign';
-import ReactCurrentDispatcher from './ReactCurrentDispatcher';
-import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
-import ReactCurrentOwner from './ReactCurrentOwner';
+import ReactCurrentDispatcher from 'shared/ReactCurrentDispatcher';
+import ReactCurrentBatchConfig from 'shared/ReactCurrentBatchConfig';
+import ReactCurrentOwner from 'shared/ReactCurrentOwner';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
-import IsSomeRendererActing from './IsSomeRendererActing';
+import IsSomeRendererActing from 'shared/IsSomeRendererActing';
 
 const ReactSharedInternals = {
   ReactCurrentDispatcher,
