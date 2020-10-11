@@ -34,17 +34,9 @@ function resolveTargetFlags(resolve, target) {
   let flagsPath;
   switch (target) {
     case 'local':
-      flagsPath = 'TargetFlags.default';
-      break;
     case 'remote':
-      flagsPath = 'TargetFlags.default';
-      break;
     case 'inline':
-      flagsPath = 'TargetFlags.default';
-      break;
     case 'standalone':
-      flagsPath = 'TargetFlags.default';
-      break;
     case 'backend':
       flagsPath = 'TargetFlags.default';
       break;
