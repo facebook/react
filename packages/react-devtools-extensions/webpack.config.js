@@ -4,12 +4,10 @@ const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
 const {GITHUB_URL, getVersionString} = require('./utils');
 const {
-  validateWebpackTarget,
   resolveTargetFlags,
 } = require('react-devtools-shared/config/resolveTarget');
 
 const TARGET = process.env.TARGET;
-validateWebpackTarget(TARGET);
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {

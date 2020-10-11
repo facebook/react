@@ -6,30 +6,6 @@
  *
  */
 
-function validateWebpackTarget(target) {
-  if (!target) {
-    console.error('TARGET not set');
-    process.exit(1);
-  }
-  switch (target) {
-    case 'local':
-      return;
-    case 'remote':
-      return;
-    case 'inline':
-      return;
-    case 'standalone':
-      return;
-    case 'backend':
-      return;
-    case 'extension':
-      return;
-    default:
-      console.error('invalid TARGET:', target);
-      process.exit(1);
-  }
-}
-
 function resolveTargetFlags(resolve, target) {
   let flagsPath;
   switch (target) {
@@ -51,6 +27,5 @@ function resolveTargetFlags(resolve, target) {
 }
 
 module.exports = {
-  validateWebpackTarget,
   resolveTargetFlags,
 };
