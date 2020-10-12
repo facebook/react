@@ -30,7 +30,10 @@ import invariant from 'shared/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
-import {DebugTracingMode, StrictMode} from 'react-reconciler/src/ReactTypeOfMode';
+import {
+  DebugTracingMode,
+  StrictMode,
+} from 'react-reconciler/src/ReactTypeOfMode';
 
 import {
   enqueueUpdate,

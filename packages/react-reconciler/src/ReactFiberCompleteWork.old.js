@@ -58,7 +58,11 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
 } from 'react-reconciler/src/ReactWorkTags';
-import {NoMode, BlockingMode, ProfileMode} from 'react-reconciler/src/ReactTypeOfMode';
+import {
+  NoMode,
+  BlockingMode,
+  ProfileMode,
+} from 'react-reconciler/src/ReactTypeOfMode';
 import {
   Ref,
   Update,

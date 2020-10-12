@@ -28,7 +28,11 @@ import {
   decoupleUpdatePriorityFromScheduler,
 } from 'shared/ReactFeatureFlags';
 
-import {NoMode, BlockingMode, DebugTracingMode} from 'react-reconciler/src/ReactTypeOfMode';
+import {
+  NoMode,
+  BlockingMode,
+  DebugTracingMode,
+} from 'react-reconciler/src/ReactTypeOfMode';
 import {
   NoLane,
   NoLanes,
