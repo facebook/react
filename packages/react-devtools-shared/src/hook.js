@@ -11,7 +11,6 @@ import {
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
 } from './backend/console';
-import {enableConsolePatching} from 'react-devtools-target-flags';
 
 import type {DevToolsHook} from 'react-devtools-shared/src/backend/types';
 
@@ -173,7 +172,11 @@ export function installHook(target: any): DevToolsHook | null {
     // In that case, we'll patch later (when the frontend attaches).
     //
     // Don't patch in test environments because we don't want to interfere with Jest's own console overrides.
-    if (enableConsolePatching && process.env.NODE_ENV !== 'test') {
+    //
+    // Note that because this function is inlined, this conditional check must only use static booleans.
+    // Otherwise the extension will throw with an undefined error.
+    // (See comments in the try/catch below for more context on inlining.)
+    if (!__EXTENSION__ && !__TEST__) {
       try {
         const appendComponentStack =
           window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false;

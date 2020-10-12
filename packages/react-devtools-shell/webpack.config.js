@@ -4,15 +4,17 @@ const {
   GITHUB_URL,
   getVersionString,
 } = require('react-devtools-extensions/utils');
-const {
-  resolveTargetFlags,
-} = require('react-devtools-shared/config/resolveTarget');
-
-const TARGET = process.env.TARGET;
+const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
   console.error('NODE_ENV not set');
+  process.exit(1);
+}
+
+const TARGET = process.env.TARGET;
+if (!TARGET) {
+  console.error('TARGET not set');
   process.exit(1);
 }
 
@@ -32,11 +34,11 @@ const config = {
   resolve: {
     alias: {
       react: resolve(builtModulesDir, 'react'),
-      'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
+      'react-devtools-feature-flags': resolveFeatureFlags('shell'),
+      'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
-      'react-devtools-target-flags': resolveTargetFlags(resolve, TARGET),
     },
   },
   optimization: {
@@ -45,8 +47,10 @@ const config = {
   plugins: [
     new DefinePlugin({
       __DEV__,
-      __PROFILE__: false,
       __EXPERIMENTAL__: true,
+      __EXTENSION__: false,
+      __PROFILE__: false,
+      __TEST__: NODE_ENV === 'test',
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
     }),

@@ -16,9 +16,9 @@
     "frontend.js"
   ],
   "scripts": {
-    "build": "cross-env NODE_ENV=production TARGET=inline webpack --config webpack.config.js",
+    "build": "cross-env NODE_ENV=production webpack --config webpack.config.js",
     "prepublish": "yarn run build",
-    "start": "cross-env NODE_ENV=development TARGET=inline webpack --config webpack.config.js --watch"
+    "start": "cross-env NODE_ENV=development webpack --config webpack.config.js --watch"
   },
   "dependencies": {},
   "devDependencies": {
