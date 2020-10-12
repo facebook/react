@@ -23,7 +23,6 @@ describe('ReactErrorBoundariesHooks', () => {
     function ErrorThrower() {
       React.useMemo(() => undefined, []);
       throw new Error('expected');
-      return null;
     }
 
     function StatefulComponent() {
