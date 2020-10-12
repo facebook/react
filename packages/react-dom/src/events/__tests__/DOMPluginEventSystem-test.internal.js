@@ -2643,7 +2643,7 @@ describe('DOMPluginEventSystem', () => {
             expect(log[5]).toEqual(['bubble', buttonElement]);
           });
 
-          // @gate experimental && enableEagerRootListeners
+          // @gate experimental
           it('propagates known createEventHandle events through portals without inner listeners', () => {
             const buttonRef = React.createRef();
             const divRef = React.createRef();

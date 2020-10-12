@@ -50,6 +50,8 @@ import * as React from 'react';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
 
+const isArray = Array.isArray;
+
 type ReactJSONValue =
   | string
   | boolean
@@ -117,6 +119,15 @@ export function createRequest(
 function attemptResolveElement(element: React$Element<any>): ReactModel {
   const type = element.type;
   const props = element.props;
+  if (element.ref !== null && element.ref !== undefined) {
+    // When the ref moves to the regular props object this will implicitly
+    // throw for functions. We could probably relax it to a DEV warning for other
+    // cases.
+    invariant(
+      false,
+      'Refs cannot be used in server components, nor passed to client components.',
+    );
+  }
   if (typeof type === 'function') {
     // This is a server-side component.
     return type(props);
@@ -151,7 +162,11 @@ function attemptResolveElement(element: React$Element<any>): ReactModel {
       }
     }
   }
-  invariant(false, 'Unsupported type.');
+  invariant(
+    false,
+    'Unsupported server component type: %s',
+    describeValueForErrorMessage(type),
+  );
 }
 
 function pingSegment(request: Request, segment: Segment): void {
@@ -186,12 +201,175 @@ function escapeStringValue(value: string): string {
   }
 }
 
+function isObjectPrototype(object): boolean {
+  if (!object) {
+    return false;
+  }
+  // $FlowFixMe
+  const ObjectPrototype = Object.prototype;
+  if (object === ObjectPrototype) {
+    return true;
+  }
+  // It might be an object from a different Realm which is
+  // still just a plain simple object.
+  if (Object.getPrototypeOf(object)) {
+    return false;
+  }
+  const names = Object.getOwnPropertyNames(object);
+  for (let i = 0; i < names.length; i++) {
+    if (!(names[i] in ObjectPrototype)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function isSimpleObject(object): boolean {
+  if (!isObjectPrototype(Object.getPrototypeOf(object))) {
+    return false;
+  }
+  const names = Object.getOwnPropertyNames(object);
+  for (let i = 0; i < names.length; i++) {
+    const descriptor = Object.getOwnPropertyDescriptor(object, names[i]);
+    if (!descriptor) {
+      return false;
+    }
+    if (!descriptor.enumerable) {
+      if (
+        (names[i] === 'key' || names[i] === 'ref') &&
+        typeof descriptor.get === 'function'
+      ) {
+        // React adds key and ref getters to props objects to issue warnings.
+        // Those getters will not be transferred to the client, but that's ok,
+        // so we'll special case them.
+        continue;
+      }
+      return false;
+    }
+  }
+  return true;
+}
+
+function objectName(object): string {
+  const name = Object.prototype.toString.call(object);
+  return name.replace(/^\[object (.*)\]$/, function(m, p0) {
+    return p0;
+  });
+}
+
+function describeKeyForErrorMessage(key: string): string {
+  const encodedKey = JSON.stringify(key);
+  return '"' + key + '"' === encodedKey ? key : encodedKey;
+}
+
+function describeValueForErrorMessage(value: ReactModel): string {
+  switch (typeof value) {
+    case 'string': {
+      return JSON.stringify(
+        value.length <= 10 ? value : value.substr(0, 10) + '...',
+      );
+    }
+    case 'object': {
+      if (isArray(value)) {
+        return '[...]';
+      }
+      const name = objectName(value);
+      if (name === 'Object') {
+        return '{...}';
+      }
+      return name;
+    }
+    case 'function':
+      return 'function';
+    default:
+      // eslint-disable-next-line
+      return String(value);
+  }
+}
+
+function describeObjectForErrorMessage(
+  objectOrArray:
+    | {+[key: string | number]: ReactModel}
+    | $ReadOnlyArray<ReactModel>,
+  expandedName?: string,
+): string {
+  if (isArray(objectOrArray)) {
+    let str = '[';
+    // $FlowFixMe: Should be refined by now.
+    const array: $ReadOnlyArray<ReactModel> = objectOrArray;
+    for (let i = 0; i < array.length; i++) {
+      if (i > 0) {
+        str += ', ';
+      }
+      if (i > 6) {
+        str += '...';
+        break;
+      }
+      const value = array[i];
+      if (
+        '' + i === expandedName &&
+        typeof value === 'object' &&
+        value !== null
+      ) {
+        str += describeObjectForErrorMessage(value);
+      } else {
+        str += describeValueForErrorMessage(value);
+      }
+    }
+    str += ']';
+    return str;
+  } else {
+    let str = '{';
+    // $FlowFixMe: Should be refined by now.
+    const object: {+[key: string | number]: ReactModel} = objectOrArray;
+    const names = Object.keys(object);
+    for (let i = 0; i < names.length; i++) {
+      if (i > 0) {
+        str += ', ';
+      }
+      if (i > 6) {
+        str += '...';
+        break;
+      }
+      const name = names[i];
+      str += describeKeyForErrorMessage(name) + ': ';
+      const value = object[name];
+      if (
+        name === expandedName &&
+        typeof value === 'object' &&
+        value !== null
+      ) {
+        str += describeObjectForErrorMessage(value);
+      } else {
+        str += describeValueForErrorMessage(value);
+      }
+    }
+    str += '}';
+    return str;
+  }
+}
+
 export function resolveModelToJSON(
   request: Request,
   parent: {+[key: string | number]: ReactModel} | $ReadOnlyArray<ReactModel>,
   key: string,
   value: ReactModel,
 ): ReactJSONValue {
+  if (__DEV__) {
+    // $FlowFixMe
+    const originalValue = parent[key];
+    if (typeof originalValue === 'object' && originalValue !== value) {
+      console.error(
+        'Only plain objects can be passed to client components from server components. ' +
+          'Objects with toJSON methods are not supported. Convert it manually ' +
+          'to a simple value before passing it to props. ' +
+          'Remove %s from these props: %s',
+        describeKeyForErrorMessage(key),
+        describeObjectForErrorMessage(parent),
+      );
+    }
+  }
+
   // Special Symbols
   switch (value) {
     case REACT_ELEMENT_TYPE:
@@ -263,10 +441,6 @@ export function resolveModelToJSON(
     }
   }
 
-  if (typeof value === 'string') {
-    return escapeStringValue(value);
-  }
-
   // Resolve server components.
   while (
     typeof value === 'object' &&
@@ -293,7 +467,111 @@ export function resolveModelToJSON(
     }
   }
 
-  return value;
+  if (typeof value === 'object') {
+    if (__DEV__) {
+      if (value !== null && !isArray(value)) {
+        // Verify that this is a simple plain object.
+        if (objectName(value) !== 'Object') {
+          console.error(
+            'Only plain objects can be passed to client components from server components. ' +
+              'Built-ins like %s are not supported. ' +
+              'Remove %s from these props: %s',
+            objectName(value),
+            describeKeyForErrorMessage(key),
+            describeObjectForErrorMessage(parent),
+          );
+        } else if (!isSimpleObject(value)) {
+          console.error(
+            'Only plain objects can be passed to client components from server components. ' +
+              'Classes or other objects with methods are not supported. ' +
+              'Remove %s from these props: %s',
+            describeKeyForErrorMessage(key),
+            describeObjectForErrorMessage(parent, key),
+          );
+        } else if (Object.getOwnPropertySymbols) {
+          const symbols = Object.getOwnPropertySymbols(value);
+          if (symbols.length > 0) {
+            console.error(
+              'Only plain objects can be passed to client components from server components. ' +
+                'Objects with symbol properties like %s are not supported. ' +
+                'Remove %s from these props: %s',
+              symbols[0].description,
+              describeKeyForErrorMessage(key),
+              describeObjectForErrorMessage(parent, key),
+            );
+          }
+        }
+      }
+    }
+    return value;
+  }
+
+  if (typeof value === 'string') {
+    return escapeStringValue(value);
+  }
+
+  if (
+    typeof value === 'boolean' ||
+    typeof value === 'number' ||
+    typeof value === 'undefined'
+  ) {
+    return value;
+  }
+
+  if (typeof value === 'function') {
+    if (/^on[A-Z]/.test(key)) {
+      invariant(
+        false,
+        'Event handlers cannot be passed to client component props. ' +
+          'Remove %s from these props if possible: %s\n' +
+          'If you need interactivity, consider converting part of this to a client component.',
+        describeKeyForErrorMessage(key),
+        describeObjectForErrorMessage(parent),
+      );
+    } else {
+      invariant(
+        false,
+        'Functions cannot be passed directly to client components ' +
+          "because they're not serializable. " +
+          'Remove %s (%s) from this object, or avoid the entire object: %s',
+        describeKeyForErrorMessage(key),
+        value.displayName || value.name || 'function',
+        describeObjectForErrorMessage(parent),
+      );
+    }
+  }
+
+  if (typeof value === 'symbol') {
+    invariant(
+      false,
+      'Symbol values (%s) cannot be passed to client components. ' +
+        'Remove %s from this object, or avoid the entire object: %s',
+      value.description,
+      describeKeyForErrorMessage(key),
+      describeObjectForErrorMessage(parent),
+    );
+  }
+
+  // $FlowFixMe: bigint isn't added to Flow yet.
+  if (typeof value === 'bigint') {
+    invariant(
+      false,
+      'BigInt (%s) is not yet supported in client component props. ' +
+        'Remove %s from this object or use a plain number instead: %s',
+      value,
+      describeKeyForErrorMessage(key),
+      describeObjectForErrorMessage(parent),
+    );
+  }
+
+  invariant(
+    false,
+    'Type %s is not supported in client component props. ' +
+      'Remove %s from this object, or avoid the entire object: %s',
+    typeof value,
+    describeKeyForErrorMessage(key),
+    describeObjectForErrorMessage(parent),
+  );
 }
 
 function emitErrorChunk(request: Request, id: number, error: mixed): void {

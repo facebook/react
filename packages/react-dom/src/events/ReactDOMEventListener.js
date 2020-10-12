@@ -40,7 +40,6 @@ import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
 import {
   enableLegacyFBSupport,
-  enableEagerRootListeners,
   decoupleUpdatePriorityFromScheduler,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -188,16 +187,14 @@ export function dispatchEvent(
   if (!_enabled) {
     return;
   }
-  let allowReplay = true;
-  if (enableEagerRootListeners) {
-    // TODO: replaying capture phase events is currently broken
-    // because we used to do it during top-level native bubble handlers
-    // but now we use different bubble and capture handlers.
-    // In eager mode, we attach capture listeners early, so we need
-    // to filter them out until we fix the logic to handle them correctly.
-    // This could've been outside the flag but I put it inside to reduce risk.
-    allowReplay = (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
-  }
+
+  // TODO: replaying capture phase events is currently broken
+  // because we used to do it during top-level native bubble handlers
+  // but now we use different bubble and capture handlers.
+  // In eager mode, we attach capture listeners early, so we need
+  // to filter them out until we fix the logic to handle them correctly.
+  const allowReplay = (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
+
   if (
     allowReplay &&
     hasQueuedDiscreteEvents() &&
