@@ -34,7 +34,7 @@ import {
   HostComponent,
   HostText,
   ScopeComponent,
-} from 'shared/ReactWorkTags';
+} from 'react-reconciler/src/ReactWorkTags';
 
 import getEventTarget from './getEventTarget';
 import {

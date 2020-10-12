@@ -24,7 +24,7 @@ import {
   HostText,
   FundamentalComponent,
   SuspenseComponent,
-} from 'shared/ReactWorkTags';
+} from 'react-reconciler/src/ReactWorkTags';
 import {NoFlags, Placement, Hydrating} from 'shared/ReactFiberFlags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 

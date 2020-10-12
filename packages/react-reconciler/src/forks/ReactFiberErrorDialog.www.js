@@ -10,7 +10,7 @@
 import type {Fiber} from '../ReactFiber.old';
 import type {CapturedValue} from '../ReactCapturedValue';
 
-import {ClassComponent} from 'shared/ReactWorkTags';
+import {ClassComponent} from 'react-reconciler/src/ReactWorkTags';
 
 import invariant from 'shared/invariant';
 

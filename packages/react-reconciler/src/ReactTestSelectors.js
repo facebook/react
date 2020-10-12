@@ -11,7 +11,7 @@ import type {Fiber} from 'shared/ReactInternalTypes';
 import type {Instance} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
-import {HostComponent, HostText} from 'shared/ReactWorkTags';
+import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import {
   findFiberRoot,

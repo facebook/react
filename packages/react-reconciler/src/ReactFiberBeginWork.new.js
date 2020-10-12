@@ -52,7 +52,7 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from 'shared/ReactWorkTags';
+} from 'react-reconciler/src/ReactWorkTags';
 import {
   NoFlags,
   PerformedWork,
@@ -123,7 +123,7 @@ import {
   ProfileMode,
   StrictMode,
   BlockingMode,
-} from 'shared/ReactTypeOfMode';
+} from 'react-reconciler/src/ReactTypeOfMode';
 import {
   shouldSetTextContent,
   isSuspenseInstancePending,

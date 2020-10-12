@@ -56,7 +56,7 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from 'shared/ReactWorkTags';
+} from 'react-reconciler/src/ReactWorkTags';
 import {
   invokeGuardedCallback,
   hasCaughtError,
@@ -89,7 +89,7 @@ import {
   recordPassiveEffectDuration,
   startPassiveEffectTimer,
 } from './ReactProfilerTimer.new';
-import {ProfileMode} from 'shared/ReactTypeOfMode';
+import {ProfileMode} from 'react-reconciler/src/ReactTypeOfMode';
 import {commitUpdateQueue} from './ReactUpdateQueue.new';
 import {
   getPublicInstance,

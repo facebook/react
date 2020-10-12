@@ -15,8 +15,8 @@ import type {
   RefObject,
 } from './ReactTypes';
 import type {Source} from './ReactElementType';
-import type {WorkTag} from './ReactWorkTags';
-import type {TypeOfMode} from './ReactTypeOfMode';
+import type {WorkTag} from 'react-reconciler/src/ReactWorkTags';
+import type {TypeOfMode} from 'react-reconciler/src/ReactTypeOfMode';
 import type {Flags} from './ReactFiberFlags';
 
 export type LanePriority =

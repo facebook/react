@@ -29,7 +29,7 @@ import {
   enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
 
-import {NoMode, BlockingMode, DebugTracingMode} from 'shared/ReactTypeOfMode';
+import {NoMode, BlockingMode, DebugTracingMode} from 'react-reconciler/src/ReactTypeOfMode';
 import {
   NoLane,
   NoLanes,

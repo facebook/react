@@ -105,7 +105,7 @@ import {
   ProfileMode,
   BlockingMode,
   ConcurrentMode,
-} from 'shared/ReactTypeOfMode';
+} from 'react-reconciler/src/ReactTypeOfMode';
 import {
   HostRoot,
   IndeterminateComponent,
@@ -119,7 +119,7 @@ import {
   Block,
   ScopeComponent,
   Profiler,
-} from 'shared/ReactWorkTags';
+} from 'react-reconciler/src/ReactWorkTags';
 import {LegacyRoot} from './ReactRootTags';
 import {
   NoFlags,

@@ -14,7 +14,7 @@ import {
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
 import getComponentName from 'shared/getComponentName';
-import {StrictMode} from 'shared/ReactTypeOfMode';
+import {StrictMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 type FiberArray = Array<Fiber>;
 type FiberToFiberComponentsMap = Map<Fiber, FiberArray>;

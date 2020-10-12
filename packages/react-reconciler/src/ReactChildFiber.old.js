@@ -33,7 +33,7 @@ import {
   Fragment,
   SimpleMemoComponent,
   Block,
-} from 'shared/ReactWorkTags';
+} from 'react-reconciler/src/ReactWorkTags';
 import invariant from 'shared/invariant';
 import {
   warnAboutStringRefs,
@@ -51,7 +51,7 @@ import {
 } from './ReactFiber.old';
 import {emptyRefsObject} from './ReactFiberClassComponent.old';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.old';
-import {StrictMode} from 'shared/ReactTypeOfMode';
+import {StrictMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;

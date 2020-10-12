@@ -25,7 +25,7 @@ import {
   HostComponent,
   ScopeComponent,
   ContextProvider,
-} from 'shared/ReactWorkTags';
+} from 'react-reconciler/src/ReactWorkTags';
 import {enableScopeAPI} from 'shared/ReactFeatureFlags';
 
 function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {

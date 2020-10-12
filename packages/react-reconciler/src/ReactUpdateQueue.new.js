@@ -96,7 +96,7 @@ import {Callback, ShouldCapture, DidCapture} from 'shared/ReactFiberFlags';
 
 import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
 
-import {StrictMode} from 'shared/ReactTypeOfMode';
+import {StrictMode} from 'react-reconciler/src/ReactTypeOfMode';
 import {markSkippedUpdateLanes} from './ReactFiberWorkLoop.new';
 
 import invariant from 'shared/invariant';

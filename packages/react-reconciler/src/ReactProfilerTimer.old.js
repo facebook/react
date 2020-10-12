@@ -13,7 +13,7 @@ import {
   enableProfilerTimer,
   enableProfilerCommitHooks,
 } from 'shared/ReactFeatureFlags';
-import {Profiler} from 'shared/ReactWorkTags';
+import {Profiler} from 'react-reconciler/src/ReactWorkTags';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.

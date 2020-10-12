@@ -69,7 +69,7 @@ import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
-import {HostComponent, HostText} from 'shared/ReactWorkTags';
+import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 
 export type Type = string;

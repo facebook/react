@@ -57,13 +57,13 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from 'shared/ReactWorkTags';
+} from 'react-reconciler/src/ReactWorkTags';
 import {
   NoMode,
   BlockingMode,
   ConcurrentMode,
   ProfileMode,
-} from 'shared/ReactTypeOfMode';
+} from 'react-reconciler/src/ReactTypeOfMode';
 import {
   Ref,
   Update,

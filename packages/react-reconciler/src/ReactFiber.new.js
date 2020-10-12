@@ -16,8 +16,8 @@ import type {
 } from 'shared/ReactTypes';
 import type {Fiber} from 'shared/ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
-import type {WorkTag} from 'shared/ReactWorkTags';
-import type {TypeOfMode} from 'shared/ReactTypeOfMode';
+import type {WorkTag} from 'react-reconciler/src/ReactWorkTags';
+import type {TypeOfMode} from 'react-reconciler/src/ReactTypeOfMode';
 import type {Lanes} from './ReactFiberLane';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {OffscreenProps} from './ReactFiberOffscreenComponent';
@@ -56,7 +56,7 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from 'shared/ReactWorkTags';
+} from 'react-reconciler/src/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
@@ -73,7 +73,7 @@ import {
   ProfileMode,
   StrictMode,
   BlockingMode,
-} from 'shared/ReactTypeOfMode';
+} from 'react-reconciler/src/ReactTypeOfMode';
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,

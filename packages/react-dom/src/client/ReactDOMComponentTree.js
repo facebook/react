@@ -26,7 +26,7 @@ import {
   HostText,
   HostRoot,
   SuspenseComponent,
-} from 'shared/ReactWorkTags';
+} from 'react-reconciler/src/ReactWorkTags';
 
 import {getParentSuspenseInstance} from './ReactDOMHostConfig';
 

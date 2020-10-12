@@ -11,7 +11,7 @@ import type {Fiber} from 'shared/ReactInternalTypes';
 import type {CapturedValue} from './ReactCapturedValue';
 
 import {showErrorDialog} from './ReactFiberErrorDialog';
-import {ClassComponent} from 'shared/ReactWorkTags';
+import {ClassComponent} from 'react-reconciler/src/ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
 export function logCapturedError(
