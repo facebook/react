@@ -754,8 +754,6 @@ export function formatDataForPreview(
       } else {
         return '{…}';
       }
-    case 'window':
-      return 'Window';
     case 'boolean':
     case 'number':
     case 'infinity':
