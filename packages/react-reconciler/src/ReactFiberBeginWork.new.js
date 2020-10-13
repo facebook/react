@@ -981,7 +981,7 @@ function finishClassComponent(
     nextChildren = null;
 
     if (enableProfilerTimer) {
-      stopProfilerTimerIfRunning(workInProgress);
+      stopProfilerTimerIfRunning();
     }
   } else {
     if (__DEV__) {
@@ -2993,7 +2993,7 @@ function bailoutOnAlreadyFinishedWork(
 
   if (enableProfilerTimer) {
     // Don't update "base" render times for bailouts.
-    stopProfilerTimerIfRunning(workInProgress);
+    stopProfilerTimerIfRunning();
   }
 
   markSkippedUpdateLanes(workInProgress.lanes);
