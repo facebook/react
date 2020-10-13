@@ -58,7 +58,7 @@ function startProfilerTimer(fiber: Fiber): void {
   }
 }
 
-function stopProfilerTimerIfRunning(fiber: Fiber): void {
+function stopProfilerTimerIfRunning(): void {
   if (!enableProfilerTimer) {
     return;
   }
