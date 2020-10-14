@@ -1,28 +1,4 @@
 {
-  "_from": "react-test-renderer@15",
-  "_id": "react-test-renderer@15.6.2",
-  "_inBundle": false,
-  "_integrity": "sha1-0DM0NPwsQ4CSaWyncNpe1IA376g=",
-  "_location": "/react-test-renderer",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "range",
-    "registry": true,
-    "raw": "react-test-renderer@15",
-    "name": "react-test-renderer",
-    "escapedName": "react-test-renderer",
-    "rawSpec": "15",
-    "saveSpec": null,
-    "fetchSpec": "15"
-  },
-  "_requiredBy": [
-    "#USER",
-    "/"
-  ],
-  "_resolved": "https://registry.npmjs.org/react-test-renderer/-/react-test-renderer-15.6.2.tgz",
-  "_shasum": "d0333434fc2c438092696ca770da5ed48037efa8",
-  "_spec": "react-test-renderer@15",
-  "_where": "/Users/gaearon/p/old",
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
@@ -50,11 +26,11 @@
   "main": "index.js",
   "name": "react-test-renderer",
   "peerDependencies": {
-    "react": "^15.6.2"
+    "react": "^15.7.0"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/facebook/react.git"
   },
-  "version": "15.6.2"
+  "version": "15.7.0"
 }
