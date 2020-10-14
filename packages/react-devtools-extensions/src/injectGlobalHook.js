@@ -38,6 +38,10 @@ window.addEventListener('message', function(evt) {
     script.src = chrome.runtime.getURL('build/react_devtools_backend.js');
     document.documentElement.appendChild(script);
     script.parentNode.removeChild(script);
+  } else if (evt.data.source === 'react-devtools-content-script') {
+    if (evt.data.payload && evt.data.payload.event === 'reactContextMenu') {
+      chrome.runtime.sendMessage(evt.data.payload);
+    }
   }
 });
 
@@ -54,6 +58,12 @@ window.addEventListener('pageshow', function(evt) {
 
 const detectReact = `
 window.__REACT_DEVTOOLS_GLOBAL_HOOK__.on('renderer', function(evt) {
+  document.addEventListener('contextmenu', event => {
+    let el = event.target;
+    if (el) {
+      window.__REACT_DEVTOOLS_GLOBAL_HOOK__['$0'] = el;
+    }
+  });
   window.postMessage({
     source: 'react-devtools-detector',
     reactBuildType: evt.reactBuildType,
