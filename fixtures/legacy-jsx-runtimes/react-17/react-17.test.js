@@ -318,9 +318,9 @@ it('should give context for PropType errors in nested components.', () => {
   }
   expect(() => ReactTestUtils.renderIntoDocument(<ParentComp />)).toErrorDev(
     'Warning: Failed prop type: ' +
-    'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
-    'expected `string`.\n' +
-    '    in color (at **)\n' +
+      'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
+      'expected `string`.\n' +
+      '    in color (at **)\n' +
       '    in ParentComp (at **)'
   );
 });
