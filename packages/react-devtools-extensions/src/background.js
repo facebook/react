@@ -79,7 +79,7 @@ function setIconAndPopup(reactBuildType, tabId) {
 }
 
 function isRestrictedBrowserPage(url) {
-  return !url || url.indexOf('chrome://') === 0;
+  return !url || new URL(url).protocol === 'chrome:';
 }
 
 function checkAndHandleRestrictedPageIfSo(tab) {
@@ -92,12 +92,12 @@ function checkAndHandleRestrictedPageIfSo(tab) {
 // we can't update for any other types (prod,dev,outdated etc) 
 // as the content script needs to be injected at document_start itself for those kinds of detection
 // TODO: Show a different popup page(to reload current page probably) for old tabs, opened before the extension is installed
-chrome.tabs.query({}, (tabs)=>tabs.forEach(checkAndHandleRestrictedPageIfSo));
-
-chrome.tabs.onCreated.addListener((tabId, changeInfo, tab) => checkAndHandleRestrictedPageIfSo(tab));
+if (!IS_FIREFOX) { 
+  chrome.tabs.query({}, tabs => tabs.forEach(checkAndHandleRestrictedPageIfSo)); 
+  chrome.tabs.onCreated.addListener((tabId, changeInfo, tab) => checkAndHandleRestrictedPageIfSo(tab));
+}
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  checkAndHandleRestrictedPageIfSo(tab);
   // Listen to URL changes on the active tab and reset the DevTools icon.
   // This prevents non-disabled icons from sticking in Firefox.
   // Don't do this in Chrome or Edge though.
@@ -106,6 +106,8 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     if (tab.active && changeInfo.status === 'loading') {
       setIconAndPopup('disabled', tabId);
     }
+  } else {
+    checkAndHandleRestrictedPageIfSo(tab);
   }
 });
 
