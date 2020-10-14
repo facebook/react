@@ -101,7 +101,7 @@ jobs:
       - *restore_node_modules
       - run: node ./scripts/tasks/flow-ci
 
-  RELEASE_CHANNEL_stable_yarn_test:
+  yarn_test-stable:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
@@ -109,7 +109,7 @@ jobs:
     steps:
       - checkout
       - *restore_node_modules
-      - run: yarn test --release-channel=stable --ci
+      - run: yarn test-stable --ci
 
   yarn_test:
     docker: *docker
@@ -120,89 +120,79 @@ jobs:
       - *restore_node_modules
       - run: yarn test --ci
 
-  RELEASE_CHANNEL_stable_yarn_test_www:
+  yarn_test-classic:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_node_modules
-      - run: yarn test --release-channel=www-classic --ci
+      - run: yarn test-classic --ci
 
-  RELEASE_CHANNEL_stable_yarn_test_www_variant:
+  yarn_test-classic_variant:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_node_modules
-      - run: yarn test --release-channel=www-classic --variant --ci
+      - run: yarn test-classic --variant --ci
 
-  RELEASE_CHANNEL_stable_yarn_test_prod_www:
+  yarn_test-classic_prod:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_node_modules
-      - run: yarn test --release-channel=www-classic --prod --ci
+      - run: yarn test-classic --prod --ci
 
-  RELEASE_CHANNEL_stable_yarn_test_prod_www_variant:
+  yarn_test-classic_prod_variant:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_node_modules
-      - run: yarn test --release-channel=www-classic --prod --variant --ci
+      - run: yarn test-classic --prod --variant --ci
 
-  yarn_test_www:
+  yarn_test-www:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_node_modules
-      - run: yarn test --release-channel=www-modern --ci
+      - run: yarn test-www --ci
 
-  yarn_test_www_variant:
+  yarn_test-www_variant:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_node_modules
-      - run: yarn test --release-channel=www-modern --variant --ci
+      - run: yarn test-www --variant --ci
 
-  yarn_test_prod_www:
+  yarn_test-www_prod:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_node_modules
-      - run: yarn test --release-channel=www-modern --prod --ci
+      - run: yarn test-www --prod --ci
 
-  yarn_test_prod_www_variant:
+  yarn_test-www_prod_variant:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
       - *restore_node_modules
-      - run: yarn test --release-channel=www-modern --prod --variant --ci
+      - run: yarn test-www --prod --variant --ci
 
-  RELEASE_CHANNEL_stable_yarn_test_persistent:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-
-    steps:
-      - checkout
-      - *restore_node_modules
-      - run: yarn test --release-channel=stable --persistent --ci
-
-  RELEASE_CHANNEL_stable_yarn_test_prod:
+  yarn_test-stable_persistent:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
@@ -210,7 +200,17 @@ jobs:
     steps:
       - checkout
       - *restore_node_modules
-      - run: yarn test --release-channel=stable --prod --ci
+      - run: yarn test-stable --persistent --ci
+
+  yarn_test-stable_prod:
+    docker: *docker
+    environment: *environment
+    parallelism: *TEST_PARALLELISM
+
+    steps:
+      - checkout
+      - *restore_node_modules
+      - run: yarn test-stable --prod --ci
 
   yarn_test_prod:
     docker: *docker
@@ -219,7 +219,7 @@ jobs:
     steps:
       - checkout
       - *restore_node_modules
-      - run: yarn test --release-channel=experimental --prod --ci
+      - run: yarn test --prod --ci
 
   RELEASE_CHANNEL_stable_yarn_build:
     docker: *docker
@@ -316,7 +316,7 @@ jobs:
           root: packages/react-devtools-scheduling-profiler
           paths:
             - dist
-  
+
   deploy_devtools_scheduling_profiler:
     docker: *docker
     environment: *environment
@@ -389,7 +389,7 @@ jobs:
           command: yarn lint-build
       - run: scripts/circleci/check_minified_errors.sh
 
-  RELEASE_CHANNEL_stable_yarn_test_build:
+  yarn_test-stable_build:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
@@ -397,7 +397,7 @@ jobs:
       - checkout
       - attach_workspace: *attach_workspace
       - *restore_node_modules
-      - run: yarn test --release-channel=stable --build --ci
+      - run: yarn test-stable --build --ci
 
   yarn_test_build:
     docker: *docker
@@ -407,7 +407,7 @@ jobs:
       - checkout
       - attach_workspace: *attach_workspace
       - *restore_node_modules
-      - run: yarn test --release-channel=experimental --build --ci
+      - run: yarn test --build --ci
 
   yarn_test_build_devtools:
     docker: *docker
@@ -447,7 +447,7 @@ jobs:
             FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci
             FUZZ_TEST_SEED=$RANDOM yarn test --prod fuzz --ci
 
-  RELEASE_CHANNEL_stable_yarn_test_build_prod:
+  yarn_test-stable_build_prod:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
@@ -455,7 +455,7 @@ jobs:
       - checkout
       - attach_workspace: *attach_workspace
       - *restore_node_modules
-      - run: yarn test --release-channel=stable --build --prod --ci
+      - run: yarn test-stable --build --prod --ci
 
   yarn_test_build_prod:
     docker: *docker
@@ -465,7 +465,7 @@ jobs:
       - checkout
       - attach_workspace: *attach_workspace
       - *restore_node_modules
-      - run: yarn test --release-channel=experimental --build --prod --ci
+      - run: yarn test --build --prod --ci
 
 workflows:
   version: 2
@@ -478,25 +478,25 @@ workflows:
       - yarn_flow:
           requires:
             - setup
-      - RELEASE_CHANNEL_stable_yarn_test:
+      - yarn_test-stable:
           requires:
             - setup
-      - RELEASE_CHANNEL_stable_yarn_test_prod:
+      - yarn_test-stable_prod:
           requires:
             - setup
-      - RELEASE_CHANNEL_stable_yarn_test_persistent:
+      - yarn_test-stable_persistent:
           requires:
             - setup
-      - RELEASE_CHANNEL_stable_yarn_test_www:
+      - yarn_test-classic:
           requires:
             - setup
-      - RELEASE_CHANNEL_stable_yarn_test_www_variant:
+      - yarn_test-classic_variant:
           requires:
             - setup
-      - RELEASE_CHANNEL_stable_yarn_test_prod_www:
+      - yarn_test-classic_prod:
           requires:
             - setup
-      - RELEASE_CHANNEL_stable_yarn_test_prod_www_variant:
+      - yarn_test-classic_prod_variant:
           requires:
             - setup
       - RELEASE_CHANNEL_stable_yarn_build:
@@ -511,10 +511,10 @@ workflows:
       - RELEASE_CHANNEL_stable_yarn_lint_build:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
-      - RELEASE_CHANNEL_stable_yarn_test_build:
+      - yarn_test-stable_build:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
-      - RELEASE_CHANNEL_stable_yarn_test_build_prod:
+      - yarn_test-stable_build_prod:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
       - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
@@ -530,16 +530,16 @@ workflows:
       - yarn_test_prod:
           requires:
             - setup
-      - yarn_test_www:
+      - yarn_test-www:
           requires:
             - setup
-      - yarn_test_www_variant:
+      - yarn_test-www_variant:
           requires:
             - setup
-      - yarn_test_prod_www:
+      - yarn_test-www_prod:
           requires:
             - setup
-      - yarn_test_prod_www_variant:
+      - yarn_test-www_prod_variant:
           requires:
             - setup
       - yarn_build:
