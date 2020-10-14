@@ -56,7 +56,7 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from 'react-reconciler/src/ReactWorkTags';
+} from './ReactWorkTags';
 import {
   invokeGuardedCallback,
   hasCaughtError,
@@ -72,7 +72,7 @@ import {
   LayoutMask,
   PassiveMask,
   Ref,
-} from 'shared/ReactFiberFlags';
+} from './ReactFiberFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import {
@@ -89,7 +89,7 @@ import {
   recordPassiveEffectDuration,
   startPassiveEffectTimer,
 } from './ReactProfilerTimer.new';
-import {ProfileMode} from 'react-reconciler/src/ReactTypeOfMode';
+import {ProfileMode} from './ReactTypeOfMode';
 import {commitUpdateQueue} from './ReactUpdateQueue.new';
 import {
   getPublicInstance,

@@ -17,7 +17,7 @@ import type {
 import type {Source} from './ReactElementType';
 import type {WorkTag} from 'react-reconciler/src/ReactWorkTags';
 import type {TypeOfMode} from 'react-reconciler/src/ReactTypeOfMode';
-import type {Flags} from './ReactFiberFlags';
+import type {Flags} from 'react-reconciler/src/ReactFiberFlags';
 
 export type LanePriority =
   | 0

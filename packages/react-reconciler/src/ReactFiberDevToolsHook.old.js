@@ -13,7 +13,7 @@ import type {FiberRoot} from './ReactInternalTypes';
 import type {Fiber, ReactPriorityLevel} from 'shared/ReactInternalTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
-import {DidCapture} from 'shared/ReactFiberFlags';
+import {DidCapture} from './ReactFiberFlags';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 

@@ -17,7 +17,7 @@ import type {
   PublicInstance,
 } from './ReactFiberHostConfig';
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
-import {FundamentalComponent} from 'react-reconciler/src/ReactWorkTags';
+import {FundamentalComponent} from './ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Lane, LanePriority} from './ReactFiberLane';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
@@ -32,7 +32,7 @@ import {
   ClassComponent,
   HostRoot,
   SuspenseComponent,
-} from 'react-reconciler/src/ReactWorkTags';
+} from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
@@ -72,7 +72,7 @@ import {
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
-import {StrictMode} from 'react-reconciler/src/ReactTypeOfMode';
+import {StrictMode} from './ReactTypeOfMode';
 import {
   SyncLane,
   InputDiscreteHydrationLane,

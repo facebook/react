@@ -21,11 +21,7 @@ import {
 } from './ReactFiberHostConfig';
 import {isFiberSuspenseAndTimedOut} from './ReactFiberTreeReflection';
 
-import {
-  HostComponent,
-  ScopeComponent,
-  ContextProvider,
-} from 'react-reconciler/src/ReactWorkTags';
+import {HostComponent, ScopeComponent, ContextProvider} from './ReactWorkTags';
 import {enableScopeAPI} from 'shared/ReactFeatureFlags';
 
 function getSuspenseFallbackChild(fiber: Fiber): Fiber | null {

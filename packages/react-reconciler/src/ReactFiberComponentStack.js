@@ -20,7 +20,7 @@ import {
   SimpleMemoComponent,
   Block,
   ClassComponent,
-} from 'react-reconciler/src/ReactWorkTags';
+} from './ReactWorkTags';
 import {
   describeBuiltInComponentFrame,
   describeFunctionComponentFrame,

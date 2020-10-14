@@ -92,11 +92,11 @@ import {
   enterDisallowedContextReadInDEV,
   exitDisallowedContextReadInDEV,
 } from './ReactFiberNewContext.new';
-import {Callback, ShouldCapture, DidCapture} from 'shared/ReactFiberFlags';
+import {Callback, ShouldCapture, DidCapture} from './ReactFiberFlags';
 
 import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
 
-import {StrictMode} from 'react-reconciler/src/ReactTypeOfMode';
+import {StrictMode} from './ReactTypeOfMode';
 import {markSkippedUpdateLanes} from './ReactFiberWorkLoop.new';
 
 import invariant from 'shared/invariant';

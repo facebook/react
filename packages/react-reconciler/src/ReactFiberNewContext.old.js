@@ -19,7 +19,7 @@ import {
   ContextProvider,
   ClassComponent,
   DehydratedFragment,
-} from 'react-reconciler/src/ReactWorkTags';
+} from './ReactWorkTags';
 import {
   NoLanes,
   NoTimestamp,

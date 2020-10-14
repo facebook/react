@@ -23,8 +23,8 @@ import {
   HostText,
   HostRoot,
   SuspenseComponent,
-} from 'react-reconciler/src/ReactWorkTags';
-import {Deletion, Hydrating, Placement} from 'shared/ReactFiberFlags';
+} from './ReactWorkTags';
+import {Deletion, Hydrating, Placement} from './ReactFiberFlags';
 import invariant from 'shared/invariant';
 
 import {

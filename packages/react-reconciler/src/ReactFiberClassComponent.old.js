@@ -12,7 +12,7 @@ import type {Lanes} from './ReactFiberLane';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
 
 import * as React from 'react';
-import {Update, Snapshot} from 'shared/ReactFiberFlags';
+import {Update, Snapshot} from './ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
@@ -29,10 +29,7 @@ import invariant from 'shared/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
-import {
-  DebugTracingMode,
-  StrictMode,
-} from 'react-reconciler/src/ReactTypeOfMode';
+import {DebugTracingMode, StrictMode} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,

@@ -57,13 +57,13 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from 'react-reconciler/src/ReactWorkTags';
+} from './ReactWorkTags';
 import {
   NoMode,
   BlockingMode,
   ConcurrentMode,
   ProfileMode,
-} from 'react-reconciler/src/ReactTypeOfMode';
+} from './ReactTypeOfMode';
 import {
   Ref,
   Update,
@@ -78,7 +78,7 @@ import {
   PassiveMask,
   StaticMask,
   PerformedWork,
-} from 'shared/ReactFiberFlags';
+} from './ReactFiberFlags';
 import invariant from 'shared/invariant';
 
 import {

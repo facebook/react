@@ -16,7 +16,7 @@ import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {StackCursor} from './ReactFiberStack.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
-import type {Flags} from 'shared/ReactFiberFlags';
+import type {Flags} from './ReactFiberFlags';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -105,7 +105,7 @@ import {
   ProfileMode,
   BlockingMode,
   ConcurrentMode,
-} from 'react-reconciler/src/ReactTypeOfMode';
+} from './ReactTypeOfMode';
 import {
   HostRoot,
   IndeterminateComponent,
@@ -119,7 +119,7 @@ import {
   Block,
   ScopeComponent,
   Profiler,
-} from 'react-reconciler/src/ReactWorkTags';
+} from './ReactWorkTags';
 import {LegacyRoot} from './ReactRootTags';
 import {
   NoFlags,
@@ -141,7 +141,7 @@ import {
   PassiveMask,
   MountPassiveDev,
   MountLayoutDev,
-} from 'shared/ReactFiberFlags';
+} from './ReactFiberFlags';
 import {
   NoLanePriority,
   SyncLanePriority,

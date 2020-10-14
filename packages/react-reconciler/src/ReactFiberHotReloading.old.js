@@ -30,7 +30,7 @@ import {
   HostRoot,
   MemoComponent,
   SimpleMemoComponent,
-} from 'react-reconciler/src/ReactWorkTags';
+} from './ReactWorkTags';
 import {
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,

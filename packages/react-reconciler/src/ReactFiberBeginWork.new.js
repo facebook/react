@@ -52,7 +52,7 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from 'react-reconciler/src/ReactWorkTags';
+} from './ReactWorkTags';
 import {
   NoFlags,
   PerformedWork,
@@ -64,7 +64,7 @@ import {
   Deletion,
   ForceUpdateForLegacySuspense,
   StaticMask,
-} from 'shared/ReactFiberFlags';
+} from './ReactFiberFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
@@ -123,7 +123,7 @@ import {
   ProfileMode,
   StrictMode,
   BlockingMode,
-} from 'react-reconciler/src/ReactTypeOfMode';
+} from './ReactTypeOfMode';
 import {
   shouldSetTextContent,
   isSuspenseInstancePending,

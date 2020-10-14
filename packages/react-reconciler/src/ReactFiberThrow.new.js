@@ -21,7 +21,7 @@ import {
   HostRoot,
   SuspenseComponent,
   IncompleteClassComponent,
-} from 'react-reconciler/src/ReactWorkTags';
+} from './ReactWorkTags';
 import {
   DidCapture,
   Incomplete,
@@ -29,13 +29,9 @@ import {
   ShouldCapture,
   LifecycleEffectMask,
   ForceUpdateForLegacySuspense,
-} from 'shared/ReactFiberFlags';
+} from './ReactFiberFlags';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.new';
-import {
-  NoMode,
-  BlockingMode,
-  DebugTracingMode,
-} from 'react-reconciler/src/ReactTypeOfMode';
+import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   enableDebugTracing,
   enableSchedulingProfiler,

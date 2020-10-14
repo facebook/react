@@ -15,7 +15,7 @@ import type {Fiber} from 'shared/ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 
 import getComponentName from 'shared/getComponentName';
-import {Deletion, Placement} from 'shared/ReactFiberFlags';
+import {Deletion, Placement} from './ReactFiberFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -33,7 +33,7 @@ import {
   Fragment,
   SimpleMemoComponent,
   Block,
-} from 'react-reconciler/src/ReactWorkTags';
+} from './ReactWorkTags';
 import invariant from 'shared/invariant';
 import {
   warnAboutStringRefs,
@@ -51,7 +51,7 @@ import {
 } from './ReactFiber.new';
 import {emptyRefsObject} from './ReactFiberClassComponent.new';
 import {isCompatibleFamilyForHotReloading} from './ReactFiberHotReloading.new';
-import {StrictMode} from 'react-reconciler/src/ReactTypeOfMode';
+import {StrictMode} from './ReactTypeOfMode';
 
 let didWarnAboutMaps;
 let didWarnAboutGenerators;

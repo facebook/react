@@ -29,11 +29,7 @@ import {
   enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
 
-import {
-  NoMode,
-  BlockingMode,
-  DebugTracingMode,
-} from 'react-reconciler/src/ReactTypeOfMode';
+import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   NoLane,
   NoLanes,
@@ -55,7 +51,7 @@ import {
   PassiveStatic as PassiveStaticEffect,
   MountLayoutDev as MountLayoutDevEffect,
   MountPassiveDev as MountPassiveDevEffect,
-} from 'shared/ReactFiberFlags';
+} from './ReactFiberFlags';
 import {
   HasEffect as HookHasEffect,
   Layout as HookLayout,

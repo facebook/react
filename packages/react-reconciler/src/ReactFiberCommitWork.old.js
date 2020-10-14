@@ -55,7 +55,7 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from 'react-reconciler/src/ReactWorkTags';
+} from './ReactWorkTags';
 import {
   invokeGuardedCallback,
   hasCaughtError,
@@ -67,7 +67,7 @@ import {
   Placement,
   Snapshot,
   Update,
-} from 'shared/ReactFiberFlags';
+} from './ReactFiberFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 
@@ -78,7 +78,7 @@ import {
   recordLayoutEffectDuration,
   startLayoutEffectTimer,
 } from './ReactProfilerTimer.old';
-import {ProfileMode} from 'react-reconciler/src/ReactTypeOfMode';
+import {ProfileMode} from './ReactTypeOfMode';
 import {commitUpdateQueue} from './ReactUpdateQueue.old';
 import {
   getPublicInstance,

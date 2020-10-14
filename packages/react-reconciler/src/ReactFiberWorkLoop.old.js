@@ -98,7 +98,7 @@ import {
   ProfileMode,
   BlockingMode,
   ConcurrentMode,
-} from 'react-reconciler/src/ReactTypeOfMode';
+} from './ReactTypeOfMode';
 import {
   HostRoot,
   IndeterminateComponent,
@@ -113,7 +113,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
   ScopeComponent,
-} from 'react-reconciler/src/ReactWorkTags';
+} from './ReactWorkTags';
 import {LegacyRoot} from './ReactRootTags';
 import {
   NoFlags,
@@ -132,7 +132,7 @@ import {
   HostEffectMask,
   Hydrating,
   HydratingAndUpdate,
-} from 'shared/ReactFiberFlags';
+} from './ReactFiberFlags';
 import {
   NoLanePriority,
   SyncLanePriority,

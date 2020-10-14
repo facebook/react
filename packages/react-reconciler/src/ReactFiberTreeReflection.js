@@ -24,8 +24,8 @@ import {
   HostText,
   FundamentalComponent,
   SuspenseComponent,
-} from 'react-reconciler/src/ReactWorkTags';
-import {NoFlags, Placement, Hydrating} from 'shared/ReactFiberFlags';
+} from './ReactWorkTags';
+import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
 import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;

@@ -22,9 +22,9 @@ import {
   SuspenseListComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from 'react-reconciler/src/ReactWorkTags';
-import {DidCapture, NoFlags, ShouldCapture} from 'shared/ReactFiberFlags';
-import {NoMode, ProfileMode} from 'react-reconciler/src/ReactTypeOfMode';
+} from './ReactWorkTags';
+import {DidCapture, NoFlags, ShouldCapture} from './ReactFiberFlags';
+import {NoMode, ProfileMode} from './ReactTypeOfMode';
 import {
   enableSuspenseServerRenderer,
   enableProfilerTimer,

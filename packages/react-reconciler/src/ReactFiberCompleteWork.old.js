@@ -57,19 +57,9 @@ import {
   Block,
   OffscreenComponent,
   LegacyHiddenComponent,
-} from 'react-reconciler/src/ReactWorkTags';
-import {
-  NoMode,
-  BlockingMode,
-  ProfileMode,
-} from 'react-reconciler/src/ReactTypeOfMode';
-import {
-  Ref,
-  Update,
-  NoFlags,
-  DidCapture,
-  Snapshot,
-} from 'shared/ReactFiberFlags';
+} from './ReactWorkTags';
+import {NoMode, BlockingMode, ProfileMode} from './ReactTypeOfMode';
+import {Ref, Update, NoFlags, DidCapture, Snapshot} from './ReactFiberFlags';
 import invariant from 'shared/invariant';
 
 import {

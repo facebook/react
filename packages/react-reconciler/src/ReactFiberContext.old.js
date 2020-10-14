@@ -12,7 +12,7 @@ import type {StackCursor} from './ReactFiberStack.old';
 
 import {isFiberMounted} from './ReactFiberTreeReflection';
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
-import {ClassComponent, HostRoot} from 'react-reconciler/src/ReactWorkTags';
+import {ClassComponent, HostRoot} from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import checkPropTypes from 'shared/checkPropTypes';
