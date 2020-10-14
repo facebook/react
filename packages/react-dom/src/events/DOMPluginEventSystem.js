@@ -658,10 +658,11 @@ export function accumulateSinglePhaseListeners(
   nativeEventType: string,
   inCapturePhase: boolean,
   accumulateTargetOnly: boolean,
+  nativeEvent: AnyNativeEvent,
 ): Array<DispatchListener> {
   const captureName = reactName !== null ? reactName + 'Capture' : null;
   const reactEventName = inCapturePhase ? captureName : reactName;
-  const listeners: Array<DispatchListener> = [];
+  let listeners: Array<DispatchListener> = [];
 
   let instance = targetFiber;
   let lastHostComponent = null;
@@ -739,6 +740,20 @@ export function accumulateSinglePhaseListeners(
     // listeners.
     if (accumulateTargetOnly) {
       break;
+    }
+    // If we are processing the onBeforeBlur event, then we need to take
+    // into consideration that part of the React tree might have been hidden
+    // or deleted (as we're invoking this event during commit). We can find
+    // this out by checking if intercept fiber set on the event matches the
+    // current instance fiber. In which case, we should clear all existing
+    // listeners.
+    if (
+      enableCreateEventHandleAPI &&
+      nativeEvent.type === 'beforeblur' &&
+      // $FlowFixMe: internal field
+      nativeEvent._detachedInterceptFiber === instance
+    ) {
+      listeners = [];
     }
     instance = instance.return;
   }
