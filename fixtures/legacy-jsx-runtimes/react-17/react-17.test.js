@@ -320,7 +320,7 @@ it('should give context for PropType errors in nested components.', () => {
     'Warning: Failed prop type: ' +
     'Invalid prop `color` of type `number` supplied to `MyComp`, ' +
     'expected `string`.\n' +
-    '    in fn (at **)\n' + // Jest/Node issue
+    '    in color (at **)\n' +
       '    in ParentComp (at **)'
   );
 });
@@ -377,7 +377,7 @@ it('should check default prop values', () => {
   ).toErrorDev(
     'Warning: Failed prop type: The prop `prop` is marked as required in ' +
       '`RequiredPropComponent`, but its value is `null`.\n' +
-      '    in construct (at **)' // Jest/Node issue
+      '    in RequiredPropComponent (at **)'
   );
 });
 
