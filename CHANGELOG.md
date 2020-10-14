@@ -1,3 +1,9 @@
+## 16.14.0 (October 14, 2020)
+
+### React
+
+* Add support for the [new JSX transform](https://reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html). ([@lunaruan](https://github.com/lunaruan) in [#18299](https://github.com/facebook/react/pull/18299))
+
 ## 16.13.1 (March 19, 2020)
 
 ### React DOM
@@ -770,6 +776,12 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 - There is no `react-with-addons.js` build anymore. All compatible addons are published separately on npm, and have single-file browser versions if you need them.
 - The deprecations introduced in 15.x have been removed from the core package. `React.createClass` is now available as create-react-class, `React.PropTypes` as prop-types, `React.DOM` as react-dom-factories, react-addons-test-utils as react-dom/test-utils, and shallow renderer as react-test-renderer/shallow. See [15.5.0](https://reactjs.org/blog/2017/04/07/react-v15.5.0.html) and [15.6.0](https://reactjs.org/blog/2017/06/13/react-v15.6.0.html) blog posts for instructions on migrating code and automated codemods.
 
+## 15.7.0 (October 14, 2020)
+
+### React
+
+* Backport support for the [new JSX transform](https://reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html) to 15.x. ([@lunaruan](https://github.com/lunaruan) in [#18299](https://github.com/facebook/react/pull/18299) and [@gaearon](https://github.com/gaearon) in [#20024](https://github.com/facebook/react/pull/20024))
+
 ## 15.6.2 (September 25, 2017)
 
 ### All Packages
@@ -1221,6 +1233,11 @@ Each of these changes will continue to work as before with a new warning until t
 - React DOM adds a new `suppressContentEditableWarning` prop for components like [Draft.js](https://draftjs.org/) that intentionally manage `contentEditable` children with React. ([@mxstbr](https://github.com/mxstbr) in [#6112](https://github.com/facebook/react/pull/6112))
 - React improves the performance for `createClass()` on complex specs. ([@sophiebits](https://github.com/sophiebits) in [#5550](https://github.com/facebook/react/pull/5550))
 
+## 0.14.10 (October 14, 2020)
+
+### React
+
+* Backport support for the [new JSX transform](https://reactjs.org/blog/2020/09/22/introducing-the-new-jsx-transform.html) to 0.14.x. ([@lunaruan](https://github.com/lunaruan) in [#18299](https://github.com/facebook/react/pull/18299) and [@gaearon](https://github.com/gaearon) in [#20024](https://github.com/facebook/react/pull/20024))
 
 ## 0.14.8 (March 29, 2016)
 

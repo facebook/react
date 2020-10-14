@@ -85,14 +85,16 @@ export function describeNativeComponentFrame(
   Error.prepareStackTrace = undefined;
 
   reentry = true;
-  let previousDispatcher;
-  if (__DEV__) {
-    previousDispatcher = currentDispatcherRef.current;
-    // Set the dispatcher in DEV because this might be call in the render function
-    // for warnings.
-    currentDispatcherRef.current = null;
-    disableLogs();
-  }
+
+  // Override the dispatcher so effects scheduled by this shallow render are thrown away.
+  //
+  // Note that unlike the code this was forked from (in ReactComponentStackFrame)
+  // DevTools should override the dispatcher even when DevTools is compiled in production mode,
+  // because the app itself may be in development mode and log errors/warnings.
+  const previousDispatcher = currentDispatcherRef.current;
+  currentDispatcherRef.current = null;
+  disableLogs();
+
   try {
     // This should throw.
     if (construct) {
@@ -188,10 +190,8 @@ export function describeNativeComponentFrame(
 
     Error.prepareStackTrace = previousPrepareStackTrace;
 
-    if (__DEV__) {
-      currentDispatcherRef.current = previousDispatcher;
-      reenableLogs();
-    }
+    currentDispatcherRef.current = previousDispatcher;
+    reenableLogs();
   }
   // Fallback to just using the name if we couldn't make it throw.
   const name = fn ? fn.displayName || fn.name : '';

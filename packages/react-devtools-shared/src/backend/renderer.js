@@ -1572,7 +1572,7 @@ export function attach(
       if (nextPrimaryChildSet !== null) {
         mountFiberRecursively(
           nextPrimaryChildSet,
-          nextFiber,
+          shouldIncludeInTree ? nextFiber : parentFiber,
           true,
           traceNearestHostComponentUpdate,
         );
