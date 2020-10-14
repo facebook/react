@@ -1,28 +1,4 @@
 {
-  "_from": "react@15",
-  "_id": "react@15.6.2",
-  "_inBundle": false,
-  "_integrity": "sha1-26BDSrQ5z+gvEI8PURZjkIF5qnI=",
-  "_location": "/react",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "range",
-    "registry": true,
-    "raw": "react@15",
-    "name": "react",
-    "escapedName": "react",
-    "rawSpec": "15",
-    "saveSpec": null,
-    "fetchSpec": "15"
-  },
-  "_requiredBy": [
-    "#USER",
-    "/"
-  ],
-  "_resolved": "https://registry.npmjs.org/react/-/react-15.6.2.tgz",
-  "_shasum": "dba0434ab439cfe82f108f0f511663908179aa72",
-  "_spec": "react@15",
-  "_where": "/Users/gaearon/p/old",
   "browserify": {
     "transform": [
       "loose-envify"
@@ -50,7 +26,10 @@
     "react.js",
     "addons/",
     "dist/",
-    "lib/"
+    "lib/",
+    "cjs/",
+    "jsx-runtime.js",
+    "jsx-dev-runtime.js"
   ],
   "homepage": "https://facebook.github.io/react/",
   "keywords": [
@@ -63,5 +42,5 @@
     "type": "git",
     "url": "git+https://github.com/facebook/react.git"
   },
-  "version": "15.6.2"
+  "version": "15.7.0"
 }

@@ -1,28 +1,4 @@
 {
-  "_from": "react@16",
-  "_id": "react@16.13.1",
-  "_inBundle": false,
-  "_integrity": "sha512-YMZQQq32xHLX0bz5Mnibv1/LHb3Sqzngu7xstSM+vrkE5Kzr9xE0yMByK5kMoTK30YVJE61WfbxIFFvfeDKT1w==",
-  "_location": "/react",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "range",
-    "registry": true,
-    "raw": "react@16",
-    "name": "react",
-    "escapedName": "react",
-    "rawSpec": "16",
-    "saveSpec": null,
-    "fetchSpec": "16"
-  },
-  "_requiredBy": [
-    "#USER",
-    "/"
-  ],
-  "_resolved": "https://registry.npmjs.org/react/-/react-16.13.1.tgz",
-  "_shasum": "2e818822f1a9743122c063d6410d85c1e3afe48e",
-  "_spec": "react@16",
-  "_where": "/Users/gaearon/p/old",
   "browserify": {
     "transform": [
       "loose-envify"
@@ -48,7 +24,9 @@
     "build-info.json",
     "index.js",
     "cjs/",
-    "umd/"
+    "umd/",
+    "jsx-runtime.js",
+    "jsx-dev-runtime.js"
   ],
   "homepage": "https://reactjs.org/",
   "keywords": [
@@ -62,5 +40,5 @@
     "url": "git+https://github.com/facebook/react.git",
     "directory": "packages/react"
   },
-  "version": "16.13.1"
+  "version": "16.14.0"
 }

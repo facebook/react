@@ -1,28 +1,4 @@
 {
-  "_from": "react@0.14",
-  "_id": "react@0.14.9",
-  "_inBundle": false,
-  "_integrity": "sha1-kRCmSXxJ1EuhwO3TF67CnC4NkdE=",
-  "_location": "/react",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "range",
-    "registry": true,
-    "raw": "react@0.14",
-    "name": "react",
-    "escapedName": "react",
-    "rawSpec": "0.14",
-    "saveSpec": null,
-    "fetchSpec": "0.14"
-  },
-  "_requiredBy": [
-    "#USER",
-    "/"
-  ],
-  "_resolved": "https://registry.npmjs.org/react/-/react-0.14.9.tgz",
-  "_shasum": "9110a6497c49d44ba1c0edd317aec29c2e0d91d1",
-  "_spec": "react@0.14",
-  "_where": "/Users/gaearon/p/old",
   "browserify": {
     "transform": [
       "envify"
@@ -48,7 +24,10 @@
     "react.js",
     "addons/",
     "dist/",
-    "lib/"
+    "lib/",
+    "cjs/",
+    "jsx-runtime.js",
+    "jsx-dev-runtime.js"
   ],
   "homepage": "https://facebook.github.io/react/",
   "keywords": [
@@ -61,5 +40,5 @@
     "type": "git",
     "url": "git+https://github.com/facebook/react.git"
   },
-  "version": "0.14.9"
+  "version": "0.14.10"
 }

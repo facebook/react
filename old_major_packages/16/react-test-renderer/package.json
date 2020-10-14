@@ -1,28 +1,4 @@
 {
-  "_from": "react-test-renderer@16",
-  "_id": "react-test-renderer@16.13.1",
-  "_inBundle": false,
-  "_integrity": "sha512-Sn2VRyOK2YJJldOqoh8Tn/lWQ+ZiKhyZTPtaO0Q6yNj+QDbmRkVFap6pZPy3YQk8DScRDfyqm/KxKYP9gCMRiQ==",
-  "_location": "/react-test-renderer",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "range",
-    "registry": true,
-    "raw": "react-test-renderer@16",
-    "name": "react-test-renderer",
-    "escapedName": "react-test-renderer",
-    "rawSpec": "16",
-    "saveSpec": null,
-    "fetchSpec": "16"
-  },
-  "_requiredBy": [
-    "#USER",
-    "/"
-  ],
-  "_resolved": "https://registry.npmjs.org/react-test-renderer/-/react-test-renderer-16.13.1.tgz",
-  "_shasum": "de25ea358d9012606de51e012d9742e7f0deabc1",
-  "_spec": "react-test-renderer@16",
-  "_where": "/Users/gaearon/p/old",
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
@@ -54,12 +30,12 @@
   "main": "index.js",
   "name": "react-test-renderer",
   "peerDependencies": {
-    "react": "^16.13.1"
+    "react": "^16.14.0"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/facebook/react.git",
     "directory": "packages/react-test-renderer"
   },
-  "version": "16.13.1"
+  "version": "16.14.0"
 }

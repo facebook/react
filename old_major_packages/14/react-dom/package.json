@@ -1,28 +1,4 @@
 {
-  "_from": "react-dom@0.14",
-  "_id": "react-dom@0.14.9",
-  "_inBundle": false,
-  "_integrity": "sha1-BQZKPc8PsYgKOyv8nVjFXY2fYpM=",
-  "_location": "/react-dom",
-  "_phantomChildren": {},
-  "_requested": {
-    "type": "range",
-    "registry": true,
-    "raw": "react-dom@0.14",
-    "name": "react-dom",
-    "escapedName": "react-dom",
-    "rawSpec": "0.14",
-    "saveSpec": null,
-    "fetchSpec": "0.14"
-  },
-  "_requiredBy": [
-    "#USER",
-    "/"
-  ],
-  "_resolved": "https://registry.npmjs.org/react-dom/-/react-dom-0.14.9.tgz",
-  "_shasum": "05064a3dcf0fb1880a3b2bfc9d58c55d8d9f6293",
-  "_spec": "react-dom@0.14",
-  "_where": "/Users/gaearon/p/old",
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
@@ -38,7 +14,7 @@
   "main": "index.js",
   "name": "react-dom",
   "peerDependencies": {
-    "react": "^0.14.9"
+    "react": "^0.14.10"
   },
   "repository": {
     "type": "git",
@@ -47,5 +23,5 @@
   "scripts": {
     "start": "node server.js"
   },
-  "version": "0.14.9"
+  "version": "0.14.10"
 }
