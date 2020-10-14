@@ -15,11 +15,6 @@ describe('ReactDOMFrameScheduling', () => {
 
     // Un-mock scheduler
     jest.mock('scheduler', () => require.requireActual('scheduler'));
-    jest.mock('scheduler/src/SchedulerHostConfig', () =>
-      require.requireActual(
-        'scheduler/src/forks/SchedulerHostConfig.default.js',
-      ),
-    );
   });
 
   it('warns when requestAnimationFrame is not polyfilled in the browser', () => {

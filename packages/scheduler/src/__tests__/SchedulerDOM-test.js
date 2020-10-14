@@ -35,11 +35,6 @@ describe('SchedulerBrowser', () => {
 
     // Un-mock scheduler
     jest.mock('scheduler', () => require.requireActual('scheduler'));
-    jest.mock('scheduler/src/SchedulerHostConfig', () =>
-      require.requireActual(
-        'scheduler/src/forks/SchedulerHostConfig.default.js',
-      ),
-    );
 
     runtime = installMockBrowserRuntime();
     performance = global.performance;
