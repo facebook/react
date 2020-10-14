@@ -4180,7 +4180,11 @@ describe('Profiler', () => {
               const interactions = SchedulerTracing.unstable_getCurrent();
               expect(interactions.size).toBe(1);
               interaction = Array.from(interactions)[0];
-              ReactTestRenderer.create(<Component />);
+              ReactTestRendererAct(() => {
+                ReactTestRenderer.create(<Component />, {
+                  unstable_isConcurrent: true,
+                });
+              });
             },
           );
           Scheduler.unstable_flushAll();
