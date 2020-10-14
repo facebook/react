@@ -48,6 +48,7 @@ module.exports = {
     'jsx-quotes': [ERROR, 'prefer-double'],
     'keyword-spacing': [ERROR, {after: true, before: true}],
     'no-bitwise': OFF,
+    'no-console': OFF,
     'no-inner-declarations': [ERROR, 'functions'],
     'no-multi-spaces': ERROR,
     'no-restricted-globals': [ERROR].concat(restrictedGlobals),
@@ -172,6 +173,14 @@ module.exports = {
       rules: {
         'react-internal/no-production-logging': OFF,
         'react-internal/warning-args': OFF,
+
+        // Disable accessibility checks
+        'jsx-a11y/aria-role': OFF,
+        'jsx-a11y/no-noninteractive-element-interactions': OFF,
+        'jsx-a11y/no-static-element-interactions': OFF,
+        'jsx-a11y/role-has-required-aria-props': OFF,
+        'jsx-a11y/no-noninteractive-tabindex': OFF,
+        'jsx-a11y/tabindex-no-positive': OFF,
       },
     },
     {
