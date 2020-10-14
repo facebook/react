@@ -1,4 +1,4 @@
-/** @license React v16.13.1
+/** @license React v16.14.0
  * react-test-renderer.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -14871,7 +14871,7 @@ function injectIntoDevTools(devToolsConfig) {
     // Enables DevTools to append owner stacks to error messages in DEV mode.
     getCurrentFiber:  function () {
       return current;
-    } 
+    }
   }));
 }
 var IsSomeRendererActing$1 = ReactSharedInternals.IsSomeRendererActing;
@@ -15020,7 +15020,7 @@ function act(callback) {
   }
 }
 
-var ReactVersion = '16.13.1';
+var ReactVersion = '16.14.0';
 
 var defaultTestOptions = {
   createNodeMock: function () {

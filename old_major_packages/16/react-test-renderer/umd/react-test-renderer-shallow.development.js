@@ -1,4 +1,4 @@
-/** @license React v16.13.1
+/** @license React v16.14.0
  * react-test-renderer-shallow.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.

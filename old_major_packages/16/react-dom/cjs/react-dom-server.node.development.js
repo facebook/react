@@ -1,4 +1,4 @@
-/** @license React v16.13.1
+/** @license React v16.14.0
  * react-dom-server.node.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -20,7 +20,7 @@ var _assign = require('object-assign');
 var checkPropTypes = require('prop-types/checkPropTypes');
 var stream = require('stream');
 
-var ReactVersion = '16.13.1';
+var ReactVersion = '16.14.0';
 
 // Do not require this module directly! Use normal `invariant` calls with
 // template literal strings. The messages will be replaced with error codes
