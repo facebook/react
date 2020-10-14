@@ -202,9 +202,9 @@ export type MutableSource<Source: $NonMaybeType<mixed>> = {|
 // The subset of a Thenable required by things thrown by Suspense.
 // This doesn't require a value to be passed to either handler.
 export interface Wakeable {
-  then(onFulfill: () => mixed, onReject: () => mixed): void | Wakeable;
+  then(onFulfill: () => mixed, onReject: () => mixed): void | Wakeable,
   // Special flag to opt out of tracing interactions across a Suspense boundary.
-  __reactDoNotTraceInteractions?: boolean;
+  __reactDoNotTraceInteractions?: boolean,
 }
 
 // The subset of a Promise that React APIs rely on. This resolves a value.
@@ -214,5 +214,5 @@ export interface Thenable<+R> {
   then<U>(
     onFulfill: (value: R) => void | Thenable<U> | U,
     onReject: (error: mixed) => void | Thenable<U> | U,
-  ): void | Thenable<U>;
+  ): void | Thenable<U>,
 }

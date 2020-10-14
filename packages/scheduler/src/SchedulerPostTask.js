@@ -10,9 +10,9 @@
 import type {PriorityLevel} from './SchedulerPriorities';
 
 declare class TaskController {
-  constructor(priority?: string): TaskController;
-  signal: mixed;
-  abort(): void;
+  constructor(priority?: string): TaskController,
+  signal: mixed,
+  abort(): void,
 }
 
 type PostTaskPriorityLevel = 'user-blocking' | 'user-visible' | 'background';
