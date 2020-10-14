@@ -7,6 +7,10 @@
  * @emails react-core
  */
 
+// These tests are based on ReactJSXElement-test,
+// ReactJSXElementValidator-test, ReactComponent-test,
+// and ReactElementJSX-test.
+
 jest.mock('react/jsx-runtime', () => require('./jsx-runtime'), {virtual: true});
 jest.mock('react/jsx-dev-runtime', () => require('./jsx-dev-runtime'), {
   virtual: true,

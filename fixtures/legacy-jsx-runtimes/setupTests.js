@@ -1,6 +1,9 @@
-const expect = global.expect;
+'use strict';
 
-('use strict');
+// This is mostly copypasta from toWarnDev.js matchers
+// that we use in the main repo Jest configuration.
+
+const expect = global.expect;
 
 const jestDiff = require('jest-diff').default;
 const util = require('util');
