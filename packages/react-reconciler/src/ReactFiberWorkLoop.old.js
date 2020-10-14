@@ -2271,7 +2271,7 @@ function commitBeforeMutationEffects() {
           doesFiberContain(nextEffect, focusedInstanceHandle)
         ) {
           shouldFireAfterActiveInstanceBlur = true;
-          beforeActiveInstanceBlur(current);
+          beforeActiveInstanceBlur(nextEffect);
         }
       }
     }

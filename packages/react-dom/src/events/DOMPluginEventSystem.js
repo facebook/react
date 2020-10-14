@@ -747,13 +747,16 @@ export function accumulateSinglePhaseListeners(
     // this out by checking if intercept fiber set on the event matches the
     // current instance fiber. In which case, we should clear all existing
     // listeners.
-    if (
-      enableCreateEventHandleAPI &&
-      nativeEvent.type === 'beforeblur' &&
+    if (enableCreateEventHandleAPI && nativeEvent.type === 'beforeblur') {
       // $FlowFixMe: internal field
-      nativeEvent._detachedInterceptFiber === instance
-    ) {
-      listeners = [];
+      const detachedInterceptFiber = nativeEvent._detachedInterceptFiber;
+      if (
+        detachedInterceptFiber !== null &&
+        (detachedInterceptFiber === instance ||
+          detachedInterceptFiber === instance.alternate)
+      ) {
+        listeners = [];
+      }
     }
     instance = instance.return;
   }

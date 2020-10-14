@@ -2425,7 +2425,7 @@ describe('DOMPluginEventSystem', () => {
           });
 
           // @gate experimental
-          it('beforeblur has the correct propagation mechancis after a nested focused element is unmounted', () => {
+          it('beforeblur should skip handlers from a deleted subtree after the focused element is unmounted', () => {
             const onBeforeBlur = jest.fn();
             const innerRef = React.createRef();
             const innerRef2 = React.createRef();
@@ -2565,7 +2565,7 @@ describe('DOMPluginEventSystem', () => {
           });
 
           // @gate experimental
-          it('beforeblur has the correct propagation mechancis after a nested focused element is suspended', () => {
+          it('beforeblur should skip handlers from a deleted subtree after the focused element is suspended', () => {
             const onBeforeBlur = jest.fn();
             const innerRef = React.createRef();
             const innerRef2 = React.createRef();
