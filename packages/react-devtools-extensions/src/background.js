@@ -84,17 +84,19 @@ function isRestrictedBrowserPage(url) {
 
 function checkAndHandleRestrictedPageIfSo(tab) {
   if (tab && isRestrictedBrowserPage(tab.url)) {
-    setIconAndPopup('restricted',tab.id)
+    setIconAndPopup('restricted', tab.id);
   }
 }
 
 // update popup page of any existing open tabs, if they are restricted browser pages.
-// we can't update for any other types (prod,dev,outdated etc) 
+// we can't update for any other types (prod,dev,outdated etc)
 // as the content script needs to be injected at document_start itself for those kinds of detection
 // TODO: Show a different popup page(to reload current page probably) for old tabs, opened before the extension is installed
-if (!IS_FIREFOX) { 
-  chrome.tabs.query({}, tabs => tabs.forEach(checkAndHandleRestrictedPageIfSo)); 
-  chrome.tabs.onCreated.addListener((tabId, changeInfo, tab) => checkAndHandleRestrictedPageIfSo(tab));
+if (!IS_FIREFOX) {
+  chrome.tabs.query({}, tabs => tabs.forEach(checkAndHandleRestrictedPageIfSo));
+  chrome.tabs.onCreated.addListener((tabId, changeInfo, tab) =>
+    checkAndHandleRestrictedPageIfSo(tab),
+  );
 }
 
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
@@ -110,7 +112,6 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     checkAndHandleRestrictedPageIfSo(tab);
   }
 });
-
 
 chrome.runtime.onMessage.addListener((request, sender) => {
   if (sender.tab) {
