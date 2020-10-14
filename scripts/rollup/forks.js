@@ -196,7 +196,7 @@ const forks = Object.freeze({
       bundleType === FB_WWW_PROD ||
       bundleType === FB_WWW_PROFILING
     ) {
-      return 'scheduler/src/SchedulerFeatureFlags.www.js';
+      return 'scheduler/src/forks/SchedulerFeatureFlags.www.js';
     }
     return 'scheduler/src/SchedulerFeatureFlags';
   },
