@@ -268,97 +268,55 @@ describe('ReactHooksInspectionIntegration', () => {
     ]);
   });
 
-  it('should inspect useref without override ref', () => {
-    let current = null;
-    let prevCurrent = null;
-    function Foo(props) {
-      const updateCountRef = React.useRef(0);
-      updateCountRef.current++;
+  it('should discard changes to refs made during inspection', () => {
+    spyOnDev(console, 'warn');
 
-      const [state, setState] = React.useState('A');
+    function Test(props) {
+      const [state, setState] = React.useState('initial');
+      const wrapperRef = React.useRef(null);
 
-      const cbRef = React.useRef();
-      cbRef.current = () => {
-        setState(c => String.fromCharCode(c.charCodeAt(0) + 1));
-      };
-      prevCurrent = current;
-      current = cbRef.current;
-      const handler = () => cbRef.current();
+      // This is an unsafe mutation.
+      wrapperRef.current = setState;
 
       return (
-        <div className="App">
-          <button onClick={handler}>
-            Component updates {updateCountRef.current} times
-          </button>
-          <p>Current state value: {state}</p>
-        </div>
+        <button onClick={value => wrapperRef.current(value)}>{state}</button>
       );
     }
     let renderer;
     act(() => {
-      renderer = ReactTestRenderer.create(<Foo prop="prop" />);
+      renderer = ReactTestRenderer.create(<Test prop="prop" />);
     });
 
-    let childFiber = renderer.root.findByType(Foo)._currentFiber();
-
+    let childFiber = renderer.root.findByType(Test)._currentFiber();
     const {onClick: updateStates} = renderer.root.findByType('button').props;
 
-    let tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-    expect(tree[2]).toEqual(
-      [
-        {
-          isStateEditable: false,
-          id: 0,
-          name: 'Ref',
-          value: 2,
-          subHooks: [],
-        },
-        {
-          isStateEditable: true,
-          id: 1,
-          name: 'State',
-          value: 'A',
-          subHooks: [],
-        },
-        {
-          isStateEditable: false,
-          id: 2,
-          name: 'Ref',
-          subHooks: [],
-          value: prevCurrent,
-        },
-      ][2],
-    );
+    let tree;
+    expect(() => {
+      tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
+    }).toWarnDev('Warning: Ref values should not be mutated during render.', {
+      withoutStack: true,
+    });
+    expect(tree[0]).toEqual({
+      isStateEditable: true,
+      id: 0,
+      name: 'State',
+      value: 'initial',
+      subHooks: [],
+    });
 
-    act(updateStates);
+    act(() => updateStates('updated'));
 
-    childFiber = renderer.root.findByType(Foo)._currentFiber();
+    childFiber = renderer.root.findByType(Test)._currentFiber();
     tree = ReactDebugTools.inspectHooksOfFiber(childFiber);
-
-    expect(tree).toEqual([
-      {
-        isStateEditable: false,
-        id: 0,
-        name: 'Ref',
-        value: 2,
-        subHooks: [],
-      },
-      {
-        isStateEditable: true,
-        id: 1,
-        name: 'State',
-        value: 'B',
-        subHooks: [],
-      },
-      {
-        isStateEditable: false,
-        id: 2,
-        name: 'Ref',
-        value: prevCurrent,
-        subHooks: [],
-      },
-    ]);
+    expect(tree[0]).toEqual({
+      isStateEditable: true,
+      id: 0,
+      name: 'State',
+      value: 'updated',
+      subHooks: [],
+    });
   });
+
   it('should inspect the value of the current provider in useContext', () => {
     const MyContext = React.createContext('default');
     function Foo(props) {

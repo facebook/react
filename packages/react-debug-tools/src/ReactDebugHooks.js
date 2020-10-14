@@ -158,7 +158,26 @@ function useReducer<S, I, A>(
 
 function useRef<T>(initialValue: T): {|current: T|} {
   const hook = nextHook();
-  const ref = hook !== null ? {...hook.memoizedState} : {current: initialValue};
+  // Return a shallow clone of ref to prevent mutations from persisting afater inspection.
+  // This should not be necessary, since mutating the ref during render is not allowed,
+  // but it enables us to prevent potentially serious bugs (see #19114).
+  let ref;
+  if (__DEV__) {
+    let value = hook !== null ? hook.memoizedState.current : initialValue;
+    ref = {
+      get current() {
+        return value;
+      },
+      set current(newValue) {
+        if (__DEV__) {
+          console.warn('Ref values should not be mutated during render.');
+        }
+        value = newValue;
+      },
+    };
+  } else {
+    ref = hook !== null ? {...hook.memoizedState} : {current: initialValue};
+  }
   hookLog.push({
     primitive: 'Ref',
     stackError: new Error(),
