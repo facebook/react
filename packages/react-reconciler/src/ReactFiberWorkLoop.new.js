@@ -2172,7 +2172,7 @@ function commitBeforeMutationEffectsImpl(fiber: Fiber) {
       doesFiberContain(fiber, focusedInstanceHandle)
     ) {
       shouldFireAfterActiveInstanceBlur = true;
-      beforeActiveInstanceBlur();
+      beforeActiveInstanceBlur(fiber);
     }
   }
 
@@ -2206,7 +2206,7 @@ function commitBeforeMutationEffectsDeletions(deletions: Array<Fiber>) {
 
     if (doesFiberContain(fiber, ((focusedInstanceHandle: any): Fiber))) {
       shouldFireAfterActiveInstanceBlur = true;
-      beforeActiveInstanceBlur();
+      beforeActiveInstanceBlur(fiber);
     }
   }
 }

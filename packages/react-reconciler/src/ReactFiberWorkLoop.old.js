@@ -2261,7 +2261,7 @@ function commitBeforeMutationEffects() {
       if ((nextEffect.flags & Deletion) !== NoFlags) {
         if (doesFiberContain(nextEffect, focusedInstanceHandle)) {
           shouldFireAfterActiveInstanceBlur = true;
-          beforeActiveInstanceBlur();
+          beforeActiveInstanceBlur(nextEffect);
         }
       } else {
         // TODO: Move this out of the hot path using a dedicated effect tag.
@@ -2271,7 +2271,7 @@ function commitBeforeMutationEffects() {
           doesFiberContain(nextEffect, focusedInstanceHandle)
         ) {
           shouldFireAfterActiveInstanceBlur = true;
-          beforeActiveInstanceBlur();
+          beforeActiveInstanceBlur(nextEffect);
         }
       }
     }
