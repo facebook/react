@@ -1,0 +1,70 @@
+{
+  "_from": "react-dom@15",
+  "_id": "react-dom@15.6.2",
+  "_inBundle": false,
+  "_integrity": "sha1-Qc+t9pO3V/rycIRDodH9WgK+9zA=",
+  "_location": "/react-dom",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "range",
+    "registry": true,
+    "raw": "react-dom@15",
+    "name": "react-dom",
+    "escapedName": "react-dom",
+    "rawSpec": "15",
+    "saveSpec": null,
+    "fetchSpec": "15"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/react-dom/-/react-dom-15.6.2.tgz",
+  "_shasum": "41cfadf693b757faf2708443a1d1fd5a02bef730",
+  "_spec": "react-dom@15",
+  "_where": "/Users/gaearon/p/old",
+  "browserify": {
+    "transform": [
+      "loose-envify"
+    ]
+  },
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "fbjs": "^0.8.9",
+    "loose-envify": "^1.1.0",
+    "object-assign": "^4.1.0",
+    "prop-types": "^15.5.10"
+  },
+  "deprecated": false,
+  "description": "React package for working with the DOM.",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist/",
+    "lib/",
+    "index.js",
+    "server.js",
+    "test-utils.js"
+  ],
+  "homepage": "https://facebook.github.io/react/",
+  "keywords": [
+    "react"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "name": "react-dom",
+  "peerDependencies": {
+    "react": "^15.6.2"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "version": "15.6.2"
+}

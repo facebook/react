@@ -1,0 +1,65 @@
+{
+  "_from": "react@0.14",
+  "_id": "react@0.14.9",
+  "_inBundle": false,
+  "_integrity": "sha1-kRCmSXxJ1EuhwO3TF67CnC4NkdE=",
+  "_location": "/react",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "range",
+    "registry": true,
+    "raw": "react@0.14",
+    "name": "react",
+    "escapedName": "react",
+    "rawSpec": "0.14",
+    "saveSpec": null,
+    "fetchSpec": "0.14"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/react/-/react-0.14.9.tgz",
+  "_shasum": "9110a6497c49d44ba1c0edd317aec29c2e0d91d1",
+  "_spec": "react@0.14",
+  "_where": "/Users/gaearon/p/old",
+  "browserify": {
+    "transform": [
+      "envify"
+    ]
+  },
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "envify": "^3.0.0",
+    "fbjs": "^0.6.1"
+  },
+  "deprecated": false,
+  "description": "React is a JavaScript library for building user interfaces.",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "files": [
+    "LICENSE",
+    "PATENTS",
+    "addons.js",
+    "react.js",
+    "addons/",
+    "dist/",
+    "lib/"
+  ],
+  "homepage": "https://facebook.github.io/react/",
+  "keywords": [
+    "react"
+  ],
+  "license": "BSD-3-Clause",
+  "main": "react.js",
+  "name": "react",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git"
+  },
+  "version": "0.14.9"
+}

@@ -1,0 +1,84 @@
+{
+  "_from": "react-dom@16",
+  "_id": "react-dom@16.13.1",
+  "_inBundle": false,
+  "_integrity": "sha512-81PIMmVLnCNLO/fFOQxdQkvEq/+Hfpv24XNJfpyZhTRfO0QcmQIF/PgCa1zCOj2w1hrn12MFLyaJ/G0+Mxtfag==",
+  "_location": "/react-dom",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "range",
+    "registry": true,
+    "raw": "react-dom@16",
+    "name": "react-dom",
+    "escapedName": "react-dom",
+    "rawSpec": "16",
+    "saveSpec": null,
+    "fetchSpec": "16"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/react-dom/-/react-dom-16.13.1.tgz",
+  "_shasum": "c1bd37331a0486c078ee54c4740720993b2e0e7f",
+  "_spec": "react-dom@16",
+  "_where": "/Users/gaearon/p/old",
+  "browser": {
+    "./server.js": "./server.browser.js",
+    "./unstable-fizz.js": "./unstable-fizz.browser.js"
+  },
+  "browserify": {
+    "transform": [
+      "loose-envify"
+    ]
+  },
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "loose-envify": "^1.1.0",
+    "object-assign": "^4.1.1",
+    "prop-types": "^15.6.2",
+    "scheduler": "^0.19.1"
+  },
+  "deprecated": false,
+  "description": "React package for working with the DOM.",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "build-info.json",
+    "index.js",
+    "profiling.js",
+    "server.js",
+    "server.browser.js",
+    "server.node.js",
+    "test-utils.js",
+    "unstable-fire.js",
+    "unstable-fizz.js",
+    "unstable-fizz.browser.js",
+    "unstable-fizz.node.js",
+    "unstable-native-dependencies.js",
+    "cjs/",
+    "umd/"
+  ],
+  "homepage": "https://reactjs.org/",
+  "keywords": [
+    "react"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "name": "react-dom",
+  "peerDependencies": {
+    "react": "^16.13.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git",
+    "directory": "packages/react-dom"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "version": "16.13.1"
+}

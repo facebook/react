@@ -25,7 +25,9 @@ let didWarn = false;
 let didError = false;
 
 const files = glob
-  .sync('**/*.js', {ignore: ['**/node_modules/**', '**/cjs/**']})
+  .sync('**/*.js', {
+    ignore: ['**/node_modules/**', '**/cjs/**', '**/old_major_packages/**'],
+  })
   .filter(f => !onlyChanged || changedFiles.has(f));
 
 if (!files.length) {

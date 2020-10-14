@@ -1,0 +1,180 @@
+/**
+ * Copyright 2013-2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ *
+ * @providesModule SyntheticEvent
+ * @typechecks static-only
+ */
+
+'use strict';
+
+var PooledClass = require('./PooledClass');
+
+var assign = require('./Object.assign');
+var emptyFunction = require('fbjs/lib/emptyFunction');
+var warning = require('fbjs/lib/warning');
+
+/**
+ * @interface Event
+ * @see http://www.w3.org/TR/DOM-Level-3-Events/
+ */
+var EventInterface = {
+  type: null,
+  target: null,
+  // currentTarget is set when dispatching; no use in copying it here
+  currentTarget: emptyFunction.thatReturnsNull,
+  eventPhase: null,
+  bubbles: null,
+  cancelable: null,
+  timeStamp: function (event) {
+    return event.timeStamp || Date.now();
+  },
+  defaultPrevented: null,
+  isTrusted: null
+};
+
+/**
+ * Synthetic events are dispatched by event plugins, typically in response to a
+ * top-level event delegation handler.
+ *
+ * These systems should generally use pooling to reduce the frequency of garbage
+ * collection. The system should check `isPersistent` to determine whether the
+ * event should be released into the pool after being dispatched. Users that
+ * need a persisted event should invoke `persist`.
+ *
+ * Synthetic events (and subclasses) implement the DOM Level 3 Events API by
+ * normalizing browser quirks. Subclasses do not necessarily have to implement a
+ * DOM interface; custom application-specific events can also subclass this.
+ *
+ * @param {object} dispatchConfig Configuration used to dispatch this event.
+ * @param {string} dispatchMarker Marker identifying the event target.
+ * @param {object} nativeEvent Native browser event.
+ */
+function SyntheticEvent(dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget) {
+  this.dispatchConfig = dispatchConfig;
+  this.dispatchMarker = dispatchMarker;
+  this.nativeEvent = nativeEvent;
+
+  var Interface = this.constructor.Interface;
+  for (var propName in Interface) {
+    if (!Interface.hasOwnProperty(propName)) {
+      continue;
+    }
+    var normalize = Interface[propName];
+    if (normalize) {
+      this[propName] = normalize(nativeEvent);
+    } else {
+      if (propName === 'target') {
+        this.target = nativeEventTarget;
+      } else {
+        this[propName] = nativeEvent[propName];
+      }
+    }
+  }
+
+  var defaultPrevented = nativeEvent.defaultPrevented != null ? nativeEvent.defaultPrevented : nativeEvent.returnValue === false;
+  if (defaultPrevented) {
+    this.isDefaultPrevented = emptyFunction.thatReturnsTrue;
+  } else {
+    this.isDefaultPrevented = emptyFunction.thatReturnsFalse;
+  }
+  this.isPropagationStopped = emptyFunction.thatReturnsFalse;
+}
+
+assign(SyntheticEvent.prototype, {
+
+  preventDefault: function () {
+    this.defaultPrevented = true;
+    var event = this.nativeEvent;
+    if (process.env.NODE_ENV !== 'production') {
+      process.env.NODE_ENV !== 'production' ? warning(event, 'This synthetic event is reused for performance reasons. If you\'re ' + 'seeing this, you\'re calling `preventDefault` on a ' + 'released/nullified synthetic event. This is a no-op. See ' + 'https://fb.me/react-event-pooling for more information.') : undefined;
+    }
+    if (!event) {
+      return;
+    }
+
+    if (event.preventDefault) {
+      event.preventDefault();
+    } else {
+      event.returnValue = false;
+    }
+    this.isDefaultPrevented = emptyFunction.thatReturnsTrue;
+  },
+
+  stopPropagation: function () {
+    var event = this.nativeEvent;
+    if (process.env.NODE_ENV !== 'production') {
+      process.env.NODE_ENV !== 'production' ? warning(event, 'This synthetic event is reused for performance reasons. If you\'re ' + 'seeing this, you\'re calling `stopPropagation` on a ' + 'released/nullified synthetic event. This is a no-op. See ' + 'https://fb.me/react-event-pooling for more information.') : undefined;
+    }
+    if (!event) {
+      return;
+    }
+
+    if (event.stopPropagation) {
+      event.stopPropagation();
+    } else {
+      event.cancelBubble = true;
+    }
+    this.isPropagationStopped = emptyFunction.thatReturnsTrue;
+  },
+
+  /**
+   * We release all dispatched `SyntheticEvent`s after each event loop, adding
+   * them back into the pool. This allows a way to hold onto a reference that
+   * won't be added back into the pool.
+   */
+  persist: function () {
+    this.isPersistent = emptyFunction.thatReturnsTrue;
+  },
+
+  /**
+   * Checks if this event should be released back into the pool.
+   *
+   * @return {boolean} True if this should not be released, false otherwise.
+   */
+  isPersistent: emptyFunction.thatReturnsFalse,
+
+  /**
+   * `PooledClass` looks for `destructor` on each instance it releases.
+   */
+  destructor: function () {
+    var Interface = this.constructor.Interface;
+    for (var propName in Interface) {
+      this[propName] = null;
+    }
+    this.dispatchConfig = null;
+    this.dispatchMarker = null;
+    this.nativeEvent = null;
+  }
+
+});
+
+SyntheticEvent.Interface = EventInterface;
+
+/**
+ * Helper to reduce boilerplate when creating subclasses.
+ *
+ * @param {function} Class
+ * @param {?object} Interface
+ */
+SyntheticEvent.augmentClass = function (Class, Interface) {
+  var Super = this;
+
+  var prototype = Object.create(Super.prototype);
+  assign(prototype, Class.prototype);
+  Class.prototype = prototype;
+  Class.prototype.constructor = Class;
+
+  Class.Interface = assign({}, Super.Interface, Interface);
+  Class.augmentClass = Super.augmentClass;
+
+  PooledClass.addPoolingTo(Class, PooledClass.fourArgumentPooler);
+};
+
+PooledClass.addPoolingTo(SyntheticEvent, PooledClass.fourArgumentPooler);
+
+module.exports = SyntheticEvent;
