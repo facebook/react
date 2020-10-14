@@ -649,15 +649,17 @@ const bundles = [
     externals: [],
   },
 
-  /******* React Scheduler Native (experimental) *******/
+  /******* React Scheduler No DOM (experimental) *******/
   {
     bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
       RN_FB_DEV,
       RN_FB_PROD,
       RN_FB_PROFILING,
-      RN_OSS_DEV,
-      RN_OSS_PROD,
-      RN_OSS_PROFILING,
     ],
     moduleType: ISOMORPHIC,
     entry: 'scheduler/unstable_no_dom',
