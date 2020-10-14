@@ -84,6 +84,19 @@ exports[`Store component filters should ignore invalid ElementTypeRoot filter: 2
       <div>
 `;
 
+exports[`Store component filters should not break when Suspense nodes are filtered from the tree: 1: suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▾ <Loading>
+        <div>
+`;
+
+exports[`Store component filters should not break when Suspense nodes are filtered from the tree: 2: resolved 1`] = `
+[root]
+  ▾ <Wrapper>
+      <Component>
+`;
+
 exports[`Store component filters should support filtering by element type: 1: mount 1`] = `
 [root]
   ▾ <Root>
