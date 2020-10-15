@@ -267,7 +267,7 @@ describe('ReactHooks', () => {
 
     expect(() => {
       act(() => setComponent(Bar));
-    }).toErrorDev('Warning: u sure?', {withoutStack: true});
+    }).toErrorDev('Warning: You can\'t set React Component reference to state, because it\'s treated as "Functional update" function', {withoutStack: true});
   });
 
   it('warns about setState second argument', () => {

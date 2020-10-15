@@ -622,7 +622,7 @@ function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
   // $FlowFixMe: Flow doesn't like mixed types
   if (__DEV__) {
     if (isLikelyComponentType(action)) {
-      console.error('u sure?');
+      console.error('You can\'t set React Component reference to state, because it\'s treated as "Functional update" function');
     }
   }
   return typeof action === 'function' ? action(state) : action;
