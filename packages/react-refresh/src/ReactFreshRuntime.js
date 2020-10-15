@@ -178,6 +178,16 @@ function cloneSet<T>(set: Set<T>): Set<T> {
   return clone;
 }
 
+// This is a safety mechanism to protect against rogue getters and Proxies.
+function getProperty(object, property) {
+  try {
+    return object[property];
+  } catch (err) {
+    // Intentionally ignore.
+    return undefined;
+  }
+}
+
 export function performReactRefresh(): RefreshUpdate | null {
   if (!__DEV__) {
     throw new Error(
@@ -322,7 +332,7 @@ export function register(type: any, id: string): void {
 
     // Visit inner types because we might not have registered them.
     if (typeof type === 'object' && type !== null) {
-      switch (type.$$typeof) {
+      switch (getProperty(type, '$$typeof')) {
         case REACT_FORWARD_REF_TYPE:
           register(type.render, id + '$render');
           break;
@@ -676,7 +686,7 @@ export function isLikelyComponentType(type: any): boolean {
       }
       case 'object': {
         if (type != null) {
-          switch (type.$$typeof) {
+          switch (getProperty(type, '$$typeof')) {
             case REACT_FORWARD_REF_TYPE:
             case REACT_MEMO_TYPE:
               // Definitely React components.
