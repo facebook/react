@@ -97,6 +97,13 @@ exports[`Store component filters should not break when Suspense nodes are filter
       <Component>
 `;
 
+exports[`Store component filters should not break when Suspense nodes are filtered from the tree: 3: suspended 1`] = `
+[root]
+  ▾ <Wrapper>
+    ▾ <Loading>
+        <div>
+`;
+
 exports[`Store component filters should support filtering by element type: 1: mount 1`] = `
 [root]
   ▾ <Root>
