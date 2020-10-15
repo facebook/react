@@ -246,6 +246,30 @@ describe('ReactHooks', () => {
     expect(Scheduler).toHaveYielded(['Parent: 1, 2 (dark)']);
   });
 
+  it('warns about passing React Component as a setState argument', () => {
+    const {useState} = React;
+
+    function Bar() {
+      return 'hi';
+    }
+
+    let setComponent;
+    function Foo() {
+      const [Component, _setComponent] = useState(null);
+      setComponent = _setComponent;
+
+      return Component && <Component />;
+    }
+
+    const root = ReactTestRenderer.create(null, {unstable_isConcurrent: true});
+    root.update(<Foo />);
+    expect(Scheduler).toFlushAndYield([]);
+
+    expect(() => {
+      act(() => setComponent(Bar));
+    }).toErrorDev('Warning: u sure?', {withoutStack: true});
+  });
+
   it('warns about setState second argument', () => {
     const {useState} = React;
 

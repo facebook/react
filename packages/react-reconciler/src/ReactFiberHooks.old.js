@@ -65,6 +65,7 @@ import {
 } from './ReactFiberWorkLoop.old';
 
 import invariant from 'shared/invariant';
+import isValidElementType from 'shared/isValidElementType';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
@@ -89,6 +90,7 @@ import {
 import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
+import {REACT_FORWARD_REF_TYPE, REACT_MEMO_TYPE} from 'shared/ReactSymbols';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -618,6 +620,11 @@ function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
 
 function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
   // $FlowFixMe: Flow doesn't like mixed types
+  if (__DEV__) {
+    if (isLikelyComponentType(action)) {
+      console.error('u sure?');
+    }
+  }
   return typeof action === 'function' ? action(state) : action;
 }
 
@@ -2768,4 +2775,31 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+}
+
+function isLikelyComponentType(type: any): boolean {
+  if (typeof type === 'function') {
+    if (type.prototype != null) {
+      if (type.prototype.isReactComponent) {
+        // React class.
+        return true;
+      }
+      const ownNames = Object.getOwnPropertyNames(type.prototype);
+      if (ownNames.length > 1 || ownNames[0] !== 'constructor') {
+        // This looks like a class.
+        return false;
+      }
+      // eslint-disable-next-line no-proto
+      if (type.prototype.__proto__ !== Object.prototype) {
+        // It has a superclass.
+        return false;
+      }
+      // Pass through.
+      // This looks like a regular function with empty prototype.
+    }
+    // For plain functions and arrows, use name as a heuristic.
+    const name = type.name || type.displayName;
+    return typeof name === 'string' && /^[A-Z]/.test(name);
+  }
+  return false;
 }
