@@ -68,8 +68,8 @@ describe('ReactIs', () => {
         factory = React.createFactory('div');
       }).toWarnDev(
         'Warning: React.createFactory() is deprecated and will be removed in a ' +
-        'future major release. Consider using JSX or use React.createElement() ' +
-        'directly instead.',
+          'future major release. Consider using JSX or use React.createElement() ' +
+          'directly instead.',
         {withoutStack: true},
       );
       expect(ReactIs.isValidElementType(factory)).toEqual(true);
