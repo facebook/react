@@ -29,10 +29,17 @@ describe('ReactIs', () => {
     expect(ReactIs.typeOf({})).toBe(undefined);
     expect(ReactIs.typeOf(null)).toBe(undefined);
     expect(ReactIs.typeOf(undefined)).toBe(undefined);
+    expect(ReactIs.typeOf(NaN)).toBe(undefined);
+    expect(ReactIs.typeOf(Symbol('def'))).toBe(undefined);
   });
 
   it('identifies valid element types', () => {
     class Component extends React.Component {
+      render() {
+        return React.createElement('div');
+      }
+    }
+    class PureComponent extends React.PureComponent {
       render() {
         return React.createElement('div');
       }
@@ -48,6 +55,7 @@ describe('ReactIs', () => {
 
     expect(ReactIs.isValidElementType('div')).toEqual(true);
     expect(ReactIs.isValidElementType(Component)).toEqual(true);
+    expect(ReactIs.isValidElementType(PureComponent)).toEqual(true);
     expect(ReactIs.isValidElementType(FunctionComponent)).toEqual(true);
     expect(ReactIs.isValidElementType(ForwardRefComponent)).toEqual(true);
     expect(ReactIs.isValidElementType(LazyComponent)).toEqual(true);
@@ -60,8 +68,8 @@ describe('ReactIs', () => {
         factory = React.createFactory('div');
       }).toWarnDev(
         'Warning: React.createFactory() is deprecated and will be removed in a ' +
-          'future major release. Consider using JSX or use React.createElement() ' +
-          'directly instead.',
+        'future major release. Consider using JSX or use React.createElement() ' +
+        'directly instead.',
         {withoutStack: true},
       );
       expect(ReactIs.isValidElementType(factory)).toEqual(true);
