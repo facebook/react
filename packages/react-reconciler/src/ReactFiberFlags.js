@@ -48,7 +48,10 @@ export const ForceUpdateForLegacySuspense = /* */ 0b000100000000000000;
 export const PassiveStatic = /*                */ 0b001000000000000000;
 
 // Union of side effect groupings as pertains to subtreeFlags
-export const BeforeMutationMask = /*           */ 0b000000001100001010;
+// TODO: Don't need to visit Placement during BeforeMutation phase
+// TODO: Only need to visit Deletions during BeforeMutation phase if an element
+// is focused.
+export const BeforeMutationMask = /*           */ 0b000000000100001010;
 export const MutationMask = /*                 */ 0b000000010010011110;
 export const LayoutMask = /*                   */ 0b000000000010100100;
 export const PassiveMask = /*                  */ 0b000000001000001000;
