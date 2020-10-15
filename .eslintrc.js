@@ -75,6 +75,8 @@ module.exports = {
     // deal. But I turned it off because loading the plugin causes some obscure
     // syntax error and it didn't seem worth investigating.
     'max-len': OFF,
+    // Prettier forces semicolons in a few places
+    'flowtype/object-type-delimiter': OFF,
 
     // React & JSX
     // Our transforms set this automatically
