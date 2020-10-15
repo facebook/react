@@ -30,7 +30,13 @@ import invariant from 'shared/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
-import {DebugTracingMode, StrictMode} from './ReactTypeOfMode';
+import {
+  BlockingMode,
+  ConcurrentMode,
+  DebugTracingMode,
+  NoMode,
+  StrictMode,
+} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,
@@ -891,7 +897,12 @@ function mountClassInstance(
   }
 
   if (typeof instance.componentDidMount === 'function') {
-    if (__DEV__ && enableDoubleInvokingEffects) {
+    if (
+      __DEV__ &&
+      enableDoubleInvokingEffects &&
+      (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+    ) {
+      // Never double-invoke effects for legacy roots.
       workInProgress.flags |= MountLayoutDev | Update;
     } else {
       workInProgress.flags |= Update;
@@ -965,7 +976,11 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      if (__DEV__ && enableDoubleInvokingEffects) {
+      if (
+        __DEV__ &&
+        enableDoubleInvokingEffects &&
+        (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+      ) {
         workInProgress.flags |= MountLayoutDev | Update;
       } else {
         workInProgress.flags |= Update;
@@ -1012,7 +1027,11 @@ function resumeMountClassInstance(
       }
     }
     if (typeof instance.componentDidMount === 'function') {
-      if (__DEV__ && enableDoubleInvokingEffects) {
+      if (
+        __DEV__ &&
+        enableDoubleInvokingEffects &&
+        (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+      ) {
         workInProgress.flags |= MountLayoutDev | Update;
       } else {
         workInProgress.flags |= Update;
@@ -1022,7 +1041,11 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      if (__DEV__ && enableDoubleInvokingEffects) {
+      if (
+        __DEV__ &&
+        enableDoubleInvokingEffects &&
+        (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+      ) {
         workInProgress.flags |= MountLayoutDev | Update;
       } else {
         workInProgress.flags |= Update;

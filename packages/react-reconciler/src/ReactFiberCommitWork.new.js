@@ -2024,6 +2024,8 @@ function commitPassiveMount(
 
 function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
+    // We don't need to re-check for legacy roots here.
+    // This function will not be called within legacy roots.
     switch (fiber.tag) {
       case FunctionComponent:
       case ForwardRef:
@@ -2057,6 +2059,8 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
 
 function invokePassiveEffectMountInDEV(fiber: Fiber): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
+    // We don't need to re-check for legacy roots here.
+    // This function will not be called within legacy roots.
     switch (fiber.tag) {
       case FunctionComponent:
       case ForwardRef:
@@ -2081,6 +2085,8 @@ function invokePassiveEffectMountInDEV(fiber: Fiber): void {
 
 function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
+    // We don't need to re-check for legacy roots here.
+    // This function will not be called within legacy roots.
     switch (fiber.tag) {
       case FunctionComponent:
       case ForwardRef:
@@ -2113,6 +2119,8 @@ function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
 
 function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
+    // We don't need to re-check for legacy roots here.
+    // This function will not be called within legacy roots.
     switch (fiber.tag) {
       case FunctionComponent:
       case ForwardRef:

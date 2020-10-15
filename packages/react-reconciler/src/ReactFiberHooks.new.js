@@ -29,7 +29,12 @@ import {
   enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
 
-import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
+import {
+  NoMode,
+  BlockingMode,
+  ConcurrentMode,
+  DebugTracingMode,
+} from './ReactTypeOfMode';
 import {
   NoLane,
   NoLanes,
@@ -485,7 +490,11 @@ export function bailoutHooks(
   lanes: Lanes,
 ) {
   workInProgress.updateQueue = current.updateQueue;
-  if (__DEV__ && enableDoubleInvokingEffects) {
+  if (
+    __DEV__ &&
+    enableDoubleInvokingEffects &&
+    (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+  ) {
     workInProgress.flags &= ~(
       MountPassiveDevEffect |
       PassiveEffect |
@@ -1253,7 +1262,11 @@ function mountEffect(
     }
   }
 
-  if (__DEV__ && enableDoubleInvokingEffects) {
+  if (
+    __DEV__ &&
+    enableDoubleInvokingEffects &&
+    (currentlyRenderingFiber.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+  ) {
     return mountEffectImpl(
       MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
       HookPassive,
@@ -1287,7 +1300,11 @@ function mountLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  if (__DEV__ && enableDoubleInvokingEffects) {
+  if (
+    __DEV__ &&
+    enableDoubleInvokingEffects &&
+    (currentlyRenderingFiber.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+  ) {
     return mountEffectImpl(
       MountLayoutDevEffect | UpdateEffect,
       HookLayout,
@@ -1355,7 +1372,11 @@ function mountImperativeHandle<T>(
   const effectDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : null;
 
-  if (__DEV__ && enableDoubleInvokingEffects) {
+  if (
+    __DEV__ &&
+    enableDoubleInvokingEffects &&
+    (currentlyRenderingFiber.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+  ) {
     return mountEffectImpl(
       MountLayoutDevEffect | UpdateEffect,
       HookLayout,
