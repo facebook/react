@@ -295,6 +295,15 @@ export function listenToNonDelegatedEvent(
   domEventName: DOMEventName,
   targetElement: Element,
 ): void {
+  if (__DEV__) {
+    if (!nonDelegatedEvents.has(domEventName)) {
+      console.error(
+        'Did not expect a listenToNonDelegatedEvent() call for "%s". ' +
+          'This is a bug in React. Please file an issue.',
+        domEventName,
+      );
+    }
+  }
   const isCapturePhaseListener = false;
   const listenerSet = getEventListenerSet(targetElement);
   const listenerSetKey = getListenerSetKey(
@@ -312,88 +321,46 @@ export function listenToNonDelegatedEvent(
   }
 }
 
-const listeningMarker =
-  '_reactListening' +
-  Math.random()
-    .toString(36)
-    .slice(2);
-
-export function listenToAllSupportedEvents(rootContainerElement: EventTarget) {
-  if ((rootContainerElement: any)[listeningMarker]) {
-    // Performance optimization: don't iterate through events
-    // for the same portal container or root node more than once.
-    // TODO: once we remove the flag, we may be able to also
-    // remove some of the bookkeeping maps used for laziness.
-    return;
-  }
-  (rootContainerElement: any)[listeningMarker] = true;
-  allNativeEvents.forEach(domEventName => {
-    if (!nonDelegatedEvents.has(domEventName)) {
-      listenToNativeEvent(
-        domEventName,
-        false,
-        ((rootContainerElement: any): Element),
-        null,
-      );
-    }
-    listenToNativeEvent(
-      domEventName,
-      true,
-      ((rootContainerElement: any): Element),
-      null,
-    );
-  });
-}
-
 export function listenToNativeEvent(
   domEventName: DOMEventName,
   isCapturePhaseListener: boolean,
-  rootContainerElement: EventTarget,
-  targetElement: Element | null,
-  eventSystemFlags?: EventSystemFlags = 0,
+  target: EventTarget,
 ): void {
-  let target = rootContainerElement;
-
-  // selectionchange needs to be attached to the document
-  // otherwise it won't capture incoming events that are only
-  // triggered on the document directly.
-  if (
-    domEventName === 'selectionchange' &&
-    (rootContainerElement: any).nodeType !== DOCUMENT_NODE
-  ) {
-    target = (rootContainerElement: any).ownerDocument;
-  }
-  // If the event can be delegated (or is capture phase), we can
-  // register it to the root container. Otherwise, we should
-  // register the event to the target element and mark it as
-  // a non-delegated event.
-  if (
-    targetElement !== null &&
-    !isCapturePhaseListener &&
-    nonDelegatedEvents.has(domEventName)
-  ) {
-    // For all non-delegated events, apart from scroll, we attach
-    // their event listeners to the respective elements that their
-    // events fire on. That means we can skip this step, as event
-    // listener has already been added previously. However, we
-    // special case the scroll event because the reality is that any
-    // element can scroll.
-    // TODO: ideally, we'd eventually apply the same logic to all
-    // events from the nonDelegatedEvents list. Then we can remove
-    // this special case and use the same logic for all events.
-    if (domEventName !== 'scroll') {
-      return;
+  if (__DEV__) {
+    if (nonDelegatedEvents.has(domEventName) && !isCapturePhaseListener) {
+      console.error(
+        'Did not expect a listenToNativeEvent() call for "%s" in the bubble phase. ' +
+          'This is a bug in React. Please file an issue.',
+        domEventName,
+      );
     }
-    eventSystemFlags |= IS_NON_DELEGATED;
-    target = targetElement;
   }
+
+  let eventSystemFlags = 0;
+  if (isCapturePhaseListener) {
+    eventSystemFlags |= IS_CAPTURE_PHASE;
+  }
+  addTrappedEventListener(
+    target,
+    domEventName,
+    eventSystemFlags,
+    isCapturePhaseListener,
+  );
+}
+
+// This is only used by createEventHandle when the
+// target is not a DOM element. E.g. window.
+export function listenToNativeEventForNonManagedEventTarget(
+  domEventName: DOMEventName,
+  isCapturePhaseListener: boolean,
+  target: EventTarget,
+): void {
+  let eventSystemFlags = IS_EVENT_HANDLE_NON_MANAGED_NODE;
   const listenerSet = getEventListenerSet(target);
   const listenerSetKey = getListenerSetKey(
     domEventName,
     isCapturePhaseListener,
   );
-  // If the listener entry is empty or we should upgrade, then
-  // we need to trap an event listener onto the target.
   if (!listenerSet.has(listenerSetKey)) {
     if (isCapturePhaseListener) {
       eventSystemFlags |= IS_CAPTURE_PHASE;
@@ -405,6 +372,40 @@ export function listenToNativeEvent(
       isCapturePhaseListener,
     );
     listenerSet.add(listenerSetKey);
+  }
+}
+
+const listeningMarker =
+  '_reactListening' +
+  Math.random()
+    .toString(36)
+    .slice(2);
+
+export function listenToAllSupportedEvents(rootContainerElement: EventTarget) {
+  if (!(rootContainerElement: any)[listeningMarker]) {
+    (rootContainerElement: any)[listeningMarker] = true;
+    allNativeEvents.forEach(domEventName => {
+      // We handle selectionchange separately because it
+      // doesn't bubble and needs to be on the document.
+      if (domEventName !== 'selectionchange') {
+        if (!nonDelegatedEvents.has(domEventName)) {
+          listenToNativeEvent(domEventName, false, rootContainerElement);
+        }
+        listenToNativeEvent(domEventName, true, rootContainerElement);
+      }
+    });
+    const ownerDocument =
+      (rootContainerElement: any).nodeType === DOCUMENT_NODE
+        ? rootContainerElement
+        : (rootContainerElement: any).ownerDocument;
+    if (ownerDocument !== null) {
+      // The selectionchange event also needs deduplication
+      // but it is attached to the document.
+      if (!(ownerDocument: any)[listeningMarker]) {
+        (ownerDocument: any)[listeningMarker] = true;
+        listenToNativeEvent('selectionchange', false, ownerDocument);
+      }
+    }
   }
 }
 
