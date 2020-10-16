@@ -73,6 +73,7 @@ import {
   NoFlags,
   DidCapture,
   Snapshot,
+  Visibility,
   MutationMask,
   LayoutMask,
   PassiveMask,
@@ -1154,8 +1155,8 @@ function completeWork(
         // TODO: Only schedule updates if not prevDidTimeout.
         if (nextDidTimeout) {
           // If this boundary just timed out, schedule an effect to attach a
-          // retry listener to the promise. This flag is also used to hide the
-          // primary children.
+          // retry listener to the promise.
+          // TODO: Move to passive phase
           workInProgress.flags |= Update;
         }
       }
@@ -1167,7 +1168,7 @@ function completeWork(
           // primary children. In mutation mode, we also need the flag to
           // *unhide* children that were previously hidden, so check if this
           // is currently timed out, too.
-          workInProgress.flags |= Update;
+          workInProgress.flags |= Update | Visibility;
         }
       }
       if (
@@ -1176,6 +1177,7 @@ function completeWork(
         workInProgress.memoizedProps.suspenseCallback != null
       ) {
         // Always notify the callback
+        // TODO: Move to passive phase
         workInProgress.flags |= Update;
       }
       bubbleProperties(workInProgress);
@@ -1523,7 +1525,7 @@ function completeWork(
           prevIsHidden !== nextIsHidden &&
           newProps.mode !== 'unstable-defer-without-hiding'
         ) {
-          workInProgress.flags |= Update;
+          workInProgress.flags |= Update | Visibility;
         }
       }
 

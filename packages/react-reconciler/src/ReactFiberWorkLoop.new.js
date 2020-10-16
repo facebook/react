@@ -134,6 +134,7 @@ import {
   HostEffectMask,
   Hydrating,
   HydratingAndUpdate,
+  Visibility,
   BeforeMutationMask,
   MutationMask,
   LayoutMask,
@@ -2155,8 +2156,10 @@ function commitBeforeMutationEffectsImpl(fiber: Fiber) {
 
   if (!shouldFireAfterActiveInstanceBlur && focusedInstanceHandle !== null) {
     // Check to see if the focused element was inside of a hidden (Suspense) subtree.
-    // TODO: Move this out of the hot path using a dedicated effect tag.
     if (
+      // TODO: Can optimize this further with separate Hide and Show flags. We
+      // only care about Hide here.
+      (flags & Visibility) !== NoFlags &&
       fiber.tag === SuspenseComponent &&
       isSuspenseBoundaryBeingHidden(current, fiber) &&
       doesFiberContain(fiber, focusedInstanceHandle)
