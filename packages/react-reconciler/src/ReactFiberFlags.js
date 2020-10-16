@@ -7,6 +7,8 @@
  * @flow
  */
 
+import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
+
 export type Flags = number;
 
 // Don't change these two values. They're used by React Dev Tools.
@@ -49,9 +51,17 @@ export const ForceUpdateForLegacySuspense = /* */ 0b0001000000000000000;
 export const PassiveStatic = /*                */ 0b0010000000000000000;
 
 // Union of side effect groupings as pertains to subtreeFlags
-// TODO: Only need to visit Deletions during BeforeMutation phase if an element
-// is focused.
-export const BeforeMutationMask = /*           */ 0b0000000100100001000;
+
+export const BeforeMutationMask =
+  Snapshot |
+  (enableCreateEventHandleAPI
+    ? // createEventHandle needs to visit deleted and hidden trees to
+      // fire beforeblur
+      // TODO: Only need to visit Deletions during BeforeMutation phase if an
+      // element is focused.
+      Deletion | Visibility
+    : 0);
+
 export const MutationMask = /*                 */ 0b0000000110010011110;
 export const LayoutMask = /*                   */ 0b0000000000010100100;
 export const PassiveMask = /*                  */ 0b0000000001000001000;
