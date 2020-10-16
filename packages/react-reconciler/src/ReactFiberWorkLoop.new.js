@@ -341,7 +341,6 @@ let hasUncaughtError = false;
 let firstUncaughtError = null;
 let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
-let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoSchedulerPriority;
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
@@ -1865,6 +1864,22 @@ function commitRootImpl(root, renderPriorityLevel) {
     // times out.
   }
 
+  // If there are pending passive effects, schedule a callback to process them.
+  // Do this as early as possible, so it is queued before anything else that
+  // might get scheduled in the commit phase. (See #16714.)
+  const rootDoesHavePassiveEffects =
+    (finishedWork.subtreeFlags & PassiveMask) !== NoFlags ||
+    (finishedWork.flags & PassiveMask) !== NoFlags;
+  if (rootDoesHavePassiveEffects) {
+    rootWithPendingPassiveEffects = root;
+    pendingPassiveEffectsLanes = lanes;
+    pendingPassiveEffectsRenderPriority = renderPriorityLevel;
+    scheduleCallback(NormalSchedulerPriority, () => {
+      flushPassiveEffects();
+      return null;
+    });
+  }
+
   // Check if there are any effects in the whole tree.
   // TODO: This is left over from the effect list implementation, where we had
   // to check for the existence of `firstEffect` to satsify Flow. I think the
@@ -1880,20 +1895,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     NoFlags;
 
   if (subtreeHasEffects || rootHasEffect) {
-    // If there are pending passive effects, schedule a callback to process them.
-    if (
-      (finishedWork.subtreeFlags & PassiveMask) !== NoFlags ||
-      (finishedWork.flags & PassiveMask) !== NoFlags
-    ) {
-      if (!rootDoesHavePassiveEffects) {
-        rootDoesHavePassiveEffects = true;
-        scheduleCallback(NormalSchedulerPriority, () => {
-          flushPassiveEffects();
-          return null;
-        });
-      }
-    }
-
     let previousLanePriority;
     if (decoupleUpdatePriorityFromScheduler) {
       previousLanePriority = getCurrentUpdateLanePriority();
@@ -2010,17 +2011,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
   }
 
-  const rootDidHavePassiveEffects = rootDoesHavePassiveEffects;
-
-  if (rootDoesHavePassiveEffects) {
-    // This commit has passive effects. Stash a reference to them. But don't
-    // schedule a callback until after flushing layout work.
-    rootDoesHavePassiveEffects = false;
-    rootWithPendingPassiveEffects = root;
-    pendingPassiveEffectsLanes = lanes;
-    pendingPassiveEffectsRenderPriority = renderPriorityLevel;
-  }
-
   // Read this again, since an effect might have updated it
   remainingLanes = root.pendingLanes;
 
@@ -2047,13 +2037,13 @@ function commitRootImpl(root, renderPriorityLevel) {
   }
 
   if (__DEV__ && enableDoubleInvokingEffects) {
-    if (!rootDidHavePassiveEffects) {
+    if (!rootDoesHavePassiveEffects) {
       commitDoubleInvokeEffectsInDEV(root.current, false);
     }
   }
 
   if (enableSchedulerTracing) {
-    if (!rootDidHavePassiveEffects) {
+    if (!rootDoesHavePassiveEffects) {
       // If there are no passive effects, then we can complete the pending interactions.
       // Otherwise, we'll wait until after the passive effects are flushed.
       // Wait to do this until after remaining work has been scheduled,
@@ -2353,16 +2343,6 @@ function commitMutationEffectsDeletions(
         captureCommitPhaseError(childToDelete, nearestMountedAncestor, error);
       }
     }
-  }
-}
-
-export function schedulePassiveEffectCallback() {
-  if (!rootDoesHavePassiveEffects) {
-    rootDoesHavePassiveEffects = true;
-    scheduleCallback(NormalSchedulerPriority, () => {
-      flushPassiveEffects();
-      return null;
-    });
   }
 }
 

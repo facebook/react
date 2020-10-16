@@ -70,7 +70,6 @@ import {
   Update,
   Callback,
   LayoutMask,
-  PassiveMask,
   Ref,
 } from './ReactFiberFlags';
 import getComponentName from 'shared/getComponentName';
@@ -125,7 +124,6 @@ import {
   captureCommitPhaseError,
   resolveRetryWakeable,
   markCommitTimeOfFallback,
-  schedulePassiveEffectCallback,
 } from './ReactFiberWorkLoop.new';
 import {
   NoFlags as NoHookEffect,
@@ -598,10 +596,6 @@ function recursivelyCommitLayoutEffects(
                 HookLayout | HookHasEffect,
                 finishedWork,
               );
-            }
-
-            if ((finishedWork.subtreeFlags & PassiveMask) !== NoFlags) {
-              schedulePassiveEffectCallback();
             }
             break;
           }
