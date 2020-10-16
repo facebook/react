@@ -30,10 +30,9 @@ export const Hydrating = /*                    */ 0b0000000010000000000;
 export const HydratingAndUpdate = /*           */ 0b0000000010000000100;
 export const Visibility = /*                   */ 0b0000000100000000000;
 
-// Passive & Update & Callback & Ref & Snapshot
-export const LifecycleEffectMask = /*          */ 0b0000000001110100100;
+export const LifecycleEffectMask = Passive | Update | Callback | Ref | Snapshot;
 
-// Union of all host effects
+// Union of all commit flags (flags with the lifetime of a particular commit)
 export const HostEffectMask = /*               */ 0b0000000111111111111;
 
 // These are not really side effects, but we still reuse this field.
@@ -50,7 +49,14 @@ export const ForceUpdateForLegacySuspense = /* */ 0b0001000000000000000;
 // and instead rely on the static flag as a signal that there may be cleanup work.
 export const PassiveStatic = /*                */ 0b0010000000000000000;
 
-// Union of side effect groupings as pertains to subtreeFlags
+// These flags allow us to traverse to fibers that have effects on mount
+// without traversing the entire tree after every commit for
+// double invoking
+export const MountLayoutDev = /*               */ 0b0100000000000000000;
+export const MountPassiveDev = /*              */ 0b1000000000000000000;
+
+// Groups of flags that are used in the commit phase to skip over trees that
+// don't contain effects, by checking subtreeFlags.
 
 export const BeforeMutationMask =
   Snapshot |
@@ -62,17 +68,12 @@ export const BeforeMutationMask =
       Deletion | Visibility
     : 0);
 
-export const MutationMask = /*                 */ 0b0000000110010011110;
-export const LayoutMask = /*                   */ 0b0000000000010100100;
-export const PassiveMask = /*                  */ 0b0000000001000001000;
+export const MutationMask =
+  Placement | Update | Deletion | ContentReset | Ref | Hydrating | Visibility;
+export const LayoutMask = Update | Callback | Ref;
+export const PassiveMask = Passive | Deletion;
 
 // Union of tags that don't get reset on clones.
 // This allows certain concepts to persist without recalculting them,
 // e.g. whether a subtree contains passive effects or portals.
-export const StaticMask = /*                   */ 0b0010000000000000000;
-
-// These flags allow us to traverse to fibers that have effects on mount
-// without traversing the entire tree after every commit for
-// double invoking
-export const MountLayoutDev = /*               */ 0b0100000000000000000;
-export const MountPassiveDev = /*              */ 0b1000000000000000000;
+export const StaticMask = PassiveStatic;
