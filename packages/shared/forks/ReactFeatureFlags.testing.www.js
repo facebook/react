@@ -50,6 +50,7 @@ export const decoupleUpdatePriorityFromScheduler = false;
 export const enableDiscreteEventFlushingChange = true;
 
 export const enableDoubleInvokingEffects = false;
+export const enableUseRefMutationWarning = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
