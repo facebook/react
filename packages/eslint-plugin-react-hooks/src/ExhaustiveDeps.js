@@ -1115,7 +1115,7 @@ export default {
       }
       const callback = node.arguments[callbackIndex];
       const reactiveHook = node.callee;
-      const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
+      const reactiveHookName = getNodeWithoutNamespace(reactiveHook).name;
       const declaredDependenciesNode = node.arguments[callbackIndex + 1];
       const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
 
@@ -1653,11 +1653,10 @@ function analyzePropertyChain(node, optionalChains) {
   }
 }
 
-function getNodeWithoutReactNamespace(node, options) {
+function getNodeWithoutNamespace(node, options) {
   if (
     node.type === 'MemberExpression' &&
     node.object.type === 'Identifier' &&
-    node.object.name === 'React' &&
     node.property.type === 'Identifier' &&
     !node.computed
   ) {
@@ -1672,7 +1671,8 @@ function getNodeWithoutReactNamespace(node, options) {
 // 1 for useImperativeHandle(ref, fn).
 // For additionally configured Hooks, assume that they're like useEffect (0).
 function getReactiveHookCallbackIndex(calleeNode, options) {
-  const node = getNodeWithoutReactNamespace(calleeNode);
+  const node = getNodeWithoutNamespace(calleeNode);
+
   if (node.type !== 'Identifier') {
     return -1;
   }
@@ -1687,7 +1687,7 @@ function getReactiveHookCallbackIndex(calleeNode, options) {
       // useImperativeHandle(ref, fn)
       return 1;
     default:
-      if (node === calleeNode && options && options.additionalHooks) {
+      if (options && options.additionalHooks) {
         // Allow the user to provide a regular expression which enables the lint to
         // target custom reactive hooks.
         let name;

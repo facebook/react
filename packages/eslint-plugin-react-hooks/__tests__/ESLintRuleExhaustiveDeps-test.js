@@ -3432,7 +3432,7 @@ const tests = {
           React.useEffect(() => {
             console.log(props.foo);
           }, []);
-          React.useCustomEffect(() => {
+          customModule.useCustomEffect(() => {
             console.log(props.foo);
           }, []);
         }
@@ -3457,7 +3457,7 @@ const tests = {
                   React.useEffect(() => {
                     console.log(props.foo);
                   }, []);
-                  React.useCustomEffect(() => {
+                  customModule.useCustomEffect(() => {
                     console.log(props.foo);
                   }, []);
                 }
@@ -3483,7 +3483,7 @@ const tests = {
                   React.useEffect(() => {
                     console.log(props.foo);
                   }, []);
-                  React.useCustomEffect(() => {
+                  customModule.useCustomEffect(() => {
                     console.log(props.foo);
                   }, []);
                 }
@@ -3509,9 +3509,35 @@ const tests = {
                   React.useEffect(() => {
                     console.log(props.foo);
                   }, [props.foo]);
-                  React.useCustomEffect(() => {
+                  customModule.useCustomEffect(() => {
                     console.log(props.foo);
                   }, []);
+                }
+              `,
+            },
+          ],
+        },
+        {
+          message:
+            "React Hook customModule.useCustomEffect has a missing dependency: 'props.foo'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [props.foo]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  useCustomEffect(() => {
+                    console.log(props.foo);
+                  }, []);
+                  useEffect(() => {
+                    console.log(props.foo);
+                  }, []);
+                  React.useEffect(() => {
+                    console.log(props.foo);
+                  }, []);
+                  customModule.useCustomEffect(() => {
+                    console.log(props.foo);
+                  }, [props.foo]);
                 }
               `,
             },
