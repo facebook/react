@@ -1536,7 +1536,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('does not show a warning when a component updates a childs state from within passive unmount function', () => {
       function Parent() {
         Scheduler.unstable_yieldValue('Parent');
-        const updaterRef = React.useRef(null);
+        const updaterRef = useRef(null);
         React.useEffect(() => {
           Scheduler.unstable_yieldValue('Parent passive create');
           return () => {
@@ -2612,7 +2612,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
 
       // @gate new
-      it('should skip unmounted boundaries and use the nearest still-mounted boundary', () => {
+      it('should skip unmounted boundaries and use the nearest still-mounted boundary', () => {
         function Conditional({showChildren}) {
           if (showChildren) {
             return (
@@ -3199,91 +3199,6 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       ReactNoop.render(<LazyCompute compute={compute} input="B" />);
       expect(Scheduler).toFlushAndYield(['compute B', 'B']);
-    });
-  });
-
-  describe('useRef', () => {
-    it('creates a ref object initialized with the provided value', () => {
-      jest.useFakeTimers();
-
-      function useDebouncedCallback(callback, ms, inputs) {
-        const timeoutID = useRef(-1);
-        useEffect(() => {
-          return function unmount() {
-            clearTimeout(timeoutID.current);
-          };
-        }, []);
-        const debouncedCallback = useCallback(
-          (...args) => {
-            clearTimeout(timeoutID.current);
-            timeoutID.current = setTimeout(callback, ms, ...args);
-          },
-          [callback, ms],
-        );
-        return useCallback(debouncedCallback, inputs);
-      }
-
-      let ping;
-      function App() {
-        ping = useDebouncedCallback(
-          value => {
-            Scheduler.unstable_yieldValue('ping: ' + value);
-          },
-          100,
-          [],
-        );
-        return null;
-      }
-
-      act(() => {
-        ReactNoop.render(<App />);
-      });
-      expect(Scheduler).toHaveYielded([]);
-
-      ping(1);
-      ping(2);
-      ping(3);
-
-      expect(Scheduler).toHaveYielded([]);
-
-      jest.advanceTimersByTime(100);
-
-      expect(Scheduler).toHaveYielded(['ping: 3']);
-
-      ping(4);
-      jest.advanceTimersByTime(20);
-      ping(5);
-      ping(6);
-      jest.advanceTimersByTime(80);
-
-      expect(Scheduler).toHaveYielded([]);
-
-      jest.advanceTimersByTime(20);
-      expect(Scheduler).toHaveYielded(['ping: 6']);
-    });
-
-    it('should return the same ref during re-renders', () => {
-      function Counter() {
-        const ref = useRef('val');
-        const [count, setCount] = useState(0);
-        const [firstRef] = useState(ref);
-
-        if (firstRef !== ref) {
-          throw new Error('should never change');
-        }
-
-        if (count < 3) {
-          setCount(count + 1);
-        }
-
-        return <Text text={ref.current} />;
-      }
-
-      ReactNoop.render(<Counter />);
-      expect(Scheduler).toFlushAndYield(['val']);
-
-      ReactNoop.render(<Counter />);
-      expect(Scheduler).toFlushAndYield(['val']);
     });
   });
 
