@@ -1400,6 +1400,7 @@ describe('Profiler', () => {
 
         const ComponentWithEffects = ({shouldCascade}) => {
           const [didCascade, setDidCascade] = React.useState(false);
+          Scheduler.unstable_advanceTime(100000000);
           React.useLayoutEffect(() => {
             if (shouldCascade && !didCascade) {
               setDidCascade(true);
@@ -1426,6 +1427,7 @@ describe('Profiler', () => {
             }
           }
           render() {
+            Scheduler.unstable_advanceTime(1000000000);
             return null;
           }
         }
@@ -1447,7 +1449,7 @@ describe('Profiler', () => {
         expect(call[0]).toBe('mount-test');
         expect(call[1]).toBe('mount');
         expect(call[2]).toBe(1010); // durations
-        expect(call[3]).toBe(1); // commit start time (before mutations or effects)
+        expect(call[3]).toBe(1100000001); // commit start time (before mutations or effects)
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
 
         call = callback.mock.calls[1];
@@ -1456,7 +1458,7 @@ describe('Profiler', () => {
         expect(call[0]).toBe('mount-test');
         expect(call[1]).toBe('update');
         expect(call[2]).toBe(130); // durations
-        expect(call[3]).toBe(1011); // commit start time (before mutations or effects)
+        expect(call[3]).toBe(1200001011); // commit start time (before mutations or effects)
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
 
         Scheduler.unstable_advanceTime(1);
@@ -1476,7 +1478,7 @@ describe('Profiler', () => {
         expect(call[0]).toBe('update-test');
         expect(call[1]).toBe('update');
         expect(call[2]).toBe(10130); // durations
-        expect(call[3]).toBe(1142); // commit start time (before mutations or effects)
+        expect(call[3]).toBe(2300001142); // commit start time (before mutations or effects)
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
 
         call = callback.mock.calls[3];
@@ -1485,7 +1487,7 @@ describe('Profiler', () => {
         expect(call[0]).toBe('update-test');
         expect(call[1]).toBe('update');
         expect(call[2]).toBe(10000); // durations
-        expect(call[3]).toBe(11272); // commit start time (before mutations or effects)
+        expect(call[3]).toBe(3300011272); // commit start time (before mutations or effects)
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
       });
 
@@ -1966,6 +1968,7 @@ describe('Profiler', () => {
 
         const ComponentWithEffects = () => {
           const [didMount, setDidMount] = React.useState(false);
+          Scheduler.unstable_advanceTime(1000);
           React.useEffect(() => {
             if (!didMount) {
               setDidMount(true);
@@ -1996,7 +1999,7 @@ describe('Profiler', () => {
         expect(call[0]).toBe('mount-test');
         expect(call[1]).toBe('mount');
         expect(call[2]).toBe(10); // durations
-        expect(call[3]).toBe(1); // commit start time (before mutations or effects)
+        expect(call[3]).toBe(1001); // commit start time (before mutations or effects)
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
 
         call = callback.mock.calls[1];
@@ -2005,7 +2008,7 @@ describe('Profiler', () => {
         expect(call[0]).toBe('mount-test');
         expect(call[1]).toBe('update');
         expect(call[2]).toBe(130); // durations
-        expect(call[3]).toBe(11); // commit start time (before mutations or effects)
+        expect(call[3]).toBe(2011); // commit start time (before mutations or effects)
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
       });
 
