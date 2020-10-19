@@ -27,7 +27,7 @@ import {
   enableNewReconciler,
   decoupleUpdatePriorityFromScheduler,
   enableDoubleInvokingEffects,
-  enableUseRefMutationWarning,
+  enableUseRefAccessWarning,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -1216,7 +1216,7 @@ function getCallerStackFrame(): string {
 
 function mountRef<T>(initialValue: T): {|current: T|} {
   const hook = mountWorkInProgressHook();
-  if (enableUseRefMutationWarning) {
+  if (enableUseRefAccessWarning) {
     if (__DEV__) {
       // Support lazy initialization pattern shown in docs.
       // We need to store the caller stack frame so that we don't warn on subsequent renders.

@@ -30,7 +30,6 @@ describe('useRef', () => {
 
     const ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
-    ReactFeatureFlags.enableUseRefMutationWarning = true;
 
     act = ReactNoop.act;
     useCallback = React.useCallback;
@@ -104,32 +103,6 @@ describe('useRef', () => {
     expect(Scheduler).toHaveYielded(['ping: 6']);
   });
 
-  it('should never warn when attaching to children', () => {
-    class Component extends React.Component {
-      render() {
-        return null;
-      }
-    }
-
-    function Example({phase}) {
-      const hostRef = useRef();
-      const classRef = useRef();
-      return (
-        <>
-          <div key={`host-${phase}`} ref={hostRef} />
-          <Component key={`class-${phase}`} ref={classRef} />
-        </>
-      );
-    }
-
-    act(() => {
-      ReactNoop.render(<Example phase="mount" />);
-    });
-    act(() => {
-      ReactNoop.render(<Example phase="update" />);
-    });
-  });
-
   it('should return the same ref during re-renders', () => {
     function Counter() {
       const ref = useRef('val');
@@ -155,6 +128,33 @@ describe('useRef', () => {
   });
 
   if (__DEV__) {
+    it('should never warn when attaching to children', () => {
+      class Component extends React.Component {
+        render() {
+          return null;
+        }
+      }
+
+      function Example({phase}) {
+        const hostRef = useRef();
+        const classRef = useRef();
+        return (
+          <>
+            <div key={`host-${phase}`} ref={hostRef} />
+            <Component key={`class-${phase}`} ref={classRef} />
+          </>
+        );
+      }
+
+      act(() => {
+        ReactNoop.render(<Example phase="mount" />);
+      });
+      act(() => {
+        ReactNoop.render(<Example phase="update" />);
+      });
+    });
+
+    // @gate enableUseRefAccessWarning
     it('should warn about reads during render', () => {
       function Example() {
         const ref = useRef(123);
@@ -215,7 +215,8 @@ describe('useRef', () => {
       });
     });
 
-    it('should not warn about unconditional lazy init during render', () => {
+    // @gate enableUseRefAccessWarning
+    it('should warn about unconditional lazy init during render', () => {
       function Example() {
         const ref1 = useRef(null);
         const ref2 = useRef(undefined);
@@ -255,6 +256,7 @@ describe('useRef', () => {
       });
     });
 
+    // @gate enableUseRefAccessWarning
     it('should warn about reads to ref after lazy init pattern', () => {
       function Example() {
         const ref1 = useRef(null);
@@ -288,6 +290,7 @@ describe('useRef', () => {
       });
     });
 
+    // @gate enableUseRefAccessWarning
     it('should warn about writes to ref after lazy init pattern', () => {
       function Example() {
         const ref1 = useRef(null);

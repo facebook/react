@@ -135,4 +135,4 @@ export const enableDiscreteEventFlushingChange = false;
 
 export const enableDoubleInvokingEffects = false;
 
-export const enableUseRefMutationWarning = false;
+export const enableUseRefAccessWarning = false;
