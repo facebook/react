@@ -2888,18 +2888,25 @@ export function attach(
           }
           break;
         case 'props':
-          if (instance === null) {
-            if (typeof overrideProps === 'function') {
-              overrideProps(fiber, path, value);
-            }
-          } else {
-            fiber.pendingProps = copyWithSet(instance.props, path, value);
-            instance.forceUpdate();
+          switch (fiber.tag) {
+            case ClassComponent:
+              fiber.pendingProps = copyWithSet(instance.props, path, value);
+              instance.forceUpdate();
+              break;
+            default:
+              if (typeof overrideProps === 'function') {
+                overrideProps(fiber, path, value);
+              }
+              break;
           }
           break;
         case 'state':
-          setInObject(instance.state, path, value);
-          instance.forceUpdate();
+          switch (fiber.tag) {
+            case ClassComponent:
+              setInObject(instance.state, path, value);
+              instance.forceUpdate();
+              break;
+          }
           break;
       }
     }
