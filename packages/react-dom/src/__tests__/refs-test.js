@@ -505,3 +505,32 @@ describe('strings refs across renderers', () => {
     expect(inst.refs.child2).toBe(div2.firstChild);
   });
 });
+
+describe('ref error boundary', () => {
+  it('throws expected error on incorrect assignment of immutable object to the ref', () => {
+    const container = document.createElement('div');
+
+    expect(() =>
+      ReactDOM.render(<span ref={Object.freeze({})} />, container),
+    ).toErrorDev(
+      'Warning: Unexpected ref object provided for span. ' +
+        'Use either a ref-setter function or React.createRef().\n' +
+        '    in span (at **)',
+    );
+  });
+
+  it('throws error from callback ref', () => {
+    const container = document.createElement('div');
+
+    expect(() =>
+      ReactDOM.render(
+        <span
+          ref={() => {
+            throw new Error('Hi');
+          }}
+        />,
+        container,
+      ),
+    ).toThrow('Hi');
+  });
+});
