@@ -160,20 +160,9 @@ export function scheduleWorkOnParentPath(
   let node = parent;
   while (node !== null) {
     const alternate = node.alternate;
-    if (!isSubsetOfLanes(node.childLanes, renderLanes)) {
-      node.childLanes = mergeLanes(node.childLanes, renderLanes);
-      if (alternate !== null) {
-        alternate.childLanes = mergeLanes(alternate.childLanes, renderLanes);
-      }
-    } else if (
-      alternate !== null &&
-      !isSubsetOfLanes(alternate.childLanes, renderLanes)
-    ) {
+    node.childLanes = mergeLanes(node.childLanes, renderLanes);
+    if (alternate !== null) {
       alternate.childLanes = mergeLanes(alternate.childLanes, renderLanes);
-    } else {
-      // Neither alternate was updated, which means the rest of the
-      // ancestor path already has sufficient priority.
-      break;
     }
     node = node.return;
   }
