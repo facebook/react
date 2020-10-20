@@ -1491,6 +1491,61 @@ describe('Profiler', () => {
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
       });
 
+      it('should include time spent in ref callbacks', () => {
+        const callback = jest.fn();
+
+        const refSetter = ref => {
+          if (ref !== null) {
+            Scheduler.unstable_advanceTime(10);
+          } else {
+            Scheduler.unstable_advanceTime(100);
+          }
+        };
+
+        class ClassComponent extends React.Component {
+          render() {
+            return null;
+          }
+        }
+
+        const Component = () => {
+          Scheduler.unstable_advanceTime(1000);
+          return <ClassComponent ref={refSetter} />;
+        };
+
+        Scheduler.unstable_advanceTime(1);
+
+        const renderer = ReactTestRenderer.create(
+          <React.Profiler id="root" onCommit={callback}>
+            <Component />
+          </React.Profiler>,
+        );
+
+        expect(callback).toHaveBeenCalledTimes(1);
+
+        let call = callback.mock.calls[0];
+
+        expect(call).toHaveLength(enableSchedulerTracing ? 5 : 4);
+        expect(call[0]).toBe('root');
+        expect(call[1]).toBe('mount');
+        expect(call[2]).toBe(10); // durations
+        expect(call[3]).toBe(1001); // commit start time (before mutations or effects)
+
+        callback.mockClear();
+
+        renderer.update(<React.Profiler id="root" onCommit={callback} />);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+
+        call = callback.mock.calls[0];
+
+        expect(call).toHaveLength(enableSchedulerTracing ? 5 : 4);
+        expect(call[0]).toBe('root');
+        expect(call[1]).toBe('update');
+        expect(call[2]).toBe(100); // durations
+        expect(call[3]).toBe(1011); // commit start time (before mutations or effects)
+      });
+
       it('should bubble time spent in layout effects to higher profilers', () => {
         const callback = jest.fn();
 
