@@ -50,7 +50,7 @@ export const deferRenderPhaseUpdateToNextBatch = true;
 export const decoupleUpdatePriorityFromScheduler = false;
 export const enableDiscreteEventFlushingChange = false;
 
-export const enableDoubleInvokingEffects = false;
+export const enableDoubleInvokingEffects = true;
 export const enableUseRefAccessWarning = false;
 
 // Flow magic to verify the exports of this file match the original version.

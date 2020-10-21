@@ -27,7 +27,6 @@ export const {
   decoupleUpdatePriorityFromScheduler,
   enableDebugTracing,
   skipUnmountedBoundaries,
-  enableDoubleInvokingEffects,
   enableUseRefAccessWarning,
 } = dynamicFeatureFlags;
 
@@ -78,6 +77,8 @@ export const disableTextareaChildren = __EXPERIMENTAL__;
 export const warnUnstableRenderSubtreeIntoContainer = false;
 
 export const enableDiscreteEventFlushingChange = true;
+
+export const enableDoubleInvokingEffects = true;
 
 // Enable forked reconciler. Piggy-backing on the "variant" global so that we
 // don't have to add another test dimension. The build system will compile this
