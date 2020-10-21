@@ -640,7 +640,13 @@ export function higherLanePriority(
 }
 
 export function createLaneMap<T>(initial: T): LaneMap<T> {
-  return new Array(TotalLanes).fill(initial);
+  // Intentionally pushing one by one.
+  // https://v8.dev/blog/elements-kinds#avoid-creating-holes
+  const laneMap = [];
+  for (let i = 0; i < TotalLanes; i++) {
+    laneMap.push(initial);
+  }
+  return laneMap;
 }
 
 export function markRootUpdated(
