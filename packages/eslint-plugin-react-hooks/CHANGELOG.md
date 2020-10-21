@@ -1,3 +1,7 @@
+## 4.2.0
+
+* No changes, this was an automated release together with React 17.
+
 ## 4.1.2
 * Fix a crash with the TypeScript 4.x parser. ([@eps1lon](https://github.com/eps1lon) in [#19815](https://github.com/facebook/react/pull/19815))
 
