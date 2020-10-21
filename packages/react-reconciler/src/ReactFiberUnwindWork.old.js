@@ -9,9 +9,9 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
-import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
+import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 
-import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';
+import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 import {
   ClassComponent,
   HostRoot,
@@ -30,17 +30,17 @@ import {
   enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 
-import {popHostContainer, popHostContext} from './ReactFiberHostContext.old';
-import {popSuspenseContext} from './ReactFiberSuspenseContext.old';
-import {resetHydrationState} from './ReactFiberHydrationContext.old';
+import {popHostContainer, popHostContext} from './ReactFiberHostContext.new';
+import {popSuspenseContext} from './ReactFiberSuspenseContext.new';
+import {resetHydrationState} from './ReactFiberHydrationContext.new';
 import {
   isContextProvider as isLegacyContextProvider,
   popContext as popLegacyContext,
   popTopLevelContextObject as popTopLevelLegacyContextObject,
-} from './ReactFiberContext.old';
-import {popProvider} from './ReactFiberNewContext.old';
-import {popRenderLanes} from './ReactFiberWorkLoop.old';
-import {transferActualDuration} from './ReactProfilerTimer.old';
+} from './ReactFiberContext.new';
+import {popProvider} from './ReactFiberNewContext.new';
+import {popRenderLanes} from './ReactFiberWorkLoop.new';
+import {transferActualDuration} from './ReactProfilerTimer.new';
 
 import invariant from 'shared/invariant';
 

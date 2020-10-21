@@ -17,9 +17,9 @@ import {
   flushSync,
   scheduleUpdateOnFiber,
   flushPassiveEffects,
-} from './ReactFiberWorkLoop.old';
-import {updateContainer} from './ReactFiberReconciler.old';
-import {emptyContextObject} from './ReactFiberContext.old';
+} from './ReactFiberWorkLoop.new';
+import {updateContainer} from './ReactFiberReconciler.new';
+import {emptyContextObject} from './ReactFiberContext.new';
 import {SyncLane, NoTimestamp} from './ReactFiberLane';
 import {
   ClassComponent,

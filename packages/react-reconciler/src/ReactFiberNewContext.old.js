@@ -9,11 +9,11 @@
 
 import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber, ContextDependency} from './ReactInternalTypes';
-import type {StackCursor} from './ReactFiberStack.old';
+import type {StackCursor} from './ReactFiberStack.new';
 import type {Lanes} from './ReactFiberLane';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
-import {createCursor, push, pop} from './ReactFiberStack.old';
+import {createCursor, push, pop} from './ReactFiberStack.new';
 import {MAX_SIGNED_31_BIT_INT} from './MaxInts';
 import {
   ContextProvider,
@@ -31,8 +31,8 @@ import {
 
 import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
-import {createUpdate, enqueueUpdate, ForceUpdate} from './ReactUpdateQueue.old';
-import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
+import {createUpdate, enqueueUpdate, ForceUpdate} from './ReactUpdateQueue.new';
+import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.new';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);

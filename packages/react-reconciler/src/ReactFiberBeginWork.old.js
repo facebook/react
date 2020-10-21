@@ -18,8 +18,8 @@ import type {
   SuspenseState,
   SuspenseListRenderState,
   SuspenseListTailMode,
-} from './ReactFiberSuspenseComponent.old';
-import type {SuspenseContext} from './ReactFiberSuspenseContext.old';
+} from './ReactFiberSuspenseComponent.new';
+import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
 import type {
   OffscreenProps,
   OffscreenState,
@@ -60,10 +60,10 @@ import {
   Hydrating,
   ContentReset,
   DidCapture,
-  Update,
   Ref,
   Deletion,
   ForceUpdateForLegacySuspense,
+  StaticMask,
 } from './ReactFiberFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -81,7 +81,7 @@ import {
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentName from 'shared/getComponentName';
-import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
+import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
 import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
 import {
   getCurrentFiberOwnerNameInDevOrNull,
@@ -91,18 +91,18 @@ import {
   resolveFunctionForHotReloading,
   resolveForwardRefForHotReloading,
   resolveClassForHotReloading,
-} from './ReactFiberHotReloading.old';
+} from './ReactFiberHotReloading.new';
 
 import {
   mountChildFibers,
   reconcileChildFibers,
   cloneChildFibers,
-} from './ReactChildFiber.old';
+} from './ReactChildFiber.new';
 import {
   processUpdateQueue,
   cloneUpdateQueue,
   initializeUpdateQueue,
-} from './ReactUpdateQueue.old';
+} from './ReactUpdateQueue.new';
 import {
   NoLane,
   NoLanes,
@@ -133,7 +133,7 @@ import {
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldSuspend} from './ReactFiberReconciler';
-import {pushHostContext, pushHostContainer} from './ReactFiberHostContext.old';
+import {pushHostContext, pushHostContainer} from './ReactFiberHostContext.new';
 import {
   suspenseStackCursor,
   pushSuspenseContext,
@@ -143,8 +143,8 @@ import {
   setDefaultShallowSuspenseContext,
   addSubtreeSuspenseContext,
   setShallowSuspenseContext,
-} from './ReactFiberSuspenseContext.old';
-import {findFirstSuspended} from './ReactFiberSuspenseComponent.old';
+} from './ReactFiberSuspenseContext.new';
+import {findFirstSuspended} from './ReactFiberSuspenseComponent.new';
 import {
   pushProvider,
   propagateContextChange,
@@ -152,9 +152,9 @@ import {
   prepareToReadContext,
   calculateChangedBits,
   scheduleWorkOnParentPath,
-} from './ReactFiberNewContext.old';
-import {renderWithHooks, bailoutHooks} from './ReactFiberHooks.old';
-import {stopProfilerTimerIfRunning} from './ReactProfilerTimer.old';
+} from './ReactFiberNewContext.new';
+import {renderWithHooks, bailoutHooks} from './ReactFiberHooks.new';
+import {stopProfilerTimerIfRunning} from './ReactProfilerTimer.new';
 import {
   getMaskedContext,
   getUnmaskedContext,
@@ -163,14 +163,14 @@ import {
   isContextProvider as isLegacyContextProvider,
   pushTopLevelContextObject,
   invalidateContextProvider,
-} from './ReactFiberContext.old';
+} from './ReactFiberContext.new';
 import {
   enterHydrationState,
   reenterHydrationStateFromDehydratedSuspenseInstance,
   resetHydrationState,
   tryToClaimNextHydratableInstance,
   warnIfHydrating,
-} from './ReactFiberHydrationContext.old';
+} from './ReactFiberHydrationContext.new';
 import {
   adoptClassInstance,
   applyDerivedStateFromProps,
@@ -178,8 +178,8 @@ import {
   mountClassInstance,
   resumeMountClassInstance,
   updateClassInstance,
-} from './ReactFiberClassComponent.old';
-import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
+} from './ReactFiberClassComponent.new';
+import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
 import {
   resolveLazyComponentTag,
   createFiberFromTypeAndProps,
@@ -187,7 +187,7 @@ import {
   createFiberFromOffscreen,
   createWorkInProgress,
   isSimpleFunctionComponent,
-} from './ReactFiber.old';
+} from './ReactFiber.new';
 import {
   markSpawnedWork,
   retryDehydratedSuspenseBoundary,
@@ -199,9 +199,9 @@ import {
   getExecutionContext,
   RetryAfterError,
   NoContext,
-} from './ReactFiberWorkLoop.old';
+} from './ReactFiberWorkLoop.new';
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
-import {setWorkInProgressVersion} from './ReactMutableSource.old';
+import {setWorkInProgressVersion} from './ReactMutableSource.new';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
@@ -674,8 +674,6 @@ function updateProfiler(
   renderLanes: Lanes,
 ) {
   if (enableProfilerTimer) {
-    workInProgress.flags |= Update;
-
     // Reset effect durations for the next eventual effect phase.
     // These are reset during render to allow the DevTools commit hook a chance to read them,
     const stateNode = workInProgress.stateNode;
@@ -1150,6 +1148,9 @@ function updateHostComponent(
     // empty, we need to schedule the text content to be reset.
     workInProgress.flags |= ContentReset;
   }
+
+  // React DevTools reads this flag.
+  workInProgress.flags |= PerformedWork;
 
   markRef(current, workInProgress);
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
@@ -2090,9 +2091,14 @@ function updateSuspensePrimaryChildren(
   primaryChildFragment.sibling = null;
   if (currentFallbackChildFragment !== null) {
     // Delete the fallback child fragment
-    currentFallbackChildFragment.nextEffect = null;
-    currentFallbackChildFragment.flags = Deletion;
-    workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChildFragment;
+    const deletions = workInProgress.deletions;
+    if (deletions === null) {
+      workInProgress.deletions = [currentFallbackChildFragment];
+      // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
+      workInProgress.flags |= Deletion;
+    } else {
+      deletions.push(currentFallbackChildFragment);
+    }
   }
 
   workInProgress.child = primaryChildFragment;
@@ -2149,24 +2155,19 @@ function updateSuspenseFallbackChildren(
 
     // The fallback fiber was added as a deletion effect during the first pass.
     // However, since we're going to remain on the fallback, we no longer want
-    // to delete it. So we need to remove it from the list. Deletions are stored
-    // on the same list as effects. We want to keep the effects from the primary
-    // tree. So we copy the primary child fragment's effect list, which does not
-    // include the fallback deletion effect.
-    const progressedLastEffect = primaryChildFragment.lastEffect;
-    if (progressedLastEffect !== null) {
-      workInProgress.firstEffect = primaryChildFragment.firstEffect;
-      workInProgress.lastEffect = progressedLastEffect;
-      progressedLastEffect.nextEffect = null;
-    } else {
-      // TODO: Reset this somewhere else? Lol legacy mode is so weird.
-      workInProgress.firstEffect = workInProgress.lastEffect = null;
-    }
+    // to delete it.
+    workInProgress.deletions = null;
   } else {
     primaryChildFragment = createWorkInProgressOffscreenFiber(
       currentPrimaryChildFragment,
       primaryChildProps,
     );
+
+    // Since we're reusing a current tree, we need to reuse the flags, too.
+    // (We don't do this in legacy mode, because in legacy mode we don't re-use
+    // the current tree; see previous branch.)
+    primaryChildFragment.subtreeFlags =
+      currentPrimaryChildFragment.subtreeFlags & StaticMask;
   }
   let fallbackChildFragment;
   if (currentFallbackChildFragment !== null) {
@@ -2651,7 +2652,6 @@ function initSuspenseListRenderState(
   tail: null | Fiber,
   lastContentRow: null | Fiber,
   tailMode: SuspenseListTailMode,
-  lastEffectBeforeRendering: null | Fiber,
 ): void {
   const renderState: null | SuspenseListRenderState =
     workInProgress.memoizedState;
@@ -2663,7 +2663,6 @@ function initSuspenseListRenderState(
       last: lastContentRow,
       tail: tail,
       tailMode: tailMode,
-      lastEffect: lastEffectBeforeRendering,
     }: SuspenseListRenderState);
   } else {
     // We can reuse the existing object from previous renders.
@@ -2673,7 +2672,6 @@ function initSuspenseListRenderState(
     renderState.last = lastContentRow;
     renderState.tail = tail;
     renderState.tailMode = tailMode;
-    renderState.lastEffect = lastEffectBeforeRendering;
   }
 }
 
@@ -2755,7 +2753,6 @@ function updateSuspenseListComponent(
           tail,
           lastContentRow,
           tailMode,
-          workInProgress.lastEffect,
         );
         break;
       }
@@ -2787,7 +2784,6 @@ function updateSuspenseListComponent(
           tail,
           null, // last
           tailMode,
-          workInProgress.lastEffect,
         );
         break;
       }
@@ -2798,7 +2794,6 @@ function updateSuspenseListComponent(
           null, // tail
           null, // last
           undefined,
-          workInProgress.lastEffect,
         );
         break;
       }
@@ -3058,15 +3053,14 @@ function remountFiber(
 
     // Delete the old fiber and place the new one.
     // Since the old fiber is disconnected, we have to schedule it manually.
-    const last = returnFiber.lastEffect;
-    if (last !== null) {
-      last.nextEffect = current;
-      returnFiber.lastEffect = current;
+    const deletions = returnFiber.deletions;
+    if (deletions === null) {
+      returnFiber.deletions = [current];
+      // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
+      returnFiber.flags |= Deletion;
     } else {
-      returnFiber.firstEffect = returnFiber.lastEffect = current;
+      deletions.push(current);
     }
-    current.nextEffect = null;
-    current.flags = Deletion;
 
     newWorkInProgress.flags |= Placement;
 
@@ -3151,15 +3145,6 @@ function beginWork(
         }
         case Profiler:
           if (enableProfilerTimer) {
-            // Profiler should only call onRender when one of its descendants actually rendered.
-            const hasChildWork = includesSomeLane(
-              renderLanes,
-              workInProgress.childLanes,
-            );
-            if (hasChildWork) {
-              workInProgress.flags |= Update;
-            }
-
             // Reset effect durations for the next eventual effect phase.
             // These are reset during render to allow the DevTools commit hook a chance to read them,
             const stateNode = workInProgress.stateNode;
@@ -3266,7 +3251,6 @@ function beginWork(
             // update in the past but didn't complete it.
             renderState.rendering = null;
             renderState.tail = null;
-            renderState.lastEffect = null;
           }
           pushSuspenseContext(workInProgress, suspenseStackCursor.current);
 

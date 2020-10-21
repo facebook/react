@@ -11,7 +11,7 @@ import type {FiberRoot, SuspenseHydrationCallbacks} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 
 import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
-import {createHostRootFiber} from './ReactFiber.old';
+import {createHostRootFiber} from './ReactFiber.new';
 import {
   NoLanes,
   NoLanePriority,
@@ -23,7 +23,7 @@ import {
   enableSuspenseCallback,
 } from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
-import {initializeUpdateQueue} from './ReactUpdateQueue.old';
+import {initializeUpdateQueue} from './ReactUpdateQueue.new';
 import {LegacyRoot, BlockingRoot, ConcurrentRoot} from './ReactRootTags';
 
 function FiberRootNode(containerInfo, tag, hydrate) {

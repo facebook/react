@@ -20,7 +20,7 @@ import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import {FundamentalComponent} from './ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Lane, LanePriority} from './ReactFiberLane';
-import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
+import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 
 import {
   findCurrentHostFiber,
@@ -43,9 +43,9 @@ import {
   processChildContext,
   emptyContextObject,
   isContextProvider as isLegacyContextProvider,
-} from './ReactFiberContext.old';
-import {createFiberRoot} from './ReactFiberRoot.old';
-import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook.old';
+} from './ReactFiberContext.new';
+import {createFiberRoot} from './ReactFiberRoot.new';
+import {injectInternals, onScheduleRoot} from './ReactFiberDevToolsHook.new';
 import {
   requestEventTime,
   requestUpdateLane,
@@ -64,8 +64,8 @@ import {
   warnIfUnmockedScheduler,
   IsThisRendererActing,
   act,
-} from './ReactFiberWorkLoop.old';
-import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.old';
+} from './ReactFiberWorkLoop.new';
+import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.new';
 import {
   isRendering as ReactCurrentFiberIsRendering,
   current as ReactCurrentFiberCurrent,
@@ -88,7 +88,7 @@ import {
   scheduleRoot,
   setRefreshHandler,
   findHostInstancesForRefresh,
-} from './ReactFiberHotReloading.old';
+} from './ReactFiberHotReloading.new';
 import {markRenderScheduled} from './SchedulingProfiler';
 
 export {registerMutableSourceForHydration} from './ReactMutableSource.new';

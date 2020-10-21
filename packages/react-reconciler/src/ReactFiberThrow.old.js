@@ -11,9 +11,9 @@ import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lane, Lanes} from './ReactFiberLane';
 import type {CapturedValue} from './ReactCapturedValue';
-import type {Update} from './ReactUpdateQueue.old';
+import type {Update} from './ReactUpdateQueue.new';
 import type {Wakeable} from 'shared/ReactTypes';
-import type {SuspenseContext} from './ReactFiberSuspenseContext.old';
+import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
 
 import getComponentName from 'shared/getComponentName';
 import {
@@ -30,7 +30,7 @@ import {
   LifecycleEffectMask,
   ForceUpdateForLegacySuspense,
 } from './ReactFiberFlags';
-import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.old';
+import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.new';
 import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   enableDebugTracing,
@@ -43,20 +43,20 @@ import {
   CaptureUpdate,
   ForceUpdate,
   enqueueUpdate,
-} from './ReactUpdateQueue.old';
-import {markFailedErrorBoundaryForHotReloading} from './ReactFiberHotReloading.old';
+} from './ReactUpdateQueue.new';
+import {markFailedErrorBoundaryForHotReloading} from './ReactFiberHotReloading.new';
 import {
   suspenseStackCursor,
   InvisibleParentSuspenseContext,
   hasSuspenseContext,
-} from './ReactFiberSuspenseContext.old';
+} from './ReactFiberSuspenseContext.new';
 import {
   renderDidError,
   onUncaughtError,
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   pingSuspendedRoot,
-} from './ReactFiberWorkLoop.old';
+} from './ReactFiberWorkLoop.new';
 import {logCapturedError} from './ReactFiberErrorLogger';
 import {logComponentSuspended} from './DebugTracing';
 import {markComponentSuspended} from './SchedulingProfiler';
@@ -185,8 +185,6 @@ function throwException(
 ) {
   // The source fiber did not complete.
   sourceFiber.flags |= Incomplete;
-  // Its effect list is no longer valid.
-  sourceFiber.firstEffect = sourceFiber.lastEffect = null;
 
   if (
     value !== null &&

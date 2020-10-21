@@ -8,13 +8,13 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {StackCursor} from './ReactFiberStack.old';
+import type {StackCursor} from './ReactFiberStack.new';
 import type {Container, HostContext} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
 
 import {getChildHostContext, getRootHostContext} from './ReactFiberHostConfig';
-import {createCursor, push, pop} from './ReactFiberStack.old';
+import {createCursor, push, pop} from './ReactFiberStack.new';
 
 declare class NoContextT {}
 const NO_CONTEXT: NoContextT = ({}: any);

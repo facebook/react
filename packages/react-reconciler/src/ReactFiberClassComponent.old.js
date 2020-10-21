@@ -9,18 +9,19 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
-import type {UpdateQueue} from './ReactUpdateQueue.old';
+import type {UpdateQueue} from './ReactUpdateQueue.new';
 
 import * as React from 'react';
-import {Update, Snapshot} from './ReactFiberFlags';
+import {Update, Snapshot, MountLayoutDev} from './ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
   enableDebugTracing,
   enableSchedulingProfiler,
   warnAboutDeprecatedLifecycles,
+  enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
-import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
+import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
 import {isMounted} from './ReactFiberTreeReflection';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
@@ -28,8 +29,14 @@ import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
-import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
-import {DebugTracingMode, StrictMode} from './ReactTypeOfMode';
+import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
+import {
+  BlockingMode,
+  ConcurrentMode,
+  DebugTracingMode,
+  NoMode,
+  StrictMode,
+} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,
@@ -41,7 +48,7 @@ import {
   ForceUpdate,
   initializeUpdateQueue,
   cloneUpdateQueue,
-} from './ReactUpdateQueue.old';
+} from './ReactUpdateQueue.new';
 import {NoLanes} from './ReactFiberLane';
 import {
   cacheContext,
@@ -49,13 +56,13 @@ import {
   getUnmaskedContext,
   hasContextChanged,
   emptyContextObject,
-} from './ReactFiberContext.old';
-import {readContext} from './ReactFiberNewContext.old';
+} from './ReactFiberContext.new';
+import {readContext} from './ReactFiberNewContext.new';
 import {
   requestEventTime,
   requestUpdateLane,
   scheduleUpdateOnFiber,
-} from './ReactFiberWorkLoop.old';
+} from './ReactFiberWorkLoop.new';
 import {logForceUpdateScheduled, logStateUpdateScheduled} from './DebugTracing';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
@@ -890,7 +897,16 @@ function mountClassInstance(
   }
 
   if (typeof instance.componentDidMount === 'function') {
-    workInProgress.flags |= Update;
+    if (
+      __DEV__ &&
+      enableDoubleInvokingEffects &&
+      (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+    ) {
+      // Never double-invoke effects for legacy roots.
+      workInProgress.flags |= MountLayoutDev | Update;
+    } else {
+      workInProgress.flags |= Update;
+    }
   }
 }
 
@@ -960,7 +976,15 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.flags |= Update;
+      if (
+        __DEV__ &&
+        enableDoubleInvokingEffects &&
+        (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+      ) {
+        workInProgress.flags |= MountLayoutDev | Update;
+      } else {
+        workInProgress.flags |= Update;
+      }
     }
     return false;
   }
@@ -1003,13 +1027,29 @@ function resumeMountClassInstance(
       }
     }
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.flags |= Update;
+      if (
+        __DEV__ &&
+        enableDoubleInvokingEffects &&
+        (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+      ) {
+        workInProgress.flags |= MountLayoutDev | Update;
+      } else {
+        workInProgress.flags |= Update;
+      }
     }
   } else {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.flags |= Update;
+      if (
+        __DEV__ &&
+        enableDoubleInvokingEffects &&
+        (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+      ) {
+        workInProgress.flags |= MountLayoutDev | Update;
+      } else {
+        workInProgress.flags |= Update;
+      }
     }
 
     // If shouldComponentUpdate returned false, we should still update the
