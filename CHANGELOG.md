@@ -1,3 +1,9 @@
+## 17.0.1 (October 22, 2020)
+
+### React DOM
+
+* Fix a crash in IE11. ([@gaearon](https://github.com/gaearon) in [#20071](https://github.com/facebook/react/pull/20071))
+
 ## 17.0.0 (October 20, 2020)
 
 Today, we are releasing React 17!

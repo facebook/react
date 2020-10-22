@@ -1,6 +1,6 @@
 {
   "name": "react-test-renderer",
-  "version": "17.0.0",
+  "version": "17.0.1",
   "description": "React package for snapshot testing.",
   "main": "index.js",
   "repository": {
@@ -20,12 +20,12 @@
   "homepage": "https://reactjs.org/",
   "dependencies": {
     "object-assign": "^4.1.1",
-    "react-is": "^17.0.0",
+    "react-is": "^17.0.1",
     "react-shallow-renderer": "^16.13.1",
-    "scheduler": "^0.20.0"
+    "scheduler": "^0.20.1"
   },
   "peerDependencies": {
-    "react": "17.0.0"
+    "react": "17.0.1"
   },
   "files": [
     "LICENSE",
