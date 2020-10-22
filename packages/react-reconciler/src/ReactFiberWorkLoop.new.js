@@ -2846,9 +2846,9 @@ function commitDoubleInvokeEffectsInDEV(
 ) {
   if (__DEV__ && enableDoubleInvokingEffects) {
     // Never double-invoke effects for legacy roots.
-    if ((fiber.mode & (BlockingMode | ConcurrentMode)) === NoMode) {
-      return;
-    }
+    // if ((fiber.mode & (BlockingMode | ConcurrentMode)) === NoMode) {
+      // return;
+    // }
 
     setCurrentDebugFiberInDEV(fiber);
     invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectUnmountInDEV);

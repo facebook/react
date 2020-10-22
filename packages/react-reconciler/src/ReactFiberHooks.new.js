@@ -493,8 +493,9 @@ export function bailoutHooks(
   workInProgress.updateQueue = current.updateQueue;
   if (
     __DEV__ &&
-    enableDoubleInvokingEffects &&
-    (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+    enableDoubleInvokingEffects
+    // enableDoubleInvokingEffects &&
+    // (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
   ) {
     workInProgress.flags &= ~(
       MountPassiveDevEffect |
@@ -1343,8 +1344,9 @@ function mountEffect(
 
   if (
     __DEV__ &&
-    enableDoubleInvokingEffects &&
-    (currentlyRenderingFiber.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+    enableDoubleInvokingEffects
+    // enableDoubleInvokingEffects &&
+    // (currentlyRenderingFiber.mode & (BlockingMode | ConcurrentMode)) !== NoMode
   ) {
     return mountEffectImpl(
       MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
@@ -1381,8 +1383,9 @@ function mountLayoutEffect(
 ): void {
   if (
     __DEV__ &&
-    enableDoubleInvokingEffects &&
-    (currentlyRenderingFiber.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+    enableDoubleInvokingEffects
+    // enableDoubleInvokingEffects &&
+    // (currentlyRenderingFiber.mode & (BlockingMode | ConcurrentMode)) !== NoMode
   ) {
     return mountEffectImpl(
       MountLayoutDevEffect | UpdateEffect,
@@ -1453,8 +1456,9 @@ function mountImperativeHandle<T>(
 
   if (
     __DEV__ &&
-    enableDoubleInvokingEffects &&
-    (currentlyRenderingFiber.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+    enableDoubleInvokingEffects
+    // enableDoubleInvokingEffects &&
+    // (currentlyRenderingFiber.mode & (BlockingMode | ConcurrentMode)) !== NoMode
   ) {
     return mountEffectImpl(
       MountLayoutDevEffect | UpdateEffect,

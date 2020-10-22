@@ -899,8 +899,9 @@ function mountClassInstance(
   if (typeof instance.componentDidMount === 'function') {
     if (
       __DEV__ &&
-      enableDoubleInvokingEffects &&
-      (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+      enableDoubleInvokingEffects
+      // enableDoubleInvokingEffects &&
+      // (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
     ) {
       // Never double-invoke effects for legacy roots.
       workInProgress.flags |= MountLayoutDev | Update;
@@ -978,8 +979,9 @@ function resumeMountClassInstance(
     if (typeof instance.componentDidMount === 'function') {
       if (
         __DEV__ &&
-        enableDoubleInvokingEffects &&
-        (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+        enableDoubleInvokingEffects
+        // enableDoubleInvokingEffects &&
+        // (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
       ) {
         workInProgress.flags |= MountLayoutDev | Update;
       } else {
@@ -1029,8 +1031,9 @@ function resumeMountClassInstance(
     if (typeof instance.componentDidMount === 'function') {
       if (
         __DEV__ &&
-        enableDoubleInvokingEffects &&
-        (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+        enableDoubleInvokingEffects
+        // enableDoubleInvokingEffects &&
+        // (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
       ) {
         workInProgress.flags |= MountLayoutDev | Update;
       } else {
@@ -1043,8 +1046,9 @@ function resumeMountClassInstance(
     if (typeof instance.componentDidMount === 'function') {
       if (
         __DEV__ &&
-        enableDoubleInvokingEffects &&
-        (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+        enableDoubleInvokingEffects
+        // enableDoubleInvokingEffects &&
+        // (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
       ) {
         workInProgress.flags |= MountLayoutDev | Update;
       } else {
