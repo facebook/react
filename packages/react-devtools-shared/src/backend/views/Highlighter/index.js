@@ -103,7 +103,7 @@ export default function setupHighlighter(
     }
 
     let nodes: ?Array<HTMLElement> = null;
-    if (renderer !== null) {
+    if (renderer != null) {
       nodes = ((renderer.findNativeNodesForFiberID(
         id,
       ): any): ?Array<HTMLElement>);

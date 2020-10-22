@@ -1400,6 +1400,7 @@ describe('Profiler', () => {
 
         const ComponentWithEffects = ({shouldCascade}) => {
           const [didCascade, setDidCascade] = React.useState(false);
+          Scheduler.unstable_advanceTime(100000000);
           React.useLayoutEffect(() => {
             if (shouldCascade && !didCascade) {
               setDidCascade(true);
@@ -1426,6 +1427,7 @@ describe('Profiler', () => {
             }
           }
           render() {
+            Scheduler.unstable_advanceTime(1000000000);
             return null;
           }
         }
@@ -1447,7 +1449,7 @@ describe('Profiler', () => {
         expect(call[0]).toBe('mount-test');
         expect(call[1]).toBe('mount');
         expect(call[2]).toBe(1010); // durations
-        expect(call[3]).toBe(1); // commit start time (before mutations or effects)
+        expect(call[3]).toBe(1100000001); // commit start time (before mutations or effects)
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
 
         call = callback.mock.calls[1];
@@ -1456,7 +1458,7 @@ describe('Profiler', () => {
         expect(call[0]).toBe('mount-test');
         expect(call[1]).toBe('update');
         expect(call[2]).toBe(130); // durations
-        expect(call[3]).toBe(1011); // commit start time (before mutations or effects)
+        expect(call[3]).toBe(1200001011); // commit start time (before mutations or effects)
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
 
         Scheduler.unstable_advanceTime(1);
@@ -1476,7 +1478,7 @@ describe('Profiler', () => {
         expect(call[0]).toBe('update-test');
         expect(call[1]).toBe('update');
         expect(call[2]).toBe(10130); // durations
-        expect(call[3]).toBe(1142); // commit start time (before mutations or effects)
+        expect(call[3]).toBe(2300001142); // commit start time (before mutations or effects)
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
 
         call = callback.mock.calls[3];
@@ -1485,8 +1487,63 @@ describe('Profiler', () => {
         expect(call[0]).toBe('update-test');
         expect(call[1]).toBe('update');
         expect(call[2]).toBe(10000); // durations
-        expect(call[3]).toBe(11272); // commit start time (before mutations or effects)
+        expect(call[3]).toBe(3300011272); // commit start time (before mutations or effects)
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
+      });
+
+      it('should include time spent in ref callbacks', () => {
+        const callback = jest.fn();
+
+        const refSetter = ref => {
+          if (ref !== null) {
+            Scheduler.unstable_advanceTime(10);
+          } else {
+            Scheduler.unstable_advanceTime(100);
+          }
+        };
+
+        class ClassComponent extends React.Component {
+          render() {
+            return null;
+          }
+        }
+
+        const Component = () => {
+          Scheduler.unstable_advanceTime(1000);
+          return <ClassComponent ref={refSetter} />;
+        };
+
+        Scheduler.unstable_advanceTime(1);
+
+        const renderer = ReactTestRenderer.create(
+          <React.Profiler id="root" onCommit={callback}>
+            <Component />
+          </React.Profiler>,
+        );
+
+        expect(callback).toHaveBeenCalledTimes(1);
+
+        let call = callback.mock.calls[0];
+
+        expect(call).toHaveLength(enableSchedulerTracing ? 5 : 4);
+        expect(call[0]).toBe('root');
+        expect(call[1]).toBe('mount');
+        expect(call[2]).toBe(10); // durations
+        expect(call[3]).toBe(1001); // commit start time (before mutations or effects)
+
+        callback.mockClear();
+
+        renderer.update(<React.Profiler id="root" onCommit={callback} />);
+
+        expect(callback).toHaveBeenCalledTimes(1);
+
+        call = callback.mock.calls[0];
+
+        expect(call).toHaveLength(enableSchedulerTracing ? 5 : 4);
+        expect(call[0]).toBe('root');
+        expect(call[1]).toBe('update');
+        expect(call[2]).toBe(100); // durations
+        expect(call[3]).toBe(1011); // commit start time (before mutations or effects)
       });
 
       it('should bubble time spent in layout effects to higher profilers', () => {
@@ -1966,6 +2023,7 @@ describe('Profiler', () => {
 
         const ComponentWithEffects = () => {
           const [didMount, setDidMount] = React.useState(false);
+          Scheduler.unstable_advanceTime(1000);
           React.useEffect(() => {
             if (!didMount) {
               setDidMount(true);
@@ -1996,7 +2054,7 @@ describe('Profiler', () => {
         expect(call[0]).toBe('mount-test');
         expect(call[1]).toBe('mount');
         expect(call[2]).toBe(10); // durations
-        expect(call[3]).toBe(1); // commit start time (before mutations or effects)
+        expect(call[3]).toBe(1001); // commit start time (before mutations or effects)
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
 
         call = callback.mock.calls[1];
@@ -2005,7 +2063,7 @@ describe('Profiler', () => {
         expect(call[0]).toBe('mount-test');
         expect(call[1]).toBe('update');
         expect(call[2]).toBe(130); // durations
-        expect(call[3]).toBe(11); // commit start time (before mutations or effects)
+        expect(call[3]).toBe(2011); // commit start time (before mutations or effects)
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
       });
 
@@ -4180,7 +4238,11 @@ describe('Profiler', () => {
               const interactions = SchedulerTracing.unstable_getCurrent();
               expect(interactions.size).toBe(1);
               interaction = Array.from(interactions)[0];
-              ReactTestRenderer.create(<Component />);
+              ReactTestRendererAct(() => {
+                ReactTestRenderer.create(<Component />, {
+                  unstable_isConcurrent: true,
+                });
+              });
             },
           );
           Scheduler.unstable_flushAll();

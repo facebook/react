@@ -134,6 +134,7 @@ import {
   HostEffectMask,
   Hydrating,
   HydratingAndUpdate,
+  Visibility,
   BeforeMutationMask,
   MutationMask,
   LayoutMask,
@@ -341,7 +342,6 @@ let hasUncaughtError = false;
 let firstUncaughtError = null;
 let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
 
-let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoSchedulerPriority;
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
@@ -1865,6 +1865,22 @@ function commitRootImpl(root, renderPriorityLevel) {
     // times out.
   }
 
+  // If there are pending passive effects, schedule a callback to process them.
+  // Do this as early as possible, so it is queued before anything else that
+  // might get scheduled in the commit phase. (See #16714.)
+  const rootDoesHavePassiveEffects =
+    (finishedWork.subtreeFlags & PassiveMask) !== NoFlags ||
+    (finishedWork.flags & PassiveMask) !== NoFlags;
+  if (rootDoesHavePassiveEffects) {
+    rootWithPendingPassiveEffects = root;
+    pendingPassiveEffectsLanes = lanes;
+    pendingPassiveEffectsRenderPriority = renderPriorityLevel;
+    scheduleCallback(NormalSchedulerPriority, () => {
+      flushPassiveEffects();
+      return null;
+    });
+  }
+
   // Check if there are any effects in the whole tree.
   // TODO: This is left over from the effect list implementation, where we had
   // to check for the existence of `firstEffect` to satsify Flow. I think the
@@ -1972,20 +1988,6 @@ function commitRootImpl(root, renderPriorityLevel) {
       markLayoutEffectsStopped();
     }
 
-    // If there are pending passive effects, schedule a callback to process them.
-    if (
-      (finishedWork.subtreeFlags & PassiveMask) !== NoFlags ||
-      (finishedWork.flags & PassiveMask) !== NoFlags
-    ) {
-      if (!rootDoesHavePassiveEffects) {
-        rootDoesHavePassiveEffects = true;
-        scheduleCallback(NormalSchedulerPriority, () => {
-          flushPassiveEffects();
-          return null;
-        });
-      }
-    }
-
     // Tell Scheduler to yield at the end of the frame, so the browser has an
     // opportunity to paint.
     requestPaint();
@@ -2008,17 +2010,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     if (enableProfilerTimer) {
       recordCommitTime();
     }
-  }
-
-  const rootDidHavePassiveEffects = rootDoesHavePassiveEffects;
-
-  if (rootDoesHavePassiveEffects) {
-    // This commit has passive effects. Stash a reference to them. But don't
-    // schedule a callback until after flushing layout work.
-    rootDoesHavePassiveEffects = false;
-    rootWithPendingPassiveEffects = root;
-    pendingPassiveEffectsLanes = lanes;
-    pendingPassiveEffectsRenderPriority = renderPriorityLevel;
   }
 
   // Read this again, since an effect might have updated it
@@ -2047,13 +2038,13 @@ function commitRootImpl(root, renderPriorityLevel) {
   }
 
   if (__DEV__ && enableDoubleInvokingEffects) {
-    if (!rootDidHavePassiveEffects) {
+    if (!rootDoesHavePassiveEffects) {
       commitDoubleInvokeEffectsInDEV(root.current, false);
     }
   }
 
   if (enableSchedulerTracing) {
-    if (!rootDidHavePassiveEffects) {
+    if (!rootDoesHavePassiveEffects) {
       // If there are no passive effects, then we can complete the pending interactions.
       // Otherwise, we'll wait until after the passive effects are flushed.
       // Wait to do this until after remaining work has been scheduled,
@@ -2165,14 +2156,16 @@ function commitBeforeMutationEffectsImpl(fiber: Fiber) {
 
   if (!shouldFireAfterActiveInstanceBlur && focusedInstanceHandle !== null) {
     // Check to see if the focused element was inside of a hidden (Suspense) subtree.
-    // TODO: Move this out of the hot path using a dedicated effect tag.
     if (
+      // TODO: Can optimize this further with separate Hide and Show flags. We
+      // only care about Hide here.
+      (flags & Visibility) !== NoFlags &&
       fiber.tag === SuspenseComponent &&
       isSuspenseBoundaryBeingHidden(current, fiber) &&
       doesFiberContain(fiber, focusedInstanceHandle)
     ) {
       shouldFireAfterActiveInstanceBlur = true;
-      beforeActiveInstanceBlur();
+      beforeActiveInstanceBlur(fiber);
     }
   }
 
@@ -2180,18 +2173,6 @@ function commitBeforeMutationEffectsImpl(fiber: Fiber) {
     setCurrentDebugFiberInDEV(fiber);
     commitBeforeMutationEffectOnFiber(current, fiber);
     resetCurrentDebugFiberInDEV();
-  }
-
-  if ((flags & Passive) !== NoFlags) {
-    // If there are passive effects, schedule a callback to flush at
-    // the earliest opportunity.
-    if (!rootDoesHavePassiveEffects) {
-      rootDoesHavePassiveEffects = true;
-      scheduleCallback(NormalSchedulerPriority, () => {
-        flushPassiveEffects();
-        return null;
-      });
-    }
   }
 }
 
@@ -2206,7 +2187,7 @@ function commitBeforeMutationEffectsDeletions(deletions: Array<Fiber>) {
 
     if (doesFiberContain(fiber, ((focusedInstanceHandle: any): Fiber))) {
       shouldFireAfterActiveInstanceBlur = true;
-      beforeActiveInstanceBlur();
+      beforeActiveInstanceBlur(fiber);
     }
   }
 }
@@ -2365,16 +2346,6 @@ function commitMutationEffectsDeletions(
         captureCommitPhaseError(childToDelete, nearestMountedAncestor, error);
       }
     }
-  }
-}
-
-export function schedulePassiveEffectCallback() {
-  if (!rootDoesHavePassiveEffects) {
-    rootDoesHavePassiveEffects = true;
-    scheduleCallback(NormalSchedulerPriority, () => {
-      flushPassiveEffects();
-      return null;
-    });
   }
 }
 
@@ -2874,6 +2845,11 @@ function commitDoubleInvokeEffectsInDEV(
   hasPassiveEffects: boolean,
 ) {
   if (__DEV__ && enableDoubleInvokingEffects) {
+    // Never double-invoke effects for legacy roots.
+    if ((fiber.mode & (BlockingMode | ConcurrentMode)) === NoMode) {
+      return;
+    }
+
     setCurrentDebugFiberInDEV(fiber);
     invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectUnmountInDEV);
     if (hasPassiveEffects) {
@@ -2898,6 +2874,8 @@ function invokeEffectsInDev(
   invokeEffectFn: (fiber: Fiber) => void,
 ): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
+    // We don't need to re-check for legacy roots here.
+    // This function will not be called within legacy roots.
     let fiber = firstChild;
     while (fiber !== null) {
       if (fiber.child !== null) {

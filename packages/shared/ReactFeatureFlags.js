@@ -134,3 +134,5 @@ export const decoupleUpdatePriorityFromScheduler = false;
 export const enableDiscreteEventFlushingChange = false;
 
 export const enableDoubleInvokingEffects = false;
+
+export const enableUseRefAccessWarning = false;

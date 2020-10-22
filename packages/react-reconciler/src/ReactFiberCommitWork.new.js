@@ -70,7 +70,6 @@ import {
   Update,
   Callback,
   LayoutMask,
-  PassiveMask,
   Ref,
 } from './ReactFiberFlags';
 import getComponentName from 'shared/getComponentName';
@@ -125,7 +124,6 @@ import {
   captureCommitPhaseError,
   resolveRetryWakeable,
   markCommitTimeOfFallback,
-  schedulePassiveEffectCallback,
 } from './ReactFiberWorkLoop.new';
 import {
   NoFlags as NoHookEffect,
@@ -196,14 +194,38 @@ function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber) {
   if (ref !== null) {
     if (typeof ref === 'function') {
       if (__DEV__) {
-        invokeGuardedCallback(null, ref, null, null);
+        if (
+          enableProfilerTimer &&
+          enableProfilerCommitHooks &&
+          current.mode & ProfileMode
+        ) {
+          startLayoutEffectTimer();
+          invokeGuardedCallback(null, ref, null, null);
+          recordLayoutEffectDuration(current);
+        } else {
+          invokeGuardedCallback(null, ref, null, null);
+        }
+
         if (hasCaughtError()) {
           const refError = clearCaughtError();
           captureCommitPhaseError(current, nearestMountedAncestor, refError);
         }
       } else {
         try {
-          ref(null);
+          if (
+            enableProfilerTimer &&
+            enableProfilerCommitHooks &&
+            current.mode & ProfileMode
+          ) {
+            try {
+              startLayoutEffectTimer();
+              ref(null);
+            } finally {
+              recordLayoutEffectDuration(current);
+            }
+          } else {
+            ref(null);
+          }
         } catch (refError) {
           captureCommitPhaseError(current, nearestMountedAncestor, refError);
         }
@@ -599,10 +621,6 @@ function recursivelyCommitLayoutEffects(
                 finishedWork,
               );
             }
-
-            if ((finishedWork.subtreeFlags & PassiveMask) !== NoFlags) {
-              schedulePassiveEffectCallback();
-            }
             break;
           }
           case ClassComponent: {
@@ -971,7 +989,20 @@ function commitAttachRef(finishedWork: Fiber) {
       instanceToUse = instance;
     }
     if (typeof ref === 'function') {
-      ref(instanceToUse);
+      if (
+        enableProfilerTimer &&
+        enableProfilerCommitHooks &&
+        finishedWork.mode & ProfileMode
+      ) {
+        try {
+          startLayoutEffectTimer();
+          ref(instanceToUse);
+        } finally {
+          recordLayoutEffectDuration(finishedWork);
+        }
+      } else {
+        ref(instanceToUse);
+      }
     } else {
       if (__DEV__) {
         if (!ref.hasOwnProperty('current')) {
@@ -992,7 +1023,20 @@ function commitDetachRef(current: Fiber) {
   const currentRef = current.ref;
   if (currentRef !== null) {
     if (typeof currentRef === 'function') {
-      currentRef(null);
+      if (
+        enableProfilerTimer &&
+        enableProfilerCommitHooks &&
+        current.mode & ProfileMode
+      ) {
+        try {
+          startLayoutEffectTimer();
+          currentRef(null);
+        } finally {
+          recordLayoutEffectDuration(current);
+        }
+      } else {
+        currentRef(null);
+      }
     } else {
       currentRef.current = null;
     }
@@ -2024,6 +2068,8 @@ function commitPassiveMount(
 
 function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
+    // We don't need to re-check for legacy roots here.
+    // This function will not be called within legacy roots.
     switch (fiber.tag) {
       case FunctionComponent:
       case ForwardRef:
@@ -2057,6 +2103,8 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
 
 function invokePassiveEffectMountInDEV(fiber: Fiber): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
+    // We don't need to re-check for legacy roots here.
+    // This function will not be called within legacy roots.
     switch (fiber.tag) {
       case FunctionComponent:
       case ForwardRef:
@@ -2081,6 +2129,8 @@ function invokePassiveEffectMountInDEV(fiber: Fiber): void {
 
 function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
+    // We don't need to re-check for legacy roots here.
+    // This function will not be called within legacy roots.
     switch (fiber.tag) {
       case FunctionComponent:
       case ForwardRef:
@@ -2113,6 +2163,8 @@ function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
 
 function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
+    // We don't need to re-check for legacy roots here.
+    // This function will not be called within legacy roots.
     switch (fiber.tag) {
       case FunctionComponent:
       case ForwardRef:

@@ -377,7 +377,7 @@ export function makeOpaqueHydratingObject(
   };
 }
 
-export function beforeActiveInstanceBlur() {
+export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {
   // noop
 }
 

@@ -17,6 +17,6 @@
     "umd/"
   ],
   "peerDependencies": {
-    "react": "^17.0.0-alpha"
+    "react": "^17.0.0"
   }
 }
