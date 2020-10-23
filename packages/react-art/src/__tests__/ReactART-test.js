@@ -381,7 +381,7 @@ describe('ReactART', () => {
     }
 
     // Using test renderer instead of the DOM renderer here because async
-    // testing APIs for the DOM renderer don't exist.
+    // testing APIs for the DOM renderer doesn't exist.
     ReactNoop.render(
       <CurrentRendererContext.Provider value="Test">
         <Yield value="A" />
