@@ -172,7 +172,7 @@ export function setValueForProperty(
       // `toString`ed by IE8/9.
       (node: any)[propertyName] = value;
     }
-    if(!propertyMustUseAttribute){
+    if (!propertyMustUseAttribute) {
       return;
     }
   }
