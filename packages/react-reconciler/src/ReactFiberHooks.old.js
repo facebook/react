@@ -911,7 +911,7 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
   } else {
     // This handles the special case of a mutable source being shared between renderers.
     // In that case, if the source is mutated between the first and second renderer,
-    // The second renderer don't know that it needs to reset the WIP version during unwind,
+    // The second renderer doesn't know that it needs to reset the WIP version during unwind,
     // (because the hook only marks sources as dirty if it's written to their WIP version).
     // That would cause this tear check to throw again and eventually be visible to the user.
     // We can avoid this infinite loop by explicitly marking the source as dirty.
