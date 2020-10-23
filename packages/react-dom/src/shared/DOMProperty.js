@@ -8,6 +8,7 @@
  */
 
 import {enableFilterEmptyStringAttributesDOM} from 'shared/ReactFeatureFlags';
+import { boolean } from 'yargs';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -53,6 +54,7 @@ export type PropertyInfo = {|
   +type: PropertyType,
   +sanitizeURL: boolean,
   +removeEmptyString: boolean,
+  +propertyMustUseAttribute: boolean,
 |};
 
 /* eslint-disable max-len */
@@ -261,6 +263,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -280,6 +283,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -295,6 +299,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -316,6 +321,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -356,6 +362,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -380,7 +387,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
-    false, //propertyMustUseAttribute
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -416,7 +423,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
-    false, //propertyMustUseAttribute
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -439,7 +446,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
-    false, //propertyMustUseAttribute
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -453,7 +460,7 @@ reservedProps.forEach(name => {
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
-    false, //propertyMustUseAttribute
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -553,7 +560,7 @@ const capitalize = token => token[1].toUpperCase();
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
-    false, //propertyMustUseAttribute
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -579,7 +586,7 @@ const capitalize = token => token[1].toUpperCase();
     'http://www.w3.org/1999/xlink',
     false, // sanitizeURL
     false, // removeEmptyString
-    false, //propertyMustUseAttribute
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -602,7 +609,7 @@ const capitalize = token => token[1].toUpperCase();
     'http://www.w3.org/XML/1998/namespace',
     false, // sanitizeURL
     false, // removeEmptyString
-    false, //propertyMustUseAttribute
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -618,6 +625,7 @@ const capitalize = token => token[1].toUpperCase();
     null, // attributeNamespace
     false, // sanitizeURL
     false, // removeEmptyString
+    false, // propertyMustUseAttribute
   );
 });
 
@@ -632,7 +640,7 @@ properties[xlinkHref] = new PropertyInfoRecord(
   'http://www.w3.org/1999/xlink',
   true, // sanitizeURL
   false, // removeEmptyString
-  false, //propertyMustUseAttribute
+  false, // propertyMustUseAttribute
 );
 
 ['src', 'href', 'action', 'formAction'].forEach(attributeName => {
@@ -644,6 +652,6 @@ properties[xlinkHref] = new PropertyInfoRecord(
     null, // attributeNamespace
     true, // sanitizeURL
     true, // removeEmptyString
-    false, //propertyMustUseAttribute
+    false, // propertyMustUseAttribute
   );
 });
