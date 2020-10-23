@@ -8,7 +8,6 @@
  */
 
 import {enableFilterEmptyStringAttributesDOM} from 'shared/ReactFeatureFlags';
-import { boolean } from 'yargs';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
