@@ -163,7 +163,7 @@ export function setValueForProperty(
   }
   const {mustUseProperty} = propertyInfo;
   if (mustUseProperty) {
-    const {propertyName} = propertyInfo;
+    const {propertyName, propertyMustUseAttribute} = propertyInfo;
     if (value === null) {
       const {type} = propertyInfo;
       (node: any)[propertyName] = type === BOOLEAN ? false : '';
@@ -172,7 +172,9 @@ export function setValueForProperty(
       // `toString`ed by IE8/9.
       (node: any)[propertyName] = value;
     }
-    return;
+    if(!propertyMustUseAttribute){
+      return;
+    }
   }
   // The rest are treated as attributes with special cases.
   const {attributeName, attributeNamespace} = propertyInfo;
