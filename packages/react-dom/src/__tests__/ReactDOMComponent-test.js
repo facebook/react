@@ -1222,6 +1222,16 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn for uppercased selfclosing tags', () => {
+    it('video muted prop should show as an attribute', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <video src="http://example.org/video" muted={true} />,
+        container,
+      );
+      expect(container.firstChild.hasAttribute('muted')).toBe(true);
+    });
+
+    it('should not duplicate uppercased selfclosing tags', () => {
       class Container extends React.Component {
         render() {
           return React.createElement('BR', null);
