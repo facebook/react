@@ -3,5 +3,5 @@ export default function (options?: {
     refreshReg?: string;
     refreshSig?: string;
     emitFullSignatures?: boolean;
-    ts?: ts;
+    ts?: typeof ts;
 }): ts.TransformerFactory<ts.SourceFile>;
