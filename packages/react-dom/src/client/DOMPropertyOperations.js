@@ -170,7 +170,15 @@ export function setValueForProperty(
     } else {
       // Contrary to `setAttribute`, object properties are properly
       // `toString`ed by IE8/9.
-      (node: any)[propertyName] = value;
+      // props that needs an attribute to work (mute) needs to wait for the attribute to be rendered first so it won't cause
+      // a change on the property
+      if (propertyMustUseAttribute) {
+        setTimeout(() => {
+          (node: any)[propertyName] = value;
+        }, 0);
+      } else {
+        (node: any)[propertyName] = value;
+      }
     }
     if (!propertyMustUseAttribute) {
       return;
