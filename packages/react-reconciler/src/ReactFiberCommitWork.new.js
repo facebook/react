@@ -36,6 +36,7 @@ import {
   enableSuspenseCallback,
   enableScopeAPI,
   enableDoubleInvokingEffects,
+  enableRecursiveCommitTraversal,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -152,6 +153,8 @@ import {
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.new';
 import {doesFiberContain} from './ReactFiberTreeReflection';
+
+let nextEffect: Fiber | null = null;
 
 // Used to avoid traversing the return path to find the nearest Profiler ancestor during commit.
 let nearestProfilerOnStack: Fiber | null = null;
@@ -399,7 +402,12 @@ export function commitBeforeMutationEffects(
 ) {
   focusedInstanceHandle = prepareForCommit(root.containerInfo);
 
-  recursivelyCommitBeforeMutationEffects(firstChild);
+  if (enableRecursiveCommitTraversal) {
+    recursivelyCommitBeforeMutationEffects(firstChild);
+  } else {
+    nextEffect = firstChild;
+    iterativelyCommitBeforeMutationEffects_begin();
+  }
 
   // We no longer need to track the active instance fiber
   const shouldFire = shouldFireAfterActiveInstanceBlur;
@@ -412,15 +420,14 @@ export function commitBeforeMutationEffects(
 function recursivelyCommitBeforeMutationEffects(firstChild: Fiber) {
   let fiber = firstChild;
   while (fiber !== null) {
+    // TODO: Should wrap this in flags check, too, as optimization
     if (fiber.deletions !== null) {
       commitBeforeMutationEffectsDeletions(fiber.deletions);
     }
 
-    if (fiber.child !== null) {
-      const primarySubtreeFlags = fiber.subtreeFlags & BeforeMutationMask;
-      if (primarySubtreeFlags !== NoFlags) {
-        recursivelyCommitBeforeMutationEffects(fiber.child);
-      }
+    const child = fiber.child;
+    if (fiber.subtreeFlags & BeforeMutationMask && child !== null) {
+      recursivelyCommitBeforeMutationEffects(child);
     }
 
     if (__DEV__) {
@@ -444,6 +451,64 @@ function recursivelyCommitBeforeMutationEffects(firstChild: Fiber) {
       }
     }
     fiber = fiber.sibling;
+  }
+}
+
+function iterativelyCommitBeforeMutationEffects_begin() {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+
+    // TODO: Should wrap this in flags check, too, as optimization
+    const deletions = fiber.deletions;
+    if (deletions !== null) {
+      commitBeforeMutationEffectsDeletions(deletions);
+    }
+
+    const child = fiber.child;
+    if (
+      (fiber.subtreeFlags & BeforeMutationMask) !== NoFlags &&
+      child !== null
+    ) {
+      child.return = fiber;
+      nextEffect = child;
+    } else {
+      iterativelyCommitBeforeMutationEffects_complete();
+    }
+  }
+}
+
+function iterativelyCommitBeforeMutationEffects_complete() {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+    if (__DEV__) {
+      setCurrentDebugFiberInDEV(fiber);
+      invokeGuardedCallback(
+        null,
+        commitBeforeMutationEffectsOnFiber,
+        null,
+        fiber,
+      );
+      if (hasCaughtError()) {
+        const error = clearCaughtError();
+        captureCommitPhaseError(fiber, fiber.return, error);
+      }
+      resetCurrentDebugFiberInDEV();
+    } else {
+      try {
+        commitBeforeMutationEffectsOnFiber(fiber);
+      } catch (error) {
+        captureCommitPhaseError(fiber, fiber.return, error);
+      }
+    }
+
+    const sibling = fiber.sibling;
+    if (sibling !== null) {
+      sibling.return = fiber.return;
+      nextEffect = sibling;
+      return;
+    }
+
+    nextEffect = fiber.return;
   }
 }
 
@@ -583,11 +648,12 @@ export function commitMutationEffects(
   root: FiberRoot,
   renderPriorityLevel: ReactPriorityLevel,
 ) {
-  return recursivelyCommitMutationEffects(
-    firstChild,
-    root,
-    renderPriorityLevel,
-  );
+  if (enableRecursiveCommitTraversal) {
+    recursivelyCommitMutationEffects(firstChild, root, renderPriorityLevel);
+  } else {
+    nextEffect = firstChild;
+    iterativelyCommitMutationEffects_begin(root, renderPriorityLevel);
+  }
 }
 
 function recursivelyCommitMutationEffects(
@@ -641,6 +707,74 @@ function recursivelyCommitMutationEffects(
       }
     }
     fiber = fiber.sibling;
+  }
+}
+
+function iterativelyCommitMutationEffects_begin(
+  root: FiberRoot,
+  renderPriorityLevel: ReactPriorityLevel,
+) {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+
+    // TODO: Should wrap this in flags check, too, as optimization
+    const deletions = fiber.deletions;
+    if (deletions !== null) {
+      commitMutationEffectsDeletions(
+        deletions,
+        fiber,
+        root,
+        renderPriorityLevel,
+      );
+    }
+
+    const child = fiber.child;
+    if ((fiber.subtreeFlags & MutationMask) !== NoFlags && child !== null) {
+      child.return = fiber;
+      nextEffect = child;
+    } else {
+      iterativelyCommitMutationEffects_complete(root, renderPriorityLevel);
+    }
+  }
+}
+
+function iterativelyCommitMutationEffects_complete(
+  root: FiberRoot,
+  renderPriorityLevel: ReactPriorityLevel,
+) {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+    if (__DEV__) {
+      setCurrentDebugFiberInDEV(fiber);
+      invokeGuardedCallback(
+        null,
+        commitMutationEffectsOnFiber,
+        null,
+        fiber,
+        root,
+        renderPriorityLevel,
+      );
+      if (hasCaughtError()) {
+        const error = clearCaughtError();
+        captureCommitPhaseError(fiber, fiber.return, error);
+      }
+      resetCurrentDebugFiberInDEV();
+    } else {
+      try {
+        commitMutationEffectsOnFiber(fiber, root, renderPriorityLevel);
+      } catch (error) {
+        captureCommitPhaseError(fiber, fiber.return, error);
+      }
+    }
+
+    const sibling = fiber.sibling;
+    if (sibling !== null) {
+      sibling.return = fiber.return;
+      nextEffect = sibling;
+      return;
+    }
+
+    nextEffect = fiber.return;
   }
 }
 
@@ -755,10 +889,35 @@ export function commitLayoutEffects(
   finishedWork: Fiber,
   finishedRoot: FiberRoot,
 ) {
-  recursivelyCommitLayoutEffects(finishedWork, finishedRoot);
+  if (enableRecursiveCommitTraversal) {
+    if (__DEV__) {
+      setCurrentDebugFiberInDEV(finishedWork);
+      invokeGuardedCallback(
+        null,
+        recursivelyCommitLayoutEffects,
+        null,
+        finishedWork,
+        finishedRoot,
+      );
+      if (hasCaughtError()) {
+        const error = clearCaughtError();
+        captureCommitPhaseError(finishedWork, null, error);
+      }
+      resetCurrentDebugFiberInDEV();
+    } else {
+      try {
+        recursivelyCommitLayoutEffects(finishedWork, finishedRoot);
+      } catch (error) {
+        captureCommitPhaseError(finishedWork, null, error);
+      }
+    }
+  } else {
+    nextEffect = finishedWork;
+    iterativelyCommitLayoutEffects_begin(finishedWork, finishedRoot);
+  }
 }
 
-export function recursivelyCommitLayoutEffects(
+function recursivelyCommitLayoutEffects(
   finishedWork: Fiber,
   finishedRoot: FiberRoot,
 ) {
@@ -968,6 +1127,217 @@ export function recursivelyCommitLayoutEffects(
         }
       }
       break;
+    }
+  }
+}
+
+function iterativelyCommitLayoutEffects_begin(
+  subtreeRoot: Fiber,
+  finishedRoot: FiberRoot,
+) {
+  while (nextEffect !== null) {
+    const finishedWork: Fiber = nextEffect;
+    const firstChild = finishedWork.child;
+
+    if (
+      (finishedWork.subtreeFlags & LayoutMask) !== NoFlags &&
+      firstChild !== null
+    ) {
+      if (
+        enableProfilerTimer &&
+        enableProfilerCommitHooks &&
+        finishedWork.tag === Profiler
+      ) {
+        const prevProfilerOnStack = nearestProfilerOnStack;
+        nearestProfilerOnStack = finishedWork;
+
+        let child = firstChild;
+        while (child !== null) {
+          nextEffect = child;
+          iterativelyCommitLayoutEffects_begin(child, finishedRoot);
+          child = child.sibling;
+        }
+        nextEffect = finishedWork;
+
+        if ((finishedWork.flags & LayoutMask) !== NoFlags) {
+          if (__DEV__) {
+            setCurrentDebugFiberInDEV(finishedWork);
+            invokeGuardedCallback(
+              null,
+              commitLayoutEffectsForProfiler,
+              null,
+              finishedWork,
+              finishedRoot,
+            );
+            if (hasCaughtError()) {
+              const error = clearCaughtError();
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
+            }
+            resetCurrentDebugFiberInDEV();
+          } else {
+            try {
+              commitLayoutEffectsForProfiler(finishedWork, finishedRoot);
+            } catch (error) {
+              captureCommitPhaseError(finishedWork, finishedWork.return, error);
+            }
+          }
+        }
+
+        // Propagate layout effect durations to the next nearest Profiler ancestor.
+        // Do not reset these values until the next render so DevTools has a chance to read them first.
+        if (prevProfilerOnStack !== null) {
+          prevProfilerOnStack.stateNode.effectDuration +=
+            finishedWork.stateNode.effectDuration;
+        }
+        nearestProfilerOnStack = prevProfilerOnStack;
+
+        if (finishedWork === subtreeRoot) {
+          nextEffect = null;
+          return;
+        }
+        const sibling = finishedWork.sibling;
+        if (sibling !== null) {
+          sibling.return = finishedWork.return;
+          nextEffect = sibling;
+        } else {
+          nextEffect = finishedWork.return;
+          iterativelyCommitLayoutEffects_complete(subtreeRoot, finishedRoot);
+        }
+      } else {
+        firstChild.return = finishedWork;
+        nextEffect = firstChild;
+      }
+    } else {
+      iterativelyCommitLayoutEffects_complete(subtreeRoot, finishedRoot);
+    }
+  }
+}
+
+function iterativelyCommitLayoutEffects_complete(
+  subtreeRoot: Fiber,
+  finishedRoot: FiberRoot,
+) {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+
+    if ((fiber.flags & LayoutMask) !== NoFlags) {
+      if (__DEV__) {
+        setCurrentDebugFiberInDEV(fiber);
+        invokeGuardedCallback(
+          null,
+          commitLayoutEffectsOnFiber,
+          null,
+          finishedRoot,
+          fiber,
+        );
+        if (hasCaughtError()) {
+          const error = clearCaughtError();
+          captureCommitPhaseError(fiber, fiber.return, error);
+        }
+        resetCurrentDebugFiberInDEV();
+      } else {
+        try {
+          commitLayoutEffectsOnFiber(finishedRoot, fiber);
+        } catch (error) {
+          captureCommitPhaseError(fiber, fiber.return, error);
+        }
+      }
+    }
+
+    if (fiber === subtreeRoot) {
+      nextEffect = null;
+      return;
+    }
+
+    const sibling = fiber.sibling;
+    if (sibling !== null) {
+      sibling.return = fiber.return;
+      nextEffect = sibling;
+      return;
+    }
+
+    nextEffect = nextEffect.return;
+  }
+}
+
+function commitLayoutEffectsOnFiber(
+  finishedRoot: FiberRoot,
+  finishedWork: Fiber,
+) {
+  const tag = finishedWork.tag;
+  const flags = finishedWork.flags;
+  if ((flags & (Update | Callback)) !== NoFlags) {
+    switch (tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent:
+      case Block: {
+        if (
+          enableProfilerTimer &&
+          enableProfilerCommitHooks &&
+          finishedWork.mode & ProfileMode
+        ) {
+          try {
+            startLayoutEffectTimer();
+            commitHookEffectListMount(HookLayout | HookHasEffect, finishedWork);
+          } finally {
+            recordLayoutEffectDuration(finishedWork);
+          }
+        } else {
+          commitHookEffectListMount(HookLayout | HookHasEffect, finishedWork);
+        }
+        break;
+      }
+      case ClassComponent: {
+        // NOTE: Layout effect durations are measured within this function.
+        commitLayoutEffectsForClassComponent(finishedWork);
+        break;
+      }
+      case HostRoot: {
+        commitLayoutEffectsForHostRoot(finishedWork);
+        break;
+      }
+      case HostComponent: {
+        commitLayoutEffectsForHostComponent(finishedWork);
+        break;
+      }
+      case Profiler: {
+        commitLayoutEffectsForProfiler(finishedWork, finishedRoot);
+        break;
+      }
+      case SuspenseComponent: {
+        commitSuspenseHydrationCallbacks(finishedRoot, finishedWork);
+        break;
+      }
+      case FundamentalComponent:
+      case HostPortal:
+      case HostText:
+      case IncompleteClassComponent:
+      case LegacyHiddenComponent:
+      case OffscreenComponent:
+      case ScopeComponent:
+      case SuspenseListComponent: {
+        // We have no life-cycles associated with these component types.
+        break;
+      }
+      default: {
+        invariant(
+          false,
+          'This unit of work tag should not have side-effects. This error is ' +
+            'likely caused by a bug in React. Please file an issue.',
+        );
+      }
+    }
+  }
+
+  if (enableScopeAPI) {
+    // TODO: This is a temporary solution that allowed us to transition away from React Flare on www.
+    if (flags & Ref && tag !== ScopeComponent) {
+      commitAttachRef(finishedWork);
+    }
+  } else {
+    if (flags & Ref) {
+      commitAttachRef(finishedWork);
     }
   }
 }
@@ -1272,7 +1642,12 @@ export function commitPassiveMountEffects(
   root: FiberRoot,
   firstChild: Fiber,
 ): void {
-  recursivelyCommitPassiveMountEffects(root, firstChild);
+  if (enableRecursiveCommitTraversal) {
+    recursivelyCommitPassiveMountEffects(root, firstChild);
+  } else {
+    nextEffect = firstChild;
+    iterativelyCommitPassiveMountEffects_begin(firstChild, root);
+  }
 }
 
 function recursivelyCommitPassiveMountEffects(
@@ -1336,8 +1711,138 @@ function recursivelyCommitPassiveMountEffects(
   }
 }
 
+function iterativelyCommitPassiveMountEffects_begin(
+  subtreeRoot: Fiber,
+  root: FiberRoot,
+) {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+    const firstChild = fiber.child;
+    if ((fiber.subtreeFlags & PassiveMask) !== NoFlags && firstChild !== null) {
+      if (
+        enableProfilerTimer &&
+        enableProfilerCommitHooks &&
+        fiber.tag === Profiler
+      ) {
+        const prevProfilerOnStack = nearestProfilerOnStack;
+        nearestProfilerOnStack = fiber;
+
+        let child = firstChild;
+        while (child !== null) {
+          nextEffect = child;
+          iterativelyCommitPassiveMountEffects_begin(child, root);
+          child = child.sibling;
+        }
+        nextEffect = fiber;
+
+        if ((fiber.flags & PassiveMask) !== NoFlags) {
+          if (__DEV__) {
+            setCurrentDebugFiberInDEV(fiber);
+            invokeGuardedCallback(
+              null,
+              commitProfilerPassiveEffect,
+              null,
+              root,
+              fiber,
+            );
+            if (hasCaughtError()) {
+              const error = clearCaughtError();
+              captureCommitPhaseError(fiber, fiber.return, error);
+            }
+            resetCurrentDebugFiberInDEV();
+          } else {
+            try {
+              commitProfilerPassiveEffect(root, fiber);
+            } catch (error) {
+              captureCommitPhaseError(fiber, fiber.return, error);
+            }
+          }
+        }
+
+        // Bubble times to the next nearest ancestor Profiler.
+        // After we process that Profiler, we'll bubble further up.
+        if (prevProfilerOnStack !== null) {
+          prevProfilerOnStack.stateNode.passiveEffectDuration +=
+            fiber.stateNode.passiveEffectDuration;
+        }
+
+        nearestProfilerOnStack = prevProfilerOnStack;
+
+        if (fiber === subtreeRoot) {
+          nextEffect = null;
+          return;
+        }
+        const sibling = fiber.sibling;
+        if (sibling !== null) {
+          sibling.return = fiber.return;
+          nextEffect = sibling;
+        } else {
+          nextEffect = fiber.return;
+          iterativelyCommitPassiveMountEffects_complete(subtreeRoot, root);
+        }
+      } else {
+        firstChild.return = fiber;
+        nextEffect = firstChild;
+      }
+    } else {
+      iterativelyCommitPassiveMountEffects_complete(subtreeRoot, root);
+    }
+  }
+}
+
+function iterativelyCommitPassiveMountEffects_complete(
+  subtreeRoot: Fiber,
+  root: FiberRoot,
+) {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+    if ((fiber.flags & Passive) !== NoFlags) {
+      if (__DEV__) {
+        setCurrentDebugFiberInDEV(fiber);
+        invokeGuardedCallback(
+          null,
+          commitPassiveMountOnFiber,
+          null,
+          root,
+          fiber,
+        );
+        if (hasCaughtError()) {
+          const error = clearCaughtError();
+          captureCommitPhaseError(fiber, fiber.return, error);
+        }
+        resetCurrentDebugFiberInDEV();
+      } else {
+        try {
+          commitPassiveMountOnFiber(root, fiber);
+        } catch (error) {
+          captureCommitPhaseError(fiber, fiber.return, error);
+        }
+      }
+    }
+
+    if (fiber === subtreeRoot) {
+      nextEffect = null;
+      return;
+    }
+
+    const sibling = fiber.sibling;
+    if (sibling !== null) {
+      sibling.return = fiber.return;
+      nextEffect = sibling;
+      return;
+    }
+
+    nextEffect = fiber.return;
+  }
+}
+
 export function commitPassiveUnmountEffects(firstChild: Fiber): void {
-  recursivelyCommitPassiveUnmountEffects(firstChild);
+  if (enableRecursiveCommitTraversal) {
+    recursivelyCommitPassiveUnmountEffects(firstChild);
+  } else {
+    nextEffect = firstChild;
+    iterativelyCommitPassiveUnmountEffects_begin();
+  }
 }
 
 function recursivelyCommitPassiveUnmountEffects(firstChild: Fiber): void {
@@ -1347,7 +1852,10 @@ function recursivelyCommitPassiveUnmountEffects(firstChild: Fiber): void {
     if (deletions !== null) {
       for (let i = 0; i < deletions.length; i++) {
         const fiberToDelete = deletions[i];
-        commitPassiveUnmountEffectsInsideOfDeletedTree(fiberToDelete, fiber);
+        recursivelyCommitPassiveUnmountEffectsInsideOfDeletedTree(
+          fiberToDelete,
+          fiber,
+        );
 
         // Now that passive effects have been processed, it's safe to detach lingering pointers.
         detachFiberAfterEffects(fiberToDelete);
@@ -1377,7 +1885,58 @@ function recursivelyCommitPassiveUnmountEffects(firstChild: Fiber): void {
   }
 }
 
-function commitPassiveUnmountEffectsInsideOfDeletedTree(
+function iterativelyCommitPassiveUnmountEffects_begin() {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+    const child = fiber.child;
+
+    // TODO: Should wrap this in flags check, too, as optimization
+    const deletions = fiber.deletions;
+    if (deletions !== null) {
+      for (let i = 0; i < deletions.length; i++) {
+        const fiberToDelete = deletions[i];
+        nextEffect = fiberToDelete;
+        iterativelyCommitPassiveUnmountEffectsInsideOfDeletedTree_begin(
+          fiberToDelete,
+          fiber,
+        );
+
+        // Now that passive effects have been processed, it's safe to detach lingering pointers.
+        detachFiberAfterEffects(fiberToDelete);
+      }
+      nextEffect = fiber;
+    }
+
+    if ((fiber.subtreeFlags & PassiveMask) !== NoFlags && child !== null) {
+      child.return = fiber;
+      nextEffect = child;
+    } else {
+      iterativelyCommitPassiveUnmountEffects_complete();
+    }
+  }
+}
+
+function iterativelyCommitPassiveUnmountEffects_complete() {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+    if ((fiber.flags & Passive) !== NoFlags) {
+      setCurrentDebugFiberInDEV(fiber);
+      commitPassiveUnmountOnFiber(fiber);
+      resetCurrentDebugFiberInDEV();
+    }
+
+    const sibling = fiber.sibling;
+    if (sibling !== null) {
+      sibling.return = fiber.return;
+      nextEffect = sibling;
+      return;
+    }
+
+    nextEffect = fiber.return;
+  }
+}
+
+function recursivelyCommitPassiveUnmountEffectsInsideOfDeletedTree(
   fiberToDelete: Fiber,
   nearestMountedAncestor: Fiber,
 ): void {
@@ -1388,7 +1947,7 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree(
     // since that would not cover passive effects in siblings.
     let child = fiberToDelete.child;
     while (child !== null) {
-      commitPassiveUnmountEffectsInsideOfDeletedTree(
+      recursivelyCommitPassiveUnmountEffectsInsideOfDeletedTree(
         child,
         nearestMountedAncestor,
       );
@@ -1403,6 +1962,56 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree(
       nearestMountedAncestor,
     );
     resetCurrentDebugFiberInDEV();
+  }
+}
+
+function iterativelyCommitPassiveUnmountEffectsInsideOfDeletedTree_begin(
+  deletedSubtreeRoot: Fiber,
+  nearestMountedAncestor: Fiber,
+) {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+    const child = fiber.child;
+    if ((fiber.subtreeFlags & PassiveStatic) !== NoFlags && child !== null) {
+      child.return = fiber;
+      nextEffect = child;
+    } else {
+      iterativelyCommitPassiveUnmountEffectsInsideOfDeletedTree_complete(
+        deletedSubtreeRoot,
+        nearestMountedAncestor,
+      );
+    }
+  }
+}
+
+function iterativelyCommitPassiveUnmountEffectsInsideOfDeletedTree_complete(
+  deletedSubtreeRoot: Fiber,
+  nearestMountedAncestor: Fiber,
+) {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+    if ((fiber.flags & PassiveStatic) !== NoFlags) {
+      setCurrentDebugFiberInDEV(fiber);
+      commitPassiveUnmountInsideDeletedTreeOnFiber(
+        fiber,
+        nearestMountedAncestor,
+      );
+      resetCurrentDebugFiberInDEV();
+    }
+
+    if (fiber === deletedSubtreeRoot) {
+      nextEffect = null;
+      return;
+    }
+
+    const sibling = fiber.sibling;
+    if (sibling !== null) {
+      sibling.return = fiber.return;
+      nextEffect = sibling;
+      return;
+    }
+
+    nextEffect = fiber.return;
   }
 }
 
@@ -2640,6 +3249,8 @@ function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
   }
 }
 
+// TODO: Convert this to iteration instead of recursion, too. Leaving this for
+// a follow up because the flag is off.
 export function commitDoubleInvokeEffectsInDEV(
   fiber: Fiber,
   hasPassiveEffects: boolean,

@@ -1920,27 +1920,7 @@ function commitRootImpl(root, renderPriorityLevel) {
       markLayoutEffectsStarted(lanes);
     }
 
-    if (__DEV__) {
-      setCurrentDebugFiberInDEV(finishedWork);
-      invokeGuardedCallback(
-        null,
-        commitLayoutEffects,
-        null,
-        finishedWork,
-        root,
-      );
-      if (hasCaughtError()) {
-        const error = clearCaughtError();
-        captureCommitPhaseErrorOnRoot(finishedWork, finishedWork, error);
-      }
-      resetCurrentDebugFiberInDEV();
-    } else {
-      try {
-        commitLayoutEffects(finishedWork, root);
-      } catch (error) {
-        captureCommitPhaseErrorOnRoot(finishedWork, finishedWork, error);
-      }
-    }
+    commitLayoutEffects(finishedWork, root);
 
     if (__DEV__) {
       if (enableDebugTracing) {
