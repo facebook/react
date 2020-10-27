@@ -50,9 +50,7 @@ export default {
     
     // Parse the `stateLikeHooks` regex.
     const stateLikeHooks =
-      context.options &&
-      context.options[0] &&
-      context.options[0].stateLikeHooks
+      context.options && context.options[0] && context.options[0].stateLikeHooks
         ? new RegExp(context.options[0].stateLikeHooks)
         : undefined;
 
@@ -236,9 +234,11 @@ export default {
           // useRef() return value is stable.
           return true;
         } else if (
-          name === 'useState' || 
-          name === 'useReducer' || 
-          (options && options.stateLikeHooks && options.stateLikeHooks.test(name))
+          name === "useState" ||
+          name === "useReducer" ||
+          (options &&
+            options.stateLikeHooks &&
+            options.stateLikeHooks.test(name))
         ) {
           // Only consider second value in initializing tuple stable.
           if (
