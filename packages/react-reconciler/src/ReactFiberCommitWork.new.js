@@ -212,6 +212,7 @@ function safelyCallComponentWillUnmount(
   }
 }
 
+/** @noinline */
 function safelyDetachRef(current: Fiber, nearestMountedAncestor: Fiber) {
   const ref = current.ref;
   if (ref !== null) {
@@ -279,6 +280,7 @@ export function safelyCallDestroy(
   }
 }
 
+/** @noinline */
 function commitHookEffectListUnmount(
   flags: HookFlags,
   finishedWork: Fiber,
@@ -303,6 +305,7 @@ function commitHookEffectListUnmount(
   }
 }
 
+/** @noinline */
 function commitHookEffectListMount(flags: HookFlags, finishedWork: Fiber) {
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
@@ -512,6 +515,7 @@ function iterativelyCommitBeforeMutationEffects_complete() {
   }
 }
 
+/** @noinline */
 function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
   const current = finishedWork.alternate;
   const flags = finishedWork.flags;
@@ -627,6 +631,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
   }
 }
 
+/** @noinline */
 function commitBeforeMutationEffectsDeletions(deletions: Array<Fiber>) {
   for (let i = 0; i < deletions.length; i++) {
     const fiber = deletions[i];
@@ -778,6 +783,7 @@ function iterativelyCommitMutationEffects_complete(
   }
 }
 
+/** @noinline */
 function commitMutationEffectsOnFiber(
   fiber: Fiber,
   root: FiberRoot,
@@ -848,6 +854,7 @@ function commitMutationEffectsOnFiber(
   }
 }
 
+/** @noinline */
 function commitMutationEffectsDeletions(
   deletions: Array<Fiber>,
   nearestMountedAncestor: Fiber,
@@ -1342,6 +1349,7 @@ function commitLayoutEffectsOnFiber(
   }
 }
 
+/** @noinline */
 function commitLayoutEffectsForProfiler(
   finishedWork: Fiber,
   finishedRoot: FiberRoot,
@@ -1407,6 +1415,7 @@ function commitLayoutEffectsForProfiler(
   }
 }
 
+/** @noinline */
 function commitLayoutEffectsForClassComponent(finishedWork: Fiber) {
   const instance = finishedWork.stateNode;
   const current = finishedWork.alternate;
@@ -1555,6 +1564,7 @@ function commitLayoutEffectsForClassComponent(finishedWork: Fiber) {
   }
 }
 
+/** @noinline */
 function commitLayoutEffectsForHostRoot(finishedWork: Fiber) {
   // TODO: I think this is now always non-null by the time it reaches the
   // commit phase. Consider removing the type check.
@@ -1575,6 +1585,7 @@ function commitLayoutEffectsForHostRoot(finishedWork: Fiber) {
   }
 }
 
+/** @noinline */
 function commitLayoutEffectsForHostComponent(finishedWork: Fiber) {
   const instance: Instance = finishedWork.stateNode;
   const current = finishedWork.alternate;
@@ -1590,6 +1601,7 @@ function commitLayoutEffectsForHostComponent(finishedWork: Fiber) {
   }
 }
 
+/** @noinline */
 function hideOrUnhideAllChildren(finishedWork, isHidden) {
   if (supportsMutation) {
     // We only have the top Fiber that was inserted but we need to recurse down its
@@ -2950,6 +2962,7 @@ function commitSuspenseComponent(finishedWork: Fiber) {
   }
 }
 
+/** @noinline */
 function commitSuspenseHydrationCallbacks(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
