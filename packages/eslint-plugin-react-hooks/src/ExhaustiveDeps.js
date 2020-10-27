@@ -29,6 +29,9 @@ export default {
           additionalHooks: {
             type: 'string',
           },
+          stateLikeHooks: {
+            type: 'string',
+          },
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
           },
@@ -44,6 +47,14 @@ export default {
       context.options[0].additionalHooks
         ? new RegExp(context.options[0].additionalHooks)
         : undefined;
+    
+    // Parse the `stateLikeHooks` regex.
+    const stateLikeHooks =
+      context.options &&
+      context.options[0] &&
+      context.options[0].stateLikeHooks
+        ? new RegExp(context.options[0].stateLikeHooks)
+        : undefined;
 
     const enableDangerousAutofixThisMayCauseInfiniteLoops =
       (context.options &&
@@ -53,6 +64,7 @@ export default {
 
     const options = {
       additionalHooks,
+      stateLikeHooks,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
     };
 
@@ -153,6 +165,8 @@ export default {
       //               ^^^ true for this reference
       // const [state, dispatch] = useReducer() / React.useReducer()
       //               ^^^ true for this reference
+      // const [state, callbacks] = useStateLikeHook()
+      //               ^^^ true for this reference
       // const ref = useRef()
       //       ^^^ true for this reference
       // False for everything else.
@@ -221,7 +235,11 @@ export default {
         if (name === 'useRef' && id.type === 'Identifier') {
           // useRef() return value is stable.
           return true;
-        } else if (name === 'useState' || name === 'useReducer') {
+        } else if (
+          name === 'useState' || 
+          name === 'useReducer' || 
+          (options && options.stateLikeHooks && options.stateLikeHooks.test(name))
+        ) {
           // Only consider second value in initializing tuple stable.
           if (
             id.type === 'ArrayPattern' &&
