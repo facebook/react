@@ -131,10 +131,10 @@ describe('ReactTestUtils.act()', () => {
           document.createElement('div'),
         );
         root.render(<Component />);
-        // sanity check that effects were mounted
+        // confidence check that effects were mounted
         expect(Scheduler).toFlushAndYield(['layout', 'imperative handle']);
         root.render(<Component />);
-        // sanity check that effects were updated
+        // confidence check that effects were updated
         expect(Scheduler).toFlushAndYield(['layout', 'imperative handle']);
       }).toErrorDev([]);
     });
