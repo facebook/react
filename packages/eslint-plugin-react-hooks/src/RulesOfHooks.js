@@ -105,11 +105,22 @@ function isInsideComponentOrHook(node) {
 }
 
 function isDirectlyInsideRenderHooks(node) {
-  return node.parent && 
-    node.parent.type === 'JSXExpressionContainer' && 
-    node.parent.parent && 
-    node.parent.parent.type === 'JSXElement' && 
+  if (!node.parent) {
+    return false;
+  }
+
+  const isDirectlyInsideHooksComponent =
+    node.parent.type === 'JSXExpressionContainer' &&
+    node.parent.parent &&
+    node.parent.parent.type === 'JSXElement' &&
     node.parent.parent.openingElement.name.name === 'Hooks';
+  const isDirectlyInsideHooksFunction =
+    node.parent.type === 'CallExpression' &&
+    node.parent.callee &&
+    node.parent.callee.type === 'Identifier' &&
+    node.parent.callee.name === 'hooks';
+
+  return isDirectlyInsideHooksComponent || isDirectlyInsideHooksFunction;
 }
 
 export default {
@@ -360,7 +371,9 @@ export default {
         const isDirectlyInsideComponentOrHook = codePathFunctionName
           ? isComponentName(codePathFunctionName) ||
             isHook(codePathFunctionName)
-          : isForwardRefCallback(codePathNode) || isMemoCallback(codePathNode) || isDirectlyInsideRenderHooks(codePathNode);
+          : isForwardRefCallback(codePathNode) ||
+            isMemoCallback(codePathNode) ||
+            isDirectlyInsideRenderHooks(codePathNode);
 
         // Compute the earliest finalizer level using information from the
         // cache. We expect all reachable final segments to have a cache entry

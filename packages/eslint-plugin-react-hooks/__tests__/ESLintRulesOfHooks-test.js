@@ -338,12 +338,20 @@ const tests = {
       }
     `,
     `
-      // Valid because render-hooks acts as a component boundary
+      // Valid because Hooks component acts as a component boundary
       function App(props) {
         return props.isOpen
           ? <Hooks>
               {() => <Modal close={useCallback(() => props.setIsOpen(false), [props.setIsOpen])} />}
             </Hooks> 
+          : null;
+      }
+    `,
+    `
+      // Valid because hooks function acts as a component boundary
+      function App(props) {
+        return props.isOpen
+          ? hooks(() => <Modal close={useCallback(() => props.setIsOpen(false), [props.setIsOpen])} />) 
           : null;
       }
     `,
@@ -899,7 +907,7 @@ const tests = {
     },
     {
       code: `
-        // Invalid because rule of hooks still need to be adhered to within render-hooks
+        // Invalid because rule of hooks still need to be adhered to within Hooks component
         function App(props) {
           return props.isOpen
             ? <Hooks>
@@ -910,8 +918,21 @@ const tests = {
             : null;
         }
       `,
-      errors: [conditionalError('useCallback')]
-    }
+      errors: [conditionalError('useCallback')],
+    },
+    {
+      code: `
+        // Invalid because rule of hooks still need to be adhered to within hooks function
+        function App(props) {
+          return props.isOpen
+            ? hooks(() => {
+                return <Modal close={props.setIsOpen ? useCallback(() => props.setIsOpen(false), [props.setIsOpen]) : undefined} />;
+              }) 
+            : null;
+        }
+      `,
+      errors: [conditionalError('useCallback')],
+    },
   ],
 };
 
