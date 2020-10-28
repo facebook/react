@@ -10,6 +10,7 @@
 let act;
 let React;
 let ReactDOM;
+let JSResourceReference;
 let ReactDOMFlightRelayServer;
 let ReactDOMFlightRelayServerRuntime;
 let ReactDOMFlightRelayClient;
@@ -24,6 +25,7 @@ describe('ReactFlightDOMRelay', () => {
     ReactDOMFlightRelayServer = require('react-transport-dom-relay/server');
     ReactDOMFlightRelayServerRuntime = require('react-transport-dom-relay/server-runtime');
     ReactDOMFlightRelayClient = require('react-transport-dom-relay');
+    JSResourceReference = require('JSResourceReference');
   });
 
   function readThrough(data) {
@@ -47,14 +49,18 @@ describe('ReactFlightDOMRelay', () => {
   }
 
   function block(render, load) {
+    const reference = new JSResourceReference(render);
     if (load === undefined) {
-      return ReactDOMFlightRelayServerRuntime.serverBlock(render);
+      return ReactDOMFlightRelayServerRuntime.serverBlock(reference);
     }
     return function(...args) {
       const curriedLoad = () => {
         return load(...args);
       };
-      return ReactDOMFlightRelayServerRuntime.serverBlock(render, curriedLoad);
+      return ReactDOMFlightRelayServerRuntime.serverBlock(
+        reference,
+        curriedLoad,
+      );
     };
   }
 

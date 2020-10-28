@@ -9,10 +9,13 @@
 
 import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
 
+import JSResourceReference from 'JSResourceReference';
+
+export type ModuleReference<T> = JSResourceReference<T>;
+
 import type {
   Destination,
   BundlerConfig,
-  ModuleReference,
   ModuleMetaData,
 } from 'ReactFlightDOMRelayServerIntegration';
 
@@ -27,9 +30,12 @@ import {
 export type {
   Destination,
   BundlerConfig,
-  ModuleReference,
   ModuleMetaData,
 } from 'ReactFlightDOMRelayServerIntegration';
+
+export function isModuleReference(reference: Object): boolean {
+  return reference instanceof JSResourceReference;
+}
 
 export function resolveModuleMetaData<T>(
   config: BundlerConfig,

@@ -26,6 +26,7 @@ import {
   processModelChunk,
   processErrorChunk,
   resolveModuleMetaData,
+  isModuleReference,
 } from './ReactFlightServerConfig';
 
 import {
@@ -391,6 +392,13 @@ export function resolveModelToJSON(
     switch (key) {
       case '1': {
         // Module reference
+        if (!isModuleReference(value)) {
+          invariant(
+            false,
+            'Unsupported server component type: %s',
+            describeValueForErrorMessage(value),
+          );
+        }
         const moduleReference: ModuleReference<any> = (value: any);
         try {
           const moduleMetaData: ModuleMetaData = resolveModuleMetaData(

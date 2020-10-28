@@ -54,16 +54,20 @@ describe('ReactFlight', () => {
   });
 
   function block(render, load) {
+    const reference = {
+      $$typeof: Symbol.for('noop.module.reference'),
+      value: render,
+    };
     if (load === undefined) {
       return () => {
-        return ReactNoopFlightServerRuntime.serverBlockNoData(render);
+        return ReactNoopFlightServerRuntime.serverBlockNoData(reference);
       };
     }
     return function(...args) {
       const curriedLoad = () => {
         return load(...args);
       };
-      return ReactNoopFlightServerRuntime.serverBlock(render, curriedLoad);
+      return ReactNoopFlightServerRuntime.serverBlock(reference, curriedLoad);
     };
   }
 

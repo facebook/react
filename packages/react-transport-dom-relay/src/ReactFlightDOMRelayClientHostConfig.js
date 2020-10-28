@@ -9,6 +9,10 @@
 
 import type {JSONValue, ResponseBase} from 'react-client/src/ReactFlightClient';
 
+import type JSResourceReference from 'JSResourceReference';
+
+export type ModuleReference<T> = JSResourceReference<T>;
+
 import {
   parseModelString,
   parseModelTuple,
@@ -20,10 +24,7 @@ export {
   requireModule,
 } from 'ReactFlightDOMRelayClientIntegration';
 
-export type {
-  ModuleReference,
-  ModuleMetaData,
-} from 'ReactFlightDOMRelayClientIntegration';
+export type {ModuleMetaData} from 'ReactFlightDOMRelayClientIntegration';
 
 export opaque type UninitializedModel = JSONValue;
 

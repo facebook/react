@@ -83,8 +83,9 @@ describe('ReactFlightDOM', () => {
       const curriedLoad = () => {
         return load(...args);
       };
+      const MODULE_TAG = Symbol.for('react.module.reference');
       return ReactTransportDOMServerRuntime.serverBlock(
-        'path/' + idx,
+        {$$typeof: MODULE_TAG, name: 'path/' + idx},
         curriedLoad,
       );
     };

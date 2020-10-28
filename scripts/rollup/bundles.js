@@ -301,6 +301,7 @@ const bundles = [
       'react',
       'react-dom/server',
       'ReactFlightDOMRelayServerIntegration',
+      'JSResourceReference',
     ],
   },
   {
@@ -308,7 +309,11 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-transport-dom-relay/server-runtime',
     global: 'ReactFlightDOMRelayServerRuntime',
-    externals: ['react', 'ReactFlightDOMRelayServerIntegration'],
+    externals: [
+      'react',
+      'ReactFlightDOMRelayServerIntegration',
+      'JSResourceReference',
+    ],
   },
 
   /******* React DOM Flight Client Relay *******/
@@ -317,7 +322,11 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-transport-dom-relay',
     global: 'ReactFlightDOMRelayClient',
-    externals: ['react', 'ReactFlightDOMRelayClientIntegration'],
+    externals: [
+      'react',
+      'ReactFlightDOMRelayClientIntegration',
+      'JSResourceReference',
+    ],
   },
 
   /******* React ART *******/
