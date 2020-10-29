@@ -14,8 +14,7 @@
 FLIGHT PROTOCOL GRAMMAR
 
 Response
-- JSONData RowSequence
-- JSONData
+- RowSequence
 
 RowSequence
 - Row RowSequence
@@ -23,6 +22,7 @@ RowSequence
 
 Row
 - "J" RowID JSONData
+- "M" RowID JSONModuleData
 - "H" RowID HTMLData
 - "B" RowID BlobData
 - "U" RowID URLData
