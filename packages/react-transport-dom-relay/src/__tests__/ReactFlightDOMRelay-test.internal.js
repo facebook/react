@@ -102,6 +102,39 @@ describe('ReactFlightDOMRelay', () => {
   });
 
   // @gate experimental
+  it('can render a client component using a module reference and render there', () => {
+    function UserClient(props) {
+      return (
+        <span>
+          {props.greeting}, {props.name}
+        </span>
+      );
+    }
+    const User = new JSResourceReference(UserClient);
+
+    function Greeting({firstName, lastName}) {
+      return <User greeting="Hello" name={firstName + ' ' + lastName} />;
+    }
+
+    const model = {
+      greeting: <Greeting firstName="Seb" lastName="Smith" />,
+    };
+
+    const transport = [];
+    ReactDOMFlightRelayServer.render(model, transport);
+
+    const modelClient = readThrough(transport);
+
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
+    act(() => {
+      root.render(modelClient.greeting);
+    });
+
+    expect(container.innerHTML).toEqual('<span>Hello, Seb Smith</span>');
+  });
+
+  // @gate experimental
   it('can transfer a Block to the client and render there', () => {
     function load(firstName, lastName) {
       return {name: firstName + ' ' + lastName};
