@@ -376,14 +376,14 @@ describe('DebugTracing', () => {
         expect(logs).toEqual([
           'group: ⚛️ render (0b0000000000000000000001000000000)',
           'log: ⚛️ Example updated state (0b0000000000000000000001000000000)',
-          'log: ⚛️ Example updated state (0b0000000000000000000001000000000)', // debugRenderPhaseSideEffectsForStrictMode
+          'log: ⚛️ Example updated state (0b0000000000000000000001000000000)',
           'groupEnd: ⚛️ render (0b0000000000000000000001000000000)',
         ]);
       } else {
         expect(logs).toEqual([
           'group: ⚛️ render (0b0000000000000000000001000000000)',
           'log: ⚛️ Example updated state (0b0000000000000000000010000000000)',
-          'log: ⚛️ Example updated state (0b0000000000000000000010000000000)', // debugRenderPhaseSideEffectsForStrictMode
+          'log: ⚛️ Example updated state (0b0000000000000000000010000000000)',
           'groupEnd: ⚛️ render (0b0000000000000000000001000000000)',
         ]);
       }

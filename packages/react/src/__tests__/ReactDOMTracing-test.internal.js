@@ -152,16 +152,7 @@ describe('ReactDOMTracing', () => {
           onInteractionScheduledWorkCompleted,
         ).toHaveBeenLastNotifiedOfInteraction(interaction);
 
-        if (gate(flags => flags.new)) {
-          expect(onRender).toHaveBeenCalledTimes(3);
-        } else {
-          // TODO: This is 4 instead of 3 because this update was scheduled at
-          // idle priority, and idle updates are slightly higher priority than
-          // offscreen work. So it takes two render passes to finish it. Profiler
-          // calls `onRender` for the first render even though everything
-          // bails out.
-          expect(onRender).toHaveBeenCalledTimes(4);
-        }
+        expect(onRender).toHaveBeenCalledTimes(3);
         expect(onRender).toHaveLastRenderedWithInteractions(
           new Set([interaction]),
         );
@@ -310,16 +301,7 @@ describe('ReactDOMTracing', () => {
         expect(
           onInteractionScheduledWorkCompleted,
         ).toHaveBeenLastNotifiedOfInteraction(interaction);
-        if (gate(flags => flags.new)) {
-          expect(onRender).toHaveBeenCalledTimes(3);
-        } else {
-          // TODO: This is 4 instead of 3 because this update was scheduled at
-          // idle priority, and idle updates are slightly higher priority than
-          // offscreen work. So it takes two render passes to finish it. Profiler
-          // calls `onRender` for the first render even though everything
-          // bails out.
-          expect(onRender).toHaveBeenCalledTimes(4);
-        }
+        expect(onRender).toHaveBeenCalledTimes(3);
         expect(onRender).toHaveLastRenderedWithInteractions(
           new Set([interaction]),
         );
