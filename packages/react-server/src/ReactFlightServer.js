@@ -155,6 +155,10 @@ function attemptResolveElement(element: React$Element<any>): ReactModel {
   ) {
     return element.props.children;
   } else if (type != null && typeof type === 'object') {
+    if (isModuleReference(type)) {
+      // This is a reference to a client component.
+      return [REACT_ELEMENT_TYPE, type, element.key, element.props];
+    }
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE: {
         const render = type.render;
@@ -395,26 +399,8 @@ export function resolveModelToJSON(
     switch (key) {
       case '1': {
         // Module reference
-        if (!isModuleReference(value)) {
-          invariant(
-            false,
-            'Unsupported server component type: %s',
-            describeValueForErrorMessage(value),
-          );
-        }
-        const moduleReference: ModuleReference<any> = (value: any);
-        try {
-          const moduleMetaData: ModuleMetaData = resolveModuleMetaData(
-            request.bundlerConfig,
-            moduleReference,
-          );
-          return (moduleMetaData: ReactJSONValue);
-        } catch (x) {
-          request.pendingChunks++;
-          const errorId = request.nextChunkId++;
-          emitErrorChunk(request, errorId, x);
-          return serializeIDRef(errorId);
-        }
+        // Encode as a normal value.
+        break;
       }
       case '2': {
         // Load function
@@ -478,7 +464,29 @@ export function resolveModelToJSON(
     }
   }
 
+  if (value === null) {
+    return null;
+  }
+
   if (typeof value === 'object') {
+    if (isModuleReference(value)) {
+      const moduleReference: ModuleReference<any> = (value: any);
+      try {
+        const moduleMetaData: ModuleMetaData = resolveModuleMetaData(
+          request.bundlerConfig,
+          moduleReference,
+        );
+        const moduleId = request.nextChunkId++;
+        emitModuleChunk(request, moduleId, moduleMetaData);
+        return serializeIDRef(moduleId);
+      } catch (x) {
+        request.pendingChunks++;
+        const errorId = request.nextChunkId++;
+        emitErrorChunk(request, errorId, x);
+        return serializeIDRef(errorId);
+      }
+    }
+
     if (__DEV__) {
       if (value !== null && !isArray(value)) {
         // Verify that this is a simple plain object.
