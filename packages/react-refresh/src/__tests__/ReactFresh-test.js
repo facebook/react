@@ -3745,24 +3745,32 @@ describe('ReactFresh', () => {
     }
   });
 
-  // This simulates the scenario in https://github.com/facebook/react/issues/17626.
+  function initFauxDevToolsHook() {
+    const onCommitFiberRoot = jest.fn();
+    const onCommitFiberUnmount = jest.fn();
+
+    let idCounter = 0;
+    const renderers = new Map();
+
+    // This is a minimal shim for the global hook installed by DevTools.
+    // The real one is in packages/react-devtools-shared/src/hook.js.
+    global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+      renderers,
+      supportsFiber: true,
+      inject(renderer) {
+        const id = ++idCounter;
+        renderers.set(id, renderer);
+        return id;
+      },
+      onCommitFiberRoot,
+      onCommitFiberUnmount,
+    };
+  }
+
+  // This simulates the scenario in https://github.com/facebook/react/issues/17626
   it('can inject the runtime after the renderer executes', () => {
     if (__DEV__) {
-      // This is a minimal shim for the global hook installed by DevTools.
-      // The real one is in packages/react-devtools-shared/src/hook.js.
-      let idCounter = 0;
-      const renderers = new Map();
-      global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
-        renderers,
-        supportsFiber: true,
-        inject(renderer) {
-          const id = ++idCounter;
-          renderers.set(id, renderer);
-          return id;
-        },
-        onCommitFiberRoot() {},
-        onCommitFiberUnmount() {},
-      };
+      initFauxDevToolsHook();
 
       // Load these first, as if they're coming from a CDN.
       jest.resetModules();
@@ -3818,6 +3826,41 @@ describe('ReactFresh', () => {
       expect(container.firstChild).toBe(el);
       expect(el.textContent).toBe('1');
       expect(el.style.color).toBe('red');
+    }
+  });
+
+  // This simulates the scenario in https://github.com/facebook/react/issues/20100
+  it('does not block DevTools when an unsupported renderer is injected', () => {
+    if (__DEV__) {
+      initFauxDevToolsHook();
+
+      const onCommitFiberRoot =
+        global.__REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot;
+
+      // Redirect all React/ReactDOM requires to v16.8.0
+      // This version predates Fast Refresh support.
+      jest.mock('react', () => jest.requireActual('react-16-8'));
+      jest.mock('react-dom', () => jest.requireActual('react-dom-16-8'));
+
+      // Load React and company.
+      jest.resetModules();
+      React = require('react');
+      ReactDOM = require('react-dom');
+      Scheduler = require('scheduler');
+
+      // Important! Inject into the global hook *after* ReactDOM runs:
+      ReactFreshRuntime = require('react-refresh/runtime');
+      ReactFreshRuntime.injectIntoGlobalHook(global);
+
+      render(() => {
+        function Hello() {
+          return <div>Hi!</div>;
+        }
+        $RefreshReg$(Hello, 'Hello');
+        return Hello;
+      });
+
+      expect(onCommitFiberRoot).toHaveBeenCalled();
     }
   });
 });
