@@ -403,7 +403,7 @@ export function resolveModule(
 ): void {
   const chunks = response._chunks;
   const chunk = chunks.get(id);
-  const moduleMetaData = parseModel<ModuleMetaData>(response, model);
+  const moduleMetaData: ModuleMetaData = parseModel(response, model);
   const moduleReference = resolveModuleReference(moduleMetaData);
 
   // TODO: Add an option to encode modules that are lazy loaded.
