@@ -23,6 +23,7 @@ import {resolveModelToJSON} from 'react-server/src/ReactFlightServer';
 
 import {
   emitModel,
+  emitModule,
   emitError,
   resolveModuleMetaData as resolveModuleMetaDataImpl,
 } from 'ReactFlightDOMRelayServerIntegration';
@@ -57,6 +58,11 @@ export type Chunk =
       type: 'json',
       id: number,
       json: JSONValue,
+    }
+  | {
+      type: 'module',
+      id: number,
+      json: ModuleMetaData,
     }
   | {
       type: 'error',
@@ -127,6 +133,19 @@ export function processModelChunk(
   };
 }
 
+export function processModuleChunk(
+  request: Request,
+  id: number,
+  moduleMetaData: ModuleMetaData,
+): Chunk {
+  // The moduleMetaData is already a JSON serializable value.
+  return {
+    type: 'module',
+    id: id,
+    json: moduleMetaData,
+  };
+}
+
 export function scheduleWork(callback: () => void) {
   callback();
 }
@@ -138,6 +157,8 @@ export function beginWriting(destination: Destination) {}
 export function writeChunk(destination: Destination, chunk: Chunk): boolean {
   if (chunk.type === 'json') {
     emitModel(destination, chunk.id, chunk.json);
+  } else if (chunk.type === 'module') {
+    emitModule(destination, chunk.id, chunk.json);
   } else {
     emitError(destination, chunk.id, chunk.json.message, chunk.json.stack);
   }

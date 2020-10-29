@@ -24,6 +24,7 @@ import {
   flushBuffered,
   close,
   processModelChunk,
+  processModuleChunk,
   processErrorChunk,
   resolveModuleMetaData,
   isModuleReference,
@@ -84,6 +85,7 @@ export type Request = {
   nextChunkId: number,
   pendingChunks: number,
   pingedSegments: Array<Segment>,
+  completedModuleChunks: Array<Chunk>,
   completedJSONChunks: Array<Chunk>,
   completedErrorChunks: Array<Chunk>,
   flowing: boolean,
@@ -104,6 +106,7 @@ export function createRequest(
     nextChunkId: 0,
     pendingChunks: 0,
     pingedSegments: pingedSegments,
+    completedModuleChunks: [],
     completedJSONChunks: [],
     completedErrorChunks: [],
     flowing: false,
@@ -603,6 +606,15 @@ function emitErrorChunk(request: Request, id: number, error: mixed): void {
   request.completedErrorChunks.push(processedChunk);
 }
 
+function emitModuleChunk(
+  request: Request,
+  id: number,
+  moduleMetaData: ModuleMetaData,
+): void {
+  const processedChunk = processModuleChunk(request, id, moduleMetaData);
+  request.completedModuleChunks.push(processedChunk);
+}
+
 function retrySegment(request: Request, segment: Segment): void {
   const query = segment.query;
   let value;
@@ -662,8 +674,22 @@ function flushCompletedChunks(request: Request): void {
   const destination = request.destination;
   beginWriting(destination);
   try {
-    const jsonChunks = request.completedJSONChunks;
+    // We emit module chunks first in the stream so that
+    // they can be preloaded as early as possible.
+    const moduleChunks = request.completedModuleChunks;
     let i = 0;
+    for (; i < moduleChunks.length; i++) {
+      request.pendingChunks--;
+      const chunk = moduleChunks[i];
+      if (!writeChunk(destination, chunk)) {
+        request.flowing = false;
+        i++;
+        break;
+      }
+    }
+    // Next comes model data.
+    const jsonChunks = request.completedJSONChunks;
+    i = 0;
     for (; i < jsonChunks.length; i++) {
       request.pendingChunks--;
       const chunk = jsonChunks[i];
@@ -674,6 +700,9 @@ function flushCompletedChunks(request: Request): void {
       }
     }
     jsonChunks.splice(0, i);
+    // Finally, errors are sent. The idea is that it's ok to delay
+    // any error messages and prioritize display of other parts of
+    // the page.
     const errorChunks = request.completedErrorChunks;
     i = 0;
     for (; i < errorChunks.length; i++) {

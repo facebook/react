@@ -31,6 +31,11 @@ declare module 'ReactFlightDOMRelayServerIntegration' {
     id: number,
     json: JSONValue,
   ): void;
+  declare export function emitModule(
+    destination: Destination,
+    id: number,
+    json: ModuleMetaData,
+  ): void;
   declare export function emitError(
     destination: Destination,
     id: number,

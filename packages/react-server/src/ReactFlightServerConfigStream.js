@@ -104,6 +104,21 @@ export function processModelChunk(
   return convertStringToBuffer(row);
 }
 
+export function processModuleChunk(
+  request: Request,
+  id: number,
+  moduleMetaData: ReactModel,
+): Chunk {
+  const json = stringify(moduleMetaData);
+  let row;
+  if (id === 0) {
+    row = json + '\n';
+  } else {
+    row = serializeRowHeader('M', id) + json + '\n';
+  }
+  return convertStringToBuffer(row);
+}
+
 export {
   scheduleWork,
   flushBuffered,

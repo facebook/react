@@ -10,6 +10,7 @@
 import type {Response} from './ReactFlightClientHostConfigStream';
 
 import {
+  resolveModule,
   resolveModel,
   resolveError,
   createResponse as createResponseBase,
@@ -37,6 +38,13 @@ function processFullRow(response: Response, row: string): void {
       const id = parseInt(row.substring(1, colon), 16);
       const json = row.substring(colon + 1);
       resolveModel(response, id, json);
+      return;
+    }
+    case 'M': {
+      const colon = row.indexOf(':', 1);
+      const id = parseInt(row.substring(1, colon), 16);
+      const json = row.substring(colon + 1);
+      resolveModule(response, id, json);
       return;
     }
     case 'E': {

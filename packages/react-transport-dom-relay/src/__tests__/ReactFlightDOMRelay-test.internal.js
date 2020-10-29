@@ -34,6 +34,8 @@ describe('ReactFlightDOMRelay', () => {
       const chunk = data[i];
       if (chunk.type === 'json') {
         ReactDOMFlightRelayClient.resolveModel(response, chunk.id, chunk.json);
+      } else if (chunk.type === 'module') {
+        ReactDOMFlightRelayClient.resolveModule(response, chunk.id, chunk.json);
       } else {
         ReactDOMFlightRelayClient.resolveError(
           response,
