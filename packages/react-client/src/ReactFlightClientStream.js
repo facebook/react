@@ -56,9 +56,9 @@ function processFullRow(response: Response, row: string): void {
       return;
     }
     default: {
-      // Assume this is the root model.
-      resolveModel(response, 0, row);
-      return;
+      throw new Error(
+        "Error parsing the data. It's probably an error code or network corruption.",
+      );
     }
   }
 }

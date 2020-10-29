@@ -95,12 +95,7 @@ export function processModelChunk(
   model: ReactModel,
 ): Chunk {
   const json = stringify(model, request.toJSON);
-  let row;
-  if (id === 0) {
-    row = json + '\n';
-  } else {
-    row = serializeRowHeader('J', id) + json + '\n';
-  }
+  const row = serializeRowHeader('J', id) + json + '\n';
   return convertStringToBuffer(row);
 }
 
@@ -110,12 +105,7 @@ export function processModuleChunk(
   moduleMetaData: ReactModel,
 ): Chunk {
   const json = stringify(moduleMetaData);
-  let row;
-  if (id === 0) {
-    row = json + '\n';
-  } else {
-    row = serializeRowHeader('M', id) + json + '\n';
-  }
+  const row = serializeRowHeader('M', id) + json + '\n';
   return convertStringToBuffer(row);
 }
 
