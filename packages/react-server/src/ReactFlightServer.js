@@ -195,8 +195,12 @@ function createSegment(request: Request, query: () => ReactModel): Segment {
   return segment;
 }
 
-function serializeIDRef(id: number): string {
+function serializeByValueID(id: number): string {
   return '$' + id.toString(16);
+}
+
+function serializeByRefID(id: number): string {
+  return '@' + id.toString(16);
 }
 
 function escapeStringValue(value: string): string {
@@ -419,13 +423,13 @@ export function resolveModelToJSON(
             const newSegment = createSegment(request, load);
             const ping = newSegment.ping;
             x.then(ping, ping);
-            return serializeIDRef(newSegment.id);
+            return serializeByValueID(newSegment.id);
           } else {
             // This load failed, encode the error as a separate row and reference that.
             request.pendingChunks++;
             const errorId = request.nextChunkId++;
             emitErrorChunk(request, errorId, x);
-            return serializeIDRef(errorId);
+            return serializeByValueID(errorId);
           }
         }
       }
@@ -456,7 +460,7 @@ export function resolveModelToJSON(
         const newSegment = createSegment(request, () => value);
         const ping = newSegment.ping;
         x.then(ping, ping);
-        return serializeIDRef(newSegment.id);
+        return serializeByValueID(newSegment.id);
       } else {
         // Something errored. Don't bother encoding anything up to here.
         throw x;
@@ -479,12 +483,20 @@ export function resolveModelToJSON(
         request.pendingChunks++;
         const moduleId = request.nextChunkId++;
         emitModuleChunk(request, moduleId, moduleMetaData);
-        return serializeIDRef(moduleId);
+        if (parent[0] === REACT_ELEMENT_TYPE && key === '1') {
+          // If we're encoding the "type" of an element, we can refer
+          // to that by a lazy reference instead of directly since React
+          // knows how to deal with lazy values. This lets us suspend
+          // on this component rather than its parent until the code has
+          // loaded.
+          return serializeByRefID(moduleId);
+        }
+        return serializeByValueID(moduleId);
       } catch (x) {
         request.pendingChunks++;
         const errorId = request.nextChunkId++;
         emitErrorChunk(request, errorId, x);
-        return serializeIDRef(errorId);
+        return serializeByValueID(errorId);
       }
     }
 
