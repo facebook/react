@@ -64,7 +64,7 @@ export default function isValidElementType(type: mixed) {
       // we don't know which Flight build this will end up being used
       // with.
       type.$$typeof === REACT_MODULE_REFERENCE ||
-      type.getModuleID !== undefined ||
+      type.getModuleId !== undefined ||
       type.$$typeof === REACT_BLOCK_TYPE ||
       type[(0: any)] === REACT_SERVER_BLOCK_TYPE
     ) {
