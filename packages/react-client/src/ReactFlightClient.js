@@ -41,8 +41,9 @@ export type JSONValue =
 
 const PENDING = 0;
 const RESOLVED_MODEL = 1;
-const INITIALIZED = 2;
-const ERRORED = 3;
+const RESOLVED_MODULE = 2;
+const INITIALIZED = 3;
+const ERRORED = 4;
 
 type PendingChunk = {
   _status: 0,
@@ -56,14 +57,20 @@ type ResolvedModelChunk = {
   _response: Response,
   then(resolve: () => mixed): void,
 };
-type InitializedChunk<T> = {
+type ResolvedModuleChunk<T> = {
   _status: 2,
+  _value: ModuleReference<T>,
+  _response: Response,
+  then(resolve: () => mixed): void,
+};
+type InitializedChunk<T> = {
+  _status: 3,
   _value: T,
   _response: Response,
   then(resolve: () => mixed): void,
 };
 type ErroredChunk = {
-  _status: 3,
+  _status: 4,
   _value: Error,
   _response: Response,
   then(resolve: () => mixed): void,
@@ -71,6 +78,7 @@ type ErroredChunk = {
 type SomeChunk<T> =
   | PendingChunk
   | ResolvedModelChunk
+  | ResolvedModuleChunk<T>
   | InitializedChunk<T>
   | ErroredChunk;
 
@@ -105,6 +113,8 @@ function readChunk<T>(chunk: SomeChunk<T>): T {
       return chunk._value;
     case RESOLVED_MODEL:
       return initializeModelChunk(chunk);
+    case RESOLVED_MODULE:
+      return initializeModuleChunk(chunk);
     case PENDING:
       // eslint-disable-next-line no-throw-literal
       throw (chunk: Wakeable);
@@ -155,6 +165,13 @@ function createResolvedModelChunk(
   return new Chunk(RESOLVED_MODEL, value, response);
 }
 
+function createResolvedModuleChunk<T>(
+  response: Response,
+  value: ModuleReference<T>,
+): ResolvedModuleChunk<T> {
+  return new Chunk(RESOLVED_MODULE, value, response);
+}
+
 function resolveModelChunk<T>(
   chunk: SomeChunk<T>,
   value: UninitializedModel,
@@ -170,8 +187,31 @@ function resolveModelChunk<T>(
   wakeChunk(listeners);
 }
 
+function resolveModuleChunk<T>(
+  chunk: SomeChunk<T>,
+  value: ModuleReference<T>,
+): void {
+  if (chunk._status !== PENDING) {
+    // We already resolved. We didn't expect to see this.
+    return;
+  }
+  const listeners = chunk._value;
+  const resolvedChunk: ResolvedModuleChunk<T> = (chunk: any);
+  resolvedChunk._status = RESOLVED_MODULE;
+  resolvedChunk._value = value;
+  wakeChunk(listeners);
+}
+
 function initializeModelChunk<T>(chunk: ResolvedModelChunk): T {
   const value: T = parseModel(chunk._response, chunk._value);
+  const initializedChunk: InitializedChunk<T> = (chunk: any);
+  initializedChunk._status = INITIALIZED;
+  initializedChunk._value = value;
+  return value;
+}
+
+function initializeModuleChunk<T>(chunk: ResolvedModuleChunk<T>): T {
+  const value: T = requireModule(chunk._value);
   const initializedChunk: InitializedChunk<T> = (chunk: any);
   initializedChunk._status = INITIALIZED;
   initializedChunk._value = value;
@@ -241,7 +281,7 @@ function createElement(type, key, props): React$Element<any> {
 
 type UninitializedBlockPayload<Data> = [
   mixed,
-  ModuleMetaData | SomeChunk<ModuleMetaData>,
+  BlockRenderFunction<any, Data> | SomeChunk<BlockRenderFunction<any, Data>>,
   Data | SomeChunk<Data>,
   Response,
 ];
@@ -250,14 +290,7 @@ function initializeBlock<Props, Data>(
   tuple: UninitializedBlockPayload<Data>,
 ): BlockComponent<Props, Data> {
   // Require module first and then data. The ordering matters.
-  const moduleMetaData: ModuleMetaData = readMaybeChunk(tuple[1]);
-  const moduleReference: ModuleReference<
-    BlockRenderFunction<Props, Data>,
-  > = resolveModuleReference(moduleMetaData);
-  // TODO: Do this earlier, as the chunk is resolved.
-  preloadModule(moduleReference);
-
-  const moduleExport = requireModule(moduleReference);
+  const moduleExport = readMaybeChunk(tuple[1]);
 
   // The ordering here is important because this call might suspend.
   // We don't want that to prevent the module graph for being initialized.
@@ -360,6 +393,28 @@ export function resolveModel(
     chunks.set(id, createResolvedModelChunk(response, model));
   } else {
     resolveModelChunk(chunk, model);
+  }
+}
+
+export function resolveModule(
+  response: Response,
+  id: number,
+  model: UninitializedModel,
+): void {
+  const chunks = response._chunks;
+  const chunk = chunks.get(id);
+  const moduleMetaData: ModuleMetaData = parseModel(response, model);
+  const moduleReference = resolveModuleReference(moduleMetaData);
+
+  // TODO: Add an option to encode modules that are lazy loaded.
+  // For now we preload all modules as early as possible since it's likely
+  // that we'll need them.
+  preloadModule(moduleReference);
+
+  if (!chunk) {
+    chunks.set(id, createResolvedModuleChunk(response, moduleReference));
+  } else {
+    resolveModuleChunk(chunk, moduleReference);
   }
 }
 

@@ -10,6 +10,7 @@
 let act;
 let React;
 let ReactDOM;
+let JSResourceReference;
 let ReactDOMFlightRelayServer;
 let ReactDOMFlightRelayServerRuntime;
 let ReactDOMFlightRelayClient;
@@ -24,6 +25,7 @@ describe('ReactFlightDOMRelay', () => {
     ReactDOMFlightRelayServer = require('react-transport-dom-relay/server');
     ReactDOMFlightRelayServerRuntime = require('react-transport-dom-relay/server-runtime');
     ReactDOMFlightRelayClient = require('react-transport-dom-relay');
+    JSResourceReference = require('JSResourceReference');
   });
 
   function readThrough(data) {
@@ -32,6 +34,8 @@ describe('ReactFlightDOMRelay', () => {
       const chunk = data[i];
       if (chunk.type === 'json') {
         ReactDOMFlightRelayClient.resolveModel(response, chunk.id, chunk.json);
+      } else if (chunk.type === 'module') {
+        ReactDOMFlightRelayClient.resolveModule(response, chunk.id, chunk.json);
       } else {
         ReactDOMFlightRelayClient.resolveError(
           response,
@@ -47,14 +51,18 @@ describe('ReactFlightDOMRelay', () => {
   }
 
   function block(render, load) {
+    const reference = new JSResourceReference(render);
     if (load === undefined) {
-      return ReactDOMFlightRelayServerRuntime.serverBlock(render);
+      return ReactDOMFlightRelayServerRuntime.serverBlock(reference);
     }
     return function(...args) {
       const curriedLoad = () => {
         return load(...args);
       };
-      return ReactDOMFlightRelayServerRuntime.serverBlock(render, curriedLoad);
+      return ReactDOMFlightRelayServerRuntime.serverBlock(
+        reference,
+        curriedLoad,
+      );
     };
   }
 
@@ -91,6 +99,39 @@ describe('ReactFlightDOMRelay', () => {
         ),
       },
     });
+  });
+
+  // @gate experimental
+  it('can render a client component using a module reference and render there', () => {
+    function UserClient(props) {
+      return (
+        <span>
+          {props.greeting}, {props.name}
+        </span>
+      );
+    }
+    const User = new JSResourceReference(UserClient);
+
+    function Greeting({firstName, lastName}) {
+      return <User greeting="Hello" name={firstName + ' ' + lastName} />;
+    }
+
+    const model = {
+      greeting: <Greeting firstName="Seb" lastName="Smith" />,
+    };
+
+    const transport = [];
+    ReactDOMFlightRelayServer.render(model, transport);
+
+    const modelClient = readThrough(transport);
+
+    const container = document.createElement('div');
+    const root = ReactDOM.createRoot(container);
+    act(() => {
+      root.render(modelClient.greeting);
+    });
+
+    expect(container.innerHTML).toEqual('<span>Hello, Seb Smith</span>');
   });
 
   // @gate experimental

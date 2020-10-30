@@ -15,6 +15,13 @@ const ReactFlightDOMRelayServerIntegration = {
       json: json,
     });
   },
+  emitModule(destination, id, json) {
+    destination.push({
+      type: 'module',
+      id: id,
+      json: json,
+    });
+  },
   emitError(destination, id, message, stack) {
     destination.push({
       type: 'error',
@@ -24,7 +31,7 @@ const ReactFlightDOMRelayServerIntegration = {
   },
   close(destination) {},
   resolveModuleMetaData(config, resource) {
-    return resource;
+    return resource._moduleId;
   },
 };
 

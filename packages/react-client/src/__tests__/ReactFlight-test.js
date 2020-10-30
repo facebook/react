@@ -53,17 +53,29 @@ describe('ReactFlight', () => {
     };
   });
 
+  function moduleReference(value) {
+    return {
+      $$typeof: Symbol.for('react.module.reference'),
+      value: value,
+    };
+  }
+
   function block(render, load) {
     if (load === undefined) {
       return () => {
-        return ReactNoopFlightServerRuntime.serverBlockNoData(render);
+        return ReactNoopFlightServerRuntime.serverBlockNoData(
+          moduleReference(render),
+        );
       };
     }
     return function(...args) {
       const curriedLoad = () => {
         return load(...args);
       };
-      return ReactNoopFlightServerRuntime.serverBlock(render, curriedLoad);
+      return ReactNoopFlightServerRuntime.serverBlock(
+        moduleReference(render),
+        curriedLoad,
+      );
     };
   }
 
@@ -95,6 +107,35 @@ describe('ReactFlight', () => {
         ),
       },
     });
+  });
+
+  it('can render a client component using a module reference and render there', () => {
+    function UserClient(props) {
+      return (
+        <span>
+          {props.greeting}, {props.name}
+        </span>
+      );
+    }
+    const User = moduleReference(UserClient);
+
+    function Greeting({firstName, lastName}) {
+      return <User greeting="Hello" name={firstName + ' ' + lastName} />;
+    }
+
+    const model = {
+      greeting: <Greeting firstName="Seb" lastName="Smith" />,
+    };
+
+    const transport = ReactNoopFlightServer.render(model);
+
+    act(() => {
+      const rootModel = ReactNoopFlightClient.read(transport);
+      const greeting = rootModel.greeting;
+      ReactNoop.render(greeting);
+    });
+
+    expect(ReactNoop).toMatchRenderedOutput(<span>Hello, Seb Smith</span>);
   });
 
   if (ReactFeatureFlags.enableBlocksAPI) {

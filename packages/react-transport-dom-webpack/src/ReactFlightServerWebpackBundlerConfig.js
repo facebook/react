@@ -14,7 +14,10 @@ type WebpackMap = {
 export type BundlerConfig = WebpackMap;
 
 // eslint-disable-next-line no-unused-vars
-export type ModuleReference<T> = string;
+export type ModuleReference<T> = {
+  $$typeof: Symbol,
+  name: string,
+};
 
 export type ModuleMetaData = {
   id: string,
@@ -22,9 +25,15 @@ export type ModuleMetaData = {
   name: string,
 };
 
+const MODULE_TAG = Symbol.for('react.module.reference');
+
+export function isModuleReference(reference: Object): boolean {
+  return reference.$$typeof === MODULE_TAG;
+}
+
 export function resolveModuleMetaData<T>(
   config: BundlerConfig,
-  modulePath: ModuleReference<T>,
+  moduleReference: ModuleReference<T>,
 ): ModuleMetaData {
-  return config[modulePath];
+  return config[moduleReference.name];
 }
