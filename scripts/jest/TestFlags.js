@@ -74,6 +74,7 @@ function getTestFlags() {
       channel: releaseChannel,
       modern: releaseChannel === 'modern',
       classic: releaseChannel === 'classic',
+      source: !process.env.IS_BUILD,
       www,
 
       ...featureFlags,
