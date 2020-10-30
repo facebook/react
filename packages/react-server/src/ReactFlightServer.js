@@ -476,6 +476,7 @@ export function resolveModelToJSON(
           request.bundlerConfig,
           moduleReference,
         );
+        request.pendingChunks++;
         const moduleId = request.nextChunkId++;
         emitModuleChunk(request, moduleId, moduleMetaData);
         return serializeIDRef(moduleId);
