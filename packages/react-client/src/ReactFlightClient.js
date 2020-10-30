@@ -318,6 +318,17 @@ function createLazyBlock<Props, Data>(
   return lazyType;
 }
 
+function createLazyChunkWrapper<T>(
+  chunk: SomeChunk<T>,
+): LazyComponent<T, SomeChunk<T>> {
+  const lazyType: LazyComponent<T, SomeChunk<T>> = {
+    $$typeof: REACT_LAZY_TYPE,
+    _payload: chunk,
+    _init: readChunk,
+  };
+  return lazyType;
+}
+
 function getChunk(response: Response, id: number): SomeChunk<any> {
   const chunks = response._chunks;
   let chunk = chunks.get(id);
@@ -333,26 +344,36 @@ export function parseModelString(
   parentObject: Object,
   value: string,
 ): any {
-  if (value[0] === '$') {
-    if (value === '$') {
-      return REACT_ELEMENT_TYPE;
-    } else if (value[1] === '$' || value[1] === '@') {
-      // This was an escaped string value.
-      return value.substring(1);
-    } else {
-      const id = parseInt(value.substring(1), 16);
-      const chunk = getChunk(response, id);
-      if (parentObject[0] === REACT_BLOCK_TYPE) {
-        // Block types know how to deal with lazy values.
-        return chunk;
+  switch (value[0]) {
+    case '$': {
+      if (value === '$') {
+        return REACT_ELEMENT_TYPE;
+      } else if (value[1] === '$' || value[1] === '@') {
+        // This was an escaped string value.
+        return value.substring(1);
+      } else {
+        const id = parseInt(value.substring(1), 16);
+        const chunk = getChunk(response, id);
+        if (parentObject[0] === REACT_BLOCK_TYPE) {
+          // Block types know how to deal with lazy values.
+          return chunk;
+        }
+        // For anything else we must Suspend this block if
+        // we don't yet have the value.
+        return readChunk(chunk);
       }
-      // For anything else we must Suspend this block if
-      // we don't yet have the value.
-      return readChunk(chunk);
     }
-  }
-  if (value === '@') {
-    return REACT_BLOCK_TYPE;
+    case '@': {
+      if (value === '@') {
+        return REACT_BLOCK_TYPE;
+      } else {
+        const id = parseInt(value.substring(1), 16);
+        const chunk = getChunk(response, id);
+        // We create a React.lazy wrapper around any lazy values.
+        // When passed into React, we'll know how to suspend on this.
+        return createLazyChunkWrapper(chunk);
+      }
+    }
   }
   return value;
 }
