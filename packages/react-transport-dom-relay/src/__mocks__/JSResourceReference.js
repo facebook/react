@@ -11,7 +11,7 @@ class JSResourceReference {
   constructor(exportedValue) {
     this._moduleId = exportedValue;
   }
-  getModuleID() {
+  getModuleId() {
     return this._moduleId;
   }
 }
