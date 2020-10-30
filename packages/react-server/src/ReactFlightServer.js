@@ -460,7 +460,7 @@ export function resolveModelToJSON(
         const newSegment = createSegment(request, () => value);
         const ping = newSegment.ping;
         x.then(ping, ping);
-        return serializeByValueID(newSegment.id);
+        return serializeByRefID(newSegment.id);
       } else {
         // Something errored. Don't bother encoding anything up to here.
         throw x;
@@ -708,6 +708,7 @@ function flushCompletedChunks(request: Request): void {
         break;
       }
     }
+    moduleChunks.splice(0, i);
     // Next comes model data.
     const jsonChunks = request.completedJSONChunks;
     i = 0;
