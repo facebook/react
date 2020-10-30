@@ -42,6 +42,7 @@ describe('ReactDOMFrameScheduling', () => {
 
   // We're just testing importing, not using it.
   // It is important because even isomorphic components may import it.
+  // @gate !source
   it('can import findDOMNode in Node environment', () => {
     const previousRAF = global.requestAnimationFrame;
     const previousRIC = global.requestIdleCallback;
