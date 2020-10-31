@@ -14,7 +14,6 @@ module.exports = [
       'react-dom/testing',
       'react-dom/unstable-fizz.node',
       'react-transport-dom-webpack/server.node',
-      'react-transport-dom-webpack/server-runtime',
       'react-transport-dom-webpack',
     ],
     paths: [
@@ -25,7 +24,6 @@ module.exports = [
       'react-transport-dom-webpack',
       'react-transport-dom-webpack/server',
       'react-transport-dom-webpack/server.node',
-      'react-transport-dom-webpack/server-runtime',
       'react-transport-dom-webpack/src/ReactFlightDOMServerNode.js', // react-transport-dom-webpack/server.browser
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-interactions',
@@ -40,7 +38,6 @@ module.exports = [
       'react-dom/testing',
       'react-dom/unstable-fizz.browser',
       'react-transport-dom-webpack/server.browser',
-      'react-transport-dom-webpack/server-runtime',
       'react-transport-dom-webpack',
     ],
     paths: [
@@ -50,7 +47,6 @@ module.exports = [
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/unstable-fizz.browser
       'react-transport-dom-webpack',
       'react-transport-dom-webpack/server.browser',
-      'react-transport-dom-webpack/server-runtime',
       'react-transport-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-transport-dom-webpack/server.browser
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
     ],
@@ -90,7 +86,6 @@ module.exports = [
     entryPoints: [
       'react-transport-dom-relay',
       'react-transport-dom-relay/server',
-      'react-transport-dom-relay/server-runtime',
     ],
     paths: ['react-dom', 'react-transport-dom-relay'],
     isFlowTyped: true,
@@ -103,12 +98,10 @@ module.exports = [
       'react-client/flight',
       'react-server',
       'react-server/flight',
-      'react-server/flight-server-runtime',
     ],
     paths: [
       'react-client/flight',
       'react-server/flight',
-      'react-server/flight-server-runtime',
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
     ],
     isFlowTyped: true,

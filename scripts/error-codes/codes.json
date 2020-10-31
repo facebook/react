@@ -341,7 +341,7 @@
   "349": "Expected a work-in-progress root. This is a bug in React. Please file an issue.",
   "350": "Cannot read from mutable source during the current render without tearing. This is a bug in React. Please file an issue.",
   "351": "Unsupported server component type: %s",
-  "352": "React Blocks (and Lazy Components) are expected to be replaced by a compiler on the server. Try configuring your compiler set up and avoid using React.lazy inside of Blocks.",
+  "352": "React Lazy Components are not yet supported on the server.",
   "353": "A server block should never encode any other slots. This is a bug in React.",
   "354": "getInspectorDataForViewAtPoint() is not available in production.",
   "355": "The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.",

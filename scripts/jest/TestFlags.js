@@ -4,7 +4,7 @@
 // certain conditions. They're like GKs.
 //
 // Examples:
-//   // @gate enableBlocksAPI
+//   // @gate enableSomeAPI
 //   test('uses an unstable API', () => {/*...*/})
 //
 //   // @gate __DEV__
@@ -18,12 +18,12 @@
 //
 // You can also combine flags using multiple gates:
 //
-//   // @gate enableBlocksAPI
+//   // @gate enableSomeAPI
 //   // @gate __DEV__
 //   test('both conditions must pass', () => {/*...*/})
 //
 // Or using logical operators
-//   // @gate enableBlocksAPI && __DEV__
+//   // @gate enableSomeAPI && __DEV__
 //   test('both conditions must pass', () => {/*...*/})
 //
 // Negation also works:

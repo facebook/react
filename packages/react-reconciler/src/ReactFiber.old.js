@@ -27,7 +27,6 @@ import {
   enableProfilerTimer,
   enableFundamentalAPI,
   enableScopeAPI,
-  enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement} from './ReactFiberFlags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
@@ -53,7 +52,6 @@ import {
   LazyComponent,
   FundamentalComponent,
   ScopeComponent,
-  Block,
   OffscreenComponent,
   LegacyHiddenComponent,
 } from './ReactWorkTags';
@@ -88,7 +86,6 @@ import {
   REACT_LAZY_TYPE,
   REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
-  REACT_BLOCK_TYPE,
   REACT_OFFSCREEN_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
 } from 'shared/ReactSymbols';
@@ -240,11 +237,6 @@ export function resolveLazyComponentTag(Component: Function): WorkTag {
     }
     if ($$typeof === REACT_MEMO_TYPE) {
       return MemoComponent;
-    }
-    if (enableBlocksAPI) {
-      if ($$typeof === REACT_BLOCK_TYPE) {
-        return Block;
-      }
     }
   }
   return IndeterminateComponent;
@@ -521,9 +513,6 @@ export function createFiberFromTypeAndProps(
             case REACT_LAZY_TYPE:
               fiberTag = LazyComponent;
               resolvedType = null;
-              break getTag;
-            case REACT_BLOCK_TYPE:
-              fiberTag = Block;
               break getTag;
             case REACT_FUNDAMENTAL_TYPE:
               if (enableFundamentalAPI) {

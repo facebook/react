@@ -54,7 +54,6 @@ import {
   IncompleteClassComponent,
   FundamentalComponent,
   ScopeComponent,
-  Block,
   OffscreenComponent,
   LegacyHiddenComponent,
 } from './ReactWorkTags';
@@ -120,7 +119,6 @@ import {
   enableSuspenseServerRenderer,
   enableFundamentalAPI,
   enableScopeAPI,
-  enableBlocksAPI,
   enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -1256,11 +1254,6 @@ function completeWork(
       }
       break;
     }
-    case Block:
-      if (enableBlocksAPI) {
-        return null;
-      }
-      break;
     case OffscreenComponent:
     case LegacyHiddenComponent: {
       popRenderLanes(workInProgress);

@@ -29,7 +29,6 @@ let Stream;
 let React;
 let ReactDOM;
 let ReactTransportDOMServer;
-let ReactTransportDOMServerRuntime;
 let ReactTransportDOMClient;
 
 describe('ReactFlightDOM', () => {
@@ -42,7 +41,6 @@ describe('ReactFlightDOM', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTransportDOMServer = require('react-transport-dom-webpack/server');
-    ReactTransportDOMServerRuntime = require('react-transport-dom-webpack/server-runtime');
     ReactTransportDOMClient = require('react-transport-dom-webpack');
   });
 
@@ -76,25 +74,6 @@ describe('ReactFlightDOM', () => {
     };
     const MODULE_TAG = Symbol.for('react.module.reference');
     return {$$typeof: MODULE_TAG, name: 'path/' + idx};
-  }
-
-  function block(render, load) {
-    if (load === undefined) {
-      return () => {
-        return ReactTransportDOMServerRuntime.serverBlockNoData(
-          moduleReference(render),
-        );
-      };
-    }
-    return function(...args) {
-      const curriedLoad = () => {
-        return load(...args);
-      };
-      return ReactTransportDOMServerRuntime.serverBlock(
-        moduleReference(render),
-        curriedLoad,
-      );
-    };
   }
 
   async function waitForSuspense(fn) {
@@ -271,220 +250,6 @@ describe('ReactFlightDOM', () => {
       root.render(<App response={response} />);
     });
     expect(container.innerHTML).toBe('<p>@div</p>');
-  });
-
-  // @gate experimental
-  it('should progressively reveal Blocks', async () => {
-    const {Suspense} = React;
-
-    class ErrorBoundary extends React.Component {
-      state = {hasError: false, error: null};
-      static getDerivedStateFromError(error) {
-        return {
-          hasError: true,
-          error,
-        };
-      }
-      render() {
-        if (this.state.hasError) {
-          return this.props.fallback(this.state.error);
-        }
-        return this.props.children;
-      }
-    }
-
-    // Model
-    function Text({children}) {
-      return children;
-    }
-    function makeDelayedTextBlock() {
-      let error, _resolve, _reject;
-      let promise = new Promise((resolve, reject) => {
-        _resolve = () => {
-          promise = null;
-          resolve();
-        };
-        _reject = e => {
-          error = e;
-          promise = null;
-          reject(e);
-        };
-      });
-      function load() {
-        if (promise) {
-          throw promise;
-        }
-        if (error) {
-          throw error;
-        }
-        return 'data';
-      }
-      function DelayedText({children}, data) {
-        if (data !== 'data') {
-          throw new Error('No data');
-        }
-        return <Text>{children}</Text>;
-      }
-      const loadBlock = block(DelayedText, load);
-      return [loadBlock(), _resolve, _reject];
-    }
-
-    function makeDelayedText() {
-      let error, _resolve, _reject;
-      let promise = new Promise((resolve, reject) => {
-        _resolve = () => {
-          promise = null;
-          resolve();
-        };
-        _reject = e => {
-          error = e;
-          promise = null;
-          reject(e);
-        };
-      });
-      function DelayedText({children}, data) {
-        if (promise) {
-          throw promise;
-        }
-        if (error) {
-          throw error;
-        }
-        return <Text>{children}</Text>;
-      }
-      return [DelayedText, _resolve, _reject];
-    }
-
-    const [FriendsModel, resolveFriendsModel] = makeDelayedText();
-    const [NameModel, resolveNameModel] = makeDelayedText();
-    const [PostsModel, resolvePostsModel] = makeDelayedTextBlock();
-    const [PhotosModel, resolvePhotosModel] = makeDelayedTextBlock();
-    const [GamesModel, , rejectGamesModel] = makeDelayedTextBlock();
-    function ProfileMore() {
-      return {
-        avatar: <Text>:avatar:</Text>,
-        friends: <FriendsModel>:friends:</FriendsModel>,
-        posts: <PostsModel>:posts:</PostsModel>,
-        games: <GamesModel>:games:</GamesModel>,
-      };
-    }
-    const profileModel = {
-      photos: <PhotosModel>:photos:</PhotosModel>,
-      name: <NameModel>:name:</NameModel>,
-      more: <ProfileMore />,
-    };
-
-    // View
-    function ProfileDetails({response}) {
-      const model = response.readRoot();
-      return (
-        <div>
-          {model.name}
-          {model.more.avatar}
-        </div>
-      );
-    }
-    function ProfileSidebar({response}) {
-      const model = response.readRoot();
-      return (
-        <div>
-          {model.photos}
-          {model.more.friends}
-        </div>
-      );
-    }
-    function ProfilePosts({response}) {
-      return <div>{response.readRoot().more.posts}</div>;
-    }
-    function ProfileGames({response}) {
-      return <div>{response.readRoot().more.games}</div>;
-    }
-    function ProfilePage({response}) {
-      return (
-        <>
-          <Suspense fallback={<p>(loading)</p>}>
-            <ProfileDetails response={response} />
-            <Suspense fallback={<p>(loading sidebar)</p>}>
-              <ProfileSidebar response={response} />
-            </Suspense>
-            <Suspense fallback={<p>(loading posts)</p>}>
-              <ProfilePosts response={response} />
-            </Suspense>
-            <ErrorBoundary fallback={e => <p>{e.message}</p>}>
-              <Suspense fallback={<p>(loading games)</p>}>
-                <ProfileGames response={response} />
-              </Suspense>
-            </ErrorBoundary>
-          </Suspense>
-        </>
-      );
-    }
-
-    const {writable, readable} = getTestStream();
-    ReactTransportDOMServer.pipeToNodeWritable(
-      profileModel,
-      writable,
-      webpackMap,
-    );
-    const response = ReactTransportDOMClient.createFromReadableStream(readable);
-
-    const container = document.createElement('div');
-    const root = ReactDOM.unstable_createRoot(container);
-    await act(async () => {
-      root.render(<ProfilePage response={response} />);
-    });
-    expect(container.innerHTML).toBe('<p>(loading)</p>');
-
-    // This isn't enough to show anything.
-    await act(async () => {
-      resolveFriendsModel();
-    });
-    expect(container.innerHTML).toBe('<p>(loading)</p>');
-
-    // We can now show the details. Sidebar and posts are still loading.
-    await act(async () => {
-      resolveNameModel();
-    });
-    // Advance time enough to trigger a nested fallback.
-    jest.advanceTimersByTime(500);
-    expect(container.innerHTML).toBe(
-      '<div>:name::avatar:</div>' +
-        '<p>(loading sidebar)</p>' +
-        '<p>(loading posts)</p>' +
-        '<p>(loading games)</p>',
-    );
-
-    // Let's *fail* loading games.
-    await act(async () => {
-      rejectGamesModel(new Error('Game over'));
-    });
-    expect(container.innerHTML).toBe(
-      '<div>:name::avatar:</div>' +
-        '<p>(loading sidebar)</p>' +
-        '<p>(loading posts)</p>' +
-        '<p>Game over</p>', // TODO: should not have message in prod.
-    );
-
-    // We can now show the sidebar.
-    await act(async () => {
-      resolvePhotosModel();
-    });
-    expect(container.innerHTML).toBe(
-      '<div>:name::avatar:</div>' +
-        '<div>:photos::friends:</div>' +
-        '<p>(loading posts)</p>' +
-        '<p>Game over</p>', // TODO: should not have message in prod.
-    );
-
-    // Show everything.
-    await act(async () => {
-      resolvePostsModel();
-    });
-    expect(container.innerHTML).toBe(
-      '<div>:name::avatar:</div>' +
-        '<div>:photos::friends:</div>' +
-        '<div>:posts:</div>' +
-        '<p>Game over</p>', // TODO: should not have message in prod.
-    );
   });
 
   // @gate experimental

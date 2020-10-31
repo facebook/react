@@ -21,8 +21,6 @@ import {
   REACT_LAZY_TYPE,
   REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
-  REACT_BLOCK_TYPE,
-  REACT_SERVER_BLOCK_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
 } from 'shared/ReactSymbols';
 import {enableScopeAPI} from './ReactFeatureFlags';
@@ -64,9 +62,7 @@ export default function isValidElementType(type: mixed) {
       // we don't know which Flight build this will end up being used
       // with.
       type.$$typeof === REACT_MODULE_REFERENCE ||
-      type.getModuleId !== undefined ||
-      type.$$typeof === REACT_BLOCK_TYPE ||
-      type[(0: any)] === REACT_SERVER_BLOCK_TYPE
+      type.getModuleId !== undefined
     ) {
       return true;
     }

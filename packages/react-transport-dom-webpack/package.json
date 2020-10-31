@@ -17,7 +17,6 @@
     "server.js",
     "server.browser.js",
     "server.node.js",
-    "server-runtime.js",
     "cjs/",
     "umd/"
   ],
