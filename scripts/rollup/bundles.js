@@ -265,13 +265,6 @@ const bundles = [
     global: 'ReactTransportDOMServer',
     externals: ['react', 'react-dom/server'],
   },
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: RENDERER,
-    entry: 'react-transport-dom-webpack/server-runtime',
-    global: 'ReactTransportDOMServerRuntime',
-    externals: ['react'],
-  },
 
   /******* React Transport DOM Client Webpack *******/
   {
@@ -300,17 +293,6 @@ const bundles = [
     externals: [
       'react',
       'react-dom/server',
-      'ReactFlightDOMRelayServerIntegration',
-      'JSResourceReference',
-    ],
-  },
-  {
-    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
-    moduleType: RENDERER,
-    entry: 'react-transport-dom-relay/server-runtime',
-    global: 'ReactFlightDOMRelayServerRuntime',
-    externals: [
-      'react',
       'ReactFlightDOMRelayServerIntegration',
       'JSResourceReference',
     ],
@@ -519,13 +501,6 @@ const bundles = [
     moduleType: RECONCILER,
     entry: 'react-server/flight',
     global: 'ReactFlightServer',
-    externals: ['react'],
-  },
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: RENDERER,
-    entry: 'react-server/flight-server-runtime',
-    global: 'ReactFlightServerRuntime',
     externals: ['react'],
   },
 
