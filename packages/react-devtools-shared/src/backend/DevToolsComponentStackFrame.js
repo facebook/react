@@ -17,8 +17,6 @@ import type {LazyComponent} from 'react/src/ReactLazy';
 import type {CurrentDispatcherRef} from './types';
 
 import {
-  BLOCK_NUMBER,
-  BLOCK_SYMBOL_STRING,
   FORWARD_REF_NUMBER,
   FORWARD_REF_SYMBOL_STRING,
   LAZY_NUMBER,
@@ -272,14 +270,6 @@ export function describeUnknownElementTypeFrameInDEV(
         // Memo may contain any component type so we recursively resolve it.
         return describeUnknownElementTypeFrameInDEV(
           type.type,
-          source,
-          ownerFn,
-          currentDispatcherRef,
-        );
-      case BLOCK_NUMBER:
-      case BLOCK_SYMBOL_STRING:
-        return describeFunctionComponentFrame(
-          type._render,
           source,
           ownerFn,
           currentDispatcherRef,
