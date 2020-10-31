@@ -9,8 +9,6 @@
 
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
-import type {BlockComponent} from 'react/src/ReactBlock';
-import type {LazyComponent} from 'react/src/ReactLazy';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 
@@ -22,7 +20,6 @@ import {
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
   REACT_LAZY_TYPE,
-  REACT_BLOCK_TYPE,
 } from 'shared/ReactSymbols';
 import {
   FunctionComponent,
@@ -32,12 +29,10 @@ import {
   ForwardRef,
   Fragment,
   SimpleMemoComponent,
-  Block,
 } from './ReactWorkTags';
 import invariant from 'shared/invariant';
 import {
   warnAboutStringRefs,
-  enableBlocksAPI,
   enableLazyElements,
 } from 'shared/ReactFeatureFlags';
 
@@ -251,22 +246,6 @@ function warnOnFunctionType(returnFiber: Fiber) {
   }
 }
 
-// We avoid inlining this to avoid potential deopts from using try/catch.
-/** @noinline */
-function resolveLazyType<T, P>(
-  lazyComponent: LazyComponent<T, P>,
-): LazyComponent<T, P> | T {
-  try {
-    // If we can, let's peek at the resulting type.
-    const payload = lazyComponent._payload;
-    const init = lazyComponent._init;
-    return init(payload);
-  } catch (x) {
-    // Leave it in place and let it throw again in the begin phase.
-    return lazyComponent;
-  }
-}
-
 // This wrapper function exists because I expect to clone the code in each path
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
@@ -419,28 +398,6 @@ function ChildReconciler(shouldTrackSideEffects) {
           existing._debugOwner = element._owner;
         }
         return existing;
-      } else if (enableBlocksAPI && current.tag === Block) {
-        // The new Block might not be initialized yet. We need to initialize
-        // it in case initializing it turns out it would match.
-        let type = element.type;
-        if (type.$$typeof === REACT_LAZY_TYPE) {
-          type = resolveLazyType(type);
-        }
-        if (
-          type.$$typeof === REACT_BLOCK_TYPE &&
-          ((type: any): BlockComponent<any, any>)._render ===
-            (current.type: BlockComponent<any, any>)._render
-        ) {
-          // Same as above but also update the .type field.
-          const existing = useFiber(current, element.props);
-          existing.return = returnFiber;
-          existing.type = type;
-          if (__DEV__) {
-            existing._debugSource = element._source;
-            existing._debugOwner = element._owner;
-          }
-          return existing;
-        }
       }
     }
     // Insert
@@ -1158,33 +1115,6 @@ function ChildReconciler(shouldTrackSideEffects) {
             }
             break;
           }
-          case Block:
-            if (enableBlocksAPI) {
-              let type = element.type;
-              if (type.$$typeof === REACT_LAZY_TYPE) {
-                type = resolveLazyType(type);
-              }
-              if (type.$$typeof === REACT_BLOCK_TYPE) {
-                // The new Block might not be initialized yet. We need to initialize
-                // it in case initializing it turns out it would match.
-                if (
-                  ((type: any): BlockComponent<any, any>)._render ===
-                  (child.type: BlockComponent<any, any>)._render
-                ) {
-                  deleteRemainingChildren(returnFiber, child.sibling);
-                  const existing = useFiber(child, element.props);
-                  existing.type = type;
-                  existing.return = returnFiber;
-                  if (__DEV__) {
-                    existing._debugSource = element._source;
-                    existing._debugOwner = element._owner;
-                  }
-                  return existing;
-                }
-              }
-            }
-          // We intentionally fallthrough here if enableBlocksAPI is not on.
-          // eslint-disable-next-lined no-fallthrough
           default: {
             if (
               child.elementType === element.type ||
@@ -1387,7 +1317,6 @@ function ChildReconciler(shouldTrackSideEffects) {
         // Intentionally fall through to the next case, which handles both
         // functions and classes
         // eslint-disable-next-lined no-fallthrough
-        case Block:
         case FunctionComponent:
         case ForwardRef:
         case SimpleMemoComponent: {

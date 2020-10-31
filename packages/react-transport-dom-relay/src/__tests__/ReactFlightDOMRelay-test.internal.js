@@ -12,7 +12,6 @@ let React;
 let ReactDOM;
 let JSResourceReference;
 let ReactDOMFlightRelayServer;
-let ReactDOMFlightRelayServerRuntime;
 let ReactDOMFlightRelayClient;
 
 describe('ReactFlightDOMRelay', () => {
@@ -23,7 +22,6 @@ describe('ReactFlightDOMRelay', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFlightRelayServer = require('react-transport-dom-relay/server');
-    ReactDOMFlightRelayServerRuntime = require('react-transport-dom-relay/server-runtime');
     ReactDOMFlightRelayClient = require('react-transport-dom-relay');
     JSResourceReference = require('JSResourceReference');
   });
@@ -48,22 +46,6 @@ describe('ReactFlightDOMRelay', () => {
     ReactDOMFlightRelayClient.close(response);
     const model = response.readRoot();
     return model;
-  }
-
-  function block(render, load) {
-    const reference = new JSResourceReference(render);
-    if (load === undefined) {
-      return ReactDOMFlightRelayServerRuntime.serverBlock(reference);
-    }
-    return function(...args) {
-      const curriedLoad = () => {
-        return load(...args);
-      };
-      return ReactDOMFlightRelayServerRuntime.serverBlock(
-        reference,
-        curriedLoad,
-      );
-    };
   }
 
   it('can render a server component', () => {
@@ -129,38 +111,6 @@ describe('ReactFlightDOMRelay', () => {
     const root = ReactDOM.createRoot(container);
     act(() => {
       root.render(modelClient.greeting);
-    });
-
-    expect(container.innerHTML).toEqual('<span>Hello, Seb Smith</span>');
-  });
-
-  // @gate experimental
-  it('can transfer a Block to the client and render there', () => {
-    function load(firstName, lastName) {
-      return {name: firstName + ' ' + lastName};
-    }
-    function User(props, data) {
-      return (
-        <span>
-          {props.greeting}, {data.name}
-        </span>
-      );
-    }
-    const loadUser = block(User, load);
-    const model = {
-      User: loadUser('Seb', 'Smith'),
-    };
-
-    const transport = [];
-    ReactDOMFlightRelayServer.render(model, transport);
-
-    const modelClient = readThrough(transport);
-
-    const container = document.createElement('div');
-    const root = ReactDOM.createRoot(container);
-    act(() => {
-      const UserClient = modelClient.User;
-      root.render(<UserClient greeting="Hello" />);
     });
 
     expect(container.innerHTML).toEqual('<span>Hello, Seb Smith</span>');

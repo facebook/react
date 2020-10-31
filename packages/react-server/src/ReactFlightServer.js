@@ -31,7 +31,6 @@ import {
 } from './ReactFlightServerConfig';
 
 import {
-  REACT_BLOCK_TYPE,
   REACT_ELEMENT_TYPE,
   REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_FORWARD_REF_TYPE,
@@ -42,7 +41,6 @@ import {
   REACT_OFFSCREEN_TYPE,
   REACT_PROFILER_TYPE,
   REACT_SCOPE_TYPE,
-  REACT_SERVER_BLOCK_TYPE,
   REACT_STRICT_MODE_TYPE,
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
@@ -137,8 +135,6 @@ function attemptResolveElement(element: React$Element<any>): ReactModel {
     return type(props);
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
-    return [REACT_ELEMENT_TYPE, type, element.key, element.props];
-  } else if (type[0] === REACT_SERVER_BLOCK_TYPE) {
     return [REACT_ELEMENT_TYPE, type, element.key, element.props];
   } else if (
     type === REACT_FRAGMENT_TYPE ||
@@ -386,60 +382,11 @@ export function resolveModelToJSON(
   switch (value) {
     case REACT_ELEMENT_TYPE:
       return '$';
-    case REACT_SERVER_BLOCK_TYPE:
-      return '@';
     case REACT_LAZY_TYPE:
-    case REACT_BLOCK_TYPE:
       invariant(
         false,
-        'React Blocks (and Lazy Components) are expected to be replaced by a ' +
-          'compiler on the server. Try configuring your compiler set up and avoid ' +
-          'using React.lazy inside of Blocks.',
+        'React Lazy Components are not yet supported on the server.',
       );
-  }
-
-  if (parent[0] === REACT_SERVER_BLOCK_TYPE) {
-    // We're currently encoding part of a Block. Look up which key.
-    switch (key) {
-      case '1': {
-        // Module reference
-        // Encode as a normal value.
-        break;
-      }
-      case '2': {
-        // Load function
-        const load: () => ReactModel = (value: any);
-        try {
-          // Attempt to resolve the data.
-          return load();
-        } catch (x) {
-          if (
-            typeof x === 'object' &&
-            x !== null &&
-            typeof x.then === 'function'
-          ) {
-            // Something suspended, we'll need to create a new segment and resolve it later.
-            request.pendingChunks++;
-            const newSegment = createSegment(request, load);
-            const ping = newSegment.ping;
-            x.then(ping, ping);
-            return serializeByValueID(newSegment.id);
-          } else {
-            // This load failed, encode the error as a separate row and reference that.
-            request.pendingChunks++;
-            const errorId = request.nextChunkId++;
-            emitErrorChunk(request, errorId, x);
-            return serializeByValueID(errorId);
-          }
-        }
-      }
-      default: {
-        invariant(
-          false,
-          'A server block should never encode any other slots. This is a bug in React.',
-        );
-      }
-    }
   }
 
   // Resolve server components.

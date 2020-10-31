@@ -55,7 +55,6 @@ import {
   SuspenseListComponent,
   FundamentalComponent,
   ScopeComponent,
-  Block,
   OffscreenComponent,
   LegacyHiddenComponent,
 } from './ReactWorkTags';
@@ -540,8 +539,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
     switch (finishedWork.tag) {
       case FunctionComponent:
       case ForwardRef:
-      case SimpleMemoComponent:
-      case Block: {
+      case SimpleMemoComponent: {
         break;
       }
       case ClassComponent: {
@@ -1061,8 +1059,7 @@ function recursivelyCommitLayoutEffects(
         switch (tag) {
           case FunctionComponent:
           case ForwardRef:
-          case SimpleMemoComponent:
-          case Block: {
+          case SimpleMemoComponent: {
             if (
               enableProfilerTimer &&
               enableProfilerCommitHooks &&
@@ -1277,8 +1274,7 @@ function commitLayoutEffectsOnFiber(
     switch (tag) {
       case FunctionComponent:
       case ForwardRef:
-      case SimpleMemoComponent:
-      case Block: {
+      case SimpleMemoComponent: {
         if (
           enableProfilerTimer &&
           enableProfilerCommitHooks &&
@@ -2131,8 +2127,7 @@ function commitUnmount(
     case FunctionComponent:
     case ForwardRef:
     case MemoComponent:
-    case SimpleMemoComponent:
-    case Block: {
+    case SimpleMemoComponent: {
       const updateQueue: FunctionComponentUpdateQueue | null = (current.updateQueue: any);
       if (updateQueue !== null) {
         const lastEffect = updateQueue.lastEffect;
@@ -2725,8 +2720,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       case FunctionComponent:
       case ForwardRef:
       case MemoComponent:
-      case SimpleMemoComponent:
-      case Block: {
+      case SimpleMemoComponent: {
         // Layout effects are destroyed during the mutation phase so that all
         // destroy functions for all fibers are called before any create functions.
         // This prevents sibling component effects from interfering with each other,
@@ -2793,8 +2787,7 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     case FunctionComponent:
     case ForwardRef:
     case MemoComponent:
-    case SimpleMemoComponent:
-    case Block: {
+    case SimpleMemoComponent: {
       // Layout effects are destroyed during the mutation phase so that all
       // destroy functions for all fibers are called before any create functions.
       // This prevents sibling component effects from interfering with each other,
@@ -3049,8 +3042,7 @@ function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
-    case SimpleMemoComponent:
-    case Block: {
+    case SimpleMemoComponent: {
       if (
         enableProfilerTimer &&
         enableProfilerCommitHooks &&
@@ -3082,8 +3074,7 @@ function commitPassiveUnmountInsideDeletedTreeOnFiber(
   switch (current.tag) {
     case FunctionComponent:
     case ForwardRef:
-    case SimpleMemoComponent:
-    case Block: {
+    case SimpleMemoComponent: {
       if (
         enableProfilerTimer &&
         enableProfilerCommitHooks &&
@@ -3115,8 +3106,7 @@ function commitPassiveMountOnFiber(
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
-    case SimpleMemoComponent:
-    case Block: {
+    case SimpleMemoComponent: {
       if (
         enableProfilerTimer &&
         enableProfilerCommitHooks &&
@@ -3147,8 +3137,7 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
     switch (fiber.tag) {
       case FunctionComponent:
       case ForwardRef:
-      case SimpleMemoComponent:
-      case Block: {
+      case SimpleMemoComponent: {
         invokeGuardedCallback(
           null,
           commitHookEffectListMount,
@@ -3182,8 +3171,7 @@ function invokePassiveEffectMountInDEV(fiber: Fiber): void {
     switch (fiber.tag) {
       case FunctionComponent:
       case ForwardRef:
-      case SimpleMemoComponent:
-      case Block: {
+      case SimpleMemoComponent: {
         invokeGuardedCallback(
           null,
           commitHookEffectListMount,
@@ -3208,8 +3196,7 @@ function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
     switch (fiber.tag) {
       case FunctionComponent:
       case ForwardRef:
-      case SimpleMemoComponent:
-      case Block: {
+      case SimpleMemoComponent: {
         invokeGuardedCallback(
           null,
           commitHookEffectListUnmount,
@@ -3242,8 +3229,7 @@ function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
     switch (fiber.tag) {
       case FunctionComponent:
       case ForwardRef:
-      case SimpleMemoComponent:
-      case Block: {
+      case SimpleMemoComponent: {
         invokeGuardedCallback(
           null,
           commitHookEffectListUnmount,

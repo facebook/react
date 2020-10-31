@@ -8,7 +8,6 @@
  */
 
 import type {Wakeable} from 'shared/ReactTypes';
-import type {BlockComponent, BlockRenderFunction} from 'react/src/ReactBlock';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
 import type {
@@ -25,11 +24,7 @@ import {
   parseModel,
 } from './ReactFlightClientHostConfig';
 
-import {
-  REACT_LAZY_TYPE,
-  REACT_BLOCK_TYPE,
-  REACT_ELEMENT_TYPE,
-} from 'shared/ReactSymbols';
+import {REACT_LAZY_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 export type JSONValue =
   | number
@@ -229,15 +224,6 @@ export function reportGlobalError(response: Response, error: Error): void {
   });
 }
 
-function readMaybeChunk<T>(maybeChunk: SomeChunk<T> | T): T {
-  if (maybeChunk == null || !(maybeChunk instanceof Chunk)) {
-    // $FlowFixMe
-    return maybeChunk;
-  }
-  const chunk: SomeChunk<T> = (maybeChunk: any);
-  return readChunk(chunk);
-}
-
 function createElement(type, key, props): React$Element<any> {
   const element: any = {
     // This tag allows us to uniquely identify this as a React Element
@@ -279,45 +265,6 @@ function createElement(type, key, props): React$Element<any> {
   return element;
 }
 
-type UninitializedBlockPayload<Data> = [
-  mixed,
-  BlockRenderFunction<any, Data> | SomeChunk<BlockRenderFunction<any, Data>>,
-  Data | SomeChunk<Data>,
-  Response,
-];
-
-function initializeBlock<Props, Data>(
-  tuple: UninitializedBlockPayload<Data>,
-): BlockComponent<Props, Data> {
-  // Require module first and then data. The ordering matters.
-  const moduleExport = readMaybeChunk(tuple[1]);
-
-  // The ordering here is important because this call might suspend.
-  // We don't want that to prevent the module graph for being initialized.
-  const data: Data = readMaybeChunk(tuple[2]);
-
-  return {
-    $$typeof: REACT_BLOCK_TYPE,
-    _status: -1,
-    _data: data,
-    _render: moduleExport,
-  };
-}
-
-function createLazyBlock<Props, Data>(
-  tuple: UninitializedBlockPayload<Data>,
-): LazyComponent<BlockComponent<Props, Data>, UninitializedBlockPayload<Data>> {
-  const lazyType: LazyComponent<
-    BlockComponent<Props, Data>,
-    UninitializedBlockPayload<Data>,
-  > = {
-    $$typeof: REACT_LAZY_TYPE,
-    _payload: tuple,
-    _init: initializeBlock,
-  };
-  return lazyType;
-}
-
 function createLazyChunkWrapper<T>(
   chunk: SomeChunk<T>,
 ): LazyComponent<T, SomeChunk<T>> {
@@ -354,25 +301,15 @@ export function parseModelString(
       } else {
         const id = parseInt(value.substring(1), 16);
         const chunk = getChunk(response, id);
-        if (parentObject[0] === REACT_BLOCK_TYPE) {
-          // Block types know how to deal with lazy values.
-          return chunk;
-        }
-        // For anything else we must Suspend this block if
-        // we don't yet have the value.
         return readChunk(chunk);
       }
     }
     case '@': {
-      if (value === '@') {
-        return REACT_BLOCK_TYPE;
-      } else {
-        const id = parseInt(value.substring(1), 16);
-        const chunk = getChunk(response, id);
-        // We create a React.lazy wrapper around any lazy values.
-        // When passed into React, we'll know how to suspend on this.
-        return createLazyChunkWrapper(chunk);
-      }
+      const id = parseInt(value.substring(1), 16);
+      const chunk = getChunk(response, id);
+      // We create a React.lazy wrapper around any lazy values.
+      // When passed into React, we'll know how to suspend on this.
+      return createLazyChunkWrapper(chunk);
     }
   }
   return value;
@@ -387,9 +324,6 @@ export function parseModelTuple(
     // TODO: Consider having React just directly accept these arrays as elements.
     // Or even change the ReactElement type to be an array.
     return createElement(tuple[1], tuple[2], tuple[3]);
-  } else if (tuple[0] === REACT_BLOCK_TYPE) {
-    // TODO: Consider having React just directly accept these arrays as blocks.
-    return createLazyBlock((tuple: any));
   }
   return value;
 }

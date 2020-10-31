@@ -32,7 +32,6 @@ import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
-import {block} from './ReactBlock';
 import {
   useCallback,
   useContext,
@@ -111,8 +110,6 @@ export {
   useDeferredValue,
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
-  // enableBlocksAPI
-  block,
   // enableFundamentalAPI
   createFundamental as unstable_createFundamental,
   // enableScopeAPI
