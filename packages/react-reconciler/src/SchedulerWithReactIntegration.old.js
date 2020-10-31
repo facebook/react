@@ -165,13 +165,13 @@ export function cancelCallback(callbackNode: mixed) {
   }
 }
 
-export function flushSyncCallbackQueue() {
+export function flushSyncCallbackQueue(): boolean {
   if (immediateQueueCallbackNode !== null) {
     const node = immediateQueueCallbackNode;
     immediateQueueCallbackNode = null;
     Scheduler_cancelCallback(node);
   }
-  flushSyncCallbackQueueImpl();
+  return flushSyncCallbackQueueImpl();
 }
 
 function flushSyncCallbackQueueImpl() {
@@ -237,5 +237,8 @@ function flushSyncCallbackQueueImpl() {
         isFlushingSyncQueue = false;
       }
     }
+    return true;
+  } else {
+    return false;
   }
 }

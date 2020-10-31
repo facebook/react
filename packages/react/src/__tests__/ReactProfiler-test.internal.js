@@ -347,7 +347,7 @@ describe('Profiler', () => {
 
         expect(callback).toHaveBeenCalledTimes(1);
 
-        let call = callback.mock.calls[0];
+        const call = callback.mock.calls[0];
 
         expect(call).toHaveLength(enableSchedulerTracing ? 7 : 6);
         expect(call[0]).toBe('test');
@@ -364,31 +364,9 @@ describe('Profiler', () => {
 
         renderer.update(<App />);
 
-        if (gate(flags => flags.new)) {
-          // None of the Profiler's subtree was rendered because App bailed out before the Profiler.
-          // So we expect onRender not to be called.
-          expect(callback).not.toHaveBeenCalled();
-        } else {
-          // Updating a parent reports a re-render,
-          // since React technically did a little bit of work between the Profiler and the bailed out subtree.
-          // This is not optimal but it's how the old reconciler fork works.
-          expect(callback).toHaveBeenCalledTimes(1);
-
-          call = callback.mock.calls[0];
-
-          expect(call).toHaveLength(enableSchedulerTracing ? 7 : 6);
-          expect(call[0]).toBe('test');
-          expect(call[1]).toBe('update');
-          expect(call[2]).toBe(0); // actual time
-          expect(call[3]).toBe(10); // base time
-          expect(call[4]).toBe(30); // start time
-          expect(call[5]).toBe(30); // commit time
-          expect(call[6]).toEqual(
-            enableSchedulerTracing ? new Set() : undefined,
-          ); // interaction events
-
-          callback.mockReset();
-        }
+        // None of the Profiler's subtree was rendered because App bailed out before the Profiler.
+        // So we expect onRender not to be called.
+        expect(callback).not.toHaveBeenCalled();
 
         Scheduler.unstable_advanceTime(20); // 30 -> 50
 
@@ -3714,15 +3692,11 @@ describe('Profiler', () => {
         wrappedCascadingFn();
         expect(Scheduler).toHaveYielded(['onPostCommit', 'render']);
 
-        // The new reconciler does not call onPostCommit again
-        // because the resolved suspended subtree doesn't contain any passive effects.
-        // If <AsyncComponentWithCascadingWork> or its decendents had a passive effect,
-        // onPostCommit would be called again.
-        if (gate(flags => flags.new)) {
-          expect(Scheduler).toFlushAndYield([]);
-        } else {
-          expect(Scheduler).toFlushAndYield(['onPostCommit']);
-        }
+        // Does not call onPostCommit again because the resolved suspended
+        // subtree doesn't contain any passive effects. If
+        // <AsyncComponentWithCascadingWork> or its decendents had a passive
+        // effect, onPostCommit would be called again.
+        expect(Scheduler).toFlushAndYield([]);
 
         expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         expect(
@@ -4209,7 +4183,6 @@ describe('Profiler', () => {
       });
 
       if (__DEV__) {
-        // @gate new
         it('double invoking does not disconnect wrapped async work', () => {
           ReactFeatureFlags.enableDoubleInvokingEffects = true;
 
