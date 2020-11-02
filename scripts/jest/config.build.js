@@ -4,6 +4,8 @@ const {readdirSync, statSync} = require('fs');
 const {join} = require('path');
 const baseConfig = require('./config.base');
 
+process.env.IS_BUILD = true;
+
 // Find all folders in packages/* with package.json
 const packagesRoot = join(__dirname, '..', '..', 'packages');
 const packages = readdirSync(packagesRoot).filter(dir => {

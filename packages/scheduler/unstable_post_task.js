@@ -7,4 +7,4 @@
 
 'use strict';
 
-export * from './src/SchedulerPostTask';
+export * from './src/forks/SchedulerPostTask';
