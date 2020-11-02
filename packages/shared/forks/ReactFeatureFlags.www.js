@@ -26,7 +26,6 @@ export const {
   deferRenderPhaseUpdateToNextBatch,
   decoupleUpdatePriorityFromScheduler,
   enableDebugTracing,
-  skipUnmountedBoundaries,
   enableDoubleInvokingEffects,
   enableUseRefAccessWarning,
 } = dynamicFeatureFlags;

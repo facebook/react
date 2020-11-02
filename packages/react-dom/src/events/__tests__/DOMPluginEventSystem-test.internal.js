@@ -1669,28 +1669,16 @@ describe('DOMPluginEventSystem', () => {
 
             function Test() {
               React.useEffect(() => {
-                const clearClick1 = setClick1(
-                  buttonRef.current,
-                  targetListener1,
-                );
-                const clearClick2 = setClick2(
-                  buttonRef.current,
-                  targetListener2,
-                );
-                const clearClick3 = setClick3(
-                  buttonRef.current,
-                  targetListener3,
-                );
-                const clearClick4 = setClick4(
-                  buttonRef.current,
-                  targetListener4,
-                );
+                setClick1(buttonRef.current, targetListener1);
+                setClick2(buttonRef.current, targetListener2);
+                setClick3(buttonRef.current, targetListener3);
+                setClick4(buttonRef.current, targetListener4);
 
                 return () => {
-                  clearClick1();
-                  clearClick2();
-                  clearClick3();
-                  clearClick4();
+                  setClick1();
+                  setClick2();
+                  setClick3();
+                  setClick4();
                 };
               });
 
@@ -1715,28 +1703,16 @@ describe('DOMPluginEventSystem', () => {
 
             function Test2() {
               React.useEffect(() => {
-                const clearClick1 = setClick1(
-                  buttonRef.current,
-                  targetListener1,
-                );
-                const clearClick2 = setClick2(
-                  buttonRef.current,
-                  targetListener2,
-                );
-                const clearClick3 = setClick3(
-                  buttonRef.current,
-                  targetListener3,
-                );
-                const clearClick4 = setClick4(
-                  buttonRef.current,
-                  targetListener4,
-                );
+                setClick1(buttonRef.current, targetListener1);
+                setClick2(buttonRef.current, targetListener2);
+                setClick3(buttonRef.current, targetListener3);
+                setClick4(buttonRef.current, targetListener4);
 
                 return () => {
-                  clearClick1();
-                  clearClick2();
-                  clearClick3();
-                  clearClick4();
+                  setClick1();
+                  setClick2();
+                  setClick3();
+                  setClick4();
                 };
               });
 

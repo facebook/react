@@ -2298,10 +2298,7 @@ function commitBeforeMutationEffects() {
   }
 }
 
-function commitMutationEffects(
-  root: FiberRoot,
-  renderPriorityLevel: ReactPriorityLevel,
-) {
+function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
@@ -2760,7 +2757,6 @@ export function captureCommitPhaseError(sourceFiber: Fiber, error: mixed) {
   }
 
   let fiber = sourceFiber.return;
-
   while (fiber !== null) {
     if (fiber.tag === HostRoot) {
       captureCommitPhaseErrorOnRoot(fiber, sourceFiber, error);
@@ -2786,24 +2782,6 @@ export function captureCommitPhaseError(sourceFiber: Fiber, error: mixed) {
           markRootUpdated(root, SyncLane, eventTime);
           ensureRootIsScheduled(root, eventTime);
           schedulePendingInteractions(root, SyncLane);
-        } else {
-          // This component has already been unmounted.
-          // We can't schedule any follow up work for the root because the fiber is already unmounted,
-          // but we can still call the log-only boundary so the error isn't swallowed.
-          //
-          // TODO This is only a temporary bandaid for the old reconciler fork.
-          // We can delete this special case once the new fork is merged.
-          if (
-            typeof instance.componentDidCatch === 'function' &&
-            !isAlreadyFailedLegacyErrorBoundary(instance)
-          ) {
-            try {
-              instance.componentDidCatch(error, errorInfo);
-            } catch (errorToIgnore) {
-              // TODO Ignore this error? Rethrow it?
-              // This is kind of an edge case.
-            }
-          }
         }
         return;
       }

@@ -27,7 +27,6 @@ import {
   decoupleUpdatePriorityFromScheduler,
   enableDebugTracing,
   enableSchedulingProfiler,
-  skipUnmountedBoundaries,
   enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -2201,11 +2200,7 @@ function captureCommitPhaseErrorOnRoot(
   }
 }
 
-export function captureCommitPhaseError(
-  sourceFiber: Fiber,
-  nearestMountedAncestor: Fiber | null,
-  error: mixed,
-) {
+export function captureCommitPhaseError(sourceFiber: Fiber, error: mixed) {
   if (sourceFiber.tag === HostRoot) {
     // Error was thrown at the root. There is no parent, so the root
     // itself should capture it.
@@ -2213,13 +2208,7 @@ export function captureCommitPhaseError(
     return;
   }
 
-  let fiber = null;
-  if (skipUnmountedBoundaries) {
-    fiber = nearestMountedAncestor;
-  } else {
-    fiber = sourceFiber.return;
-  }
-
+  let fiber = sourceFiber.return;
   while (fiber !== null) {
     if (fiber.tag === HostRoot) {
       captureCommitPhaseErrorOnRoot(fiber, sourceFiber, error);
