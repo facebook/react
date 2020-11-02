@@ -92,6 +92,16 @@ module.exports = [
     isServerSupported: true,
   },
   {
+    shortName: 'native-relay',
+    entryPoints: [
+      'react-transport-native-relay',
+      'react-transport-native-relay/server',
+    ],
+    paths: ['react-native-renderer', 'react-transport-native-relay'],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
     shortName: 'custom',
     entryPoints: [
       'react-reconciler',

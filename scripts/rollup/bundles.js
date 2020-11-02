@@ -298,7 +298,7 @@ const bundles = [
     ],
   },
 
-  /******* React DOM Flight Client Relay *******/
+  /******* React Transport DOM Client Relay *******/
   {
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
@@ -308,6 +308,32 @@ const bundles = [
       'react',
       'ReactFlightDOMRelayClientIntegration',
       'JSResourceReference',
+    ],
+  },
+
+  /******* React Transport Native Server Relay *******/
+  {
+    bundleTypes: [RN_FB_DEV, RN_FB_PROD],
+    moduleType: RENDERER,
+    entry: 'react-transport-native-relay/server',
+    global: 'ReactFlightNativeRelayServer',
+    externals: [
+      'react',
+      'ReactFlightNativeRelayServerIntegration',
+      'JSResourceReferenceImpl',
+    ],
+  },
+
+  /******* React Transport Native Client Relay *******/
+  {
+    bundleTypes: [RN_FB_DEV, RN_FB_PROD],
+    moduleType: RENDERER,
+    entry: 'react-transport-native-relay',
+    global: 'ReactFlightNativeRelayClient',
+    externals: [
+      'react',
+      'ReactFlightNativeRelayClientIntegration',
+      'JSResourceReferenceImpl',
     ],
   },
 
