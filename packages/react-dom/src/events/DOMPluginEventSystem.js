@@ -133,7 +133,7 @@ function extractEvents(
   // invalidates the heuristics of the event plugin. We
   // could alter all these plugins to work in such ways, but
   // that might cause other unknown side-effects that we
-  // can't forsee right now.
+  // can't foresee right now.
   if (shouldProcessPolyfillPlugins) {
     EnterLeaveEventPlugin.extractEvents(
       dispatchQueue,
