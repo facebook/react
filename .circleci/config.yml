@@ -20,17 +20,17 @@ aliases:
 
 
   - &restore_yarn_cache
+    restore_cache:
+      name: Restore yarn cache
+      key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
+
+  - &restore_node_modules
     get_workspace_info:
       filename: workspace_info.txt
     restore_cache:
-      name: Restore yarn cache
-      key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}-yarn
-
-  - &restore_node_modules
-    restore_cache:
       name: Restore node_modules cache
       keys:
-        - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-node-modules
+        - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}-node-modules
 
   - &TEST_PARALLELISM 20
 
@@ -84,12 +84,14 @@ jobs:
           paths:
             - ~/.cache/yarn
       - save_cache:
+          get_workspace_info:
+            filename: workspace_info.txt
           # Store node_modules for all jobs in this workflow so that they don't
           # need to each run a yarn install for each job. This will speed up
           # all jobs run on this branch with the same lockfile.
           name: Save node_modules cache
           # This cache key is per branch, a yarn install in setup is required.
-          key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-node-modules
+          key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}-node-modules
           paths:
             - node_modules
 
