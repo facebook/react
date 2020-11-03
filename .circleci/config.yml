@@ -242,6 +242,7 @@ jobs:
             - RELEASE_CHANNEL
             - facebook-www
             - facebook-react-native
+            - facebook-relay
             - node_modules
             - react-native
             - dist
@@ -268,6 +269,7 @@ jobs:
             - RELEASE_CHANNEL
             - facebook-www
             - facebook-react-native
+            - facebook-relay
             - node_modules
             - react-native
             - dist
