@@ -72,28 +72,28 @@ jobs:
           name: Nodejs Version
           command: node --version
       - *restore_yarn_cache
-      - run:
-          name: Install Packages
-          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
-      - save_cache:
-          # Store the yarn cache globally for all lock files with this same
-          # checksum. This will speed up the setup job for all PRs where the
-          # lockfile is the same.
-          name: Save yarn cache for future installs
-          key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
-          paths:
-            - ~/.cache/yarn
-      - save_cache:
-          get_workspace_info:
-            filename: workspace_info.txt
-          # Store node_modules for all jobs in this workflow so that they don't
-          # need to each run a yarn install for each job. This will speed up
-          # all jobs run on this branch with the same lockfile.
-          name: Save node_modules cache
-          # This cache key is per branch, a yarn install in setup is required.
-          key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}-node-modules
-          paths:
-            - node_modules
+      get_workspace_info:
+        filename: workspace_info.txt
+        - run:
+            name: Install Packages
+            command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
+        - save_cache:
+            # Store the yarn cache globally for all lock files with this same
+            # checksum. This will speed up the setup job for all PRs where the
+            # lockfile is the same.
+            name: Save yarn cache for future installs
+            key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
+            paths:
+              - ~/.cache/yarn
+        - save_cache:
+            # Store node_modules for all jobs in this workflow so that they don't
+            # need to each run a yarn install for each job. This will speed up
+            # all jobs run on this branch with the same lockfile.
+            name: Save node_modules cache
+            # This cache key is per branch, a yarn install in setup is required.
+            key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}-node-modules
+            paths:
+              - node_modules
 
   yarn_lint:
     docker: *docker
