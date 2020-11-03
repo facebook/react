@@ -29,7 +29,7 @@ aliases:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: node ./scripts/rollup/consolidateBundleSizes.js
       - run: ./scripts/circleci/pack_and_store_artifact.sh
@@ -61,7 +61,7 @@ jobs:
       - run:
           name: Install Packages
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - save_cache:
           # Store the yarn cache globally for all lock files with this same
           # checksum. This will speed up the setup job for all PRs where the
@@ -86,7 +86,7 @@ jobs:
 
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: node ./scripts/prettier/index
       - run: node ./scripts/tasks/eslint
@@ -100,7 +100,7 @@ jobs:
 
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: node ./scripts/tasks/flow-ci
 
@@ -111,7 +111,7 @@ jobs:
 
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test-stable --ci
 
@@ -121,7 +121,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test --ci
 
@@ -131,7 +131,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test-classic --ci
 
@@ -141,7 +141,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test-classic --variant --ci
 
@@ -151,7 +151,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test-classic --prod --ci
 
@@ -161,7 +161,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test-classic --prod --variant --ci
 
@@ -171,7 +171,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test-www --ci
 
@@ -181,7 +181,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test-www --variant --ci
 
@@ -191,7 +191,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test-www --prod --ci
 
@@ -201,7 +201,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test-www --prod --variant --ci
 
@@ -212,7 +212,7 @@ jobs:
 
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test-stable --persistent --ci
 
@@ -223,7 +223,7 @@ jobs:
 
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test-stable --prod --ci
 
@@ -233,7 +233,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test --prod --ci
 
@@ -243,7 +243,7 @@ jobs:
     parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
           environment:
@@ -271,7 +271,7 @@ jobs:
     parallelism: 20
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
           environment:
@@ -299,7 +299,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_yarn_cache
       - *restore_node_modules
       - run:
@@ -318,7 +318,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_yarn_cache
       - *restore_node_modules
       - run:
@@ -346,7 +346,7 @@ jobs:
       - checkout
       - attach_workspace:
           at: packages/react-devtools-scheduling-profiler
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
           name: Deploy
@@ -365,7 +365,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       # This runs in the process_artifacts job, too, but it's faster to run
       # this step in both jobs instead of running the jobs sequentially
@@ -381,7 +381,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       # This runs in the process_artifacts job, too, but it's faster to run
       # this step in both jobs instead of running the jobs sequentially
@@ -397,7 +397,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn lint-build
       - run: scripts/circleci/check_minified_errors.sh
@@ -408,7 +408,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
           environment:
@@ -423,7 +423,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test-stable --build --ci
 
@@ -434,7 +434,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test --build --ci
 
@@ -444,7 +444,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test --project=devtools --build --ci
 
@@ -454,7 +454,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
           name: Run DOM fixture tests
@@ -471,7 +471,7 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run:
           name: Run fuzz tests
@@ -486,7 +486,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test-stable --build --prod --ci
 
@@ -497,7 +497,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - run: yarn workspaces info > workspace_info.txt
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test --build --prod --ci
 
