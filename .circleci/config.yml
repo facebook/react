@@ -1,16 +1,5 @@
 version: 2
 
-commands:
-  get_workspace_info:
-    description: "Output yarn workspace information. File is used as checksum source for part of caching key."
-    parameters:
-      filename:
-        type: string
-    steps:
-      - run:
-          name: Get yarn workspace information.
-          command: yarn workspaces info > << parameters.filename >>
-
 aliases:
   - &docker
     - image: circleci/openjdk:8-jdk-node-browsers
@@ -18,15 +7,16 @@ aliases:
   - &environment
     TZ: /usr/share/zoneinfo/America/Los_Angeles
 
-
   - &restore_yarn_cache
     restore_cache:
       name: Restore yarn cache
       key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
 
   - &restore_node_modules
-    get_workspace_info:
-      filename: workspace_info.txt
+    steps:
+      - run:
+          name: Get yarn workspace information.
+          command: yarn workspaces info > << parameters.filename >>
     restore_cache:
       name: Restore node_modules cache
       keys:
