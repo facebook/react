@@ -13,6 +13,7 @@ aliases:
       key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
 
   - &restore_node_modules
+    run: yarn workspaces info > workspace_info.txt
     restore_cache:
       name: Restore node_modules cache
       keys:
