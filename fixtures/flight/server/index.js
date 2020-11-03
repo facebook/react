@@ -5,6 +5,7 @@ const babelRegister = require('@babel/register');
 babelRegister({
   ignore: [/\/(build|node_modules)\//],
   presets: ['react-app'],
+  plugins: ['@babel/transform-modules-commonjs'],
 });
 
 const express = require('express');
