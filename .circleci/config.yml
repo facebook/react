@@ -10,7 +10,7 @@ aliases:
   - &restore_yarn_cache
     restore_cache:
       name: Restore yarn cache
-      key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
+      key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-yarn
 
   - &restore_node_modules
     restore_cache:
