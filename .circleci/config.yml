@@ -13,10 +13,6 @@ aliases:
       key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
 
   - &restore_node_modules
-    steps:
-      - run:
-          name: Get yarn workspace information.
-          command: yarn workspaces info > << parameters.filename >>
     restore_cache:
       name: Restore node_modules cache
       keys:
@@ -60,9 +56,6 @@ jobs:
       - run:
           name: Nodejs Version
           command: node --version
-      - run:
-          name: Get yarn workspace information.
-          command: yarn workspaces info > workspace_info.txt
       - *restore_yarn_cache
       - run:
           name: Install Packages
