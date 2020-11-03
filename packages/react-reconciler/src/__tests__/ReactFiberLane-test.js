@@ -9,12 +9,12 @@
  */
 'use strict';
 
-import {
+const {
   ImmediatePriority,
   NormalPriority,
   NoPriority,
   UserBlockingPriority,
-} from 'react-reconciler/src/SchedulerWithReactIntegration.new';
+} = require('react-reconciler/src/SchedulerWithReactIntegration.new');
 
 let ReactFiberLane;
 
@@ -22,7 +22,7 @@ describe('ReactFiberLane', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    ReactFiberLane = require('react-reconciler/src/ReactFiberLane');
+    ReactFiberLane = require('../ReactFiberLane');
   });
 
   describe('lanePriorityToSchedulerPriority', () => {
