@@ -1,26 +1,17 @@
 'use strict';
 
-const ReactTransportDOMServer = require('react-transport-dom-webpack/server');
-const React = require('react');
-const Stream = require('stream');
-
-function Text({children}) {
-  return <span>{children}</span>;
-}
-
-function HTML() {
-  return (
-    <div>
-      <Text>Hello</Text>
-      <Text>world</Text>
-    </div>
-  );
-}
+import {pipeToNodeWritable} from 'react-transport-dom-webpack/server';
+import * as React from 'react';
+import App from './App.server';
 
 module.exports = function(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  let model = {
-    content: <HTML />,
-  };
-  ReactTransportDOMServer.pipeToNodeWritable(model, res);
+  pipeToNodeWritable(<App />, res, {
+    // TODO: Read from a map on the disk.
+    './src/Counter.client.js': {
+      id: './src/Counter.client.js',
+      chunks: ['2'],
+      name: 'default',
+    },
+  });
 };

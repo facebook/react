@@ -1,10 +1,22 @@
-import React from 'react';
+import React, {Suspense} from 'react';
 import ReactDOM from 'react-dom';
 import ReactTransportDOMClient from 'react-transport-dom-webpack';
-import App from './App';
 
 let data = ReactTransportDOMClient.createFromFetch(
   fetch('http://localhost:3001')
 );
 
-ReactDOM.render(<App data={data} />, document.getElementById('root'));
+function Content() {
+  return data.readRoot();
+}
+
+ReactDOM.render(
+  <Suspense fallback={<h1>Loading...</h1>}>
+    <Content />
+  </Suspense>,
+  document.getElementById('root')
+);
+
+// Create entry points for Client Components.
+// TODO: Webpack plugin should do this and write a map to disk.
+require.context('./', true, /\.client\.js$/, 'lazy');
