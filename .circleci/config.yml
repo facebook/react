@@ -61,6 +61,7 @@ jobs:
       - run:
           name: Install Packages
           command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
+      - run: yarn workspaces info > workspace_info.txt
       - save_cache:
           # Store the yarn cache globally for all lock files with this same
           # checksum. This will speed up the setup job for all PRs where the
