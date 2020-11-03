@@ -14,7 +14,7 @@ const {
   NormalPriority,
   NoPriority,
   UserBlockingPriority,
-} = require('react-reconciler/src/SchedulerWithReactIntegration.new');
+} = require('../SchedulerWithReactIntegration.new');
 
 let ReactFiberLane;
 
