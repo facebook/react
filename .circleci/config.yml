@@ -65,13 +65,14 @@ jobs:
   setup:
     docker: *docker
     environment: *environment
-    get_workspace_info:
-      filename: workspace_info.txt
     steps:
       - checkout
       - run:
           name: Nodejs Version
           command: node --version
+      - run:
+          name: Get yarn workspace information.
+          command: yarn workspaces info > workspace_info.txt
       - *restore_yarn_cache
       - run:
           name: Install Packages
