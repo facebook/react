@@ -20,7 +20,6 @@ export const enableProfilerCommitHooks = false;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
-export const enableBlocksAPI = false;
 export const enableLazyElements = false;
 export const disableJavaScriptURLs = false;
 export const disableInputAttributeSyncing = false;
@@ -50,6 +49,9 @@ export const decoupleUpdatePriorityFromScheduler = false;
 export const enableDiscreteEventFlushingChange = false;
 
 export const enableDoubleInvokingEffects = false;
+export const enableUseRefAccessWarning = false;
+
+export const enableRecursiveCommitTraversal = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

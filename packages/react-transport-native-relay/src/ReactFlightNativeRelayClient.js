@@ -7,4 +7,10 @@
  * @flow
  */
 
-export * from 'react-server/src/ReactFlightServerRuntime';
+export {
+  createResponse,
+  resolveModel,
+  resolveModule,
+  resolveError,
+  close,
+} from 'react-client/src/ReactFlightClient';

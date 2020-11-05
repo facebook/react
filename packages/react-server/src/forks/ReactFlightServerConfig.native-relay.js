@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from 'react-server/src/ReactFlightServerRuntime';
+export * from 'react-transport-native-relay/src/ReactFlightNativeRelayServerHostConfig';

@@ -17,7 +17,6 @@
     "server.js",
     "server.browser.js",
     "server.node.js",
-    "server-runtime.js",
     "cjs/",
     "umd/"
   ],
@@ -34,8 +33,8 @@
     "node": ">=0.10.0"
   },
   "peerDependencies": {
-    "react": "^17.0.0-alpha",
-    "react-dom": "^17.0.0-alpha",
+    "react": "^17.0.0",
+    "react-dom": "^17.0.0",
     "webpack": "^4.43.0"
   },
   "dependencies": {

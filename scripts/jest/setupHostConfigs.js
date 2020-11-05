@@ -34,6 +34,7 @@ jest.mock('react-server/flight', () => {
     jest.mock(shimServerStreamConfigPath, () => config);
     jest.mock(shimServerFormatConfigPath, () => config);
     jest.mock('react-server/src/ReactFlightServerBundlerConfigCustom', () => ({
+      isModuleReference: config.isModuleReference,
       resolveModuleMetaData: config.resolveModuleMetaData,
     }));
     jest.mock(shimFlightServerConfigPath, () =>
@@ -95,6 +96,3 @@ jest.mock('shared/ReactSharedInternals', () =>
 );
 
 jest.mock('scheduler', () => require.requireActual('scheduler/unstable_mock'));
-jest.mock('scheduler/src/SchedulerHostConfig', () =>
-  require.requireActual('scheduler/src/forks/SchedulerHostConfig.mock.js')
-);

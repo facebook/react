@@ -474,12 +474,12 @@ describe('ReactDOMServerHooks', () => {
   describe('useRef', () => {
     itRenders('basic render', async render => {
       function Counter(props) {
-        const count = useRef(0);
-        return <span>Count: {count.current}</span>;
+        const ref = useRef();
+        return <span ref={ref}>Hi</span>;
       }
 
       const domNode = await render(<Counter />);
-      expect(domNode.textContent).toEqual('Count: 0');
+      expect(domNode.textContent).toEqual('Hi');
     });
 
     itRenders(
@@ -487,18 +487,16 @@ describe('ReactDOMServerHooks', () => {
       async render => {
         function Counter(props) {
           const [count, setCount] = useState(0);
-          const ref = useRef(count);
+          const ref = useRef();
 
           if (count < 3) {
             const newCount = count + 1;
-
-            ref.current = newCount;
             setCount(newCount);
           }
 
           yieldValue(count);
 
-          return <span>Count: {ref.current}</span>;
+          return <span ref={ref}>Count: {count}</span>;
         }
 
         const domNode = await render(<Counter />);
@@ -513,7 +511,7 @@ describe('ReactDOMServerHooks', () => {
         let firstRef = null;
         function Counter(props) {
           const [count, setCount] = useState(0);
-          const ref = useRef(count);
+          const ref = useRef();
           if (firstRef === null) {
             firstRef = ref;
           } else if (firstRef !== ref) {
@@ -528,12 +526,12 @@ describe('ReactDOMServerHooks', () => {
 
           yieldValue(count);
 
-          return <span>Count: {ref.current}</span>;
+          return <span ref={ref}>Count: {count}</span>;
         }
 
         const domNode = await render(<Counter />);
         expect(clearYields()).toEqual([0, 1, 2, 3]);
-        expect(domNode.textContent).toEqual('Count: 0');
+        expect(domNode.textContent).toEqual('Count: 3');
       },
     );
   });

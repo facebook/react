@@ -14,8 +14,7 @@
 FLIGHT PROTOCOL GRAMMAR
 
 Response
-- JSONData RowSequence
-- JSONData
+- RowSequence
 
 RowSequence
 - Row RowSequence
@@ -23,6 +22,7 @@ RowSequence
 
 Row
 - "J" RowID JSONData
+- "M" RowID JSONModuleData
 - "H" RowID HTMLData
 - "B" RowID BlobData
 - "U" RowID URLData
@@ -95,12 +95,17 @@ export function processModelChunk(
   model: ReactModel,
 ): Chunk {
   const json = stringify(model, request.toJSON);
-  let row;
-  if (id === 0) {
-    row = json + '\n';
-  } else {
-    row = serializeRowHeader('J', id) + json + '\n';
-  }
+  const row = serializeRowHeader('J', id) + json + '\n';
+  return convertStringToBuffer(row);
+}
+
+export function processModuleChunk(
+  request: Request,
+  id: number,
+  moduleMetaData: ReactModel,
+): Chunk {
+  const json = stringify(moduleMetaData);
+  const row = serializeRowHeader('M', id) + json + '\n';
   return convertStringToBuffer(row);
 }
 

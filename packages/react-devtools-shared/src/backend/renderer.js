@@ -169,7 +169,6 @@ export function getInternalReactConstants(
   if (gte(version, '17.0.0-alpha')) {
     // TODO (Offscreen) Update the version number above to reflect the first Offscreen alpha/beta release.
     ReactTypeOfWork = {
-      Block: 22,
       ClassComponent: 1,
       ContextConsumer: 9,
       ContextProvider: 10,
@@ -188,7 +187,7 @@ export function getInternalReactConstants(
       LazyComponent: 16,
       MemoComponent: 14,
       Mode: 8,
-      OffscreenComponent: 23, // Experimental
+      OffscreenComponent: 22, // Experimental
       Profiler: 12,
       SimpleMemoComponent: 15,
       SuspenseComponent: 13,
@@ -197,7 +196,6 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
-      Block: 22,
       ClassComponent: 1,
       ContextConsumer: 9,
       ContextProvider: 10,
@@ -225,7 +223,6 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.4.3-alpha')) {
     ReactTypeOfWork = {
-      Block: -1, // Doesn't exist yet
       ClassComponent: 2,
       ContextConsumer: 11,
       ContextProvider: 12,
@@ -253,7 +250,6 @@ export function getInternalReactConstants(
     };
   } else {
     ReactTypeOfWork = {
-      Block: -1, // Doesn't exist yet
       ClassComponent: 2,
       ContextConsumer: 12,
       ContextProvider: 13,
@@ -2888,18 +2884,25 @@ export function attach(
           }
           break;
         case 'props':
-          if (instance === null) {
-            if (typeof overrideProps === 'function') {
-              overrideProps(fiber, path, value);
-            }
-          } else {
-            fiber.pendingProps = copyWithSet(instance.props, path, value);
-            instance.forceUpdate();
+          switch (fiber.tag) {
+            case ClassComponent:
+              fiber.pendingProps = copyWithSet(instance.props, path, value);
+              instance.forceUpdate();
+              break;
+            default:
+              if (typeof overrideProps === 'function') {
+                overrideProps(fiber, path, value);
+              }
+              break;
           }
           break;
         case 'state':
-          setInObject(instance.state, path, value);
-          instance.forceUpdate();
+          switch (fiber.tag) {
+            case ClassComponent:
+              setInObject(instance.state, path, value);
+              instance.forceUpdate();
+              break;
+          }
           break;
       }
     }

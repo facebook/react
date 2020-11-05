@@ -1,7 +1,7 @@
 {
   "name": "use-subscription",
   "description": "Reusable hooks",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",
@@ -19,7 +19,7 @@
     "object-assign": "^4.1.1"
   },
   "peerDependencies": {
-    "react": "^17.0.0-alpha"
+    "react": "^17.0.0"
   },
   "devDependencies": {
     "rxjs": "^5.5.6"

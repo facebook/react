@@ -188,7 +188,10 @@ module.exports = {
       },
     },
     {
-      files: ['packages/react-native-renderer/**/*.js'],
+      files: [
+        'packages/react-native-renderer/**/*.js',
+        'packages/react-transport-native-relay/**/*.js'
+      ],
       globals: {
         nativeFabricUIManager: true,
       },

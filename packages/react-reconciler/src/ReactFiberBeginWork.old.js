@@ -8,7 +8,6 @@
  */
 
 import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
-import type {BlockComponent} from 'react/src/ReactBlock';
 import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
@@ -49,7 +48,6 @@ import {
   IncompleteClassComponent,
   FundamentalComponent,
   ScopeComponent,
-  Block,
   OffscreenComponent,
   LegacyHiddenComponent,
 } from './ReactWorkTags';
@@ -76,7 +74,6 @@ import {
   enableFundamentalAPI,
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
-  enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -782,75 +779,6 @@ function updateFunctionComponent(
   return workInProgress.child;
 }
 
-function updateBlock<Props, Data>(
-  current: Fiber | null,
-  workInProgress: Fiber,
-  block: BlockComponent<Props, Data>,
-  nextProps: any,
-  renderLanes: Lanes,
-) {
-  // TODO: current can be non-null here even if the component
-  // hasn't yet mounted. This happens after the first render suspends.
-  // We'll need to figure out if this is fine or can cause issues.
-
-  const render = block._render;
-  const data = block._data;
-
-  // The rest is a fork of updateFunctionComponent
-  let nextChildren;
-  prepareToReadContext(workInProgress, renderLanes);
-  if (__DEV__) {
-    ReactCurrentOwner.current = workInProgress;
-    setIsRendering(true);
-    nextChildren = renderWithHooks(
-      current,
-      workInProgress,
-      render,
-      nextProps,
-      data,
-      renderLanes,
-    );
-    if (
-      debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictMode
-    ) {
-      disableLogs();
-      try {
-        nextChildren = renderWithHooks(
-          current,
-          workInProgress,
-          render,
-          nextProps,
-          data,
-          renderLanes,
-        );
-      } finally {
-        reenableLogs();
-      }
-    }
-    setIsRendering(false);
-  } else {
-    nextChildren = renderWithHooks(
-      current,
-      workInProgress,
-      render,
-      nextProps,
-      data,
-      renderLanes,
-    );
-  }
-
-  if (current !== null && !didReceiveUpdate) {
-    bailoutHooks(current, workInProgress, renderLanes);
-    return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
-  }
-
-  // React DevTools reads this flag.
-  workInProgress.flags |= PerformedWork;
-  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
-  return workInProgress.child;
-}
-
 function updateClassComponent(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -1263,20 +1191,6 @@ function mountLazyComponent(
         renderLanes,
       );
       return child;
-    }
-    case Block: {
-      if (enableBlocksAPI) {
-        // TODO: Resolve for Hot Reloading.
-        child = updateBlock(
-          null,
-          workInProgress,
-          Component,
-          props,
-          renderLanes,
-        );
-        return child;
-      }
-      break;
     }
   }
   let hint = '';
@@ -3467,14 +3381,6 @@ function beginWork(
     case ScopeComponent: {
       if (enableScopeAPI) {
         return updateScopeComponent(current, workInProgress, renderLanes);
-      }
-      break;
-    }
-    case Block: {
-      if (enableBlocksAPI) {
-        const block = workInProgress.type;
-        const props = workInProgress.pendingProps;
-        return updateBlock(current, workInProgress, block, props, renderLanes);
       }
       break;
     }

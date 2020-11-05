@@ -10,6 +10,7 @@
 export {
   createResponse,
   resolveModel,
+  resolveModule,
   resolveError,
   close,
 } from 'react-client/src/ReactFlightClient';

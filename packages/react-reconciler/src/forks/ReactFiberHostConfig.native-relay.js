@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from 'react-server/flight-server-runtime';
+export * from 'react-native-renderer/src/ReactFabricHostConfig';

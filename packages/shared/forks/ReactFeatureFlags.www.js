@@ -28,6 +28,7 @@ export const {
   enableDebugTracing,
   skipUnmountedBoundaries,
   enableDoubleInvokingEffects,
+  enableUseRefAccessWarning,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -53,7 +54,6 @@ export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
 
-export const enableBlocksAPI = true;
 export const enableLazyElements = true;
 
 export const disableJavaScriptURLs = true;
@@ -82,6 +82,8 @@ export const enableDiscreteEventFlushingChange = true;
 // don't have to add another test dimension. The build system will compile this
 // to the correct value.
 export const enableNewReconciler = __VARIANT__;
+
+export const enableRecursiveCommitTraversal = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
