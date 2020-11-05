@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {RowEncoding, JSONValue} from './ReactFlightDOMRelayProtocol';
+
 import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
 
 import JSResourceReference from 'JSResourceReference';
@@ -22,9 +24,7 @@ import type {
 import {resolveModelToJSON} from 'react-server/src/ReactFlightServer';
 
 import {
-  emitModel,
-  emitModule,
-  emitError,
+  emitRow,
   resolveModuleMetaData as resolveModuleMetaDataImpl,
 } from 'ReactFlightDOMRelayServerIntegration';
 
@@ -45,34 +45,7 @@ export function resolveModuleMetaData<T>(
   return resolveModuleMetaDataImpl(config, resource);
 }
 
-type JSONValue =
-  | string
-  | number
-  | boolean
-  | null
-  | {+[key: string]: JSONValue}
-  | Array<JSONValue>;
-
-export type Chunk =
-  | {
-      type: 'json',
-      id: number,
-      json: JSONValue,
-    }
-  | {
-      type: 'module',
-      id: number,
-      json: ModuleMetaData,
-    }
-  | {
-      type: 'error',
-      id: number,
-      json: {
-        message: string,
-        stack: string,
-        ...
-      },
-    };
+export type Chunk = RowEncoding;
 
 export function processErrorChunk(
   request: Request,
@@ -155,13 +128,7 @@ export function flushBuffered(destination: Destination) {}
 export function beginWriting(destination: Destination) {}
 
 export function writeChunk(destination: Destination, chunk: Chunk): boolean {
-  if (chunk.type === 'json') {
-    emitModel(destination, chunk.id, chunk.json);
-  } else if (chunk.type === 'module') {
-    emitModule(destination, chunk.id, chunk.json);
-  } else {
-    emitError(destination, chunk.id, chunk.json.message, chunk.json.stack);
-  }
+  emitRow(destination, chunk);
   return true;
 }
 
