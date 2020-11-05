@@ -91,6 +91,99 @@ describe('ReactFiberLane', () => {
         );
       });
     });
+
+    describe('given expired lanes', () => {
+      let root;
+      beforeEach(() => {
+        root = {
+          pendingLanes: ReactFiberLane.SyncLane,
+          expiredLanes: ReactFiberLane.SyncLane,
+          suspendedLanes: ReactFiberLane.NoLanes,
+          pingedLanes: ReactFiberLane.NoLanes,
+          entangledLanes: ReactFiberLane.NoLanes,
+        };
+      });
+
+      describe('no entangled lanes', () => {
+        describe('pending lanes with higher priority than expired lanes', () => {
+          beforeEach(() => {
+            root = {
+              ...root,
+              pendingLanes: ReactFiberLane.mergeLanes(
+                ReactFiberLane.SomeRetryLane,
+                ReactFiberLane.DefaultHydrationLane,
+              ),
+              expiredLanes: ReactFiberLane.DefaultLanes,
+            };
+          });
+
+          it('returns the lanes above or equal to the priority of the expired lanes', () => {
+            const result = ReactFiberLane.getNextLanes(
+              root,
+              ReactFiberLane.NoLanes,
+            );
+            expect(result).toEqual(ReactFiberLane.DefaultHydrationLane);
+          });
+
+          it('sets the highest lane priority to sync lane', () => {
+            ReactFiberLane.getNextLanes(root, ReactFiberLane.NoLanes);
+            expect(ReactFiberLane.returnNextLanesPriority()).toEqual(
+              ReactFiberLane.SyncLanePriority,
+            );
+          });
+        });
+
+        describe('pending lanes with lower priority than expired lanes', () => {
+          beforeEach(() => {
+            root = {
+              ...root,
+              pendingLanes: ReactFiberLane.SyncBatchedLane,
+              expiredLanes: ReactFiberLane.SyncLane,
+            };
+          });
+
+          it('returns no lanes', () => {
+            const result = ReactFiberLane.getNextLanes(
+              root,
+              ReactFiberLane.NoLanes,
+            );
+            expect(result).toEqual(ReactFiberLane.NoLanes);
+          });
+
+          it('sets the highest lane priority to sync lane', () => {
+            ReactFiberLane.getNextLanes(root, ReactFiberLane.NoLanes);
+            expect(ReactFiberLane.returnNextLanesPriority()).toEqual(
+              ReactFiberLane.SyncLanePriority,
+            );
+          });
+        });
+      });
+
+      it('sets the highest lane priority to sync lane', () => {
+        const result = ReactFiberLane.getNextLanes(
+          root,
+          ReactFiberLane.NoLanes,
+        );
+
+        expect(result).toEqual(ReactFiberLane.SyncLane);
+        expect(ReactFiberLane.returnNextLanesPriority()).toEqual(
+          ReactFiberLane.SyncLanePriority,
+        );
+      });
+
+      it('sets the highest lane priority to sync lane 2', () => {
+        root = {...root, expiredLanes: ReactFiberLane.SyncBatchedLane};
+        const result = ReactFiberLane.getNextLanes(
+          root,
+          ReactFiberLane.NoLanes,
+        );
+
+        expect(result).toEqual(ReactFiberLane.SyncLane);
+        expect(ReactFiberLane.returnNextLanesPriority()).toEqual(
+          ReactFiberLane.SyncLanePriority,
+        );
+      });
+    });
   });
 
   describe('includesNonIdleWork', () => {
