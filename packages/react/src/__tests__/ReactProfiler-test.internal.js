@@ -28,6 +28,7 @@ let resourcePromise;
 function loadModules({
   enableProfilerTimer = true,
   enableProfilerCommitHooks = true,
+  enableProfilerNestedUpdatePhase = true,
   enableSchedulerTracing = true,
   replayFailedUnitOfWorkWithInvokeGuardedCallback = false,
   useNoopRenderer = false,
@@ -36,6 +37,7 @@ function loadModules({
 
   ReactFeatureFlags.enableProfilerTimer = enableProfilerTimer;
   ReactFeatureFlags.enableProfilerCommitHooks = enableProfilerCommitHooks;
+  ReactFeatureFlags.enableProfilerNestedUpdatePhase = enableProfilerNestedUpdatePhase;
   ReactFeatureFlags.enableSchedulerTracing = enableSchedulerTracing;
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
 
@@ -1098,7 +1100,7 @@ describe('Profiler', () => {
                 );
 
                 // The update includes the ErrorBoundary and its fallback child
-                expect(updateCall[1]).toBe('update');
+                expect(updateCall[1]).toBe('nested-update');
                 // actual time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
                 expect(updateCall[2]).toBe(22);
                 // base time includes: 2 (ErrorBoundary) + 20 (AdvanceTime)
@@ -1456,7 +1458,7 @@ describe('Profiler', () => {
 
         expect(call).toHaveLength(enableSchedulerTracing ? 5 : 4);
         expect(call[0]).toBe('mount-test');
-        expect(call[1]).toBe('update');
+        expect(call[1]).toBe('nested-update');
         expect(call[2]).toBe(130); // durations
         expect(call[3]).toBe(1200001011); // commit start time (before mutations or effects)
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
@@ -1485,7 +1487,7 @@ describe('Profiler', () => {
 
         expect(call).toHaveLength(enableSchedulerTracing ? 5 : 4);
         expect(call[0]).toBe('update-test');
-        expect(call[1]).toBe('update');
+        expect(call[1]).toBe('nested-update');
         expect(call[2]).toBe(10000); // durations
         expect(call[3]).toBe(3300011272); // commit start time (before mutations or effects)
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
@@ -1716,7 +1718,7 @@ describe('Profiler', () => {
         // Cleanup render from error boundary
         expect(call).toHaveLength(enableSchedulerTracing ? 5 : 4);
         expect(call[0]).toBe('root');
-        expect(call[1]).toBe('update');
+        expect(call[1]).toBe('nested-update');
         expect(call[2]).toBe(100000000); // durations
         expect(call[3]).toBe(10110111); // commit start time (before mutations or effects)
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
@@ -1847,7 +1849,7 @@ describe('Profiler', () => {
         // Cleanup render from error boundary
         expect(call).toHaveLength(enableSchedulerTracing ? 5 : 4);
         expect(call[0]).toBe('root');
-        expect(call[1]).toBe('update');
+        expect(call[1]).toBe('nested-update');
         expect(call[2]).toBe(100001000); // durations
         expect(call[3]).toBe(11221221); // commit start time (before mutations or effects)
         expect(call[4]).toEqual(enableSchedulerTracing ? new Set() : undefined); // interaction events
@@ -1905,7 +1907,7 @@ describe('Profiler', () => {
 
           expect(call).toHaveLength(enableSchedulerTracing ? 5 : 4);
           expect(call[0]).toBe('root');
-          expect(call[1]).toBe('update');
+          expect(call[1]).toBe('nested-update');
           expect(call[4]).toMatchInteractions([interaction]);
         });
       }

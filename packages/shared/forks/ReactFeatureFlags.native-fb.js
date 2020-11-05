@@ -15,6 +15,7 @@ export const enableDebugTracing = false;
 export const enableSchedulingProfiler = false;
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = false;
+export const enableProfilerNestedUpdatePhase = false;
 export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;

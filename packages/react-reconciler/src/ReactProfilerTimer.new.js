@@ -10,8 +10,9 @@
 import type {Fiber} from './ReactInternalTypes';
 
 import {
-  enableProfilerTimer,
   enableProfilerCommitHooks,
+  enableProfilerNestedUpdatePhase,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {Profiler} from './ReactWorkTags';
 
@@ -23,10 +24,13 @@ const {unstable_now: now} = Scheduler;
 
 export type ProfilerTimer = {
   getCommitTime(): number,
+  isCurrentUpdateNested(): boolean,
+  markNestedUpdateScheduled(): void,
   recordCommitTime(): void,
   startProfilerTimer(fiber: Fiber): void,
   stopProfilerTimerIfRunning(fiber: Fiber): void,
   stopProfilerTimerIfRunningAndRecordDelta(fiber: Fiber): void,
+  syncNestedUpdateFlag(): void,
   ...
 };
 
@@ -34,6 +38,42 @@ let commitTime: number = 0;
 let layoutEffectStartTime: number = -1;
 let profilerStartTime: number = -1;
 let passiveEffectStartTime: number = -1;
+
+/**
+ * Tracks whether the current update was a nested/cascading update (scheduled from a layout effect).
+ *
+ * The overall sequence is:
+ *   1. render
+ *   2. commit (and call `onRender`, `onCommit`)
+ *   3. check for nested updates
+ *   4. flush passive effects (and call `onPostCommit`)
+ *
+ * Nested updates are identified in step 3 above,
+ * but step 4 still applies to the work that was just committed.
+ * We use two flags to track nested updates then:
+ * one tracks whether the upcoming update is a nested update,
+ * and the other tracks whether the current update was a nested update.
+ * The first value gets synced to the second at the start of the render phase.
+ */
+let currentUpdateIsNested: boolean = false;
+let nestedUpdateScheduled: boolean = false;
+
+function isCurrentUpdateNested(): boolean {
+  return currentUpdateIsNested;
+}
+
+function markNestedUpdateScheduled(): void {
+  if (enableProfilerNestedUpdatePhase) {
+    nestedUpdateScheduled = true;
+  }
+}
+
+function syncNestedUpdateFlag(): void {
+  if (enableProfilerNestedUpdatePhase) {
+    currentUpdateIsNested = nestedUpdateScheduled;
+    nestedUpdateScheduled = false;
+  }
+}
 
 function getCommitTime(): number {
   return commitTime;
@@ -161,6 +201,8 @@ function transferActualDuration(fiber: Fiber): void {
 
 export {
   getCommitTime,
+  isCurrentUpdateNested,
+  markNestedUpdateScheduled,
   recordCommitTime,
   recordLayoutEffectDuration,
   recordPassiveEffectDuration,
@@ -169,5 +211,6 @@ export {
   startProfilerTimer,
   stopProfilerTimerIfRunning,
   stopProfilerTimerIfRunningAndRecordDelta,
+  syncNestedUpdateFlag,
   transferActualDuration,
 };

@@ -36,6 +36,9 @@ export const enableProfilerTimer = __PROFILE__;
 // Record durations for commit and passive effects phases.
 export const enableProfilerCommitHooks = false;
 
+// Phase param passed to onRender callback differentiates between an "update" and a "cascading-update".
+export const enableProfilerNestedUpdatePhase = false;
+
 // Trace which interactions trigger each commit.
 export const enableSchedulerTracing = __PROFILE__;
 
