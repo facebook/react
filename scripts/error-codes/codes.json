@@ -364,7 +364,7 @@
   "373": "This Hook is not supported in Server Components.",
   "374": "Event handlers cannot be passed to client component props. Remove %s from these props if possible: %s\nIf you need interactivity, consider converting part of this to a client component.",
   "375": "Functions cannot be passed directly to client components because they're not serializable. Remove %s (%s) from this object, or avoid the entire object: %s",
-  "376": "Symbol values (%s) cannot be passed to client components. Remove %s from this object, or avoid the entire object: %s",
+  "376": "Only global symbols received from Symbol.for(...) can be passed to client components. The symbol Symbol.for(%s) cannot be found among global symbols. Remove %s from this object, or avoid the entire object: %s",
   "377": "BigInt (%s) is not yet supported in client component props. Remove %s from this object or use a plain number instead: %s",
   "378": "Type %s is not supported in client component props. Remove %s from this object, or avoid the entire object: %s",
   "379": "Refs cannot be used in server components, nor passed to client components."

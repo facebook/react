@@ -15,6 +15,7 @@ import {
   createResponse,
   resolveModel,
   resolveModule,
+  resolveSymbol,
   resolveError,
   close,
 } from 'react-client/src/ReactFlightClient';
@@ -26,6 +27,9 @@ export function resolveRow(response: Response, chunk: RowEncoding): void {
     resolveModel(response, chunk[1], chunk[2]);
   } else if (chunk[0] === 'M') {
     resolveModule(response, chunk[1], chunk[2]);
+  } else if (chunk[0] === 'S') {
+    // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
+    resolveSymbol(response, chunk[1], chunk[2]);
   } else {
     // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
     resolveError(response, chunk[1], chunk[2].message, chunk[2].stack);

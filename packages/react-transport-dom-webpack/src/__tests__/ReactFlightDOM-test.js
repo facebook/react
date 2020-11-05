@@ -282,10 +282,6 @@ describe('ReactFlightDOM', () => {
       );
     }
 
-    function Placeholder({children, fallback}) {
-      return <Suspense fallback={fallback}>{children}</Suspense>;
-    }
-
     // Model
     function Text({children}) {
       return children;
@@ -347,22 +343,21 @@ describe('ReactFlightDOM', () => {
     }
 
     const MyErrorBoundaryClient = moduleReference(MyErrorBoundary);
-    const PlaceholderClient = moduleReference(Placeholder);
 
     function ProfileContent() {
       return (
         <>
           <ProfileDetails avatar={<Text>:avatar:</Text>} />
-          <PlaceholderClient fallback={<p>(loading sidebar)</p>}>
+          <Suspense fallback={<p>(loading sidebar)</p>}>
             <ProfileSidebar friends={<Friends>:friends:</Friends>} />
-          </PlaceholderClient>
-          <PlaceholderClient fallback={<p>(loading posts)</p>}>
+          </Suspense>
+          <Suspense fallback={<p>(loading posts)</p>}>
             <ProfilePosts posts={<Posts>:posts:</Posts>} />
-          </PlaceholderClient>
+          </Suspense>
           <MyErrorBoundaryClient>
-            <PlaceholderClient fallback={<p>(loading games)</p>}>
+            <Suspense fallback={<p>(loading games)</p>}>
               <ProfileGames games={<Games>:games:</Games>} />
-            </PlaceholderClient>
+            </Suspense>
           </MyErrorBoundaryClient>
         </>
       );

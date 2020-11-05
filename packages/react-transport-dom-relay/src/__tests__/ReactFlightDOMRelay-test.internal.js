@@ -153,11 +153,14 @@ describe('ReactFlightDOMRelay', () => {
       foo: {
         bar: (
           <div>
-            {'Fragment child'}
-            {'Profiler child'}
-            {'StrictMode child'}
-            {'Suspense child'}
-            {['SuspenseList row 1', 'SuspenseList row 2']}
+            Fragment child
+            <Profiler>Profiler child</Profiler>
+            <StrictMode>StrictMode child</StrictMode>
+            <Suspense fallback="Loading...">Suspense child</Suspense>
+            <SuspenseList fallback="Loading...">
+              {'SuspenseList row 1'}
+              {'SuspenseList row 2'}
+            </SuspenseList>
             <div>Hello world</div>
           </div>
         ),

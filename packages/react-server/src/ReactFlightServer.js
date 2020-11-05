@@ -25,6 +25,7 @@ import {
   close,
   processModelChunk,
   processModuleChunk,
+  processSymbolChunk,
   processErrorChunk,
   resolveModuleMetaData,
   isModuleReference,
@@ -32,18 +33,10 @@ import {
 
 import {
   REACT_ELEMENT_TYPE,
-  REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_LAZY_TYPE,
-  REACT_LEGACY_HIDDEN_TYPE,
   REACT_MEMO_TYPE,
-  REACT_OFFSCREEN_TYPE,
-  REACT_PROFILER_TYPE,
-  REACT_SCOPE_TYPE,
-  REACT_STRICT_MODE_TYPE,
-  REACT_SUSPENSE_TYPE,
-  REACT_SUSPENSE_LIST_TYPE,
 } from 'shared/ReactSymbols';
 
 import * as React from 'react';
@@ -136,20 +129,17 @@ function attemptResolveElement(element: React$Element<any>): ReactModel {
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
     return [REACT_ELEMENT_TYPE, type, element.key, element.props];
-  } else if (
-    type === REACT_FRAGMENT_TYPE ||
-    type === REACT_STRICT_MODE_TYPE ||
-    type === REACT_PROFILER_TYPE ||
-    type === REACT_SCOPE_TYPE ||
-    type === REACT_DEBUG_TRACING_MODE_TYPE ||
-    type === REACT_LEGACY_HIDDEN_TYPE ||
-    type === REACT_OFFSCREEN_TYPE ||
-    // TODO: These are temporary shims
-    // and we'll want a different behavior.
-    type === REACT_SUSPENSE_TYPE ||
-    type === REACT_SUSPENSE_LIST_TYPE
-  ) {
-    return element.props.children;
+  } else if (typeof type === 'symbol') {
+    if (type === REACT_FRAGMENT_TYPE) {
+      // For key-less fragments, we add a small optimization to avoid serializing
+      // it as a wrapper.
+      // TODO: If a key is specified, we should propagate its key to any children.
+      // Same as if a server component has a key.
+      return element.props.children;
+    }
+    // This might be a built-in React component. We'll let the client decide.
+    // Any built-in works as long as its props are serializable.
+    return [REACT_ELEMENT_TYPE, type, element.key, element.props];
   } else if (type != null && typeof type === 'object') {
     if (isModuleReference(type)) {
       // This is a reference to a client component.
@@ -526,14 +516,20 @@ export function resolveModelToJSON(
   }
 
   if (typeof value === 'symbol') {
+    const name = value.description;
     invariant(
-      false,
-      'Symbol values (%s) cannot be passed to client components. ' +
+      Symbol.for(name) === value,
+      'Only global symbols received from Symbol.for(...) can be passed to client components. ' +
+        'The symbol Symbol.for(%s) cannot be found among global symbols. ' +
         'Remove %s from this object, or avoid the entire object: %s',
       value.description,
       describeKeyForErrorMessage(key),
       describeObjectForErrorMessage(parent),
     );
+    request.pendingChunks++;
+    const symbolId = request.nextChunkId++;
+    emitSymbolChunk(request, symbolId, name);
+    return serializeByValueID(symbolId);
   }
 
   // $FlowFixMe: bigint isn't added to Flow yet.
@@ -585,6 +581,11 @@ function emitModuleChunk(
   moduleMetaData: ModuleMetaData,
 ): void {
   const processedChunk = processModuleChunk(request, id, moduleMetaData);
+  request.completedModuleChunks.push(processedChunk);
+}
+
+function emitSymbolChunk(request: Request, id: number, name: string): void {
+  const processedChunk = processSymbolChunk(request, id, name);
   request.completedModuleChunks.push(processedChunk);
 }
 
