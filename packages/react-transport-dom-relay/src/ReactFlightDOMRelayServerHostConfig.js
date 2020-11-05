@@ -53,14 +53,14 @@ export function processErrorChunk(
   message: string,
   stack: string,
 ): Chunk {
-  return {
-    type: 'error',
-    id: id,
-    json: {
+  return [
+    'E',
+    id,
+    {
       message,
       stack,
     },
-  };
+  ];
 }
 
 function convertModelToJSON(
@@ -99,11 +99,7 @@ export function processModelChunk(
   model: ReactModel,
 ): Chunk {
   const json = convertModelToJSON(request, {}, '', model);
-  return {
-    type: 'json',
-    id: id,
-    json: json,
-  };
+  return ['J', id, json];
 }
 
 export function processModuleChunk(
@@ -112,11 +108,7 @@ export function processModuleChunk(
   moduleMetaData: ModuleMetaData,
 ): Chunk {
   // The moduleMetaData is already a JSON serializable value.
-  return {
-    type: 'module',
-    id: id,
-    json: moduleMetaData,
-  };
+  return ['M', id, moduleMetaData];
 }
 
 export function scheduleWork(callback: () => void) {

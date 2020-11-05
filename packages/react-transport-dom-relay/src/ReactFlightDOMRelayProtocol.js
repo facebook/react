@@ -18,22 +18,14 @@ export type JSONValue =
   | Array<JSONValue>;
 
 export type RowEncoding =
-  | {
-      type: 'json',
-      id: number,
-      json: JSONValue,
-    }
-  | {
-      type: 'module',
-      id: number,
-      json: ModuleMetaData,
-    }
-  | {
-      type: 'error',
-      id: number,
-      json: {
+  | ['J', number, JSONValue]
+  | ['M', number, ModuleMetaData]
+  | [
+      'E',
+      number,
+      {
         message: string,
         stack: string,
         ...
       },
-    };
+    ];

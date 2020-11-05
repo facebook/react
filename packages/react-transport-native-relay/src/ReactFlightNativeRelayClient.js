@@ -22,11 +22,12 @@ import {
 export {createResponse, close};
 
 export function resolveRow(response: Response, chunk: RowEncoding): void {
-  if (chunk.type === 'json') {
-    resolveModel(response, chunk.id, chunk.json);
-  } else if (chunk.type === 'module') {
-    resolveModule(response, chunk.id, chunk.json);
+  if (chunk[0] === 'J') {
+    resolveModel(response, chunk[1], chunk[2]);
+  } else if (chunk[0] === 'M') {
+    resolveModule(response, chunk[1], chunk[2]);
   } else {
-    resolveError(response, chunk.id, chunk.json.message, chunk.json.stack);
+    // $FlowFixMe: Flow doesn't support disjoint unions on tuples.
+    resolveError(response, chunk[1], chunk[2].message, chunk[2].stack);
   }
 }
