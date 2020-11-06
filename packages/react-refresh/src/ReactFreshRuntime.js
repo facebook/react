@@ -20,6 +20,7 @@ import type {
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import {REACT_MEMO_TYPE, REACT_FORWARD_REF_TYPE} from 'shared/ReactSymbols';
+import warning from 'fbjs/lib/warning';
 
 type Signature = {|
   ownKey: string,
@@ -467,8 +468,9 @@ export function injectIntoGlobalHook(globalObject: any): void {
     // Checks if DevTools hook is disabled
     if (hook.isDisabled) {
       if (__DEV__) {
-        console.error('React DevTools hook is disabled. Try to enable the hook ' +
-        'or update your React DevTools. ',);
+        warning('React DevTools hook is disabled. Try to enable the hook ' +
+          'or update your React DevTools. ',
+);
       }
     }
 
