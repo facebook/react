@@ -464,6 +464,15 @@ export function injectIntoGlobalHook(globalObject: any): void {
         onCommitFiberUnmount() {},
       };
     }
+    // Checks if DevTools hook is disabled
+    if (hook.isDisabled) {
+      if (__DEV__) {
+        console.warn(
+          'React DevTools hook is disabled. Try to enable the hook ' +
+          'or update your React DevTools. ',
+        );
+      }
+    }
 
     // Here, we just want to get a reference to scheduleRefresh.
     const oldInject = hook.inject;
