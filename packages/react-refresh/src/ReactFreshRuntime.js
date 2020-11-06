@@ -467,7 +467,8 @@ export function injectIntoGlobalHook(globalObject: any): void {
     // Checks if DevTools hook is disabled
     if (hook.isDisabled) {
       if (__DEV__) {
-        console.warn(
+        warning(
+          false,
           'React DevTools hook is disabled. Try to enable the hook ' +
           'or update your React DevTools. ',
         );
