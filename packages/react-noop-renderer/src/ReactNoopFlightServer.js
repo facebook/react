@@ -45,6 +45,9 @@ const ReactNoopFlightServer = ReactFlightServer({
   isModuleReference(reference: Object): boolean {
     return reference.$$typeof === Symbol.for('react.module.reference');
   },
+  getModuleKey(reference: Object): Object {
+    return reference;
+  },
   resolveModuleMetaData(
     config: void,
     reference: {$$typeof: Symbol, value: any},

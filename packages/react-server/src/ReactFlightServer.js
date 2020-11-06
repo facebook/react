@@ -14,6 +14,7 @@ import type {
   BundlerConfig,
   ModuleMetaData,
   ModuleReference,
+  ModuleKey,
 } from './ReactFlightServerConfig';
 
 import {
@@ -28,6 +29,7 @@ import {
   processSymbolChunk,
   processErrorChunk,
   resolveModuleMetaData,
+  getModuleKey,
   isModuleReference,
 } from './ReactFlightServerConfig';
 
@@ -79,6 +81,7 @@ export type Request = {
   completedJSONChunks: Array<Chunk>,
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<Symbol, number>,
+  writtenModules: Map<ModuleKey, number>,
   flowing: boolean,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
 };
@@ -101,6 +104,7 @@ export function createRequest(
     completedJSONChunks: [],
     completedErrorChunks: [],
     writtenSymbols: new Map(),
+    writtenModules: new Map(),
     flowing: false,
     toJSON: function(key: string, value: ReactModel): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
@@ -425,6 +429,11 @@ export function resolveModelToJSON(
   if (typeof value === 'object') {
     if (isModuleReference(value)) {
       const moduleReference: ModuleReference<any> = (value: any);
+      const moduleKey: ModuleKey = getModuleKey(moduleReference);
+      const existingId = request.writtenModules.get(moduleKey);
+      if (existingId !== undefined) {
+        return serializeByValueID(existingId);
+      }
       try {
         const moduleMetaData: ModuleMetaData = resolveModuleMetaData(
           request.bundlerConfig,
