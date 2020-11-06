@@ -78,6 +78,7 @@ export type Request = {
   completedModuleChunks: Array<Chunk>,
   completedJSONChunks: Array<Chunk>,
   completedErrorChunks: Array<Chunk>,
+  writtenSymbols: Map<Symbol, number>,
   flowing: boolean,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
 };
@@ -99,6 +100,7 @@ export function createRequest(
     completedModuleChunks: [],
     completedJSONChunks: [],
     completedErrorChunks: [],
+    writtenSymbols: new Map(),
     flowing: false,
     toJSON: function(key: string, value: ReactModel): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
@@ -522,6 +524,11 @@ export function resolveModelToJSON(
   }
 
   if (typeof value === 'symbol') {
+    const writtenSymbols = request.writtenSymbols;
+    const existingId = writtenSymbols.get(value);
+    if (existingId !== undefined) {
+      return serializeByValueID(existingId);
+    }
     const name = value.description;
     invariant(
       Symbol.for(name) === value,
@@ -535,6 +542,7 @@ export function resolveModelToJSON(
     request.pendingChunks++;
     const symbolId = request.nextChunkId++;
     emitSymbolChunk(request, symbolId, name);
+    writtenSymbols.set(value, symbolId);
     return serializeByValueID(symbolId);
   }
 
