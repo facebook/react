@@ -535,6 +535,17 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent(props) {
+          const navigation = useNavigation();
+          useEffect(() => {
+            navigation.goBack();
+          }, []);
+        }
+      `,
+      options: [{ignoredDependencies: '^(navigation|otherVariable)$'}],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
           useWithoutEffectSuffix(() => {
             console.log(props.foo);
           }, []);
@@ -3512,6 +3523,37 @@ const tests = {
                   React.useCustomEffect(() => {
                     console.log(props.foo);
                   }, []);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          const navigation = useNavigation();
+          useEffect(() => {
+            navigation.goBack();
+          }, []);
+        }
+      `,
+      options: [{ignoredDependencies: '$(nav)^'}],
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'navigation'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [navigation]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  const navigation = useNavigation();
+                  useEffect(() => {
+                    navigation.goBack();
+                  }, [navigation]);
                 }
               `,
             },
