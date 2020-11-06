@@ -29,6 +29,9 @@ export default {
           additionalHooks: {
             type: 'string',
           },
+          ignoredDependencies: {
+            type: 'string',
+          },
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
           },
@@ -45,6 +48,13 @@ export default {
         ? new RegExp(context.options[0].additionalHooks)
         : undefined;
 
+    const ignoredDependencies =
+      context.options &&
+      context.options[0] &&
+      context.options[0].ignoredDependencies
+        ? new RegExp(context.options[0].ignoredDependencies)
+        : undefined;
+
     const enableDangerousAutofixThisMayCauseInfiniteLoops =
       (context.options &&
         context.options[0] &&
@@ -53,6 +63,7 @@ export default {
 
     const options = {
       additionalHooks,
+      ignoredDependencies,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
     };
 
@@ -157,6 +168,9 @@ export default {
       //       ^^^ true for this reference
       // False for everything else.
       function isStableKnownHookValue(resolved) {
+        if (options.ignoredDependencies && options.ignoredDependencies.test(resolved.name)) {
+          return true;
+        }
         if (!Array.isArray(resolved.defs)) {
           return false;
         }
