@@ -39,7 +39,6 @@ import {
   REACT_MEMO_TYPE,
 } from 'shared/ReactSymbols';
 
-import * as React from 'react';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
 
@@ -111,10 +110,13 @@ export function createRequest(
   return request;
 }
 
-function attemptResolveElement(element: React$Element<any>): ReactModel {
-  const type = element.type;
-  const props = element.props;
-  if (element.ref !== null && element.ref !== undefined) {
+function attemptResolveElement(
+  type: any,
+  key: null | React$Key,
+  ref: mixed,
+  props: any,
+): ReactModel {
+  if (ref !== null && ref !== undefined) {
     // When the ref moves to the regular props object this will implicitly
     // throw for functions. We could probably relax it to a DEV warning for other
     // cases.
@@ -128,22 +130,22 @@ function attemptResolveElement(element: React$Element<any>): ReactModel {
     return type(props);
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
-    return [REACT_ELEMENT_TYPE, type, element.key, element.props];
+    return [REACT_ELEMENT_TYPE, type, key, props];
   } else if (typeof type === 'symbol') {
     if (type === REACT_FRAGMENT_TYPE) {
       // For key-less fragments, we add a small optimization to avoid serializing
       // it as a wrapper.
       // TODO: If a key is specified, we should propagate its key to any children.
       // Same as if a server component has a key.
-      return element.props.children;
+      return props.children;
     }
     // This might be a built-in React component. We'll let the client decide.
     // Any built-in works as long as its props are serializable.
-    return [REACT_ELEMENT_TYPE, type, element.key, element.props];
+    return [REACT_ELEMENT_TYPE, type, key, props];
   } else if (type != null && typeof type === 'object') {
     if (isModuleReference(type)) {
       // This is a reference to a client component.
-      return [REACT_ELEMENT_TYPE, type, element.key, element.props];
+      return [REACT_ELEMENT_TYPE, type, key, props];
     }
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE: {
@@ -151,8 +153,7 @@ function attemptResolveElement(element: React$Element<any>): ReactModel {
         return render(props, undefined);
       }
       case REACT_MEMO_TYPE: {
-        const nextChildren = React.createElement(type.type, element.props);
-        return attemptResolveElement(nextChildren);
+        return attemptResolveElement(type.type, key, ref, props);
       }
     }
   }
@@ -389,7 +390,12 @@ export function resolveModelToJSON(
     const element: React$Element<any> = (value: any);
     try {
       // Attempt to render the server component.
-      value = attemptResolveElement(element);
+      value = attemptResolveElement(
+        element.type,
+        element.key,
+        element.ref,
+        element.props,
+      );
     } catch (x) {
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Something suspended, we'll need to create a new segment and resolve it later.
@@ -605,7 +611,12 @@ function retrySegment(request: Request, segment: Segment): void {
       // Doing this here lets us reuse this same segment if the next component
       // also suspends.
       segment.query = () => value;
-      value = attemptResolveElement(element);
+      value = attemptResolveElement(
+        element.type,
+        element.key,
+        element.ref,
+        element.props,
+      );
     }
     const processedChunk = processModelChunk(request, segment.id, value);
     request.completedJSONChunks.push(processedChunk);
