@@ -551,7 +551,7 @@ export function dispatchEventForPluginEventSystem(
     if (
       enableLegacyFBSupport &&
       // If our event flags match the required flags for entering
-      // FB legacy mode and we are prcocessing the "click" event,
+      // FB legacy mode and we are processing the "click" event,
       // then we can defer the event to the "document", to allow
       // for legacy FB support, where the expected behavior was to
       // match React < 16 behavior of delegated clicks to the doc.
