@@ -207,6 +207,17 @@ if (__DEV__) {
       return true;
     }
 
+    if (
+      typeof value === 'string' &&
+      shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)
+    ) {
+      if (name === 'size') {
+        console.error(`The size attribute value of "${value}" has the wrong type. The size attribute is a well-known HTML attribute. You should be using data-size="${value}" instead.`);
+      }
+      warnedProperties[name] = true;
+      return true;
+    }
+
     // Warn when a known attribute is a bad type
     if (shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)) {
       warnedProperties[name] = true;

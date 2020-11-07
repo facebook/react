@@ -136,6 +136,12 @@ export function shouldRemoveAttributeWithWarning(
         return prefix !== 'data-' && prefix !== 'aria-';
       }
     }
+    case 'string': {
+      if (name === 'size') {
+        return true;
+      }
+      return false;
+    }
     default:
       return false;
   }
