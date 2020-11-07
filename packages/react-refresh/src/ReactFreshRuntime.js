@@ -447,6 +447,7 @@ export function injectIntoGlobalHook(globalObject: any): void {
       globalObject.__REACT_DEVTOOLS_GLOBAL_HOOK__ = hook = {
         renderers: new Map(),
         supportsFiber: true,
+        isDisabled: false,
         inject(injected) {
           return nextID++;
         },
@@ -465,107 +466,117 @@ export function injectIntoGlobalHook(globalObject: any): void {
       };
     }
 
-    // Here, we just want to get a reference to scheduleRefresh.
-    const oldInject = hook.inject;
-    hook.inject = function(injected) {
-      const id = oldInject.apply(this, arguments);
-      if (
-        typeof injected.scheduleRefresh === 'function' &&
-        typeof injected.setRefreshHandler === 'function'
-      ) {
-        // This version supports React Refresh.
-        helpersByRendererID.set(id, ((injected: any): RendererHelpers));
-      }
-      return id;
-    };
-
-    // Do the same for any already injected roots.
-    // This is useful if ReactDOM has already been initialized.
-    // https://github.com/facebook/react/issues/17626
-    hook.renderers.forEach((injected, id) => {
-      if (
-        typeof injected.scheduleRefresh === 'function' &&
-        typeof injected.setRefreshHandler === 'function'
-      ) {
-        // This version supports React Refresh.
-        helpersByRendererID.set(id, ((injected: any): RendererHelpers));
-      }
-    });
-
-    // We also want to track currently mounted roots.
-    const oldOnCommitFiberRoot = hook.onCommitFiberRoot;
-    const oldOnScheduleFiberRoot = hook.onScheduleFiberRoot || (() => {});
-    hook.onScheduleFiberRoot = function(
-      id: number,
-      root: FiberRoot,
-      children: ReactNodeList,
-    ) {
-      if (!isPerformingRefresh) {
-        // If it was intentionally scheduled, don't attempt to restore.
-        // This includes intentionally scheduled unmounts.
-        failedRoots.delete(root);
-        if (rootElements !== null) {
-          rootElements.set(root, children);
+    if (hook.isDisabled) {
+      // This isn't a real property on the hook, but it can be set to opt out
+      // of DevTools integration and associated warnings and logs.
+      // https://github.com/facebook/react/issues/20117
+      console.error(
+        'The installed version of React DevTools is disabled. ' +
+          'https://reactjs.org/link/react-devtools',
+      );
+    } else {
+      // Here, we just want to get a reference to scheduleRefresh.
+      const oldInject = hook.inject;
+      hook.inject = function(injected) {
+        const id = oldInject.apply(this, arguments);
+        if (
+          typeof injected.scheduleRefresh === 'function' &&
+          typeof injected.setRefreshHandler === 'function'
+        ) {
+          // This version supports React Refresh.
+          helpersByRendererID.set(id, ((injected: any): RendererHelpers));
         }
-      }
-      return oldOnScheduleFiberRoot.apply(this, arguments);
-    };
-    hook.onCommitFiberRoot = function(
-      id: number,
-      root: FiberRoot,
-      maybePriorityLevel: mixed,
-      didError: boolean,
-    ) {
-      const helpers = helpersByRendererID.get(id);
-      if (helpers !== undefined) {
-        helpersByRoot.set(root, helpers);
+        return id;
+      };
 
-        const current = root.current;
-        const alternate = current.alternate;
+      // Do the same for any already injected roots.
+      // This is useful if ReactDOM has already been initialized.
+      // https://github.com/facebook/react/issues/17626
+      hook.renderers.forEach((injected, id) => {
+        if (
+          typeof injected.scheduleRefresh === 'function' &&
+          typeof injected.setRefreshHandler === 'function'
+        ) {
+          // This version supports React Refresh.
+          helpersByRendererID.set(id, ((injected: any): RendererHelpers));
+        }
+      });
 
-        // We need to determine whether this root has just (un)mounted.
-        // This logic is copy-pasted from similar logic in the DevTools backend.
-        // If this breaks with some refactoring, you'll want to update DevTools too.
+      // We also want to track currently mounted roots.
+      const oldOnCommitFiberRoot = hook.onCommitFiberRoot;
+      const oldOnScheduleFiberRoot = hook.onScheduleFiberRoot || (() => {});
+      hook.onScheduleFiberRoot = function(
+        id: number,
+        root: FiberRoot,
+        children: ReactNodeList,
+      ) {
+        if (!isPerformingRefresh) {
+          // If it was intentionally scheduled, don't attempt to restore.
+          // This includes intentionally scheduled unmounts.
+          failedRoots.delete(root);
+          if (rootElements !== null) {
+            rootElements.set(root, children);
+          }
+        }
+        return oldOnScheduleFiberRoot.apply(this, arguments);
+      };
+      hook.onCommitFiberRoot = function(
+        id: number,
+        root: FiberRoot,
+        maybePriorityLevel: mixed,
+        didError: boolean,
+      ) {
+        const helpers = helpersByRendererID.get(id);
+        if (helpers !== undefined) {
+          helpersByRoot.set(root, helpers);
 
-        if (alternate !== null) {
-          const wasMounted =
-            alternate.memoizedState != null &&
-            alternate.memoizedState.element != null;
-          const isMounted =
-            current.memoizedState != null &&
-            current.memoizedState.element != null;
+          const current = root.current;
+          const alternate = current.alternate;
 
-          if (!wasMounted && isMounted) {
+          // We need to determine whether this root has just (un)mounted.
+          // This logic is copy-pasted from similar logic in the DevTools backend.
+          // If this breaks with some refactoring, you'll want to update DevTools too.
+
+          if (alternate !== null) {
+            const wasMounted =
+              alternate.memoizedState != null &&
+              alternate.memoizedState.element != null;
+            const isMounted =
+              current.memoizedState != null &&
+              current.memoizedState.element != null;
+
+            if (!wasMounted && isMounted) {
+              // Mount a new root.
+              mountedRoots.add(root);
+              failedRoots.delete(root);
+            } else if (wasMounted && isMounted) {
+              // Update an existing root.
+              // This doesn't affect our mounted root Set.
+            } else if (wasMounted && !isMounted) {
+              // Unmount an existing root.
+              mountedRoots.delete(root);
+              if (didError) {
+                // We'll remount it on future edits.
+                failedRoots.add(root);
+              } else {
+                helpersByRoot.delete(root);
+              }
+            } else if (!wasMounted && !isMounted) {
+              if (didError) {
+                // We'll remount it on future edits.
+                failedRoots.add(root);
+              }
+            }
+          } else {
             // Mount a new root.
             mountedRoots.add(root);
-            failedRoots.delete(root);
-          } else if (wasMounted && isMounted) {
-            // Update an existing root.
-            // This doesn't affect our mounted root Set.
-          } else if (wasMounted && !isMounted) {
-            // Unmount an existing root.
-            mountedRoots.delete(root);
-            if (didError) {
-              // We'll remount it on future edits.
-              failedRoots.add(root);
-            } else {
-              helpersByRoot.delete(root);
-            }
-          } else if (!wasMounted && !isMounted) {
-            if (didError) {
-              // We'll remount it on future edits.
-              failedRoots.add(root);
-            }
           }
-        } else {
-          // Mount a new root.
-          mountedRoots.add(root);
         }
-      }
 
-      // Always call the decorated DevTools hook.
-      return oldOnCommitFiberRoot.apply(this, arguments);
-    };
+        // Always call the decorated DevTools hook.
+        return oldOnCommitFiberRoot.apply(this, arguments);
+      };
+    }
   } else {
     throw new Error(
       'Unexpected call to React Refresh in a production environment.',

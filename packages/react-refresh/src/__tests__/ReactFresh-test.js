@@ -447,6 +447,21 @@ describe('ReactFresh', () => {
     }
   });
 
+  it('throws an error when react dev tools global hook is disabled to avoid crashing', () => {
+    if (__DEV__) {
+      global.__REACT_DEVTOOLS_GLOBAL_HOOK__.isDisabled = true;
+      ReactFreshRuntime = require('react-refresh/runtime');
+
+      expect(() => {
+        ReactFreshRuntime.injectIntoGlobalHook(global);
+      }).toErrorDev(
+        'The installed version of React DevTools is disabled. ' +
+          'https://reactjs.org/link/react-devtools',
+        {withoutStack: true},
+      );
+    }
+  });
+
   it('can update forwardRef render function in isolation', () => {
     if (__DEV__) {
       render(() => {
