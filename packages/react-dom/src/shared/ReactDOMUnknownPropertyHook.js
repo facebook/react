@@ -209,11 +209,15 @@ if (__DEV__) {
 
     if (
       typeof value === 'string' &&
+      tagName !== 'select' &&
+      tagName !== 'input' &&
       shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)
     ) {
       if (name === 'size') {
         console.error(
-          `The size attribute value of "${value}" has the wrong type. The size attribute is a well-known HTML attribute. You should be using data-size="${value}" instead.`,
+          'The size attribute value of %s has the wrong type. The size attribute is a well-known HTML attribute. You should be using data-size="%s" instead.',
+          value,
+          value,
         );
       }
       warnedProperties[name] = true;
