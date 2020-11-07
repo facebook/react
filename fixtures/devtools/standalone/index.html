@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>TODO List</title>
+
+    <!-- DevTools -->
+    <script src="http://localhost:8097"></script>
+
+    <script src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/immutable@4.0.0-rc.12/dist/immutable.js"></script>
+
+    <!-- Don't use this in production: -->
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+
+    <style type="text/css">
+      .Input {
+        font-size: 1rem;
+        padding: 0.25rem;
+      }
+
+      .IconButton {
+        padding: 0.25rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+      }
+
+      .List {
+        margin: 0.5rem 0 0;
+        padding: 0;
+      }
+
+      .ListItem {
+        list-style-type: none;
+      }
+
+      .Label {
+        cursor: pointer;
+        padding: 0.25rem;
+        color: #555;
+      }
+      .Label:hover {
+        color: #000;
+      }
+
+      .IconButton {
+        padding: 0.25rem;
+        border: none;
+        background: none;
+        cursor: pointer;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      const { Fragment, useCallback, useState } = React;
+
+      function List(props) {
+        const [newItemText, setNewItemText] = useState("");
+        const [items, setItems] = useState([
+          { id: 1, isComplete: true, text: "First" },
+          { id: 2, isComplete: true, text: "Second" },
+          { id: 3, isComplete: false, text: "Third" }
+        ]);
+        const [uid, setUID] = useState(4);
+
+        const handleClick = useCallback(() => {
+          if (newItemText !== "") {
+            setItems([
+              ...items,
+              {
+                id: uid,
+                isComplete: false,
+                text: newItemText
+              }
+            ]);
+            setUID(uid + 1);
+            setNewItemText("");
+          }
+        }, [newItemText, items, uid]);
+
+        const handleKeyPress = useCallback(
+          event => {
+            if (event.key === "Enter") {
+              handleClick();
+            }
+          },
+          [handleClick]
+        );
+
+        const handleChange = useCallback(
+          event => {
+            setNewItemText(event.currentTarget.value);
+          },
+          [setNewItemText]
+        );
+
+        const removeItem = useCallback(
+          itemToRemove => setItems(items.filter(item => item !== itemToRemove)),
+          [items]
+        );
+
+        const toggleItem = useCallback(
+          itemToToggle => {
+            const index = items.indexOf(itemToToggle);
+
+            setItems(
+              items
+                .slice(0, index)
+                .concat({
+                  ...itemToToggle,
+                  isComplete: !itemToToggle.isComplete
+                })
+                .concat(items.slice(index + 1))
+            );
+          },
+          [items]
+        );
+
+        return (
+          <Fragment>
+            <h1>List</h1>
+            <input
+              type="text"
+              placeholder="New list item..."
+              className="Input"
+              value={newItemText}
+              onChange={handleChange}
+              onKeyPress={handleKeyPress}
+            />
+            <button
+              className="IconButton"
+              disabled={newItemText === ""}
+              onClick={handleClick}
+            >
+              <span role="img" aria-label="Add item">
+                ➕
+              </span>
+            </button>
+            <ul className="List">
+              {items.map(item => (
+                <ListItem
+                  key={item.id}
+                  item={item}
+                  removeItem={removeItem}
+                  toggleItem={toggleItem}
+                />
+              ))}
+            </ul>
+          </Fragment>
+        );
+      }
+
+      function ListItem({ item, removeItem, toggleItem }) {
+        const handleDelete = useCallback(() => {
+          removeItem(item);
+        }, [item, removeItem]);
+
+        const handleToggle = useCallback(() => {
+          toggleItem(item);
+        }, [item, toggleItem]);
+
+        return (
+          <li className="ListItem">
+            <button className="IconButton" onClick={handleDelete}>
+              🗑
+            </button>
+            <label className="Label">
+              <input
+                className="Input"
+                checked={item.isComplete}
+                onChange={handleToggle}
+                type="checkbox"
+              />{" "}
+              {item.text}
+            </label>
+          </li>
+        );
+      }
+
+      function SimpleValues() {
+        return (
+          <ChildComponent
+            string="abc"
+            emptyString=""
+            number={123}
+            undefined={undefined}
+            null={null}
+            nan={NaN}
+            infinity={Infinity}
+            true={true}
+            false={false}
+          />
+        );
+      }
+
+      class Custom {
+        _number = 42;
+        get number() {
+          return this._number;
+        }
+      }
+
+      function CustomObject() {
+        return <ChildComponent customObject={new Custom()} />;
+      }
+
+      const baseInheritedKeys = Object.create(Object.prototype, {
+      enumerableStringBase: {
+        value: 1,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      [Symbol('enumerableSymbolBase')]: {
+        value: 1,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      nonEnumerableStringBase: {
+        value: 1,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [Symbol('nonEnumerableSymbolBase')]: {
+        value: 1,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+    });
+
+    const inheritedKeys = Object.create(baseInheritedKeys, {
+      enumerableString: {
+        value: 2,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      nonEnumerableString: {
+        value: 3,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      123: {
+        value: 3,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      [Symbol('nonEnumerableSymbol')]: {
+        value: 2,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [Symbol('enumerableSymbol')]: {
+        value: 3,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      });
+
+      function InheritedKeys() {
+        return <ChildComponent data={inheritedKeys} />;
+      }
+
+      const object = {
+        string: "abc",
+        longString: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKJLMNOPQRSTUVWXYZ1234567890",
+        emptyString: "",
+        number: 123,
+        boolean: true,
+        undefined: undefined,
+        null: null
+      };
+
+      function ObjectProps() {
+        return (
+          <ChildComponent
+            object={{
+              outer: {
+                inner: object
+              }
+            }}
+            array={["first", "second", "third"]}
+            objectInArray={[object]}
+            arrayInObject={{ array: ["first", "second", "third"] }}
+            deepObject={{
+              // Known limitation: we won't go deeper than several levels.
+              // In the future, we might offer a way to request deeper access on demand.
+              a: {
+                b: {
+                  c: {
+                    d: {
+                      e: {
+                        f: {
+                          g: {
+                            h: {
+                              i: {
+                                j: 10
+                              }
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }}
+          />
+        );
+      }
+
+      const set = new Set(['abc', 123]);
+      const map = new Map([['name', 'Brian'], ['food', 'sushi']]);
+      const setOfSets = new Set([new Set(['a', 'b', 'c']), new Set([1, 2, 3])]);
+      const mapOfMaps = new Map([['first', map], ['second', map]]);
+      const typedArray = Int8Array.from([100, -100, 0]);
+      const immutable = Immutable.fromJS({
+        a: [{ hello: 'there' }, 'fixed', true],
+        b: 123,
+        c: {
+          '1': 'xyz',
+          xyz: 1,
+        },
+      });
+
+      function UnserializableProps() {
+        return (
+          <ChildComponent
+            map={map}
+            set={set}
+            mapOfMaps={mapOfMaps}
+            setOfSets={setOfSets}
+            typedArray={typedArray}
+            immutable={immutable}
+          />
+        );
+      }
+
+      function ChildComponent(props: any) {
+        return null;
+      }
+
+      function InspectableElements() {
+        return (
+          <Fragment>
+            <SimpleValues />
+            <ObjectProps />
+            <UnserializableProps />
+            <CustomObject />
+            <InheritedKeys />
+          </Fragment>
+        );
+      }
+
+      function App() {
+        return (
+          <Fragment>
+            <List />
+            <InspectableElements />
+          </Fragment>
+        );
+      }
+
+      ReactDOM.render(<App />, document.getElementById("root"));
+    </script>
+  </body>
+</html>

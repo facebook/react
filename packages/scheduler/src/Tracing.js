@@ -45,15 +45,12 @@ export type Subscriber = {
   // A batch of work has completed for a set of interactions.
   // Work is done by a "thread" which is identified by a unique ID.
   onWorkStopped: (interactions: Set<Interaction>, threadID: number) => void,
+  ...
 };
 
-export type InteractionsRef = {
-  current: Set<Interaction>,
-};
+export type InteractionsRef = {|current: Set<Interaction>|};
 
-export type SubscriberRef = {
-  current: Subscriber | null,
-};
+export type SubscriberRef = {|current: Subscriber | null|};
 
 const DEFAULT_THREAD_ID = 0;
 

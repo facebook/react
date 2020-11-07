@@ -7,32 +7,53 @@
  * @flow
  */
 
-// TODO: direct imports like some-package/src/* are bad. Fix me.
-import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
-import {registrationNameModules} from 'events/EventPluginRegistry';
-import warning from 'shared/warning';
-import {canUseDOM} from 'shared/ExecutionEnvironment';
-import warningWithoutStack from 'shared/warningWithoutStack';
+import {
+  registrationNameDependencies,
+  possibleRegistrationNames,
+} from '../events/EventRegistry';
 
-import * as DOMPropertyOperations from './DOMPropertyOperations';
-import * as ReactDOMInput from './ReactDOMInput';
-import * as ReactDOMOption from './ReactDOMOption';
-import * as ReactDOMSelect from './ReactDOMSelect';
-import * as ReactDOMTextarea from './ReactDOMTextarea';
-import * as inputValueTracking from './inputValueTracking';
+import {canUseDOM} from 'shared/ExecutionEnvironment';
+
+import {
+  getValueForAttribute,
+  getValueForProperty,
+  setValueForProperty,
+} from './DOMPropertyOperations';
+import {
+  initWrapperState as ReactDOMInputInitWrapperState,
+  getHostProps as ReactDOMInputGetHostProps,
+  postMountWrapper as ReactDOMInputPostMountWrapper,
+  updateChecked as ReactDOMInputUpdateChecked,
+  updateWrapper as ReactDOMInputUpdateWrapper,
+  restoreControlledState as ReactDOMInputRestoreControlledState,
+} from './ReactDOMInput';
+import {
+  getHostProps as ReactDOMOptionGetHostProps,
+  postMountWrapper as ReactDOMOptionPostMountWrapper,
+  validateProps as ReactDOMOptionValidateProps,
+} from './ReactDOMOption';
+import {
+  initWrapperState as ReactDOMSelectInitWrapperState,
+  getHostProps as ReactDOMSelectGetHostProps,
+  postMountWrapper as ReactDOMSelectPostMountWrapper,
+  restoreControlledState as ReactDOMSelectRestoreControlledState,
+  postUpdateWrapper as ReactDOMSelectPostUpdateWrapper,
+} from './ReactDOMSelect';
+import {
+  initWrapperState as ReactDOMTextareaInitWrapperState,
+  getHostProps as ReactDOMTextareaGetHostProps,
+  postMountWrapper as ReactDOMTextareaPostMountWrapper,
+  updateWrapper as ReactDOMTextareaUpdateWrapper,
+  restoreControlledState as ReactDOMTextareaRestoreControlledState,
+} from './ReactDOMTextarea';
+import {track} from './inputValueTracking';
 import setInnerHTML from './setInnerHTML';
 import setTextContent from './setTextContent';
 import {
-  TOP_ERROR,
-  TOP_INVALID,
-  TOP_LOAD,
-  TOP_RESET,
-  TOP_SUBMIT,
-  TOP_TOGGLE,
-} from '../events/DOMTopLevelEventTypes';
-import {listenTo, trapBubbledEvent} from '../events/ReactBrowserEventEmitter';
-import {mediaEventTypes} from '../events/DOMTopLevelEventTypes';
-import * as CSSPropertyOperations from '../shared/CSSPropertyOperations';
+  createDangerousStringForStyles,
+  setValueForStyles,
+  validateShorthandPropertyCollisionInDev,
+} from '../shared/CSSPropertyOperations';
 import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces';
 import {
   getPropertyInfo,
@@ -40,15 +61,22 @@ import {
   shouldRemoveAttribute,
 } from '../shared/DOMProperty';
 import assertValidProps from '../shared/assertValidProps';
-import {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} from '../shared/HTMLNodeType';
+import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
 import possibleStandardNames from '../shared/possibleStandardNames';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
+
+import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
+import {
+  mediaEventTypes,
+  listenToNonDelegatedEvent,
+} from '../events/DOMPluginEventSystem';
 
 let didWarnInvalidHydration = false;
-let didWarnShadyDOM = false;
+let didWarnScriptTags = false;
 
 const DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
 const SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
@@ -75,11 +103,6 @@ let normalizeHTML;
 
 if (__DEV__) {
   warnedUnknownTags = {
-    // Chrome is the only major browser not shipping <time>. But as of July
-    // 2017 it intends to ship it due to widespread usage. We intentionally
-    // *don't* warn for <time> even if it's unrecognized by Chrome because
-    // it soon will be, and many apps have been using it anyway.
-    time: true,
     // There are working polyfills for <dialog>. Let people use it.
     dialog: true,
     // Electron ships a custom <webview> tag to display external web content in
@@ -93,7 +116,10 @@ if (__DEV__) {
   validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
-    validateUnknownProperties(type, props, /* canUseEventSystem */ true);
+    validateUnknownProperties(type, props, {
+      registrationNameDependencies,
+      possibleRegistrationNames,
+    });
   };
 
   // IE 11 parses & normalizes the style attribute as opposed to other
@@ -135,8 +161,7 @@ if (__DEV__) {
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
-      false,
+    console.error(
       'Text content did not match. Server: "%s" Client: "%s"',
       normalizedServerText,
       normalizedClientText,
@@ -161,8 +186,7 @@ if (__DEV__) {
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
-      false,
+    console.error(
       'Prop `%s` did not match. Server: %s Client: %s',
       propName,
       JSON.stringify(normalizedServerValue),
@@ -179,13 +203,12 @@ if (__DEV__) {
     attributeNames.forEach(function(name) {
       names.push(name);
     });
-    warningWithoutStack(false, 'Extra attributes from the server: %s', names);
+    console.error('Extra attributes from the server: %s', names);
   };
 
   warnForInvalidEventListener = function(registrationName, listener) {
     if (listener === false) {
-      warning(
-        false,
+      console.error(
         'Expected `%s` listener to be a function, instead got `false`.\n\n' +
           'If you used to conditionally omit it with %s={condition && value}, ' +
           'pass %s={condition ? value : undefined} instead.',
@@ -194,8 +217,7 @@ if (__DEV__) {
         registrationName,
       );
     } else {
-      warning(
-        false,
+      console.error(
         'Expected `%s` listener to be a function, instead got a value of `%s` type.',
         registrationName,
         typeof listener,
@@ -222,16 +244,6 @@ if (__DEV__) {
   };
 }
 
-function ensureListeningTo(rootContainerElement, registrationName) {
-  const isDocumentOrFragment =
-    rootContainerElement.nodeType === DOCUMENT_NODE ||
-    rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE;
-  const doc = isDocumentOrFragment
-    ? rootContainerElement
-    : rootContainerElement.ownerDocument;
-  listenTo(registrationName, doc);
-}
-
 function getOwnerDocumentFromRootContainer(
   rootContainerElement: Element | Document,
 ): Document {
@@ -247,7 +259,7 @@ export function trapClickOnNonInteractiveElement(node: HTMLElement) {
   // non-interactive elements, which means delegated click listeners do not
   // fire. The workaround for this bug involves attaching an empty click
   // listener on the target node.
-  // http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
+  // https://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
   // Just set it using the onclick property so that we don't have to manage any
   // bookkeeping for it. Not sure if we need to clear it when the listener is
   // removed.
@@ -276,7 +288,7 @@ function setInitialDOMProperties(
         }
       }
       // Relies on `updateStylesByID` not mutating `styleUpdates`.
-      CSSPropertyOperations.setValueForStyles(domElement, nextProp);
+      setValueForStyles(domElement, nextProp);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       const nextHtml = nextProp ? nextProp[HTML] : undefined;
       if (nextHtml != null) {
@@ -305,20 +317,17 @@ function setInitialDOMProperties(
       // We could have excluded it in the property list instead of
       // adding a special case here, but then it wouldn't be emitted
       // on server rendering (but we *do* want to emit it in SSR).
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+    } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
       if (nextProp != null) {
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        ensureListeningTo(rootContainerElement, propKey);
+        if (propKey === 'onScroll') {
+          listenToNonDelegatedEvent('scroll', domElement);
+        }
       }
     } else if (nextProp != null) {
-      DOMPropertyOperations.setValueForProperty(
-        domElement,
-        propKey,
-        nextProp,
-        isCustomComponentTag,
-      );
+      setValueForProperty(domElement, propKey, nextProp, isCustomComponentTag);
     }
   }
 }
@@ -334,18 +343,13 @@ function updateDOMProperties(
     const propKey = updatePayload[i];
     const propValue = updatePayload[i + 1];
     if (propKey === STYLE) {
-      CSSPropertyOperations.setValueForStyles(domElement, propValue);
+      setValueForStyles(domElement, propValue);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       setInnerHTML(domElement, propValue);
     } else if (propKey === CHILDREN) {
       setTextContent(domElement, propValue);
     } else {
-      DOMPropertyOperations.setValueForProperty(
-        domElement,
-        propKey,
-        propValue,
-        isCustomComponentTag,
-      );
+      setValueForProperty(domElement, propKey, propValue, isCustomComponentTag);
     }
   }
 }
@@ -373,19 +377,31 @@ export function createElement(
       isCustomComponentTag = isCustomComponent(type, props);
       // Should this check be gated by parent namespace? Not sure we want to
       // allow <SVG> or <mATH>.
-      warning(
-        isCustomComponentTag || type === type.toLowerCase(),
-        '<%s /> is using incorrect casing. ' +
-          'Use PascalCase for React components, ' +
-          'or lowercase for HTML elements.',
-        type,
-      );
+      if (!isCustomComponentTag && type !== type.toLowerCase()) {
+        console.error(
+          '<%s /> is using incorrect casing. ' +
+            'Use PascalCase for React components, ' +
+            'or lowercase for HTML elements.',
+          type,
+        );
+      }
     }
 
     if (type === 'script') {
       // Create the script via .innerHTML so its "parser-inserted" flag is
       // set to true and it does not execute
       const div = ownerDocument.createElement('div');
+      if (__DEV__) {
+        if (enableTrustedTypesIntegration && !didWarnScriptTags) {
+          console.error(
+            'Encountered a script tag while rendering React component. ' +
+              'Scripts inside React components are never executed when rendering ' +
+              'on the client. Consider using template tag instead ' +
+              '(https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template).',
+          );
+          didWarnScriptTags = true;
+        }
+      }
       div.innerHTML = '<script><' + '/script>'; // eslint-disable-line
       // This is guaranteed to yield a script element.
       const firstChild = ((div.firstChild: any): HTMLScriptElement);
@@ -398,14 +414,25 @@ export function createElement(
       // See discussion in https://github.com/facebook/react/pull/6896
       // and discussion in https://bugzilla.mozilla.org/show_bug.cgi?id=1276240
       domElement = ownerDocument.createElement(type);
-      // Normally attributes are assigned in `setInitialDOMProperties`, however the `multiple`
-      // attribute on `select`s needs to be added before `option`s are inserted. This prevents
-      // a bug where the `select` does not scroll to the correct option because singular
-      // `select` elements automatically pick the first item.
+      // Normally attributes are assigned in `setInitialDOMProperties`, however the `multiple` and `size`
+      // attributes on `select`s needs to be added before `option`s are inserted.
+      // This prevents:
+      // - a bug where the `select` does not scroll to the correct option because singular
+      //  `select` elements automatically pick the first item #13222
+      // - a bug where the `select` set the first item as selected despite the `size` attribute #14239
       // See https://github.com/facebook/react/issues/13222
-      if (type === 'select' && props.multiple) {
+      // and https://github.com/facebook/react/issues/14239
+      if (type === 'select') {
         const node = ((domElement: any): HTMLSelectElement);
-        node.multiple = true;
+        if (props.multiple) {
+          node.multiple = true;
+        } else if (props.size) {
+          // Setting a size greater than 1 causes a select to behave like `multiple=true`, where
+          // it is possible that no option is selected.
+          //
+          // This is only necessary when a select in "single selection mode".
+          node.size = props.size;
+        }
       }
     }
   } else {
@@ -421,8 +448,7 @@ export function createElement(
         !Object.prototype.hasOwnProperty.call(warnedUnknownTags, type)
       ) {
         warnedUnknownTags[type] = true;
-        warning(
-          false,
+        console.error(
           'The tag <%s> is unrecognized in this browser. ' +
             'If you meant to render a React component, start its name with ' +
             'an uppercase letter.',
@@ -453,84 +479,78 @@ export function setInitialProperties(
   const isCustomComponentTag = isCustomComponent(tag, rawProps);
   if (__DEV__) {
     validatePropertiesInDevelopment(tag, rawProps);
-    if (
-      isCustomComponentTag &&
-      !didWarnShadyDOM &&
-      (domElement: any).shadyRoot
-    ) {
-      warning(
-        false,
-        '%s is using shady DOM. Using shady DOM with React can ' +
-          'cause things to break subtly.',
-        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
-      );
-      didWarnShadyDOM = true;
-    }
   }
 
   // TODO: Make sure that we check isMounted before firing any of these events.
   let props: Object;
   switch (tag) {
+    case 'dialog':
+      listenToNonDelegatedEvent('cancel', domElement);
+      listenToNonDelegatedEvent('close', domElement);
+      props = rawProps;
+      break;
     case 'iframe':
     case 'object':
-      trapBubbledEvent(TOP_LOAD, domElement);
+    case 'embed':
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the load event.
+      listenToNonDelegatedEvent('load', domElement);
       props = rawProps;
       break;
     case 'video':
     case 'audio':
-      // Create listener for each media event
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for all the media events.
       for (let i = 0; i < mediaEventTypes.length; i++) {
-        trapBubbledEvent(mediaEventTypes[i], domElement);
+        listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
       }
       props = rawProps;
       break;
     case 'source':
-      trapBubbledEvent(TOP_ERROR, domElement);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the error event.
+      listenToNonDelegatedEvent('error', domElement);
       props = rawProps;
       break;
     case 'img':
     case 'image':
     case 'link':
-      trapBubbledEvent(TOP_ERROR, domElement);
-      trapBubbledEvent(TOP_LOAD, domElement);
-      props = rawProps;
-      break;
-    case 'form':
-      trapBubbledEvent(TOP_RESET, domElement);
-      trapBubbledEvent(TOP_SUBMIT, domElement);
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for error and load events.
+      listenToNonDelegatedEvent('error', domElement);
+      listenToNonDelegatedEvent('load', domElement);
       props = rawProps;
       break;
     case 'details':
-      trapBubbledEvent(TOP_TOGGLE, domElement);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the toggle event.
+      listenToNonDelegatedEvent('toggle', domElement);
       props = rawProps;
       break;
     case 'input':
-      ReactDOMInput.initWrapperState(domElement, rawProps);
-      props = ReactDOMInput.getHostProps(domElement, rawProps);
-      trapBubbledEvent(TOP_INVALID, domElement);
-      // For controlled components we always need to ensure we're listening
-      // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ReactDOMInputInitWrapperState(domElement, rawProps);
+      props = ReactDOMInputGetHostProps(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent('invalid', domElement);
       break;
     case 'option':
-      ReactDOMOption.validateProps(domElement, rawProps);
-      props = ReactDOMOption.getHostProps(domElement, rawProps);
+      ReactDOMOptionValidateProps(domElement, rawProps);
+      props = ReactDOMOptionGetHostProps(domElement, rawProps);
       break;
     case 'select':
-      ReactDOMSelect.initWrapperState(domElement, rawProps);
-      props = ReactDOMSelect.getHostProps(domElement, rawProps);
-      trapBubbledEvent(TOP_INVALID, domElement);
-      // For controlled components we always need to ensure we're listening
-      // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ReactDOMSelectInitWrapperState(domElement, rawProps);
+      props = ReactDOMSelectGetHostProps(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent('invalid', domElement);
       break;
     case 'textarea':
-      ReactDOMTextarea.initWrapperState(domElement, rawProps);
-      props = ReactDOMTextarea.getHostProps(domElement, rawProps);
-      trapBubbledEvent(TOP_INVALID, domElement);
-      // For controlled components we always need to ensure we're listening
-      // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ReactDOMTextareaInitWrapperState(domElement, rawProps);
+      props = ReactDOMTextareaGetHostProps(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent('invalid', domElement);
       break;
     default:
       props = rawProps;
@@ -550,20 +570,20 @@ export function setInitialProperties(
     case 'input':
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      inputValueTracking.track((domElement: any));
-      ReactDOMInput.postMountWrapper(domElement, rawProps, false);
+      track((domElement: any));
+      ReactDOMInputPostMountWrapper(domElement, rawProps, false);
       break;
     case 'textarea':
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      inputValueTracking.track((domElement: any));
-      ReactDOMTextarea.postMountWrapper(domElement, rawProps);
+      track((domElement: any));
+      ReactDOMTextareaPostMountWrapper(domElement, rawProps);
       break;
     case 'option':
-      ReactDOMOption.postMountWrapper(domElement, rawProps);
+      ReactDOMOptionPostMountWrapper(domElement, rawProps);
       break;
     case 'select':
-      ReactDOMSelect.postMountWrapper(domElement, rawProps);
+      ReactDOMSelectPostMountWrapper(domElement, rawProps);
       break;
     default:
       if (typeof props.onClick === 'function') {
@@ -592,23 +612,23 @@ export function diffProperties(
   let nextProps: Object;
   switch (tag) {
     case 'input':
-      lastProps = ReactDOMInput.getHostProps(domElement, lastRawProps);
-      nextProps = ReactDOMInput.getHostProps(domElement, nextRawProps);
+      lastProps = ReactDOMInputGetHostProps(domElement, lastRawProps);
+      nextProps = ReactDOMInputGetHostProps(domElement, nextRawProps);
       updatePayload = [];
       break;
     case 'option':
-      lastProps = ReactDOMOption.getHostProps(domElement, lastRawProps);
-      nextProps = ReactDOMOption.getHostProps(domElement, nextRawProps);
+      lastProps = ReactDOMOptionGetHostProps(domElement, lastRawProps);
+      nextProps = ReactDOMOptionGetHostProps(domElement, nextRawProps);
       updatePayload = [];
       break;
     case 'select':
-      lastProps = ReactDOMSelect.getHostProps(domElement, lastRawProps);
-      nextProps = ReactDOMSelect.getHostProps(domElement, nextRawProps);
+      lastProps = ReactDOMSelectGetHostProps(domElement, lastRawProps);
+      nextProps = ReactDOMSelectGetHostProps(domElement, nextRawProps);
       updatePayload = [];
       break;
     case 'textarea':
-      lastProps = ReactDOMTextarea.getHostProps(domElement, lastRawProps);
-      nextProps = ReactDOMTextarea.getHostProps(domElement, nextRawProps);
+      lastProps = ReactDOMTextareaGetHostProps(domElement, lastRawProps);
+      nextProps = ReactDOMTextareaGetHostProps(domElement, nextRawProps);
       updatePayload = [];
       break;
     default:
@@ -656,7 +676,7 @@ export function diffProperties(
       // Noop
     } else if (propKey === AUTOFOCUS) {
       // Noop. It doesn't work on updates anyway.
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+    } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
       // This is a special case. If any listener updates we need to ensure
       // that the "current" fiber pointer gets updated so we need a commit
       // to update this element.
@@ -665,7 +685,7 @@ export function diffProperties(
       }
     } else {
       // For all other deleted properties we add it to the queue. We use
-      // the whitelist in the commit phase instead.
+      // the allowed property list in the commit phase instead.
       (updatePayload = updatePayload || []).push(propKey, null);
     }
   }
@@ -727,17 +747,14 @@ export function diffProperties(
       const lastHtml = lastProp ? lastProp[HTML] : undefined;
       if (nextHtml != null) {
         if (lastHtml !== nextHtml) {
-          (updatePayload = updatePayload || []).push(propKey, '' + nextHtml);
+          (updatePayload = updatePayload || []).push(propKey, nextHtml);
         }
       } else {
         // TODO: It might be too late to clear this if we have children
         // inserted already.
       }
     } else if (propKey === CHILDREN) {
-      if (
-        lastProp !== nextProp &&
-        (typeof nextProp === 'string' || typeof nextProp === 'number')
-      ) {
+      if (typeof nextProp === 'string' || typeof nextProp === 'number') {
         (updatePayload = updatePayload || []).push(propKey, '' + nextProp);
       }
     } else if (
@@ -745,13 +762,15 @@ export function diffProperties(
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
       // Noop
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+    } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
       if (nextProp != null) {
         // We eagerly listen to this even though we haven't committed yet.
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        ensureListeningTo(rootContainerElement, propKey);
+        if (propKey === 'onScroll') {
+          listenToNonDelegatedEvent('scroll', domElement);
+        }
       }
       if (!updatePayload && lastProp !== nextProp) {
         // This is a special case. If any listener updates we need to ensure
@@ -759,13 +778,25 @@ export function diffProperties(
         // to update this element.
         updatePayload = [];
       }
+    } else if (
+      typeof nextProp === 'object' &&
+      nextProp !== null &&
+      nextProp.$$typeof === REACT_OPAQUE_ID_TYPE
+    ) {
+      // If we encounter useOpaqueReference's opaque object, this means we are hydrating.
+      // In this case, call the opaque object's toString function which generates a new client
+      // ID so client and server IDs match and throws to rerender.
+      nextProp.toString();
     } else {
       // For any other property we always add it to the queue and then we
-      // filter it out using the whitelist during the commit.
+      // filter it out using the allowed property list during the commit.
       (updatePayload = updatePayload || []).push(propKey, nextProp);
     }
   }
   if (styleUpdates) {
+    if (__DEV__) {
+      validateShorthandPropertyCollisionInDev(styleUpdates, nextProps[STYLE]);
+    }
     (updatePayload = updatePayload || []).push(STYLE, styleUpdates);
   }
   return updatePayload;
@@ -787,7 +818,7 @@ export function updateProperties(
     nextRawProps.type === 'radio' &&
     nextRawProps.name != null
   ) {
-    ReactDOMInput.updateChecked(domElement, nextRawProps);
+    ReactDOMInputUpdateChecked(domElement, nextRawProps);
   }
 
   const wasCustomComponentTag = isCustomComponent(tag, lastRawProps);
@@ -807,15 +838,15 @@ export function updateProperties(
       // Update the wrapper around inputs *after* updating props. This has to
       // happen after `updateDOMProperties`. Otherwise HTML5 input validations
       // raise warnings and prevent the new value from being assigned.
-      ReactDOMInput.updateWrapper(domElement, nextRawProps);
+      ReactDOMInputUpdateWrapper(domElement, nextRawProps);
       break;
     case 'textarea':
-      ReactDOMTextarea.updateWrapper(domElement, nextRawProps);
+      ReactDOMTextareaUpdateWrapper(domElement, nextRawProps);
       break;
     case 'select':
       // <select> value update needs to occur after <option> children
       // reconciliation
-      ReactDOMSelect.postUpdateWrapper(domElement, nextRawProps);
+      ReactDOMSelectPostUpdateWrapper(domElement, nextRawProps);
       break;
   }
 }
@@ -845,73 +876,67 @@ export function diffHydratedProperties(
     suppressHydrationWarning = rawProps[SUPPRESS_HYDRATION_WARNING] === true;
     isCustomComponentTag = isCustomComponent(tag, rawProps);
     validatePropertiesInDevelopment(tag, rawProps);
-    if (
-      isCustomComponentTag &&
-      !didWarnShadyDOM &&
-      (domElement: any).shadyRoot
-    ) {
-      warning(
-        false,
-        '%s is using shady DOM. Using shady DOM with React can ' +
-          'cause things to break subtly.',
-        getCurrentFiberOwnerNameInDevOrNull() || 'A component',
-      );
-      didWarnShadyDOM = true;
-    }
   }
 
   // TODO: Make sure that we check isMounted before firing any of these events.
   switch (tag) {
+    case 'dialog':
+      listenToNonDelegatedEvent('cancel', domElement);
+      listenToNonDelegatedEvent('close', domElement);
+      break;
     case 'iframe':
     case 'object':
-      trapBubbledEvent(TOP_LOAD, domElement);
+    case 'embed':
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the load event.
+      listenToNonDelegatedEvent('load', domElement);
       break;
     case 'video':
     case 'audio':
-      // Create listener for each media event
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for all the media events.
       for (let i = 0; i < mediaEventTypes.length; i++) {
-        trapBubbledEvent(mediaEventTypes[i], domElement);
+        listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
       }
       break;
     case 'source':
-      trapBubbledEvent(TOP_ERROR, domElement);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the error event.
+      listenToNonDelegatedEvent('error', domElement);
       break;
     case 'img':
     case 'image':
     case 'link':
-      trapBubbledEvent(TOP_ERROR, domElement);
-      trapBubbledEvent(TOP_LOAD, domElement);
-      break;
-    case 'form':
-      trapBubbledEvent(TOP_RESET, domElement);
-      trapBubbledEvent(TOP_SUBMIT, domElement);
+      // We listen to these events in case to ensure emulated bubble
+      // listeners still fire for error and load events.
+      listenToNonDelegatedEvent('error', domElement);
+      listenToNonDelegatedEvent('load', domElement);
       break;
     case 'details':
-      trapBubbledEvent(TOP_TOGGLE, domElement);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the toggle event.
+      listenToNonDelegatedEvent('toggle', domElement);
       break;
     case 'input':
-      ReactDOMInput.initWrapperState(domElement, rawProps);
-      trapBubbledEvent(TOP_INVALID, domElement);
-      // For controlled components we always need to ensure we're listening
-      // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ReactDOMInputInitWrapperState(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent('invalid', domElement);
       break;
     case 'option':
-      ReactDOMOption.validateProps(domElement, rawProps);
+      ReactDOMOptionValidateProps(domElement, rawProps);
       break;
     case 'select':
-      ReactDOMSelect.initWrapperState(domElement, rawProps);
-      trapBubbledEvent(TOP_INVALID, domElement);
-      // For controlled components we always need to ensure we're listening
-      // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ReactDOMSelectInitWrapperState(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent('invalid', domElement);
       break;
     case 'textarea':
-      ReactDOMTextarea.initWrapperState(domElement, rawProps);
-      trapBubbledEvent(TOP_INVALID, domElement);
-      // For controlled components we always need to ensure we're listening
-      // to onChange. Even if there is no listener.
-      ensureListeningTo(rootContainerElement, 'onChange');
+      ReactDOMTextareaInitWrapperState(domElement, rawProps);
+      // We listen to this event in case to ensure emulated bubble
+      // listeners still fire for the invalid event.
+      listenToNonDelegatedEvent('invalid', domElement);
       break;
   }
 
@@ -923,7 +948,7 @@ export function diffHydratedProperties(
     for (let i = 0; i < attributes.length; i++) {
       const name = attributes[i].name.toLowerCase();
       switch (name) {
-        // Built-in SSR attribute is whitelisted
+        // Built-in SSR attribute is allowed
         case 'data-reactroot':
           break;
         // Controlled attributes are not validated
@@ -973,12 +998,14 @@ export function diffHydratedProperties(
           updatePayload = [CHILDREN, '' + nextProp];
         }
       }
-    } else if (registrationNameModules.hasOwnProperty(propKey)) {
+    } else if (registrationNameDependencies.hasOwnProperty(propKey)) {
       if (nextProp != null) {
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        ensureListeningTo(rootContainerElement, propKey);
+        if (propKey === 'onScroll') {
+          listenToNonDelegatedEvent('scroll', domElement);
+        }
       }
     } else if (
       __DEV__ &&
@@ -1003,21 +1030,18 @@ export function diffHydratedProperties(
       } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
         const serverHTML = domElement.innerHTML;
         const nextHtml = nextProp ? nextProp[HTML] : undefined;
-        const expectedHTML = normalizeHTML(
-          domElement,
-          nextHtml != null ? nextHtml : '',
-        );
-        if (expectedHTML !== serverHTML) {
-          warnForPropDifference(propKey, serverHTML, expectedHTML);
+        if (nextHtml != null) {
+          const expectedHTML = normalizeHTML(domElement, nextHtml);
+          if (expectedHTML !== serverHTML) {
+            warnForPropDifference(propKey, serverHTML, expectedHTML);
+          }
         }
       } else if (propKey === STYLE) {
         // $FlowFixMe - Should be inferred as not undefined.
         extraAttributeNames.delete(propKey);
 
         if (canDiffStyleForHydrationWarning) {
-          const expectedStyle = CSSPropertyOperations.createDangerousStringForStyles(
-            nextProp,
-          );
+          const expectedStyle = createDangerousStringForStyles(nextProp);
           serverValue = domElement.getAttribute('style');
           if (expectedStyle !== serverValue) {
             warnForPropDifference(propKey, serverValue, expectedStyle);
@@ -1026,11 +1050,7 @@ export function diffHydratedProperties(
       } else if (isCustomComponentTag) {
         // $FlowFixMe - Should be inferred as not undefined.
         extraAttributeNames.delete(propKey.toLowerCase());
-        serverValue = DOMPropertyOperations.getValueForAttribute(
-          domElement,
-          propKey,
-          nextProp,
-        );
+        serverValue = getValueForAttribute(domElement, propKey, nextProp);
 
         if (nextProp !== serverValue) {
           warnForPropDifference(propKey, serverValue, nextProp);
@@ -1048,7 +1068,7 @@ export function diffHydratedProperties(
         if (propertyInfo !== null) {
           // $FlowFixMe - Should be inferred as not undefined.
           extraAttributeNames.delete(propertyInfo.attributeName);
-          serverValue = DOMPropertyOperations.getValueForProperty(
+          serverValue = getValueForProperty(
             domElement,
             propKey,
             nextProp,
@@ -1077,11 +1097,7 @@ export function diffHydratedProperties(
             // $FlowFixMe - Should be inferred as not undefined.
             extraAttributeNames.delete(propKey);
           }
-          serverValue = DOMPropertyOperations.getValueForAttribute(
-            domElement,
-            propKey,
-            nextProp,
-          );
+          serverValue = getValueForAttribute(domElement, propKey, nextProp);
         }
 
         if (nextProp !== serverValue && !isMismatchDueToBadCasing) {
@@ -1103,14 +1119,14 @@ export function diffHydratedProperties(
     case 'input':
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      inputValueTracking.track((domElement: any));
-      ReactDOMInput.postMountWrapper(domElement, rawProps, true);
+      track((domElement: any));
+      ReactDOMInputPostMountWrapper(domElement, rawProps, true);
       break;
     case 'textarea':
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      inputValueTracking.track((domElement: any));
-      ReactDOMTextarea.postMountWrapper(domElement, rawProps);
+      track((domElement: any));
+      ReactDOMTextareaPostMountWrapper(domElement, rawProps);
       break;
     case 'select':
     case 'option':
@@ -1151,8 +1167,7 @@ export function warnForDeletedHydratableElement(
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
-      false,
+    console.error(
       'Did not expect server HTML to contain a <%s> in <%s>.',
       child.nodeName.toLowerCase(),
       parentNode.nodeName.toLowerCase(),
@@ -1169,8 +1184,7 @@ export function warnForDeletedHydratableText(
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
-      false,
+    console.error(
       'Did not expect server HTML to contain the text node "%s" in <%s>.',
       child.nodeValue,
       parentNode.nodeName.toLowerCase(),
@@ -1188,8 +1202,7 @@ export function warnForInsertedHydratedElement(
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
-      false,
+    console.error(
       'Expected server HTML to contain a matching <%s> in <%s>.',
       tag,
       parentNode.nodeName.toLowerCase(),
@@ -1213,8 +1226,7 @@ export function warnForInsertedHydratedText(
       return;
     }
     didWarnInvalidHydration = true;
-    warningWithoutStack(
-      false,
+    console.error(
       'Expected server HTML to contain a matching text node for "%s" in <%s>.',
       text,
       parentNode.nodeName.toLowerCase(),
@@ -1229,13 +1241,13 @@ export function restoreControlledState(
 ): void {
   switch (tag) {
     case 'input':
-      ReactDOMInput.restoreControlledState(domElement, props);
+      ReactDOMInputRestoreControlledState(domElement, props);
       return;
     case 'textarea':
-      ReactDOMTextarea.restoreControlledState(domElement, props);
+      ReactDOMTextareaRestoreControlledState(domElement, props);
       return;
     case 'select':
-      ReactDOMSelect.restoreControlledState(domElement, props);
+      ReactDOMSelectRestoreControlledState(domElement, props);
       return;
   }
 }

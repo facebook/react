@@ -3,3 +3,27 @@ body {
   padding: 0;
   font-family: sans-serif;
 }
+
+body.light {
+  background-color: #FFFFFF;
+  color: #333333;
+}
+
+body.dark {
+  background-color: #000000;
+  color: #CCCCCC;
+}
+
+.light-loading {
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #CCCCCC;
+  color: #666666;
+}
+
+.dark-loading {
+  margin: 10px 0;
+  padding: 10px;
+  background-color: #333333;
+  color: #999999;
+}

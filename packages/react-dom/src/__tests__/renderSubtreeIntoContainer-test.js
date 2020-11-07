@@ -16,6 +16,8 @@ const ReactTestUtils = require('react-dom/test-utils');
 const renderSubtreeIntoContainer = require('react-dom')
   .unstable_renderSubtreeIntoContainer;
 
+const ReactFeatureFlags = require('shared/ReactFeatureFlags');
+
 describe('renderSubtreeIntoContainer', () => {
   it('should pass context when rendering subtree elsewhere', () => {
     const portal = document.createElement('div');
@@ -46,11 +48,18 @@ describe('renderSubtreeIntoContainer', () => {
       }
 
       componentDidMount() {
-        expect(
-          function() {
-            renderSubtreeIntoContainer(this, <Component />, portal);
-          }.bind(this),
-        ).not.toThrow();
+        if (ReactFeatureFlags.warnUnstableRenderSubtreeIntoContainer) {
+          expect(
+            function() {
+              renderSubtreeIntoContainer(this, <Component />, portal);
+            }.bind(this),
+          ).toWarnDev(
+            'ReactDOM.unstable_renderSubtreeIntoContainer() is deprecated and ' +
+              'will be removed in a future major release. Consider using React Portals instead.',
+          );
+        } else {
+          renderSubtreeIntoContainer(this, <Component />, portal);
+        }
       }
     }
 
@@ -312,11 +321,11 @@ describe('renderSubtreeIntoContainer', () => {
     }).toThrow(
       __DEV__
         ? '_processChildContext is not available in React 16+. This likely ' +
-          'means you have multiple copies of React and are attempting to nest ' +
-          'a React 15 tree inside a React 16 tree using ' +
-          "unstable_renderSubtreeIntoContainer, which isn't supported. Try to " +
-          'make sure you have only one copy of React (and ideally, switch to ' +
-          'ReactDOM.createPortal).'
+            'means you have multiple copies of React and are attempting to nest ' +
+            'a React 15 tree inside a React 16 tree using ' +
+            "unstable_renderSubtreeIntoContainer, which isn't supported. Try to " +
+            'make sure you have only one copy of React (and ideally, switch to ' +
+            'ReactDOM.createPortal).'
         : "Cannot read property '_processChildContext' of undefined",
     );
   });

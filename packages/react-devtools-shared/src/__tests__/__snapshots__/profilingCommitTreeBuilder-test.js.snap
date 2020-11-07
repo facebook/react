@@ -1,0 +1,190 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`commit tree should be able to rebuild the store tree for each commit: 0: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 12,
+      "type": 11,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+      ],
+      "displayName": "Parent",
+      "hocDisplayNames": null,
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 12,
+      "type": 5,
+    },
+    3 => Object {
+      "children": Array [],
+      "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 3,
+      "key": "0",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+      "type": 8,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`commit tree should be able to rebuild the store tree for each commit: 1: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 16,
+      "type": 11,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+        4,
+        5,
+      ],
+      "displayName": "Parent",
+      "hocDisplayNames": null,
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 16,
+      "type": 5,
+    },
+    3 => Object {
+      "children": Array [],
+      "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 3,
+      "key": "0",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+      "type": 8,
+    },
+    4 => Object {
+      "children": Array [],
+      "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 4,
+      "key": "1",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+      "type": 8,
+    },
+    5 => Object {
+      "children": Array [],
+      "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 5,
+      "key": "2",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+      "type": 8,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`commit tree should be able to rebuild the store tree for each commit: 2: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 14,
+      "type": 11,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+        4,
+      ],
+      "displayName": "Parent",
+      "hocDisplayNames": null,
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 14,
+      "type": 5,
+    },
+    3 => Object {
+      "children": Array [],
+      "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 3,
+      "key": "0",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+      "type": 8,
+    },
+    4 => Object {
+      "children": Array [],
+      "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 4,
+      "key": "1",
+      "parentID": 2,
+      "treeBaseDuration": 2,
+      "type": 8,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`commit tree should be able to rebuild the store tree for each commit: 3: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 10,
+      "type": 11,
+    },
+    2 => Object {
+      "children": Array [],
+      "displayName": "Parent",
+      "hocDisplayNames": null,
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 10,
+      "type": 5,
+    },
+  },
+  "rootID": 1,
+}
+`;

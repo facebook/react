@@ -1,3 +1,4 @@
+import Fixture from '../../Fixture';
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
 
@@ -38,6 +39,44 @@ export default class TextAreaFixtures extends React.Component {
           <div style={{margin: '10px 0px'}}>
             <textarea placeholder="Hello, world" />
           </div>
+        </TestCase>
+
+        <TestCase
+          title="Required Textareas"
+          affectedBrowsers="Firefox"
+          relatedIssues="16402">
+          <TestCase.Steps>
+            <li>View this test in Firefox</li>
+          </TestCase.Steps>
+
+          <TestCase.ExpectedResult>
+            You should{' '}
+            <b>
+              <i>not</i>
+            </b>{' '}
+            see a red aura on initial page load, indicating the textarea is
+            invalid.
+            <br />
+            This aura looks roughly like:
+            <textarea style={{boxShadow: '0 0 1px 1px red', marginLeft: 8}} />
+          </TestCase.ExpectedResult>
+
+          <Fixture>
+            <form className="control-box">
+              <fieldset>
+                <legend>Empty value prop string</legend>
+                <textarea value="" required={true} />
+              </fieldset>
+              <fieldset>
+                <legend>No value prop</legend>
+                <textarea required={true} />
+              </fieldset>
+              <fieldset>
+                <legend>Empty defaultValue prop string</legend>
+                <textarea required={true} defaultValue="" />
+              </fieldset>
+            </form>
+          </Fixture>
         </TestCase>
       </FixtureSet>
     );

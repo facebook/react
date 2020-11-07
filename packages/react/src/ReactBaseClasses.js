@@ -6,7 +6,6 @@
  */
 
 import invariant from 'shared/invariant';
-import lowPriorityWarning from 'shared/lowPriorityWarning';
 
 import ReactNoopUpdateQueue from './ReactNoopUpdateQueue';
 
@@ -105,8 +104,7 @@ if (__DEV__) {
   const defineDeprecationWarning = function(methodName, info) {
     Object.defineProperty(Component.prototype, methodName, {
       get: function() {
-        lowPriorityWarning(
-          false,
+        console.warn(
           '%s(...) is deprecated in plain JavaScript React classes. %s',
           info[0],
           info[1],

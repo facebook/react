@@ -26,65 +26,17 @@ function captureAssertion(fn) {
 }
 
 function assertYieldsWereCleared(root) {
-  const actualYields = root.unstable_clearYields();
+  const Scheduler = root._Scheduler;
+  const actualYields = Scheduler.unstable_clearYields();
   invariant(
     actualYields.length === 0,
     'Log of yielded values is not empty. ' +
-      'Call expect(ReactTestRenderer).toHaveYielded(...) first.',
+      'Call expect(ReactTestRenderer).unstable_toHaveYielded(...) first.',
   );
 }
 
-export function toFlushAndYield(root, expectedYields) {
-  return captureAssertion(() => {
-    assertYieldsWereCleared(root);
-    const actualYields = root.unstable_flushAll();
-    expect(actualYields).toEqual(expectedYields);
-  });
-}
-
-export function toFlushAndYieldThrough(root, expectedYields) {
-  return captureAssertion(() => {
-    assertYieldsWereCleared(root);
-    const actualYields = root.unstable_flushNumberOfYields(
-      expectedYields.length,
-    );
-    expect(actualYields).toEqual(expectedYields);
-  });
-}
-
-export function toFlushWithoutYielding(root) {
-  return toFlushAndYield(root, []);
-}
-
-export function toHaveYielded(ReactTestRenderer, expectedYields) {
-  return captureAssertion(() => {
-    if (
-      ReactTestRenderer === null ||
-      typeof ReactTestRenderer !== 'object' ||
-      typeof ReactTestRenderer.unstable_setNowImplementation !== 'function'
-    ) {
-      invariant(
-        false,
-        'The matcher `toHaveYielded` expects an instance of React Test ' +
-          'Renderer.\n\nTry: ' +
-          'expect(ReactTestRenderer).toHaveYielded(expectedYields)',
-      );
-    }
-    const actualYields = ReactTestRenderer.unstable_clearYields();
-    expect(actualYields).toEqual(expectedYields);
-  });
-}
-
-export function toFlushAndThrow(root, ...rest) {
-  return captureAssertion(() => {
-    assertYieldsWereCleared(root);
-    expect(() => {
-      root.unstable_flushAll();
-    }).toThrow(...rest);
-  });
-}
-
-export function toMatchRenderedOutput(root, expectedJSX) {
+export function unstable_toMatchRenderedOutput(root, expectedJSX) {
+  assertYieldsWereCleared(root);
   const actualJSON = root.toJSON();
 
   let actualJSX;
@@ -147,11 +99,11 @@ function jsonChildrenToJSXChildren(jsonChildren) {
     if (jsonChildren.length === 1) {
       return jsonChildToJSXChild(jsonChildren[0]);
     } else if (jsonChildren.length > 1) {
-      let jsxChildren = [];
+      const jsxChildren = [];
       let allJSXChildrenAreStrings = true;
       let jsxChildrenString = '';
       for (let i = 0; i < jsonChildren.length; i++) {
-        const jsxChild = jsonChildrenToJSXChildren(jsonChildren[i]);
+        const jsxChild = jsonChildToJSXChild(jsonChildren[i]);
         jsxChildren.push(jsxChild);
         if (allJSXChildrenAreStrings) {
           if (typeof jsxChild === 'string') {

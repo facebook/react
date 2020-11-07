@@ -14,6 +14,7 @@ const ReactDOMServerIntegrationUtils = require('./utils/ReactDOMServerIntegratio
 let React;
 let ReactDOM;
 let ReactDOMServer;
+let ReactTestUtils;
 
 function initModules() {
   // Reset warning cache.
@@ -21,11 +22,13 @@ function initModules() {
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
+  ReactTestUtils = require('react-dom/test-utils');
 
   // Make them available to the helpers.
   return {
     ReactDOM,
     ReactDOMServer,
+    ReactTestUtils,
   };
 }
 
@@ -205,7 +208,7 @@ describe('ReactDOMServerIntegrationUserInteraction', () => {
         expect(e.checked).toBe(true);
 
         // simulate a user clicking.
-        e.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));
+        e.click();
 
         expect(changeCount).toBe(1);
         expect(e.checked).toBe(false);

@@ -7,22 +7,22 @@
  * @flow
  */
 
-import type {ReactElement} from 'shared/ReactElementType';
-
-import describeComponentFrame from 'shared/describeComponentFrame';
-import getComponentName from 'shared/getComponentName';
-
 const ReactDebugCurrentFrame = {};
 
-let currentlyValidatingElement = (null: null | ReactElement);
+let currentExtraStackFrame = (null: null | string);
 
-export function setCurrentlyValidatingElement(element: null | ReactElement) {
+export function setExtraStackFrame(stack: null | string) {
   if (__DEV__) {
-    currentlyValidatingElement = element;
+    currentExtraStackFrame = stack;
   }
 }
 
 if (__DEV__) {
+  ReactDebugCurrentFrame.setExtraStackFrame = function(stack: null | string) {
+    if (__DEV__) {
+      currentExtraStackFrame = stack;
+    }
+  };
   // Stack implementation injected by the current renderer.
   ReactDebugCurrentFrame.getCurrentStack = (null: null | (() => string));
 
@@ -30,14 +30,8 @@ if (__DEV__) {
     let stack = '';
 
     // Add an extra top frame while an element is being validated
-    if (currentlyValidatingElement) {
-      const name = getComponentName(currentlyValidatingElement.type);
-      const owner = currentlyValidatingElement._owner;
-      stack += describeComponentFrame(
-        name,
-        currentlyValidatingElement._source,
-        owner && getComponentName(owner.type),
-      );
+    if (currentExtraStackFrame) {
+      stack += currentExtraStackFrame;
     }
 
     // Delegate to the injected renderer-specific implementation

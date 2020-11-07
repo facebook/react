@@ -22,12 +22,18 @@
 
 .hydration-options label {
   font-size: 13px;
+  margin-right: 10px;
 }
 
 .hydration-options input[type=checkbox] {
   display: inline-block;
   margin-right: 4px;
   vertical-align: middle;
+}
+
+.hydration-options select {
+  margin-left: 10px;
+  max-width: 100px;
 }
 
 .hydration .CodeMirror {

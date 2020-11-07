@@ -5,19 +5,36 @@ const filesize = require('filesize');
 const chalk = require('chalk');
 const join = require('path').join;
 const fs = require('fs');
-const prevBuildResults = require('./results.json');
+const mkdirp = require('mkdirp');
+
+const BUNDLE_SIZES_FILE_NAME = join(__dirname, '../../build/bundle-sizes.json');
+const prevBuildResults = fs.existsSync(BUNDLE_SIZES_FILE_NAME)
+  ? require(BUNDLE_SIZES_FILE_NAME)
+  : {bundleSizes: []};
 
 const currentBuildResults = {
   // Mutated inside build.js during a build run.
-  // We make a copy so that partial rebuilds don't erase other stats.
-  bundleSizes: [...prevBuildResults.bundleSizes],
+  bundleSizes: [],
 };
 
 function saveResults() {
-  fs.writeFileSync(
-    join('scripts', 'rollup', 'results.json'),
-    JSON.stringify(currentBuildResults, null, 2)
-  );
+  if (process.env.CIRCLE_NODE_TOTAL) {
+    // In CI, write the bundle sizes to a subdirectory and append the node index
+    // to the filename. A downstream job will consolidate these into a
+    // single file.
+    const nodeIndex = process.env.CIRCLE_NODE_INDEX;
+    mkdirp.sync('build/sizes');
+    fs.writeFileSync(
+      join('build', 'sizes', `bundle-sizes-${nodeIndex}.json`),
+      JSON.stringify(currentBuildResults, null, 2)
+    );
+  } else {
+    // Write all the bundle sizes to a single JSON file.
+    fs.writeFileSync(
+      BUNDLE_SIZES_FILE_NAME,
+      JSON.stringify(currentBuildResults, null, 2)
+    );
+  }
 }
 
 function fractionalChange(prev, current) {

@@ -1,0 +1,122 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`OwnersListContext should fetch the owners list for the selected element that includes filtered components: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+      <Child>
+      <Child>
+`;
+
+exports[`OwnersListContext should fetch the owners list for the selected element that includes filtered components: owners for "Child" 1`] = `
+Array [
+  Object {
+    "displayName": "Grandparent",
+    "hocDisplayNames": null,
+    "id": 7,
+    "type": 5,
+  },
+  Object {
+    "displayName": "Parent",
+    "hocDisplayNames": null,
+    "id": 9,
+    "type": 5,
+  },
+  Object {
+    "displayName": "Child",
+    "hocDisplayNames": null,
+    "id": 8,
+    "type": 5,
+  },
+]
+`;
+
+exports[`OwnersListContext should fetch the owners list for the selected element: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child>
+        <Child>
+`;
+
+exports[`OwnersListContext should fetch the owners list for the selected element: owners for "Child" 1`] = `
+Array [
+  Object {
+    "displayName": "Grandparent",
+    "hocDisplayNames": null,
+    "id": 2,
+    "type": 5,
+  },
+  Object {
+    "displayName": "Parent",
+    "hocDisplayNames": null,
+    "id": 3,
+    "type": 5,
+  },
+  Object {
+    "displayName": "Child",
+    "hocDisplayNames": null,
+    "id": 4,
+    "type": 5,
+  },
+]
+`;
+
+exports[`OwnersListContext should fetch the owners list for the selected element: owners for "Parent" 1`] = `
+Array [
+  Object {
+    "displayName": "Grandparent",
+    "hocDisplayNames": null,
+    "id": 2,
+    "type": 5,
+  },
+  Object {
+    "displayName": "Parent",
+    "hocDisplayNames": null,
+    "id": 3,
+    "type": 5,
+  },
+]
+`;
+
+exports[`OwnersListContext should include all owners for a component wrapped in react memo: owners for "InnerComponent" 1`] = `
+Array [
+  Object {
+    "displayName": "Grandparent",
+    "hocDisplayNames": null,
+    "id": 2,
+    "type": 5,
+  },
+  Object {
+    "displayName": "InnerComponent",
+    "hocDisplayNames": Array [
+      "Memo",
+    ],
+    "id": 3,
+    "type": 8,
+  },
+  Object {
+    "displayName": "InnerComponent",
+    "hocDisplayNames": Array [
+      "ForwardRef",
+    ],
+    "id": 4,
+    "type": 6,
+  },
+]
+`;
+
+exports[`OwnersListContext should include the current element even if there are no other owners: mount 1`] = `
+[root]
+    <Grandparent>
+`;
+
+exports[`OwnersListContext should include the current element even if there are no other owners: owners for "Grandparent" 1`] = `
+Array [
+  Object {
+    "displayName": "Grandparent",
+    "hocDisplayNames": null,
+    "id": 5,
+    "type": 5,
+  },
+]
+`;

@@ -37,7 +37,7 @@ function getFriendlyTag(tag) {
   }
 }
 
-function getFriendlyEffect(effectTag) {
+function getFriendlyEffect(flags) {
   const effects = {
     1: 'Performed Work',
     2: 'Placement',
@@ -49,7 +49,7 @@ function getFriendlyEffect(effectTag) {
     128: 'Ref',
   };
   return Object.keys(effects)
-    .filter(flag => flag & effectTag)
+    .filter(flag => flag & flags)
     .map(flag => effects[flag])
     .join(' & ');
 }
@@ -72,7 +72,7 @@ export default function describeFibers(rootFiber, workInProgress) {
       ...fiber,
       id: id,
       tag: getFriendlyTag(fiber.tag),
-      effectTag: getFriendlyEffect(fiber.effectTag),
+      flags: getFriendlyEffect(fiber.flags),
       type: fiber.type && '<' + (fiber.type.name || fiber.type) + '>',
       stateNode: `[${typeof fiber.stateNode}]`,
       return: acknowledgeFiber(fiber.return),
@@ -90,17 +90,17 @@ export default function describeFibers(rootFiber, workInProgress) {
   const workInProgressID = acknowledgeFiber(workInProgress);
 
   let currentIDs = new Set();
-  function markAsCurent(id) {
+  function markAsCurrent(id) {
     currentIDs.add(id);
     const fiber = descriptions[id];
     if (fiber.sibling) {
-      markAsCurent(fiber.sibling);
+      markAsCurrent(fiber.sibling);
     }
     if (fiber.child) {
-      markAsCurent(fiber.child);
+      markAsCurrent(fiber.child);
     }
   }
-  markAsCurent(rootID);
+  markAsCurrent(rootID);
 
   return {
     descriptions,

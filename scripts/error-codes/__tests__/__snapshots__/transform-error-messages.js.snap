@@ -1,0 +1,60 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`error transform should correctly transform invariants that are not in the error codes map 1`] = `
+"import invariant from 'shared/invariant';
+
+/*FIXME (minify-errors-in-prod): Unminified error message in production build!*/
+if (!condition) {
+  throw Error(\\"This is not a real error message.\\");
+}"
+`;
+
+exports[`error transform should handle escaped characters 1`] = `
+"import invariant from 'shared/invariant';
+
+/*FIXME (minify-errors-in-prod): Unminified error message in production build!*/
+if (!condition) {
+  throw Error(\\"What's up?\\");
+}"
+`;
+
+exports[`error transform should replace simple invariant calls 1`] = `
+"import _formatProdErrorMessage from \\"shared/formatProdErrorMessage\\";
+import invariant from 'shared/invariant';
+
+if (!condition) {
+  {
+    throw Error(__DEV__ ? \\"Do not override existing functions.\\" : _formatProdErrorMessage(16));
+  }
+}"
+`;
+
+exports[`error transform should support invariant calls with a concatenated template string and args 1`] = `
+"import _formatProdErrorMessage from \\"shared/formatProdErrorMessage\\";
+import invariant from 'shared/invariant';
+
+if (!condition) {
+  {
+    throw Error(__DEV__ ? \\"Expected a component class, got \\" + Foo + \\".\\" + Bar : _formatProdErrorMessage(18, Foo, Bar));
+  }
+}"
+`;
+
+exports[`error transform should support invariant calls with args 1`] = `
+"import _formatProdErrorMessage from \\"shared/formatProdErrorMessage\\";
+import invariant from 'shared/invariant';
+
+if (!condition) {
+  {
+    throw Error(__DEV__ ? \\"Expected \\" + foo + \\" target to be an array; got \\" + bar : _formatProdErrorMessage(7, foo, bar));
+  }
+}"
+`;
+
+exports[`error transform should support noMinify option 1`] = `
+"import invariant from 'shared/invariant';
+
+if (!condition) {
+  throw Error(\\"Do not override existing functions.\\");
+}"
+`;

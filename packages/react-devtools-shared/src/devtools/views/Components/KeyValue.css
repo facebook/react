@@ -1,0 +1,46 @@
+.Item:not([hidden]) {
+  display: flex;
+}
+
+.Name {
+  color: var(--color-attribute-name-not-editable);
+  flex: 0 0 auto;
+  cursor: default;
+}
+.EditableName {
+  color: var(--color-attribute-name);
+  flex: 0 0 auto;
+  cursor: default;
+}
+
+.AfterName {
+  color: var(--color-text);
+  margin-right: 0.5rem;
+}
+
+.Value {
+  color: var(--color-attribute-value);
+  white-space: pre;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+.None {
+  color: var(--color-dimmer);
+  font-style: italic;
+}
+
+.ExpandCollapseToggleSpacer {
+  flex: 0 0 1rem;
+  width: 1rem;
+}
+
+.Empty {
+  color: var(--color-dimmer);
+}
+
+.DeleteArrayItemButton {
+  padding: 0;
+  margin-right: 0.125rem;
+}

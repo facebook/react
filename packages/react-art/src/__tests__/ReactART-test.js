@@ -11,7 +11,19 @@
 
 'use strict';
 
-const React = require('react');
+import * as React from 'react';
+
+import * as ReactART from 'react-art';
+import ARTSVGMode from 'art/modes/svg';
+import ARTCurrentMode from 'art/modes/current';
+// Since these are default exports, we need to import them using ESM.
+// Since they must be on top, we need to import this before ReactDOM.
+import Circle from 'react-art/Circle';
+import Rectangle from 'react-art/Rectangle';
+import Wedge from 'react-art/Wedge';
+
+// Isolate DOM renderer.
+jest.resetModules();
 const ReactDOM = require('react-dom');
 const ReactTestUtils = require('react-dom/test-utils');
 
@@ -19,18 +31,10 @@ const ReactTestUtils = require('react-dom/test-utils');
 jest.resetModules();
 const ReactTestRenderer = require('react-test-renderer');
 
-// Isolate ART renderer.
-jest.resetModules();
-const ReactART = require('react-art');
-const ARTSVGMode = require('art/modes/svg');
-const ARTCurrentMode = require('art/modes/current');
-const Circle = require('react-art/Circle');
-const Rectangle = require('react-art/Rectangle');
-const Wedge = require('react-art/Wedge');
-
 // Isolate the noop renderer
 jest.resetModules();
 const ReactNoop = require('react-noop-renderer');
+const Scheduler = require('scheduler');
 
 let Group;
 let Shape;
@@ -213,7 +217,9 @@ describe('ReactART', () => {
         const chars = this.props.chars.split('');
         return (
           <Surface>
-            {chars.map(text => <Shape key={text} title={text} />)}
+            {chars.map(text => (
+              <Shape key={text} title={text} />
+            ))}
           </Surface>
         );
       }
@@ -358,7 +364,7 @@ describe('ReactART', () => {
     const CurrentRendererContext = React.createContext(null);
 
     function Yield(props) {
-      ReactNoop.yield(props.value);
+      Scheduler.unstable_yieldValue(props.value);
       return null;
     }
 
@@ -385,7 +391,7 @@ describe('ReactART', () => {
       </CurrentRendererContext.Provider>,
     );
 
-    ReactNoop.flushThrough(['A']);
+    expect(Scheduler).toFlushAndYieldThrough(['A']);
 
     ReactDOM.render(
       <Surface>
@@ -400,7 +406,7 @@ describe('ReactART', () => {
     expect(ops).toEqual([null, 'ART']);
 
     ops = [];
-    expect(ReactNoop.flush()).toEqual(['B', 'C']);
+    expect(Scheduler).toFlushAndYield(['B', 'C']);
 
     expect(ops).toEqual(['Test']);
   });
@@ -419,7 +425,7 @@ describe('ReactARTComponents', () => {
       ReactTestRenderer.create(
         <Circle stroke="green" strokeWidth={3} fill="blue" />,
       ),
-    ).toWarnDev(
+    ).toErrorDev(
       'Warning: Failed prop type: The prop `radius` is marked as required in `Circle`, ' +
         'but its value is `undefined`.' +
         '\n    in Circle (at **)',
@@ -436,7 +442,7 @@ describe('ReactARTComponents', () => {
   it('should warn if width/height is missing on a Rectangle component', () => {
     expect(() =>
       ReactTestRenderer.create(<Rectangle stroke="green" fill="blue" />),
-    ).toWarnDev([
+    ).toErrorDev([
       'Warning: Failed prop type: The prop `width` is marked as required in `Rectangle`, ' +
         'but its value is `undefined`.' +
         '\n    in Rectangle (at **)',
@@ -461,7 +467,7 @@ describe('ReactARTComponents', () => {
   });
 
   it('should warn if outerRadius/startAngle/endAngle is missing on a Wedge component', () => {
-    expect(() => ReactTestRenderer.create(<Wedge fill="blue" />)).toWarnDev([
+    expect(() => ReactTestRenderer.create(<Wedge fill="blue" />)).toErrorDev([
       'Warning: Failed prop type: The prop `outerRadius` is marked as required in `Wedge`, ' +
         'but its value is `undefined`.' +
         '\n    in Wedge (at **)',

@@ -9,11 +9,11 @@
 
 'use strict';
 
-let createRenderer;
-let React;
-let ReactDOM;
-let ReactDOMServer;
-let ReactTestUtils;
+import ReactShallowRenderer from 'react-test-renderer/shallow';
+import * as React from 'react';
+import * as ReactDOM from 'react-dom';
+import * as ReactDOMServer from 'react-dom/server';
+import * as ReactTestUtils from 'react-dom/test-utils';
 
 function getTestDocument(markup) {
   const doc = document.implementation.createHTMLDocument('');
@@ -27,20 +27,8 @@ function getTestDocument(markup) {
 }
 
 describe('ReactTestUtils', () => {
-  beforeEach(() => {
-    createRenderer = require('react-test-renderer/shallow').createRenderer;
-    React = require('react');
-    ReactDOM = require('react-dom');
-    ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
-  });
-
   it('Simulate should have locally attached media events', () => {
     expect(Object.keys(ReactTestUtils.Simulate).sort()).toMatchSnapshot();
-  });
-
-  it('SimulateNative should have locally attached media events', () => {
-    expect(Object.keys(ReactTestUtils.SimulateNative).sort()).toMatchSnapshot();
   });
 
   it('gives Jest mocks a passthrough implementation with mockComponent()', () => {
@@ -55,10 +43,10 @@ describe('ReactTestUtils', () => {
     // Patch it up so it returns its children.
     expect(() =>
       ReactTestUtils.mockComponent(MockedComponent),
-    ).toLowPriorityWarnDev(
+    ).toWarnDev(
       'ReactTestUtils.mockComponent() is deprecated. ' +
         'Use shallow rendering or jest.mock() instead.\n\n' +
-        'See https://fb.me/test-utils-mock-component for more information.',
+        'See https://reactjs.org/link/test-utils-mock-component for more information.',
       {withoutStack: true},
     );
 
@@ -403,7 +391,7 @@ describe('ReactTestUtils', () => {
       }
 
       const handler = jest.fn().mockName('spy');
-      const shallowRenderer = createRenderer();
+      const shallowRenderer = ReactShallowRenderer.createRenderer();
       const result = shallowRenderer.render(
         <SomeComponent handleClick={handler} />,
       );

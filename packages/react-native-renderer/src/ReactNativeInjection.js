@@ -9,24 +9,31 @@
 
 import './ReactNativeInjectionShared';
 
-import * as ReactNativeComponentTree from './ReactNativeComponentTree';
-import * as EventPluginUtils from 'events/EventPluginUtils';
-import * as ReactNativeEventEmitter from './ReactNativeEventEmitter';
+import {
+  getFiberCurrentPropsFromNode,
+  getInstanceFromNode,
+  getNodeFromInstance,
+} from './ReactNativeComponentTree';
+import {setComponentTree} from './legacy-events/EventPluginUtils';
+import {receiveEvent, receiveTouches} from './ReactNativeEventEmitter';
 import ReactNativeGlobalResponderHandler from './ReactNativeGlobalResponderHandler';
-import ResponderEventPlugin from 'events/ResponderEventPlugin';
+import ResponderEventPlugin from './legacy-events/ResponderEventPlugin';
 
 // Module provided by RN:
-import RCTEventEmitter from 'RCTEventEmitter';
+import {RCTEventEmitter} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 /**
  * Register the event emitter with the native bridge
  */
-RCTEventEmitter.register(ReactNativeEventEmitter);
+RCTEventEmitter.register({
+  receiveEvent,
+  receiveTouches,
+});
 
-EventPluginUtils.setComponentTree(
-  ReactNativeComponentTree.getFiberCurrentPropsFromNode,
-  ReactNativeComponentTree.getInstanceFromNode,
-  ReactNativeComponentTree.getNodeFromInstance,
+setComponentTree(
+  getFiberCurrentPropsFromNode,
+  getInstanceFromNode,
+  getNodeFromInstance,
 );
 
 ResponderEventPlugin.injection.injectGlobalResponderHandler(

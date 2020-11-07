@@ -1,0 +1,117 @@
+.Profiler {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: stretch;
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sans-normal);
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+.Profiler, .Profiler * {
+  box-sizing: border-box;
+  -webkit-font-smoothing: var(--font-smoothing);
+}
+
+.LeftColumn {
+  display: flex;
+  flex-direction: column;
+  flex: 2 1 200px;
+  border-top: 1px solid var(--color-border);
+}
+
+.RightColumn {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 100px;
+  max-width: 300px;
+  overflow-x: hidden;
+  border-left: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+}
+
+.Content {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.Column {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem;
+}
+
+.Paragraph {
+  text-align: center;
+}
+
+.Row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.Header {
+  font-size: var(--font-size-sans-large);
+  margin-bottom: 0.5rem;
+}
+
+.Toolbar {
+  height: 2.25rem;
+  padding: 0 0.25rem;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.VRule {
+  height: 20px;
+  width: 1px;
+  border-left: 1px solid var(--color-border);
+  padding-left: 0.25rem;
+  margin-left: 0.25rem;
+}
+
+.Spacer {
+  flex: 1;
+}
+
+.StopRecordingButton {
+  font-size: var(--font-size-sans-large);
+  padding: 0.5rem;
+}
+
+.ContentFallback {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sans-large);
+  color: var(--color-dim);
+}
+
+.SnapshotSelectorFallback {
+  height: 100%;
+  padding-left: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sans-large);
+  color: var(--color-dim);
+}
+
+.Link {
+  color: var(--color-button);
+}

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import warning from 'shared/warning';
+import {enableFilterEmptyStringAttributesDOM} from 'shared/ReactFeatureFlags';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -16,7 +16,7 @@ type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 export const RESERVED = 0;
 
 // A simple string attribute.
-// Attributes that aren't in the whitelist are presumed to have this type.
+// Attributes that aren't in the filter are presumed to have this type.
 export const STRING = 1;
 
 // A string attribute that accepts booleans in React. In HTML, these are called
@@ -51,6 +51,8 @@ export type PropertyInfo = {|
   +mustUseProperty: boolean,
   +propertyName: string,
   +type: PropertyType,
+  +sanitizeURL: boolean,
+  +removeEmptyString: boolean,
 |};
 
 /* eslint-disable max-len */
@@ -83,7 +85,7 @@ export function isAttributeNameSafe(attributeName: string): boolean {
   }
   illegalAttributeNameCache[attributeName] = true;
   if (__DEV__) {
-    warning(false, 'Invalid attribute name: `%s`', attributeName);
+    console.error('Invalid attribute name: `%s`', attributeName);
   }
   return false;
 }
@@ -162,6 +164,32 @@ export function shouldRemoveAttribute(
     return false;
   }
   if (propertyInfo !== null) {
+    if (enableFilterEmptyStringAttributesDOM) {
+      if (propertyInfo.removeEmptyString && value === '') {
+        if (__DEV__) {
+          if (name === 'src') {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'This may cause the browser to download the whole page again over the network. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              name,
+              name,
+            );
+          } else {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              name,
+              name,
+            );
+          }
+        }
+        return true;
+      }
+    }
+
     switch (propertyInfo.type) {
       case BOOLEAN:
         return !value;
@@ -186,6 +214,8 @@ function PropertyInfoRecord(
   mustUseProperty: boolean,
   attributeName: string,
   attributeNamespace: string | null,
+  sanitizeURL: boolean,
+  removeEmptyString: boolean,
 ) {
   this.acceptsBooleans =
     type === BOOLEANISH_STRING ||
@@ -196,6 +226,8 @@ function PropertyInfoRecord(
   this.mustUseProperty = mustUseProperty;
   this.propertyName = name;
   this.type = type;
+  this.sanitizeURL = sanitizeURL;
+  this.removeEmptyString = removeEmptyString;
 }
 
 // When adding attributes to this list, be sure to also add them to
@@ -204,7 +236,7 @@ function PropertyInfoRecord(
 const properties = {};
 
 // These props are reserved by React. They shouldn't be written to the DOM.
-[
+const reservedProps = [
   'children',
   'dangerouslySetInnerHTML',
   // TODO: This prevents the assignment of defaultValue to regular
@@ -216,13 +248,17 @@ const properties = {};
   'suppressContentEditableWarning',
   'suppressHydrationWarning',
   'style',
-].forEach(name => {
+];
+
+reservedProps.forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
     RESERVED,
     false, // mustUseProperty
     name, // attributeName
     null, // attributeNamespace
+    false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -240,6 +276,8 @@ const properties = {};
     false, // mustUseProperty
     attributeName, // attributeName
     null, // attributeNamespace
+    false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -253,6 +291,8 @@ const properties = {};
     false, // mustUseProperty
     name.toLowerCase(), // attributeName
     null, // attributeNamespace
+    false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -272,6 +312,8 @@ const properties = {};
     false, // mustUseProperty
     name, // attributeName
     null, // attributeNamespace
+    false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -287,6 +329,8 @@ const properties = {};
   'default',
   'defer',
   'disabled',
+  'disablePictureInPicture',
+  'disableRemotePlayback',
   'formNoValidate',
   'hidden',
   'loop',
@@ -308,6 +352,8 @@ const properties = {};
     false, // mustUseProperty
     name.toLowerCase(), // attributeName
     null, // attributeNamespace
+    false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -331,6 +377,8 @@ const properties = {};
     true, // mustUseProperty
     name, // attributeName
     null, // attributeNamespace
+    false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -350,6 +398,8 @@ const properties = {};
     false, // mustUseProperty
     name, // attributeName
     null, // attributeNamespace
+    false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -370,6 +420,8 @@ const properties = {};
     false, // mustUseProperty
     name, // attributeName
     null, // attributeNamespace
+    false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -381,6 +433,8 @@ const properties = {};
     false, // mustUseProperty
     name.toLowerCase(), // attributeName
     null, // attributeNamespace
+    false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -389,9 +443,9 @@ const capitalize = token => token[1].toUpperCase();
 
 // This is a list of all SVG attributes that need special casing, namespacing,
 // or boolean value assignment. Regular attributes that just accept strings
-// and have the same names are omitted, just like in the HTML whitelist.
+// and have the same names are omitted, just like in the HTML attribute filter.
 // Some of these attributes can be hard to find. This list was created by
-// scrapping the MDN documentation.
+// scraping the MDN documentation.
 [
   'accent-height',
   'alignment-baseline',
@@ -478,6 +532,8 @@ const capitalize = token => token[1].toUpperCase();
     false, // mustUseProperty
     attributeName,
     null, // attributeNamespace
+    false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -485,7 +541,6 @@ const capitalize = token => token[1].toUpperCase();
 [
   'xlink:actuate',
   'xlink:arcrole',
-  'xlink:href',
   'xlink:role',
   'xlink:show',
   'xlink:title',
@@ -502,6 +557,8 @@ const capitalize = token => token[1].toUpperCase();
     false, // mustUseProperty
     attributeName,
     'http://www.w3.org/1999/xlink',
+    false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
@@ -522,16 +579,47 @@ const capitalize = token => token[1].toUpperCase();
     false, // mustUseProperty
     attributeName,
     'http://www.w3.org/XML/1998/namespace',
+    false, // sanitizeURL
+    false, // removeEmptyString
   );
 });
 
-// Special case: this attribute exists both in HTML and SVG.
-// Its "tabindex" attribute name is case-sensitive in SVG so we can't just use
-// its React `tabIndex` name, like we do for attributes that exist only in HTML.
-properties.tabIndex = new PropertyInfoRecord(
-  'tabIndex',
+// These attribute exists both in HTML and SVG.
+// The attribute name is case-sensitive in SVG so we can't just use
+// the React name like we do for attributes that exist only in HTML.
+['tabIndex', 'crossOrigin'].forEach(attributeName => {
+  properties[attributeName] = new PropertyInfoRecord(
+    attributeName,
+    STRING,
+    false, // mustUseProperty
+    attributeName.toLowerCase(), // attributeName
+    null, // attributeNamespace
+    false, // sanitizeURL
+    false, // removeEmptyString
+  );
+});
+
+// These attributes accept URLs. These must not allow javascript: URLS.
+// These will also need to accept Trusted Types object in the future.
+const xlinkHref = 'xlinkHref';
+properties[xlinkHref] = new PropertyInfoRecord(
+  'xlinkHref',
   STRING,
   false, // mustUseProperty
-  'tabindex', // attributeName
-  null, // attributeNamespace
+  'xlink:href',
+  'http://www.w3.org/1999/xlink',
+  true, // sanitizeURL
+  false, // removeEmptyString
 );
+
+['src', 'href', 'action', 'formAction'].forEach(attributeName => {
+  properties[attributeName] = new PropertyInfoRecord(
+    attributeName,
+    STRING,
+    false, // mustUseProperty
+    attributeName.toLowerCase(), // attributeName
+    null, // attributeNamespace
+    true, // sanitizeURL
+    true, // removeEmptyString
+  );
+});

@@ -11,10 +11,24 @@
 
 declare var __PROFILE__: boolean;
 declare var __UMD__: boolean;
+declare var __EXPERIMENTAL__: boolean;
+declare var __VARIANT__: boolean;
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
   inject: ?((stuff: Object) => void)
 };*/
+
+declare module 'create-react-class' {
+  declare var exports: React$CreateClass;
+}
+
+declare var trustedTypes: {|
+  isHTML: (value: any) => boolean,
+  isScript: (value: any) => boolean,
+  isScriptURL: (value: any) => boolean,
+  // TrustedURLs are deprecated and will be removed soon: https://github.com/WICG/trusted-types/pull/204
+  isURL?: (value: any) => boolean,
+|};
 
 // ReactFeatureFlags www fork
 declare module 'ReactFeatureFlags' {
@@ -23,15 +37,35 @@ declare module 'ReactFeatureFlags' {
 
 // ReactFiberErrorDialog www fork
 declare module 'ReactFiberErrorDialog' {
-  declare module.exports: {
-    showErrorDialog: (error: mixed) => boolean,
-  };
+  declare module.exports: {showErrorDialog: (error: mixed) => boolean, ...};
 }
 
 // EventListener www fork
 declare module 'EventListener' {
   declare module.exports: {
-    listen: (target: Element, type: string, callback: Function) => mixed,
-    capture: (target: Element, type: string, callback: Function) => mixed,
+    listen: (
+      target: EventTarget,
+      type: string,
+      callback: Function,
+      priority?: number,
+      options?: {passive: boolean, ...},
+    ) => mixed,
+    capture: (target: EventTarget, type: string, callback: Function) => mixed,
+    captureWithPassiveFlag: (
+      target: EventTarget,
+      type: string,
+      callback: Function,
+      passive: boolean,
+    ) => mixed,
+    bubbleWithPassiveFlag: (
+      target: EventTarget,
+      type: string,
+      callback: Function,
+      passive: boolean,
+    ) => mixed,
+    ...
   };
 }
+
+declare function __webpack_chunk_load__(id: string): Promise<mixed>;
+declare function __webpack_require__(id: string): {default: any};

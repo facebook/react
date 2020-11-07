@@ -10,13 +10,13 @@
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCurrentFiber';
 import invariant from 'shared/invariant';
-import warning from 'shared/warning';
 
-import * as DOMPropertyOperations from './DOMPropertyOperations';
+import {setValueForProperty} from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import {getToStringValue, toString} from './ToStringValue';
-import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
-import * as inputValueTracking from './inputValueTracking';
+import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
+import {updateValueIfChanged} from './inputValueTracking';
+import getActiveElement from './getActiveElement';
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 
 import type {ToStringValue} from './ToStringValue';
@@ -26,7 +26,9 @@ type InputWithWrapperState = HTMLInputElement & {
     initialValue: ToStringValue,
     initialChecked: ?boolean,
     controlled?: boolean,
+    ...
   },
+  ...
 };
 
 let didWarnValueDefaultValue = false;
@@ -72,21 +74,20 @@ export function getHostProps(element: Element, props: Object) {
 
 export function initWrapperState(element: Element, props: Object) {
   if (__DEV__) {
-    ReactControlledValuePropTypes.checkPropTypes('input', props);
+    checkControlledValueProps('input', props);
 
     if (
       props.checked !== undefined &&
       props.defaultChecked !== undefined &&
       !didWarnCheckedDefaultChecked
     ) {
-      warning(
-        false,
+      console.error(
         '%s contains an input of type %s with both checked and defaultChecked props. ' +
           'Input elements must be either controlled or uncontrolled ' +
           '(specify either the checked prop, or the defaultChecked prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
+          'https://reactjs.org/link/controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
@@ -97,14 +98,13 @@ export function initWrapperState(element: Element, props: Object) {
       props.defaultValue !== undefined &&
       !didWarnValueDefaultValue
     ) {
-      warning(
-        false,
+      console.error(
         '%s contains an input of type %s with both value and defaultValue props. ' +
           'Input elements must be either controlled or uncontrolled ' +
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
+          'https://reactjs.org/link/controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
@@ -129,7 +129,7 @@ export function updateChecked(element: Element, props: Object) {
   const node = ((element: any): InputWithWrapperState);
   const checked = props.checked;
   if (checked != null) {
-    DOMPropertyOperations.setValueForProperty(node, 'checked', checked, false);
+    setValueForProperty(node, 'checked', checked, false);
   }
 }
 
@@ -143,13 +143,12 @@ export function updateWrapper(element: Element, props: Object) {
       controlled &&
       !didWarnUncontrolledToControlled
     ) {
-      warning(
-        false,
-        'A component is changing an uncontrolled input of type %s to be controlled. ' +
-          'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
+      console.error(
+        'A component is changing an uncontrolled input to be controlled. ' +
+          'This is likely caused by the value changing from undefined to ' +
+          'a defined value, which should not happen. ' +
           'Decide between using a controlled or uncontrolled input ' +
-          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-        props.type,
+          'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
       );
       didWarnUncontrolledToControlled = true;
     }
@@ -158,13 +157,12 @@ export function updateWrapper(element: Element, props: Object) {
       !controlled &&
       !didWarnControlledToUncontrolled
     ) {
-      warning(
-        false,
-        'A component is changing a controlled input of type %s to be uncontrolled. ' +
-          'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
+      console.error(
+        'A component is changing a controlled input to be uncontrolled. ' +
+          'This is likely caused by the value changing from a defined to ' +
+          'undefined, which should not happen. ' +
           'Decide between using a controlled or uncontrolled input ' +
-          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-        props.type,
+          'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
       );
       didWarnControlledToUncontrolled = true;
     }
@@ -183,10 +181,10 @@ export function updateWrapper(element: Element, props: Object) {
         // eslint-disable-next-line
         node.value != (value: any)
       ) {
-        node.value = toString(value);
+        node.value = toString((value: any));
       }
-    } else if (node.value !== toString(value)) {
-      node.value = toString(value);
+    } else if (node.value !== toString((value: any))) {
+      node.value = toString((value: any));
     }
   } else if (type === 'submit' || type === 'reset') {
     // Submit/reset inputs need the attribute removed completely to avoid
@@ -277,7 +275,7 @@ export function postMountWrapper(
         }
       } else {
         // When syncing the value attribute, the value property should use
-        // the the wrapperState._initialValue property. This uses:
+        // the wrapperState._initialValue property. This uses:
         //
         //   1. The value React property when present
         //   2. The defaultValue React property when present
@@ -330,7 +328,7 @@ export function postMountWrapper(
       node.defaultChecked = !!props.defaultChecked;
     }
   } else {
-    // When syncing the checked attribute, both the the checked property and
+    // When syncing the checked attribute, both the checked property and
     // attribute are assigned at the same time using defaultChecked. This uses:
     //
     //   1. The checked React property when present
@@ -389,7 +387,7 @@ function updateNamedCousins(rootNode, props) {
 
       // We need update the tracked value on the named cousin since the value
       // was changed but the input saw no event or value set
-      inputValueTracking.updateValueIfChanged(otherNode);
+      updateValueIfChanged(otherNode);
 
       // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked
@@ -415,7 +413,7 @@ export function setDefaultValue(
   if (
     // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
     type !== 'number' ||
-    node.ownerDocument.activeElement !== node
+    getActiveElement(node.ownerDocument) !== node
   ) {
     if (value == null) {
       node.defaultValue = toString(node._wrapperState.initialValue);

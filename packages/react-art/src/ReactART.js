@@ -5,9 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import React from 'react';
+import * as React from 'react';
 import ReactVersion from 'shared/ReactVersion';
-import * as ARTRenderer from 'react-reconciler/inline.art';
+import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
+import {
+  createContainer,
+  updateContainer,
+  injectIntoDevTools,
+} from 'react-reconciler/src/ReactFiberReconciler';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
 import FastNoSideEffects from 'art/modes/fast-noSideEffects';
@@ -61,8 +66,8 @@ class Surface extends React.Component {
 
     this._surface = Mode.Surface(+width, +height, this._tagRef);
 
-    this._mountNode = ARTRenderer.createContainer(this._surface);
-    ARTRenderer.updateContainer(this.props.children, this._mountNode, this);
+    this._mountNode = createContainer(this._surface, LegacyRoot, false, null);
+    updateContainer(this.props.children, this._mountNode, this);
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -72,7 +77,7 @@ class Surface extends React.Component {
       this._surface.resize(+props.width, +props.height);
     }
 
-    ARTRenderer.updateContainer(this.props.children, this._mountNode, this);
+    updateContainer(this.props.children, this._mountNode, this);
 
     if (this._surface.render) {
       this._surface.render();
@@ -80,7 +85,7 @@ class Surface extends React.Component {
   }
 
   componentWillUnmount() {
-    ARTRenderer.updateContainer(null, this._mountNode, this);
+    updateContainer(null, this._mountNode, this);
   }
 
   render() {
@@ -132,7 +137,7 @@ class Text extends React.Component {
   }
 }
 
-ARTRenderer.injectIntoDevTools({
+injectIntoDevTools({
   findFiberByHostInstance: () => null,
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,

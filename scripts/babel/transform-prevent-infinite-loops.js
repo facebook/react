@@ -22,10 +22,10 @@ module.exports = ({types: t, template}) => {
   // We set a global so that we can later fail the test
   // even if the error ends up being caught by the code.
   const buildGuard = template(`
-    if (ITERATOR++ > MAX_ITERATIONS) {
+    if (%%iterator%%++ > %%maxIterations%%) {
       global.infiniteLoopError = new RangeError(
         'Potential infinite loop: exceeded ' +
-        MAX_ITERATIONS +
+        %%maxIterations%% +
         ' iterations.'
       );
       throw global.infiniteLoopError;
@@ -36,10 +36,18 @@ module.exports = ({types: t, template}) => {
     visitor: {
       'WhileStatement|ForStatement|DoWhileStatement': (path, file) => {
         const filename = file.file.opts.filename;
-        const MAX_ITERATIONS =
-          filename.indexOf('__tests__') === -1
-            ? MAX_SOURCE_ITERATIONS
-            : MAX_TEST_ITERATIONS;
+        const maxIterations = t.logicalExpression(
+          '||',
+          t.memberExpression(
+            t.identifier('global'),
+            t.identifier('__MAX_ITERATIONS__')
+          ),
+          t.numericLiteral(
+            filename.indexOf('__tests__') === -1
+              ? MAX_SOURCE_ITERATIONS
+              : MAX_TEST_ITERATIONS
+          )
+        );
 
         // An iterator that is incremented with each iteration
         const iterator = path.scope.parent.generateUidIdentifier('loopIt');
@@ -50,8 +58,8 @@ module.exports = ({types: t, template}) => {
         });
         // If statement and throw error if it matches our criteria
         const guard = buildGuard({
-          ITERATOR: iterator,
-          MAX_ITERATIONS: t.numericLiteral(MAX_ITERATIONS),
+          iterator,
+          maxIterations,
         });
         // No block statement e.g. `while (1) 1;`
         if (!path.get('body').isBlockStatement()) {

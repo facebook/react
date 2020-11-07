@@ -4,27 +4,33 @@
   "keywords": [
     "react"
   ],
-  "version": "16.6.0-alpha.8af6728",
+  "version": "17.0.1",
   "homepage": "https://reactjs.org/",
   "bugs": "https://github.com/facebook/react/issues",
   "license": "MIT",
   "files": [
     "LICENSE",
     "README.md",
+    "build-info.json",
     "index.js",
     "cjs/",
-    "umd/"
+    "umd/",
+    "jsx-runtime.js",
+    "jsx-dev-runtime.js",
+    "unstable-cache.js"
   ],
   "main": "index.js",
-  "repository": "facebook/react",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react"
+  },
   "engines": {
     "node": ">=0.10.0"
   },
   "dependencies": {
     "loose-envify": "^1.1.0",
-    "object-assign": "^4.1.1",
-    "prop-types": "^15.6.2",
-    "scheduler": "^0.10.0-alpha.8af6728"
+    "object-assign": "^4.1.1"
   },
   "browserify": {
     "transform": [

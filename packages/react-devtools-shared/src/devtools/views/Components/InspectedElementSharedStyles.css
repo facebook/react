@@ -1,0 +1,59 @@
+.InspectedElementTree {
+  padding: 0.25rem;
+  border-top: 1px solid var(--color-border);
+}
+.InspectedElementTree:first-of-type {
+  border-top: none;
+}
+
+.HeaderRow {
+  display: flex;
+  align-items: center;
+}
+
+.Header {
+  flex: 1 1;
+  font-family: var(--font-family-sans);
+}
+
+.Item {
+  display: flex;
+}
+
+.Name {
+  color: var(--color-attribute-name);
+  flex: 0 0 auto;
+}
+.Name:after {
+  content: ': ';
+  color: var(--color-text);
+  margin-right: 0.5rem;
+}
+
+.Value {
+  color: var(--color-attribute-value);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.None {
+  color: var(--color-dimmer);
+  font-style: italic;
+}
+
+.Empty {
+  color: var(--color-dimmer);
+  font-style: italic;
+  padding-left: 0.75rem;
+}
+
+.ToggleSuspenseRow {
+  padding-left: 1rem;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+.EditableValue {
+  min-width: 1rem;
+}

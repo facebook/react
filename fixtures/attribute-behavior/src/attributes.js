@@ -255,7 +255,7 @@ const attributes = [
   {
     name: 'cite',
     tagName: 'blockquote',
-    overrideStringValue: 'http://reactjs.com/',
+    overrideStringValue: 'https://reactjs.com/',
   },
   {name: 'class', read: getAttribute('class')},
   {name: 'classID', tagName: 'object', read: getAttribute('classid')},
@@ -449,6 +449,16 @@ const attributes = [
   },
   {name: 'disabled', tagName: 'input'},
   {
+    name: 'disablePictureInPicture',
+    tagName: 'video',
+    read: getProperty('disablepictureinpicture'),
+  },
+  {
+    name: 'disableRemotePlayback',
+    tagName: 'video',
+    read: getProperty('disableremoteplayback'),
+  },
+  {
     name: 'display',
     tagName: 'svg',
     overrideStringValue: 'list-item',
@@ -545,6 +555,11 @@ const attributes = [
     containerTagName: 'svg',
     tagName: 'animate',
     read: getSVGAttribute('end'),
+  },
+  {
+    name: 'enterKeyHint',
+    tagName: 'input',
+    read: getProperty('enterKeyHint'),
   },
   {
     name: 'exponent',

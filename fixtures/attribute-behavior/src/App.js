@@ -461,9 +461,7 @@ function prepareState(initGlobals) {
       hasSameBehaviorForAll,
       rowPatternHash,
       // "Good enough" id that we can store in localStorage
-      rowIdHash: `${attribute.name} ${attribute.tagName} ${
-        attribute.overrideStringValue
-      }`,
+      rowIdHash: `${attribute.name} ${attribute.tagName} ${attribute.overrideStringValue}`,
     };
     const rowGroup = rowPatternHashes.get(rowPatternHash) || new Set();
     rowGroup.add(row);
@@ -860,20 +858,18 @@ class App extends React.Component {
         });
         break;
       default:
-        throw new Error('Switch statement should be exhuastive');
+        throw new Error('Switch statement should be exhaustive');
     }
 
     // Sort
     switch (sortOrder) {
       case ALPHABETICAL:
-        return filteredAttributes.sort(
-          (attr1, attr2) =>
-            attr1.name.toLowerCase() < attr2.name.toLowerCase() ? -1 : 1
+        return filteredAttributes.sort((attr1, attr2) =>
+          attr1.name.toLowerCase() < attr2.name.toLowerCase() ? -1 : 1
         );
       case REV_ALPHABETICAL:
-        return filteredAttributes.sort(
-          (attr1, attr2) =>
-            attr1.name.toLowerCase() < attr2.name.toLowerCase() ? 1 : -1
+        return filteredAttributes.sort((attr1, attr2) =>
+          attr1.name.toLowerCase() < attr2.name.toLowerCase() ? 1 : -1
         );
       case GROUPED_BY_ROW_PATTERN: {
         return filteredAttributes.sort((attr1, attr2) => {
@@ -887,7 +883,7 @@ class App extends React.Component {
         });
       }
       default:
-        throw new Error('Switch statement should be exhuastive');
+        throw new Error('Switch statement should be exhaustive');
     }
   }
 

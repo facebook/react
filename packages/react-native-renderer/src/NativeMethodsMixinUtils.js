@@ -66,17 +66,19 @@ export function throwOnStylesProp(component: any, props: any) {
 }
 
 export function warnForStyleProps(props: any, validAttributes: any) {
-  for (const key in validAttributes.style) {
-    if (!(validAttributes[key] || props[key] === undefined)) {
-      console.error(
-        'You are setting the style `{ ' +
-          key +
-          ': ... }` as a prop. You ' +
-          'should nest it in a style object. ' +
-          'E.g. `{ style: { ' +
-          key +
-          ': ... } }`',
-      );
+  if (__DEV__) {
+    for (const key in validAttributes.style) {
+      if (!(validAttributes[key] || props[key] === undefined)) {
+        console.error(
+          'You are setting the style `{ %s' +
+            ': ... }` as a prop. You ' +
+            'should nest it in a style object. ' +
+            'E.g. `{ style: { %s' +
+            ': ... } }`',
+          key,
+          key,
+        );
+      }
     }
   }
 }

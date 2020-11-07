@@ -45,17 +45,11 @@ global.spyOnProd = function(...args) {
   }
 };
 
-const JestReact = require('jest-react');
 expect.extend({
-  ...require('../matchers/interactionTracing'),
+  ...require('../matchers/interactionTracingMatchers'),
+  ...require('../matchers/profilerMatchers'),
   ...require('../matchers/toWarnDev'),
-
-  toFlushWithoutYielding: JestReact.toFlushWithoutYielding,
-  toFlushAndYield: JestReact.toFlushAndYield,
-  toFlushAndYieldThrough: JestReact.toFlushAndYieldThrough,
-  toHaveYielded: JestReact.toHaveYielded,
-  toFlushAndThrow: JestReact.toFlushAndThrow,
-  toMatchRenderedOutput: JestReact.toMatchRenderedOutput,
+  ...require('../matchers/reactTestMatchers'),
 });
 
 beforeEach(() => (numExpectations = 0));

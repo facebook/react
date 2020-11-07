@@ -7,12 +7,16 @@
 
 'use strict';
 
+const helperModuleImports = require('@babel/helper-module-imports');
+
 module.exports = function autoImporter(babel) {
   function getAssignIdent(path, file, state) {
     if (state.id) {
       return state.id;
     }
-    state.id = file.addImport('object-assign', 'default', 'assign');
+    state.id = helperModuleImports.addDefault(path, 'object-assign', {
+      nameHint: 'assign',
+    });
     return state.id;
   }
 
@@ -24,6 +28,10 @@ module.exports = function autoImporter(babel) {
 
     visitor: {
       CallExpression: function(path, file) {
+        if (file.filename.indexOf('object-assign') !== -1) {
+          // Don't replace Object.assign if we're transforming object-assign
+          return;
+        }
         if (path.get('callee').matchesPattern('Object.assign')) {
           // generate identifier and require if it hasn't been already
           const id = getAssignIdent(path, file, this);
@@ -32,6 +40,10 @@ module.exports = function autoImporter(babel) {
       },
 
       MemberExpression: function(path, file) {
+        if (file.filename.indexOf('object-assign') !== -1) {
+          // Don't replace Object.assign if we're transforming object-assign
+          return;
+        }
         if (path.matchesPattern('Object.assign')) {
           const id = getAssignIdent(path, file, this);
           path.replaceWith(id);

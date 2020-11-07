@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// For HTML, certain tags should omit their close tag. We keep a whitelist for
+// For HTML, certain tags should omit their close tag. We keep a list for
 // those special-case tags.
 
 const omittedCloseTags = {

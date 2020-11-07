@@ -9,6 +9,6 @@
 
 export const canUseDOM: boolean = !!(
   typeof window !== 'undefined' &&
-  window.document &&
-  window.document.createElement
+  typeof window.document !== 'undefined' &&
+  typeof window.document.createElement !== 'undefined'
 );

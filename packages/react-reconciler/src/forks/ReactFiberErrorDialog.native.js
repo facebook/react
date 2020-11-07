@@ -7,44 +7,32 @@
  * @flow
  */
 
-import type {CapturedError} from '../ReactCapturedValue';
+import type {Fiber} from '../ReactFiber.old';
+import type {CapturedValue} from '../ReactCapturedValue';
+
+import {ClassComponent} from '../ReactWorkTags';
 
 // Module provided by RN:
-import ExceptionsManager from 'ExceptionsManager';
+import {ReactFiberErrorDialog as RNImpl} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
-/**
- * Intercept lifecycle errors and ensure they are shown with the correct stack
- * trace within the native redbox component.
- */
-export function showErrorDialog(capturedError: CapturedError): boolean {
-  const {componentStack, error} = capturedError;
+import invariant from 'shared/invariant';
 
-  let errorToHandle: Error;
+invariant(
+  typeof RNImpl.showErrorDialog === 'function',
+  'Expected ReactFiberErrorDialog.showErrorDialog to be a function.',
+);
 
-  // Typically Errors are thrown but eg strings or null can be thrown as well.
-  if (error instanceof Error) {
-    const {message, name} = error;
-
-    const summary = message ? `${name}: ${message}` : name;
-
-    errorToHandle = error;
-
-    try {
-      errorToHandle.message = `${summary}\n\nThis error is located at:${componentStack}`;
-    } catch (e) {}
-  } else if (typeof error === 'string') {
-    errorToHandle = new Error(
-      `${error}\n\nThis error is located at:${componentStack}`,
-    );
-  } else {
-    errorToHandle = new Error(`Unspecified error at:${componentStack}`);
-  }
-
-  ExceptionsManager.handleException(errorToHandle, false);
-
-  // Return false here to prevent ReactFiberErrorLogger default behavior of
-  // logging error details to console.error. Calls to console.error are
-  // automatically routed to the native redbox controller, which we've already
-  // done above by calling ExceptionsManager.
-  return false;
+export function showErrorDialog(
+  boundary: Fiber,
+  errorInfo: CapturedValue<mixed>,
+): boolean {
+  const capturedError = {
+    componentStack: errorInfo.stack !== null ? errorInfo.stack : '',
+    error: errorInfo.value,
+    errorBoundary:
+      boundary !== null && boundary.tag === ClassComponent
+        ? boundary.stateNode
+        : null,
+  };
+  return RNImpl.showErrorDialog(capturedError);
 }

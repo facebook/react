@@ -1,0 +1,71 @@
+.Components {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: row;
+  background-color: var(--color-background);
+  color: var(--color-text);
+  font-family: var(--font-family-sans);
+}
+
+.Components, .Components * {
+  box-sizing: border-box;
+  -webkit-font-smoothing: var(--font-smoothing);
+}
+
+.TreeWrapper {
+  flex: 0 0 var(--horizontal-resize-percentage);
+  overflow: auto;
+}
+
+.InspectedElementWrapper {
+  flex: 1 1 35%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.ResizeBarWrapper {
+  flex: 0 0 0px;
+  position: relative;
+}
+
+.ResizeBar {
+  position: absolute;
+  left: -2px;
+  width: 5px;
+  height: 100%;
+  cursor: ew-resize;
+}
+
+@media screen and (max-width: 600px) {
+  .Components {
+    flex-direction: column;
+  }
+
+  .TreeWrapper {
+    flex: 0 0 var(--vertical-resize-percentage);
+  }
+
+  .InspectedElementWrapper {
+    flex: 1 1 50%;
+  }
+
+  .ResizeBar {
+    top: -2px;
+    left: 0;
+    width: 100%;
+    height: 5px;
+    cursor: ns-resize;
+  }
+}
+
+.Loading {
+  height: 100%;
+  padding-left: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: var(--font-size-sans-large);
+  color: var(--color-dim);
+}

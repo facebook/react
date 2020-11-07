@@ -8,17 +8,53 @@
  */
 
 export function addEventBubbleListener(
-  element: Document | Element,
+  target: EventTarget,
   eventType: string,
   listener: Function,
-): void {
-  element.addEventListener(eventType, listener, false);
+): Function {
+  target.addEventListener(eventType, listener, false);
+  return listener;
 }
 
 export function addEventCaptureListener(
-  element: Document | Element,
+  target: EventTarget,
   eventType: string,
   listener: Function,
+): Function {
+  target.addEventListener(eventType, listener, true);
+  return listener;
+}
+
+export function addEventCaptureListenerWithPassiveFlag(
+  target: EventTarget,
+  eventType: string,
+  listener: Function,
+  passive: boolean,
+): Function {
+  target.addEventListener(eventType, listener, {
+    capture: true,
+    passive,
+  });
+  return listener;
+}
+
+export function addEventBubbleListenerWithPassiveFlag(
+  target: EventTarget,
+  eventType: string,
+  listener: Function,
+  passive: boolean,
+): Function {
+  target.addEventListener(eventType, listener, {
+    passive,
+  });
+  return listener;
+}
+
+export function removeEventListener(
+  target: EventTarget,
+  eventType: string,
+  listener: Function,
+  capture: boolean,
 ): void {
-  element.addEventListener(eventType, listener, true);
+  target.removeEventListener(eventType, listener, capture);
 }

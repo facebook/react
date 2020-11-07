@@ -192,8 +192,7 @@ class App extends Component {
               }
             />
             <p>
-              Step {currentStep}
-              : {friendlyAction} (
+              Step {currentStep}: {friendlyAction} (
               <a style={{color: 'gray'}} onClick={this.handleEdit} href="#">
                 Edit
               </a>

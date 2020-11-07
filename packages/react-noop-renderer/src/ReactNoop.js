@@ -17,9 +17,39 @@
 import ReactFiberReconciler from 'react-reconciler';
 import createReactNoop from './createReactNoop';
 
-const ReactNoop = createReactNoop(
+export const {
+  _Scheduler,
+  getChildren,
+  getPendingChildren,
+  getOrCreateRootContainer,
+  createRoot,
+  createBlockingRoot,
+  createLegacyRoot,
+  getChildrenAsJSX,
+  getPendingChildrenAsJSX,
+  createPortal,
+  render,
+  renderLegacySyncRoot,
+  renderToRootWithID,
+  unmountRootWithID,
+  findInstance,
+  flushNextYield,
+  flushWithHostCounters,
+  expire,
+  flushExpired,
+  batchedUpdates,
+  deferredUpdates,
+  unbatchedUpdates,
+  discreteUpdates,
+  flushDiscreteUpdates,
+  flushSync,
+  flushPassiveEffects,
+  act,
+  dumpTree,
+  getRoot,
+  // TODO: Remove this after callers migrate to alternatives.
+  unstable_runWithPriority,
+} = createReactNoop(
   ReactFiberReconciler, // reconciler
   true, // useMutation
 );
-
-export default ReactNoop;

@@ -5,11 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export {
-  unstable_now as now,
-  unstable_scheduleCallback as scheduleDeferredCallback,
-  unstable_cancelCallback as cancelDeferredCallback,
-} from 'scheduler';
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
 import invariant from 'shared/invariant';
@@ -69,7 +64,7 @@ function createEventHandler(instance) {
 
 function destroyEventListeners(instance) {
   if (instance._subscriptions) {
-    for (let type in instance._subscriptions) {
+    for (const type in instance._subscriptions) {
       instance._subscriptions[type]();
     }
   }
@@ -171,7 +166,7 @@ function applyNodeProps(instance, props, prevProps = {}) {
     }
   }
 
-  for (let type in EVENT_TYPES) {
+  for (const type in EVENT_TYPES) {
     addEventListeners(instance, EVENT_TYPES[type], props[type]);
   }
 }
@@ -242,8 +237,10 @@ function applyTextProps(instance, props, prevProps = {}) {
   }
 }
 
-export * from 'shared/HostConfigWithNoPersistence';
-export * from 'shared/HostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
 
 export function appendInitialChild(parentInstance, child) {
   if (typeof child === 'string') {
@@ -307,6 +304,7 @@ export function getPublicInstance(instance) {
 
 export function prepareForCommit() {
   // Noop
+  return null;
 }
 
 export function prepareUpdate(domElement, type, oldProps, newProps) {
@@ -319,10 +317,6 @@ export function resetAfterCommit() {
 
 export function resetTextContent(domElement) {
   // Noop
-}
-
-export function shouldDeprioritizeSubtree(type, props) {
-  return false;
 }
 
 export function getRootHostContext() {
@@ -345,6 +339,9 @@ export function shouldSetTextContent(type, props) {
 
 // The ART renderer is secondary to the React DOM renderer.
 export const isPrimaryRenderer = false;
+
+// The ART renderer shouldn't trigger missing act() warnings
+export const warnsIfNotActing = false;
 
 export const supportsMutation = true;
 
@@ -404,4 +401,80 @@ export function commitUpdate(
   newProps,
 ) {
   instance._applyProps(instance, newProps, oldProps);
+}
+
+export function hideInstance(instance) {
+  instance.hide();
+}
+
+export function hideTextInstance(textInstance) {
+  // Noop
+}
+
+export function unhideInstance(instance, props) {
+  if (props.visible == null || props.visible) {
+    instance.show();
+  }
+}
+
+export function unhideTextInstance(textInstance, text): void {
+  // Noop
+}
+
+export function clearContainer(container) {
+  // TODO Implement this
+}
+
+export function getFundamentalComponentInstance(fundamentalInstance) {
+  throw new Error('Not yet implemented.');
+}
+
+export function mountFundamentalComponent(fundamentalInstance) {
+  throw new Error('Not yet implemented.');
+}
+
+export function shouldUpdateFundamentalComponent(fundamentalInstance) {
+  throw new Error('Not yet implemented.');
+}
+
+export function updateFundamentalComponent(fundamentalInstance) {
+  throw new Error('Not yet implemented.');
+}
+
+export function unmountFundamentalComponent(fundamentalInstance) {
+  throw new Error('Not yet implemented.');
+}
+
+export function getInstanceFromNode(node) {
+  throw new Error('Not yet implemented.');
+}
+
+export function isOpaqueHydratingObject(value: mixed): boolean {
+  throw new Error('Not yet implemented');
+}
+
+export function makeOpaqueHydratingObject(
+  attemptToReadValue: () => void,
+): OpaqueIDType {
+  throw new Error('Not yet implemented.');
+}
+
+export function makeClientId(): OpaqueIDType {
+  throw new Error('Not yet implemented');
+}
+
+export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
+  throw new Error('Not yet implemented');
+}
+
+export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {
+  // noop
+}
+
+export function afterActiveInstanceBlur() {
+  // noop
+}
+
+export function preparePortalMount(portalInstance: any): void {
+  // noop
 }

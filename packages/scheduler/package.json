@@ -1,9 +1,13 @@
 {
   "name": "scheduler",
-  "version": "0.10.0-alpha.8af6728",
+  "version": "0.20.1",
   "description": "Cooperative scheduler for the browser environment.",
   "main": "index.js",
-  "repository": "facebook/react",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/scheduler"
+  },
   "license": "MIT",
   "keywords": [
     "react"
@@ -19,9 +23,13 @@
   "files": [
     "LICENSE",
     "README.md",
+    "build-info.json",
     "index.js",
     "tracing.js",
     "tracing-profiling.js",
+    "unstable_mock.js",
+    "unstable_no_dom.js",
+    "unstable_post_task.js",
     "cjs/",
     "umd/"
   ],

@@ -1,6 +1,14 @@
 'use strict';
 
+const RELEASE_CHANNEL = process.env.RELEASE_CHANNEL;
+
+const __EXPERIMENTAL__ =
+  typeof RELEASE_CHANNEL === 'string'
+    ? RELEASE_CHANNEL === 'experimental'
+    : true;
+
 const bundleTypes = {
+  NODE_ES2015: 'NODE_ES2015',
   UMD_DEV: 'UMD_DEV',
   UMD_PROD: 'UMD_PROD',
   UMD_PROFILING: 'UMD_PROFILING',
@@ -18,45 +26,49 @@ const bundleTypes = {
   RN_FB_PROFILING: 'RN_FB_PROFILING',
 };
 
-const UMD_DEV = bundleTypes.UMD_DEV;
-const UMD_PROD = bundleTypes.UMD_PROD;
-const UMD_PROFILING = bundleTypes.UMD_PROFILING;
-const NODE_DEV = bundleTypes.NODE_DEV;
-const NODE_PROD = bundleTypes.NODE_PROD;
-const NODE_PROFILING = bundleTypes.NODE_PROFILING;
-const FB_WWW_DEV = bundleTypes.FB_WWW_DEV;
-const FB_WWW_PROD = bundleTypes.FB_WWW_PROD;
-const FB_WWW_PROFILING = bundleTypes.FB_WWW_PROFILING;
-const RN_OSS_DEV = bundleTypes.RN_OSS_DEV;
-const RN_OSS_PROD = bundleTypes.RN_OSS_PROD;
-const RN_OSS_PROFILING = bundleTypes.RN_OSS_PROFILING;
-const RN_FB_DEV = bundleTypes.RN_FB_DEV;
-const RN_FB_PROD = bundleTypes.RN_FB_PROD;
-const RN_FB_PROFILING = bundleTypes.RN_FB_PROFILING;
+const {
+  NODE_ES2015,
+  UMD_DEV,
+  UMD_PROD,
+  UMD_PROFILING,
+  NODE_DEV,
+  NODE_PROD,
+  NODE_PROFILING,
+  FB_WWW_DEV,
+  FB_WWW_PROD,
+  FB_WWW_PROFILING,
+  RN_OSS_DEV,
+  RN_OSS_PROD,
+  RN_OSS_PROFILING,
+  RN_FB_DEV,
+  RN_FB_PROD,
+  RN_FB_PROFILING,
+} = bundleTypes;
 
 const moduleTypes = {
+  // React
   ISOMORPHIC: 'ISOMORPHIC',
+  // Individual renderers. They bundle the reconciler. (e.g. ReactDOM)
   RENDERER: 'RENDERER',
+  // Helper packages that access specific renderer's internals. (e.g. TestUtils)
   RENDERER_UTILS: 'RENDERER_UTILS',
+  // Standalone reconciler for third-party renderers.
   RECONCILER: 'RECONCILER',
+  // Non-Fiber implementations like SSR and Shallow renderers.
   NON_FIBER_RENDERER: 'NON_FIBER_RENDERER',
 };
 
-// React
-const ISOMORPHIC = moduleTypes.ISOMORPHIC;
-// Individual renderers. They bundle the reconciler. (e.g. ReactDOM)
-const RENDERER = moduleTypes.RENDERER;
-// Helper packages that access specific renderer's internals. (e.g. TestUtils)
-const RENDERER_UTILS = moduleTypes.RENDERER_UTILS;
-// Standalone reconciler for third-party renderers.
-const RECONCILER = moduleTypes.RECONCILER;
-// Non-Fiber implementations like SSR and Shallow renderers.
-const NON_FIBER_RENDERER = moduleTypes.NON_FIBER_RENDERER;
+const {
+  ISOMORPHIC,
+  RENDERER,
+  RENDERER_UTILS,
+  RECONCILER,
+  NON_FIBER_RENDERER,
+} = moduleTypes;
 
 const bundles = [
   /******* Isomorphic *******/
   {
-    label: 'core',
     bundleTypes: [
       UMD_DEV,
       UMD_PROD,
@@ -66,6 +78,9 @@ const bundles = [
       FB_WWW_DEV,
       FB_WWW_PROD,
       FB_WWW_PROFILING,
+      RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
     ],
     moduleType: ISOMORPHIC,
     entry: 'react',
@@ -73,9 +88,71 @@ const bundles = [
     externals: [],
   },
 
+  /******* React JSX Runtime *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      NODE_PROFILING,
+      // TODO: use on WWW.
+      RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'react/jsx-runtime',
+    global: 'JSXRuntime',
+    externals: ['react'],
+  },
+
+  /******* React JSX DEV Runtime *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      NODE_PROFILING,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+      RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'react/jsx-dev-runtime',
+    global: 'JSXDEVRuntime',
+    externals: ['react'],
+  },
+
+  /******* React Cache (experimental, new) *******/
+  {
+    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD, NODE_PROFILING] : [],
+    moduleType: ISOMORPHIC,
+    entry: 'react/unstable-cache',
+    global: 'ReactCache',
+    externals: ['react'],
+  },
+
+  /******* React Fetch Browser (experimental, new) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-fetch/index.browser',
+    global: 'ReactFetch',
+    externals: ['react'],
+  },
+
+  /******* React Fetch Node (experimental, new) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-fetch/index.node',
+    global: 'ReactFetch',
+    externals: ['react', 'http', 'https'],
+  },
+
   /******* React DOM *******/
   {
-    label: 'dom-client',
     bundleTypes: [
       UMD_DEV,
       UMD_PROD,
@@ -93,9 +170,18 @@ const bundles = [
     externals: ['react'],
   },
 
-  //******* Test Utils *******/
+  /******* React DOM - www - Uses forked reconciler *******/
   {
-    label: 'dom-test-utils',
+    moduleType: RENDERER,
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD, FB_WWW_PROFILING],
+    entry: 'react-dom',
+    global: 'ReactDOMForked',
+    enableNewReconciler: true,
+    externals: ['react'],
+  },
+
+  /******* Test Utils *******/
+  {
     moduleType: RENDERER_UTILS,
     bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     entry: 'react-dom/test-utils',
@@ -103,26 +189,17 @@ const bundles = [
     externals: ['react', 'react-dom'],
   },
 
-  /* React DOM internals required for react-native-web (e.g., to shim native events from react-dom) */
+  /******* React DOM - www - Testing *******/
   {
-    label: 'dom-unstable-native-dependencies',
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: RENDERER_UTILS,
-    entry: 'react-dom/unstable-native-dependencies',
-    global: 'ReactDOMUnstableNativeDependencies',
-    externals: ['react', 'react-dom'],
+    moduleType: RENDERER,
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
+    entry: 'react-dom/testing',
+    global: 'ReactDOMTesting',
+    externals: ['react'],
   },
 
   /******* React DOM Server *******/
   {
-    label: 'dom-server-browser',
     bundleTypes: [
       UMD_DEV,
       UMD_PROD,
@@ -135,19 +212,133 @@ const bundles = [
     entry: 'react-dom/server.browser',
     global: 'ReactDOMServer',
     externals: ['react'],
+    babel: opts =>
+      Object.assign({}, opts, {
+        plugins: opts.plugins.concat([
+          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
+        ]),
+      }),
   },
-
   {
-    label: 'dom-server-node',
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: NON_FIBER_RENDERER,
     entry: 'react-dom/server.node',
     externals: ['react', 'stream'],
+    babel: opts =>
+      Object.assign({}, opts, {
+        plugins: opts.plugins.concat([
+          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
+        ]),
+      }),
+  },
+
+  /******* React DOM Fizz Server *******/
+  {
+    bundleTypes: __EXPERIMENTAL__
+      ? [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD]
+      : [],
+    moduleType: RENDERER,
+    entry: 'react-dom/unstable-fizz.browser',
+    global: 'ReactDOMFizzServer',
+    externals: ['react', 'react-dom/server'],
+  },
+  {
+    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD] : [],
+    moduleType: RENDERER,
+    entry: 'react-dom/unstable-fizz.node',
+    global: 'ReactDOMFizzServer',
+    externals: ['react', 'react-dom/server'],
+  },
+
+  /******* React Transport DOM Server Webpack *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    moduleType: RENDERER,
+    entry: 'react-transport-dom-webpack/server.browser',
+    global: 'ReactTransportDOMServer',
+    externals: ['react', 'react-dom/server'],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-transport-dom-webpack/server.node',
+    global: 'ReactTransportDOMServer',
+    externals: ['react', 'react-dom/server'],
+  },
+
+  /******* React Transport DOM Client Webpack *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    moduleType: RENDERER,
+    entry: 'react-transport-dom-webpack',
+    global: 'ReactTransportDOMClient',
+    externals: ['react'],
+  },
+
+  /******* React Transport DOM Webpack Plugin *******/
+  {
+    bundleTypes: [NODE_ES2015],
+    moduleType: RENDERER_UTILS,
+    entry: 'react-transport-dom-webpack/plugin',
+    global: 'ReactFlightWebpackPlugin',
+    externals: [],
+  },
+
+  /******* React Transport DOM Server Relay *******/
+  {
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: RENDERER,
+    entry: 'react-transport-dom-relay/server',
+    global: 'ReactFlightDOMRelayServer',
+    externals: [
+      'react',
+      'react-dom/server',
+      'ReactFlightDOMRelayServerIntegration',
+      'JSResourceReference',
+    ],
+  },
+
+  /******* React Transport DOM Client Relay *******/
+  {
+    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
+    moduleType: RENDERER,
+    entry: 'react-transport-dom-relay',
+    global: 'ReactFlightDOMRelayClient',
+    externals: [
+      'react',
+      'ReactFlightDOMRelayClientIntegration',
+      'JSResourceReference',
+    ],
+  },
+
+  /******* React Transport Native Server Relay *******/
+  {
+    bundleTypes: [RN_FB_DEV, RN_FB_PROD],
+    moduleType: RENDERER,
+    entry: 'react-transport-native-relay/server',
+    global: 'ReactFlightNativeRelayServer',
+    externals: [
+      'react',
+      'ReactFlightNativeRelayServerIntegration',
+      'JSResourceReferenceImpl',
+    ],
+  },
+
+  /******* React Transport Native Client Relay *******/
+  {
+    bundleTypes: [RN_FB_DEV, RN_FB_PROD],
+    moduleType: RENDERER,
+    entry: 'react-transport-native-relay',
+    global: 'ReactFlightNativeRelayClient',
+    externals: [
+      'react',
+      'ReactFlightNativeRelayClientIntegration',
+      'JSResourceReferenceImpl',
+    ],
   },
 
   /******* React ART *******/
   {
-    label: 'art',
     bundleTypes: [
       UMD_DEV,
       UMD_PROD,
@@ -163,182 +354,193 @@ const bundles = [
     babel: opts =>
       Object.assign({}, opts, {
         // Include JSX
-        presets: opts.presets.concat([require.resolve('babel-preset-react')]),
+        presets: opts.presets.concat([
+          require.resolve('@babel/preset-react'),
+          require.resolve('@babel/preset-flow'),
+        ]),
+        plugins: opts.plugins.concat([
+          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
+        ]),
       }),
   },
 
   /******* React Native *******/
   {
-    label: 'native-fb',
-    bundleTypes: [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
+    bundleTypes: __EXPERIMENTAL__
+      ? []
+      : [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
     moduleType: RENDERER,
     entry: 'react-native-renderer',
     global: 'ReactNativeRenderer',
-    externals: [
-      'ExceptionsManager',
-      'InitializeCore',
-      'Platform',
-      'RCTEventEmitter',
-      'TextInputState',
-      'UIManager',
-      'deepDiffer',
-      'deepFreezeAndThrowOnMutationInDev',
-      'flattenStyle',
-      'ReactNativeViewConfigRegistry',
-    ],
+    externals: ['react-native'],
+    babel: opts =>
+      Object.assign({}, opts, {
+        plugins: opts.plugins.concat([
+          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
+        ]),
+      }),
   },
-
   {
-    label: 'native',
     bundleTypes: [RN_OSS_DEV, RN_OSS_PROD, RN_OSS_PROFILING],
     moduleType: RENDERER,
     entry: 'react-native-renderer',
     global: 'ReactNativeRenderer',
-    externals: [
-      'ExceptionsManager',
-      'InitializeCore',
-      'Platform',
-      'RCTEventEmitter',
-      'TextInputState',
-      'UIManager',
-      'deepDiffer',
-      'deepFreezeAndThrowOnMutationInDev',
-      'flattenStyle',
-      'ReactNativeViewConfigRegistry',
-    ],
+    externals: ['react-native'],
+    babel: opts =>
+      Object.assign({}, opts, {
+        plugins: opts.plugins.concat([
+          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
+        ]),
+      }),
   },
 
   /******* React Native Fabric *******/
   {
-    label: 'native-fabric-fb',
-    bundleTypes: [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
+    bundleTypes: __EXPERIMENTAL__
+      ? []
+      : [RN_FB_DEV, RN_FB_PROD, RN_FB_PROFILING],
     moduleType: RENDERER,
     entry: 'react-native-renderer/fabric',
     global: 'ReactFabric',
-    externals: [
-      'ExceptionsManager',
-      'InitializeCore',
-      'Platform',
-      'RCTEventEmitter',
-      'TextInputState',
-      'UIManager',
-      'FabricUIManager',
-      'deepDiffer',
-      'deepFreezeAndThrowOnMutationInDev',
-      'flattenStyle',
-      'ReactNativeViewConfigRegistry',
-    ],
+    externals: ['react-native'],
+    babel: opts =>
+      Object.assign({}, opts, {
+        plugins: opts.plugins.concat([
+          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
+        ]),
+      }),
   },
-
   {
-    label: 'native-fabric',
     bundleTypes: [RN_OSS_DEV, RN_OSS_PROD, RN_OSS_PROFILING],
     moduleType: RENDERER,
     entry: 'react-native-renderer/fabric',
     global: 'ReactFabric',
-    externals: [
-      'ExceptionsManager',
-      'InitializeCore',
-      'Platform',
-      'RCTEventEmitter',
-      'TextInputState',
-      'UIManager',
-      'FabricUIManager',
-      'deepDiffer',
-      'deepFreezeAndThrowOnMutationInDev',
-      'flattenStyle',
-      'ReactNativeViewConfigRegistry',
-    ],
+    externals: ['react-native'],
+    babel: opts =>
+      Object.assign({}, opts, {
+        plugins: opts.plugins.concat([
+          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
+        ]),
+      }),
   },
 
   /******* React Test Renderer *******/
   {
-    label: 'test',
-    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    bundleTypes: [
+      FB_WWW_DEV,
+      NODE_DEV,
+      NODE_PROD,
+      UMD_DEV,
+      UMD_PROD,
+      RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
+    ],
     moduleType: RENDERER,
     entry: 'react-test-renderer',
     global: 'ReactTestRenderer',
-    externals: ['react'],
-  },
-
-  {
-    label: 'test-shallow',
-    bundleTypes: [FB_WWW_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-test-renderer/shallow',
-    global: 'ReactShallowRenderer',
-    externals: ['react'],
+    externals: ['react', 'scheduler', 'scheduler/unstable_mock'],
+    babel: opts =>
+      Object.assign({}, opts, {
+        plugins: opts.plugins.concat([
+          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
+        ]),
+      }),
   },
 
   /******* React Noop Renderer (used for tests) *******/
   {
-    label: 'noop',
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-noop-renderer',
     global: 'ReactNoopRenderer',
-    externals: ['react', 'expect'],
-    // React Noop uses generators. However GCC currently
-    // breaks when we attempt to use them in the output.
-    // So we precompile them with regenerator, and include
-    // it as a runtime dependency of React Noop. In practice
-    // this isn't an issue because React Noop is only used
-    // in our tests. We wouldn't want to do this for any
-    // public package though.
-    babel: opts =>
-      Object.assign({}, opts, {
-        plugins: opts.plugins.concat([
-          require.resolve('babel-plugin-transform-regenerator'),
-        ]),
-      }),
+    externals: ['react', 'scheduler', 'scheduler/unstable_mock', 'expect'],
   },
 
   /******* React Noop Persistent Renderer (used for tests) *******/
   {
-    label: 'noop-persistent',
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-noop-renderer/persistent',
     global: 'ReactNoopRendererPersistent',
-    externals: ['react', 'expect'],
-    // React Noop uses generators. However GCC currently
-    // breaks when we attempt to use them in the output.
-    // So we precompile them with regenerator, and include
-    // it as a runtime dependency of React Noop. In practice
-    // this isn't an issue because React Noop is only used
-    // in our tests. We wouldn't want to do this for any
-    // public package though.
-    babel: opts =>
-      Object.assign({}, opts, {
-        plugins: opts.plugins.concat([
-          require.resolve('babel-plugin-transform-regenerator'),
-        ]),
-      }),
+    externals: ['react', 'scheduler', 'expect'],
+  },
+
+  /******* React Noop Server Renderer (used for tests) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-noop-renderer/server',
+    global: 'ReactNoopRendererServer',
+    externals: ['react', 'scheduler', 'expect'],
+  },
+
+  /******* React Noop Flight Server (used for tests) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-noop-renderer/flight-server',
+    global: 'ReactNoopFlightServer',
+    externals: [
+      'react',
+      'scheduler',
+      'expect',
+      'react-noop-renderer/flight-modules',
+    ],
+  },
+
+  /******* React Noop Flight Client (used for tests) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-noop-renderer/flight-client',
+    global: 'ReactNoopFlightClient',
+    externals: [
+      'react',
+      'scheduler',
+      'expect',
+      'react-noop-renderer/flight-modules',
+    ],
   },
 
   /******* React Reconciler *******/
   {
-    label: 'react-reconciler',
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, NODE_PROFILING],
     moduleType: RECONCILER,
     entry: 'react-reconciler',
     global: 'ReactReconciler',
     externals: ['react'],
   },
 
-  /******* React Persistent Reconciler *******/
+  /******* React Server *******/
   {
-    label: 'react-reconciler-persistent',
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RECONCILER,
-    entry: 'react-reconciler/persistent',
-    global: 'ReactPersistentReconciler',
+    entry: 'react-server',
+    global: 'ReactServer',
+    externals: ['react'],
+  },
+
+  /******* React Flight Server *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RECONCILER,
+    entry: 'react-server/flight',
+    global: 'ReactFlightServer',
+    externals: ['react'],
+  },
+
+  /******* React Flight Client *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RECONCILER,
+    entry: 'react-client/flight',
+    global: 'ReactFlightClient',
     externals: ['react'],
   },
 
   /******* Reflection *******/
   {
-    label: 'reconciler-reflection',
     moduleType: RENDERER_UTILS,
     bundleTypes: [NODE_DEV, NODE_PROD],
     entry: 'react-reconciler/reflection',
@@ -348,7 +550,6 @@ const bundles = [
 
   /******* React Is *******/
   {
-    label: 'react-is',
     bundleTypes: [
       NODE_DEV,
       NODE_PROD,
@@ -363,55 +564,158 @@ const bundles = [
     externals: [],
   },
 
-  /******* React Cache (experimental) *******/
+  /******* React Debug Tools *******/
   {
-    label: 'react-cache',
-    bundleTypes: [
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      UMD_DEV,
-      UMD_PROD,
-    ],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'react-cache',
-    global: 'ReactCache',
-    externals: ['react'],
+    entry: 'react-debug-tools',
+    global: 'ReactDebugTools',
+    externals: [],
   },
 
-  /******* createComponentWithSubscriptions (experimental) *******/
+  /******* React Cache (experimental, old) *******/
   {
-    label: 'create-subscription',
+    // This is only used by our own tests.
+    // We can delete it later.
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-cache',
+    global: 'ReactCacheOld',
+    externals: ['react', 'scheduler'],
+  },
+
+  /******* createComponentWithSubscriptions *******/
+  {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
     entry: 'create-subscription',
     global: 'createSubscription',
     externals: ['react'],
+    babel: opts =>
+      Object.assign({}, opts, {
+        plugins: opts.plugins.concat([
+          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
+        ]),
+      }),
+  },
+
+  /******* Hook for managing subscriptions safely *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'use-subscription',
+    global: 'useSubscription',
+    externals: ['react'],
   },
 
   /******* React Scheduler (experimental) *******/
   {
-    label: 'scheduler',
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+      RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
+    ],
     moduleType: ISOMORPHIC,
     entry: 'scheduler',
     global: 'Scheduler',
     externals: [],
   },
 
+  /******* React Scheduler Mock (experimental) *******/
+  {
+    bundleTypes: [
+      UMD_DEV,
+      UMD_PROD,
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      RN_FB_DEV,
+      RN_FB_PROD,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'scheduler/unstable_mock',
+    global: 'SchedulerMock',
+    externals: [],
+  },
+
+  /******* React Scheduler Post Task (experimental) *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'scheduler/unstable_post_task',
+    global: 'SchedulerPostTask',
+    externals: [],
+  },
+
+  /******* React Scheduler No DOM (experimental) *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+      RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'scheduler/unstable_no_dom',
+    global: 'SchedulerNoDOM',
+    externals: [],
+  },
+
   /******* Jest React (experimental) *******/
   {
-    label: 'jest-react',
-    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
     entry: 'jest-react',
     global: 'JestReact',
-    externals: ['jest-diff'],
+    externals: [],
+  },
+
+  /******* ESLint Plugin for Hooks *******/
+  {
+    // TODO: it's awkward to create a bundle for this but if we don't, the package
+    // won't get copied. We also can't create just DEV bundle because it contains a
+    // NODE_ENV check inside. We should probably tweak our build process to allow
+    // "raw" packages that don't get bundled.
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'eslint-plugin-react-hooks',
+    global: 'ESLintPluginReactHooks',
+    externals: [],
+  },
+
+  /******* React Fresh *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-refresh/babel',
+    global: 'ReactFreshBabelPlugin',
+    externals: [],
+  },
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD, FB_WWW_DEV],
+    moduleType: ISOMORPHIC,
+    entry: 'react-refresh/runtime',
+    global: 'ReactFreshRuntime',
+    externals: [],
   },
 
   {
-    label: 'scheduler-tracing',
     bundleTypes: [
       FB_WWW_DEV,
       FB_WWW_PROD,
@@ -419,6 +723,9 @@ const bundles = [
       NODE_DEV,
       NODE_PROD,
       NODE_PROFILING,
+      RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
     ],
     moduleType: ISOMORPHIC,
     entry: 'scheduler/tracing',
@@ -444,9 +751,47 @@ function deepFreeze(o) {
 
 // Don't accidentally mutate config as part of the build
 deepFreeze(bundles);
+deepFreeze(bundleTypes);
+deepFreeze(moduleTypes);
+
+function getFilename(bundle, bundleType) {
+  let name = bundle.entry;
+  const globalName = bundle.global;
+  // we do this to replace / to -, for react-dom/server
+  name = name.replace('/index.', '.').replace('/', '-');
+  switch (bundleType) {
+    case NODE_ES2015:
+      return `${name}.js`;
+    case UMD_DEV:
+      return `${name}.development.js`;
+    case UMD_PROD:
+      return `${name}.production.min.js`;
+    case UMD_PROFILING:
+      return `${name}.profiling.min.js`;
+    case NODE_DEV:
+      return `${name}.development.js`;
+    case NODE_PROD:
+      return `${name}.production.min.js`;
+    case NODE_PROFILING:
+      return `${name}.profiling.min.js`;
+    case FB_WWW_DEV:
+    case RN_OSS_DEV:
+    case RN_FB_DEV:
+      return `${globalName}-dev.js`;
+    case FB_WWW_PROD:
+    case RN_OSS_PROD:
+    case RN_FB_PROD:
+      return `${globalName}-prod.js`;
+    case FB_WWW_PROFILING:
+    case RN_FB_PROFILING:
+    case RN_OSS_PROFILING:
+      return `${globalName}-profiling.js`;
+  }
+}
 
 module.exports = {
   bundleTypes,
   moduleTypes,
   bundles,
+  getFilename,
 };

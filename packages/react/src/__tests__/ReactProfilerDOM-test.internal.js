@@ -13,59 +13,25 @@ let React;
 let ReactFeatureFlags;
 let ReactDOM;
 let SchedulerTracing;
-let ReactCache;
-
-function initEnvForAsyncTesting() {
-  // Boilerplate copied from ReactDOMRoot-test
-  // TODO pull this into helper method, reduce repetition.
-  const originalDateNow = Date.now;
-  global.Date.now = function() {
-    return originalDateNow();
-  };
-  global.requestAnimationFrame = function(cb) {
-    return setTimeout(() => {
-      cb(Date.now());
-    });
-  };
-  const originalAddEventListener = global.addEventListener;
-  let postMessageCallback;
-  global.addEventListener = function(eventName, callback, useCapture) {
-    if (eventName === 'message') {
-      postMessageCallback = callback;
-    } else {
-      originalAddEventListener(eventName, callback, useCapture);
-    }
-  };
-  global.postMessage = function(messageKey, targetOrigin) {
-    const postMessageEvent = {source: window, data: messageKey};
-    if (postMessageCallback) {
-      postMessageCallback(postMessageEvent);
-    }
-  };
-}
+let Scheduler;
 
 function loadModules() {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-  ReactFeatureFlags.debugRenderPhaseSideEffects = false;
-  ReactFeatureFlags.debugRenderPhaseSideEffectsForStrictMode = false;
+
   ReactFeatureFlags.enableProfilerTimer = true;
   ReactFeatureFlags.enableSchedulerTracing = true;
 
   React = require('react');
   SchedulerTracing = require('scheduler/tracing');
   ReactDOM = require('react-dom');
-  ReactCache = require('react-cache');
+  Scheduler = require('scheduler');
 }
 
 describe('ProfilerDOM', () => {
-  let TextResource;
-  let cache;
-  let resourcePromise;
   let onInteractionScheduledWorkCompleted;
   let onInteractionTraced;
 
   beforeEach(() => {
-    initEnvForAsyncTesting();
     loadModules();
 
     onInteractionScheduledWorkCompleted = jest.fn();
@@ -80,89 +46,56 @@ describe('ProfilerDOM', () => {
       onWorkStarted: () => {},
       onWorkStopped: () => {},
     });
-
-    cache = ReactCache.createCache(() => {});
-
-    resourcePromise = null;
-
-    TextResource = ReactCache.createResource(([text, ms = 0]) => {
-      resourcePromise = new Promise(
-        SchedulerTracing.unstable_wrap((resolve, reject) => {
-          setTimeout(
-            SchedulerTracing.unstable_wrap(() => {
-              resolve(text);
-            }),
-            ms,
-          );
-        }),
-      );
-      return resourcePromise;
-    }, ([text, ms]) => text);
   });
 
-  const AsyncText = ({ms, text}) => {
-    TextResource.read(cache, [text, ms]);
-    return text;
-  };
+  function Text(props) {
+    Scheduler.unstable_yieldValue(props.text);
+    return props.text;
+  }
 
-  const Text = ({text}) => text;
+  // @gate experimental
+  it('should correctly trace interactions for async roots', async () => {
+    let resolve;
+    let thenable = {
+      then(res) {
+        resolve = () => {
+          thenable = null;
+          res();
+        };
+      },
+    };
 
-  it('should correctly trace interactions for async roots', async done => {
-    let batch, element, interaction;
+    function Async() {
+      if (thenable !== null) {
+        Scheduler.unstable_yieldValue('Suspend! [Async]');
+        throw thenable;
+      }
+      Scheduler.unstable_yieldValue('Async');
+      return 'Async';
+    }
 
+    const element = document.createElement('div');
+    const root = ReactDOM.createRoot(element);
+
+    let interaction;
+    let wrappedResolve;
     SchedulerTracing.unstable_trace('initial_event', performance.now(), () => {
       const interactions = SchedulerTracing.unstable_getCurrent();
       expect(interactions.size).toBe(1);
       interaction = Array.from(interactions)[0];
 
-      element = document.createElement('div');
-      const root = ReactDOM.unstable_createRoot(element);
-      batch = root.createBatch();
-      batch.render(
-        <React.unstable_Suspense
-          maxDuration={100}
-          fallback={<Text text="Loading..." />}>
-          <AsyncText text="Text" ms={200} />
-        </React.unstable_Suspense>,
+      root.render(
+        <React.Suspense fallback={<Text text="Loading..." />}>
+          <Async />
+        </React.Suspense>,
       );
-      batch.then(
-        SchedulerTracing.unstable_wrap(() => {
-          batch.commit();
 
-          expect(element.textContent).toBe('Loading...');
-          expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-          expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-
-          resourcePromise.then(
-            SchedulerTracing.unstable_wrap(() => {
-              jest.runAllTimers();
-
-              expect(element.textContent).toBe('Text');
-              expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-              expect(
-                onInteractionScheduledWorkCompleted,
-              ).not.toHaveBeenCalled();
-
-              // Evaluate in an unwrapped callback,
-              // Because trace/wrap won't decrement the count within the wrapped callback.
-              setImmediate(() => {
-                expect(onInteractionTraced).toHaveBeenCalledTimes(1);
-                expect(
-                  onInteractionScheduledWorkCompleted,
-                ).toHaveBeenCalledTimes(1);
-                expect(
-                  onInteractionScheduledWorkCompleted,
-                ).toHaveBeenLastNotifiedOfInteraction(interaction);
-
-                expect(interaction.__count).toBe(0);
-
-                done();
-              });
-            }),
-          );
-        }),
-      );
+      wrappedResolve = SchedulerTracing.unstable_wrap(() => resolve());
     });
+
+    // Render, suspend, and commit fallback
+    expect(Scheduler).toFlushAndYield(['Suspend! [Async]', 'Loading...']);
+    expect(element.textContent).toEqual('Loading...');
 
     expect(onInteractionTraced).toHaveBeenCalledTimes(1);
     expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
@@ -170,6 +103,27 @@ describe('ProfilerDOM', () => {
     );
     expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
 
-    jest.runAllTimers();
+    // Ping React to try rendering again
+    wrappedResolve();
+
+    // Complete the tree without committing it
+    expect(Scheduler).toFlushAndYieldThrough(['Async']);
+    // Still showing the fallback
+    expect(element.textContent).toEqual('Loading...');
+
+    expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+    expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+      interaction,
+    );
+    expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+
+    expect(Scheduler).toFlushAndYield([]);
+    expect(element.textContent).toEqual('Async');
+
+    expect(onInteractionTraced).toHaveBeenCalledTimes(1);
+    expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
+      interaction,
+    );
+    expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
   });
 });

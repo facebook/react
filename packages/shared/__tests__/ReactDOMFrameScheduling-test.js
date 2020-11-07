@@ -10,11 +10,24 @@
 'use strict';
 
 describe('ReactDOMFrameScheduling', () => {
+  beforeEach(() => {
+    jest.resetModules();
+
+    // Un-mock scheduler
+    jest.mock('scheduler', () => require.requireActual('scheduler'));
+  });
+
   it('warns when requestAnimationFrame is not polyfilled in the browser', () => {
     const previousRAF = global.requestAnimationFrame;
+    const previousMessageChannel = global.MessageChannel;
     try {
-      global.requestAnimationFrame = undefined;
-      jest.resetModules();
+      delete global.requestAnimationFrame;
+      global.MessageChannel = function MessageChannel() {
+        return {
+          port1: {},
+          port2: {},
+        };
+      };
       spyOnDevAndProd(console, 'error');
       require('react-dom');
       expect(console.error.calls.count()).toEqual(1);
@@ -22,12 +35,14 @@ describe('ReactDOMFrameScheduling', () => {
         "This browser doesn't support requestAnimationFrame.",
       );
     } finally {
+      global.MessageChannel = previousMessageChannel;
       global.requestAnimationFrame = previousRAF;
     }
   });
 
   // We're just testing importing, not using it.
   // It is important because even isomorphic components may import it.
+  // @gate !source
   it('can import findDOMNode in Node environment', () => {
     const previousRAF = global.requestAnimationFrame;
     const previousRIC = global.requestIdleCallback;

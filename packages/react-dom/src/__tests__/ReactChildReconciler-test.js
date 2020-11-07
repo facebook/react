@@ -65,7 +65,7 @@ describe('ReactChildReconciler', () => {
           <h1>{iterableFunction}</h1>
         </div>,
       );
-    }).toWarnDev('Functions are not valid as a React child');
+    }).toErrorDev('Functions are not valid as a React child');
 
     expect(node.innerHTML).toContain(''); // h1
   });
@@ -77,7 +77,7 @@ describe('ReactChildReconciler', () => {
       }
     }
 
-    expect(() => ReactTestUtils.renderIntoDocument(<Component />)).toWarnDev(
+    expect(() => ReactTestUtils.renderIntoDocument(<Component />)).toErrorDev(
       'Keys should be unique so that components maintain their identity ' +
         'across updates. Non-unique keys may cause children to be ' +
         'duplicated and/or omitted — the behavior is unsupported and ' +
@@ -104,7 +104,7 @@ describe('ReactChildReconciler', () => {
       }
     }
 
-    expect(() => ReactTestUtils.renderIntoDocument(<GrandParent />)).toWarnDev(
+    expect(() => ReactTestUtils.renderIntoDocument(<GrandParent />)).toErrorDev(
       'Encountered two children with the same key, `1`. ' +
         'Keys should be unique so that components maintain their identity ' +
         'across updates. Non-unique keys may cause children to be ' +
@@ -124,7 +124,7 @@ describe('ReactChildReconciler', () => {
       }
     }
 
-    expect(() => ReactTestUtils.renderIntoDocument(<Component />)).toWarnDev(
+    expect(() => ReactTestUtils.renderIntoDocument(<Component />)).toErrorDev(
       'Keys should be unique so that components maintain their identity ' +
         'across updates. Non-unique keys may cause children to be ' +
         'duplicated and/or omitted — the behavior is unsupported and ' +
@@ -151,7 +151,7 @@ describe('ReactChildReconciler', () => {
       }
     }
 
-    expect(() => ReactTestUtils.renderIntoDocument(<GrandParent />)).toWarnDev(
+    expect(() => ReactTestUtils.renderIntoDocument(<GrandParent />)).toErrorDev(
       'Encountered two children with the same key, `1`. ' +
         'Keys should be unique so that components maintain their identity ' +
         'across updates. Non-unique keys may cause children to be ' +

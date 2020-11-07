@@ -451,6 +451,53 @@ describe('SyntheticKeyboardEvent', () => {
         });
       });
     });
+
+    describe('code', () => {
+      it('returns code on `keydown`, `keyup` and `keypress`', () => {
+        let codeDown = null;
+        let codeUp = null;
+        let codePress = null;
+        const node = ReactDOM.render(
+          <input
+            onKeyDown={e => {
+              codeDown = e.code;
+            }}
+            onKeyUp={e => {
+              codeUp = e.code;
+            }}
+            onKeyPress={e => {
+              codePress = e.code;
+            }}
+          />,
+          container,
+        );
+        node.dispatchEvent(
+          new KeyboardEvent('keydown', {
+            code: 'KeyQ',
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+        node.dispatchEvent(
+          new KeyboardEvent('keyup', {
+            code: 'KeyQ',
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+        node.dispatchEvent(
+          new KeyboardEvent('keypress', {
+            code: 'KeyQ',
+            charCode: 113,
+            bubbles: true,
+            cancelable: true,
+          }),
+        );
+        expect(codeDown).toBe('KeyQ');
+        expect(codeUp).toBe('KeyQ');
+        expect(codePress).toBe('KeyQ');
+      });
+    });
   });
 
   describe('EventInterface', () => {
@@ -466,7 +513,7 @@ describe('SyntheticKeyboardEvent', () => {
         expect(event.isPropagationStopped()).toBe(true);
         expectedCount++;
       };
-      let div = ReactDOM.render(
+      const div = ReactDOM.render(
         <div
           onKeyDown={eventHandler}
           onKeyUp={eventHandler}
@@ -498,51 +545,6 @@ describe('SyntheticKeyboardEvent', () => {
         }),
       );
       expect(expectedCount).toBe(3);
-    });
-
-    it('is able to `persist`', () => {
-      const persistentEvents = [];
-      const eventHandler = event => {
-        expect(event.isPersistent()).toBe(false);
-        event.persist();
-        expect(event.isPersistent()).toBe(true);
-        persistentEvents.push(event);
-      };
-      let div = ReactDOM.render(
-        <div
-          onKeyDown={eventHandler}
-          onKeyUp={eventHandler}
-          onKeyPress={eventHandler}
-        />,
-        container,
-      );
-
-      div.dispatchEvent(
-        new KeyboardEvent('keydown', {
-          keyCode: 40,
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-      div.dispatchEvent(
-        new KeyboardEvent('keyup', {
-          keyCode: 40,
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-      div.dispatchEvent(
-        new KeyboardEvent('keypress', {
-          charCode: 40,
-          keyCode: 40,
-          bubbles: true,
-          cancelable: true,
-        }),
-      );
-      expect(persistentEvents.length).toBe(3);
-      expect(persistentEvents[0].type).toBe('keydown');
-      expect(persistentEvents[1].type).toBe('keyup');
-      expect(persistentEvents[2].type).toBe('keypress');
     });
   });
 });

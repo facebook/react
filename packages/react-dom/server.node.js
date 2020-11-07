@@ -7,10 +7,11 @@
  * @flow
  */
 
-'use strict';
-
-const ReactDOMServer = require('./src/server/ReactDOMServerNode');
-
-// TODO: decide on the top-level export form.
-// This is hacky but makes it work with both Rollup and Jest
-module.exports = ReactDOMServer.default || ReactDOMServer;
+// For some reason Flow doesn't like export * in this file. I don't know why.
+export {
+  renderToString,
+  renderToStaticMarkup,
+  renderToNodeStream,
+  renderToStaticNodeStream,
+  version,
+} from './src/server/ReactDOMServerNode';

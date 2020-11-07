@@ -39,7 +39,7 @@ class Bad extends React.Component {
 }
 
 describe('ReactErrorLoggingRecovery', () => {
-  let originalConsoleError = console.error;
+  const originalConsoleError = console.error;
 
   beforeEach(() => {
     console.error = error => {

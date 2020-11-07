@@ -18,17 +18,45 @@ const configTemplate = fs
   .readFileSync(__dirname + '/config/flowconfig')
   .toString();
 
-function writeConfig(renderer) {
+function writeConfig(renderer, rendererInfo, isServerSupported) {
   const folder = __dirname + '/' + renderer;
   mkdirp.sync(folder);
 
-  const config = configTemplate.replace(
-    '%REACT_RENDERER_FLOW_OPTIONS%',
-    `
-module.name_mapper='react-reconciler/inline.${renderer}$$' -> 'react-reconciler/inline-typed'
+  const serverRenderer = isServerSupported ? renderer : 'custom';
+
+  const ignoredPaths = [];
+
+  inlinedHostConfigs.forEach(otherRenderer => {
+    if (otherRenderer === rendererInfo) {
+      return;
+    }
+    otherRenderer.paths.forEach(otherPath => {
+      if (rendererInfo.paths.indexOf(otherPath) !== -1) {
+        return;
+      }
+      ignoredPaths.push(`.*/packages/${otherPath}`);
+    });
+
+    if (otherRenderer.shortName !== serverRenderer) {
+      ignoredPaths.push(
+        `.*/packages/.*/forks/.*.${otherRenderer.shortName}.js`,
+      );
+    }
+  });
+
+  const config = configTemplate
+    .replace(
+      '%REACT_RENDERER_FLOW_OPTIONS%',
+      `
 module.name_mapper='ReactFiberHostConfig$$' -> 'forks/ReactFiberHostConfig.${renderer}'
+module.name_mapper='ReactServerStreamConfig$$' -> 'forks/ReactServerStreamConfig.${serverRenderer}'
+module.name_mapper='ReactServerFormatConfig$$' -> 'forks/ReactServerFormatConfig.${serverRenderer}'
+module.name_mapper='ReactFlightServerConfig$$' -> 'forks/ReactFlightServerConfig.${serverRenderer}'
+module.name_mapper='ReactFlightClientHostConfig$$' -> 'forks/ReactFlightClientHostConfig.${serverRenderer}'
+module.name_mapper='react-devtools-feature-flags' -> 'react-devtools-shared/src/config/DevToolsFeatureFlags.default'
     `.trim(),
-  );
+    )
+    .replace('%REACT_RENDERER_FLOW_IGNORES%', ignoredPaths.join('\n'));
 
   const disclaimer = `
 # ---------------------------------------------------------------#
@@ -61,6 +89,10 @@ ${disclaimer}
 // so that we can run those checks in parallel if we want.
 inlinedHostConfigs.forEach(rendererInfo => {
   if (rendererInfo.isFlowTyped) {
-    writeConfig(rendererInfo.shortName);
+    writeConfig(
+      rendererInfo.shortName,
+      rendererInfo,
+      rendererInfo.isServerSupported,
+    );
   }
 });
