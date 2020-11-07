@@ -15,16 +15,16 @@ module.exports = function(context) {
       if (node.name === 'toWarnDev') {
         let current = node;
         while (current.parent) {
-          if (
-            current.type === 'CallExpression' &&
-            current &&
-            current.callee &&
-            current.callee.property &&
-            current.callee.property.name === 'toThrow'
-          ) {
-            context.report(node, 'toWarnDev() matcher should not be nested');
+          if (current.type === 'CallExpression') {
+            if (
+              current &&
+              current.callee &&
+              current.callee.property &&
+              current.callee.property.name === 'toThrow'
+            ) {
+              context.report(node, 'toWarnDev() matcher should not be nested');
+            }
           }
-
           current = current.parent;
         }
       }
