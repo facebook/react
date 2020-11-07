@@ -7,7 +7,7 @@
  * @flow
  */
 
-const BEFORE_SLASH_RE = /^(.*)[\\\/]/;
+const BEFORE_SLASH_RE = /^(.*)[\\/]/;
 
 export default function(
   name: null | string,

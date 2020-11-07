@@ -94,7 +94,7 @@ function getRepoSlug() {
 
   const remotes = exec('git', ['remote', '-v']).split('\n');
   for (let i = 0; i < remotes.length; ++i) {
-    const match = remotes[i].match(/^origin\t[^:]+:([^\.]+).+\(fetch\)/);
+    const match = remotes[i].match(/^origin\t[^:]+:([^.]+).+\(fetch\)/);
     if (match) {
       return match[1];
     }

@@ -30,7 +30,7 @@ function percentChangeString(change) {
     return 'n/a';
   }
   const formatted = (change * 100).toFixed(1);
-  if (/^-|^0(?:\.0+)$/.test(formatted)) {
+  if (/^-|^0\.0+$/.test(formatted)) {
     return `${formatted}%`;
   } else {
     return `+${formatted}%`;

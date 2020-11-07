@@ -257,7 +257,7 @@ describe('ReactBrowserEventEmitter', () => {
     // Ew. See D4504876.
     putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
     putListener(PARENT, ON_CLICK_KEY, function(e) {
-      recordID(PARENT, e);
+      recordID(PARENT);
       // This stops React bubbling but avoids touching the native event
       e.isPropagationStopped = () => true;
     });

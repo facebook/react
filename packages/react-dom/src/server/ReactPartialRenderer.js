@@ -179,7 +179,7 @@ const newlineEatingTags = {
 // We accept any tag to be rendered but since this gets injected into arbitrary
 // HTML, we want to make sure that it's a safe tag.
 // http://www.w3.org/TR/REC-xml/#NT-Name
-const VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
+const VALID_TAG_REGEX = /^[a-zA-Z][\w:.\-]*$/; // Simplified subset
 const validatedTagCache = {};
 function validateDangerousTag(tag) {
   if (!validatedTagCache.hasOwnProperty(tag)) {
