@@ -10,7 +10,7 @@ module.exports = function(req, res) {
     // TODO: Read from a map on the disk.
     './src/Counter.client.js': {
       id: './src/Counter.client.js',
-      chunks: ['2'],
+      chunks: ['1'],
       name: 'default',
     },
   });
