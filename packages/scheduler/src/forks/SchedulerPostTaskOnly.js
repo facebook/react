@@ -429,7 +429,7 @@ function unstable_getCurrentPriorityLevel() {
   return currentPriorityLevel;
 }
 
-let isMessageLoopRunning = false;
+let isTaskLoopRunning = false;
 let scheduledHostCallback = null;
 let taskTimeoutID = -1;
 
@@ -522,38 +522,39 @@ const performWorkUntilDeadline = () => {
     try {
       const hasMoreWork = scheduledHostCallback(hasTimeRemaining, currentTime);
       if (!hasMoreWork) {
-        isMessageLoopRunning = false;
+        isTaskLoopRunning = false;
         scheduledHostCallback = null;
       } else {
         // If there's more work, schedule the next message event at the end
         // of the preceding one.
-        port.postMessage(null);
+        postTask(performWorkUntilDeadline);
       }
     } catch (error) {
       // If a scheduler task throws, exit the current browser task so the
       // error can be observed.
-      port.postMessage(null);
+      postTask(performWorkUntilDeadline);
       throw error;
     }
   } else {
-    isMessageLoopRunning = false;
+    isTaskLoopRunning = false;
   }
   // Yielding to the browser will give it a chance to paint, so we can
   // reset this.
   needsPaint = false;
 };
 
-const channel = new MessageChannel();
-const port = channel.port2;
-channel.port1.onmessage = performWorkUntilDeadline;
+function postTask(callback) {
+  // Use experimental Chrome Scheduler postTask API.
+  global.scheduler.postTask(callback);
+}
 
 function requestHostCallback(callback) {
-  scheduledHostCallback = callback;
-  if (!isMessageLoopRunning) {
-    isMessageLoopRunning = true;
-    port.postMessage(null);
-  }
-}
+                                         scheduledHostCallback = callback;
+                                         if (!isTaskLoopRunning) {
+                                           isTaskLoopRunning = true;
+                                           postTask(performWorkUntilDeadline);
+                                         }
+                                       }
 
 function requestHostTimeout(callback, ms) {
   taskTimeoutID = setTimeout(() => {
