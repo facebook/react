@@ -25,9 +25,9 @@ function loadModules() {
   jest.useFakeTimers();
 
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
   ReactFeatureFlags.enableSchedulerTracing = true;
   ReactFeatureFlags.enableProfilerTimer = true;
+
   React = require('react');
   ReactNoop = require('react-noop-renderer');
   Scheduler = require('scheduler');
@@ -1716,6 +1716,39 @@ describe('useMutableSource', () => {
       expect(Scheduler).toFlushAndYield(['a:two', 'b:two']);
       expect(source.listenerCount).toBe(2);
     });
+  });
+
+  // See https://github.com/facebook/react/issues/19948
+  it('should recover from mutations during read', () => {
+    const source = createSource('initial');
+    const mutableSource = createMutableSource(source, param => param.version);
+
+    function MutateDuringRead() {
+      const value = useMutableSource(
+        mutableSource,
+        defaultGetSnapshot,
+        defaultSubscribe,
+      );
+      Scheduler.unstable_yieldValue('MutateDuringRead:' + value);
+      // This is not a supported/recommended pattern.
+      if (value === 'initial') {
+        source.value = 'updated';
+      }
+      return null;
+    }
+
+    act(() => {
+      ReactNoop.renderLegacySyncRoot(
+        <React.StrictMode>
+          <MutateDuringRead />
+        </React.StrictMode>,
+      );
+    });
+
+    expect(Scheduler).toHaveYielded([
+      'MutateDuringRead:initial',
+      'MutateDuringRead:updated',
+    ]);
   });
 
   if (__DEV__) {
