@@ -23,7 +23,7 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
 } from './ReactWorkTags';
-import {DidCapture, NoEffect, ShouldCapture} from './ReactSideEffectTags';
+import {DidCapture, NoFlags, ShouldCapture} from './ReactFiberFlags';
 import {NoMode, ProfileMode} from './ReactTypeOfMode';
 import {
   enableSuspenseServerRenderer,
@@ -51,9 +51,9 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
       }
-      const effectTag = workInProgress.effectTag;
-      if (effectTag & ShouldCapture) {
-        workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
+      const flags = workInProgress.flags;
+      if (flags & ShouldCapture) {
+        workInProgress.flags = (flags & ~ShouldCapture) | DidCapture;
         if (
           enableProfilerTimer &&
           (workInProgress.mode & ProfileMode) !== NoMode
@@ -68,13 +68,13 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       resetMutableSourceWorkInProgressVersions();
-      const effectTag = workInProgress.effectTag;
+      const flags = workInProgress.flags;
       invariant(
-        (effectTag & DidCapture) === NoEffect,
+        (flags & DidCapture) === NoFlags,
         'The root failed to unmount after an error. This is likely a bug in ' +
           'React. Please file an issue.',
       );
-      workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
+      workInProgress.flags = (flags & ~ShouldCapture) | DidCapture;
       return workInProgress;
     }
     case HostComponent: {
@@ -96,9 +96,9 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
           resetHydrationState();
         }
       }
-      const effectTag = workInProgress.effectTag;
-      if (effectTag & ShouldCapture) {
-        workInProgress.effectTag = (effectTag & ~ShouldCapture) | DidCapture;
+      const flags = workInProgress.flags;
+      if (flags & ShouldCapture) {
+        workInProgress.flags = (flags & ~ShouldCapture) | DidCapture;
         // Captured a suspense effect. Re-render the boundary.
         if (
           enableProfilerTimer &&

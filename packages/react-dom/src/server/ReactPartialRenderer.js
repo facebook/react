@@ -23,7 +23,6 @@ import {
   disableModulePatternComponents,
   enableSuspenseServerRenderer,
   enableFundamentalAPI,
-  enableDeprecatedFlareAPI,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 
@@ -368,9 +367,6 @@ function createOpenTagMarkup(
     if (!hasOwnProperty.call(props, propKey)) {
       continue;
     }
-    if (enableDeprecatedFlareAPI && propKey === 'DEPRECATED_flareListeners') {
-      continue;
-    }
     let propValue = props[propKey];
     if (propValue == null) {
       continue;
@@ -595,7 +591,7 @@ function resolve(
               console.warn(
                 // keep this warning in sync with ReactStrictModeWarning.js
                 'componentWillMount has been renamed, and is not recommended for use. ' +
-                  'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
+                  'See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n' +
                   '* Move code from componentWillMount to componentDidMount (preferred in most cases) ' +
                   'or the constructor.\n' +
                   '\nPlease update the following components: %s',
@@ -1402,7 +1398,7 @@ class ReactDOMServerRenderer {
               '(specify either the checked prop, or the defaultChecked prop, but not ' +
               'both). Decide between using a controlled or uncontrolled input ' +
               'element and remove one of these props. More info: ' +
-              'https://fb.me/react-controlled-components',
+              'https://reactjs.org/link/controlled-components',
             'A component',
             props.type,
           );
@@ -1419,7 +1415,7 @@ class ReactDOMServerRenderer {
               '(specify either the value prop, or the defaultValue prop, but not ' +
               'both). Decide between using a controlled or uncontrolled input ' +
               'element and remove one of these props. More info: ' +
-              'https://fb.me/react-controlled-components',
+              'https://reactjs.org/link/controlled-components',
             'A component',
             props.type,
           );
@@ -1452,7 +1448,7 @@ class ReactDOMServerRenderer {
               '(specify either the value prop, or the defaultValue prop, but not ' +
               'both). Decide between using a controlled or uncontrolled textarea ' +
               'and remove one of these props. More info: ' +
-              'https://fb.me/react-controlled-components',
+              'https://reactjs.org/link/controlled-components',
           );
           didWarnDefaultTextareaValue = true;
         }
@@ -1529,7 +1525,7 @@ class ReactDOMServerRenderer {
               '(specify either the value prop, or the defaultValue prop, but not ' +
               'both). Decide between using a controlled or uncontrolled select ' +
               'element and remove one of these props. More info: ' +
-              'https://fb.me/react-controlled-components',
+              'https://reactjs.org/link/controlled-components',
           );
           didWarnDefaultSelectValue = true;
         }

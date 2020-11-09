@@ -33,7 +33,7 @@ function assertValidProps(tag: string, props: ?Object) {
       typeof props.dangerouslySetInnerHTML === 'object' &&
         HTML in props.dangerouslySetInnerHTML,
       '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-        'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
+        'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
         'for more information.',
     );
   }

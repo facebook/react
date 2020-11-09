@@ -1,0 +1,78 @@
+.Tooltip {
+  position: fixed;
+  display: inline-block;
+  border-radius: 0.125rem;
+  max-width: 300px;
+  padding: 0.25rem;
+  user-select: none;
+  pointer-events: none;
+  background-color: #ffffff;
+  border: 1px solid #ccc;
+  box-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  font-size: 11px;
+}
+
+.Divider {
+  height: 1px;
+  background-color: #aaa;
+  margin: 0.5rem 0;
+}
+
+.DetailsGrid {
+  display: grid;
+  padding-top: 5px;
+  grid-gap: 2px 5px;
+  grid-template-columns: min-content auto;
+}
+
+.DetailsGridLabel {
+  color: #666;
+  text-align: right;
+}
+
+.DetailsGridURL {
+  word-break: break-all;
+  max-height: 50vh;
+  overflow: hidden;
+}
+
+.FlamechartStackFrameName {
+  word-break: break-word;
+  margin-left: 0.4rem;
+}
+
+.ComponentName {
+  font-weight: bold;
+  word-break: break-word;
+  margin-right: 0.4rem;
+}
+
+.ComponentStack {
+  overflow: hidden;
+  max-width: 35em;
+  max-height: 10em;
+  margin: 0;
+  font-size: 0.9em;
+  line-height: 1.5;
+  -webkit-mask-image: linear-gradient(
+    180deg,
+    #fff,
+    #fff 5em,
+    transparent
+  );
+  mask-image: linear-gradient(
+    180deg,
+    #fff,
+    #fff 5em,
+    transparent
+  );
+  white-space: pre;
+}
+
+.ReactMeasureLabel {
+  margin-left: 0.4rem;
+}
+
+.UserTimingLabel {
+  word-break: break-word;
+}

@@ -93,6 +93,11 @@ const argv = yargs
       type: 'boolean',
       default: false,
     },
+    deprecated: {
+      describe: 'Print deprecation message for command.',
+      requiresArg: true,
+      type: 'string',
+    },
   }).argv;
 
 function logError(message) {
@@ -287,6 +292,10 @@ function getEnvars() {
 }
 
 function main() {
+  if (argv.deprecated) {
+    console.log(chalk.red(`\nPlease run: \`${argv.deprecated}\` instead.\n`));
+    return;
+  }
   validateOptions();
   const args = getCommandArgs();
   const envars = getEnvars();

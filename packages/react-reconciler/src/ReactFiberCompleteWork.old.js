@@ -54,18 +54,11 @@ import {
   IncompleteClassComponent,
   FundamentalComponent,
   ScopeComponent,
-  Block,
   OffscreenComponent,
   LegacyHiddenComponent,
 } from './ReactWorkTags';
 import {NoMode, BlockingMode, ProfileMode} from './ReactTypeOfMode';
-import {
-  Ref,
-  Update,
-  NoEffect,
-  DidCapture,
-  Snapshot,
-} from './ReactSideEffectTags';
+import {Ref, Update, NoFlags, DidCapture, Snapshot} from './ReactFiberFlags';
 import invariant from 'shared/invariant';
 
 import {
@@ -124,10 +117,8 @@ import {
   enableSchedulerTracing,
   enableSuspenseCallback,
   enableSuspenseServerRenderer,
-  enableDeprecatedFlareAPI,
   enableFundamentalAPI,
   enableScopeAPI,
-  enableBlocksAPI,
   enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -136,22 +127,22 @@ import {
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
   popRenderLanes,
+  getRenderTargetTime,
 } from './ReactFiberWorkLoop.old';
 import {createFundamentalStateInstance} from './ReactFiberFundamental.old';
-import {OffscreenLane} from './ReactFiberLane';
+import {OffscreenLane, SomeRetryLane} from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber.old';
-import {updateDeprecatedEventListeners} from './ReactFiberDeprecatedEvents.old';
 import {createScopeInstance} from './ReactFiberScope.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
   // a PlacementAndUpdate.
-  workInProgress.effectTag |= Update;
+  workInProgress.flags |= Update;
 }
 
 function markRef(workInProgress: Fiber) {
-  workInProgress.effectTag |= Ref;
+  workInProgress.flags |= Ref;
 }
 
 let appendAllChildren;
@@ -298,7 +289,7 @@ if (supportsMutation) {
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
       } else if (node.tag === SuspenseComponent) {
-        if ((node.effectTag & Update) !== NoEffect) {
+        if ((node.flags & Update) !== NoFlags) {
           // Need to toggle the visibility of the primary children.
           const newIsHidden = node.memoizedState !== null;
           if (newIsHidden) {
@@ -392,7 +383,7 @@ if (supportsMutation) {
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
       } else if (node.tag === SuspenseComponent) {
-        if ((node.effectTag & Update) !== NoEffect) {
+        if ((node.flags & Update) !== NoFlags) {
           // Need to toggle the visibility of the primary children.
           const newIsHidden = node.memoizedState !== null;
           if (newIsHidden) {
@@ -697,7 +688,7 @@ function completeWork(
           // This handles the case of React rendering into a container with previous children.
           // It's also safe to do for updates too, because current.child would only be null
           // if the previous render was null (so the the container would already be empty).
-          workInProgress.effectTag |= Snapshot;
+          workInProgress.flags |= Snapshot;
         }
       }
       updateHostContainer(workInProgress);
@@ -715,14 +706,6 @@ function completeWork(
           newProps,
           rootContainerInstance,
         );
-
-        if (enableDeprecatedFlareAPI) {
-          const prevListeners = current.memoizedProps.DEPRECATED_flareListeners;
-          const nextListeners = newProps.DEPRECATED_flareListeners;
-          if (prevListeners !== nextListeners) {
-            markUpdate(workInProgress);
-          }
-        }
 
         if (current.ref !== workInProgress.ref) {
           markRef(workInProgress);
@@ -758,16 +741,6 @@ function completeWork(
             // commit-phase we mark this as such.
             markUpdate(workInProgress);
           }
-          if (enableDeprecatedFlareAPI) {
-            const listeners = newProps.DEPRECATED_flareListeners;
-            if (listeners != null) {
-              updateDeprecatedEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
-            }
-          }
         } else {
           const instance = createInstance(
             type,
@@ -779,19 +752,7 @@ function completeWork(
 
           appendAllChildren(instance, workInProgress, false, false);
 
-          // This needs to be set before we mount Flare event listeners
           workInProgress.stateNode = instance;
-
-          if (enableDeprecatedFlareAPI) {
-            const listeners = newProps.DEPRECATED_flareListeners;
-            if (listeners != null) {
-              updateDeprecatedEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
-            }
-          }
 
           // Certain renderers require commit-time effects for initial mount.
           // (eg DOM renderer supports auto-focus for certain elements).
@@ -873,7 +834,7 @@ function completeWork(
             // However, in some of those paths, we might have reentered a hydration state
             // and then we might be inside a hydration state. In that case, we'll need to exit out of it.
             resetHydrationState();
-            if ((workInProgress.effectTag & DidCapture) === NoEffect) {
+            if ((workInProgress.flags & DidCapture) === NoFlags) {
               // This boundary did not suspend so it's now hydrated and unsuspended.
               workInProgress.memoizedState = null;
             }
@@ -882,13 +843,13 @@ function completeWork(
             // It's also a signal to replay events and the suspense callback.
             // If something suspended, schedule an effect to attach retry listeners.
             // So we might as well always mark this.
-            workInProgress.effectTag |= Update;
+            workInProgress.flags |= Update;
             return null;
           }
         }
       }
 
-      if ((workInProgress.effectTag & DidCapture) !== NoEffect) {
+      if ((workInProgress.flags & DidCapture) !== NoFlags) {
         // Something suspended. Re-render with the fallback children.
         workInProgress.lanes = renderLanes;
         // Do not reset the effect list.
@@ -953,7 +914,7 @@ function completeWork(
           // If this boundary just timed out, schedule an effect to attach a
           // retry listener to the promise. This flag is also used to hide the
           // primary children.
-          workInProgress.effectTag |= Update;
+          workInProgress.flags |= Update;
         }
       }
       if (supportsMutation) {
@@ -964,7 +925,7 @@ function completeWork(
           // primary children. In mutation mode, we also need the flag to
           // *unhide* children that were previously hidden, so check if this
           // is currently timed out, too.
-          workInProgress.effectTag |= Update;
+          workInProgress.flags |= Update;
         }
       }
       if (
@@ -973,7 +934,7 @@ function completeWork(
         workInProgress.memoizedProps.suspenseCallback != null
       ) {
         // Always notify the callback
-        workInProgress.effectTag |= Update;
+        workInProgress.flags |= Update;
       }
       return null;
     }
@@ -1009,8 +970,7 @@ function completeWork(
         return null;
       }
 
-      let didSuspendAlready =
-        (workInProgress.effectTag & DidCapture) !== NoEffect;
+      let didSuspendAlready = (workInProgress.flags & DidCapture) !== NoFlags;
 
       const renderedTail = renderState.rendering;
       if (renderedTail === null) {
@@ -1029,14 +989,14 @@ function completeWork(
           // findFirstSuspended.
           const cannotBeSuspended =
             renderHasNotSuspendedYet() &&
-            (current === null || (current.effectTag & DidCapture) === NoEffect);
+            (current === null || (current.flags & DidCapture) === NoFlags);
           if (!cannotBeSuspended) {
             let row = workInProgress.child;
             while (row !== null) {
               const suspended = findFirstSuspended(row);
               if (suspended !== null) {
                 didSuspendAlready = true;
-                workInProgress.effectTag |= DidCapture;
+                workInProgress.flags |= DidCapture;
                 cutOffTailIfNeeded(renderState, false);
 
                 // If this is a newly suspended tree, it might not get committed as
@@ -1054,7 +1014,7 @@ function completeWork(
                 const newThennables = suspended.updateQueue;
                 if (newThennables !== null) {
                   workInProgress.updateQueue = newThennables;
-                  workInProgress.effectTag |= Update;
+                  workInProgress.flags |= Update;
                 }
 
                 // Rerender the whole list, but this time, we'll force fallbacks
@@ -1081,6 +1041,29 @@ function completeWork(
               row = row.sibling;
             }
           }
+
+          if (renderState.tail !== null && now() > getRenderTargetTime()) {
+            // We have already passed our CPU deadline but we still have rows
+            // left in the tail. We'll just give up further attempts to render
+            // the main content and only render fallbacks.
+            workInProgress.flags |= DidCapture;
+            didSuspendAlready = true;
+
+            cutOffTailIfNeeded(renderState, false);
+
+            // Since nothing actually suspended, there will nothing to ping this
+            // to get it started back up to attempt the next item. While in terms
+            // of priority this work has the same priority as this current render,
+            // it's not part of the same transition once the transition has
+            // committed. If it's sync, we still want to yield so that it can be
+            // painted. Conceptually, this is really the same as pinging.
+            // We can use any RetryLane even if it's the one currently rendering
+            // since we're leaving it behind on this node.
+            workInProgress.lanes = SomeRetryLane;
+            if (enableSchedulerTracing) {
+              markSpawnedWork(SomeRetryLane);
+            }
+          }
         } else {
           cutOffTailIfNeeded(renderState, false);
         }
@@ -1090,7 +1073,7 @@ function completeWork(
         if (!didSuspendAlready) {
           const suspended = findFirstSuspended(renderedTail);
           if (suspended !== null) {
-            workInProgress.effectTag |= DidCapture;
+            workInProgress.flags |= DidCapture;
             didSuspendAlready = true;
 
             // Ensure we transfer the update queue to the parent so that it doesn't
@@ -1098,7 +1081,7 @@ function completeWork(
             const newThennables = suspended.updateQueue;
             if (newThennables !== null) {
               workInProgress.updateQueue = newThennables;
-              workInProgress.effectTag |= Update;
+              workInProgress.flags |= Update;
             }
 
             cutOffTailIfNeeded(renderState, true);
@@ -1122,28 +1105,32 @@ function completeWork(
               return null;
             }
           } else if (
-            // The time it took to render last row is greater than time until
-            // the expiration.
+            // The time it took to render last row is greater than the remaining
+            // time we have to render. So rendering one more row would likely
+            // exceed it.
             now() * 2 - renderState.renderingStartTime >
-              renderState.tailExpiration &&
+              getRenderTargetTime() &&
             renderLanes !== OffscreenLane
           ) {
             // We have now passed our CPU deadline and we'll just give up further
             // attempts to render the main content and only render fallbacks.
             // The assumption is that this is usually faster.
-            workInProgress.effectTag |= DidCapture;
+            workInProgress.flags |= DidCapture;
             didSuspendAlready = true;
 
             cutOffTailIfNeeded(renderState, false);
 
             // Since nothing actually suspended, there will nothing to ping this
-            // to get it started back up to attempt the next item. If we can show
-            // them, then they really have the same priority as this render.
-            // So we'll pick it back up the very next render pass once we've had
-            // an opportunity to yield for paint.
-            workInProgress.lanes = renderLanes;
+            // to get it started back up to attempt the next item. While in terms
+            // of priority this work has the same priority as this current render,
+            // it's not part of the same transition once the transition has
+            // committed. If it's sync, we still want to yield so that it can be
+            // painted. Conceptually, this is really the same as pinging.
+            // We can use any RetryLane even if it's the one currently rendering
+            // since we're leaving it behind on this node.
+            workInProgress.lanes = SomeRetryLane;
             if (enableSchedulerTracing) {
-              markSpawnedWork(renderLanes);
+              markSpawnedWork(SomeRetryLane);
             }
           }
         }
@@ -1168,18 +1155,6 @@ function completeWork(
 
       if (renderState.tail !== null) {
         // We still have tail rows to render.
-        if (renderState.tailExpiration === 0) {
-          // Heuristic for how long we're willing to spend rendering rows
-          // until we just give up and show what we have so far.
-          const TAIL_EXPIRATION_TIMEOUT_MS = 500;
-          renderState.tailExpiration = now() + TAIL_EXPIRATION_TIMEOUT_MS;
-          // TODO: This is meant to mimic the train model or JND but this
-          // is a per component value. It should really be since the start
-          // of the total render or last commit. Consider using something like
-          // globalMostRecentFallbackTime. That doesn't account for being
-          // suspended for part of the time or when it's a new render.
-          // It should probably use a global start time value instead.
-        }
         // Pop a row.
         const next = renderState.tail;
         renderState.rendering = next;
@@ -1262,37 +1237,14 @@ function completeWork(
         if (current === null) {
           const scopeInstance: ReactScopeInstance = createScopeInstance();
           workInProgress.stateNode = scopeInstance;
-          if (enableDeprecatedFlareAPI) {
-            const listeners = newProps.DEPRECATED_flareListeners;
-            if (listeners != null) {
-              const rootContainerInstance = getRootHostContainer();
-              updateDeprecatedEventListeners(
-                listeners,
-                workInProgress,
-                rootContainerInstance,
-              );
-            }
-          }
           prepareScopeUpdate(scopeInstance, workInProgress);
           if (workInProgress.ref !== null) {
             markRef(workInProgress);
             markUpdate(workInProgress);
           }
         } else {
-          if (enableDeprecatedFlareAPI) {
-            const prevListeners =
-              current.memoizedProps.DEPRECATED_flareListeners;
-            const nextListeners = newProps.DEPRECATED_flareListeners;
-            if (
-              prevListeners !== nextListeners ||
-              workInProgress.ref !== null
-            ) {
-              markUpdate(workInProgress);
-            }
-          } else {
-            if (workInProgress.ref !== null) {
-              markUpdate(workInProgress);
-            }
+          if (workInProgress.ref !== null) {
+            markUpdate(workInProgress);
           }
           if (current.ref !== workInProgress.ref) {
             markRef(workInProgress);
@@ -1302,11 +1254,6 @@ function completeWork(
       }
       break;
     }
-    case Block:
-      if (enableBlocksAPI) {
-        return null;
-      }
-      break;
     case OffscreenComponent:
     case LegacyHiddenComponent: {
       popRenderLanes(workInProgress);
@@ -1320,7 +1267,7 @@ function completeWork(
           prevIsHidden !== nextIsHidden &&
           newProps.mode !== 'unstable-defer-without-hiding'
         ) {
-          workInProgress.effectTag |= Update;
+          workInProgress.flags |= Update;
         }
       }
       return null;

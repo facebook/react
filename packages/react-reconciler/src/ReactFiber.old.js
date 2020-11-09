@@ -27,9 +27,8 @@ import {
   enableProfilerTimer,
   enableFundamentalAPI,
   enableScopeAPI,
-  enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
-import {NoEffect, Placement} from './ReactSideEffectTags';
+import {NoFlags, Placement} from './ReactFiberFlags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
 import {
   IndeterminateComponent,
@@ -53,7 +52,6 @@ import {
   LazyComponent,
   FundamentalComponent,
   ScopeComponent,
-  Block,
   OffscreenComponent,
   LegacyHiddenComponent,
 } from './ReactWorkTags';
@@ -88,7 +86,6 @@ import {
   REACT_LAZY_TYPE,
   REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
-  REACT_BLOCK_TYPE,
   REACT_OFFSCREEN_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
 } from 'shared/ReactSymbols';
@@ -143,7 +140,7 @@ function FiberNode(
   this.mode = mode;
 
   // Effects
-  this.effectTag = NoEffect;
+  this.flags = NoFlags;
   this.nextEffect = null;
 
   this.firstEffect = null;
@@ -241,11 +238,6 @@ export function resolveLazyComponentTag(Component: Function): WorkTag {
     if ($$typeof === REACT_MEMO_TYPE) {
       return MemoComponent;
     }
-    if (enableBlocksAPI) {
-      if ($$typeof === REACT_BLOCK_TYPE) {
-        return Block;
-      }
-    }
   }
   return IndeterminateComponent;
 }
@@ -286,7 +278,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
 
     // We already have an alternate.
     // Reset the effect tag.
-    workInProgress.effectTag = NoEffect;
+    workInProgress.flags = NoFlags;
 
     // The effect list is no longer valid.
     workInProgress.nextEffect = null;
@@ -320,7 +312,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
       : {
           lanes: currentDependencies.lanes,
           firstContext: currentDependencies.firstContext,
-          responders: currentDependencies.responders,
         };
 
   // These will be overridden during the parent's reconciliation
@@ -367,7 +358,7 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
 
   // Reset the effect tag but keep any Placement tags, since that's something
   // that child fiber is setting, not the reconciliation.
-  workInProgress.effectTag &= Placement;
+  workInProgress.flags &= Placement;
 
   // The effect list is no longer valid.
   workInProgress.nextEffect = null;
@@ -416,7 +407,6 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
         : {
             lanes: currentDependencies.lanes,
             firstContext: currentDependencies.firstContext,
-            responders: currentDependencies.responders,
           };
 
     if (enableProfilerTimer) {
@@ -524,9 +514,6 @@ export function createFiberFromTypeAndProps(
               fiberTag = LazyComponent;
               resolvedType = null;
               break getTag;
-            case REACT_BLOCK_TYPE:
-              fiberTag = Block;
-              break getTag;
             case REACT_FUNDAMENTAL_TYPE:
               if (enableFundamentalAPI) {
                 return createFiberFromFundamental(
@@ -574,6 +561,10 @@ export function createFiberFromTypeAndProps(
   fiber.elementType = type;
   fiber.type = resolvedType;
   fiber.lanes = lanes;
+
+  if (__DEV__) {
+    fiber._debugOwner = owner;
+  }
 
   return fiber;
 }
@@ -819,7 +810,7 @@ export function assignFiberPropertiesInDEV(
   target.memoizedState = source.memoizedState;
   target.dependencies = source.dependencies;
   target.mode = source.mode;
-  target.effectTag = source.effectTag;
+  target.flags = source.flags;
   target.nextEffect = source.nextEffect;
   target.firstEffect = source.firstEffect;
   target.lastEffect = source.lastEffect;

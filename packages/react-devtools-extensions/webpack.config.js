@@ -3,6 +3,7 @@
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
 const {GITHUB_URL, getVersionString} = require('./utils');
+const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -39,6 +40,7 @@ module.exports = {
     alias: {
       react: resolve(builtModulesDir, 'react'),
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
+      'react-devtools-feature-flags': resolveFeatureFlags('extension'),
       'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
@@ -49,9 +51,11 @@ module.exports = {
   },
   plugins: [
     new DefinePlugin({
-      __DEV__: false,
-      __PROFILE__: false,
+      __DEV__,
       __EXPERIMENTAL__: true,
+      __EXTENSION__: true,
+      __PROFILE__: false,
+      __TEST__: NODE_ENV === 'test',
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.NODE_ENV': `"${NODE_ENV}"`,

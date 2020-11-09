@@ -86,154 +86,6 @@ export default {
         return result;
       };
     }
-
-    return {
-      CallExpression: visitCallExpression,
-    };
-
-    function visitCallExpression(node) {
-      const callbackIndex = getReactiveHookCallbackIndex(node.callee, options);
-      if (callbackIndex === -1) {
-        // Not a React Hook call that needs deps.
-        return;
-      }
-      const callback = node.arguments[callbackIndex];
-      const reactiveHook = node.callee;
-      const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
-      const declaredDependenciesNode = node.arguments[callbackIndex + 1];
-      const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
-
-      // Check the declared dependencies for this reactive hook. If there is no
-      // second argument then the reactive callback will re-run on every render.
-      // So no need to check for dependency inclusion.
-      if (!declaredDependenciesNode && !isEffect) {
-        // These are only used for optimization.
-        if (
-          reactiveHookName === 'useMemo' ||
-          reactiveHookName === 'useCallback'
-        ) {
-          // TODO: Can this have a suggestion?
-          reportProblem({
-            node: reactiveHook,
-            message:
-              `React Hook ${reactiveHookName} does nothing when called with ` +
-              `only one argument. Did you forget to pass an array of ` +
-              `dependencies?`,
-          });
-        }
-        return;
-      }
-
-      switch (callback.type) {
-        case 'FunctionExpression':
-        case 'ArrowFunctionExpression':
-          visitFunctionWithDependencies(
-            callback,
-            declaredDependenciesNode,
-            reactiveHook,
-            reactiveHookName,
-            isEffect,
-          );
-          return; // Handled
-        case 'Identifier':
-          if (!declaredDependenciesNode) {
-            // No deps, no problems.
-            return; // Handled
-          }
-          // The function passed as a callback is not written inline.
-          // But perhaps it's in the dependencies array?
-          if (
-            declaredDependenciesNode.elements &&
-            declaredDependenciesNode.elements.some(
-              el => el && el.type === 'Identifier' && el.name === callback.name,
-            )
-          ) {
-            // If it's already in the list of deps, we don't care because
-            // this is valid regardless.
-            return; // Handled
-          }
-          // We'll do our best effort to find it, complain otherwise.
-          const variable = context.getScope().set.get(callback.name);
-          if (variable == null || variable.defs == null) {
-            // If it's not in scope, we don't care.
-            return; // Handled
-          }
-          // The function passed as a callback is not written inline.
-          // But it's defined somewhere in the render scope.
-          // We'll do our best effort to find and check it, complain otherwise.
-          const def = variable.defs[0];
-          if (!def || !def.node) {
-            break; // Unhandled
-          }
-          if (def.type !== 'Variable' && def.type !== 'FunctionName') {
-            // Parameter or an unusual pattern. Bail out.
-            break; // Unhandled
-          }
-          switch (def.node.type) {
-            case 'FunctionDeclaration':
-              // useEffect(() => { ... }, []);
-              visitFunctionWithDependencies(
-                def.node,
-                declaredDependenciesNode,
-                reactiveHook,
-                reactiveHookName,
-                isEffect,
-              );
-              return; // Handled
-            case 'VariableDeclarator':
-              const init = def.node.init;
-              if (!init) {
-                break; // Unhandled
-              }
-              switch (init.type) {
-                // const effectBody = () => {...};
-                // useEffect(effectBody, []);
-                case 'ArrowFunctionExpression':
-                case 'FunctionExpression':
-                  // We can inspect this function as if it were inline.
-                  visitFunctionWithDependencies(
-                    init,
-                    declaredDependenciesNode,
-                    reactiveHook,
-                    reactiveHookName,
-                    isEffect,
-                  );
-                  return; // Handled
-              }
-              break; // Unhandled
-          }
-          break; // Unhandled
-        default:
-          // useEffect(generateEffectBody(), []);
-          reportProblem({
-            node: reactiveHook,
-            message:
-              `React Hook ${reactiveHookName} received a function whose dependencies ` +
-              `are unknown. Pass an inline function instead.`,
-          });
-          return; // Handled
-      }
-
-      // Something unusual. Fall back to suggesting to add the body itself as a dep.
-      reportProblem({
-        node: reactiveHook,
-        message:
-          `React Hook ${reactiveHookName} has a missing dependency: '${callback.name}'. ` +
-          `Either include it or remove the dependency array.`,
-        suggest: [
-          {
-            desc: `Update the dependencies array to be: [${callback.name}]`,
-            fix(fixer) {
-              return fixer.replaceText(
-                declaredDependenciesNode,
-                `[${callback.name}]`,
-              );
-            },
-          },
-        ],
-      });
-    }
-
     /**
      * Visitor for both function expressions and arrow function expressions.
      */
@@ -258,7 +110,7 @@ export default {
             '  }\n' +
             '  fetchData();\n' +
             `}, [someId]); // Or [] if effect doesn't need props or state\n\n` +
-            'Learn more about data fetching with Hooks: https://fb.me/react-hooks-data-fetching',
+            'Learn more about data fetching with Hooks: https://reactjs.org/link/hooks-data-fetching',
         });
       }
 
@@ -398,6 +250,17 @@ export default {
               }
               // State variable itself is dynamic.
               return false;
+            }
+          }
+        } else if (name === 'useTransition') {
+          if (
+            id.type === 'ArrayPattern' &&
+            Array.isArray(resolved.identifiers)
+          ) {
+            // Is first tuple value the same reference we're checking?
+            if (id.elements[0] === resolved.identifiers[0]) {
+              // Setter is stable.
+              return true;
             }
           }
         }
@@ -543,7 +406,10 @@ export default {
             });
           }
 
-          if (dependencyNode.parent.type === 'TSTypeQuery') {
+          if (
+            dependencyNode.parent.type === 'TSTypeQuery' ||
+            dependencyNode.parent.type === 'TSTypeReference'
+          ) {
             continue;
           }
 
@@ -803,9 +669,10 @@ export default {
           let maybeID = declaredDependencyNode;
           while (
             maybeID.type === 'MemberExpression' ||
-            maybeID.type === 'OptionalMemberExpression'
+            maybeID.type === 'OptionalMemberExpression' ||
+            maybeID.type === 'ChainExpression'
           ) {
-            maybeID = maybeID.object;
+            maybeID = maybeID.object || maybeID.expression.object;
           }
           const isDeclaredInComponent = !componentScope.through.some(
             ref => ref.identifier === maybeID,
@@ -844,59 +711,80 @@ export default {
         unnecessaryDependencies.size;
 
       if (problemCount === 0) {
-        // If nothing else to report, check if some callbacks
-        // are bare and would invalidate on every render.
-        const bareFunctions = scanForDeclaredBareFunctions({
+        // If nothing else to report, check if some dependencies would
+        // invalidate on every render.
+        const constructions = scanForConstructions({
           declaredDependencies,
           declaredDependenciesNode,
           componentScope,
           scope,
         });
-        bareFunctions.forEach(({fn, suggestUseCallback}) => {
-          let message =
-            `The '${fn.name.name}' function makes the dependencies of ` +
-            `${reactiveHookName} Hook (at line ${declaredDependenciesNode.loc.start.line}) ` +
-            `change on every render.`;
-          if (suggestUseCallback) {
-            message +=
-              ` To fix this, ` +
-              `wrap the '${fn.name.name}' definition into its own useCallback() Hook.`;
-          } else {
-            message +=
-              ` Move it inside the ${reactiveHookName} callback. ` +
-              `Alternatively, wrap the '${fn.name.name}' definition into its own useCallback() Hook.`;
-          }
+        constructions.forEach(
+          ({construction, isUsedOutsideOfHook, depType}) => {
+            const wrapperHook =
+              depType === 'function' ? 'useCallback' : 'useMemo';
 
-          let suggest;
-          // Only handle the simple case: arrow functions.
-          // Wrapping function declarations can mess up hoisting.
-          if (suggestUseCallback && fn.type === 'Variable') {
-            suggest = [
-              {
-                desc: `Wrap the '${fn.name.name}' definition into its own useCallback() Hook.`,
-                fix(fixer) {
-                  return [
-                    // TODO: also add an import?
-                    fixer.insertTextBefore(fn.node.init, 'useCallback('),
-                    // TODO: ideally we'd gather deps here but it would require
-                    // restructuring the rule code. This will cause a new lint
-                    // error to appear immediately for useCallback. Note we're
-                    // not adding [] because would that changes semantics.
-                    fixer.insertTextAfter(fn.node.init, ')'),
-                  ];
+            const constructionType =
+              depType === 'function' ? 'definition' : 'initialization';
+
+            const defaultAdvice = `wrap the ${constructionType} of '${construction.name.name}' in its own ${wrapperHook}() Hook.`;
+
+            const advice = isUsedOutsideOfHook
+              ? `To fix this, ${defaultAdvice}`
+              : `Move it inside the ${reactiveHookName} callback. Alternatively, ${defaultAdvice}`;
+
+            const causation =
+              depType === 'conditional' || depType === 'logical expression'
+                ? 'could make'
+                : 'makes';
+
+            const message =
+              `The '${construction.name.name}' ${depType} ${causation} the dependencies of ` +
+              `${reactiveHookName} Hook (at line ${declaredDependenciesNode.loc.start.line}) ` +
+              `change on every render. ${advice}`;
+
+            let suggest;
+            // Only handle the simple case of variable assignments.
+            // Wrapping function declarations can mess up hoisting.
+            if (
+              isUsedOutsideOfHook &&
+              construction.type === 'Variable' &&
+              // Objects may be mutated ater construction, which would make this
+              // fix unsafe. Functions _probably_ won't be mutated, so we'll
+              // allow this fix for them.
+              depType === 'function'
+            ) {
+              suggest = [
+                {
+                  desc: `Wrap the ${constructionType} of '${construction.name.name}' in its own ${wrapperHook}() Hook.`,
+                  fix(fixer) {
+                    const [before, after] =
+                      wrapperHook === 'useMemo'
+                        ? [`useMemo(() => { return `, '; })']
+                        : ['useCallback(', ')'];
+                    return [
+                      // TODO: also add an import?
+                      fixer.insertTextBefore(construction.node.init, before),
+                      // TODO: ideally we'd gather deps here but it would require
+                      // restructuring the rule code. This will cause a new lint
+                      // error to appear immediately for useCallback. Note we're
+                      // not adding [] because would that changes semantics.
+                      fixer.insertTextAfter(construction.node.init, after),
+                    ];
+                  },
                 },
-              },
-            ];
-          }
-          // TODO: What if the function needs to change on every render anyway?
-          // Should we suggest removing effect deps as an appropriate fix too?
-          reportProblem({
-            // TODO: Why not report this at the dependency site?
-            node: fn.node,
-            message,
-            suggest,
-          });
-        });
+              ];
+            }
+            // TODO: What if the function needs to change on every render anyway?
+            // Should we suggest removing effect deps as an appropriate fix too?
+            reportProblem({
+              // TODO: Why not report this at the dependency site?
+              node: construction.node,
+              message,
+              suggest,
+            });
+          },
+        );
         return;
       }
 
@@ -1218,6 +1106,153 @@ export default {
         ],
       });
     }
+
+    function visitCallExpression(node) {
+      const callbackIndex = getReactiveHookCallbackIndex(node.callee, options);
+      if (callbackIndex === -1) {
+        // Not a React Hook call that needs deps.
+        return;
+      }
+      const callback = node.arguments[callbackIndex];
+      const reactiveHook = node.callee;
+      const reactiveHookName = getNodeWithoutReactNamespace(reactiveHook).name;
+      const declaredDependenciesNode = node.arguments[callbackIndex + 1];
+      const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
+
+      // Check the declared dependencies for this reactive hook. If there is no
+      // second argument then the reactive callback will re-run on every render.
+      // So no need to check for dependency inclusion.
+      if (!declaredDependenciesNode && !isEffect) {
+        // These are only used for optimization.
+        if (
+          reactiveHookName === 'useMemo' ||
+          reactiveHookName === 'useCallback'
+        ) {
+          // TODO: Can this have a suggestion?
+          reportProblem({
+            node: reactiveHook,
+            message:
+              `React Hook ${reactiveHookName} does nothing when called with ` +
+              `only one argument. Did you forget to pass an array of ` +
+              `dependencies?`,
+          });
+        }
+        return;
+      }
+
+      switch (callback.type) {
+        case 'FunctionExpression':
+        case 'ArrowFunctionExpression':
+          visitFunctionWithDependencies(
+            callback,
+            declaredDependenciesNode,
+            reactiveHook,
+            reactiveHookName,
+            isEffect,
+          );
+          return; // Handled
+        case 'Identifier':
+          if (!declaredDependenciesNode) {
+            // No deps, no problems.
+            return; // Handled
+          }
+          // The function passed as a callback is not written inline.
+          // But perhaps it's in the dependencies array?
+          if (
+            declaredDependenciesNode.elements &&
+            declaredDependenciesNode.elements.some(
+              el => el && el.type === 'Identifier' && el.name === callback.name,
+            )
+          ) {
+            // If it's already in the list of deps, we don't care because
+            // this is valid regardless.
+            return; // Handled
+          }
+          // We'll do our best effort to find it, complain otherwise.
+          const variable = context.getScope().set.get(callback.name);
+          if (variable == null || variable.defs == null) {
+            // If it's not in scope, we don't care.
+            return; // Handled
+          }
+          // The function passed as a callback is not written inline.
+          // But it's defined somewhere in the render scope.
+          // We'll do our best effort to find and check it, complain otherwise.
+          const def = variable.defs[0];
+          if (!def || !def.node) {
+            break; // Unhandled
+          }
+          if (def.type !== 'Variable' && def.type !== 'FunctionName') {
+            // Parameter or an unusual pattern. Bail out.
+            break; // Unhandled
+          }
+          switch (def.node.type) {
+            case 'FunctionDeclaration':
+              // useEffect(() => { ... }, []);
+              visitFunctionWithDependencies(
+                def.node,
+                declaredDependenciesNode,
+                reactiveHook,
+                reactiveHookName,
+                isEffect,
+              );
+              return; // Handled
+            case 'VariableDeclarator':
+              const init = def.node.init;
+              if (!init) {
+                break; // Unhandled
+              }
+              switch (init.type) {
+                // const effectBody = () => {...};
+                // useEffect(effectBody, []);
+                case 'ArrowFunctionExpression':
+                case 'FunctionExpression':
+                  // We can inspect this function as if it were inline.
+                  visitFunctionWithDependencies(
+                    init,
+                    declaredDependenciesNode,
+                    reactiveHook,
+                    reactiveHookName,
+                    isEffect,
+                  );
+                  return; // Handled
+              }
+              break; // Unhandled
+          }
+          break; // Unhandled
+        default:
+          // useEffect(generateEffectBody(), []);
+          reportProblem({
+            node: reactiveHook,
+            message:
+              `React Hook ${reactiveHookName} received a function whose dependencies ` +
+              `are unknown. Pass an inline function instead.`,
+          });
+          return; // Handled
+      }
+
+      // Something unusual. Fall back to suggesting to add the body itself as a dep.
+      reportProblem({
+        node: reactiveHook,
+        message:
+          `React Hook ${reactiveHookName} has a missing dependency: '${callback.name}'. ` +
+          `Either include it or remove the dependency array.`,
+        suggest: [
+          {
+            desc: `Update the dependencies array to be: [${callback.name}]`,
+            fix(fixer) {
+              return fixer.replaceText(
+                declaredDependenciesNode,
+                `[${callback.name}]`,
+              );
+            },
+          },
+        ],
+      });
+    }
+
+    return {
+      CallExpression: visitCallExpression,
+    };
   },
 };
 
@@ -1381,50 +1416,116 @@ function collectRecommendations({
   };
 }
 
-// Finds functions declared as dependencies
+// If the node will result in constructing a referentially unique value, return
+// its human readable type name, else return null.
+function getConstructionExpressionType(node) {
+  switch (node.type) {
+    case 'ObjectExpression':
+      return 'object';
+    case 'ArrayExpression':
+      return 'array';
+    case 'ArrowFunctionExpression':
+    case 'FunctionExpression':
+      return 'function';
+    case 'ClassExpression':
+      return 'class';
+    case 'ConditionalExpression':
+      if (
+        getConstructionExpressionType(node.consequent) != null ||
+        getConstructionExpressionType(node.alternate) != null
+      ) {
+        return 'conditional';
+      }
+      return null;
+    case 'LogicalExpression':
+      if (
+        getConstructionExpressionType(node.left) != null ||
+        getConstructionExpressionType(node.right) != null
+      ) {
+        return 'logical expression';
+      }
+      return null;
+    case 'JSXFragment':
+      return 'JSX fragment';
+    case 'JSXElement':
+      return 'JSX element';
+    case 'AssignmentExpression':
+      if (getConstructionExpressionType(node.right) != null) {
+        return 'assignment expression';
+      }
+      return null;
+    case 'NewExpression':
+      return 'object construction';
+    case 'Literal':
+      if (node.value instanceof RegExp) {
+        return 'regular expression';
+      }
+      return null;
+    case 'TypeCastExpression':
+      return getConstructionExpressionType(node.expression);
+    case 'TSAsExpression':
+      return getConstructionExpressionType(node.expression);
+  }
+  return null;
+}
+
+// Finds variables declared as dependencies
 // that would invalidate on every render.
-function scanForDeclaredBareFunctions({
+function scanForConstructions({
   declaredDependencies,
   declaredDependenciesNode,
   componentScope,
   scope,
 }) {
-  const bareFunctions = declaredDependencies
+  const constructions = declaredDependencies
     .map(({key}) => {
-      const fnRef = componentScope.set.get(key);
-      if (fnRef == null) {
+      const ref = componentScope.variables.find(v => v.name === key);
+      if (ref == null) {
         return null;
       }
-      const fnNode = fnRef.defs[0];
-      if (fnNode == null) {
+
+      const node = ref.defs[0];
+      if (node == null) {
         return null;
       }
       // const handleChange = function () {}
       // const handleChange = () => {}
+      // const foo = {}
+      // const foo = []
+      // etc.
       if (
-        fnNode.type === 'Variable' &&
-        fnNode.node.type === 'VariableDeclarator' &&
-        fnNode.node.init != null &&
-        (fnNode.node.init.type === 'ArrowFunctionExpression' ||
-          fnNode.node.init.type === 'FunctionExpression')
+        node.type === 'Variable' &&
+        node.node.type === 'VariableDeclarator' &&
+        node.node.id.type === 'Identifier' && // Ensure this is not destructed assignment
+        node.node.init != null
       ) {
-        return fnRef;
+        const constantExpressionType = getConstructionExpressionType(
+          node.node.init,
+        );
+        if (constantExpressionType != null) {
+          return [ref, constantExpressionType];
+        }
       }
       // function handleChange() {}
       if (
-        fnNode.type === 'FunctionName' &&
-        fnNode.node.type === 'FunctionDeclaration'
+        node.type === 'FunctionName' &&
+        node.node.type === 'FunctionDeclaration'
       ) {
-        return fnRef;
+        return [ref, 'function'];
+      }
+
+      // class Foo {}
+      if (node.type === 'ClassName' && node.node.type === 'ClassDeclaration') {
+        return [ref, 'class'];
       }
       return null;
     })
     .filter(Boolean);
 
-  function isUsedOutsideOfHook(fnRef) {
+  function isUsedOutsideOfHook(ref) {
     let foundWriteExpr = false;
-    for (let i = 0; i < fnRef.references.length; i++) {
-      const reference = fnRef.references[i];
+    for (let i = 0; i < ref.references.length; i++) {
+      const reference = ref.references[i];
       if (reference.writeExpr) {
         if (foundWriteExpr) {
           // Two writes to the same function.
@@ -1450,9 +1551,10 @@ function scanForDeclaredBareFunctions({
     return false;
   }
 
-  return bareFunctions.map(fnRef => ({
-    fn: fnRef.defs[0],
-    suggestUseCallback: isUsedOutsideOfHook(fnRef),
+  return constructions.map(([ref, depType]) => ({
+    construction: ref.defs[0],
+    depType,
+    isUsedOutsideOfHook: isUsedOutsideOfHook(ref),
   }));
 }
 
@@ -1492,6 +1594,27 @@ function getDependency(node) {
 }
 
 /**
+ * Mark a node as either optional or required.
+ * Note: If the node argument is an OptionalMemberExpression, it doesn't necessarily mean it is optional.
+ * It just means there is an optional member somewhere inside.
+ * This particular node might still represent a required member, so check .optional field.
+ */
+function markNode(node, optionalChains, result) {
+  if (optionalChains) {
+    if (node.optional) {
+      // We only want to consider it optional if *all* usages were optional.
+      if (!optionalChains.has(result)) {
+        // Mark as (maybe) optional. If there's a required usage, this will be overridden.
+        optionalChains.set(result, true);
+      }
+    } else {
+      // Mark as required.
+      optionalChains.set(result, false);
+    }
+  }
+}
+
+/**
  * Assuming () means the passed node.
  * (foo) -> 'foo'
  * foo(.)bar -> 'foo.bar'
@@ -1499,7 +1622,7 @@ function getDependency(node) {
  * Otherwise throw.
  */
 function analyzePropertyChain(node, optionalChains) {
-  if (node.type === 'Identifier') {
+  if (node.type === 'Identifier' || node.type === 'JSXIdentifier') {
     const result = node.name;
     if (optionalChains) {
       // Mark as required.
@@ -1510,30 +1633,20 @@ function analyzePropertyChain(node, optionalChains) {
     const object = analyzePropertyChain(node.object, optionalChains);
     const property = analyzePropertyChain(node.property, null);
     const result = `${object}.${property}`;
-    if (optionalChains) {
-      // Mark as required.
-      optionalChains.set(result, false);
-    }
+    markNode(node, optionalChains, result);
     return result;
   } else if (node.type === 'OptionalMemberExpression' && !node.computed) {
     const object = analyzePropertyChain(node.object, optionalChains);
     const property = analyzePropertyChain(node.property, null);
     const result = `${object}.${property}`;
-    if (optionalChains) {
-      // Note: OptionalMemberExpression doesn't necessarily mean this node is optional.
-      // It just means there is an optional member somewhere inside.
-      // This particular node might still represent a required member, so check .optional field.
-      if (node.optional) {
-        // We only want to consider it optional if *all* usages were optional.
-        if (!optionalChains.has(result)) {
-          // Mark as (maybe) optional. If there's a required usage, this will be overridden.
-          optionalChains.set(result, true);
-        }
-      } else {
-        // Mark as required.
-        optionalChains.set(result, false);
-      }
-    }
+    markNode(node, optionalChains, result);
+    return result;
+  } else if (node.type === 'ChainExpression' && !node.computed) {
+    const expression = node.expression;
+    const object = analyzePropertyChain(expression.object, optionalChains);
+    const property = analyzePropertyChain(expression.property, null);
+    const result = `${object}.${property}`;
+    markNode(expression, optionalChains, result);
     return result;
   } else {
     throw new Error(`Unsupported node type: ${node.type}`);
@@ -1666,7 +1779,8 @@ function isNodeLike(val) {
 
 function isSameIdentifier(a, b) {
   return (
-    a.type === 'Identifier' &&
+    (a.type === 'Identifier' || a.type === 'JSXIdentifier') &&
+    a.type === b.type &&
     a.name === b.name &&
     a.range[0] === b.range[0] &&
     a.range[1] === b.range[1]

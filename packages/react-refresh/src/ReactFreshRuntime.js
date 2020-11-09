@@ -178,6 +178,16 @@ function cloneSet<T>(set: Set<T>): Set<T> {
   return clone;
 }
 
+// This is a safety mechanism to protect against rogue getters and Proxies.
+function getProperty(object, property) {
+  try {
+    return object[property];
+  } catch (err) {
+    // Intentionally ignore.
+    return undefined;
+  }
+}
+
 export function performReactRefresh(): RefreshUpdate | null {
   if (!__DEV__) {
     throw new Error(
@@ -322,7 +332,7 @@ export function register(type: any, id: string): void {
 
     // Visit inner types because we might not have registered them.
     if (typeof type === 'object' && type !== null) {
-      switch (type.$$typeof) {
+      switch (getProperty(type, '$$typeof')) {
         case REACT_FORWARD_REF_TYPE:
           register(type.render, id + '$render');
           break;
@@ -507,53 +517,53 @@ export function injectIntoGlobalHook(globalObject: any): void {
       didError: boolean,
     ) {
       const helpers = helpersByRendererID.get(id);
-      if (helpers === undefined) {
-        return;
-      }
-      helpersByRoot.set(root, helpers);
+      if (helpers !== undefined) {
+        helpersByRoot.set(root, helpers);
 
-      const current = root.current;
-      const alternate = current.alternate;
+        const current = root.current;
+        const alternate = current.alternate;
 
-      // We need to determine whether this root has just (un)mounted.
-      // This logic is copy-pasted from similar logic in the DevTools backend.
-      // If this breaks with some refactoring, you'll want to update DevTools too.
+        // We need to determine whether this root has just (un)mounted.
+        // This logic is copy-pasted from similar logic in the DevTools backend.
+        // If this breaks with some refactoring, you'll want to update DevTools too.
 
-      if (alternate !== null) {
-        const wasMounted =
-          alternate.memoizedState != null &&
-          alternate.memoizedState.element != null;
-        const isMounted =
-          current.memoizedState != null &&
-          current.memoizedState.element != null;
+        if (alternate !== null) {
+          const wasMounted =
+            alternate.memoizedState != null &&
+            alternate.memoizedState.element != null;
+          const isMounted =
+            current.memoizedState != null &&
+            current.memoizedState.element != null;
 
-        if (!wasMounted && isMounted) {
+          if (!wasMounted && isMounted) {
+            // Mount a new root.
+            mountedRoots.add(root);
+            failedRoots.delete(root);
+          } else if (wasMounted && isMounted) {
+            // Update an existing root.
+            // This doesn't affect our mounted root Set.
+          } else if (wasMounted && !isMounted) {
+            // Unmount an existing root.
+            mountedRoots.delete(root);
+            if (didError) {
+              // We'll remount it on future edits.
+              failedRoots.add(root);
+            } else {
+              helpersByRoot.delete(root);
+            }
+          } else if (!wasMounted && !isMounted) {
+            if (didError) {
+              // We'll remount it on future edits.
+              failedRoots.add(root);
+            }
+          }
+        } else {
           // Mount a new root.
           mountedRoots.add(root);
-          failedRoots.delete(root);
-        } else if (wasMounted && isMounted) {
-          // Update an existing root.
-          // This doesn't affect our mounted root Set.
-        } else if (wasMounted && !isMounted) {
-          // Unmount an existing root.
-          mountedRoots.delete(root);
-          if (didError) {
-            // We'll remount it on future edits.
-            failedRoots.add(root);
-          } else {
-            helpersByRoot.delete(root);
-          }
-        } else if (!wasMounted && !isMounted) {
-          if (didError) {
-            // We'll remount it on future edits.
-            failedRoots.add(root);
-          }
         }
-      } else {
-        // Mount a new root.
-        mountedRoots.add(root);
       }
 
+      // Always call the decorated DevTools hook.
       return oldOnCommitFiberRoot.apply(this, arguments);
     };
   } else {
@@ -676,7 +686,7 @@ export function isLikelyComponentType(type: any): boolean {
       }
       case 'object': {
         if (type != null) {
-          switch (type.$$typeof) {
+          switch (getProperty(type, '$$typeof')) {
             case REACT_FORWARD_REF_TYPE:
             case REACT_MEMO_TYPE:
               // Definitely React components.

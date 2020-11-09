@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {TopLevelType} from '../../events/TopLevelEventTypes';
+import type {DOMEventName} from '../../events/DOMEventNames';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {AnyNativeEvent} from '../../events/PluginModuleType';
 import type {DispatchQueue} from '../DOMPluginEventSystem';
@@ -15,20 +15,25 @@ import type {EventSystemFlags} from '../EventSystemFlags';
 
 import {
   SyntheticEvent,
-  AnimationEventInterface,
-  ClipboardEventInterface,
-  FocusEventInterface,
-  KeyboardEventInterface,
-  MouseEventInterface,
-  PointerEventInterface,
-  DragEventInterface,
-  TouchEventInterface,
-  TransitionEventInterface,
-  UIEventInterface,
-  WheelEventInterface,
+  SyntheticKeyboardEvent,
+  SyntheticFocusEvent,
+  SyntheticMouseEvent,
+  SyntheticDragEvent,
+  SyntheticTouchEvent,
+  SyntheticAnimationEvent,
+  SyntheticTransitionEvent,
+  SyntheticUIEvent,
+  SyntheticWheelEvent,
+  SyntheticClipboardEvent,
+  SyntheticPointerEvent,
 } from '../../events/SyntheticEvent';
 
-import * as DOMTopLevelEventTypes from '../DOMTopLevelEventTypes';
+import {
+  ANIMATION_END,
+  ANIMATION_ITERATION,
+  ANIMATION_START,
+  TRANSITION_END,
+} from '../DOMEventNames';
 import {
   topLevelEventsToReactNames,
   registerSimpleEvents,
@@ -46,20 +51,21 @@ import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 
 function extractEvents(
   dispatchQueue: DispatchQueue,
-  topLevelType: TopLevelType,
+  domEventName: DOMEventName,
   targetInst: null | Fiber,
   nativeEvent: AnyNativeEvent,
   nativeEventTarget: null | EventTarget,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
 ): void {
-  const reactName = topLevelEventsToReactNames.get(topLevelType);
+  const reactName = topLevelEventsToReactNames.get(domEventName);
   if (reactName === undefined) {
     return;
   }
-  let EventInterface;
-  switch (topLevelType) {
-    case DOMTopLevelEventTypes.TOP_KEY_PRESS:
+  let SyntheticEventCtor = SyntheticEvent;
+  let reactEventType: string = domEventName;
+  switch (domEventName) {
+    case 'keypress':
       // Firefox creates a keypress event for function keys too. This removes
       // the unwanted keypress events. Enter is however both printable and
       // non-printable. One would expect Tab to be as well (but it isn't).
@@ -67,113 +73,147 @@ function extractEvents(
         return;
       }
     /* falls through */
-    case DOMTopLevelEventTypes.TOP_KEY_DOWN:
-    case DOMTopLevelEventTypes.TOP_KEY_UP:
-      EventInterface = KeyboardEventInterface;
+    case 'keydown':
+    case 'keyup':
+      SyntheticEventCtor = SyntheticKeyboardEvent;
       break;
-    case DOMTopLevelEventTypes.TOP_FOCUS_IN:
-    case DOMTopLevelEventTypes.TOP_FOCUS_OUT:
-    case DOMTopLevelEventTypes.TOP_BEFORE_BLUR:
-    case DOMTopLevelEventTypes.TOP_AFTER_BLUR:
-      EventInterface = FocusEventInterface;
+    case 'focusin':
+      reactEventType = 'focus';
+      SyntheticEventCtor = SyntheticFocusEvent;
       break;
-    case DOMTopLevelEventTypes.TOP_CLICK:
+    case 'focusout':
+      reactEventType = 'blur';
+      SyntheticEventCtor = SyntheticFocusEvent;
+      break;
+    case 'beforeblur':
+    case 'afterblur':
+      SyntheticEventCtor = SyntheticFocusEvent;
+      break;
+    case 'click':
       // Firefox creates a click event on right mouse clicks. This removes the
       // unwanted click events.
       if (nativeEvent.button === 2) {
         return;
       }
     /* falls through */
-    case DOMTopLevelEventTypes.TOP_AUX_CLICK:
-    case DOMTopLevelEventTypes.TOP_DOUBLE_CLICK:
-    case DOMTopLevelEventTypes.TOP_MOUSE_DOWN:
-    case DOMTopLevelEventTypes.TOP_MOUSE_MOVE:
-    case DOMTopLevelEventTypes.TOP_MOUSE_UP:
+    case 'auxclick':
+    case 'dblclick':
+    case 'mousedown':
+    case 'mousemove':
+    case 'mouseup':
     // TODO: Disabled elements should not respond to mouse events
     /* falls through */
-    case DOMTopLevelEventTypes.TOP_MOUSE_OUT:
-    case DOMTopLevelEventTypes.TOP_MOUSE_OVER:
-    case DOMTopLevelEventTypes.TOP_CONTEXT_MENU:
-      EventInterface = MouseEventInterface;
+    case 'mouseout':
+    case 'mouseover':
+    case 'contextmenu':
+      SyntheticEventCtor = SyntheticMouseEvent;
       break;
-    case DOMTopLevelEventTypes.TOP_DRAG:
-    case DOMTopLevelEventTypes.TOP_DRAG_END:
-    case DOMTopLevelEventTypes.TOP_DRAG_ENTER:
-    case DOMTopLevelEventTypes.TOP_DRAG_EXIT:
-    case DOMTopLevelEventTypes.TOP_DRAG_LEAVE:
-    case DOMTopLevelEventTypes.TOP_DRAG_OVER:
-    case DOMTopLevelEventTypes.TOP_DRAG_START:
-    case DOMTopLevelEventTypes.TOP_DROP:
-      EventInterface = DragEventInterface;
+    case 'drag':
+    case 'dragend':
+    case 'dragenter':
+    case 'dragexit':
+    case 'dragleave':
+    case 'dragover':
+    case 'dragstart':
+    case 'drop':
+      SyntheticEventCtor = SyntheticDragEvent;
       break;
-    case DOMTopLevelEventTypes.TOP_TOUCH_CANCEL:
-    case DOMTopLevelEventTypes.TOP_TOUCH_END:
-    case DOMTopLevelEventTypes.TOP_TOUCH_MOVE:
-    case DOMTopLevelEventTypes.TOP_TOUCH_START:
-      EventInterface = TouchEventInterface;
+    case 'touchcancel':
+    case 'touchend':
+    case 'touchmove':
+    case 'touchstart':
+      SyntheticEventCtor = SyntheticTouchEvent;
       break;
-    case DOMTopLevelEventTypes.TOP_ANIMATION_END:
-    case DOMTopLevelEventTypes.TOP_ANIMATION_ITERATION:
-    case DOMTopLevelEventTypes.TOP_ANIMATION_START:
-      EventInterface = AnimationEventInterface;
+    case ANIMATION_END:
+    case ANIMATION_ITERATION:
+    case ANIMATION_START:
+      SyntheticEventCtor = SyntheticAnimationEvent;
       break;
-    case DOMTopLevelEventTypes.TOP_TRANSITION_END:
-      EventInterface = TransitionEventInterface;
+    case TRANSITION_END:
+      SyntheticEventCtor = SyntheticTransitionEvent;
       break;
-    case DOMTopLevelEventTypes.TOP_SCROLL:
-      EventInterface = UIEventInterface;
+    case 'scroll':
+      SyntheticEventCtor = SyntheticUIEvent;
       break;
-    case DOMTopLevelEventTypes.TOP_WHEEL:
-      EventInterface = WheelEventInterface;
+    case 'wheel':
+      SyntheticEventCtor = SyntheticWheelEvent;
       break;
-    case DOMTopLevelEventTypes.TOP_COPY:
-    case DOMTopLevelEventTypes.TOP_CUT:
-    case DOMTopLevelEventTypes.TOP_PASTE:
-      EventInterface = ClipboardEventInterface;
+    case 'copy':
+    case 'cut':
+    case 'paste':
+      SyntheticEventCtor = SyntheticClipboardEvent;
       break;
-    case DOMTopLevelEventTypes.TOP_GOT_POINTER_CAPTURE:
-    case DOMTopLevelEventTypes.TOP_LOST_POINTER_CAPTURE:
-    case DOMTopLevelEventTypes.TOP_POINTER_CANCEL:
-    case DOMTopLevelEventTypes.TOP_POINTER_DOWN:
-    case DOMTopLevelEventTypes.TOP_POINTER_MOVE:
-    case DOMTopLevelEventTypes.TOP_POINTER_OUT:
-    case DOMTopLevelEventTypes.TOP_POINTER_OVER:
-    case DOMTopLevelEventTypes.TOP_POINTER_UP:
-      EventInterface = PointerEventInterface;
+    case 'gotpointercapture':
+    case 'lostpointercapture':
+    case 'pointercancel':
+    case 'pointerdown':
+    case 'pointermove':
+    case 'pointerout':
+    case 'pointerover':
+    case 'pointerup':
+      SyntheticEventCtor = SyntheticPointerEvent;
       break;
     default:
       // Unknown event. This is used by createEventHandle.
       break;
   }
-  const event = new SyntheticEvent(
-    reactName,
-    null,
-    nativeEvent,
-    nativeEventTarget,
-    EventInterface,
-  );
 
   const inCapturePhase = (eventSystemFlags & IS_CAPTURE_PHASE) !== 0;
   if (
     enableCreateEventHandleAPI &&
     eventSystemFlags & IS_EVENT_HANDLE_NON_MANAGED_NODE
   ) {
-    accumulateEventHandleNonManagedNodeListeners(
-      dispatchQueue,
-      event,
+    const listeners = accumulateEventHandleNonManagedNodeListeners(
+      // TODO: this cast may not make sense for events like
+      // "focus" where React listens to e.g. "focusin".
+      ((reactEventType: any): DOMEventName),
       targetContainer,
       inCapturePhase,
     );
+    if (listeners.length > 0) {
+      // Intentionally create event lazily.
+      const event = new SyntheticEventCtor(
+        reactName,
+        reactEventType,
+        null,
+        nativeEvent,
+        nativeEventTarget,
+      );
+      dispatchQueue.push({event, listeners});
+    }
   } else {
-    // We traverse only capture or bubble phase listeners
-    accumulateSinglePhaseListeners(
+    // Some events don't bubble in the browser.
+    // In the past, React has always bubbled them, but this can be surprising.
+    // We're going to try aligning closer to the browser behavior by not bubbling
+    // them in React either. We'll start by not bubbling onScroll, and then expand.
+    const accumulateTargetOnly =
+      !inCapturePhase &&
+      // TODO: ideally, we'd eventually add all events from
+      // nonDelegatedEvents list in DOMPluginEventSystem.
+      // Then we can remove this special list.
+      // This is a breaking change that can wait until React 18.
+      domEventName === 'scroll';
+
+    const listeners = accumulateSinglePhaseListeners(
       targetInst,
-      dispatchQueue,
-      event,
+      reactName,
+      nativeEvent.type,
       inCapturePhase,
+      accumulateTargetOnly,
+      nativeEvent,
     );
+    if (listeners.length > 0) {
+      // Intentionally create event lazily.
+      const event = new SyntheticEventCtor(
+        reactName,
+        reactEventType,
+        null,
+        nativeEvent,
+        nativeEventTarget,
+      );
+      dispatchQueue.push({event, listeners});
+    }
   }
-  return event;
 }
 
 export {registerSimpleEvents as registerEvents, extractEvents};

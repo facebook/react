@@ -33,6 +33,9 @@ describe('InspectedElementContext', () => {
   let TestUtils;
   let TreeContextController;
 
+  let TestUtilsAct;
+  let TestRendererAct;
+
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
@@ -47,7 +50,9 @@ describe('InspectedElementContext', () => {
     ReactDOM = require('react-dom');
     PropTypes = require('prop-types');
     TestUtils = require('react-dom/test-utils');
+    TestUtilsAct = TestUtils.unstable_concurrentAct;
     TestRenderer = utils.requireTestRenderer();
+    TestRendererAct = TestUtils.unstable_concurrentAct;
 
     BridgeContext = require('react-devtools-shared/src/devtools/views/context')
       .BridgeContext;
@@ -532,6 +537,9 @@ describe('InspectedElementContext', () => {
     const objectOfObjects = {
       inner: {string: 'abc', number: 123, boolean: true},
     };
+    const objectWithSymbol = {
+      [Symbol('name')]: 'hello',
+    };
     const typedArray = Int8Array.from([100, -100, 0]);
     const arrayBuffer = typedArray.buffer;
     const dataView = new DataView(arrayBuffer);
@@ -548,6 +556,14 @@ describe('InspectedElementContext', () => {
       anonymousFunction = () => {};
     }
     const instance = new Class();
+
+    const proxyInstance = new Proxy(() => {}, {
+      get: function(_, name) {
+        return function() {
+          return null;
+        };
+      },
+    });
 
     const container = document.createElement('div');
     await utils.actAsync(() =>
@@ -567,6 +583,8 @@ describe('InspectedElementContext', () => {
           map={mapShallow}
           map_of_maps={mapOfMaps}
           object_of_objects={objectOfObjects}
+          object_with_symbol={objectWithSymbol}
+          proxy={proxyInstance}
           react_element={<span />}
           regexp={/abc/giu}
           set={setShallow}
@@ -619,6 +637,8 @@ describe('InspectedElementContext', () => {
       map,
       map_of_maps,
       object_of_objects,
+      object_with_symbol,
+      proxy,
       react_element,
       regexp,
       set,
@@ -722,6 +742,14 @@ describe('InspectedElementContext', () => {
     );
     expect(object_of_objects.inner[meta.preview_short]).toBe('{…}');
 
+    expect(object_with_symbol['Symbol(name)']).toBe('hello');
+
+    expect(proxy[meta.inspectable]).toBe(false);
+    expect(proxy[meta.name]).toBe('function');
+    expect(proxy[meta.type]).toBe('function');
+    expect(proxy[meta.preview_long]).toBe('ƒ () {}');
+    expect(proxy[meta.preview_short]).toBe('ƒ () {}');
+
     expect(react_element[meta.inspectable]).toBe(false);
     expect(react_element[meta.name]).toBe('span');
     expect(react_element[meta.type]).toBe('react_element');
@@ -764,6 +792,57 @@ describe('InspectedElementContext', () => {
     expect(typed_array[2]).toBe(0);
     expect(typed_array[meta.preview_long]).toBe('Int8Array(3) [100, -100, 0]');
     expect(typed_array[meta.preview_short]).toBe('Int8Array(3)');
+
+    done();
+  });
+
+  it('should not consume iterables while inspecting', async done => {
+    const Example = () => null;
+
+    function* generator() {
+      throw Error('Should not be consumed!');
+    }
+
+    const container = document.createElement('div');
+
+    const iterable = generator();
+    await utils.actAsync(() =>
+      ReactDOM.render(<Example prop={iterable} />, container),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let inspectedElement = null;
+
+    function Suspender({target}) {
+      const {getInspectedElement} = React.useContext(InspectedElementContext);
+      inspectedElement = getInspectedElement(id);
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={0}>
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>,
+        ),
+      false,
+    );
+
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot(`1: Inspected element ${id}`);
+
+    const {prop} = (inspectedElement: any).props;
+    expect(prop[meta.inspectable]).toBe(false);
+    expect(prop[meta.name]).toBe('Generator');
+    expect(prop[meta.type]).toBe('opaque_iterator');
+    expect(prop[meta.preview_long]).toBe('Generator');
+    expect(prop[meta.preview_short]).toBe('Generator');
 
     done();
   });
@@ -918,6 +997,111 @@ describe('InspectedElementContext', () => {
     done();
   });
 
+  it('should support objects with with inherited keys', async done => {
+    const Example = () => null;
+
+    const base = Object.create(Object.prototype, {
+      enumerableStringBase: {
+        value: 1,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      [Symbol('enumerableSymbolBase')]: {
+        value: 1,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      nonEnumerableStringBase: {
+        value: 1,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [Symbol('nonEnumerableSymbolBase')]: {
+        value: 1,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+    });
+
+    const object = Object.create(base, {
+      enumerableString: {
+        value: 2,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      nonEnumerableString: {
+        value: 3,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      123: {
+        value: 3,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+      [Symbol('nonEnumerableSymbol')]: {
+        value: 2,
+        writable: true,
+        enumerable: false,
+        configurable: true,
+      },
+      [Symbol('enumerableSymbol')]: {
+        value: 3,
+        writable: true,
+        enumerable: true,
+        configurable: true,
+      },
+    });
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(<Example object={object} />, container),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let inspectedElement = null;
+
+    function Suspender({target}) {
+      const {getInspectedElement} = React.useContext(InspectedElementContext);
+      inspectedElement = getInspectedElement(id);
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={0}>
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>,
+        ),
+      false,
+    );
+
+    expect(inspectedElement).not.toBeNull();
+    expect(inspectedElement).toMatchSnapshot(`1: Inspected element ${id}`);
+    expect(inspectedElement.props.object).toEqual({
+      123: 3,
+      'Symbol(enumerableSymbol)': 3,
+      'Symbol(enumerableSymbolBase)': 1,
+      enumerableString: 2,
+      enumerableStringBase: 1,
+    });
+
+    done();
+  });
+
   it('should not dehydrate nested values until explicitly requested', async done => {
     const Example = () => {
       const [state] = React.useState({
@@ -983,8 +1167,8 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
 
     inspectedElement = null;
-    TestUtils.act(() => {
-      TestRenderer.act(() => {
+    TestUtilsAct(() => {
+      TestRendererAct(() => {
         getInspectedElementPath(id, ['props', 'nestedObject', 'a']);
         jest.runOnlyPendingTimers();
       });
@@ -993,8 +1177,8 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('2: Inspect props.nestedObject.a');
 
     inspectedElement = null;
-    TestUtils.act(() => {
-      TestRenderer.act(() => {
+    TestUtilsAct(() => {
+      TestRendererAct(() => {
         getInspectedElementPath(id, ['props', 'nestedObject', 'a', 'b', 'c']);
         jest.runOnlyPendingTimers();
       });
@@ -1005,8 +1189,8 @@ describe('InspectedElementContext', () => {
     );
 
     inspectedElement = null;
-    TestUtils.act(() => {
-      TestRenderer.act(() => {
+    TestUtilsAct(() => {
+      TestRendererAct(() => {
         getInspectedElementPath(id, [
           'props',
           'nestedObject',
@@ -1025,8 +1209,8 @@ describe('InspectedElementContext', () => {
     );
 
     inspectedElement = null;
-    TestUtils.act(() => {
-      TestRenderer.act(() => {
+    TestUtilsAct(() => {
+      TestRendererAct(() => {
         getInspectedElementPath(id, ['hooks', 0, 'value']);
         jest.runOnlyPendingTimers();
       });
@@ -1035,8 +1219,8 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('5: Inspect hooks.0.value');
 
     inspectedElement = null;
-    TestUtils.act(() => {
-      TestRenderer.act(() => {
+    TestUtilsAct(() => {
+      TestRendererAct(() => {
         getInspectedElementPath(id, ['hooks', 0, 'value', 'foo', 'bar']);
         jest.runOnlyPendingTimers();
       });
@@ -1092,8 +1276,8 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
 
     inspectedElement = null;
-    TestUtils.act(() => {
-      TestRenderer.act(() => {
+    TestUtilsAct(() => {
+      TestRendererAct(() => {
         getInspectedElementPath(id, ['props', 'set_of_sets', 0]);
         jest.runOnlyPendingTimers();
       });
@@ -1163,7 +1347,7 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
 
     inspectedElement = null;
-    TestRenderer.act(() => {
+    TestRendererAct(() => {
       getInspectedElementPath(id, ['props', 'nestedObject', 'a']);
       jest.runOnlyPendingTimers();
     });
@@ -1171,15 +1355,15 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('2: Inspect props.nestedObject.a');
 
     inspectedElement = null;
-    TestRenderer.act(() => {
+    TestRendererAct(() => {
       getInspectedElementPath(id, ['props', 'nestedObject', 'c']);
       jest.runOnlyPendingTimers();
     });
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot('3: Inspect props.nestedObject.c');
 
-    TestRenderer.act(() => {
-      TestUtils.act(() => {
+    TestRendererAct(() => {
+      TestUtilsAct(() => {
         ReactDOM.render(
           <Example
             nestedObject={{
@@ -1205,7 +1389,7 @@ describe('InspectedElementContext', () => {
       });
     });
 
-    TestRenderer.act(() => {
+    TestRendererAct(() => {
       inspectedElement = null;
       jest.advanceTimersByTime(1000);
     });
@@ -1265,7 +1449,7 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).not.toBeNull();
     expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
 
-    TestUtils.act(() => {
+    TestUtilsAct(() => {
       ReactDOM.render(
         <Example
           nestedObject={{
@@ -1284,8 +1468,8 @@ describe('InspectedElementContext', () => {
 
     inspectedElement = null;
 
-    TestRenderer.act(() => {
-      TestUtils.act(() => {
+    TestRendererAct(() => {
+      TestUtilsAct(() => {
         getInspectedElementPath(id, ['props', 'nestedObject', 'a']);
         jest.runOnlyPendingTimers();
       });
@@ -1572,7 +1756,7 @@ describe('InspectedElementContext', () => {
     done();
   });
 
-  it('display complex values of useDebugValue', async done => {
+  it('should display complex values of useDebugValue', async done => {
     let getInspectedElementPath: GetInspectedElementPath = ((null: any): GetInspectedElementPath);
     let inspectedElement = null;
     function Suspender({target}) {

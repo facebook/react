@@ -10,20 +10,20 @@
 let act;
 let React;
 let ReactDOM;
+let JSResourceReference;
 let ReactDOMFlightRelayServer;
-let ReactDOMFlightRelayServerRuntime;
 let ReactDOMFlightRelayClient;
 
 describe('ReactFlightDOMRelay', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    act = require('react-dom/test-utils').act;
+    act = require('react-dom/test-utils').unstable_concurrentAct;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFlightRelayServer = require('react-transport-dom-relay/server');
-    ReactDOMFlightRelayServerRuntime = require('react-transport-dom-relay/server-runtime');
     ReactDOMFlightRelayClient = require('react-transport-dom-relay');
+    JSResourceReference = require('JSResourceReference');
   });
 
   function readThrough(data) {
@@ -32,6 +32,8 @@ describe('ReactFlightDOMRelay', () => {
       const chunk = data[i];
       if (chunk.type === 'json') {
         ReactDOMFlightRelayClient.resolveModel(response, chunk.id, chunk.json);
+      } else if (chunk.type === 'module') {
+        ReactDOMFlightRelayClient.resolveModule(response, chunk.id, chunk.json);
       } else {
         ReactDOMFlightRelayClient.resolveError(
           response,
@@ -44,18 +46,6 @@ describe('ReactFlightDOMRelay', () => {
     ReactDOMFlightRelayClient.close(response);
     const model = response.readRoot();
     return model;
-  }
-
-  function block(render, load) {
-    if (load === undefined) {
-      return ReactDOMFlightRelayServerRuntime.serverBlock(render);
-    }
-    return function(...args) {
-      const curriedLoad = () => {
-        return load(...args);
-      };
-      return ReactDOMFlightRelayServerRuntime.serverBlock(render, curriedLoad);
-    };
   }
 
   it('can render a server component', () => {
@@ -94,20 +84,22 @@ describe('ReactFlightDOMRelay', () => {
   });
 
   // @gate experimental
-  it('can transfer a Block to the client and render there', () => {
-    function load(firstName, lastName) {
-      return {name: firstName + ' ' + lastName};
-    }
-    function User(props, data) {
+  it('can render a client component using a module reference and render there', () => {
+    function UserClient(props) {
       return (
         <span>
-          {props.greeting}, {data.name}
+          {props.greeting}, {props.name}
         </span>
       );
     }
-    const loadUser = block(User, load);
+    const User = new JSResourceReference(UserClient);
+
+    function Greeting({firstName, lastName}) {
+      return <User greeting="Hello" name={firstName + ' ' + lastName} />;
+    }
+
     const model = {
-      User: loadUser('Seb', 'Smith'),
+      greeting: <Greeting firstName="Seb" lastName="Smith" />,
     };
 
     const transport = [];
@@ -118,10 +110,116 @@ describe('ReactFlightDOMRelay', () => {
     const container = document.createElement('div');
     const root = ReactDOM.createRoot(container);
     act(() => {
-      const UserClient = modelClient.User;
-      root.render(<UserClient greeting="Hello" />);
+      root.render(modelClient.greeting);
     });
 
     expect(container.innerHTML).toEqual('<span>Hello, Seb Smith</span>');
+  });
+
+  // @gate experimental
+  it('can reasonably handle different element types', () => {
+    const {
+      forwardRef,
+      memo,
+      Fragment,
+      StrictMode,
+      Profiler,
+      Suspense,
+      SuspenseList,
+    } = React;
+
+    const Inner = memo(
+      forwardRef((props, ref) => {
+        return <div ref={ref}>{'Hello ' + props.name}</div>;
+      }),
+    );
+
+    function Foo() {
+      return {
+        bar: (
+          <div>
+            <Fragment>Fragment child</Fragment>
+            <Profiler>Profiler child</Profiler>
+            <StrictMode>StrictMode child</StrictMode>
+            <Suspense fallback="Loading...">Suspense child</Suspense>
+            <SuspenseList fallback="Loading...">
+              {'SuspenseList row 1'}
+              {'SuspenseList row 2'}
+            </SuspenseList>
+            <Inner name="world" />
+          </div>
+        ),
+      };
+    }
+    const transport = [];
+    ReactDOMFlightRelayServer.render(
+      {
+        foo: <Foo />,
+      },
+      transport,
+    );
+
+    const model = readThrough(transport);
+    expect(model).toEqual({
+      foo: {
+        bar: (
+          <div>
+            {'Fragment child'}
+            {'Profiler child'}
+            {'StrictMode child'}
+            {'Suspense child'}
+            {['SuspenseList row 1', 'SuspenseList row 2']}
+            <div>Hello world</div>
+          </div>
+        ),
+      },
+    });
+  });
+
+  it('can handle a subset of Hooks', () => {
+    const {useMemo, useCallback} = React;
+    function Inner({x}) {
+      const foo = useMemo(() => x + x, [x]);
+      const bar = useCallback(() => 10 + foo, [foo]);
+      return bar();
+    }
+
+    function Foo() {
+      return {
+        bar: <Inner x={2} />,
+      };
+    }
+    const transport = [];
+    ReactDOMFlightRelayServer.render(
+      {
+        foo: <Foo />,
+      },
+      transport,
+    );
+
+    const model = readThrough(transport);
+    expect(model).toEqual({
+      foo: {
+        bar: 14,
+      },
+    });
+  });
+
+  it('can handle a subset of Hooks, with element as root', () => {
+    const {useMemo, useCallback} = React;
+    function Inner({x}) {
+      const foo = useMemo(() => x + x, [x]);
+      const bar = useCallback(() => 10 + foo, [foo]);
+      return bar();
+    }
+
+    function Foo() {
+      return <Inner x={2} />;
+    }
+    const transport = [];
+    ReactDOMFlightRelayServer.render(<Foo />, transport);
+
+    const model = readThrough(transport);
+    expect(model).toEqual(14);
   });
 });

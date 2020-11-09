@@ -26,7 +26,9 @@ export const {
   deferRenderPhaseUpdateToNextBatch,
   decoupleUpdatePriorityFromScheduler,
   enableDebugTracing,
-  enableSchedulingProfilerComponentStacks,
+  skipUnmountedBoundaries,
+  enableDoubleInvokingEffects,
+  enableUseRefAccessWarning,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -52,14 +54,11 @@ export const warnAboutDefaultPropsOnFunctionComponents = false;
 export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
 
-export const enableBlocksAPI = true;
 export const enableLazyElements = true;
 
 export const disableJavaScriptURLs = true;
 
 export const disableModulePatternComponents = true;
-
-export const enableDeprecatedFlareAPI = true;
 
 export const enableCreateEventHandleAPI = true;
 
@@ -77,10 +76,14 @@ export const disableTextareaChildren = __EXPERIMENTAL__;
 
 export const warnUnstableRenderSubtreeIntoContainer = false;
 
+export const enableDiscreteEventFlushingChange = true;
+
 // Enable forked reconciler. Piggy-backing on the "variant" global so that we
 // don't have to add another test dimension. The build system will compile this
 // to the correct value.
 export const enableNewReconciler = __VARIANT__;
+
+export const enableRecursiveCommitTraversal = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

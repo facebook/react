@@ -18,18 +18,13 @@ export const disableInputAttributeSyncing = __VARIANT__;
 export const enableFilterEmptyStringAttributesDOM = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
 export const decoupleUpdatePriorityFromScheduler = __VARIANT__;
+export const skipUnmountedBoundaries = __VARIANT__;
 
 // Enable this flag to help with concurrent mode debugging.
 // It logs information to the console about React scheduling, rendering, and commit phases.
 //
 // NOTE: This feature will only work in DEV mode; all callsights are wrapped with __DEV__.
-export const enableDebugTracing = false;
-
-// TODO: getStackByFiberInDevAndProd() causes errors when synced to www.
-// This flag can be used to disable component stacks for the profiler marks,
-// so that the feature can be synced for others,
-// while still enabling investigation into the underlying source of the errors.
-export const enableSchedulingProfilerComponentStacks = false;
+export const enableDebugTracing = __EXPERIMENTAL__;
 
 // This only has an effect in the new reconciler. But also, the new reconciler
 // is only enabled when __VARIANT__ is true. So this is set to the opposite of
@@ -51,3 +46,6 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 // to __VARIANT__.
 export const enableTrustedTypesIntegration = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+
+export const enableDoubleInvokingEffects = false;
+export const enableUseRefAccessWarning = __VARIANT__;

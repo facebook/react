@@ -4,6 +4,7 @@ const {
   GITHUB_URL,
   getVersionString,
 } = require('react-devtools-extensions/utils');
+const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -25,7 +26,7 @@ const DEVTOOLS_VERSION = getVersionString();
 
 const config = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: false,
+  devtool: __DEV__ ? 'cheap-module-eval-source-map' : 'source-map',
   entry: {
     app: './src/app/index.js',
     devtools: './src/devtools.js',
@@ -33,8 +34,9 @@ const config = {
   resolve: {
     alias: {
       react: resolve(builtModulesDir, 'react'),
-      'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
+      'react-devtools-feature-flags': resolveFeatureFlags('shell'),
+      'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },
@@ -45,8 +47,10 @@ const config = {
   plugins: [
     new DefinePlugin({
       __DEV__,
-      __PROFILE__: false,
       __EXPERIMENTAL__: true,
+      __EXTENSION__: false,
+      __PROFILE__: false,
+      __TEST__: NODE_ENV === 'test',
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
     }),

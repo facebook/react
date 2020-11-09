@@ -1,34 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`InspectedElementContext display complex values of useDebugValue: DisplayedComplexValue 1`] = `
-{
-  "id": 2,
-  "owners": null,
-  "context": null,
-  "hooks": [
-    {
-      "id": null,
-      "isStateEditable": false,
-      "name": "DebuggableHook",
-      "value": {
-        "foo": 2
-      },
-      "subHooks": [
-        {
-          "id": 0,
-          "isStateEditable": true,
-          "name": "State",
-          "value": 1,
-          "subHooks": []
-        }
-      ]
-    }
-  ],
-  "props": {},
-  "state": null
-}
-`;
-
 exports[`InspectedElementContext should dehydrate complex nested values when requested: 1: Initially inspect element 1`] = `
 {
   "id": 2,
@@ -61,6 +32,35 @@ exports[`InspectedElementContext should dehydrate complex nested values when req
       "1": {}
     }
   },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should display complex values of useDebugValue: DisplayedComplexValue 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": [
+    {
+      "id": null,
+      "isStateEditable": false,
+      "name": "DebuggableHook",
+      "value": {
+        "foo": 2
+      },
+      "subHooks": [
+        {
+          "id": 0,
+          "isStateEditable": true,
+          "name": "State",
+          "value": 1,
+          "subHooks": []
+        }
+      ]
+    }
+  ],
+  "props": {},
   "state": null
 }
 `;
@@ -195,6 +195,19 @@ exports[`InspectedElementContext should inspect the currently selected element: 
   "props": {
     "a": 1,
     "b": "abc"
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should not consume iterables while inspecting: 1: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "prop": {}
   },
   "state": null
 }
@@ -541,6 +554,10 @@ exports[`InspectedElementContext should support complex data types: 1: Inspected
     "object_of_objects": {
       "inner": {}
     },
+    "object_with_symbol": {
+      "Symbol(name)": "hello"
+    },
+    "proxy": {},
     "react_element": {},
     "regexp": {},
     "set": {
@@ -605,6 +622,25 @@ exports[`InspectedElementContext should support objects with overridden hasOwnPr
     "object": {
       "name": "blah",
       "hasOwnProperty": true
+    }
+  },
+  "state": null
+}
+`;
+
+exports[`InspectedElementContext should support objects with with inherited keys: 1: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "object": {
+      "123": 3,
+      "enumerableString": 2,
+      "Symbol(enumerableSymbol)": 3,
+      "enumerableStringBase": 1,
+      "Symbol(enumerableSymbolBase)": 1
     }
   },
   "state": null

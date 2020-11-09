@@ -198,7 +198,11 @@ function InspectedElementContextController({children}: Props) {
         case 'full-data':
           const {
             canEditFunctionProps,
+            canEditFunctionPropsDeletePaths,
+            canEditFunctionPropsRenamePaths,
             canEditHooks,
+            canEditHooksAndDeletePaths,
+            canEditHooksAndRenamePaths,
             canToggleSuspense,
             canViewSource,
             hasLegacyContext,
@@ -217,7 +221,11 @@ function InspectedElementContextController({children}: Props) {
 
           const inspectedElement: InspectedElementFrontend = {
             canEditFunctionProps,
+            canEditFunctionPropsDeletePaths,
+            canEditFunctionPropsRenamePaths,
             canEditHooks,
+            canEditHooksAndDeletePaths,
+            canEditHooksAndRenamePaths,
             canToggleSuspense,
             canViewSource,
             hasLegacyContext,

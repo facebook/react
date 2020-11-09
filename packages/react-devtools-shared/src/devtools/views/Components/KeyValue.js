@@ -9,64 +9,85 @@
 
 import * as React from 'react';
 import {useEffect, useRef, useState} from 'react';
+import EditableName from './EditableName';
 import EditableValue from './EditableValue';
+import NewArrayValue from './NewArrayValue';
+import NewKeyValue from './NewKeyValue';
 import ExpandCollapseToggle from './ExpandCollapseToggle';
 import {alphaSortEntries, getMetaValueLabel} from '../utils';
 import {meta} from '../../../hydration';
 import useContextMenu from '../../ContextMenu/useContextMenu';
+import Store from '../../store';
+import {parseHookPathForEdit} from './utils';
 import styles from './KeyValue.css';
+import Button from 'react-devtools-shared/src/devtools/views/Button';
+import ButtonIcon from 'react-devtools-shared/src/devtools/views/ButtonIcon';
 
+import type {InspectedElement} from './types';
 import type {Element} from 'react';
-import type {InspectPath} from './SelectedElement';
+import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
+import type {GetInspectedElementPath} from './InspectedElementContext';
 
-type OverrideValueFn = (path: Array<string | number>, value: any) => void;
+type Type = 'props' | 'state' | 'context' | 'hooks';
 
 type KeyValueProps = {|
   alphaSort: boolean,
+  bridge: FrontendBridge,
+  canDeletePaths: boolean,
+  canEditValues: boolean,
+  canRenamePaths: boolean,
+  canRenamePathsAtDepth?: (depth: number) => boolean,
   depth: number,
-  hidden?: boolean,
-  inspectPath?: InspectPath,
-  isReadOnly?: boolean,
+  hidden: boolean,
+  hookID?: ?number,
+  getInspectedElementPath: GetInspectedElementPath,
+  inspectedElement: InspectedElement,
+  isDirectChildOfAnArray?: boolean,
   name: string,
-  overrideValueFn?: ?OverrideValueFn,
   path: Array<any>,
-  pathRoot: string,
+  pathRoot: Type,
+  store: Store,
   value: any,
 |};
 
 export default function KeyValue({
   alphaSort,
+  bridge,
+  canDeletePaths,
+  canEditValues,
+  canRenamePaths,
+  canRenamePathsAtDepth,
   depth,
-  inspectPath,
-  isReadOnly,
+  getInspectedElementPath,
+  inspectedElement,
+  isDirectChildOfAnArray,
   hidden,
+  hookID,
   name,
-  overrideValueFn,
   path,
   pathRoot,
+  store,
   value,
 }: KeyValueProps) {
+  const {id} = inspectedElement;
+
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const prevIsOpenRef = useRef(isOpen);
   const contextMenuTriggerRef = useRef(null);
 
-  const isInspectable =
-    value !== null &&
-    typeof value === 'object' &&
-    value[meta.inspectable] &&
-    value[meta.size] !== 0;
+  let isInspectable = false;
+  let isReadOnly = false;
+  if (value !== null && typeof value === 'object') {
+    isInspectable = value[meta.inspectable] && value[meta.size] !== 0;
+    isReadOnly = value[meta.readonly];
+  }
 
   useEffect(() => {
-    if (
-      isInspectable &&
-      isOpen &&
-      !prevIsOpenRef.current &&
-      typeof inspectPath === 'function'
-    ) {
-      inspectPath(path);
+    if (isInspectable && isOpen && !prevIsOpenRef.current) {
+      getInspectedElementPath(id, [pathRoot, ...path]);
     }
     prevIsOpenRef.current = isOpen;
-  }, [inspectPath, isInspectable, isOpen, path]);
+  }, [getInspectedElementPath, isInspectable, isOpen, path, pathRoot]);
 
   const toggleIsOpen = () => setIsOpen(prevIsOpen => !prevIsOpen);
 
@@ -80,7 +101,7 @@ export default function KeyValue({
           ? value[meta.type]
           : typeof value,
     },
-    id: 'SelectedElement',
+    id: 'InspectedElement',
     ref: contextMenuTriggerRef,
   });
 
@@ -95,6 +116,99 @@ export default function KeyValue({
     paddingLeft: `${(depth - 1) * 0.75}rem`,
   };
 
+  const overrideValue = (newPath, newValue) => {
+    if (hookID != null) {
+      newPath = parseHookPathForEdit(newPath);
+    }
+
+    const rendererID = store.getRendererIDForElement(id);
+    if (rendererID !== null) {
+      bridge.send('overrideValueAtPath', {
+        hookID,
+        id,
+        path: newPath,
+        rendererID,
+        type: pathRoot,
+        value: newValue,
+      });
+    }
+  };
+
+  const deletePath = pathToDelete => {
+    if (hookID != null) {
+      pathToDelete = parseHookPathForEdit(pathToDelete);
+    }
+
+    const rendererID = store.getRendererIDForElement(id);
+    if (rendererID !== null) {
+      bridge.send('deletePath', {
+        hookID,
+        id,
+        path: pathToDelete,
+        rendererID,
+        type: pathRoot,
+      });
+    }
+  };
+
+  const renamePath = (oldPath, newPath) => {
+    if (newPath[newPath.length - 1] === '') {
+      // Deleting the key suggests an intent to delete the whole path.
+      if (canDeletePaths) {
+        deletePath(oldPath);
+      }
+    } else {
+      if (hookID != null) {
+        oldPath = parseHookPathForEdit(oldPath);
+        newPath = parseHookPathForEdit(newPath);
+      }
+
+      const rendererID = store.getRendererIDForElement(id);
+      if (rendererID !== null) {
+        bridge.send('renamePath', {
+          hookID,
+          id,
+          newPath,
+          oldPath,
+          rendererID,
+          type: pathRoot,
+        });
+      }
+    }
+  };
+
+  // TRICKY This is a bit of a hack to account for context and hooks.
+  // In these cases, paths can be renamed but only at certain depths.
+  // The special "value" wrapper for context shouldn't be editable.
+  // Only certain types of hooks should be editable.
+  let canRenameTheCurrentPath = canRenamePaths;
+  if (canRenameTheCurrentPath && typeof canRenamePathsAtDepth === 'function') {
+    canRenameTheCurrentPath = canRenamePathsAtDepth(depth);
+  }
+
+  let renderedName;
+  if (isDirectChildOfAnArray) {
+    if (canDeletePaths) {
+      renderedName = (
+        <DeleteToggle name={name} deletePath={deletePath} path={path} />
+      );
+    } else {
+      renderedName = <span className={styles.Name}>{name}</span>;
+    }
+  } else if (canRenameTheCurrentPath) {
+    renderedName = (
+      <EditableName
+        allowEmpty={canDeletePaths}
+        className={styles.EditableName}
+        initialValue={name}
+        overrideName={renamePath}
+        path={path}
+      />
+    );
+  } else {
+    renderedName = <span className={styles.Name}>{name}</span>;
+  }
+
   let children = null;
   if (isSimpleType) {
     let displayValue = value;
@@ -108,23 +222,19 @@ export default function KeyValue({
       displayValue = 'undefined';
     }
 
-    const isEditable = typeof overrideValueFn === 'function' && !isReadOnly;
-
     children = (
       <div
         key="root"
-        path={path}
         className={styles.Item}
         hidden={hidden}
         ref={contextMenuTriggerRef}
         style={style}>
         <div className={styles.ExpandCollapseToggleSpacer} />
-        <span className={isEditable ? styles.EditableName : styles.Name}>
-          {name}
-        </span>
-        {isEditable ? (
+        {renderedName}
+        <div className={styles.AfterName}>:</div>
+        {canEditValues ? (
           <EditableValue
-            overrideValueFn={((overrideValueFn: any): OverrideValueFn)}
+            overrideValue={overrideValue}
             path={path}
             value={value}
           />
@@ -139,21 +249,18 @@ export default function KeyValue({
   ) {
     children = (
       <div
-        ref={contextMenuTriggerRef}
         key="root"
         className={styles.Item}
         hidden={hidden}
+        ref={contextMenuTriggerRef}
         style={style}>
         {isInspectable ? (
           <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
         ) : (
           <div className={styles.ExpandCollapseToggleSpacer} />
         )}
-        <span
-          className={styles.Name}
-          onClick={isInspectable ? toggleIsOpen : undefined}>
-          {name}
-        </span>
+        {renderedName}
+        <div className={styles.AfterName}>:</div>
         <span
           className={styles.Value}
           onClick={isInspectable ? toggleIsOpen : undefined}>
@@ -163,41 +270,64 @@ export default function KeyValue({
     );
   } else {
     if (Array.isArray(value)) {
-      const hasChildren = value.length > 0;
+      const hasChildren = value.length > 0 || canEditValues;
       const displayName = getMetaValueLabel(value);
 
       children = value.map((innerValue, index) => (
         <KeyValue
           key={index}
           alphaSort={alphaSort}
+          bridge={bridge}
+          canDeletePaths={canDeletePaths && !isReadOnly}
+          canEditValues={canEditValues && !isReadOnly}
+          canRenamePaths={canRenamePaths && !isReadOnly}
+          canRenamePathsAtDepth={canRenamePathsAtDepth}
           depth={depth + 1}
-          inspectPath={inspectPath}
-          isReadOnly={isReadOnly}
+          getInspectedElementPath={getInspectedElementPath}
+          hookID={hookID}
+          inspectedElement={inspectedElement}
+          isDirectChildOfAnArray={true}
           hidden={hidden || !isOpen}
           name={index}
-          overrideValueFn={overrideValueFn}
           path={path.concat(index)}
           pathRoot={pathRoot}
+          store={store}
           value={value[index]}
         />
       ));
+
+      if (canEditValues && !isReadOnly) {
+        children.push(
+          <NewArrayValue
+            key="NewKeyValue"
+            bridge={bridge}
+            depth={depth + 1}
+            hidden={hidden || !isOpen}
+            hookID={hookID}
+            index={value.length}
+            getInspectedElementPath={getInspectedElementPath}
+            inspectedElement={inspectedElement}
+            path={path}
+            store={store}
+            type={pathRoot}
+          />,
+        );
+      }
+
       children.unshift(
         <div
-          ref={contextMenuTriggerRef}
           key={`${depth}-root`}
           className={styles.Item}
           hidden={hidden}
+          ref={contextMenuTriggerRef}
           style={style}>
           {hasChildren ? (
             <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
           ) : (
             <div className={styles.ExpandCollapseToggleSpacer} />
           )}
-          <span
-            className={styles.Name}
-            onClick={hasChildren ? toggleIsOpen : undefined}>
-            {name}
-          </span>
+          {renderedName}
+          <div className={styles.AfterName}>:</div>
           <span
             className={styles.Value}
             onClick={hasChildren ? toggleIsOpen : undefined}>
@@ -214,42 +344,62 @@ export default function KeyValue({
         entries.sort(alphaSortEntries);
       }
 
-      const hasChildren = entries.length > 0;
+      const hasChildren = entries.length > 0 || canEditValues;
       const displayName = getMetaValueLabel(value);
 
-      const areChildrenReadOnly = isReadOnly || !!value[meta.readonly];
       children = entries.map<Element<any>>(([key, keyValue]) => (
         <KeyValue
           key={key}
           alphaSort={alphaSort}
+          bridge={bridge}
+          canDeletePaths={canDeletePaths && !isReadOnly}
+          canEditValues={canEditValues && !isReadOnly}
+          canRenamePaths={canRenamePaths && !isReadOnly}
+          canRenamePathsAtDepth={canRenamePathsAtDepth}
           depth={depth + 1}
-          inspectPath={inspectPath}
-          isReadOnly={areChildrenReadOnly}
+          getInspectedElementPath={getInspectedElementPath}
+          hookID={hookID}
+          inspectedElement={inspectedElement}
           hidden={hidden || !isOpen}
           name={key}
-          overrideValueFn={overrideValueFn}
           path={path.concat(key)}
           pathRoot={pathRoot}
+          store={store}
           value={keyValue}
         />
       ));
+
+      if (canEditValues && !isReadOnly) {
+        children.push(
+          <NewKeyValue
+            key="NewKeyValue"
+            bridge={bridge}
+            depth={depth + 1}
+            getInspectedElementPath={getInspectedElementPath}
+            hidden={hidden || !isOpen}
+            hookID={hookID}
+            inspectedElement={inspectedElement}
+            path={path}
+            store={store}
+            type={pathRoot}
+          />,
+        );
+      }
+
       children.unshift(
         <div
-          ref={contextMenuTriggerRef}
           key={`${depth}-root`}
           className={styles.Item}
           hidden={hidden}
+          ref={contextMenuTriggerRef}
           style={style}>
           {hasChildren ? (
             <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
           ) : (
             <div className={styles.ExpandCollapseToggleSpacer} />
           )}
-          <span
-            className={styles.Name}
-            onClick={hasChildren ? toggleIsOpen : undefined}>
-            {name}
-          </span>
+          {renderedName}
+          <div className={styles.AfterName}>:</div>
           <span
             className={styles.Value}
             onClick={hasChildren ? toggleIsOpen : undefined}>
@@ -261,4 +411,23 @@ export default function KeyValue({
   }
 
   return children;
+}
+
+function DeleteToggle({deletePath, name, path}) {
+  const handleClick = event => {
+    event.stopPropagation();
+    deletePath(path);
+  };
+
+  return (
+    <>
+      <Button
+        className={styles.DeleteArrayItemButton}
+        onClick={handleClick}
+        title="Delete entry">
+        <ButtonIcon type="delete" />
+      </Button>
+      <span className={styles.Name}>{name}</span>
+    </>
+  );
 }

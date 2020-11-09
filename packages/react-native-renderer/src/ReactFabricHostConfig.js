@@ -435,22 +435,6 @@ export function replaceContainerChildren(
   newChildren: ChildSet,
 ): void {}
 
-export function DEPRECATED_mountResponderInstance(
-  responder: any,
-  responderInstance: any,
-  props: Object,
-  state: Object,
-  instance: Instance,
-) {
-  throw new Error('Not yet implemented.');
-}
-
-export function DEPRECATED_unmountResponderInstance(
-  responderInstance: any,
-): void {
-  throw new Error('Not yet implemented.');
-}
-
 export function getFundamentalComponentInstance(fundamentalInstance: any) {
   throw new Error('Not yet implemented.');
 }
@@ -497,7 +481,7 @@ export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
   throw new Error('Not yet implemented');
 }
 
-export function beforeActiveInstanceBlur() {
+export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {
   // noop
 }
 

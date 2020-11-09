@@ -94,7 +94,7 @@ if (__DEV__) {
   ) {
     console.error(
       'React depends on Map and Set built-in types. Make sure that you load a ' +
-        'polyfill in older browsers. https://fb.me/react-polyfills',
+        'polyfill in older browsers. https://reactjs.org/link/react-polyfills',
     );
   }
 }
@@ -183,6 +183,7 @@ const Internals = {
     enqueueStateRestore,
     restoreStateIfNeeded,
     flushPassiveEffects,
+    // TODO: This is related to `act`, not events. Move to separate key?
     IsThisRendererActing,
   ],
 };
@@ -238,10 +239,10 @@ if (__DEV__) {
         console.info(
           '%cDownload the React DevTools ' +
             'for a better development experience: ' +
-            'https://fb.me/react-devtools' +
+            'https://reactjs.org/link/react-devtools' +
             (protocol === 'file:'
               ? '\nYou might need to use a local HTTP server (instead of file://): ' +
-                'https://fb.me/react-devtools-faq'
+                'https://reactjs.org/link/react-devtools-faq'
               : ''),
           'font-weight:bold',
         );

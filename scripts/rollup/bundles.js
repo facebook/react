@@ -265,13 +265,6 @@ const bundles = [
     global: 'ReactTransportDOMServer',
     externals: ['react', 'react-dom/server'],
   },
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: RENDERER,
-    entry: 'react-transport-dom-webpack/server-runtime',
-    global: 'ReactTransportDOMServerRuntime',
-    externals: ['react'],
-  },
 
   /******* React Transport DOM Client Webpack *******/
   {
@@ -301,23 +294,47 @@ const bundles = [
       'react',
       'react-dom/server',
       'ReactFlightDOMRelayServerIntegration',
+      'JSResourceReference',
     ],
   },
-  {
-    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
-    moduleType: RENDERER,
-    entry: 'react-transport-dom-relay/server-runtime',
-    global: 'ReactFlightDOMRelayServerRuntime',
-    externals: ['react', 'ReactFlightDOMRelayServerIntegration'],
-  },
 
-  /******* React DOM Flight Client Relay *******/
+  /******* React Transport DOM Client Relay *******/
   {
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
     entry: 'react-transport-dom-relay',
     global: 'ReactFlightDOMRelayClient',
-    externals: ['react', 'ReactFlightDOMRelayClientIntegration'],
+    externals: [
+      'react',
+      'ReactFlightDOMRelayClientIntegration',
+      'JSResourceReference',
+    ],
+  },
+
+  /******* React Transport Native Server Relay *******/
+  {
+    bundleTypes: [RN_FB_DEV, RN_FB_PROD],
+    moduleType: RENDERER,
+    entry: 'react-transport-native-relay/server',
+    global: 'ReactFlightNativeRelayServer',
+    externals: [
+      'react',
+      'ReactFlightNativeRelayServerIntegration',
+      'JSResourceReferenceImpl',
+    ],
+  },
+
+  /******* React Transport Native Client Relay *******/
+  {
+    bundleTypes: [RN_FB_DEV, RN_FB_PROD],
+    moduleType: RENDERER,
+    entry: 'react-transport-native-relay',
+    global: 'ReactFlightNativeRelayClient',
+    externals: [
+      'react',
+      'ReactFlightNativeRelayClientIntegration',
+      'JSResourceReferenceImpl',
+    ],
   },
 
   /******* React ART *******/
@@ -488,7 +505,7 @@ const bundles = [
 
   /******* React Reconciler *******/
   {
-    bundleTypes: [NODE_DEV, NODE_PROD],
+    bundleTypes: [NODE_DEV, NODE_PROD, NODE_PROFILING],
     moduleType: RECONCILER,
     entry: 'react-reconciler',
     global: 'ReactReconciler',
@@ -510,13 +527,6 @@ const bundles = [
     moduleType: RECONCILER,
     entry: 'react-server/flight',
     global: 'ReactFlightServer',
-    externals: ['react'],
-  },
-  {
-    bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: RENDERER,
-    entry: 'react-server/flight-server-runtime',
-    global: 'ReactFlightServerRuntime',
     externals: ['react'],
   },
 
@@ -634,6 +644,39 @@ const bundles = [
     externals: [],
   },
 
+  /******* React Scheduler Post Task (experimental) *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'scheduler/unstable_post_task',
+    global: 'SchedulerPostTask',
+    externals: [],
+  },
+
+  /******* React Scheduler No DOM (experimental) *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+      RN_FB_DEV,
+      RN_FB_PROD,
+      RN_FB_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'scheduler/unstable_no_dom',
+    global: 'SchedulerNoDOM',
+    externals: [],
+  },
+
   /******* Jest React (experimental) *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -689,74 +732,7 @@ const bundles = [
     global: 'SchedulerTracing',
     externals: [],
   },
-
-  /******* React Events (experimental) *******/
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/context-menu',
-    global: 'ReactEventsContextMenu',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/deprecated-focus',
-    global: 'ReactEventsFocus',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/hover',
-    global: 'ReactEventsHover',
-    externals: ['react'],
-  },
-
-  {
-    bundleTypes: [
-      UMD_DEV,
-      UMD_PROD,
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-    ],
-    moduleType: NON_FIBER_RENDERER,
-    entry: 'react-interactions/events/press-legacy',
-    global: 'ReactEventsPressLegacy',
-    externals: ['react'],
-  },
 ];
-
-const fbBundleExternalsMap = {
-  'react-interactions/events/focus': 'ReactEventsFocus',
-  'react-interactions/events/tap': 'ReactEventsTap',
-};
 
 // Based on deep-freeze by substack (public domain)
 function deepFreeze(o) {
@@ -814,7 +790,6 @@ function getFilename(bundle, bundleType) {
 }
 
 module.exports = {
-  fbBundleExternalsMap,
   bundleTypes,
   moduleTypes,
   bundles,

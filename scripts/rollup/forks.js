@@ -116,6 +116,13 @@ const forks = Object.freeze({
         }
       case 'react-test-renderer':
         switch (bundleType) {
+          case RN_FB_DEV:
+          case RN_FB_PROD:
+          case RN_FB_PROFILING:
+          case RN_OSS_DEV:
+          case RN_OSS_PROD:
+          case RN_OSS_PROFILING:
+            return 'shared/forks/ReactFeatureFlags.test-renderer.native.js';
           case FB_WWW_DEV:
           case FB_WWW_PROD:
           case FB_WWW_PROFILING:
@@ -136,6 +143,10 @@ const forks = Object.freeze({
           case FB_WWW_PROD:
           case FB_WWW_PROFILING:
             return 'shared/forks/ReactFeatureFlags.www.js';
+          case RN_FB_DEV:
+          case RN_FB_PROD:
+          case RN_FB_PROFILING:
+            return 'shared/forks/ReactFeatureFlags.native-fb.js';
         }
     }
     return null;
@@ -188,18 +199,6 @@ const forks = Object.freeze({
       return 'scheduler/src/forks/SchedulerFeatureFlags.www.js';
     }
     return 'scheduler/src/SchedulerFeatureFlags';
-  },
-
-  'scheduler/src/SchedulerHostConfig': (bundleType, entry, dependencies) => {
-    if (
-      entry === 'scheduler/unstable_mock' ||
-      entry === 'react-noop-renderer' ||
-      entry === 'react-noop-renderer/persistent' ||
-      entry === 'react-test-renderer'
-    ) {
-      return 'scheduler/src/forks/SchedulerHostConfig.mock';
-    }
-    return 'scheduler/src/forks/SchedulerHostConfig.default';
   },
 
   'shared/consoleWithStackDev': (bundleType, entry) => {

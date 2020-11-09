@@ -20,7 +20,7 @@ describe('Store component filters', () => {
   let utils;
 
   const act = (callback: Function) => {
-    TestUtils.act(() => {
+    TestUtils.unstable_concurrentAct(() => {
       callback();
     });
     jest.runAllTimers(); // Flush Bridge operations
@@ -226,5 +226,38 @@ describe('Store component filters', () => {
           utils.createElementTypeFilter(Types.ElementTypeHostComponent, false),
         ]),
     );
+  });
+
+  it('should not break when Suspense nodes are filtered from the tree', () => {
+    const promise = new Promise(() => {});
+
+    const Loading = () => <div>Loading...</div>;
+
+    const Component = ({shouldSuspend}) => {
+      if (shouldSuspend) {
+        throw promise;
+      }
+      return null;
+    };
+
+    const Wrapper = ({shouldSuspend}) => (
+      <React.Suspense fallback={<Loading />}>
+        <Component shouldSuspend={shouldSuspend} />
+      </React.Suspense>
+    );
+
+    store.componentFilters = [
+      utils.createElementTypeFilter(Types.ElementTypeSuspense),
+    ];
+
+    const container = document.createElement('div');
+    act(() => ReactDOM.render(<Wrapper shouldSuspend={true} />, container));
+    expect(store).toMatchSnapshot('1: suspended');
+
+    act(() => ReactDOM.render(<Wrapper shouldSuspend={false} />, container));
+    expect(store).toMatchSnapshot('2: resolved');
+
+    act(() => ReactDOM.render(<Wrapper shouldSuspend={true} />, container));
+    expect(store).toMatchSnapshot('3: suspended');
   });
 });

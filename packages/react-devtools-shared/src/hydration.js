@@ -10,6 +10,7 @@
 import {
   getDataType,
   getDisplayNameForReactElement,
+  getAllEnumerableKeys,
   getInObject,
   formatDataForPreview,
   setInObject,
@@ -151,7 +152,10 @@ export function dehydrate(
         inspectable: false,
         preview_short: formatDataForPreview(data, false),
         preview_long: formatDataForPreview(data, true),
-        name: data.name || 'function',
+        name:
+          typeof data.name === 'function' || !data.name
+            ? 'function'
+            : data.name,
         type,
       };
 
@@ -219,6 +223,7 @@ export function dehydrate(
         ),
       );
 
+    case 'html_all_collection':
     case 'typed_array':
     case 'iterator':
       isPathAllowedCheck = isPathAllowed(path);
@@ -261,6 +266,16 @@ export function dehydrate(
         return unserializableValue;
       }
 
+    case 'opaque_iterator':
+      cleaned.push(path);
+      return {
+        inspectable: false,
+        preview_short: formatDataForPreview(data, false),
+        preview_long: formatDataForPreview(data, true),
+        name: data[Symbol.toStringTag],
+        type,
+      };
+
     case 'date':
       cleaned.push(path);
       return {
@@ -287,16 +302,17 @@ export function dehydrate(
         return createDehydrated(type, true, data, cleaned, path);
       } else {
         const object = {};
-        for (const name in data) {
+        getAllEnumerableKeys(data).forEach(key => {
+          const name = key.toString();
           object[name] = dehydrate(
-            data[name],
+            data[key],
             cleaned,
             unserializable,
             path.concat([name]),
             isPathAllowed,
             isPathAllowedCheck ? 1 : level + 1,
           );
-        }
+        });
         return object;
       }
 

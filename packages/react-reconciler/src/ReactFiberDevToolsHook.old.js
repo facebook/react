@@ -12,7 +12,7 @@ import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 import type {Fiber, FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
-import {DidCapture} from './ReactSideEffectTags';
+import {DidCapture} from './ReactFiberFlags';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
@@ -40,7 +40,7 @@ export function injectInternals(internals: Object): boolean {
       console.error(
         'The installed version of React DevTools is too old and will not work ' +
           'with the current version of React. Please update React DevTools. ' +
-          'https://fb.me/react-devtools',
+          'https://reactjs.org/link/react-devtools',
       );
     }
     // DevTools exists, even though it doesn't support Fiber.
@@ -84,7 +84,7 @@ export function onCommitRoot(
 ) {
   if (injectedHook && typeof injectedHook.onCommitFiberRoot === 'function') {
     try {
-      const didError = (root.current.effectTag & DidCapture) === DidCapture;
+      const didError = (root.current.flags & DidCapture) === DidCapture;
       if (enableProfilerTimer) {
         injectedHook.onCommitFiberRoot(
           rendererID,

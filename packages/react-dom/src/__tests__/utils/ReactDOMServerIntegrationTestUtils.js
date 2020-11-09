@@ -49,11 +49,11 @@ module.exports = function(initModules) {
   function asyncReactDOMRender(reactElement, domElement, forceHydrate) {
     return new Promise(resolve => {
       if (forceHydrate) {
-        ReactTestUtils.act(() => {
+        ReactTestUtils.unstable_concurrentAct(() => {
           ReactDOM.hydrate(reactElement, domElement);
         });
       } else {
-        ReactTestUtils.act(() => {
+        ReactTestUtils.unstable_concurrentAct(() => {
           ReactDOM.render(reactElement, domElement);
         });
       }
@@ -144,9 +144,11 @@ module.exports = function(initModules) {
   async function renderIntoStream(reactElement, errorCount = 0) {
     return await expectErrors(
       () =>
-        new Promise(resolve => {
+        new Promise((resolve, reject) => {
           const writable = new DrainWritable();
-          ReactDOMServer.renderToNodeStream(reactElement).pipe(writable);
+          const s = ReactDOMServer.renderToNodeStream(reactElement);
+          s.on('error', e => reject(e));
+          s.pipe(writable);
           writable.on('finish', () => resolve(writable.buffer));
         }),
       errorCount,

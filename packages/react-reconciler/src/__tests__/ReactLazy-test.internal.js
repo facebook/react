@@ -979,13 +979,7 @@ describe('ReactLazy', () => {
       },
     );
 
-    if (__DEV__) {
-      // Getting the name for the warning cause the loading to start early.
-      expect(Scheduler).toHaveYielded(['Started loading']);
-      expect(Scheduler).toFlushAndYield(['Loading...']);
-    } else {
-      expect(Scheduler).toFlushAndYield(['Started loading', 'Loading...']);
-    }
+    expect(Scheduler).toFlushAndYield(['Started loading', 'Loading...']);
     expect(root).not.toMatchRenderedOutput(<div>AB</div>);
 
     await Promise.resolve();

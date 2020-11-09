@@ -10,6 +10,7 @@
 import type {Response} from './ReactFlightClientHostConfigStream';
 
 import {
+  resolveModule,
   resolveModel,
   resolveError,
   createResponse as createResponseBase,
@@ -39,6 +40,13 @@ function processFullRow(response: Response, row: string): void {
       resolveModel(response, id, json);
       return;
     }
+    case 'M': {
+      const colon = row.indexOf(':', 1);
+      const id = parseInt(row.substring(1, colon), 16);
+      const json = row.substring(colon + 1);
+      resolveModule(response, id, json);
+      return;
+    }
     case 'E': {
       const colon = row.indexOf(':', 1);
       const id = parseInt(row.substring(1, colon), 16);
@@ -48,9 +56,9 @@ function processFullRow(response: Response, row: string): void {
       return;
     }
     default: {
-      // Assume this is the root model.
-      resolveModel(response, 0, row);
-      return;
+      throw new Error(
+        "Error parsing the data. It's probably an error code or network corruption.",
+      );
     }
   }
 }

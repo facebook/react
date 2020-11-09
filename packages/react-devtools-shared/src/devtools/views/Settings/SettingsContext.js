@@ -214,7 +214,7 @@ function updateStyleHelper(
   );
 }
 
-function updateDisplayDensity(
+export function updateDisplayDensity(
   displayDensity: DisplayDensity,
   documentElements: DocumentElements,
 ): void {
@@ -248,7 +248,7 @@ function updateDisplayDensity(
   root.style.fontSize = fontSize;
 }
 
-function updateThemeVariables(
+export function updateThemeVariables(
   theme: Theme,
   documentElements: DocumentElements,
 ): void {

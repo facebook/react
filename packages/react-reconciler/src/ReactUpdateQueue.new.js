@@ -86,22 +86,18 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
-import type {SuspenseConfig} from './ReactFiberSuspenseConfig';
 
 import {NoLane, NoLanes, isSubsetOfLanes, mergeLanes} from './ReactFiberLane';
 import {
   enterDisallowedContextReadInDEV,
   exitDisallowedContextReadInDEV,
 } from './ReactFiberNewContext.new';
-import {Callback, ShouldCapture, DidCapture} from './ReactSideEffectTags';
+import {Callback, ShouldCapture, DidCapture} from './ReactFiberFlags';
 
 import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
 
 import {StrictMode} from './ReactTypeOfMode';
-import {
-  markRenderEventTimeAndConfig,
-  markSkippedUpdateLanes,
-} from './ReactFiberWorkLoop.new';
+import {markSkippedUpdateLanes} from './ReactFiberWorkLoop.new';
 
 import invariant from 'shared/invariant';
 
@@ -112,7 +108,6 @@ export type Update<State> = {|
   // transition -> event time on the root.
   eventTime: number,
   lane: Lane,
-  suspenseConfig: null | SuspenseConfig,
 
   tag: 0 | 1 | 2 | 3,
   payload: any,
@@ -186,15 +181,10 @@ export function cloneUpdateQueue<State>(
   }
 }
 
-export function createUpdate(
-  eventTime: number,
-  lane: Lane,
-  suspenseConfig: null | SuspenseConfig,
-): Update<*> {
+export function createUpdate(eventTime: number, lane: Lane): Update<*> {
   const update: Update<*> = {
     eventTime,
     lane,
-    suspenseConfig,
 
     tag: UpdateState,
     payload: null,
@@ -269,7 +259,6 @@ export function enqueueCapturedUpdate<State>(
           const clone: Update<State> = {
             eventTime: update.eventTime,
             lane: update.lane,
-            suspenseConfig: update.suspenseConfig,
 
             tag: update.tag,
             payload: update.payload,
@@ -356,8 +345,8 @@ function getStateFromUpdate<State>(
       return payload;
     }
     case CaptureUpdate: {
-      workInProgress.effectTag =
-        (workInProgress.effectTag & ~ShouldCapture) | DidCapture;
+      workInProgress.flags =
+        (workInProgress.flags & ~ShouldCapture) | DidCapture;
     }
     // Intentional fallthrough
     case UpdateState: {
@@ -482,7 +471,6 @@ export function processUpdateQueue<State>(
         const clone: Update<State> = {
           eventTime: updateEventTime,
           lane: updateLane,
-          suspenseConfig: update.suspenseConfig,
 
           tag: update.tag,
           payload: update.payload,
@@ -508,7 +496,6 @@ export function processUpdateQueue<State>(
             // it. Using NoLane works because 0 is a subset of all bitmasks, so
             // this will never be skipped by the check above.
             lane: NoLane,
-            suspenseConfig: update.suspenseConfig,
 
             tag: update.tag,
             payload: update.payload,
@@ -518,14 +505,6 @@ export function processUpdateQueue<State>(
           };
           newLastBaseUpdate = newLastBaseUpdate.next = clone;
         }
-
-        // Mark the event time of this update as relevant to this render pass.
-        // TODO: This should ideally use the true event time of this update rather than
-        // its priority which is a derived and not reversible value.
-        // TODO: We should skip this update if it was already committed but currently
-        // we have no way of detecting the difference between a committed and suspended
-        // update here.
-        markRenderEventTimeAndConfig(updateEventTime, update.suspenseConfig);
 
         // Process this update.
         newState = getStateFromUpdate(
@@ -538,7 +517,7 @@ export function processUpdateQueue<State>(
         );
         const callback = update.callback;
         if (callback !== null) {
-          workInProgress.effectTag |= Callback;
+          workInProgress.flags |= Callback;
           const effects = queue.effects;
           if (effects === null) {
             queue.effects = [update];
