@@ -21,24 +21,28 @@ let NormalPriority;
 
 describe('SchedulerPostTaskOnly', () => {
   beforeEach(() => {
-    jest.resetModules();
+    if (!process.env.IS_BUILD) {
+      jest.resetModules();
 
-    // Un-mock scheduler
-    jest.mock('scheduler', () =>
-      require.requireActual('scheduler/unstable_post_task_only'),
-    );
+      // Un-mock scheduler
+      jest.mock('scheduler', () =>
+        require.requireActual('scheduler/unstable_post_task_only'),
+      );
 
-    runtime = installMockBrowserRuntime();
-    performance = window.performance;
-    Scheduler = require('scheduler');
-    cancelCallback = Scheduler.unstable_cancelCallback;
-    scheduleCallback = Scheduler.unstable_scheduleCallback;
-    NormalPriority = Scheduler.unstable_NormalPriority;
+      runtime = installMockBrowserRuntime();
+      performance = window.performance;
+      Scheduler = require('scheduler');
+      cancelCallback = Scheduler.unstable_cancelCallback;
+      scheduleCallback = Scheduler.unstable_scheduleCallback;
+      NormalPriority = Scheduler.unstable_NormalPriority;
+    }
   });
 
   afterEach(() => {
-    if (!runtime.isLogEmpty()) {
-      throw Error('Test exited without clearing log.');
+    if (!process.env.IS_BUILD) {
+      if (!runtime.isLogEmpty()) {
+        throw Error('Test exited without clearing log.');
+      }
     }
   });
 
@@ -138,6 +142,7 @@ describe('SchedulerPostTaskOnly', () => {
     };
   }
 
+  // @gate source
   it('task that finishes before deadline', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Task');
@@ -147,6 +152,7 @@ describe('SchedulerPostTaskOnly', () => {
     runtime.assertLog(['Task Event', 'Task']);
   });
 
+  // @gate source
   it('task with continuation', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Task');
@@ -167,6 +173,7 @@ describe('SchedulerPostTaskOnly', () => {
     runtime.assertLog(['Task Event', 'Continuation']);
   });
 
+  // @gate source
   it('multiple tasks', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('A');
@@ -179,6 +186,7 @@ describe('SchedulerPostTaskOnly', () => {
     runtime.assertLog(['Task Event', 'A', 'B']);
   });
 
+  // @gate source
   it('multiple tasks with a yield in between', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('A');
@@ -199,6 +207,7 @@ describe('SchedulerPostTaskOnly', () => {
     runtime.assertLog(['Task Event', 'B']);
   });
 
+  // @gate source
   it('cancels tasks', () => {
     const task = scheduleCallback(NormalPriority, () => {
       runtime.log('Task');
@@ -208,6 +217,7 @@ describe('SchedulerPostTaskOnly', () => {
     runtime.assertLog([]);
   });
 
+  // @gate source
   it('throws when a task errors then continues in a new event', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Oops!');
@@ -225,6 +235,7 @@ describe('SchedulerPostTaskOnly', () => {
     runtime.assertLog(['Task Event', 'Yay']);
   });
 
+  // @gate source
   it('schedule new task after queue has emptied', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('A');
@@ -242,6 +253,7 @@ describe('SchedulerPostTaskOnly', () => {
     runtime.assertLog(['Task Event', 'B']);
   });
 
+  // @gate source
   it('schedule new task after a cancellation', () => {
     const handle = scheduleCallback(NormalPriority, () => {
       runtime.log('A');
