@@ -36,6 +36,12 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
 
 import {
+  NoPriority as NoSchedulerPriority,
+  ImmediatePriority as ImmediateSchedulerPriority,
+  UserBlockingPriority as UserBlockingSchedulerPriority,
+  NormalPriority as NormalSchedulerPriority,
+} from './ReactFiberSchedulerPriorities';
+import {
   scheduleCallback,
   cancelCallback,
   getCurrentPriorityLevel,
@@ -43,10 +49,6 @@ import {
   shouldYield,
   requestPaint,
   now,
-  NoPriority as NoSchedulerPriority,
-  ImmediatePriority as ImmediateSchedulerPriority,
-  UserBlockingPriority as UserBlockingSchedulerPriority,
-  NormalPriority as NormalSchedulerPriority,
   flushSyncCallbackQueue,
   scheduleSyncCallback,
 } from './SchedulerWithReactIntegration.old';
