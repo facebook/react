@@ -39,17 +39,10 @@ import {
 
 import {enableIsInputPending} from '../SchedulerFeatureFlags';
 
-let getCurrentTime;
-const hasPerformanceNow =
-  typeof performance === 'object' && typeof performance.now === 'function';
+const perf = window.performance;
 
-if (hasPerformanceNow) {
-  const localPerformance = performance;
-  getCurrentTime = () => localPerformance.now();
-} else {
-  const localDate = Date;
-  const initialTime = localDate.now();
-  getCurrentTime = () => localDate.now() - initialTime;
+function getCurrentTime() {
+  return perf.now();
 }
 
 // Max 31 bit integer. The max integer size in V8 for 32-bit systems.
