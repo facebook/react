@@ -16,6 +16,7 @@ let ReactNoop;
 let ReactNoopFlightServer;
 let ReactNoopFlightClient;
 let ErrorBoundary;
+let NoErrorExpected;
 
 describe('ReactFlight', () => {
   beforeEach(() => {
@@ -39,6 +40,26 @@ describe('ReactFlight', () => {
         expect(this.state.hasError).toBe(true);
         expect(this.state.error).toBeTruthy();
         expect(this.state.error.message).toContain(this.props.expectedMessage);
+      }
+      render() {
+        if (this.state.hasError) {
+          return this.state.error.message;
+        }
+        return this.props.children;
+      }
+    };
+
+    NoErrorExpected = class extends React.Component {
+      state = {hasError: false, error: null};
+      static getDerivedStateFromError(error) {
+        return {
+          hasError: true,
+          error,
+        };
+      }
+      componentDidMount() {
+        expect(this.state.error).toBe(null);
+        expect(this.state.hasError).toBe(false);
       }
       render() {
         if (this.state.hasError) {
@@ -160,6 +181,49 @@ describe('ReactFlight', () => {
             <Client transport={refs} />
           </ErrorBoundary>
         </>,
+      );
+    });
+  });
+
+  it('should trigger the inner most error boundary inside a client component', () => {
+    function ServerComponent() {
+      throw new Error('This was thrown in the server component.');
+    }
+
+    function ClientComponent({children}) {
+      // This should catch the error thrown by the server component, even though it has already happened.
+      // We currently need to wrap it in a div because as it's set up right now, a lazy reference will
+      // throw during reconciliation which will trigger the parent of the error boundary.
+      // This is similar to how these will suspend the parent if it's a direct child of a Suspense boundary.
+      // That's a bug.
+      return (
+        <ErrorBoundary expectedMessage="This was thrown in the server component.">
+          <div>{children}</div>
+        </ErrorBoundary>
+      );
+    }
+
+    const ClientComponentReference = moduleReference(ClientComponent);
+
+    function Server() {
+      return (
+        <ClientComponentReference>
+          <ServerComponent />
+        </ClientComponentReference>
+      );
+    }
+
+    const data = ReactNoopFlightServer.render(<Server />);
+
+    function Client({transport}) {
+      return ReactNoopFlightClient.read(transport);
+    }
+
+    act(() => {
+      ReactNoop.render(
+        <NoErrorExpected>
+          <Client transport={data} />
+        </NoErrorExpected>,
       );
     });
   });
