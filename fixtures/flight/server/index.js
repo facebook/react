@@ -18,7 +18,7 @@ app.get('/', function(req, res) {
       delete require.cache[key];
     }
   }
-  require('./handler')(req, res);
+  require('./handler.server')(req, res);
 });
 
 app.listen(3001, () => {
