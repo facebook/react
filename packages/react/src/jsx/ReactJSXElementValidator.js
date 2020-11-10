@@ -373,9 +373,7 @@ export function jsxWithValidation(
               validateChildKeys(children[i], type);
             }
 
-            if (Object.freeze) {
-              Object.freeze(children);
-            }
+            Object.freeze(children);
           } else {
             console.error(
               'React.jsx: Static children should always be an array. ' +

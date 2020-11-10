@@ -191,10 +191,9 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
       writable: false,
       value: source,
     });
-    if (Object.freeze) {
-      Object.freeze(element.props);
-      Object.freeze(element);
-    }
+
+    Object.freeze(element.props);
+    Object.freeze(element);
   }
 
   return element;
