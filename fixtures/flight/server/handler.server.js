@@ -8,12 +8,12 @@ module.exports = function(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   pipeToNodeWritable(<App />, res, {
     // TODO: Read from a map on the disk.
-    './src/Counter.client.js': {
+    [require.resolve('../src/Counter.client.js')]: {
       id: './src/Counter.client.js',
       chunks: ['1'],
       name: 'default',
     },
-    './src/ShowMore.client.js': {
+    [require.resolve('../src/ShowMore.client.js')]: {
       id: './src/ShowMore.client.js',
       chunks: ['2'],
       name: 'default',

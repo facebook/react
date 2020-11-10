@@ -1,5 +1,12 @@
 'use strict';
 
+require.extensions['.client.js'] = function(module, path) {
+  module.exports = {
+    $$typeof: Symbol.for('react.module.reference'),
+    name: path,
+  };
+};
+
 const babelRegister = require('@babel/register');
 
 babelRegister({
