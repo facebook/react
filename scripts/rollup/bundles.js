@@ -659,6 +659,21 @@ const bundles = [
     externals: [],
   },
 
+  /******* React Scheduler Post Task Only (experimental) *******/
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'scheduler/unstable_post_task_only',
+    global: 'SchedulerPostTaskOnly',
+    externals: [],
+  },
+
   /******* React Scheduler No DOM (experimental) *******/
   {
     bundleTypes: [
