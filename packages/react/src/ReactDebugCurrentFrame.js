@@ -18,11 +18,7 @@ export function setExtraStackFrame(stack: null | string) {
 }
 
 if (__DEV__) {
-  ReactDebugCurrentFrame.setExtraStackFrame = function(stack: null | string) {
-    if (__DEV__) {
-      currentExtraStackFrame = stack;
-    }
-  };
+  ReactDebugCurrentFrame.setExtraStackFrame = setExtraStackFrame;
   // Stack implementation injected by the current renderer.
   ReactDebugCurrentFrame.getCurrentStack = (null: null | (() => string));
 
