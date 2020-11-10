@@ -467,8 +467,8 @@ export function injectIntoGlobalHook(globalObject: any): void {
     // Checks if DevTools hook is disabled
     if (hook.isDisabled) {
       console['warn'](
-        'Something has shimmed the React DevTools global hook (REACT_DEVTOOLS_GLOBAL_HOOK).' +
-          'Fast Refresh is not compatible with this shim and will be disabled.  ',
+        'Something has shimmed the React DevTools global hook (REACT_DEVTOOLS_GLOBAL_HOOK). ' +
+          'Fast Refresh is not compatible with this shim and will be disabled.',
       );
     }
     // Here, we just want to get a reference to scheduleRefresh.
