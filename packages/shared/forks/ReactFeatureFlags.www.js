@@ -35,6 +35,7 @@ export const {
 
 export const enableProfilerTimer = __PROFILE__;
 export const enableProfilerCommitHooks = __PROFILE__;
+export const enableProfilerNestedUpdatePhase = __PROFILE__;
 
 // Logs additional User Timing API marks for use with an experimental profiling tool.
 export const enableSchedulingProfiler = __PROFILE__;

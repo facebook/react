@@ -31,6 +31,7 @@ import {
   enableSchedulerTracing,
   enableProfilerTimer,
   enableProfilerCommitHooks,
+  enableProfilerNestedUpdatePhase,
   enableSuspenseServerRenderer,
   enableFundamentalAPI,
   enableSuspenseCallback,
@@ -94,6 +95,7 @@ import {
 import {onCommitUnmount} from './ReactFiberDevToolsHook.new';
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
 import {
+  isCurrentUpdateNested,
   getCommitTime,
   recordLayoutEffectDuration,
   startLayoutEffectTimer,
@@ -357,22 +359,24 @@ function commitProfilerPassiveEffect(
         // It does not get reset until the start of the next commit phase.
         const commitTime = getCommitTime();
 
+        let phase = finishedWork.alternate === null ? 'mount' : 'update';
+        if (enableProfilerNestedUpdatePhase) {
+          if (isCurrentUpdateNested()) {
+            phase = 'nested-update';
+          }
+        }
+
         if (typeof onPostCommit === 'function') {
           if (enableSchedulerTracing) {
             onPostCommit(
               id,
-              finishedWork.alternate === null ? 'mount' : 'update',
+              phase,
               passiveEffectDuration,
               commitTime,
               finishedRoot.memoizedInteractions,
             );
           } else {
-            onPostCommit(
-              id,
-              finishedWork.alternate === null ? 'mount' : 'update',
-              passiveEffectDuration,
-              commitTime,
-            );
+            onPostCommit(id, phase, passiveEffectDuration, commitTime);
           }
         }
         break;
@@ -1333,11 +1337,18 @@ function commitLayoutEffectsForProfiler(
     const OnRenderFlag = Update;
     const OnCommitFlag = Callback;
 
+    let phase = current === null ? 'mount' : 'update';
+    if (enableProfilerNestedUpdatePhase) {
+      if (isCurrentUpdateNested()) {
+        phase = 'nested-update';
+      }
+    }
+
     if ((flags & OnRenderFlag) !== NoFlags && typeof onRender === 'function') {
       if (enableSchedulerTracing) {
         onRender(
           finishedWork.memoizedProps.id,
-          current === null ? 'mount' : 'update',
+          phase,
           finishedWork.actualDuration,
           finishedWork.treeBaseDuration,
           finishedWork.actualStartTime,
@@ -1347,7 +1358,7 @@ function commitLayoutEffectsForProfiler(
       } else {
         onRender(
           finishedWork.memoizedProps.id,
-          current === null ? 'mount' : 'update',
+          phase,
           finishedWork.actualDuration,
           finishedWork.treeBaseDuration,
           finishedWork.actualStartTime,
@@ -1364,7 +1375,7 @@ function commitLayoutEffectsForProfiler(
         if (enableSchedulerTracing) {
           onCommit(
             finishedWork.memoizedProps.id,
-            current === null ? 'mount' : 'update',
+            phase,
             effectDuration,
             commitTime,
             finishedRoot.memoizedInteractions,
@@ -1372,7 +1383,7 @@ function commitLayoutEffectsForProfiler(
         } else {
           onCommit(
             finishedWork.memoizedProps.id,
-            current === null ? 'mount' : 'update',
+            phase,
             effectDuration,
             commitTime,
           );
