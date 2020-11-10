@@ -542,12 +542,12 @@ function postTask(callback) {
 }
 
 function requestHostCallback(callback) {
-                                         scheduledHostCallback = callback;
-                                         if (!isTaskLoopRunning) {
-                                           isTaskLoopRunning = true;
-                                           postTask(performWorkUntilDeadline);
-                                         }
-                                       }
+  scheduledHostCallback = callback;
+  if (!isTaskLoopRunning) {
+    isTaskLoopRunning = true;
+    postTask(performWorkUntilDeadline);
+  }
+}
 
 function requestHostTimeout(callback, ms) {
   taskTimeoutID = setTimeout(() => {
