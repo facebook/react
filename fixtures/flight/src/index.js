@@ -1,4 +1,5 @@
-import React, {Suspense} from 'react';
+import * as React from 'react';
+import {Suspense} from 'react';
 import ReactDOM from 'react-dom';
 import ReactTransportDOMClient from 'react-transport-dom-webpack';
 
