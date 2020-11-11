@@ -105,4 +105,26 @@ describe('ReactFlightNativeRelay', () => {
       nativeFabricUIManager.__dumpHierarchyForJestTestsOnly(),
     ).toMatchSnapshot();
   });
+
+  it('should warn in DEV if a class instance polyfill is passed to a host component', () => {
+    function Bar() {}
+
+    function Foo() {}
+    Foo.prototype = Object.create(Bar.prototype);
+    // This is enumerable which some polyfills do.
+    Foo.prototype.constructor = Foo;
+    Foo.prototype.method = function() {};
+
+    expect(() => {
+      const transport = [];
+      ReactNativeFlightRelayServer.render(
+        <input value={new Foo()} />,
+        transport,
+      );
+      readThrough(transport);
+    }).toErrorDev(
+      'Only plain objects can be passed to client components from server components. ',
+      {withoutStack: true},
+    );
+  });
 });

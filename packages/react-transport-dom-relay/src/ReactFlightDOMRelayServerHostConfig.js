@@ -71,6 +71,8 @@ export function processErrorChunk(
   ];
 }
 
+const hasOwnProperty = Object.prototype.hasOwnProperty;
+
 function convertModelToJSON(
   request: Request,
   parent: {+[key: string]: ReactModel} | $ReadOnlyArray<ReactModel>,
@@ -88,12 +90,14 @@ function convertModelToJSON(
     } else {
       const jsonObj: {[key: string]: JSONValue} = {};
       for (const nextKey in json) {
-        jsonObj[nextKey] = convertModelToJSON(
-          request,
-          json,
-          nextKey,
-          json[nextKey],
-        );
+        if (hasOwnProperty.call(json, nextKey)) {
+          jsonObj[nextKey] = convertModelToJSON(
+            request,
+            json,
+            nextKey,
+            json[nextKey],
+          );
+        }
       }
       return jsonObj;
     }
