@@ -470,7 +470,7 @@ export function injectIntoGlobalHook(globalObject: any): void {
       // of DevTools integration and associated warnings and logs.
       // Using console['warn'] to evade Babel and ESLint
       console['warn'](
-        'Something has shimmed the React DevTools global hook (REACT_DEVTOOLS_GLOBAL_HOOK). ' +
+        'Something has shimmed the React DevTools global hook (__REACT_DEVTOOLS_GLOBAL_HOOK__). ' +
           'Fast Refresh is not compatible with this shim and will be disabled.',
       );
       return;
