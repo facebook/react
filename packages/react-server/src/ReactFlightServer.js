@@ -409,8 +409,13 @@ export function resolveModelToJSON(
         x.then(ping, ping);
         return serializeByRefID(newSegment.id);
       } else {
-        // Something errored. Don't bother encoding anything up to here.
-        throw x;
+        // Something errored. We'll still send everything we have up until this point.
+        // We'll replace this element with a lazy reference that throws on the client
+        // once it gets rendered.
+        request.pendingChunks++;
+        const errorId = request.nextChunkId++;
+        emitErrorChunk(request, errorId, x);
+        return serializeByRefID(errorId);
       }
     }
   }
