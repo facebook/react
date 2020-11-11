@@ -25,6 +25,7 @@ import {
   close,
   processModelChunk,
   processModuleChunk,
+  processSymbolChunk,
   processErrorChunk,
   resolveModuleMetaData,
   isModuleReference,
@@ -32,21 +33,12 @@ import {
 
 import {
   REACT_ELEMENT_TYPE,
-  REACT_DEBUG_TRACING_MODE_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_LAZY_TYPE,
-  REACT_LEGACY_HIDDEN_TYPE,
   REACT_MEMO_TYPE,
-  REACT_OFFSCREEN_TYPE,
-  REACT_PROFILER_TYPE,
-  REACT_SCOPE_TYPE,
-  REACT_STRICT_MODE_TYPE,
-  REACT_SUSPENSE_TYPE,
-  REACT_SUSPENSE_LIST_TYPE,
 } from 'shared/ReactSymbols';
 
-import * as React from 'react';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
 
@@ -86,6 +78,7 @@ export type Request = {
   completedModuleChunks: Array<Chunk>,
   completedJSONChunks: Array<Chunk>,
   completedErrorChunks: Array<Chunk>,
+  writtenSymbols: Map<Symbol, number>,
   flowing: boolean,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
 };
@@ -107,6 +100,7 @@ export function createRequest(
     completedModuleChunks: [],
     completedJSONChunks: [],
     completedErrorChunks: [],
+    writtenSymbols: new Map(),
     flowing: false,
     toJSON: function(key: string, value: ReactModel): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
@@ -118,10 +112,13 @@ export function createRequest(
   return request;
 }
 
-function attemptResolveElement(element: React$Element<any>): ReactModel {
-  const type = element.type;
-  const props = element.props;
-  if (element.ref !== null && element.ref !== undefined) {
+function attemptResolveElement(
+  type: any,
+  key: null | React$Key,
+  ref: mixed,
+  props: any,
+): ReactModel {
+  if (ref !== null && ref !== undefined) {
     // When the ref moves to the regular props object this will implicitly
     // throw for functions. We could probably relax it to a DEV warning for other
     // cases.
@@ -135,25 +132,22 @@ function attemptResolveElement(element: React$Element<any>): ReactModel {
     return type(props);
   } else if (typeof type === 'string') {
     // This is a host element. E.g. HTML.
-    return [REACT_ELEMENT_TYPE, type, element.key, element.props];
-  } else if (
-    type === REACT_FRAGMENT_TYPE ||
-    type === REACT_STRICT_MODE_TYPE ||
-    type === REACT_PROFILER_TYPE ||
-    type === REACT_SCOPE_TYPE ||
-    type === REACT_DEBUG_TRACING_MODE_TYPE ||
-    type === REACT_LEGACY_HIDDEN_TYPE ||
-    type === REACT_OFFSCREEN_TYPE ||
-    // TODO: These are temporary shims
-    // and we'll want a different behavior.
-    type === REACT_SUSPENSE_TYPE ||
-    type === REACT_SUSPENSE_LIST_TYPE
-  ) {
-    return element.props.children;
+    return [REACT_ELEMENT_TYPE, type, key, props];
+  } else if (typeof type === 'symbol') {
+    if (type === REACT_FRAGMENT_TYPE) {
+      // For key-less fragments, we add a small optimization to avoid serializing
+      // it as a wrapper.
+      // TODO: If a key is specified, we should propagate its key to any children.
+      // Same as if a server component has a key.
+      return props.children;
+    }
+    // This might be a built-in React component. We'll let the client decide.
+    // Any built-in works as long as its props are serializable.
+    return [REACT_ELEMENT_TYPE, type, key, props];
   } else if (type != null && typeof type === 'object') {
     if (isModuleReference(type)) {
       // This is a reference to a client component.
-      return [REACT_ELEMENT_TYPE, type, element.key, element.props];
+      return [REACT_ELEMENT_TYPE, type, key, props];
     }
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE: {
@@ -161,8 +155,7 @@ function attemptResolveElement(element: React$Element<any>): ReactModel {
         return render(props, undefined);
       }
       case REACT_MEMO_TYPE: {
-        const nextChildren = React.createElement(type.type, element.props);
-        return attemptResolveElement(nextChildren);
+        return attemptResolveElement(type.type, key, ref, props);
       }
     }
   }
@@ -399,7 +392,12 @@ export function resolveModelToJSON(
     const element: React$Element<any> = (value: any);
     try {
       // Attempt to render the server component.
-      value = attemptResolveElement(element);
+      value = attemptResolveElement(
+        element.type,
+        element.key,
+        element.ref,
+        element.props,
+      );
     } catch (x) {
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Something suspended, we'll need to create a new segment and resolve it later.
@@ -526,14 +524,26 @@ export function resolveModelToJSON(
   }
 
   if (typeof value === 'symbol') {
+    const writtenSymbols = request.writtenSymbols;
+    const existingId = writtenSymbols.get(value);
+    if (existingId !== undefined) {
+      return serializeByValueID(existingId);
+    }
+    const name = value.description;
     invariant(
-      false,
-      'Symbol values (%s) cannot be passed to client components. ' +
+      Symbol.for(name) === value,
+      'Only global symbols received from Symbol.for(...) can be passed to client components. ' +
+        'The symbol Symbol.for(%s) cannot be found among global symbols. ' +
         'Remove %s from this object, or avoid the entire object: %s',
       value.description,
       describeKeyForErrorMessage(key),
       describeObjectForErrorMessage(parent),
     );
+    request.pendingChunks++;
+    const symbolId = request.nextChunkId++;
+    emitSymbolChunk(request, symbolId, name);
+    writtenSymbols.set(value, symbolId);
+    return serializeByValueID(symbolId);
   }
 
   // $FlowFixMe: bigint isn't added to Flow yet.
@@ -588,6 +598,11 @@ function emitModuleChunk(
   request.completedModuleChunks.push(processedChunk);
 }
 
+function emitSymbolChunk(request: Request, id: number, name: string): void {
+  const processedChunk = processSymbolChunk(request, id, name);
+  request.completedModuleChunks.push(processedChunk);
+}
+
 function retrySegment(request: Request, segment: Segment): void {
   const query = segment.query;
   let value;
@@ -604,7 +619,12 @@ function retrySegment(request: Request, segment: Segment): void {
       // Doing this here lets us reuse this same segment if the next component
       // also suspends.
       segment.query = () => value;
-      value = attemptResolveElement(element);
+      value = attemptResolveElement(
+        element.type,
+        element.key,
+        element.ref,
+        element.props,
+      );
     }
     const processedChunk = processModelChunk(request, segment.id, value);
     request.completedJSONChunks.push(processedChunk);

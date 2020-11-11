@@ -174,7 +174,7 @@ describe('ReactFlight', () => {
           <ErrorBoundary expectedMessage="Functions cannot be passed directly to client components because they're not serializable.">
             <Client transport={fn} />
           </ErrorBoundary>
-          <ErrorBoundary expectedMessage="Symbol values (foo) cannot be passed to client components.">
+          <ErrorBoundary expectedMessage="Only global symbols received from Symbol.for(...) can be passed to client components.">
             <Client transport={symbol} />
           </ErrorBoundary>
           <ErrorBoundary expectedMessage="Refs cannot be used in server components, nor passed to client components.">
