@@ -45,26 +45,7 @@ describe('ReactFlightNativeRelay', () => {
     const response = ReactNativeFlightRelayClient.createResponse();
     for (let i = 0; i < data.length; i++) {
       const chunk = data[i];
-      if (chunk.type === 'json') {
-        ReactNativeFlightRelayClient.resolveModel(
-          response,
-          chunk.id,
-          chunk.json,
-        );
-      } else if (chunk.type === 'module') {
-        ReactNativeFlightRelayClient.resolveModule(
-          response,
-          chunk.id,
-          chunk.json,
-        );
-      } else {
-        ReactNativeFlightRelayClient.resolveError(
-          response,
-          chunk.id,
-          chunk.json.message,
-          chunk.json.stack,
-        );
-      }
+      ReactNativeFlightRelayClient.resolveRow(response, chunk);
     }
     ReactNativeFlightRelayClient.close(response);
     const model = response.readRoot();

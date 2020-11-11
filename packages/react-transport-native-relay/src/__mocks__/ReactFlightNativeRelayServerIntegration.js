@@ -8,26 +8,8 @@
 'use strict';
 
 const ReactFlightNativeRelayServerIntegration = {
-  emitModel(destination, id, json) {
-    destination.push({
-      type: 'json',
-      id: id,
-      json: json,
-    });
-  },
-  emitModule(destination, id, json) {
-    destination.push({
-      type: 'module',
-      id: id,
-      json: json,
-    });
-  },
-  emitError(destination, id, message, stack) {
-    destination.push({
-      type: 'error',
-      id: id,
-      json: {message, stack},
-    });
+  emitRow(destination, json) {
+    destination.push(json);
   },
   close(destination) {},
   resolveModuleMetaData(config, resource) {

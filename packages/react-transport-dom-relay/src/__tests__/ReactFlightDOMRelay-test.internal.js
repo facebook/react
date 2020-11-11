@@ -30,18 +30,7 @@ describe('ReactFlightDOMRelay', () => {
     const response = ReactDOMFlightRelayClient.createResponse();
     for (let i = 0; i < data.length; i++) {
       const chunk = data[i];
-      if (chunk.type === 'json') {
-        ReactDOMFlightRelayClient.resolveModel(response, chunk.id, chunk.json);
-      } else if (chunk.type === 'module') {
-        ReactDOMFlightRelayClient.resolveModule(response, chunk.id, chunk.json);
-      } else {
-        ReactDOMFlightRelayClient.resolveError(
-          response,
-          chunk.id,
-          chunk.json.message,
-          chunk.json.stack,
-        );
-      }
+      ReactDOMFlightRelayClient.resolveRow(response, chunk);
     }
     ReactDOMFlightRelayClient.close(response);
     const model = response.readRoot();
