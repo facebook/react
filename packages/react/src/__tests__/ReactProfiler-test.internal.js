@@ -29,6 +29,7 @@ function loadModules({
   enableProfilerTimer = true,
   enableProfilerCommitHooks = true,
   enableProfilerNestedUpdatePhase = true,
+  enableProfilerNestedUpdateScheduledHook = false,
   enableSchedulerTracing = true,
   replayFailedUnitOfWorkWithInvokeGuardedCallback = false,
   useNoopRenderer = false,
@@ -38,6 +39,7 @@ function loadModules({
   ReactFeatureFlags.enableProfilerTimer = enableProfilerTimer;
   ReactFeatureFlags.enableProfilerCommitHooks = enableProfilerCommitHooks;
   ReactFeatureFlags.enableProfilerNestedUpdatePhase = enableProfilerNestedUpdatePhase;
+  ReactFeatureFlags.enableProfilerNestedUpdateScheduledHook = enableProfilerNestedUpdateScheduledHook;
   ReactFeatureFlags.enableSchedulerTracing = enableSchedulerTracing;
   ReactFeatureFlags.replayFailedUnitOfWorkWithInvokeGuardedCallback = replayFailedUnitOfWorkWithInvokeGuardedCallback;
 
@@ -2437,6 +2439,528 @@ describe('Profiler', () => {
           expect(call[4]).toMatchInteractions([interaction]);
         });
       }
+    });
+
+    describe(`onNestedUpdateScheduled enableSchedulerTracing:${
+      enableSchedulerTracing ? 'enabled' : 'disabled'
+    }`, () => {
+      beforeEach(() => {
+        jest.resetModules();
+
+        loadModules({
+          enableProfilerNestedUpdateScheduledHook: true,
+          enableSchedulerTracing,
+          useNoopRenderer: true,
+        });
+      });
+
+      it('is not called when the legacy render API is used to schedule an update', () => {
+        const onNestedUpdateScheduled = jest.fn();
+
+        ReactNoop.renderLegacySyncRoot(
+          <React.Profiler
+            id="test"
+            onNestedUpdateScheduled={onNestedUpdateScheduled}>
+            <div>initial</div>
+          </React.Profiler>,
+        );
+
+        ReactNoop.renderLegacySyncRoot(
+          <React.Profiler
+            id="test"
+            onNestedUpdateScheduled={onNestedUpdateScheduled}>
+            <div>update</div>
+          </React.Profiler>,
+        );
+
+        expect(onNestedUpdateScheduled).not.toHaveBeenCalled();
+      });
+
+      it('is not called when the root API is used to schedule an update', () => {
+        const onNestedUpdateScheduled = jest.fn();
+
+        ReactNoop.render(
+          <React.Profiler
+            id="test"
+            onNestedUpdateScheduled={onNestedUpdateScheduled}>
+            <div>initial</div>
+          </React.Profiler>,
+        );
+
+        ReactNoop.render(
+          <React.Profiler
+            id="test"
+            onNestedUpdateScheduled={onNestedUpdateScheduled}>
+            <div>update</div>
+          </React.Profiler>,
+        );
+
+        expect(onNestedUpdateScheduled).not.toHaveBeenCalled();
+      });
+
+      it('is called when a function component schedules an update during a layout effect', () => {
+        function Component() {
+          const [didMount, setDidMount] = React.useState(false);
+          React.useLayoutEffect(() => {
+            setDidMount(true);
+          }, []);
+          Scheduler.unstable_yieldValue(`Component:${didMount}`);
+          return didMount;
+        }
+
+        const interactionCreation = {
+          id: 0,
+          name: 'creation event',
+          timestamp: Scheduler.unstable_now(),
+        };
+
+        const onNestedUpdateScheduled = jest.fn();
+
+        SchedulerTracing.unstable_trace(
+          interactionCreation.name,
+          Scheduler.unstable_now(),
+          () => {
+            ReactNoop.act(() => {
+              ReactNoop.render(
+                <React.Profiler
+                  id="test"
+                  onNestedUpdateScheduled={onNestedUpdateScheduled}>
+                  <Component />
+                </React.Profiler>,
+              );
+            });
+          },
+        );
+
+        expect(Scheduler).toHaveYielded(['Component:false', 'Component:true']);
+        expect(onNestedUpdateScheduled).toHaveBeenCalledTimes(1);
+        if (ReactFeatureFlags.enableSchedulerTracing) {
+          expect(onNestedUpdateScheduled.mock.calls[0][0]).toMatchInteractions([
+            interactionCreation,
+          ]);
+        }
+      });
+
+      it('bubbles up and calls all ancestor Profilers', () => {
+        function Component() {
+          const [didMount, setDidMount] = React.useState(false);
+          React.useLayoutEffect(() => {
+            setDidMount(true);
+          }, []);
+          Scheduler.unstable_yieldValue(`Component:${didMount}`);
+          return didMount;
+        }
+        const onNestedUpdateScheduledOne = jest.fn();
+        const onNestedUpdateScheduledTwo = jest.fn();
+        const onNestedUpdateScheduledThree = jest.fn();
+
+        ReactNoop.act(() => {
+          ReactNoop.render(
+            <React.Profiler
+              id="one"
+              onNestedUpdateScheduled={onNestedUpdateScheduledOne}>
+              <React.Profiler
+                id="two"
+                onNestedUpdateScheduled={onNestedUpdateScheduledTwo}>
+                <>
+                  <Component />
+                  <React.Profiler
+                    id="three"
+                    onNestedUpdateScheduled={onNestedUpdateScheduledThree}
+                  />
+                </>
+              </React.Profiler>
+            </React.Profiler>,
+          );
+        });
+
+        expect(Scheduler).toHaveYielded(['Component:false', 'Component:true']);
+        expect(onNestedUpdateScheduledOne).toHaveBeenCalledTimes(1);
+        expect(onNestedUpdateScheduledTwo).toHaveBeenCalledTimes(1);
+        expect(onNestedUpdateScheduledThree).not.toHaveBeenCalled();
+      });
+
+      it('is not called when an update is scheduled for another doort during a layout effect', () => {
+        const setStateRef = React.createRef(null);
+
+        function ComponentRootOne() {
+          const [state, setState] = React.useState(false);
+          setStateRef.current = setState;
+          Scheduler.unstable_yieldValue(`ComponentRootOne:${state}`);
+          return state;
+        }
+
+        function ComponentRootTwo() {
+          React.useLayoutEffect(() => {
+            setStateRef.current(true);
+          }, []);
+          Scheduler.unstable_yieldValue('ComponentRootTwo');
+          return null;
+        }
+
+        const interactionCreation = {
+          id: 0,
+          name: 'creation event',
+          timestamp: Scheduler.unstable_now(),
+        };
+
+        const onNestedUpdateScheduled = jest.fn();
+
+        SchedulerTracing.unstable_trace(
+          interactionCreation.name,
+          Scheduler.unstable_now(),
+          () => {
+            ReactNoop.act(() => {
+              ReactNoop.renderToRootWithID(
+                <React.Profiler
+                  id="test"
+                  onNestedUpdateScheduled={onNestedUpdateScheduled}>
+                  <ComponentRootOne />
+                </React.Profiler>,
+                1,
+              );
+
+              ReactNoop.renderToRootWithID(
+                <React.Profiler
+                  id="test"
+                  onNestedUpdateScheduled={onNestedUpdateScheduled}>
+                  <ComponentRootTwo />
+                </React.Profiler>,
+                2,
+              );
+            });
+          },
+        );
+
+        expect(Scheduler).toHaveYielded([
+          'ComponentRootOne:false',
+          'ComponentRootTwo',
+          'ComponentRootOne:true',
+        ]);
+        expect(onNestedUpdateScheduled).not.toHaveBeenCalled();
+      });
+
+      it('is not called when a function component schedules an update during a passive effect', () => {
+        function Component() {
+          const [didMount, setDidMount] = React.useState(false);
+          React.useEffect(() => {
+            setDidMount(true);
+          }, []);
+          Scheduler.unstable_yieldValue(`Component:${didMount}`);
+          return didMount;
+        }
+
+        const onNestedUpdateScheduled = jest.fn();
+
+        ReactNoop.act(() => {
+          ReactNoop.render(
+            <React.Profiler
+              id="test"
+              onNestedUpdateScheduled={onNestedUpdateScheduled}>
+              <Component />
+            </React.Profiler>,
+          );
+        });
+
+        expect(Scheduler).toHaveYielded(['Component:false', 'Component:true']);
+        expect(onNestedUpdateScheduled).not.toHaveBeenCalled();
+      });
+
+      it('is not called when a function component schedules an update outside of render', () => {
+        const updateFnRef = React.createRef(null);
+
+        function Component() {
+          const [state, setState] = React.useState(false);
+          updateFnRef.current = () => setState(true);
+          Scheduler.unstable_yieldValue(`Component:${state}`);
+          return state;
+        }
+
+        const onNestedUpdateScheduled = jest.fn();
+
+        ReactNoop.act(() => {
+          ReactNoop.render(
+            <React.Profiler
+              id="test"
+              onNestedUpdateScheduled={onNestedUpdateScheduled}>
+              <Component />
+            </React.Profiler>,
+          );
+        });
+        expect(Scheduler).toHaveYielded(['Component:false']);
+
+        ReactNoop.act(() => {
+          updateFnRef.current();
+        });
+        expect(Scheduler).toHaveYielded(['Component:true']);
+        expect(onNestedUpdateScheduled).not.toHaveBeenCalled();
+      });
+
+      it('it is not called when a component schedules an update during render', () => {
+        function Component() {
+          const [state, setState] = React.useState(false);
+          if (state === false) {
+            setState(true);
+          }
+          Scheduler.unstable_yieldValue(`Component:${state}`);
+          return state;
+        }
+
+        const onNestedUpdateScheduled = jest.fn();
+
+        ReactNoop.act(() => {
+          ReactNoop.render(
+            <React.Profiler
+              id="test"
+              onNestedUpdateScheduled={onNestedUpdateScheduled}>
+              <Component />
+            </React.Profiler>,
+          );
+        });
+
+        expect(Scheduler).toHaveYielded(['Component:false', 'Component:true']);
+        expect(onNestedUpdateScheduled).not.toHaveBeenCalled();
+      });
+
+      it('it is called when a component schedules an update from a ref callback', () => {
+        function Component({mountChild}) {
+          const [refAttached, setRefAttached] = React.useState(false);
+          const [refDetached, setRefDetached] = React.useState(false);
+          const refSetter = React.useCallback(ref => {
+            if (ref !== null) {
+              setRefAttached(true);
+            } else {
+              setRefDetached(true);
+            }
+          }, []);
+          Scheduler.unstable_yieldValue(
+            `Component:${refAttached}:${refDetached}`,
+          );
+          return mountChild ? <div ref={refSetter} /> : null;
+        }
+
+        const onNestedUpdateScheduled = jest.fn();
+
+        const interactionCreation = {
+          id: 0,
+          name: 'creation event',
+          timestamp: Scheduler.unstable_now(),
+        };
+
+        SchedulerTracing.unstable_trace(
+          interactionCreation.name,
+          Scheduler.unstable_now(),
+          () => {
+            ReactNoop.act(() => {
+              ReactNoop.render(
+                <React.Profiler
+                  id="test"
+                  onNestedUpdateScheduled={onNestedUpdateScheduled}>
+                  <Component mountChild={true} />
+                </React.Profiler>,
+              );
+            });
+          },
+        );
+
+        expect(Scheduler).toHaveYielded([
+          'Component:false:false',
+          'Component:true:false',
+        ]);
+        expect(onNestedUpdateScheduled).toHaveBeenCalledTimes(1);
+        if (ReactFeatureFlags.enableSchedulerTracing) {
+          expect(onNestedUpdateScheduled.mock.calls[0][0]).toMatchInteractions([
+            interactionCreation,
+          ]);
+        }
+
+        const interactionUpdate = {
+          id: 1,
+          name: 'update event',
+          timestamp: Scheduler.unstable_now(),
+        };
+
+        SchedulerTracing.unstable_trace(
+          interactionUpdate.name,
+          Scheduler.unstable_now(),
+          () => {
+            ReactNoop.act(() => {
+              ReactNoop.render(
+                <React.Profiler
+                  id="test"
+                  onNestedUpdateScheduled={onNestedUpdateScheduled}>
+                  <Component mountChild={false} />
+                </React.Profiler>,
+              );
+            });
+          },
+        );
+
+        expect(Scheduler).toHaveYielded([
+          'Component:true:false',
+          'Component:true:true',
+        ]);
+        expect(onNestedUpdateScheduled).toHaveBeenCalledTimes(2);
+        if (ReactFeatureFlags.enableSchedulerTracing) {
+          expect(onNestedUpdateScheduled.mock.calls[1][0]).toMatchInteractions([
+            interactionUpdate,
+          ]);
+        }
+      });
+
+      it('is called when a class component schedules an update from the componentDidMount lifecycles', () => {
+        class Component extends React.Component {
+          state = {
+            value: false,
+          };
+          componentDidMount() {
+            this.setState({value: true});
+          }
+          render() {
+            const {value} = this.state;
+            Scheduler.unstable_yieldValue(`Component:${value}`);
+            return value;
+          }
+        }
+
+        const interactionCreation = {
+          id: 0,
+          name: 'creation event',
+          timestamp: Scheduler.unstable_now(),
+        };
+
+        const onNestedUpdateScheduled = jest.fn();
+
+        SchedulerTracing.unstable_trace(
+          interactionCreation.name,
+          Scheduler.unstable_now(),
+          () => {
+            ReactNoop.act(() => {
+              ReactNoop.render(
+                <React.Profiler
+                  id="test"
+                  onNestedUpdateScheduled={onNestedUpdateScheduled}>
+                  <Component />
+                </React.Profiler>,
+              );
+            });
+          },
+        );
+
+        expect(Scheduler).toHaveYielded(['Component:false', 'Component:true']);
+        expect(onNestedUpdateScheduled).toHaveBeenCalledTimes(1);
+        if (ReactFeatureFlags.enableSchedulerTracing) {
+          expect(onNestedUpdateScheduled.mock.calls[0][0]).toMatchInteractions([
+            interactionCreation,
+          ]);
+        }
+      });
+
+      it('is called when a class component schedules an update from the componentDidUpdate lifecycles', () => {
+        class Component extends React.Component {
+          state = {
+            nestedUpdateSheduled: false,
+          };
+          componentDidUpdate(prevProps, prevState) {
+            if (
+              this.props.scheduleNestedUpdate &&
+              !this.state.nestedUpdateSheduled
+            ) {
+              this.setState({nestedUpdateSheduled: true});
+            }
+          }
+          render() {
+            const {scheduleNestedUpdate} = this.props;
+            const {nestedUpdateSheduled} = this.state;
+            Scheduler.unstable_yieldValue(
+              `Component:${scheduleNestedUpdate}:${nestedUpdateSheduled}`,
+            );
+            return nestedUpdateSheduled;
+          }
+        }
+
+        const onNestedUpdateScheduled = jest.fn();
+
+        ReactNoop.act(() => {
+          ReactNoop.render(
+            <React.Profiler
+              id="test"
+              onNestedUpdateScheduled={onNestedUpdateScheduled}>
+              <Component scheduleNestedUpdate={false} />
+            </React.Profiler>,
+          );
+        });
+        expect(Scheduler).toHaveYielded(['Component:false:false']);
+        expect(onNestedUpdateScheduled).not.toHaveBeenCalled();
+
+        const interactionCreation = {
+          id: 0,
+          name: 'creation event',
+          timestamp: Scheduler.unstable_now(),
+        };
+
+        SchedulerTracing.unstable_trace(
+          interactionCreation.name,
+          Scheduler.unstable_now(),
+          () => {
+            ReactNoop.act(() => {
+              ReactNoop.render(
+                <React.Profiler
+                  id="test"
+                  onNestedUpdateScheduled={onNestedUpdateScheduled}>
+                  <Component scheduleNestedUpdate={true} />
+                </React.Profiler>,
+              );
+            });
+          },
+        );
+
+        expect(Scheduler).toHaveYielded([
+          'Component:true:false',
+          'Component:true:true',
+        ]);
+        expect(onNestedUpdateScheduled).toHaveBeenCalledTimes(1);
+        if (ReactFeatureFlags.enableSchedulerTracing) {
+          expect(onNestedUpdateScheduled.mock.calls[0][0]).toMatchInteractions([
+            interactionCreation,
+          ]);
+        }
+      });
+
+      it('is not called when a class component schedules an update outside of render', () => {
+        const updateFnRef = React.createRef(null);
+
+        class Component extends React.Component {
+          state = {
+            value: false,
+          };
+          render() {
+            const {value} = this.state;
+            updateFnRef.current = () => this.setState({value: true});
+            Scheduler.unstable_yieldValue(`Component:${value}`);
+            return value;
+          }
+        }
+
+        const onNestedUpdateScheduled = jest.fn();
+
+        ReactNoop.act(() => {
+          ReactNoop.render(
+            <React.Profiler
+              id="test"
+              onNestedUpdateScheduled={onNestedUpdateScheduled}>
+              <Component />
+            </React.Profiler>,
+          );
+        });
+        expect(Scheduler).toHaveYielded(['Component:false']);
+
+        ReactNoop.act(() => {
+          updateFnRef.current();
+        });
+        expect(Scheduler).toHaveYielded(['Component:true']);
+        expect(onNestedUpdateScheduled).not.toHaveBeenCalled();
+      });
     });
   });
 

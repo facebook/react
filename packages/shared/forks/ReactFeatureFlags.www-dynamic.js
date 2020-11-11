@@ -48,3 +48,5 @@ export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 
 export const enableDoubleInvokingEffects = false;
 export const enableUseRefAccessWarning = __VARIANT__;
+
+export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
