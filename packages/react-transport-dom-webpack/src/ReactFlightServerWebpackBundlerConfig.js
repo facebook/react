@@ -25,7 +25,13 @@ export type ModuleMetaData = {
   name: string,
 };
 
+export type ModuleKey = string;
+
 const MODULE_TAG = Symbol.for('react.module.reference');
+
+export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
+  return reference.name;
+}
 
 export function isModuleReference(reference: Object): boolean {
   return reference.$$typeof === MODULE_TAG;

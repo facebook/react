@@ -38,6 +38,14 @@ export function isModuleReference(reference: Object): boolean {
   return reference instanceof JSResourceReferenceImpl;
 }
 
+export type ModuleKey = ModuleReference<any>;
+
+export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
+  // We use the reference object itself as the key because we assume the
+  // object will be cached by the bundler runtime.
+  return reference;
+}
+
 export function resolveModuleMetaData<T>(
   config: BundlerConfig,
   resource: ModuleReference<T>,
