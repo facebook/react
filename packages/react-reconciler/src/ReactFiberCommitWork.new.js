@@ -463,6 +463,7 @@ function iterativelyCommitBeforeMutationEffects_begin() {
       (fiber.subtreeFlags & BeforeMutationMask) !== NoFlags &&
       child !== null
     ) {
+      warnIfWrongReturnPointer(fiber, child);
       nextEffect = child;
     } else {
       iterativelyCommitBeforeMutationEffects_complete();
@@ -496,6 +497,7 @@ function iterativelyCommitBeforeMutationEffects_complete() {
 
     const sibling = fiber.sibling;
     if (sibling !== null) {
+      warnIfWrongReturnPointer(fiber.return, sibling);
       nextEffect = sibling;
       return;
     }
@@ -713,6 +715,7 @@ function iterativelyCommitMutationEffects_begin(
 
     const child = fiber.child;
     if ((fiber.subtreeFlags & MutationMask) !== NoFlags && child !== null) {
+      warnIfWrongReturnPointer(fiber, child);
       nextEffect = child;
     } else {
       iterativelyCommitMutationEffects_complete(root, renderPriorityLevel);
@@ -751,6 +754,7 @@ function iterativelyCommitMutationEffects_complete(
 
     const sibling = fiber.sibling;
     if (sibling !== null) {
+      warnIfWrongReturnPointer(fiber.return, sibling);
       nextEffect = sibling;
       return;
     }
@@ -1172,12 +1176,14 @@ function iterativelyCommitLayoutEffects_begin(
         }
         const sibling = finishedWork.sibling;
         if (sibling !== null) {
+          warnIfWrongReturnPointer(finishedWork.return, sibling);
           nextEffect = sibling;
         } else {
           nextEffect = finishedWork.return;
           iterativelyCommitLayoutEffects_complete(subtreeRoot, finishedRoot);
         }
       } else {
+        warnIfWrongReturnPointer(finishedWork, firstChild);
         nextEffect = firstChild;
       }
     } else {
@@ -1224,6 +1230,7 @@ function iterativelyCommitLayoutEffects_complete(
 
     const sibling = fiber.sibling;
     if (sibling !== null) {
+      warnIfWrongReturnPointer(fiber.return, sibling);
       nextEffect = sibling;
       return;
     }
@@ -1757,12 +1764,14 @@ function iterativelyCommitPassiveMountEffects_begin(
         }
         const sibling = fiber.sibling;
         if (sibling !== null) {
+          warnIfWrongReturnPointer(fiber.return, sibling);
           nextEffect = sibling;
         } else {
           nextEffect = fiber.return;
           iterativelyCommitPassiveMountEffects_complete(subtreeRoot, root);
         }
       } else {
+        warnIfWrongReturnPointer(fiber, firstChild);
         nextEffect = firstChild;
       }
     } else {
@@ -1808,6 +1817,7 @@ function iterativelyCommitPassiveMountEffects_complete(
 
     const sibling = fiber.sibling;
     if (sibling !== null) {
+      warnIfWrongReturnPointer(fiber.return, sibling);
       nextEffect = sibling;
       return;
     }
@@ -1886,6 +1896,7 @@ function iterativelyCommitPassiveUnmountEffects_begin() {
     }
 
     if ((fiber.subtreeFlags & PassiveMask) !== NoFlags && child !== null) {
+      warnIfWrongReturnPointer(fiber, child);
       nextEffect = child;
     } else {
       iterativelyCommitPassiveUnmountEffects_complete();
@@ -1904,6 +1915,7 @@ function iterativelyCommitPassiveUnmountEffects_complete() {
 
     const sibling = fiber.sibling;
     if (sibling !== null) {
+      warnIfWrongReturnPointer(fiber.return, sibling);
       nextEffect = sibling;
       return;
     }
@@ -1941,6 +1953,7 @@ function iterativelyCommitPassiveUnmountEffectsInsideOfDeletedTree_begin(
     const fiber = nextEffect;
     const child = fiber.child;
     if ((fiber.subtreeFlags & PassiveStatic) !== NoFlags && child !== null) {
+      warnIfWrongReturnPointer(fiber, child);
       nextEffect = child;
     } else {
       iterativelyCommitPassiveUnmountEffectsInsideOfDeletedTree_complete(
@@ -1968,6 +1981,7 @@ function iterativelyCommitPassiveUnmountEffectsInsideOfDeletedTree_complete(
 
     const sibling = fiber.sibling;
     if (sibling !== null) {
+      warnIfWrongReturnPointer(fiber.return, sibling);
       nextEffect = sibling;
       return;
     }
@@ -3175,6 +3189,19 @@ function invokeEffectsInDev(
         invokeEffectFn(fiber);
       }
       fiber = fiber.sibling;
+    }
+  }
+}
+
+let didWarnWrongReturnPointer = false;
+function warnIfWrongReturnPointer(returnFiber, child) {
+  if (__DEV__) {
+    if (!didWarnWrongReturnPointer && child.return !== returnFiber) {
+      didWarnWrongReturnPointer = true;
+      console.error(
+        'Internal React error: Return pointer is inconsistent ' +
+          'with parent.',
+      );
     }
   }
 }
