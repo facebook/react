@@ -228,6 +228,49 @@ describe('ReactFlight', () => {
     });
   });
 
+  it('should trigger the inner most error boundary when serialization fails', () => {
+    function ClientComponent({children}) {
+      // This should catch the error thrown by the server component, even though it has already happened.
+      // We currently need to wrap it in a div because as it's set up right now, a lazy reference will
+      // throw during reconciliation which will trigger the parent of the error boundary.
+      // This is similar to how these will suspend the parent if it's a direct child of a Suspense boundary.
+      // That's a bug.
+      return (
+        <ErrorBoundary expectedMessage="This was thrown in the server component.">
+          <div>{children}</div>
+        </ErrorBoundary>
+      );
+    }
+
+    const ClientComponentReference = moduleReference(ClientComponent);
+
+    function Server() {
+      return (
+        <ClientComponentReference>
+          <div
+            onClick={function() {
+              /* this is not valid from a server component */
+            }}
+          />
+        </ClientComponentReference>
+      );
+    }
+
+    const data = ReactNoopFlightServer.render(<Server />);
+
+    function Client({transport}) {
+      return ReactNoopFlightClient.read(transport);
+    }
+
+    act(() => {
+      ReactNoop.render(
+        <NoErrorExpected>
+          <Client transport={data} />
+        </NoErrorExpected>,
+      );
+    });
+  });
+
   it('should warn in DEV if a toJSON instance is passed to a host component', () => {
     expect(() => {
       const transport = ReactNoopFlightServer.render(
