@@ -13,7 +13,7 @@
 // (which use different values for ReactTypeOfWork).
 
 import type {Source} from 'shared/ReactElementType';
-import type {LazyComponent} from 'react/src/ReactLazy';
+import type {LazyComponent} from 'shared/ReactTypes';
 import type {CurrentDispatcherRef} from './types';
 
 import {

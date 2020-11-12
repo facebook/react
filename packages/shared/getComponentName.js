@@ -7,8 +7,6 @@
  * @flow
  */
 
-import type {LazyComponent} from 'react/src/ReactLazy';
-
 import {
   REACT_CONTEXT_TYPE,
   REACT_FORWARD_REF_TYPE,
@@ -22,7 +20,7 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
-import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
+import type {LazyComponent, ReactContext, ReactProviderType} from 'shared/ReactTypes';
 
 function getWrappedName(
   outerType: mixed,

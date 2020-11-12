@@ -8,7 +8,7 @@
  */
 
 import type {Source} from 'shared/ReactElementType';
-import type {LazyComponent} from 'react/src/ReactLazy';
+import type {LazyComponent} from './ReactTypes';
 
 import {enableComponentStackLocations} from 'shared/ReactFeatureFlags';
 

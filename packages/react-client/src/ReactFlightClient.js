@@ -7,8 +7,7 @@
  * @flow
  */
 
-import type {Wakeable} from 'shared/ReactTypes';
-import type {LazyComponent} from 'react/src/ReactLazy';
+import type {LazyComponent, Wakeable} from 'shared/ReactTypes';
 
 import type {
   ModuleReference,

@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Wakeable, Thenable} from 'shared/ReactTypes';
+import type {LazyComponent, Thenable, Wakeable} from 'shared/ReactTypes';
 
 import {REACT_LAZY_TYPE} from 'shared/ReactSymbols';
 
@@ -41,12 +41,6 @@ type Payload<T> =
   | PendingPayload
   | ResolvedPayload<T>
   | RejectedPayload;
-
-export type LazyComponent<T, P> = {
-  $$typeof: Symbol | number,
-  _payload: P,
-  _init: (payload: P) => T,
-};
 
 function lazyInitializer<T>(payload: Payload<T>): T {
   if (payload._status === Uninitialized) {
