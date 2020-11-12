@@ -18,7 +18,6 @@ import {
   IndeterminateComponent,
   ForwardRef,
   SimpleMemoComponent,
-  Block,
   ClassComponent,
 } from './ReactWorkTags';
 import {
@@ -49,8 +48,6 @@ function describeFiber(fiber: Fiber): string {
       return describeFunctionComponentFrame(fiber.type, source, owner);
     case ForwardRef:
       return describeFunctionComponentFrame(fiber.type.render, source, owner);
-    case Block:
-      return describeFunctionComponentFrame(fiber.type._render, source, owner);
     case ClassComponent:
       return describeClassComponentFrame(fiber.type, source, owner);
     default:

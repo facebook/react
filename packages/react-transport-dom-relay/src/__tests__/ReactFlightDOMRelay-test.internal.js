@@ -10,8 +10,8 @@
 let act;
 let React;
 let ReactDOM;
+let JSResourceReference;
 let ReactDOMFlightRelayServer;
-let ReactDOMFlightRelayServerRuntime;
 let ReactDOMFlightRelayClient;
 
 describe('ReactFlightDOMRelay', () => {
@@ -22,40 +22,19 @@ describe('ReactFlightDOMRelay', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFlightRelayServer = require('react-transport-dom-relay/server');
-    ReactDOMFlightRelayServerRuntime = require('react-transport-dom-relay/server-runtime');
     ReactDOMFlightRelayClient = require('react-transport-dom-relay');
+    JSResourceReference = require('JSResourceReference');
   });
 
   function readThrough(data) {
     const response = ReactDOMFlightRelayClient.createResponse();
     for (let i = 0; i < data.length; i++) {
       const chunk = data[i];
-      if (chunk.type === 'json') {
-        ReactDOMFlightRelayClient.resolveModel(response, chunk.id, chunk.json);
-      } else {
-        ReactDOMFlightRelayClient.resolveError(
-          response,
-          chunk.id,
-          chunk.json.message,
-          chunk.json.stack,
-        );
-      }
+      ReactDOMFlightRelayClient.resolveRow(response, chunk);
     }
     ReactDOMFlightRelayClient.close(response);
     const model = response.readRoot();
     return model;
-  }
-
-  function block(render, load) {
-    if (load === undefined) {
-      return ReactDOMFlightRelayServerRuntime.serverBlock(render);
-    }
-    return function(...args) {
-      const curriedLoad = () => {
-        return load(...args);
-      };
-      return ReactDOMFlightRelayServerRuntime.serverBlock(render, curriedLoad);
-    };
   }
 
   it('can render a server component', () => {
@@ -94,20 +73,22 @@ describe('ReactFlightDOMRelay', () => {
   });
 
   // @gate experimental
-  it('can transfer a Block to the client and render there', () => {
-    function load(firstName, lastName) {
-      return {name: firstName + ' ' + lastName};
-    }
-    function User(props, data) {
+  it('can render a client component using a module reference and render there', () => {
+    function UserClient(props) {
       return (
         <span>
-          {props.greeting}, {data.name}
+          {props.greeting}, {props.name}
         </span>
       );
     }
-    const loadUser = block(User, load);
+    const User = new JSResourceReference(UserClient);
+
+    function Greeting({firstName, lastName}) {
+      return <User greeting="Hello" name={firstName + ' ' + lastName} />;
+    }
+
     const model = {
-      User: loadUser('Seb', 'Smith'),
+      greeting: <Greeting firstName="Seb" lastName="Smith" />,
     };
 
     const transport = [];
@@ -118,8 +99,7 @@ describe('ReactFlightDOMRelay', () => {
     const container = document.createElement('div');
     const root = ReactDOM.createRoot(container);
     act(() => {
-      const UserClient = modelClient.User;
-      root.render(<UserClient greeting="Hello" />);
+      root.render(modelClient.greeting);
     });
 
     expect(container.innerHTML).toEqual('<span>Hello, Seb Smith</span>');
@@ -173,11 +153,14 @@ describe('ReactFlightDOMRelay', () => {
       foo: {
         bar: (
           <div>
-            {'Fragment child'}
-            {'Profiler child'}
-            {'StrictMode child'}
-            {'Suspense child'}
-            {['SuspenseList row 1', 'SuspenseList row 2']}
+            Fragment child
+            <Profiler>Profiler child</Profiler>
+            <StrictMode>StrictMode child</StrictMode>
+            <Suspense fallback="Loading...">Suspense child</Suspense>
+            <SuspenseList fallback="Loading...">
+              {'SuspenseList row 1'}
+              {'SuspenseList row 2'}
+            </SuspenseList>
             <div>Hello world</div>
           </div>
         ),
@@ -230,5 +213,24 @@ describe('ReactFlightDOMRelay', () => {
 
     const model = readThrough(transport);
     expect(model).toEqual(14);
+  });
+
+  it('should warn in DEV if a class instance polyfill is passed to a host component', () => {
+    function Bar() {}
+
+    function Foo() {}
+    Foo.prototype = Object.create(Bar.prototype);
+    // This is enumerable which some polyfills do.
+    Foo.prototype.constructor = Foo;
+    Foo.prototype.method = function() {};
+
+    expect(() => {
+      const transport = [];
+      ReactDOMFlightRelayServer.render(<input value={new Foo()} />, transport);
+      readThrough(transport);
+    }).toErrorDev(
+      'Only plain objects can be passed to client components from server components. ',
+      {withoutStack: true},
+    );
   });
 });

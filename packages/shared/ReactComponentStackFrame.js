@@ -17,7 +17,6 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,
-  REACT_BLOCK_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
 
@@ -301,8 +300,6 @@ export function describeUnknownElementTypeFrameInDEV(
       case REACT_MEMO_TYPE:
         // Memo may contain any component type so we recursively resolve it.
         return describeUnknownElementTypeFrameInDEV(type.type, source, ownerFn);
-      case REACT_BLOCK_TYPE:
-        return describeFunctionComponentFrame(type._render, source, ownerFn);
       case REACT_LAZY_TYPE: {
         const lazyComponent: LazyComponent<any, any> = (type: any);
         const payload = lazyComponent._payload;

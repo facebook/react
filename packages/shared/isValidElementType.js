@@ -21,11 +21,14 @@ import {
   REACT_LAZY_TYPE,
   REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
-  REACT_BLOCK_TYPE,
-  REACT_SERVER_BLOCK_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
 } from 'shared/ReactSymbols';
 import {enableScopeAPI} from './ReactFeatureFlags';
+
+let REACT_MODULE_REFERENCE: number | Symbol = 0;
+if (typeof Symbol === 'function') {
+  REACT_MODULE_REFERENCE = Symbol.for('react.module.reference');
+}
 
 export default function isValidElementType(type: mixed) {
   if (typeof type === 'string' || typeof type === 'function') {
@@ -54,8 +57,12 @@ export default function isValidElementType(type: mixed) {
       type.$$typeof === REACT_CONTEXT_TYPE ||
       type.$$typeof === REACT_FORWARD_REF_TYPE ||
       type.$$typeof === REACT_FUNDAMENTAL_TYPE ||
-      type.$$typeof === REACT_BLOCK_TYPE ||
-      type[(0: any)] === REACT_SERVER_BLOCK_TYPE
+      // This needs to include all possible module reference object
+      // types supported by any Flight configuration anywhere since
+      // we don't know which Flight build this will end up being used
+      // with.
+      type.$$typeof === REACT_MODULE_REFERENCE ||
+      type.getModuleId !== undefined
     ) {
       return true;
     }

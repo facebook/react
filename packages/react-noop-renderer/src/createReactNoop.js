@@ -275,6 +275,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       props: Props,
       rootContainerInstance: Container,
       hostContext: HostContext,
+      internalInstanceHandle: Object,
     ): Instance {
       if (type === 'errorInCompletePhase') {
         throw new Error('Error in host config.');
@@ -298,6 +299,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       });
       Object.defineProperty(inst, 'context', {
         value: inst.context,
+        enumerable: false,
+      });
+      Object.defineProperty(inst, 'fiber', {
+        value: internalInstanceHandle,
         enumerable: false,
       });
       return inst;

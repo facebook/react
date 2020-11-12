@@ -200,6 +200,7 @@ function extractEvents(
       nativeEvent.type,
       inCapturePhase,
       accumulateTargetOnly,
+      nativeEvent,
     );
     if (listeners.length > 0) {
       // Intentionally create event lazily.

@@ -54,7 +54,6 @@ import {
   IncompleteClassComponent,
   FundamentalComponent,
   ScopeComponent,
-  Block,
   OffscreenComponent,
   LegacyHiddenComponent,
 } from './ReactWorkTags';
@@ -73,6 +72,7 @@ import {
   NoFlags,
   DidCapture,
   Snapshot,
+  Visibility,
   MutationMask,
   LayoutMask,
   PassiveMask,
@@ -139,7 +139,6 @@ import {
   enableSuspenseServerRenderer,
   enableFundamentalAPI,
   enableScopeAPI,
-  enableBlocksAPI,
   enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {
@@ -739,6 +738,11 @@ function bubbleProperties(completedWork: Fiber) {
         subtreeFlags |= child.subtreeFlags;
         subtreeFlags |= child.flags;
 
+        // Update the return pointer so the tree is consistent. This is a code
+        // smell because it assumes the commit phase is never concurrent with
+        // the render phase. Will address during refactor to alternate model.
+        child.return = completedWork;
+
         child = child.sibling;
       }
     }
@@ -784,6 +788,11 @@ function bubbleProperties(completedWork: Fiber) {
         // ignore them.
         subtreeFlags |= child.subtreeFlags & StaticMask;
         subtreeFlags |= child.flags & StaticMask;
+
+        // Update the return pointer so the tree is consistent. This is a code
+        // smell because it assumes the commit phase is never concurrent with
+        // the render phase. Will address during refactor to alternate model.
+        child.return = completedWork;
 
         child = child.sibling;
       }
@@ -1154,8 +1163,8 @@ function completeWork(
         // TODO: Only schedule updates if not prevDidTimeout.
         if (nextDidTimeout) {
           // If this boundary just timed out, schedule an effect to attach a
-          // retry listener to the promise. This flag is also used to hide the
-          // primary children.
+          // retry listener to the promise.
+          // TODO: Move to passive phase
           workInProgress.flags |= Update;
         }
       }
@@ -1167,7 +1176,7 @@ function completeWork(
           // primary children. In mutation mode, we also need the flag to
           // *unhide* children that were previously hidden, so check if this
           // is currently timed out, too.
-          workInProgress.flags |= Update;
+          workInProgress.flags |= Update | Visibility;
         }
       }
       if (
@@ -1176,6 +1185,7 @@ function completeWork(
         workInProgress.memoizedProps.suspenseCallback != null
       ) {
         // Always notify the callback
+        // TODO: Move to passive phase
         workInProgress.flags |= Update;
       }
       bubbleProperties(workInProgress);
@@ -1503,12 +1513,6 @@ function completeWork(
       }
       break;
     }
-    case Block:
-      if (enableBlocksAPI) {
-        bubbleProperties(workInProgress);
-        return null;
-      }
-      break;
     case OffscreenComponent:
     case LegacyHiddenComponent: {
       popRenderLanes(workInProgress);
@@ -1523,7 +1527,7 @@ function completeWork(
           prevIsHidden !== nextIsHidden &&
           newProps.mode !== 'unstable-defer-without-hiding'
         ) {
-          workInProgress.flags |= Update;
+          workInProgress.flags |= Update | Visibility;
         }
       }
 

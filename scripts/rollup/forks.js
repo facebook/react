@@ -201,18 +201,6 @@ const forks = Object.freeze({
     return 'scheduler/src/SchedulerFeatureFlags';
   },
 
-  'scheduler/src/SchedulerHostConfig': (bundleType, entry, dependencies) => {
-    if (
-      entry === 'scheduler/unstable_mock' ||
-      entry === 'react-noop-renderer' ||
-      entry === 'react-noop-renderer/persistent' ||
-      entry === 'react-test-renderer'
-    ) {
-      return 'scheduler/src/forks/SchedulerHostConfig.mock';
-    }
-    return 'scheduler/src/forks/SchedulerHostConfig.default';
-  },
-
   'shared/consoleWithStackDev': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:

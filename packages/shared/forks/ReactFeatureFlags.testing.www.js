@@ -17,10 +17,10 @@ export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = false;
 export const enableProfilerCommitHooks = false;
+export const enableProfilerNestedUpdatePhase = false;
 export const enableSchedulerTracing = false;
 export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
-export const enableBlocksAPI = true;
 export const enableLazyElements = false;
 export const disableJavaScriptURLs = true;
 export const disableInputAttributeSyncing = false;
@@ -42,7 +42,6 @@ export const warnAboutSpreadingKeyToJSX = false;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = !__EXPERIMENTAL__;
 export const enableFilterEmptyStringAttributesDOM = false;
-export const skipUnmountedBoundaries = __EXPERIMENTAL__;
 
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
@@ -50,6 +49,9 @@ export const decoupleUpdatePriorityFromScheduler = false;
 export const enableDiscreteEventFlushingChange = true;
 
 export const enableDoubleInvokingEffects = false;
+export const enableUseRefAccessWarning = false;
+
+export const enableRecursiveCommitTraversal = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

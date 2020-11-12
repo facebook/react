@@ -50,9 +50,6 @@ export {
   startTransition as unstable_startTransition,
   SuspenseList,
   SuspenseList as unstable_SuspenseList,
-  // enableBlocksAPI
-  block,
-  block as unstable_block,
   // enableScopeAPI
   unstable_Scope,
   unstable_useOpaqueIdentifier,

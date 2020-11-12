@@ -1,10 +1,18 @@
 'use strict';
 
+require.extensions['.client.js'] = function(module, path) {
+  module.exports = {
+    $$typeof: Symbol.for('react.module.reference'),
+    name: path,
+  };
+};
+
 const babelRegister = require('@babel/register');
 
 babelRegister({
   ignore: [/\/(build|node_modules)\//],
   presets: ['react-app'],
+  plugins: ['@babel/transform-modules-commonjs'],
 });
 
 const express = require('express');
@@ -17,7 +25,7 @@ app.get('/', function(req, res) {
       delete require.cache[key];
     }
   }
-  require('./handler')(req, res);
+  require('./handler.server')(req, res);
 });
 
 app.listen(3001, () => {

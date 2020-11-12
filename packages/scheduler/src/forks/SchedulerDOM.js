@@ -11,17 +11,9 @@
 import {
   enableSchedulerDebugging,
   enableProfiling,
-} from './SchedulerFeatureFlags';
-import {
-  requestHostCallback,
-  requestHostTimeout,
-  cancelHostTimeout,
-  shouldYieldToHost,
-  getCurrentTime,
-  forceFrameRate,
-  requestPaint,
-} from './SchedulerHostConfig';
-import {push, pop, peek} from './SchedulerMinHeap';
+} from '../SchedulerFeatureFlags';
+
+import {push, pop, peek} from '../SchedulerMinHeap';
 
 // TODO: Use symbols?
 import {
@@ -30,7 +22,7 @@ import {
   NormalPriority,
   LowPriority,
   IdlePriority,
-} from './SchedulerPriorities';
+} from '../SchedulerPriorities';
 import {
   sharedProfilingBuffer,
   markTaskRun,
@@ -43,7 +35,22 @@ import {
   markTaskStart,
   stopLoggingProfilingEvents,
   startLoggingProfilingEvents,
-} from './SchedulerProfiling';
+} from '../SchedulerProfiling';
+
+import {enableIsInputPending} from '../SchedulerFeatureFlags';
+
+let getCurrentTime;
+const hasPerformanceNow =
+  typeof performance === 'object' && typeof performance.now === 'function';
+
+if (hasPerformanceNow) {
+  const localPerformance = performance;
+  getCurrentTime = () => localPerformance.now();
+} else {
+  const localDate = Date;
+  const initialTime = localDate.now();
+  getCurrentTime = () => localDate.now() - initialTime;
+}
 
 // Max 31 bit integer. The max integer size in V8 for 32-bit systems.
 // Math.pow(2, 30) - 1
@@ -77,6 +84,35 @@ var isPerformingWork = false;
 
 var isHostCallbackScheduled = false;
 var isHostTimeoutScheduled = false;
+
+// Capture local references to native APIs, in case a polyfill overrides them.
+const setTimeout = window.setTimeout;
+const clearTimeout = window.clearTimeout;
+
+if (typeof console !== 'undefined') {
+  // TODO: Scheduler no longer requires these methods to be polyfilled. But
+  // maybe we want to continue warning if they don't exist, to preserve the
+  // option to rely on it in the future?
+  const requestAnimationFrame = window.requestAnimationFrame;
+  const cancelAnimationFrame = window.cancelAnimationFrame;
+
+  if (typeof requestAnimationFrame !== 'function') {
+    // Using console['error'] to evade Babel and ESLint
+    console['error'](
+      "This browser doesn't support requestAnimationFrame. " +
+        'Make sure that you load a ' +
+        'polyfill in older browsers. https://reactjs.org/link/react-polyfills',
+    );
+  }
+  if (typeof cancelAnimationFrame !== 'function') {
+    // Using console['error'] to evade Babel and ESLint
+    console['error'](
+      "This browser doesn't support cancelAnimationFrame. " +
+        'Make sure that you load a ' +
+        'polyfill in older browsers. https://reactjs.org/link/react-polyfills',
+    );
+  }
+}
 
 function advanceTimers(currentTime) {
   // Check for tasks that are no longer delayed and add them to the queue.
@@ -391,6 +427,143 @@ function unstable_cancelCallback(task) {
 
 function unstable_getCurrentPriorityLevel() {
   return currentPriorityLevel;
+}
+
+let isMessageLoopRunning = false;
+let scheduledHostCallback = null;
+let taskTimeoutID = -1;
+
+// Scheduler periodically yields in case there is other work on the main
+// thread, like user events. By default, it yields multiple times per frame.
+// It does not attempt to align with frame boundaries, since most tasks don't
+// need to be frame aligned; for those that do, use requestAnimationFrame.
+let yieldInterval = 5;
+let deadline = 0;
+
+// TODO: Make this configurable
+// TODO: Adjust this based on priority?
+const maxYieldInterval = 300;
+let needsPaint = false;
+
+function shouldYieldToHost() {
+  if (
+    enableIsInputPending &&
+    navigator !== undefined &&
+    navigator.scheduling !== undefined &&
+    navigator.scheduling.isInputPending !== undefined
+  ) {
+    const scheduling = navigator.scheduling;
+    const currentTime = getCurrentTime();
+    if (currentTime >= deadline) {
+      // There's no time left. We may want to yield control of the main
+      // thread, so the browser can perform high priority tasks. The main ones
+      // are painting and user input. If there's a pending paint or a pending
+      // input, then we should yield. But if there's neither, then we can
+      // yield less often while remaining responsive. We'll eventually yield
+      // regardless, since there could be a pending paint that wasn't
+      // accompanied by a call to `requestPaint`, or other main thread tasks
+      // like network events.
+      if (needsPaint || scheduling.isInputPending()) {
+        // There is either a pending paint or a pending input.
+        return true;
+      }
+      // There's no pending input. Only yield if we've reached the max
+      // yield interval.
+      return currentTime >= maxYieldInterval;
+    } else {
+      // There's still time left in the frame.
+      return false;
+    }
+  } else {
+    // `isInputPending` is not available. Since we have no way of knowing if
+    // there's pending input, always yield at the end of the frame.
+    return getCurrentTime() >= deadline;
+  }
+}
+
+function requestPaint() {
+  if (
+    enableIsInputPending &&
+    navigator !== undefined &&
+    navigator.scheduling !== undefined &&
+    navigator.scheduling.isInputPending !== undefined
+  ) {
+    needsPaint = true;
+  }
+
+  // Since we yield every frame regardless, `requestPaint` has no effect.
+}
+
+function forceFrameRate(fps) {
+  if (fps < 0 || fps > 125) {
+    // Using console['error'] to evade Babel and ESLint
+    console['error'](
+      'forceFrameRate takes a positive int between 0 and 125, ' +
+        'forcing frame rates higher than 125 fps is not supported',
+    );
+    return;
+  }
+  if (fps > 0) {
+    yieldInterval = Math.floor(1000 / fps);
+  } else {
+    // reset the framerate
+    yieldInterval = 5;
+  }
+}
+
+const performWorkUntilDeadline = () => {
+  if (scheduledHostCallback !== null) {
+    const currentTime = getCurrentTime();
+    // Yield after `yieldInterval` ms, regardless of where we are in the vsync
+    // cycle. This means there's always time remaining at the beginning of
+    // the message event.
+    deadline = currentTime + yieldInterval;
+    const hasTimeRemaining = true;
+    try {
+      const hasMoreWork = scheduledHostCallback(hasTimeRemaining, currentTime);
+      if (!hasMoreWork) {
+        isMessageLoopRunning = false;
+        scheduledHostCallback = null;
+      } else {
+        // If there's more work, schedule the next message event at the end
+        // of the preceding one.
+        port.postMessage(null);
+      }
+    } catch (error) {
+      // If a scheduler task throws, exit the current browser task so the
+      // error can be observed.
+      port.postMessage(null);
+      throw error;
+    }
+  } else {
+    isMessageLoopRunning = false;
+  }
+  // Yielding to the browser will give it a chance to paint, so we can
+  // reset this.
+  needsPaint = false;
+};
+
+const channel = new MessageChannel();
+const port = channel.port2;
+channel.port1.onmessage = performWorkUntilDeadline;
+
+function requestHostCallback(callback) {
+  scheduledHostCallback = callback;
+  if (!isMessageLoopRunning) {
+    isMessageLoopRunning = true;
+    port.postMessage(null);
+  }
+}
+
+function requestHostTimeout(callback, ms) {
+  taskTimeoutID = setTimeout(() => {
+    callback(getCurrentTime());
+  }, ms);
+}
+
+function cancelHostTimeout() {
+  clearTimeout(taskTimeoutID);
+  taskTimeoutID = -1;
 }
 
 const unstable_requestPaint = requestPaint;

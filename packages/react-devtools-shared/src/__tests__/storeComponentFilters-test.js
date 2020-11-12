@@ -256,5 +256,8 @@ describe('Store component filters', () => {
 
     act(() => ReactDOM.render(<Wrapper shouldSuspend={false} />, container));
     expect(store).toMatchSnapshot('2: resolved');
+
+    act(() => ReactDOM.render(<Wrapper shouldSuspend={true} />, container));
+    expect(store).toMatchSnapshot('3: suspended');
   });
 });

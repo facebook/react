@@ -7,29 +7,44 @@
  * @flow
  */
 
+import type {RowEncoding, JSONValue} from './ReactFlightDOMRelayProtocol';
+
 import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
+
+import JSResourceReference from 'JSResourceReference';
+
+export type ModuleReference<T> = JSResourceReference<T>;
 
 import type {
   Destination,
   BundlerConfig,
-  ModuleReference,
   ModuleMetaData,
 } from 'ReactFlightDOMRelayServerIntegration';
 
 import {resolveModelToJSON} from 'react-server/src/ReactFlightServer';
 
 import {
-  emitModel,
-  emitError,
+  emitRow,
   resolveModuleMetaData as resolveModuleMetaDataImpl,
 } from 'ReactFlightDOMRelayServerIntegration';
 
 export type {
   Destination,
   BundlerConfig,
-  ModuleReference,
   ModuleMetaData,
 } from 'ReactFlightDOMRelayServerIntegration';
+
+export function isModuleReference(reference: Object): boolean {
+  return reference instanceof JSResourceReference;
+}
+
+export type ModuleKey = ModuleReference<any>;
+
+export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
+  // We use the reference object itself as the key because we assume the
+  // object will be cached by the bundler runtime.
+  return reference;
+}
 
 export function resolveModuleMetaData<T>(
   config: BundlerConfig,
@@ -38,29 +53,7 @@ export function resolveModuleMetaData<T>(
   return resolveModuleMetaDataImpl(config, resource);
 }
 
-type JSONValue =
-  | string
-  | number
-  | boolean
-  | null
-  | {+[key: string]: JSONValue}
-  | Array<JSONValue>;
-
-export type Chunk =
-  | {
-      type: 'json',
-      id: number,
-      json: JSONValue,
-    }
-  | {
-      type: 'error',
-      id: number,
-      json: {
-        message: string,
-        stack: string,
-        ...
-      },
-    };
+export type Chunk = RowEncoding;
 
 export function processErrorChunk(
   request: Request,
@@ -68,15 +61,17 @@ export function processErrorChunk(
   message: string,
   stack: string,
 ): Chunk {
-  return {
-    type: 'error',
-    id: id,
-    json: {
+  return [
+    'E',
+    id,
+    {
       message,
       stack,
     },
-  };
+  ];
 }
+
+const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function convertModelToJSON(
   request: Request,
@@ -95,12 +90,14 @@ function convertModelToJSON(
     } else {
       const jsonObj: {[key: string]: JSONValue} = {};
       for (const nextKey in json) {
-        jsonObj[nextKey] = convertModelToJSON(
-          request,
-          json,
-          nextKey,
-          json[nextKey],
-        );
+        if (hasOwnProperty.call(json, nextKey)) {
+          jsonObj[nextKey] = convertModelToJSON(
+            request,
+            json,
+            nextKey,
+            json[nextKey],
+          );
+        }
       }
       return jsonObj;
     }
@@ -114,11 +111,24 @@ export function processModelChunk(
   model: ReactModel,
 ): Chunk {
   const json = convertModelToJSON(request, {}, '', model);
-  return {
-    type: 'json',
-    id: id,
-    json: json,
-  };
+  return ['J', id, json];
+}
+
+export function processModuleChunk(
+  request: Request,
+  id: number,
+  moduleMetaData: ModuleMetaData,
+): Chunk {
+  // The moduleMetaData is already a JSON serializable value.
+  return ['M', id, moduleMetaData];
+}
+
+export function processSymbolChunk(
+  request: Request,
+  id: number,
+  name: string,
+): Chunk {
+  return ['S', id, name];
 }
 
 export function scheduleWork(callback: () => void) {
@@ -130,11 +140,7 @@ export function flushBuffered(destination: Destination) {}
 export function beginWriting(destination: Destination) {}
 
 export function writeChunk(destination: Destination, chunk: Chunk): boolean {
-  if (chunk.type === 'json') {
-    emitModel(destination, chunk.id, chunk.json);
-  } else {
-    emitError(destination, chunk.id, chunk.json.message, chunk.json.stack);
-  }
+  emitRow(destination, chunk);
   return true;
 }
 

@@ -1669,28 +1669,16 @@ describe('DOMPluginEventSystem', () => {
 
             function Test() {
               React.useEffect(() => {
-                const clearClick1 = setClick1(
-                  buttonRef.current,
-                  targetListener1,
-                );
-                const clearClick2 = setClick2(
-                  buttonRef.current,
-                  targetListener2,
-                );
-                const clearClick3 = setClick3(
-                  buttonRef.current,
-                  targetListener3,
-                );
-                const clearClick4 = setClick4(
-                  buttonRef.current,
-                  targetListener4,
-                );
+                setClick1(buttonRef.current, targetListener1);
+                setClick2(buttonRef.current, targetListener2);
+                setClick3(buttonRef.current, targetListener3);
+                setClick4(buttonRef.current, targetListener4);
 
                 return () => {
-                  clearClick1();
-                  clearClick2();
-                  clearClick3();
-                  clearClick4();
+                  setClick1();
+                  setClick2();
+                  setClick3();
+                  setClick4();
                 };
               });
 
@@ -1715,28 +1703,16 @@ describe('DOMPluginEventSystem', () => {
 
             function Test2() {
               React.useEffect(() => {
-                const clearClick1 = setClick1(
-                  buttonRef.current,
-                  targetListener1,
-                );
-                const clearClick2 = setClick2(
-                  buttonRef.current,
-                  targetListener2,
-                );
-                const clearClick3 = setClick3(
-                  buttonRef.current,
-                  targetListener3,
-                );
-                const clearClick4 = setClick4(
-                  buttonRef.current,
-                  targetListener4,
-                );
+                setClick1(buttonRef.current, targetListener1);
+                setClick2(buttonRef.current, targetListener2);
+                setClick3(buttonRef.current, targetListener3);
+                setClick4(buttonRef.current, targetListener4);
 
                 return () => {
-                  clearClick1();
-                  clearClick2();
-                  clearClick3();
-                  clearClick4();
+                  setClick1();
+                  setClick2();
+                  setClick3();
+                  setClick4();
                 };
               });
 
@@ -2425,6 +2401,60 @@ describe('DOMPluginEventSystem', () => {
           });
 
           // @gate experimental
+          it('beforeblur should skip handlers from a deleted subtree after the focused element is unmounted', () => {
+            const onBeforeBlur = jest.fn();
+            const innerRef = React.createRef();
+            const innerRef2 = React.createRef();
+            const setBeforeBlurHandle = ReactDOM.unstable_createEventHandle(
+              'beforeblur',
+            );
+            const ref2 = React.createRef();
+
+            const Component = ({show}) => {
+              const ref = React.useRef(null);
+
+              React.useEffect(() => {
+                const clear1 = setBeforeBlurHandle(ref.current, onBeforeBlur);
+                let clear2;
+                if (ref2.current) {
+                  clear2 = setBeforeBlurHandle(ref2.current, onBeforeBlur);
+                }
+
+                return () => {
+                  clear1();
+                  if (clear2) {
+                    clear2();
+                  }
+                };
+              });
+
+              return (
+                <div ref={ref}>
+                  {show && (
+                    <div ref={ref2}>
+                      <input ref={innerRef} />
+                    </div>
+                  )}
+                  <div ref={innerRef2} />
+                </div>
+              );
+            };
+
+            ReactDOM.render(<Component show={true} />, container);
+            Scheduler.unstable_flushAll();
+
+            const inner = innerRef.current;
+            const target = createEventTarget(inner);
+            target.focus();
+            expect(onBeforeBlur).toHaveBeenCalledTimes(0);
+
+            ReactDOM.render(<Component show={false} />, container);
+            Scheduler.unstable_flushAll();
+
+            expect(onBeforeBlur).toHaveBeenCalledTimes(1);
+          });
+
+          // @gate experimental
           it('beforeblur and afterblur are called after a focused element is suspended', () => {
             const log = [];
             // We have to persist here because we want to read relatedTarget later.
@@ -2506,6 +2536,87 @@ describe('DOMPluginEventSystem', () => {
             );
             resolve();
             expect(log).toEqual(['beforeblur', 'afterblur']);
+
+            document.body.removeChild(container2);
+          });
+
+          // @gate experimental
+          it('beforeblur should skip handlers from a deleted subtree after the focused element is suspended', () => {
+            const onBeforeBlur = jest.fn();
+            const innerRef = React.createRef();
+            const innerRef2 = React.createRef();
+            const setBeforeBlurHandle = ReactDOM.unstable_createEventHandle(
+              'beforeblur',
+            );
+            const ref2 = React.createRef();
+            const Suspense = React.Suspense;
+            let suspend = false;
+            let resolve;
+            const promise = new Promise(
+              resolvePromise => (resolve = resolvePromise),
+            );
+
+            function Child() {
+              if (suspend) {
+                throw promise;
+              } else {
+                return <input ref={innerRef} />;
+              }
+            }
+
+            const Component = () => {
+              const ref = React.useRef(null);
+
+              React.useEffect(() => {
+                const clear1 = setBeforeBlurHandle(ref.current, onBeforeBlur);
+                let clear2;
+                if (ref2.current) {
+                  clear2 = setBeforeBlurHandle(ref2.current, onBeforeBlur);
+                }
+
+                return () => {
+                  clear1();
+                  if (clear2) {
+                    clear2();
+                  }
+                };
+              });
+
+              return (
+                <div ref={ref}>
+                  <Suspense fallback="Loading...">
+                    <div ref={ref2}>
+                      <Child />
+                    </div>
+                  </Suspense>
+                  <div ref={innerRef2} />
+                </div>
+              );
+            };
+
+            const container2 = document.createElement('div');
+            document.body.appendChild(container2);
+
+            const root = ReactDOM.createRoot(container2);
+
+            act(() => {
+              root.render(<Component />);
+            });
+            jest.runAllTimers();
+
+            const inner = innerRef.current;
+            const target = createEventTarget(inner);
+            target.focus();
+            expect(onBeforeBlur).toHaveBeenCalledTimes(0);
+
+            suspend = true;
+            act(() => {
+              root.render(<Component />);
+            });
+            jest.runAllTimers();
+
+            expect(onBeforeBlur).toHaveBeenCalledTimes(1);
+            resolve();
 
             document.body.removeChild(container2);
           });

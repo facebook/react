@@ -169,7 +169,6 @@ export function getInternalReactConstants(
   if (gte(version, '17.0.0-alpha')) {
     // TODO (Offscreen) Update the version number above to reflect the first Offscreen alpha/beta release.
     ReactTypeOfWork = {
-      Block: 22,
       ClassComponent: 1,
       ContextConsumer: 9,
       ContextProvider: 10,
@@ -188,7 +187,7 @@ export function getInternalReactConstants(
       LazyComponent: 16,
       MemoComponent: 14,
       Mode: 8,
-      OffscreenComponent: 23, // Experimental
+      OffscreenComponent: 22, // Experimental
       Profiler: 12,
       SimpleMemoComponent: 15,
       SuspenseComponent: 13,
@@ -197,7 +196,6 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
-      Block: 22,
       ClassComponent: 1,
       ContextConsumer: 9,
       ContextProvider: 10,
@@ -225,7 +223,6 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.4.3-alpha')) {
     ReactTypeOfWork = {
-      Block: -1, // Doesn't exist yet
       ClassComponent: 2,
       ContextConsumer: 11,
       ContextProvider: 12,
@@ -253,7 +250,6 @@ export function getInternalReactConstants(
     };
   } else {
     ReactTypeOfWork = {
-      Block: -1, // Doesn't exist yet
       ClassComponent: 2,
       ContextConsumer: 12,
       ContextProvider: 13,
@@ -1437,6 +1433,9 @@ export function attach(
   }
 
   function recordResetChildren(fiber: Fiber, childSet: Fiber) {
+    if (__DEBUG__) {
+      debug('recordResetChildren()', childSet, fiber);
+    }
     // The frontend only really cares about the displayName, key, and children.
     // The first two don't really change, so we are only concerned with the order of children here.
     // This is trickier than a simple comparison though, since certain types of fibers are filtered.
@@ -1471,6 +1470,23 @@ export function attach(
       nextChildren.push(getFiberID(getPrimaryFiber(fiber)));
     } else {
       let child = fiber.child;
+      const isTimedOutSuspense =
+        fiber.tag === SuspenseComponent && fiber.memoizedState !== null;
+      if (isTimedOutSuspense) {
+        // Special case: if Suspense mounts in a timed-out state,
+        // get the fallback child from the inner fragment,
+        // and skip over the primary child.
+        const primaryChildFragment = fiber.child;
+        const fallbackChildFragment = primaryChildFragment
+          ? primaryChildFragment.sibling
+          : null;
+        const fallbackChild = fallbackChildFragment
+          ? fallbackChildFragment.child
+          : null;
+        if (fallbackChild !== null) {
+          child = fallbackChild;
+        }
+      }
       while (child !== null) {
         findReorderedChildrenRecursively(child, nextChildren);
         child = child.sibling;
@@ -1592,7 +1608,7 @@ export function attach(
       if (nextFallbackChildSet != null) {
         mountFiberRecursively(
           nextFallbackChildSet,
-          nextFiber,
+          shouldIncludeInTree ? nextFiber : parentFiber,
           true,
           traceNearestHostComponentUpdate,
         );
@@ -2868,18 +2884,25 @@ export function attach(
           }
           break;
         case 'props':
-          if (instance === null) {
-            if (typeof overrideProps === 'function') {
-              overrideProps(fiber, path, value);
-            }
-          } else {
-            fiber.pendingProps = copyWithSet(instance.props, path, value);
-            instance.forceUpdate();
+          switch (fiber.tag) {
+            case ClassComponent:
+              fiber.pendingProps = copyWithSet(instance.props, path, value);
+              instance.forceUpdate();
+              break;
+            default:
+              if (typeof overrideProps === 'function') {
+                overrideProps(fiber, path, value);
+              }
+              break;
           }
           break;
         case 'state':
-          setInObject(instance.state, path, value);
-          instance.forceUpdate();
+          switch (fiber.tag) {
+            case ClassComponent:
+              setInObject(instance.state, path, value);
+              instance.forceUpdate();
+              break;
+          }
           break;
       }
     }
