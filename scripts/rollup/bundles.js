@@ -283,7 +283,7 @@ const bundles = [
     moduleType: RENDERER_UTILS,
     entry: 'react-transport-dom-webpack/plugin',
     global: 'ReactFlightWebpackPlugin',
-    externals: [],
+    externals: ['fs', 'path', 'url'],
   },
 
   /******* React Transport DOM Webpack Node.js Loader *******/

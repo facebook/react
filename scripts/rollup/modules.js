@@ -9,6 +9,8 @@ const {UMD_DEV, UMD_PROD, UMD_PROFILING} = require('./bundles').bundleTypes;
 const HAS_NO_SIDE_EFFECTS_ON_IMPORT = false;
 // const HAS_SIDE_EFFECTS_ON_IMPORT = true;
 const importSideEffects = Object.freeze({
+  fs: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  path: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'prop-types/checkPropTypes': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   scheduler: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
@@ -17,6 +19,7 @@ const importSideEffects = Object.freeze({
   'react/jsx-dev-runtime': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-fetch/node': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-dom': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  url: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
 });
 
 // Bundles exporting globals that other modules rely on.
