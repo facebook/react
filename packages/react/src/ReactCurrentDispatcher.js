@@ -7,7 +7,6 @@
  * @flow
  */
 
-
 /**
  * Keeps track of the current dispatcher.
  */
