@@ -1,9 +1,11 @@
 {
   "name": "flight",
+  "type": "module",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
     "@babel/core": "7.6.0",
+    "@babel/plugin-syntax-import-meta": "^7.10.4",
     "@babel/register": "^7.7.0",
     "@svgr/webpack": "4.3.2",
     "@typescript-eslint/eslint-plugin": "^2.2.0",
@@ -65,7 +67,7 @@
     "prebuild": "cp -r ../../build/node_modules/* ./node_modules/",
     "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
     "start:client": "node scripts/start.js",
-    "start:server": "NODE_ENV=development node server",
+    "start:server": "NODE_ENV=development node --experimental-loader ./server/loader.mjs server",
     "start:prod": "node scripts/build.js && NODE_ENV=production node server",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom"

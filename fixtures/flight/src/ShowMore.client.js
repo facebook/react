@@ -1,6 +1,6 @@
 import * as React from 'react';
 
-import Container from './Container';
+import Container from './Container.js';
 
 export default function ShowMore({children}) {
   const [show, setShow] = React.useState(false);

@@ -14,6 +14,7 @@
     "@babel/plugin-proposal-class-properties": "^7.10.4",
     "@babel/plugin-proposal-object-rest-spread": "^7.11.0",
     "@babel/plugin-syntax-dynamic-import": "^7.8.3",
+    "@babel/plugin-syntax-import-meta": "^7.10.4",
     "@babel/plugin-syntax-jsx": "^7.10.4",
     "@babel/plugin-transform-arrow-functions": "^7.10.4",
     "@babel/plugin-transform-async-to-generator": "^7.10.4",

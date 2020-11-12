@@ -1,10 +1,10 @@
 import * as React from 'react';
 
-import Container from './Container';
+import Container from './Container.js';
 
-import Counter from './Counter.client';
+import Counter from './Counter.client.js';
 
-import ShowMore from './ShowMore.client';
+import ShowMore from './ShowMore.client.js';
 
 export default function App() {
   return (

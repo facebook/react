@@ -25,7 +25,8 @@ app.get('/', function(req, res) {
       delete require.cache[key];
     }
   }
-  require('./handler.server')(req, res);
+  import('./handler.server.mjs').then(m => m.default(req, res));
+  //   require('./handler.server.js')(req, res);
 });
 
 app.listen(3001, () => {
