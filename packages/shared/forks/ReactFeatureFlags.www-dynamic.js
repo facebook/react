@@ -25,6 +25,8 @@ export const decoupleUpdatePriorityFromScheduler = __VARIANT__;
 // NOTE: This feature will only work in DEV mode; all callsights are wrapped with __DEV__.
 export const enableDebugTracing = __EXPERIMENTAL__;
 
+export const enableSchedulingProfiler = __VARIANT__;
+
 // This only has an effect in the new reconciler. But also, the new reconciler
 // is only enabled when __VARIANT__ is true. So this is set to the opposite of
 // __VARIANT__ so that it's `false` when running against the new reconciler.
