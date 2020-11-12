@@ -18,22 +18,56 @@ describe('SchedulingProfiler', () => {
   let ReactNoop;
   let Scheduler;
 
+  let clearedMarks;
+  let featureDetectionMarkName = null;
   let marks;
 
   function createUserTimingPolyfill() {
+    featureDetectionMarkName = null;
+
+    clearedMarks = [];
+    marks = [];
+
     // This is not a true polyfill, but it gives us enough to capture marks.
     // Reference: https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API
     return {
-      mark(markName) {
+      clearMarks(markName) {
+        clearedMarks.push(markName);
+        marks = marks.filter(mark => mark !== markName);
+      },
+      mark(markName, markOptions) {
+        if (featureDetectionMarkName === null) {
+          featureDetectionMarkName = markName;
+        }
         marks.push(markName);
+        if (markOptions != null) {
+          // This is triggers the feature detection.
+          markOptions.startTime++;
+        }
       },
     };
   }
 
+  function clearPendingMarks() {
+    clearedMarks.splice(0);
+  }
+
+  function expectMarksToContain(expectedMarks) {
+    expect(clearedMarks).toContain(expectedMarks);
+  }
+
+  function expectMarksToEqual(expectedMarks) {
+    expect(
+      clearedMarks[0] === featureDetectionMarkName
+        ? clearedMarks.slice(1)
+        : clearedMarks,
+    ).toEqual(expectedMarks);
+  }
+
   beforeEach(() => {
     jest.resetModules();
+
     global.performance = createUserTimingPolyfill();
-    marks = [];
 
     React = require('react');
 
@@ -45,25 +79,28 @@ describe('SchedulingProfiler', () => {
   });
 
   afterEach(() => {
+    // Verify all logged marks also get cleared.
+    expect(marks).toHaveLength(0);
+
     delete global.performance;
   });
 
   // @gate !enableSchedulingProfiler
   it('should not mark if enableSchedulingProfiler is false', () => {
     ReactTestRenderer.create(<div />);
-    expect(marks).toEqual([]);
+    expectMarksToEqual([]);
   });
 
   // @gate enableSchedulingProfiler
   it('should log React version on initialization', () => {
-    expect(marks).toEqual([`--react-init-${ReactVersion}`]);
+    expectMarksToEqual([`--react-init-${ReactVersion}`]);
   });
 
   // @gate enableSchedulingProfiler
   it('should mark sync render without suspends or state updates', () => {
     ReactTestRenderer.create(<div />);
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       `--react-init-${ReactVersion}`,
       '--schedule-render-1',
       '--render-start-1',
@@ -79,16 +116,16 @@ describe('SchedulingProfiler', () => {
   it('should mark concurrent render without suspends or state updates', () => {
     ReactTestRenderer.create(<div />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       `--react-init-${ReactVersion}`,
       '--schedule-render-512',
     ]);
 
-    marks.splice(0);
+    clearPendingMarks();
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       '--render-start-512',
       '--render-stop',
       '--commit-start-512',
@@ -114,7 +151,7 @@ describe('SchedulingProfiler', () => {
     // Do one step of work.
     expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       `--react-init-${ReactVersion}`,
       '--schedule-render-512',
       '--render-start-512',
@@ -135,7 +172,7 @@ describe('SchedulingProfiler', () => {
       </React.Suspense>,
     );
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       `--react-init-${ReactVersion}`,
       '--schedule-render-1',
       '--render-start-1',
@@ -147,10 +184,10 @@ describe('SchedulingProfiler', () => {
       '--commit-stop',
     ]);
 
-    marks.splice(0);
+    clearPendingMarks();
 
     await fakeSuspensePromise;
-    expect(marks).toEqual(['--suspense-resolved-0-Example']);
+    expectMarksToEqual(['--suspense-resolved-0-Example']);
   });
 
   // @gate enableSchedulingProfiler
@@ -166,7 +203,7 @@ describe('SchedulingProfiler', () => {
       </React.Suspense>,
     );
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       `--react-init-${ReactVersion}`,
       '--schedule-render-1',
       '--render-start-1',
@@ -178,10 +215,10 @@ describe('SchedulingProfiler', () => {
       '--commit-stop',
     ]);
 
-    marks.splice(0);
+    clearPendingMarks();
 
     await expect(fakeSuspensePromise).rejects.toThrow();
-    expect(marks).toEqual(['--suspense-rejected-0-Example']);
+    expectMarksToEqual(['--suspense-rejected-0-Example']);
   });
 
   // @gate enableSchedulingProfiler
@@ -198,16 +235,16 @@ describe('SchedulingProfiler', () => {
       {unstable_isConcurrent: true},
     );
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       `--react-init-${ReactVersion}`,
       '--schedule-render-512',
     ]);
 
-    marks.splice(0);
+    clearPendingMarks();
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       '--render-start-512',
       '--suspense-suspend-0-Example',
       '--render-stop',
@@ -217,10 +254,10 @@ describe('SchedulingProfiler', () => {
       '--commit-stop',
     ]);
 
-    marks.splice(0);
+    clearPendingMarks();
 
     await fakeSuspensePromise;
-    expect(marks).toEqual(['--suspense-resolved-0-Example']);
+    expectMarksToEqual(['--suspense-resolved-0-Example']);
   });
 
   // @gate enableSchedulingProfiler
@@ -237,16 +274,16 @@ describe('SchedulingProfiler', () => {
       {unstable_isConcurrent: true},
     );
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       `--react-init-${ReactVersion}`,
       '--schedule-render-512',
     ]);
 
-    marks.splice(0);
+    clearPendingMarks();
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       '--render-start-512',
       '--suspense-suspend-0-Example',
       '--render-stop',
@@ -256,10 +293,10 @@ describe('SchedulingProfiler', () => {
       '--commit-stop',
     ]);
 
-    marks.splice(0);
+    clearPendingMarks();
 
     await expect(fakeSuspensePromise).rejects.toThrow();
-    expect(marks).toEqual(['--suspense-rejected-0-Example']);
+    expectMarksToEqual(['--suspense-rejected-0-Example']);
   });
 
   // @gate enableSchedulingProfiler
@@ -276,16 +313,16 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       `--react-init-${ReactVersion}`,
       '--schedule-render-512',
     ]);
 
-    marks.splice(0);
+    clearPendingMarks();
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       '--render-start-512',
       '--render-stop',
       '--commit-start-512',
@@ -313,16 +350,16 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       `--react-init-${ReactVersion}`,
       '--schedule-render-512',
     ]);
 
-    marks.splice(0);
+    clearPendingMarks();
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       '--render-start-512',
       '--render-stop',
       '--commit-start-512',
@@ -351,12 +388,12 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       `--react-init-${ReactVersion}`,
       '--schedule-render-512',
     ]);
 
-    marks.splice(0);
+    clearPendingMarks();
 
     expect(() => {
       expect(Scheduler).toFlushUntilNextPaint([]);
@@ -364,8 +401,8 @@ describe('SchedulingProfiler', () => {
 
     gate(({old}) =>
       old
-        ? expect(marks).toContain('--schedule-state-update-1024-Example')
-        : expect(marks).toContain('--schedule-state-update-512-Example'),
+        ? expectMarksToContain('--schedule-state-update-1024-Example')
+        : expectMarksToContain('--schedule-state-update-512-Example'),
     );
   });
 
@@ -383,12 +420,12 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       `--react-init-${ReactVersion}`,
       '--schedule-render-512',
     ]);
 
-    marks.splice(0);
+    clearPendingMarks();
 
     expect(() => {
       expect(Scheduler).toFlushUntilNextPaint([]);
@@ -396,8 +433,8 @@ describe('SchedulingProfiler', () => {
 
     gate(({old}) =>
       old
-        ? expect(marks).toContain('--schedule-forced-update-1024-Example')
-        : expect(marks).toContain('--schedule-forced-update-512-Example'),
+        ? expectMarksToContain('--schedule-forced-update-1024-Example')
+        : expectMarksToContain('--schedule-forced-update-512-Example'),
     );
   });
 
@@ -413,16 +450,16 @@ describe('SchedulingProfiler', () => {
 
     ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       `--react-init-${ReactVersion}`,
       '--schedule-render-512',
     ]);
 
-    marks.splice(0);
+    clearPendingMarks();
 
     expect(Scheduler).toFlushUntilNextPaint([]);
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       '--render-start-512',
       '--render-stop',
       '--commit-start-512',
@@ -451,7 +488,7 @@ describe('SchedulingProfiler', () => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 
-    expect(marks).toEqual([
+    expectMarksToEqual([
       `--react-init-${ReactVersion}`,
       '--schedule-render-512',
       '--render-start-512',
@@ -486,8 +523,8 @@ describe('SchedulingProfiler', () => {
 
     gate(({old}) =>
       old
-        ? expect(marks).toContain('--schedule-state-update-1024-Example')
-        : expect(marks).toContain('--schedule-state-update-512-Example'),
+        ? expectMarksToContain('--schedule-state-update-1024-Example')
+        : expectMarksToContain('--schedule-state-update-512-Example'),
     );
   });
 });
