@@ -9,6 +9,14 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.10.0 (November 12, 2020)
+#### Features
+* Make DevTools Websocket retry delay configurable ([bvaughn](https://github.com/bvaughn) in [#20107](https://github.com/facebook/react/pull/20107))
+#### Bugfix
+* Fix error loading source maps for devtools extension ([sytranvn](https://github.com/sytranvn) in [#20079](https://github.com/facebook/react/pull/20079))
+* Remove css-sourcemap for `react-devtools-inline` ([sean9keenan](https://github.com/sean9keenan) in [#20170](https://github.com/facebook/react/pull/20170))
+* Decrease NPM update notification/prompt for standalone DevTools ([recurx](https://github.com/recurx) in [#20078](https://github.com/facebook/react/pull/20078))
+
 ## 4.9.0 (October 19, 2020)
 #### Features
 * [Improved DevTools editing interface](#improved-devtools-editing-interface) ([bvaughn](https://github.com/bvaughn) in [#19774](https://github.com/facebook/react/pull/19774))
