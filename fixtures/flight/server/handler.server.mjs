@@ -1,4 +1,4 @@
-import {pipeToNodeWritable} from 'react-transport-dom-webpack/server.js';
+import {pipeToNodeWritable} from 'react-transport-dom-webpack/server';
 import * as React from 'react';
 import App from '../src/App.server.js';
 
@@ -10,8 +10,10 @@ function resolve(relative) {
 }
 
 export default function(req, res) {
+  // In case this was a transpiled CommonJS import.
+  const AppOrDefault = App.default || App;
   res.setHeader('Access-Control-Allow-Origin', '*');
-  pipeToNodeWritable(<App />, res, {
+  pipeToNodeWritable(<AppOrDefault />, res, {
     // TODO: Read from a map on the disk.
     [resolve('../src/Counter.client.js')]: {
       id: './src/Counter.client.js',

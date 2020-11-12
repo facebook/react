@@ -1,9 +1,11 @@
 'use strict';
 
+const url = require('url');
+
 require.extensions['.client.js'] = function(module, path) {
   module.exports = {
     $$typeof: Symbol.for('react.module.reference'),
-    name: path,
+    name: url.pathToFileURL(path).href,
   };
 };
 
@@ -26,7 +28,7 @@ app.get('/', function(req, res) {
     }
   }
   import('./handler.server.mjs').then(m => m.default(req, res));
-  //   require('./handler.server.js')(req, res);
+  // require('./handler.server.js')(req, res);
 });
 
 app.listen(3001, () => {

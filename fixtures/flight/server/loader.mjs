@@ -1,6 +1,13 @@
+import {
+  resolve,
+  getSource,
+} from 'react-transport-dom-webpack/node-loader';
+
+export {resolve, getSource};
+
 import babel from '@babel/core';
 
-const options = {
+const babelOptions = {
   babelrc: false,
   ignore: [/\/(build|node_modules)\//],
   plugins: [
@@ -9,34 +16,15 @@ const options = {
   ],
 };
 
-const optionsCommonJS = {
-  ignore: [/\/(build|node_modules)\//],
-  presets: ['react-app'],
-  plugins: ['@babel/transform-modules-commonjs'],
-};
-
 export async function transformSource(source, context, defaultTransformSource) {
   const {format} = context;
-  if (format === 'module' || format === 'commonjs') {
+  if (format === 'module') {
     const opt = Object.assign(
       {filename: context.url},
-      format === 'commonjs' ? optionsCommonJS : options
+      babelOptions
     );
     const {code} = await babel.transformAsync(source, opt);
     return {source: code};
   }
-  return defaultTransformSource(source, context);
-}
-
-export async function getSource(url, context, defaultGetSource) {
-  if (url.endsWith('.client.js')) {
-    const name = url;
-    return {
-      source:
-        "export default { $$typeof: Symbol.for('react.module.reference'), name: " +
-        JSON.stringify(name) +
-        '}',
-    };
-  }
-  return defaultGetSource(url, context, defaultGetSource);
+  return defaultTransformSource(source, context, defaultTransformSource);
 }
