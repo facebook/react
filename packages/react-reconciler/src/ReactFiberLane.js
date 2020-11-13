@@ -7,7 +7,14 @@
  * @flow
  */
 
-import type {FiberRoot, ReactPriorityLevel, Lane, LanePriority, LaneMap, Lanes} from './ReactInternalTypes';
+import type {
+  FiberRoot,
+  ReactPriorityLevel,
+  Lane,
+  LanePriority,
+  LaneMap,
+  Lanes,
+} from './ReactInternalTypes';
 
 // unwind-cycles: Re-export lane definitions here
 export type {Lane, LanePriority, LaneMap, Lanes};

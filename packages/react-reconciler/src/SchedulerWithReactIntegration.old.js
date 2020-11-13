@@ -14,7 +14,6 @@ import {
   NormalPriority,
   LowPriority,
   IdlePriority,
-  NoPriority,
 } from './ReactFiberSchedulerPriorities';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
