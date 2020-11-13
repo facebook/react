@@ -17,7 +17,7 @@ import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
 
-import ReactCurrentDispatcher from './ReactCurrentDispatcher';
+import ReactCurrentDispatcher from 'shared/ReactCurrentDispatcher';
 
 type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;

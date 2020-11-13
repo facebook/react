@@ -6,7 +6,7 @@
  * @flow
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 import type {Props} from '../client/ReactDOMHostConfig';
 
 import invariant from 'shared/invariant';

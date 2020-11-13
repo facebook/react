@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactPriorityLevel} from './ReactInternalTypes';
+import type {ReactPriorityLevel} from 'shared/ReactInternalTypes';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.

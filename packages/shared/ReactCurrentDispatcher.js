@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
+import type {Dispatcher} from 'shared/ReactInternalTypes';
 
 /**
  * Keeps track of the current dispatcher.

@@ -84,7 +84,7 @@
 // regardless of priority. Intermediate state may vary according to system
 // resources, but the final state is always the same.
 
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 
 import {NoLane, NoLanes, isSubsetOfLanes, mergeLanes} from './ReactFiberLane';

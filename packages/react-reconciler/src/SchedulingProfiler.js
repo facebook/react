@@ -8,7 +8,7 @@
  */
 
 import type {Lane, Lanes} from './ReactFiberLane';
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 import type {Wakeable} from 'shared/ReactTypes';
 
 import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';

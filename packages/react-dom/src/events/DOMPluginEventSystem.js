@@ -19,7 +19,7 @@ import type {
   KnownReactSyntheticEvent,
   ReactSyntheticEvent,
 } from './ReactSyntheticEventType';
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 
 import {allNativeEvents} from './EventRegistry';
 import {

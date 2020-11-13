@@ -8,7 +8,7 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
-import type {Fiber, ContextDependency} from './ReactInternalTypes';
+import type {Fiber, ContextDependency} from 'shared/ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.new';
 import type {Lanes} from './ReactFiberLane';
 

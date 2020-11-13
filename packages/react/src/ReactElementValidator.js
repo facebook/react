@@ -24,7 +24,7 @@ import {
 import {warnAboutSpreadingKeyToJSX} from 'shared/ReactFeatureFlags';
 import checkPropTypes from 'shared/checkPropTypes';
 
-import ReactCurrentOwner from './ReactCurrentOwner';
+import ReactCurrentOwner from 'shared/ReactCurrentOwner';
 import {
   isValidElement,
   createElement,

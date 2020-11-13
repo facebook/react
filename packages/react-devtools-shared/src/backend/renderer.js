@@ -77,7 +77,7 @@ import {
   MEMO_SYMBOL_STRING,
 } from './ReactSymbols';
 
-import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
+import type {Fiber} from 'shared/ReactInternalTypes';
 import type {
   ChangeDescription,
   CommitDataBackend,

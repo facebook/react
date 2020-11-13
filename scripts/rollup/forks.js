@@ -212,7 +212,7 @@ const forks = Object.freeze({
 
   // In FB bundles, we preserve an inline require to ReactCurrentOwner.
   // See the explanation in FB version of ReactCurrentOwner in www:
-  'react/src/ReactCurrentOwner': (bundleType, entry) => {
+  'shared/ReactCurrentOwner': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
@@ -225,7 +225,7 @@ const forks = Object.freeze({
 
   // Similarly, we preserve an inline require to ReactCurrentDispatcher.
   // See the explanation in FB version of ReactCurrentDispatcher in www:
-  'react/src/ReactCurrentDispatcher': (bundleType, entry) => {
+  'shared/ReactCurrentDispatcher': (bundleType, entry) => {
     switch (bundleType) {
       case FB_WWW_DEV:
       case FB_WWW_PROD:
