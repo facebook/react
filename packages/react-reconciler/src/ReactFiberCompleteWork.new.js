@@ -178,12 +178,18 @@ function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {
     return true;
   }
 
+  if ((completedWork.flags & Deletion) !== NoFlags) {
+    return false;
+  }
+
+  // TODO: If we move the `hadNoMutationsEffects` call after `bubbleProperties`
+  // then we only have to check the `completedWork.subtreeFlags`.
   let child = completedWork.child;
   while (child !== null) {
-    if ((child.flags & MutationMask) !== NoFlags) {
+    if ((child.flags & (MutationMask | Deletion)) !== NoFlags) {
       return false;
     }
-    if ((child.subtreeFlags & MutationMask) !== NoFlags) {
+    if ((child.subtreeFlags & (MutationMask | Deletion)) !== NoFlags) {
       return false;
     }
     child = child.sibling;
