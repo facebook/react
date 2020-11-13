@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {Lanes, Lane} from './ReactFiberLane';
+import type {Lanes} from './ReactFiberLane';
 import type {
   ReactFundamentalComponentInstance,
   ReactScopeInstance,
@@ -57,28 +57,8 @@ import {
   OffscreenComponent,
   LegacyHiddenComponent,
 } from './ReactWorkTags';
-import {
-  NoMode,
-  BlockingMode,
-  ConcurrentMode,
-  ProfileMode,
-} from './ReactTypeOfMode';
-import {
-  Ref,
-  Update,
-  Callback,
-  Passive,
-  Deletion,
-  NoFlags,
-  DidCapture,
-  Snapshot,
-  Visibility,
-  MutationMask,
-  LayoutMask,
-  PassiveMask,
-  StaticMask,
-  PerformedWork,
-} from './ReactFiberFlags';
+import {NoMode, BlockingMode, ProfileMode} from './ReactTypeOfMode';
+import {Ref, Update, NoFlags, DidCapture, Snapshot} from './ReactFiberFlags';
 import invariant from 'shared/invariant';
 
 import {
@@ -148,16 +128,9 @@ import {
   renderHasNotSuspendedYet,
   popRenderLanes,
   getRenderTargetTime,
-  subtreeRenderLanes,
 } from './ReactFiberWorkLoop.new';
 import {createFundamentalStateInstance} from './ReactFiberFundamental.new';
-import {
-  OffscreenLane,
-  SomeRetryLane,
-  NoLanes,
-  includesSomeLane,
-  mergeLanes,
-} from './ReactFiberLane';
+import {OffscreenLane, SomeRetryLane} from './ReactFiberLane';
 import {resetChildFibers} from './ReactChildFiber.new';
 import {createScopeInstance} from './ReactFiberScope.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
@@ -170,31 +143,6 @@ function markUpdate(workInProgress: Fiber) {
 
 function markRef(workInProgress: Fiber) {
   workInProgress.flags |= Ref;
-}
-
-function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {
-  const didBailout = current !== null && current.child === completedWork.child;
-  if (didBailout) {
-    return true;
-  }
-
-  if ((completedWork.flags & Deletion) !== NoFlags) {
-    return false;
-  }
-
-  // TODO: If we move the `hadNoMutationsEffects` call after `bubbleProperties`
-  // then we only have to check the `completedWork.subtreeFlags`.
-  let child = completedWork.child;
-  while (child !== null) {
-    if ((child.flags & (MutationMask | Deletion)) !== NoFlags) {
-      return false;
-    }
-    if ((child.subtreeFlags & (MutationMask | Deletion)) !== NoFlags) {
-      return false;
-    }
-    child = child.sibling;
-  }
-  return true;
 }
 
 let appendAllChildren;
@@ -241,7 +189,7 @@ if (supportsMutation) {
     }
   };
 
-  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
+  updateHostContainer = function(workInProgress: Fiber) {
     // Noop
   };
   updateHostComponent = function(
@@ -485,13 +433,13 @@ if (supportsMutation) {
       node = node.sibling;
     }
   };
-  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
+  updateHostContainer = function(workInProgress: Fiber) {
     const portalOrRoot: {
       containerInfo: Container,
       pendingChildren: ChildSet,
       ...
     } = workInProgress.stateNode;
-    const childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
+    const childrenUnchanged = workInProgress.firstEffect === null;
     if (childrenUnchanged) {
       // No changes, just reuse the existing instance.
     } else {
@@ -516,7 +464,7 @@ if (supportsMutation) {
     const oldProps = current.memoizedProps;
     // If there are no effects associated with this node, then none of our children had any updates.
     // This guarantees that we can reuse all of them.
-    const childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
+    const childrenUnchanged = workInProgress.firstEffect === null;
     if (childrenUnchanged && oldProps === newProps) {
       // No changes, just reuse the existing instance.
       // Note that this might release a previous clone.
@@ -599,7 +547,7 @@ if (supportsMutation) {
   };
 } else {
   // No host operations
-  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
+  updateHostContainer = function(workInProgress: Fiber) {
     // Noop
   };
   updateHostComponent = function(
@@ -692,126 +640,6 @@ function cutOffTailIfNeeded(
   }
 }
 
-function bubbleProperties(completedWork: Fiber) {
-  const didBailout =
-    completedWork.alternate !== null &&
-    completedWork.alternate.child === completedWork.child;
-
-  let newChildLanes = NoLanes;
-  let subtreeFlags = NoFlags;
-
-  if (!didBailout) {
-    // Bubble up the earliest expiration time.
-    if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
-      // In profiling mode, resetChildExpirationTime is also used to reset
-      // profiler durations.
-      let actualDuration = completedWork.actualDuration;
-      let treeBaseDuration = ((completedWork.selfBaseDuration: any): number);
-
-      let child = completedWork.child;
-      while (child !== null) {
-        newChildLanes = mergeLanes(
-          newChildLanes,
-          mergeLanes(child.lanes, child.childLanes),
-        );
-
-        subtreeFlags |= child.subtreeFlags;
-        subtreeFlags |= child.flags;
-
-        // When a fiber is cloned, its actualDuration is reset to 0. This value will
-        // only be updated if work is done on the fiber (i.e. it doesn't bailout).
-        // When work is done, it should bubble to the parent's actualDuration. If
-        // the fiber has not been cloned though, (meaning no work was done), then
-        // this value will reflect the amount of time spent working on a previous
-        // render. In that case it should not bubble. We determine whether it was
-        // cloned by comparing the child pointer.
-        actualDuration += child.actualDuration;
-
-        treeBaseDuration += child.treeBaseDuration;
-        child = child.sibling;
-      }
-
-      completedWork.actualDuration = actualDuration;
-      completedWork.treeBaseDuration = treeBaseDuration;
-    } else {
-      let child = completedWork.child;
-      while (child !== null) {
-        newChildLanes = mergeLanes(
-          newChildLanes,
-          mergeLanes(child.lanes, child.childLanes),
-        );
-
-        subtreeFlags |= child.subtreeFlags;
-        subtreeFlags |= child.flags;
-
-        // Update the return pointer so the tree is consistent. This is a code
-        // smell because it assumes the commit phase is never concurrent with
-        // the render phase. Will address during refactor to alternate model.
-        child.return = completedWork;
-
-        child = child.sibling;
-      }
-    }
-
-    completedWork.subtreeFlags |= subtreeFlags;
-  } else {
-    // Bubble up the earliest expiration time.
-    if (enableProfilerTimer && (completedWork.mode & ProfileMode) !== NoMode) {
-      // In profiling mode, resetChildExpirationTime is also used to reset
-      // profiler durations.
-      let treeBaseDuration = ((completedWork.selfBaseDuration: any): number);
-
-      let child = completedWork.child;
-      while (child !== null) {
-        newChildLanes = mergeLanes(
-          newChildLanes,
-          mergeLanes(child.lanes, child.childLanes),
-        );
-
-        // "Static" flags share the lifetime of the fiber/hook they belong to,
-        // so we should bubble those up even during a bailout. All the other
-        // flags have a lifetime only of a single render + commit, so we should
-        // ignore them.
-        subtreeFlags |= child.subtreeFlags & StaticMask;
-        subtreeFlags |= child.flags & StaticMask;
-
-        treeBaseDuration += child.treeBaseDuration;
-        child = child.sibling;
-      }
-
-      completedWork.treeBaseDuration = treeBaseDuration;
-    } else {
-      let child = completedWork.child;
-      while (child !== null) {
-        newChildLanes = mergeLanes(
-          newChildLanes,
-          mergeLanes(child.lanes, child.childLanes),
-        );
-
-        // "Static" flags share the lifetime of the fiber/hook they belong to,
-        // so we should bubble those up even during a bailout. All the other
-        // flags have a lifetime only of a single render + commit, so we should
-        // ignore them.
-        subtreeFlags |= child.subtreeFlags & StaticMask;
-        subtreeFlags |= child.flags & StaticMask;
-
-        // Update the return pointer so the tree is consistent. This is a code
-        // smell because it assumes the commit phase is never concurrent with
-        // the render phase. Will address during refactor to alternate model.
-        child.return = completedWork;
-
-        child = child.sibling;
-      }
-    }
-
-    completedWork.subtreeFlags |= subtreeFlags;
-  }
-
-  completedWork.childLanes = newChildLanes;
-
-  return didBailout;
-}
-
 function completeWork(
   current: Fiber | null,
   workInProgress: Fiber,
@@ -827,16 +655,15 @@ function completeWork(
     case ForwardRef:
     case Fragment:
     case Mode:
+    case Profiler:
     case ContextConsumer:
     case MemoComponent:
-      bubbleProperties(workInProgress);
       return null;
     case ClassComponent: {
       const Component = workInProgress.type;
       if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
       }
-      bubbleProperties(workInProgress);
       return null;
     }
     case HostRoot: {
@@ -864,8 +691,7 @@ function completeWork(
           workInProgress.flags |= Snapshot;
         }
       }
-      updateHostContainer(current, workInProgress);
-      bubbleProperties(workInProgress);
+      updateHostContainer(workInProgress);
       return null;
     }
     case HostComponent: {
@@ -892,7 +718,6 @@ function completeWork(
               'caused by a bug in React. Please file an issue.',
           );
           // This can happen when we abort work.
-          bubbleProperties(workInProgress);
           return null;
         }
 
@@ -950,7 +775,6 @@ function completeWork(
           markRef(workInProgress);
         }
       }
-      bubbleProperties(workInProgress);
       return null;
     }
     case HostText: {
@@ -985,58 +809,6 @@ function completeWork(
           );
         }
       }
-      bubbleProperties(workInProgress);
-      return null;
-    }
-    case Profiler: {
-      const didBailout = bubbleProperties(workInProgress);
-      if (!didBailout) {
-        // Use subtreeFlags to determine which commit callbacks should fire.
-        // TODO: Move this logic to the commit phase, since we already check if
-        // a fiber's subtree contains effects. Refactor the commit phase's
-        // depth-first traversal so that we can put work tag-specific logic
-        // before or after committing a subtree's effects.
-        const OnRenderFlag = Update;
-        const OnCommitFlag = Callback;
-        const OnPostCommitFlag = Passive;
-        const subtreeFlags = workInProgress.subtreeFlags;
-        const flags = workInProgress.flags;
-        let newFlags = flags;
-
-        // Call onRender any time this fiber or its subtree are worked on.
-        if (
-          (flags & PerformedWork) !== NoFlags ||
-          (subtreeFlags & PerformedWork) !== NoFlags
-        ) {
-          newFlags |= OnRenderFlag;
-        }
-
-        // Call onCommit only if the subtree contains layout work, or if it
-        // contains deletions, since those might result in unmount work, which
-        // we include in the same measure.
-        // TODO: Can optimize by using a static flag to track whether a tree
-        // contains layout effects, like we do for passive effects.
-        if (
-          (flags & (LayoutMask | Deletion)) !== NoFlags ||
-          (subtreeFlags & (LayoutMask | Deletion)) !== NoFlags
-        ) {
-          newFlags |= OnCommitFlag;
-        }
-
-        // Call onPostCommit only if the subtree contains passive work.
-        // Don't have to check for deletions, because Deletion is already
-        // a passive flag.
-        if (
-          (flags & PassiveMask) !== NoFlags ||
-          (subtreeFlags & PassiveMask) !== NoFlags
-        ) {
-          newFlags |= OnPostCommitFlag;
-        }
-        workInProgress.flags = newFlags;
-      } else {
-        // This fiber and its subtree bailed out, so don't fire any callbacks.
-      }
-
       return null;
     }
     case SuspenseComponent: {
@@ -1056,20 +828,6 @@ function completeWork(
             if (enableSchedulerTracing) {
               markSpawnedWork(OffscreenLane);
             }
-            bubbleProperties(workInProgress);
-            if (enableProfilerTimer) {
-              if ((workInProgress.mode & ProfileMode) !== NoMode) {
-                const isTimedOutSuspense = nextState !== null;
-                if (isTimedOutSuspense) {
-                  // Don't count time spent in a timed out Suspense subtree as part of the base duration.
-                  const primaryChildFragment = workInProgress.child;
-                  if (primaryChildFragment !== null) {
-                    // $FlowFixMe Flow doens't support type casting in combiation with the -= operator
-                    workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
-                  }
-                }
-              }
-            }
             return null;
           } else {
             // We should never have been in a hydration state if we didn't have a current.
@@ -1086,20 +844,6 @@ function completeWork(
             // If something suspended, schedule an effect to attach retry listeners.
             // So we might as well always mark this.
             workInProgress.flags |= Update;
-            bubbleProperties(workInProgress);
-            if (enableProfilerTimer) {
-              if ((workInProgress.mode & ProfileMode) !== NoMode) {
-                const isTimedOutSuspense = nextState !== null;
-                if (isTimedOutSuspense) {
-                  // Don't count time spent in a timed out Suspense subtree as part of the base duration.
-                  const primaryChildFragment = workInProgress.child;
-                  if (primaryChildFragment !== null) {
-                    // $FlowFixMe Flow doens't support type casting in combiation with the -= operator
-                    workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
-                  }
-                }
-              }
-            }
             return null;
           }
         }
@@ -1115,7 +859,6 @@ function completeWork(
         ) {
           transferActualDuration(workInProgress);
         }
-        // Don't bubble properties in this case.
         return workInProgress;
       }
 
@@ -1169,8 +912,8 @@ function completeWork(
         // TODO: Only schedule updates if not prevDidTimeout.
         if (nextDidTimeout) {
           // If this boundary just timed out, schedule an effect to attach a
-          // retry listener to the promise.
-          // TODO: Move to passive phase
+          // retry listener to the promise. This flag is also used to hide the
+          // primary children.
           workInProgress.flags |= Update;
         }
       }
@@ -1182,7 +925,7 @@ function completeWork(
           // primary children. In mutation mode, we also need the flag to
           // *unhide* children that were previously hidden, so check if this
           // is currently timed out, too.
-          workInProgress.flags |= Update | Visibility;
+          workInProgress.flags |= Update;
         }
       }
       if (
@@ -1191,36 +934,20 @@ function completeWork(
         workInProgress.memoizedProps.suspenseCallback != null
       ) {
         // Always notify the callback
-        // TODO: Move to passive phase
         workInProgress.flags |= Update;
-      }
-      bubbleProperties(workInProgress);
-      if (enableProfilerTimer) {
-        if ((workInProgress.mode & ProfileMode) !== NoMode) {
-          if (nextDidTimeout) {
-            // Don't count time spent in a timed out Suspense subtree as part of the base duration.
-            const primaryChildFragment = workInProgress.child;
-            if (primaryChildFragment !== null) {
-              // $FlowFixMe Flow doens't support type casting in combiation with the -= operator
-              workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
-            }
-          }
-        }
       }
       return null;
     }
     case HostPortal:
       popHostContainer(workInProgress);
-      updateHostContainer(current, workInProgress);
+      updateHostContainer(workInProgress);
       if (current === null) {
         preparePortalMount(workInProgress.stateNode.containerInfo);
       }
-      bubbleProperties(workInProgress);
       return null;
     case ContextProvider:
       // Pop provider fiber
       popProvider(workInProgress);
-      bubbleProperties(workInProgress);
       return null;
     case IncompleteClassComponent: {
       // Same as class component case. I put it down here so that the tags are
@@ -1229,7 +956,6 @@ function completeWork(
       if (isLegacyContextProvider(Component)) {
         popLegacyContext(workInProgress);
       }
-      bubbleProperties(workInProgress);
       return null;
     }
     case SuspenseListComponent: {
@@ -1241,7 +967,6 @@ function completeWork(
       if (renderState === null) {
         // We're running in the default, "independent" mode.
         // We don't do anything in this mode.
-        bubbleProperties(workInProgress);
         return null;
       }
 
@@ -1294,8 +1019,12 @@ function completeWork(
 
                 // Rerender the whole list, but this time, we'll force fallbacks
                 // to stay in place.
+                // Reset the effect list before doing the second pass since that's now invalid.
+                if (renderState.lastEffect === null) {
+                  workInProgress.firstEffect = null;
+                }
+                workInProgress.lastEffect = renderState.lastEffect;
                 // Reset the child fibers to their original state.
-                workInProgress.subtreeFlags = NoFlags;
                 resetChildFibers(workInProgress, renderLanes);
 
                 // Set up the Suspense Context to force suspense and immediately
@@ -1307,7 +1036,6 @@ function completeWork(
                     ForceSuspenseFallback,
                   ),
                 );
-                // Don't bubble properties in this case.
                 return workInProgress.child;
               }
               row = row.sibling;
@@ -1364,8 +1092,16 @@ function completeWork(
               !renderedTail.alternate &&
               !getIsHydrating() // We don't cut it if we're hydrating.
             ) {
+              // We need to delete the row we just rendered.
+              // Reset the effect list to what it was before we rendered this
+              // child. The nested children have already appended themselves.
+              const lastEffect = (workInProgress.lastEffect =
+                renderState.lastEffect);
+              // Remove any effects that were appended after this point.
+              if (lastEffect !== null) {
+                lastEffect.nextEffect = null;
+              }
               // We're done.
-              bubbleProperties(workInProgress);
               return null;
             }
           } else if (
@@ -1385,10 +1121,13 @@ function completeWork(
             cutOffTailIfNeeded(renderState, false);
 
             // Since nothing actually suspended, there will nothing to ping this
-            // to get it started back up to attempt the next item. If we can show
-            // them, then they really have the same priority as this render.
-            // So we'll pick it back up the very next render pass once we've had
-            // an opportunity to yield for paint.
+            // to get it started back up to attempt the next item. While in terms
+            // of priority this work has the same priority as this current render,
+            // it's not part of the same transition once the transition has
+            // committed. If it's sync, we still want to yield so that it can be
+            // painted. Conceptually, this is really the same as pinging.
+            // We can use any RetryLane even if it's the one currently rendering
+            // since we're leaving it behind on this node.
             workInProgress.lanes = SomeRetryLane;
             if (enableSchedulerTracing) {
               markSpawnedWork(SomeRetryLane);
@@ -1420,6 +1159,7 @@ function completeWork(
         const next = renderState.tail;
         renderState.rendering = next;
         renderState.tail = next.sibling;
+        renderState.lastEffect = workInProgress.lastEffect;
         renderState.renderingStartTime = now();
         next.sibling = null;
 
@@ -1437,10 +1177,8 @@ function completeWork(
         }
         pushSuspenseContext(workInProgress, suspenseContext);
         // Do a pass over the next row.
-        // Don't bubble properties in this case.
         return next;
       }
-      bubbleProperties(workInProgress);
       return null;
     }
     case FundamentalComponent: {
@@ -1468,7 +1206,6 @@ function completeWork(
           ): any): Instance);
           fundamentalInstance.instance = instance;
           if (fundamentalImpl.reconcileChildren === false) {
-            bubbleProperties(workInProgress);
             return null;
           }
           appendAllChildren(instance, workInProgress, false, false);
@@ -1491,7 +1228,6 @@ function completeWork(
             markUpdate(workInProgress);
           }
         }
-        bubbleProperties(workInProgress);
         return null;
       }
       break;
@@ -1514,7 +1250,6 @@ function completeWork(
             markRef(workInProgress);
           }
         }
-        bubbleProperties(workInProgress);
         return null;
       }
       break;
@@ -1522,30 +1257,19 @@ function completeWork(
     case OffscreenComponent:
     case LegacyHiddenComponent: {
       popRenderLanes(workInProgress);
-      const nextState: OffscreenState | null = workInProgress.memoizedState;
-      const nextIsHidden = nextState !== null;
-
       if (current !== null) {
+        const nextState: OffscreenState | null = workInProgress.memoizedState;
         const prevState: OffscreenState | null = current.memoizedState;
 
         const prevIsHidden = prevState !== null;
+        const nextIsHidden = nextState !== null;
         if (
           prevIsHidden !== nextIsHidden &&
           newProps.mode !== 'unstable-defer-without-hiding'
         ) {
-          workInProgress.flags |= Update | Visibility;
+          workInProgress.flags |= Update;
         }
       }
-
-      // Don't bubble properties for hidden children.
-      if (
-        !nextIsHidden ||
-        includesSomeLane(subtreeRenderLanes, (OffscreenLane: Lane)) ||
-        (workInProgress.mode & ConcurrentMode) === NoMode
-      ) {
-        bubbleProperties(workInProgress);
-      }
-
       return null;
     }
   }

@@ -368,7 +368,7 @@ describe('Profiler', () => {
 
         renderer.update(<App />);
 
-        if (gate(flags => flags.new)) {
+        if (gate(flags => flags.dfsEffectsRefactor)) {
           // None of the Profiler's subtree was rendered because App bailed out before the Profiler.
           // So we expect onRender not to be called.
           expect(callback).not.toHaveBeenCalled();
@@ -4292,7 +4292,7 @@ describe('Profiler', () => {
         // because the resolved suspended subtree doesn't contain any passive effects.
         // If <AsyncComponentWithCascadingWork> or its decendents had a passive effect,
         // onPostCommit would be called again.
-        if (gate(flags => flags.new)) {
+        if (gate(flags => flags.dfsEffectsRefactor)) {
           expect(Scheduler).toFlushAndYield([]);
         } else {
           expect(Scheduler).toFlushAndYield(['onPostCommit']);
@@ -4783,7 +4783,8 @@ describe('Profiler', () => {
       });
 
       if (__DEV__) {
-        // @gate new
+        // @gate dfsEffectsRefactor
+        // @gate enableDoubleInvokingEffects
         it('double invoking does not disconnect wrapped async work', () => {
           ReactFeatureFlags.enableDoubleInvokingEffects = true;
 

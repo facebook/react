@@ -60,6 +60,9 @@ export type SuspenseListRenderState = {|
   tail: null | Fiber,
   // Tail insertions setting.
   tailMode: SuspenseListTailMode,
+  // Last Effect before we rendered the "rendering" item.
+  // Used to remove new effects added by the rendered item.
+  lastEffect: null | Fiber,
 |};
 
 export function shouldCaptureSuspense(

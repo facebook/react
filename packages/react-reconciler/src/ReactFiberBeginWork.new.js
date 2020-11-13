@@ -58,10 +58,10 @@ import {
   Hydrating,
   ContentReset,
   DidCapture,
+  Update,
   Ref,
   Deletion,
   ForceUpdateForLegacySuspense,
-  StaticMask,
 } from './ReactFiberFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -671,6 +671,8 @@ function updateProfiler(
   renderLanes: Lanes,
 ) {
   if (enableProfilerTimer) {
+    workInProgress.flags |= Update;
+
     // Reset effect durations for the next eventual effect phase.
     // These are reset during render to allow the DevTools commit hook a chance to read them,
     const stateNode = workInProgress.stateNode;
@@ -1076,9 +1078,6 @@ function updateHostComponent(
     // empty, we need to schedule the text content to be reset.
     workInProgress.flags |= ContentReset;
   }
-
-  // React DevTools reads this flag.
-  workInProgress.flags |= PerformedWork;
 
   markRef(current, workInProgress);
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
@@ -2005,14 +2004,9 @@ function updateSuspensePrimaryChildren(
   primaryChildFragment.sibling = null;
   if (currentFallbackChildFragment !== null) {
     // Delete the fallback child fragment
-    const deletions = workInProgress.deletions;
-    if (deletions === null) {
-      workInProgress.deletions = [currentFallbackChildFragment];
-      // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
-      workInProgress.flags |= Deletion;
-    } else {
-      deletions.push(currentFallbackChildFragment);
-    }
+    currentFallbackChildFragment.nextEffect = null;
+    currentFallbackChildFragment.flags = Deletion;
+    workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChildFragment;
   }
 
   workInProgress.child = primaryChildFragment;
@@ -2069,19 +2063,24 @@ function updateSuspenseFallbackChildren(
 
     // The fallback fiber was added as a deletion effect during the first pass.
     // However, since we're going to remain on the fallback, we no longer want
-    // to delete it.
-    workInProgress.deletions = null;
+    // to delete it. So we need to remove it from the list. Deletions are stored
+    // on the same list as effects. We want to keep the effects from the primary
+    // tree. So we copy the primary child fragment's effect list, which does not
+    // include the fallback deletion effect.
+    const progressedLastEffect = primaryChildFragment.lastEffect;
+    if (progressedLastEffect !== null) {
+      workInProgress.firstEffect = primaryChildFragment.firstEffect;
+      workInProgress.lastEffect = progressedLastEffect;
+      progressedLastEffect.nextEffect = null;
+    } else {
+      // TODO: Reset this somewhere else? Lol legacy mode is so weird.
+      workInProgress.firstEffect = workInProgress.lastEffect = null;
+    }
   } else {
     primaryChildFragment = createWorkInProgressOffscreenFiber(
       currentPrimaryChildFragment,
       primaryChildProps,
     );
-
-    // Since we're reusing a current tree, we need to reuse the flags, too.
-    // (We don't do this in legacy mode, because in legacy mode we don't re-use
-    // the current tree; see previous branch.)
-    primaryChildFragment.subtreeFlags =
-      currentPrimaryChildFragment.subtreeFlags & StaticMask;
   }
   let fallbackChildFragment;
   if (currentFallbackChildFragment !== null) {
@@ -2566,6 +2565,7 @@ function initSuspenseListRenderState(
   tail: null | Fiber,
   lastContentRow: null | Fiber,
   tailMode: SuspenseListTailMode,
+  lastEffectBeforeRendering: null | Fiber,
 ): void {
   const renderState: null | SuspenseListRenderState =
     workInProgress.memoizedState;
@@ -2577,6 +2577,7 @@ function initSuspenseListRenderState(
       last: lastContentRow,
       tail: tail,
       tailMode: tailMode,
+      lastEffect: lastEffectBeforeRendering,
     }: SuspenseListRenderState);
   } else {
     // We can reuse the existing object from previous renders.
@@ -2586,6 +2587,7 @@ function initSuspenseListRenderState(
     renderState.last = lastContentRow;
     renderState.tail = tail;
     renderState.tailMode = tailMode;
+    renderState.lastEffect = lastEffectBeforeRendering;
   }
 }
 
@@ -2667,6 +2669,7 @@ function updateSuspenseListComponent(
           tail,
           lastContentRow,
           tailMode,
+          workInProgress.lastEffect,
         );
         break;
       }
@@ -2698,6 +2701,7 @@ function updateSuspenseListComponent(
           tail,
           null, // last
           tailMode,
+          workInProgress.lastEffect,
         );
         break;
       }
@@ -2708,6 +2712,7 @@ function updateSuspenseListComponent(
           null, // tail
           null, // last
           undefined,
+          workInProgress.lastEffect,
         );
         break;
       }
@@ -2967,14 +2972,15 @@ function remountFiber(
 
     // Delete the old fiber and place the new one.
     // Since the old fiber is disconnected, we have to schedule it manually.
-    const deletions = returnFiber.deletions;
-    if (deletions === null) {
-      returnFiber.deletions = [current];
-      // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
-      returnFiber.flags |= Deletion;
+    const last = returnFiber.lastEffect;
+    if (last !== null) {
+      last.nextEffect = current;
+      returnFiber.lastEffect = current;
     } else {
-      deletions.push(current);
+      returnFiber.firstEffect = returnFiber.lastEffect = current;
     }
+    current.nextEffect = null;
+    current.flags = Deletion;
 
     newWorkInProgress.flags |= Placement;
 
@@ -3059,6 +3065,15 @@ function beginWork(
         }
         case Profiler:
           if (enableProfilerTimer) {
+            // Profiler should only call onRender when one of its descendants actually rendered.
+            const hasChildWork = includesSomeLane(
+              renderLanes,
+              workInProgress.childLanes,
+            );
+            if (hasChildWork) {
+              workInProgress.flags |= Update;
+            }
+
             // Reset effect durations for the next eventual effect phase.
             // These are reset during render to allow the DevTools commit hook a chance to read them,
             const stateNode = workInProgress.stateNode;
@@ -3165,6 +3180,7 @@ function beginWork(
             // update in the past but didn't complete it.
             renderState.rendering = null;
             renderState.tail = null;
+            renderState.lastEffect = null;
           }
           pushSuspenseContext(workInProgress, suspenseStackCursor.current);
 

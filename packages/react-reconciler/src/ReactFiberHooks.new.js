@@ -26,16 +26,10 @@ import {
   enableSchedulingProfiler,
   enableNewReconciler,
   decoupleUpdatePriorityFromScheduler,
-  enableDoubleInvokingEffects,
   enableUseRefAccessWarning,
 } from 'shared/ReactFeatureFlags';
 
-import {
-  NoMode,
-  BlockingMode,
-  ConcurrentMode,
-  DebugTracingMode,
-} from './ReactTypeOfMode';
+import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   NoLane,
   NoLanes,
@@ -54,9 +48,6 @@ import {readContext} from './ReactFiberNewContext.new';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
-  PassiveStatic as PassiveStaticEffect,
-  MountLayoutDev as MountLayoutDevEffect,
-  MountPassiveDev as MountPassiveDevEffect,
 } from './ReactFiberFlags';
 import {
   HasEffect as HookHasEffect,
@@ -475,20 +466,7 @@ export function bailoutHooks(
   lanes: Lanes,
 ) {
   workInProgress.updateQueue = current.updateQueue;
-  if (
-    __DEV__ &&
-    enableDoubleInvokingEffects &&
-    (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
-  ) {
-    workInProgress.flags &= ~(
-      MountPassiveDevEffect |
-      PassiveEffect |
-      MountLayoutDevEffect |
-      UpdateEffect
-    );
-  } else {
-    workInProgress.flags &= ~(PassiveEffect | UpdateEffect);
-  }
+  workInProgress.flags &= ~(PassiveEffect | UpdateEffect);
   current.lanes = removeLanes(current.lanes, lanes);
 }
 
@@ -1320,30 +1298,16 @@ function mountEffect(
 ): void {
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-    if (typeof jest !== 'undefined') {
+    if ('undefined' !== typeof jest) {
       warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
     }
   }
-
-  if (
-    __DEV__ &&
-    enableDoubleInvokingEffects &&
-    (currentlyRenderingFiber.mode & (BlockingMode | ConcurrentMode)) !== NoMode
-  ) {
-    return mountEffectImpl(
-      MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
-      HookPassive,
-      create,
-      deps,
-    );
-  } else {
-    return mountEffectImpl(
-      PassiveEffect | PassiveStaticEffect,
-      HookPassive,
-      create,
-      deps,
-    );
-  }
+  return mountEffectImpl(
+    UpdateEffect | PassiveEffect,
+    HookPassive,
+    create,
+    deps,
+  );
 }
 
 function updateEffect(
@@ -1352,31 +1316,23 @@ function updateEffect(
 ): void {
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-    if (typeof jest !== 'undefined') {
+    if ('undefined' !== typeof jest) {
       warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
     }
   }
-  return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
+  return updateEffectImpl(
+    UpdateEffect | PassiveEffect,
+    HookPassive,
+    create,
+    deps,
+  );
 }
 
 function mountLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  if (
-    __DEV__ &&
-    enableDoubleInvokingEffects &&
-    (currentlyRenderingFiber.mode & (BlockingMode | ConcurrentMode)) !== NoMode
-  ) {
-    return mountEffectImpl(
-      MountLayoutDevEffect | UpdateEffect,
-      HookLayout,
-      create,
-      deps,
-    );
-  } else {
-    return mountEffectImpl(UpdateEffect, HookLayout, create, deps);
-  }
+  return mountEffectImpl(UpdateEffect, HookLayout, create, deps);
 }
 
 function updateLayoutEffect(
@@ -1435,25 +1391,12 @@ function mountImperativeHandle<T>(
   const effectDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : null;
 
-  if (
-    __DEV__ &&
-    enableDoubleInvokingEffects &&
-    (currentlyRenderingFiber.mode & (BlockingMode | ConcurrentMode)) !== NoMode
-  ) {
-    return mountEffectImpl(
-      MountLayoutDevEffect | UpdateEffect,
-      HookLayout,
-      imperativeHandleEffect.bind(null, create, ref),
-      effectDeps,
-    );
-  } else {
-    return mountEffectImpl(
-      UpdateEffect,
-      HookLayout,
-      imperativeHandleEffect.bind(null, create, ref),
-      effectDeps,
-    );
-  }
+  return mountEffectImpl(
+    UpdateEffect,
+    HookLayout,
+    imperativeHandleEffect.bind(null, create, ref),
+    effectDeps,
+  );
 }
 
 function updateImperativeHandle<T>(
@@ -1734,12 +1677,7 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
     const setId = mountState(id)[1];
 
     if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
-      if (__DEV__ && enableDoubleInvokingEffects) {
-        currentlyRenderingFiber.flags |=
-          MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect;
-      } else {
-        currentlyRenderingFiber.flags |= PassiveEffect | PassiveStaticEffect;
-      }
+      currentlyRenderingFiber.flags |= UpdateEffect | PassiveEffect;
       pushEffect(
         HookHasEffect | HookPassive,
         () => {
@@ -1855,7 +1793,7 @@ function dispatchAction<S, A>(
     }
     if (__DEV__) {
       // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-      if (typeof jest !== 'undefined') {
+      if ('undefined' !== typeof jest) {
         warnIfNotScopedWithMatchingAct(fiber);
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }

@@ -28,7 +28,7 @@ import {
   enableFundamentalAPI,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
-import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
+import {NoFlags, Placement} from './ReactFiberFlags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
 import {
   IndeterminateComponent,
@@ -279,6 +279,13 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     workInProgress.type = current.type;
 
     // We already have an alternate.
+    // Reset the effect tag.
+    workInProgress.flags = NoFlags;
+
+    // The effect list is no longer valid.
+    workInProgress.nextEffect = null;
+    workInProgress.firstEffect = null;
+    workInProgress.lastEffect = null;
     workInProgress.subtreeFlags = NoFlags;
     workInProgress.deletions = null;
 
@@ -292,9 +299,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     }
   }
 
-  // Reset all effects except static ones.
-  // Static effects are not specific to a render.
-  workInProgress.flags = current.flags & StaticMask;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
 
@@ -359,6 +363,11 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
   // Reset the effect tag but keep any Placement tags, since that's something
   // that child fiber is setting, not the reconciliation.
   workInProgress.flags &= Placement;
+
+  // The effect list is no longer valid.
+  workInProgress.nextEffect = null;
+  workInProgress.firstEffect = null;
+  workInProgress.lastEffect = null;
 
   const current = workInProgress.alternate;
   if (current === null) {

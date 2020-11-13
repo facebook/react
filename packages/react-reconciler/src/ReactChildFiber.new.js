@@ -13,7 +13,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane';
 
 import getComponentName from 'shared/getComponentName';
-import {Deletion, Placement} from './ReactFiberFlags';
+import {Placement, Deletion} from './ReactFiberFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -256,13 +256,20 @@ function ChildReconciler(shouldTrackSideEffects) {
       // Noop.
       return;
     }
-    const deletions = returnFiber.deletions;
-    if (deletions === null) {
-      returnFiber.deletions = [childToDelete];
-      returnFiber.flags |= Deletion;
+    // Deletions are added in reversed order so we add it to the front.
+    // At this point, the return fiber's effect list is empty except for
+    // deletions, so we can just append the deletion to the list. The remaining
+    // effects aren't added until the complete phase. Once we implement
+    // resuming, this may not be true.
+    const last = returnFiber.lastEffect;
+    if (last !== null) {
+      last.nextEffect = childToDelete;
+      returnFiber.lastEffect = childToDelete;
     } else {
-      deletions.push(childToDelete);
+      returnFiber.firstEffect = returnFiber.lastEffect = childToDelete;
     }
+    childToDelete.nextEffect = null;
+    childToDelete.flags = Deletion;
   }
 
   function deleteRemainingChildren(

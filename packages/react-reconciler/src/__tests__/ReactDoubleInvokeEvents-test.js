@@ -10,7 +10,6 @@
 'use strict';
 
 let React;
-let ReactFeatureFlags;
 let ReactTestRenderer;
 let Scheduler;
 let act;
@@ -19,12 +18,19 @@ describe('ReactDoubleInvokeEvents', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
-    ReactFeatureFlags.enableDoubleInvokingEffects = __VARIANT__;
     act = ReactTestRenderer.unstable_concurrentAct;
   });
+
+  function supportsDoubleInvokeEffects() {
+    return gate(
+      flags =>
+        flags.build === 'development' &&
+        flags.enableDoubleInvokingEffects &&
+        flags.dfsEffectsRefactor,
+    );
+  }
 
   it('should not double invoke effects in legacy mode', () => {
     function App({text}) {
@@ -73,7 +79,7 @@ describe('ReactDoubleInvokeEvents', () => {
       });
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (supportsDoubleInvokeEffects()) {
       expect(Scheduler).toHaveYielded([
         'useLayoutEffect mount',
         'useEffect mount',
@@ -132,7 +138,7 @@ describe('ReactDoubleInvokeEvents', () => {
       });
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (supportsDoubleInvokeEffects()) {
       expect(Scheduler).toHaveYielded([
         'useEffect One mount',
         'useEffect Two mount',
@@ -193,7 +199,7 @@ describe('ReactDoubleInvokeEvents', () => {
       });
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (supportsDoubleInvokeEffects()) {
       expect(Scheduler).toHaveYielded([
         'useLayoutEffect One mount',
         'useLayoutEffect Two mount',
@@ -250,7 +256,7 @@ describe('ReactDoubleInvokeEvents', () => {
       });
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (supportsDoubleInvokeEffects()) {
       expect(Scheduler).toHaveYielded([
         'useLayoutEffect mount',
         'useEffect mount',
@@ -308,7 +314,7 @@ describe('ReactDoubleInvokeEvents', () => {
       ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (supportsDoubleInvokeEffects()) {
       expect(Scheduler).toHaveYielded([
         'componentDidMount',
         'componentWillUnmount',
@@ -345,7 +351,7 @@ describe('ReactDoubleInvokeEvents', () => {
       });
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (supportsDoubleInvokeEffects()) {
       expect(Scheduler).toHaveYielded([
         'componentDidMount',
         'componentWillUnmount',
@@ -420,7 +426,7 @@ describe('ReactDoubleInvokeEvents', () => {
       });
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (supportsDoubleInvokeEffects()) {
       expect(Scheduler).toHaveYielded([
         'mount',
         'useLayoutEffect mount',
@@ -485,7 +491,7 @@ describe('ReactDoubleInvokeEvents', () => {
       ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (supportsDoubleInvokeEffects()) {
       expect(Scheduler).toHaveYielded([
         'App useLayoutEffect mount',
         'App useEffect mount',
@@ -505,7 +511,7 @@ describe('ReactDoubleInvokeEvents', () => {
       _setShowChild(true);
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (supportsDoubleInvokeEffects()) {
       expect(Scheduler).toHaveYielded([
         'App useLayoutEffect unmount',
         'Child useLayoutEffect mount',
@@ -573,7 +579,7 @@ describe('ReactDoubleInvokeEvents', () => {
       });
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (supportsDoubleInvokeEffects()) {
       expect(Scheduler).toHaveYielded([
         'componentDidMount',
         'useLayoutEffect mount',

@@ -185,6 +185,8 @@ function throwException(
 ) {
   // The source fiber did not complete.
   sourceFiber.flags |= Incomplete;
+  // Its effect list is no longer valid.
+  sourceFiber.firstEffect = sourceFiber.lastEffect = null;
 
   if (
     value !== null &&
