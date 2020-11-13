@@ -13,7 +13,7 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
 } from 'shared/ReactTypes';
-import type {Fiber, Dispatcher} from './ReactInternalTypes';
+import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
@@ -117,22 +117,6 @@ type UpdateQueue<S, A> = {|
   lastRenderedReducer: ((S, A) => S) | null,
   lastRenderedState: S | null,
 |};
-
-export type HookType =
-  | 'useState'
-  | 'useReducer'
-  | 'useContext'
-  | 'useRef'
-  | 'useEffect'
-  | 'useLayoutEffect'
-  | 'useCallback'
-  | 'useMemo'
-  | 'useImperativeHandle'
-  | 'useDebugValue'
-  | 'useDeferredValue'
-  | 'useTransition'
-  | 'useMutableSource'
-  | 'useOpaqueIdentifier';
 
 let didWarnAboutMismatchedHooksForComponent;
 let didWarnAboutUseOpaqueIdentifier;
