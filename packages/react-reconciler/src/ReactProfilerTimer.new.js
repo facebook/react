@@ -68,6 +68,13 @@ function markNestedUpdateScheduled(): void {
   }
 }
 
+function resetNestedUpdateFlag(): void {
+  if (enableProfilerNestedUpdatePhase) {
+    currentUpdateIsNested = false;
+    nestedUpdateScheduled = false;
+  }
+}
+
 function syncNestedUpdateFlag(): void {
   if (enableProfilerNestedUpdatePhase) {
     currentUpdateIsNested = nestedUpdateScheduled;
@@ -206,6 +213,7 @@ export {
   recordCommitTime,
   recordLayoutEffectDuration,
   recordPassiveEffectDuration,
+  resetNestedUpdateFlag,
   startLayoutEffectTimer,
   startPassiveEffectTimer,
   startProfilerTimer,
