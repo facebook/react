@@ -7,9 +7,14 @@
 const {promisify} = require('util');
 const glob = promisify(require('glob'));
 const fs = require('fs');
+const minimist = require('minimist');
 
 const stat = promisify(fs.stat);
 const copyFile = promisify(fs.copyFile);
+
+const argv = minimist(process.argv.slice(2), {
+  boolean: ['reverse'],
+});
 
 async function main() {
   const oldFilenames = await glob('packages/react-reconciler/**/*.old.js');
@@ -38,7 +43,11 @@ async function unforkFile(oldFilename) {
     return;
   }
 
-  await copyFile(newFilename, oldFilename);
+  if (argv.reverse) {
+    await copyFile(oldFilename, newFilename);
+  } else {
+    await copyFile(newFilename, oldFilename);
+  }
 }
 
 main();
