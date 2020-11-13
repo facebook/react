@@ -141,6 +141,10 @@ function FiberNode(
 
   // Effects
   this.flags = NoFlags;
+  this.nextEffect = null;
+
+  this.firstEffect = null;
+  this.lastEffect = null;
   this.subtreeFlags = NoFlags;
   this.deletions = null;
 
@@ -805,6 +809,9 @@ export function assignFiberPropertiesInDEV(
   target.dependencies = source.dependencies;
   target.mode = source.mode;
   target.flags = source.flags;
+  target.nextEffect = source.nextEffect;
+  target.firstEffect = source.firstEffect;
+  target.lastEffect = source.lastEffect;
   target.subtreeFlags = source.subtreeFlags;
   target.deletions = source.deletions;
   target.lanes = source.lanes;
