@@ -700,6 +700,54 @@ describe('Profiler', () => {
         expect(updateCall[5]).toBe(43); // commit time
       });
 
+      it('should clear nested-update flag when multiple cascading renders are scheduled', () => {
+        loadModules({
+          enableSchedulerTracing,
+          useNoopRenderer: true,
+        });
+
+        function Component() {
+          const [didMount, setDidMount] = React.useState(false);
+          const [didMountAndUpdate, setDidMountAndUpdate] = React.useState(
+            false,
+          );
+
+          React.useLayoutEffect(() => {
+            setDidMount(true);
+          }, []);
+
+          React.useEffect(() => {
+            if (didMount && !didMountAndUpdate) {
+              setDidMountAndUpdate(true);
+            }
+          }, [didMount, didMountAndUpdate]);
+
+          Scheduler.unstable_yieldValue(`${didMount}:${didMountAndUpdate}`);
+
+          return null;
+        }
+
+        const onRender = jest.fn();
+
+        ReactNoop.act(() => {
+          ReactNoop.render(
+            <React.Profiler id="root" onRender={onRender}>
+              <Component />
+            </React.Profiler>,
+          );
+        });
+        expect(Scheduler).toHaveYielded([
+          'false:false',
+          'true:false',
+          'true:true',
+        ]);
+
+        expect(onRender).toHaveBeenCalledTimes(3);
+        expect(onRender.mock.calls[0][1]).toBe('mount');
+        expect(onRender.mock.calls[1][1]).toBe('nested-update');
+        expect(onRender.mock.calls[2][1]).toBe('update');
+      });
+
       describe('with regard to interruptions', () => {
         it('should accumulate actual time after a scheduling interruptions', () => {
           const callback = jest.fn();
