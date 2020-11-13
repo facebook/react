@@ -6,6 +6,7 @@
 
 const {promisify} = require('util');
 const glob = promisify(require('glob'));
+const {spawnSync} = require('child_process');
 const fs = require('fs');
 
 const stat = promisify(fs.stat);
@@ -14,6 +15,9 @@ const copyFile = promisify(fs.copyFile);
 async function main() {
   const oldFilenames = await glob('packages/react-reconciler/**/*.old.js');
   await Promise.all(oldFilenames.map(unforkFile));
+
+  // Use ESLint to autofix imports
+  spawnSync('yarn', ['linc', '--fix']);
 }
 
 async function unforkFile(oldFilename) {
