@@ -295,22 +295,24 @@ export function dehydrate(
         name: data.toString(),
         type,
       };
+
     case 'window':
-      try {
-        // eslint-disable-next-line no-unused-expressions
-        data.origin;
-      } catch {
-        cleaned.push(path);
-        return {
-          inspectable: false,
-          preview_short: 'Window',
-          preview_long: 'Window',
-          name: 'Window',
-          type,
-        };
-      }
-    // eslint-disable-next-line no-fallthrough
     case 'object':
+      if (type === 'window') {
+        try {
+          // eslint-disable-next-line no-unused-expressions
+          data.origin;
+        } catch {
+          cleaned.push(path);
+          return {
+            inspectable: false,
+            preview_short: 'Window',
+            preview_long: 'Window',
+            name: 'Window',
+            type,
+          };
+        }
+      }
       isPathAllowedCheck = isPathAllowed(path);
       if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
         return createDehydrated(type, true, data, cleaned, path);
@@ -339,6 +341,7 @@ export function dehydrate(
       return {
         type,
       };
+
     default:
       return data;
   }
