@@ -9,6 +9,7 @@ const __EXPERIMENTAL__ =
 
 const bundleTypes = {
   NODE_ES2015: 'NODE_ES2015',
+  NODE_ESM: 'NODE_ESM',
   UMD_DEV: 'UMD_DEV',
   UMD_PROD: 'UMD_PROD',
   UMD_PROFILING: 'UMD_PROFILING',
@@ -28,6 +29,7 @@ const bundleTypes = {
 
 const {
   NODE_ES2015,
+  NODE_ESM,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -776,6 +778,8 @@ function getFilename(bundle, bundleType) {
   name = name.replace('/index.', '.').replace('/', '-');
   switch (bundleType) {
     case NODE_ES2015:
+      return `${name}.js`;
+    case NODE_ESM:
       return `${name}.js`;
     case UMD_DEV:
       return `${name}.development.js`;
