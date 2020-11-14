@@ -25,7 +25,7 @@ import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
 
-export type {ReactPriorityLevel} from './ReactFiberSchedulerPriorities';
+export type {ReactPriorityLevel} from './ReactPriorityLevel';
 
 export type HookType =
   | 'useState'

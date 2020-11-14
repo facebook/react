@@ -73,10 +73,7 @@ import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
-import {
-  UserBlockingPriority,
-  NormalPriority,
-} from './ReactFiberSchedulerPriorities';
+import {UserBlockingPriority, NormalPriority} from './ReactPriorityLevel';
 import {
   runWithPriority,
   getCurrentPriorityLevel,

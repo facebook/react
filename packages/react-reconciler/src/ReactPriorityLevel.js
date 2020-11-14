@@ -7,7 +7,6 @@
  * @flow
  */
 
-// unwind-cycles: Extract type and constant definitions to common dependency
 export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
 
 // Except for NoPriority, these correspond to Scheduler priorities. We use

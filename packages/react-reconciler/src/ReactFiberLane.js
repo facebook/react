@@ -16,7 +16,6 @@ import type {
   Lanes,
 } from './ReactInternalTypes';
 
-// unwind-cycles: Re-export lane definitions here
 export type {Lane, LanePriority, LaneMap, Lanes};
 
 import invariant from 'shared/invariant';
@@ -28,7 +27,7 @@ import {
   LowPriority as LowSchedulerPriority,
   IdlePriority as IdleSchedulerPriority,
   NoPriority as NoSchedulerPriority,
-} from './ReactFiberSchedulerPriorities';
+} from './ReactPriorityLevel';
 
 export const SyncLanePriority: LanePriority = 15;
 export const SyncBatchedLanePriority: LanePriority = 14;

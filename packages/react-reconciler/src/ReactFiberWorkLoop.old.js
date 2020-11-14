@@ -40,7 +40,7 @@ import {
   ImmediatePriority as ImmediateSchedulerPriority,
   UserBlockingPriority as UserBlockingSchedulerPriority,
   NormalPriority as NormalSchedulerPriority,
-} from './ReactFiberSchedulerPriorities';
+} from './ReactPriorityLevel';
 import {
   scheduleCallback,
   cancelCallback,
