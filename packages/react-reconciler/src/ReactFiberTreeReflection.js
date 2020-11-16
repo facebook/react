@@ -265,71 +265,57 @@ export function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
 
 export function findCurrentHostFiber(parent: Fiber): Fiber | null {
   const currentParent = findCurrentFiberUsingSlowPath(parent);
-  if (!currentParent) {
-    return null;
+  return currentParent !== null
+    ? findCurrentHostFiberImpl(currentParent)
+    : null;
+}
+
+function findCurrentHostFiberImpl(node: Fiber) {
+  // Next we'll drill down this component to find the first HostComponent/Text.
+  if (node.tag === HostComponent || node.tag === HostText) {
+    return node;
   }
 
-  // Next we'll drill down this component to find the first HostComponent/Text.
-  let node: Fiber = currentParent;
-  while (true) {
-    if (node.tag === HostComponent || node.tag === HostText) {
-      return node;
-    } else if (node.child) {
-      node.child.return = node;
-      node = node.child;
-      continue;
+  let child = node.child;
+  while (child !== null) {
+    const match = findCurrentHostFiberImpl(child);
+    if (match !== null) {
+      return match;
     }
-    if (node === currentParent) {
-      return null;
-    }
-    while (!node.sibling) {
-      if (!node.return || node.return === currentParent) {
-        return null;
-      }
-      node = node.return;
-    }
-    node.sibling.return = node.return;
-    node = node.sibling;
+    child = child.sibling;
   }
-  // Flow needs the return null here, but ESLint complains about it.
-  // eslint-disable-next-line no-unreachable
+
   return null;
 }
 
 export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
   const currentParent = findCurrentFiberUsingSlowPath(parent);
-  if (!currentParent) {
-    return null;
+  return currentParent !== null
+    ? findCurrentHostFiberWithNoPortalsImpl(currentParent)
+    : null;
+}
+
+function findCurrentHostFiberWithNoPortalsImpl(node: Fiber) {
+  // Next we'll drill down this component to find the first HostComponent/Text.
+  if (
+    node.tag === HostComponent ||
+    node.tag === HostText ||
+    (enableFundamentalAPI && node.tag === FundamentalComponent)
+  ) {
+    return node;
   }
 
-  // Next we'll drill down this component to find the first HostComponent/Text.
-  let node: Fiber = currentParent;
-  while (true) {
-    if (
-      node.tag === HostComponent ||
-      node.tag === HostText ||
-      (enableFundamentalAPI && node.tag === FundamentalComponent)
-    ) {
-      return node;
-    } else if (node.child && node.tag !== HostPortal) {
-      node.child.return = node;
-      node = node.child;
-      continue;
-    }
-    if (node === currentParent) {
-      return null;
-    }
-    while (!node.sibling) {
-      if (!node.return || node.return === currentParent) {
-        return null;
+  let child = node.child;
+  while (child !== null) {
+    if (child.tag !== HostPortal) {
+      const match = findCurrentHostFiberWithNoPortalsImpl(child);
+      if (match !== null) {
+        return match;
       }
-      node = node.return;
     }
-    node.sibling.return = node.return;
-    node = node.sibling;
+    child = child.sibling;
   }
-  // Flow needs the return null here, but ESLint complains about it.
-  // eslint-disable-next-line no-unreachable
+
   return null;
 }
 
