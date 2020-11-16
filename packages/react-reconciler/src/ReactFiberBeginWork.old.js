@@ -61,6 +61,7 @@ import {
   Update,
   Ref,
   Deletion,
+  ChildDeletion,
   ForceUpdateForLegacySuspense,
 } from './ReactFiberFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -2007,6 +2008,14 @@ function updateSuspensePrimaryChildren(
     currentFallbackChildFragment.nextEffect = null;
     currentFallbackChildFragment.flags = Deletion;
     workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChildFragment;
+    let deletions = workInProgress.deletions;
+    if (deletions === null) {
+      deletions = workInProgress.deletions = [currentFallbackChildFragment];
+      workInProgress.flags |= ChildDeletion;
+    } else {
+      deletions.push(currentFallbackChildFragment);
+    }
+    currentFallbackChildFragment.deletions = deletions;
   }
 
   workInProgress.child = primaryChildFragment;
@@ -2061,21 +2070,23 @@ function updateSuspenseFallbackChildren(
         currentPrimaryChildFragment.treeBaseDuration;
     }
 
-    // The fallback fiber was added as a deletion effect during the first pass.
-    // However, since we're going to remain on the fallback, we no longer want
-    // to delete it. So we need to remove it from the list. Deletions are stored
-    // on the same list as effects. We want to keep the effects from the primary
-    // tree. So we copy the primary child fragment's effect list, which does not
-    // include the fallback deletion effect.
-    const progressedLastEffect = primaryChildFragment.lastEffect;
-    if (progressedLastEffect !== null) {
-      workInProgress.firstEffect = primaryChildFragment.firstEffect;
-      workInProgress.lastEffect = progressedLastEffect;
-      progressedLastEffect.nextEffect = null;
-    } else {
-      // TODO: Reset this somewhere else? Lol legacy mode is so weird.
-      workInProgress.firstEffect = workInProgress.lastEffect = null;
+    if (currentFallbackChildFragment !== null) {
+      // The fallback fiber was added as a deletion effect during the first
+      // pass. However, since we're going to remain on the fallback, we no
+      // longer want to delete it. So we need to remove it from the list.
+      // Deletions are stored on the same list as effects, and are always added
+      // to the front. So we know that the first effect must be the fallback
+      // deletion effect, and everything after that is from the primary free.
+      const firstPrimaryTreeEffect = currentFallbackChildFragment.nextEffect;
+      if (firstPrimaryTreeEffect !== null) {
+        workInProgress.firstEffect = firstPrimaryTreeEffect;
+      } else {
+        // TODO: Reset this somewhere else? Lol legacy mode is so weird.
+        workInProgress.firstEffect = workInProgress.lastEffect = null;
+      }
     }
+
+    workInProgress.deletions = null;
   } else {
     primaryChildFragment = createWorkInProgressOffscreenFiber(
       currentPrimaryChildFragment,
@@ -2981,6 +2992,15 @@ function remountFiber(
     }
     current.nextEffect = null;
     current.flags = Deletion;
+
+    let deletions = returnFiber.deletions;
+    if (deletions === null) {
+      deletions = returnFiber.deletions = [current];
+      returnFiber.flags |= ChildDeletion;
+    } else {
+      deletions.push(current);
+    }
+    current.deletions = deletions;
 
     newWorkInProgress.flags |= Placement;
 

@@ -1821,6 +1821,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         // Mark the parent fiber as incomplete and clear its effect list.
         returnFiber.firstEffect = returnFiber.lastEffect = null;
         returnFiber.flags |= Incomplete;
+        returnFiber.deletions = null;
       }
     }
 
@@ -2384,7 +2385,7 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
     // bitmap value, we remove the secondary effects from the effect tag and
     // switch on that value.
     const primaryFlags = flags & (Placement | Update | Deletion | Hydrating);
-    switch (primaryFlags) {
+    outer: switch (primaryFlags) {
       case Placement: {
         commitPlacement(nextEffect);
         // Clear the "placement" from effect tag so that we know that this is
@@ -2424,7 +2425,35 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
         break;
       }
       case Deletion: {
-        commitDeletion(root, nextEffect, renderPriorityLevel);
+        // Reached a deletion effect. Instead of commit this effect like we
+        // normally do, we're going to use the `deletions` array of the parent.
+        // However, because the effect list is sorted in depth-first order, we
+        // can't wait until we reach the parent node, because the child effects
+        // will have run in the meantime.
+        //
+        // So instead, we use a trick where the first time we hit a deletion
+        // effect, we commit all the deletion effects that belong to that parent.
+        //
+        // This is an incremental step away from using the effect list and
+        // toward a DFS + subtreeFlags traversal.
+        //
+        // A reference to the deletion array of the parent is also stored on
+        // each of the deletions. This is really weird. It would be better to
+        // follow the `.return` pointer, but unfortunately we can't assume that
+        // `.return` points to the correct fiber, even in the commit phase,
+        // because `findDOMNode` might mutate it.
+        const deletedChild = nextEffect;
+        const deletions = deletedChild.deletions;
+        if (deletions !== null) {
+          for (let i = 0; i < deletions.length; i++) {
+            const deletion = deletions[i];
+            // Clear the deletion effect so that we don't delete this node more
+            // than once.
+            deletion.flags &= ~Deletion;
+            deletion.deletions = null;
+            commitDeletion(root, deletion, renderPriorityLevel);
+          }
+        }
         break;
       }
     }
@@ -2843,6 +2872,22 @@ export function captureCommitPhaseError(sourceFiber: Fiber, error: mixed) {
       }
     }
     fiber = fiber.return;
+  }
+
+  if (__DEV__) {
+    // TODO: Until we re-land skipUnmountedBoundaries (see #20147), this warning
+    // will fire for errors that are thrown by destroy functions inside deleted
+    // trees. What it should instead do is propagate the error to the parent of
+    // the deleted tree. In the meantime, do not add this warning to the
+    // allowlist; this is only for our internal use.
+    console.error(
+      'Internal React error: Attempted to capture a commit phase error ' +
+        'inside a detached tree. This indicates a bug in React. Likely ' +
+        'causes include deleting the same fiber more than once, committing an ' +
+        'already-finished tree, or an inconsistent return pointer.\n\n' +
+        'Error message:\n\n%s',
+      error,
+    );
   }
 }
 

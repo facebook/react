@@ -1864,9 +1864,6 @@ const HooksDispatcherOnMount: Dispatcher = {
 
   unstable_isNewReconciler: enableNewReconciler,
 };
-if (enableCache) {
-  (HooksDispatcherOnMount: Dispatcher).getCacheForType = getCacheForType;
-}
 
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,

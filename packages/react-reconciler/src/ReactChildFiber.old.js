@@ -13,7 +13,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.old';
 
 import getComponentName from 'shared/getComponentName';
-import {Placement, Deletion} from './ReactFiberFlags';
+import {Deletion, ChildDeletion, Placement} from './ReactFiberFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -276,6 +276,23 @@ function ChildReconciler(shouldTrackSideEffects) {
     }
     childToDelete.nextEffect = null;
     childToDelete.flags = Deletion;
+
+    let deletions = returnFiber.deletions;
+    if (deletions === null) {
+      deletions = returnFiber.deletions = [childToDelete];
+      returnFiber.flags |= ChildDeletion;
+    } else {
+      deletions.push(childToDelete);
+    }
+    // Stash a reference to the return fiber's deletion array on each of the
+    // deleted children. This is really weird, but it's a temporary workaround
+    // while we're still using the effect list to traverse effect fibers. A
+    // better workaround would be to follow the `.return` pointer in the commit
+    // phase, but unfortunately we can't assume that `.return` points to the
+    // correct fiber, even in the commit phase, because `findDOMNode` might
+    // mutate it.
+    // TODO: Remove this line.
+    childToDelete.deletions = deletions;
   }
 
   function deleteRemainingChildren(
@@ -1125,6 +1142,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         } else {
           if (
             child.elementType === elementType ||
+            // Keep this check inline so it only runs on the false path:
             (__DEV__
               ? isCompatibleFamilyForHotReloading(child, element)
               : false) ||

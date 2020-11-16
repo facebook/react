@@ -24,7 +24,7 @@ import {
   HostRoot,
   SuspenseComponent,
 } from './ReactWorkTags';
-import {Deletion, Placement, Hydrating} from './ReactFiberFlags';
+import {Deletion, ChildDeletion, Placement, Hydrating} from './ReactFiberFlags';
 import invariant from 'shared/invariant';
 
 import {
@@ -137,6 +137,15 @@ function deleteHydratableInstance(
   } else {
     returnFiber.firstEffect = returnFiber.lastEffect = childToDelete;
   }
+
+  let deletions = returnFiber.deletions;
+  if (deletions === null) {
+    deletions = returnFiber.deletions = [childToDelete];
+    returnFiber.flags |= ChildDeletion;
+  } else {
+    deletions.push(childToDelete);
+  }
+  childToDelete.deletions = deletions;
 }
 
 function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
