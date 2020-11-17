@@ -28,7 +28,7 @@ import {
   enableFundamentalAPI,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
-import {NoFlags, Placement} from './ReactFiberFlags';
+import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
 import {
   IndeterminateComponent,
@@ -299,6 +299,9 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     }
   }
 
+  // Reset all effects except static ones.
+  // Static effects are not specific to a render.
+  workInProgress.flags = current.flags & StaticMask;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
 
