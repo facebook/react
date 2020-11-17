@@ -67,7 +67,7 @@
     "prebuild": "cp -r ../../build/node_modules/* ./node_modules/",
     "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
     "start:client": "node scripts/start.js",
-    "start:server": "NODE_ENV=development node --experimental-loader ./server/loader.mjs server",
+    "start:server": "NODE_ENV=development node --experimental-loader ./loader/index.js server",
     "start:prod": "node scripts/build.js && NODE_ENV=production node server",
     "build": "node scripts/build.js",
     "test": "node scripts/test.js --env=jsdom"

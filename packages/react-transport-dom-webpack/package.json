@@ -17,9 +17,21 @@
     "server.js",
     "server.browser.js",
     "server.node.js",
+    "node-register.js",
     "cjs/",
-    "umd/"
+    "umd/",
+    "esm/"
   ],
+  "exports": {
+    ".": "./index.js",
+    "./plugin": "./plugin.js",
+    "./server": "./server.js",
+    "./server.browser": "./server.browser.js",
+    "./server.node": "./server.node.js",
+    "./node-loader": "./esm/react-transport-dom-webpack-node-loader.js",
+    "./node-register": "./node-register.js",
+    "./package.json": "./package.json"
+  },
   "browser": {
     "./server.js": "./server.browser.js"
   },

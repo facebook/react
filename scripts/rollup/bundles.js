@@ -286,6 +286,24 @@ const bundles = [
     externals: [],
   },
 
+  /******* React Transport DOM Webpack Node.js Loader *******/
+  {
+    bundleTypes: [NODE_ESM],
+    moduleType: RENDERER_UTILS,
+    entry: 'react-transport-dom-webpack/node-loader',
+    global: 'ReactFlightWebpackNodeLoader',
+    externals: [],
+  },
+
+  /******* React Transport DOM Webpack Node.js CommonJS Loader *******/
+  {
+    bundleTypes: [NODE_ES2015],
+    moduleType: RENDERER_UTILS,
+    entry: 'react-transport-dom-webpack/node-register',
+    global: 'ReactFlightWebpackNodeRegister',
+    externals: ['url'],
+  },
+
   /******* React Transport DOM Server Relay *******/
   {
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
