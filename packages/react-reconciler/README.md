@@ -125,7 +125,9 @@ In this method, you can perform some final mutations on the `instance`. Unlike w
 
 This method happens **in the render phase**. It can mutate `instance`, but it must not modify any other nodes. It's called while the tree is still being built up and not connected to the actual tree on the screen.
 
-There is a second purpose to this method. It lets you specify whether there is some work that needs to happen when the node is connected to the tree on the screen. If you return `true`, the instance will receive a `commitMount` call later. See its documentation below. If you're not sure you need this, return `false`.
+There is a second purpose to this method. It lets you specify whether there is some work that needs to happen when the node is connected to the tree on the screen. If you return `true`, the instance will receive a `commitMount` call later. See its documentation below.
+
+If you don't want to do anything here, you should return `false`.
 
 #### `prepareUpdate(instance, type, oldProps, newProps, rootContainer, hostContext)`
 
@@ -139,9 +141,9 @@ See the meaning of `rootContainer` and `hostContext` in the `createInstance` doc
 
 Some target platforms support setting an instance's text content without manually creating a text node. For example, in the DOM, you can set `node.textContent` instead of creating a text node and appending it.
 
-If you return `true` from this method, React will assume that this node's children are text, and will not create nodes for them. It will instead rely on you to have filled that text during `createInstance`. This is a performance optimization. For example, the DOM renderer returns `true` only if `type` is a known text-only parent (like `'textarea'`) or if `props.children` has a `'string'` type.
+If you return `true` from this method, React will assume that this node's children are text, and will not create nodes for them. It will instead rely on you to have filled that text during `createInstance`. This is a performance optimization. For example, the DOM renderer returns `true` only if `type` is a known text-only parent (like `'textarea'`) or if `props.children` has a `'string'` type. If you return `true`, you will need to implement `resetTextContent` too.
 
-If you return `true`, you will need to implement `resetTextContent` too.
+If you don't want to do anything here, you should return `false`.
 
 This method happens **in the render phase**. Do not mutate the tree from it.
 
@@ -159,21 +161,27 @@ Host context lets you track some information about where you are in the tree so 
 
 If the node of this `type` does not influence the context you want to pass down, you can return `parentHostContext`. Alternatively, you can return any custom object representing the information you want to pass down.
 
+If you don't want to do anything here, return `parentHostContext`.
+
 This method happens **in the render phase**. Do not mutate the tree from it.
 
 #### `getPublicInstance(instance)`
 
 Determines what object gets exposed as a ref. You'll likely want to return the `instance` itself. But in some cases it might make sense to only expose some part of it.
 
+If you don't want to do anything here, return `instance`.
+
 #### `prepareForCommit(containerInfo)`
 
 This method lets you store some information before React starts making changes to the tree on the screen. For example, the DOM renderer stores the current text selection so that it can later restore it. This method is mirrored by `resetAfterCommit`.
 
-You need to explicitly return `null` from this method.
+Even if you don't want to do anything here, you need to return `null` from it.
 
 #### `resetAfterCommit(containerInfo)`
 
 This method is called right after React has performed the tree mutations. You can use it to restore something you've stored in `prepareForCommit` — for example, text selection.
+
+You can leave it empty.
 
 #### `preparePortalMount(containerInfo)`
 
@@ -237,7 +245,7 @@ Same as `removeChild`, but for when a node is detached from the root container. 
 
 If you returned `true` from `shouldSetTextContent` for the previous props, but returned `false` from `shouldSetTextContent` for the next props, React will call this method so that you can clear the text content you were managing manually. For example, in the DOM you could set `node.textContent = ''`.
 
-This method is not called if you never return `true` from `shouldSetTextContent`.
+If you never return `true` from `shouldSetTextContent`, you can leave it empty.
 
 #### `commitTextUpdate(textInstance, prevText, nextText)`
 
@@ -254,6 +262,8 @@ It lets you do some additional work after the node is actually attached to the t
 Note that `commitMount` does not mirror `removeChild` one to one because `removeChild` is only called for the top-level removed node. This is why ideally `commitMount` should not mutate any nodes other than the `instance` itself. For example, if it registers some events on some node above, it will be your responsibility to traverse the tree in `removeChild` and clean them up, which is not ideal.
 
 The `internalHandle` data structure is meant to be opaque. If you bend the rules and rely on its internal fields, be aware that it may change significantly between versions. You're taking on additional maintenance risk by reading from it, and giving up all guarantees if you write something to it.
+
+If you never return `true` from `finalizeInitialChildren`, you can leave it empty.
 
 #### `commitUpdate(instance, updatePayload, type, prevProps, nextProps, internalHandle)`
 
