@@ -1,13 +1,7 @@
 'use strict';
 
-const url = require('url');
-
-require.extensions['.client.js'] = function(module, path) {
-  module.exports = {
-    $$typeof: Symbol.for('react.module.reference'),
-    name: url.pathToFileURL(path).href,
-  };
-};
+const register = require('react-transport-dom-webpack/node-register');
+register();
 
 const babelRegister = require('@babel/register');
 
