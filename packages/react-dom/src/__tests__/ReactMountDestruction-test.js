@@ -11,6 +11,10 @@
 
 const React = require('react');
 const ReactDOM = require('react-dom');
+const {
+  getFiberCurrentPropsFromNode,
+  getInstanceFromNode,
+} = require('../client/ReactDOMComponentTree');
 
 describe('ReactMount', () => {
   it('should destroy a react root upon request', () => {
@@ -36,6 +40,83 @@ describe('ReactMount', () => {
     expect(firstRootDiv.firstChild).toBeNull();
     ReactDOM.unmountComponentAtNode(secondRootDiv);
     expect(secondRootDiv.firstChild).toBeNull();
+  });
+
+  describe('when unmounting the container node', () => {
+    it('should remove references from rendered DOM elements to their fiber nodes', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <div>
+          <span>Hello World</span>
+        </div>,
+        container,
+      );
+      const node = container.firstChild;
+      expect(getInstanceFromNode(node)).not.toBeNull();
+      const nestedNode = node.firstChild;
+      expect(getInstanceFromNode(nestedNode)).not.toBeNull();
+
+      ReactDOM.unmountComponentAtNode(container);
+      expect(getInstanceFromNode(node)).toBeNull();
+      expect(getInstanceFromNode(nestedNode)).toBeNull();
+    });
+    it("should remove references from rendered DOM elements to their fiber's props", () => {
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <div className="hello">
+          <span className="world" />
+        </div>,
+        container,
+      );
+      const node = container.firstChild;
+      expect(getFiberCurrentPropsFromNode(node)).not.toBeNull();
+      const nestedNode = node.firstChild;
+      expect(getFiberCurrentPropsFromNode(nestedNode)).not.toBeNull();
+
+      ReactDOM.unmountComponentAtNode(container);
+      expect(getFiberCurrentPropsFromNode(node)).toBeNull();
+      expect(getFiberCurrentPropsFromNode(nestedNode)).toBeNull();
+    });
+  });
+  describe('when unmounting a non-container node', () => {
+    it('should remove references from rendered DOM elements to their fiber nodes', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <div>
+          <span>
+            <i>Hello World</i>
+          </span>
+        </div>,
+        container,
+      );
+      const node = container.firstChild.firstChild;
+      expect(getInstanceFromNode(node)).not.toBeNull();
+      const nestedNode = node.firstChild;
+      expect(getInstanceFromNode(nestedNode)).not.toBeNull();
+
+      ReactDOM.render(<div />, container);
+      expect(getInstanceFromNode(node)).toBeNull();
+      expect(getInstanceFromNode(nestedNode)).toBeNull();
+    });
+    it("should remove references from rendered DOM elements to their fiber's props", () => {
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <div>
+          <span className="hello">
+            <i className="world" />
+          </span>
+        </div>,
+        container,
+      );
+      const node = container.firstChild.firstChild;
+      expect(getFiberCurrentPropsFromNode(node)).not.toBeNull();
+      const nestedNode = node.firstChild;
+      expect(getFiberCurrentPropsFromNode(nestedNode)).not.toBeNull();
+
+      ReactDOM.render(<div />, container);
+      expect(getFiberCurrentPropsFromNode(node)).toBeNull();
+      expect(getFiberCurrentPropsFromNode(nestedNode)).toBeNull();
+    });
   });
 
   it('should warn when unmounting a non-container root node', () => {
