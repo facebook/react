@@ -163,7 +163,7 @@ This method happens **in the render phase**. Do not mutate the tree from it.
 
 #### `getPublicInstance(instance)`
 
-Determines what object gets exposed as a ref. You'll likely want to return the `instance` yourself, but in some cases it might make sense to only expose some part of it.
+Determines what object gets exposed as a ref. You'll likely want to return the `instance` itself. But in some cases it might make sense to only expose some part of it.
 
 #### `prepareForCommit(containerInfo)`
 
