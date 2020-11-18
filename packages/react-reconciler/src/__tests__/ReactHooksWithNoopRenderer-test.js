@@ -3370,4 +3370,50 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
     expect(Scheduler).toHaveYielded(['Unmount layout B', 'Unmount passive B']);
   });
+
+  it('regression: deleting a tree and unmounting its effects after a reorder', async () => {
+    const root = ReactNoop.createRoot();
+
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return label;
+    }
+
+    await act(async () => {
+      root.render(
+        <>
+          <Child key="A" label="A" />
+          <Child key="B" label="B" />
+        </>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Mount A', 'Mount B']);
+
+    await act(async () => {
+      root.render(
+        <>
+          <Child key="B" label="B" />
+          <Child key="A" label="A" />
+        </>,
+      );
+    });
+    expect(Scheduler).toHaveYielded([]);
+
+    await act(async () => {
+      root.render(null);
+    });
+
+    expect(Scheduler).toHaveYielded([
+      'Unmount B',
+      // In the regression, the reorder would cause Child A to "forget" that it
+      // contains passive effects. Then when we deleted the tree, A's unmount
+      // effect would not fire.
+      'Unmount A',
+    ]);
+  });
 });
