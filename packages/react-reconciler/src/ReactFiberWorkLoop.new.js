@@ -549,12 +549,12 @@ export function scheduleUpdateOnFiber(
         let current = fiber;
         while (current !== null) {
           if (current.tag === Profiler) {
-            const {onNestedUpdateScheduled} = current.memoizedProps;
+            const {id, onNestedUpdateScheduled} = current.memoizedProps;
             if (typeof onNestedUpdateScheduled === 'function') {
               if (enableSchedulerTracing) {
-                onNestedUpdateScheduled(root.memoizedInteractions);
+                onNestedUpdateScheduled(id, root.memoizedInteractions);
               } else {
-                onNestedUpdateScheduled();
+                onNestedUpdateScheduled(id);
               }
             }
           }
