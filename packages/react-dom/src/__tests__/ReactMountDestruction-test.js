@@ -11,10 +11,6 @@
 
 const React = require('react');
 const ReactDOM = require('react-dom');
-const {
-  getFiberCurrentPropsFromNode,
-  getInstanceFromNode,
-} = require('../client/ReactDOMComponentTree');
 
 describe('ReactMount', () => {
   it('should destroy a react root upon request', () => {
@@ -167,3 +163,26 @@ describe('ReactMount', () => {
     );
   });
 });
+
+function getInstanceFromNode(node) {
+  // the prefix must be the same as in the internalInstanceKey in ReactDOMComponentTree
+  return getPrefixedValueFromNode(node, '__reactFiber$');
+}
+
+function getFiberCurrentPropsFromNode(node) {
+  // the prefix must be the same as in the internalPropsKey in ReactDOMComponentTree
+  return getPrefixedValueFromNode(node, '__reactProps$');
+}
+
+function getPrefixedValueFromNode(node, prefix) {
+  const keys = Object.keys(node);
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i];
+    if (key.startsWith(prefix)) {
+      return node[key];
+    }
+  }
+  throw new Error(
+    'node ' + node + ' has no property prefixed "' + prefix + '".',
+  );
+}
