@@ -111,7 +111,7 @@ This method happens **in the render phase**. It can (and usually should) mutate 
 
 #### `createTextInstance(text, rootContainer, hostContext, internalHandle)`
 
-Same as `createInstance`, but for text nodes. If your renderer doesn't support text nodes, you can throw here.
+Same as `createInstance`, but for text nodes. If your renderer doesn't support text nodes, you can throw here, for example in **React Native** you must use `Text` component around a texts.
 
 #### `appendInitialChild(parentInstance, child)`
 
