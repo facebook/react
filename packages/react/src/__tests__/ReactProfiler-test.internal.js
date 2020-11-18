@@ -2583,7 +2583,8 @@ describe('Profiler', () => {
         expect(Scheduler).toHaveYielded(['Component:false', 'Component:true']);
         expect(onNestedUpdateScheduled).toHaveBeenCalledTimes(1);
         if (ReactFeatureFlags.enableSchedulerTracing) {
-          expect(onNestedUpdateScheduled.mock.calls[0][0]).toMatchInteractions([
+          expect(onNestedUpdateScheduled.mock.calls[0][0]).toBe('test');
+          expect(onNestedUpdateScheduled.mock.calls[0][1]).toMatchInteractions([
             interactionCreation,
           ]);
         }
@@ -2624,7 +2625,9 @@ describe('Profiler', () => {
 
         expect(Scheduler).toHaveYielded(['Component:false', 'Component:true']);
         expect(onNestedUpdateScheduledOne).toHaveBeenCalledTimes(1);
+        expect(onNestedUpdateScheduledOne.mock.calls[0][0]).toBe('one');
         expect(onNestedUpdateScheduledTwo).toHaveBeenCalledTimes(1);
+        expect(onNestedUpdateScheduledTwo.mock.calls[0][0]).toBe('two');
         expect(onNestedUpdateScheduledThree).not.toHaveBeenCalled();
       });
 
@@ -2817,7 +2820,8 @@ describe('Profiler', () => {
         ]);
         expect(onNestedUpdateScheduled).toHaveBeenCalledTimes(1);
         if (ReactFeatureFlags.enableSchedulerTracing) {
-          expect(onNestedUpdateScheduled.mock.calls[0][0]).toMatchInteractions([
+          expect(onNestedUpdateScheduled.mock.calls[0][0]).toBe('test');
+          expect(onNestedUpdateScheduled.mock.calls[0][1]).toMatchInteractions([
             interactionCreation,
           ]);
         }
@@ -2850,7 +2854,8 @@ describe('Profiler', () => {
         ]);
         expect(onNestedUpdateScheduled).toHaveBeenCalledTimes(2);
         if (ReactFeatureFlags.enableSchedulerTracing) {
-          expect(onNestedUpdateScheduled.mock.calls[1][0]).toMatchInteractions([
+          expect(onNestedUpdateScheduled.mock.calls[1][0]).toBe('test');
+          expect(onNestedUpdateScheduled.mock.calls[1][1]).toMatchInteractions([
             interactionUpdate,
           ]);
         }
@@ -2898,7 +2903,8 @@ describe('Profiler', () => {
         expect(Scheduler).toHaveYielded(['Component:false', 'Component:true']);
         expect(onNestedUpdateScheduled).toHaveBeenCalledTimes(1);
         if (ReactFeatureFlags.enableSchedulerTracing) {
-          expect(onNestedUpdateScheduled.mock.calls[0][0]).toMatchInteractions([
+          expect(onNestedUpdateScheduled.mock.calls[0][0]).toBe('test');
+          expect(onNestedUpdateScheduled.mock.calls[0][1]).toMatchInteractions([
             interactionCreation,
           ]);
         }
@@ -2969,7 +2975,8 @@ describe('Profiler', () => {
         ]);
         expect(onNestedUpdateScheduled).toHaveBeenCalledTimes(1);
         if (ReactFeatureFlags.enableSchedulerTracing) {
-          expect(onNestedUpdateScheduled.mock.calls[0][0]).toMatchInteractions([
+          expect(onNestedUpdateScheduled.mock.calls[0][0]).toBe('test');
+          expect(onNestedUpdateScheduled.mock.calls[0][1]).toMatchInteractions([
             interactionCreation,
           ]);
         }
