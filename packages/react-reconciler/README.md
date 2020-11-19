@@ -121,7 +121,7 @@ This method happens **in the render phase**. It can mutate `parentInstance` and 
 
 #### `finalizeInitialChildren(instance, type, props, rootContainer, hostContext)`
 
-In this method, you can perform some final mutations on the `instance`. Unlike with `createInstance`, by the time `finalizeInitialChildren` is called, all the initial children have already been addded to the `instance`, but the instance itself has not yet been connected to the tree on the screen.
+In this method, you can perform some final mutations on the `instance`. Unlike with `createInstance`, by the time `finalizeInitialChildren` is called, all the initial children have already been added to the `instance`, but the instance itself has not yet been connected to the tree on the screen.
 
 This method happens **in the render phase**. It can mutate `instance`, but it must not modify any other nodes. It's called while the tree is still being built up and not connected to the actual tree on the screen.
 
