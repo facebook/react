@@ -90,6 +90,15 @@ const bundles = [
     externals: [],
   },
 
+  /******* Isomorphic Server Only *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react/unstable-index.server',
+    global: 'React',
+    externals: [],
+  },
+
   /******* React JSX Runtime *******/
   {
     bundleTypes: [

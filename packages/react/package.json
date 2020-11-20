@@ -17,9 +17,24 @@
     "umd/",
     "jsx-runtime.js",
     "jsx-dev-runtime.js",
+    "unstable-index.server.js",
     "unstable-cache.js"
   ],
   "main": "index.js",
+  "exports": {
+    ".": {
+      "react-server": "./unstable-index.server.js",
+      "default": "./index.js"
+    },
+    "./index": {
+      "react-server": "./unstable-index.server.js",
+      "default": "./index.js"
+    },
+    "./build-info.json": "./build-info.json",
+    "./jsx-runtime": "./jsx-runtime.js",
+    "./jsx-dev-runtime": "./jsx-dev-runtime.js",
+    "./": "./"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/facebook/react.git",

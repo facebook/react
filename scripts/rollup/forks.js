@@ -43,7 +43,7 @@ const forks = Object.freeze({
       // happens. Other bundles just require('object-assign') anyway.
       return null;
     }
-    if (entry === 'react') {
+    if (entry === 'react' || entry === 'react/unstable-index.server') {
       // Use the forked version that uses ES modules instead of CommonJS.
       return 'shared/forks/object-assign.inline-umd.js';
     }
@@ -64,8 +64,8 @@ const forks = Object.freeze({
   // Without this fork, importing `shared/ReactSharedInternals` inside
   // the `react` package itself would not work due to a cyclical dependency.
   'shared/ReactSharedInternals': (bundleType, entry, dependencies) => {
-    if (entry === 'react') {
-      return 'react/src/ReactSharedInternals';
+    if (entry === 'react' || entry === 'react/unstable-index.server') {
+      return 'react/src/ReactSharedInternals.js';
     }
     if (!entry.startsWith('react/') && dependencies.indexOf('react') === -1) {
       // React internals are unavailable if we can't reference the package.
