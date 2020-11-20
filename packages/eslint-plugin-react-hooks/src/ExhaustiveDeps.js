@@ -597,14 +597,18 @@ export default {
         // If the declared dependencies are not an array expression then we
         // can't verify that the user provided the correct dependencies. Tell
         // the user this in an error.
-        reportProblem({
-          node: declaredDependenciesNode,
-          message:
-            `React Hook ${context.getSource(reactiveHook)} was passed a ` +
-            'dependency list that is not an array literal. This means we ' +
-            "can't statically verify whether you've passed the correct " +
-            'dependencies.',
-        });
+        if (declaredDependenciesNode.name !== 'undefined') {
+          // If the user explicitly passes an undefined as the second argument
+          // we are assuming that it is intentional and omitting the error
+          reportProblem({
+            node: declaredDependenciesNode,
+            message:
+              `React Hook ${context.getSource(reactiveHook)} was passed a ` +
+              'dependency list that is not an array literal. This means we ' +
+              "can't statically verify whether you've passed the correct " +
+              'dependencies.',
+          });
+        }
       } else {
         declaredDependenciesNode.elements.forEach(declaredDependencyNode => {
           // Skip elided elements.
@@ -1070,41 +1074,43 @@ export default {
           }
         }
       }
-
-      reportProblem({
-        node: declaredDependenciesNode,
-        message:
-          `React Hook ${context.getSource(reactiveHook)} has ` +
-          // To avoid a long message, show the next actionable item.
-          (getWarningMessage(missingDependencies, 'a', 'missing', 'include') ||
-            getWarningMessage(
-              unnecessaryDependencies,
-              'an',
-              'unnecessary',
-              'exclude',
-            ) ||
-            getWarningMessage(
-              duplicateDependencies,
-              'a',
-              'duplicate',
-              'omit',
-            )) +
-          extraWarning,
-        suggest: [
-          {
-            desc: `Update the dependencies array to be: [${suggestedDeps
-              .map(formatDependency)
-              .join(', ')}]`,
-            fix(fixer) {
-              // TODO: consider preserving the comments or formatting?
-              return fixer.replaceText(
-                declaredDependenciesNode,
-                `[${suggestedDeps.map(formatDependency).join(', ')}]`,
-              );
+      if (declaredDependenciesNode.name !== 'undefined') {
+        // Report the error only if the dependency array is not explicitly undefined
+        reportProblem({
+          node: declaredDependenciesNode,
+          message:
+            `React Hook ${context.getSource(reactiveHook)} has ` +
+            // To avoid a long message, show the next actionable item.
+            (getWarningMessage(missingDependencies, 'a', 'missing', 'include') ||
+              getWarningMessage(
+                unnecessaryDependencies,
+                'an',
+                'unnecessary',
+                'exclude',
+              ) ||
+              getWarningMessage(
+                duplicateDependencies,
+                'a',
+                'duplicate',
+                'omit',
+              )) +
+            extraWarning,
+          suggest: [
+            {
+              desc: `Update the dependencies array to be: [${suggestedDeps
+                .map(formatDependency)
+                .join(', ')}]`,
+              fix(fixer) {
+                // TODO: consider preserving the comments or formatting?
+                return fixer.replaceText(
+                  declaredDependenciesNode,
+                  `[${suggestedDeps.map(formatDependency).join(', ')}]`,
+                );
+              },
             },
-          },
-        ],
-      });
+          ],
+        });
+      }
     }
 
     function visitCallExpression(node) {
