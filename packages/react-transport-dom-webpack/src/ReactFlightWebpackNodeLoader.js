@@ -29,6 +29,17 @@ type GetSourceFunction = (
   GetSourceFunction,
 ) => Promise<{source: Source}>;
 
+type TransformSourceContext = {
+  format: string,
+  url: string,
+};
+
+type TransformSourceFunction = (
+  Source,
+  TransformSourceContext,
+  TransformSourceFunction,
+) => Promise<{source: Source}>;
+
 type Source = string | ArrayBuffer | Uint8Array;
 
 let warnedAboutConditionsFlag = false;
@@ -71,14 +82,23 @@ export async function getSource(
   url: string,
   context: GetSourceContext,
   defaultGetSource: GetSourceFunction,
+) {
+  return defaultGetSource(url, context, defaultGetSource);
+}
+
+export async function transformSource(
+  source: Source,
+  context: TransformSourceContext,
+  defaultTransformSource: TransformSourceFunction,
 ): Promise<{source: Source}> {
-  if (url.endsWith('.client.js')) {
+  if (context.url.endsWith('.client.js')) {
     // TODO: Named exports.
     const src =
       "export default { $$typeof: Symbol.for('react.module.reference'), filepath: " +
-      JSON.stringify(url) +
+      JSON.stringify(context.url) +
       '}';
     return {source: src};
   }
-  return defaultGetSource(url, context, defaultGetSource);
+
+  return defaultTransformSource(source, context, defaultTransformSource);
 }
