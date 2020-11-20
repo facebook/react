@@ -310,7 +310,7 @@ const bundles = [
     moduleType: RENDERER_UTILS,
     entry: 'react-transport-dom-webpack/node-register',
     global: 'ReactFlightWebpackNodeRegister',
-    externals: ['url'],
+    externals: ['url', 'module'],
   },
 
   /******* React Transport DOM Server Relay *******/
