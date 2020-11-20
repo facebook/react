@@ -492,6 +492,7 @@ export function setCurrentPartialRenderer(renderer: PartialRenderer) {
 }
 
 export const Dispatcher: DispatcherType = {
+  readCache: readContext, // TODO
   readContext,
   useContext,
   useMemo,

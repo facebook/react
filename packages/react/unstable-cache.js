@@ -6,4 +6,4 @@
  *
  * @flow
  */
-export {createCache, readCache, CacheProvider} from './src/cache/ReactCache';
+export {createCache, readCache, CacheContext} from './src/cache/ReactCache';

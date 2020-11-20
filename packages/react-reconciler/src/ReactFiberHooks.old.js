@@ -1816,6 +1816,7 @@ function dispatchAction<S, A>(
 }
 
 export const ContextOnlyDispatcher: Dispatcher = {
+  readCache: readContext, // TODO
   readContext,
 
   useCallback: throwInvalidHookError,
@@ -1837,6 +1838,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
 };
 
 const HooksDispatcherOnMount: Dispatcher = {
+  readCache: readContext, // TODO
   readContext,
 
   useCallback: mountCallback,
@@ -1858,6 +1860,7 @@ const HooksDispatcherOnMount: Dispatcher = {
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
+  readCache: readContext, // TODO
   readContext,
 
   useCallback: updateCallback,
@@ -1879,6 +1882,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 };
 
 const HooksDispatcherOnRerender: Dispatcher = {
+  readCache: readContext, // TODO
   readContext,
 
   useCallback: updateCallback,
@@ -1927,6 +1931,13 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnMountInDEV = {
+    // TODO: remove the arguments and change the implementation.
+    readCache<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      return readContext(context, observedBits);
+    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2054,6 +2065,13 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
+    // TODO: remove the arguments and change the implementation.
+    readCache<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      return readContext(context, observedBits);
+    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2176,6 +2194,13 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnUpdateInDEV = {
+    // TODO: remove the arguments and change the implementation.
+    readCache<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      return readContext(context, observedBits);
+    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2298,6 +2323,13 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnRerenderInDEV = {
+    // TODO: remove the arguments and change the implementation.
+    readCache<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      return readContext(context, observedBits);
+    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2421,6 +2453,13 @@ if (__DEV__) {
   };
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
+    // TODO: remove the arguments and change the implementation.
+    readCache<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      return readContext(context, observedBits);
+    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2558,6 +2597,13 @@ if (__DEV__) {
   };
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
+    // TODO: remove the arguments and change the implementation.
+    readCache<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      return readContext(context, observedBits);
+    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2695,6 +2741,13 @@ if (__DEV__) {
   };
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
+    // TODO: remove the arguments and change the implementation.
+    readCache<T>(
+      context: ReactContext<T>,
+      observedBits: void | number | boolean,
+    ): T {
+      return readContext(context, observedBits);
+    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,

@@ -274,6 +274,11 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 export type Dispatcher = {|
+  readCache<T>(
+    // TODO: remove these arguments.
+    context: ReactContext<T>,
+    observedBits: void | number | boolean,
+  ): T,
   readContext<T>(
     context: ReactContext<T>,
     observedBits: void | number | boolean,

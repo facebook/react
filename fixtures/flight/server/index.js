@@ -24,6 +24,20 @@ app.get('/', function(req, res) {
   require('./handler.server.js')(req, res);
 });
 
+app.get('/todos', function(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.json([
+    {
+      id: 1,
+      text: 'Shave yaks',
+    },
+    {
+      id: 2,
+      text: 'Eat kale',
+    },
+  ]);
+});
+
 app.listen(3001, () => {
   console.log('Flight Server listening on port 3001...');
 });

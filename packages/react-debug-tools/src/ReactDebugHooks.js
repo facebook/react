@@ -298,6 +298,7 @@ function useOpaqueIdentifier(): OpaqueIDType | void {
 }
 
 const Dispatcher: DispatcherType = {
+  readCache: readContext, // TODO
   readContext,
   useCallback,
   useContext,

@@ -8,19 +8,20 @@
 
 import type {ReactContext} from 'shared/ReactTypes';
 
-import {createContext} from 'react';
-import invariant from 'shared/invariant';
+import * as React from 'react';
 
 type Cache = {|
   resources: Map<any, any>,
 |};
 
-// TODO: should there be a default cache?
-const CacheContext: ReactContext<null | Cache> = createContext(null);
+const ReactCurrentDispatcher =
+  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+    .ReactCurrentDispatcher;
+
+const CacheContext: ReactContext<null | Cache> = React.createContext(null);
 
 function CacheImpl() {
   this.resources = new Map();
-  // TODO: cancellation token.
 }
 
 function createCache(): Cache {
@@ -29,15 +30,7 @@ function createCache(): Cache {
 }
 
 function readCache(): Cache {
-  // TODO: this doesn't subscribe.
-  // But we really want load context anyway.
-  const value = CacheContext._currentValue;
-  if (value instanceof CacheImpl) {
-    return value;
-  }
-  invariant(false, 'Could not read the cache.');
+  return ReactCurrentDispatcher.current.readCache(CacheContext);
 }
 
-const CacheProvider = CacheContext.Provider;
-
-export {createCache, readCache, CacheProvider};
+export {createCache, readCache, CacheContext};
