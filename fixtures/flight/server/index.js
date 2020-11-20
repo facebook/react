@@ -17,9 +17,9 @@ const app = express();
 // Application
 app.get('/', function(req, res) {
   if (process.env.NODE_ENV === 'development') {
-    for (var key in require.cache) {
-      delete require.cache[key];
-    }
+    // for (var key in require.cache) {
+    //   delete require.cache[key];
+    // }
   }
   require('./handler.server.js')(req, res);
 });

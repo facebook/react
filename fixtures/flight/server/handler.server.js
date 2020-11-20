@@ -14,8 +14,8 @@ module.exports = async function(req, res) {
   CacheContext._currentValue = createCache();
 
   res.setHeader('Access-Control-Allow-Origin', '*');
-  // const m = await import('../src/App.server.js');
-  const m = require('../src/App.server.js');
+  const m = await import('../src/App.server.js');
+  // const m = require('../src/App.server.js');
   const App = m.default.default || m.default;
 
   pipeToNodeWritable(<App />, res, {
