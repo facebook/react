@@ -542,7 +542,7 @@ export function scheduleUpdateOnFiber(
 
   if (enableProfilerTimer && enableProfilerNestedUpdateScheduledHook) {
     if (
-      executionContext === CommitContext &&
+      (executionContext & CommitContext) !== NoContext &&
       root === rootCommittingMutationOrLayoutEffects
     ) {
       if (fiber.mode & ProfileMode) {
@@ -2240,7 +2240,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
   }
 
-  if (remainingLanes === SyncLane) {
+  if (includesSomeLane(remainingLanes, (SyncLane: Lane))) {
     if (enableProfilerTimer && enableProfilerNestedUpdatePhase) {
       markNestedUpdateScheduled();
     }
