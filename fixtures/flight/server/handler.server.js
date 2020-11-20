@@ -18,12 +18,17 @@ module.exports = async function(req, res) {
     // TODO: Read from a map on the disk.
     [resolve('../src/Counter.client.js')]: {
       id: './src/Counter.client.js',
+      chunks: ['2'],
+      name: 'Counter',
+    },
+    [resolve('../src/Counter2.client.js')]: {
+      id: './src/Counter2.client.js',
       chunks: ['1'],
-      name: 'default',
+      name: 'Counter',
     },
     [resolve('../src/ShowMore.client.js')]: {
       id: './src/ShowMore.client.js',
-      chunks: ['2'],
+      chunks: ['3'],
       name: 'default',
     },
   });

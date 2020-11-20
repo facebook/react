@@ -301,7 +301,7 @@ const bundles = [
     moduleType: RENDERER_UTILS,
     entry: 'react-transport-dom-webpack/node-loader',
     global: 'ReactFlightWebpackNodeLoader',
-    externals: [],
+    externals: ['acorn'],
   },
 
   /******* React Transport DOM Webpack Node.js CommonJS Loader *******/
