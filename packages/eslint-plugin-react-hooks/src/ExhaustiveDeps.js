@@ -1081,7 +1081,12 @@ export default {
           message:
             `React Hook ${context.getSource(reactiveHook)} has ` +
             // To avoid a long message, show the next actionable item.
-            (getWarningMessage(missingDependencies, 'a', 'missing', 'include') ||
+            (getWarningMessage(
+              missingDependencies,
+              'a',
+              'missing',
+              'include',
+            ) ||
               getWarningMessage(
                 unnecessaryDependencies,
                 'an',
