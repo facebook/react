@@ -16,7 +16,7 @@ export type BundlerConfig = WebpackMap;
 // eslint-disable-next-line no-unused-vars
 export type ModuleReference<T> = {
   $$typeof: Symbol,
-  name: string,
+  filepath: string,
 };
 
 export type ModuleMetaData = {
@@ -30,7 +30,7 @@ export type ModuleKey = string;
 const MODULE_TAG = Symbol.for('react.module.reference');
 
 export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
-  return reference.name;
+  return reference.filepath;
 }
 
 export function isModuleReference(reference: Object): boolean {
@@ -41,5 +41,5 @@ export function resolveModuleMetaData<T>(
   config: BundlerConfig,
   moduleReference: ModuleReference<T>,
 ): ModuleMetaData {
-  return config[moduleReference.name];
+  return config[moduleReference.filepath];
 }

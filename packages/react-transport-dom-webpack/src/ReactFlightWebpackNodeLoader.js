@@ -75,7 +75,7 @@ export async function getSource(
   if (url.endsWith('.client.js')) {
     // TODO: Named exports.
     const src =
-      "export default { $$typeof: Symbol.for('react.module.reference'), name: " +
+      "export default { $$typeof: Symbol.for('react.module.reference'), filepath: " +
       JSON.stringify(url) +
       '}';
     return {source: src};

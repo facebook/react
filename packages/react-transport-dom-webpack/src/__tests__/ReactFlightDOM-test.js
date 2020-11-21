@@ -73,7 +73,7 @@ describe('ReactFlightDOM', () => {
       name: 'd',
     };
     const MODULE_TAG = Symbol.for('react.module.reference');
-    return {$$typeof: MODULE_TAG, name: 'path/' + idx};
+    return {$$typeof: MODULE_TAG, filepath: 'path/' + idx};
   }
 
   async function waitForSuspense(fn) {

@@ -16,7 +16,7 @@ module.exports = function register() {
   (require: any).extensions['.client.js'] = function(module, path) {
     module.exports = {
       $$typeof: Symbol.for('react.module.reference'),
-      name: url.pathToFileURL(path).href,
+      filepath: url.pathToFileURL(path).href,
     };
   };
 
