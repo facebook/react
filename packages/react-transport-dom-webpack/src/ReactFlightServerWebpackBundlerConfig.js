@@ -8,7 +8,9 @@
  */
 
 type WebpackMap = {
-  [filename: string]: ModuleMetaData,
+  [filepath: string]: {
+    [name: string]: ModuleMetaData,
+  },
 };
 
 export type BundlerConfig = WebpackMap;
@@ -17,6 +19,7 @@ export type BundlerConfig = WebpackMap;
 export type ModuleReference<T> = {
   $$typeof: Symbol,
   filepath: string,
+  name: string,
 };
 
 export type ModuleMetaData = {
@@ -30,7 +33,7 @@ export type ModuleKey = string;
 const MODULE_TAG = Symbol.for('react.module.reference');
 
 export function getModuleKey(reference: ModuleReference<any>): ModuleKey {
-  return reference.filepath;
+  return reference.filepath + '#' + reference.name;
 }
 
 export function isModuleReference(reference: Object): boolean {
@@ -41,5 +44,5 @@ export function resolveModuleMetaData<T>(
   config: BundlerConfig,
   moduleReference: ModuleReference<T>,
 ): ModuleMetaData {
-  return config[moduleReference.filepath];
+  return config[moduleReference.filepath][moduleReference.name];
 }
