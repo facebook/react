@@ -36,6 +36,16 @@ module.exports = async function(req, res) {
         chunks: ['3'],
         name: 'default',
       },
+      '': {
+        id: './src/ShowMore.client.js',
+        chunks: ['3'],
+        name: '',
+      },
+      '*': {
+        id: './src/ShowMore.client.js',
+        chunks: ['3'],
+        name: '*',
+      },
     },
   });
 };

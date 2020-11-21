@@ -68,4 +68,4 @@ declare module 'EventListener' {
 }
 
 declare function __webpack_chunk_load__(id: string): Promise<mixed>;
-declare function __webpack_require__(id: string): {default: any};
+declare function __webpack_require__(id: string): any;
