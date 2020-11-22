@@ -12,7 +12,10 @@ babelRegister({
 });
 
 const express = require('express');
+const cors = require('cors');
 const app = express();
+app.use(cors());
+app.use(express.json());
 
 // Application
 app.get('/', function(req, res) {
@@ -25,18 +28,27 @@ app.get('/', function(req, res) {
   require('./handler.server.js')(req, res);
 });
 
+let todos = [
+  {
+    id: 1,
+    text: 'Shave yaks',
+  },
+  {
+    id: 2,
+    text: 'Eat kale!',
+  },
+];
+
 app.get('/todos', function(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.json([
-    {
-      id: 1,
-      text: 'Shave yaks',
-    },
-    {
-      id: 2,
-      text: 'Eat kale',
-    },
-  ]);
+  res.json(todos);
+});
+
+app.post('/todos', function(req, res) {
+  todos.push({
+    id: todos.length + 1,
+    text: req.body.text,
+  });
+  res.json(todos);
 });
 
 app.listen(3001, () => {

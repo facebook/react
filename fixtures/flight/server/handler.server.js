@@ -19,7 +19,7 @@ module.exports = async function(req, res) {
     [resolve('../src/Counter.client.js')]: {
       Counter: {
         id: './src/Counter.client.js',
-        chunks: ['2'],
+        chunks: ['1'],
         name: 'Counter',
       },
     },
@@ -30,20 +30,27 @@ module.exports = async function(req, res) {
         name: 'Counter',
       },
     },
+    [resolve('../src/AddTodo.client.js')]: {
+      default: {
+        id: './src/AddTodo.client.js',
+        chunks: ['2'],
+        name: 'default',
+      },
+    },
     [resolve('../src/ShowMore.client.js')]: {
       default: {
         id: './src/ShowMore.client.js',
-        chunks: ['3'],
+        chunks: ['4'],
         name: 'default',
       },
       '': {
         id: './src/ShowMore.client.js',
-        chunks: ['3'],
+        chunks: ['4'],
         name: '',
       },
       '*': {
         id: './src/ShowMore.client.js',
-        chunks: ['3'],
+        chunks: ['4'],
         name: '*',
       },
     },

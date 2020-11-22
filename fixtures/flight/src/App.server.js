@@ -5,7 +5,7 @@ import Container from './Container.js';
 
 import {Counter} from './Counter.client.js';
 import {Counter as Counter2} from './Counter2.client.js';
-
+import AddTodo from './AddTodo.client.js';
 import ShowMore from './ShowMore.client.js';
 
 export default function App() {
@@ -20,6 +20,9 @@ export default function App() {
           <li key={todo.id}>{todo.text}</li>
         ))}
       </ul>
+      <AddTodo />
+      <br />
+      <br />
       <ShowMore>
         <p>Lorem ipsum</p>
       </ShowMore>
