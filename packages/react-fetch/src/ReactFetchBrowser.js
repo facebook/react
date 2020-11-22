@@ -7,9 +7,9 @@
  * @flow
  */
 
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Wakeable, ReactCache} from 'shared/ReactTypes';
 
-import {readCache} from 'react/unstable-cache';
+import * as React from 'react';
 
 const Pending = 0;
 const Resolved = 1;
@@ -35,6 +35,14 @@ type Result = PendingResult | ResolvedResult | RejectedResult;
 // TODO: this is a browser-only version. Add a separate Node entry point.
 const nativeFetch = window.fetch;
 const fetchKey = {};
+
+const ReactCurrentDispatcher =
+  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+    .ReactCurrentDispatcher;
+
+function readCache(): ReactCache {
+  return ReactCurrentDispatcher.current.readCache();
+}
 
 function readResultMap(): Map<string, Result> {
   const resources = readCache().resources;

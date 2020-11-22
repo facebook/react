@@ -7,12 +7,11 @@
  * @flow
  */
 
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Wakeable, ReactCache} from 'shared/ReactTypes';
 
 import * as http from 'http';
 import * as https from 'https';
-
-import {readCache} from 'react/unstable-cache';
+import * as React from 'react';
 
 type FetchResponse = {|
   // Properties
@@ -74,6 +73,14 @@ type RejectedResult = {|
 |};
 
 type Result<V> = PendingResult | ResolvedResult<V> | RejectedResult;
+
+const ReactCurrentDispatcher =
+  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+    .ReactCurrentDispatcher;
+
+function readCache(): ReactCache {
+  return ReactCurrentDispatcher.current.readCache();
+}
 
 const fetchKey = {};
 
