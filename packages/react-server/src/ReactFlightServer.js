@@ -757,9 +757,8 @@ const Dispatcher: DispatcherType = {
   useTransition(): [(callback: () => void) => void, boolean] {
     return [() => {}, false];
   },
-  readCache(context: any) {
-    // Temporary hack to let us inject a value.
-    return context._currentValue;
+  readCache() {
+    invariant(false, 'Not implemented.');
   },
   readContext: (unsupportedHook: any),
   useContext: (unsupportedHook: any),

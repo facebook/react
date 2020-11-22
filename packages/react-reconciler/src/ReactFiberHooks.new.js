@@ -12,6 +12,7 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
+  ReactCache,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
@@ -1815,8 +1816,12 @@ function dispatchAction<S, A>(
   }
 }
 
+function readCache() {
+  invariant(false, 'Not implemented.');
+}
+
 export const ContextOnlyDispatcher: Dispatcher = {
-  readCache: readContext, // TODO
+  readCache,
   readContext,
 
   useCallback: throwInvalidHookError,
@@ -1838,7 +1843,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
 };
 
 const HooksDispatcherOnMount: Dispatcher = {
-  readCache: readContext, // TODO
+  readCache,
   readContext,
 
   useCallback: mountCallback,
@@ -1860,7 +1865,7 @@ const HooksDispatcherOnMount: Dispatcher = {
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
-  readCache: readContext, // TODO
+  readCache,
   readContext,
 
   useCallback: updateCallback,
@@ -1882,7 +1887,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 };
 
 const HooksDispatcherOnRerender: Dispatcher = {
-  readCache: readContext, // TODO
+  readCache,
   readContext,
 
   useCallback: updateCallback,
@@ -1931,13 +1936,8 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnMountInDEV = {
-    // TODO: remove the arguments and change the implementation.
-    readCache<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
-      warnInvalidContextAccess();
-      return readContext(context, observedBits);
+    readCache(): ReactCache {
+      return readCache();
     },
     readContext<T>(
       context: ReactContext<T>,
@@ -2066,13 +2066,8 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
-    // TODO: remove the arguments and change the implementation.
-    readCache<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
-      warnInvalidContextAccess();
-      return readContext(context, observedBits);
+    readCache(): ReactCache {
+      return readCache();
     },
     readContext<T>(
       context: ReactContext<T>,
@@ -2196,13 +2191,8 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnUpdateInDEV = {
-    // TODO: remove the arguments and change the implementation.
-    readCache<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
-      warnInvalidContextAccess();
-      return readContext(context, observedBits);
+    readCache(): ReactCache {
+      return readCache();
     },
     readContext<T>(
       context: ReactContext<T>,
@@ -2326,13 +2316,8 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnRerenderInDEV = {
-    // TODO: remove the arguments and change the implementation.
-    readCache<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
-      warnInvalidContextAccess();
-      return readContext(context, observedBits);
+    readCache(): ReactCache {
+      return readCache();
     },
     readContext<T>(
       context: ReactContext<T>,
@@ -2457,12 +2442,8 @@ if (__DEV__) {
   };
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
-    readCache<T>(
-      // TODO: remove this argument.
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
-      return readContext(context, observedBits);
+    readCache(): ReactCache {
+      return readCache();
     },
     readContext<T>(
       context: ReactContext<T>,
@@ -2601,13 +2582,8 @@ if (__DEV__) {
   };
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
-    // TODO: remove the arguments and change the implementation.
-    readCache<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
-      warnInvalidContextAccess();
-      return readContext(context, observedBits);
+    readCache(): ReactCache {
+      return readCache();
     },
     readContext<T>(
       context: ReactContext<T>,
@@ -2746,13 +2722,8 @@ if (__DEV__) {
   };
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
-    // TODO: remove the arguments and change the implementation.
-    readCache<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
-      warnInvalidContextAccess();
-      return readContext(context, observedBits);
+    readCache(): ReactCache {
+      return readCache();
     },
     readContext<T>(
       context: ReactContext<T>,
