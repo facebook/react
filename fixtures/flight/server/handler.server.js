@@ -2,7 +2,6 @@
 
 import {pipeToNodeWritable} from 'react-transport-dom-webpack/server';
 import * as React from 'react';
-import {CacheContext, createCache} from 'react/unstable-cache.js';
 
 import url from 'url';
 
@@ -11,8 +10,6 @@ function resolve(path) {
 }
 
 module.exports = async function(req, res) {
-  CacheContext._currentValue = createCache();
-
   res.setHeader('Access-Control-Allow-Origin', '*');
   const m = await import('../src/App.server.js');
   // const m = require('../src/App.server.js');
