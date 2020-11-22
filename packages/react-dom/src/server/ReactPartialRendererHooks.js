@@ -14,6 +14,7 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
+  ReactCache,
 } from 'shared/ReactTypes';
 import type PartialRenderer from './ReactPartialRenderer';
 
@@ -212,6 +213,10 @@ export function resetHooksState(): void {
   numberOfReRenders = 0;
   renderPhaseUpdates = null;
   workInProgressHook = null;
+}
+
+function readCache(): ReactCache {
+  invariant(false, 'Not implemented.');
 }
 
 function readContext<T>(
@@ -492,6 +497,7 @@ export function setCurrentPartialRenderer(renderer: PartialRenderer) {
 }
 
 export const Dispatcher: DispatcherType = {
+  readCache,
   readContext,
   useContext,
   useMemo,

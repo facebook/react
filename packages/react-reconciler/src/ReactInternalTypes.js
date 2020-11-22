@@ -23,7 +23,7 @@ import type {Flags} from './ReactFiberFlags';
 import type {Lane, LanePriority, Lanes, LaneMap} from './ReactFiberLane';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
-import type {Wakeable} from 'shared/ReactTypes';
+import type {Wakeable, ReactCache} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
 
 // Unwind Circular: moved from ReactFiberHooks.old
@@ -274,6 +274,7 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 export type Dispatcher = {|
+  readCache(): ReactCache,
   readContext<T>(
     context: ReactContext<T>,
     observedBits: void | number | boolean,

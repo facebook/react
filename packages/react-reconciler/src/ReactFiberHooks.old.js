@@ -12,6 +12,7 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
+  ReactCache,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
@@ -1815,7 +1816,12 @@ function dispatchAction<S, A>(
   }
 }
 
+function readCache() {
+  invariant(false, 'Not implemented.');
+}
+
 export const ContextOnlyDispatcher: Dispatcher = {
+  readCache,
   readContext,
 
   useCallback: throwInvalidHookError,
@@ -1837,6 +1843,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
 };
 
 const HooksDispatcherOnMount: Dispatcher = {
+  readCache,
   readContext,
 
   useCallback: mountCallback,
@@ -1858,6 +1865,7 @@ const HooksDispatcherOnMount: Dispatcher = {
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
+  readCache,
   readContext,
 
   useCallback: updateCallback,
@@ -1879,6 +1887,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 };
 
 const HooksDispatcherOnRerender: Dispatcher = {
+  readCache,
   readContext,
 
   useCallback: updateCallback,
@@ -1927,6 +1936,9 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnMountInDEV = {
+    readCache(): ReactCache {
+      return readCache();
+    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2054,6 +2066,9 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
+    readCache(): ReactCache {
+      return readCache();
+    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2176,6 +2191,9 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnUpdateInDEV = {
+    readCache(): ReactCache {
+      return readCache();
+    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2298,6 +2316,9 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnRerenderInDEV = {
+    readCache(): ReactCache {
+      return readCache();
+    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2421,6 +2442,9 @@ if (__DEV__) {
   };
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
+    readCache(): ReactCache {
+      return readCache();
+    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2558,6 +2582,9 @@ if (__DEV__) {
   };
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
+    readCache(): ReactCache {
+      return readCache();
+    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2695,6 +2722,9 @@ if (__DEV__) {
   };
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
+    readCache(): ReactCache {
+      return readCache();
+    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
