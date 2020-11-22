@@ -17,8 +17,7 @@
     "umd/",
     "jsx-runtime.js",
     "jsx-dev-runtime.js",
-    "unstable-index.server.js",
-    "unstable-cache.js"
+    "unstable-index.server.js"
   ],
   "main": "index.js",
   "exports": {
