@@ -34,6 +34,5 @@ spawn(
   } else {
     console.log('Danger passed');
   }
-
   process.exit(code);
 });
