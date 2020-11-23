@@ -440,4 +440,92 @@ describe('ReactFlightDOM', () => {
         '<p>Game over</p>', // TODO: should not have message in prod.
     );
   });
+
+  // @gate experimental
+  it('should preserve state of client components on refetch', async () => {
+    const {Suspense} = React;
+
+    // Client
+
+    function Page({response}) {
+      return response.readRoot();
+    }
+
+    function Input() {
+      return <input />;
+    }
+
+    const InputClient = moduleReference(Input);
+
+    // Server
+
+    function App({color}) {
+      // Verify both DOM and Client children.
+      return (
+        <div style={{color}}>
+          <input />
+          <InputClient />
+        </div>
+      );
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOM.unstable_createRoot(container);
+
+    const stream1 = getTestStream();
+    ReactTransportDOMServer.pipeToNodeWritable(
+      <App color="red" />,
+      stream1.writable,
+      webpackMap,
+    );
+    const response1 = ReactTransportDOMClient.createFromReadableStream(
+      stream1.readable,
+    );
+    await act(async () => {
+      root.render(
+        <Suspense fallback={<p>(loading)</p>}>
+          <Page response={response1} />
+        </Suspense>,
+      );
+    });
+    expect(container.children.length).toBe(1);
+    expect(container.children[0].tagName).toBe('DIV');
+    expect(container.children[0].style.color).toBe('red');
+
+    // Change the DOM state for both inputs.
+    const inputA = container.children[0].children[0];
+    expect(inputA.tagName).toBe('INPUT');
+    inputA.value = 'hello';
+    const inputB = container.children[0].children[1];
+    expect(inputB.tagName).toBe('INPUT');
+    inputB.value = 'goodbye';
+
+    const stream2 = getTestStream();
+    ReactTransportDOMServer.pipeToNodeWritable(
+      <App color="blue" />,
+      stream2.writable,
+      webpackMap,
+    );
+    const response2 = ReactTransportDOMClient.createFromReadableStream(
+      stream2.readable,
+    );
+    await act(async () => {
+      root.render(
+        <Suspense fallback={<p>(loading)</p>}>
+          <Page response={response2} />
+        </Suspense>,
+      );
+    });
+    expect(container.children.length).toBe(1);
+    expect(container.children[0].tagName).toBe('DIV');
+    expect(container.children[0].style.color).toBe('blue');
+
+    // Verify we didn't destroy the DOM for either input.
+    expect(inputA === container.children[0].children[0]).toBe(true);
+    expect(inputA.tagName).toBe('INPUT');
+    expect(inputA.value).toBe('hello');
+    expect(inputB === container.children[0].children[1]).toBe(true);
+    expect(inputB.tagName).toBe('INPUT');
+    expect(inputB.value).toBe('goodbye');
+  });
 });
