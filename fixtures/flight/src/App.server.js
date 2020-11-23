@@ -6,6 +6,7 @@ import Container from './Container.js';
 import {Counter} from './Counter.client.js';
 import {Counter as Counter2} from './Counter2.client.js';
 import AddTodo from './AddTodo.client.js';
+import DeleteTodo from './DeleteTodo.client.js';
 import ShowMore from './ShowMore.client.js';
 
 export default function App() {
@@ -17,7 +18,11 @@ export default function App() {
       <Counter2 />
       <ul>
         {todos.map(todo => (
-          <li key={todo.id}>{todo.text}</li>
+          <React.Fragment key={todo.id}>
+            <li>
+              {todo.text} <DeleteTodo id={todo.id} />
+            </li>
+          </React.Fragment>
         ))}
       </ul>
       <AddTodo />

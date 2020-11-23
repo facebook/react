@@ -51,6 +51,11 @@ app.post('/todos', function(req, res) {
   res.json(todos);
 });
 
+app.delete('/todos/:id', function(req, res) {
+  todos = todos.filter(todo => todo.id !== Number(req.params.id));
+  res.json(todos);
+});
+
 app.listen(3001, () => {
   console.log('Flight Server listening on port 3001...');
 });

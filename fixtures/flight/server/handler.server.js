@@ -54,5 +54,12 @@ module.exports = async function(req, res) {
         name: '*',
       },
     },
+    [resolve('../src/DeleteTodo.client.js')]: {
+      default: {
+        id: './src/DeleteTodo.client.js',
+        chunks: ['5'],
+        name: 'default',
+      },
+    },
   });
 };
