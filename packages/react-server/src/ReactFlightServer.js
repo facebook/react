@@ -442,14 +442,19 @@ export function resolveModelToJSON(
         request.pendingChunks++;
         const moduleId = request.nextChunkId++;
         emitModuleChunk(request, moduleId, moduleMetaData);
-        if (parent[0] === REACT_ELEMENT_TYPE && key === '1') {
-          // If we're encoding the "type" of an element, we can refer
-          // to that by a lazy reference instead of directly since React
-          // knows how to deal with lazy values. This lets us suspend
-          // on this component rather than its parent until the code has
-          // loaded.
-          return serializeByRefID(moduleId);
-        }
+
+        // Removed because this make lazy "type" different between refetches.
+        // TODO: add this back?
+
+        // if (parent[0] === REACT_ELEMENT_TYPE && key === '1') {
+        //   // If we're encoding the "type" of an element, we can refer
+        //   // to that by a lazy reference instead of directly since React
+        //   // knows how to deal with lazy values. This lets us suspend
+        //   // on this component rather than its parent until the code has
+        //   // loaded.
+        //   return serializeByRefID(moduleId);
+        // }
+
         return serializeByValueID(moduleId);
       } catch (x) {
         request.pendingChunks++;
