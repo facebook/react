@@ -12,9 +12,5 @@ export default function getActiveElement(doc: ?Document): ?Element {
   if (typeof doc === 'undefined') {
     return null;
   }
-  try {
-    return doc.activeElement || doc.body;
-  } catch (e) {
-    return doc.body;
-  }
+  return doc.activeElement || doc.body;
 }
