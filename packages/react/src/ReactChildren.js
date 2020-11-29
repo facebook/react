@@ -102,15 +102,16 @@ function mapIntoArray(
         }
     }
   }
-
+  
   if (invokeCallback) {
     const child = children;
     let mappedChild = callback(child);
     // If it's the only child, treat the name as if it was wrapped in an array
     // so that it's consistent if the number of children grows:
+    const iteratorFn = getIteratorFn(mappedChild);
     const childKey =
       nameSoFar === '' ? SEPARATOR + getElementKey(child, 0) : nameSoFar;
-    if (Array.isArray(mappedChild)) {
+    if (Array.isArray(mappedChild) || typeof iteratorFn === 'function') {
       let escapedChildKey = '';
       if (childKey != null) {
         escapedChildKey = escapeUserProvidedKey(childKey) + '/';
@@ -123,12 +124,12 @@ function mapIntoArray(
           // Keep both the (mapped) and old keys if they differ, just as
           // traverseAllChildren used to do for objects as children
           escapedPrefix +
-            // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
-            (mappedChild.key && (!child || child.key !== mappedChild.key)
-              ? // $FlowFixMe Flow incorrectly thinks existing element's key can be a number
-                escapeUserProvidedKey('' + mappedChild.key) + '/'
-              : '') +
-            childKey,
+          // $FlowFixMe Flow incorrectly thinks React.Portal doesn't have a key
+          (mappedChild.key && (!child || child.key !== mappedChild.key)
+            ? // $FlowFixMe Flow incorrectly thinks existing element's key can be a number
+            escapeUserProvidedKey('' + mappedChild.key) + '/'
+            : '') +
+          childKey,
         );
       }
       array.push(mappedChild);
