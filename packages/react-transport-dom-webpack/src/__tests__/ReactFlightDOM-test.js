@@ -68,12 +68,14 @@ describe('ReactFlightDOM', () => {
       d: moduleExport,
     };
     webpackMap['path/' + idx] = {
-      id: '' + idx,
-      chunks: [],
-      name: 'd',
+      default: {
+        id: '' + idx,
+        chunks: [],
+        name: 'd',
+      },
     };
     const MODULE_TAG = Symbol.for('react.module.reference');
-    return {$$typeof: MODULE_TAG, name: 'path/' + idx};
+    return {$$typeof: MODULE_TAG, filepath: 'path/' + idx, name: 'default'};
   }
 
   async function waitForSuspense(fn) {

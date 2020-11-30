@@ -1,4 +1,8 @@
-import {resolve, getSource} from 'react-transport-dom-webpack/node-loader';
+import {
+  resolve,
+  getSource,
+  transformSource as reactTransformSource,
+} from 'react-transport-dom-webpack/node-loader';
 
 export {resolve, getSource};
 
@@ -13,7 +17,7 @@ const babelOptions = {
   ],
 };
 
-export async function transformSource(source, context, defaultTransformSource) {
+async function babelTransformSource(source, context, defaultTransformSource) {
   const {format} = context;
   if (format === 'module') {
     const opt = Object.assign({filename: context.url}, babelOptions);
@@ -21,4 +25,10 @@ export async function transformSource(source, context, defaultTransformSource) {
     return {source: code};
   }
   return defaultTransformSource(source, context, defaultTransformSource);
+}
+
+export async function transformSource(source, context, defaultTransformSource) {
+  return reactTransformSource(source, context, (s, c) => {
+    return babelTransformSource(s, c, defaultTransformSource);
+  });
 }

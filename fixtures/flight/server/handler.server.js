@@ -17,14 +17,35 @@ module.exports = async function(req, res) {
   pipeToNodeWritable(<App />, res, {
     // TODO: Read from a map on the disk.
     [resolve('../src/Counter.client.js')]: {
-      id: './src/Counter.client.js',
-      chunks: ['1'],
-      name: 'default',
+      Counter: {
+        id: './src/Counter.client.js',
+        chunks: ['2'],
+        name: 'Counter',
+      },
+    },
+    [resolve('../src/Counter2.client.js')]: {
+      Counter: {
+        id: './src/Counter2.client.js',
+        chunks: ['1'],
+        name: 'Counter',
+      },
     },
     [resolve('../src/ShowMore.client.js')]: {
-      id: './src/ShowMore.client.js',
-      chunks: ['2'],
-      name: 'default',
+      default: {
+        id: './src/ShowMore.client.js',
+        chunks: ['3'],
+        name: 'default',
+      },
+      '': {
+        id: './src/ShowMore.client.js',
+        chunks: ['3'],
+        name: '',
+      },
+      '*': {
+        id: './src/ShowMore.client.js',
+        chunks: ['3'],
+        name: '*',
+      },
     },
   });
 };
