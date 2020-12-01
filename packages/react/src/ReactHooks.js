@@ -36,6 +36,11 @@ function resolveDispatcher() {
   return dispatcher;
 }
 
+export function getCacheForType<T>(resourceType: () => T): T {
+  const dispatcher = resolveDispatcher();
+  return dispatcher.getCacheForType(resourceType);
+}
+
 export function useContext<T>(
   Context: ReactContext<T>,
   unstable_observedBits: number | boolean | void,

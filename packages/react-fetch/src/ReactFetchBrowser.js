@@ -9,7 +9,7 @@
 
 import type {Wakeable} from 'shared/ReactTypes';
 
-import * as React from 'react';
+import {unstable_getCacheForType} from 'react';
 
 const Pending = 0;
 const Resolved = 1;
@@ -35,12 +35,8 @@ type Result = PendingResult | ResolvedResult | RejectedResult;
 // TODO: this is a browser-only version. Add a separate Node entry point.
 const nativeFetch = window.fetch;
 
-const ReactCurrentDispatcher =
-  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-    .ReactCurrentDispatcher;
-
 function getResultMap(): Map<string, Result> {
-  return ReactCurrentDispatcher.current.getCacheForType(createResultMap);
+  return unstable_getCacheForType(createResultMap);
 }
 
 function createResultMap(): Map<string, Result> {

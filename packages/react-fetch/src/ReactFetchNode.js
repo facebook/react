@@ -11,7 +11,7 @@ import type {Wakeable} from 'shared/ReactTypes';
 
 import * as http from 'http';
 import * as https from 'https';
-import * as React from 'react';
+import {unstable_getCacheForType} from 'react';
 
 type FetchResponse = {|
   // Properties
@@ -74,12 +74,8 @@ type RejectedResult = {|
 
 type Result<V> = PendingResult | ResolvedResult<V> | RejectedResult;
 
-const ReactCurrentDispatcher =
-  React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-    .ReactCurrentDispatcher;
-
 function getResultMap(): Map<string, Result<FetchResponse>> {
-  return ReactCurrentDispatcher.current.getCacheForType(createResultMap);
+  return unstable_getCacheForType(createResultMap);
 }
 
 function createResultMap(): Map<string, Result<FetchResponse>> {
