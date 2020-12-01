@@ -10,7 +10,10 @@
 import type {Source} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
-import {enableComponentStackLocations} from 'shared/ReactFeatureFlags';
+import {
+  enableComponentStackLocations,
+  disableNativeComponentFrames,
+} from 'shared/ReactFeatureFlags';
 
 import {
   REACT_SUSPENSE_TYPE,
@@ -65,7 +68,7 @@ export function describeNativeComponentFrame(
   construct: boolean,
 ): string {
   // If something asked for a stack inside a fake render, it should get ignored.
-  if (!fn || reentry) {
+  if (disableNativeComponentFrames || !fn || reentry) {
     return '';
   }
 

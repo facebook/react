@@ -98,6 +98,8 @@ export const enableComponentStackLocations = true;
 
 export const enableNewReconciler = false;
 
+export const disableNativeComponentFrames = false;
+
 // --------------------------
 // Future APIs to be deprecated
 // --------------------------
