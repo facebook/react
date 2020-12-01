@@ -1269,6 +1269,93 @@ describe('ReactLazy', () => {
   });
 
   // @gate enableLazyElements
+  it('mount and reorder lazy types', async () => {
+    class Child extends React.Component {
+      componentDidMount() {
+        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
+      }
+      componentDidUpdate() {
+        Scheduler.unstable_yieldValue('Did update: ' + this.props.label);
+      }
+      render() {
+        return <Text text={this.props.label} />;
+      }
+    }
+
+    function ChildA({lowerCase}) {
+      return <Child label={lowerCase ? 'a' : 'A'} />;
+    }
+
+    function ChildB({lowerCase}) {
+      return <Child label={lowerCase ? 'b' : 'B'} />;
+    }
+
+    const LazyChildA = lazy(() => {
+      Scheduler.unstable_yieldValue('Init A');
+      return fakeImport(ChildA);
+    });
+    const LazyChildB = lazy(() => {
+      Scheduler.unstable_yieldValue('Init B');
+      return fakeImport(ChildB);
+    });
+    const LazyChildA2 = lazy(() => {
+      Scheduler.unstable_yieldValue('Init A2');
+      return fakeImport(ChildA);
+    });
+    const LazyChildB2 = lazy(() => {
+      Scheduler.unstable_yieldValue('Init B2');
+      return fakeImport(ChildB);
+    });
+
+    function Parent({swap}) {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          {swap
+            ? [
+                <LazyChildB2 key="B" lowerCase={true} />,
+                <LazyChildA2 key="A" lowerCase={true} />,
+              ]
+            : [<LazyChildA key="A" />, <LazyChildB key="B" />]}
+        </Suspense>
+      );
+    }
+
+    const root = ReactTestRenderer.create(<Parent swap={false} />, {
+      unstable_isConcurrent: true,
+    });
+
+    expect(Scheduler).toFlushAndYield(['Init A', 'Init B', 'Loading...']);
+    expect(root).not.toMatchRenderedOutput('AB');
+
+    await LazyChildA;
+    await LazyChildB;
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'B',
+      'Did mount: A',
+      'Did mount: B',
+    ]);
+    expect(root).toMatchRenderedOutput('AB');
+
+    // Swap the position of A and B
+    root.update(<Parent swap={true} />);
+    expect(Scheduler).toFlushAndYield(['Init B2', 'Loading...']);
+    await LazyChildB2;
+    // We need to flush to trigger the second one to load.
+    expect(Scheduler).toFlushAndYield(['Init A2', 'Loading...']);
+    await LazyChildA2;
+
+    expect(Scheduler).toFlushAndYield([
+      'b',
+      'a',
+      'Did update: b',
+      'Did update: a',
+    ]);
+    expect(root).toMatchRenderedOutput('ba');
+  });
+
+  // @gate enableLazyElements
   it('mount and reorder lazy elements', async () => {
     class Child extends React.Component {
       componentDidMount() {
