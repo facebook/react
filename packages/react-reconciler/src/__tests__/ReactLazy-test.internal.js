@@ -1344,10 +1344,9 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('AB');
 
     // Swap the position of A and B
-    ReactTestRenderer.act(() => {
-      root.update(<Parent swap={true} />);
-      expect(Scheduler).toFlushAndYield(['Init B2', 'Loading...']);
-    });
+    root.update(<Parent swap={true} />);
+    expect(Scheduler).toFlushAndYield(['Init B2', 'Loading...']);
+    jest.runAllTimers();
 
     // The suspense boundary should've triggered now.
     expect(root).toMatchRenderedOutput('Loading...');
