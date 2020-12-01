@@ -40,7 +40,6 @@ import {
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
 } from 'shared/ReactSymbols';
-import type {ReactCache} from 'shared/ReactTypes';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -75,7 +74,7 @@ type Segment = {
 export type Request = {
   destination: Destination,
   bundlerConfig: BundlerConfig,
-  cache: ReactCache,
+  cache: Map<Function, mixed>,
   nextChunkId: number,
   pendingChunks: number,
   pingedSegments: Array<Segment>,
@@ -90,12 +89,6 @@ export type Request = {
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
-function createCache(): ReactCache {
-  return {
-    resources: new Map(),
-  };
-}
-
 export function createRequest(
   model: ReactModel,
   destination: Destination,
@@ -105,7 +98,7 @@ export function createRequest(
   const request = {
     destination,
     bundlerConfig,
-    cache: createCache(),
+    cache: new Map(),
     nextChunkId: 0,
     pendingChunks: 0,
     pingedSegments: pingedSegments,
@@ -755,7 +748,7 @@ function unsupportedHook(): void {
   invariant(false, 'This Hook is not supported in Server Components.');
 }
 
-let currentCache: ReactCache | null = null;
+let currentCache: Map<Function, mixed> | null = null;
 
 const Dispatcher: DispatcherType = {
   useMemo<T>(nextCreate: () => T): T {
@@ -771,12 +764,17 @@ const Dispatcher: DispatcherType = {
   useTransition(): [(callback: () => void) => void, boolean] {
     return [() => {}, false];
   },
-  readCache() {
+  getCacheForType<T>(resourceType: () => T): T {
     invariant(
       currentCache,
       'Reading the cache is only supported while rendering.',
     );
-    return currentCache;
+    if (currentCache.has(resourceType)) {
+      return ((currentCache.get(resourceType): any): T);
+    }
+    const entry = resourceType();
+    currentCache.set(resourceType, entry);
+    return entry;
   },
   readContext: (unsupportedHook: any),
   useContext: (unsupportedHook: any),

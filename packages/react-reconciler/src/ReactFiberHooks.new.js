@@ -12,7 +12,6 @@ import type {
   MutableSourceGetSnapshotFn,
   MutableSourceSubscribeFn,
   ReactContext,
-  ReactCache,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
@@ -1816,12 +1815,12 @@ function dispatchAction<S, A>(
   }
 }
 
-function readCache() {
+function getCacheForType<T>(resourceType: () => T): T {
   invariant(false, 'Not implemented.');
 }
 
 export const ContextOnlyDispatcher: Dispatcher = {
-  readCache,
+  getCacheForType,
   readContext,
 
   useCallback: throwInvalidHookError,
@@ -1843,7 +1842,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
 };
 
 const HooksDispatcherOnMount: Dispatcher = {
-  readCache,
+  getCacheForType,
   readContext,
 
   useCallback: mountCallback,
@@ -1865,7 +1864,7 @@ const HooksDispatcherOnMount: Dispatcher = {
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
-  readCache,
+  getCacheForType,
   readContext,
 
   useCallback: updateCallback,
@@ -1887,7 +1886,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 };
 
 const HooksDispatcherOnRerender: Dispatcher = {
-  readCache,
+  getCacheForType,
   readContext,
 
   useCallback: updateCallback,
@@ -1936,8 +1935,8 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnMountInDEV = {
-    readCache(): ReactCache {
-      return readCache();
+    getCacheForType<T>(resourceType: () => T): T {
+      return getCacheForType(resourceType);
     },
     readContext<T>(
       context: ReactContext<T>,
@@ -2066,8 +2065,8 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
-    readCache(): ReactCache {
-      return readCache();
+    getCacheForType<T>(resourceType: () => T): T {
+      return getCacheForType(resourceType);
     },
     readContext<T>(
       context: ReactContext<T>,
@@ -2191,8 +2190,8 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnUpdateInDEV = {
-    readCache(): ReactCache {
-      return readCache();
+    getCacheForType<T>(resourceType: () => T): T {
+      return getCacheForType(resourceType);
     },
     readContext<T>(
       context: ReactContext<T>,
@@ -2316,8 +2315,8 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnRerenderInDEV = {
-    readCache(): ReactCache {
-      return readCache();
+    getCacheForType<T>(resourceType: () => T): T {
+      return getCacheForType(resourceType);
     },
     readContext<T>(
       context: ReactContext<T>,
@@ -2442,8 +2441,8 @@ if (__DEV__) {
   };
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
-    readCache(): ReactCache {
-      return readCache();
+    getCacheForType<T>(resourceType: () => T): T {
+      return getCacheForType(resourceType);
     },
     readContext<T>(
       context: ReactContext<T>,
@@ -2582,8 +2581,8 @@ if (__DEV__) {
   };
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
-    readCache(): ReactCache {
-      return readCache();
+    getCacheForType<T>(resourceType: () => T): T {
+      return getCacheForType(resourceType);
     },
     readContext<T>(
       context: ReactContext<T>,
@@ -2722,8 +2721,8 @@ if (__DEV__) {
   };
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
-    readCache(): ReactCache {
-      return readCache();
+    getCacheForType<T>(resourceType: () => T): T {
+      return getCacheForType(resourceType);
     },
     readContext<T>(
       context: ReactContext<T>,

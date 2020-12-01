@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Wakeable, ReactCache} from 'shared/ReactTypes';
+import type {Wakeable} from 'shared/ReactTypes';
 
 import * as http from 'http';
 import * as https from 'https';
@@ -78,20 +78,12 @@ const ReactCurrentDispatcher =
   React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
     .ReactCurrentDispatcher;
 
-function readCache(): ReactCache {
-  return ReactCurrentDispatcher.current.readCache();
+function getResultMap(): Map<string, Result<FetchResponse>> {
+  return ReactCurrentDispatcher.current.getCacheForType(createResultMap);
 }
 
-const fetchKey = {};
-
-function readResultMap(): Map<string, Result<FetchResponse>> {
-  const resources = readCache().resources;
-  let map = resources.get(fetchKey);
-  if (map === undefined) {
-    map = new Map();
-    resources.set(fetchKey, map);
-  }
-  return map;
+function createResultMap(): Map<string, Result<FetchResponse>> {
+  return new Map();
 }
 
 function readResult<T>(result: Result<T>): T {
@@ -173,7 +165,7 @@ Response.prototype = {
 };
 
 function preloadResult(url: string, options: mixed): Result<FetchResponse> {
-  const map = readResultMap();
+  const map = getResultMap();
   let entry = map.get(url);
   if (!entry) {
     if (options) {

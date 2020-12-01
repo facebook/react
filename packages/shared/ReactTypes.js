@@ -216,8 +216,3 @@ export interface Thenable<+R> {
     onReject: (error: mixed) => void | Thenable<U> | U,
   ): void | Thenable<U>;
 }
-
-export type ReactCache = {|
-  // TODO: a different API.
-  resources: Map<any, any>,
-|};

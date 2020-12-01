@@ -13,7 +13,6 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   ReactProviderType,
-  ReactCache,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -102,7 +101,7 @@ function nextHook(): null | Hook {
   return hook;
 }
 
-function readCache(): ReactCache {
+function getCacheForType<T>(resourceType: () => T): T {
   invariant(false, 'Not implemented.');
 }
 
@@ -304,7 +303,7 @@ function useOpaqueIdentifier(): OpaqueIDType | void {
 }
 
 const Dispatcher: DispatcherType = {
-  readCache,
+  getCacheForType,
   readContext,
   useCallback,
   useContext,

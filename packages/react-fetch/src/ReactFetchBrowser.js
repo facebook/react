@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {Wakeable, ReactCache} from 'shared/ReactTypes';
+import type {Wakeable} from 'shared/ReactTypes';
 
 import * as React from 'react';
 
@@ -34,24 +34,17 @@ type Result = PendingResult | ResolvedResult | RejectedResult;
 
 // TODO: this is a browser-only version. Add a separate Node entry point.
 const nativeFetch = window.fetch;
-const fetchKey = {};
 
 const ReactCurrentDispatcher =
   React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
     .ReactCurrentDispatcher;
 
-function readCache(): ReactCache {
-  return ReactCurrentDispatcher.current.readCache();
+function getResultMap(): Map<string, Result> {
+  return ReactCurrentDispatcher.current.getCacheForType(createResultMap);
 }
 
-function readResultMap(): Map<string, Result> {
-  const resources = readCache().resources;
-  let map = resources.get(fetchKey);
-  if (map === undefined) {
-    map = new Map();
-    resources.set(fetchKey, map);
-  }
-  return map;
+function createResultMap(): Map<string, Result> {
+  return new Map();
 }
 
 function toResult(thenable): Result {
@@ -128,7 +121,7 @@ Response.prototype = {
 };
 
 function preloadResult(url: string, options: mixed): Result {
-  const map = readResultMap();
+  const map = getResultMap();
   let entry = map.get(url);
   if (!entry) {
     if (options) {
