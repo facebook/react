@@ -402,13 +402,19 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (current !== null) {
       if (
         current.elementType === elementType ||
+        // Keep this check inline so it only runs on the false path:
+        (__DEV__
+          ? isCompatibleFamilyForHotReloading(current, element)
+          : false) ||
+        // Lazy types should reconcile their resolved type.
+        // We need to do this after the Hot Reloading check above,
+        // because hot reloading has different semantics than prod because
+        // it doesn't resuspend. So we can't let the call below suspend.
         (enableLazyElements &&
           typeof elementType === 'object' &&
           elementType !== null &&
           elementType.$$typeof === REACT_LAZY_TYPE &&
-          resolveLazy(elementType) === current.type) ||
-        // Keep this check inline so it only runs on the false path:
-        (__DEV__ ? isCompatibleFamilyForHotReloading(current, element) : false)
+          resolveLazy(elementType) === current.type)
       ) {
         // Move based on index
         const existing = useFiber(current, element.props);
@@ -1119,15 +1125,19 @@ function ChildReconciler(shouldTrackSideEffects) {
         } else {
           if (
             child.elementType === elementType ||
+            // Keep this check inline so it only runs on the false path:
+            (__DEV__
+              ? isCompatibleFamilyForHotReloading(child, element)
+              : false) ||
+            // Lazy types should reconcile their resolved type.
+            // We need to do this after the Hot Reloading check above,
+            // because hot reloading has different semantics than prod because
+            // it doesn't resuspend. So we can't let the call below suspend.
             (enableLazyElements &&
               typeof elementType === 'object' &&
               elementType !== null &&
               elementType.$$typeof === REACT_LAZY_TYPE &&
-              resolveLazy(elementType) === child.type) ||
-            // Keep this check inline so it only runs on the false path:
-            (__DEV__
-              ? isCompatibleFamilyForHotReloading(child, element)
-              : false)
+              resolveLazy(elementType) === child.type)
           ) {
             deleteRemainingChildren(returnFiber, child.sibling);
             const existing = useFiber(child, element.props);
