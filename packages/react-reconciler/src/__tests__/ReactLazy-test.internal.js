@@ -1269,6 +1269,192 @@ describe('ReactLazy', () => {
   });
 
   // @gate enableLazyElements
+  it('mount and reorder lazy types', async () => {
+    class Child extends React.Component {
+      componentDidMount() {
+        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
+      }
+      componentDidUpdate() {
+        Scheduler.unstable_yieldValue('Did update: ' + this.props.label);
+      }
+      render() {
+        return <Text text={this.props.label} />;
+      }
+    }
+
+    function ChildA({lowerCase}) {
+      return <Child label={lowerCase ? 'a' : 'A'} />;
+    }
+
+    function ChildB({lowerCase}) {
+      return <Child label={lowerCase ? 'b' : 'B'} />;
+    }
+
+    const LazyChildA = lazy(() => {
+      Scheduler.unstable_yieldValue('Init A');
+      return fakeImport(ChildA);
+    });
+    const LazyChildB = lazy(() => {
+      Scheduler.unstable_yieldValue('Init B');
+      return fakeImport(ChildB);
+    });
+    const LazyChildA2 = lazy(() => {
+      Scheduler.unstable_yieldValue('Init A2');
+      return fakeImport(ChildA);
+    });
+    let resolveB2;
+    const LazyChildB2 = lazy(() => {
+      Scheduler.unstable_yieldValue('Init B2');
+      return new Promise(r => {
+        resolveB2 = r;
+      });
+    });
+
+    function Parent({swap}) {
+      return (
+        <Suspense fallback={<Text text="Outer..." />}>
+          <Suspense fallback={<Text text="Loading..." />}>
+            {swap
+              ? [
+                  <LazyChildB2 key="B" lowerCase={true} />,
+                  <LazyChildA2 key="A" lowerCase={true} />,
+                ]
+              : [<LazyChildA key="A" />, <LazyChildB key="B" />]}
+          </Suspense>
+        </Suspense>
+      );
+    }
+
+    const root = ReactTestRenderer.create(<Parent swap={false} />, {
+      unstable_isConcurrent: true,
+    });
+
+    expect(Scheduler).toFlushAndYield(['Init A', 'Init B', 'Loading...']);
+    expect(root).not.toMatchRenderedOutput('AB');
+
+    await LazyChildA;
+    await LazyChildB;
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'B',
+      'Did mount: A',
+      'Did mount: B',
+    ]);
+    expect(root).toMatchRenderedOutput('AB');
+
+    // Swap the position of A and B
+    root.update(<Parent swap={true} />);
+    expect(Scheduler).toFlushAndYield(['Init B2', 'Loading...']);
+    jest.runAllTimers();
+
+    // The suspense boundary should've triggered now.
+    expect(root).toMatchRenderedOutput('Loading...');
+    await resolveB2({default: ChildB});
+
+    // We need to flush to trigger the second one to load.
+    expect(Scheduler).toFlushAndYield(['Init A2']);
+    await LazyChildA2;
+
+    expect(Scheduler).toFlushAndYield([
+      'b',
+      'a',
+      'Did update: b',
+      'Did update: a',
+    ]);
+    expect(root).toMatchRenderedOutput('ba');
+  });
+
+  // @gate enableLazyElements
+  it('mount and reorder lazy types (legacy mode)', async () => {
+    class Child extends React.Component {
+      componentDidMount() {
+        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
+      }
+      componentDidUpdate() {
+        Scheduler.unstable_yieldValue('Did update: ' + this.props.label);
+      }
+      render() {
+        return <Text text={this.props.label} />;
+      }
+    }
+
+    function ChildA({lowerCase}) {
+      return <Child label={lowerCase ? 'a' : 'A'} />;
+    }
+
+    function ChildB({lowerCase}) {
+      return <Child label={lowerCase ? 'b' : 'B'} />;
+    }
+
+    const LazyChildA = lazy(() => {
+      Scheduler.unstable_yieldValue('Init A');
+      return fakeImport(ChildA);
+    });
+    const LazyChildB = lazy(() => {
+      Scheduler.unstable_yieldValue('Init B');
+      return fakeImport(ChildB);
+    });
+    const LazyChildA2 = lazy(() => {
+      Scheduler.unstable_yieldValue('Init A2');
+      return fakeImport(ChildA);
+    });
+    const LazyChildB2 = lazy(() => {
+      Scheduler.unstable_yieldValue('Init B2');
+      return fakeImport(ChildB);
+    });
+
+    function Parent({swap}) {
+      return (
+        <Suspense fallback={<Text text="Outer..." />}>
+          <Suspense fallback={<Text text="Loading..." />}>
+            {swap
+              ? [
+                  <LazyChildB2 key="B" lowerCase={true} />,
+                  <LazyChildA2 key="A" lowerCase={true} />,
+                ]
+              : [<LazyChildA key="A" />, <LazyChildB key="B" />]}
+          </Suspense>
+        </Suspense>
+      );
+    }
+
+    const root = ReactTestRenderer.create(<Parent swap={false} />, {
+      unstable_isConcurrent: false,
+    });
+
+    expect(Scheduler).toHaveYielded(['Init A', 'Init B', 'Loading...']);
+    expect(root).not.toMatchRenderedOutput('AB');
+
+    await LazyChildA;
+    await LazyChildB;
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'B',
+      'Did mount: A',
+      'Did mount: B',
+    ]);
+    expect(root).toMatchRenderedOutput('AB');
+
+    // Swap the position of A and B
+    root.update(<Parent swap={true} />);
+    expect(Scheduler).toHaveYielded(['Init B2', 'Loading...']);
+    await LazyChildB2;
+    // We need to flush to trigger the second one to load.
+    expect(Scheduler).toFlushAndYield(['Init A2']);
+    await LazyChildA2;
+
+    expect(Scheduler).toFlushAndYield([
+      'b',
+      'a',
+      'Did update: b',
+      'Did update: a',
+    ]);
+    expect(root).toMatchRenderedOutput('ba');
+  });
+
+  // @gate enableLazyElements
   it('mount and reorder lazy elements', async () => {
     class Child extends React.Component {
       componentDidMount() {
@@ -1333,6 +1519,82 @@ describe('ReactLazy', () => {
     await lazyChildB2;
     // We need to flush to trigger the second one to load.
     expect(Scheduler).toFlushAndYield(['Init A2', 'Loading...']);
+    await lazyChildA2;
+
+    expect(Scheduler).toFlushAndYield([
+      'b',
+      'a',
+      'Did update: b',
+      'Did update: a',
+    ]);
+    expect(root).toMatchRenderedOutput('ba');
+  });
+
+  // @gate enableLazyElements
+  it('mount and reorder lazy elements (legacy mode)', async () => {
+    class Child extends React.Component {
+      componentDidMount() {
+        Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
+      }
+      componentDidUpdate() {
+        Scheduler.unstable_yieldValue('Did update: ' + this.props.label);
+      }
+      render() {
+        return <Text text={this.props.label} />;
+      }
+    }
+
+    const lazyChildA = lazy(() => {
+      Scheduler.unstable_yieldValue('Init A');
+      return fakeImport(<Child key="A" label="A" />);
+    });
+    const lazyChildB = lazy(() => {
+      Scheduler.unstable_yieldValue('Init B');
+      return fakeImport(<Child key="B" label="B" />);
+    });
+    const lazyChildA2 = lazy(() => {
+      Scheduler.unstable_yieldValue('Init A2');
+      return fakeImport(<Child key="A" label="a" />);
+    });
+    const lazyChildB2 = lazy(() => {
+      Scheduler.unstable_yieldValue('Init B2');
+      return fakeImport(<Child key="B" label="b" />);
+    });
+
+    function Parent({swap}) {
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          {swap ? [lazyChildB2, lazyChildA2] : [lazyChildA, lazyChildB]}
+        </Suspense>
+      );
+    }
+
+    const root = ReactTestRenderer.create(<Parent swap={false} />, {
+      unstable_isConcurrent: false,
+    });
+
+    expect(Scheduler).toHaveYielded(['Init A', 'Loading...']);
+    expect(root).not.toMatchRenderedOutput('AB');
+
+    await lazyChildA;
+    // We need to flush to trigger the B to load.
+    expect(Scheduler).toFlushAndYield(['Init B']);
+    await lazyChildB;
+
+    expect(Scheduler).toFlushAndYield([
+      'A',
+      'B',
+      'Did mount: A',
+      'Did mount: B',
+    ]);
+    expect(root).toMatchRenderedOutput('AB');
+
+    // Swap the position of A and B
+    root.update(<Parent swap={true} />);
+    expect(Scheduler).toHaveYielded(['Init B2', 'Loading...']);
+    await lazyChildB2;
+    // We need to flush to trigger the second one to load.
+    expect(Scheduler).toFlushAndYield(['Init A2']);
     await lazyChildA2;
 
     expect(Scheduler).toFlushAndYield([
