@@ -79,7 +79,6 @@ const bundles = [
       NODE_PROD,
       FB_WWW_DEV,
       FB_WWW_PROD,
-      FB_WWW_PROFILING,
       RN_FB_DEV,
       RN_FB_PROD,
       RN_FB_PROFILING,
@@ -122,9 +121,6 @@ const bundles = [
       NODE_DEV,
       NODE_PROD,
       NODE_PROFILING,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      FB_WWW_PROFILING,
       RN_FB_DEV,
       RN_FB_PROD,
       RN_FB_PROFILING,
@@ -198,15 +194,6 @@ const bundles = [
     entry: 'react-dom/test-utils',
     global: 'ReactTestUtils',
     externals: ['react', 'react-dom'],
-  },
-
-  /******* React DOM - www - Testing *******/
-  {
-    moduleType: RENDERER,
-    bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
-    entry: 'react-dom/testing',
-    global: 'ReactDOMTesting',
-    externals: ['react'],
   },
 
   /******* React DOM Server *******/
@@ -643,7 +630,6 @@ const bundles = [
       NODE_DEV,
       NODE_PROD,
       FB_WWW_DEV,
-      FB_WWW_PROD,
       FB_WWW_PROFILING,
       RN_FB_DEV,
       RN_FB_PROD,
@@ -674,19 +660,20 @@ const bundles = [
   },
 
   /******* React Scheduler Post Task (experimental) *******/
-  {
-    bundleTypes: [
-      NODE_DEV,
-      NODE_PROD,
-      FB_WWW_DEV,
-      FB_WWW_PROD,
-      FB_WWW_PROFILING,
-    ],
-    moduleType: ISOMORPHIC,
-    entry: 'scheduler/unstable_post_task',
-    global: 'SchedulerPostTask',
-    externals: [],
-  },
+  // Currently not used.
+  // {
+  //   bundleTypes: [
+  //     NODE_DEV,
+  //     NODE_PROD,
+  //     FB_WWW_DEV,
+  //     FB_WWW_PROD,
+  //     FB_WWW_PROFILING,
+  //   ],
+  //   moduleType: ISOMORPHIC,
+  //   entry: 'scheduler/unstable_post_task',
+  //   global: 'SchedulerPostTask',
+  //   externals: [],
+  // },
 
   /******* React Scheduler Post Task Only (experimental) *******/
   {
