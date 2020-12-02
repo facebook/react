@@ -1841,7 +1841,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
   unstable_isNewReconciler: enableNewReconciler,
 };
 if (enableCache) {
-  ContextOnlyDispatcher.getCacheForType = getCacheForType;
+  (ContextOnlyDispatcher: Dispatcher).getCacheForType = getCacheForType;
 }
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -1865,7 +1865,7 @@ const HooksDispatcherOnMount: Dispatcher = {
   unstable_isNewReconciler: enableNewReconciler,
 };
 if (enableCache) {
-  HooksDispatcherOnMount.getCacheForType = getCacheForType;
+  (HooksDispatcherOnMount: Dispatcher).getCacheForType = getCacheForType;
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -1889,7 +1889,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
   unstable_isNewReconciler: enableNewReconciler,
 };
 if (enableCache) {
-  HooksDispatcherOnUpdate.getCacheForType = getCacheForType;
+  (HooksDispatcherOnUpdate: Dispatcher).getCacheForType = getCacheForType;
 }
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -1913,7 +1913,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
   unstable_isNewReconciler: enableNewReconciler,
 };
 if (enableCache) {
-  HooksDispatcherOnRerender.getCacheForType = getCacheForType;
+  (HooksDispatcherOnRerender: Dispatcher).getCacheForType = getCacheForType;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -2070,7 +2070,7 @@ if (__DEV__) {
     unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
-    HooksDispatcherOnMountInDEV.getCacheForType = getCacheForType;
+    (HooksDispatcherOnMountInDEV: Dispatcher).getCacheForType = getCacheForType;
   }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
@@ -2195,7 +2195,7 @@ if (__DEV__) {
     unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
-    HooksDispatcherOnMountWithHookTypesInDEV.getCacheForType = getCacheForType;
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).getCacheForType = getCacheForType;
   }
 
   HooksDispatcherOnUpdateInDEV = {
@@ -2320,7 +2320,7 @@ if (__DEV__) {
     unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
-    HooksDispatcherOnUpdateInDEV.getCacheForType = getCacheForType;
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).getCacheForType = getCacheForType;
   }
 
   HooksDispatcherOnRerenderInDEV = {
@@ -2446,7 +2446,7 @@ if (__DEV__) {
     unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
-    HooksDispatcherOnRerenderInDEV.getCacheForType = getCacheForType;
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).getCacheForType = getCacheForType;
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
@@ -2586,7 +2586,7 @@ if (__DEV__) {
     unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
-    InvalidNestedHooksDispatcherOnMountInDEV.getCacheForType = getCacheForType;
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).getCacheForType = getCacheForType;
   }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -2726,7 +2726,7 @@ if (__DEV__) {
     unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
-    InvalidNestedHooksDispatcherOnUpdateInDEV.getCacheForType = getCacheForType;
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).getCacheForType = getCacheForType;
   }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
@@ -2867,6 +2867,6 @@ if (__DEV__) {
     unstable_isNewReconciler: enableNewReconciler,
   };
   if (enableCache) {
-    InvalidNestedHooksDispatcherOnRerenderInDEV.getCacheForType = getCacheForType;
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).getCacheForType = getCacheForType;
   }
 }
