@@ -38,6 +38,7 @@ function resolveDispatcher() {
 
 export function getCacheForType<T>(resourceType: () => T): T {
   const dispatcher = resolveDispatcher();
+  // $FlowFixMe This is unstable, thus optional
   return dispatcher.getCacheForType(resourceType);
 }
 

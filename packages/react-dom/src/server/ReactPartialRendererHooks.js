@@ -20,6 +20,7 @@ import type PartialRenderer from './ReactPartialRenderer';
 import {validateContextBounds} from './ReactPartialRendererContext';
 
 import invariant from 'shared/invariant';
+import {enableCache} from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 
 type BasicStateAction<S> = (S => S) | S;
@@ -496,7 +497,6 @@ export function setCurrentPartialRenderer(renderer: PartialRenderer) {
 }
 
 export const Dispatcher: DispatcherType = {
-  getCacheForType,
   readContext,
   useContext,
   useMemo,
@@ -517,3 +517,7 @@ export const Dispatcher: DispatcherType = {
   // Subscriptions are not setup in a server environment.
   useMutableSource,
 };
+
+if (enableCache) {
+  Dispatcher.getCacheForType = getCacheForType;
+}

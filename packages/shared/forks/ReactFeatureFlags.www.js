@@ -58,6 +58,7 @@ export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
 
 export const enableLazyElements = true;
+export const enableCache = true;
 
 export const disableJavaScriptURLs = true;
 

@@ -25,6 +25,7 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   enableNewReconciler,
+  enableCache,
   decoupleUpdatePriorityFromScheduler,
   enableUseRefAccessWarning,
 } from 'shared/ReactFeatureFlags';
@@ -1820,7 +1821,6 @@ function getCacheForType<T>(resourceType: () => T): T {
 }
 
 export const ContextOnlyDispatcher: Dispatcher = {
-  getCacheForType,
   readContext,
 
   useCallback: throwInvalidHookError,
@@ -1840,9 +1840,11 @@ export const ContextOnlyDispatcher: Dispatcher = {
 
   unstable_isNewReconciler: enableNewReconciler,
 };
+if (enableCache) {
+  ContextOnlyDispatcher.getCacheForType = getCacheForType;
+}
 
 const HooksDispatcherOnMount: Dispatcher = {
-  getCacheForType,
   readContext,
 
   useCallback: mountCallback,
@@ -1864,7 +1866,6 @@ const HooksDispatcherOnMount: Dispatcher = {
 };
 
 const HooksDispatcherOnUpdate: Dispatcher = {
-  getCacheForType,
   readContext,
 
   useCallback: updateCallback,
@@ -1884,9 +1885,11 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 
   unstable_isNewReconciler: enableNewReconciler,
 };
+if (enableCache) {
+  HooksDispatcherOnUpdate.getCacheForType = getCacheForType;
+}
 
 const HooksDispatcherOnRerender: Dispatcher = {
-  getCacheForType,
   readContext,
 
   useCallback: updateCallback,
@@ -1906,6 +1909,9 @@ const HooksDispatcherOnRerender: Dispatcher = {
 
   unstable_isNewReconciler: enableNewReconciler,
 };
+if (enableCache) {
+  HooksDispatcherOnRerender.getCacheForType = getCacheForType;
+}
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
 let HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher | null = null;
@@ -1935,9 +1941,6 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnMountInDEV = {
-    getCacheForType<T>(resourceType: () => T): T {
-      return getCacheForType(resourceType);
-    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2063,11 +2066,11 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    HooksDispatcherOnMountInDEV.getCacheForType = getCacheForType;
+  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
-    getCacheForType<T>(resourceType: () => T): T {
-      return getCacheForType(resourceType);
-    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2188,11 +2191,11 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    HooksDispatcherOnMountWithHookTypesInDEV.getCacheForType = getCacheForType;
+  }
 
   HooksDispatcherOnUpdateInDEV = {
-    getCacheForType<T>(resourceType: () => T): T {
-      return getCacheForType(resourceType);
-    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2313,11 +2316,11 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    HooksDispatcherOnUpdateInDEV.getCacheForType = getCacheForType;
+  }
 
   HooksDispatcherOnRerenderInDEV = {
-    getCacheForType<T>(resourceType: () => T): T {
-      return getCacheForType(resourceType);
-    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2439,11 +2442,11 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    HooksDispatcherOnRerenderInDEV.getCacheForType = getCacheForType;
+  }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
-    getCacheForType<T>(resourceType: () => T): T {
-      return getCacheForType(resourceType);
-    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2579,11 +2582,11 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    InvalidNestedHooksDispatcherOnMountInDEV.getCacheForType = getCacheForType;
+  }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
-    getCacheForType<T>(resourceType: () => T): T {
-      return getCacheForType(resourceType);
-    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2719,11 +2722,11 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    InvalidNestedHooksDispatcherOnUpdateInDEV.getCacheForType = getCacheForType;
+  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
-    getCacheForType<T>(resourceType: () => T): T {
-      return getCacheForType(resourceType);
-    },
     readContext<T>(
       context: ReactContext<T>,
       observedBits: void | number | boolean,
@@ -2860,4 +2863,7 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    InvalidNestedHooksDispatcherOnRerenderInDEV.getCacheForType = getCacheForType;
+  }
 }

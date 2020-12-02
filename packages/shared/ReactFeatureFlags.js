@@ -52,6 +52,7 @@ export const enableSelectiveHydration = __EXPERIMENTAL__;
 
 // Flight experiments
 export const enableLazyElements = __EXPERIMENTAL__;
+export const enableCache = __EXPERIMENTAL__;
 
 // Only used in www builds.
 export const enableSchedulerDebugging = false;
