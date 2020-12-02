@@ -47,6 +47,7 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 // to __VARIANT__.
 export const enableTrustedTypesIntegration = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+export const disableNativeComponentFrames = false;
 
 export const enableDoubleInvokingEffects = false;
 export const enableUseRefAccessWarning = __VARIANT__;
