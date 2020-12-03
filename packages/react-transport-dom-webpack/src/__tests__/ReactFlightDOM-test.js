@@ -29,7 +29,6 @@ let Stream;
 let React;
 let ReactDOM;
 let ReactTransportDOMServer;
-let ReactTransportDOMServerRuntime;
 let ReactTransportDOMClient;
 
 describe('ReactFlightDOM', () => {
@@ -42,7 +41,6 @@ describe('ReactFlightDOM', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTransportDOMServer = require('react-transport-dom-webpack/server');
-    ReactTransportDOMServerRuntime = require('react-transport-dom-webpack/server-runtime');
     ReactTransportDOMClient = require('react-transport-dom-webpack');
   });
 
@@ -64,30 +62,20 @@ describe('ReactFlightDOM', () => {
     };
   }
 
-  function block(render, load) {
+  function moduleReference(moduleExport) {
     const idx = webpackModuleIdx++;
     webpackModules[idx] = {
-      d: render,
+      d: moduleExport,
     };
     webpackMap['path/' + idx] = {
-      id: '' + idx,
-      chunks: [],
-      name: 'd',
+      default: {
+        id: '' + idx,
+        chunks: [],
+        name: 'd',
+      },
     };
-    if (load === undefined) {
-      return () => {
-        return ReactTransportDOMServerRuntime.serverBlockNoData('path/' + idx);
-      };
-    }
-    return function(...args) {
-      const curriedLoad = () => {
-        return load(...args);
-      };
-      return ReactTransportDOMServerRuntime.serverBlock(
-        'path/' + idx,
-        curriedLoad,
-      );
-    };
+    const MODULE_TAG = Symbol.for('react.module.reference');
+    return {$$typeof: MODULE_TAG, filepath: 'path/' + idx, name: 'default'};
   }
 
   async function waitForSuspense(fn) {
@@ -267,8 +255,10 @@ describe('ReactFlightDOM', () => {
   });
 
   // @gate experimental
-  it('should progressively reveal Blocks', async () => {
+  it('should progressively reveal server components', async () => {
     const {Suspense} = React;
+
+    // Client Components
 
     class ErrorBoundary extends React.Component {
       state = {hasError: false, error: null};
@@ -286,37 +276,17 @@ describe('ReactFlightDOM', () => {
       }
     }
 
+    function MyErrorBoundary({children}) {
+      return (
+        <ErrorBoundary fallback={e => <p>{e.message}</p>}>
+          {children}
+        </ErrorBoundary>
+      );
+    }
+
     // Model
     function Text({children}) {
       return children;
-    }
-    function makeDelayedTextBlock() {
-      let error, _resolve, _reject;
-      let promise = new Promise((resolve, reject) => {
-        _resolve = () => {
-          promise = null;
-          resolve();
-        };
-        _reject = e => {
-          error = e;
-          promise = null;
-          reject(e);
-        };
-      });
-      function load() {
-        if (promise) {
-          throw promise;
-        }
-        if (error) {
-          throw error;
-        }
-        return 'data';
-      }
-      function DelayedText({children}, data) {
-        return <Text>{children}</Text>;
-      }
-      const loadBlock = block(DelayedText, load);
-      return [loadBlock(), _resolve, _reject];
     }
 
     function makeDelayedText() {
@@ -344,95 +314,89 @@ describe('ReactFlightDOM', () => {
       return [DelayedText, _resolve, _reject];
     }
 
-    const [FriendsModel, resolveFriendsModel] = makeDelayedText();
-    const [NameModel, resolveNameModel] = makeDelayedText();
-    const [PostsModel, resolvePostsModel] = makeDelayedTextBlock();
-    const [PhotosModel, resolvePhotosModel] = makeDelayedTextBlock();
-    const [GamesModel, , rejectGamesModel] = makeDelayedTextBlock();
-    function ProfileMore() {
-      return {
-        avatar: <Text>:avatar:</Text>,
-        friends: <FriendsModel>:friends:</FriendsModel>,
-        posts: <PostsModel>:posts:</PostsModel>,
-        games: <GamesModel>:games:</GamesModel>,
-      };
-    }
-    const profileModel = {
-      photos: <PhotosModel>:photos:</PhotosModel>,
-      name: <NameModel>:name:</NameModel>,
-      more: <ProfileMore />,
-    };
+    const [Friends, resolveFriends] = makeDelayedText();
+    const [Name, resolveName] = makeDelayedText();
+    const [Posts, resolvePosts] = makeDelayedText();
+    const [Photos, resolvePhotos] = makeDelayedText();
+    const [Games, , rejectGames] = makeDelayedText();
 
     // View
-    function ProfileDetails({response}) {
-      const model = response.readRoot();
+    function ProfileDetails({avatar}) {
       return (
         <div>
-          {model.name}
-          {model.more.avatar}
+          <Name>:name:</Name>
+          {avatar}
         </div>
       );
     }
-    function ProfileSidebar({response}) {
-      const model = response.readRoot();
+    function ProfileSidebar({friends}) {
       return (
         <div>
-          {model.photos}
-          {model.more.friends}
+          <Photos>:photos:</Photos>
+          {friends}
         </div>
       );
     }
-    function ProfilePosts({response}) {
-      return <div>{response.readRoot().more.posts}</div>;
+    function ProfilePosts({posts}) {
+      return <div>{posts}</div>;
     }
-    function ProfileGames({response}) {
-      return <div>{response.readRoot().more.games}</div>;
+    function ProfileGames({games}) {
+      return <div>{games}</div>;
     }
-    function ProfilePage({response}) {
+
+    const MyErrorBoundaryClient = moduleReference(MyErrorBoundary);
+
+    function ProfileContent() {
       return (
         <>
-          <Suspense fallback={<p>(loading)</p>}>
-            <ProfileDetails response={response} />
-            <Suspense fallback={<p>(loading sidebar)</p>}>
-              <ProfileSidebar response={response} />
-            </Suspense>
-            <Suspense fallback={<p>(loading posts)</p>}>
-              <ProfilePosts response={response} />
-            </Suspense>
-            <ErrorBoundary fallback={e => <p>{e.message}</p>}>
-              <Suspense fallback={<p>(loading games)</p>}>
-                <ProfileGames response={response} />
-              </Suspense>
-            </ErrorBoundary>
+          <ProfileDetails avatar={<Text>:avatar:</Text>} />
+          <Suspense fallback={<p>(loading sidebar)</p>}>
+            <ProfileSidebar friends={<Friends>:friends:</Friends>} />
           </Suspense>
+          <Suspense fallback={<p>(loading posts)</p>}>
+            <ProfilePosts posts={<Posts>:posts:</Posts>} />
+          </Suspense>
+          <MyErrorBoundaryClient>
+            <Suspense fallback={<p>(loading games)</p>}>
+              <ProfileGames games={<Games>:games:</Games>} />
+            </Suspense>
+          </MyErrorBoundaryClient>
         </>
       );
     }
 
+    const model = {
+      rootContent: <ProfileContent />,
+    };
+
+    function ProfilePage({response}) {
+      return response.readRoot().rootContent;
+    }
+
     const {writable, readable} = getTestStream();
-    ReactTransportDOMServer.pipeToNodeWritable(
-      profileModel,
-      writable,
-      webpackMap,
-    );
+    ReactTransportDOMServer.pipeToNodeWritable(model, writable, webpackMap);
     const response = ReactTransportDOMClient.createFromReadableStream(readable);
 
     const container = document.createElement('div');
     const root = ReactDOM.unstable_createRoot(container);
     await act(async () => {
-      root.render(<ProfilePage response={response} />);
+      root.render(
+        <Suspense fallback={<p>(loading)</p>}>
+          <ProfilePage response={response} />
+        </Suspense>,
+      );
     });
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 
     // This isn't enough to show anything.
     await act(async () => {
-      resolveFriendsModel();
+      resolveFriends();
     });
     expect(container.innerHTML).toBe('<p>(loading)</p>');
 
     // We can now show the details. Sidebar and posts are still loading.
     await act(async () => {
-      resolveNameModel();
+      resolveName();
     });
     // Advance time enough to trigger a nested fallback.
     jest.advanceTimersByTime(500);
@@ -445,7 +409,7 @@ describe('ReactFlightDOM', () => {
 
     // Let's *fail* loading games.
     await act(async () => {
-      rejectGamesModel(new Error('Game over'));
+      rejectGames(new Error('Game over'));
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
@@ -456,7 +420,7 @@ describe('ReactFlightDOM', () => {
 
     // We can now show the sidebar.
     await act(async () => {
-      resolvePhotosModel();
+      resolvePhotos();
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
@@ -467,7 +431,7 @@ describe('ReactFlightDOM', () => {
 
     // Show everything.
     await act(async () => {
-      resolvePostsModel();
+      resolvePosts();
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
@@ -475,5 +439,93 @@ describe('ReactFlightDOM', () => {
         '<div>:posts:</div>' +
         '<p>Game over</p>', // TODO: should not have message in prod.
     );
+  });
+
+  // @gate experimental
+  it('should preserve state of client components on refetch', async () => {
+    const {Suspense} = React;
+
+    // Client
+
+    function Page({response}) {
+      return response.readRoot();
+    }
+
+    function Input() {
+      return <input />;
+    }
+
+    const InputClient = moduleReference(Input);
+
+    // Server
+
+    function App({color}) {
+      // Verify both DOM and Client children.
+      return (
+        <div style={{color}}>
+          <input />
+          <InputClient />
+        </div>
+      );
+    }
+
+    const container = document.createElement('div');
+    const root = ReactDOM.unstable_createRoot(container);
+
+    const stream1 = getTestStream();
+    ReactTransportDOMServer.pipeToNodeWritable(
+      <App color="red" />,
+      stream1.writable,
+      webpackMap,
+    );
+    const response1 = ReactTransportDOMClient.createFromReadableStream(
+      stream1.readable,
+    );
+    await act(async () => {
+      root.render(
+        <Suspense fallback={<p>(loading)</p>}>
+          <Page response={response1} />
+        </Suspense>,
+      );
+    });
+    expect(container.children.length).toBe(1);
+    expect(container.children[0].tagName).toBe('DIV');
+    expect(container.children[0].style.color).toBe('red');
+
+    // Change the DOM state for both inputs.
+    const inputA = container.children[0].children[0];
+    expect(inputA.tagName).toBe('INPUT');
+    inputA.value = 'hello';
+    const inputB = container.children[0].children[1];
+    expect(inputB.tagName).toBe('INPUT');
+    inputB.value = 'goodbye';
+
+    const stream2 = getTestStream();
+    ReactTransportDOMServer.pipeToNodeWritable(
+      <App color="blue" />,
+      stream2.writable,
+      webpackMap,
+    );
+    const response2 = ReactTransportDOMClient.createFromReadableStream(
+      stream2.readable,
+    );
+    await act(async () => {
+      root.render(
+        <Suspense fallback={<p>(loading)</p>}>
+          <Page response={response2} />
+        </Suspense>,
+      );
+    });
+    expect(container.children.length).toBe(1);
+    expect(container.children[0].tagName).toBe('DIV');
+    expect(container.children[0].style.color).toBe('blue');
+
+    // Verify we didn't destroy the DOM for either input.
+    expect(inputA === container.children[0].children[0]).toBe(true);
+    expect(inputA.tagName).toBe('INPUT');
+    expect(inputA.value).toBe('hello');
+    expect(inputB === container.children[0].children[1]).toBe(true);
+    expect(inputB.tagName).toBe('INPUT');
+    expect(inputB.value).toBe('goodbye');
   });
 });

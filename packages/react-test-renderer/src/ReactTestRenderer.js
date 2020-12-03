@@ -39,7 +39,6 @@ import {
   Profiler,
   MemoComponent,
   SimpleMemoComponent,
-  Block,
   IncompleteClassComponent,
   ScopeComponent,
 } from 'react-reconciler/src/ReactWorkTags';
@@ -195,14 +194,6 @@ function toTree(node: ?Fiber) {
         instance: null,
         rendered: childrenToTree(node.child),
       };
-    case Block:
-      return {
-        nodeType: 'block',
-        type: node.type,
-        props: {...node.memoizedProps},
-        instance: null,
-        rendered: childrenToTree(node.child),
-      };
     case HostComponent: {
       return {
         nodeType: 'host',
@@ -240,7 +231,6 @@ const validWrapperTypes = new Set([
   ForwardRef,
   MemoComponent,
   SimpleMemoComponent,
-  Block,
   // Normally skipped, but used when there's more than one root child.
   HostRoot,
 ]);

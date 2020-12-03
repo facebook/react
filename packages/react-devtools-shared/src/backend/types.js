@@ -26,7 +26,6 @@ export type WorkFlags = number;
 export type ExpirationTime = number;
 
 export type WorkTagMap = {|
-  Block: WorkTag,
   ClassComponent: WorkTag,
   ContextConsumer: WorkTag,
   ContextProvider: WorkTag,
@@ -43,10 +42,12 @@ export type WorkTagMap = {|
   IncompleteClassComponent: WorkTag,
   IndeterminateComponent: WorkTag,
   LazyComponent: WorkTag,
+  LegacyHiddenComponent: WorkTag,
   MemoComponent: WorkTag,
   Mode: WorkTag,
   OffscreenComponent: WorkTag,
   Profiler: WorkTag,
+  ScopeComponent: WorkTag,
   SimpleMemoComponent: WorkTag,
   SuspenseComponent: WorkTag,
   SuspenseListComponent: WorkTag,

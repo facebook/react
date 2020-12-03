@@ -44,9 +44,8 @@ export {
   useDeferredValue as unstable_useDeferredValue,
   startTransition as unstable_startTransition,
   SuspenseList as unstable_SuspenseList,
-  // enableBlocksAPI
-  block as unstable_block,
   unstable_useOpaqueIdentifier,
+  unstable_getCacheForType,
   // enableDebugTracing
   unstable_DebugTracingMode,
 } from './src/React';

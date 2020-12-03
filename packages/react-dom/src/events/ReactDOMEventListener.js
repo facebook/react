@@ -252,7 +252,7 @@ export function dispatchEvent(
       return;
     }
     // We need to clear only if we didn't queue because
-    // queueing is accummulative.
+    // queueing is accumulative.
     clearIfContinuousEvent(domEventName, nativeEvent);
   }
 

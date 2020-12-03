@@ -367,7 +367,7 @@ describe('ReactDOMServerPartialHydration', () => {
     // This is a new node.
     expect(span).not.toBe(span2);
 
-    if (gate(flags => flags.new)) {
+    if (gate(flags => flags.dfsEffectsRefactor)) {
       // The effects list refactor causes this to be null because the Suspense Offscreen's child
       // is null. However, since we can't hydrate Suspense in legacy this change in behavior is ok
       expect(ref.current).toBe(null);

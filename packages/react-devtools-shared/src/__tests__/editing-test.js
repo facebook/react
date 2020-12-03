@@ -28,6 +28,7 @@ describe('editing interface', () => {
     bridge = global.bridge;
     store = global.store;
     store.collapseNodesByDefault = false;
+    store.componentFilters = [];
 
     PropTypes = require('prop-types');
     React = require('react');
@@ -37,8 +38,10 @@ describe('editing interface', () => {
   describe('props', () => {
     let committedClassProps;
     let committedFunctionProps;
+    let inputRef;
     let classID;
     let functionID;
+    let hostComponentID;
 
     async function mountTestApp() {
       class ClassComponent extends React.Component {
@@ -60,6 +63,8 @@ describe('editing interface', () => {
         return null;
       }
 
+      inputRef = React.createRef(null);
+
       const container = document.createElement('div');
       await utils.actAsync(() =>
         ReactDOM.render(
@@ -76,6 +81,7 @@ describe('editing interface', () => {
               shallow="initial"
             />
             ,
+            <input ref={inputRef} onChange={jest.fn()} value="initial" />
           </>,
           container,
         ),
@@ -83,6 +89,7 @@ describe('editing interface', () => {
 
       classID = ((store.getElementIDAtIndex(0): any): number);
       functionID = ((store.getElementIDAtIndex(1): any): number);
+      hostComponentID = ((store.getElementIDAtIndex(2): any): number);
 
       expect(committedClassProps).toStrictEqual({
         array: [1, 2, 3],
@@ -98,6 +105,7 @@ describe('editing interface', () => {
         },
         shallow: 'initial',
       });
+      expect(inputRef.current.value).toBe('initial');
     }
 
     it('should have editable values', async () => {
@@ -379,6 +387,25 @@ describe('editing interface', () => {
         array: [1, 3],
         object: {},
       });
+    });
+
+    it('should support editing host component values', async () => {
+      await mountTestApp();
+
+      function overrideProps(id, path, value) {
+        const rendererID = utils.getRendererID();
+        bridge.send('overrideValueAtPath', {
+          id,
+          path,
+          rendererID,
+          type: 'props',
+          value,
+        });
+        flushPendingUpdates();
+      }
+
+      overrideProps(hostComponentID, ['value'], 'updated');
+      expect(inputRef.current.value).toBe('updated');
     });
   });
 

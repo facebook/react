@@ -20,6 +20,7 @@ import type PartialRenderer from './ReactPartialRenderer';
 import {validateContextBounds} from './ReactPartialRendererContext';
 
 import invariant from 'shared/invariant';
+import {enableCache} from 'shared/ReactFeatureFlags';
 import is from 'shared/objectIs';
 
 type BasicStateAction<S> = (S => S) | S;
@@ -212,6 +213,10 @@ export function resetHooksState(): void {
   numberOfReRenders = 0;
   renderPhaseUpdates = null;
   workInProgressHook = null;
+}
+
+function getCacheForType<T>(resourceType: () => T): T {
+  invariant(false, 'Not implemented.');
 }
 
 function readContext<T>(
@@ -512,3 +517,7 @@ export const Dispatcher: DispatcherType = {
   // Subscriptions are not setup in a server environment.
   useMutableSource,
 };
+
+if (enableCache) {
+  Dispatcher.getCacheForType = getCacheForType;
+}

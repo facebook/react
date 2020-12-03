@@ -185,6 +185,8 @@ function throwException(
 ) {
   // The source fiber did not complete.
   sourceFiber.flags |= Incomplete;
+  // Its effect list is no longer valid.
+  sourceFiber.firstEffect = sourceFiber.lastEffect = null;
 
   if (
     value !== null &&
@@ -254,7 +256,15 @@ function throwException(
         // Note: It doesn't matter whether the component that suspended was
         // inside a blocking mode tree. If the Suspense is outside of it, we
         // should *not* suspend the commit.
-        if ((workInProgress.mode & BlockingMode) === NoMode) {
+        //
+        // If the suspense boundary suspended itself suspended, we don't have to
+        // do this trick because nothing was partially started. We can just
+        // directly do a second pass over the fallback in this render and
+        // pretend we meant to render that directly.
+        if (
+          (workInProgress.mode & BlockingMode) === NoMode &&
+          workInProgress !== returnFiber
+        ) {
           workInProgress.flags |= DidCapture;
           sourceFiber.flags |= ForceUpdateForLegacySuspense;
 

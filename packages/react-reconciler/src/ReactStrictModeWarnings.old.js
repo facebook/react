@@ -64,7 +64,7 @@ if (__DEV__) {
     fiber: Fiber,
     instance: any,
   ) => {
-    // Dedup strategy: Warn once per component.
+    // Dedupe strategy: Warn once per component.
     if (didWarnAboutUnsafeLifecycles.has(fiber.type)) {
       return;
     }

@@ -9,7 +9,7 @@
 
 import type {Wakeable} from 'shared/ReactTypes';
 
-import {readCache} from 'react/unstable-cache';
+import {unstable_getCacheForType} from 'react';
 
 const Pending = 0;
 const Resolved = 1;
@@ -34,16 +34,13 @@ type Result = PendingResult | ResolvedResult | RejectedResult;
 
 // TODO: this is a browser-only version. Add a separate Node entry point.
 const nativeFetch = window.fetch;
-const fetchKey = {};
 
-function readResultMap(): Map<string, Result> {
-  const resources = readCache().resources;
-  let map = resources.get(fetchKey);
-  if (map === undefined) {
-    map = new Map();
-    resources.set(fetchKey, map);
-  }
-  return map;
+function getResultMap(): Map<string, Result> {
+  return unstable_getCacheForType(createResultMap);
+}
+
+function createResultMap(): Map<string, Result> {
+  return new Map();
 }
 
 function toResult(thenable): Result {
@@ -120,7 +117,7 @@ Response.prototype = {
 };
 
 function preloadResult(url: string, options: mixed): Result {
-  const map = readResultMap();
+  const map = getResultMap();
   let entry = map.get(url);
   if (!entry) {
     if (options) {

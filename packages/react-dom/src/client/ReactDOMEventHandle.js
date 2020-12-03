@@ -22,9 +22,7 @@ import {
   addEventHandleToTarget,
 } from './ReactDOMComponentTree';
 import {ELEMENT_NODE} from '../shared/HTMLNodeType';
-import {listenToNativeEvent} from '../events/DOMPluginEventSystem';
-
-import {IS_EVENT_HANDLE_NON_MANAGED_NODE} from '../events/EventSystemFlags';
+import {listenToNativeEventForNonManagedEventTarget} from '../events/DOMPluginEventSystem';
 
 import {
   enableScopeAPI,
@@ -69,12 +67,10 @@ function registerReactDOMEvent(
     const eventTarget = ((target: any): EventTarget);
     // These are valid event targets, but they are also
     // non-managed React nodes.
-    listenToNativeEvent(
+    listenToNativeEventForNonManagedEventTarget(
       domEventName,
       isCapturePhaseListener,
       eventTarget,
-      null,
-      IS_EVENT_HANDLE_NON_MANAGED_NODE,
     );
   } else {
     invariant(

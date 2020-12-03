@@ -59,5 +59,16 @@ export function requireModule<T>(moduleData: ModuleReference<T>): T {
       throw entry;
     }
   }
-  return __webpack_require__(moduleData.id)[moduleData.name];
+  const moduleExports = __webpack_require__(moduleData.id);
+  if (moduleData.name === '*') {
+    // This is a placeholder value that represents that the caller imported this
+    // as a CommonJS module as is.
+    return moduleExports;
+  }
+  if (moduleData.name === '') {
+    // This is a placeholder value that represents that the caller accessed the
+    // default property of this if it was an ESM interop module.
+    return moduleExports.__esModule ? moduleExports.default : moduleExports;
+  }
+  return moduleExports[moduleData.name];
 }

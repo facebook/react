@@ -505,7 +505,7 @@ describe('InspectedElementContext', () => {
         enumerable: false,
         configurable: true,
       },
-      [123]: {
+      123: {
         value: 3,
         writable: true,
         enumerable: true,

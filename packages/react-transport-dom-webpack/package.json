@@ -17,10 +17,21 @@
     "server.js",
     "server.browser.js",
     "server.node.js",
-    "server-runtime.js",
+    "node-register.js",
     "cjs/",
-    "umd/"
+    "umd/",
+    "esm/"
   ],
+  "exports": {
+    ".": "./index.js",
+    "./plugin": "./plugin.js",
+    "./server": "./server.js",
+    "./server.browser": "./server.browser.js",
+    "./server.node": "./server.node.js",
+    "./node-loader": "./esm/react-transport-dom-webpack-node-loader.js",
+    "./node-register": "./node-register.js",
+    "./package.json": "./package.json"
+  },
   "browser": {
     "./server.js": "./server.browser.js"
   },
@@ -34,11 +45,12 @@
     "node": ">=0.10.0"
   },
   "peerDependencies": {
-    "react": "^17.0.0-alpha",
-    "react-dom": "^17.0.0-alpha",
+    "react": "^17.0.0",
+    "react-dom": "^17.0.0",
     "webpack": "^4.43.0"
   },
   "dependencies": {
+    "acorn": "^6.2.1",
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.1"
   },
