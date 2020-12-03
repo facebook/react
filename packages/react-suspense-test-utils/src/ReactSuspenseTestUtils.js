@@ -17,7 +17,7 @@ function unsupported() {
   invariant(false, 'This feature is not supported by ReactSuspenseTestUtils.');
 }
 
-export async function waitForSuspense<T>(fn: () => T): Promise<T> {
+export function waitForSuspense<T>(fn: () => T): Promise<T> {
   const cache: Map<Function, mixed> = new Map();
   const testDispatcher: Dispatcher = {
     getCacheForType<R>(resourceType: () => R): R {
@@ -45,21 +45,24 @@ export async function waitForSuspense<T>(fn: () => T): Promise<T> {
     useOpaqueIdentifier: unsupported,
     useMutableSource: unsupported,
   };
-  while (true) {
-    const prevDispatcher = ReactCurrentDispatcher.current;
-    ReactCurrentDispatcher.current = testDispatcher;
-    try {
-      return fn();
-    } catch (promise) {
-      if (typeof promise.then === 'function') {
-        await promise;
-      } else {
-        throw promise;
+  // Not using async/await because we don't compile it.
+  return new Promise((resolve, reject) => {
+    function retry() {
+      const prevDispatcher = ReactCurrentDispatcher.current;
+      ReactCurrentDispatcher.current = testDispatcher;
+      try {
+        const result = fn();
+        resolve(result);
+      } catch (thrownValue) {
+        if (typeof thrownValue.then === 'function') {
+          thrownValue.then(retry, reject);
+        } else {
+          reject(thrownValue);
+        }
+      } finally {
+        ReactCurrentDispatcher.current = prevDispatcher;
       }
-    } finally {
-      ReactCurrentDispatcher.current = prevDispatcher;
     }
-  }
-  // eslint-disable-next-line no-unreachable
-  return (undefined: any);
+    retry();
+  });
 }
