@@ -14,7 +14,7 @@ import type {
   ReactContext,
 } from 'shared/ReactTypes';
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
-import type {Lanes, Lane} from './ReactFiberLane';
+import type {Lanes, Lane} from './ReactFiberLane.old';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
@@ -44,7 +44,7 @@ import {
   setCurrentUpdateLanePriority,
   higherLanePriority,
   DefaultLanePriority,
-} from './ReactFiberLane';
+} from './ReactFiberLane.old';
 import {readContext} from './ReactFiberNewContext.old';
 import {
   Update as UpdateEffect,

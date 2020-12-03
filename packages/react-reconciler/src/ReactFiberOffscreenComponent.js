@@ -8,7 +8,7 @@
  */
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {Lanes} from './ReactFiberLane';
+import type {Lanes} from './ReactFiberLane.old';
 
 export type OffscreenProps = {|
   // TODO: Pick an API before exposing the Offscreen type. I've chosen an enum

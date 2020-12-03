@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane';
+import type {Lanes} from './ReactFiberLane.new';
 import type {
   ReactFundamentalComponentInstance,
   ReactScopeInstance,
@@ -130,7 +130,7 @@ import {
   getRenderTargetTime,
 } from './ReactFiberWorkLoop.new';
 import {createFundamentalStateInstance} from './ReactFiberFundamental.new';
-import {OffscreenLane, SomeRetryLane} from './ReactFiberLane';
+import {OffscreenLane, SomeRetryLane} from './ReactFiberLane.new';
 import {resetChildFibers} from './ReactChildFiber.new';
 import {createScopeInstance} from './ReactFiberScope.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
