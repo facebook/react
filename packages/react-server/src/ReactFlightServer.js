@@ -769,11 +769,12 @@ const Dispatcher: DispatcherType = {
       currentCache,
       'Reading the cache is only supported while rendering.',
     );
-    if (currentCache.has(resourceType)) {
-      return ((currentCache.get(resourceType): any): T);
+    let entry: T | void = (currentCache.get(resourceType): any);
+    if (entry === undefined) {
+      entry = resourceType();
+      // TODO: Warn if undefined?
+      currentCache.set(resourceType, entry);
     }
-    const entry = resourceType();
-    currentCache.set(resourceType, entry);
     return entry;
   },
   readContext: (unsupportedHook: any),

@@ -18,14 +18,15 @@ function unsupported() {
 }
 
 export async function waitForSuspense<T>(fn: () => T): Promise<T> {
-  const cache = new Map();
+  const cache: Map<Function, mixed> = new Map();
   const testDispatcher: Dispatcher = {
     getCacheForType<R>(resourceType: () => R): R {
-      if (cache.has(resourceType)) {
-        return ((cache.get(resourceType): any): R);
+      let entry: R | void = (cache.get(resourceType): any);
+      if (entry === undefined) {
+        entry = resourceType();
+        // TODO: Warn if undefined?
+        cache.set(resourceType, entry);
       }
-      const entry = resourceType();
-      cache.set(resourceType, entry);
       return entry;
     },
     readContext: unsupported,
