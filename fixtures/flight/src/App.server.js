@@ -18,11 +18,9 @@ export default function App() {
       <Counter2 />
       <ul>
         {todos.map(todo => (
-          <React.Fragment key={todo.id}>
-            <li>
-              {todo.text} <DeleteTodo id={todo.id} />
-            </li>
-          </React.Fragment>
+          <li key={todo.id}>
+            {todo.text} <DeleteTodo id={todo.id} />
+          </li>
         ))}
       </ul>
       <AddTodo />
