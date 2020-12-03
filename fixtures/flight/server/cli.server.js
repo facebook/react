@@ -17,11 +17,26 @@ const app = express();
 // Application
 app.get('/', function(req, res) {
   if (process.env.NODE_ENV === 'development') {
-    for (var key in require.cache) {
-      delete require.cache[key];
-    }
+    // This doesn't work in ESM mode.
+    // for (var key in require.cache) {
+    //   delete require.cache[key];
+    // }
   }
   require('./handler.server.js')(req, res);
+});
+
+app.get('/todos', function(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.json([
+    {
+      id: 1,
+      text: 'Shave yaks',
+    },
+    {
+      id: 2,
+      text: 'Eat kale',
+    },
+  ]);
 });
 
 app.listen(3001, () => {

@@ -23,6 +23,7 @@ export const enableSchedulerTracing = __PROFILE__;
 export const enableSuspenseServerRenderer = false;
 export const enableSelectiveHydration = false;
 export const enableLazyElements = false;
+export const enableCache = false;
 export const disableJavaScriptURLs = false;
 export const disableInputAttributeSyncing = false;
 export const enableSchedulerDebugging = false;

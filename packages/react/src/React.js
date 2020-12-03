@@ -33,6 +33,7 @@ import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
 import {
+  getCacheForType,
   useCallback,
   useContext,
   useEffect,
@@ -110,6 +111,7 @@ export {
   useDeferredValue,
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
+  getCacheForType as unstable_getCacheForType,
   // enableFundamentalAPI
   createFundamental as unstable_createFundamental,
   // enableScopeAPI

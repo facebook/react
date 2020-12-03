@@ -274,6 +274,7 @@ type BasicStateAction<S> = (S => S) | S;
 type Dispatch<A> = A => void;
 
 export type Dispatcher = {|
+  getCacheForType?: <T>(resourceType: () => T) => T,
   readContext<T>(
     context: ReactContext<T>,
     observedBits: void | number | boolean,

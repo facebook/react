@@ -82,4 +82,5 @@ export {
   unstable_createFundamental,
   unstable_Scope,
   unstable_useOpaqueIdentifier,
+  unstable_getCacheForType,
 } from './src/React';

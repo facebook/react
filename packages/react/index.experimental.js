@@ -45,6 +45,7 @@ export {
   startTransition as unstable_startTransition,
   SuspenseList as unstable_SuspenseList,
   unstable_useOpaqueIdentifier,
+  unstable_getCacheForType,
   // enableDebugTracing
   unstable_DebugTracingMode,
 } from './src/React';

@@ -25,6 +25,7 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   enableNewReconciler,
+  enableCache,
   decoupleUpdatePriorityFromScheduler,
   enableUseRefAccessWarning,
 } from 'shared/ReactFeatureFlags';
@@ -1815,6 +1816,10 @@ function dispatchAction<S, A>(
   }
 }
 
+function getCacheForType<T>(resourceType: () => T): T {
+  invariant(false, 'Not implemented.');
+}
+
 export const ContextOnlyDispatcher: Dispatcher = {
   readContext,
 
@@ -1835,6 +1840,9 @@ export const ContextOnlyDispatcher: Dispatcher = {
 
   unstable_isNewReconciler: enableNewReconciler,
 };
+if (enableCache) {
+  (ContextOnlyDispatcher: Dispatcher).getCacheForType = getCacheForType;
+}
 
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
@@ -1877,6 +1885,9 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 
   unstable_isNewReconciler: enableNewReconciler,
 };
+if (enableCache) {
+  (HooksDispatcherOnUpdate: Dispatcher).getCacheForType = getCacheForType;
+}
 
 const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
@@ -1898,6 +1909,9 @@ const HooksDispatcherOnRerender: Dispatcher = {
 
   unstable_isNewReconciler: enableNewReconciler,
 };
+if (enableCache) {
+  (HooksDispatcherOnRerender: Dispatcher).getCacheForType = getCacheForType;
+}
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
 let HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher | null = null;
@@ -2052,6 +2066,9 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).getCacheForType = getCacheForType;
+  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext<T>(
@@ -2174,6 +2191,9 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).getCacheForType = getCacheForType;
+  }
 
   HooksDispatcherOnUpdateInDEV = {
     readContext<T>(
@@ -2296,6 +2316,9 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).getCacheForType = getCacheForType;
+  }
 
   HooksDispatcherOnRerenderInDEV = {
     readContext<T>(
@@ -2419,6 +2442,9 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).getCacheForType = getCacheForType;
+  }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
     readContext<T>(
@@ -2556,6 +2582,9 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).getCacheForType = getCacheForType;
+  }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
     readContext<T>(
@@ -2693,6 +2722,9 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).getCacheForType = getCacheForType;
+  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
     readContext<T>(
@@ -2831,4 +2863,7 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).getCacheForType = getCacheForType;
+  }
 }

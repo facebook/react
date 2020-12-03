@@ -11,8 +11,7 @@ import type {Wakeable} from 'shared/ReactTypes';
 
 import * as http from 'http';
 import * as https from 'https';
-
-import {readCache} from 'react/unstable-cache';
+import {unstable_getCacheForType} from 'react';
 
 type FetchResponse = {|
   // Properties
@@ -75,16 +74,12 @@ type RejectedResult = {|
 
 type Result<V> = PendingResult | ResolvedResult<V> | RejectedResult;
 
-const fetchKey = {};
+function getResultMap(): Map<string, Result<FetchResponse>> {
+  return unstable_getCacheForType(createResultMap);
+}
 
-function readResultMap(): Map<string, Result<FetchResponse>> {
-  const resources = readCache().resources;
-  let map = resources.get(fetchKey);
-  if (map === undefined) {
-    map = new Map();
-    resources.set(fetchKey, map);
-  }
-  return map;
+function createResultMap(): Map<string, Result<FetchResponse>> {
+  return new Map();
 }
 
 function readResult<T>(result: Result<T>): T {
@@ -166,7 +161,7 @@ Response.prototype = {
 };
 
 function preloadResult(url: string, options: mixed): Result<FetchResponse> {
-  const map = readResultMap();
+  const map = getResultMap();
   let entry = map.get(url);
   if (!entry) {
     if (options) {

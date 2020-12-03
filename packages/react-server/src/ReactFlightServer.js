@@ -74,6 +74,7 @@ type Segment = {
 export type Request = {
   destination: Destination,
   bundlerConfig: BundlerConfig,
+  cache: Map<Function, mixed>,
   nextChunkId: number,
   pendingChunks: number,
   pingedSegments: Array<Segment>,
@@ -97,6 +98,7 @@ export function createRequest(
   const request = {
     destination,
     bundlerConfig,
+    cache: new Map(),
     nextChunkId: 0,
     pendingChunks: 0,
     pingedSegments: pingedSegments,
@@ -652,7 +654,9 @@ function retrySegment(request: Request, segment: Segment): void {
 
 function performWork(request: Request): void {
   const prevDispatcher = ReactCurrentDispatcher.current;
+  const prevCache = currentCache;
   ReactCurrentDispatcher.current = Dispatcher;
+  currentCache = request.cache;
 
   const pingedSegments = request.pingedSegments;
   request.pingedSegments = [];
@@ -665,6 +669,7 @@ function performWork(request: Request): void {
   }
 
   ReactCurrentDispatcher.current = prevDispatcher;
+  currentCache = prevCache;
 }
 
 let reentrant = false;
@@ -743,6 +748,8 @@ function unsupportedHook(): void {
   invariant(false, 'This Hook is not supported in Server Components.');
 }
 
+let currentCache: Map<Function, mixed> | null = null;
+
 const Dispatcher: DispatcherType = {
   useMemo<T>(nextCreate: () => T): T {
     return nextCreate();
@@ -756,6 +763,19 @@ const Dispatcher: DispatcherType = {
   },
   useTransition(): [(callback: () => void) => void, boolean] {
     return [() => {}, false];
+  },
+  getCacheForType<T>(resourceType: () => T): T {
+    invariant(
+      currentCache,
+      'Reading the cache is only supported while rendering.',
+    );
+    let entry: T | void = (currentCache.get(resourceType): any);
+    if (entry === undefined) {
+      entry = resourceType();
+      // TODO: Warn if undefined?
+      currentCache.set(resourceType, entry);
+    }
+    return entry;
   },
   readContext: (unsupportedHook: any),
   useContext: (unsupportedHook: any),

@@ -135,15 +135,6 @@ const bundles = [
     externals: ['react'],
   },
 
-  /******* React Cache (experimental, new) *******/
-  {
-    bundleTypes: __EXPERIMENTAL__ ? [NODE_DEV, NODE_PROD, NODE_PROFILING] : [],
-    moduleType: ISOMORPHIC,
-    entry: 'react/unstable-cache',
-    global: 'ReactCache',
-    externals: ['react'],
-  },
-
   /******* React Fetch Browser (experimental, new) *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
@@ -364,6 +355,15 @@ const bundles = [
       'ReactFlightNativeRelayClientIntegration',
       'JSResourceReferenceImpl',
     ],
+  },
+
+  /******* React Suspense Test Utils *******/
+  {
+    bundleTypes: [NODE_ES2015],
+    moduleType: RENDERER_UTILS,
+    entry: 'react-suspense-test-utils',
+    global: 'ReactSuspenseTestUtils',
+    externals: ['react'],
   },
 
   /******* React ART *******/

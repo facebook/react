@@ -6,4 +6,5 @@
  *
  * @flow
  */
-export {createCache, readCache, CacheProvider} from './src/cache/ReactCache';
+
+export * from './src/ReactSuspenseTestUtils';

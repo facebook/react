@@ -23,6 +23,7 @@ import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 import {NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 import ErrorStackParser from 'error-stack-parser';
+import invariant from 'shared/invariant';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 import {
@@ -98,6 +99,10 @@ function nextHook(): null | Hook {
     currentHook = hook.next;
   }
   return hook;
+}
+
+function getCacheForType<T>(resourceType: () => T): T {
+  invariant(false, 'Not implemented.');
 }
 
 function readContext<T>(
@@ -298,6 +303,7 @@ function useOpaqueIdentifier(): OpaqueIDType | void {
 }
 
 const Dispatcher: DispatcherType = {
+  getCacheForType,
   readContext,
   useCallback,
   useContext,
