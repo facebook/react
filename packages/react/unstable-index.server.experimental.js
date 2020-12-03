@@ -32,6 +32,7 @@ export {
   useDeferredValue as unstable_useDeferredValue,
   SuspenseList as unstable_SuspenseList,
   unstable_useOpaqueIdentifier,
+  unstable_getCacheForType,
   // enableDebugTracing
   unstable_DebugTracingMode,
 } from './src/React';
