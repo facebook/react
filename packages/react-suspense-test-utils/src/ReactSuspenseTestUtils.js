@@ -55,7 +55,7 @@ export function waitForSuspense<T>(fn: () => T): Promise<T> {
         resolve(result);
       } catch (thrownValue) {
         if (typeof thrownValue.then === 'function') {
-          thrownValue.then(retry, reject);
+          thrownValue.then(retry, retry);
         } else {
           reject(thrownValue);
         }

@@ -104,4 +104,18 @@ describe('ReactFetchNode', () => {
     });
     expect(outputs).toMatchObject(['banana', 'mango', 'orange']);
   });
+
+  // @gate experimental
+  it('can produce an error', async () => {
+    serverImpl = (req, res) => {};
+
+    expect.assertions(1);
+    try {
+      await waitForSuspense(() => {
+        return fetch('BOOM');
+      });
+    } catch (err) {
+      expect(err.message).toEqual('Invalid URL: BOOM');
+    }
+  });
 });
