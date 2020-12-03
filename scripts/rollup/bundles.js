@@ -660,20 +660,19 @@ const bundles = [
   },
 
   /******* React Scheduler Post Task (experimental) *******/
-  // Currently not used.
-  // {
-  //   bundleTypes: [
-  //     NODE_DEV,
-  //     NODE_PROD,
-  //     FB_WWW_DEV,
-  //     FB_WWW_PROD,
-  //     FB_WWW_PROFILING,
-  //   ],
-  //   moduleType: ISOMORPHIC,
-  //   entry: 'scheduler/unstable_post_task',
-  //   global: 'SchedulerPostTask',
-  //   externals: [],
-  // },
+  {
+    bundleTypes: [
+      NODE_DEV,
+      NODE_PROD,
+      FB_WWW_DEV,
+      FB_WWW_PROD,
+      FB_WWW_PROFILING,
+    ],
+    moduleType: ISOMORPHIC,
+    entry: 'scheduler/unstable_post_task',
+    global: 'SchedulerPostTask',
+    externals: [],
+  },
 
   /******* React Scheduler Post Task Only (experimental) *******/
   {
