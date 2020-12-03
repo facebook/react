@@ -357,6 +357,15 @@ const bundles = [
     ],
   },
 
+  /******* React Suspense Test Utils *******/
+  {
+    bundleTypes: [NODE_ES2015],
+    moduleType: RENDERER_UTILS,
+    entry: 'react-suspense-test-utils',
+    global: 'ReactSuspenseTestUtils',
+    externals: ['react'],
+  },
+
   /******* React ART *******/
   {
     bundleTypes: [
