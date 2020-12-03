@@ -19,5 +19,5 @@ ReactDOM.render(
 );
 
 // Create entry points for Client Components.
-// TODO: Webpack plugin should do this and write a map to disk.
+// TODO: Webpack plugin should do this.
 require.context('./', true, /\.client\.js$/, 'lazy');
