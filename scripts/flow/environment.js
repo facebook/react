@@ -77,3 +77,9 @@ declare module 'pg' {
     query: (query: string, values?: Array<mixed>) => void,
   };
 }
+
+declare module 'pg/lib/utils' {
+  declare module.exports: {
+    prepareValue(val: any): mixed,
+  };
+}

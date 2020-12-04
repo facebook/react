@@ -74,38 +74,30 @@ export function Pool(options: mixed) {
   };
 }
 
-function getInnerMap(
-  outerMap: Map<string, mixed>,
-  query: string,
-  values?: Array<mixed>,
-) {
-  if (values == null || values.length === 0) {
-    return [outerMap, query];
-  }
-  // If we have parameters, each becomes as a nesting layer for Maps.
-  // We want to find (or create as needed) the innermost Map, and return that.
-  let innerMap = outerMap;
-  let key = query;
-  for (let i = 0; i < values.length; i++) {
-    let nextMap = innerMap.get(key);
-    if (nextMap === undefined) {
-      nextMap = new Map();
-      innerMap.set(key, nextMap);
-    }
-    innerMap = nextMap;
-    // Postgres bindings convert everything to strings:
-    // https://node-postgres.com/features/queries#parameterized-query
-    // We reuse their algorithm instead of reimplementing.
-    key = prepareValue(values[i]);
-  }
-  return [innerMap, key];
-}
-
 Pool.prototype.query = function(query: string, values?: Array<mixed>) {
   const pool = this.pool;
   const outerMap = unstable_getCacheForType(this.createResultMap);
-  const [innerMap, key] = getInnerMap(outerMap, query, values);
-  let entry = innerMap.get(key);
+
+  let innerMap: Map<any, any> = outerMap;
+  let key = query;
+  if (values != null) {
+    // If we have parameters, each becomes as a nesting layer for Maps.
+    // We want to find (or create as needed) the innermost Map, and return that.
+    for (let i = 0; i < values.length; i++) {
+      let nextMap = innerMap.get(key);
+      if (nextMap === undefined) {
+        nextMap = new Map();
+        innerMap.set(key, nextMap);
+      }
+      innerMap = nextMap;
+      // Postgres bindings convert everything to strings:
+      // https://node-postgres.com/features/queries#parameterized-query
+      // We reuse their algorithm instead of reimplementing.
+      key = prepareValue(values[i]);
+    }
+  }
+
+  let entry: Result | void = innerMap.get(key);
   if (!entry) {
     const thenable = pool.query(query, values);
     entry = toResult(thenable);
