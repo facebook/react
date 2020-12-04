@@ -11,6 +11,7 @@ import type {Wakeable} from 'shared/ReactTypes';
 
 import {unstable_getCacheForType} from 'react';
 import {Pool as PostgresPool} from 'pg';
+import {prepareValue} from 'pg/lib/utils';
 
 const Pending = 0;
 const Resolved = 1;
@@ -73,16 +74,42 @@ export function Pool(options: mixed) {
   };
 }
 
+function getInnerMap(
+  outerMap: Map<string, mixed>,
+  query: string,
+  values?: Array<mixed>,
+) {
+  if (values == null || values.length === 0) {
+    return [outerMap, query];
+  }
+  // If we have parameters, each becomes as a nesting layer for Maps.
+  // We want to find (or create as needed) the innermost Map, and return that.
+  let innerMap = outerMap;
+  let key = query;
+  for (let i = 0; i < values.length; i++) {
+    let nextMap = innerMap.get(key);
+    if (nextMap === undefined) {
+      nextMap = new Map();
+      innerMap.set(key, nextMap);
+    }
+    innerMap = nextMap;
+    // Postgres bindings convert everything to strings:
+    // https://node-postgres.com/features/queries#parameterized-query
+    // We reuse their algorithm instead of reimplementing.
+    key = prepareValue(values[i]);
+  }
+  return [innerMap, key];
+}
+
 Pool.prototype.query = function(query: string, values?: Array<mixed>) {
   const pool = this.pool;
-  const map = unstable_getCacheForType(this.createResultMap);
-  // TODO: Is this sufficient? What about more complex types?
-  const key = JSON.stringify({query, values});
-  let entry = map.get(key);
+  const outerMap = unstable_getCacheForType(this.createResultMap);
+  const [innerMap, key] = getInnerMap(outerMap, query, values);
+  let entry = innerMap.get(key);
   if (!entry) {
     const thenable = pool.query(query, values);
     entry = toResult(thenable);
-    map.set(key, entry);
+    innerMap.set(key, entry);
   }
   return readResult(entry);
 };
