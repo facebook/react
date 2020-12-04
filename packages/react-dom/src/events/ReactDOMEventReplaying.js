@@ -12,7 +12,7 @@ import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
 import type {EventSystemFlags} from './EventSystemFlags';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
-import type {LanePriority} from 'react-reconciler/src/ReactFiberLane';
+import type {LanePriority} from 'react-reconciler/src/ReactFiberLane.old';
 
 import {enableSelectiveHydration} from 'shared/ReactFeatureFlags';
 import {

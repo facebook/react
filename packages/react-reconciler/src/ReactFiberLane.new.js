@@ -9,7 +9,9 @@
 
 import type {FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
 
-export opaque type LanePriority =
+// TODO: Ideally these types would be opaque but that doesn't work well with
+// our reconciler fork infra, since these leak into non-reconciler packages.
+export type LanePriority =
   | 0
   | 1
   | 2
@@ -28,9 +30,10 @@ export opaque type LanePriority =
   | 15
   | 16
   | 17;
-export opaque type Lanes = number;
-export opaque type Lane = number;
-export opaque type LaneMap<T> = Array<T>;
+
+export type Lanes = number;
+export type Lane = number;
+export type LaneMap<T> = Array<T>;
 
 import invariant from 'shared/invariant';
 

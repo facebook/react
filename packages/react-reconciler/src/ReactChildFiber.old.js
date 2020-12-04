@@ -10,7 +10,7 @@
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane';
+import type {Lanes} from './ReactFiberLane.old';
 
 import getComponentName from 'shared/getComponentName';
 import {Placement, Deletion} from './ReactFiberFlags';

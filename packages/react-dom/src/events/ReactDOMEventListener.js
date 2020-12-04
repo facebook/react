@@ -41,6 +41,7 @@ import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import {
   enableLegacyFBSupport,
   decoupleUpdatePriorityFromScheduler,
+  enableNewReconciler,
 } from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
@@ -53,11 +54,27 @@ import {
   flushDiscreteUpdatesIfNeeded,
   discreteUpdates,
 } from './ReactDOMUpdateBatching';
+
 import {
-  InputContinuousLanePriority,
-  getCurrentUpdateLanePriority,
-  setCurrentUpdateLanePriority,
-} from 'react-reconciler/src/ReactFiberLane';
+  InputContinuousLanePriority as InputContinuousLanePriority_old,
+  getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
+  setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_old,
+} from 'react-reconciler/src/ReactFiberLane.old';
+import {
+  InputContinuousLanePriority as InputContinuousLanePriority_new,
+  getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
+  setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_new,
+} from 'react-reconciler/src/ReactFiberLane.new';
+
+const InputContinuousLanePriority = enableNewReconciler
+  ? InputContinuousLanePriority_new
+  : InputContinuousLanePriority_old;
+const getCurrentUpdateLanePriority = enableNewReconciler
+  ? getCurrentUpdateLanePriority_new
+  : getCurrentUpdateLanePriority_old;
+const setCurrentUpdateLanePriority = enableNewReconciler
+  ? setCurrentUpdateLanePriority_new
+  : setCurrentUpdateLanePriority_old;
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,

@@ -17,7 +17,7 @@ import {
   NoLanePriority,
   NoTimestamp,
   createLaneMap,
-} from './ReactFiberLane';
+} from './ReactFiberLane.old';
 import {
   enableSchedulerTracing,
   enableSuspenseCallback,
