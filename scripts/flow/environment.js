@@ -69,3 +69,17 @@ declare module 'EventListener' {
 
 declare function __webpack_chunk_load__(id: string): Promise<mixed>;
 declare function __webpack_require__(id: string): any;
+
+declare module 'pg' {
+  declare var Pool: (
+    options: mixed,
+  ) => {
+    query: (query: string, values?: Array<mixed>) => void,
+  };
+}
+
+declare module 'pg/lib/utils' {
+  declare module.exports: {
+    prepareValue(val: any): mixed,
+  };
+}

@@ -153,6 +153,24 @@ const bundles = [
     externals: ['react', 'http', 'https'],
   },
 
+  /******* React PG Browser (experimental, new) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-pg/index.browser',
+    global: 'ReactPostgres',
+    externals: [],
+  },
+
+  /******* React PG Node (experimental, new) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-pg/index.node',
+    global: 'ReactPostgres',
+    externals: ['react', 'pg'],
+  },
+
   /******* React DOM *******/
   {
     bundleTypes: [

@@ -1,0 +1,27 @@
+{
+  "private": true,
+  "name": "react-pg",
+  "description": "React bindings for PostgreSQL",
+  "version": "0.0.0",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/facebook/react.git",
+    "directory": "packages/react-pg"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "build-info.json",
+    "index.js",
+    "index.node.js",
+    "index.browser.js",
+    "cjs/"
+  ],
+  "peerDependencies": {
+    "react": "^17.0.0",
+    "pg": "*"
+  },
+  "browser": {
+    "./index.js": "./index.browser.js"
+  }
+}
