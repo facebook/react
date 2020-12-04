@@ -369,5 +369,7 @@
   "378": "Type %s is not supported in client component props. Remove %s from this object, or avoid the entire object: %s",
   "379": "Refs cannot be used in server components, nor passed to client components.",
   "380": "Reading the cache is only supported while rendering.",
-  "381": "This feature is not supported by ReactSuspenseTestUtils."
+  "381": "This feature is not supported by ReactSuspenseTestUtils.",
+  "382": "This query has received more parameters than the last time the same query was used. Always pass the exact number of parameters that the query needs.",
+  "383": "This query has received fewer parameters than the last time the same query was used. Always pass the exact number of parameters that the query needs."
 }
