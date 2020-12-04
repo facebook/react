@@ -13,10 +13,14 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
 } from 'shared/ReactTypes';
-import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
+import type {
+  Fiber,
+  Dispatcher,
+  HookType,
+  ReactPriorityLevel,
+} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane';
 import type {HookFlags} from './ReactHookEffectTags';
-import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
 
@@ -70,9 +74,8 @@ import invariant from 'shared/invariant';
 import getComponentName from 'shared/getComponentName';
 import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
+import {UserBlockingPriority, NormalPriority} from './ReactPriorityLevel';
 import {
-  UserBlockingPriority,
-  NormalPriority,
   runWithPriority,
   getCurrentPriorityLevel,
 } from './SchedulerWithReactIntegration.old';
