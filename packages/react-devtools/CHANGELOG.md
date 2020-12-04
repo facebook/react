@@ -11,7 +11,7 @@
 
 ## 4.10.1 (November 12, 2020)
 #### Bugfix
-* Fixed invalid internal work tag mappings ([bvaughn](https://github.com/bvaughn) in [#20380](https://github.com/facebook/react/pull/20380))
+* Fixed invalid internal work tag mappings ([bvaughn](https://github.com/bvaughn) in [#20362](https://github.com/facebook/react/pull/20362))
 
 ## 4.10.0 (November 12, 2020)
 #### Features
