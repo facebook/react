@@ -9,6 +9,10 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.10.1 (November 12, 2020)
+#### Bugfix
+* Fixed invalid internal work tag mappings ([bvaughn](https://github.com/bvaughn) in [#20380](https://github.com/facebook/react/pull/20380))
+
 ## 4.10.0 (November 12, 2020)
 #### Features
 * Make DevTools Websocket retry delay configurable ([bvaughn](https://github.com/bvaughn) in [#20107](https://github.com/facebook/react/pull/20107))
