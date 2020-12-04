@@ -12,6 +12,7 @@ import type {Wakeable} from 'shared/ReactTypes';
 import {unstable_getCacheForType} from 'react';
 import {Pool as PostgresPool} from 'pg';
 import {prepareValue} from 'pg/lib/utils';
+import invariant from 'shared/invariant';
 
 const Pending = 0;
 const Resolved = 1;
@@ -74,11 +75,13 @@ export function Pool(options: mixed) {
   };
 }
 
+type NestedMap = Map<any, Result | NestedMap>;
+
 Pool.prototype.query = function(query: string, values?: Array<mixed>) {
   const pool = this.pool;
   const outerMap = unstable_getCacheForType(this.createResultMap);
 
-  let innerMap: Map<any, any> = outerMap;
+  let innerMap: NestedMap = outerMap;
   let key = query;
   if (values != null) {
     // If we have parameters, each becomes as a nesting layer for Maps.
@@ -88,6 +91,13 @@ Pool.prototype.query = function(query: string, values?: Array<mixed>) {
       if (nextMap === undefined) {
         nextMap = new Map();
         innerMap.set(key, nextMap);
+      } else if (!(nextMap instanceof Map)) {
+        invariant(
+          false,
+          'This query has received more parameters than the last time ' +
+            'the same query was used. Always pass the exact number of ' +
+            'parameters that the query needs.',
+        );
       }
       innerMap = nextMap;
       // Postgres bindings convert everything to strings:
@@ -97,11 +107,18 @@ Pool.prototype.query = function(query: string, values?: Array<mixed>) {
     }
   }
 
-  let entry: Result | void = innerMap.get(key);
+  let entry = innerMap.get(key);
   if (!entry) {
     const thenable = pool.query(query, values);
     entry = toResult(thenable);
     innerMap.set(key, entry);
+  } else if (entry instanceof Map) {
+    invariant(
+      false,
+      'This query has received fewer parameters than the last time ' +
+        'the same query was used. Always pass the exact number of ' +
+        'parameters that the query needs.',
+    );
   }
   return readResult(entry);
 };
