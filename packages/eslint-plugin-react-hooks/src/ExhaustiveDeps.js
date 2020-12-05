@@ -1119,6 +1119,19 @@ export default {
       const declaredDependenciesNode = node.arguments[callbackIndex + 1];
       const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
 
+      // Check whether a callback is supplied to useEffect. If there is no
+      // callback supplied then the hook will not work and React will throw a TypeError.
+      // So no need to check for dependency inclusion.
+      if (!callback) {
+        reportProblem({
+          node: reactiveHook,
+          message:
+            `React Hook ${reactiveHookName} will crash when called with no arguments. ` +
+            `Did you forget to pass a function and an array of dependencies?`,
+        });
+        return;
+      }
+
       // Check the declared dependencies for this reactive hook. If there is no
       // second argument then the reactive callback will re-run on every render.
       // So no need to check for dependency inclusion.
