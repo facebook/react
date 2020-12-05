@@ -1696,6 +1696,7 @@ const tests = {
       code: normalizeIndent`
         function MyComponent() {
           useEffect()
+          useLayoutEffect()
           useCallback()
           useMemo()
         }
@@ -1704,6 +1705,12 @@ const tests = {
         {
           message:
             'React Hook useEffect will crash when called with no arguments. ' +
+            'Did you forget to pass a function and an array of dependencies?',
+          suggestions: undefined,
+        },
+        {
+          message:
+            'React Hook useLayoutEffect will crash when called with no arguments. ' +
             'Did you forget to pass a function and an array of dependencies?',
           suggestions: undefined,
         },
