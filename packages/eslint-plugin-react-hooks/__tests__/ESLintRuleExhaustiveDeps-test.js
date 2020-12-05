@@ -1705,25 +1705,25 @@ const tests = {
         {
           message:
             'React Hook useEffect will crash when called with no arguments. ' +
-            'Did you forget to pass a function and an array of dependencies?',
+            'Did you forget to pass a callback to the hook?',
           suggestions: undefined,
         },
         {
           message:
             'React Hook useLayoutEffect will crash when called with no arguments. ' +
-            'Did you forget to pass a function and an array of dependencies?',
+            'Did you forget to pass a callback to the hook?',
           suggestions: undefined,
         },
         {
           message:
             'React Hook useCallback will crash when called with no arguments. ' +
-            'Did you forget to pass a function and an array of dependencies?',
+            'Did you forget to pass a callback to the hook?',
           suggestions: undefined,
         },
         {
           message:
             'React Hook useMemo will crash when called with no arguments. ' +
-            'Did you forget to pass a function and an array of dependencies?',
+            'Did you forget to pass a callback to the hook?',
           suggestions: undefined,
         },
       ],
