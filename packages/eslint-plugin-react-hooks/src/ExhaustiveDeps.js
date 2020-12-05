@@ -1119,8 +1119,8 @@ export default {
       const declaredDependenciesNode = node.arguments[callbackIndex + 1];
       const isEffect = /Effect($|[^a-z])/g.test(reactiveHookName);
 
-      // Check whether a callback is supplied to useEffect. If there is no
-      // callback supplied then the hook will not work and React will throw a TypeError.
+      // Check whether a callback is supplied. If there is no callback supplied
+      // then the hook will not work and React will throw a TypeError.
       // So no need to check for dependency inclusion.
       if (!callback) {
         reportProblem({
