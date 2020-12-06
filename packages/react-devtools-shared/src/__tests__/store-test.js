@@ -850,10 +850,6 @@ describe('Store', () => {
   });
 
   it('should show the right display names for special component types', async done => {
-    async function fakeImport(result) {
-      return {default: result};
-    }
-
     const MyComponent = (props, ref) => null;
     const ForwardRefComponent = React.forwardRef(MyComponent);
     const MyComponent2 = (props, ref) => null;
@@ -868,8 +864,6 @@ describe('Store', () => {
     const MyComponent4 = (props, ref) => null;
     const MemoComponent = React.memo(MyComponent4);
     const MemoForwardRefComponent = React.memo(ForwardRefComponent);
-    const MyComponent5 = (props, ref) => null;
-    const LazyComponent = React.lazy(() => fakeImport(MyComponent5));
 
     const FakeHigherOrderComponent = () => null;
     FakeHigherOrderComponent.displayName = 'withFoo(withBar(Baz))';
@@ -889,9 +883,6 @@ describe('Store', () => {
         <ForwardRefComponentWithCustomDisplayName />
         <MemoComponent />
         <MemoForwardRefComponent />
-        <React.Suspense fallback="Loading...">
-          <LazyComponent />
-        </React.Suspense>
         <FakeHigherOrderComponent />
         <MemoizedFakeHigherOrderComponent />
         <ForwardRefFakeHigherOrderComponent />
@@ -911,5 +902,110 @@ describe('Store', () => {
     expect(store).toMatchSnapshot();
 
     done();
+  });
+
+  describe('Lazy', () => {
+    async function fakeImport(result) {
+      return {default: result};
+    }
+
+    const LazyInnerComponent = () => null;
+
+    const App = ({renderChildren}) => {
+      if (renderChildren) {
+        return (
+          <React.Suspense fallback="Loading...">
+            <LazyComponent />
+          </React.Suspense>
+        );
+      } else {
+        return null;
+      }
+    };
+
+    let LazyComponent;
+    beforeEach(() => {
+      LazyComponent = React.lazy(() => fakeImport(LazyInnerComponent));
+    });
+
+    it('should support Lazy components (legacy render)', async done => {
+      const container = document.createElement('div');
+
+      // Render once to start fetching the lazy component
+      act(() => ReactDOM.render(<App renderChildren={true} />, container));
+
+      expect(store).toMatchSnapshot('1: mounted + loading');
+
+      await Promise.resolve();
+
+      // Render again after it resolves
+      act(() => ReactDOM.render(<App renderChildren={true} />, container));
+
+      expect(store).toMatchSnapshot('2: mounted + loaded');
+
+      // Render again to unmount it
+      act(() => ReactDOM.render(<App renderChildren={false} />, container));
+
+      expect(store).toMatchSnapshot('3: unmounted');
+
+      done();
+    });
+
+    it('should support Lazy components in (createRoot)', async done => {
+      const container = document.createElement('div');
+      const root = ReactDOM.unstable_createRoot(container);
+
+      // Render once to start fetching the lazy component
+      act(() => root.render(<App renderChildren={true} />));
+
+      expect(store).toMatchSnapshot('1: mounted + loading');
+
+      await Promise.resolve();
+
+      // Render again after it resolves
+      act(() => root.render(<App renderChildren={true} />));
+
+      expect(store).toMatchSnapshot('2: mounted + loaded');
+
+      // Render again to unmount it
+      act(() => root.render(<App renderChildren={false} />));
+
+      expect(store).toMatchSnapshot('3: unmounted');
+
+      done();
+    });
+
+    it('should support Lazy components that are unmounted before they finish loading (legacy render)', async done => {
+      const container = document.createElement('div');
+
+      // Render once to start fetching the lazy component
+      act(() => ReactDOM.render(<App renderChildren={true} />, container));
+
+      expect(store).toMatchSnapshot('1: mounted + loading');
+
+      // Render again to unmount it before it finishes loading
+      act(() => ReactDOM.render(<App renderChildren={false} />, container));
+
+      expect(store).toMatchSnapshot('2: unmounted');
+
+      done();
+    });
+
+    it('should support Lazy components that are unmounted before they finish loading in (createRoot)', async done => {
+      const container = document.createElement('div');
+      const root = ReactDOM.unstable_createRoot(container);
+
+      // Render once to start fetching the lazy component
+      act(() => root.render(<App renderChildren={true} />));
+
+      expect(store).toMatchSnapshot('1: mounted + loading');
+
+      // Render again to unmount it before it finishes loading
+      act(() => root.render(<App renderChildren={false} />));
+
+      expect(store).toMatchSnapshot('2: unmounted');
+
+      done();
+    });
   });
 });
