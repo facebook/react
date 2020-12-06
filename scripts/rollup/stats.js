@@ -18,23 +18,14 @@ const currentBuildResults = {
 };
 
 function saveResults() {
-  if (process.env.CIRCLE_NODE_TOTAL) {
-    // In CI, write the bundle sizes to a subdirectory and append the node index
-    // to the filename. A downstream job will consolidate these into a
-    // single file.
-    const nodeIndex = process.env.CIRCLE_NODE_INDEX;
-    mkdirp.sync('build/sizes');
-    fs.writeFileSync(
-      join('build', 'sizes', `bundle-sizes-${nodeIndex}.json`),
-      JSON.stringify(currentBuildResults, null, 2)
-    );
-  } else {
-    // Write all the bundle sizes to a single JSON file.
-    fs.writeFileSync(
-      BUNDLE_SIZES_FILE_NAME,
-      JSON.stringify(currentBuildResults, null, 2)
-    );
-  }
+  // Write the bundle sizes to a subdirectory and append the node index to the
+  // filename. A downstream job will consolidate these into a single file.
+  const nodeIndex = process.env.CIRCLE_NODE_INDEX || 0;
+  mkdirp.sync('build/sizes');
+  fs.writeFileSync(
+    join('build', 'sizes', `bundle-sizes-${nodeIndex}.json`),
+    JSON.stringify(currentBuildResults, null, 2)
+  );
 }
 
 function fractionalChange(prev, current) {

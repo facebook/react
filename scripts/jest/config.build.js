@@ -6,6 +6,11 @@ const baseConfig = require('./config.base');
 
 process.env.IS_BUILD = true;
 
+const NODE_MODULES_DIR =
+  process.env.RELEASE_CHANNEL === 'stable'
+    ? 'build/oss-stable'
+    : 'build/oss-experimental';
+
 // Find all folders in packages/* with package.json
 const packagesRoot = join(__dirname, '..', '..', 'packages');
 const packages = readdirSync(packagesRoot).filter(dir => {
@@ -35,11 +40,11 @@ moduleNameMapper[
 // Map packages to bundles
 packages.forEach(name => {
   // Root entry point
-  moduleNameMapper[`^${name}$`] = `<rootDir>/build/node_modules/${name}`;
+  moduleNameMapper[`^${name}$`] = `<rootDir>/${NODE_MODULES_DIR}/${name}`;
   // Named entry points
   moduleNameMapper[
     `^${name}\/([^\/]+)$`
-  ] = `<rootDir>/build/node_modules/${name}/$1`;
+  ] = `<rootDir>/${NODE_MODULES_DIR}/${name}/$1`;
 });
 
 module.exports = Object.assign({}, baseConfig, {

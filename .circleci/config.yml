@@ -23,31 +23,6 @@ aliases:
   - &attach_workspace
     at: build
 
-  - &process_artifacts
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: node ./scripts/rollup/consolidateBundleSizes.js
-      - run: ./scripts/circleci/pack_and_store_artifact.sh
-      - store_artifacts:
-          path: ./node_modules.tgz
-      - store_artifacts:
-          path: ./build.tgz
-      - store_artifacts:
-          path: ./build/bundle-sizes.json
-      - store_artifacts:
-          # TODO: Update release script to use local file instead of pulling
-          # from artifacts.
-          path: ./scripts/error-codes/codes.json
-      - persist_to_workspace:
-          root: build
-          paths:
-            - bundle-sizes.json
-
 jobs:
   setup:
     docker: *docker
@@ -237,38 +212,10 @@ jobs:
       - *restore_node_modules
       - run: yarn test --prod --ci
 
-  RELEASE_CHANNEL_stable_yarn_build:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run:
-          environment:
-            RELEASE_CHANNEL: stable
-          command: |
-            ./scripts/circleci/add_build_info_json.sh
-            ./scripts/circleci/update_package_versions.sh
-            yarn build
-      - run: echo "stable" >> build/RELEASE_CHANNEL
-      - persist_to_workspace:
-          root: build
-          paths:
-            - RELEASE_CHANNEL
-            - facebook-www
-            - facebook-react-native
-            - facebook-relay
-            - node_modules
-            - react-native
-            - dist
-            - sizes/*.json
-
   yarn_build:
     docker: *docker
     environment: *environment
-    parallelism: 20
+    parallelism: 40
     steps:
       - checkout
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
@@ -279,8 +226,7 @@ jobs:
           command: |
             ./scripts/circleci/add_build_info_json.sh
             ./scripts/circleci/update_package_versions.sh
-            yarn build
-      - run: echo "experimental" >> build/RELEASE_CHANNEL
+            node ./scripts/rollup/build-all-release-channels.js
       - persist_to_workspace:
           root: build
           paths:
@@ -288,10 +234,12 @@ jobs:
             - facebook-www
             - facebook-react-native
             - facebook-relay
-            - node_modules
+            - oss-stable
+            - oss-experimental
             - react-native
             - dist
-            - sizes/*.json
+            - sizes-stable
+            - sizes-experimental
 
   build_devtools_and_process_artifacts:
     docker: *docker
@@ -354,12 +302,7 @@ jobs:
             cd packages/react-devtools-scheduling-profiler
             yarn vercel deploy dist --prod --confirm --token $SCHEDULING_PROFILER_DEPLOY_VERCEL_TOKEN
 
-  # These jobs are named differently so we can distinguish the stable and
-  # and experimental artifacts
-  process_artifacts: *process_artifacts
-  process_artifacts_experimental: *process_artifacts
-
-  sizebot_stable:
+  process_artifacts:
     docker: *docker
     environment: *environment
     steps:
@@ -367,29 +310,53 @@ jobs:
       - attach_workspace: *attach_workspace
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
-      # This runs in the process_artifacts job, too, but it's faster to run
-      # this step in both jobs instead of running the jobs sequentially
-      - run: node ./scripts/rollup/consolidateBundleSizes.js
-      - run:
-          environment:
-            RELEASE_CHANNEL: stable
-          command: node ./scripts/tasks/danger
+      - run: tar -zcvf ./build.tgz ./build
+      - store_artifacts:
+          path: ./build.tgz
+      # sizebot is temporarily disabled until the other changes land
+      # - store_artifacts:
+      #     path: ./build/bundle-sizes.json
+      - store_artifacts:
+          # TODO: Update release script to use local file instead of pulling
+          # from artifacts.
+          path: ./scripts/error-codes/codes.json
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build
 
-  sizebot_experimental:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      # This runs in the process_artifacts job, too, but it's faster to run
-      # this step in both jobs instead of running the jobs sequentially
-      - run: node ./scripts/rollup/consolidateBundleSizes.js
-      - run:
-          environment:
-            RELEASE_CHANNEL: experimental
-          command: node ./scripts/tasks/danger
+  # sizebot is temporarily disabled until the other changes land
+  # sizebot_stable:
+  #   docker: *docker
+  #   environment: *environment
+  #   steps:
+  #     - checkout
+  #     - attach_workspace: *attach_workspace
+  #     - run: yarn workspaces info | head -n -1 > workspace_info.txt
+  #     - *restore_node_modules
+  #     # This runs in the process_artifacts job, too, but it's faster to run
+  #     # this step in both jobs instead of running the jobs sequentially
+  #     - run: node ./scripts/rollup/consolidateBundleSizes.js
+  #     - run:
+  #         environment:
+  #           RELEASE_CHANNEL: stable
+  #         command: node ./scripts/tasks/danger
+
+  # sizebot_experimental:
+  #   docker: *docker
+  #   environment: *environment
+  #   steps:
+  #     - checkout
+  #     - attach_workspace: *attach_workspace
+  #     - run: yarn workspaces info | head -n -1 > workspace_info.txt
+  #     - *restore_node_modules
+  #     # This runs in the process_artifacts job, too, but it's faster to run
+  #     # this step in both jobs instead of running the jobs sequentially
+  #     - run: node ./scripts/rollup/consolidateBundleSizes.js
+  #     - run:
+  #         environment:
+  #           RELEASE_CHANNEL: experimental
+  #         command: node ./scripts/tasks/danger
 
   yarn_lint_build:
     docker: *docker
@@ -503,7 +470,8 @@ jobs:
 
 workflows:
   version: 2
-  stable:
+
+  build_and_test:
     jobs:
       - setup
       - yarn_lint:
@@ -533,31 +501,6 @@ workflows:
       - yarn_test-classic_prod_variant:
           requires:
             - setup
-      - RELEASE_CHANNEL_stable_yarn_build:
-          requires:
-            - setup
-      - process_artifacts:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
-      - sizebot_stable:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
-      - RELEASE_CHANNEL_stable_yarn_lint_build:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
-      - yarn_test-stable_build:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
-      - yarn_test-stable_build_prod:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
-      - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
-
-  experimental:
-    jobs:
-      - setup
       - yarn_test:
           requires:
             - setup
@@ -579,12 +522,29 @@ workflows:
       - yarn_build:
           requires:
             - setup
-      - process_artifacts_experimental:
+      - process_artifacts:
           requires:
             - yarn_build
-      - sizebot_experimental:
+      # sizebot is temporarily disabled until the other changes land
+      # - sizebot_stable:
+      #     requires:
+      #       - yarn_build
+      - RELEASE_CHANNEL_stable_yarn_lint_build:
           requires:
             - yarn_build
+      - yarn_test-stable_build:
+          requires:
+            - yarn_build
+      - yarn_test-stable_build_prod:
+          requires:
+            - yarn_build
+      - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
+          requires:
+            - yarn_build
+      # sizebot is temporarily disabled until the other changes land
+      # - sizebot_experimental:
+      #     requires:
+      #       - yarn_build
       - yarn_test_build:
           requires:
             - yarn_build
