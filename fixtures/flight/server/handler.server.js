@@ -3,7 +3,6 @@
 import {pipeToNodeWritable} from 'react-transport-dom-webpack/server';
 import {readFile} from 'fs';
 import {resolve} from 'path';
-import * as React from 'react';
 
 module.exports = function(req, res) {
   // const m = require('../src/App.server.js');
