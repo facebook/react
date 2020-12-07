@@ -18,9 +18,9 @@ const app = express();
 app.get('/', function(req, res) {
   if (process.env.NODE_ENV === 'development') {
     // This doesn't work in ESM mode.
-    // for (var key in require.cache) {
-    //   delete require.cache[key];
-    // }
+    for (var key in require.cache) {
+      delete require.cache[key];
+    }
   }
   require('./handler.server.js')(req, res);
 });
