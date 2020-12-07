@@ -11,13 +11,12 @@ import {mkdirSync, writeFileSync} from 'fs';
 import {dirname, resolve, join} from 'path';
 import {pathToFileURL} from 'url';
 
-// This can't be loaded as an ESM module.
-const asyncLib = require('neo-async');
+import asyncLib from 'neo-async';
 
-const ModuleDependency = require('webpack/lib/dependencies/ModuleDependency');
-const NullDependency = require('webpack/lib/dependencies/NullDependency');
-const AsyncDependenciesBlock = require('webpack/lib/AsyncDependenciesBlock');
-const Template = require('webpack/lib/Template');
+import ModuleDependency from 'webpack/lib/dependencies/ModuleDependency';
+import NullDependency from 'webpack/lib/dependencies/NullDependency';
+import AsyncDependenciesBlock from 'webpack/lib/AsyncDependenciesBlock';
+import Template from 'webpack/lib/Template';
 
 class ClientReferenceDependency extends ModuleDependency {
   constructor(request) {
