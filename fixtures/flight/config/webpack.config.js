@@ -664,7 +664,14 @@ module.exports = function(webpackEnv) {
           formatter: isEnvProduction ? typescriptFormatter : undefined,
         }),
       // Fork Start
-      new ReactFlightWebpackPlugin({isServer: false}),
+      new ReactFlightWebpackPlugin({
+        isServer: false,
+        clientReferences: {
+          directory: './src/',
+          recursive: true,
+          include: /\.client\.js$/,
+        },
+      }),
       // Fork End
     ].filter(Boolean),
     // Some libraries import Node modules but don't use them in the browser.
