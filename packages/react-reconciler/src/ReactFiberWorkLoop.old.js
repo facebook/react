@@ -14,7 +14,6 @@ import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {Effect as HookEffect} from './ReactFiberHooks.old';
-import type {Flags} from './ReactFiberFlags';
 import type {StackCursor} from './ReactFiberStack.old';
 
 import {
@@ -32,7 +31,6 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   enableScopeAPI,
-  enableDoubleInvokingEffects,
   disableSchedulerTimeoutInWorkLoop,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -134,8 +132,6 @@ import {
   HostEffectMask,
   Hydrating,
   HydratingAndUpdate,
-  MountPassiveDev,
-  MountLayoutDev,
 } from './ReactFiberFlags';
 import {
   NoLanePriority,
@@ -196,10 +192,6 @@ import {
   commitPassiveEffectDurations,
   commitResetTextContent,
   isSuspenseBoundaryBeingHidden,
-  invokeLayoutEffectMountInDEV,
-  invokePassiveEffectMountInDEV,
-  invokeLayoutEffectUnmountInDEV,
-  invokePassiveEffectUnmountInDEV,
 } from './ReactFiberCommitWork.old';
 import {enqueueUpdate} from './ReactUpdateQueue.old';
 import {resetContextDependencies} from './ReactFiberNewContext.old';
@@ -2134,10 +2126,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     pendingPassiveEffectsLanes = lanes;
     pendingPassiveEffectsRenderPriority = renderPriorityLevel;
   } else {
-    if (__DEV__ && enableDoubleInvokingEffects) {
-      commitDoubleInvokeEffectsInDEV(root, false);
-    }
-
     // We are done with the effect chain at this point so let's clear the
     // nextEffect pointers to assist with GC. If we have passive effects, we'll
     // clear this in flushPassiveEffects.
@@ -2685,29 +2673,6 @@ function flushPassiveEffectsImpl() {
     }
   }
 
-  if (enableProfilerTimer && enableProfilerCommitHooks) {
-    const profilerEffects = pendingPassiveProfilerEffects;
-    pendingPassiveProfilerEffects = [];
-    for (let i = 0; i < profilerEffects.length; i++) {
-      const fiber = ((profilerEffects[i]: any): Fiber);
-      commitPassiveEffectDurations(root, fiber);
-    }
-  }
-
-  if (__DEV__) {
-    if (enableDebugTracing) {
-      logPassiveEffectsStopped();
-    }
-  }
-
-  if (enableSchedulingProfiler) {
-    markPassiveEffectsStopped();
-  }
-
-  if (__DEV__ && enableDoubleInvokingEffects) {
-    commitDoubleInvokeEffectsInDEV(root, true);
-  }
-
   // Note: This currently assumes there are no passive effects on the root fiber
   // because the root is not part of its own effect list.
   // This could change in the future.
@@ -2722,13 +2687,32 @@ function flushPassiveEffectsImpl() {
     effect = nextNextEffect;
   }
 
-  if (__DEV__) {
-    isFlushingPassiveEffects = false;
+  if (enableProfilerTimer && enableProfilerCommitHooks) {
+    const profilerEffects = pendingPassiveProfilerEffects;
+    pendingPassiveProfilerEffects = [];
+    for (let i = 0; i < profilerEffects.length; i++) {
+      const fiber = ((profilerEffects[i]: any): Fiber);
+      commitPassiveEffectDurations(root, fiber);
+    }
   }
 
   if (enableSchedulerTracing) {
     popInteractions(((prevInteractions: any): Set<Interaction>));
     finishPendingInteractions(root, lanes);
+  }
+
+  if (__DEV__) {
+    isFlushingPassiveEffects = false;
+  }
+
+  if (__DEV__) {
+    if (enableDebugTracing) {
+      logPassiveEffectsStopped();
+    }
+  }
+
+  if (enableSchedulingProfiler) {
+    markPassiveEffectsStopped();
   }
 
   executionContext = prevExecutionContext;
@@ -3010,49 +2994,6 @@ function flushRenderPhaseStrictModeWarningsInDEV() {
 
     if (warnAboutDeprecatedLifecycles) {
       ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
-    }
-  }
-}
-
-function commitDoubleInvokeEffectsInDEV(
-  root: FiberRoot,
-  hasPassiveEffects: boolean,
-) {
-  if (__DEV__ && enableDoubleInvokingEffects) {
-    invokeEffectsInDev(root, MountLayoutDev, invokeLayoutEffectUnmountInDEV);
-    if (hasPassiveEffects) {
-      invokeEffectsInDev(
-        root,
-        MountPassiveDev,
-        invokePassiveEffectUnmountInDEV,
-      );
-    }
-
-    invokeEffectsInDev(root, MountLayoutDev, invokeLayoutEffectMountInDEV);
-    if (hasPassiveEffects) {
-      invokeEffectsInDev(root, MountPassiveDev, invokePassiveEffectMountInDEV);
-    }
-  }
-}
-
-function invokeEffectsInDev(
-  root: FiberRoot,
-  fiberFlags: Flags,
-  invokeEffectFn: (fiber: Fiber) => void,
-): void {
-  if (__DEV__ && enableDoubleInvokingEffects) {
-    // Note: This currently assumes there are no passive effects on the root fiber
-    // because the root is not part of its own effect list.
-    // This could change in the future.
-    let currentEffect = root.current.firstEffect;
-    while (currentEffect !== null) {
-      const flags = currentEffect.flags;
-      if ((flags & fiberFlags) !== NoFlags) {
-        setCurrentDebugFiberInDEV(currentEffect);
-        invokeEffectFn(currentEffect);
-        resetCurrentDebugFiberInDEV();
-      }
-      currentEffect = currentEffect.nextEffect;
     }
   }
 }

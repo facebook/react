@@ -15,9 +15,8 @@ let ReactNoop;
 let Scheduler;
 
 function shouldDoubleInvokingEffects() {
-  // For now, this feature only exists in the old fork (while the new fork is being bisected).
-  // Eventually we'll land it in both forks.
-  return __DEV__ && !__VARIANT__;
+  // Reverted temporarily. Need to re-land.
+  return false;
 }
 
 describe('ReactDoubleInvokeEvents', () => {

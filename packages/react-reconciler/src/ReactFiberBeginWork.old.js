@@ -2007,7 +2007,8 @@ function updateSuspensePrimaryChildren(
   if (currentFallbackChildFragment !== null) {
     // Delete the fallback child fragment
     currentFallbackChildFragment.nextEffect = null;
-    currentFallbackChildFragment.flags = Deletion;
+    currentFallbackChildFragment.flags =
+      (currentFallbackChildFragment.flags & StaticMask) | Deletion;
     workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChildFragment;
     let deletions = workInProgress.deletions;
     if (deletions === null) {
@@ -2998,7 +2999,7 @@ function remountFiber(
       returnFiber.firstEffect = returnFiber.lastEffect = current;
     }
     current.nextEffect = null;
-    current.flags = Deletion;
+    current.flags = (current.flags & StaticMask) | Deletion;
 
     let deletions = returnFiber.deletions;
     if (deletions === null) {

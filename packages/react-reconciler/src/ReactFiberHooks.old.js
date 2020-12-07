@@ -28,15 +28,9 @@ import {
   enableCache,
   decoupleUpdatePriorityFromScheduler,
   enableUseRefAccessWarning,
-  enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
 
-import {
-  NoMode,
-  BlockingMode,
-  DebugTracingMode,
-  StrictMode,
-} from './ReactTypeOfMode';
+import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   NoLane,
   NoLanes,
@@ -55,8 +49,6 @@ import {readContext} from './ReactFiberNewContext.old';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
-  MountLayoutDev as MountLayoutDevEffect,
-  MountPassiveDev as MountPassiveDevEffect,
 } from './ReactFiberFlags';
 import {
   HasEffect as HookHasEffect,
@@ -475,20 +467,7 @@ export function bailoutHooks(
   lanes: Lanes,
 ) {
   workInProgress.updateQueue = current.updateQueue;
-  if (
-    __DEV__ &&
-    enableDoubleInvokingEffects &&
-    (workInProgress.mode & StrictMode) !== NoMode
-  ) {
-    workInProgress.flags &= ~(
-      MountLayoutDevEffect |
-      MountPassiveDevEffect |
-      PassiveEffect |
-      UpdateEffect
-    );
-  } else {
-    workInProgress.flags &= ~(PassiveEffect | UpdateEffect);
-  }
+  workInProgress.flags &= ~(PassiveEffect | UpdateEffect);
   current.lanes = removeLanes(current.lanes, lanes);
 }
 
@@ -1324,26 +1303,12 @@ function mountEffect(
       warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
     }
   }
-
-  if (
-    __DEV__ &&
-    enableDoubleInvokingEffects &&
-    (currentlyRenderingFiber.mode & StrictMode) !== NoMode
-  ) {
-    return mountEffectImpl(
-      UpdateEffect | PassiveEffect | MountPassiveDevEffect,
-      HookPassive,
-      create,
-      deps,
-    );
-  } else {
-    return mountEffectImpl(
-      UpdateEffect | PassiveEffect,
-      HookPassive,
-      create,
-      deps,
-    );
-  }
+  return mountEffectImpl(
+    UpdateEffect | PassiveEffect,
+    HookPassive,
+    create,
+    deps,
+  );
 }
 
 function updateEffect(
@@ -1368,20 +1333,7 @@ function mountLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  if (
-    __DEV__ &&
-    enableDoubleInvokingEffects &&
-    (currentlyRenderingFiber.mode & StrictMode) !== NoMode
-  ) {
-    return mountEffectImpl(
-      UpdateEffect | MountLayoutDevEffect,
-      HookLayout,
-      create,
-      deps,
-    );
-  } else {
-    return mountEffectImpl(UpdateEffect, HookLayout, create, deps);
-  }
+  return mountEffectImpl(UpdateEffect, HookLayout, create, deps);
 }
 
 function updateLayoutEffect(
@@ -1440,25 +1392,12 @@ function mountImperativeHandle<T>(
   const effectDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : null;
 
-  if (
-    __DEV__ &&
-    enableDoubleInvokingEffects &&
-    (currentlyRenderingFiber.mode & StrictMode) !== NoMode
-  ) {
-    return mountEffectImpl(
-      UpdateEffect | MountLayoutDevEffect,
-      HookLayout,
-      imperativeHandleEffect.bind(null, create, ref),
-      effectDeps,
-    );
-  } else {
-    return mountEffectImpl(
-      UpdateEffect,
-      HookLayout,
-      imperativeHandleEffect.bind(null, create, ref),
-      effectDeps,
-    );
-  }
+  return mountEffectImpl(
+    UpdateEffect,
+    HookLayout,
+    imperativeHandleEffect.bind(null, create, ref),
+    effectDeps,
+  );
 }
 
 function updateImperativeHandle<T>(
@@ -1739,17 +1678,7 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
     const setId = mountState(id)[1];
 
     if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
-      if (
-        __DEV__ &&
-        enableDoubleInvokingEffects &&
-        (currentlyRenderingFiber.mode & StrictMode) !== NoMode
-      ) {
-        currentlyRenderingFiber.flags |=
-          UpdateEffect | PassiveEffect | MountPassiveDevEffect;
-      } else {
-        currentlyRenderingFiber.flags |= UpdateEffect | PassiveEffect;
-      }
-
+      currentlyRenderingFiber.flags |= UpdateEffect | PassiveEffect;
       pushEffect(
         HookHasEffect | HookPassive,
         () => {
