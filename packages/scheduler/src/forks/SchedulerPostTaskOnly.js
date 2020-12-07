@@ -512,21 +512,25 @@ const performWorkUntilDeadline = () => {
     // the message event.
     deadline = currentTime + yieldInterval;
     const hasTimeRemaining = true;
+
+    // If a scheduler task throws, exit the current browser task so the
+    // error can be observed.
+    //
+    // Intentionally not using a try-catch, since that makes some debugging
+    // techniques harder. Instead, if `scheduledHostCallback` errors, then
+    // `hasMoreWork` will remain true, and we'll continue the work loop.
+    let hasMoreWork = true;
     try {
-      const hasMoreWork = scheduledHostCallback(hasTimeRemaining, currentTime);
-      if (!hasMoreWork) {
+      hasMoreWork = scheduledHostCallback(hasTimeRemaining, currentTime);
+    } finally {
+      if (hasMoreWork) {
+        // If there's more work, schedule the next browser task at the end of
+        // the preceding one.
+        postTask(performWorkUntilDeadline);
+      } else {
         isTaskLoopRunning = false;
         scheduledHostCallback = null;
-      } else {
-        // If there's more work, schedule the next message event at the end
-        // of the preceding one.
-        postTask(performWorkUntilDeadline);
       }
-    } catch (error) {
-      // If a scheduler task throws, exit the current browser task so the
-      // error can be observed.
-      postTask(performWorkUntilDeadline);
-      throw error;
     }
   } else {
     isTaskLoopRunning = false;
