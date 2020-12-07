@@ -1069,30 +1069,42 @@ function commitNestedUnmounts(
 }
 
 function detachFiberMutation(fiber: Fiber) {
-  // Cut off the return pointers to disconnect it from the tree. Ideally, we
-  // should clear the child pointer of the parent alternate to let this
-  // get GC:ed but we don't know which for sure which parent is the current
-  // one so we'll settle for GC:ing the subtree of this child. This child
-  // itself will be GC:ed when the parent updates the next time.
-  // Note: we cannot null out sibling here, otherwise it can cause issues
-  // with findDOMNode and how it requires the sibling field to carry out
-  // traversal in a later effect. See PR #16820. We now clear the sibling
-  // field after effects, see: detachFiberAfterEffects.
+  // Cut off the return pointer to disconnect it from the tree.
+  // This enables us to detect and warn against state updates on an unmounted component.
+  // It also prevents events from bubbling from within disconnected components.
   //
-  // Don't disconnect stateNode now; it will be detached in detachFiberAfterEffects.
-  // It may be required if the current component is an error boundary,
-  // and one of its descendants throws while unmounting a passive effect.
-  fiber.alternate = null;
+  // Ideally, we should also clear the child pointer of the parent alternate to let this
+  // get GC:ed but we don't know which for sure which parent is the current
+  // one so we'll settle for GC:ing the subtree of this child.
+  // This child itself will be GC:ed when the parent updates the next time.
+  //
+  // Note that we can't clear child or sibling pointers yet.
+  // They're needed for passive effects and for findDOMNode.
+  // We defer those fields, and all other cleanup, to the passive phase (see detachFiberAfterEffects).
+  const alternate = fiber.alternate;
+  if (alternate !== null) {
+    alternate.return = null;
+    fiber.alternate = null;
+  }
+  fiber.return = null;
+}
+
+export function detachFiberAfterEffects(fiber: Fiber): void {
+  // Null out fields to improve GC for references that may be lingering (e.g. DevTools).
+  // Note that we already cleared the return pointer in detachFiberMutation().
   fiber.child = null;
   fiber.deletions = null;
   fiber.dependencies = null;
-  fiber.firstEffect = null;
-  fiber.lastEffect = null;
   fiber.memoizedProps = null;
   fiber.memoizedState = null;
   fiber.pendingProps = null;
-  fiber.return = null;
+  fiber.sibling = null;
+  fiber.stateNode = null;
   fiber.updateQueue = null;
+  fiber.nextEffect = null;
+  fiber.firstEffect = null;
+  fiber.lastEffect = null;
+
   if (__DEV__) {
     fiber._debugOwner = null;
   }
