@@ -1,8 +1,9 @@
 'use strict';
 
-import {pipeToNodeWritable} from 'react-transport-dom-webpack/server';
-import {readFile} from 'fs';
-import {resolve} from 'path';
+const {pipeToNodeWritable} = require('react-transport-dom-webpack/server');
+const {readFile} = require('fs');
+const {resolve} = require('path');
+const React = require('react');
 
 module.exports = function(req, res) {
   // const m = require('../src/App.server.js');

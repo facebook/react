@@ -6,9 +6,12 @@ register();
 const babelRegister = require('@babel/register');
 
 babelRegister({
+  babelrc: false,
   ignore: [/\/(build|node_modules)\//],
-  presets: ['react-app'],
-  plugins: ['@babel/transform-modules-commonjs'],
+  plugins: [
+    '@babel/plugin-syntax-import-meta',
+    '@babel/plugin-transform-react-jsx',
+  ],
 });
 
 const express = require('express');
