@@ -2,7 +2,7 @@ import {
   resolve,
   getSource,
   transformSource as reactTransformSource,
-} from 'react-transport-dom-webpack/node-loader';
+} from 'react-server-dom-webpack/node-loader';
 
 export {resolve, getSource};
 

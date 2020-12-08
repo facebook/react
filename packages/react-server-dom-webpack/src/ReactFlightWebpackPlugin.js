@@ -50,7 +50,7 @@ type Options = {
   manifestFilename?: string,
 };
 
-const PLUGIN_NAME = 'React Transport Plugin';
+const PLUGIN_NAME = 'React Server Plugin';
 
 export default class ReactFlightWebpackPlugin {
   clientReferences: $ReadOnlyArray<ClientReferencePath>;

@@ -13,18 +13,18 @@ module.exports = [
       'react-dom',
       'react-dom/testing',
       'react-dom/unstable-fizz.node',
-      'react-transport-dom-webpack/server.node',
-      'react-transport-dom-webpack',
+      'react-server-dom-webpack/writer.node.server',
+      'react-server-dom-webpack',
     ],
     paths: [
       'react-dom',
       'react-dom/unstable-fizz',
       'react-dom/unstable-fizz.node',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/unstable-fizz.node
-      'react-transport-dom-webpack',
-      'react-transport-dom-webpack/server',
-      'react-transport-dom-webpack/server.node',
-      'react-transport-dom-webpack/src/ReactFlightDOMServerNode.js', // react-transport-dom-webpack/server.browser
+      'react-server-dom-webpack',
+      'react-server-dom-webpack/writer',
+      'react-server-dom-webpack/writer.node.server',
+      'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/writer.node.server
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-interactions',
     ],
@@ -37,17 +37,17 @@ module.exports = [
       'react-dom',
       'react-dom/testing',
       'react-dom/unstable-fizz.browser',
-      'react-transport-dom-webpack/server.browser',
-      'react-transport-dom-webpack',
+      'react-server-dom-webpack/writer.browser.server',
+      'react-server-dom-webpack',
     ],
     paths: [
       'react-dom',
       'react-dom/testing',
       'react-dom/unstable-fizz.browser',
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/unstable-fizz.browser
-      'react-transport-dom-webpack',
-      'react-transport-dom-webpack/server.browser',
-      'react-transport-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-transport-dom-webpack/server.browser
+      'react-server-dom-webpack',
+      'react-server-dom-webpack/writer.browser.server',
+      'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/writer.browser.server
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
     ],
     isFlowTyped: true,
@@ -83,21 +83,18 @@ module.exports = [
   },
   {
     shortName: 'dom-relay',
-    entryPoints: [
-      'react-transport-dom-relay',
-      'react-transport-dom-relay/server',
-    ],
-    paths: ['react-dom', 'react-transport-dom-relay'],
+    entryPoints: ['react-server-dom-relay', 'react-server-dom-relay/server'],
+    paths: ['react-dom', 'react-server-dom-relay'],
     isFlowTyped: true,
     isServerSupported: true,
   },
   {
     shortName: 'native-relay',
     entryPoints: [
-      'react-transport-native-relay',
-      'react-transport-native-relay/server',
+      'react-server-native-relay',
+      'react-server-native-relay/server',
     ],
-    paths: ['react-native-renderer', 'react-transport-native-relay'],
+    paths: ['react-native-renderer', 'react-server-native-relay'],
     isFlowTyped: true,
     isServerSupported: true,
   },

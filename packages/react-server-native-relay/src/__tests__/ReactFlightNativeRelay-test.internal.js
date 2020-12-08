@@ -36,8 +36,8 @@ describe('ReactFlightNativeRelay', () => {
       uiViewClassName: 'RCTText',
     }));
 
-    ReactNativeFlightRelayServer = require('react-transport-native-relay/server');
-    ReactNativeFlightRelayClient = require('react-transport-native-relay');
+    ReactNativeFlightRelayServer = require('react-server-native-relay/server');
+    ReactNativeFlightRelayClient = require('react-server-native-relay');
     JSResourceReferenceImpl = require('JSResourceReferenceImpl');
   });
 

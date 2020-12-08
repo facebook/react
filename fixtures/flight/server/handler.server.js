@@ -1,6 +1,6 @@
 'use strict';
 
-const {pipeToNodeWritable} = require('react-transport-dom-webpack/server');
+const {pipeToNodeWritable} = require('react-server-dom-webpack/writer');
 const {readFile} = require('fs');
 const {resolve} = require('path');
 const React = require('react');

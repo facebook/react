@@ -1,4 +1,4 @@
-# react-transport-dom-webpack
+# react-server-dom-webpack
 
 Experimental React Flight bindings for DOM using Webpack.
 

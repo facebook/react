@@ -28,8 +28,8 @@ let act;
 let Stream;
 let React;
 let ReactDOM;
-let ReactTransportDOMServer;
-let ReactTransportDOMClient;
+let ReactServerDOMWriter;
+let ReactServerDOMReader;
 
 describe('ReactFlightDOM', () => {
   beforeEach(() => {
@@ -40,8 +40,8 @@ describe('ReactFlightDOM', () => {
     Stream = require('stream');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTransportDOMServer = require('react-transport-dom-webpack/server');
-    ReactTransportDOMClient = require('react-transport-dom-webpack');
+    ReactServerDOMWriter = require('react-server-dom-webpack/writer.node.server');
+    ReactServerDOMReader = require('react-server-dom-webpack');
   });
 
   function getTestStream() {
@@ -113,8 +113,8 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactTransportDOMServer.pipeToNodeWritable(<App />, writable, webpackMap);
-    const response = ReactTransportDOMClient.createFromReadableStream(readable);
+    ReactServerDOMWriter.pipeToNodeWritable(<App />, writable, webpackMap);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
     await waitForSuspense(() => {
       const model = response.readRoot();
       expect(model).toEqual({
@@ -163,12 +163,12 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactTransportDOMServer.pipeToNodeWritable(
+    ReactServerDOMWriter.pipeToNodeWritable(
       <RootModel />,
       writable,
       webpackMap,
     );
-    const response = ReactTransportDOMClient.createFromReadableStream(readable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
     const root = ReactDOM.unstable_createRoot(container);
@@ -202,12 +202,12 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactTransportDOMServer.pipeToNodeWritable(
+    ReactServerDOMWriter.pipeToNodeWritable(
       <RootModel />,
       writable,
       webpackMap,
     );
-    const response = ReactTransportDOMClient.createFromReadableStream(readable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
     const root = ReactDOM.unstable_createRoot(container);
@@ -239,12 +239,12 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactTransportDOMServer.pipeToNodeWritable(
+    ReactServerDOMWriter.pipeToNodeWritable(
       <RootModel />,
       writable,
       webpackMap,
     );
-    const response = ReactTransportDOMClient.createFromReadableStream(readable);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
     const root = ReactDOM.unstable_createRoot(container);
@@ -374,8 +374,8 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactTransportDOMServer.pipeToNodeWritable(model, writable, webpackMap);
-    const response = ReactTransportDOMClient.createFromReadableStream(readable);
+    ReactServerDOMWriter.pipeToNodeWritable(model, writable, webpackMap);
+    const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
     const root = ReactDOM.unstable_createRoot(container);
@@ -473,12 +473,12 @@ describe('ReactFlightDOM', () => {
     const root = ReactDOM.unstable_createRoot(container);
 
     const stream1 = getTestStream();
-    ReactTransportDOMServer.pipeToNodeWritable(
+    ReactServerDOMWriter.pipeToNodeWritable(
       <App color="red" />,
       stream1.writable,
       webpackMap,
     );
-    const response1 = ReactTransportDOMClient.createFromReadableStream(
+    const response1 = ReactServerDOMReader.createFromReadableStream(
       stream1.readable,
     );
     await act(async () => {
@@ -501,12 +501,12 @@ describe('ReactFlightDOM', () => {
     inputB.value = 'goodbye';
 
     const stream2 = getTestStream();
-    ReactTransportDOMServer.pipeToNodeWritable(
+    ReactServerDOMWriter.pipeToNodeWritable(
       <App color="blue" />,
       stream2.writable,
       webpackMap,
     );
-    const response2 = ReactTransportDOMClient.createFromReadableStream(
+    const response2 = ReactServerDOMReader.createFromReadableStream(
       stream2.readable,
     );
     await act(async () => {

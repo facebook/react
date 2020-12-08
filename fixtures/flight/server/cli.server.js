@@ -1,6 +1,6 @@
 'use strict';
 
-const register = require('react-transport-dom-webpack/node-register');
+const register = require('react-server-dom-webpack/node-register');
 register();
 
 const babelRegister = require('@babel/register');

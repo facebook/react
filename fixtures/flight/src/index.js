@@ -1,11 +1,9 @@
 import * as React from 'react';
 import {Suspense} from 'react';
 import ReactDOM from 'react-dom';
-import ReactTransportDOMClient from 'react-transport-dom-webpack';
+import ReactServerDOMReader from 'react-server-dom-webpack';
 
-let data = ReactTransportDOMClient.createFromFetch(
-  fetch('http://localhost:3001')
-);
+let data = ReactServerDOMReader.createFromFetch(fetch('http://localhost:3001'));
 
 function Content() {
   return data.readRoot();

@@ -1,7 +1,7 @@
 'use strict';
 
 // Fork Start
-const ReactFlightWebpackPlugin = require('react-transport-dom-webpack/plugin');
+const ReactFlightWebpackPlugin = require('react-server-dom-webpack/plugin');
 // Fork End
 
 const fs = require('fs');
