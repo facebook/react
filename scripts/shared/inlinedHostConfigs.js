@@ -13,7 +13,7 @@ module.exports = [
       'react-dom',
       'react-dom/testing',
       'react-dom/unstable-fizz.node',
-      'react-server-dom-webpack/server.node',
+      'react-server-dom-webpack/writer.node.server',
       'react-server-dom-webpack',
     ],
     paths: [
@@ -22,9 +22,9 @@ module.exports = [
       'react-dom/unstable-fizz.node',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/unstable-fizz.node
       'react-server-dom-webpack',
-      'react-server-dom-webpack/server',
-      'react-server-dom-webpack/server.node',
-      'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/server.browser
+      'react-server-dom-webpack/writer',
+      'react-server-dom-webpack/writer.node.server',
+      'react-server-dom-webpack/src/ReactFlightDOMServerNode.js', // react-server-dom-webpack/writer.node.server
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
       'react-interactions',
     ],
@@ -37,7 +37,7 @@ module.exports = [
       'react-dom',
       'react-dom/testing',
       'react-dom/unstable-fizz.browser',
-      'react-server-dom-webpack/server.browser',
+      'react-server-dom-webpack/writer.browser.server',
       'react-server-dom-webpack',
     ],
     paths: [
@@ -46,8 +46,8 @@ module.exports = [
       'react-dom/unstable-fizz.browser',
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/unstable-fizz.browser
       'react-server-dom-webpack',
-      'react-server-dom-webpack/server.browser',
-      'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/server.browser
+      'react-server-dom-webpack/writer.browser.server',
+      'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/writer.browser.server
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
     ],
     isFlowTyped: true,
@@ -83,10 +83,7 @@ module.exports = [
   },
   {
     shortName: 'dom-relay',
-    entryPoints: [
-      'react-server-dom-relay',
-      'react-server-dom-relay/server',
-    ],
+    entryPoints: ['react-server-dom-relay', 'react-server-dom-relay/server'],
     paths: ['react-dom', 'react-server-dom-relay'],
     isFlowTyped: true,
     isServerSupported: true,

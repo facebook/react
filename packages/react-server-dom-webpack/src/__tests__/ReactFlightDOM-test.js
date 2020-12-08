@@ -40,7 +40,7 @@ describe('ReactFlightDOM', () => {
     Stream = require('stream');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactServerDOMWriter = require('react-server-dom-webpack/server');
+    ReactServerDOMWriter = require('react-server-dom-webpack/writer');
     ReactServerDOMReader = require('react-server-dom-webpack');
   });
 

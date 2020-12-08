@@ -14,9 +14,9 @@
     "README.md",
     "index.js",
     "plugin.js",
-    "server.js",
-    "server.browser.js",
-    "server.node.js",
+    "writer.js",
+    "writer.browser.server.js",
+    "writer.node.server.js",
     "node-register.js",
     "cjs/",
     "umd/",
@@ -25,15 +25,15 @@
   "exports": {
     ".": "./index.js",
     "./plugin": "./plugin.js",
-    "./server": "./server.js",
-    "./server.browser": "./server.browser.js",
-    "./server.node": "./server.node.js",
+    "./writer": "./writer.js",
+    "./writer.browser.server": "./writer.browser.server.js",
+    "./writer.node.server": "./writer.node.server.js",
     "./node-loader": "./esm/react-server-dom-webpack-node-loader.js",
     "./node-register": "./node-register.js",
     "./package.json": "./package.json"
   },
   "browser": {
-    "./server.js": "./server.browser.js"
+    "./writer.js": "./writer.browser.server.js"
   },
   "main": "index.js",
   "repository": {

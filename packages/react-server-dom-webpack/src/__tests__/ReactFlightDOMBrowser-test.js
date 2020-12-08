@@ -23,7 +23,7 @@ describe('ReactFlightDOMBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactServerDOMWriter = require('react-server-dom-webpack/server.browser');
+    ReactServerDOMWriter = require('react-server-dom-webpack/writer.browser.server');
     ReactServerDOMReader = require('react-server-dom-webpack');
   });
 

@@ -274,14 +274,14 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
-    entry: 'react-server-dom-webpack/server.browser',
+    entry: 'react-server-dom-webpack/writer.browser.server',
     global: 'ReactServerDOMWriter',
     externals: ['react', 'react-dom/server'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-server-dom-webpack/server.node',
+    entry: 'react-server-dom-webpack/writer.node.server',
     global: 'ReactServerDOMWriter',
     externals: ['react', 'react-dom/server'],
   },

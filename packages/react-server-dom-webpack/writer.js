@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from './server.node';
+export * from './writer.node.server';
