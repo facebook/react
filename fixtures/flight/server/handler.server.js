@@ -10,7 +10,7 @@ module.exports = function(req, res) {
   import('../src/App.server.js').then(m => {
     const dist = process.env.NODE_ENV === 'development' ? 'dist' : 'build';
     readFile(
-      resolve(__dirname, `../${dist}/react-transport-manifest.json`),
+      resolve(__dirname, `../${dist}/react-client-manifest.json`),
       'utf8',
       (err, data) => {
         if (err) {
