@@ -26,7 +26,7 @@ const validate = async ({cwd}) => {
         return 'No results were found.';
       }
 
-      for (let i = 0; i < items.length; i++) {
+      for (let i = 0; i < items.length; i += 1) {
         const item = items[i];
         if (item.getAttribute('data-value') !== 'All checks pass') {
           return `Unexpected result, "${item.getAttribute('data-value')}"`;

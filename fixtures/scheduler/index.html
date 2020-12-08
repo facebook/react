@@ -185,7 +185,7 @@ function checkTestResult(testNumber) {
   if (expected.length !== result.length) {
     correct = false;
   } else {
-    for (let i = 0, len = expected.length; i < len; i++) {
+    for (let i = 0, len = expected.length; i < len; i += 1) {
       if (expected[i] !== result[i]) {
         correct = false;
         break;

@@ -40,7 +40,7 @@ function checkSelectPropTypes(props) {
   if (__DEV__) {
     checkControlledValueProps('select', props);
 
-    for (let i = 0; i < valuePropNames.length; i++) {
+    for (let i = 0; i < valuePropNames.length; i += 1) {
       const propName = valuePropNames[i];
       if (props[propName] == null) {
         continue;
@@ -80,11 +80,11 @@ function updateOptions(
   if (multiple) {
     const selectedValues = (propValue: Array<string>);
     const selectedValue = {};
-    for (let i = 0; i < selectedValues.length; i++) {
+    for (let i = 0; i < selectedValues.length; i += 1) {
       // Prefix to avoid chaos with special keys.
       selectedValue['$' + selectedValues[i]] = true;
     }
-    for (let i = 0; i < options.length; i++) {
+    for (let i = 0; i < options.length; i += 1) {
       const selected = selectedValue.hasOwnProperty('$' + options[i].value);
       if (options[i].selected !== selected) {
         options[i].selected = selected;
@@ -98,7 +98,7 @@ function updateOptions(
     // browsers for all cases.
     const selectedValue = toString(getToStringValue((propValue: any)));
     let defaultSelected = null;
-    for (let i = 0; i < options.length; i++) {
+    for (let i = 0; i < options.length; i += 1) {
       if (options[i].value === selectedValue) {
         options[i].selected = true;
         if (setDefaultSelected) {

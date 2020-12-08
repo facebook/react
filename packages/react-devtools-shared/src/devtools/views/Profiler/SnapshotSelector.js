@@ -58,7 +58,7 @@ export default function SnapshotSelector(_: Props) {
   // Map the (unfiltered) selected commit index to an index within the filtered data.
   const selectedFilteredCommitIndex = useMemo(() => {
     if (selectedCommitIndex !== null) {
-      for (let i = 0; i < filteredCommitIndices.length; i++) {
+      for (let i = 0; i < filteredCommitIndices.length; i += 1) {
         if (filteredCommitIndices[i] === selectedCommitIndex) {
           return i;
         }

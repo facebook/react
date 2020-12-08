@@ -47,7 +47,7 @@ const touchEvent = function(nodeHandle, touches, changedTouches) {
 
 const subsequence = function(arr, indices) {
   const ret = [];
-  for (let i = 0; i < indices.length; i++) {
+  for (let i = 0; i < indices.length; i += 1) {
     const index = indices[i];
     ret.push(arr[index]);
   }
@@ -56,7 +56,7 @@ const subsequence = function(arr, indices) {
 
 const antiSubsequence = function(arr, indices) {
   const ret = [];
-  for (let i = 0; i < arr.length; i++) {
+  for (let i = 0; i < arr.length; i += 1) {
     if (indices.indexOf(i) === -1) {
       ret.push(arr[i]);
     }
@@ -1452,7 +1452,7 @@ describe('ResponderEventPlugin', () => {
       },
     ];
     let i;
-    for (i = 0; i < ancestors.length; i++) {
+    for (i = 0; i < ancestors.length; i += 1) {
       const plan = ancestors[i];
       const firstCommon = getLowestCommonAncestor(
         ReactDOMComponentTree.getInstanceFromNode(plan.one),

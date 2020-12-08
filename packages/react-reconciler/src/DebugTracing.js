@@ -46,7 +46,7 @@ function groupEnd(): void {
 
 function log(...logArgs): void {
   if (printedGroupIndex < pendingGroupArgs.length - 1) {
-    for (let i = printedGroupIndex + 1; i < pendingGroupArgs.length; i++) {
+    for (let i = printedGroupIndex + 1; i < pendingGroupArgs.length; i += 1) {
       const groupArgs = pendingGroupArgs[i];
       nativeConsole.group(...groupArgs);
     }

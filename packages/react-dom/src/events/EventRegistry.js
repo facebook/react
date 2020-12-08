@@ -65,7 +65,7 @@ export function registerDirectEvent(
     }
   }
 
-  for (let i = 0; i < dependencies.length; i++) {
+  for (let i = 0; i < dependencies.length; i += 1) {
     allNativeEvents.add(dependencies[i]);
   }
 }

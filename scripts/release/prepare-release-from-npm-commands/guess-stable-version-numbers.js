@@ -10,7 +10,7 @@ const run = async ({cwd, packages, skipPackages}, versionsMap) => {
     cwd,
   });
 
-  for (let i = 0; i < packages.length; i++) {
+  for (let i = 0; i < packages.length; i += 1) {
     const packageName = packages[i];
 
     try {

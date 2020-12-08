@@ -165,7 +165,7 @@ export default function(babel, opts = {}) {
         }
         let isLikelyUsedAsType = false;
         const referencePaths = binding.referencePaths;
-        for (let i = 0; i < referencePaths.length; i++) {
+        for (let i = 0; i < referencePaths.length; i += 1) {
           const ref = referencePaths[i];
           if (
             ref.node &&
@@ -261,7 +261,7 @@ export default function(babel, opts = {}) {
 
     hasForceReset = false;
     const comments = file.ast.comments;
-    for (let i = 0; i < comments.length; i++) {
+    for (let i = 0; i < comments.length; i += 1) {
       const cmt = comments[i];
       if (cmt.value.indexOf('@refresh reset') !== -1) {
         hasForceReset = true;

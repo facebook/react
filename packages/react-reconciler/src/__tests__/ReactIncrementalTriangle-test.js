@@ -102,7 +102,7 @@ describe('ReactIncrementalTriangle', () => {
 
   function formatActions(actions) {
     let result = 'simulate(';
-    for (let i = 0; i < actions.length; i++) {
+    for (let i = 0; i < actions.length; i += 1) {
       const action = actions[i];
       result += formatAction(action);
       if (i !== actions.length - 1) {
@@ -116,7 +116,7 @@ describe('ReactIncrementalTriangle', () => {
   const MAX_DEPTH = 3;
   const TOTAL_CHILDREN = Math.pow(3, MAX_DEPTH);
   let TOTAL_TRIANGLES = 0;
-  for (let i = 0; i <= MAX_DEPTH; i++) {
+  for (let i = 0; i <= MAX_DEPTH; i += 1) {
     TOTAL_TRIANGLES += Math.pow(3, i);
   }
 
@@ -130,14 +130,14 @@ describe('ReactIncrementalTriangle', () => {
       [EXPIRE, 1],
     ];
     let totalWeight = 0;
-    for (let i = 0; i < weights.length; i++) {
+    for (let i = 0; i < weights.length; i += 1) {
       totalWeight += weights[i][1];
     }
 
     const randomNumber = Math.random() * totalWeight;
     let actionType;
     let remainingWeight = randomNumber;
-    for (let i = 0; i < weights.length; i++) {
+    for (let i = 0; i < weights.length; i += 1) {
       const [option, weight] = weights[i];
       remainingWeight -= weight;
       if (remainingWeight <= 0) {
@@ -166,7 +166,7 @@ describe('ReactIncrementalTriangle', () => {
 
   function randomActions(n) {
     const actions = [];
-    for (let i = 0; i < n; i++) {
+    for (let i = 0; i < n; i += 1) {
       actions.push(randomAction());
     }
     return actions;
@@ -324,7 +324,7 @@ describe('ReactIncrementalTriangle', () => {
 
       let expectedCounter = counter;
 
-      for (let i = 0; i < children.length; i++) {
+      for (let i = 0; i < children.length; i += 1) {
         const child = children[i];
 
         const output = JSON.parse(child.prop);
@@ -478,7 +478,7 @@ describe('ReactIncrementalTriangle', () => {
 
       const limit = 1000;
 
-      for (let i = 0; i < limit; i++) {
+      for (let i = 0; i < limit; i += 1) {
         const actions = randomActions(5);
         try {
           simulate(...actions);
@@ -504,7 +504,7 @@ ${formatActions(actions)}
       }
 
       const actions = [];
-      for (let i = 0; i < 10; i++) {
+      for (let i = 0; i < 10; i += 1) {
         const rootID = randomRootID();
         const action = randomAction();
         actions.push([rootID, action]);
@@ -514,7 +514,7 @@ ${formatActions(actions)}
 
     function formatActionsPerRoot(actions) {
       let result = 'simulateMultipleRoots(';
-      for (let i = 0; i < actions.length; i++) {
+      for (let i = 0; i < actions.length; i += 1) {
         const [rootID, action] = actions[i];
         result += `['${rootID}', ${formatAction(action)}]`;
         if (i !== actions.length - 1) {
@@ -566,7 +566,7 @@ ${formatActions(actions)}
 
     it('generative tests', () => {
       const limit = 100;
-      for (let i = 0; i < limit; i++) {
+      for (let i = 0; i < limit; i += 1) {
         const actions = randomActionsPerRoot();
         try {
           simulateMultipleRoots(...actions);

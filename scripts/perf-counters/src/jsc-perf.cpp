@@ -66,7 +66,7 @@ static JSValueRef js_print(
   const JSValueRef arguments[],
   JSValueRef *exception
 ) {
-  for (int i = 0; i < argumentCount; i++) {
+  for (int i = 0; i < argumentCount; i += 1) {
     if (i != 0) {
       printf(" ");
     }

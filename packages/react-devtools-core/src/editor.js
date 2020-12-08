@@ -86,7 +86,7 @@ function guessEditor(): Array<string> {
     try {
       const output = execSync('ps x').toString();
       const processNames = Object.keys(COMMON_EDITORS);
-      for (let i = 0; i < processNames.length; i++) {
+      for (let i = 0; i < processNames.length; i += 1) {
         const processName = processNames[i];
         if (output.indexOf(processName) !== -1) {
           return [COMMON_EDITORS[processName]];
@@ -121,7 +121,7 @@ export function getValidFilePath(
       return maybeRelativePath;
     }
   } else {
-    for (let i = 0; i < absoluteProjectRoots.length; i++) {
+    for (let i = 0; i < absoluteProjectRoots.length; i += 1) {
       const projectRoot = absoluteProjectRoots[i];
       const joinedPath = join(projectRoot, maybeRelativePath);
       if (existsSync(joinedPath)) {

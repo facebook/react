@@ -112,7 +112,7 @@ function diffNestedArrayProperty(
   const minLength =
     prevArray.length < nextArray.length ? prevArray.length : nextArray.length;
   let i;
-  for (i = 0; i < minLength; i++) {
+  for (i = 0; i < minLength; i += 1) {
     // Diff any items in the array in the forward direction. Repeated keys
     // will be overwritten by later values.
     updatePayload = diffNestedProperty(
@@ -122,7 +122,7 @@ function diffNestedArrayProperty(
       validAttributes,
     );
   }
-  for (; i < prevArray.length; i++) {
+  for (; i < prevArray.length; i += 1) {
     // Clear out all remaining properties.
     updatePayload = clearNestedProperty(
       updatePayload,
@@ -130,7 +130,7 @@ function diffNestedArrayProperty(
       validAttributes,
     );
   }
-  for (; i < nextArray.length; i++) {
+  for (; i < nextArray.length; i += 1) {
     // Add all remaining properties.
     updatePayload = addNestedProperty(
       updatePayload,
@@ -217,7 +217,7 @@ function addNestedProperty(
     return addProperties(updatePayload, nextProp, validAttributes);
   }
 
-  for (let i = 0; i < nextProp.length; i++) {
+  for (let i = 0; i < nextProp.length; i += 1) {
     // Add all the properties of the array.
     updatePayload = addNestedProperty(
       updatePayload,
@@ -247,7 +247,7 @@ function clearNestedProperty(
     return clearProperties(updatePayload, prevProp, validAttributes);
   }
 
-  for (let i = 0; i < prevProp.length; i++) {
+  for (let i = 0; i < prevProp.length; i += 1) {
     // Add all the properties of the array.
     updatePayload = clearNestedProperty(
       updatePayload,

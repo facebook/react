@@ -199,7 +199,7 @@ const ResponderTouchHistoryStore = {
       nativeEvent.changedTouches.forEach(recordTouchEnd);
       touchHistory.numberActiveTouches = nativeEvent.touches.length;
       if (touchHistory.numberActiveTouches === 1) {
-        for (let i = 0; i < touchBank.length; i++) {
+        for (let i = 0; i < touchBank.length; i += 1) {
           const touchTrackToCheck = touchBank[i];
           if (touchTrackToCheck != null && touchTrackToCheck.touchActive) {
             touchHistory.indexOfSingleActiveTouch = i;

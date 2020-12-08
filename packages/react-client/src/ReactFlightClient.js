@@ -141,7 +141,7 @@ function createInitializedChunk<T>(
 
 function wakeChunk(listeners: null | Array<() => mixed>) {
   if (listeners !== null) {
-    for (let i = 0; i < listeners.length; i++) {
+    for (let i = 0; i < listeners.length; i += 1) {
       const listener = listeners[i];
       listener();
     }

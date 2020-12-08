@@ -49,7 +49,7 @@ const expectChildren = function(container, children) {
   } else {
     let mountIndex = 0;
 
-    for (let i = 0; i < children.length; i++) {
+    for (let i = 0; i < children.length; i += 1) {
       const child = children[i];
 
       if (typeof child === 'string') {

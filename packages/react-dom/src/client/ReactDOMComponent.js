@@ -501,7 +501,7 @@ export function setInitialProperties(
     case 'audio':
       // We listen to these events in case to ensure emulated bubble
       // listeners still fire for all the media events.
-      for (let i = 0; i < mediaEventTypes.length; i++) {
+      for (let i = 0; i < mediaEventTypes.length; i += 1) {
         listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
       }
       props = rawProps;
@@ -895,7 +895,7 @@ export function diffHydratedProperties(
     case 'audio':
       // We listen to these events in case to ensure emulated bubble
       // listeners still fire for all the media events.
-      for (let i = 0; i < mediaEventTypes.length; i++) {
+      for (let i = 0; i < mediaEventTypes.length; i += 1) {
         listenToNonDelegatedEvent(mediaEventTypes[i], domElement);
       }
       break;
@@ -945,7 +945,7 @@ export function diffHydratedProperties(
   if (__DEV__) {
     extraAttributeNames = new Set();
     const attributes = domElement.attributes;
-    for (let i = 0; i < attributes.length; i++) {
+    for (let i = 0; i < attributes.length; i += 1) {
       const name = attributes[i].name.toLowerCase();
       switch (name) {
         // Built-in SSR attribute is allowed

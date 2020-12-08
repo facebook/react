@@ -41,7 +41,7 @@ const EMPTY_NATIVE_EVENT = (({}: any): AnyNativeEvent);
  */
 const touchSubsequence = function(touches, indices) {
   const ret = [];
-  for (let i = 0; i < indices.length; i++) {
+  for (let i = 0; i < indices.length; i += 1) {
     ret.push(touches[indices[i]]);
   }
   return ret;
@@ -66,7 +66,7 @@ const removeTouchesAtIndices = function(
   // use an unsafe downcast to alias to nullable elements,
   // so we can delete and then compact.
   const temp: Array<?Object> = (touches: Array<any>);
-  for (let i = 0; i < indices.length; i++) {
+  for (let i = 0; i < indices.length; i += 1) {
     const index = indices[i];
     rippedOut.push(touches[index]);
     temp[index] = null;
@@ -127,7 +127,7 @@ function extractPluginEvents(
 ): Array<ReactSyntheticEvent> | ReactSyntheticEvent | null {
   let events = null;
   const legacyPlugins = ((plugins: any): Array<LegacyPluginModule<Event>>);
-  for (let i = 0; i < legacyPlugins.length; i++) {
+  for (let i = 0; i < legacyPlugins.length; i += 1) {
     // Not every plugin in the ordering may be loaded at runtime.
     const possiblePlugin: LegacyPluginModule<AnyNativeEvent> = legacyPlugins[i];
     if (possiblePlugin) {

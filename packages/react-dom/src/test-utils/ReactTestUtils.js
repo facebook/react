@@ -366,7 +366,7 @@ function executeDispatchesInOrder(event) {
   const dispatchListeners = event._dispatchListeners;
   const dispatchInstances = event._dispatchInstances;
   if (Array.isArray(dispatchListeners)) {
-    for (let i = 0; i < dispatchListeners.length; i++) {
+    for (let i = 0; i < dispatchListeners.length; i += 1) {
       if (event.isPropagationStopped()) {
         break;
       }
@@ -433,7 +433,7 @@ export function traverseTwoPhase(inst, fn, arg) {
   for (i = path.length; i-- > 0; ) {
     fn(path[i], 'captured', arg);
   }
-  for (i = 0; i < path.length; i++) {
+  for (i = 0; i < path.length; i += 1) {
     fn(path[i], 'bubbled', arg);
   }
 }

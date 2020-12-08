@@ -354,7 +354,7 @@ export function fillInPath(
   if (value !== null && data.unserializable.length > 0) {
     const unserializablePath = data.unserializable[0];
     let isMatch = unserializablePath.length === path.length;
-    for (let i = 0; i < path.length; i++) {
+    for (let i = 0; i < path.length; i += 1) {
       if (path[i] !== unserializablePath[i]) {
         isMatch = false;
         break;

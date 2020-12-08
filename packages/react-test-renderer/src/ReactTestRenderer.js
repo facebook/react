@@ -100,7 +100,7 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode | null {
       /* eslint-enable */
       let renderedChildren = null;
       if (inst.children && inst.children.length) {
-        for (let i = 0; i < inst.children.length; i++) {
+        for (let i = 0; i < inst.children.length; i += 1) {
           const renderedChild = toJSON(inst.children[i]);
           if (renderedChild !== null) {
             if (renderedChildren === null) {
@@ -481,7 +481,7 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
       }
       let renderedChildren = null;
       if (container.children && container.children.length) {
-        for (let i = 0; i < container.children.length; i++) {
+        for (let i = 0; i < container.children.length; i += 1) {
           const renderedChild = toJSON(container.children[i]);
           if (renderedChild !== null) {
             if (renderedChildren === null) {

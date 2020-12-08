@@ -77,7 +77,7 @@ export function traverseTwoPhase(inst: Object, fn: Function, arg: Function) {
   for (i = path.length; i-- > 0; ) {
     fn(path[i], 'captured', arg);
   }
-  for (i = 0; i < path.length; i++) {
+  for (i = 0; i < path.length; i += 1) {
     fn(path[i], 'bubbled', arg);
   }
 }

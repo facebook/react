@@ -62,7 +62,7 @@ function flushCompletedChunks(request: OpaqueRequest) {
 
   beginWriting(destination);
   try {
-    for (let i = 0; i < chunks.length; i++) {
+    for (let i = 0; i < chunks.length; i += 1) {
       const chunk = chunks[i];
       writeChunk(destination, chunk);
     }

@@ -40,7 +40,7 @@ const run = async ({build, cwd}) => {
 
   // Unpack packages and prepare to publish
   const compressedPackages = readdirSync(join(cwd, 'build/node_modules/'));
-  for (let i = 0; i < compressedPackages.length; i++) {
+  for (let i = 0; i < compressedPackages.length; i += 1) {
     await exec(
       `tar zxvf ./build/node_modules/${compressedPackages[i]} -C ./build/node_modules/`,
       {cwd}

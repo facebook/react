@@ -660,7 +660,7 @@ function performWork(request: Request): void {
 
   const pingedSegments = request.pingedSegments;
   request.pingedSegments = [];
-  for (let i = 0; i < pingedSegments.length; i++) {
+  for (let i = 0; i < pingedSegments.length; i += 1) {
     const segment = pingedSegments[i];
     retrySegment(request, segment);
   }
@@ -713,7 +713,7 @@ function flushCompletedChunks(request: Request): void {
     // the page.
     const errorChunks = request.completedErrorChunks;
     i = 0;
-    for (; i < errorChunks.length; i++) {
+    for (; i < errorChunks.length; i += 1) {
       request.pendingChunks--;
       const chunk = errorChunks[i];
       if (!writeChunk(destination, chunk)) {

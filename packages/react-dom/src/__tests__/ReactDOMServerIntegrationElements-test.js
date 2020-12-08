@@ -684,7 +684,7 @@ describe('ReactDOMServerIntegration', () => {
             </Component>
           </Component>,
         );
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 3; i += 1) {
           expect(e.tagName).toBe('DIV');
           expect(e.childNodes.length).toBe(1);
           e = e.firstChild;
@@ -709,7 +709,7 @@ describe('ReactDOMServerIntegration', () => {
         );
         expect(e.tagName).toBe('DIV');
         expect(e.childNodes.length).toBe(2);
-        for (let i = 0; i < 2; i++) {
+        for (let i = 0; i < 2; i += 1) {
           const child = e.childNodes[i];
           expect(child.tagName).toBe('DIV');
           expect(child.childNodes.length).toBe(2);

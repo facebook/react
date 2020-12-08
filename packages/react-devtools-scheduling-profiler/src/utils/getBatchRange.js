@@ -22,7 +22,7 @@ function unmemoizedGetBatchRange(
 
   let i = 0;
 
-  for (i; i < measures.length; i++) {
+  for (i; i < measures.length; i += 1) {
     const measure = measures[i];
     if (measure.batchUID === batchUID) {
       startTime = measure.timestamp;
@@ -30,7 +30,7 @@ function unmemoizedGetBatchRange(
     }
   }
 
-  for (i; i < measures.length; i++) {
+  for (i; i < measures.length; i += 1) {
     const measure = measures[i];
     stopTime = measure.timestamp;
     if (measure.batchUID !== batchUID) {

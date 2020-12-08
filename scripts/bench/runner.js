@@ -36,7 +36,7 @@ async function runBenchmarks(reactPath) {
   const server = serveBenchmark();
   await wait(1000);
 
-  for (let i = 0; i < benchmarkNames.length; i++) {
+  for (let i = 0; i < benchmarkNames.length; i += 1) {
     const benchmarkName = benchmarkNames[i];
 
     if (

@@ -102,7 +102,7 @@ function jsonChildrenToJSXChildren(jsonChildren) {
       const jsxChildren = [];
       let allJSXChildrenAreStrings = true;
       let jsxChildrenString = '';
-      for (let i = 0; i < jsonChildren.length; i++) {
+      for (let i = 0; i < jsonChildren.length; i += 1) {
         const jsxChild = jsonChildToJSXChild(jsonChildren[i]);
         jsxChildren.push(jsxChild);
         if (allJSXChildrenAreStrings) {

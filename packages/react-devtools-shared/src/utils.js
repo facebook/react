@@ -128,7 +128,7 @@ export function utfEncodeString(string: string): Array<number> {
   }
 
   const encoded = new Array(string.length);
-  for (let i = 0; i < string.length; i++) {
+  for (let i = 0; i < string.length; i += 1) {
     encoded[i] = string.codePointAt(i);
   }
   encodedStringCache.set(string, encoded);
@@ -645,7 +645,7 @@ export function formatDataForPreview(
     case 'array':
       if (showFormattedValue) {
         let formatted = '';
-        for (let i = 0; i < data.length; i++) {
+        for (let i = 0; i < data.length; i += 1) {
           if (i > 0) {
             formatted += ', ';
           }
@@ -666,7 +666,7 @@ export function formatDataForPreview(
       const shortName = `${data.constructor.name}(${data.length})`;
       if (showFormattedValue) {
         let formatted = '';
-        for (let i = 0; i < data.length; i++) {
+        for (let i = 0; i < data.length; i += 1) {
           if (i > 0) {
             formatted += ', ';
           }
@@ -691,7 +691,7 @@ export function formatDataForPreview(
         const array = Array.from(data);
 
         let formatted = '';
-        for (let i = 0; i < array.length; i++) {
+        for (let i = 0; i < array.length; i += 1) {
           const entryOrEntries = array[i];
 
           if (i > 0) {
@@ -731,7 +731,7 @@ export function formatDataForPreview(
         const keys = getAllEnumerableKeys(data).sort(alphaSortKeys);
 
         let formatted = '';
-        for (let i = 0; i < keys.length; i++) {
+        for (let i = 0; i < keys.length; i += 1) {
           const key = keys[i];
           if (i > 0) {
             formatted += ', ';

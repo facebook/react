@@ -59,7 +59,7 @@ export function printStore(store: Store, includeWeight: boolean = false) {
 
     snapshotLines.push('[root]' + (includeWeight ? ` (${weight})` : ''));
 
-    for (let i = rootWeight; i < rootWeight + weight; i++) {
+    for (let i = rootWeight; i < rootWeight + weight; i += 1) {
       const element = store.getElementAtIndex(i);
 
       if (element == null) {

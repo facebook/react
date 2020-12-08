@@ -249,7 +249,7 @@ function transform(babel) {
     }
     if (conditions !== null) {
       let condition = conditions[0];
-      for (let i = 1; i < conditions.length; i++) {
+      for (let i = 1; i < conditions.length; i += 1) {
         const right = conditions[i];
         condition = t.logicalExpression('&&', condition, right);
       }

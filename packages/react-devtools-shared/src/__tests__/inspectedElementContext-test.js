@@ -215,7 +215,7 @@ describe('InspectedElementContext', () => {
       return null;
     }
 
-    for (let i = 0; i < ids.length; i++) {
+    for (let i = 0; i < ids.length; i += 1) {
       const {id, shouldHaveLegacyContext} = ids[i];
 
       await utils.actAsync(

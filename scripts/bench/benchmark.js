@@ -51,7 +51,7 @@ function bootstrap(data) {
 
 function calculateStandardErrorOfMean(data) {
   const means = [];
-  for (let i = 0; i < 10000; i++) {
+  for (let i = 0; i < 10000; i += 1) {
     means.push(stats.mean(bootstrap(data)));
   }
   return stats.stdev(means);
@@ -112,7 +112,7 @@ async function runBenchmark(benchmark, headless) {
 
   await initChrome();
 
-  for (let i = 0; i < timesToRun; i++) {
+  for (let i = 0; i < timesToRun; i += 1) {
     let chrome = await launchChrome(headless);
 
     results.runs.push(await runScenario(benchmark, chrome));

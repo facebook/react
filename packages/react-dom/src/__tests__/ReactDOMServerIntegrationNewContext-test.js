@@ -448,7 +448,7 @@ describe('ReactDOMServerIntegration', () => {
       // works properly.
       const streamCount = 34;
 
-      for (let i = 0; i < streamCount; i++) {
+      for (let i = 0; i < streamCount; i += 1) {
         streams[i] = ReactDOMServer.renderToNodeStream(
           NthRender(i % 2 === 0 ? 'Expected to be recreated' : i),
         ).setEncoding('utf8');
@@ -457,7 +457,7 @@ describe('ReactDOMServerIntegration', () => {
       // Testing by filling the buffer using internal _read() with a small
       // number of bytes to avoid a test case which needs to align to a
       // highWaterMark boundary of 2^14 chars.
-      for (let i = 0; i < streamCount; i++) {
+      for (let i = 0; i < streamCount; i += 1) {
         streams[i]._read(20);
       }
 
@@ -474,12 +474,12 @@ describe('ReactDOMServerIntegration', () => {
       }
 
       // Read a bit from all streams again.
-      for (let i = 0; i < streamCount; i++) {
+      for (let i = 0; i < streamCount; i += 1) {
         streams[i]._read(20);
       }
 
       // Assert that all stream rendered the expected output.
-      for (let i = 0; i < streamCount; i++) {
+      for (let i = 0; i < streamCount; i += 1) {
         expect(streams[i].read()).toBe(
           '<header>' + i + '</header><footer>' + i + '</footer>',
         );

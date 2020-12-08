@@ -187,11 +187,11 @@ describe('ReactSuspenseFuzz', () => {
 
     function pickRandomWeighted(rand, options) {
       let totalWeight = 0;
-      for (let i = 0; i < options.length; i++) {
+      for (let i = 0; i < options.length; i += 1) {
         totalWeight += options[i].weight;
       }
       let remainingWeight = rand.floatBetween(0, totalWeight);
-      for (let i = 0; i < options.length; i++) {
+      for (let i = 0; i < options.length; i += 1) {
         const {value, weight} = options[i];
         remainingWeight -= weight;
         if (remainingWeight <= 0) {
@@ -227,7 +227,7 @@ describe('ReactSuspenseFuzz', () => {
             ]);
 
             const updates = [];
-            for (let i = 0; i < numberOfUpdates; i++) {
+            for (let i = 0; i < numberOfUpdates; i += 1) {
               updates.push({
                 beginAfter: rand.intBetween(0, 10000),
                 suspendFor: rand.intBetween(0, 10000),
@@ -250,7 +250,7 @@ describe('ReactSuspenseFuzz', () => {
             ]);
 
             const updates = [];
-            for (let i = 0; i < numberOfUpdates; i++) {
+            for (let i = 0; i < numberOfUpdates; i += 1) {
               updates.push({
                 remountAfter: rand.intBetween(0, 10000),
               });
@@ -326,7 +326,7 @@ describe('ReactSuspenseFuzz', () => {
     const NUMBER_OF_TEST_CASES = 500;
     const ELEMENTS_PER_CASE = 12;
 
-    for (let i = 0; i < NUMBER_OF_TEST_CASES; i++) {
+    for (let i = 0; i < NUMBER_OF_TEST_CASES; i += 1) {
       const randomTestCase = generateTestCase(rand, ELEMENTS_PER_CASE);
       try {
         testResolvedOutput(randomTestCase);

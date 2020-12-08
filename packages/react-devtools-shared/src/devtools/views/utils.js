@@ -65,7 +65,7 @@ export function createRegExp(string: string): RegExp {
   let restRegex = '';
   // For 'item' input, restRegex becomes '[tT][eE][mM]'
   // We can't simply make it case-insensitive because first letter case matters.
-  for (let i = 1; i < escaped.length; i++) {
+  for (let i = 1; i < escaped.length; i += 1) {
     restRegex += matchAnyCase(escaped[i]);
   }
 

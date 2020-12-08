@@ -136,7 +136,7 @@ function createRootImpl(
   listenToAllSupportedEvents(rootContainerElement);
 
   if (mutableSources) {
-    for (let i = 0; i < mutableSources.length; i++) {
+    for (let i = 0; i < mutableSources.length; i += 1) {
       const mutableSource = mutableSources[i];
       registerMutableSourceForHydration(root, mutableSource);
     }

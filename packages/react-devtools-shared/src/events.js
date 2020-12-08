@@ -40,7 +40,7 @@ export default class EventEmitter<Events: Object> {
         let caughtError = null;
 
         const clonedListeners = Array.from(listeners);
-        for (let i = 0; i < clonedListeners.length; i++) {
+        for (let i = 0; i < clonedListeners.length; i += 1) {
           const listener = clonedListeners[i];
           try {
             listener.apply(null, args);

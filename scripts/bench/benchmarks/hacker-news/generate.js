@@ -18,7 +18,7 @@ async function getTopStories() {
   const topStoriesIds = await topStoriesRes.json();
 
   const topStories = [];
-  for (let i = 0; i < stories; i++) {
+  for (let i = 0; i < stories; i += 1) {
     const topStoriesId = topStoriesIds[i];
 
     topStories.push(await getStory(topStoriesId));

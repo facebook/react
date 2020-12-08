@@ -181,7 +181,7 @@ function setEventPriorities(
   eventTypes: Array<DOMEventName>,
   priority: EventPriority,
 ): void {
-  for (let i = 0; i < eventTypes.length; i++) {
+  for (let i = 0; i < eventTypes.length; i += 1) {
     eventPriorities.set(eventTypes[i], priority);
   }
 }

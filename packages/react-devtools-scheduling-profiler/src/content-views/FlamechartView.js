@@ -161,7 +161,7 @@ class FlamechartStackLayerView extends View {
 
     const scaleFactor = positioningScaleFactor(_intrinsicSize.width, frame);
 
-    for (let i = 0; i < _stackLayer.length; i++) {
+    for (let i = 0; i < _stackLayer.length; i += 1) {
       const stackFrame = _stackLayer[i];
       const {name, timestamp, duration} = stackFrame;
 

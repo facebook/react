@@ -39,7 +39,7 @@ const run = async () => {
     reactVersion,
   };
 
-  for (let i = 0; i < packages.length; i++) {
+  for (let i = 0; i < packages.length; i += 1) {
     const packageName = packages[i];
     const packagePath = join(packagesDir, packageName);
     const packageJSON = await readJson(join(packagePath, 'package.json'));

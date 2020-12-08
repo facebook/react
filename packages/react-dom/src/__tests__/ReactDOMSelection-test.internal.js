@@ -50,7 +50,7 @@ describe('ReactDOMSelection', () => {
         return;
       }
 
-      for (let i = 0; true; i++) {
+      for (let i = 0; true; i += 1) {
         if (node === anchorNode && i === anchorOffset) {
           start = length;
         }
@@ -161,7 +161,7 @@ describe('ReactDOMSelection', () => {
       );
     }
 
-    for (let i = 0; i < 2000; i++) {
+    for (let i = 0; i < 2000; i += 1) {
       const anchorNode = randomNode();
       const anchorOffset = randomOffset(anchorNode);
       const focusNode = randomNode();

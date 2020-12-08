@@ -114,7 +114,7 @@ describe('StoreStress (Legacy Mode)', () => {
     ];
 
     // 5. Test fresh mount for each case.
-    for (let i = 0; i < cases.length; i++) {
+    for (let i = 0; i < cases.length; i += 1) {
       // Ensure fresh mount.
       container = document.createElement('div');
 
@@ -145,7 +145,7 @@ describe('StoreStress (Legacy Mode)', () => {
     // 6. Verify *updates* by reusing the container between iterations.
     // There'll be no unmounting until the very end.
     container = document.createElement('div');
-    for (let i = 0; i < cases.length; i++) {
+    for (let i = 0; i < cases.length; i += 1) {
       // Verify mounting 'abcde'.
       act(() => ReactDOM.render(<Parent>{cases[i]}</Parent>, container));
       expect(container.textContent).toMatch('abcde');
@@ -209,7 +209,7 @@ describe('StoreStress (Legacy Mode)', () => {
     // 1. Capture the expected render result.
     const snapshots = [];
     let container = document.createElement('div');
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       act(() => ReactDOM.render(<Root>{steps[i]}</Root>, container));
       // We snapshot each step once so it doesn't regress.
       expect(store).toMatchSnapshot();
@@ -219,7 +219,7 @@ describe('StoreStress (Legacy Mode)', () => {
     }
 
     // 2. Verify that we can update from every step to every other step and back.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         container = document.createElement('div');
         act(() => ReactDOM.render(<Root>{steps[i]}</Root>, container));
@@ -234,7 +234,7 @@ describe('StoreStress (Legacy Mode)', () => {
     }
 
     // 3. Same test as above, but this time we wrap children in a host component.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         container = document.createElement('div');
         act(() =>
@@ -310,7 +310,7 @@ describe('StoreStress (Legacy Mode)', () => {
     // This is the only step where we use Jest snapshots.
     const snapshots = [];
     let container = document.createElement('div');
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       act(() =>
         ReactDOM.render(
           <Root>
@@ -329,7 +329,7 @@ describe('StoreStress (Legacy Mode)', () => {
     }
 
     // 2. Verify check Suspense can render same steps as initial fallback content.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       act(() =>
         ReactDOM.render(
           <Root>
@@ -350,7 +350,7 @@ describe('StoreStress (Legacy Mode)', () => {
     }
 
     // 3. Verify we can update from each step to each step in primary mode.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -397,7 +397,7 @@ describe('StoreStress (Legacy Mode)', () => {
     }
 
     // 4. Verify we can update from each step to each step in fallback mode.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -456,7 +456,7 @@ describe('StoreStress (Legacy Mode)', () => {
     }
 
     // 5. Verify we can update from each step to each step when moving primary -> fallback.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -507,7 +507,7 @@ describe('StoreStress (Legacy Mode)', () => {
     }
 
     // 6. Verify we can update from each step to each step when moving fallback -> primary.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -562,7 +562,7 @@ describe('StoreStress (Legacy Mode)', () => {
     }
 
     // 7. Verify we can update from each step to each step when toggling Suspense.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -721,7 +721,7 @@ describe('StoreStress (Legacy Mode)', () => {
     // This is the only step where we use Jest snapshots.
     const snapshots = [];
     let container = document.createElement('div');
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       act(() =>
         ReactDOM.render(
           <Root>
@@ -745,7 +745,7 @@ describe('StoreStress (Legacy Mode)', () => {
     // We don't actually assert here because the tree includes <MaybeSuspend>
     // which is different from the snapshots above. So we take more snapshots.
     const fallbackSnapshots = [];
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       act(() =>
         ReactDOM.render(
           <Root>
@@ -768,7 +768,7 @@ describe('StoreStress (Legacy Mode)', () => {
     }
 
     // 3. Verify we can update from each step to each step in primary mode.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -821,7 +821,7 @@ describe('StoreStress (Legacy Mode)', () => {
     }
 
     // 4. Verify we can update from each step to each step in fallback mode.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -889,7 +889,7 @@ describe('StoreStress (Legacy Mode)', () => {
     }
 
     // 5. Verify we can update from each step to each step when moving primary -> fallback.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -942,7 +942,7 @@ describe('StoreStress (Legacy Mode)', () => {
     }
 
     // 6. Verify we can update from each step to each step when moving fallback -> primary.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');
@@ -995,7 +995,7 @@ describe('StoreStress (Legacy Mode)', () => {
     }
 
     // 7. Verify we can update from each step to each step when toggling Suspense.
-    for (let i = 0; i < steps.length; i++) {
+    for (let i = 0; i < steps.length; i += 1) {
       for (let j = 0; j < steps.length; j++) {
         // Always start with a fresh container and steps[i].
         container = document.createElement('div');

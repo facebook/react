@@ -475,10 +475,10 @@ describe('ReactUpdates', () => {
 
     function expectUpdates(desiredWillUpdates, desiredDidUpdates) {
       let i;
-      for (i = 0; i < desiredWillUpdates; i++) {
+      for (i = 0; i < desiredWillUpdates; i += 1) {
         expect(willUpdates).toContain(desiredWillUpdates[i]);
       }
-      for (i = 0; i < desiredDidUpdates; i++) {
+      for (i = 0; i < desiredDidUpdates; i += 1) {
         expect(didUpdates).toContain(desiredDidUpdates[i]);
       }
       willUpdates = [];
@@ -493,7 +493,7 @@ describe('ReactUpdates', () => {
       let i;
 
       ReactDOM.unstable_batchedUpdates(function() {
-        for (i = 0; i < components.length; i++) {
+        for (i = 0; i < components.length; i += 1) {
           triggerUpdate(components[i]);
         }
       });
@@ -1361,7 +1361,7 @@ describe('ReactUpdates', () => {
     class Foo extends React.Component {
       componentDidMount() {
         const limit = 1200;
-        for (let i = 0; i < limit; i++) {
+        for (let i = 0; i < limit; i += 1) {
           if (i < limit - 1) {
             ReactDOM.render(<div />, document.createElement('div'));
           } else {
@@ -1577,7 +1577,7 @@ describe('ReactUpdates', () => {
     class App extends React.Component {
       render() {
         const children = [];
-        for (let i = 0; i < 1200; i++) {
+        for (let i = 0; i < 1200; i += 1) {
           children.push(<Child key={i} />);
         }
         return children;
@@ -1667,7 +1667,7 @@ describe('ReactUpdates', () => {
       function Terminating() {
         const [step, setStep] = React.useState(0);
         React.useEffect(() => {
-          for (let i = 0; i < 1000; i++) {
+          for (let i = 0; i < 1000; i += 1) {
             setStep(x => x + 1);
           }
           Scheduler.unstable_yieldValue('Done');

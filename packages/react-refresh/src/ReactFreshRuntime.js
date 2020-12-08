@@ -98,7 +98,7 @@ function computeFullKey(signature: Signature): string {
     return fullKey;
   }
 
-  for (let i = 0; i < hooks.length; i++) {
+  for (let i = 0; i < hooks.length; i += 1) {
     const hook = hooks[i];
     if (typeof hook !== 'function') {
       // Something's wrong. Assume we need to remount.

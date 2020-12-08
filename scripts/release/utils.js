@@ -221,7 +221,7 @@ const updateVersionsForNext = async (cwd, reactVersion, version) => {
     await writeJson(packageJSONPath, packageJSON, {spaces: 2});
   }
 
-  for (let i = 0; i < packages.length; i++) {
+  for (let i = 0; i < packages.length; i += 1) {
     const packageName = packages[i];
     const packagePath = join(packagesDir, packageName);
 

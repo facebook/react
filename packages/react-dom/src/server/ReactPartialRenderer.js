@@ -627,7 +627,7 @@ function resolve(
         } else {
           let nextState = oldReplace ? oldQueue[0] : inst.state;
           let dontMutate = true;
-          for (let i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
+          for (let i = oldReplace ? 1 : 0; i < oldQueue.length; i += 1) {
             const partial = oldQueue[i];
             const partialState =
               typeof partial === 'function'
@@ -1494,7 +1494,7 @@ class ReactDOMServerRenderer {
       if (__DEV__) {
         checkControlledValueProps('select', props);
 
-        for (let i = 0; i < valuePropNames.length; i++) {
+        for (let i = 0; i < valuePropNames.length; i += 1) {
           const propName = valuePropNames[i];
           if (props[propName] == null) {
             continue;

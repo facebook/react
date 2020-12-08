@@ -42,7 +42,7 @@ function hashCode(string: string): number {
   const z2 = 0x59d2f15d; // random odd 32 bit number
   let s = 0;
   let zi = 1;
-  for (let i = 0; i < string.length; i++) {
+  for (let i = 0; i < string.length; i += 1) {
     const xi = string.charCodeAt(i) * z2;
     s = (s + zi * xi) % p;
     zi = (zi * z) % p;

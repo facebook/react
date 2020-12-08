@@ -82,7 +82,7 @@ class FriendsStatusDisplay extends React.Component {
   getStatusDisplays() {
     const res = {};
     const originalKeys = this.getOriginalKeys();
-    for (let i = 0; i < originalKeys.length; i++) {
+    for (let i = 0; i < originalKeys.length; i += 1) {
       const key = originalKeys[i];
       res[key] = this.refs[key];
     }
@@ -98,7 +98,7 @@ class FriendsStatusDisplay extends React.Component {
    */
   verifyPreviousRefsResolved(flushedKey) {
     const originalKeys = this.getOriginalKeys();
-    for (let i = 0; i < originalKeys.length; i++) {
+    for (let i = 0; i < originalKeys.length; i += 1) {
       const key = originalKeys[i];
       if (key === flushedKey) {
         // We are only interested in children up to the current key.
@@ -200,7 +200,7 @@ function verifyDomOrderingAccurate(outerContainer, statusDisplays) {
   const containerNode = outerContainer.firstChild;
   const statusDisplayNodes = containerNode.childNodes;
   const orderedDomKeys = [];
-  for (let i = 0; i < statusDisplayNodes.length; i++) {
+  for (let i = 0; i < statusDisplayNodes.length; i += 1) {
     const contentKey = statusDisplayNodes[i].textContent;
     orderedDomKeys.push(contentKey);
   }
@@ -227,7 +227,7 @@ function testPropsSequenceWithPreparedChildren(sequence, prepareChildren) {
   let lastInternalStates = getInternalStateByUserName(statusDisplays);
   verifyStatuses(statusDisplays, sequence[0]);
 
-  for (let i = 1; i < sequence.length; i++) {
+  for (let i = 1; i < sequence.length; i += 1) {
     ReactDOM.render(
       <FriendsStatusDisplay
         {...sequence[i]}

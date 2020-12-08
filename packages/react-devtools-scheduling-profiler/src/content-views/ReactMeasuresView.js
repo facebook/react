@@ -191,7 +191,7 @@ export class ReactMeasuresView extends View {
       frame,
     );
 
-    for (let i = 0; i < _lanesToRender.length; i++) {
+    for (let i = 0; i < _lanesToRender.length; i += 1) {
       const lane = _lanesToRender[i];
       const baseY = frame.origin.y + i * REACT_LANE_HEIGHT;
       const measuresForLane = _laneToMeasures.get(lane);

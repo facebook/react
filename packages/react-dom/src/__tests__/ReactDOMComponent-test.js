@@ -655,7 +655,7 @@ describe('ReactDOMComponent', () => {
 
     it('should reject attribute key injection attack on markup for regular DOM (SSR)', () => {
       expect(() => {
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 3; i += 1) {
           const element1 = React.createElement(
             'div',
             {'blah" onclick="beevil" noise="hi': 'selected'},
@@ -679,7 +679,7 @@ describe('ReactDOMComponent', () => {
 
     it('should reject attribute key injection attack on markup for custom elements (SSR)', () => {
       expect(() => {
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 3; i += 1) {
           const element1 = React.createElement(
             'x-foo-component',
             {'blah" onclick="beevil" noise="hi': 'selected'},
@@ -703,7 +703,7 @@ describe('ReactDOMComponent', () => {
 
     it('should reject attribute key injection attack on mount for regular DOM', () => {
       expect(() => {
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 3; i += 1) {
           const container = document.createElement('div');
           ReactDOM.render(
             React.createElement(
@@ -733,7 +733,7 @@ describe('ReactDOMComponent', () => {
 
     it('should reject attribute key injection attack on mount for custom elements', () => {
       expect(() => {
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 3; i += 1) {
           const container = document.createElement('div');
           ReactDOM.render(
             React.createElement(
@@ -763,7 +763,7 @@ describe('ReactDOMComponent', () => {
 
     it('should reject attribute key injection attack on update for regular DOM', () => {
       expect(() => {
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 3; i += 1) {
           const container = document.createElement('div');
           const beforeUpdate = React.createElement('div', {}, null);
           ReactDOM.render(beforeUpdate, container);
@@ -794,7 +794,7 @@ describe('ReactDOMComponent', () => {
 
     it('should reject attribute key injection attack on update for custom elements', () => {
       expect(() => {
-        for (let i = 0; i < 3; i++) {
+        for (let i = 0; i < 3; i += 1) {
           const container = document.createElement('div');
           const beforeUpdate = React.createElement('x-foo-component', {}, null);
           ReactDOM.render(beforeUpdate, container);

@@ -31,7 +31,7 @@ class ClickCounter extends React.Component {
   render() {
     const children = [];
     let i;
-    for (i = 0; i < this.state.count; i++) {
+    for (i = 0; i < this.state.count; i += 1) {
       children.push(
         <div
           className="clickLogDiv"

@@ -1699,7 +1699,7 @@ describe('ReactNewContext', () => {
 
     function randomActions(n) {
       const actions = [];
-      for (let i = 0; i < n; i++) {
+      for (let i = 0; i < n; i += 1) {
         actions.push(randomAction());
       }
       return actions;
@@ -1831,7 +1831,7 @@ describe('ReactNewContext', () => {
       const {simulate} = ContextSimulator(5);
 
       const LIMIT = 100;
-      for (let i = 0; i < LIMIT; i++) {
+      for (let i = 0; i < LIMIT; i += 1) {
         const seed = Math.random()
           .toString(36)
           .substr(2, 5);

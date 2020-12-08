@@ -14,7 +14,7 @@ const run = async ({cwd, packages, version}, versionsMap) => {
 
   // Cache all package JSONs for easy lookup below.
   const sourcePackageJSONs = new Map();
-  for (let i = 0; i < packages.length; i++) {
+  for (let i = 0; i < packages.length; i += 1) {
     const packageName = packages[i];
     const sourcePackageJSON = await readJson(
       join(cwd, 'packages', packageName, 'package.json')
@@ -29,7 +29,7 @@ const run = async ({cwd, packages, version}, versionsMap) => {
         key
       ];
 
-      for (let i = 0; i < packages.length; i++) {
+      for (let i = 0; i < packages.length; i += 1) {
         const dependencyName = packages[i];
         const targetDependency = targetDependencies[dependencyName];
 
@@ -70,7 +70,7 @@ const run = async ({cwd, packages, version}, versionsMap) => {
   // This must be done in a way that respects semver constraints (e.g. 16.7.0, ^16.7.0, ^16.0.0).
   // To do this, we use the dependencies defined in the source package JSONs,
   // because the "next" dependencies have already been flattened to an exact match (e.g. 0.0.0-ddaf2b07c).
-  for (let i = 0; i < packages.length; i++) {
+  for (let i = 0; i < packages.length; i += 1) {
     const packageName = packages[i];
     const packageJSONPath = join(nodeModulesPath, packageName, 'package.json');
     const packageJSON = await readJson(packageJSONPath);
@@ -96,7 +96,7 @@ const run = async ({cwd, packages, version}, versionsMap) => {
       }
     }
   };
-  for (let i = 0; i < packages.length; i++) {
+  for (let i = 0; i < packages.length; i += 1) {
     const packageName = packages[i];
     const packageJSONPath = join(nodeModulesPath, packageName, 'package.json');
     const packageJSON = await readJson(packageJSONPath);
@@ -133,7 +133,7 @@ const run = async ({cwd, packages, version}, versionsMap) => {
   let numFilesModified = 0;
 
   // Find-and-replace hard coded version (in built JS) for renderers.
-  for (let i = 0; i < packages.length; i++) {
+  for (let i = 0; i < packages.length; i += 1) {
     const packageName = packages[i];
     const packagePath = join(nodeModulesPath, packageName);
 

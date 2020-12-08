@@ -232,7 +232,7 @@ function traverseTwoPhase(inst, fn, arg) {
   for (i = path.length; i-- > 0; ) {
     fn(path[i], 'captured', arg);
   }
-  for (i = 0; i < path.length; i++) {
+  for (i = 0; i < path.length; i += 1) {
     fn(path[i], 'bubbled', arg);
   }
 }
@@ -665,7 +665,7 @@ function noResponderTouches(nativeEvent) {
   if (!touches || touches.length === 0) {
     return true;
   }
-  for (let i = 0; i < touches.length; i++) {
+  for (let i = 0; i < touches.length; i += 1) {
     const activeTouch = touches[i];
     const target = activeTouch.target;
     if (target !== null && target !== undefined && target !== 0) {

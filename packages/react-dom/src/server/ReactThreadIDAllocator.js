@@ -16,7 +16,7 @@ import invariant from 'shared/invariant';
 export type ThreadID = number;
 
 let nextAvailableThreadIDs = new Uint16Array(16);
-for (let i = 0; i < 15; i++) {
+for (let i = 0; i < 15; i += 1) {
   nextAvailableThreadIDs[i] = i + 1;
 }
 nextAvailableThreadIDs[15] = 0;
@@ -36,7 +36,7 @@ function growThreadCountAndReturnNextAvailable() {
   newArray.set(oldArray);
   nextAvailableThreadIDs = newArray;
   nextAvailableThreadIDs[0] = oldSize + 1;
-  for (let i = oldSize; i < newSize - 1; i++) {
+  for (let i = oldSize; i < newSize - 1; i += 1) {
     nextAvailableThreadIDs[i] = i + 1;
   }
   nextAvailableThreadIDs[newSize - 1] = 0;

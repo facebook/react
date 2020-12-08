@@ -20,7 +20,7 @@ function ignoreStrings(
   console[methodName] = (...args) => {
     const maybeString = args[0];
     if (typeof maybeString === 'string') {
-      for (let i = 0; i < stringsToIgnore.length; i++) {
+      for (let i = 0; i < stringsToIgnore.length; i += 1) {
         if (maybeString.startsWith(stringsToIgnore[i])) {
           return;
         }
