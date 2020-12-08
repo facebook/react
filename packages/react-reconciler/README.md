@@ -69,7 +69,7 @@ At the moment, we can't commit to documenting every API detail because the host 
 
 #### Modes
 
-The reconciler has two modes: mutation mode and peristent mode. You must specify one of them.
+The reconciler has two modes: mutation mode and persistent mode. You must specify one of them.
 
 If your target platform is similar to the DOM and has methods similar to `appendChild`, `removeChild`, and so on, you'll want to use the **mutation mode**. This is the same mode used by React DOM, React ART, and the classic React Native renderer.
 
