@@ -1,9 +1,9 @@
 'use strict';
 
-import {pipeToNodeWritable} from 'react-transport-dom-webpack/server';
-import {readFile} from 'fs';
-import {resolve} from 'path';
-import * as React from 'react';
+const {pipeToNodeWritable} = require('react-transport-dom-webpack/server');
+const {readFile} = require('fs');
+const {resolve} = require('path');
+const React = require('react');
 
 module.exports = function(req, res) {
   // const m = require('../src/App.server.js');
@@ -20,7 +20,7 @@ module.exports = function(req, res) {
         const App = m.default.default || m.default;
         res.setHeader('Access-Control-Allow-Origin', '*');
         const moduleMap = JSON.parse(data);
-        pipeToNodeWritable(<App />, res, moduleMap);
+        pipeToNodeWritable(React.createElement(App), res, moduleMap);
       }
     );
   });
