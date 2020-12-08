@@ -100,7 +100,6 @@ function Response(nativeResponse) {
   this.url = nativeResponse.url;
 
   this._response = nativeResponse;
-  this._blob = null;
   this._json = null;
   this._text = null;
 
@@ -151,12 +150,22 @@ Response.prototype = {
     throw new Error('Not implemented.');
   },
   json() {
+    if (this._json !== null) {
+      return this._json;
+    }
     const buffer = readResult(this._result);
-    return JSON.parse(buffer.toString());
+    const json = JSON.parse(buffer.toString());
+    this._json = json;
+    return json;
   },
   text() {
+    if (this._text !== null) {
+      return this._text;
+    }
     const buffer = readResult(this._result);
-    return buffer.toString();
+    const text = buffer.toString();
+    this._text = text;
+    return text;
   },
 };
 
