@@ -7,8 +7,7 @@
  * @flow
  */
 
-import {mkdirSync, writeFileSync} from 'fs';
-import {dirname, resolve, join} from 'path';
+import {join} from 'path';
 import {pathToFileURL} from 'url';
 
 import asyncLib from 'neo-async';
@@ -48,6 +47,7 @@ type Options = {
   isServer: boolean,
   clientReferences?: ClientReferencePath | $ReadOnlyArray<ClientReferencePath>,
   chunkName?: string,
+  manifestFilename?: string,
 };
 
 const PLUGIN_NAME = 'React Transport Plugin';
@@ -55,6 +55,8 @@ const PLUGIN_NAME = 'React Transport Plugin';
 export default class ReactFlightWebpackPlugin {
   clientReferences: $ReadOnlyArray<ClientReferencePath>;
   chunkName: string;
+  manifestFilename: string;
+
   constructor(options: Options) {
     if (!options || typeof options.isServer !== 'boolean') {
       throw new Error(
@@ -88,6 +90,8 @@ export default class ReactFlightWebpackPlugin {
     } else {
       this.chunkName = 'client[index]';
     }
+    this.manifestFilename =
+      options.manifestFilename || 'react-client-manifest.json';
   }
 
   apply(compiler: any) {
@@ -189,13 +193,14 @@ export default class ReactFlightWebpackPlugin {
         });
       });
       const output = JSON.stringify(json, null, 2);
-      const filename = resolve(
-        compiler.options.output.path,
-        'react-transport-manifest.json',
-      );
-      mkdirSync(dirname(filename), {recursive: true});
-      // TODO: Use webpack's emit API and read from the devserver.
-      writeFileSync(filename, output);
+      compilation.assets[this.manifestFilename] = {
+        source() {
+          return output;
+        },
+        size() {
+          return output.length;
+        },
+      };
     });
   }
 

@@ -90,6 +90,9 @@ module.exports = function(proxy, allowedHost) {
     watchOptions: {
       ignored: ignoredFiles(paths.appSrc),
     },
+    writeToDisk: filePath => {
+      return /react-client-manifest\.json$/.test(filePath);
+    },
     https: getHttpsConfig(),
     host,
     overlay: false,
