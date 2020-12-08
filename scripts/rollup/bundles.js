@@ -274,14 +274,14 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
-    entry: 'react-transport-dom-webpack/server.browser',
+    entry: 'react-server-dom-webpack/server.browser',
     global: 'ReactTransportDOMServer',
     externals: ['react', 'react-dom/server'],
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-transport-dom-webpack/server.node',
+    entry: 'react-server-dom-webpack/server.node',
     global: 'ReactTransportDOMServer',
     externals: ['react', 'react-dom/server'],
   },
@@ -290,7 +290,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     moduleType: RENDERER,
-    entry: 'react-transport-dom-webpack',
+    entry: 'react-server-dom-webpack',
     global: 'ReactTransportDOMClient',
     externals: ['react'],
   },
@@ -299,7 +299,7 @@ const bundles = [
   {
     bundleTypes: [NODE_ES2015],
     moduleType: RENDERER_UTILS,
-    entry: 'react-transport-dom-webpack/plugin',
+    entry: 'react-server-dom-webpack/plugin',
     global: 'ReactFlightWebpackPlugin',
     externals: ['fs', 'path', 'url', 'neo-async'],
   },
@@ -308,7 +308,7 @@ const bundles = [
   {
     bundleTypes: [NODE_ESM],
     moduleType: RENDERER_UTILS,
-    entry: 'react-transport-dom-webpack/node-loader',
+    entry: 'react-server-dom-webpack/node-loader',
     global: 'ReactFlightWebpackNodeLoader',
     externals: ['acorn'],
   },
@@ -317,7 +317,7 @@ const bundles = [
   {
     bundleTypes: [NODE_ES2015],
     moduleType: RENDERER_UTILS,
-    entry: 'react-transport-dom-webpack/node-register',
+    entry: 'react-server-dom-webpack/node-register',
     global: 'ReactFlightWebpackNodeRegister',
     externals: ['url', 'module'],
   },
@@ -326,7 +326,7 @@ const bundles = [
   {
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
-    entry: 'react-transport-dom-relay/server',
+    entry: 'react-server-dom-relay/server',
     global: 'ReactFlightDOMRelayServer',
     externals: [
       'react',
@@ -340,7 +340,7 @@ const bundles = [
   {
     bundleTypes: [FB_WWW_DEV, FB_WWW_PROD],
     moduleType: RENDERER,
-    entry: 'react-transport-dom-relay',
+    entry: 'react-server-dom-relay',
     global: 'ReactFlightDOMRelayClient',
     externals: [
       'react',
@@ -353,7 +353,7 @@ const bundles = [
   {
     bundleTypes: [RN_FB_DEV, RN_FB_PROD],
     moduleType: RENDERER,
-    entry: 'react-transport-native-relay/server',
+    entry: 'react-server-native-relay/server',
     global: 'ReactFlightNativeRelayServer',
     externals: [
       'react',
@@ -366,7 +366,7 @@ const bundles = [
   {
     bundleTypes: [RN_FB_DEV, RN_FB_PROD],
     moduleType: RENDERER,
-    entry: 'react-transport-native-relay',
+    entry: 'react-server-native-relay',
     global: 'ReactFlightNativeRelayClient',
     externals: [
       'react',

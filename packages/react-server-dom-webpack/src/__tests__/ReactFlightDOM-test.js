@@ -40,8 +40,8 @@ describe('ReactFlightDOM', () => {
     Stream = require('stream');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTransportDOMServer = require('react-transport-dom-webpack/server');
-    ReactTransportDOMClient = require('react-transport-dom-webpack');
+    ReactTransportDOMServer = require('react-server-dom-webpack/server');
+    ReactTransportDOMClient = require('react-server-dom-webpack');
   });
 
   function getTestStream() {

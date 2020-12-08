@@ -21,8 +21,8 @@ describe('ReactFlightDOMRelay', () => {
     act = require('react-dom/test-utils').unstable_concurrentAct;
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMFlightRelayServer = require('react-transport-dom-relay/server');
-    ReactDOMFlightRelayClient = require('react-transport-dom-relay');
+    ReactDOMFlightRelayServer = require('react-server-dom-relay/server');
+    ReactDOMFlightRelayClient = require('react-server-dom-relay');
     JSResourceReference = require('JSResourceReference');
   });
 

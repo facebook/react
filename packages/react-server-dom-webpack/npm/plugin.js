@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('./cjs/react-transport-dom-webpack-plugin.js');
+module.exports = require('./cjs/react-server-dom-webpack-plugin.js');
