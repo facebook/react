@@ -70,6 +70,16 @@ declare module 'EventListener' {
 declare function __webpack_chunk_load__(id: string): Promise<mixed>;
 declare function __webpack_require__(id: string): any;
 
+declare module 'fs/promises' {
+  declare var readFile: (
+    path: string,
+    options?:
+      | ?string
+      | {
+          encoding?: ?string,
+        },
+  ) => Promise<Buffer>;
+}
 declare module 'pg' {
   declare var Pool: (
     options: mixed,
