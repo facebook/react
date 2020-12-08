@@ -60,7 +60,7 @@
         content: <HTML />,
       };
 
-      let stream = ReactTransportDOMServer.renderToReadableStream(model);
+      let stream = ReactServerDOMWriter.renderToReadableStream(model);
       let response = new Response(stream, {
         headers: {'Content-Type': 'text/html'},
       });
@@ -70,13 +70,13 @@
         let blob = await responseToDisplay.blob();
         let url = URL.createObjectURL(blob);
 
-        let data = ReactTransportDOMClient.createFromFetch(
+        let data = ReactServerDOMReader.createFromFetch(
           fetch(url)
         );
         // The client also supports XHR streaming.
         // var xhr = new XMLHttpRequest();
         // xhr.open('GET', url);
-        // let data = ReactTransportDOMClient.createFromXHR(xhr);
+        // let data = ReactServerDOMReader.createFromXHR(xhr);
         // xhr.send();
 
         renderResult(data);
