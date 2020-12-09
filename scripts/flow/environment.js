@@ -72,6 +72,10 @@ declare function __webpack_require__(id: string): any;
 
 declare module 'fs/promises' {
   declare var access: (path: string, mode?: number) => Promise<void>;
+  declare var lstat: (
+    path: string,
+    options?: ?{bigint?: boolean},
+  ) => Promise<mixed>;
   declare var readFile: (
     path: string,
     options?:

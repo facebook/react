@@ -124,6 +124,40 @@ export function access(path: string, mode?: number): void {
   readRecord(record); // No return value.
 }
 
+function createLstatCache(): Map<string, Array<boolean | Record<mixed>>> {
+  return new Map();
+}
+
+export function lstat(path: string, options?: {bigint?: boolean}): mixed {
+  checkPathInDev(path);
+  let bigint = false;
+  if (options && options.bigint) {
+    bigint = true;
+  }
+  const map = unstable_getCacheForType(createLstatCache);
+  let lstatCache = map.get(path);
+  if (!lstatCache) {
+    lstatCache = [];
+    map.set(path, lstatCache);
+  }
+  let record;
+  for (let i = 0; i < lstatCache.length; i += 2) {
+    const cachedBigint: boolean = (lstatCache[i]: any);
+    if (bigint === cachedBigint) {
+      const cachedRecord: Record<void> = (lstatCache[i + 1]: any);
+      record = cachedRecord;
+      break;
+    }
+  }
+  if (!record) {
+    const thenable = fs.lstat(path, {bigint});
+    record = createRecordFromThenable(thenable);
+    lstatCache.push(bigint, record);
+  }
+  const stat = readRecord(record).value;
+  return stat;
+}
+
 function createReadFileCache(): Map<string, Record<Buffer>> {
   return new Map();
 }
