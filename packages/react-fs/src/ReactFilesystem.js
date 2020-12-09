@@ -19,16 +19,19 @@ const Rejected = 2;
 type PendingResult = {|
   status: 0,
   value: Wakeable,
+  cache: Array<mixed>,
 |};
 
 type ResolvedResult<T> = {|
   status: 1,
   value: T,
+  cache: Array<mixed>,
 |};
 
 type RejectedResult = {|
   status: 2,
   value: mixed,
+  cache: Array<mixed>,
 |};
 
 type Result<T> = PendingResult | ResolvedResult<T> | RejectedResult;
@@ -37,6 +40,7 @@ function toResult<T>(thenable: Thenable<T>): Result<T> {
   const result: Result<T> = {
     status: Pending,
     value: thenable,
+    cache: [],
   };
   thenable.then(
     value => {
@@ -109,11 +113,10 @@ export function readFile(
   if (typeof encoding !== 'string') {
     return result;
   }
-  const textCache =
-    (result: any)._reactTextCache || ((result: any)._reactTextCache = []);
+  const textCache = entry.cache;
   for (let i = 0; i < textCache.length; i += 2) {
     if (textCache[i] === encoding) {
-      return textCache[i + 1];
+      return (textCache[i + 1]: any);
     }
   }
   const text = result.toString((encoding: any));
