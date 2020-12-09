@@ -75,9 +75,9 @@ export function readFile(
     | string
     | {
         encoding?: string | null,
-        // Ignored:
-        flag?: string,
-        signal?: mixed,
+        // Unsupported:
+        flag?: string, // Doesn't make sense except "r"
+        signal?: mixed, // We'll have our own signal
       },
 ): string | Buffer {
   const map = unstable_getCacheForType(createReadFileCache);
@@ -91,7 +91,21 @@ export function readFile(
   if (!options) {
     return result;
   }
-  const encoding = typeof options === 'string' ? options : options.encoding;
+  let encoding;
+  if (typeof options === 'string') {
+    encoding = options;
+  } else {
+    const flag = options.flag;
+    if (flag != null && flag !== 'r') {
+      throw Error(
+        'The flag option is not supported, and always defaults to "r".',
+      );
+    }
+    if (options.signal) {
+      throw Error('The signal option is not supported.');
+    }
+    encoding = options.encoding;
+  }
   if (typeof encoding !== 'string') {
     return result;
   }
