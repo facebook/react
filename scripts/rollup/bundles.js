@@ -873,12 +873,17 @@ function getOriginalFilename(bundle, bundleType) {
 
 function getFilename(bundle, bundleType) {
   const originalFilename = getOriginalFilename(bundle, bundleType);
+  // Ensure .server.js or .client.js is the final suffix.
+  // This is important for the Server tooling convention.
   if (originalFilename.indexOf('.server.') !== -1) {
-    // Ensure .server.js is the final suffix.
-    // This is important for the Server tooling convention.
     return originalFilename
       .replace('.server.', '.')
       .replace('.js', '.server.js');
+  }
+  if (originalFilename.indexOf('.client.') !== -1) {
+    return originalFilename
+      .replace('.client.', '.')
+      .replace('.js', '.client.js');
   }
   return originalFilename;
 }
