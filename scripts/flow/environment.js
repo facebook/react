@@ -101,6 +101,14 @@ declare module 'fs/promises' {
           encoding?: ?string,
         },
   ) => Promise<mixed>;
+  declare var realpath: (
+    path: string,
+    options?:
+      | ?string
+      | {
+          encoding?: ?string,
+        },
+  ) => Promise<mixed>;
   declare var stat: (
     path: string,
     options?: ?{bigint?: boolean},

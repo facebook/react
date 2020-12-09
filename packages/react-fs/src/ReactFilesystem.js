@@ -305,6 +305,47 @@ export function readlink(
   return linkString;
 }
 
+function createRealpathCache(): Map<string, Array<string | Record<mixed>>> {
+  return new Map();
+}
+
+export function realpath(
+  path: string,
+  options?: string | {encoding?: string},
+): mixed {
+  checkPathInDev(path);
+  let encoding = 'utf8';
+  if (typeof options === 'string') {
+    encoding = options;
+  } else if (options != null) {
+    if (options.encoding) {
+      encoding = options.encoding;
+    }
+  }
+  const map = unstable_getCacheForType(createRealpathCache);
+  let realpathCache = map.get(path);
+  if (!realpathCache) {
+    realpathCache = [];
+    map.set(path, realpathCache);
+  }
+  let record;
+  for (let i = 0; i < realpathCache.length; i += 2) {
+    const cachedEncoding: string = (realpathCache[i]: any);
+    if (encoding === cachedEncoding) {
+      const cachedRecord: Record<void> = (realpathCache[i + 1]: any);
+      record = cachedRecord;
+      break;
+    }
+  }
+  if (!record) {
+    const thenable = fs.realpath(path, {encoding});
+    record = createRecordFromThenable(thenable);
+    realpathCache.push(encoding, record);
+  }
+  const resolvedPath = readRecord(record).value;
+  return resolvedPath;
+}
+
 function createStatCache(): Map<string, Array<boolean | Record<mixed>>> {
   return new Map();
 }
