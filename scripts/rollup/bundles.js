@@ -153,6 +153,24 @@ const bundles = [
     externals: ['react', 'http', 'https'],
   },
 
+  /******* React FS Browser (experimental, new) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-fs/index.browser',
+    global: 'ReactFilesystem',
+    externals: [],
+  },
+
+  /******* React FS Node (experimental, new) *******/
+  {
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-fs/index.node',
+    global: 'ReactFilesystem',
+    externals: ['react', 'fs/promises', 'path'],
+  },
+
   /******* React PG Browser (experimental, new) *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
