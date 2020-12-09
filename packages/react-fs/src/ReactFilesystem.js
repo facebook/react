@@ -92,6 +92,38 @@ function checkPathInDev(path: string) {
   }
 }
 
+function createAccessCache(): Map<string, Array<number | Record<void>>> {
+  return new Map();
+}
+
+export function access(path: string, mode?: number): void {
+  checkPathInDev(path);
+  if (mode == null) {
+    mode = 0; // fs.constants.F_OK
+  }
+  const map = unstable_getCacheForType(createAccessCache);
+  let accessCache = map.get(path);
+  if (!accessCache) {
+    accessCache = [];
+    map.set(path, accessCache);
+  }
+  let record;
+  for (let i = 0; i < accessCache.length; i += 2) {
+    const cachedMode: number = (accessCache[i]: any);
+    if (mode === cachedMode) {
+      const cachedRecord: Record<void> = (accessCache[i + 1]: any);
+      record = cachedRecord;
+      break;
+    }
+  }
+  if (!record) {
+    const thenable = fs.access(path, mode);
+    record = createRecordFromThenable(thenable);
+    accessCache.push(mode, record);
+  }
+  readRecord(record); // No return value.
+}
+
 function createReadFileCache(): Map<string, Record<Buffer>> {
   return new Map();
 }
@@ -107,8 +139,8 @@ export function readFile(
         signal?: mixed, // We'll have our own signal
       },
 ): string | Buffer {
-  const map = unstable_getCacheForType(createReadFileCache);
   checkPathInDev(path);
+  const map = unstable_getCacheForType(createReadFileCache);
   let record = map.get(path);
   if (!record) {
     const thenable = fs.readFile(path);
