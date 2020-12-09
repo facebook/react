@@ -18,68 +18,68 @@ const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-type PendingResult = {|
+type PendingRecord = {|
   status: 0,
   value: Wakeable,
 |};
 
-type ResolvedResult = {|
+type ResolvedRecord = {|
   status: 1,
   value: mixed,
 |};
 
-type RejectedResult = {|
+type RejectedRecord = {|
   status: 2,
   value: mixed,
 |};
 
-type Result = PendingResult | ResolvedResult | RejectedResult;
+type Record = PendingRecord | ResolvedRecord | RejectedRecord;
 
-function toResult(thenable): Result {
-  const result: Result = {
+function createRecordFromThenable(thenable): Record {
+  const record: Record = {
     status: Pending,
     value: thenable,
   };
   thenable.then(
     value => {
-      if (result.status === Pending) {
-        const resolvedResult = ((result: any): ResolvedResult);
-        resolvedResult.status = Resolved;
-        resolvedResult.value = value;
+      if (record.status === Pending) {
+        const resolvedRecord = ((record: any): ResolvedRecord);
+        resolvedRecord.status = Resolved;
+        resolvedRecord.value = value;
       }
     },
     err => {
-      if (result.status === Pending) {
-        const rejectedResult = ((result: any): RejectedResult);
-        rejectedResult.status = Rejected;
-        rejectedResult.value = err;
+      if (record.status === Pending) {
+        const rejectedRecord = ((record: any): RejectedRecord);
+        rejectedRecord.status = Rejected;
+        rejectedRecord.value = err;
       }
     },
   );
-  return result;
+  return record;
 }
 
-function readResult(result: Result) {
-  if (result.status === Resolved) {
-    return result.value;
+function readRecordValue(record: Record) {
+  if (record.status === Resolved) {
+    return record.value;
   } else {
-    throw result.value;
+    throw record.value;
   }
 }
 
 export function Pool(options: mixed) {
   this.pool = new PostgresPool(options);
   // Unique function per instance because it's used for cache identity.
-  this.createResultMap = function() {
+  this.createRecordMap = function() {
     return new Map();
   };
 }
 
-type NestedMap = Map<any, Result | NestedMap>;
+type NestedMap = Map<any, Record | NestedMap>;
 
 Pool.prototype.query = function(query: string, values?: Array<mixed>) {
   const pool = this.pool;
-  const outerMap = unstable_getCacheForType(this.createResultMap);
+  const outerMap = unstable_getCacheForType(this.createRecordMap);
 
   let innerMap: NestedMap = outerMap;
   let key = query;
@@ -107,12 +107,12 @@ Pool.prototype.query = function(query: string, values?: Array<mixed>) {
     }
   }
 
-  let entry = innerMap.get(key);
-  if (!entry) {
+  let record = innerMap.get(key);
+  if (!record) {
     const thenable = pool.query(query, values);
-    entry = toResult(thenable);
-    innerMap.set(key, entry);
-  } else if (entry instanceof Map) {
+    record = createRecordFromThenable(thenable);
+    innerMap.set(key, record);
+  } else if (record instanceof Map) {
     invariant(
       false,
       'This query has received fewer parameters than the last time ' +
@@ -120,5 +120,6 @@ Pool.prototype.query = function(query: string, values?: Array<mixed>) {
         'parameters that the query needs.',
     );
   }
-  return readResult(entry);
+  const result = readRecordValue(record);
+  return result;
 };
