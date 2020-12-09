@@ -92,7 +92,7 @@ function checkPathInDev(path: string) {
   }
 }
 
-function createAccessCache(): Map<string, Array<number | Record<void>>> {
+function createAccessMap(): Map<string, Array<number | Record<void>>> {
   return new Map();
 }
 
@@ -101,7 +101,7 @@ export function access(path: string, mode?: number): void {
   if (mode == null) {
     mode = 0; // fs.constants.F_OK
   }
-  const map = unstable_getCacheForType(createAccessCache);
+  const map = unstable_getCacheForType(createAccessMap);
   let accessCache = map.get(path);
   if (!accessCache) {
     accessCache = [];
@@ -124,7 +124,7 @@ export function access(path: string, mode?: number): void {
   readRecord(record); // No return value.
 }
 
-function createLstatCache(): Map<string, Array<boolean | Record<mixed>>> {
+function createLstatMap(): Map<string, Array<boolean | Record<mixed>>> {
   return new Map();
 }
 
@@ -134,7 +134,7 @@ export function lstat(path: string, options?: {bigint?: boolean}): mixed {
   if (options && options.bigint) {
     bigint = true;
   }
-  const map = unstable_getCacheForType(createLstatCache);
+  const map = unstable_getCacheForType(createLstatMap);
   let lstatCache = map.get(path);
   if (!lstatCache) {
     lstatCache = [];
@@ -158,7 +158,7 @@ export function lstat(path: string, options?: {bigint?: boolean}): mixed {
   return stats;
 }
 
-function createReaddirCache(): Map<
+function createReaddirMap(): Map<
   string,
   Array<string | boolean | Record<mixed>>,
 > {
@@ -182,7 +182,7 @@ export function readdir(
       withFileTypes = true;
     }
   }
-  const map = unstable_getCacheForType(createReaddirCache);
+  const map = unstable_getCacheForType(createReaddirMap);
   let readdirCache = map.get(path);
   if (!readdirCache) {
     readdirCache = [];
@@ -207,7 +207,7 @@ export function readdir(
   return files;
 }
 
-function createReadFileCache(): Map<string, Record<Buffer>> {
+function createReadFileMap(): Map<string, Record<Buffer>> {
   return new Map();
 }
 
@@ -223,7 +223,7 @@ export function readFile(
       },
 ): string | Buffer {
   checkPathInDev(path);
-  const map = unstable_getCacheForType(createReadFileCache);
+  const map = unstable_getCacheForType(createReadFileMap);
   let record = map.get(path);
   if (!record) {
     const thenable = fs.readFile(path);
@@ -264,7 +264,7 @@ export function readFile(
   return text;
 }
 
-function createReadlinkCache(): Map<string, Array<string | Record<mixed>>> {
+function createReadlinkMap(): Map<string, Array<string | Record<mixed>>> {
   return new Map();
 }
 
@@ -281,7 +281,7 @@ export function readlink(
       encoding = options.encoding;
     }
   }
-  const map = unstable_getCacheForType(createReadlinkCache);
+  const map = unstable_getCacheForType(createReadlinkMap);
   let readlinkCache = map.get(path);
   if (!readlinkCache) {
     readlinkCache = [];
@@ -305,7 +305,7 @@ export function readlink(
   return linkString;
 }
 
-function createRealpathCache(): Map<string, Array<string | Record<mixed>>> {
+function createRealpathMap(): Map<string, Array<string | Record<mixed>>> {
   return new Map();
 }
 
@@ -322,7 +322,7 @@ export function realpath(
       encoding = options.encoding;
     }
   }
-  const map = unstable_getCacheForType(createRealpathCache);
+  const map = unstable_getCacheForType(createRealpathMap);
   let realpathCache = map.get(path);
   if (!realpathCache) {
     realpathCache = [];
@@ -346,7 +346,7 @@ export function realpath(
   return resolvedPath;
 }
 
-function createStatCache(): Map<string, Array<boolean | Record<mixed>>> {
+function createStatMap(): Map<string, Array<boolean | Record<mixed>>> {
   return new Map();
 }
 
@@ -356,7 +356,7 @@ export function stat(path: string, options?: {bigint?: boolean}): mixed {
   if (options && options.bigint) {
     bigint = true;
   }
-  const map = unstable_getCacheForType(createStatCache);
+  const map = unstable_getCacheForType(createStatMap);
   let statCache = map.get(path);
   if (!statCache) {
     statCache = [];
