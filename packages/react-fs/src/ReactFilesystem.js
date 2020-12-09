@@ -154,8 +154,8 @@ export function lstat(path: string, options?: {bigint?: boolean}): mixed {
     record = createRecordFromThenable(thenable);
     lstatCache.push(bigint, record);
   }
-  const stat = readRecord(record).value;
-  return stat;
+  const stats = readRecord(record).value;
+  return stats;
 }
 
 function createReadFileCache(): Map<string, Record<Buffer>> {
@@ -213,4 +213,38 @@ export function readFile(
   const text = buffer.toString((encoding: any));
   textCache.push(encoding, text);
   return text;
+}
+
+function createStatCache(): Map<string, Array<boolean | Record<mixed>>> {
+  return new Map();
+}
+
+export function stat(path: string, options?: {bigint?: boolean}): mixed {
+  checkPathInDev(path);
+  let bigint = false;
+  if (options && options.bigint) {
+    bigint = true;
+  }
+  const map = unstable_getCacheForType(createStatCache);
+  let statCache = map.get(path);
+  if (!statCache) {
+    statCache = [];
+    map.set(path, statCache);
+  }
+  let record;
+  for (let i = 0; i < statCache.length; i += 2) {
+    const cachedBigint: boolean = (statCache[i]: any);
+    if (bigint === cachedBigint) {
+      const cachedRecord: Record<void> = (statCache[i + 1]: any);
+      record = cachedRecord;
+      break;
+    }
+  }
+  if (!record) {
+    const thenable = fs.stat(path, {bigint});
+    record = createRecordFromThenable(thenable);
+    statCache.push(bigint, record);
+  }
+  const stats = readRecord(record).value;
+  return stats;
 }

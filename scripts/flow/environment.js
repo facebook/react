@@ -84,6 +84,10 @@ declare module 'fs/promises' {
           encoding?: ?string,
         },
   ) => Promise<Buffer>;
+  declare var stat: (
+    path: string,
+    options?: ?{bigint?: boolean},
+  ) => Promise<mixed>;
 }
 declare module 'pg' {
   declare var Pool: (
