@@ -20,19 +20,19 @@ const Rejected = 2;
 type PendingRecord = {|
   status: 0,
   value: Wakeable,
-  cache: Array<mixed>,
+  cache: null,
 |};
 
 type ResolvedRecord<T> = {|
   status: 1,
   value: T,
-  cache: Array<mixed>,
+  cache: null | Array<mixed>,
 |};
 
 type RejectedRecord = {|
   status: 2,
   value: mixed,
-  cache: Array<mixed>,
+  cache: null,
 |};
 
 type Record<T> = PendingRecord | ResolvedRecord<T> | RejectedRecord;
@@ -41,7 +41,7 @@ function createRecordFromThenable<T>(thenable: Thenable<T>): Record<T> {
   const record: Record<T> = {
     status: Pending,
     value: thenable,
-    cache: [],
+    cache: null,
   };
   thenable.then(
     value => {
@@ -62,9 +62,10 @@ function createRecordFromThenable<T>(thenable: Thenable<T>): Record<T> {
   return record;
 }
 
-function readRecordValue<T>(record: Record<T>): T {
+function readRecord<T>(record: Record<T>): ResolvedRecord<T> {
   if (record.status === Resolved) {
-    return record.value;
+    // This is just a type refinement.
+    return record;
   } else {
     throw record.value;
   }
@@ -114,7 +115,8 @@ export function readFile(
     record = createRecordFromThenable(thenable);
     map.set(path, record);
   }
-  const buffer: Buffer = readRecordValue(record);
+  const resolvedRecord = readRecord(record);
+  const buffer: Buffer = resolvedRecord.value;
   if (!options) {
     return buffer;
   }
@@ -136,7 +138,7 @@ export function readFile(
   if (typeof encoding !== 'string') {
     return buffer;
   }
-  const textCache = record.cache;
+  const textCache = resolvedRecord.cache || (resolvedRecord.cache = []);
   for (let i = 0; i < textCache.length; i += 2) {
     if (textCache[i] === encoding) {
       return (textCache[i + 1]: any);
