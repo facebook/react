@@ -1074,6 +1074,7 @@ function detachFiberMutation(fiber: Fiber) {
   // and one of its descendants throws while unmounting a passive effect.
   fiber.alternate = null;
   fiber.child = null;
+  fiber.deletions = null;
   fiber.dependencies = null;
   fiber.firstEffect = null;
   fiber.lastEffect = null;
