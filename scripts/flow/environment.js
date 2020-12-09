@@ -76,6 +76,15 @@ declare module 'fs/promises' {
     path: string,
     options?: ?{bigint?: boolean},
   ) => Promise<mixed>;
+  declare var readdir: (
+    path: string,
+    options?:
+      | ?string
+      | {
+          encoding?: ?string,
+          withFileTypes?: ?boolean,
+        },
+  ) => Promise<Buffer>;
   declare var readFile: (
     path: string,
     options?:

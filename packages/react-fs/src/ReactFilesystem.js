@@ -158,6 +158,55 @@ export function lstat(path: string, options?: {bigint?: boolean}): mixed {
   return stats;
 }
 
+function createReaddirCache(): Map<
+  string,
+  Array<string | boolean | Record<mixed>>,
+> {
+  return new Map();
+}
+
+export function readdir(
+  path: string,
+  options?: string | {encoding?: string, withFileTypes?: boolean},
+): mixed {
+  checkPathInDev(path);
+  let encoding = 'utf8';
+  let withFileTypes = false;
+  if (typeof options === 'string') {
+    encoding = options;
+  } else if (options != null) {
+    if (options.encoding) {
+      encoding = options.encoding;
+    }
+    if (options.withFileTypes) {
+      withFileTypes = true;
+    }
+  }
+  const map = unstable_getCacheForType(createReaddirCache);
+  let readdirCache = map.get(path);
+  if (!readdirCache) {
+    readdirCache = [];
+    map.set(path, readdirCache);
+  }
+  let record;
+  for (let i = 0; i < readdirCache.length; i += 3) {
+    const cachedEncoding: string = (readdirCache[i]: any);
+    const cachedWithFileTypes: boolean = (readdirCache[i + 1]: any);
+    if (encoding === cachedEncoding && withFileTypes === cachedWithFileTypes) {
+      const cachedRecord: Record<void> = (readdirCache[i + 2]: any);
+      record = cachedRecord;
+      break;
+    }
+  }
+  if (!record) {
+    const thenable = fs.readdir(path, {encoding, withFileTypes});
+    record = createRecordFromThenable(thenable);
+    readdirCache.push(encoding, withFileTypes, record);
+  }
+  const files = readRecord(record).value;
+  return files;
+}
+
 function createReadFileCache(): Map<string, Record<Buffer>> {
   return new Map();
 }
