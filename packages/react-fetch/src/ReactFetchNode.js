@@ -57,36 +57,36 @@ const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-type PendingResult = {|
+type PendingRecord = {|
   status: 0,
   value: Wakeable,
 |};
 
-type ResolvedResult<V> = {|
+type ResolvedRecord<V> = {|
   status: 1,
   value: V,
 |};
 
-type RejectedResult = {|
+type RejectedRecord = {|
   status: 2,
   value: mixed,
 |};
 
-type Result<V> = PendingResult | ResolvedResult<V> | RejectedResult;
+type Record<V> = PendingRecord | ResolvedRecord<V> | RejectedRecord;
 
-function getResultMap(): Map<string, Result<FetchResponse>> {
-  return unstable_getCacheForType(createResultMap);
+function getRecordMap(): Map<string, Record<FetchResponse>> {
+  return unstable_getCacheForType(createRecordMap);
 }
 
-function createResultMap(): Map<string, Result<FetchResponse>> {
+function createRecordMap(): Map<string, Record<FetchResponse>> {
   return new Map();
 }
 
-function readResult<T>(result: Result<T>): T {
-  if (result.status === Resolved) {
-    return result.value;
+function readRecordValue<T>(record: Record<T>): T {
+  if (record.status === Resolved) {
+    return record.value;
   } else {
-    throw result.value;
+    throw record.value;
   }
 }
 
@@ -111,7 +111,7 @@ function Response(nativeResponse) {
       cb();
     }
   }
-  const result: PendingResult = (this._result = {
+  const bufferRecord: PendingRecord = (this._bufferRecord = {
     status: Pending,
     value: {
       then(cb) {
@@ -122,18 +122,18 @@ function Response(nativeResponse) {
   const data = [];
   nativeResponse.on('data', chunk => data.push(chunk));
   nativeResponse.on('end', () => {
-    if (result.status === Pending) {
-      const resolvedResult = ((result: any): ResolvedResult<Buffer>);
-      resolvedResult.status = Resolved;
-      resolvedResult.value = Buffer.concat(data);
+    if (bufferRecord.status === Pending) {
+      const resolvedRecord = ((bufferRecord: any): ResolvedRecord<Buffer>);
+      resolvedRecord.status = Resolved;
+      resolvedRecord.value = Buffer.concat(data);
       wake();
     }
   });
   nativeResponse.on('error', err => {
-    if (result.status === Pending) {
-      const rejectedResult = ((result: any): RejectedResult);
-      rejectedResult.status = Rejected;
-      rejectedResult.value = err;
+    if (bufferRecord.status === Pending) {
+      const rejectedRecord = ((bufferRecord: any): RejectedRecord);
+      rejectedRecord.status = Rejected;
+      rejectedRecord.value = err;
       wake();
     }
   });
@@ -142,7 +142,7 @@ function Response(nativeResponse) {
 Response.prototype = {
   constructor: Response,
   arrayBuffer() {
-    const buffer = readResult(this._result);
+    const buffer = readRecordValue(this._bufferRecord);
     return buffer;
   },
   blob() {
@@ -153,7 +153,7 @@ Response.prototype = {
     if (this._json !== null) {
       return this._json;
     }
-    const buffer = readResult(this._result);
+    const buffer = readRecordValue(this._bufferRecord);
     const json = JSON.parse(buffer.toString());
     this._json = json;
     return json;
@@ -162,17 +162,17 @@ Response.prototype = {
     if (this._text !== null) {
       return this._text;
     }
-    const buffer = readResult(this._result);
+    const buffer = readRecordValue(this._bufferRecord);
     const text = buffer.toString();
     this._text = text;
     return text;
   },
 };
 
-function preloadResult(url: string, options: mixed): Result<FetchResponse> {
-  const map = getResultMap();
-  let entry = map.get(url);
-  if (!entry) {
+function preloadRecord(url: string, options: mixed): Record<FetchResponse> {
+  const map = getRecordMap();
+  let record = map.get(url);
+  if (!record) {
     if (options) {
       if (options.method || options.body || options.signal) {
         // TODO: wire up our own cancellation mechanism.
@@ -193,7 +193,7 @@ function preloadResult(url: string, options: mixed): Result<FetchResponse> {
         cb();
       }
     };
-    const result: Result<FetchResponse> = (entry = {
+    const newRecord: Record<FetchResponse> = (record = {
       status: Pending,
       value: wakeable,
     });
@@ -201,33 +201,34 @@ function preloadResult(url: string, options: mixed): Result<FetchResponse> {
       url,
       options,
       response => {
-        if (result.status === Pending) {
-          const resolvedResult = ((result: any): ResolvedResult<FetchResponse>);
-          resolvedResult.status = Resolved;
-          resolvedResult.value = response;
+        if (newRecord.status === Pending) {
+          const resolvedRecord = ((newRecord: any): ResolvedRecord<FetchResponse>);
+          resolvedRecord.status = Resolved;
+          resolvedRecord.value = response;
           wake();
         }
       },
       err => {
-        if (result.status === Pending) {
-          const rejectedResult = ((result: any): RejectedResult);
-          rejectedResult.status = Rejected;
-          rejectedResult.value = err;
+        if (newRecord.status === Pending) {
+          const rejectedRecord = ((newRecord: any): RejectedRecord);
+          rejectedRecord.status = Rejected;
+          rejectedRecord.value = err;
           wake();
         }
       },
     );
-    map.set(url, entry);
+    map.set(url, record);
   }
-  return entry;
+  return record;
 }
 
 export function preload(url: string, options: mixed): void {
-  preloadResult(url, options);
+  preloadRecord(url, options);
   // Don't return anything.
 }
 
 export function fetch(url: string, options: mixed): FetchResponse {
-  const result = preloadResult(url, options);
-  return readResult(result);
+  const record = preloadRecord(url, options);
+  const response = readRecordValue(record);
+  return response;
 }

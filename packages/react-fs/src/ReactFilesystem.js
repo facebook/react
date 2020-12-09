@@ -17,56 +17,56 @@ const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-type PendingResult = {|
+type PendingRecord = {|
   status: 0,
   value: Wakeable,
   cache: Array<mixed>,
 |};
 
-type ResolvedResult<T> = {|
+type ResolvedRecord<T> = {|
   status: 1,
   value: T,
   cache: Array<mixed>,
 |};
 
-type RejectedResult = {|
+type RejectedRecord = {|
   status: 2,
   value: mixed,
   cache: Array<mixed>,
 |};
 
-type Result<T> = PendingResult | ResolvedResult<T> | RejectedResult;
+type Record<T> = PendingRecord | ResolvedRecord<T> | RejectedRecord;
 
-function toResult<T>(thenable: Thenable<T>): Result<T> {
-  const result: Result<T> = {
+function createRecordFromThenable<T>(thenable: Thenable<T>): Record<T> {
+  const record: Record<T> = {
     status: Pending,
     value: thenable,
     cache: [],
   };
   thenable.then(
     value => {
-      if (result.status === Pending) {
-        const resolvedResult = ((result: any): ResolvedResult<T>);
-        resolvedResult.status = Resolved;
-        resolvedResult.value = value;
+      if (record.status === Pending) {
+        const resolvedRecord = ((record: any): ResolvedRecord<T>);
+        resolvedRecord.status = Resolved;
+        resolvedRecord.value = value;
       }
     },
     err => {
-      if (result.status === Pending) {
-        const rejectedResult = ((result: any): RejectedResult);
-        rejectedResult.status = Rejected;
-        rejectedResult.value = err;
+      if (record.status === Pending) {
+        const rejectedRecord = ((record: any): RejectedRecord);
+        rejectedRecord.status = Rejected;
+        rejectedRecord.value = err;
       }
     },
   );
-  return result;
+  return record;
 }
 
-function readResult<T>(result: Result<T>): T {
-  if (result.status === Resolved) {
-    return result.value;
+function readRecordValue<T>(record: Record<T>): T {
+  if (record.status === Resolved) {
+    return record.value;
   } else {
-    throw result.value;
+    throw record.value;
   }
 }
 
@@ -91,7 +91,7 @@ function checkPathInDev(path: string) {
   }
 }
 
-function createReadFileCache(): Map<string, Result<Buffer>> {
+function createReadFileCache(): Map<string, Record<Buffer>> {
   return new Map();
 }
 
@@ -108,15 +108,15 @@ export function readFile(
 ): string | Buffer {
   const map = unstable_getCacheForType(createReadFileCache);
   checkPathInDev(path);
-  let entry = map.get(path);
-  if (!entry) {
+  let record = map.get(path);
+  if (!record) {
     const thenable = fs.readFile(path);
-    entry = toResult(thenable);
-    map.set(path, entry);
+    record = createRecordFromThenable(thenable);
+    map.set(path, record);
   }
-  const result: Buffer = readResult(entry);
+  const buffer: Buffer = readRecordValue(record);
   if (!options) {
-    return result;
+    return buffer;
   }
   let encoding;
   if (typeof options === 'string') {
@@ -134,15 +134,15 @@ export function readFile(
     encoding = options.encoding;
   }
   if (typeof encoding !== 'string') {
-    return result;
+    return buffer;
   }
-  const textCache = entry.cache;
+  const textCache = record.cache;
   for (let i = 0; i < textCache.length; i += 2) {
     if (textCache[i] === encoding) {
       return (textCache[i + 1]: any);
     }
   }
-  const text = result.toString((encoding: any));
+  const text = buffer.toString((encoding: any));
   textCache.push(encoding, text);
   return text;
 }

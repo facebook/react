@@ -15,63 +15,63 @@ const Pending = 0;
 const Resolved = 1;
 const Rejected = 2;
 
-type PendingResult = {|
+type PendingRecord = {|
   status: 0,
   value: Wakeable,
 |};
 
-type ResolvedResult = {|
+type ResolvedRecord = {|
   status: 1,
   value: mixed,
 |};
 
-type RejectedResult = {|
+type RejectedRecord = {|
   status: 2,
   value: mixed,
 |};
 
-type Result = PendingResult | ResolvedResult | RejectedResult;
+type Record = PendingRecord | ResolvedRecord | RejectedRecord;
 
 // TODO: this is a browser-only version. Add a separate Node entry point.
 const nativeFetch = window.fetch;
 
-function getResultMap(): Map<string, Result> {
-  return unstable_getCacheForType(createResultMap);
+function getRecordMap(): Map<string, Record> {
+  return unstable_getCacheForType(createRecordMap);
 }
 
-function createResultMap(): Map<string, Result> {
+function createRecordMap(): Map<string, Record> {
   return new Map();
 }
 
-function toResult(thenable): Result {
-  const result: Result = {
+function createRecordFromThenable(thenable): Record {
+  const record: Record = {
     status: Pending,
     value: thenable,
   };
   thenable.then(
     value => {
-      if (result.status === Pending) {
-        const resolvedResult = ((result: any): ResolvedResult);
-        resolvedResult.status = Resolved;
-        resolvedResult.value = value;
+      if (record.status === Pending) {
+        const resolvedRecord = ((record: any): ResolvedRecord);
+        resolvedRecord.status = Resolved;
+        resolvedRecord.value = value;
       }
     },
     err => {
-      if (result.status === Pending) {
-        const rejectedResult = ((result: any): RejectedResult);
-        rejectedResult.status = Rejected;
-        rejectedResult.value = err;
+      if (record.status === Pending) {
+        const rejectedRecord = ((record: any): RejectedRecord);
+        rejectedRecord.status = Rejected;
+        rejectedRecord.value = err;
       }
     },
   );
-  return result;
+  return record;
 }
 
-function readResult(result: Result) {
-  if (result.status === Resolved) {
-    return result.value;
+function readRecordValue(record: Record) {
+  if (record.status === Resolved) {
+    return record.value;
   } else {
-    throw result.value;
+    throw record.value;
   }
 }
 
@@ -94,32 +94,37 @@ function Response(nativeResponse) {
 Response.prototype = {
   constructor: Response,
   arrayBuffer() {
-    return readResult(
+    return readRecordValue(
       this._arrayBuffer ||
-        (this._arrayBuffer = toResult(this._response.arrayBuffer())),
+        (this._arrayBuffer = createRecordFromThenable(
+          this._response.arrayBuffer(),
+        )),
     );
   },
   blob() {
-    return readResult(
-      this._blob || (this._blob = toResult(this._response.blob())),
+    return readRecordValue(
+      this._blob ||
+        (this._blob = createRecordFromThenable(this._response.blob())),
     );
   },
   json() {
-    return readResult(
-      this._json || (this._json = toResult(this._response.json())),
+    return readRecordValue(
+      this._json ||
+        (this._json = createRecordFromThenable(this._response.json())),
     );
   },
   text() {
-    return readResult(
-      this._text || (this._text = toResult(this._response.text())),
+    return readRecordValue(
+      this._text ||
+        (this._text = createRecordFromThenable(this._response.text())),
     );
   },
 };
 
-function preloadResult(url: string, options: mixed): Result {
-  const map = getResultMap();
-  let entry = map.get(url);
-  if (!entry) {
+function preloadRecord(url: string, options: mixed): Record {
+  const map = getRecordMap();
+  let record = map.get(url);
+  if (!record) {
     if (options) {
       if (options.method || options.body || options.signal) {
         // TODO: wire up our own cancellation mechanism.
@@ -128,20 +133,20 @@ function preloadResult(url: string, options: mixed): Result {
       }
     }
     const thenable = nativeFetch(url, options);
-    entry = toResult(thenable);
-    map.set(url, entry);
+    record = createRecordFromThenable(thenable);
+    map.set(url, record);
   }
-  return entry;
+  return record;
 }
 
 export function preload(url: string, options: mixed): void {
-  preloadResult(url, options);
+  preloadRecord(url, options);
   // Don't return anything.
 }
 
 export function fetch(url: string, options: mixed): Object {
-  const result = preloadResult(url, options);
-  const nativeResponse = (readResult(result): any);
+  const record = preloadRecord(url, options);
+  const nativeResponse = (readRecordValue(record): any);
   if (nativeResponse._reactResponse) {
     return nativeResponse._reactResponse;
   } else {
