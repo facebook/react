@@ -264,6 +264,47 @@ export function readFile(
   return text;
 }
 
+function createReadlinkCache(): Map<string, Array<string | Record<mixed>>> {
+  return new Map();
+}
+
+export function readlink(
+  path: string,
+  options?: string | {encoding?: string},
+): mixed {
+  checkPathInDev(path);
+  let encoding = 'utf8';
+  if (typeof options === 'string') {
+    encoding = options;
+  } else if (options != null) {
+    if (options.encoding) {
+      encoding = options.encoding;
+    }
+  }
+  const map = unstable_getCacheForType(createReadlinkCache);
+  let readlinkCache = map.get(path);
+  if (!readlinkCache) {
+    readlinkCache = [];
+    map.set(path, readlinkCache);
+  }
+  let record;
+  for (let i = 0; i < readlinkCache.length; i += 2) {
+    const cachedEncoding: string = (readlinkCache[i]: any);
+    if (encoding === cachedEncoding) {
+      const cachedRecord: Record<void> = (readlinkCache[i + 1]: any);
+      record = cachedRecord;
+      break;
+    }
+  }
+  if (!record) {
+    const thenable = fs.readlink(path, {encoding});
+    record = createRecordFromThenable(thenable);
+    readlinkCache.push(encoding, record);
+  }
+  const linkString = readRecord(record).value;
+  return linkString;
+}
+
 function createStatCache(): Map<string, Array<boolean | Record<mixed>>> {
   return new Map();
 }

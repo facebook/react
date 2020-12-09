@@ -93,6 +93,14 @@ declare module 'fs/promises' {
           encoding?: ?string,
         },
   ) => Promise<Buffer>;
+  declare var readlink: (
+    path: string,
+    options?:
+      | ?string
+      | {
+          encoding?: ?string,
+        },
+  ) => Promise<mixed>;
   declare var stat: (
     path: string,
     options?: ?{bigint?: boolean},
