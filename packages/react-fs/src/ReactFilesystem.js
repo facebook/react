@@ -11,7 +11,7 @@ import type {Wakeable, Thenable} from 'shared/ReactTypes';
 
 import {unstable_getCacheForType} from 'react';
 import * as fs from 'fs/promises';
-import {resolve} from 'path';
+import {isAbsolute, normalize} from 'path';
 
 const Pending = 0;
 const Resolved = 1;
@@ -70,6 +70,27 @@ function readResult<T>(result: Result<T>): T {
   }
 }
 
+// We don't want to normalize every path ourselves in production.
+// However, relative or non-normalized paths will lead to cache misses.
+// So we encourage the developer to fix it in DEV and normalize on their end.
+function checkPathInDev(path: string) {
+  if (__DEV__) {
+    if (!isAbsolute(path)) {
+      console.error(
+        'The provided path was not absolute: "%s". ' +
+          'Convert it to an absolute path first.',
+        path,
+      );
+    } else if (path !== normalize(path)) {
+      console.error(
+        'The provided path was not normalized: "%s". ' +
+          'Convert it to a normalized path first.',
+        path,
+      );
+    }
+  }
+}
+
 function createReadFileCache(): Map<string, Result<Buffer>> {
   return new Map();
 }
@@ -86,12 +107,12 @@ export function readFile(
       },
 ): string | Buffer {
   const map = unstable_getCacheForType(createReadFileCache);
-  const resolvedPath = resolve(path);
-  let entry = map.get(resolvedPath);
+  checkPathInDev(path);
+  let entry = map.get(path);
   if (!entry) {
-    const thenable = fs.readFile(resolvedPath);
+    const thenable = fs.readFile(path);
     entry = toResult(thenable);
-    map.set(resolvedPath, entry);
+    map.set(path, entry);
   }
   const result: Buffer = readResult(entry);
   if (!options) {
