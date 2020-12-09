@@ -834,7 +834,7 @@ deepFreeze(bundles);
 deepFreeze(bundleTypes);
 deepFreeze(moduleTypes);
 
-function getFilename(bundle, bundleType) {
+function getOriginalFilename(bundle, bundleType) {
   let name = bundle.entry;
   const globalName = bundle.global;
   // we do this to replace / to -, for react-dom/server
@@ -869,6 +869,23 @@ function getFilename(bundle, bundleType) {
     case RN_OSS_PROFILING:
       return `${globalName}-profiling.js`;
   }
+}
+
+function getFilename(bundle, bundleType) {
+  const originalFilename = getOriginalFilename(bundle, bundleType);
+  // Ensure .server.js or .client.js is the final suffix.
+  // This is important for the Server tooling convention.
+  if (originalFilename.indexOf('.server.') !== -1) {
+    return originalFilename
+      .replace('.server.', '.')
+      .replace('.js', '.server.js');
+  }
+  if (originalFilename.indexOf('.client.') !== -1) {
+    return originalFilename
+      .replace('.client.', '.')
+      .replace('.js', '.client.js');
+  }
+  return originalFilename;
 }
 
 module.exports = {
