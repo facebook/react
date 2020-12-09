@@ -168,7 +168,7 @@ const bundles = [
     moduleType: ISOMORPHIC,
     entry: 'react-fs/index.node',
     global: 'ReactFilesystem',
-    externals: ['react', 'fs/promises'],
+    externals: ['react', 'fs/promises', 'path'],
   },
 
   /******* React PG Browser (experimental, new) *******/

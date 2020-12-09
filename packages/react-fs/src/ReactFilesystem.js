@@ -11,6 +11,7 @@ import type {Wakeable, Thenable} from 'shared/ReactTypes';
 
 import {unstable_getCacheForType} from 'react';
 import * as fs from 'fs/promises';
+import {resolve} from 'path';
 
 const Pending = 0;
 const Resolved = 1;
@@ -85,11 +86,12 @@ export function readFile(
       },
 ): string | Buffer {
   const map = unstable_getCacheForType(createReadFileCache);
-  let entry = map.get(path);
+  const resolvedPath = resolve(path);
+  let entry = map.get(resolvedPath);
   if (!entry) {
-    const thenable = fs.readFile(path);
+    const thenable = fs.readFile(resolvedPath);
     entry = toResult(thenable);
-    map.set(path, entry);
+    map.set(resolvedPath, entry);
   }
   const result: Buffer = readResult(entry);
   if (!options) {
