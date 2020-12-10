@@ -13,14 +13,23 @@
     "README.md",
     "build-info.json",
     "index.js",
-    "index.node.js",
-    "index.browser.js",
+    "index.node.server.js",
+    "index.browser.server.js",
     "cjs/"
   ],
+  "exports": {
+    ".": {
+      "react-server": {
+        "node": "./index.node.server.js",
+        "browser": "./index.browser.server.js"
+      },
+      "default": "./index.js"
+    },
+    "./index.node.server": "./index.node.server.js",
+    "./index.browser.server": "./index.browser.server.js",
+    "./package.json": "./package.json"
+  },
   "peerDependencies": {
     "react": "^17.0.0"
-  },
-  "browser": {
-    "./index.js": "./index.browser.js"
   }
 }

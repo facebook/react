@@ -157,7 +157,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'react-fs/index.browser',
+    entry: 'react-fs/index.browser.server',
     global: 'ReactFilesystem',
     externals: [],
   },
@@ -166,7 +166,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'react-fs/index.node',
+    entry: 'react-fs/index.node.server',
     global: 'ReactFilesystem',
     externals: ['react', 'fs/promises', 'path'],
   },

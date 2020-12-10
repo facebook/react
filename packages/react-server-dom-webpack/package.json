@@ -38,9 +38,6 @@
     "./node-register": "./node-register.js",
     "./package.json": "./package.json"
   },
-  "browser": {
-    "./writer.js": "./writer.browser.server.js"
-  },
   "main": "index.js",
   "repository": {
     "type" : "git",
