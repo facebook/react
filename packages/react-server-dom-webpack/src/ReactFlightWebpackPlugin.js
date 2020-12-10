@@ -170,26 +170,29 @@ export default class ReactFlightWebpackPlugin {
 
     compiler.hooks.emit.tap(PLUGIN_NAME, compilation => {
       const json = {};
-      compilation.chunks.forEach(chunk => {
-        chunk.getModules().forEach(mod => {
-          // TOOD: Hook into deps instead of the target module.
-          // That way we know by the type of dep whether to include.
-          // It also resolves conflicts when the same module is in multiple chunks.
-          if (!/\.client\.js$/.test(mod.resource)) {
-            return;
-          }
-          const moduleExports = {};
-          ['', '*'].concat(mod.buildMeta.providedExports).forEach(name => {
-            moduleExports[name] = {
-              id: mod.id,
-              chunks: chunk.ids,
-              name: name,
-            };
+      compilation.chunkGroups.forEach(chunkGroup => {
+        const chunkIds = chunkGroup.chunks.map(c => c.id);
+        chunkGroup.chunks.forEach(chunk => {
+          chunk.getModules().forEach(mod => {
+            // TODO: Hook into deps instead of the target module.
+            // That way we know by the type of dep whether to include.
+            // It also resolves conflicts when the same module is in multiple chunks.
+            if (!/\.client\.js$/.test(mod.resource)) {
+              return;
+            }
+            const moduleExports = {};
+            ['', '*'].concat(mod.buildMeta.providedExports).forEach(name => {
+              moduleExports[name] = {
+                id: mod.id,
+                chunks: chunkIds,
+                name: name,
+              };
+            });
+            const href = pathToFileURL(mod.resource).href;
+            if (href !== undefined) {
+              json[href] = moduleExports;
+            }
           });
-          const href = pathToFileURL(mod.resource).href;
-          if (href !== undefined) {
-            json[href] = moduleExports;
-          }
         });
       });
       const output = JSON.stringify(json, null, 2);
