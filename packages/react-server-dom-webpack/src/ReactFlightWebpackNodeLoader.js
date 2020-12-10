@@ -70,19 +70,23 @@ export async function resolve(
       );
     }
   }
-  // We intentionally check the specifier here instead of the resolved file.
-  // This allows package exports to configure non-server aliases that resolve to server files
-  // depending on environment. It's probably a bad idea to export a server file as "main" though.
-  if (specifier.endsWith('.server.js')) {
+  const resolved = defaultResolve(specifier, context, defaultResolve);
+  if (resolved.url.endsWith('.server.js')) {
     if (context.parentURL && !context.parentURL.endsWith('.server.js')) {
+      let reason;
+      if (specifier.endsWith('.server.js')) {
+        reason = `"${specifier}"`;
+      } else {
+        reason = `"${specifier}" (which expands to "${resolved.url}")`;
+      }
       throw new Error(
-        `Cannot import "${specifier}" from "${context.parentURL}". ` +
+        `Cannot import ${reason} from "${context.parentURL}". ` +
           'By react-server convention, .server.js files can only be imported from other .server.js files. ' +
           'That way nobody accidentally sends these to the client by indirectly importing it.',
       );
     }
   }
-  return defaultResolve(specifier, context, defaultResolve);
+  return resolved;
 }
 
 export async function getSource(

@@ -70,22 +70,26 @@ module.exports = function register() {
   const originalResolveFilename = Module._resolveFilename;
 
   Module._resolveFilename = function(request, parent, isMain, options) {
-    // We intentionally check the request here instead of the resolved file.
-    // This allows package exports to configure non-server aliases that resolve to server files
-    // depending on environment. It's probably a bad idea to export a server file as "main" though.
-    if (request.endsWith('.server.js')) {
+    const resolved = originalResolveFilename.apply(this, arguments);
+    if (resolved.endsWith('.server.js')) {
       if (
         parent &&
         parent.filename &&
         !parent.filename.endsWith('.server.js')
       ) {
+        let reason;
+        if (request.endsWith('.server.js')) {
+          reason = `"${request}"`;
+        } else {
+          reason = `"${request}" (which expands to "${resolved}")`;
+        }
         throw new Error(
-          `Cannot import "${request}" from "${parent.filename}". ` +
+          `Cannot import ${reason} from "${parent.filename}". ` +
             'By react-server convention, .server.js files can only be imported from other .server.js files. ' +
             'That way nobody accidentally sends these to the client by indirectly importing it.',
         );
       }
     }
-    return originalResolveFilename.apply(this, arguments);
+    return resolved;
   };
 };
