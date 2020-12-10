@@ -3228,13 +3228,21 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
 
       if (hasCaughtError()) {
         const replayError = clearCaughtError();
-        // `invokeGuardedCallback` sometimes sets an expando `_suppressLogging`.
-        // Rethrow this error instead of the original one.
-        throw replayError;
-      } else {
-        // This branch is reachable if the render phase is impure.
-        throw originalError;
+        if (
+          typeof replayError === 'object' &&
+          replayError !== null &&
+          replayError._suppressLogging &&
+          typeof originalError === 'object' &&
+          originalError !== null &&
+          !originalError._suppressLogging
+        ) {
+          // If suppressed, let the flag carry over to the original error which is the one we'll rethrow.
+          originalError._suppressLogging = true;
+        }
       }
+      // We always throw the original error in case the second render pass is not idempotent.
+      // This can happen if a memoized function or CommonJS module doesn't throw after first invokation.
+      throw originalError;
     }
   };
 } else {
