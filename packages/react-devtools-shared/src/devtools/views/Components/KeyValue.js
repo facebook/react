@@ -229,9 +229,11 @@ export default function KeyValue({
         hidden={hidden}
         ref={contextMenuTriggerRef}
         style={style}>
-        <div className={styles.ExpandCollapseToggleSpacer} />
-        {renderedName}
-        <div className={styles.AfterName}>:</div>
+        <span className={styles.Key}>
+          <div className={styles.ExpandCollapseToggleSpacer} />
+          {renderedName}
+          <div className={styles.AfterName}>:</div>
+        </span>
         {canEditValues ? (
           <EditableValue
             overrideValue={overrideValue}
@@ -259,8 +261,12 @@ export default function KeyValue({
         ) : (
           <div className={styles.ExpandCollapseToggleSpacer} />
         )}
-        {renderedName}
-        <div className={styles.AfterName}>:</div>
+        <span
+          className={styles.Key}
+          onClick={isInspectable ? toggleIsOpen : undefined}>
+          {renderedName}
+          <div className={styles.AfterName}>:</div>
+        </span>
         <span
           className={styles.Value}
           onClick={isInspectable ? toggleIsOpen : undefined}>
@@ -321,13 +327,17 @@ export default function KeyValue({
           hidden={hidden}
           ref={contextMenuTriggerRef}
           style={style}>
-          {hasChildren ? (
-            <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
-          ) : (
-            <div className={styles.ExpandCollapseToggleSpacer} />
-          )}
-          {renderedName}
-          <div className={styles.AfterName}>:</div>
+          <span
+            className={styles.Key}
+            onClick={hasChildren ? toggleIsOpen : undefined}>
+            {hasChildren ? (
+              <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
+            ) : (
+              <div className={styles.ExpandCollapseToggleSpacer} />
+            )}
+            {renderedName}
+            <div className={styles.AfterName}>:</div>
+          </span>
           <span
             className={styles.Value}
             onClick={hasChildren ? toggleIsOpen : undefined}>
@@ -393,13 +403,17 @@ export default function KeyValue({
           hidden={hidden}
           ref={contextMenuTriggerRef}
           style={style}>
-          {hasChildren ? (
-            <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
-          ) : (
-            <div className={styles.ExpandCollapseToggleSpacer} />
-          )}
-          {renderedName}
-          <div className={styles.AfterName}>:</div>
+          <span
+            className={styles.Key}
+            onClick={hasChildren ? toggleIsOpen : undefined}>
+            {hasChildren ? (
+              <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
+            ) : (
+              <div className={styles.ExpandCollapseToggleSpacer} />
+            )}
+            {renderedName}
+            <div className={styles.AfterName}>:</div>
+          </span>
           <span
             className={styles.Value}
             onClick={hasChildren ? toggleIsOpen : undefined}>
