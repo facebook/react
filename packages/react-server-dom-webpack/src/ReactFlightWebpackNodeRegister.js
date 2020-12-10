@@ -70,6 +70,12 @@ module.exports = function register() {
   const originalLoad = Module._load;
   const originalResolveFilename = Module._resolveFilename;
 
+  let isInLoadBeforeResolve = false;
+  let currentRequest;
+  let currentParent;
+  let currentIsMain;
+  let currentResolved;
+
   // Need to capture it here because Node skips _resolveFilename()
   // for other files in the same directory.
   Module._load = function(request, parent, isMain) {
@@ -98,19 +104,37 @@ module.exports = function register() {
         );
       }
     }
-    // Node will now resolve again in its _load() implementation.
-    // To avoid duplicating the work, add a fast cached path.
-    Module._resolveFilename = function(r, p, i) {
-      if (request === r && parent === p && isMain === i) {
-        return resolved;
-      } else {
-        return originalResolveFilename.apply(this, arguments);
+    // We're assuming that in the period between now and when
+    // _resolveFilename is called inside, _load is not reentrant.
+    isInLoadBeforeResolve = true;
+    currentRequest = request;
+    currentParent = parent;
+    currentIsMain = isMain;
+    currentResolved = resolved;
+    const result = originalLoad.apply(this, arguments);
+    isInLoadBeforeResolve = false;
+    // Load could throw, but we assume that it can only
+    // throw *after* calling _resolveFilename, which we
+    // also override and in which we also reset this flag.
+    return result;
+  };
+
+  // Node will now resolve again in its _load() implementation.
+  // To avoid duplicating the work, add a fast cached path.
+  Module._resolveFilename = function(request, parent, isMain) {
+    if (isInLoadBeforeResolve) {
+      // Only memoize the first call, which we expect to be
+      // for the same module that is getting loaded.
+      isInLoadBeforeResolve = false;
+      // These should always be true but we'll check just in case:
+      if (
+        request === currentRequest &&
+        parent === currentParent &&
+        isMain === currentIsMain
+      ) {
+        return currentResolved;
       }
-    };
-    try {
-      return originalLoad.apply(this, arguments);
-    } finally {
-      Module._resolveFilename = originalResolveFilename;
     }
+    return originalResolveFilename.apply(this, arguments);
   };
 };
