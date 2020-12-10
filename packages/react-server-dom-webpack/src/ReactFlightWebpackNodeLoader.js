@@ -18,7 +18,7 @@ type ResolveFunction = (
   string,
   ResolveContext,
   ResolveFunction,
-) => Promise<{url: string}>;
+) => {url: string} | Promise<{url: string}>;
 
 type GetSourceContext = {
   format: string,
@@ -133,7 +133,7 @@ function addExportNames(names, node) {
 function resolveClientImport(
   specifier: string,
   parentURL: string,
-): Promise<{url: string}> {
+): {url: string} | Promise<{url: string}> {
   // Resolve an import specifier as if it was loaded by the client. This doesn't use
   // the overrides that this loader does but instead reverts to the default.
   // This resolution algorithm will not necessarily have the same configuration
