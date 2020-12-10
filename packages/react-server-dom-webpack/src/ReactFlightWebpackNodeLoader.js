@@ -18,7 +18,7 @@ type ResolveFunction = (
   string,
   ResolveContext,
   ResolveFunction,
-) => Promise<{url: string}>;
+) => {url: string} | Promise<{url: string}>;
 
 type GetSourceContext = {
   format: string,
@@ -70,19 +70,24 @@ export async function resolve(
       );
     }
   }
-  // We intentionally check the specifier here instead of the resolved file.
-  // This allows package exports to configure non-server aliases that resolve to server files
-  // depending on environment. It's probably a bad idea to export a server file as "main" though.
-  if (specifier.endsWith('.server.js')) {
-    if (context.parentURL && !context.parentURL.endsWith('.server.js')) {
+  const resolved = await defaultResolve(specifier, context, defaultResolve);
+  if (resolved.url.endsWith('.server.js')) {
+    const parentURL = context.parentURL;
+    if (parentURL && !parentURL.endsWith('.server.js')) {
+      let reason;
+      if (specifier.endsWith('.server.js')) {
+        reason = `"${specifier}"`;
+      } else {
+        reason = `"${specifier}" (which expands to "${resolved.url}")`;
+      }
       throw new Error(
-        `Cannot import "${specifier}" from "${context.parentURL}". ` +
+        `Cannot import ${reason} from "${parentURL}". ` +
           'By react-server convention, .server.js files can only be imported from other .server.js files. ' +
           'That way nobody accidentally sends these to the client by indirectly importing it.',
       );
     }
   }
-  return defaultResolve(specifier, context, defaultResolve);
+  return resolved;
 }
 
 export async function getSource(
@@ -128,7 +133,7 @@ function addExportNames(names, node) {
 function resolveClientImport(
   specifier: string,
   parentURL: string,
-): Promise<{url: string}> {
+): {url: string} | Promise<{url: string}> {
   // Resolve an import specifier as if it was loaded by the client. This doesn't use
   // the overrides that this loader does but instead reverts to the default.
   // This resolution algorithm will not necessarily have the same configuration
