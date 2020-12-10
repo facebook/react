@@ -213,11 +213,30 @@ function initializeModelChunk<T>(chunk: ResolvedModelChunk): T {
 }
 
 function initializeModuleChunk<T>(chunk: ResolvedModuleChunk<T>): T {
-  const value: T = requireModule(chunk._value);
-  const initializedChunk: InitializedChunk<T> = (chunk: any);
-  initializedChunk._status = INITIALIZED;
-  initializedChunk._value = value;
-  return value;
+  try {
+    const value: T = requireModule(chunk._value);
+    const initializedChunk: InitializedChunk<T> = (chunk: any);
+    initializedChunk._status = INITIALIZED;
+    initializedChunk._value = value;
+    return value;
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      typeof error.then === 'function'
+    ) {
+      // Suspended, not an error.
+      throw error;
+    }
+    // If we error during init, store the error for future reads so
+    // that they all see the same error. We don't have to wake listeners
+    // in this case because they've already been woken if we're
+    // initializing.
+    const erroredChunk: ErroredChunk = (chunk: any);
+    erroredChunk._status = ERRORED;
+    erroredChunk._value = error;
+    throw error;
+  }
 }
 
 // Report that any missing chunks in the model is now going to throw this
