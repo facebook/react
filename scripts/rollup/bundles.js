@@ -175,7 +175,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'react-pg/index.browser',
+    entry: 'react-pg/index.browser.server',
     global: 'ReactPostgres',
     externals: [],
   },
@@ -184,7 +184,7 @@ const bundles = [
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'react-pg/index.node',
+    entry: 'react-pg/index.node.server',
     global: 'ReactPostgres',
     externals: ['react', 'pg'],
   },
