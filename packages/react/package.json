@@ -17,16 +17,16 @@
     "umd/",
     "jsx-runtime.js",
     "jsx-dev-runtime.js",
-    "unstable-index.server.js"
+    "unstable-shared-subset.js"
   ],
   "main": "index.js",
   "exports": {
     ".": {
-      "react-server": "./unstable-index.server.js",
+      "react-server": "./unstable-shared-subset.js",
       "default": "./index.js"
     },
     "./index": {
-      "react-server": "./unstable-index.server.js",
+      "react-server": "./unstable-shared-subset.js",
       "default": "./index.js"
     },
     "./build-info.json": "./build-info.json",

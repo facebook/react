@@ -90,11 +90,11 @@ const bundles = [
     externals: [],
   },
 
-  /******* Isomorphic Server Only *******/
+  /******* Isomorphic Shared Subset *******/
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: ISOMORPHIC,
-    entry: 'react/unstable-index.server',
+    entry: 'react/unstable-shared-subset',
     global: 'React',
     externals: [],
   },
