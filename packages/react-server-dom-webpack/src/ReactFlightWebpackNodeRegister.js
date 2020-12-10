@@ -67,10 +67,18 @@ module.exports = function register() {
     module.exports = new Proxy(moduleReference, proxyHandlers);
   };
 
+  const originalLoad = Module._load;
   const originalResolveFilename = Module._resolveFilename;
 
-  Module._resolveFilename = function(request, parent, isMain, options) {
-    const resolved = originalResolveFilename.apply(this, arguments);
+  // Need to capture it here because Node skips _resolveFilename()
+  // for other files in the same directory.
+  Module._load = function(request, parent, isMain) {
+    const resolved = originalResolveFilename.call(
+      this,
+      request,
+      parent,
+      isMain,
+    );
     if (resolved.endsWith('.server.js')) {
       if (
         parent &&
@@ -90,6 +98,19 @@ module.exports = function register() {
         );
       }
     }
-    return resolved;
+    // Node will now resolve again in its _load() implementation.
+    // To avoid duplicating the work, add a fast cached path.
+    Module._resolveFilename = function(r, p, i) {
+      if (request === r && parent === p && isMain === i) {
+        return resolved;
+      } else {
+        return originalResolveFilename.apply(this, arguments);
+      }
+    };
+    try {
+      return originalLoad.apply(this, arguments);
+    } finally {
+      Module._resolveFilename = originalResolveFilename;
+    }
   };
 };
