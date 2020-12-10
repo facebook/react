@@ -7,6 +7,11 @@
   flex: 0 0 auto;
   cursor: default;
 }
+
+.Key {
+  display: flex;
+}
+
 .EditableName {
   color: var(--color-attribute-name);
   flex: 0 0 auto;
