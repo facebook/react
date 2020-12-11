@@ -435,6 +435,14 @@ export function resolveModelToJSON(
       const writtenModules = request.writtenModules;
       const existingId = writtenModules.get(moduleKey);
       if (existingId !== undefined) {
+        if (parent[0] === REACT_ELEMENT_TYPE && key === '1') {
+          // If we're encoding the "type" of an element, we can refer
+          // to that by a lazy reference instead of directly since React
+          // knows how to deal with lazy values. This lets us suspend
+          // on this component rather than its parent until the code has
+          // loaded.
+          return serializeByRefID(existingId);
+        }
         return serializeByValueID(existingId);
       }
       try {
