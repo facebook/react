@@ -3416,4 +3416,60 @@ describe('ReactHooksWithNoopRenderer', () => {
       'Unmount A',
     ]);
   });
+
+  // @gate experimental
+  it('regression: SuspenseList causes unmounts to be dropped on deletion', async () => {
+    const SuspenseList = React.unstable_SuspenseList;
+
+    function Row({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return (
+        <Suspense fallback="Loading...">
+          <AsyncText text={label} />
+        </Suspense>
+      );
+    }
+
+    function App() {
+      return (
+        <SuspenseList revealOrder="together">
+          <Row label="A" />
+          <Row label="B" />
+        </SuspenseList>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Mount A',
+      'Mount B',
+    ]);
+
+    await ReactNoop.act(async () => {
+      await resolveText('A');
+    });
+    expect(Scheduler).toHaveYielded([
+      'Promise resolved [A]',
+      'A',
+      'Suspend! [B]',
+    ]);
+
+    await ReactNoop.act(async () => {
+      root.render(null);
+    });
+    // In the regression, SuspenseList would cause the children to "forget" that
+    // it contains passive effects. Then when we deleted the tree, these unmount
+    // effects would not fire.
+    expect(Scheduler).toHaveYielded(['Unmount A', 'Unmount B']);
+  });
 });
