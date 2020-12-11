@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {CurrentDispatcherRef, ReactRenderer, WorkTagMap} from './types';
+import type {CurrentDispatcherRef, ReactRenderer} from './types';
 
 import {getInternalReactConstants} from './renderer';
 import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
@@ -22,12 +22,18 @@ const PREFIX_REGEX = /\s{4}(in|at)\s{1}/;
 // but we can fallback to looking for location info (e.g. "foo.js:12:345")
 const ROW_COLUMN_NUMBER_REGEX = /:\d+:\d+(\n|$)/;
 
+type OnErrorOrWarning = (
+  fiber: Fiber,
+  type: 'error' | 'warn',
+  args: Array<any>,
+) => void;
+
 const injectedRenderers: Map<
   ReactRenderer,
   {|
     currentDispatcherRef: CurrentDispatcherRef,
     getCurrentFiber: () => Fiber | null,
-    workTagMap: WorkTagMap,
+    onErrorOrWarning: ?OnErrorOrWarning,
   |},
 > = new Map();
 
@@ -54,7 +60,10 @@ export function dangerous_setTargetConsoleForTesting(
 // v16 renderers should use this method to inject internals necessary to generate a component stack.
 // These internals will be used if the console is patched.
 // Injecting them separately allows the console to easily be patched or un-patched later (at runtime).
-export function registerRenderer(renderer: ReactRenderer): void {
+export function registerRenderer(
+  renderer: ReactRenderer,
+  onErrorOrWarning?: OnErrorOrWarning,
+): void {
   const {
     currentDispatcherRef,
     getCurrentFiber,
@@ -76,6 +85,7 @@ export function registerRenderer(renderer: ReactRenderer): void {
       currentDispatcherRef,
       getCurrentFiber,
       workTagMap: ReactTypeOfWork,
+      onErrorOrWarning,
     });
   }
 }
@@ -143,10 +153,23 @@ export function patch({
               for (const {
                 currentDispatcherRef,
                 getCurrentFiber,
+                onErrorOrWarning,
                 workTagMap,
               } of injectedRenderers.values()) {
                 const current: ?Fiber = getCurrentFiber();
                 if (current != null) {
+                  if (method === 'error' || method === 'warn') {
+                    if (typeof onErrorOrWarning === 'function') {
+                      // TODO (inline errors) The renderer is injected in two places:
+                      // 1. First by "react-devtools-shared/src/hook" which isn't stateful and doesn't supply onErrorOrWarning()
+                      // 2. Second by "react-devtools-shared/src/backend/renderer" which is and does
+                      //
+                      // We should probably move the queueing+batching mechanism from backend/renderer to this file,
+                      // so that it handles warnings logged during initial mount (potentially before step 2 above).
+                      onErrorOrWarning(current, method, args);
+                    }
+                  }
+
                   const componentStack = getStackByFiberInDevAndProd(
                     workTagMap,
                     current,
@@ -160,6 +183,7 @@ export function patch({
               }
             }
           } catch (error) {
+            console.log(error);
             // Don't let a DevTools or React internal error interfere with logging.
           }
         }
@@ -177,6 +201,7 @@ export function patch({
       };
 
       overrideMethod.__REACT_DEVTOOLS_ORIGINAL_METHOD__ = originalMethod;
+      originalMethod.__REACT_DEVTOOLS_OVERRIDE_METHOD__ = overrideMethod;
 
       // $FlowFixMe property error|warn is not writable.
       targetConsole[method] = overrideMethod;

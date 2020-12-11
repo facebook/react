@@ -9,7 +9,7 @@
 
 import EventEmitter from './events';
 
-import type {ComponentFilter, Wall} from './types';
+import type {ComponentFilter, ErrorOrWarning, Wall} from './types';
 import type {
   InspectedElementPayload,
   OwnersList,
@@ -117,6 +117,7 @@ type UpdateConsolePatchSettingsParams = {|
 |};
 
 type BackendEvents = {|
+  errorsAndWarnings: [Array<ErrorOrWarning>],
   extensionBackendInitialized: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
