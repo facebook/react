@@ -15,9 +15,10 @@ import ButtonIcon from '../ButtonIcon';
 import {createRegExp} from '../utils';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {StoreContext} from '../context';
+import {useSubscription} from '../hooks';
 
 import type {ItemData} from './Tree';
-import type {Element} from './types';
+import type {Element as ElementType} from './types';
 
 import styles from './Element.css';
 
@@ -28,7 +29,7 @@ type Props = {
   ...
 };
 
-export default function ElementView({data, index, style}: Props) {
+export default function Element({data, index, style}: Props) {
   const store = useContext(StoreContext);
   const {ownerFlatTree, ownerID, selectedElementID} = useContext(
     TreeStateContext,
@@ -45,6 +46,23 @@ export default function ElementView({data, index, style}: Props) {
   const {isNavigatingWithKeyboard, onElementMouseEnter, treeFocused} = data;
   const id = element === null ? null : element.id;
   const isSelected = selectedElementID === id;
+
+  const errorsAndWarningsSubscription = useMemo(
+    () => ({
+      getCurrentValue: () =>
+        store.errorsAndWarnings.get(element === null ? -1 : element.id) || null,
+      subscribe: (callback: Function) => {
+        store.addListener('errorsAndWarnings', callback);
+        return () => store.removeListener('errorsAndWarnings', callback);
+      },
+    }),
+    [store, element],
+  );
+  const errorsAndWarnings = useSubscription<{
+    errors: ErrorOrWarning[],
+    warnings: ErrorOrWarning[],
+  } | null>(errorsAndWarningsSubscription);
+  const {errors = [], warnings = []} = errorsAndWarnings || {};
 
   const handleDoubleClick = () => {
     if (id !== null) {
@@ -81,7 +99,7 @@ export default function ElementView({data, index, style}: Props) {
 
   // Handle elements that are removed from the tree while an async render is in progress.
   if (element == null) {
-    console.warn(`<ElementView> Could not find element at index ${index}`);
+    console.warn(`<Element> Could not find element at index ${index}`);
 
     // This return needs to happen after hooks, since hooks can't be conditional.
     return null;
@@ -93,9 +111,9 @@ export default function ElementView({data, index, style}: Props) {
     hocDisplayNames,
     key,
     type,
-  } = ((element: any): Element);
+  } = ((element: any): ElementType);
 
-  let className = styles.Element;
+  let className = styles.ElementType;
   if (isSelected) {
     className = treeFocused
       ? styles.SelectedElement
@@ -148,6 +166,12 @@ export default function ElementView({data, index, style}: Props) {
             />
           </Badge>
         ) : null}
+        {errors.length > 0 && (
+          <span className={styles.Errors}>{errors.length}</span>
+        )}
+        {warnings.length > 0 && (
+          <span className={styles.Warnings}>{warnings.length}</span>
+        )}
       </div>
     </div>
   );
@@ -160,7 +184,7 @@ const swallowDoubleClick = event => {
 };
 
 type ExpandCollapseToggleProps = {|
-  element: Element,
+  element: ElementType,
   store: Store,
 |};
 

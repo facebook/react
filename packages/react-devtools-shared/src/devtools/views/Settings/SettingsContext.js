@@ -371,6 +371,9 @@ export function updateThemeVariables(
   updateStyleHelper(theme, 'color-toggle-text', documentElements);
   updateStyleHelper(theme, 'color-tooltip-background', documentElements);
   updateStyleHelper(theme, 'color-tooltip-text', documentElements);
+  updateStyleHelper(theme, 'color-warning-background', documentElements);
+  updateStyleHelper(theme, 'color-warning-border', documentElements);
+  updateStyleHelper(theme, 'color-warning-text', documentElements);
 
   // Font smoothing varies based on the theme.
   updateStyleHelper(theme, 'font-smoothing', documentElements);

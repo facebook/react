@@ -68,6 +68,10 @@ export type Capabilities = {|
 export default class Store extends EventEmitter<{|
   collapseNodesByDefault: [],
   componentFilters: [],
+  errorsAndWarnings: Map<
+    number,
+    {errors: ErrorOrWarning[], warnings: ErrorOrWarning[]},
+  >,
   mutated: [[Array<number>, Map<number, number>]],
   recordChangeDescriptions: [],
   roots: [],
@@ -82,6 +86,11 @@ export default class Store extends EventEmitter<{|
   _collapseNodesByDefault: boolean = true;
 
   _componentFilters: Array<ComponentFilter>;
+
+  _errorsAndWarnings: Map<
+    number,
+    {errors: ErrorOrWarning[], warnings: ErrorOrWarning[]},
+  > = new Map();
 
   // At least one of the injected renderers contains (DEV only) owner metadata.
   _hasOwnerMetadata: boolean = false;
@@ -288,6 +297,14 @@ export default class Store extends EventEmitter<{|
     }
 
     this.emit('componentFilters');
+  }
+
+  // TODO: What's a useful data structure here?
+  get errorsAndWarnings(): Map<
+    number,
+    {errors: ErrorOrWarning[], warnings: ErrorOrWarning[]},
+  > {
+    return this._errorsAndWarnings;
   }
 
   get hasOwnerMetadata(): boolean {
@@ -704,7 +721,27 @@ export default class Store extends EventEmitter<{|
   };
 
   onBridgeErrorsAndWarnings = (errorsAndWarnings: Array<ErrorOrWarning>) => {
-    console.log('onBridgeErrorsAndWarnings', errorsAndWarnings);
+    if (__DEBUG__) {
+      console.log('onBridgeErrorsAndWarnings', errorsAndWarnings);
+    }
+    errorsAndWarnings.forEach(errorOrWarning => {
+      const errorsAndWarningsForElement = this._errorsAndWarnings.get(
+        errorOrWarning.id,
+      ) ?? {errors: [], warnings: []};
+
+      if (errorOrWarning.type === 'error') {
+        errorsAndWarningsForElement.errors.push(errorOrWarning);
+      } else if (errorOrWarning.type === 'warn') {
+        errorsAndWarningsForElement.warnings.push(errorOrWarning);
+      }
+
+      this._errorsAndWarnings.set(errorOrWarning.id, {
+        ...errorsAndWarningsForElement,
+      });
+    });
+
+    console.log('emit', errorsAndWarnings);
+    this.emit('errorsAndWarnings', this._errorsAndWarnings);
   };
 
   onBridgeOperations = (operations: Array<number>) => {

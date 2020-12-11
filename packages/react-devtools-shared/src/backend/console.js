@@ -183,7 +183,7 @@ export function patch({
               }
             }
           } catch (error) {
-            console.log(error);
+            // console.log(error);
             // Don't let a DevTools or React internal error interfere with logging.
           }
         }

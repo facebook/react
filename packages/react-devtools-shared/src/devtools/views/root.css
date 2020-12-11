@@ -53,7 +53,7 @@
   --light-color-dim: #777d88;
   --light-color-dimmer: #cfd1d5;
   --light-color-dimmest: #eff0f1;
-  --light-color-error-background: hsl(0, 100%, 97%);
+  --light-color-error-background: hsl(0, 0%, 0%);
   --light-color-error-border: hsl(0, 100%, 92%);
   --light-color-error-text: #ff0000;
   --light-color-expand-collapse-toggle: #777d88;
@@ -79,6 +79,9 @@
   --light-color-toggle-text: #ffffff;
   --light-color-tooltip-background: rgba(0, 0, 0, 0.9);
   --light-color-tooltip-text: #ffffff;
+  --light-color-warning-background: hsl(0, 0%, 0%);
+  --light-color-warning-border: hsl(39, 100%, 50%);
+  --light-color-warning-text: hsl(44, 100%, 50%);
 
   /* Dark theme */
   --dark-color-attribute-name: #9d87d2;
@@ -156,6 +159,9 @@
   --dark-color-toggle-text: #ffffff;
   --dark-color-tooltip-background: rgba(255, 255, 255, 0.9);
   --dark-color-tooltip-text: #000000;
+  --dark-color-warning-background: hsl(0, 0%, 0%);
+  --dark-color-warning-border: hsl(39, 100%, 50%);
+  --dark-color-warning-text: hsl(44, 100%, 50%);
 
   /* Font smoothing */
   --light-font-smoothing: auto;

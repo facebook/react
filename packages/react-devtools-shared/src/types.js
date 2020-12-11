@@ -78,6 +78,9 @@ export type ComponentFilter =
   | RegExpComponentFilter;
 
 export type ErrorOrWarning = {|
+  /**
+   * Fiber ID
+   */
   id: number,
   type: 'error' | 'warn',
 |};

@@ -23,7 +23,7 @@ import {FixedSizeList} from 'react-window';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
 import {SettingsContext} from '../Settings/SettingsContext';
 import {BridgeContext, StoreContext} from '../context';
-import ElementView from './Element';
+import Element from './Element';
 import InspectHostNodesToggle from './InspectHostNodesToggle';
 import OwnersStack from './OwnersStack';
 import SearchInput from './SearchInput';
@@ -339,7 +339,7 @@ export default function Tree(props: Props) {
                 itemSize={lineHeight}
                 ref={listCallbackRef}
                 width={width}>
-                {ElementView}
+                {Element}
               </FixedSizeList>
             )}
           </AutoSizer>
