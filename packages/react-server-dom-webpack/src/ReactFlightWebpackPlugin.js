@@ -183,7 +183,7 @@ export default class ReactFlightWebpackPlugin {
           const moduleExports = {};
           ['', '*'].concat(mod.buildMeta.providedExports).forEach(name => {
             moduleExports[name] = {
-              id: mod.id,
+              id: id,
               chunks: chunkIds,
               name: name,
             };
@@ -197,6 +197,12 @@ export default class ReactFlightWebpackPlugin {
         chunkGroup.chunks.forEach(chunk => {
           chunk.getModules().forEach(mod => {
             recordModule(mod.id, mod);
+            // If this is a concatenation, register each child to the parent ID.
+            if (mod.modules) {
+              mod.modules.forEach(concatenatedMod => {
+                recordModule(mod.id, concatenatedMod);
+              });
+            }
           });
         });
       });
