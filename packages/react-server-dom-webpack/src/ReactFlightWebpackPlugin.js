@@ -172,25 +172,36 @@ export default class ReactFlightWebpackPlugin {
       const json = {};
       compilation.chunkGroups.forEach(chunkGroup => {
         const chunkIds = chunkGroup.chunks.map(c => c.id);
+
+        function recordModule(id, mod) {
+          // TODO: Hook into deps instead of the target module.
+          // That way we know by the type of dep whether to include.
+          // It also resolves conflicts when the same module is in multiple chunks.
+          if (!/\.client\.js$/.test(mod.resource)) {
+            return;
+          }
+          const moduleExports = {};
+          ['', '*'].concat(mod.buildMeta.providedExports).forEach(name => {
+            moduleExports[name] = {
+              id: id,
+              chunks: chunkIds,
+              name: name,
+            };
+          });
+          const href = pathToFileURL(mod.resource).href;
+          if (href !== undefined) {
+            json[href] = moduleExports;
+          }
+        }
+
         chunkGroup.chunks.forEach(chunk => {
           chunk.getModules().forEach(mod => {
-            // TODO: Hook into deps instead of the target module.
-            // That way we know by the type of dep whether to include.
-            // It also resolves conflicts when the same module is in multiple chunks.
-            if (!/\.client\.js$/.test(mod.resource)) {
-              return;
-            }
-            const moduleExports = {};
-            ['', '*'].concat(mod.buildMeta.providedExports).forEach(name => {
-              moduleExports[name] = {
-                id: mod.id,
-                chunks: chunkIds,
-                name: name,
-              };
-            });
-            const href = pathToFileURL(mod.resource).href;
-            if (href !== undefined) {
-              json[href] = moduleExports;
+            recordModule(mod.id, mod);
+            // If this is a concatenation, register each child to the parent ID.
+            if (mod.modules) {
+              mod.modules.forEach(concatenatedMod => {
+                recordModule(mod.id, concatenatedMod);
+              });
             }
           });
         });
