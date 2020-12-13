@@ -67,7 +67,7 @@ export default {
       context.report(problem);
     }
 
-    const scopeManager = context.getSourceCode().scopeManager;
+    const {scopeManager} = context.getSourceCode();
 
     // Should be shared between visitors.
     const setStateCallSites = new WeakMap();
@@ -75,7 +75,7 @@ export default {
     const stableKnownValueCache = new WeakMap();
     const functionWithoutCapturedValueCache = new WeakMap();
     function memoizeWithWeakMap(fn, map) {
-      return function(arg) {
+      return arg => {
         if (map.has(arg)) {
           // to verify cache hits:
           // console.log(arg.name)
@@ -160,7 +160,7 @@ export default {
         if (!Array.isArray(resolved.defs)) {
           return false;
         }
-        const def = resolved.defs[0];
+        const [def] = resolved.defs;
         if (def == null) {
           return false;
         }
@@ -168,7 +168,7 @@ export default {
         if (def.node.type !== 'VariableDeclarator') {
           return false;
         }
-        let init = def.node.init;
+        let {init} = def.node;
         if (init == null) {
           return false;
         }
@@ -203,7 +203,7 @@ export default {
         if (init.type !== 'CallExpression') {
           return false;
         }
-        let callee = init.callee;
+        let {callee} = init;
         // Step into `= React.something` initializer.
         if (
           callee.type === 'MemberExpression' &&
@@ -216,7 +216,7 @@ export default {
         if (callee.type !== 'Identifier') {
           return false;
         }
-        const id = def.node.id;
+        const {id} = def.node;
         const {name} = callee;
         if (name === 'useRef' && id.type === 'Identifier') {
           // useRef() return value is stable.
@@ -231,7 +231,7 @@ export default {
             // Is second tuple value the same reference we're checking?
             if (id.elements[1] === resolved.identifiers[0]) {
               if (name === 'useState') {
-                const references = resolved.references;
+                const {references} = resolved;
                 for (let i = 0; i < references.length; i++) {
                   setStateCallSites.set(
                     references[i].identifier,
@@ -243,7 +243,7 @@ export default {
               return true;
             } else if (id.elements[0] === resolved.identifiers[0]) {
               if (name === 'useState') {
-                const references = resolved.references;
+                const {references} = resolved;
                 for (let i = 0; i < references.length; i++) {
                   stateVariables.add(references[i].identifier);
                 }
@@ -273,7 +273,7 @@ export default {
         if (!Array.isArray(resolved.defs)) {
           return false;
         }
-        const def = resolved.defs[0];
+        const [def] = resolved.defs;
         if (def == null) {
           return false;
         }
@@ -283,7 +283,7 @@ export default {
         // Search the direct component subscopes for
         // top-level function definitions matching this reference.
         const fnNode = def.node;
-        const childScopes = componentScope.childScopes;
+        const {childScopes} = componentScope;
         let fnScope = null;
         let i;
         for (i = 0; i < childScopes.length; i++) {
@@ -413,7 +413,7 @@ export default {
             continue;
           }
 
-          const def = reference.resolved.defs[0];
+          const [def] = reference.resolved.defs;
           if (def == null) {
             continue;
           }
@@ -429,7 +429,7 @@ export default {
           // Add the dependency to a map so we can make sure it is referenced
           // again in our dependencies array. Remember whether it's stable.
           if (!dependencies.has(dependency)) {
-            const resolved = reference.resolved;
+            const {resolved} = reference;
             const isStable =
               memoizedIsStablecKnownHookValue(resolved) ||
               memoizedIsFunctionWithoutCapturedValues(resolved);
@@ -450,7 +450,7 @@ export default {
       // Warn about accessing .current in cleanup effects.
       currentRefsInEffectCleanup.forEach(
         ({reference, dependencyNode}, dependency) => {
-          const references = reference.resolved.references;
+          const {references} = reference.resolved;
           // Is React managing this ref or us?
           // Let's see if we can find a .current assignment.
           let foundCurrentAssignment = false;
@@ -531,7 +531,7 @@ export default {
         // Check if there are any top-level setState() calls.
         // Those tend to lead to infinite loops.
         let setStateInsideEffectWithoutDeps = null;
-        dependencies.forEach(({isStable, references}, key) => {
+        dependencies.forEach(({references}, key) => {
           if (setStateInsideEffectWithoutDeps) {
             return;
           }
@@ -872,7 +872,7 @@ export default {
             ` Mutable values like '${badRef}' aren't valid dependencies ` +
             "because mutating them doesn't re-render the component.";
         } else if (externalDependencies.size > 0) {
-          const dep = Array.from(externalDependencies)[0];
+          const [dep] = Array.from(externalDependencies);
           // Don't show this warning for things that likely just got moved *inside* the callback
           // because in that case they're clearly not referring to globals.
           if (!scope.set.has(dep)) {
@@ -906,7 +906,7 @@ export default {
             isPropsOnlyUsedInMembers = false;
             break;
           }
-          const parent = id.parent;
+          const {parent} = id;
           if (parent == null) {
             isPropsOnlyUsedInMembers = false;
             break;
@@ -943,7 +943,7 @@ export default {
             return;
           }
           // Is this a destructured prop?
-          const def = topScopeRef.defs[0];
+          const [def] = topScopeRef.defs;
           if (def == null || def.name == null || def.type !== 'Parameter') {
             return;
           }
@@ -986,7 +986,7 @@ export default {
             return;
           }
           const usedDep = dependencies.get(missingDep);
-          const references = usedDep.references;
+          const {references} = usedDep;
           let id;
           let maybeCall;
           for (let i = 0; i < references.length; i++) {
@@ -1014,12 +1014,12 @@ export default {
                       form: 'reducer',
                     };
                   } else {
-                    const resolved = references[i].resolved;
+                    const {resolved} = references[i];
                     if (resolved != null) {
                       // If it's a parameter *and* a missing dep,
                       // it must be a prop or something inside a prop.
                       // Therefore, recommend an inline reducer.
-                      const def = resolved.defs[0];
+                      const [def] = resolved.defs;
                       if (def != null && def.type === 'Parameter') {
                         setStateRecommendation = {
                           missingDep,
@@ -1177,7 +1177,7 @@ export default {
           // The function passed as a callback is not written inline.
           // But it's defined somewhere in the render scope.
           // We'll do our best effort to find and check it, complain otherwise.
-          const def = variable.defs[0];
+          const [def] = variable.defs;
           if (!def || !def.node) {
             break; // Unhandled
           }
@@ -1197,7 +1197,7 @@ export default {
               );
               return; // Handled
             case 'VariableDeclarator':
-              const init = def.node.init;
+              const {init} = def.node;
               if (!init) {
                 break; // Unhandled
               }
@@ -1376,7 +1376,7 @@ function collectRecommendations({
   declaredDependencies.forEach(({key}) => {
     // Does this declared dep satisfy a real need?
     if (satisfyingDependencies.has(key)) {
-      if (suggestedDependencies.indexOf(key) === -1) {
+      if (!suggestedDependencies.includes(key)) {
         // Good one.
         suggestedDependencies.push(key);
       } else {
@@ -1393,7 +1393,7 @@ function collectRecommendations({
         // Such as resetting scroll when ID changes.
         // Consider them legit.
         // The exception is ref.current which is always wrong.
-        if (suggestedDependencies.indexOf(key) === -1) {
+        if (!suggestedDependencies.includes(key)) {
           suggestedDependencies.push(key);
         }
       } else {
@@ -1484,7 +1484,7 @@ function scanForConstructions({
         return null;
       }
 
-      const node = ref.defs[0];
+      const [node] = ref.defs;
       if (node == null) {
         return null;
       }
@@ -1642,7 +1642,7 @@ function analyzePropertyChain(node, optionalChains) {
     markNode(node, optionalChains, result);
     return result;
   } else if (node.type === 'ChainExpression' && !node.computed) {
-    const expression = node.expression;
+    const {expression} = node;
     const object = analyzePropertyChain(expression.object, optionalChains);
     const property = analyzePropertyChain(expression.property, null);
     const result = `${object}.${property}`;
@@ -1653,7 +1653,7 @@ function analyzePropertyChain(node, optionalChains) {
   }
 }
 
-function getNodeWithoutReactNamespace(node, options) {
+function getNodeWithoutReactNamespace(node) {
   if (
     node.type === 'MemberExpression' &&
     node.object.type === 'Identifier' &&
