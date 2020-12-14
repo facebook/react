@@ -21,6 +21,7 @@ import {
 import {
   enableSchedulerTracing,
   enableSuspenseCallback,
+  enableCache,
 } from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
 import {initializeUpdateQueue} from './ReactUpdateQueue.new';
@@ -51,6 +52,10 @@ function FiberRootNode(containerInfo, tag, hydrate) {
 
   this.entangledLanes = NoLanes;
   this.entanglements = createLaneMap(NoLanes);
+
+  if (enableCache) {
+    this.pooledCache = null;
+  }
 
   if (supportsHydration) {
     this.mutableSourceEagerHydrationData = null;

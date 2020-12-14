@@ -755,6 +755,14 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
 
     lanes &= ~lane;
   }
+
+  if (enableCache) {
+    // Clear the pooled cache so subsequent updates get fresh data.
+    // TODO: This is very naive and only works if the shell of a cache boundary
+    // doesn't suspend. The next, key feature is to preserve caches across
+    // multiple attempts (suspend -> ping) to render a new tree.
+    root.pooledCache = null;
+  }
 }
 
 export function markRootEntangled(root: FiberRoot, entangledLanes: Lanes) {
@@ -776,11 +784,23 @@ export function requestFreshCache(root: FiberRoot, renderLanes: Lanes): Cache {
   if (!enableCache) {
     return (null: any);
   }
+
+  // Check if there's a pooled cache. This is really just a batching heuristic
+  // so that two transitions that happen in a similar timeframe can share the
+  // same cache.
+  const pooledCache = root.pooledCache;
+  if (pooledCache !== null) {
+    return pooledCache;
+  }
+
   // Create a fresh cache.
   const freshCache = {
     providers: null,
     data: null,
   };
+
+  // This is now the pooled cache.
+  root.pooledCache = freshCache;
   return freshCache;
 }
 export function getBumpedLaneForHydration(
