@@ -93,6 +93,9 @@ type ACTION_SELECT_ELEMENT_BY_ID = {|
 type ACTION_SELECT_NEXT_ELEMENT_IN_TREE = {|
   type: 'SELECT_NEXT_ELEMENT_IN_TREE',
 |};
+type ACTION_SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE = {|
+  type: 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE',
+|};
 type ACTION_SELECT_NEXT_SIBLING_IN_TREE = {|
   type: 'SELECT_NEXT_SIBLING_IN_TREE',
 |};
@@ -105,6 +108,9 @@ type ACTION_SELECT_PARENT_ELEMENT_IN_TREE = {|
 |};
 type ACTION_SELECT_PREVIOUS_ELEMENT_IN_TREE = {|
   type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE',
+|};
+type ACTION_SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE = {|
+  type: 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE',
 |};
 type ACTION_SELECT_PREVIOUS_SIBLING_IN_TREE = {|
   type: 'SELECT_PREVIOUS_SIBLING_IN_TREE',
@@ -132,10 +138,12 @@ type Action =
   | ACTION_SELECT_ELEMENT_AT_INDEX
   | ACTION_SELECT_ELEMENT_BY_ID
   | ACTION_SELECT_NEXT_ELEMENT_IN_TREE
+  | ACTION_SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE
   | ACTION_SELECT_NEXT_SIBLING_IN_TREE
   | ACTION_SELECT_OWNER
   | ACTION_SELECT_PARENT_ELEMENT_IN_TREE
   | ACTION_SELECT_PREVIOUS_ELEMENT_IN_TREE
+  | ACTION_SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE
   | ACTION_SELECT_PREVIOUS_SIBLING_IN_TREE
   | ACTION_SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE
   | ACTION_SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE
@@ -372,6 +380,46 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
           }
         }
         break;
+      case 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE': {
+        // TODO (inline errors) The element indices are incorrect if the element is hidden in a collapsed tree.
+        // Shouldn't hidden elements excluded from computing a valid index?
+        const elementIndicesWithErrorsOrWarnings = Array.from(
+          store.errorsAndWarnings.keys(),
+          elementId => store.getIndexOfElementID(elementId),
+        );
+        const predecessors = elementIndicesWithErrorsOrWarnings.filter(
+          elementIndex => {
+            return elementIndex !== null && elementIndex < selectedElementIndex;
+          },
+        );
+        if (predecessors.length === 0) {
+          selectedElementIndex = Math.max(
+            ...elementIndicesWithErrorsOrWarnings,
+          );
+        } else {
+          selectedElementIndex = Math.max(...predecessors);
+        }
+        break;
+      }
+      case 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE': {
+        const elementIndicesWithErrorsOrWarnings = Array.from(
+          store.errorsAndWarnings.keys(),
+          elementId => store.getIndexOfElementID(elementId),
+        );
+        const successors = elementIndicesWithErrorsOrWarnings.filter(
+          elementIndex => {
+            return elementIndex !== null && elementIndex > selectedElementIndex;
+          },
+        );
+        if (successors.length === 0) {
+          selectedElementIndex = Math.min(
+            ...elementIndicesWithErrorsOrWarnings,
+          );
+        } else {
+          selectedElementIndex = Math.min(...successors);
+        }
+        break;
+      }
       default:
         // React can bailout of no-op updates.
         return state;
@@ -776,11 +824,13 @@ function TreeContextController({
         case 'SELECT_ELEMENT_BY_ID':
         case 'SELECT_CHILD_ELEMENT_IN_TREE':
         case 'SELECT_NEXT_ELEMENT_IN_TREE':
+        case 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE':
         case 'SELECT_NEXT_SIBLING_IN_TREE':
         case 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE':
         case 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE':
         case 'SELECT_PARENT_ELEMENT_IN_TREE':
         case 'SELECT_PREVIOUS_ELEMENT_IN_TREE':
+        case 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE':
         case 'SELECT_PREVIOUS_SIBLING_IN_TREE':
         case 'SELECT_OWNER':
         case 'UPDATE_INSPECTED_ELEMENT_ID':

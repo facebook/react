@@ -303,6 +303,14 @@ export default function Tree(props: Props) {
     [store],
   );
 
+  const handlePreviousErrorOrWarningClick = React.useCallback(() => {
+    dispatch({type: 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE'});
+  }, []);
+
+  const handleNextErrorOrWarningClick = React.useCallback(() => {
+    dispatch({type: 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE'});
+  }, []);
+
   return (
     <TreeFocusedContext.Provider value={treeFocused}>
       <div className={styles.Tree} ref={treeRef}>
@@ -313,6 +321,16 @@ export default function Tree(props: Props) {
               <div className={styles.VRule} />
             </Fragment>
           )}
+          <Button
+            onClick={handlePreviousErrorOrWarningClick}
+            title="Previous error or warning">
+            <ButtonIcon type="previous" />
+          </Button>
+          <Button
+            onClick={handleNextErrorOrWarningClick}
+            title="Next error or warning">
+            <ButtonIcon type="next" />
+          </Button>
           <Button
             onClick={() => store.clearErrorsAndWarnings()}
             title="Clear all errors and warnings">
