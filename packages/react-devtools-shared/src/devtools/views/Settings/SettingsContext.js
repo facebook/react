@@ -338,6 +338,7 @@ export function updateThemeVariables(
   updateStyleHelper(theme, 'color-dimmer', documentElements);
   updateStyleHelper(theme, 'color-dimmest', documentElements);
   updateStyleHelper(theme, 'color-error-background', documentElements);
+  updateStyleHelper(theme, 'color-error-background-message', documentElements);
   updateStyleHelper(theme, 'color-error-border', documentElements);
   updateStyleHelper(theme, 'color-error-text', documentElements);
   updateStyleHelper(theme, 'color-expand-collapse-toggle', documentElements);
