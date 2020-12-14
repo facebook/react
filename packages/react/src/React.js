@@ -49,6 +49,7 @@ import {
   useTransition,
   useDeferredValue,
   useOpaqueIdentifier,
+  useRefresh,
 } from './ReactHooks';
 import {
   createElementWithValidation,
@@ -113,6 +114,7 @@ export {
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
   getCacheForType as unstable_getCacheForType,
+  useRefresh as unstable_useRefresh,
   REACT_CACHE_TYPE as unstable_Cache,
   // enableFundamentalAPI
   createFundamental as unstable_createFundamental,

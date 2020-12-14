@@ -51,6 +51,7 @@ export {
   SuspenseList as unstable_SuspenseList,
   unstable_getCacheForType,
   unstable_Cache,
+  unstable_useRefresh,
   // enableScopeAPI
   unstable_Scope,
   unstable_useOpaqueIdentifier,

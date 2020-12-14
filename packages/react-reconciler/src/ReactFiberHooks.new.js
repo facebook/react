@@ -19,6 +19,7 @@ import type {HookFlags} from './ReactHookEffectTags';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
+import type {Cache} from './ReactFiberCacheComponent';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -1708,6 +1709,43 @@ function rerenderOpaqueIdentifier(): OpaqueIDType | void {
   return id;
 }
 
+function mountRefresh() {
+  const cache: Cache | null = readContext(CacheContext);
+  return mountCallback(refreshCache.bind(null, cache), [cache]);
+}
+
+function updateRefresh() {
+  const cache: Cache | null = readContext(CacheContext);
+  return updateCallback(refreshCache.bind(null, cache), [cache]);
+}
+
+function refreshCache(cache: Cache | null) {
+  if (cache !== null) {
+    const providers = cache.providers;
+    if (providers !== null) {
+      providers.forEach(scheduleCacheRefresh);
+    }
+  } else {
+    // TODO: Warn if cache is null?
+  }
+}
+
+function scheduleCacheRefresh(cacheComponentFiber: Fiber) {
+  // Inlined startTransition
+  // TODO: Maybe we shouldn't automatically give this transition priority. Are
+  // there valid use cases for a high-pri refresh? Like if the content is
+  // super stale and you want to immediately hide it.
+  const prevTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition = 1;
+  try {
+    const eventTime = requestEventTime();
+    const lane = requestUpdateLane(cacheComponentFiber);
+    scheduleUpdateOnFiber(cacheComponentFiber, lane, eventTime);
+  } finally {
+    ReactCurrentBatchConfig.transition = prevTransition;
+  }
+}
+
 function dispatchAction<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
@@ -1819,7 +1857,7 @@ function dispatchAction<S, A>(
 }
 
 function getCacheForType<T>(resourceType: () => T): T {
-  const cache = readContext(CacheContext);
+  const cache: Cache | null = readContext(CacheContext);
   invariant(
     cache !== null,
     'Tried to fetch data, but no cache was found. To fix, wrap your ' +
@@ -1867,6 +1905,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
 };
 if (enableCache) {
   (ContextOnlyDispatcher: Dispatcher).getCacheForType = getCacheForType;
+  (ContextOnlyDispatcher: Dispatcher).useRefresh = throwInvalidHookError;
 }
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -1891,6 +1930,7 @@ const HooksDispatcherOnMount: Dispatcher = {
 };
 if (enableCache) {
   (HooksDispatcherOnMount: Dispatcher).getCacheForType = getCacheForType;
+  (HooksDispatcherOnMount: Dispatcher).useRefresh = mountRefresh;
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -1915,6 +1955,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 };
 if (enableCache) {
   (HooksDispatcherOnUpdate: Dispatcher).getCacheForType = getCacheForType;
+  (HooksDispatcherOnUpdate: Dispatcher).useRefresh = updateRefresh;
 }
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -1939,6 +1980,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
 };
 if (enableCache) {
   (HooksDispatcherOnRerender: Dispatcher).getCacheForType = getCacheForType;
+  (HooksDispatcherOnRerender: Dispatcher).useRefresh = updateRefresh;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -2096,6 +2138,11 @@ if (__DEV__) {
   };
   if (enableCache) {
     (HooksDispatcherOnMountInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (HooksDispatcherOnMountInDEV: Dispatcher).useRefresh = function useRefresh() {
+      currentHookNameInDev = 'useRefresh';
+      mountHookTypesDev();
+      return mountRefresh();
+    };
   }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
@@ -2221,6 +2268,11 @@ if (__DEV__) {
   };
   if (enableCache) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useRefresh = function useRefresh() {
+      currentHookNameInDev = 'useRefresh';
+      updateHookTypesDev();
+      return mountRefresh();
+    };
   }
 
   HooksDispatcherOnUpdateInDEV = {
@@ -2346,6 +2398,11 @@ if (__DEV__) {
   };
   if (enableCache) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useRefresh = function useRefresh() {
+      currentHookNameInDev = 'useRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    };
   }
 
   HooksDispatcherOnRerenderInDEV = {
@@ -2472,6 +2529,11 @@ if (__DEV__) {
   };
   if (enableCache) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useRefresh = function useRefresh() {
+      currentHookNameInDev = 'useRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    };
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
@@ -2612,6 +2674,11 @@ if (__DEV__) {
   };
   if (enableCache) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useRefresh = function useRefresh() {
+      currentHookNameInDev = 'useRefresh';
+      updateHookTypesDev();
+      return mountRefresh();
+    };
   }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -2752,6 +2819,11 @@ if (__DEV__) {
   };
   if (enableCache) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useRefresh = function useRefresh() {
+      currentHookNameInDev = 'useRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    };
   }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
@@ -2893,5 +2965,10 @@ if (__DEV__) {
   };
   if (enableCache) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useRefresh = function useRefresh() {
+      currentHookNameInDev = 'useRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    };
   }
 }

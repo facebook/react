@@ -42,7 +42,8 @@ export type HookType =
   | 'useDeferredValue'
   | 'useTransition'
   | 'useMutableSource'
-  | 'useOpaqueIdentifier';
+  | 'useOpaqueIdentifier'
+  | 'useRefresh';
 
 export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
 
@@ -318,6 +319,7 @@ export type Dispatcher = {|
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
   useOpaqueIdentifier(): any,
+  useRefresh?: () => () => void,
 
   unstable_isNewReconciler?: boolean,
 |};

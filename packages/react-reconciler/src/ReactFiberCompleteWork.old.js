@@ -1488,7 +1488,28 @@ function completeWork(
     }
     case CacheComponent: {
       if (enableCache) {
-        popProvider(CacheContext, workInProgress);
+        // If the cache provided by this boundary has changed, schedule an
+        // effect to add this component to the cache's providers, and to remove
+        // it from the old cache.
+        // TODO: Schedule for Passive phase
+        const ownCache: Cache | null = workInProgress.memoizedState;
+        if (current === null) {
+          if (ownCache !== null) {
+            // This is a cache provider.
+            popProvider(CacheContext, workInProgress);
+            // Set up a refresh subscription.
+            workInProgress.flags |= Update;
+          }
+        } else {
+          if (ownCache !== null) {
+            // This is a cache provider.
+            popProvider(CacheContext, workInProgress);
+          }
+          if (ownCache !== current.memoizedState) {
+            // Cache changed. Create or update a refresh subscription.
+            workInProgress.flags |= Update;
+          }
+        }
         bubbleProperties(workInProgress);
         return null;
       }
