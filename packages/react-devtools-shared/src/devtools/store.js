@@ -740,7 +740,6 @@ export default class Store extends EventEmitter<{|
       });
     });
 
-    console.log('emit', errorsAndWarnings);
     this.emit('errorsAndWarnings', this._errorsAndWarnings);
   };
 
