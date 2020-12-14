@@ -91,21 +91,22 @@ function InnerErrorsAndWarningsTreeView({
   errors,
   warnings,
 }: InnerErrorsAndWarningsTreeViewProps) {
-  // TODO (inline errors) keys for each message
   return (
     <React.Fragment>
-      {errors.map(error => {
+      {errors.map((error, index) => {
         return (
           <ErrorOrWarningView
+            key={`error-${index}`}
             className={styles.Error}
             errorOrWarning={error}
             icon={<Icon className={styles.ErrorIcon} type="error" />}
           />
         );
       })}
-      {warnings.map(warning => {
+      {warnings.map((warning, index) => {
         return (
           <ErrorOrWarningView
+            key={`warning-${index}`}
             className={styles.Warning}
             errorOrWarning={warning}
             icon={<Icon className={styles.WarningIcon} type="warning" />}
