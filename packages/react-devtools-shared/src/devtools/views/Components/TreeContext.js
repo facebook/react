@@ -381,6 +381,9 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         }
         break;
       case 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE': {
+        if (store.errorsAndWarnings.size === 0) {
+          return state;
+        }
         // TODO (inline errors) The element indices are incorrect if the element is hidden in a collapsed tree.
         // Shouldn't hidden elements excluded from computing a valid index?
         const elementIndicesWithErrorsOrWarnings = Array.from(
@@ -402,6 +405,10 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         break;
       }
       case 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE': {
+        if (store.errorsAndWarnings.size === 0) {
+          return state;
+        }
+
         const elementIndicesWithErrorsOrWarnings = Array.from(
           store.errorsAndWarnings.keys(),
           elementId => store.getIndexOfElementID(elementId),
