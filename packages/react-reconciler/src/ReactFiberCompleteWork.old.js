@@ -12,6 +12,7 @@ import type {Lanes, Lane} from './ReactFiberLane.old';
 import type {
   ReactFundamentalComponentInstance,
   ReactScopeInstance,
+  ReactContext,
 } from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {
@@ -155,6 +156,7 @@ import {
 import {resetChildFibers} from './ReactChildFiber.old';
 import {createScopeInstance} from './ReactFiberScope.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
+import {CacheContext} from './ReactFiberCacheComponent';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -1137,7 +1139,8 @@ function completeWork(
       return null;
     case ContextProvider:
       // Pop provider fiber
-      popProvider(workInProgress);
+      const context: ReactContext<any> = workInProgress.type._context;
+      popProvider(context, workInProgress);
       bubbleProperties(workInProgress);
       return null;
     case IncompleteClassComponent: {
@@ -1485,6 +1488,7 @@ function completeWork(
     }
     case CacheComponent: {
       if (enableCache) {
+        popProvider(CacheContext, workInProgress);
         bubbleProperties(workInProgress);
         return null;
       }

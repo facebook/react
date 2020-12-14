@@ -23,6 +23,7 @@ import type {
   OffscreenProps,
   OffscreenState,
 } from './ReactFiberOffscreenComponent';
+import type {Cache} from './ReactFiberCacheComponent';
 
 import checkPropTypes from 'shared/checkPropTypes';
 
@@ -117,6 +118,7 @@ import {
   removeLanes,
   mergeLanes,
   getBumpedLaneForHydration,
+  requestFreshCache,
 } from './ReactFiberLane.old';
 import {
   ConcurrentMode,
@@ -203,6 +205,7 @@ import {
 } from './ReactFiberWorkLoop.old';
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {setWorkInProgressVersion} from './ReactMutableSource.old';
+import {CacheContext} from './ReactFiberCacheComponent';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
@@ -658,6 +661,24 @@ function updateCacheComponent(
   if (!enableCache) {
     return null;
   }
+
+  const root = getWorkInProgressRoot();
+  invariant(
+    root !== null,
+    'Expected a work-in-progress root. This is a bug in React. Please ' +
+      'file an issue.',
+  );
+
+  const cache: Cache =
+    current === null
+      ? requestFreshCache(root, renderLanes)
+      : current.memoizedState;
+
+  // TODO: Propagate changes, once refreshing exists.
+  pushProvider(workInProgress, CacheContext, cache);
+
+  workInProgress.memoizedState = cache;
+
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
@@ -2817,7 +2838,7 @@ function updateContextProvider(
     }
   }
 
-  pushProvider(workInProgress, newValue);
+  pushProvider(workInProgress, context, newValue);
 
   if (oldProps !== null) {
     const oldValue = oldProps.value;
@@ -3104,7 +3125,8 @@ function beginWork(
           break;
         case ContextProvider: {
           const newValue = workInProgress.memoizedProps.value;
-          pushProvider(workInProgress, newValue);
+          const context: ReactContext<any> = workInProgress.type._context;
+          pushProvider(workInProgress, context, newValue);
           break;
         }
         case Profiler:
@@ -3249,6 +3271,13 @@ function beginWork(
           // but I won't :)
           workInProgress.lanes = NoLanes;
           return updateOffscreenComponent(current, workInProgress, renderLanes);
+        }
+        case CacheComponent: {
+          if (enableCache) {
+            const cache: Cache = current.memoizedState;
+            pushProvider(workInProgress, CacheContext, cache);
+          }
+          break;
         }
       }
       return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);

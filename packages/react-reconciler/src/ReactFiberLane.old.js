@@ -8,6 +8,7 @@
  */
 
 import type {FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
+import type {Cache} from './ReactFiberCacheComponent';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
@@ -36,6 +37,7 @@ export type Lane = number;
 export type LaneMap<T> = Array<T>;
 
 import invariant from 'shared/invariant';
+import {enableCache} from 'shared/ReactFeatureFlags';
 
 import {
   ImmediatePriority as ImmediateSchedulerPriority,
@@ -770,6 +772,17 @@ export function markRootEntangled(root: FiberRoot, entangledLanes: Lanes) {
   }
 }
 
+export function requestFreshCache(root: FiberRoot, renderLanes: Lanes): Cache {
+  if (!enableCache) {
+    return (null: any);
+  }
+  // Create a fresh cache.
+  const freshCache = {
+    providers: null,
+    data: null,
+  };
+  return freshCache;
+}
 export function getBumpedLaneForHydration(
   root: FiberRoot,
   renderLanes: Lanes,

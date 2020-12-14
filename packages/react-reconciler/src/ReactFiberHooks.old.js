@@ -92,6 +92,7 @@ import {
 import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
+import {CacheContext} from './ReactFiberCacheComponent';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1818,7 +1819,30 @@ function dispatchAction<S, A>(
 }
 
 function getCacheForType<T>(resourceType: () => T): T {
-  invariant(false, 'Not implemented.');
+  const cache = readContext(CacheContext);
+  invariant(
+    cache !== null,
+    'Tried to fetch data, but no cache was found. To fix, wrap your ' +
+      "component in a <Cache /> boundary. It doesn't need to be a direct " +
+      'parent; it can be anywhere in the ancestor path',
+  );
+  let cachesByType = cache.data;
+  if (cachesByType === null) {
+    cachesByType = cache.data = new Map();
+    // TODO: Warn if constructor returns undefined? Creates ambiguity with
+    // existence check above. (I don't want to use `has`. Two map lookups
+    // instead of one? Silly.)
+    const cacheForType = resourceType();
+    cachesByType.set(resourceType, cacheForType);
+    return cacheForType;
+  } else {
+    let cacheForType: T | void = (cachesByType.get(resourceType): any);
+    if (cacheForType === undefined) {
+      cacheForType = resourceType();
+      cachesByType.set(resourceType, cacheForType);
+    }
+    return cacheForType;
+  }
 }
 
 export const ContextOnlyDispatcher: Dispatcher = {
@@ -1865,6 +1889,9 @@ const HooksDispatcherOnMount: Dispatcher = {
 
   unstable_isNewReconciler: enableNewReconciler,
 };
+if (enableCache) {
+  (HooksDispatcherOnMount: Dispatcher).getCacheForType = getCacheForType;
+}
 
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,

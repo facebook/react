@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
@@ -22,12 +23,14 @@ import {
   SuspenseListComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
+  CacheComponent,
 } from './ReactWorkTags';
 import {DidCapture, NoFlags, ShouldCapture} from './ReactFiberFlags';
 import {NoMode, ProfileMode} from './ReactTypeOfMode';
 import {
   enableSuspenseServerRenderer,
   enableProfilerTimer,
+  enableCache,
 } from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext.old';
@@ -41,6 +44,7 @@ import {
 import {popProvider} from './ReactFiberNewContext.old';
 import {popRenderLanes} from './ReactFiberWorkLoop.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
+import {CacheContext} from './ReactFiberCacheComponent';
 
 import invariant from 'shared/invariant';
 
@@ -120,11 +124,17 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       popHostContainer(workInProgress);
       return null;
     case ContextProvider:
-      popProvider(workInProgress);
+      const context: ReactContext<any> = workInProgress.type._context;
+      popProvider(context, workInProgress);
       return null;
     case OffscreenComponent:
     case LegacyHiddenComponent:
       popRenderLanes(workInProgress);
+      return null;
+    case CacheComponent:
+      if (enableCache) {
+        popProvider(CacheContext, workInProgress);
+      }
       return null;
     default:
       return null;
@@ -160,11 +170,17 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
       popSuspenseContext(interruptedWork);
       break;
     case ContextProvider:
-      popProvider(interruptedWork);
+      const context: ReactContext<any> = interruptedWork.type._context;
+      popProvider(context, interruptedWork);
       break;
     case OffscreenComponent:
     case LegacyHiddenComponent:
       popRenderLanes(interruptedWork);
+      break;
+    case CacheComponent:
+      if (enableCache) {
+        popProvider(CacheContext, interruptedWork);
+      }
       break;
     default:
       break;
