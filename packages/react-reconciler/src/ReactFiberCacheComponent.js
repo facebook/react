@@ -11,12 +11,14 @@ import type {ReactContext} from 'shared/ReactTypes';
 
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
-export type Cache = {|
-  providers: Set<Fiber> | null,
-  data: Map<() => mixed, mixed> | null,
+export type Cache = Map<() => mixed, mixed>;
+
+export type CacheInstance = {|
+  cache: Cache | null,
+  provider: Fiber,
 |};
 
-export const CacheContext: ReactContext<Cache | null> = {
+export const CacheContext: ReactContext<CacheInstance | null> = {
   $$typeof: REACT_CONTEXT_TYPE,
   // We don't use Consumer/Provider for Cache components. So we'll cheat.
   Consumer: (null: any),

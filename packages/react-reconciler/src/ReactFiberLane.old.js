@@ -861,10 +861,7 @@ export function requestFreshCache(root: FiberRoot, renderLanes: Lanes): Cache {
   }
 
   // Create a fresh cache.
-  const freshCache = {
-    providers: null,
-    data: null,
-  };
+  const freshCache = new Map();
 
   // This is now the pooled cache.
   root.pooledCache = freshCache;

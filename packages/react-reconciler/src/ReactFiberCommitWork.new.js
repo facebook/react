@@ -37,7 +37,6 @@ import {
   enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
-  enableCache,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -806,31 +805,8 @@ function commitLifeCycles(
     case ScopeComponent:
     case OffscreenComponent:
     case LegacyHiddenComponent:
+    case CacheComponent:
       return;
-    case CacheComponent: {
-      if (enableCache) {
-        if (current !== null) {
-          const oldCache: Cache | null = current.memoizedState;
-          if (oldCache !== null) {
-            const oldCacheProviders = oldCache.providers;
-            if (oldCacheProviders) {
-              oldCacheProviders.delete(current);
-              oldCacheProviders.delete(finishedWork);
-            }
-          }
-        }
-        const newCache: Cache | null = finishedWork.memoizedState;
-        if (newCache !== null) {
-          const newCacheProviders = newCache.providers;
-          if (newCacheProviders === null) {
-            newCache.providers = new Set([finishedWork]);
-          } else {
-            newCacheProviders.add(finishedWork);
-          }
-        }
-      }
-      return;
-    }
   }
   invariant(
     false,

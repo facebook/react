@@ -529,7 +529,7 @@ describe('ReactCache', () => {
 
   // @gate experimental
   test(
-    'refreshing a cache boundary also refreshes the other boundaries ' +
+    'refreshing a cache boundary does not refresh the other boundaries ' +
       'that mounted at the same time (i.e. the ones that share the same cache)',
     async () => {
       let refreshFirstBoundary;
@@ -575,23 +575,19 @@ describe('ReactCache', () => {
       expect(Scheduler).toHaveYielded(['A [v1]', 'A [v1]']);
       expect(root).toMatchRenderedOutput('A [v1]A [v1]');
 
-      // Refresh the first boundary. It should also refresh the second boundary,
-      // since they appeared at the same time.
+      // Refresh the first boundary. It should not refresh the second boundary,
+      // even though they previously shared the same underlying cache.
       mutateRemoteTextService();
       await ReactNoop.act(async () => {
         await refreshFirstBoundary();
       });
-      expect(Scheduler).toHaveYielded([
-        'Cache miss! [A]',
-        'Loading...',
-        'Loading...',
-      ]);
+      expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
 
       await ReactNoop.act(async () => {
         await resolveText('A');
       });
-      expect(Scheduler).toHaveYielded(['A [v2]', 'A [v2]']);
-      expect(root).toMatchRenderedOutput('A [v2]A [v2]');
+      expect(Scheduler).toHaveYielded(['A [v2]']);
+      expect(root).toMatchRenderedOutput('A [v2]A [v1]');
     },
   );
 });

@@ -28,6 +28,7 @@ import type {
 } from './ReactFiberSuspenseComponent.new';
 import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
+import type {CacheInstance} from './ReactFiberCacheComponent';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 
@@ -1488,27 +1489,11 @@ function completeWork(
     }
     case CacheComponent: {
       if (enableCache) {
-        // If the cache provided by this boundary has changed, schedule an
-        // effect to add this component to the cache's providers, and to remove
-        // it from the old cache.
-        // TODO: Schedule for Passive phase
-        const ownCache: Cache | null = workInProgress.memoizedState;
-        if (current === null) {
-          if (ownCache !== null) {
-            // This is a cache provider.
-            popProvider(CacheContext, workInProgress);
-            // Set up a refresh subscription.
-            workInProgress.flags |= Update;
-          }
-        } else {
-          if (ownCache !== null) {
-            // This is a cache provider.
-            popProvider(CacheContext, workInProgress);
-          }
-          if (ownCache !== current.memoizedState) {
-            // Cache changed. Create or update a refresh subscription.
-            workInProgress.flags |= Update;
-          }
+        const ownCacheInstance: CacheInstance | null =
+          workInProgress.memoizedState;
+        if (ownCacheInstance !== null) {
+          // This is a cache provider.
+          popProvider(CacheContext, workInProgress);
         }
         bubbleProperties(workInProgress);
         return null;

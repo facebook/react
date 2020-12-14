@@ -11,6 +11,7 @@ import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
+import type {CacheInstance} from './ReactFiberCacheComponent';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';
 import {
@@ -133,8 +134,9 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       return null;
     case CacheComponent:
       if (enableCache) {
-        const ownCache: Cache | null = workInProgress.memoizedState;
-        if (ownCache !== null) {
+        const ownCacheInstance: CacheInstance | null =
+          workInProgress.memoizedState;
+        if (ownCacheInstance !== null) {
           popProvider(CacheContext, workInProgress);
         }
       }
@@ -182,8 +184,9 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
       break;
     case CacheComponent:
       if (enableCache) {
-        const ownCache: Cache | null = interruptedWork.memoizedState;
-        if (ownCache !== null) {
+        const ownCacheInstance: CacheInstance | null =
+          interruptedWork.memoizedState;
+        if (ownCacheInstance !== null) {
           popProvider(CacheContext, interruptedWork);
         }
       }

@@ -19,7 +19,7 @@ import type {HookFlags} from './ReactHookEffectTags';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
-import type {Cache} from './ReactFiberCacheComponent';
+import type {CacheInstance} from './ReactFiberCacheComponent';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -1711,57 +1711,48 @@ function rerenderOpaqueIdentifier(): OpaqueIDType | void {
 }
 
 function mountRefresh() {
-  const cache: Cache | null = readContext(CacheContext);
-  return mountCallback(refreshCache.bind(null, cache), [cache]);
+  // TODO: CacheInstance should never be null. Update type.
+  const cacheInstance: CacheInstance | null = readContext(CacheContext);
+  return mountCallback(refreshCache.bind(null, cacheInstance), [cacheInstance]);
 }
 
 function updateRefresh() {
-  const cache: Cache | null = readContext(CacheContext);
-  return updateCallback(refreshCache.bind(null, cache), [cache]);
+  const cacheInstance: CacheInstance | null = readContext(CacheContext);
+  return updateCallback(refreshCache.bind(null, cacheInstance), [
+    cacheInstance,
+  ]);
 }
 
-function refreshCache<T>(cache: Cache | null, seedKey: ?() => T, seedValue: T) {
-  if (cache !== null) {
-    const providers = cache.providers;
-    if (providers !== null) {
-      let seededCache = null;
-      if (seedKey !== null && seedKey !== undefined) {
+function refreshCache<T>(
+  cacheInstance: CacheInstance | null,
+  seedKey: ?() => T,
+  seedValue: T,
+) {
+  if (cacheInstance !== null) {
+    const provider = cacheInstance.provider;
+
+    // Inlined startTransition
+    // TODO: Maybe we shouldn't automatically give this transition priority. Are
+    // there valid use cases for a high-pri refresh? Like if the content is
+    // super stale and you want to immediately hide it.
+    const prevTransition = ReactCurrentBatchConfig.transition;
+    ReactCurrentBatchConfig.transition = 1;
+    // TODO: Do we really need the try/finally? I don't think any of these
+    // functions would ever throw unless there's an internal error.
+    try {
+      const eventTime = requestEventTime();
+      const lane = requestUpdateLane(provider);
+      const root = scheduleUpdateOnFiber(provider, lane, eventTime);
+      if (seedKey !== null && seedKey !== undefined && root !== null) {
         // TODO: Warn if wrong type
-        seededCache = {
-          providers: null,
-          data: new Map([[seedKey, seedValue]]),
-        };
+        const seededCache = new Map([[seedKey, seedValue]]);
+        transferCacheToSpawnedLane(root, seededCache, lane);
       }
-      providers.forEach(provider =>
-        scheduleCacheRefresh(provider, seededCache),
-      );
+    } finally {
+      ReactCurrentBatchConfig.transition = prevTransition;
     }
   } else {
-    // TODO: Warn if cache is null?
-  }
-}
-
-function scheduleCacheRefresh(
-  cacheComponentFiber: Fiber,
-  seededCache: Cache | null,
-) {
-  // Inlined startTransition
-  // TODO: Maybe we shouldn't automatically give this transition priority. Are
-  // there valid use cases for a high-pri refresh? Like if the content is
-  // super stale and you want to immediately hide it.
-  const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = 1;
-  // TODO: Do we really need the try/finally? I don't think any of these
-  // functions would ever throw unless there's an internal error.
-  try {
-    const eventTime = requestEventTime();
-    const lane = requestUpdateLane(cacheComponentFiber);
-    const root = scheduleUpdateOnFiber(cacheComponentFiber, lane, eventTime);
-    if (seededCache !== null && root !== null) {
-      transferCacheToSpawnedLane(root, seededCache, lane);
-    }
-  } finally {
-    ReactCurrentBatchConfig.transition = prevTransition;
+    // TODO: CacheInstance should never be null. Update type.
   }
 }
 
@@ -1876,27 +1867,27 @@ function dispatchAction<S, A>(
 }
 
 function getCacheForType<T>(resourceType: () => T): T {
-  const cache: Cache | null = readContext(CacheContext);
+  const cacheInstance: CacheInstance | null = readContext(CacheContext);
   invariant(
-    cache !== null,
+    cacheInstance !== null,
     'Tried to fetch data, but no cache was found. To fix, wrap your ' +
       "component in a <Cache /> boundary. It doesn't need to be a direct " +
       'parent; it can be anywhere in the ancestor path',
   );
-  let cachesByType = cache.data;
-  if (cachesByType === null) {
-    cachesByType = cache.data = new Map();
+  let cache = cacheInstance.cache;
+  if (cache === null) {
+    cache = cacheInstance.cache = new Map();
     // TODO: Warn if constructor returns undefined? Creates ambiguity with
     // existence check above. (I don't want to use `has`. Two map lookups
     // instead of one? Silly.)
     const cacheForType = resourceType();
-    cachesByType.set(resourceType, cacheForType);
+    cache.set(resourceType, cacheForType);
     return cacheForType;
   } else {
-    let cacheForType: T | void = (cachesByType.get(resourceType): any);
+    let cacheForType: T | void = (cache.get(resourceType): any);
     if (cacheForType === undefined) {
       cacheForType = resourceType();
-      cachesByType.set(resourceType, cacheForType);
+      cache.set(resourceType, cacheForType);
     }
     return cacheForType;
   }

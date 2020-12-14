@@ -23,7 +23,7 @@ import type {
   OffscreenProps,
   OffscreenState,
 } from './ReactFiberOffscreenComponent';
-import type {Cache} from './ReactFiberCacheComponent';
+import type {CacheInstance} from './ReactFiberCacheComponent';
 
 import checkPropTypes from 'shared/checkPropTypes';
 
@@ -667,20 +667,41 @@ function updateCacheComponent(
   // Read directly from the context. We don't set up a context dependency
   // because the propagation function automatically includes CacheComponents in
   // its search.
-  const parentCache: Cache | null = isPrimaryRenderer
+  const parentCacheInstance: CacheInstance | null = isPrimaryRenderer
     ? CacheContext._currentValue
     : CacheContext._currentValue2;
 
-  let ownCache: Cache | null = null;
-  // TODO: Fast path if parent has a new cache. Merely an optimization. Might
-  // not be worth it.
-  if (false) {
-    // The parent boundary also has a new cache. We're either inside a new tree,
-    // or there was a refresh. In both cases, we should use the parent cache.
-    ownCache = null;
+  let ownCacheInstance: CacheInstance | null = null;
+  if (current === null) {
+    // This is a newly mounted component. Request a fresh cache.
+    const root = getWorkInProgressRoot();
+    invariant(
+      root !== null,
+      'Expected a work-in-progress root. This is a bug in React. Please ' +
+        'file an issue.',
+    );
+    const freshCache = requestFreshCache(root, renderLanes);
+    // This may be the same as the parent cache, like if the current render
+    // spawned from a previous render that already committed. Otherwise, this
+    // is the root of a cache consistency boundary.
+    if (
+      parentCacheInstance === null ||
+      freshCache !== parentCacheInstance.cache
+    ) {
+      ownCacheInstance = {
+        cache: freshCache,
+        provider: workInProgress,
+      };
+      pushProvider(workInProgress, CacheContext, ownCacheInstance);
+      // No need to propagate the refresh, because this is a new tree.
+    } else {
+      // Use the parent cache
+      ownCacheInstance = null;
+    }
   } else {
-    if (current === null) {
-      // This is a newly mounted component. Request a fresh cache.
+    // This component already mounted.
+    if (includesSomeLane(renderLanes, updateLanes)) {
+      // A refresh was scheduled.
       const root = getWorkInProgressRoot();
       invariant(
         root !== null,
@@ -688,51 +709,31 @@ function updateCacheComponent(
           'file an issue.',
       );
       const freshCache = requestFreshCache(root, renderLanes);
-      // This may be the same as the parent cache, like if the current render
-      // spawned from a previous render that already committed. Otherwise, this
-      // is the root of a cache consistency boundary.
-      if (freshCache !== parentCache) {
-        ownCache = freshCache;
-        pushProvider(workInProgress, CacheContext, freshCache);
-        // No need to propagate the refresh, because this is a new tree.
+      if (
+        parentCacheInstance === null ||
+        freshCache !== parentCacheInstance.cache
+      ) {
+        ownCacheInstance = {
+          cache: freshCache,
+          provider: workInProgress,
+        };
+        pushProvider(workInProgress, CacheContext, ownCacheInstance);
+        // Refreshes propagate through the entire subtree. The refreshed cache
+        // will override nested caches.
+        propagateCacheRefresh(workInProgress, renderLanes);
       } else {
-        // Use the parent cache
-        ownCache = null;
+        // The fresh cache is the same as the parent cache.
+        ownCacheInstance = null;
       }
     } else {
-      // This component already mounted.
-      if (includesSomeLane(renderLanes, updateLanes)) {
-        // A refresh was scheduled.
-        const root = getWorkInProgressRoot();
-        invariant(
-          root !== null,
-          'Expected a work-in-progress root. This is a bug in React. Please ' +
-            'file an issue.',
-        );
-        const freshCache = requestFreshCache(root, renderLanes);
-        if (freshCache !== parentCache) {
-          ownCache = freshCache;
-          pushProvider(workInProgress, CacheContext, freshCache);
-          // Refreshes propagate through the entire subtree. The refreshed cache
-          // will override nested caches.
-          propagateCacheRefresh(workInProgress, renderLanes);
-        } else {
-          // The fresh cache is the same as the parent cache. I think this
-          // unreachable in practice, because this means the parent cache was
-          // refreshed in the same render. So we would have already handled this
-          // in the earlier branch, where we check if the parent is new.
-          ownCache = null;
-        }
+      // Reuse the memoized cache.
+      const prevCacheInstance: CacheInstance | null = current.memoizedState;
+      if (prevCacheInstance !== null) {
+        ownCacheInstance = prevCacheInstance;
+        // There was no refresh, so no need to propagate to nested boundaries.
+        pushProvider(workInProgress, CacheContext, ownCacheInstance);
       } else {
-        // Reuse the memoized cache.
-        const prevCache: Cache | null = current.memoizedState;
-        if (prevCache !== null) {
-          ownCache = prevCache;
-          // There was no refresh, so no need to propagate to nested boundaries.
-          pushProvider(workInProgress, CacheContext, prevCache);
-        } else {
-          ownCache = null;
-        }
+        ownCacheInstance = null;
       }
     }
   }
@@ -741,7 +742,7 @@ function updateCacheComponent(
   // point to a cache object. Otherwise, a null state indicates that this
   // CacheComponent inherits from a parent boundary. We can use this to infer
   // whether to push/pop the cache context.
-  workInProgress.memoizedState = ownCache;
+  workInProgress.memoizedState = ownCacheInstance;
 
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
@@ -3338,9 +3339,10 @@ function beginWork(
         }
         case CacheComponent: {
           if (enableCache) {
-            const ownCache: Cache | null = workInProgress.memoizedState;
-            if (ownCache !== null) {
-              pushProvider(workInProgress, CacheContext, ownCache);
+            const ownCacheInstance: CacheInstance | null =
+              workInProgress.memoizedState;
+            if (ownCacheInstance !== null) {
+              pushProvider(workInProgress, CacheContext, ownCacheInstance);
             }
           }
           break;
