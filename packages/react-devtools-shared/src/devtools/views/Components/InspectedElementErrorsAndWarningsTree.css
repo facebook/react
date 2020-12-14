@@ -1,9 +1,12 @@
 .ErrorOrWarning {
   border-bottom: 1px solid transparent;
+  display: flex;
+  padding-left: 1rem;
 }
 
 .ErrorOrWarningMessage {
-  /* referenced in other declarations */
+  overflow-wrap: break-word;
+  white-space: pre-wrap;
 }
 
 

@@ -116,12 +116,25 @@ function ErrorOrWarningView({
   errorOrWarning,
   icon,
 }: ErrorOrWarningViewProps) {
+  const {id, args: serializedArgs, type} = errorOrWarning;
+  const args = serializedArgs.map(arg => {
+    if (arg === null) {
+      return null;
+    }
+    try {
+      return JSON.parse(arg);
+    } catch (error) {
+      console.error(
+        `Unable to deserialize type '${type}' of id '${id}': '${arg}'`,
+      );
+      return null;
+    }
+  });
+
   return (
     <div className={`${styles.ErrorOrWarning} ${className}`}>
-      {icon}:{' '}
-      <span className={styles.ErrorOrWarningMessage}>
-        {JSON.stringify(errorOrWarning)}
-      </span>
+      <div>{icon}</div>
+      <div className={styles.ErrorOrWarningMessage}>{args.join('\n')}</div>
     </div>
   );
 }

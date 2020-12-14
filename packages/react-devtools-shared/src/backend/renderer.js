@@ -564,16 +564,22 @@ export function attach(
   function flushErrorOrWarningUpdates() {
     flushErrorOrWarningUpdatesTimoutID = null;
 
-    hook.emit(
-      'errorsAndWarnings',
-      pendingErrorOrWarnings
-        .filter(({fiber}) => isFiberMounted(fiber))
-        .map(({args, fiber, type}) => ({
+    const data = pendingErrorOrWarnings
+      .filter(({fiber}) => isFiberMounted(fiber))
+      .map(({args, fiber, type}) => {
+        return {
           id: getFiberID(getPrimaryFiber(fiber)),
           type,
-          // TODO (inline errors) Send JSON-serialized args
-        })),
-    );
+          args: args.map(arg => {
+            try {
+              return JSON.stringify(arg);
+            } catch (error) {
+              return null;
+            }
+          }),
+        };
+      });
+    hook.emit('errorsAndWarnings', data);
 
     pendingErrorOrWarnings.splice(0);
   }
