@@ -386,13 +386,22 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         }
         // TODO (inline errors) The element indices are incorrect if the element is hidden in a collapsed tree.
         // Shouldn't hidden elements excluded from computing a valid index?
-        const elementIndicesWithErrorsOrWarnings = Array.from(
+        const elementIndicesWithErrorsOrWarnings: number[] = Array.from(
           store.errorsAndWarnings.keys(),
-          elementId => store.getIndexOfElementID(elementId),
-        );
+        )
+          .map(elementId => {
+            // $FlowFixMe https://github.com/facebook/flow/issues/1414
+            return store.getIndexOfElementID(elementId);
+          })
+          .filter(elementIndex => {
+            return elementIndex !== null;
+          });
         const predecessors = elementIndicesWithErrorsOrWarnings.filter(
           elementIndex => {
-            return elementIndex !== null && elementIndex < selectedElementIndex;
+            return (
+              selectedElementIndex === null ||
+              elementIndex < selectedElementIndex
+            );
           },
         );
         if (predecessors.length === 0) {
@@ -409,13 +418,22 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
           return state;
         }
 
-        const elementIndicesWithErrorsOrWarnings = Array.from(
+        const elementIndicesWithErrorsOrWarnings: number[] = Array.from(
           store.errorsAndWarnings.keys(),
-          elementId => store.getIndexOfElementID(elementId),
-        );
+        )
+          .map(elementId => {
+            // $FlowFixMe https://github.com/facebook/flow/issues/1414
+            return store.getIndexOfElementID(elementId);
+          })
+          .filter(elementIndex => {
+            return elementIndex !== null;
+          });
         const successors = elementIndicesWithErrorsOrWarnings.filter(
           elementIndex => {
-            return elementIndex !== null && elementIndex > selectedElementIndex;
+            return (
+              selectedElementIndex === null ||
+              elementIndex > selectedElementIndex
+            );
           },
         );
         if (successors.length === 0) {
