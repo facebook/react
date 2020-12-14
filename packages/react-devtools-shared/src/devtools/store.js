@@ -299,7 +299,6 @@ export default class Store extends EventEmitter<{|
     this.emit('componentFilters');
   }
 
-  // TODO: What's a useful data structure here?
   get errorsAndWarnings(): Map<
     number,
     {errors: ErrorOrWarning[], warnings: ErrorOrWarning[]},
