@@ -4,6 +4,11 @@
 .HoveredElement {
   color: var(--color-component-name);
 }
+.Element[data-errors="true"] {
+  background-color: var(--color-error-background-message);
+}
+.Element[data-warnings="true"] {
+  background-color: var(--color-warning-background);}
 .HoveredElement {
   background-color: var(--color-background-hover);
 }

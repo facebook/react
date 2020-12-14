@@ -115,7 +115,7 @@ export default function Element({data, index, style}: Props) {
     type,
   } = ((element: any): ElementType);
 
-  let className = styles.ElementType;
+  let className = styles.Element;
   if (isSelected) {
     className = treeFocused
       ? styles.SelectedElement
@@ -132,7 +132,9 @@ export default function Element({data, index, style}: Props) {
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
       style={style}
-      data-depth={depth}>
+      data-depth={depth}
+      data-errors={errors.length > 0}
+      data-warnings={warnings.length > 0}>
       {/* This wrapper is used by Tree for measurement purposes. */}
       <div
         className={styles.Wrapper}
