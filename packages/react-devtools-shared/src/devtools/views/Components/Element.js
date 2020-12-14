@@ -19,6 +19,7 @@ import {useSubscription} from '../hooks';
 
 import type {ItemData} from './Tree';
 import type {Element as ElementType} from './types';
+import type {ErrorOrWarning} from '../../../types';
 
 import styles from './Element.css';
 import Icon from '../Icon';
@@ -51,7 +52,7 @@ export default function Element({data, index, style}: Props) {
   const errorsAndWarningsSubscription = useMemo(
     () => ({
       getCurrentValue: () =>
-        store.errorsAndWarnings.get(element === null ? -1 : element.id) || null,
+        store.errorsAndWarnings.get(element === null ? -1 : element.id),
       subscribe: (callback: Function) => {
         store.addListener('errorsAndWarnings', callback);
         return () => store.removeListener('errorsAndWarnings', callback);
@@ -62,7 +63,7 @@ export default function Element({data, index, style}: Props) {
   const errorsAndWarnings = useSubscription<{
     errors: ErrorOrWarning[],
     warnings: ErrorOrWarning[],
-  } | null>(errorsAndWarningsSubscription);
+  } | void>(errorsAndWarningsSubscription);
   const {errors = [], warnings = []} = errorsAndWarnings || {};
 
   const handleDoubleClick = () => {

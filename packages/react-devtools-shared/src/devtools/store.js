@@ -68,10 +68,9 @@ export type Capabilities = {|
 export default class Store extends EventEmitter<{|
   collapseNodesByDefault: [],
   componentFilters: [],
-  errorsAndWarnings: Map<
-    number,
-    {errors: ErrorOrWarning[], warnings: ErrorOrWarning[]},
-  >,
+  errorsAndWarnings: [
+    Map<number, {errors: ErrorOrWarning[], warnings: ErrorOrWarning[]}>,
+  ],
   mutated: [[Array<number>, Map<number, number>]],
   recordChangeDescriptions: [],
   roots: [],
