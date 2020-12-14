@@ -95,6 +95,7 @@ export default class ReactFlightWebpackPlugin {
   }
 
   apply(compiler: any) {
+    let resolvedClientReferences;
     const run = (params, callback) => {
       // First we need to find all client files on the file system. We do this early so
       // that we have them synchronously available later when we need them. This might
@@ -107,59 +108,12 @@ export default class ReactFlightWebpackPlugin {
         contextResolver,
         compiler.inputFileSystem,
         compiler.createContextModuleFactory(),
-        (err, resolvedClientReferences) => {
+        (err, resolvedClientRefs) => {
           if (err) {
             callback(err);
             return;
           }
-          compiler.hooks.compilation.tap(
-            PLUGIN_NAME,
-            (compilation, {normalModuleFactory}) => {
-              compilation.dependencyFactories.set(
-                ClientReferenceDependency,
-                normalModuleFactory,
-              );
-              compilation.dependencyTemplates.set(
-                ClientReferenceDependency,
-                new NullDependency.Template(),
-              );
-
-              compilation.hooks.buildModule.tap(PLUGIN_NAME, module => {
-                // We need to add all client references as dependency of something in the graph so
-                // Webpack knows which entries need to know about the relevant chunks and include the
-                // map in their runtime. The things that actually resolves the dependency is the Flight
-                // client runtime. So we add them as a dependency of the Flight client runtime.
-                // Anything that imports the runtime will be made aware of these chunks.
-                // TODO: Warn if we don't find this file anywhere in the compilation.
-                if (module.resource !== clientFileName) {
-                  return;
-                }
-                if (resolvedClientReferences) {
-                  for (let i = 0; i < resolvedClientReferences.length; i++) {
-                    const dep = resolvedClientReferences[i];
-                    const chunkName = this.chunkName
-                      .replace(/\[index\]/g, '' + i)
-                      .replace(
-                        /\[request\]/g,
-                        Template.toPath(dep.userRequest),
-                      );
-
-                    const block = new AsyncDependenciesBlock(
-                      {
-                        name: chunkName,
-                      },
-                      module,
-                      null,
-                      dep.require,
-                    );
-                    block.addDependency(dep);
-                    module.addBlock(block);
-                  }
-                }
-              });
-            },
-          );
-
+          resolvedClientReferences = resolvedClientRefs;
           callback();
         },
       );
@@ -167,6 +121,50 @@ export default class ReactFlightWebpackPlugin {
 
     compiler.hooks.run.tapAsync(PLUGIN_NAME, run);
     compiler.hooks.watchRun.tapAsync(PLUGIN_NAME, run);
+    compiler.hooks.compilation.tap(
+      PLUGIN_NAME,
+      (compilation, {normalModuleFactory}) => {
+        compilation.dependencyFactories.set(
+          ClientReferenceDependency,
+          normalModuleFactory,
+        );
+        compilation.dependencyTemplates.set(
+          ClientReferenceDependency,
+          new NullDependency.Template(),
+        );
+
+        compilation.hooks.buildModule.tap(PLUGIN_NAME, module => {
+          // We need to add all client references as dependency of something in the graph so
+          // Webpack knows which entries need to know about the relevant chunks and include the
+          // map in their runtime. The things that actually resolves the dependency is the Flight
+          // client runtime. So we add them as a dependency of the Flight client runtime.
+          // Anything that imports the runtime will be made aware of these chunks.
+          // TODO: Warn if we don't find this file anywhere in the compilation.
+          if (module.resource !== clientFileName) {
+            return;
+          }
+          if (resolvedClientReferences) {
+            for (let i = 0; i < resolvedClientReferences.length; i++) {
+              const dep = resolvedClientReferences[i];
+              const chunkName = this.chunkName
+                .replace(/\[index\]/g, '' + i)
+                .replace(/\[request\]/g, Template.toPath(dep.userRequest));
+
+              const block = new AsyncDependenciesBlock(
+                {
+                  name: chunkName,
+                },
+                module,
+                null,
+                dep.require,
+              );
+              block.addDependency(dep);
+              module.addBlock(block);
+            }
+          }
+        });
+      },
+    );
 
     compiler.hooks.emit.tap(PLUGIN_NAME, compilation => {
       const json = {};
