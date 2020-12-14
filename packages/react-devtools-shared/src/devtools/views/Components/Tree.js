@@ -30,7 +30,7 @@ import SearchInput from './SearchInput';
 import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContextToggle';
 import SelectedTreeHighlight from './SelectedTreeHighlight';
 import TreeFocusedContext from './TreeFocusedContext';
-import {useHighlightNativeElement} from '../hooks';
+import {useHighlightNativeElement, useSubscription} from '../hooks';
 
 import styles from './Tree.css';
 import ButtonIcon from '../ButtonIcon';
@@ -311,6 +311,20 @@ export default function Tree(props: Props) {
     dispatch({type: 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE'});
   }, []);
 
+  const hasErrorsOrWarningsSubscription = useMemo(
+    () => ({
+      getCurrentValue: () => store.errorsAndWarnings.size > 0,
+      subscribe: (callback: Function) => {
+        store.addListener('errorsAndWarnings', callback);
+        return () => store.removeListener('errorsAndWarnings', callback);
+      },
+    }),
+    [store],
+  );
+  const hasErrorsOrWarnings = useSubscription<boolean>(
+    hasErrorsOrWarningsSubscription,
+  );
+
   return (
     <TreeFocusedContext.Provider value={treeFocused}>
       <div className={styles.Tree} ref={treeRef}>
@@ -321,21 +335,25 @@ export default function Tree(props: Props) {
               <div className={styles.VRule} />
             </Fragment>
           )}
-          <Button
-            onClick={handlePreviousErrorOrWarningClick}
-            title="Previous error or warning">
-            <ButtonIcon type="previous" />
-          </Button>
-          <Button
-            onClick={handleNextErrorOrWarningClick}
-            title="Next error or warning">
-            <ButtonIcon type="next" />
-          </Button>
-          <Button
-            onClick={() => store.clearErrorsAndWarnings()}
-            title="Clear all errors and warnings">
-            <ButtonIcon type="clear" />
-          </Button>
+          {hasErrorsOrWarnings && (
+            <React.Fragment>
+              <Button
+                onClick={handlePreviousErrorOrWarningClick}
+                title="Previous error or warning">
+                <ButtonIcon type="previous" />
+              </Button>
+              <Button
+                onClick={handleNextErrorOrWarningClick}
+                title="Next error or warning">
+                <ButtonIcon type="next" />
+              </Button>
+              <Button
+                onClick={() => store.clearErrorsAndWarnings()}
+                title="Clear all errors and warnings">
+                <ButtonIcon type="clear" />
+              </Button>
+            </React.Fragment>
+          )}
           <div className={styles.VRule} />
           <Suspense fallback={<Loading />}>
             {ownerID !== null ? <OwnersStack /> : <SearchInput />}
