@@ -13,6 +13,7 @@ import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Icon from '../Icon';
 import {serializeDataForCopy} from '../utils';
+import useContextMenu from '../../ContextMenu/useContextMenu';
 import Store from '../../store';
 import {useSubscription} from '../hooks';
 import sharedStyles from './InspectedElementSharedStyles.css';
@@ -65,6 +66,13 @@ export default function InspectedElementErrorsAndWarningsTree({
           <Icon className={styles.ErrorIcon} type="error" /> errors &amp;{' '}
           <Icon className={styles.WarningIcon} type="warning" /> warnings
         </div>
+        <Button
+          onClick={() =>
+            store.clearErrorsAndWarningsForElement(inspectedElement)
+          }
+          title="Clear errors and warnings">
+          <ButtonIcon type="clear" />
+        </Button>
         <Button onClick={handleCopy} title="Copy to clipboard">
           <ButtonIcon type="copy" />
         </Button>
@@ -134,8 +142,19 @@ function ErrorOrWarningView({
     }
   });
 
+  const contextMenuTriggerRef = React.useRef(null);
+  useContextMenu({
+    data: {
+      errorOrWarning,
+    },
+    id: 'ErrorOrWarning',
+    ref: contextMenuTriggerRef,
+  });
+
   return (
-    <div className={`${styles.ErrorOrWarning} ${className}`}>
+    <div
+      className={`${styles.ErrorOrWarning} ${className}`}
+      ref={contextMenuTriggerRef}>
       {icon}
       <div className={styles.ErrorOrWarningMessage}>{args.join('\n')}</div>
     </div>

@@ -190,6 +190,20 @@ export default function InspectedElementView({
           )}
         </ContextMenu>
       )}
+      <ContextMenu id="ErrorOrWarning">
+        {data => (
+          <Fragment>
+            <ContextMenuItem
+              onClick={() =>
+                store.clearErrorOrWarning(element, data.errorOrWarning)
+              }
+              title="Clear from this component">
+              <ButtonIcon className={styles.ContextMenuIcon} type="clear" />{' '}
+              Clear from this component
+            </ContextMenuItem>
+          </Fragment>
+        )}
+      </ContextMenu>
     </Fragment>
   );
 }

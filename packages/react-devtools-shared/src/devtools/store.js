@@ -68,6 +68,7 @@ export type Capabilities = {|
 export default class Store extends EventEmitter<{|
   collapseNodesByDefault: [],
   componentFilters: [],
+  // TODO (inline errors) Do we even need the argument for subscriptions?
   errorsAndWarnings: [
     Map<number, {errors: ErrorOrWarning[], warnings: ErrorOrWarning[]}>,
   ],
@@ -372,6 +373,41 @@ export default class Store extends EventEmitter<{|
 
   get unsupportedRendererVersionDetected(): boolean {
     return this._unsupportedRendererVersionDetected;
+  }
+
+  clearErrorsAndWarnings(): void {
+    this._errorsAndWarnings = new Map();
+    this.emit('errorsAndWarnings', this._errorsAndWarnings);
+  }
+
+  clearErrorsAndWarningsForElement(element: {id: number}): void {
+    this._errorsAndWarnings.delete(element.id);
+    this.emit('errorsAndWarnings', this._errorsAndWarnings);
+  }
+
+  clearErrorOrWarning(element: Element, errorOrWarning: ErrorOrWarning): void {
+    const errorsAndWarnings = this._errorsAndWarnings.get(element.id);
+    if (errorsAndWarnings === undefined) {
+      return;
+    }
+
+    const newErrorsAndWarnings = {...errorsAndWarnings};
+    if (errorOrWarning.type === 'warn') {
+      newErrorsAndWarnings.warnings = newErrorsAndWarnings.warnings.filter(
+        warning => {
+          return warning !== errorOrWarning;
+        },
+      );
+    } else if (errorOrWarning.type === 'error') {
+      newErrorsAndWarnings.errors = newErrorsAndWarnings.errors.filter(
+        error => {
+          return error !== errorOrWarning;
+        },
+      );
+    }
+
+    this._errorsAndWarnings.set(element.id, newErrorsAndWarnings);
+    this.emit('errorsAndWarnings', this._errorsAndWarnings);
   }
 
   containsElement(id: number): boolean {

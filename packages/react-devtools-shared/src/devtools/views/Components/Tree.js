@@ -33,6 +33,8 @@ import TreeFocusedContext from './TreeFocusedContext';
 import {useHighlightNativeElement} from '../hooks';
 
 import styles from './Tree.css';
+import ButtonIcon from '../ButtonIcon';
+import Button from '../Button';
 
 // Never indent more than this number of pixels (even if we have the room).
 const DEFAULT_INDENTATION_SIZE = 12;
@@ -311,6 +313,12 @@ export default function Tree(props: Props) {
               <div className={styles.VRule} />
             </Fragment>
           )}
+          <Button
+            onClick={() => store.clearErrorsAndWarnings()}
+            title="Clear all errors and warnings">
+            <ButtonIcon type="clear" />
+          </Button>
+          <div className={styles.VRule} />
           <Suspense fallback={<Loading />}>
             {ownerID !== null ? <OwnersStack /> : <SearchInput />}
           </Suspense>
