@@ -21,6 +21,7 @@ import type {ItemData} from './Tree';
 import type {Element as ElementType} from './types';
 
 import styles from './Element.css';
+import Icon from '../Icon';
 
 type Props = {
   data: ItemData,
@@ -167,10 +168,16 @@ export default function Element({data, index, style}: Props) {
           </Badge>
         ) : null}
         {errors.length > 0 && (
-          <span className={styles.Errors}>{errors.length}</span>
+          <span className={styles.Errors}>
+            <Icon type="error" />
+            {errors.length}
+          </span>
         )}
         {warnings.length > 0 && (
-          <span className={styles.Warnings}>{warnings.length}</span>
+          <span className={styles.Warnings}>
+            <Icon type="warning" />
+            {warnings.length}
+          </span>
         )}
       </div>
     </div>

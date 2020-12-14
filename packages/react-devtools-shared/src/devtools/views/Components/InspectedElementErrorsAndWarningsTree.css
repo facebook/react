@@ -1,4 +1,5 @@
 .ErrorOrWarning {
+  align-items: baseline;
   border-bottom: 1px solid transparent;
   display: flex;
   padding-left: 1rem;
@@ -8,7 +9,6 @@
   overflow-wrap: break-word;
   white-space: pre-wrap;
 }
-
 
 .Error {
   background-color: var(--color-error-background-message);
@@ -23,6 +23,13 @@
   color: var(--color-error-text);
 }
 
+.ErrorIcon {
+  color: var(--color-error-text);
+  height: 1em;
+  line-height: 1;
+  width: 1em;
+}
+
 .Warning {
   background-color: var(--color-warning-background);
   border-top-color: var(--color-warning-border);
@@ -34,4 +41,11 @@
 
 .Warning .ErrorOrWarningMessage {
   color: var(--color-warning-text);
+}
+
+.WarningIcon {
+  color: var(--color-warning-text);
+  height: 1em;
+  line-height: 1;
+  width: 1em;
 }

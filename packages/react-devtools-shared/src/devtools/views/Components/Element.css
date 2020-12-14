@@ -75,23 +75,11 @@
 }
 
 .Errors {
-  /* TODO: Add icon to emphasis instead of swapping colors? */
-  /* swap text and background color to emphasise the "badge" */
-  background-color: var(--color-error-text);
-  color: var(--color-error-background);
-  border: 1px solid var(--color-error-border);
-  border-radius: 5px;
-  display: inline-block;
-  padding: 0px 5px;
+  color: var(--color-error-text);
+  display: flex;
 }
 
 .Warnings {
-  /* TODO: Add icon to emphasis instead of swapping colors? */
-  /* swap text and background color to emphasise the "badge" */
-  background-color: var(--color-warning-text);
-  color: var(--color-warning-background);
-  border: 1px solid var(--color-warning-border);
-  border-radius: 5px;
-  display: inline-block;
-  padding: 0px 1px;
+  color: var(--color-warning-text);
+  display: flex;
 }

@@ -11,6 +11,7 @@ import {copy} from 'clipboard-js';
 import * as React from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
+import Icon from '../Icon';
 import {serializeDataForCopy} from '../utils';
 import Store from '../../store';
 import {useSubscription} from '../hooks';
@@ -60,8 +61,10 @@ export default function InspectedElementErrorsAndWarningsTree({
   return (
     <div className={sharedStyles.InspectedElementTree}>
       <div className={sharedStyles.HeaderRow}>
-        {/* TODO (inline errors) icons instead? Prefix with icons so that the icon is associated with the label */}
-        <div className={sharedStyles.Header}>errors/warnings</div>
+        <div className={sharedStyles.Header}>
+          <Icon className={styles.ErrorIcon} type="error" /> errors &amp;{' '}
+          <Icon className={styles.WarningIcon} type="warning" /> warnings
+        </div>
         <Button onClick={handleCopy} title="Copy to clipboard">
           <ButtonIcon type="copy" />
         </Button>
@@ -88,7 +91,7 @@ function InnerErrorsAndWarningsTreeView({
           <ErrorOrWarningView
             className={styles.Error}
             errorOrWarning={error}
-            icon="❌"
+            icon={<Icon className={styles.ErrorIcon} type="error" />}
           />
         );
       })}
@@ -97,7 +100,7 @@ function InnerErrorsAndWarningsTreeView({
           <ErrorOrWarningView
             className={styles.Warning}
             errorOrWarning={warning}
-            icon="⚠️"
+            icon={<Icon className={styles.WarningIcon} type="warning" />}
           />
         );
       })}
@@ -133,7 +136,7 @@ function ErrorOrWarningView({
 
   return (
     <div className={`${styles.ErrorOrWarning} ${className}`}>
-      <div>{icon}</div>
+      {icon}
       <div className={styles.ErrorOrWarningMessage}>{args.join('\n')}</div>
     </div>
   );
