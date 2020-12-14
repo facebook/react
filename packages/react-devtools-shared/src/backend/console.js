@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {CurrentDispatcherRef, ReactRenderer} from './types';
+import type {CurrentDispatcherRef, ReactRenderer, WorkTagMap} from './types';
 
 import {getInternalReactConstants} from './renderer';
 import {getStackByFiberInDevAndProd} from './DevToolsFiberComponentStack';
@@ -34,6 +34,7 @@ const injectedRenderers: Map<
     currentDispatcherRef: CurrentDispatcherRef,
     getCurrentFiber: () => Fiber | null,
     onErrorOrWarning: ?OnErrorOrWarning,
+    workTagMap: WorkTagMap,
   |},
 > = new Map();
 
