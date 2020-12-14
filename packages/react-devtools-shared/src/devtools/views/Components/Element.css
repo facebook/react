@@ -75,6 +75,8 @@
 }
 
 .Errors {
+  /* TODO: Add icon to emphasis instead of swapping colors? */
+  /* swap text and background color to emphasise the "badge" */
   background-color: var(--color-error-text);
   color: var(--color-error-background);
   border: 1px solid var(--color-error-border);
@@ -84,6 +86,8 @@
 }
 
 .Warnings {
+  /* TODO: Add icon to emphasis instead of swapping colors? */
+  /* swap text and background color to emphasise the "badge" */
   background-color: var(--color-warning-text);
   color: var(--color-warning-background);
   border: 1px solid var(--color-warning-border);

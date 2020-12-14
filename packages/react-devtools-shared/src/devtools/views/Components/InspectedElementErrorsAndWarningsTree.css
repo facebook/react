@@ -1,0 +1,34 @@
+.ErrorOrWarning {
+  border-bottom: 1px solid transparent;
+}
+
+.ErrorOrWarningMessage {
+  /* referenced in other declarations */
+}
+
+
+.Error {
+  background-color: var(--color-error-background-message);
+  border-top-color: var(--color-error-border);
+}
+
+.Error:last-of-type {
+  border-bottom-color: var(--color-error-border);
+}
+
+.Error .ErrorOrWarningMessage {
+  color: var(--color-error-text);
+}
+
+.Warning {
+  background-color: var(--color-warning-background);
+  border-top-color: var(--color-warning-border);
+}
+
+.Warning:last-of-type {
+  border-bottom-color: var(--color-warning-border);
+}
+
+.Warning .ErrorOrWarningMessage {
+  color: var(--color-warning-text);
+}
