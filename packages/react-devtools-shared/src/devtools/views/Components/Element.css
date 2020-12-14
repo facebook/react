@@ -79,12 +79,19 @@
   margin-left: 0.25rem;
 }
 
+.Errors, .Warnings {
+  display: flex;
+}
+
+.Errors svg, .Warnings svg {
+  margin-left: 4px;
+  margin-right: 4px;
+}
+
 .Errors {
   color: var(--color-error-text);
-  display: flex;
 }
 
 .Warnings {
   color: var(--color-warning-text);
-  display: flex;
 }
