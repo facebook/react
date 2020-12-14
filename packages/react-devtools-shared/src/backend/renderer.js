@@ -551,7 +551,14 @@ export function attach(
     //
     // For this reason, warnings/errors are sent to the frontend periodically (on a timer).
     // When processing errors, any Fiber that is not still registered is assumed to be unmounted.
-    pendingErrorOrWarnings.push({fiber, type, args});
+    pendingErrorOrWarnings.push({
+      fiber,
+      type,
+      // React pushes the component stack to the args later
+      // These are not interesting to the view in React devtools where we already have access to the component stack.
+      // TODO (inline errors) Should this actually be fixed when appending the component stack by not mutating the args?
+      args: args.slice(),
+    });
 
     if (flushErrorOrWarningUpdatesTimoutID === null) {
       flushErrorOrWarningUpdatesTimoutID = setTimeout(
