@@ -56,6 +56,7 @@ import {
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
+  CacheComponent,
 } from './ReactWorkTags';
 import {
   NoMode,
@@ -132,6 +133,7 @@ import {
   enableFundamentalAPI,
   enableScopeAPI,
   enableProfilerTimer,
+  enableCache,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -1480,6 +1482,12 @@ function completeWork(
       }
 
       return null;
+    }
+    case CacheComponent: {
+      if (enableCache) {
+        bubbleProperties(workInProgress);
+        return null;
+      }
     }
   }
   invariant(

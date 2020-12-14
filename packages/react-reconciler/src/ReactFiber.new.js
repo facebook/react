@@ -27,6 +27,7 @@ import {
   enableProfilerTimer,
   enableFundamentalAPI,
   enableScopeAPI,
+  enableCache,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
@@ -54,6 +55,7 @@ import {
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
+  CacheComponent,
 } from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -88,6 +90,7 @@ import {
   REACT_SCOPE_TYPE,
   REACT_OFFSCREEN_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
+  REACT_CACHE_TYPE,
 } from 'shared/ReactSymbols';
 
 export type {Fiber};
@@ -501,6 +504,11 @@ export function createFiberFromTypeAndProps(
           return createFiberFromScope(type, pendingProps, mode, lanes, key);
         }
       // eslint-disable-next-line no-fallthrough
+      case REACT_CACHE_TYPE:
+        if (enableCache) {
+          return createFiberFromCache(pendingProps, mode, lanes, key);
+        }
+      // eslint-disable-next-line no-fallthrough
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
@@ -741,6 +749,24 @@ export function createFiberFromLegacyHidden(
     fiber.type = REACT_LEGACY_HIDDEN_TYPE;
   }
   fiber.elementType = REACT_LEGACY_HIDDEN_TYPE;
+  fiber.lanes = lanes;
+  return fiber;
+}
+
+export function createFiberFromCache(
+  pendingProps: any,
+  mode: TypeOfMode,
+  lanes: Lanes,
+  key: null | string,
+) {
+  const fiber = createFiber(CacheComponent, pendingProps, key, mode);
+  // TODO: The Cache fiber shouldn't have a type. It has a tag.
+  // This needs to be fixed in getComponentName so that it relies on the tag
+  // instead.
+  if (__DEV__) {
+    fiber.type = REACT_CACHE_TYPE;
+  }
+  fiber.elementType = REACT_CACHE_TYPE;
   fiber.lanes = lanes;
   return fiber;
 }

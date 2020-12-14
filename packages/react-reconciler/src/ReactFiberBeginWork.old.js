@@ -50,6 +50,7 @@ import {
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
+  CacheComponent,
 } from './ReactWorkTags';
 import {
   NoFlags,
@@ -76,6 +77,7 @@ import {
   enableFundamentalAPI,
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
+  enableCache,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -646,6 +648,20 @@ function updateOffscreenComponent(
 // ourselves to this constraint, though. If the behavior diverges, we should
 // fork the function.
 const updateLegacyHiddenComponent = updateOffscreenComponent;
+
+function updateCacheComponent(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  updateLanes: Lanes,
+  renderLanes: Lanes,
+) {
+  if (!enableCache) {
+    return null;
+  }
+  const nextChildren = workInProgress.pendingProps.children;
+  reconcileChildren(current, workInProgress, nextChildren, renderLanes);
+  return workInProgress.child;
+}
 
 function updateFragment(
   current: Fiber | null,
@@ -3417,6 +3433,17 @@ function beginWork(
     }
     case LegacyHiddenComponent: {
       return updateLegacyHiddenComponent(current, workInProgress, renderLanes);
+    }
+    case CacheComponent: {
+      if (enableCache) {
+        return updateCacheComponent(
+          current,
+          workInProgress,
+          updateLanes,
+          renderLanes,
+        );
+      }
+      break;
     }
   }
   invariant(
