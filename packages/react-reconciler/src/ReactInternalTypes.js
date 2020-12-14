@@ -237,6 +237,7 @@ type BaseFiberRootProperties = {|
   entangledLanes: Lanes,
   entanglements: LaneMap<Lanes>,
 
+  caches: Array<Cache | null> | null,
   pooledCache: Cache | null,
 |};
 

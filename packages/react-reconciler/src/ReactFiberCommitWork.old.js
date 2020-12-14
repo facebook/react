@@ -25,6 +25,7 @@ import type {Wakeable} from 'shared/ReactTypes';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
+import type {Cache} from './ReactFiberCacheComponent';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {
@@ -56,6 +57,7 @@ import {
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
+  CacheComponent,
 } from './ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -1513,7 +1515,11 @@ function commitDeletion(
   }
 }
 
-function commitWork(current: Fiber | null, finishedWork: Fiber): void {
+function commitWork(
+  current: Fiber | null,
+  finishedWork: Fiber,
+  cache: Cache | null,
+): void {
   if (!supportsMutation) {
     switch (finishedWork.tag) {
       case FunctionComponent:
@@ -1549,11 +1555,11 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       }
       case SuspenseComponent: {
         commitSuspenseComponent(finishedWork);
-        attachSuspenseRetryListeners(finishedWork);
+        attachSuspenseRetryListeners(finishedWork, cache);
         return;
       }
       case SuspenseListComponent: {
-        attachSuspenseRetryListeners(finishedWork);
+        attachSuspenseRetryListeners(finishedWork, cache);
         return;
       }
       case HostRoot: {
@@ -1664,11 +1670,11 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     }
     case SuspenseComponent: {
       commitSuspenseComponent(finishedWork);
-      attachSuspenseRetryListeners(finishedWork);
+      attachSuspenseRetryListeners(finishedWork, cache);
       return;
     }
     case SuspenseListComponent: {
-      attachSuspenseRetryListeners(finishedWork);
+      attachSuspenseRetryListeners(finishedWork, cache);
       return;
     }
     case IncompleteClassComponent: {
@@ -1697,6 +1703,8 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       hideOrUnhideAllChildren(finishedWork, isHidden);
       return;
     }
+    case CacheComponent:
+      return;
   }
   invariant(
     false,
@@ -1772,7 +1780,10 @@ function commitSuspenseHydrationCallbacks(
   }
 }
 
-function attachSuspenseRetryListeners(finishedWork: Fiber) {
+function attachSuspenseRetryListeners(
+  finishedWork: Fiber,
+  cache: Cache | null,
+) {
   // If this boundary just timed out, then it will have a set of wakeables.
   // For each wakeable, attach a listener so that when it resolves, React
   // attempts to re-render the boundary in the primary (pre-timeout) state.
@@ -1785,7 +1796,12 @@ function attachSuspenseRetryListeners(finishedWork: Fiber) {
     }
     wakeables.forEach(wakeable => {
       // Memoize using the boundary fiber to prevent redundant listeners.
-      let retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
+      let retry = resolveRetryWakeable.bind(
+        null,
+        finishedWork,
+        wakeable,
+        cache,
+      );
       if (!retryCache.has(wakeable)) {
         if (enableSchedulerTracing) {
           if (wakeable.__reactDoNotTraceInteractions !== true) {

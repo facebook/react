@@ -86,6 +86,11 @@ describe('ReactCache', () => {
     }
   }
 
+  function mutateRemoteTextService() {
+    textService = new Map();
+    textServiceVersion++;
+  }
+
   function resolveText(text) {
     const request = textService.get(text);
     if (request !== undefined) {
@@ -179,5 +184,176 @@ describe('ReactCache', () => {
     });
     expect(Scheduler).toHaveYielded(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
+  });
+
+  // @gate experimental
+  test('new content inside an existing Cache boundary should re-use already cached data', async () => {
+    function App({showMore}) {
+      return (
+        <Cache>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText showVersion={true} text="A" />
+          </Suspense>
+          {showMore ? (
+            <Suspense fallback={<Text text="Loading..." />}>
+              <AsyncText showVersion={true} text="A" />
+            </Suspense>
+          ) : null}
+        </Cache>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      await resolveText('A');
+      root.render(<App showMore={false} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Cache miss! [A]',
+      'Loading...',
+      'A [v1]',
+    ]);
+    expect(root).toMatchRenderedOutput('A [v1]');
+
+    // Simulate a server mutation.
+    mutateRemoteTextService();
+
+    // Add a new cache boundary
+    await ReactNoop.act(async () => {
+      await resolveText('A');
+      root.render(<App showMore={true} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'A [v1]',
+      // New tree should use already cached data
+      'A [v1]',
+    ]);
+    expect(root).toMatchRenderedOutput('A [v1]A [v1]');
+  });
+
+  // @gate experimental
+  test('a new Cache boundary uses fresh cache', async () => {
+    // The only difference from the previous test is that the "Show More"
+    // content is wrapped in a nested <Cache /> boundary
+    function App({showMore}) {
+      return (
+        <Cache>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText showVersion={true} text="A" />
+          </Suspense>
+          {showMore ? (
+            <Cache>
+              <Suspense fallback={<Text text="Loading..." />}>
+                <AsyncText showVersion={true} text="A" />
+              </Suspense>
+            </Cache>
+          ) : null}
+        </Cache>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      await resolveText('A');
+      root.render(<App showMore={false} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Cache miss! [A]',
+      'Loading...',
+      'A [v1]',
+    ]);
+    expect(root).toMatchRenderedOutput('A [v1]');
+
+    // Simulate a server mutation.
+    mutateRemoteTextService();
+
+    // Add a new cache boundary
+    await ReactNoop.act(async () => {
+      await resolveText('A');
+      root.render(<App showMore={true} />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'A [v1]',
+      // New tree should load fresh data.
+      'Cache miss! [A]',
+      'Loading...',
+      'A [v2]',
+    ]);
+    expect(root).toMatchRenderedOutput('A [v1]A [v2]');
+  });
+
+  // @gate experimental
+  test('inner content uses same cache as shell if spawned by the same transition', async () => {
+    const root = ReactNoop.createRoot();
+
+    function App() {
+      return (
+        <Cache>
+          <Suspense fallback={<Text text="Loading shell..." />}>
+            {/* The shell reads A */}
+            <Shell>
+              {/* The inner content reads both A and B */}
+              <Suspense fallback={<Text text="Loading content..." />}>
+                <Cache>
+                  <Content />
+                </Cache>
+              </Suspense>
+            </Shell>
+          </Suspense>
+        </Cache>
+      );
+    }
+
+    function Shell({children}) {
+      readText('A');
+      return (
+        <>
+          <div>
+            <Text text="Shell" />
+          </div>
+          <div>{children}</div>
+        </>
+      );
+    }
+
+    function Content() {
+      readText('A');
+      readText('B');
+      return <Text text="Content" />;
+    }
+
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading shell...']);
+    expect(root).toMatchRenderedOutput('Loading shell...');
+
+    await ReactNoop.act(async () => {
+      await resolveText('A');
+    });
+    expect(Scheduler).toHaveYielded([
+      'Shell',
+      // There's a cache miss for B, because it hasn't been read yet. But not
+      // A, because it was cached when we rendered the shell.
+      'Cache miss! [B]',
+      'Loading content...',
+    ]);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Shell</div>
+        <div>Loading content...</div>
+      </>,
+    );
+
+    await ReactNoop.act(async () => {
+      await resolveText('B');
+    });
+    expect(Scheduler).toHaveYielded(['Content']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <div>Shell</div>
+        <div>Content</div>
+      </>,
+    );
   });
 });

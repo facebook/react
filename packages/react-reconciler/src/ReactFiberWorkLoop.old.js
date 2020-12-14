@@ -16,6 +16,7 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {Effect as HookEffect} from './ReactFiberHooks.old';
 import type {StackCursor} from './ReactFiberStack.old';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
+import type {Cache} from './ReactFiberCacheComponent';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -178,6 +179,8 @@ import {
   markRootFinished,
   schedulerPriorityToLanePriority,
   lanePriorityToSchedulerPriority,
+  getWorkInProgressCache,
+  transferCacheToSpawnedLane,
 } from './ReactFiberLane.old';
 import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork.old';
@@ -1923,6 +1926,12 @@ function commitRootImpl(root, renderPriorityLevel) {
   // So we can clear these now to allow a new callback to be scheduled.
   root.callbackNode = null;
 
+  // TODO: This is only used when a render spawns a retry. So we could pass this
+  // fron the render phase instead, only for the relevant RootExitStatuses.
+  // However, we may end up using this same strategy for other types of spawned
+  // work, like Offscreen.
+  const cache = getWorkInProgressCache(root, lanes);
+
   // Update the first and last pending times on this root. The new first
   // pending time is whatever is left on the root fiber.
   let remainingLanes = mergeLanes(finishedWork.lanes, finishedWork.childLanes);
@@ -2039,6 +2048,7 @@ function commitRootImpl(root, renderPriorityLevel) {
           null,
           root,
           renderPriorityLevel,
+          cache,
         );
         if (hasCaughtError()) {
           invariant(nextEffect !== null, 'Should be working on an effect.');
@@ -2048,7 +2058,7 @@ function commitRootImpl(root, renderPriorityLevel) {
         }
       } else {
         try {
-          commitMutationEffects(root, renderPriorityLevel);
+          commitMutationEffects(root, renderPriorityLevel, cache);
         } catch (error) {
           invariant(nextEffect !== null, 'Should be working on an effect.');
           captureCommitPhaseError(nextEffect, error);
@@ -2303,7 +2313,11 @@ function commitBeforeMutationEffects() {
   }
 }
 
-function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
+function commitMutationEffects(
+  root: FiberRoot,
+  renderPriorityLevel: ReactPriorityLevel,
+  cache: Cache | null,
+) {
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
@@ -2352,7 +2366,7 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
 
         // Update
         const current = nextEffect.alternate;
-        commitWork(current, nextEffect);
+        commitWork(current, nextEffect, cache);
         break;
       }
       case Hydrating: {
@@ -2364,12 +2378,12 @@ function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
 
         // Update
         const current = nextEffect.alternate;
-        commitWork(current, nextEffect);
+        commitWork(current, nextEffect, cache);
         break;
       }
       case Update: {
         const current = nextEffect.alternate;
-        commitWork(current, nextEffect);
+        commitWork(current, nextEffect, cache);
         break;
       }
       case Deletion: {
@@ -2749,7 +2763,11 @@ export function pingSuspendedRoot(
   schedulePendingInteractions(root, pingedLanes);
 }
 
-function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
+function retryTimedOutBoundary(
+  boundaryFiber: Fiber,
+  dataCache: Cache | null,
+  retryLane: Lane,
+) {
   // The boundary fiber (a Suspense component or SuspenseList component)
   // previously was rendered in its fallback state. One of the promises that
   // suspended it has resolved, which means at least part of the tree was
@@ -2764,6 +2782,10 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
     markRootUpdated(root, retryLane, eventTime);
     ensureRootIsScheduled(root, eventTime);
     schedulePendingInteractions(root, retryLane);
+
+    if (dataCache !== null) {
+      transferCacheToSpawnedLane(root, dataCache, retryLane);
+    }
   }
 }
 
@@ -2773,10 +2795,14 @@ export function retryDehydratedSuspenseBoundary(boundaryFiber: Fiber) {
   if (suspenseState !== null) {
     retryLane = suspenseState.retryLane;
   }
-  retryTimedOutBoundary(boundaryFiber, retryLane);
+  retryTimedOutBoundary(boundaryFiber, null, retryLane);
 }
 
-export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
+export function resolveRetryWakeable(
+  boundaryFiber: Fiber,
+  wakeable: Wakeable,
+  dataCache: Cache | null,
+) {
   let retryLane = NoLane; // Default
   let retryCache: WeakSet<Wakeable> | Set<Wakeable> | null;
   if (enableSuspenseServerRenderer) {
@@ -2808,7 +2834,7 @@ export function resolveRetryWakeable(boundaryFiber: Fiber, wakeable: Wakeable) {
     retryCache.delete(wakeable);
   }
 
-  retryTimedOutBoundary(boundaryFiber, retryLane);
+  retryTimedOutBoundary(boundaryFiber, dataCache, retryLane);
 }
 
 // Computes the next Just Noticeable Difference (JND) boundary.

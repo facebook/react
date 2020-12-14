@@ -742,6 +742,7 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   const entanglements = root.entanglements;
   const eventTimes = root.eventTimes;
   const expirationTimes = root.expirationTimes;
+  const pooledCache = root.pooledCache;
 
   // Clear the lanes that no longer have pending work
   let lanes = noLongerPendingLanes;
@@ -753,15 +754,31 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
     eventTimes[index] = NoTimestamp;
     expirationTimes[index] = NoTimestamp;
 
-    lanes &= ~lane;
-  }
+    if (enableCache) {
+      // Subsequent loads in this lane should use a fresh cache.
+      // TODO: If a cache is no longer associated with any lane, we should issue
+      // an abort signal.
+      const caches = root.caches;
+      if (caches !== null) {
+        if (remainingLanes === 0) {
+          // Fast path. Clear all caches at once.
+          root.caches = createLaneMap(null);
+          root.pooledCache = null;
+        } else {
+          const cache = caches[index];
+          if (cache !== null) {
+            caches[index] = null;
+            if (cache === pooledCache) {
+              // The pooled cache is now part of the committed tree. We'll now
+              // clear it so that the next transition gets a fresh cache.
+              root.pooledCache = null;
+            }
+          }
+        }
+      }
+    }
 
-  if (enableCache) {
-    // Clear the pooled cache so subsequent updates get fresh data.
-    // TODO: This is very naive and only works if the shell of a cache boundary
-    // doesn't suspend. The next, key feature is to preserve caches across
-    // multiple attempts (suspend -> ping) to render a new tree.
-    root.pooledCache = null;
+    lanes &= ~lane;
   }
 }
 
@@ -785,12 +802,62 @@ export function requestFreshCache(root: FiberRoot, renderLanes: Lanes): Cache {
     return (null: any);
   }
 
-  // Check if there's a pooled cache. This is really just a batching heuristic
-  // so that two transitions that happen in a similar timeframe can share the
-  // same cache.
-  const pooledCache = root.pooledCache;
-  if (pooledCache !== null) {
-    return pooledCache;
+  // 1. Check if the currently rendering lanes already have a pending cache
+  //    associated with them. If so, use this cache. If for some reason two or
+  //    more lanes have different caches, pick the highest priority one.
+  // 2. Otherwise, check the root's `pooledCache`. This the oldest cache
+  //    that has not yet been committed. This is really just a batching
+  //    heuristic so that two transitions that happen in a similar timeframe can
+  //    share the same cache. If it exists, use this cache.
+  // 3. If there's no pooled cache, create a fresh cache. This is now the
+  //    pooled cache.
+
+  let caches = root.caches;
+
+  // TODO: There should be a primary render lane, and we should use whatever
+  // cache is associated with that one.
+  if (caches === null) {
+    caches = root.caches = createLaneMap(null);
+  } else {
+    let lanes = renderLanes;
+    while (lanes > 0) {
+      const lane = getHighestPriorityLane(lanes);
+      const index = laneToIndex(lane);
+      const inProgressCache: Cache | null = caches[index];
+      if (inProgressCache !== null) {
+        // This render lane already has a cache associated with it. Reuse it.
+
+        // If the other render lanes are not already associated with a cache,
+        // associate them with this one.
+        let otherRenderLanes = renderLanes & ~lane;
+        while (otherRenderLanes > 0) {
+          const otherIndex = pickArbitraryLaneIndex(otherRenderLanes);
+          const otherLane = 1 << otherIndex;
+          // We shouldn't overwrite a cache that already exists, since that could
+          // lead to dropped requests or data, i.e. if the current render suspends.
+          if (caches[otherIndex] === null) {
+            caches[otherIndex] = inProgressCache;
+          }
+          otherRenderLanes &= ~otherLane;
+        }
+        return inProgressCache;
+      }
+      lanes &= ~lane;
+    }
+    // There are no in-progress caches associated with the current render. Check
+    // if there's a pooled cache.
+    const pooledCache = root.pooledCache;
+    if (pooledCache !== null) {
+      // Associate the pooled cache with each of the render lanes.
+      lanes = renderLanes;
+      while (lanes > 0) {
+        const index = pickArbitraryLaneIndex(lanes);
+        const lane = 1 << index;
+        caches[index] = pooledCache;
+        lanes &= ~lane;
+      }
+      return pooledCache;
+    }
   }
 
   // Create a fresh cache.
@@ -801,8 +868,61 @@ export function requestFreshCache(root: FiberRoot, renderLanes: Lanes): Cache {
 
   // This is now the pooled cache.
   root.pooledCache = freshCache;
+
+  // Associate the new cache with each of the render lanes.
+  let lanes = renderLanes;
+  while (lanes > 0) {
+    const index = pickArbitraryLaneIndex(lanes);
+    const lane = 1 << index;
+    caches[index] = freshCache;
+    lanes &= ~lane;
+  }
+
   return freshCache;
 }
+
+export function getWorkInProgressCache(
+  root: FiberRoot,
+  renderLanes: Lanes,
+): Cache | null {
+  if (enableCache) {
+    // TODO: There should be a primary render lane, and we should use whatever
+    // cache is associated with that one.
+    const caches = root.caches;
+    if (caches !== null) {
+      let lanes = renderLanes;
+      while (lanes > 0) {
+        const lane = getHighestPriorityLane(lanes);
+        const index = laneToIndex(lane);
+        const inProgressCache: Cache | null = caches[index];
+        if (inProgressCache !== null) {
+          return inProgressCache;
+        }
+        lanes &= ~lane;
+      }
+    }
+  }
+  return null;
+}
+
+export function transferCacheToSpawnedLane(
+  root: FiberRoot,
+  cache: Cache,
+  lane: Lane,
+) {
+  const index = laneToIndex(lane);
+  let caches = root.caches;
+  if (caches !== null) {
+    const existingCache: Cache | null = caches[index];
+    if (existingCache === null) {
+      caches[index] = cache;
+    }
+  } else {
+    caches = root.caches = createLaneMap(null);
+    caches[index] = cache;
+  }
+}
+
 export function getBumpedLaneForHydration(
   root: FiberRoot,
   renderLanes: Lanes,
