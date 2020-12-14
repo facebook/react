@@ -762,7 +762,7 @@ export default class Store extends EventEmitter<{|
     errorsAndWarnings.forEach(errorOrWarning => {
       const errorsAndWarningsForElement = this._errorsAndWarnings.get(
         errorOrWarning.id,
-      ) ?? {errors: [], warnings: []};
+      ) || {errors: [], warnings: []};
 
       if (errorOrWarning.type === 'error') {
         errorsAndWarningsForElement.errors.push(errorOrWarning);
