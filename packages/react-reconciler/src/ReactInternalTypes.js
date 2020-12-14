@@ -319,7 +319,7 @@ export type Dispatcher = {|
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
   useOpaqueIdentifier(): any,
-  useRefresh?: () => () => void,
+  useRefresh?: () => <T>(?() => T, ?T) => void,
 
   unstable_isNewReconciler?: boolean,
 |};

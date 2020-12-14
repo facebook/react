@@ -489,7 +489,7 @@ function useOpaqueIdentifier(): OpaqueIDType {
   );
 }
 
-function useRefresh(): () => void {
+function useRefresh(): <T>(?() => T, ?T) => void {
   invariant(false, 'Not implemented.');
 }
 

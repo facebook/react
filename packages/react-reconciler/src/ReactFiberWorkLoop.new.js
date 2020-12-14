@@ -534,7 +534,7 @@ export function scheduleUpdateOnFiber(
   fiber: Fiber,
   lane: Lane,
   eventTime: number,
-) {
+): FiberRoot | null {
   checkForNestedUpdates();
   warnAboutRenderPhaseUpdatesInDEV(fiber);
 
@@ -656,6 +656,8 @@ export function scheduleUpdateOnFiber(
   // the same root, then it's not a huge deal, we just might batch more stuff
   // together more than necessary.
   mostRecentlyUpdatedRoot = root;
+
+  return root;
 }
 
 // This is split into a separate function so we can mark a fiber with pending

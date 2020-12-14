@@ -804,7 +804,7 @@ const Dispatcher: DispatcherType = {
   useEffect: (unsupportedHook: any),
   useOpaqueIdentifier: (unsupportedHook: any),
   useMutableSource: (unsupportedHook: any),
-  useRefresh(): () => void {
+  useRefresh(): <T>(?() => T, ?T) => void {
     return unsupportedRefresh;
   },
 };

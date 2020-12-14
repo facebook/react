@@ -45,6 +45,7 @@ import {
   setCurrentUpdateLanePriority,
   higherLanePriority,
   DefaultLanePriority,
+  transferCacheToSpawnedLane,
 } from './ReactFiberLane.new';
 import {readContext} from './ReactFiberNewContext.new';
 import {
@@ -1719,28 +1720,46 @@ function updateRefresh() {
   return updateCallback(refreshCache.bind(null, cache), [cache]);
 }
 
-function refreshCache(cache: Cache | null) {
+function refreshCache<T>(cache: Cache | null, seedKey: ?() => T, seedValue: T) {
   if (cache !== null) {
     const providers = cache.providers;
     if (providers !== null) {
-      providers.forEach(scheduleCacheRefresh);
+      let seededCache = null;
+      if (seedKey !== null && seedKey !== undefined) {
+        // TODO: Warn if wrong type
+        seededCache = {
+          providers: null,
+          data: new Map([[seedKey, seedValue]]),
+        };
+      }
+      providers.forEach(provider =>
+        scheduleCacheRefresh(provider, seededCache),
+      );
     }
   } else {
     // TODO: Warn if cache is null?
   }
 }
 
-function scheduleCacheRefresh(cacheComponentFiber: Fiber) {
+function scheduleCacheRefresh(
+  cacheComponentFiber: Fiber,
+  seededCache: Cache | null,
+) {
   // Inlined startTransition
   // TODO: Maybe we shouldn't automatically give this transition priority. Are
   // there valid use cases for a high-pri refresh? Like if the content is
   // super stale and you want to immediately hide it.
   const prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = 1;
+  // TODO: Do we really need the try/finally? I don't think any of these
+  // functions would ever throw unless there's an internal error.
   try {
     const eventTime = requestEventTime();
     const lane = requestUpdateLane(cacheComponentFiber);
-    scheduleUpdateOnFiber(cacheComponentFiber, lane, eventTime);
+    const root = scheduleUpdateOnFiber(cacheComponentFiber, lane, eventTime);
+    if (seededCache !== null && root !== null) {
+      transferCacheToSpawnedLane(root, seededCache, lane);
+    }
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
   }

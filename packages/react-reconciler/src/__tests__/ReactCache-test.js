@@ -405,6 +405,54 @@ describe('ReactCache', () => {
   });
 
   // @gate experimental
+  test('refresh a cache with seed data', async () => {
+    let refresh;
+    function App() {
+      refresh = useRefresh();
+      return <AsyncText showVersion={true} text="A" />;
+    }
+
+    // Mount initial data
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(
+        <Cache>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <App />
+          </Suspense>
+        </Cache>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    await ReactNoop.act(async () => {
+      await resolveText('A');
+    });
+    expect(Scheduler).toHaveYielded(['A [v1]']);
+    expect(root).toMatchRenderedOutput('A [v1]');
+
+    // Mutate the text service, then refresh for new data.
+    mutateRemoteTextService();
+    await ReactNoop.act(async () => {
+      // Refresh the cache with seeded data, like you would receive from a
+      // server mutation.
+      // TODO: Seeding multiple typed caches. Should work by calling `refresh`
+      // multiple times with different key/value pairs
+      const seededCache = new Map();
+      seededCache.set('A', {
+        ping: null,
+        status: 'resolved',
+        value: textServiceVersion,
+      });
+      refresh(createTextCache, seededCache);
+    });
+    // The root should re-render without a cache miss.
+    expect(Scheduler).toHaveYielded(['A [v2]']);
+    expect(root).toMatchRenderedOutput('A [v2]');
+  });
+
+  // @gate experimental
   test('refreshing a parent cache also refreshes its children', async () => {
     let refreshShell;
     function RefreshShell() {
