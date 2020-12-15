@@ -1099,6 +1099,15 @@ function updateHostRoot(current, workInProgress, renderLanes) {
   const nextState = workInProgress.memoizedState;
   // Caution: React DevTools currently depends on this property
   // being called "element".
+
+  if (enableCache) {
+    const nextCacheInstance: CacheInstance = nextState.cacheInstance;
+    pushProvider(workInProgress, CacheContext, nextCacheInstance);
+    if (nextCacheInstance !== prevState.cacheInstance) {
+      propagateCacheRefresh(workInProgress, renderLanes);
+    }
+  }
+
   const nextChildren = nextState.element;
   if (nextChildren === prevChildren) {
     resetHydrationState();
@@ -3170,6 +3179,11 @@ function beginWork(
       switch (workInProgress.tag) {
         case HostRoot:
           pushHostRootContext(workInProgress);
+          if (enableCache) {
+            const nextCacheInstance: CacheInstance =
+              current.memoizedState.cacheInstance;
+            pushProvider(workInProgress, CacheContext, nextCacheInstance);
+          }
           resetHydrationState();
           break;
         case HostComponent:

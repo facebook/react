@@ -151,6 +151,26 @@ describe('ReactCache', () => {
   });
 
   // @gate experimental
+  test('root acts as implicit cache boundary', async () => {
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <AsyncText text="A" />
+        </Suspense>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    await ReactNoop.act(async () => {
+      await resolveText('A');
+    });
+    expect(Scheduler).toHaveYielded(['A']);
+    expect(root).toMatchRenderedOutput('A');
+  });
+
+  // @gate experimental
   test('multiple new Cache boundaries in the same update share the same, fresh cache', async () => {
     function App({text}) {
       return (
@@ -377,6 +397,48 @@ describe('ReactCache', () => {
             <App />
           </Suspense>
         </Cache>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    await ReactNoop.act(async () => {
+      await resolveText('A');
+    });
+    expect(Scheduler).toHaveYielded(['A [v1]']);
+    expect(root).toMatchRenderedOutput('A [v1]');
+
+    // Mutate the text service, then refresh for new data.
+    mutateRemoteTextService();
+    await ReactNoop.act(async () => {
+      refresh();
+    });
+    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(root).toMatchRenderedOutput('A [v1]');
+
+    await ReactNoop.act(async () => {
+      await resolveText('A');
+    });
+    // Note that the version has updated
+    expect(Scheduler).toHaveYielded(['A [v2]']);
+    expect(root).toMatchRenderedOutput('A [v2]');
+  });
+
+  // @gate experimental
+  test('refresh the root cache', async () => {
+    let refresh;
+    function App() {
+      refresh = useRefresh();
+      return <AsyncText showVersion={true} text="A" />;
+    }
+
+    // Mount initial data
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>
+          <App />
+        </Suspense>,
       );
     });
     expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);

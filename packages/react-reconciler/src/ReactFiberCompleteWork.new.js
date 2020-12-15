@@ -813,6 +813,9 @@ function completeWork(
       return null;
     }
     case HostRoot: {
+      if (enableCache) {
+        popProvider(CacheContext, workInProgress);
+      }
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       resetMutableSourceWorkInProgressVersions();

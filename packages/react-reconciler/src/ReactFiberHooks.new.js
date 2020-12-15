@@ -31,6 +31,7 @@ import {
   enableUseRefAccessWarning,
 } from 'shared/ReactFeatureFlags';
 
+import {HostRoot} from './ReactWorkTags';
 import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   NoLane,
@@ -95,6 +96,7 @@ import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
 import {CacheContext} from './ReactFiberCacheComponent';
+import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.new';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1742,11 +1744,30 @@ function refreshCache<T>(
     try {
       const eventTime = requestEventTime();
       const lane = requestUpdateLane(provider);
+      // TODO: Does Cache work in legacy mode? Should decide and write a test.
       const root = scheduleUpdateOnFiber(provider, lane, eventTime);
+
+      let seededCache = null;
       if (seedKey !== null && seedKey !== undefined && root !== null) {
         // TODO: Warn if wrong type
-        const seededCache = new Map([[seedKey, seedValue]]);
+        seededCache = new Map([[seedKey, seedValue]]);
         transferCacheToSpawnedLane(root, seededCache, lane);
+      }
+
+      if (provider.tag === HostRoot) {
+        const refreshUpdate = createUpdate(eventTime, lane);
+        refreshUpdate.payload = {
+          cacheInstance: {
+            provider: provider,
+            cache:
+              // For the root cache, we won't bother to lazily initialize the
+              // map. Seed an empty one. This saves use the trouble of having
+              // to use an updater function. Maybe we should use this approach
+              // for non-root refreshes, too.
+              seededCache !== null ? seededCache : new Map(),
+          },
+        };
+        enqueueUpdate(provider, refreshUpdate);
       }
     } finally {
       ReactCurrentBatchConfig.transition = prevTransition;
@@ -1870,9 +1891,7 @@ function getCacheForType<T>(resourceType: () => T): T {
   const cacheInstance: CacheInstance | null = readContext(CacheContext);
   invariant(
     cacheInstance !== null,
-    'Tried to fetch data, but no cache was found. To fix, wrap your ' +
-      "component in a <Cache /> boundary. It doesn't need to be a direct " +
-      'parent; it can be anywhere in the ancestor path',
+    'Internal React error: Should always have a cache.',
   );
   let cache = cacheInstance.cache;
   if (cache === null) {

@@ -70,6 +70,9 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       return null;
     }
     case HostRoot: {
+      if (enableCache) {
+        popProvider(CacheContext, workInProgress);
+      }
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       resetMutableSourceWorkInProgressVersions();
@@ -156,6 +159,9 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
       break;
     }
     case HostRoot: {
+      if (enableCache) {
+        popProvider(CacheContext, interruptedWork);
+      }
       popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
       resetMutableSourceWorkInProgressVersions();
