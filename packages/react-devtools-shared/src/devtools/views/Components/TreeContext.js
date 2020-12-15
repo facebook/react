@@ -384,33 +384,43 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         if (store.errorsAndWarnings.size === 0) {
           return state;
         }
-        // TODO (inline errors) The element indices are incorrect if the element is hidden in a collapsed tree.
-        // Shouldn't hidden elements excluded from computing a valid index?
-        const elementIndicesWithErrorsOrWarnings: number[] = Array.from(
-          store.errorsAndWarnings.keys(),
-        )
+
+        // Mapping of ID -> Index in the flat tree
+        const elementIndicesWithErrorsOrWarnings: [
+          number,
+          number,
+        ][] = Array.from(store.errorsAndWarnings.keys())
           .map(elementId => {
             // $FlowFixMe https://github.com/facebook/flow/issues/1414
-            return store.getIndexOfElementID(elementId);
+            return [elementId, store.getIndexOfElementID(elementId)];
           })
-          .filter(elementIndex => {
+          .filter(([, elementIndex]) => {
             return elementIndex !== null;
           });
+        elementIndicesWithErrorsOrWarnings.sort(([, a], [, b]) => {
+          return b - a;
+        });
+
+        const flatSelectedElementIndex =
+          // Selected element in a collapsed tree?
+          selectedElementIndex === null && selectedElementID !== null
+            ? store.getIndexOfElementID(selectedElementID)
+            : selectedElementIndex;
         const predecessors = elementIndicesWithErrorsOrWarnings.filter(
-          elementIndex => {
+          ([, elementIndex]) => {
             return (
-              selectedElementIndex === null ||
-              elementIndex < selectedElementIndex
+              flatSelectedElementIndex === null ||
+              elementIndex < flatSelectedElementIndex
             );
           },
         );
         if (predecessors.length === 0) {
-          selectedElementIndex = Math.max(
-            ...elementIndicesWithErrorsOrWarnings,
-          );
+          selectedElementID = elementIndicesWithErrorsOrWarnings[0][0];
         } else {
-          selectedElementIndex = Math.max(...predecessors);
+          selectedElementID = predecessors[0][0];
         }
+        selectedElementIndex = store.getIndexOfElementID(selectedElementID);
+        lookupIDForIndex = false;
         break;
       }
       case 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE': {
@@ -418,31 +428,42 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
           return state;
         }
 
-        const elementIndicesWithErrorsOrWarnings: number[] = Array.from(
-          store.errorsAndWarnings.keys(),
-        )
+        // Mapping of ID -> Index in the flat tree
+        const elementIndicesWithErrorsOrWarnings: [
+          number,
+          number,
+        ][] = Array.from(store.errorsAndWarnings.keys())
           .map(elementId => {
             // $FlowFixMe https://github.com/facebook/flow/issues/1414
-            return store.getIndexOfElementID(elementId);
+            return [elementId, store.getIndexOfElementID(elementId)];
           })
-          .filter(elementIndex => {
+          .filter(([, elementIndex]) => {
             return elementIndex !== null;
           });
+        elementIndicesWithErrorsOrWarnings.sort(([, a], [, b]) => {
+          return a - b;
+        });
+
+        const flatSelectedElementIndex =
+          // Selected element in a collapsed tree?
+          selectedElementIndex === null && selectedElementID !== null
+            ? store.getIndexOfElementID(selectedElementID)
+            : selectedElementIndex;
         const successors = elementIndicesWithErrorsOrWarnings.filter(
-          elementIndex => {
+          ([, elementIndex]) => {
             return (
-              selectedElementIndex === null ||
-              elementIndex > selectedElementIndex
+              flatSelectedElementIndex === null ||
+              elementIndex > flatSelectedElementIndex
             );
           },
         );
         if (successors.length === 0) {
-          selectedElementIndex = Math.min(
-            ...elementIndicesWithErrorsOrWarnings,
-          );
+          selectedElementID = elementIndicesWithErrorsOrWarnings[0][0];
         } else {
-          selectedElementIndex = Math.min(...successors);
+          selectedElementID = successors[0][0];
         }
+        selectedElementIndex = store.getIndexOfElementID(selectedElementID);
+        lookupIDForIndex = false;
         break;
       }
       default:
