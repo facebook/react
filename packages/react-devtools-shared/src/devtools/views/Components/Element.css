@@ -2,8 +2,10 @@
 .InactiveSelectedElement,
 .SelectedElement,
 .HoveredElement {
-  background-color: var(--color-background-hover);
   color: var(--color-component-name);
+}
+.HoveredElement {
+  background-color: var(--color-background-hover);
 }
 .InactiveSelectedElement {
   background-color: var(--color-background-inactive);
