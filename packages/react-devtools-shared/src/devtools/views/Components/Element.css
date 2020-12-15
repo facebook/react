@@ -80,7 +80,7 @@
 }
 
 .Errors, .Warnings {
-  align-items: baseline;
+  align-items: center;
   display: flex;
 }
 
