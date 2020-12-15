@@ -95,14 +95,23 @@ export default function SearchInput(props: Props) {
         className={styles.IconButton}
         disabled={!searchText}
         onClick={() => dispatch({type: 'GO_TO_PREVIOUS_SEARCH_RESULT'})}
-        title="Scroll to previous search result">
+        title={
+          <React.Fragment>
+            Scroll to previous search result (<kbd>Shift</kbd> +{' '}
+            <kbd>Enter</kbd>)
+          </React.Fragment>
+        }>
         <ButtonIcon type="up" />
       </Button>
       <Button
         className={styles.IconButton}
         disabled={!searchText}
         onClick={() => dispatch({type: 'GO_TO_NEXT_SEARCH_RESULT'})}
-        title="Scroll to next search result">
+        title={
+          <React.Fragment>
+            Scroll to next search result (<kbd>Enter</kbd>)
+          </React.Fragment>
+        }>
         <ButtonIcon type="down" />
       </Button>
       <Button
