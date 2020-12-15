@@ -209,7 +209,11 @@ import {
 } from './ReactFiberWorkLoop.old';
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {setWorkInProgressVersion} from './ReactMutableSource.old';
-import {CacheContext, pushCacheProvider} from './ReactFiberCacheComponent';
+import {
+  CacheContext,
+  pushFreshCacheProvider,
+  pushStaleCacheProvider,
+} from './ReactFiberCacheComponent';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
@@ -724,7 +728,7 @@ function updateCacheComponent(
         initialState = {
           cache: freshCache,
         };
-        pushCacheProvider(workInProgress, cacheInstance);
+        pushFreshCacheProvider(workInProgress, cacheInstance);
         // No need to propagate the refresh, because this is a new tree.
       } else {
         // Use the parent cache
@@ -754,7 +758,7 @@ function updateCacheComponent(
           cache: nextCache,
           provider: workInProgress,
         };
-        pushCacheProvider(workInProgress, cacheInstance);
+        pushFreshCacheProvider(workInProgress, cacheInstance);
         // Refreshes propagate through the entire subtree. The refreshed cache
         // will override nested caches.
         propagateCacheRefresh(workInProgress, renderLanes);
@@ -774,7 +778,7 @@ function updateCacheComponent(
       cacheInstance = current.stateNode;
       if (cacheInstance !== null) {
         // There was no refresh, so no need to propagate to nested boundaries.
-        pushCacheProvider(workInProgress, cacheInstance);
+        pushStaleCacheProvider(workInProgress, cacheInstance);
       }
     }
   }
@@ -1143,9 +1147,11 @@ function updateHostRoot(current, workInProgress, renderLanes) {
 
   if (enableCache) {
     const nextCacheInstance: CacheInstance = nextState.cacheInstance;
-    pushCacheProvider(workInProgress, nextCacheInstance);
     if (nextCacheInstance !== prevState.cacheInstance) {
+      pushFreshCacheProvider(workInProgress, nextCacheInstance);
       propagateCacheRefresh(workInProgress, renderLanes);
+    } else {
+      pushStaleCacheProvider(workInProgress, nextCacheInstance);
     }
   }
 
@@ -3223,7 +3229,7 @@ function beginWork(
           if (enableCache) {
             const nextCacheInstance: CacheInstance =
               current.memoizedState.cacheInstance;
-            pushCacheProvider(workInProgress, nextCacheInstance);
+            pushStaleCacheProvider(workInProgress, nextCacheInstance);
           }
           resetHydrationState();
           break;
@@ -3396,7 +3402,7 @@ function beginWork(
           if (enableCache) {
             const ownCacheInstance: CacheInstance | null = current.stateNode;
             if (ownCacheInstance !== null) {
-              pushCacheProvider(workInProgress, ownCacheInstance);
+              pushStaleCacheProvider(workInProgress, ownCacheInstance);
             }
             workInProgress.stateNode = ownCacheInstance;
           }

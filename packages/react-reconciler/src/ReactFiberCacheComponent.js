@@ -37,18 +37,51 @@ if (__DEV__) {
   CacheContext._currentRenderer2 = null;
 }
 
-export function pushCacheProvider(
+// A parent cache refresh always overrides any nested cache. So there will only
+// ever be a single fresh cache on the context stack.
+// TODO: Use this to detect parent refreshes.
+let freshCacheInstance: CacheInstance | null = null;
+
+export function pushStaleCacheProvider(
   workInProgress: Fiber,
   cacheInstance: CacheInstance,
 ) {
+  if (__DEV__) {
+    if (freshCacheInstance !== null) {
+      console.error(
+        'Already inside a fresh cache boundary. This is a bug in React.',
+      );
+    }
+  }
+  pushProvider(workInProgress, CacheContext, cacheInstance);
+}
+
+export function pushFreshCacheProvider(
+  workInProgress: Fiber,
+  cacheInstance: CacheInstance,
+) {
+  if (__DEV__) {
+    if (freshCacheInstance !== null) {
+      console.error(
+        'Already inside a fresh cache boundary. This is a bug in React.',
+      );
+    }
+  }
+  freshCacheInstance = cacheInstance;
   pushProvider(workInProgress, CacheContext, cacheInstance);
 }
 
 export function popCacheProvider(
   workInProgress: Fiber,
-  // We don't actually use the cache instance object, but you're not supposed to
-  // call this function unless it exists.
   cacheInstance: CacheInstance,
 ) {
+  if (__DEV__) {
+    if (freshCacheInstance !== null && freshCacheInstance !== cacheInstance) {
+      console.error(
+        'Unexpected cache instance on context. This is a bug in React.',
+      );
+    }
+  }
+  freshCacheInstance = null;
   popProvider(CacheContext, workInProgress);
 }
