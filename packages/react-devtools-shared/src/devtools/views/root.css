@@ -163,7 +163,7 @@
   --dark-color-tooltip-text: #000000;
   --dark-color-warning-background: hsl(50deg 100% 10%);
   --dark-color-warning-border: rgb(102 85 0);
-  --dark-color-warning-text: hsl(39deg 100% 18%);
+  --dark-color-warning-text: rgb(255 253 250);
 
   /* Font smoothing */
   --light-font-smoothing: auto;
