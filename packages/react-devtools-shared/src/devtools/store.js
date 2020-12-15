@@ -784,6 +784,7 @@ export default class Store extends EventEmitter<{|
     }
 
     let haveRootsChanged = false;
+    let haveWarningsAndErrorsChanged = false;
 
     // The first two values are always rendererID and rootID
     const rendererID = operations[0];
@@ -985,6 +986,10 @@ export default class Store extends EventEmitter<{|
                 set.delete(id);
               }
             }
+
+            const deletedWarnings = this._errorsAndWarnings.delete(id);
+            haveWarningsAndErrorsChanged =
+              haveWarningsAndErrorsChanged || deletedWarnings;
           }
           break;
         }
@@ -1061,6 +1066,10 @@ export default class Store extends EventEmitter<{|
       if (this._supportsProfiling !== prevSupportsProfiling) {
         this.emit('supportsProfiling');
       }
+    }
+
+    if (haveWarningsAndErrorsChanged) {
+      this.emit('errorsAndWarnings', this._errorsAndWarnings);
     }
 
     if (__DEBUG__) {

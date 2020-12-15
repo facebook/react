@@ -117,6 +117,7 @@ export default function ElementTypes() {
       <WarnOnMount />
       <WarnOnUpdate />
       {count === 0 ? <WarnOnUnmount /> : null}
+      {count === 0 ? <WarnOnMount /> : null}
       <ErrorDuringRender />
       <ErrorOnMount />
       <ErrorOnUpdate />
