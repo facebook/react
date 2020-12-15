@@ -11,6 +11,8 @@ import type {ReactContext} from 'shared/ReactTypes';
 
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
+import {pushProvider, popProvider} from './ReactFiberNewContext.new';
+
 export type Cache = Map<() => mixed, mixed>;
 
 export type CacheInstance = {|
@@ -33,4 +35,20 @@ export const CacheContext: ReactContext<CacheInstance> = {
 if (__DEV__) {
   CacheContext._currentRenderer = null;
   CacheContext._currentRenderer2 = null;
+}
+
+export function pushCacheProvider(
+  workInProgress: Fiber,
+  cacheInstance: CacheInstance,
+) {
+  pushProvider(workInProgress, CacheContext, cacheInstance);
+}
+
+export function popCacheProvider(
+  workInProgress: Fiber,
+  // We don't actually use the cache instance object, but you're not supposed to
+  // call this function unless it exists.
+  cacheInstance: CacheInstance,
+) {
+  popProvider(CacheContext, workInProgress);
 }

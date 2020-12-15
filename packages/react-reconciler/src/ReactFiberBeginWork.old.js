@@ -209,7 +209,7 @@ import {
 } from './ReactFiberWorkLoop.old';
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {setWorkInProgressVersion} from './ReactMutableSource.old';
-import {CacheContext} from './ReactFiberCacheComponent';
+import {CacheContext, pushCacheProvider} from './ReactFiberCacheComponent';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
@@ -724,7 +724,7 @@ function updateCacheComponent(
         initialState = {
           cache: freshCache,
         };
-        pushProvider(workInProgress, CacheContext, cacheInstance);
+        pushCacheProvider(workInProgress, cacheInstance);
         // No need to propagate the refresh, because this is a new tree.
       } else {
         // Use the parent cache
@@ -754,7 +754,7 @@ function updateCacheComponent(
           cache: nextCache,
           provider: workInProgress,
         };
-        pushProvider(workInProgress, CacheContext, cacheInstance);
+        pushCacheProvider(workInProgress, cacheInstance);
         // Refreshes propagate through the entire subtree. The refreshed cache
         // will override nested caches.
         propagateCacheRefresh(workInProgress, renderLanes);
@@ -774,7 +774,7 @@ function updateCacheComponent(
       cacheInstance = current.stateNode;
       if (cacheInstance !== null) {
         // There was no refresh, so no need to propagate to nested boundaries.
-        pushProvider(workInProgress, CacheContext, cacheInstance);
+        pushCacheProvider(workInProgress, cacheInstance);
       }
     }
   }
@@ -1143,7 +1143,7 @@ function updateHostRoot(current, workInProgress, renderLanes) {
 
   if (enableCache) {
     const nextCacheInstance: CacheInstance = nextState.cacheInstance;
-    pushProvider(workInProgress, CacheContext, nextCacheInstance);
+    pushCacheProvider(workInProgress, nextCacheInstance);
     if (nextCacheInstance !== prevState.cacheInstance) {
       propagateCacheRefresh(workInProgress, renderLanes);
     }
@@ -3223,7 +3223,7 @@ function beginWork(
           if (enableCache) {
             const nextCacheInstance: CacheInstance =
               current.memoizedState.cacheInstance;
-            pushProvider(workInProgress, CacheContext, nextCacheInstance);
+            pushCacheProvider(workInProgress, nextCacheInstance);
           }
           resetHydrationState();
           break;
@@ -3396,7 +3396,7 @@ function beginWork(
           if (enableCache) {
             const ownCacheInstance: CacheInstance | null = current.stateNode;
             if (ownCacheInstance !== null) {
-              pushProvider(workInProgress, CacheContext, ownCacheInstance);
+              pushCacheProvider(workInProgress, ownCacheInstance);
             }
             workInProgress.stateNode = ownCacheInstance;
           }

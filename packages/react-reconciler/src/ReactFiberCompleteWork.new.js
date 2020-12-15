@@ -157,7 +157,7 @@ import {
 import {resetChildFibers} from './ReactChildFiber.new';
 import {createScopeInstance} from './ReactFiberScope.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
-import {CacheContext} from './ReactFiberCacheComponent';
+import {popCacheProvider} from './ReactFiberCacheComponent';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -814,7 +814,9 @@ function completeWork(
     }
     case HostRoot: {
       if (enableCache) {
-        popProvider(CacheContext, workInProgress);
+        const cacheInstance: CacheInstance =
+          workInProgress.memoizedState.cacheInstance;
+        popCacheProvider(workInProgress, cacheInstance);
       }
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
@@ -1495,7 +1497,7 @@ function completeWork(
         const ownCacheInstance: CacheInstance | null = workInProgress.stateNode;
         if (ownCacheInstance !== null) {
           // This is a cache provider.
-          popProvider(CacheContext, workInProgress);
+          popCacheProvider(workInProgress, ownCacheInstance);
         }
         bubbleProperties(workInProgress);
         return null;

@@ -44,8 +44,8 @@ import {
 } from './ReactFiberContext.old';
 import {popProvider} from './ReactFiberNewContext.old';
 import {popRenderLanes} from './ReactFiberWorkLoop.old';
+import {popCacheProvider} from './ReactFiberCacheComponent';
 import {transferActualDuration} from './ReactProfilerTimer.old';
-import {CacheContext} from './ReactFiberCacheComponent';
 
 import invariant from 'shared/invariant';
 
@@ -71,7 +71,9 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
     }
     case HostRoot: {
       if (enableCache) {
-        popProvider(CacheContext, workInProgress);
+        const cacheInstance: CacheInstance =
+          workInProgress.memoizedState.cacheInstance;
+        popCacheProvider(workInProgress, cacheInstance);
       }
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
@@ -139,7 +141,7 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       if (enableCache) {
         const ownCacheInstance: CacheInstance | null = workInProgress.stateNode;
         if (ownCacheInstance !== null) {
-          popProvider(CacheContext, workInProgress);
+          popCacheProvider(workInProgress, ownCacheInstance);
         }
       }
       return null;
@@ -159,7 +161,9 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
     }
     case HostRoot: {
       if (enableCache) {
-        popProvider(CacheContext, interruptedWork);
+        const cacheInstance: CacheInstance =
+          interruptedWork.memoizedState.cacheInstance;
+        popCacheProvider(interruptedWork, cacheInstance);
       }
       popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
@@ -192,7 +196,7 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
         const ownCacheInstance: CacheInstance | null =
           interruptedWork.stateNode;
         if (ownCacheInstance !== null) {
-          popProvider(CacheContext, interruptedWork);
+          popCacheProvider(interruptedWork, ownCacheInstance);
         }
       }
       break;
