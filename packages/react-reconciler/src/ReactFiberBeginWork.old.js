@@ -667,7 +667,7 @@ function updateCacheComponent(
   // Read directly from the context. We don't set up a context dependency
   // because the propagation function automatically includes CacheComponents in
   // its search.
-  const parentCacheInstance: CacheInstance | null = isPrimaryRenderer
+  const parentCacheInstance: CacheInstance = isPrimaryRenderer
     ? CacheContext._currentValue
     : CacheContext._currentValue2;
 
@@ -684,10 +684,7 @@ function updateCacheComponent(
     // This may be the same as the parent cache, like if the current render
     // spawned from a previous render that already committed. Otherwise, this
     // is the root of a cache consistency boundary.
-    if (
-      parentCacheInstance === null ||
-      freshCache !== parentCacheInstance.cache
-    ) {
+    if (freshCache !== parentCacheInstance.cache) {
       ownCacheInstance = {
         cache: freshCache,
         provider: workInProgress,

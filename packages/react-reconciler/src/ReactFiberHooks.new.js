@@ -1713,67 +1713,62 @@ function rerenderOpaqueIdentifier(): OpaqueIDType | void {
 }
 
 function mountRefresh() {
-  // TODO: CacheInstance should never be null. Update type.
-  const cacheInstance: CacheInstance | null = readContext(CacheContext);
+  const cacheInstance: CacheInstance = readContext(CacheContext);
   return mountCallback(refreshCache.bind(null, cacheInstance), [cacheInstance]);
 }
 
 function updateRefresh() {
-  const cacheInstance: CacheInstance | null = readContext(CacheContext);
+  const cacheInstance: CacheInstance = readContext(CacheContext);
   return updateCallback(refreshCache.bind(null, cacheInstance), [
     cacheInstance,
   ]);
 }
 
 function refreshCache<T>(
-  cacheInstance: CacheInstance | null,
+  cacheInstance: CacheInstance,
   seedKey: ?() => T,
   seedValue: T,
 ) {
-  if (cacheInstance !== null) {
-    const provider = cacheInstance.provider;
+  const provider = cacheInstance.provider;
 
-    // Inlined startTransition
-    // TODO: Maybe we shouldn't automatically give this transition priority. Are
-    // there valid use cases for a high-pri refresh? Like if the content is
-    // super stale and you want to immediately hide it.
-    const prevTransition = ReactCurrentBatchConfig.transition;
-    ReactCurrentBatchConfig.transition = 1;
-    // TODO: Do we really need the try/finally? I don't think any of these
-    // functions would ever throw unless there's an internal error.
-    try {
-      const eventTime = requestEventTime();
-      const lane = requestUpdateLane(provider);
-      // TODO: Does Cache work in legacy mode? Should decide and write a test.
-      const root = scheduleUpdateOnFiber(provider, lane, eventTime);
+  // Inlined startTransition
+  // TODO: Maybe we shouldn't automatically give this transition priority. Are
+  // there valid use cases for a high-pri refresh? Like if the content is
+  // super stale and you want to immediately hide it.
+  const prevTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition = 1;
+  // TODO: Do we really need the try/finally? I don't think any of these
+  // functions would ever throw unless there's an internal error.
+  try {
+    const eventTime = requestEventTime();
+    const lane = requestUpdateLane(provider);
+    // TODO: Does Cache work in legacy mode? Should decide and write a test.
+    const root = scheduleUpdateOnFiber(provider, lane, eventTime);
 
-      let seededCache = null;
-      if (seedKey !== null && seedKey !== undefined && root !== null) {
-        // TODO: Warn if wrong type
-        seededCache = new Map([[seedKey, seedValue]]);
-        transferCacheToSpawnedLane(root, seededCache, lane);
-      }
-
-      if (provider.tag === HostRoot) {
-        const refreshUpdate = createUpdate(eventTime, lane);
-        refreshUpdate.payload = {
-          cacheInstance: {
-            provider: provider,
-            cache:
-              // For the root cache, we won't bother to lazily initialize the
-              // map. Seed an empty one. This saves use the trouble of having
-              // to use an updater function. Maybe we should use this approach
-              // for non-root refreshes, too.
-              seededCache !== null ? seededCache : new Map(),
-          },
-        };
-        enqueueUpdate(provider, refreshUpdate);
-      }
-    } finally {
-      ReactCurrentBatchConfig.transition = prevTransition;
+    let seededCache = null;
+    if (seedKey !== null && seedKey !== undefined && root !== null) {
+      // TODO: Warn if wrong type
+      seededCache = new Map([[seedKey, seedValue]]);
+      transferCacheToSpawnedLane(root, seededCache, lane);
     }
-  } else {
-    // TODO: CacheInstance should never be null. Update type.
+
+    if (provider.tag === HostRoot) {
+      const refreshUpdate = createUpdate(eventTime, lane);
+      refreshUpdate.payload = {
+        cacheInstance: {
+          provider: provider,
+          cache:
+            // For the root cache, we won't bother to lazily initialize the
+            // map. Seed an empty one. This saves use the trouble of having
+            // to use an updater function. Maybe we should use this approach
+            // for non-root refreshes, too.
+            seededCache !== null ? seededCache : new Map(),
+        },
+      };
+      enqueueUpdate(provider, refreshUpdate);
+    }
+  } finally {
+    ReactCurrentBatchConfig.transition = prevTransition;
   }
 }
 
@@ -1888,11 +1883,7 @@ function dispatchAction<S, A>(
 }
 
 function getCacheForType<T>(resourceType: () => T): T {
-  const cacheInstance: CacheInstance | null = readContext(CacheContext);
-  invariant(
-    cacheInstance !== null,
-    'Internal React error: Should always have a cache.',
-  );
+  const cacheInstance: CacheInstance = readContext(CacheContext);
   let cache = cacheInstance.cache;
   if (cache === null) {
     cache = cacheInstance.cache = new Map();
