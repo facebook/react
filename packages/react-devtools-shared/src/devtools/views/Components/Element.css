@@ -2,15 +2,8 @@
 .InactiveSelectedElement,
 .SelectedElement,
 .HoveredElement {
-  color: var(--color-component-name);
-}
-.Element[data-errors="true"] {
-  background-color: var(--color-error-background-message);
-}
-.Element[data-warnings="true"] {
-  background-color: var(--color-warning-background);}
-.HoveredElement {
   background-color: var(--color-background-hover);
+  color: var(--color-component-name);
 }
 .InactiveSelectedElement {
   background-color: var(--color-background-inactive);
@@ -79,22 +72,20 @@
   margin-left: 0.25rem;
 }
 
-.Errors, .Warnings {
-  align-items: center;
-  display: flex;
+.ErrorIcon,
+.ErrorIconContrast,
+.WarningIcon,
+.WarningIconContrast {
+  height: 0.75rem !important;
+  width: 0.75rem !important;
+  margin-left: 0.25rem;
 }
-
-.Errors svg, .Warnings svg {
-  height: 1em;
-  margin-left: 4px;
-  margin-right: 4px;
-  width: 1em;
-}
-
-.Errors {
+.ErrorIcon {
   color: var(--color-error-text);
 }
-
-.Warnings {
+.WarningIcon {
   color: var(--color-warning-text);
+}
+.ErrorIconContrast, .WarningIconContrast, {
+  color: var(--color-component-name);
 }

@@ -132,9 +132,7 @@ export default function Element({data, index, style}: Props) {
       onMouseDown={handleMouseDown}
       onDoubleClick={handleDoubleClick}
       style={style}
-      data-depth={depth}
-      data-errors={errors.length > 0}
-      data-warnings={warnings.length > 0}>
+      data-depth={depth}>
       {/* This wrapper is used by Tree for measurement purposes. */}
       <div
         className={styles.Wrapper}
@@ -171,16 +169,10 @@ export default function Element({data, index, style}: Props) {
           </Badge>
         ) : null}
         {errors.length > 0 && (
-          <span className={styles.Errors}>
-            <Icon type="error" />
-            {errors.length}
-          </span>
+          <Icon type="error" className={isSelected && treeFocused ? styles.ErrorIconContrast : styles.ErrorIcon} />
         )}
         {warnings.length > 0 && (
-          <span className={styles.Warnings}>
-            <Icon type="warning" />
-            {warnings.length}
-          </span>
+          <Icon type="warning" className={isSelected && treeFocused ? styles.WarningIconContrast : styles.WarningIcon} />
         )}
       </div>
     </div>
