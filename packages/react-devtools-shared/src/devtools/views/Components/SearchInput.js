@@ -34,25 +34,6 @@ export default function SearchInput(props: Props) {
     [dispatch],
   );
 
-  const handleKeyDown = useCallback(
-    event => {
-      // For convenience, let up/down arrow keys change Tree selection.
-      switch (event.key) {
-        case 'ArrowDown':
-          dispatch({type: 'SELECT_NEXT_ELEMENT_IN_TREE'});
-          event.preventDefault();
-          break;
-        case 'ArrowUp':
-          dispatch({type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE'});
-          event.preventDefault();
-          break;
-        default:
-          break;
-      }
-    },
-    [dispatch],
-  );
-
   const handleInputKeyPress = useCallback(
     ({key, shiftKey}) => {
       if (key === 'Enter') {
@@ -98,7 +79,6 @@ export default function SearchInput(props: Props) {
       <input
         className={styles.Input}
         onChange={handleTextChange}
-        onKeyDown={handleKeyDown}
         onKeyPress={handleInputKeyPress}
         placeholder="Search (text or /regex/)"
         ref={inputRef}
