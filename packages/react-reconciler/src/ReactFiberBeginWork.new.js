@@ -674,36 +674,43 @@ function updateCacheComponent(
 
   let cacheInstance: CacheInstance | null = null;
   if (current === null) {
-    // This is a newly mounted component. Request a fresh cache.
-    // TODO: Fast path when parent cache component is also a new mount? We can
-    // check `parentCacheInstance.provider.alternate`.
-    const root = getWorkInProgressRoot();
-    invariant(
-      root !== null,
-      'Expected a work-in-progress root. This is a bug in React. Please ' +
-        'file an issue.',
-    );
-    const freshCache = requestFreshCache(root, renderLanes);
-    // This may be the same as the parent cache, like if the current render
-    // spawned from a previous render that already committed. Otherwise, this
-    // is the root of a cache consistency boundary.
     let initialState;
-    if (freshCache !== parentCacheInstance.cache) {
-      cacheInstance = {
-        cache: freshCache,
-        provider: workInProgress,
-      };
-      initialState = {
-        cache: freshCache,
-      };
-      pushProvider(workInProgress, CacheContext, cacheInstance);
-      // No need to propagate the refresh, because this is a new tree.
-    } else {
-      // Use the parent cache
+    if (parentCacheInstance.provider.alternate === null) {
+      // Fast path. The parent Cache boundary is also a new mount. We can
+      // inherit its cache.
       cacheInstance = null;
       initialState = {
         cache: null,
       };
+    } else {
+      // This is a newly mounted component. Request a fresh cache.
+      const root = getWorkInProgressRoot();
+      invariant(
+        root !== null,
+        'Expected a work-in-progress root. This is a bug in React. Please ' +
+          'file an issue.',
+      );
+      const freshCache = requestFreshCache(root, renderLanes);
+      // This may be the same as the parent cache, like if the current render
+      // spawned from a previous render that already committed. Otherwise, this
+      // is the root of a cache consistency boundary.
+      if (freshCache !== parentCacheInstance.cache) {
+        cacheInstance = {
+          cache: freshCache,
+          provider: workInProgress,
+        };
+        initialState = {
+          cache: freshCache,
+        };
+        pushProvider(workInProgress, CacheContext, cacheInstance);
+        // No need to propagate the refresh, because this is a new tree.
+      } else {
+        // Use the parent cache
+        cacheInstance = null;
+        initialState = {
+          cache: null,
+        };
+      }
     }
     // Initialize an update queue. We use this for refreshes.
     workInProgress.memoizedState = initialState;
