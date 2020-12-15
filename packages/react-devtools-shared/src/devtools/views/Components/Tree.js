@@ -339,13 +339,13 @@ export default function Tree(props: Props) {
             <React.Fragment>
               <Button
                 onClick={handlePreviousErrorOrWarningClick}
-                title="Previous error or warning">
-                <ButtonIcon type="previous" />
+                title="Scroll to previous error or warning">
+                <ButtonIcon type="up" />
               </Button>
               <Button
                 onClick={handleNextErrorOrWarningClick}
-                title="Next error or warning">
-                <ButtonIcon type="next" />
+                title="Scroll to next error or warning">
+                <ButtonIcon type="down" />
               </Button>
               <Button
                 onClick={() => store.clearErrorsAndWarnings()}
