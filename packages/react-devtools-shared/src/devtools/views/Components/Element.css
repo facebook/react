@@ -80,12 +80,15 @@
 }
 
 .Errors, .Warnings {
+  align-items: baseline;
   display: flex;
 }
 
 .Errors svg, .Warnings svg {
+  height: 1em;
   margin-left: 4px;
   margin-right: 4px;
+  width: 1em;
 }
 
 .Errors {
