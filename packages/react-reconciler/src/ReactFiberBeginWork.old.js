@@ -213,6 +213,7 @@ import {
   CacheContext,
   pushFreshCacheProvider,
   pushStaleCacheProvider,
+  hasFreshCacheProvider,
 } from './ReactFiberCacheComponent';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
@@ -680,25 +681,8 @@ function updateCacheComponent(
   let cacheInstance: CacheInstance | null = null;
   if (current === null) {
     let initialState;
-    const providerFiber = parentCacheInstance.provider;
-    if (
-      // If the provider fiber does not have an alternate, it must be a mount.
-      providerFiber.alternate === null ||
-      // Host roots are never not mounted. Even during the initial render. So we
-      // use a trick. Check if `memoizedState.element` is null. We also check
-      // the alternate. The work-in-progress fiber's `element` will never be
-      // null because we're inside a work-in-progress tree. So if either fiber's
-      // element is null, that fiber must be the current one, which most likely
-      // means it's the initial mount.
-      //
-      // (I say "most likely" because, technically, you could pass `null` to
-      // `root.render()`. But, meh, good enough.)
-      (providerFiber.tag === HostRoot &&
-        (providerFiber.memoizedState.element === null ||
-          (providerFiber.alternate !== null &&
-            providerFiber.alternate.memoizedState.element === null)))
-    ) {
-      // Fast path. The parent Cache boundary is also a new mount. We can
+    if (hasFreshCacheProvider()) {
+      // Fast path. The parent Cache is either a new mount or a refresh. We can
       // inherit its cache.
       cacheInstance = null;
       initialState = {
@@ -743,7 +727,11 @@ function updateCacheComponent(
     initializeUpdateQueue(workInProgress);
   } else {
     // This component already mounted.
-    if (includesSomeLane(renderLanes, updateLanes)) {
+    if (hasFreshCacheProvider()) {
+      // Fast path. The parent Cache is either a new mount or a refresh. We can
+      // inherit its cache.
+      cacheInstance = null;
+    } else if (includesSomeLane(renderLanes, updateLanes)) {
       // An refresh was scheduled. If it was an refresh on this fiber, then we
       // will have an update in the queue. Otherwise, it must have been an
       // update on a parent, propagated via context.
@@ -1138,7 +1126,7 @@ function updateHostRoot(current, workInProgress, renderLanes) {
   );
   const nextProps = workInProgress.pendingProps;
   const prevState = workInProgress.memoizedState;
-  const prevChildren = prevState !== null ? prevState.element : null;
+  const prevChildren = prevState.element;
   cloneUpdateQueue(current, workInProgress);
   processUpdateQueue(workInProgress, nextProps, null, renderLanes);
   const nextState = workInProgress.memoizedState;
@@ -1151,7 +1139,12 @@ function updateHostRoot(current, workInProgress, renderLanes) {
       pushFreshCacheProvider(workInProgress, nextCacheInstance);
       propagateCacheRefresh(workInProgress, renderLanes);
     } else {
-      pushStaleCacheProvider(workInProgress, nextCacheInstance);
+      if (prevChildren === null) {
+        // If there are no children, this must be the initial render.
+        pushFreshCacheProvider(workInProgress, nextCacheInstance);
+      } else {
+        pushStaleCacheProvider(workInProgress, nextCacheInstance);
+      }
     }
   }
 

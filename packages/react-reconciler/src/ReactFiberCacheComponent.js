@@ -10,6 +10,7 @@
 import type {ReactContext} from 'shared/ReactTypes';
 
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
+import {HostRoot} from './ReactWorkTags';
 
 import {pushProvider, popProvider} from './ReactFiberNewContext.new';
 
@@ -39,7 +40,6 @@ if (__DEV__) {
 
 // A parent cache refresh always overrides any nested cache. So there will only
 // ever be a single fresh cache on the context stack.
-// TODO: Use this to detect parent refreshes.
 let freshCacheInstance: CacheInstance | null = null;
 
 export function pushStaleCacheProvider(
@@ -61,7 +61,13 @@ export function pushFreshCacheProvider(
   cacheInstance: CacheInstance,
 ) {
   if (__DEV__) {
-    if (freshCacheInstance !== null) {
+    if (
+      freshCacheInstance !== null &&
+      // TODO: Remove this exception for roots. There are a few tests that throw
+      // in pushHostContainer, before the cache context is pushed. Not a huge
+      // issue, but should still fix.
+      workInProgress.tag !== HostRoot
+    ) {
       console.error(
         'Already inside a fresh cache boundary. This is a bug in React.',
       );
@@ -84,4 +90,8 @@ export function popCacheProvider(
   }
   freshCacheInstance = null;
   popProvider(CacheContext, workInProgress);
+}
+
+export function hasFreshCacheProvider() {
+  return freshCacheInstance !== null;
 }
