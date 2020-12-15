@@ -778,7 +778,7 @@ describe('Profiler', () => {
           },
         );
 
-        // Flush sync work with a nested upate
+        // Flush sync work with a nested update
         ReactNoop.flushSync(() => {
           ReactNoop.render(
             <React.Profiler id="root" onRender={onRender}>
