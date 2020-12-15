@@ -554,9 +554,8 @@ export function attach(
     pendingErrorOrWarnings.push({
       fiber,
       type,
-      // React pushes the component stack to the args later
+      // React pushes the component stack to the args later.
       // These are not interesting to the view in React devtools where we already have access to the component stack.
-      // TODO (inline errors) Should this actually be fixed when appending the component stack by not mutating the args?
       args: args.slice(),
     });
 
