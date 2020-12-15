@@ -352,9 +352,9 @@ export default function Tree(props: Props) {
                 title="Clear all errors and warnings">
                 <ButtonIcon type="clear" />
               </Button>
+              <div className={styles.VRule} />
             </React.Fragment>
           )}
-          <div className={styles.VRule} />
           <Suspense fallback={<Loading />}>
             {ownerID !== null ? <OwnersStack /> : <SearchInput />}
           </Suspense>
