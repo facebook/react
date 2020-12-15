@@ -1492,8 +1492,7 @@ function completeWork(
     }
     case CacheComponent: {
       if (enableCache) {
-        const ownCacheInstance: CacheInstance | null =
-          workInProgress.memoizedState;
+        const ownCacheInstance: CacheInstance | null = workInProgress.stateNode;
         if (ownCacheInstance !== null) {
           // This is a cache provider.
           popProvider(CacheContext, workInProgress);

@@ -137,8 +137,7 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       return null;
     case CacheComponent:
       if (enableCache) {
-        const ownCacheInstance: CacheInstance | null =
-          workInProgress.memoizedState;
+        const ownCacheInstance: CacheInstance | null = workInProgress.stateNode;
         if (ownCacheInstance !== null) {
           popProvider(CacheContext, workInProgress);
         }
@@ -191,7 +190,7 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
     case CacheComponent:
       if (enableCache) {
         const ownCacheInstance: CacheInstance | null =
-          interruptedWork.memoizedState;
+          interruptedWork.stateNode;
         if (ownCacheInstance !== null) {
           popProvider(CacheContext, interruptedWork);
         }

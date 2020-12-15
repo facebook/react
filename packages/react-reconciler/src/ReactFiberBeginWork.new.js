@@ -23,7 +23,8 @@ import type {
   OffscreenProps,
   OffscreenState,
 } from './ReactFiberOffscreenComponent';
-import type {CacheInstance} from './ReactFiberCacheComponent';
+import type {CacheInstance, Cache} from './ReactFiberCacheComponent';
+import type {UpdateQueue} from './ReactUpdateQueue.new';
 
 import checkPropTypes from 'shared/checkPropTypes';
 
@@ -671,9 +672,11 @@ function updateCacheComponent(
     ? CacheContext._currentValue
     : CacheContext._currentValue2;
 
-  let ownCacheInstance: CacheInstance | null = null;
+  let cacheInstance: CacheInstance | null = null;
   if (current === null) {
     // This is a newly mounted component. Request a fresh cache.
+    // TODO: Fast path when parent cache component is also a new mount? We can
+    // check `parentCacheInstance.provider.alternate`.
     const root = getWorkInProgressRoot();
     invariant(
       root !== null,
@@ -684,62 +687,74 @@ function updateCacheComponent(
     // This may be the same as the parent cache, like if the current render
     // spawned from a previous render that already committed. Otherwise, this
     // is the root of a cache consistency boundary.
+    let initialState;
     if (freshCache !== parentCacheInstance.cache) {
-      ownCacheInstance = {
+      cacheInstance = {
         cache: freshCache,
         provider: workInProgress,
       };
-      pushProvider(workInProgress, CacheContext, ownCacheInstance);
+      initialState = {
+        cache: freshCache,
+      };
+      pushProvider(workInProgress, CacheContext, cacheInstance);
       // No need to propagate the refresh, because this is a new tree.
     } else {
       // Use the parent cache
-      ownCacheInstance = null;
+      cacheInstance = null;
+      initialState = {
+        cache: null,
+      };
     }
+    // Initialize an update queue. We use this for refreshes.
+    workInProgress.memoizedState = initialState;
+    initializeUpdateQueue(workInProgress);
   } else {
     // This component already mounted.
     if (includesSomeLane(renderLanes, updateLanes)) {
-      // A refresh was scheduled.
-      const root = getWorkInProgressRoot();
-      invariant(
-        root !== null,
-        'Expected a work-in-progress root. This is a bug in React. Please ' +
-          'file an issue.',
-      );
-      const freshCache = requestFreshCache(root, renderLanes);
-      if (
-        parentCacheInstance === null ||
-        freshCache !== parentCacheInstance.cache
-      ) {
-        ownCacheInstance = {
-          cache: freshCache,
+      // An refresh was scheduled. If it was an refresh on this fiber, then we
+      // will have an update in the queue. Otherwise, it must have been an
+      // update on a parent, propagated via context.
+      cloneUpdateQueue(current, workInProgress);
+      processUpdateQueue(workInProgress, null, null, renderLanes);
+      const prevCache: Cache | null = current.memoizedState.cache;
+      const nextCache: Cache | null = workInProgress.memoizedState.cache;
+
+      if (nextCache !== prevCache && nextCache !== null) {
+        // Received a refresh.
+        cacheInstance = {
+          cache: nextCache,
           provider: workInProgress,
         };
-        pushProvider(workInProgress, CacheContext, ownCacheInstance);
+        pushProvider(workInProgress, CacheContext, cacheInstance);
         // Refreshes propagate through the entire subtree. The refreshed cache
         // will override nested caches.
         propagateCacheRefresh(workInProgress, renderLanes);
       } else {
-        // The fresh cache is the same as the parent cache.
-        ownCacheInstance = null;
+        // A parent cache boundary refreshed. So we can use the cache context.
+        cacheInstance = null;
+
+        // If the update queue is empty, disconnect the old cache from the tree
+        // so it can be garbage collected.
+        if (workInProgress.lanes === NoLanes) {
+          const updateQueue: UpdateQueue<any> = (workInProgress.updateQueue: any);
+          workInProgress.memoizedState = updateQueue.baseState = {cache: null};
+        }
       }
     } else {
       // Reuse the memoized cache.
-      const prevCacheInstance: CacheInstance | null = current.memoizedState;
-      if (prevCacheInstance !== null) {
-        ownCacheInstance = prevCacheInstance;
+      cacheInstance = current.stateNode;
+      if (cacheInstance !== null) {
         // There was no refresh, so no need to propagate to nested boundaries.
-        pushProvider(workInProgress, CacheContext, ownCacheInstance);
-      } else {
-        ownCacheInstance = null;
+        pushProvider(workInProgress, CacheContext, cacheInstance);
       }
     }
   }
 
-  // If this CacheComponent is the root of its tree, then `memoizedState` will
-  // point to a cache object. Otherwise, a null state indicates that this
+  // If this CacheComponent is the root of its tree, then `stateNode` will
+  // point to a cache instance. Otherwise, a null instance indicates that this
   // CacheComponent inherits from a parent boundary. We can use this to infer
   // whether to push/pop the cache context.
-  workInProgress.memoizedState = ownCacheInstance;
+  workInProgress.stateNode = cacheInstance;
 
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
@@ -3350,11 +3365,11 @@ function beginWork(
         }
         case CacheComponent: {
           if (enableCache) {
-            const ownCacheInstance: CacheInstance | null =
-              workInProgress.memoizedState;
+            const ownCacheInstance: CacheInstance | null = current.stateNode;
             if (ownCacheInstance !== null) {
               pushProvider(workInProgress, CacheContext, ownCacheInstance);
             }
+            workInProgress.stateNode = ownCacheInstance;
           }
           break;
         }

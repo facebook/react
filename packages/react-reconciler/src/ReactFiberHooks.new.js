@@ -46,7 +46,6 @@ import {
   setCurrentUpdateLanePriority,
   higherLanePriority,
   DefaultLanePriority,
-  transferCacheToSpawnedLane,
 } from './ReactFiberLane.new';
 import {readContext} from './ReactFiberNewContext.new';
 import {
@@ -1745,28 +1744,30 @@ function refreshCache<T>(
     // TODO: Does Cache work in legacy mode? Should decide and write a test.
     const root = scheduleUpdateOnFiber(provider, lane, eventTime);
 
-    let seededCache = null;
+    const seededCache = new Map();
     if (seedKey !== null && seedKey !== undefined && root !== null) {
-      // TODO: Warn if wrong type
-      seededCache = new Map([[seedKey, seedValue]]);
-      transferCacheToSpawnedLane(root, seededCache, lane);
+      // Seed the cache with the value passed by the caller. This could be from
+      // a server mutation, or it could be a streaming response.
+      seededCache.set(seedKey, seedValue);
     }
 
+    // Schedule an update on the cache boundary to trigger a refresh.
+    const refreshUpdate = createUpdate(eventTime, lane);
+    let payload;
     if (provider.tag === HostRoot) {
-      const refreshUpdate = createUpdate(eventTime, lane);
-      refreshUpdate.payload = {
+      payload = {
         cacheInstance: {
           provider: provider,
-          cache:
-            // For the root cache, we won't bother to lazily initialize the
-            // map. Seed an empty one. This saves use the trouble of having
-            // to use an updater function. Maybe we should use this approach
-            // for non-root refreshes, too.
-            seededCache !== null ? seededCache : new Map(),
+          cache: seededCache,
         },
       };
-      enqueueUpdate(provider, refreshUpdate);
+    } else {
+      payload = {
+        cache: seededCache,
+      };
     }
+    refreshUpdate.payload = payload;
+    enqueueUpdate(provider, refreshUpdate);
   } finally {
     ReactCurrentBatchConfig.transition = prevTransition;
   }
