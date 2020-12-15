@@ -210,6 +210,39 @@ describe('ReactCache', () => {
   });
 
   // @gate experimental
+  test(
+    'nested cache boundaries share the same cache as the root during ' +
+      'the initial render',
+    async () => {
+      function App({text}) {
+        return (
+          <Suspense fallback={<Text text="Loading..." />}>
+            <AsyncText text="A" />
+            <Cache>
+              <AsyncText text="A" />
+            </Cache>
+          </Suspense>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await ReactNoop.act(async () => {
+        root.render(<App showMore={false} />);
+      });
+      // Even though there are two new <Cache /> trees, they should share the same
+      // data cache. So there should be only a single cache miss for A.
+      expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+      expect(root).toMatchRenderedOutput('Loading...');
+
+      await ReactNoop.act(async () => {
+        await resolveText('A');
+      });
+      expect(Scheduler).toHaveYielded(['A', 'A']);
+      expect(root).toMatchRenderedOutput('AA');
+    },
+  );
+
+  // @gate experimental
   test('new content inside an existing Cache boundary should re-use already cached data', async () => {
     function App({showMore}) {
       return (
@@ -600,8 +633,8 @@ describe('ReactCache', () => {
         return null;
       }
 
-      function App({text}) {
-        return (
+      function App({showMore}) {
+        return showMore ? (
           <>
             <Cache>
               <Suspense fallback={<Text text="Loading..." />}>
@@ -615,13 +648,23 @@ describe('ReactCache', () => {
               </Suspense>
             </Cache>
           </>
-        );
+        ) : null;
       }
 
+      // First mount the initial shell without the nested boundaries. This is
+      // necessary for this test because we want the two inner boundaries to be
+      // treated like sibling providers that happen to share an underlying
+      // cache, as opposed to consumers of the root-level cache.
       const root = ReactNoop.createRoot();
       await ReactNoop.act(async () => {
         root.render(<App showMore={false} />);
       });
+
+      // Now reveal the boundaries. In a real app  this would be a navigation.
+      await ReactNoop.act(async () => {
+        root.render(<App showMore={true} />);
+      });
+
       // Even though there are two new <Cache /> trees, they should share the same
       // data cache. So there should be only a single cache miss for A.
       expect(Scheduler).toHaveYielded([

@@ -201,6 +201,7 @@ import {
   renderDidSuspendDelayIfPossible,
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
+  getRootRenderLanes,
   pushRenderLanes,
   getExecutionContext,
   RetryAfterError,
@@ -675,7 +676,24 @@ function updateCacheComponent(
   let cacheInstance: CacheInstance | null = null;
   if (current === null) {
     let initialState;
-    if (parentCacheInstance.provider.alternate === null) {
+    const providerFiber = parentCacheInstance.provider;
+    if (
+      // If the provider fiber does not have an alternate, it must be a mount.
+      providerFiber.alternate === null ||
+      // Host roots are never not mounted. Even during the initial render. So we
+      // use a trick. Check if `memoizedState.element` is null. We also check
+      // the alternate. The work-in-progress fiber's `element` will never be
+      // null because we're inside a work-in-progress tree. So if either fiber's
+      // element is null, that fiber must be the current one, which most likely
+      // means it's the initial mount.
+      //
+      // (I say "most likely" because, technically, you could pass `null` to
+      // `root.render()`. But, meh, good enough.)
+      (providerFiber.tag === HostRoot &&
+        (providerFiber.memoizedState.element === null ||
+          (providerFiber.alternate !== null &&
+            providerFiber.alternate.memoizedState.element === null)))
+    ) {
       // Fast path. The parent Cache boundary is also a new mount. We can
       // inherit its cache.
       cacheInstance = null;
@@ -690,11 +708,15 @@ function updateCacheComponent(
         'Expected a work-in-progress root. This is a bug in React. Please ' +
           'file an issue.',
       );
-      const freshCache = requestFreshCache(root, renderLanes);
+      const freshCache: Cache | null = requestFreshCache(
+        root,
+        getRootRenderLanes(),
+        renderLanes,
+      );
       // This may be the same as the parent cache, like if the current render
       // spawned from a previous render that already committed. Otherwise, this
       // is the root of a cache consistency boundary.
-      if (freshCache !== parentCacheInstance.cache) {
+      if (freshCache !== null && freshCache !== parentCacheInstance.cache) {
         cacheInstance = {
           cache: freshCache,
           provider: workInProgress,

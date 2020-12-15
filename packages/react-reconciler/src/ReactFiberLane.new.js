@@ -797,9 +797,13 @@ export function markRootEntangled(root: FiberRoot, entangledLanes: Lanes) {
   }
 }
 
-export function requestFreshCache(root: FiberRoot, renderLanes: Lanes): Cache {
+export function requestFreshCache(
+  root: FiberRoot,
+  rootRenderLanes: Lanes,
+  renderLanes: Lanes,
+): Cache | null {
   if (!enableCache) {
-    return (null: any);
+    return null;
   }
 
   // 1. Check if the currently rendering lanes already have a pending cache
@@ -844,6 +848,16 @@ export function requestFreshCache(root: FiberRoot, renderLanes: Lanes): Cache {
       }
       lanes &= ~lane;
     }
+
+    if (includesOnlyRetries(rootRenderLanes)) {
+      // If this is a retry, and there's no cache associated with this lane,
+      // that must be because the original update was triggered by a refresh.
+      // Refreshes are stored on the Cache update queue, not the root. So,
+      // return null to indicate that we should use the parent cache (the cache
+      // that refreshed).
+      return null;
+    }
+
     // There are no in-progress caches associated with the current render. Check
     // if there's a pooled cache.
     const pooledCache = root.pooledCache;
@@ -858,6 +872,14 @@ export function requestFreshCache(root: FiberRoot, renderLanes: Lanes): Cache {
       }
       return pooledCache;
     }
+  }
+
+  if (includesOnlyRetries(rootRenderLanes)) {
+    // If this is a retry, and there's no cache associated with this lane, that
+    // must be because the original update was triggered by a refresh. Refreshes
+    // are stored on the Cache update queue, not the root. So, return null to
+    // indicate that we should use the parent cache (the cache that refreshed).
+    return null;
   }
 
   // Create a fresh cache.

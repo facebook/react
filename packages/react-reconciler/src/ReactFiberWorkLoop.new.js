@@ -386,6 +386,13 @@ export function getWorkInProgressRoot(): FiberRoot | null {
   return workInProgressRoot;
 }
 
+// DELETE ME: This is only neccessary because of `subtreeLanes`. We should get
+// rid of `subtreeLanes` and use entanglement for Suspense retries instead. We
+// would still be able to tell it's a retry because we'd check the primary lane.
+export function getRootRenderLanes(): Lanes {
+  return workInProgressRootRenderLanes;
+}
+
 export function requestEventTime() {
   if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     // We're inside React, so it's fine to read the actual time.
