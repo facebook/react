@@ -1,3 +1,13 @@
+.ErrorTree {
+  background-color: var(--color-error-background-message);
+  color: var(--color-error-text);
+}
+
+.WarningTree {
+  background-color: var(--color-warning-background);
+  color: var(--color-warning-text);
+}
+
 .ErrorOrWarning {
   align-items: center;
   border-bottom: 1px solid transparent;
@@ -5,47 +15,22 @@
   padding-left: 1rem;
 }
 
-.ErrorOrWarningMessage {
-  overflow-wrap: break-word;
-  white-space: pre-wrap;
+.Error, .Warning {
+  padding: 0 0.25rem;
+  display: flex;
+  align-items: center;
 }
 
 .Error {
-  background-color: var(--color-error-background-message);
   border-top-color: var(--color-error-border);
 }
 
-.Error:last-of-type {
-  border-bottom-color: var(--color-error-border);
-}
-
-.Error .ErrorOrWarningMessage {
-  color: var(--color-error-text);
-}
-
-.ErrorIcon {
-  color: var(--color-error-text);
-  height: 1em;
-  line-height: 1;
-  width: 1em;
-}
-
 .Warning {
-  background-color: var(--color-warning-background);
   border-top-color: var(--color-warning-border);
 }
 
-.Warning:last-of-type {
-  border-bottom-color: var(--color-warning-border);
-}
-
-.Warning .ErrorOrWarningMessage {
-  color: var(--color-warning-text);
-}
-
-.WarningIcon {
-  color: var(--color-warning-text);
-  height: 1em;
-  line-height: 1;
-  width: 1em;
+.Message {
+  overflow-x: auto;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

@@ -169,10 +169,24 @@ export default function Element({data, index, style}: Props) {
           </Badge>
         ) : null}
         {errors.length > 0 && (
-          <Icon type="error" className={isSelected && treeFocused ? styles.ErrorIconContrast : styles.ErrorIcon} />
+          <Icon
+            type="error"
+            className={
+              isSelected && treeFocused
+                ? styles.ErrorIconContrast
+                : styles.ErrorIcon
+            }
+          />
         )}
         {warnings.length > 0 && (
-          <Icon type="warning" className={isSelected && treeFocused ? styles.WarningIconContrast : styles.WarningIcon} />
+          <Icon
+            type="warning"
+            className={
+              isSelected && treeFocused
+                ? styles.WarningIconContrast
+                : styles.WarningIcon
+            }
+          />
         )}
       </div>
     </div>

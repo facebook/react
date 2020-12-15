@@ -106,6 +106,23 @@ function ErrorAndWarningOnUnmount() {
   return null;
 }
 
+function ReallyLongErrorMessageThatWillCauseTextToBeTruncated() {
+  console.error(
+    'This error is a really long error message that should cause the text to be truncated in DevTools',
+  );
+  return null;
+}
+
+function ErrorWithMultipleArgs() {
+  console.error('This error', 'passes console', 4, 'arguments');
+  return null;
+}
+
+function ErrorWithStringSubstitutions() {
+  console.error('This error uses %s substitutions', 'string');
+  return null;
+}
+
 export default function ElementTypes() {
   const [count, setCount] = useState(0);
   const handleClick = () => setCount(count + 1);
@@ -126,6 +143,9 @@ export default function ElementTypes() {
       <ErrorAndWarningOnMount />
       <ErrorAndWarningOnUpdate />
       {count === 0 ? <ErrorAndWarningOnUnmount /> : null}
+      <ErrorWithMultipleArgs />
+      <ErrorWithStringSubstitutions />
+      <ReallyLongErrorMessageThatWillCauseTextToBeTruncated />
     </Fragment>
   );
 }
