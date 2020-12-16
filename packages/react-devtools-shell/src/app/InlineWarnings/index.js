@@ -145,6 +145,10 @@ function MultipleWarningsAndErrors({children = null}) {
   return <div data-camelCasedAttribute="should-lower-case">{children}</div>;
 }
 
+function ComponentWithMissingKey({children}) {
+  return [<div />];
+}
+
 export default function ErrorsAndWarnings() {
   const [count, setCount] = useState(0);
   const handleClick = () => setCount(count + 1);
@@ -152,6 +156,7 @@ export default function ErrorsAndWarnings() {
     <Fragment>
       <h1>Inline warnings</h1>
       <button onClick={handleClick}>Update {count > 0 ? count : ''}</button>
+      <ComponentWithMissingKey />
       <WarnDuringRender />
       <WarnOnMount />
       <WarnOnUpdate />
