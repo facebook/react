@@ -557,14 +557,18 @@ export function attach(
     fiberID: number,
   ): void {
     const message = format(...args);
-    const messageID =
-      errorOrWarningToId.get(message) ?? freeErrorOrWarningMessageID++;
-    if (!errorOrWarningToId.has(message)) {
+    let messageID: number;
+    if (errorOrWarningToId.has(message)) {
+      messageID = ((errorOrWarningToId.get(message): any): number);
+    } else {
+      messageID = freeErrorOrWarningMessageID++;
       errorOrWarningToId.set(message, messageID);
       idToErrorOrWarning.set(messageID, message);
     }
 
-    const errorOrWarningsForFiber = errorsOrWarnings.get(fiberID) || {
+    const errorOrWarningsForFiber: RecordedErrorsOrWarnings = errorsOrWarnings.get(
+      fiberID,
+    ) || {
       errors: [],
       warnings: [],
     };
@@ -683,7 +687,7 @@ export function attach(
         ? mostRecentlyInspectedElement.id
         : null;
     updatedIDs.forEach(fiberId => {
-      const {errors = [], warnings = []} = errorsOrWarnings.get(fiberId) ?? {};
+      const {errors = [], warnings = []} = errorsOrWarnings.get(fiberId) || {};
 
       operations[i++] = TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS;
       operations[i++] = fiberId;
@@ -2645,16 +2649,19 @@ export function attach(
     const {errors: errorIDs, warnings: warningIDs} = errorsOrWarnings.get(
       id,
     ) || {errors: [], warnings: []};
-    const errors = errorIDs.map(messageID => {
-      return (
-        idToErrorOrWarning.get(messageID) ?? `Unable to find error ${messageID}`
-      );
+    const errors: string[] = errorIDs.map(messageID => {
+      const message = idToErrorOrWarning.get(messageID);
+      if (message === undefined) {
+        return `Unable to find error ${messageID}`;
+      }
+      return message;
     });
     const warnings = warningIDs.map(messageID => {
-      return (
-        idToErrorOrWarning.get(messageID) ??
-        `Unable to find warning ${messageID}`
-      );
+      const message = idToErrorOrWarning.get(messageID);
+      if (message === undefined) {
+        return `Unable to find warning ${messageID}`;
+      }
+      return message;
     });
 
     return {
