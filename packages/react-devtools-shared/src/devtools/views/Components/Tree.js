@@ -335,6 +335,10 @@ export default function Tree(props: Props) {
               <div className={styles.VRule} />
             </Fragment>
           )}
+          <Suspense fallback={<Loading />}>
+            {ownerID !== null ? <OwnersStack /> : <SearchInput />}
+          </Suspense>
+          <div className={styles.VRule} />
           {hasErrorsOrWarnings && (
             <React.Fragment>
               <Button
@@ -355,10 +359,6 @@ export default function Tree(props: Props) {
               <div className={styles.VRule} />
             </React.Fragment>
           )}
-          <Suspense fallback={<Loading />}>
-            {ownerID !== null ? <OwnersStack /> : <SearchInput />}
-          </Suspense>
-          <div className={styles.VRule} />
           <SettingsModalContextToggle />
         </div>
         <div
