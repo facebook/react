@@ -178,13 +178,8 @@ export function patch({
                       ((method: any): 'error' | 'warn'),
                       // Copy args before we mutate them (e.g. adding the component stack)
                       alreadyHasComponentStack
-                        ? [
-                            // Revert https://github.com/facebook/react/blob/cb141681750c8221ac799074df09df2bb448c7a4/packages%2Fshared%2FconsoleWithStackDev.js#L35
-                            // TODO (inline errors) This depends on the renderer version.
-                            args[0].replace(/%s$/, ''),
-                            // Remove the actual component stack.
-                            ...args.slice(1, -1),
-                          ]
+                        ? // Replace component stack with an empty string in case there's a string placeholder for it.
+                          [...args.slice(0, -1), '']
                         : args.slice(),
                     );
                   }
