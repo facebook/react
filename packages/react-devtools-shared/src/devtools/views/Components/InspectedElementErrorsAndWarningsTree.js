@@ -138,7 +138,9 @@ function ErrorOrWarningView({
   return (
     <div className={className}>
       {count > 1 && <div className={badgeClassName}>{count}</div>}
-      <div className={styles.Message}>{message}</div>
+      <div className={styles.Message} title={message}>
+        {message}
+      </div>
     </div>
   );
 }
