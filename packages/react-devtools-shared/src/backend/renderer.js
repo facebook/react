@@ -678,7 +678,10 @@ export function attach(
     operations[i++] = currentRootID; // Use this ID in case the root was unmounted!
     operations[i++] = 0; // No strings to send.
 
-    const mostRecentlyInspectedElementID = mostRecentlyInspectedElement?.id;
+    const mostRecentlyInspectedElementID =
+      mostRecentlyInspectedElement !== null
+        ? mostRecentlyInspectedElement.id
+        : null;
     updatedIDs.forEach(fiberId => {
       const {errors = [], warnings = []} = errorsOrWarnings.get(fiberId) ?? {};
 
