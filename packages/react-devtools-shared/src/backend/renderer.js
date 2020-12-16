@@ -677,6 +677,8 @@ export function attach(
     operations[i++] = rendererID;
     operations[i++] = currentRootID; // Use this ID in case the root was unmounted!
     operations[i++] = 0; // No strings to send.
+
+    const mostRecentlyInspectedElementID = mostRecentlyInspectedElement?.id;
     updatedIDs.forEach(fiberId => {
       const {errors = [], warnings = []} = errorsOrWarnings.get(fiberId) ?? {};
 
@@ -684,6 +686,10 @@ export function attach(
       operations[i++] = fiberId;
       operations[i++] = errors.length;
       operations[i++] = warnings.length;
+
+      if (fiberId === mostRecentlyInspectedElementID) {
+        hasElementUpdatedSinceLastInspected = true;
+      }
     });
 
     hook.emit('operations', operations);
