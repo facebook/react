@@ -1,5 +1,85 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`InspectedElementContext inline errors and warnings during layout (mount) get recorded 1`] = `
+Object {
+  "errors": Array [
+    Array [
+      "useLayoutEffect error",
+      1,
+    ],
+  ],
+  "warnings": Array [
+    Array [
+      "useLayoutEffect warning",
+      1,
+    ],
+  ],
+}
+`;
+
+exports[`InspectedElementContext inline errors and warnings during passive (mount) get recorded 1`] = `
+Object {
+  "errors": Array [
+    Array [
+      "useEffect error",
+      1,
+    ],
+  ],
+  "warnings": Array [
+    Array [
+      "useEffect warning",
+      1,
+    ],
+  ],
+}
+`;
+
+exports[`InspectedElementContext inline errors and warnings during render get deduped 1`] = `
+Object {
+  "errors": Array [
+    Array [
+      "render error",
+      2,
+    ],
+  ],
+  "warnings": Array [
+    Array [
+      "render warning",
+      3,
+    ],
+  ],
+}
+`;
+
+exports[`InspectedElementContext inline errors and warnings during render get recorded 1`] = `
+Object {
+  "errors": Array [
+    Array [
+      "render error",
+      1,
+    ],
+  ],
+  "warnings": Array [
+    Array [
+      "render warning",
+      1,
+    ],
+  ],
+}
+`;
+
+exports[`InspectedElementContext inline errors and warnings from react get recorded withou a component stack 1`] = `
+Object {
+  "errors": Array [
+    Array [
+      "Warning: Each child in a list should have a unique \\"key\\" prop. See https://reactjs.org/link/warning-keys for more information.",
+      1,
+    ],
+  ],
+  "warnings": Array [],
+}
+`;
+
 exports[`InspectedElementContext should dehydrate complex nested values when requested: 1: Initially inspect element 1`] = `
 {
   "id": 2,

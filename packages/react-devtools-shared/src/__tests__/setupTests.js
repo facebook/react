@@ -33,6 +33,7 @@ env.beforeEach(() => {
   const {
     getDefaultComponentFilters,
     saveComponentFilters,
+    setShowInlineWarningsAndErrors,
   } = require('react-devtools-shared/src/utils');
 
   // Fake timers let us flush Bridge operations between setup and assertions.
@@ -61,6 +62,10 @@ env.beforeEach(() => {
   // Initialize filters to a known good state.
   saveComponentFilters(getDefaultComponentFilters());
   global.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = getDefaultComponentFilters();
+
+  // Also initialize inline warnings so that we can test them.
+  setShowInlineWarningsAndErrors(true);
+  global.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ = true;
 
   installHook(global);
 

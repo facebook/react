@@ -1805,4 +1805,136 @@ describe('InspectedElementContext', () => {
 
     done();
   });
+
+  describe('inline errors and warnings', () => {
+    async function getErrorsAndWarningsForElementAtIndex(index) {
+      const id = ((store.getElementIDAtIndex(index): any): number);
+
+      let errors = null;
+      let warnings = null;
+
+      function Suspender({target}) {
+        const {getInspectedElement} = React.useContext(InspectedElementContext);
+        const inspectedElement = getInspectedElement(id);
+        errors = inspectedElement.errors;
+        warnings = inspectedElement.warnings;
+        return null;
+      }
+
+      await utils.actAsync(
+        () =>
+          TestRenderer.create(
+            <Contexts
+              defaultSelectedElementID={id}
+              defaultSelectedElementIndex={index}>
+              <React.Suspense fallback={null}>
+                <Suspender target={id} />
+              </React.Suspense>
+            </Contexts>,
+          ),
+        false,
+      );
+
+      return {errors, warnings};
+    }
+
+    it('during render get recorded', async done => {
+      const Example = () => {
+        console.error('render error');
+        console.warn('render warning');
+        return null;
+      };
+
+      const container = document.createElement('div');
+      await utils.actAsync(() =>
+        ReactDOM.render(<Example repeatWarningCount={1} />, container),
+      );
+
+      const data = await getErrorsAndWarningsForElementAtIndex(0);
+      expect(data).toMatchSnapshot();
+
+      done();
+    });
+
+    it('during render get deduped', async done => {
+      const Example = () => {
+        console.error('render error');
+        console.error('render error');
+        console.warn('render warning');
+        console.warn('render warning');
+        console.warn('render warning');
+        return null;
+      };
+
+      const container = document.createElement('div');
+      await utils.actAsync(() =>
+        ReactDOM.render(<Example repeatWarningCount={1} />, container),
+      );
+
+      const data = await getErrorsAndWarningsForElementAtIndex(0);
+      expect(data).toMatchSnapshot();
+
+      done();
+    });
+
+    it('during layout (mount) get recorded', async done => {
+      const Example = () => {
+        // Note we only test mount because once the component unmounts,
+        // it is no longer in the store and warnings are ignored.
+        React.useLayoutEffect(() => {
+          console.error('useLayoutEffect error');
+          console.warn('useLayoutEffect warning');
+        }, []);
+        return null;
+      };
+
+      const container = document.createElement('div');
+      await utils.actAsync(() =>
+        ReactDOM.render(<Example repeatWarningCount={1} />, container),
+      );
+
+      const data = await getErrorsAndWarningsForElementAtIndex(0);
+      expect(data).toMatchSnapshot();
+
+      done();
+    });
+
+    it('during passive (mount) get recorded', async done => {
+      const Example = () => {
+        // Note we only test mount because once the component unmounts,
+        // it is no longer in the store and warnings are ignored.
+        React.useEffect(() => {
+          console.error('useEffect error');
+          console.warn('useEffect warning');
+        }, []);
+        return null;
+      };
+
+      const container = document.createElement('div');
+      await utils.actAsync(() =>
+        ReactDOM.render(<Example repeatWarningCount={1} />, container),
+      );
+
+      const data = await getErrorsAndWarningsForElementAtIndex(0);
+      expect(data).toMatchSnapshot();
+
+      done();
+    });
+
+    it('from react get recorded withou a component stack', async done => {
+      const Example = () => {
+        return [<div />];
+      };
+
+      const container = document.createElement('div');
+      await utils.actAsync(() =>
+        ReactDOM.render(<Example repeatWarningCount={1} />, container),
+      );
+
+      const data = await getErrorsAndWarningsForElementAtIndex(0);
+      expect(data).toMatchSnapshot();
+
+      done();
+    });
+  });
 });
