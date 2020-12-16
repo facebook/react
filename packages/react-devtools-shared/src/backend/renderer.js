@@ -55,7 +55,6 @@ import {
 } from '../constants';
 import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
-  isStringComponentStack,
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
 } from './console';
@@ -526,7 +525,7 @@ export function attach(
     typeof scheduleUpdate === 'function';
 
   type PendingErrorOrWarning = {|
-    args: Array<any>,
+    args: $ReadOnlyArray<any>,
     fiber: Fiber,
     type: 'error' | 'warn',
   |};
@@ -540,7 +539,7 @@ export function attach(
 
   function recordErrorOrWarningOnFiber(
     type: 'error' | 'warn',
-    args: any[],
+    args: $ReadOnlyArray<any>,
     fiberID: number,
   ): void {
     const message = format(...args);
@@ -589,19 +588,8 @@ export function attach(
   function onErrorOrWarning(
     fiber: Fiber,
     type: 'error' | 'warn',
-    args: Array<any>,
+    args: $ReadOnlyArray<any>,
   ): void {
-    // If there's a component stack included in this warning, remove it.
-    // That information would be redundant in the DevTools.
-    const clonedArgs = args.slice();
-    const lastArg =
-      clonedArgs.length > 0 ? clonedArgs[clonedArgs.length - 1] : null;
-    const alreadyHasComponentStack =
-      lastArg !== null && isStringComponentStack(lastArg);
-    if (alreadyHasComponentStack) {
-      clonedArgs.splice(clonedArgs.length - 1);
-    }
-
     // There are a few places that errors might be logged:
     // 1. During render (either for initial mount or an update)
     // 2. During commit effects (both active and passive)
@@ -620,7 +608,7 @@ export function attach(
     pendingErrorOrWarnings.push({
       fiber,
       type,
-      args: clonedArgs,
+      args,
     });
 
     if (flushErrorOrWarningUpdatesTimoutID === null) {

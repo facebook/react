@@ -140,13 +140,14 @@ export function patch({
         targetConsole[method]);
 
       const overrideMethod = (...args) => {
+        const lastArg = args.length > 0 ? args[args.length - 1] : null;
+        const alreadyHasComponentStack =
+          lastArg !== null && isStringComponentStack(lastArg);
+
         let shouldAppendWarningStack = false;
         if (consoleSettingsRef.appendComponentStack) {
           // If we are ever called with a string that already has a component stack,
           // e.g. a React error/warning, don't append a second stack.
-          const lastArg = args.length > 0 ? args[args.length - 1] : null;
-          const alreadyHasComponentStack =
-            lastArg !== null && isStringComponentStack(lastArg);
           shouldAppendWarningStack = !alreadyHasComponentStack;
         }
 
@@ -175,9 +176,19 @@ export function patch({
                     onErrorOrWarning(
                       current,
                       ((method: any): 'error' | 'warn'),
-                      args,
+                      // Copy args before we mutate them (e.g. adding the component stack)
+                      alreadyHasComponentStack
+                        ? [
+                            // Revert https://github.com/facebook/react/blob/cb141681750c8221ac799074df09df2bb448c7a4/packages%2Fshared%2FconsoleWithStackDev.js#L35
+                            // TODO (inline errors) This depends on the renderer version.
+                            args[0].replace(/%s$/, ''),
+                            // Remove the actual component stack.
+                            ...args.slice(1, -1),
+                          ]
+                        : args.slice(),
                     );
                   }
+                  console.log([...args]);
                 }
 
                 if (shouldAppendWarningStack) {
