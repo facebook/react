@@ -31,14 +31,9 @@
 }
 
 .Message {
-  cursor: default;
   overflow-x: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.Message[data-expanded="true"] {
-  white-space: pre-wrap;
 }
 
 .ErrorBadge,
