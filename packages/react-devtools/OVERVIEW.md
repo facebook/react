@@ -147,6 +147,23 @@ For example, updating the base duration for a fiber with an id of 1:
 ]
 ```
 
+#### Updating errors and warnings on a Fiber
+
+We record calls to `console.warn` and `console.error` in the backend.
+Periodically we notify the frontend that the number of recorded calls got updated.
+We only send the serialized messages as part of the `inspectElement` event.
+
+
+```js
+[
+  4, // fiber id
+  0, // number of calls to console.error from that fiber
+  3, // number of calls to console.warn from that fiber
+]
+```
+
+
+
 ## Reconstructing the tree
 
 The frontend stores its information about the tree in a map of id to objects with the following keys:

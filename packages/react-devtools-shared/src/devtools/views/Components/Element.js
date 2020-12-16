@@ -19,7 +19,6 @@ import {useSubscription} from '../hooks';
 
 import type {ItemData} from './Tree';
 import type {Element as ElementType} from './types';
-import type {ErrorOrWarning} from '../../../types';
 
 import styles from './Element.css';
 import Icon from '../Icon';
@@ -60,11 +59,11 @@ export default function Element({data, index, style}: Props) {
     }),
     [store, element],
   );
-  const errorsAndWarnings = useSubscription<{
-    errors: ErrorOrWarning[],
-    warnings: ErrorOrWarning[],
-  } | void>(errorsAndWarningsSubscription);
-  const {errors = [], warnings = []} = errorsAndWarnings || {};
+  const {errors = 0, warnings = 0} =
+    useSubscription<{
+      errors: number,
+      warnings: number,
+    } | void>(errorsAndWarningsSubscription) || {};
 
   const handleDoubleClick = () => {
     if (id !== null) {
@@ -168,7 +167,7 @@ export default function Element({data, index, style}: Props) {
             />
           </Badge>
         ) : null}
-        {errors.length > 0 && (
+        {errors > 0 && (
           <Icon
             type="error"
             className={
@@ -178,7 +177,7 @@ export default function Element({data, index, style}: Props) {
             }
           />
         )}
-        {warnings.length > 0 && (
+        {warnings > 0 && (
           <Icon
             type="warning"
             className={

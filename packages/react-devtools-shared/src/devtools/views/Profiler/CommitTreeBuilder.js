@@ -13,6 +13,7 @@ import {
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+  TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
 } from 'react-devtools-shared/src/constants';
 import {utfDecodeString} from 'react-devtools-shared/src/utils';
 import {ElementTypeRoot} from 'react-devtools-shared/src/types';
@@ -329,6 +330,21 @@ function updateTree(
         i += 3;
         break;
       }
+      case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS:
+        id = operations[i + 1];
+        const numErrors = operations[i + 2];
+        const numWarnings = operations[i + 3];
+
+        i += 4;
+
+        if (__DEBUG__) {
+          debug(
+            'Warnings and Errors update',
+            `fiber ${id} has ${numErrors} errors and ${numWarnings} warnings`,
+          );
+        }
+        break;
+
       default:
         throw Error(`Unsupported Bridge operation ${operation}`);
     }

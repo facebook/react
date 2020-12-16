@@ -10,7 +10,7 @@
 
 .ErrorOrWarning {
   align-items: center;
-  border-bottom: 1px solid transparent;
+  border-top: 1px solid transparent;
   display: flex;
   padding-left: 1rem;
 }

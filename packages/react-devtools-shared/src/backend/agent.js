@@ -37,7 +37,7 @@ import type {
   RendererID,
   RendererInterface,
 } from './types';
-import type {ComponentFilter, ErrorOrWarning} from '../types';
+import type {ComponentFilter} from '../types';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -169,6 +169,9 @@ export default class Agent extends EventEmitter<{|
 
     this._bridge = bridge;
 
+    bridge.addListener('clearErrorsAndWarnings', this.clearErrorsAndWarnings);
+    bridge.addListener('clearErrorsForFiberID', this.clearErrorsForFiberID);
+    bridge.addListener('clearWarningsForFiberID', this.clearWarningsForFiberID);
     bridge.addListener('copyElementPath', this.copyElementPath);
     bridge.addListener('deletePath', this.deletePath);
     bridge.addListener('getProfilingData', this.getProfilingData);
@@ -225,6 +228,33 @@ export default class Agent extends EventEmitter<{|
   get rendererInterfaces(): {[key: RendererID]: RendererInterface, ...} {
     return this._rendererInterfaces;
   }
+
+  clearErrorsAndWarnings = ({rendererID}: {|rendererID: RendererID|}) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}"`);
+    } else {
+      renderer.clearErrorsAndWarnings();
+    }
+  };
+
+  clearErrorsForFiberID = ({id, rendererID}: ElementAndRendererID) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}"`);
+    } else {
+      renderer.clearErrorsForFiberID(id);
+    }
+  };
+
+  clearWarningsForFiberID = ({id, rendererID}: ElementAndRendererID) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}"`);
+    } else {
+      renderer.clearWarningsForFiberID(id);
+    }
+  };
 
   copyElementPath = ({id, path, rendererID}: CopyElementParams) => {
     const renderer = this._rendererInterfaces[rendererID];
@@ -611,10 +641,6 @@ export default class Agent extends EventEmitter<{|
     } else {
       renderer.prepareViewElementSource(id);
     }
-  };
-
-  onErrorsAndWarnings = (errorsAndWarnings: Array<ErrorOrWarning>) => {
-    this._bridge.send('errorsAndWarnings', errorsAndWarnings);
   };
 
   onTraceUpdates = (nodes: Set<NativeType>) => {

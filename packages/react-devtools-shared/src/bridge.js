@@ -9,7 +9,7 @@
 
 import EventEmitter from './events';
 
-import type {ComponentFilter, ErrorOrWarning, Wall} from './types';
+import type {ComponentFilter, Wall} from './types';
 import type {
   InspectedElementPayload,
   OwnersList,
@@ -117,7 +117,6 @@ type UpdateConsolePatchSettingsParams = {|
 |};
 
 type BackendEvents = {|
-  errorsAndWarnings: [Array<ErrorOrWarning>],
   extensionBackendInitialized: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
@@ -142,7 +141,10 @@ type BackendEvents = {|
 |};
 
 type FrontendEvents = {|
+  clearErrorsAndWarnings: [{|rendererID: RendererID|}],
+  clearErrorsForFiberID: [ElementAndRendererID],
   clearNativeElementHighlight: [],
+  clearWarningsForFiberID: [ElementAndRendererID],
   copyElementPath: [CopyElementPathParams],
   deletePath: [DeletePath],
   getOwnersList: [ElementAndRendererID],

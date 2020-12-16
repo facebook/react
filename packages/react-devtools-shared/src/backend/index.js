@@ -48,7 +48,6 @@ export function initBackend(
       agent.onUnsupportedRenderer(id);
     }),
 
-    hook.sub('errorsAndWarnings', agent.onErrorsAndWarnings),
     hook.sub('operations', agent.onHookOperations),
     hook.sub('traceUpdates', agent.onTraceUpdates),
 

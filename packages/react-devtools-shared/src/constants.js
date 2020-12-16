@@ -14,6 +14,7 @@ export const TREE_OPERATION_ADD = 1;
 export const TREE_OPERATION_REMOVE = 2;
 export const TREE_OPERATION_REORDER_CHILDREN = 3;
 export const TREE_OPERATION_UPDATE_TREE_BASE_DURATION = 4;
+export const TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS = 5;
 
 export const LOCAL_STORAGE_FILTER_PREFERENCES_KEY =
   'React::DevTools::componentFilters';

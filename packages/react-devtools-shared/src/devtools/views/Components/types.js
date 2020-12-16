@@ -84,6 +84,8 @@ export type InspectedElement = {|
   props: Object | null,
   state: Object | null,
   key: number | string | null,
+  errors: string[],
+  warnings: string[],
 
   // List of owners
   owners: Array<Owner> | null,

@@ -51,6 +51,7 @@ import {
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+  TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
 } from '../constants';
 import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
@@ -76,6 +77,7 @@ import {
   MEMO_NUMBER,
   MEMO_SYMBOL_STRING,
 } from './ReactSymbols';
+import {format} from './utils';
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -530,6 +532,78 @@ export function attach(
 
   let flushErrorOrWarningUpdatesTimoutID: TimeoutID | null = null;
   const pendingErrorOrWarnings: Array<PendingErrorOrWarning> = [];
+  type RecordedErrorsOrWarnings = {|
+    errors: number[],
+    warnings: number[],
+  |};
+  // TODO (inline errors) What happens if we have no free message IDs?
+  let freeErrorOrWarningMessageID = 0;
+  /**
+   * Mapping of fiber IDs to IDs of errors and warnings recorded for these fibers.
+   */
+  const errorsOrWarnings: Map<number, RecordedErrorsOrWarnings> = new Map();
+  /**
+   * Mapping of recorded (stringified) errors and warnings to a unique ID.
+   * TODO (inline errors) Do we need to apply garbage collection to unused message ids e.g. when messages are cleared for a Fiber?
+   */
+  const errorOrWarningToId: Map<string, number> = new Map();
+  /**
+   * Inverse of `errorOrWarningToId`.
+   */
+  const idToErrorOrWarning: Map<number, string> = new Map();
+  function recordErrorOrWarningOnFiber(
+    type: 'error' | 'warn',
+    args: any[],
+    fiberID: number,
+  ): void {
+    const message = format(...args);
+    const messageID =
+      errorOrWarningToId.get(message) ?? freeErrorOrWarningMessageID++;
+    if (!errorOrWarningToId.has(message)) {
+      errorOrWarningToId.set(message, messageID);
+      idToErrorOrWarning.set(messageID, message);
+    }
+
+    const errorOrWarningsForFiber = errorsOrWarnings.get(fiberID) || {
+      errors: [],
+      warnings: [],
+    };
+    if (type === 'warn') {
+      errorOrWarningsForFiber.warnings.push(messageID);
+    } else if (type === 'error') {
+      errorOrWarningsForFiber.errors.push(messageID);
+    }
+    errorsOrWarnings.set(fiberID, errorOrWarningsForFiber);
+  }
+
+  function clearErrorsAndWarnings() {
+    pendingErrorOrWarnings.splice(0);
+    clearTimeout(flushErrorOrWarningUpdatesTimoutID);
+    flushErrorOrWarningUpdatesTimoutID = null;
+
+    freeErrorOrWarningMessageID = 0;
+    errorsOrWarnings.clear();
+    errorOrWarningToId.clear();
+    idToErrorOrWarning.clear();
+  }
+
+  function clearErrorsForFiberID(id: number) {
+    if (errorsOrWarnings.has(id)) {
+      const errorsOrWarningsForFiber: RecordedErrorsOrWarnings = (errorsOrWarnings.get(
+        id,
+      ): any);
+      errorsOrWarningsForFiber.errors.splice(0);
+    }
+  }
+
+  function clearWarningsForFiberID(id: number) {
+    if (errorsOrWarnings.has(id)) {
+      const errorsOrWarningsForFiber: RecordedErrorsOrWarnings = (errorsOrWarnings.get(
+        id,
+      ): any);
+      errorsOrWarningsForFiber.warnings.splice(0);
+    }
+  }
 
   function onErrorOrWarning(
     fiber: Fiber,
@@ -570,22 +644,40 @@ export function attach(
   function flushErrorOrWarningUpdates() {
     flushErrorOrWarningUpdatesTimoutID = null;
 
-    const data = pendingErrorOrWarnings
+    const updatedFiberIds: Set<number> = new Set();
+    pendingErrorOrWarnings
       .filter(({fiber}) => isFiberMounted(fiber))
-      .map(({args, fiber, type}) => {
-        return {
-          id: getFiberID(getPrimaryFiber(fiber)),
-          type,
-          args: args.map(arg => {
-            try {
-              return JSON.stringify(arg);
-            } catch (error) {
-              return null;
-            }
-          }),
-        };
+      .forEach(({args, fiber, type}) => {
+        const fiberID = getFiberID(getPrimaryFiber(fiber));
+        updatedFiberIds.add(fiberID);
+        recordErrorOrWarningOnFiber(type, args, fiberID);
       });
-    hook.emit('errorsAndWarnings', data);
+
+    // TODO (inline errors) Do we just want to push to pendingEvents and flush?
+    const operations = new Array(
+      // Identify which renderer this update is coming from.
+      2 + // [rendererID, rootFiberID]
+      // How big is the string table?
+      0 + // [stringTableLength]
+        // Regular operations
+        updatedFiberIds.size,
+    );
+    let i = 0;
+    operations[i++] = rendererID;
+    operations[i++] = currentRootID; // Use this ID in case the root was unmounted!
+    operations[i++] = 0; // No strings to send.
+    updatedFiberIds.forEach(fiberId => {
+      const {errors, warnings} = ((errorsOrWarnings.get(
+        fiberId,
+      ): any): RecordedErrorsOrWarnings);
+
+      operations[i++] = TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS;
+      operations[i++] = fiberId;
+      operations[i++] = errors.length;
+      operations[i++] = warnings.length;
+    });
+
+    hook.emit('operations', operations);
 
     pendingErrorOrWarnings.splice(0);
   }
@@ -2534,6 +2626,21 @@ export function attach(
       rootType = fiberRoot._debugRootType;
     }
 
+    const {errors: errorIDs, warnings: warningIDs} = errorsOrWarnings.get(
+      id,
+    ) || {errors: [], warnings: []};
+    const errors = errorIDs.map(messageID => {
+      return (
+        idToErrorOrWarning.get(messageID) ?? `Unable to find error ${messageID}`
+      );
+    });
+    const warnings = warningIDs.map(messageID => {
+      return (
+        idToErrorOrWarning.get(messageID) ??
+        `Unable to find warning ${messageID}`
+      );
+    });
+
     return {
       id,
 
@@ -2576,6 +2683,8 @@ export function attach(
       hooks,
       props: memoizedProps,
       state: usesHooks ? null : memoizedState,
+      errors,
+      warnings,
 
       // List of owners
       owners,
@@ -3504,6 +3613,9 @@ export function attach(
 
   return {
     cleanup,
+    clearErrorsAndWarnings,
+    clearErrorsForFiberID,
+    clearWarningsForFiberID,
     copyElementPath,
     deletePath,
     findNativeNodesForFiberID,

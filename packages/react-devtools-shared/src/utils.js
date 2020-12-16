@@ -28,6 +28,7 @@ import {
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+  TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
 } from './constants';
 import {ElementTypeRoot} from 'react-devtools-shared/src/types';
 import {
@@ -219,6 +220,17 @@ export function printOperationsArray(operations: Array<number>) {
         // We can ignore them at this point.
         // The profiler UI uses them lazily in order to generate the tree.
         i += 3;
+        break;
+      case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS:
+        const id = operations[i + 1];
+        const numErrors = operations[i + 2];
+        const numWarnings = operations[i + 3];
+
+        i += 4;
+
+        logs.push(
+          `Node ${id} has ${numErrors} errors and ${numWarnings} warnings`,
+        );
         break;
       default:
         throw Error(`Unsupported Bridge operation ${operation}`);

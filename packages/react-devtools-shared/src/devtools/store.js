@@ -14,6 +14,7 @@ import {
   TREE_OPERATION_REMOVE,
   TREE_OPERATION_REORDER_CHILDREN,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
+  TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
 } from '../constants';
 import {ElementTypeRoot} from '../types';
 import {
@@ -29,7 +30,7 @@ import {printStore} from './utils';
 import ProfilerStore from './ProfilerStore';
 
 import type {Element} from './views/Components/types';
-import type {ComponentFilter, ElementType, ErrorOrWarning} from '../types';
+import type {ComponentFilter, ElementType} from '../types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
 const debug = (methodName, ...args) => {
@@ -68,10 +69,7 @@ export type Capabilities = {|
 export default class Store extends EventEmitter<{|
   collapseNodesByDefault: [],
   componentFilters: [],
-  // TODO (inline errors) Do we even need the argument for subscriptions?
-  errorsAndWarnings: [
-    Map<number, {errors: ErrorOrWarning[], warnings: ErrorOrWarning[]}>,
-  ],
+  errorsAndWarnings: [],
   mutated: [[Array<number>, Map<number, number>]],
   recordChangeDescriptions: [],
   roots: [],
@@ -87,9 +85,10 @@ export default class Store extends EventEmitter<{|
 
   _componentFilters: Array<ComponentFilter>;
 
+  // Map of ID to number of recorded error and warning message IDs.
   _errorsAndWarnings: Map<
     number,
-    {errors: ErrorOrWarning[], warnings: ErrorOrWarning[]},
+    {errors: number, warnings: number},
   > = new Map();
 
   // At least one of the injected renderers contains (DEV only) owner metadata.
@@ -183,7 +182,6 @@ export default class Store extends EventEmitter<{|
     }
 
     this._bridge = bridge;
-    bridge.addListener('errorsAndWarnings', this.onBridgeErrorsAndWarnings);
     bridge.addListener('operations', this.onBridgeOperations);
     bridge.addListener(
       'overrideComponentFilters',
@@ -299,10 +297,7 @@ export default class Store extends EventEmitter<{|
     this.emit('componentFilters');
   }
 
-  get errorsAndWarnings(): Map<
-    number,
-    {errors: ErrorOrWarning[], warnings: ErrorOrWarning[]},
-  > {
+  get errorsAndWarnings(): Map<number, {errors: number, warnings: number}> {
     return this._errorsAndWarnings;
   }
 
@@ -375,38 +370,41 @@ export default class Store extends EventEmitter<{|
   }
 
   clearErrorsAndWarnings(): void {
-    this._errorsAndWarnings = new Map();
-    this.emit('errorsAndWarnings', this._errorsAndWarnings);
+    this._rootIDToRendererID.forEach(rendererID => {
+      this._bridge.send('clearErrorsAndWarnings', {
+        rendererID,
+      });
+    });
   }
 
-  clearErrorsAndWarningsForElement(element: {id: number}): void {
-    this._errorsAndWarnings.delete(element.id);
-    this.emit('errorsAndWarnings', this._errorsAndWarnings);
+  clearErrorsForElement(id: number): void {
+    const rendererID = this.getRendererIDForElement(id);
+    if (rendererID === null) {
+      console.warn(
+        `Unable to find rendererID for element ${id} when clearing errors.`,
+      );
+    } else {
+      this._bridge.send('clearErrorsForFiberID', {
+        rendererID,
+        id,
+      });
+    }
   }
 
-  clearErrorOrWarning(element: Element, errorOrWarning: ErrorOrWarning): void {
-    const errorsAndWarnings = this._errorsAndWarnings.get(element.id);
-    if (errorsAndWarnings === undefined) {
-      return;
+  clearWarningsForElement(id: number): void {
+    const rendererID = this.getRendererIDForElement(id);
+    if (this._errorsAndWarnings.has(id)) {
     }
-
-    const newErrorsAndWarnings = {...errorsAndWarnings};
-    if (errorOrWarning.type === 'warn') {
-      newErrorsAndWarnings.warnings = newErrorsAndWarnings.warnings.filter(
-        warning => {
-          return warning !== errorOrWarning;
-        },
+    if (rendererID === null) {
+      console.warn(
+        `Unable to find rendererID for element ${id} when clearing warnings.`,
       );
-    } else if (errorOrWarning.type === 'error') {
-      newErrorsAndWarnings.errors = newErrorsAndWarnings.errors.filter(
-        error => {
-          return error !== errorOrWarning;
-        },
-      );
+    } else {
+      this._bridge.send('clearWarningsForFiberID', {
+        rendererID,
+        id,
+      });
     }
-
-    this._errorsAndWarnings.set(element.id, newErrorsAndWarnings);
-    this.emit('errorsAndWarnings', this._errorsAndWarnings);
   }
 
   containsElement(id: number): boolean {
@@ -754,29 +752,6 @@ export default class Store extends EventEmitter<{|
     this.emit('supportsNativeStyleEditor');
   };
 
-  onBridgeErrorsAndWarnings = (errorsAndWarnings: Array<ErrorOrWarning>) => {
-    if (__DEBUG__) {
-      console.log('onBridgeErrorsAndWarnings', errorsAndWarnings);
-    }
-    errorsAndWarnings.forEach(errorOrWarning => {
-      const errorsAndWarningsForElement = this._errorsAndWarnings.get(
-        errorOrWarning.id,
-      ) || {errors: [], warnings: []};
-
-      if (errorOrWarning.type === 'error') {
-        errorsAndWarningsForElement.errors.push(errorOrWarning);
-      } else if (errorOrWarning.type === 'warn') {
-        errorsAndWarningsForElement.warnings.push(errorOrWarning);
-      }
-
-      this._errorsAndWarnings.set(errorOrWarning.id, {
-        ...errorsAndWarningsForElement,
-      });
-    });
-
-    this.emit('errorsAndWarnings', this._errorsAndWarnings);
-  };
-
   onBridgeOperations = (operations: Array<number>) => {
     if (__DEBUG__) {
       console.groupCollapsed('onBridgeOperations');
@@ -986,10 +961,6 @@ export default class Store extends EventEmitter<{|
                 set.delete(id);
               }
             }
-
-            const deletedWarnings = this._errorsAndWarnings.delete(id);
-            haveWarningsAndErrorsChanged =
-              haveWarningsAndErrorsChanged || deletedWarnings;
           }
           break;
         }
@@ -1038,6 +1009,19 @@ export default class Store extends EventEmitter<{|
           // The profiler UI uses them lazily in order to generate the tree.
           i += 3;
           break;
+        case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS:
+          const id = operations[i + 1];
+          const numErrors = operations[i + 2];
+          const numWarnings = operations[i + 3];
+
+          i += 4;
+
+          this._errorsAndWarnings.set(id, {
+            errors: numErrors,
+            warnings: numWarnings,
+          });
+          haveWarningsAndErrorsChanged = true;
+          break;
         default:
           throw Error(`Unsupported Bridge operation ${operation}`);
       }
@@ -1069,7 +1053,7 @@ export default class Store extends EventEmitter<{|
     }
 
     if (haveWarningsAndErrorsChanged) {
-      this.emit('errorsAndWarnings', this._errorsAndWarnings);
+      this.emit('errorsAndWarnings');
     }
 
     if (__DEBUG__) {

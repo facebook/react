@@ -11,12 +11,10 @@ import * as React from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Store from '../../store';
-import {useSubscription} from '../hooks';
 import sharedStyles from './InspectedElementSharedStyles.css';
 import styles from './InspectedElementErrorsAndWarningsTree.css';
 
 import type {InspectedElement} from './types';
-import type {ErrorOrWarning} from '../../../types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
 type Props = {|
@@ -30,120 +28,63 @@ export default function InspectedElementErrorsAndWarningsTree({
   inspectedElement,
   store,
 }: Props) {
-  // TODO This is not how we will want to subscribe to errors/warnings
-  const errorsAndWarningsSubscription = React.useMemo(
-    () => ({
-      getCurrentValue: () => store.errorsAndWarnings.get(inspectedElement.id),
-      subscribe: (callback: Function) => {
-        store.addListener('errorsAndWarnings', callback);
-        return () => store.removeListener('errorsAndWarnings', callback);
-      },
-    }),
-    [store, inspectedElement],
-  );
-  const {errors = [], warnings = []} =
-    useSubscription<{
-      errors: ErrorOrWarning[],
-      warnings: ErrorOrWarning[],
-    } | void>(errorsAndWarningsSubscription) || {};
+  const {errors, warnings} = inspectedElement;
 
   return (
     <React.Fragment>
-      {errors.length > 0 && (
-        <Tree
-          bridge={bridge}
-          className={styles.ErrorTree}
-          label="errors"
-          messages={errors}
-          messageClassName={styles.Error}
-          store={store}
-        />
-      )}
-      {warnings.length > 0 && (
-        <Tree
-          bridge={bridge}
-          className={styles.WarningTree}
-          label="warnings"
-          messages={warnings}
-          messageClassName={styles.Warning}
-          store={store}
-        />
-      )}
+      <Tree
+        actions={
+          <Button
+            onClick={() => store.clearErrorsForElement(inspectedElement.id)}
+            title="Clear errors">
+            <ButtonIcon type="clear" />
+          </Button>
+        }
+        className={styles.Error}
+        label="errors"
+        messages={errors}
+      />
+      <Tree
+        actions={
+          <Button
+            onClick={() => store.clearWarningsForElement(inspectedElement.id)}
+            title="Clear warnings">
+            <ButtonIcon type="clear" />
+          </Button>
+        }
+        className={styles.Warning}
+        label="warnings"
+        messages={warnings}
+      />
     </React.Fragment>
   );
 }
 
 type TreeProps = {|
-  bridge: FrontendBridge,
+  actions: React$Node,
   className: string,
-  inspectedElement: InspectedElement,
   label: string,
-  messages: Array<ErrorOrWarning>,
-  messageClassName: string,
-  store: Store,
+  messages: string[],
 |};
 
-function Tree({
-  bridge,
-  className,
-  inspectedElement,
-  label,
-  messages,
-  messageClassName,
-  store,
-}: TreeProps) {
+function Tree({actions, className, label, messages}: TreeProps) {
+  if (messages.length === 0) {
+    return null;
+  }
   return (
-    <div className={`${sharedStyles.InspectedElementTree} ${className}`}>
-      <div className={sharedStyles.HeaderRow}>
+    <div className={styles.InspectedElementErrorOrWarningsTree}>
+      <div className={`${sharedStyles.HeaderRow} ${styles.HeaderRow}`}>
         <div className={sharedStyles.Header}>{label}</div>
-        <Button
-          onClick={() =>
-            store.clearErrorsAndWarningsForElement(inspectedElement)
-          }
-          title="Clear errors and warnings">
-          <ButtonIcon type="clear" />
-        </Button>
+        {actions}
       </div>
-      {messages.map((message, index) => (
-        <ErrorOrWarningView
-          key={`${label}-${index}`}
-          className={messageClassName}
-          message={message}
-        />
-      ))}
-    </div>
-  );
-}
-
-type ErrorOrWarningViewProps = {|
-  className: string,
-  message: ErrorOrWarning,
-|};
-
-function ErrorOrWarningView({message, className}: ErrorOrWarningViewProps) {
-  const {id, args: serializedArgs, type} = message;
-
-  // TODO Messages could be strinigified before being sent to the frontend.
-  const args = serializedArgs.map(arg => {
-    if (arg === null) {
-      return null;
-    }
-    try {
-      return JSON.parse(arg);
-    } catch (error) {
-      console.error(
-        `Unable to deserialize type '${type}' of id '${id}': '${arg}'`,
-      );
-      return null;
-    }
-  });
-
-  // TODO
-  const text = args.join('\n');
-
-  return (
-    <div className={className}>
-      <div className={styles.Message}>{text}</div>
+      {messages.map((message, index) => {
+        // TODO (inline errors) When we agressively de-duplicate by message we should use the message as key.
+        return (
+          <div key={index} className={`${styles.ErrorOrWarning} ${className}`}>
+            {message}
+          </div>
+        );
+      })}
     </div>
   );
 }

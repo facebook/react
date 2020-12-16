@@ -76,16 +76,3 @@ export type ComponentFilter =
   | BooleanComponentFilter
   | ElementTypeComponentFilter
   | RegExpComponentFilter;
-
-export type ErrorOrWarning = {|
-  /**
-   * Fiber ID
-   */
-  id: number,
-  type: 'error' | 'warn',
-  /**
-   * List of JSON serialized args.
-   * `null` if the arg is not serializeable.
-   */
-  args: Array<string | null>,
-|};
