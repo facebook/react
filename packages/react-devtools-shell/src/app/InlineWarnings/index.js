@@ -123,6 +123,10 @@ function ErrorWithStringSubstitutions() {
   return null;
 }
 
+function ReactErrorOnHostComponent() {
+  return <div data-camelCasedAttribute="should-lower-case" />;
+}
+
 export default function ErrorsAndWarnings() {
   const [count, setCount] = useState(0);
   const handleClick = () => setCount(count + 1);
@@ -145,6 +149,7 @@ export default function ErrorsAndWarnings() {
       {count === 0 ? <ErrorAndWarningOnUnmount /> : null}
       <ErrorWithMultipleArgs />
       <ErrorWithStringSubstitutions />
+      <ReactErrorOnHostComponent />
       <ReallyLongErrorMessageThatWillCauseTextToBeTruncated />
     </Fragment>
   );
