@@ -544,6 +544,19 @@ const tests = {
     {
       code: normalizeIndent`
         function MyComponent(props) {
+          const ref = useRefWrapper();
+          const ref2 = useRefWrapper2();
+          useEffect(() => {
+            console.log(ref.current);
+            console.log(ref2.current);
+          }, []);
+        }
+      `,
+      options: [{safeHooks: 'useRefWrapper2?'}],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
           return renderHelperConfusedWithEffect(() => {
             console.log(props.foo);
           }, []);
@@ -4571,6 +4584,23 @@ const tests = {
           `and use that variable in the cleanup function.`,
       ],
       options: [{additionalHooks: 'useLayoutEffect_SAFE_FOR_SSR'}],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          const ref = useRefWrapper();
+          const ref2 = useRefWrapper2();
+          useEffect(() => {
+            console.log(ref.current);
+            console.log(ref2.current);
+          }, []);
+        }
+      `,
+      options: [{safeHooks: '^useRefWrapper$'}],
+      errors: [
+        `React Hook useEffect has a missing dependency: 'ref2'.` +
+          ` Either include it or remove the dependency array.`,
+      ],
     },
     {
       // Autofix ignores constant primitives (leaving the ones that are there).
