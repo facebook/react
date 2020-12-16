@@ -24,8 +24,6 @@ import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
-import type {HookFlags} from './ReactHookEffectTags';
-import type {Cache} from './ReactFiberCacheComponent';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {
@@ -37,7 +35,6 @@ import {
   enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
-  enableCache,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -1517,11 +1514,7 @@ function commitDeletion(
   }
 }
 
-function commitWork(
-  current: Fiber | null,
-  finishedWork: Fiber,
-  cache: Cache | null,
-): void {
+function commitWork(current: Fiber | null, finishedWork: Fiber): void {
   if (!supportsMutation) {
     switch (finishedWork.tag) {
       case FunctionComponent:
@@ -1557,11 +1550,11 @@ function commitWork(
       }
       case SuspenseComponent: {
         commitSuspenseComponent(finishedWork);
-        attachSuspenseRetryListeners(finishedWork, cache);
+        attachSuspenseRetryListeners(finishedWork);
         return;
       }
       case SuspenseListComponent: {
-        attachSuspenseRetryListeners(finishedWork, cache);
+        attachSuspenseRetryListeners(finishedWork);
         return;
       }
       case HostRoot: {
@@ -1672,11 +1665,11 @@ function commitWork(
     }
     case SuspenseComponent: {
       commitSuspenseComponent(finishedWork);
-      attachSuspenseRetryListeners(finishedWork, cache);
+      attachSuspenseRetryListeners(finishedWork);
       return;
     }
     case SuspenseListComponent: {
-      attachSuspenseRetryListeners(finishedWork, cache);
+      attachSuspenseRetryListeners(finishedWork);
       return;
     }
     case IncompleteClassComponent: {
@@ -1782,10 +1775,7 @@ function commitSuspenseHydrationCallbacks(
   }
 }
 
-function attachSuspenseRetryListeners(
-  finishedWork: Fiber,
-  cache: Cache | null,
-) {
+function attachSuspenseRetryListeners(finishedWork: Fiber) {
   // If this boundary just timed out, then it will have a set of wakeables.
   // For each wakeable, attach a listener so that when it resolves, React
   // attempts to re-render the boundary in the primary (pre-timeout) state.
@@ -1798,12 +1788,7 @@ function attachSuspenseRetryListeners(
     }
     wakeables.forEach(wakeable => {
       // Memoize using the boundary fiber to prevent redundant listeners.
-      let retry = resolveRetryWakeable.bind(
-        null,
-        finishedWork,
-        wakeable,
-        cache,
-      );
+      let retry = resolveRetryWakeable.bind(null, finishedWork, wakeable);
       if (!retryCache.has(wakeable)) {
         if (enableSchedulerTracing) {
           if (wakeable.__reactDoNotTraceInteractions !== true) {

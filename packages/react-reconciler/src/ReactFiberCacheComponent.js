@@ -95,3 +95,7 @@ export function popCacheProvider(
 export function hasFreshCacheProvider() {
   return freshCacheInstance !== null;
 }
+
+export function getFreshCacheProviderIfExists(): CacheInstance | null {
+  return freshCacheInstance;
+}

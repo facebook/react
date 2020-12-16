@@ -21,6 +21,9 @@ import {
   HostRoot,
   SuspenseComponent,
   IncompleteClassComponent,
+  FunctionComponent,
+  ForwardRef,
+  SimpleMemoComponent,
 } from './ReactWorkTags';
 import {
   DidCapture,
@@ -209,9 +212,15 @@ function throwException(
       markComponentSuspended(sourceFiber, wakeable);
     }
 
-    if ((sourceFiber.mode & BlockingMode) === NoMode) {
-      // Reset the memoizedState to what it was before we attempted
-      // to render it.
+    // Reset the memoizedState to what it was before we attempted to render it.
+    // A legacy mode Suspense quirk, only relevant to hook components.
+    const tag = sourceFiber.tag;
+    if (
+      (sourceFiber.mode & BlockingMode) === NoMode &&
+      (tag === FunctionComponent ||
+        tag === ForwardRef ||
+        tag === SimpleMemoComponent)
+    ) {
       const currentSource = sourceFiber.alternate;
       if (currentSource) {
         sourceFiber.updateQueue = currentSource.updateQueue;

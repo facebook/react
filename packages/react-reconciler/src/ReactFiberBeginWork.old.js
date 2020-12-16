@@ -23,7 +23,7 @@ import type {
   OffscreenProps,
   OffscreenState,
 } from './ReactFiberOffscreenComponent';
-import type {CacheInstance, Cache} from './ReactFiberCacheComponent';
+import type {CacheInstance} from './ReactFiberCacheComponent';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
 
 import checkPropTypes from 'shared/checkPropTypes';
@@ -119,7 +119,7 @@ import {
   removeLanes,
   mergeLanes,
   getBumpedLaneForHydration,
-  requestFreshCache,
+  requestCacheFromPool,
 } from './ReactFiberLane.old';
 import {
   ConcurrentMode,
@@ -134,7 +134,6 @@ import {
   isSuspenseInstanceFallback,
   registerSuspenseInstanceRetry,
   supportsHydration,
-  isPrimaryRenderer,
 } from './ReactFiberHostConfig';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import {shouldSuspend} from './ReactFiberReconciler';
@@ -201,7 +200,6 @@ import {
   renderDidSuspendDelayIfPossible,
   markSkippedUpdateLanes,
   getWorkInProgressRoot,
-  getRootRenderLanes,
   pushRenderLanes,
   getExecutionContext,
   RetryAfterError,
@@ -210,10 +208,10 @@ import {
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {setWorkInProgressVersion} from './ReactMutableSource.old';
 import {
-  CacheContext,
   pushFreshCacheProvider,
   pushStaleCacheProvider,
   hasFreshCacheProvider,
+  getFreshCacheProviderIfExists,
 } from './ReactFiberCacheComponent';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
@@ -590,23 +588,43 @@ function updateOffscreenComponent(
   const prevState: OffscreenState | null =
     current !== null ? current.memoizedState : null;
 
+  // If this is not null, this is a cache instance that was carried over from
+  // the previous render. We will push this to the cache context so that we can
+  // resume in-flight requests. However, we don't do this if there's already a
+  // fresh cache provider on the stack.
+  let cacheInstance: CacheInstance | null = null;
+
   if (
     nextProps.mode === 'hidden' ||
     nextProps.mode === 'unstable-defer-without-hiding'
   ) {
+    // Rendering a hidden tree.
     if ((workInProgress.mode & ConcurrentMode) === NoMode) {
       // In legacy sync mode, don't defer the subtree. Render it now.
       // TODO: Figure out what we should do in Blocking mode.
       const nextState: OffscreenState = {
         baseLanes: NoLanes,
+        cache: null,
       };
       workInProgress.memoizedState = nextState;
       pushRenderLanes(workInProgress, renderLanes);
     } else if (!includesSomeLane(renderLanes, (OffscreenLane: Lane))) {
+      // We're hidden, and we're not rendering at Offscreen. We will bail out
+      // and resume this tree later.
       let nextBaseLanes;
       if (prevState !== null) {
         const prevBaseLanes = prevState.baseLanes;
         nextBaseLanes = mergeLanes(prevBaseLanes, renderLanes);
+
+        // Keep a reference to the in-flight cache so we can resume later. If
+        // there's no fresh cache on the stack, there might be one from a
+        // previous render. If so, reuse it.
+        cacheInstance = hasFreshCacheProvider()
+          ? getFreshCacheProviderIfExists()
+          : prevState.cache;
+        // We don't need to push to the cache context because we're about to
+        // bail out. There won't be a context mismatch because we only pop
+        // the cache context if `updateQueue` is non-null.
       } else {
         nextBaseLanes = renderLanes;
       }
@@ -620,16 +638,34 @@ function updateOffscreenComponent(
       );
       const nextState: OffscreenState = {
         baseLanes: nextBaseLanes,
+        cache: cacheInstance,
       };
       workInProgress.memoizedState = nextState;
+      workInProgress.updateQueue = null;
       // We're about to bail out, but we need to push this to the stack anyway
       // to avoid a push/pop misalignment.
       pushRenderLanes(workInProgress, nextBaseLanes);
       return null;
     } else {
+      // This is the second render. The surrounding visible content has already
+      // committed. Now we resume rendering the hidden tree.
+
+      if (!hasFreshCacheProvider() && prevState !== null) {
+        // If there was a fresh cache during the render that spawned this one,
+        // resume using it.
+        const prevCacheInstance = prevState.cache;
+        if (prevCacheInstance !== null) {
+          cacheInstance = prevCacheInstance;
+          pushFreshCacheProvider(workInProgress, prevCacheInstance);
+          // This isn't a refresh, it's a continuation of a previous render.
+          // So we don't need to propagate a context change.
+        }
+      }
+
       // Rendering at offscreen, so we can clear the base lanes.
       const nextState: OffscreenState = {
         baseLanes: NoLanes,
+        cache: null,
       };
       workInProgress.memoizedState = nextState;
       // Push the lanes that were skipped when we bailed out.
@@ -638,9 +674,25 @@ function updateOffscreenComponent(
       pushRenderLanes(workInProgress, subtreeRenderLanes);
     }
   } else {
+    // Rendering a visible tree.
     let subtreeRenderLanes;
     if (prevState !== null) {
+      // We're going from hidden -> visible.
+
       subtreeRenderLanes = mergeLanes(prevState.baseLanes, renderLanes);
+
+      if (!hasFreshCacheProvider()) {
+        // If there was a fresh cache during the render that spawned this one,
+        // resume using it.
+        const prevCacheInstance = prevState.cache;
+        if (prevCacheInstance !== null) {
+          cacheInstance = prevCacheInstance;
+          pushFreshCacheProvider(workInProgress, prevCacheInstance);
+          // This isn't a refresh, it's a continuation of a previous render.
+          // So we don't need to propagate a context change.
+        }
+      }
+
       // Since we're not hidden anymore, reset the state
       workInProgress.memoizedState = null;
     } else {
@@ -651,6 +703,11 @@ function updateOffscreenComponent(
     }
     pushRenderLanes(workInProgress, subtreeRenderLanes);
   }
+
+  // If we have a cache instance from a previous render attempt, then this will
+  // be non-null. We can use this to infer whether to push/pop the
+  // cache context.
+  workInProgress.updateQueue = cacheInstance;
 
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
@@ -671,13 +728,6 @@ function updateCacheComponent(
     return null;
   }
 
-  // Read directly from the context. We don't set up a context dependency
-  // because the propagation function automatically includes CacheComponents in
-  // its search.
-  const parentCacheInstance: CacheInstance = isPrimaryRenderer
-    ? CacheContext._currentValue
-    : CacheContext._currentValue2;
-
   let cacheInstance: CacheInstance | null = null;
   if (current === null) {
     let initialState;
@@ -696,31 +746,14 @@ function updateCacheComponent(
         'Expected a work-in-progress root. This is a bug in React. Please ' +
           'file an issue.',
       );
-      const freshCache: Cache | null = requestFreshCache(
-        root,
-        getRootRenderLanes(),
-        renderLanes,
-      );
-      // This may be the same as the parent cache, like if the current render
-      // spawned from a previous render that already committed. Otherwise, this
-      // is the root of a cache consistency boundary.
-      if (freshCache !== null && freshCache !== parentCacheInstance.cache) {
-        cacheInstance = {
-          cache: freshCache,
-          provider: workInProgress,
-        };
-        initialState = {
-          cache: freshCache,
-        };
-        pushFreshCacheProvider(workInProgress, cacheInstance);
-        // No need to propagate the refresh, because this is a new tree.
-      } else {
-        // Use the parent cache
-        cacheInstance = null;
-        initialState = {
-          cache: null,
-        };
-      }
+      // This will always be different from the parent cache; otherwise we would
+      // have detected a fresh cache provider in the earlier branch.
+      cacheInstance = requestCacheFromPool(root, workInProgress, renderLanes);
+      initialState = {
+        cacheInstance,
+      };
+      pushFreshCacheProvider(workInProgress, cacheInstance);
+      // No need to propagate a refresh, because this is a new tree.
     }
     // Initialize an update queue. We use this for refreshes.
     workInProgress.memoizedState = initialState;
@@ -732,20 +765,20 @@ function updateCacheComponent(
       // inherit its cache.
       cacheInstance = null;
     } else if (includesSomeLane(renderLanes, updateLanes)) {
-      // An refresh was scheduled. If it was an refresh on this fiber, then we
+      // A refresh was scheduled. If it was a refresh on this fiber, then we
       // will have an update in the queue. Otherwise, it must have been an
       // update on a parent, propagated via context.
+
+      // First check the update queue.
       cloneUpdateQueue(current, workInProgress);
       processUpdateQueue(workInProgress, null, null, renderLanes);
-      const prevCache: Cache | null = current.memoizedState.cache;
-      const nextCache: Cache | null = workInProgress.memoizedState.cache;
-
-      if (nextCache !== prevCache && nextCache !== null) {
+      const prevCacheInstance: CacheInstance =
+        current.memoizedState.cacheInstance;
+      const nextCacheInstance: CacheInstance =
+        workInProgress.memoizedState.cacheInstance;
+      if (nextCacheInstance !== prevCacheInstance) {
         // Received a refresh.
-        cacheInstance = {
-          cache: nextCache,
-          provider: workInProgress,
-        };
+        cacheInstance = nextCacheInstance;
         pushFreshCacheProvider(workInProgress, cacheInstance);
         // Refreshes propagate through the entire subtree. The refreshed cache
         // will override nested caches.
@@ -1711,8 +1744,28 @@ const SUSPENDED_MARKER: SuspenseState = {
 };
 
 function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {
+  // Keep a reference to the in-flight cache so we can resume later.
+  let cache = getFreshCacheProviderIfExists();
+  if (cache === null) {
+    // If there's no cache on the stack, a nested Cache boundary may have
+    // spawned a new one. Check the cache pool.
+    const root = getWorkInProgressRoot();
+    invariant(
+      root !== null,
+      'Expected a work-in-progress root. This is a bug in React. Please ' +
+        'file an issue.',
+    );
+    // If a nested cache accessed the pool during this render, it will be
+    // assigned to root.pooledCache. No need to check the lane-indexed pool.
+    // TODO: Actually I think I'm wrong and we do need to check the lane-indexed
+    // pool, to account for infinite transitions that are not triggered by a
+    // `refresh` call, since those won't put a fresh context on the stack.
+    // However, that's not idiomatic so this might be fine for now.
+    cache = root.pooledCache;
+  }
   return {
     baseLanes: renderLanes,
+    cache,
   };
 }
 
@@ -1720,8 +1773,33 @@ function updateSuspenseOffscreenState(
   prevOffscreenState: OffscreenState,
   renderLanes: Lanes,
 ): OffscreenState {
+  // Keep a reference to the in-flight cache so we can resume later.
+  let cache = getFreshCacheProviderIfExists();
+  if (cache === null) {
+    // If there's no cache on the stack, a nested Cache boundary may have
+    // spawned a new one. Check the cache pool.
+    const root = getWorkInProgressRoot();
+    invariant(
+      root !== null,
+      'Expected a work-in-progress root. This is a bug in React. Please ' +
+        'file an issue.',
+    );
+    // If a nested cache accessed the pool during this render, it will be
+    // assigned to root.pooledCache. No need to check the lane-indexed pool.
+    // TODO: Actually I think I'm wrong and we do need to check the lane-indexed
+    // pool, to account for infinite transitions that are not triggered by a
+    // `refresh` call, since those won't put a fresh context on the stack.
+    // However, that's not idiomatic so this might be fine for now.
+    cache = root.pooledCache;
+    if (cache === null) {
+      // If there's no cache in the pool, there might be one from a previous
+      // render. If so, reuse it.
+      cache = prevOffscreenState.cache;
+    }
+  }
   return {
     baseLanes: mergeLanes(prevOffscreenState.baseLanes, renderLanes),
+    cache,
   };
 }
 

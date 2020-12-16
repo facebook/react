@@ -31,7 +31,6 @@ import {
   enableUseRefAccessWarning,
 } from 'shared/ReactFeatureFlags';
 
-import {HostRoot} from './ReactWorkTags';
 import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   NoLane,
@@ -1753,19 +1752,12 @@ function refreshCache<T>(
 
     // Schedule an update on the cache boundary to trigger a refresh.
     const refreshUpdate = createUpdate(eventTime, lane);
-    let payload;
-    if (provider.tag === HostRoot) {
-      payload = {
-        cacheInstance: {
-          provider: provider,
-          cache: seededCache,
-        },
-      };
-    } else {
-      payload = {
+    const payload = {
+      cacheInstance: {
+        provider: provider,
         cache: seededCache,
-      };
-    }
+      },
+    };
     refreshUpdate.payload = payload;
     enqueueUpdate(provider, refreshUpdate);
   } finally {
