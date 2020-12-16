@@ -667,13 +667,26 @@ export function attach(
         ? mostRecentlyInspectedElement.id
         : null;
     updatedIDs.forEach(fiberID => {
-      const errorSet = fiberToErrorsMap.get(fiberID);
-      const warningSet = fiberToWarningsMap.get(fiberID);
+      const errorCountsMap = fiberToErrorsMap.get(fiberID);
+      const warningCountsMap = fiberToWarningsMap.get(fiberID);
+
+      let errorCount = 0;
+      let warningCount = 0;
+      if (errorCountsMap != null) {
+        errorCountsMap.forEach(count => {
+          errorCount += count;
+        });
+      }
+      if (warningCountsMap != null) {
+        warningCountsMap.forEach(count => {
+          warningCount += count;
+        });
+      }
 
       operations[i++] = TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS;
       operations[i++] = fiberID;
-      operations[i++] = errorSet != null ? errorSet.size : 0;
-      operations[i++] = warningSet != null ? warningSet.size : 0;
+      operations[i++] = errorCount;
+      operations[i++] = warningCount;
 
       if (fiberID === mostRecentlyInspectedElementID) {
         hasElementUpdatedSinceLastInspected = true;
