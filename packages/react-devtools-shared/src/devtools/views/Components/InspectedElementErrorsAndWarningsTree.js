@@ -103,7 +103,9 @@ function Tree({
     <div className={`${sharedStyles.InspectedElementTree} ${className}`}>
       <div className={`${sharedStyles.HeaderRow} ${styles.HeaderRow}`}>
         <div className={sharedStyles.Header}>{label}</div>
-        <Button onClick={clearMessages} title="Clear errors and warnings">
+        <Button
+          onClick={clearMessages}
+          title={`Clear all ${label} for this component`}>
           <ButtonIcon type="clear" />
         </Button>
       </div>

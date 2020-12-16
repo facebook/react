@@ -41,6 +41,7 @@
   display: inline-block;
   width: 0.75rem;
   height: 0.75rem;
+  flex: 0 0 0.75rem;
   line-height: 0.75rem;
   text-align: center;
   border-radius: 0.25rem;
