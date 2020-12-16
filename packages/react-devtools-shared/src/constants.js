@@ -34,6 +34,9 @@ export const LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS =
 export const LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY =
   'React::DevTools::appendComponentStack';
 
+export const LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY =
+  'React::DevTools::showInlineWarningsAndErrors';
+
 export const LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY =
   'React::DevTools::traceUpdatesEnabled';
 

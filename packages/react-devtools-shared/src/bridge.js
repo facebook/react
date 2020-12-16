@@ -114,6 +114,7 @@ type NativeStyleEditor_SetValueParams = {|
 type UpdateConsolePatchSettingsParams = {|
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
+  showInlineWarningsAndErrors: boolean,
 |};
 
 type BackendEvents = {|

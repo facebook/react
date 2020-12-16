@@ -601,16 +601,22 @@ export default class Agent extends EventEmitter<{|
   updateConsolePatchSettings = ({
     appendComponentStack,
     breakOnConsoleErrors,
+    showInlineWarningsAndErrors,
   }: {|
     appendComponentStack: boolean,
     breakOnConsoleErrors: boolean,
+    showInlineWarningsAndErrors: boolean,
   |}) => {
     // If the frontend preference has change,
     // or in the case of React Native- if the backend is just finding out the preference-
     // then install or uninstall the console overrides.
     // It's safe to call these methods multiple times, so we don't need to worry about that.
     if (appendComponentStack || breakOnConsoleErrors) {
-      patchConsole({appendComponentStack, breakOnConsoleErrors});
+      patchConsole({
+        appendComponentStack,
+        breakOnConsoleErrors,
+        showInlineWarningsAndErrors,
+      });
     } else {
       unpatchConsole();
     }

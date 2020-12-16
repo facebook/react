@@ -717,10 +717,13 @@ export function attach(
       window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false;
     const breakOnConsoleErrors =
       window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ === true;
+    const showInlineWarningsAndErrors =
+      window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ === true;
     if (appendComponentStack || breakOnConsoleErrors) {
       patchConsole({
         appendComponentStack,
         breakOnConsoleErrors,
+        showInlineWarningsAndErrors,
       });
     }
   }

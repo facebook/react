@@ -14,6 +14,7 @@ import Badge from './Badge';
 import ButtonIcon from '../ButtonIcon';
 import {createRegExp} from '../utils';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
+import {SettingsContext} from '../Settings/SettingsContext';
 import {StoreContext} from '../context';
 import {useSubscription} from '../hooks';
 
@@ -36,6 +37,7 @@ export default function Element({data, index, style}: Props) {
     TreeStateContext,
   );
   const dispatch = useContext(TreeDispatcherContext);
+  const {showInlineWarningsAndErrors} = React.useContext(SettingsContext);
 
   const element =
     ownerFlatTree !== null
@@ -167,7 +169,7 @@ export default function Element({data, index, style}: Props) {
             />
           </Badge>
         ) : null}
-        {errors > 0 && (
+        {showInlineWarningsAndErrors && errors > 0 && (
           <Icon
             type="error"
             className={
@@ -177,7 +179,7 @@ export default function Element({data, index, style}: Props) {
             }
           />
         )}
-        {warnings > 0 && (
+        {showInlineWarningsAndErrors && warnings > 0 && (
           <Icon
             type="warning"
             className={
