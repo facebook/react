@@ -26,18 +26,20 @@ export function isStringComponentStack(text: string): boolean {
   return PREFIX_REGEX.test(text) || ROW_COLUMN_NUMBER_REGEX.test(text);
 }
 
-type OnErrorOrWarning = (
+type PendingErrorOrWarning = {|
+  args: $ReadOnlyArray<any>,
   fiber: Fiber,
   type: 'error' | 'warn',
-  args: Array<any>,
-) => void;
+|};
+type OnErrorsAndWarnings = (Array<PendingErrorOrWarning>) => void;
 
 const injectedRenderers: Map<
   ReactRenderer,
   {|
     currentDispatcherRef: CurrentDispatcherRef,
     getCurrentFiber: () => Fiber | null,
-    onErrorOrWarning: ?OnErrorOrWarning,
+    onErrorsAndWarnings: ?OnErrorsAndWarnings,
+    pendingErrorsAndWarnings: Array<PendingErrorOrWarning>,
     workTagMap: WorkTagMap,
   |},
 > = new Map();
@@ -49,6 +51,20 @@ for (const method in console) {
 }
 
 let unpatchFn: null | (() => void) = null;
+
+let flushErrorOrWarningUpdatesTimoutID: TimeoutID | null = null;
+function flushErrorOrWarningUpdates() {
+  flushErrorOrWarningUpdatesTimoutID = null;
+  // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+  for (const injectedRenderer of injectedRenderers.values()) {
+    if (typeof injectedRenderer.onErrorsAndWarnings === 'function') {
+      injectedRenderer.onErrorsAndWarnings(
+        injectedRenderer.pendingErrorsAndWarnings,
+      );
+      injectedRenderer.pendingErrorsAndWarnings = [];
+    }
+  }
+}
 
 // Enables e.g. Jest tests to inject a mock console object.
 export function dangerous_setTargetConsoleForTesting(
@@ -67,7 +83,7 @@ export function dangerous_setTargetConsoleForTesting(
 // Injecting them separately allows the console to easily be patched or un-patched later (at runtime).
 export function registerRenderer(
   renderer: ReactRenderer,
-  onErrorOrWarning?: OnErrorOrWarning,
+  onErrorsAndWarnings?: OnErrorsAndWarnings,
 ): void {
   const {
     currentDispatcherRef,
@@ -90,7 +106,8 @@ export function registerRenderer(
       currentDispatcherRef,
       getCurrentFiber,
       workTagMap: ReactTypeOfWork,
-      onErrorOrWarning,
+      onErrorsAndWarnings,
+      pendingErrorsAndWarnings: [],
     });
   }
 }
@@ -133,7 +150,6 @@ export function patch({
       } catch (error) {}
     }
   };
-
   APPEND_STACK_TO_METHODS.forEach(method => {
     try {
       const originalMethod = (originalConsoleMethods[method] =
@@ -162,25 +178,45 @@ export function patch({
           for (const {
             currentDispatcherRef,
             getCurrentFiber,
-            onErrorOrWarning,
+            onErrorsAndWarnings,
+            pendingErrorsAndWarnings,
             workTagMap,
           } of injectedRenderers.values()) {
             const current: ?Fiber = getCurrentFiber();
             if (current != null) {
               try {
-                if (shouldShowInlineWarningsAndErrors) {
-                  // TODO (inline errors) The renderer is injected in two places:
-                  // 1. First by "react-devtools-shared/src/hook" which isn't stateful and doesn't supply onErrorOrWarning()
-                  // 2. Second by "react-devtools-shared/src/backend/renderer" which is and does
-                  if (typeof onErrorOrWarning === 'function') {
-                    onErrorOrWarning(
-                      current,
-                      ((method: any): 'error' | 'warn'),
-                      // Copy args before we mutate them (e.g. adding the component stack)
-                      alreadyHasComponentStack
-                        ? // Replace component stack with an empty string in case there's a string placeholder for it.
-                          [...args.slice(0, -1), '']
-                        : args.slice(),
+                if (
+                  shouldShowInlineWarningsAndErrors &&
+                  typeof onErrorsAndWarnings === 'function'
+                ) {
+                  // There are a few places that errors might be logged:
+                  // 1. During render (either for initial mount or an update)
+                  // 2. During commit effects (both active and passive)
+                  // 3. During unmounts (or commit effect cleanup functions)
+                  //
+                  // Initial render presents a special challenge-
+                  // since neither backend nor frontend Store know about a Fiber until it has mounted (and committed).
+                  // In this case, we need to hold onto errors until the subsequent commit hook is called.
+                  //
+                  // Passive effects also present a special challenge-
+                  // since the commit hook is called before passive effects, are run,
+                  // meaning that we might not want to wait until the subsequent commit hook to notify the frontend.
+                  //
+                  // For this reason, warnings/errors are sent to the frontend periodically (on a timer).
+                  // When processing errors, any Fiber that is not still registered is assumed to be unmounted.
+                  pendingErrorsAndWarnings.push({
+                    fiber: current,
+                    type: ((method: any): 'error' | 'warn'),
+                    args: alreadyHasComponentStack
+                      ? // Replace component stack with an empty string in case there's a string placeholder for it.
+                        [...args.slice(0, -1), '']
+                      : args.slice(),
+                  });
+
+                  if (flushErrorOrWarningUpdatesTimoutID === null) {
+                    flushErrorOrWarningUpdatesTimoutID = setTimeout(
+                      flushErrorOrWarningUpdates,
+                      1000,
                     );
                   }
                 }

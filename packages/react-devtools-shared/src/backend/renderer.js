@@ -524,15 +524,6 @@ export function attach(
     typeof setSuspenseHandler === 'function' &&
     typeof scheduleUpdate === 'function';
 
-  type PendingErrorOrWarning = {|
-    args: $ReadOnlyArray<any>,
-    fiber: Fiber,
-    type: 'error' | 'warn',
-  |};
-
-  let flushErrorOrWarningUpdatesTimoutID: TimeoutID | null = null;
-  const pendingErrorOrWarnings: Array<PendingErrorOrWarning> = [];
-
   // Mapping of fiber IDs to error/warning messages and counts.
   const fiberToErrorsMap: Map<number, Map<string, number>> = new Map();
   const fiberToWarningsMap: Map<number, Map<string, number>> = new Map();
@@ -555,10 +546,6 @@ export function attach(
   }
 
   function clearErrorsAndWarnings() {
-    pendingErrorOrWarnings.splice(0);
-    clearTimeout(flushErrorOrWarningUpdatesTimoutID);
-    flushErrorOrWarningUpdatesTimoutID = null;
-
     const updatedFiberIDs = new Set(fiberToErrorsMap.keys());
     // eslint-disable-next-line no-for-of-loops/no-for-of-loops
     for (const key of fiberToWarningsMap.keys()) {
@@ -585,52 +572,21 @@ export function attach(
     }
   }
 
-  function onErrorOrWarning(
-    fiber: Fiber,
-    type: 'error' | 'warn',
-    args: $ReadOnlyArray<any>,
+  function onErrorsAndWarningsUpdate(
+    errorsAndWarnings: Array<{|
+      fiber: Fiber,
+      type: 'error' | 'warn',
+      args: $ReadOnlyArray<any>,
+    |}>,
   ): void {
-    // There are a few places that errors might be logged:
-    // 1. During render (either for initial mount or an update)
-    // 2. During commit effects (both active and passive)
-    // 3. During unmounts (or commit effect cleanup functions)
-    //
-    // Initial render presents a special challenge-
-    // since neither backend nor frontend Store know about a Fiber until it has mounted (and committed).
-    // In this case, we need to hold onto errors until the subsequent commit hook is called.
-    //
-    // Passive effects also present a special challenge-
-    // since the commit hook is called before passive effects, are run,
-    // meaning that we might not want to wait until the subsequent commit hook to notify the frontend.
-    //
-    // For this reason, warnings/errors are sent to the frontend periodically (on a timer).
-    // When processing errors, any Fiber that is not still registered is assumed to be unmounted.
-    pendingErrorOrWarnings.push({
-      fiber,
-      type,
-      args,
-    });
-
-    if (flushErrorOrWarningUpdatesTimoutID === null) {
-      flushErrorOrWarningUpdatesTimoutID = setTimeout(
-        flushErrorOrWarningUpdates,
-        1000,
-      );
-    }
-  }
-
-  function flushErrorOrWarningUpdates() {
-    flushErrorOrWarningUpdatesTimoutID = null;
-
     const updatedFiberIDs: Set<number> = new Set();
-    pendingErrorOrWarnings
+    errorsAndWarnings
       .filter(({fiber}) => isFiberMounted(fiber))
       .forEach(({args, fiber, type}) => {
         const fiberID = getFiberID(getPrimaryFiber(fiber));
         updatedFiberIDs.add(fiberID);
         recordErrorOrWarningOnFiber(type, args, fiberID);
       });
-    pendingErrorOrWarnings.splice(0);
 
     emitErrorOrWarningUpdates(updatedFiberIDs);
   }
@@ -690,7 +646,7 @@ export function attach(
   //
   // Don't patch in test environments because we don't want to interfere with Jest's own console overrides.
   if (process.env.NODE_ENV !== 'test') {
-    registerRendererWithConsole(renderer, onErrorOrWarning);
+    registerRendererWithConsole(renderer, onErrorsAndWarningsUpdate);
 
     // The renderer interface can't read these preferences directly,
     // because it is stored in localStorage within the context of the extension.
