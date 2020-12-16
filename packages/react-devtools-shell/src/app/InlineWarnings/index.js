@@ -121,11 +121,27 @@ function ErrorWithMultipleArgs({children = null}) {
 }
 
 function ErrorWithStringSubstitutions({children = null}) {
-  console.error('This error uses %s substitutions', 'string');
+  console.error('This error uses "%s" substitutions', 'string');
   return children;
 }
 
 function ReactErrorOnHostComponent({children = null}) {
+  return <div data-camelCasedAttribute="should-lower-case">{children}</div>;
+}
+
+function DuplicateWarningsAndErrors({children = null}) {
+  console.warn('this warning is logged twice per render');
+  console.warn('this warning is logged twice per render');
+  console.error('this error is logged twice per render');
+  console.error('this error is logged twice per render');
+  return <div data-camelCasedAttribute="should-lower-case">{children}</div>;
+}
+
+function MultipleWarningsAndErrors({children = null}) {
+  console.warn('this is the first warning logged');
+  console.warn('this is the second warning logged');
+  console.error('this is the first error logged');
+  console.error('this is the second error logged');
   return <div data-camelCasedAttribute="should-lower-case">{children}</div>;
 }
 
@@ -153,6 +169,8 @@ export default function ErrorsAndWarnings() {
       <ErrorWithStringSubstitutions />
       <ReactErrorOnHostComponent />
       <ReallyLongErrorMessageThatWillCauseTextToBeTruncated />
+      <DuplicateWarningsAndErrors />
+      <MultipleWarningsAndErrors />
     </Fragment>
   );
 }
