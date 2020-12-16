@@ -135,11 +135,20 @@ function ErrorOrWarningView({
   count,
   message,
 }: ErrorOrWarningViewProps) {
-  // TODO Render .ErrorBadge or .WarningBadge if count > 1.
+  const [expanded, toggleExpanded] = React.useReducer(
+    currentlyExpanded => !currentlyExpanded,
+    false,
+  );
+
   return (
     <div className={className}>
       {count > 1 && <div className={badgeClassName}>{count}</div>}
-      <div className={styles.Message}>{message}</div>
+      <div
+        className={styles.Message}
+        data-expanded={expanded}
+        onClick={toggleExpanded}>
+        {message}
+      </div>
     </div>
   );
 }
