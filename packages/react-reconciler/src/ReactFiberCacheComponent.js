@@ -9,6 +9,7 @@
 
 import type {ReactContext} from 'shared/ReactTypes';
 
+import {enableCache} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import {HostRoot} from './ReactWorkTags';
 
@@ -46,6 +47,9 @@ export function pushStaleCacheProvider(
   workInProgress: Fiber,
   cacheInstance: CacheInstance,
 ) {
+  if (!enableCache) {
+    return;
+  }
   if (__DEV__) {
     if (freshCacheInstance !== null) {
       console.error(
@@ -60,6 +64,9 @@ export function pushFreshCacheProvider(
   workInProgress: Fiber,
   cacheInstance: CacheInstance,
 ) {
+  if (!enableCache) {
+    return;
+  }
   if (__DEV__) {
     if (
       freshCacheInstance !== null &&
@@ -81,6 +88,9 @@ export function popCacheProvider(
   workInProgress: Fiber,
   cacheInstance: CacheInstance,
 ) {
+  if (!enableCache) {
+    return;
+  }
   if (__DEV__) {
     if (freshCacheInstance !== null && freshCacheInstance !== cacheInstance) {
       console.error(
@@ -93,9 +103,15 @@ export function popCacheProvider(
 }
 
 export function hasFreshCacheProvider() {
+  if (!enableCache) {
+    return false;
+  }
   return freshCacheInstance !== null;
 }
 
 export function getFreshCacheProviderIfExists(): CacheInstance | null {
+  if (!enableCache) {
+    return null;
+  }
   return freshCacheInstance;
 }

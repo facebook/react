@@ -616,15 +616,17 @@ function updateOffscreenComponent(
         const prevBaseLanes = prevState.baseLanes;
         nextBaseLanes = mergeLanes(prevBaseLanes, renderLanes);
 
-        // Keep a reference to the in-flight cache so we can resume later. If
-        // there's no fresh cache on the stack, there might be one from a
-        // previous render. If so, reuse it.
-        cacheInstance = hasFreshCacheProvider()
-          ? getFreshCacheProviderIfExists()
-          : prevState.cache;
-        // We don't need to push to the cache context because we're about to
-        // bail out. There won't be a context mismatch because we only pop
-        // the cache context if `updateQueue` is non-null.
+        if (enableCache) {
+          // Keep a reference to the in-flight cache so we can resume later. If
+          // there's no fresh cache on the stack, there might be one from a
+          // previous render. If so, reuse it.
+          cacheInstance = hasFreshCacheProvider()
+            ? getFreshCacheProviderIfExists()
+            : prevState.cache;
+          // We don't need to push to the cache context because we're about to
+          // bail out. There won't be a context mismatch because we only pop
+          // the cache context if `updateQueue` is non-null.
+        }
       } else {
         nextBaseLanes = renderLanes;
       }
@@ -650,7 +652,7 @@ function updateOffscreenComponent(
       // This is the second render. The surrounding visible content has already
       // committed. Now we resume rendering the hidden tree.
 
-      if (!hasFreshCacheProvider() && prevState !== null) {
+      if (enableCache && !hasFreshCacheProvider() && prevState !== null) {
         // If there was a fresh cache during the render that spawned this one,
         // resume using it.
         const prevCacheInstance = prevState.cache;
@@ -681,7 +683,7 @@ function updateOffscreenComponent(
 
       subtreeRenderLanes = mergeLanes(prevState.baseLanes, renderLanes);
 
-      if (!hasFreshCacheProvider()) {
+      if (enableCache && !hasFreshCacheProvider()) {
         // If there was a fresh cache during the render that spawned this one,
         // resume using it.
         const prevCacheInstance = prevState.cache;
@@ -704,10 +706,12 @@ function updateOffscreenComponent(
     pushRenderLanes(workInProgress, subtreeRenderLanes);
   }
 
-  // If we have a cache instance from a previous render attempt, then this will
-  // be non-null. We can use this to infer whether to push/pop the
-  // cache context.
-  workInProgress.updateQueue = cacheInstance;
+  if (enableCache) {
+    // If we have a cache instance from a previous render attempt, then this will
+    // be non-null. We can use this to infer whether to push/pop the
+    // cache context.
+    workInProgress.updateQueue = cacheInstance;
+  }
 
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
   return workInProgress.child;
@@ -1744,24 +1748,27 @@ const SUSPENDED_MARKER: SuspenseState = {
 };
 
 function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {
-  // Keep a reference to the in-flight cache so we can resume later.
-  let cache = getFreshCacheProviderIfExists();
-  if (cache === null) {
-    // If there's no cache on the stack, a nested Cache boundary may have
-    // spawned a new one. Check the cache pool.
-    const root = getWorkInProgressRoot();
-    invariant(
-      root !== null,
-      'Expected a work-in-progress root. This is a bug in React. Please ' +
-        'file an issue.',
-    );
-    // If a nested cache accessed the pool during this render, it will be
-    // assigned to root.pooledCache. No need to check the lane-indexed pool.
-    // TODO: Actually I think I'm wrong and we do need to check the lane-indexed
-    // pool, to account for infinite transitions that are not triggered by a
-    // `refresh` call, since those won't put a fresh context on the stack.
-    // However, that's not idiomatic so this might be fine for now.
-    cache = root.pooledCache;
+  let cache = null;
+  if (enableCache) {
+    // Keep a reference to the in-flight cache so we can resume later.
+    cache = getFreshCacheProviderIfExists();
+    if (cache === null) {
+      // If there's no cache on the stack, a nested Cache boundary may have
+      // spawned a new one. Check the cache pool.
+      const root = getWorkInProgressRoot();
+      invariant(
+        root !== null,
+        'Expected a work-in-progress root. This is a bug in React. Please ' +
+          'file an issue.',
+      );
+      // If a nested cache accessed the pool during this render, it will be
+      // assigned to root.pooledCache. No need to check the lane-indexed pool.
+      // TODO: Actually I think I'm wrong and we do need to check the lane-indexed
+      // pool, to account for infinite transitions that are not triggered by a
+      // `refresh` call, since those won't put a fresh context on the stack.
+      // However, that's not idiomatic so this might be fine for now.
+      cache = root.pooledCache;
+    }
   }
   return {
     baseLanes: renderLanes,
@@ -1773,28 +1780,31 @@ function updateSuspenseOffscreenState(
   prevOffscreenState: OffscreenState,
   renderLanes: Lanes,
 ): OffscreenState {
-  // Keep a reference to the in-flight cache so we can resume later.
-  let cache = getFreshCacheProviderIfExists();
-  if (cache === null) {
-    // If there's no cache on the stack, a nested Cache boundary may have
-    // spawned a new one. Check the cache pool.
-    const root = getWorkInProgressRoot();
-    invariant(
-      root !== null,
-      'Expected a work-in-progress root. This is a bug in React. Please ' +
-        'file an issue.',
-    );
-    // If a nested cache accessed the pool during this render, it will be
-    // assigned to root.pooledCache. No need to check the lane-indexed pool.
-    // TODO: Actually I think I'm wrong and we do need to check the lane-indexed
-    // pool, to account for infinite transitions that are not triggered by a
-    // `refresh` call, since those won't put a fresh context on the stack.
-    // However, that's not idiomatic so this might be fine for now.
-    cache = root.pooledCache;
+  let cache = null;
+  if (enableCache) {
+    // Keep a reference to the in-flight cache so we can resume later.
+    cache = getFreshCacheProviderIfExists();
     if (cache === null) {
-      // If there's no cache in the pool, there might be one from a previous
-      // render. If so, reuse it.
-      cache = prevOffscreenState.cache;
+      // If there's no cache on the stack, a nested Cache boundary may have
+      // spawned a new one. Check the cache pool.
+      const root = getWorkInProgressRoot();
+      invariant(
+        root !== null,
+        'Expected a work-in-progress root. This is a bug in React. Please ' +
+          'file an issue.',
+      );
+      // If a nested cache accessed the pool during this render, it will be
+      // assigned to root.pooledCache. No need to check the lane-indexed pool.
+      // TODO: Actually I think I'm wrong and we do need to check the lane-indexed
+      // pool, to account for infinite transitions that are not triggered by a
+      // `refresh` call, since those won't put a fresh context on the stack.
+      // However, that's not idiomatic so this might be fine for now.
+      cache = root.pooledCache;
+      if (cache === null) {
+        // If there's no cache in the pool, there might be one from a previous
+        // render. If so, reuse it.
+        cache = prevOffscreenState.cache;
+      }
     }
   }
   return {

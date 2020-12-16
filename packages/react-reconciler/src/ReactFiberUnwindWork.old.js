@@ -136,9 +136,11 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
     case OffscreenComponent:
     case LegacyHiddenComponent:
       popRenderLanes(workInProgress);
-      const cacheInstance: CacheInstance | null = (workInProgress.updateQueue: any);
-      if (cacheInstance !== null) {
-        popCacheProvider(workInProgress, cacheInstance);
+      if (enableCache) {
+        const cacheInstance: CacheInstance | null = (workInProgress.updateQueue: any);
+        if (cacheInstance !== null) {
+          popCacheProvider(workInProgress, cacheInstance);
+        }
       }
       return null;
     case CacheComponent:
@@ -194,9 +196,11 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
     case OffscreenComponent:
     case LegacyHiddenComponent:
       popRenderLanes(interruptedWork);
-      const cacheInstance: CacheInstance | null = (interruptedWork.updateQueue: any);
-      if (cacheInstance !== null) {
-        popCacheProvider(interruptedWork, cacheInstance);
+      if (enableCache) {
+        const cacheInstance: CacheInstance | null = (interruptedWork.updateQueue: any);
+        if (cacheInstance !== null) {
+          popCacheProvider(interruptedWork, cacheInstance);
+        }
       }
       break;
     case CacheComponent:

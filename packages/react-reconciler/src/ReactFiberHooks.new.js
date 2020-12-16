@@ -1876,6 +1876,9 @@ function dispatchAction<S, A>(
 }
 
 function getCacheForType<T>(resourceType: () => T): T {
+  if (!enableCache) {
+    invariant(false, 'Not implemented.');
+  }
   const cacheInstance: CacheInstance = readContext(CacheContext);
   let cache = cacheInstance.cache;
   if (cache === null) {

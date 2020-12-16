@@ -55,7 +55,6 @@ import {
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
-  CacheComponent,
 } from './ReactWorkTags';
 import {
   invokeGuardedCallback,
@@ -803,7 +802,6 @@ function commitLifeCycles(
     case ScopeComponent:
     case OffscreenComponent:
     case LegacyHiddenComponent:
-    case CacheComponent:
       return;
   }
   invariant(
@@ -1698,8 +1696,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
       hideOrUnhideAllChildren(finishedWork, isHidden);
       return;
     }
-    case CacheComponent:
-      return;
   }
   invariant(
     false,

@@ -1490,9 +1490,11 @@ function completeWork(
         bubbleProperties(workInProgress);
       }
 
-      const cacheInstance: CacheInstance | null = (workInProgress.updateQueue: any);
-      if (cacheInstance !== null) {
-        popCacheProvider(workInProgress, cacheInstance);
+      if (enableCache) {
+        const cacheInstance: CacheInstance | null = (workInProgress.updateQueue: any);
+        if (cacheInstance !== null) {
+          popCacheProvider(workInProgress, cacheInstance);
+        }
       }
 
       return null;
