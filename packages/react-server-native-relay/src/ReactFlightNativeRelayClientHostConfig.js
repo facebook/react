@@ -36,18 +36,25 @@ function parseModelRecursively(response: Response, parentObj, value) {
   }
   if (typeof value === 'object' && value !== null) {
     if (Array.isArray(value)) {
+      const parsedValue = [];
       for (let i = 0; i < value.length; i++) {
-        (value: any)[i] = parseModelRecursively(response, value, value[i]);
+        (parsedValue: any)[i] = parseModelRecursively(
+          response,
+          value,
+          value[i],
+        );
       }
-      return parseModelTuple(response, value);
+      return parseModelTuple(response, parsedValue);
     } else {
+      const parsedValue = {};
       for (const innerKey in value) {
-        (value: any)[innerKey] = parseModelRecursively(
+        (parsedValue: any)[innerKey] = parseModelRecursively(
           response,
           value,
           value[innerKey],
         );
       }
+      return parsedValue;
     }
   }
   return value;
