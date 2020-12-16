@@ -581,10 +581,14 @@ export function attach(
     clearTimeout(flushErrorOrWarningUpdatesTimoutID);
     flushErrorOrWarningUpdatesTimoutID = null;
 
+    const updatedFiberIDs = new Set(errorsOrWarnings.keys());
+
     freeErrorOrWarningMessageID = 0;
     errorsOrWarnings.clear();
     errorOrWarningToId.clear();
     idToErrorOrWarning.clear();
+
+    emitErrorOrWarningUpdates(updatedFiberIDs);
   }
 
   function clearErrorsForFiberID(id: number) {
@@ -593,6 +597,7 @@ export function attach(
         id,
       ): any);
       errorsOrWarningsForFiber.errors.splice(0);
+      emitErrorOrWarningUpdates(new Set([id]));
     }
   }
 
@@ -602,6 +607,7 @@ export function attach(
         id,
       ): any);
       errorsOrWarningsForFiber.warnings.splice(0);
+      emitErrorOrWarningUpdates(new Set([id]));
     }
   }
 
@@ -644,15 +650,20 @@ export function attach(
   function flushErrorOrWarningUpdates() {
     flushErrorOrWarningUpdatesTimoutID = null;
 
-    const updatedFiberIds: Set<number> = new Set();
+    const updatedFiberIDs: Set<number> = new Set();
     pendingErrorOrWarnings
       .filter(({fiber}) => isFiberMounted(fiber))
       .forEach(({args, fiber, type}) => {
         const fiberID = getFiberID(getPrimaryFiber(fiber));
-        updatedFiberIds.add(fiberID);
+        updatedFiberIDs.add(fiberID);
         recordErrorOrWarningOnFiber(type, args, fiberID);
       });
+    pendingErrorOrWarnings.splice(0);
 
+    emitErrorOrWarningUpdates(updatedFiberIDs);
+  }
+
+  function emitErrorOrWarningUpdates(updatedIDs: Set<number>) {
     // TODO (inline errors) Do we just want to push to pendingEvents and flush?
     const operations = new Array(
       // Identify which renderer this update is coming from.
@@ -660,16 +671,14 @@ export function attach(
       // How big is the string table?
       0 + // [stringTableLength]
         // Regular operations
-        updatedFiberIds.size,
+        updatedIDs.size,
     );
     let i = 0;
     operations[i++] = rendererID;
     operations[i++] = currentRootID; // Use this ID in case the root was unmounted!
     operations[i++] = 0; // No strings to send.
-    updatedFiberIds.forEach(fiberId => {
-      const {errors, warnings} = ((errorsOrWarnings.get(
-        fiberId,
-      ): any): RecordedErrorsOrWarnings);
+    updatedIDs.forEach(fiberId => {
+      const {errors = [], warnings = []} = errorsOrWarnings.get(fiberId) ?? {};
 
       operations[i++] = TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS;
       operations[i++] = fiberId;
@@ -678,8 +687,6 @@ export function attach(
     });
 
     hook.emit('operations', operations);
-
-    pendingErrorOrWarnings.splice(0);
   }
 
   // Patching the console enables DevTools to do a few useful things:
