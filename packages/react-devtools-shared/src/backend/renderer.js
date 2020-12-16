@@ -580,13 +580,13 @@ export function attach(
     |}>,
   ): void {
     const updatedFiberIDs: Set<number> = new Set();
-    errorsAndWarnings
-      .filter(({fiber}) => isFiberMounted(fiber))
-      .forEach(({args, fiber, type}) => {
+    errorsAndWarnings.forEach(({args, fiber, type}) => {
+      if (isFiberMounted(fiber)) {
         const fiberID = getFiberID(getPrimaryFiber(fiber));
         updatedFiberIDs.add(fiberID);
         recordErrorOrWarningOnFiber(type, args, fiberID);
-      });
+      }
+    });
 
     emitErrorOrWarningUpdates(updatedFiberIDs);
   }
