@@ -40,8 +40,9 @@ export default function InspectedElementErrorsAndWarningsTree({
             <ButtonIcon type="clear" />
           </Button>
         }
-        className={styles.Error}
+        className={styles.ErrorTree}
         label="errors"
+        messageClassName={styles.Error}
         messages={errors}
       />
       <Tree
@@ -52,8 +53,9 @@ export default function InspectedElementErrorsAndWarningsTree({
             <ButtonIcon type="clear" />
           </Button>
         }
-        className={styles.Warning}
+        className={styles.WarningTree}
         label="warnings"
+        messageClassName={styles.Warning}
         messages={warnings}
       />
     </React.Fragment>
@@ -64,15 +66,23 @@ type TreeProps = {|
   actions: React$Node,
   className: string,
   label: string,
+  messageClassName: string,
   messages: string[],
 |};
 
-function Tree({actions, className, label, messages}: TreeProps) {
+function Tree({
+  actions,
+  className,
+  label,
+  messageClassName,
+  messages,
+}: TreeProps) {
   if (messages.length === 0) {
     return null;
   }
   return (
-    <div className={styles.InspectedElementErrorOrWarningsTree}>
+    <div
+      className={`${sharedStyles.InspectedElementTree} ${styles.ErrorOrWarningTree}`}>
       <div className={`${sharedStyles.HeaderRow} ${styles.HeaderRow}`}>
         <div className={sharedStyles.Header}>{label}</div>
         {actions}
@@ -80,8 +90,8 @@ function Tree({actions, className, label, messages}: TreeProps) {
       {messages.map((message, index) => {
         // TODO (inline errors) When we agressively de-duplicate by message we should use the message as key.
         return (
-          <div key={index} className={`${styles.ErrorOrWarning} ${className}`}>
-            {message}
+          <div className={messageClassName} key={index}>
+            <div className={styles.Message}>{message}</div>
           </div>
         );
       })}

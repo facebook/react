@@ -1,32 +1,27 @@
-.ErrorTree {
-  background-color: var(--color-error-background-message);
-  color: var(--color-error-text);
+.ErrorOrWarningTree {
+  padding: 0;
 }
 
-.WarningTree {
-  background-color: var(--color-warning-background);
-  color: var(--color-warning-text);
-}
-
-.ErrorOrWarning {
-  align-items: center;
-  border-top: 1px solid transparent;
-  display: flex;
-  padding-left: 1rem;
+.HeaderRow {
+  padding: 0 0.25rem;
 }
 
 .Error, .Warning {
-  padding: 0 0.25rem;
+  padding: 0 0.5rem;
   display: flex;
   align-items: center;
 }
 
 .Error {
+  background-color: var(--color-error-background-message);
   border-top-color: var(--color-error-border);
+  color: var(--color-error-text);
 }
 
 .Warning {
+  background-color: var(--color-warning-background);
   border-top-color: var(--color-warning-border);
+  color: var(--color-warning-text);
 }
 
 .Message {
