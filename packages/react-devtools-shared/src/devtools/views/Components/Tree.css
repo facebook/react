@@ -44,6 +44,7 @@
 .VRule {
   height: 20px;
   width: 1px;
+  flex: 0 0 1px;
   margin: 0 0.5rem;
   background-color: var(--color-border);
 }
@@ -64,6 +65,7 @@
   height: 0.75rem;
   margin-left: 0.25rem;
   margin-right: 0.25rem;
+  flex: 0 0 auto;
 }
 .ErrorIcon {
   color: var(--color-console-error-icon);

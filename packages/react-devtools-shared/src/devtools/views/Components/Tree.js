@@ -347,7 +347,7 @@ export default function Tree(props: Props) {
             {ownerID !== null ? <OwnersStack /> : <SearchInput />}
           </Suspense>
           <div className={styles.VRule} />
-          {(errors > 0 || warnings > 0) && (
+          {ownerID === null && (errors > 0 || warnings > 0) && (
             <React.Fragment>
               {errors > 0 && (
                 <React.Fragment>

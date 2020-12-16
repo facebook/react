@@ -105,33 +105,35 @@ export default function SearchInput(props: Props) {
         value={searchText}
       />
       {!!searchText && (
-        <span className={styles.IndexLabel}>
-          {Math.min(searchIndex + 1, searchResults.length)} |{' '}
-          {searchResults.length}
-        </span>
+        <React.Fragment>
+          <span className={styles.IndexLabel}>
+            {Math.min(searchIndex + 1, searchResults.length)} |{' '}
+            {searchResults.length}
+          </span>
+          <div className={styles.LeftVRule} />
+          <Button
+            className={styles.IconButton}
+            disabled={!searchText}
+            onClick={() => dispatch({type: 'GO_TO_PREVIOUS_SEARCH_RESULT'})}
+            title="Scroll to previous search result">
+            <ButtonIcon type="up" />
+          </Button>
+          <Button
+            className={styles.IconButton}
+            disabled={!searchText}
+            onClick={() => dispatch({type: 'GO_TO_NEXT_SEARCH_RESULT'})}
+            title="Scroll to next search result">
+            <ButtonIcon type="down" />
+          </Button>
+          <Button
+            className={styles.IconButton}
+            disabled={!searchText}
+            onClick={resetSearch}
+            title="Reset search">
+            <ButtonIcon type="close" />
+          </Button>
+        </React.Fragment>
       )}
-      <div className={styles.LeftVRule} />
-      <Button
-        className={styles.IconButton}
-        disabled={!searchText}
-        onClick={() => dispatch({type: 'GO_TO_PREVIOUS_SEARCH_RESULT'})}
-        title="Scroll to previous search result">
-        <ButtonIcon type="up" />
-      </Button>
-      <Button
-        className={styles.IconButton}
-        disabled={!searchText}
-        onClick={() => dispatch({type: 'GO_TO_NEXT_SEARCH_RESULT'})}
-        title="Scroll to next search result">
-        <ButtonIcon type="down" />
-      </Button>
-      <Button
-        className={styles.IconButton}
-        disabled={!searchText}
-        onClick={resetSearch}
-        title="Reset search">
-        <ButtonIcon type="close" />
-      </Button>
     </div>
   );
 }
