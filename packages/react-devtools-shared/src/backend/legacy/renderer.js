@@ -779,7 +779,7 @@ export function attach(
       state = publicInstance.state || null;
     }
 
-    // TODO (inline errors) What is legacy?
+    // Not implemented
     const errors = [];
     const warnings = [];
 
