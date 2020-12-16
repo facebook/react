@@ -345,10 +345,16 @@ export function updateThemeVariables(
     'color-component-badge-count-inverted',
     documentElements,
   );
+  updateStyleHelper(theme, 'color-console-error-badge-text', documentElements);
   updateStyleHelper(theme, 'color-console-error-background', documentElements);
   updateStyleHelper(theme, 'color-console-error-border', documentElements);
   updateStyleHelper(theme, 'color-console-error-icon', documentElements);
   updateStyleHelper(theme, 'color-console-error-text', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-console-warning-badge-text',
+    documentElements,
+  );
   updateStyleHelper(
     theme,
     'color-console-warning-background',

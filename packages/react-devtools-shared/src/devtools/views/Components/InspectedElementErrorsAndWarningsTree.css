@@ -50,10 +50,10 @@
 
 .ErrorBadge {
   background-color: var(--color-console-error-icon);
-  color: var(--color-text);
+  color: var(--color-console-error-badge-text);
 }
 
 .WarningBadge {
   background-color: var(--color-console-warning-icon);
-  color: var(--color-text);
+  color: var(--color-console-warning-badge-text);
 }
