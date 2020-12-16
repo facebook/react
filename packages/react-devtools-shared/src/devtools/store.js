@@ -393,8 +393,6 @@ export default class Store extends EventEmitter<{|
 
   clearWarningsForElement(id: number): void {
     const rendererID = this.getRendererIDForElement(id);
-    if (this._errorsAndWarnings.has(id)) {
-    }
     if (rendererID === null) {
       console.warn(
         `Unable to find rendererID for element ${id} when clearing warnings.`,
