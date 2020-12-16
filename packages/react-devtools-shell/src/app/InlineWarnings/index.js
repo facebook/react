@@ -3,19 +3,19 @@
 import * as React from 'react';
 import {Fragment, useEffect, useRef, useState} from 'react';
 
-function WarnDuringRender() {
+function WarnDuringRender({children = null}) {
   console.warn('This warning fires during every render');
-  return null;
+  return children;
 }
 
-function WarnOnMount() {
+function WarnOnMount({children = null}) {
   useEffect(() => {
     console.warn('This warning fires on initial mount only');
   }, []);
-  return null;
+  return children;
 }
 
-function WarnOnUpdate() {
+function WarnOnUpdate({children = null}) {
   const didMountRef = useRef(false);
   useEffect(() => {
     if (didMountRef.current) {
@@ -24,31 +24,31 @@ function WarnOnUpdate() {
       didMountRef.current = true;
     }
   });
-  return null;
+  return children;
 }
 
-function WarnOnUnmount() {
+function WarnOnUnmount({children = null}) {
   useEffect(() => {
     return () => {
       console.warn('This warning fires on unmount');
     };
   }, []);
-  return null;
+  return children;
 }
 
-function ErrorDuringRender() {
+function ErrorDuringRender({children = null}) {
   console.error('This error fires during every render');
-  return null;
+  return children;
 }
 
-function ErrorOnMount() {
+function ErrorOnMount({children = null}) {
   useEffect(() => {
     console.error('This error fires on initial mount only');
   }, []);
-  return null;
+  return children;
 }
 
-function ErrorOnUpdate() {
+function ErrorOnUpdate({children = null}) {
   const didMountRef = useRef(false);
   useEffect(() => {
     if (didMountRef.current) {
@@ -57,33 +57,33 @@ function ErrorOnUpdate() {
       didMountRef.current = true;
     }
   });
-  return null;
+  return children;
 }
 
-function ErrorOnUnmount() {
+function ErrorOnUnmount({children = null}) {
   useEffect(() => {
     return () => {
       console.error('This error fires on unmount');
     };
   }, []);
-  return null;
+  return children;
 }
 
-function ErrorAndWarningDuringRender() {
+function ErrorAndWarningDuringRender({children = null}) {
   console.warn('This warning fires during every render');
   console.error('This error fires during every render');
-  return null;
+  return children;
 }
 
-function ErrorAndWarningOnMount() {
+function ErrorAndWarningOnMount({children = null}) {
   useEffect(() => {
     console.warn('This warning fires on initial mount only');
     console.error('This error fires on initial mount only');
   }, []);
-  return null;
+  return children;
 }
 
-function ErrorAndWarningOnUpdate() {
+function ErrorAndWarningOnUpdate({children = null}) {
   const didMountRef = useRef(false);
   useEffect(() => {
     if (didMountRef.current) {
@@ -93,38 +93,40 @@ function ErrorAndWarningOnUpdate() {
       didMountRef.current = true;
     }
   });
-  return null;
+  return children;
 }
 
-function ErrorAndWarningOnUnmount() {
+function ErrorAndWarningOnUnmount({children = null}) {
   useEffect(() => {
     return () => {
       console.warn('This warning fires on unmount');
       console.error('This error fires on unmount');
     };
   }, []);
-  return null;
+  return children;
 }
 
-function ReallyLongErrorMessageThatWillCauseTextToBeTruncated() {
+function ReallyLongErrorMessageThatWillCauseTextToBeTruncated({
+  children = null,
+}) {
   console.error(
     'This error is a really long error message that should cause the text to be truncated in DevTools',
   );
-  return null;
+  return children;
 }
 
-function ErrorWithMultipleArgs() {
+function ErrorWithMultipleArgs({children = null}) {
   console.error('This error', 'passes console', 4, 'arguments');
-  return null;
+  return children;
 }
 
-function ErrorWithStringSubstitutions() {
+function ErrorWithStringSubstitutions({children = null}) {
   console.error('This error uses %s substitutions', 'string');
-  return null;
+  return children;
 }
 
-function ReactErrorOnHostComponent() {
-  return <div data-camelCasedAttribute="should-lower-case" />;
+function ReactErrorOnHostComponent({children = null}) {
+  return <div data-camelCasedAttribute="should-lower-case">{children}</div>;
 }
 
 export default function ErrorsAndWarnings() {
