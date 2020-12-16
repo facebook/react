@@ -29,12 +29,12 @@ export default function InspectedElementErrorsAndWarningsTree({
   inspectedElement,
   store,
 }: Props) {
-  const {errors, warnings} = inspectedElement;
   const {showInlineWarningsAndErrors} = React.useContext(SettingsContext);
-
   if (!showInlineWarningsAndErrors) {
     return null;
   }
+
+  const {errors, warnings} = inspectedElement;
 
   // TODO Would be nice if there were some way to either:
   // (1) Temporarily disable the button after click (unstable_useTransition?) or

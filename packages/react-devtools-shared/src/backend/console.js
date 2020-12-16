@@ -22,6 +22,10 @@ const PREFIX_REGEX = /\s{4}(in|at)\s{1}/;
 // but we can fallback to looking for location info (e.g. "foo.js:12:345")
 const ROW_COLUMN_NUMBER_REGEX = /:\d+:\d+(\n|$)/;
 
+export function isStringComponentStack(text: string): boolean {
+  return PREFIX_REGEX.test(text) || ROW_COLUMN_NUMBER_REGEX.test(text);
+}
+
 type OnErrorOrWarning = (
   fiber: Fiber,
   type: 'error' | 'warn',
@@ -142,9 +146,7 @@ export function patch({
           // e.g. a React error/warning, don't append a second stack.
           const lastArg = args.length > 0 ? args[args.length - 1] : null;
           const alreadyHasComponentStack =
-            lastArg !== null &&
-            (PREFIX_REGEX.test(lastArg) ||
-              ROW_COLUMN_NUMBER_REGEX.test(lastArg));
+            lastArg !== null && isStringComponentStack(lastArg);
           shouldAppendWarningStack = !alreadyHasComponentStack;
         }
 
@@ -169,9 +171,6 @@ export function patch({
                   // TODO (inline errors) The renderer is injected in two places:
                   // 1. First by "react-devtools-shared/src/hook" which isn't stateful and doesn't supply onErrorOrWarning()
                   // 2. Second by "react-devtools-shared/src/backend/renderer" which is and does
-                  //
-                  // We should probably move the queueing+batching mechanism from backend/renderer to this file,
-                  // so that it handles warnings logged during initial mount (potentially before step 2 above).
                   if (typeof onErrorOrWarning === 'function') {
                     onErrorOrWarning(
                       current,

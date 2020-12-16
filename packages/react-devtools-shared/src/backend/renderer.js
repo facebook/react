@@ -55,6 +55,7 @@ import {
 } from '../constants';
 import {inspectHooksOfFiber} from 'react-debug-tools';
 import {
+  isStringComponentStack,
   patch as patchConsole,
   registerRenderer as registerRendererWithConsole,
 } from './console';
@@ -620,6 +621,17 @@ export function attach(
     type: 'error' | 'warn',
     args: Array<any>,
   ): void {
+    // If there's a component stack included in this warning, remove it.
+    // That information would be redundant in the DevTools.
+    const clonedArgs = args.slice();
+    const lastArg =
+      clonedArgs.length > 0 ? clonedArgs[clonedArgs.length - 1] : null;
+    const alreadyHasComponentStack =
+      lastArg !== null && isStringComponentStack(lastArg);
+    if (alreadyHasComponentStack) {
+      clonedArgs.splice(clonedArgs.length - 1);
+    }
+
     // There are a few places that errors might be logged:
     // 1. During render (either for initial mount or an update)
     // 2. During commit effects (both active and passive)
@@ -638,9 +650,7 @@ export function attach(
     pendingErrorOrWarnings.push({
       fiber,
       type,
-      // React pushes the component stack to the args later.
-      // These are not interesting to the view in React devtools where we already have access to the component stack.
-      args: args.slice(),
+      args: clonedArgs,
     });
 
     if (flushErrorOrWarningUpdatesTimoutID === null) {
