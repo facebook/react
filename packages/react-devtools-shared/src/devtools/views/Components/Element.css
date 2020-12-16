@@ -83,10 +83,10 @@
   margin-left: 0.25rem;
 }
 .ErrorIcon {
-  color: var(--color-error-text);
+  color: var(--color-console-error-icon);
 }
 .WarningIcon {
-  color: var(--color-warning-text);
+  color: var(--color-console-warning-icon);
 }
 .ErrorIconContrast, .WarningIconContrast {
   color: var(--color-component-name);

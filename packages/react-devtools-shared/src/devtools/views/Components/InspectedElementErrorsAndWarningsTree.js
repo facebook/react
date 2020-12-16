@@ -30,34 +30,45 @@ export default function InspectedElementErrorsAndWarningsTree({
 }: Props) {
   const {errors, warnings} = inspectedElement;
 
+  // TODO Would be nice if there were some way to either:
+  // (1) Temporarily disable the button after click (unstable_useTransition?) or
+  // (2) Immediately reflect the cleared list of warnings/errors.
+  // The current clear button feels a little unresponsive because we wait to poll for new values.
+
+  const clearErrors = () => {
+    store.clearErrorsForElement(inspectedElement.id);
+  };
+
+  const clearWarnings = () => {
+    store.clearWarningsForElement(inspectedElement.id);
+  };
+
   return (
     <React.Fragment>
-      <Tree
-        actions={
-          <Button
-            onClick={() => store.clearErrorsForElement(inspectedElement.id)}
-            title="Clear errors">
-            <ButtonIcon type="clear" />
-          </Button>
-        }
-        className={styles.ErrorTree}
-        label="errors"
-        messageClassName={styles.Error}
-        messages={errors}
-      />
-      <Tree
-        actions={
-          <Button
-            onClick={() => store.clearWarningsForElement(inspectedElement.id)}
-            title="Clear warnings">
-            <ButtonIcon type="clear" />
-          </Button>
-        }
-        className={styles.WarningTree}
-        label="warnings"
-        messageClassName={styles.Warning}
-        messages={warnings}
-      />
+      {errors.length > 0 && (
+        <Tree
+          bridge={bridge}
+          className={styles.ErrorTree}
+          clearMessages={clearErrors}
+          inspectedElement={inspectedElement}
+          label="errors"
+          messages={errors}
+          messageClassName={styles.Error}
+          store={store}
+        />
+      )}
+      {warnings.length > 0 && (
+        <Tree
+          bridge={bridge}
+          className={styles.WarningTree}
+          clearMessages={clearWarnings}
+          inspectedElement={inspectedElement}
+          label="warnings"
+          messages={warnings}
+          messageClassName={styles.Warning}
+          store={store}
+        />
+      )}
     </React.Fragment>
   );
 }
@@ -65,6 +76,7 @@ export default function InspectedElementErrorsAndWarningsTree({
 type TreeProps = {|
   actions: React$Node,
   className: string,
+  clearMessages: () => {},
   label: string,
   messageClassName: string,
   messages: string[],
@@ -73,6 +85,7 @@ type TreeProps = {|
 function Tree({
   actions,
   className,
+  clearMessages,
   label,
   messageClassName,
   messages,
@@ -81,20 +94,34 @@ function Tree({
     return null;
   }
   return (
-    <div
-      className={`${sharedStyles.InspectedElementTree} ${styles.ErrorOrWarningTree}`}>
+    <div className={`${sharedStyles.InspectedElementTree} ${className}`}>
       <div className={`${sharedStyles.HeaderRow} ${styles.HeaderRow}`}>
         <div className={sharedStyles.Header}>{label}</div>
-        {actions}
+        <Button onClick={clearMessages} title="Clear errors and warnings">
+          <ButtonIcon type="clear" />
+        </Button>
       </div>
-      {messages.map((message, index) => {
-        // TODO (inline errors) When we agressively de-duplicate by message we should use the message as key.
-        return (
-          <div className={messageClassName} key={index}>
-            <div className={styles.Message}>{message}</div>
-          </div>
-        );
-      })}
+      {messages.map((message, index) => (
+        <ErrorOrWarningView
+          key={`${label}-${index}`}
+          className={messageClassName}
+          message={message}
+        />
+      ))}
+    </div>
+  );
+}
+
+type ErrorOrWarningViewProps = {|
+  className: string,
+  message: string,
+|};
+
+function ErrorOrWarningView({message, className}: ErrorOrWarningViewProps) {
+  // TODO Render .ErrorBadge or .WarningBadge if count > 1.
+  return (
+    <div className={className}>
+      <div className={styles.Message}>{message}</div>
     </div>
   );
 }
