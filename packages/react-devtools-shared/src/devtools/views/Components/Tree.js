@@ -74,7 +74,7 @@ export default function Tree(props: Props) {
 
   const [treeFocused, setTreeFocused] = useState<boolean>(false);
 
-  const {lineHeight} = useContext(SettingsContext);
+  const {lineHeight, showInlineWarningsAndErrors} = useContext(SettingsContext);
 
   // Make sure a newly selected element is visible in the list.
   // This is helpful for things like the owners list and search.
@@ -347,38 +347,40 @@ export default function Tree(props: Props) {
             {ownerID !== null ? <OwnersStack /> : <SearchInput />}
           </Suspense>
           <div className={styles.VRule} />
-          {ownerID === null && (errors > 0 || warnings > 0) && (
-            <React.Fragment>
-              {errors > 0 && (
-                <React.Fragment>
-                  <Icon className={styles.ErrorIcon} type="error" />
-                  {errors}
-                </React.Fragment>
-              )}
-              {warnings > 0 && (
-                <React.Fragment>
-                  <Icon className={styles.WarningIcon} type="warning" />
-                  {warnings}
-                </React.Fragment>
-              )}
-              <Button
-                onClick={handlePreviousErrorOrWarningClick}
-                title="Scroll to previous error or warning">
-                <ButtonIcon type="up" />
-              </Button>
-              <Button
-                onClick={handleNextErrorOrWarningClick}
-                title="Scroll to next error or warning">
-                <ButtonIcon type="down" />
-              </Button>
-              <Button
-                onClick={() => store.clearErrorsAndWarnings()}
-                title="Clear all errors and warnings">
-                <ButtonIcon type="clear" />
-              </Button>
-              <div className={styles.VRule} />
-            </React.Fragment>
-          )}
+          {showInlineWarningsAndErrors &&
+            ownerID === null &&
+            (errors > 0 || warnings > 0) && (
+              <React.Fragment>
+                {errors > 0 && (
+                  <React.Fragment>
+                    <Icon className={styles.ErrorIcon} type="error" />
+                    {errors}
+                  </React.Fragment>
+                )}
+                {warnings > 0 && (
+                  <React.Fragment>
+                    <Icon className={styles.WarningIcon} type="warning" />
+                    {warnings}
+                  </React.Fragment>
+                )}
+                <Button
+                  onClick={handlePreviousErrorOrWarningClick}
+                  title="Scroll to previous error or warning">
+                  <ButtonIcon type="up" />
+                </Button>
+                <Button
+                  onClick={handleNextErrorOrWarningClick}
+                  title="Scroll to next error or warning">
+                  <ButtonIcon type="down" />
+                </Button>
+                <Button
+                  onClick={() => store.clearErrorsAndWarnings()}
+                  title="Clear all errors and warnings">
+                  <ButtonIcon type="clear" />
+                </Button>
+                <div className={styles.VRule} />
+              </React.Fragment>
+            )}
           <SettingsModalContextToggle />
         </div>
         <div
