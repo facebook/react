@@ -533,52 +533,26 @@ export function attach(
 
   let flushErrorOrWarningUpdatesTimoutID: TimeoutID | null = null;
   const pendingErrorOrWarnings: Array<PendingErrorOrWarning> = [];
-  type RecordedErrorsOrWarnings = {|
-    errors: number[],
-    warnings: number[],
-  |};
-  // TODO (inline errors) What happens if we have no free message IDs?
-  let freeErrorOrWarningMessageID = 0;
-  /**
-   * Mapping of fiber IDs to IDs of errors and warnings recorded for these fibers.
-   */
-  const errorsOrWarnings: Map<number, RecordedErrorsOrWarnings> = new Map();
-  /**
-   * Mapping of recorded (stringified) errors and warnings to a unique ID.
-   * TODO (inline errors) Do we need to apply garbage collection to unused message ids e.g. when messages are cleared for a Fiber?
-   */
-  const errorOrWarningToId: Map<string, number> = new Map();
-  /**
-   * Inverse of `errorOrWarningToId`.
-   */
-  const idToErrorOrWarning: Map<number, string> = new Map();
+
+  // Mapping of fiber IDs to error/warning messages and counts.
+  const fiberToErrorsMap: Map<number, Map<string, number>> = new Map();
+  const fiberToWarningsMap: Map<number, Map<string, number>> = new Map();
+
   function recordErrorOrWarningOnFiber(
     type: 'error' | 'warn',
     args: any[],
     fiberID: number,
   ): void {
     const message = format(...args);
-    let messageID: number;
-    if (errorOrWarningToId.has(message)) {
-      messageID = ((errorOrWarningToId.get(message): any): number);
-    } else {
-      messageID = freeErrorOrWarningMessageID++;
-      errorOrWarningToId.set(message, messageID);
-      idToErrorOrWarning.set(messageID, message);
-    }
 
-    const errorOrWarningsForFiber: RecordedErrorsOrWarnings = errorsOrWarnings.get(
-      fiberID,
-    ) || {
-      errors: [],
-      warnings: [],
-    };
-    if (type === 'warn') {
-      errorOrWarningsForFiber.warnings.push(messageID);
-    } else if (type === 'error') {
-      errorOrWarningsForFiber.errors.push(messageID);
+    const fiberMap = type === 'error' ? fiberToErrorsMap : fiberToWarningsMap;
+    const messageMap = fiberMap.get(fiberID);
+    if (messageMap != null) {
+      const count = messageMap.get(message) || 0;
+      messageMap.set(message, count + 1);
+    } else {
+      fiberMap.set(fiberID, new Map([[message, 1]]));
     }
-    errorsOrWarnings.set(fiberID, errorOrWarningsForFiber);
   }
 
   function clearErrorsAndWarnings() {
@@ -586,32 +560,28 @@ export function attach(
     clearTimeout(flushErrorOrWarningUpdatesTimoutID);
     flushErrorOrWarningUpdatesTimoutID = null;
 
-    const updatedFiberIDs = new Set(errorsOrWarnings.keys());
+    const updatedFiberIDs = new Set(fiberToErrorsMap.keys());
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const key of fiberToWarningsMap.keys()) {
+      updatedFiberIDs.add(key);
+    }
 
-    freeErrorOrWarningMessageID = 0;
-    errorsOrWarnings.clear();
-    errorOrWarningToId.clear();
-    idToErrorOrWarning.clear();
+    fiberToErrorsMap.clear();
+    fiberToWarningsMap.clear();
 
     emitErrorOrWarningUpdates(updatedFiberIDs);
   }
 
   function clearErrorsForFiberID(id: number) {
-    if (errorsOrWarnings.has(id)) {
-      const errorsOrWarningsForFiber: RecordedErrorsOrWarnings = (errorsOrWarnings.get(
-        id,
-      ): any);
-      errorsOrWarningsForFiber.errors.splice(0);
+    if (fiberToErrorsMap.has(id)) {
+      fiberToErrorsMap.delete(id);
       emitErrorOrWarningUpdates(new Set([id]));
     }
   }
 
   function clearWarningsForFiberID(id: number) {
-    if (errorsOrWarnings.has(id)) {
-      const errorsOrWarningsForFiber: RecordedErrorsOrWarnings = (errorsOrWarnings.get(
-        id,
-      ): any);
-      errorsOrWarningsForFiber.warnings.splice(0);
+    if (fiberToWarningsMap.has(id)) {
+      fiberToWarningsMap.delete(id);
       emitErrorOrWarningUpdates(new Set([id]));
     }
   }
@@ -696,15 +666,16 @@ export function attach(
       mostRecentlyInspectedElement !== null
         ? mostRecentlyInspectedElement.id
         : null;
-    updatedIDs.forEach(fiberId => {
-      const {errors = [], warnings = []} = errorsOrWarnings.get(fiberId) || {};
+    updatedIDs.forEach(fiberID => {
+      const errorSet = fiberToErrorsMap.get(fiberID);
+      const warningSet = fiberToWarningsMap.get(fiberID);
 
       operations[i++] = TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS;
-      operations[i++] = fiberId;
-      operations[i++] = errors.length;
-      operations[i++] = warnings.length;
+      operations[i++] = fiberID;
+      operations[i++] = errorSet != null ? errorSet.size : 0;
+      operations[i++] = warningSet != null ? warningSet.size : 0;
 
-      if (fiberId === mostRecentlyInspectedElementID) {
+      if (fiberID === mostRecentlyInspectedElementID) {
         hasElementUpdatedSinceLastInspected = true;
       }
     });
@@ -2659,23 +2630,8 @@ export function attach(
       rootType = fiberRoot._debugRootType;
     }
 
-    const {errors: errorIDs, warnings: warningIDs} = errorsOrWarnings.get(
-      id,
-    ) || {errors: [], warnings: []};
-    const errors: string[] = errorIDs.map(messageID => {
-      const message = idToErrorOrWarning.get(messageID);
-      if (message === undefined) {
-        return `Unable to find error ${messageID}`;
-      }
-      return message;
-    });
-    const warnings = warningIDs.map(messageID => {
-      const message = idToErrorOrWarning.get(messageID);
-      if (message === undefined) {
-        return `Unable to find warning ${messageID}`;
-      }
-      return message;
-    });
+    const errors = fiberToErrorsMap.get(id) || new Map();
+    const warnings = fiberToWarningsMap.get(id) || new Map();
 
     return {
       id,
@@ -2719,8 +2675,8 @@ export function attach(
       hooks,
       props: memoizedProps,
       state: usesHooks ? null : memoizedState,
-      errors,
-      warnings,
+      errors: Array.from(errors.entries()),
+      warnings: Array.from(warnings.entries()),
 
       // List of owners
       owners,

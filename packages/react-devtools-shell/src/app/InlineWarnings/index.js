@@ -123,7 +123,7 @@ function ErrorWithStringSubstitutions() {
   return null;
 }
 
-export default function ElementTypes() {
+export default function ErrorsAndWarnings() {
   const [count, setCount] = useState(0);
   const handleClick = () => setCount(count + 1);
   return (

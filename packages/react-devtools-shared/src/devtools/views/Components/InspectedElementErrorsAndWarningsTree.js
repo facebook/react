@@ -35,6 +35,7 @@ export default function InspectedElementErrorsAndWarningsTree({
   }
 
   const {errors, warnings} = inspectedElement;
+  console.log('!!!', {errors, warnings});
 
   // TODO Would be nice if there were some way to either:
   // (1) Temporarily disable the button after click (unstable_useTransition?) or
@@ -53,26 +54,24 @@ export default function InspectedElementErrorsAndWarningsTree({
     <React.Fragment>
       {errors.length > 0 && (
         <Tree
+          badgeClassName={styles.ErrorBadge}
           bridge={bridge}
           className={styles.ErrorTree}
           clearMessages={clearErrors}
-          inspectedElement={inspectedElement}
+          entries={errors}
           label="errors"
-          messages={errors}
           messageClassName={styles.Error}
-          store={store}
         />
       )}
       {warnings.length > 0 && (
         <Tree
+          badgeClassName={styles.WarningBadge}
           bridge={bridge}
           className={styles.WarningTree}
           clearMessages={clearWarnings}
-          inspectedElement={inspectedElement}
+          entries={warnings}
           label="warnings"
-          messages={warnings}
           messageClassName={styles.Warning}
-          store={store}
         />
       )}
     </React.Fragment>
@@ -80,23 +79,25 @@ export default function InspectedElementErrorsAndWarningsTree({
 }
 
 type TreeProps = {|
+  badgeClassName: string,
   actions: React$Node,
   className: string,
   clearMessages: () => {},
+  entries: Array<[string, number]>,
   label: string,
   messageClassName: string,
-  messages: string[],
 |};
 
 function Tree({
+  badgeClassName,
   actions,
   className,
   clearMessages,
+  entries,
   label,
   messageClassName,
-  messages,
 }: TreeProps) {
-  if (messages.length === 0) {
+  if (entries.length === 0) {
     return null;
   }
   return (
@@ -107,10 +108,12 @@ function Tree({
           <ButtonIcon type="clear" />
         </Button>
       </div>
-      {messages.map((message, index) => (
+      {entries.map(([message, count], index) => (
         <ErrorOrWarningView
           key={`${label}-${index}`}
+          badgeClassName={badgeClassName}
           className={messageClassName}
+          count={count}
           message={message}
         />
       ))}
@@ -119,14 +122,22 @@ function Tree({
 }
 
 type ErrorOrWarningViewProps = {|
+  badgeClassName: string,
   className: string,
+  count: number,
   message: string,
 |};
 
-function ErrorOrWarningView({message, className}: ErrorOrWarningViewProps) {
+function ErrorOrWarningView({
+  className,
+  badgeClassName,
+  count,
+  message,
+}: ErrorOrWarningViewProps) {
   // TODO Render .ErrorBadge or .WarningBadge if count > 1.
   return (
     <div className={className}>
+      {count > 1 && <div className={badgeClassName}>{count}</div>}
       <div className={styles.Message}>{message}</div>
     </div>
   );

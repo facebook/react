@@ -1,5 +1,5 @@
 .ErrorTree, .WarningTree {
-  padding: 0;
+  padding: 0.25rem 0 0 0;
 }
 
 .HeaderRow {
@@ -54,6 +54,6 @@
 }
 
 .WarningBadge {
-  background-color: var(--color-console-error-icon);
+  background-color: var(--color-console-warning-icon);
   color: var(--color-text);
 }
