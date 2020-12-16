@@ -188,7 +188,6 @@ export function patch({
                         : args.slice(),
                     );
                   }
-                  console.log([...args]);
                 }
 
                 if (shouldAppendWarningStack) {
