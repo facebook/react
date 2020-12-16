@@ -88,6 +88,6 @@
 .WarningIcon {
   color: var(--color-warning-text);
 }
-.ErrorIconContrast, .WarningIconContrast, {
+.ErrorIconContrast, .WarningIconContrast {
   color: var(--color-component-name);
 }

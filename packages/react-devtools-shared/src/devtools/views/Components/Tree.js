@@ -21,6 +21,7 @@ import {
 import AutoSizer from 'react-virtualized-auto-sizer';
 import {FixedSizeList} from 'react-window';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
+import Icon from '../Icon';
 import {SettingsContext} from '../Settings/SettingsContext';
 import {BridgeContext, StoreContext} from '../context';
 import Element from './Element';
@@ -311,9 +312,18 @@ export default function Tree(props: Props) {
     dispatch({type: 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE'});
   }, []);
 
-  const hasErrorsOrWarningsSubscription = useMemo(
+  const errorsOrWarningsSubscription = useMemo(
     () => ({
-      getCurrentValue: () => store.errorsAndWarnings.size > 0,
+      getCurrentValue: () => {
+        let errorsSum = 0;
+        let warningsSum = 0;
+        store.errorsAndWarnings.forEach(({errors, warnings}) => {
+          errorsSum += errors;
+          warningsSum += warnings;
+        });
+
+        return {errors: errorsSum, warnings: warningsSum};
+      },
       subscribe: (callback: Function) => {
         store.addListener('errorsAndWarnings', callback);
         return () => store.removeListener('errorsAndWarnings', callback);
@@ -321,9 +331,7 @@ export default function Tree(props: Props) {
     }),
     [store],
   );
-  const hasErrorsOrWarnings = useSubscription<boolean>(
-    hasErrorsOrWarningsSubscription,
-  );
+  const {errors, warnings} = useSubscription(errorsOrWarningsSubscription);
 
   return (
     <TreeFocusedContext.Provider value={treeFocused}>
@@ -339,8 +347,20 @@ export default function Tree(props: Props) {
             {ownerID !== null ? <OwnersStack /> : <SearchInput />}
           </Suspense>
           <div className={styles.VRule} />
-          {hasErrorsOrWarnings && (
+          {(errors > 0 || warnings > 0) && (
             <React.Fragment>
+              {errors > 0 && (
+                <React.Fragment>
+                  <Icon className={styles.ErrorIcon} type="error" />
+                  {errors}
+                </React.Fragment>
+              )}
+              {warnings > 0 && (
+                <React.Fragment>
+                  <Icon className={styles.WarningIcon} type="warning" />
+                  {warnings}
+                </React.Fragment>
+              )}
               <Button
                 onClick={handlePreviousErrorOrWarningClick}
                 title="Scroll to previous error or warning">

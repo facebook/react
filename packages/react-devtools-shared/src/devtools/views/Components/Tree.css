@@ -58,3 +58,16 @@
   font-size: var(--font-size-sans-large);
   color: var(--color-dim);
 }
+
+.ErrorIcon, .WarningIcon {
+  margin-left: 4px;
+  margin-right: 4px;
+}
+
+.ErrorIcon {
+  color: var(--color-error-text);
+}
+
+.WarningIcon {
+  color: var(--color-warning-text);
+}
