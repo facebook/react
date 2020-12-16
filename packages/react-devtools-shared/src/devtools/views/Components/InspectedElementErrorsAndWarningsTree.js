@@ -35,7 +35,6 @@ export default function InspectedElementErrorsAndWarningsTree({
   }
 
   const {errors, warnings} = inspectedElement;
-  console.log('!!!', {errors, warnings});
 
   // TODO Would be nice if there were some way to either:
   // (1) Temporarily disable the button after click (unstable_useTransition?) or
