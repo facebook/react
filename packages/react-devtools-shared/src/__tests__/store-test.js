@@ -1012,7 +1012,7 @@ describe('Store', () => {
   });
 
   describe('inline errors and warnings', () => {
-    test('during render are counted', () => {
+    it('during render are counted', () => {
       function Example() {
         console.error('test-only: render error');
         console.warn('test-only: render warning');
@@ -1024,20 +1024,30 @@ describe('Store', () => {
         act(() => ReactDOM.render(<Example />, container));
       });
 
-      expect(store.errorsAndWarnings).toEqual(
-        new Map([[2, {errors: 1, warnings: 1}]]),
-      );
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
+        Map {
+          1 => Object {
+            "errors": 1,
+            "warnings": 1,
+          },
+        }
+      `);
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
         act(() => ReactDOM.render(<Example rerender={1} />, container));
       });
 
-      expect(store.errorsAndWarnings).toEqual(
-        new Map([[2, {errors: 2, warnings: 2}]]),
-      );
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
+        Map {
+          1 => Object {
+            "errors": 2,
+            "warnings": 2,
+          },
+        }
+      `);
     });
 
-    test('during layout get counted', () => {
+    it('during layout get counted', () => {
       function Example() {
         React.useLayoutEffect(() => {
           console.error('test-only: layout error');
@@ -1051,20 +1061,30 @@ describe('Store', () => {
         act(() => ReactDOM.render(<Example />, container));
       });
 
-      expect(store.errorsAndWarnings).toEqual(
-        new Map([[2, {errors: 1, warnings: 1}]]),
-      );
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
+        Map {
+          1 => Object {
+            "errors": 1,
+            "warnings": 1,
+          },
+        }
+      `);
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
         act(() => ReactDOM.render(<Example rerender={1} />, container));
       });
 
-      expect(store.errorsAndWarnings).toEqual(
-        new Map([[2, {errors: 2, warnings: 2}]]),
-      );
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
+        Map {
+          1 => Object {
+            "errors": 2,
+            "warnings": 2,
+          },
+        }
+      `);
     });
 
-    test('during passive get counted', () => {
+    it('during passive get counted', () => {
       function Example() {
         React.useEffect(() => {
           console.error('test-only: passive error');
@@ -1078,21 +1098,31 @@ describe('Store', () => {
         act(() => ReactDOM.render(<Example />, container));
       });
 
-      expect(store.errorsAndWarnings).toEqual(
-        new Map([[2, {errors: 1, warnings: 1}]]),
-      );
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
+        Map {
+          2 => Object {
+            "errors": 1,
+            "warnings": 1,
+          },
+        }
+      `);
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
         act(() => ReactDOM.render(<Example rerender={1} />, container));
       });
 
-      expect(store.errorsAndWarnings).toEqual(
-        new Map([[2, {errors: 2, warnings: 2}]]),
-      );
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
+        Map {
+          2 => Object {
+            "errors": 2,
+            "warnings": 2,
+          },
+        }
+      `);
     });
 
     // TODO (inline errors) The fiber for the recorded error is considered to be not mounted by renderer.js#isFiberMounted.
-    test('from react get counted', () => {
+    it('from react get counted', () => {
       const container = document.createElement('div');
       function Example() {
         return <div data-camelCased="should be lowercase" />;
@@ -1105,12 +1135,17 @@ describe('Store', () => {
         },
       );
 
-      expect(store.errorsAndWarnings).toEqual(
-        new Map([[2, {errors: 1, warnings: 0}]]),
-      );
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
+        Map {
+          1 => Object {
+            "errors": 1,
+            "warnings": 0,
+          },
+        }
+      `);
     });
 
-    test('can be cleared for the whole app', () => {
+    it('can be cleared for the whole app', () => {
       function Example() {
         console.error('test-only: render error');
         console.warn('test-only: render warning');
@@ -1128,20 +1163,39 @@ describe('Store', () => {
           ),
         );
       });
+
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
+        Map {
+          1 => Object {
+            "errors": 1,
+            "warnings": 1,
+          },
+          2 => Object {
+            "errors": 1,
+            "warnings": 1,
+          },
+        }
+      `);
 
       store.clearErrorsAndWarnings();
       // flush events to the renderer
       jest.runAllTimers();
 
-      expect(store.errorsAndWarnings).toEqual(
-        new Map([
-          [2, {errors: 0, warnings: 0}],
-          [3, {errors: 0, warnings: 0}],
-        ]),
-      );
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
+        Map {
+          1 => Object {
+            "errors": 0,
+            "warnings": 0,
+          },
+          2 => Object {
+            "errors": 0,
+            "warnings": 0,
+          },
+        }
+      `);
     });
 
-    test('can be cleared for particular Fiber (only warnings)', () => {
+    it('can be cleared for particular Fiber (only warnings)', () => {
       function Example() {
         console.error('test-only: render error');
         console.warn('test-only: render warning');
@@ -1159,20 +1213,39 @@ describe('Store', () => {
           ),
         );
       });
+
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
+        Map {
+          1 => Object {
+            "errors": 1,
+            "warnings": 1,
+          },
+          2 => Object {
+            "errors": 1,
+            "warnings": 1,
+          },
+        }
+      `);
 
       store.clearWarningsForElement(2);
       // Flush events to the renderer.
       jest.runAllTimers();
 
-      expect(store.errorsAndWarnings).toEqual(
-        new Map([
-          [2, {errors: 1, warnings: 0}],
-          [3, {errors: 1, warnings: 1}],
-        ]),
-      );
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
+        Map {
+          1 => Object {
+            "errors": 1,
+            "warnings": 1,
+          },
+          2 => Object {
+            "errors": 1,
+            "warnings": 0,
+          },
+        }
+      `);
     });
 
-    test('can be cleared for a particular Fiber (only errors)', () => {
+    it('can be cleared for a particular Fiber (only errors)', () => {
       function Example() {
         console.error('test-only: render error');
         console.warn('test-only: render warning');
@@ -1191,16 +1264,35 @@ describe('Store', () => {
         );
       });
 
-      store.clearErrorsForElement(3);
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
+        Map {
+          1 => Object {
+            "errors": 1,
+            "warnings": 1,
+          },
+          2 => Object {
+            "errors": 1,
+            "warnings": 1,
+          },
+        }
+      `);
+
+      store.clearErrorsForElement(2);
       // Flush events to the renderer.
       jest.runAllTimers();
 
-      expect(store.errorsAndWarnings).toEqual(
-        new Map([
-          [2, {errors: 1, warnings: 1}],
-          [3, {errors: 0, warnings: 1}],
-        ]),
-      );
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
+        Map {
+          1 => Object {
+            "errors": 1,
+            "warnings": 1,
+          },
+          2 => Object {
+            "errors": 0,
+            "warnings": 1,
+          },
+        }
+      `);
     });
   });
 });
