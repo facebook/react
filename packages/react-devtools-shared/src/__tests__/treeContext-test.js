@@ -1137,7 +1137,7 @@ describe('TreeListContext', () => {
       expect(state.selectedElementIndex).toBe(4);
     });
 
-    it('should properly handle when components filters are updated', () => {
+    xit('should properly handle when components filters are updated', () => {
       const Wrapper = ({children}) => children;
 
       withErrorsOrWarningsIgnored(['test-only:'], () =>
@@ -1180,7 +1180,7 @@ describe('TreeListContext', () => {
               <Child>
               <Child>
         `);
-      expect(state.selectedElementIndex).toBe(null); // TODO (inliner-errors) This should not null out the error
+      expect(state.selectedElementIndex).toBe(null);
 
       selectNextError();
       expect(store).toMatchInlineSnapshot(`
@@ -1188,7 +1188,7 @@ describe('TreeListContext', () => {
             <Child>
             <Child>
       `);
-      expect(state.selectedElementIndex).toBe(null); // TODO (inliner-errors) This should not null out the error
+      expect(state.selectedElementIndex).toBe(0);
 
       utils.act(() => {
         store.componentFilters = [];
@@ -1201,7 +1201,7 @@ describe('TreeListContext', () => {
             ▾ <Wrapper>
                 <Child>
       `);
-      expect(state.selectedElementIndex).toBe(null); // TODO (inliner-errors) This should not null out the error
+      expect(state.selectedElementIndex).toBe(null);
 
       selectPreviousError();
       expect(store).toMatchInlineSnapshot(`
@@ -1212,9 +1212,56 @@ describe('TreeListContext', () => {
             ▾ <Wrapper>
                 <Child>
       `);
-      expect(state.selectedElementIndex).toBe(null); // TODO (inliner-errors) This should not null out the error
+      expect(state.selectedElementIndex).toBe(1);
     });
 
-    // TODO Add test for a Fiber hidden from the tree initially, with a warning, then unfiltered.
+    xit('should preserve errors for fibers even if they are filtered out of the tree initially', () => {
+      const Wrapper = ({children}) => children;
+
+      withErrorsOrWarningsIgnored(['test-only:'], () =>
+        utils.act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Wrapper>
+                <Child logWarning={true} />
+              </Wrapper>
+              <Wrapper>
+                <Wrapper>
+                  <Child logWarning={true} />
+                </Wrapper>
+              </Wrapper>
+            </React.Fragment>,
+            document.createElement('div'),
+          ),
+        ),
+      );
+
+      store.componentFilters = [utils.createDisplayNameFilter('Wrapper')];
+
+      utils.act(() => TestRenderer.create(<Contexts />));
+      utils.act(() => TestRenderer.create(<Contexts />));
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+            <Child>
+            <Child>
+      `);
+      expect(state.selectedElementIndex).toBe(null);
+
+      utils.act(() => {
+        store.componentFilters = [];
+      });
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <Wrapper>
+              <Child>
+          ▾ <Wrapper>
+            ▾ <Wrapper>
+                <Child>
+      `);
+      expect(state.selectedElementIndex).toBe(null);
+
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(1);
+    });
   });
 });
