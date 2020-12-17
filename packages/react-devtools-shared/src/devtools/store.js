@@ -1014,10 +1014,14 @@ export default class Store extends EventEmitter<{|
 
           i += 4;
 
-          this._errorsAndWarnings.set(id, {
-            errors: numErrors,
-            warnings: numWarnings,
-          });
+          if (numErrors > 0 || numWarnings > 0) {
+            this._errorsAndWarnings.set(id, {
+              errors: numErrors,
+              warnings: numWarnings,
+            });
+          } else if (this._errorsAndWarnings.has(id)) {
+            this._errorsAndWarnings.delete(id);
+          }
           haveWarningsAndErrorsChanged = true;
           break;
         default:

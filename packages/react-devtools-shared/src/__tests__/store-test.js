@@ -1181,18 +1181,7 @@ describe('Store', () => {
       // flush events to the renderer
       jest.runAllTimers();
 
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          1 => Object {
-            "errors": 0,
-            "warnings": 0,
-          },
-          2 => Object {
-            "errors": 0,
-            "warnings": 0,
-          },
-        }
-      `);
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`Map {}`);
     });
 
     it('can be cleared for particular Fiber (only warnings)', () => {

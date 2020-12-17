@@ -22,6 +22,7 @@ describe('TreeListContext', () => {
   let bridge: FrontendBridge;
   let store: Store;
   let utils;
+  let withErrorsOrWarningsIgnored;
 
   let BridgeContext;
   let StoreContext;
@@ -33,6 +34,8 @@ describe('TreeListContext', () => {
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
+
+    withErrorsOrWarningsIgnored = utils.withErrorsOrWarningsIgnored;
 
     bridge = global.bridge;
     store = global.store;
@@ -810,6 +813,328 @@ describe('TreeListContext', () => {
       );
       utils.act(() => renderer.update(<Contexts />));
       expect(state).toMatchSnapshot('4: main tree');
+    });
+  });
+
+  describe('inline errors/warnings state', () => {
+    function clearAllErrors() {
+      utils.act(() => store.clearErrorsAndWarnings());
+      // flush events to the renderer
+      jest.runAllTimers();
+    }
+
+    function clearErrorsForElement(id) {
+      utils.act(() => store.clearErrorsForElement(id));
+      // flush events to the renderer
+      jest.runAllTimers();
+    }
+
+    function clearWarningsForElement(id) {
+      utils.act(() => store.clearWarningsForElement(id));
+      // flush events to the renderer
+      jest.runAllTimers();
+    }
+
+    function selectNextError() {
+      utils.act(() =>
+        dispatch({type: 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE'}),
+      );
+    }
+
+    function selectPreviousError() {
+      utils.act(() =>
+        dispatch({
+          type: 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE',
+        }),
+      );
+    }
+
+    function Child({logError = false, logWarning = false}) {
+      if (logError === true) {
+        console.error('test-only: error');
+      }
+      if (logWarning === true) {
+        console.warn('test-only: warning');
+      }
+      return null;
+    }
+
+    it('should handle when there are no errors/warnings', () => {
+      utils.act(() =>
+        ReactDOM.render(
+          <React.Fragment>
+            <Child />
+            <Child />
+            <Child />
+          </React.Fragment>,
+          document.createElement('div'),
+        ),
+      );
+
+      utils.act(() => TestRenderer.create(<Contexts />));
+      expect(state.selectedElementIndex).toBe(null);
+
+      // Next/previous errors should be a no-op
+      selectPreviousError();
+      expect(state.selectedElementIndex).toBe(null);
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(null);
+
+      utils.act(() => dispatch({type: 'SELECT_ELEMENT_AT_INDEX', payload: 0}));
+      expect(state.selectedElementIndex).toBe(0);
+
+      // Next/previous errors should still be a no-op
+      selectPreviousError();
+      expect(state.selectedElementIndex).toBe(0);
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(0);
+    });
+
+    it('should cycle through the next errors/warnings and wrap around', () => {
+      withErrorsOrWarningsIgnored(['test-only:'], () =>
+        utils.act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Child />
+              <Child logWarning={true} />
+              <Child />
+              <Child logError={true} />
+              <Child />
+            </React.Fragment>,
+            document.createElement('div'),
+          ),
+        ),
+      );
+
+      utils.act(() => TestRenderer.create(<Contexts />));
+      expect(state.selectedElementIndex).toBe(null);
+
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(1);
+
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(3);
+
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(1);
+    });
+
+    it('should cycle through the previous errors/warnings and wrap around', () => {
+      withErrorsOrWarningsIgnored(['test-only:'], () =>
+        utils.act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Child />
+              <Child logWarning={true} />
+              <Child />
+              <Child logError={true} />
+              <Child />
+            </React.Fragment>,
+            document.createElement('div'),
+          ),
+        ),
+      );
+
+      utils.act(() => TestRenderer.create(<Contexts />));
+      expect(state.selectedElementIndex).toBe(null);
+
+      selectPreviousError();
+      expect(state.selectedElementIndex).toBe(3);
+
+      selectPreviousError();
+      expect(state.selectedElementIndex).toBe(1);
+
+      selectPreviousError();
+      expect(state.selectedElementIndex).toBe(3);
+    });
+
+    it('should update correctly when errors/warnings are cleared for a fiber in the list', () => {
+      withErrorsOrWarningsIgnored(['test-only:'], () =>
+        utils.act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Child logWarning={true} />
+              <Child logError={true} />
+              <Child logError={true} />
+              <Child logWarning={true} />
+            </React.Fragment>,
+            document.createElement('div'),
+          ),
+        ),
+      );
+
+      utils.act(() => TestRenderer.create(<Contexts />));
+      expect(state.selectedElementIndex).toBe(null);
+
+      // Select the first item in the list
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(0);
+
+      // Clear warnings (but the next Fiber has only errors)
+      clearWarningsForElement(store.getElementIDAtIndex(1));
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(1);
+
+      clearErrorsForElement(store.getElementIDAtIndex(2));
+
+      // Should step to the (now) next one in the list.
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(3);
+
+      // Should skip over the (now) cleared Fiber
+      selectPreviousError();
+      expect(state.selectedElementIndex).toBe(1);
+    });
+
+    it('should update correctly when errors/warnings are cleared for the currently selected fiber', () => {
+      withErrorsOrWarningsIgnored(['test-only:'], () =>
+        utils.act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Child logWarning={true} />
+              <Child logError={true} />
+            </React.Fragment>,
+            document.createElement('div'),
+          ),
+        ),
+      );
+
+      utils.act(() => TestRenderer.create(<Contexts />));
+      expect(state.selectedElementIndex).toBe(null);
+
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(0);
+
+      clearWarningsForElement(store.getElementIDAtIndex(0));
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(1);
+    });
+
+    it('should update correctly when new errors/warnings are added', () => {
+      const container = document.createElement('div');
+
+      withErrorsOrWarningsIgnored(['test-only:'], () =>
+        utils.act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Child logWarning={true} />
+              <Child />
+              <Child />
+              <Child logError={true} />
+            </React.Fragment>,
+            container,
+          ),
+        ),
+      );
+
+      utils.act(() => TestRenderer.create(<Contexts />));
+      expect(state.selectedElementIndex).toBe(null);
+
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(0);
+
+      withErrorsOrWarningsIgnored(['test-only:'], () =>
+        utils.act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Child />
+              <Child logWarning={true} />
+              <Child />
+              <Child />
+            </React.Fragment>,
+            container,
+          ),
+        ),
+      );
+
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(1);
+
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(3);
+
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(0);
+    });
+
+    it('should update correctly when all errors/warnings are cleared', () => {
+      withErrorsOrWarningsIgnored(['test-only:'], () =>
+        utils.act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Child logWarning={true} />
+              <Child logError={true} />
+            </React.Fragment>,
+            document.createElement('div'),
+          ),
+        ),
+      );
+
+      utils.act(() => TestRenderer.create(<Contexts />));
+      expect(state.selectedElementIndex).toBe(null);
+
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(0);
+
+      clearAllErrors();
+
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(0);
+
+      selectPreviousError();
+      expect(state.selectedElementIndex).toBe(0);
+    });
+
+    it('should update select and auto-expand parts components within hidden parts of the tree', () => {
+      const Wrapper = ({children}) => children;
+
+      store.collapseNodesByDefault = true;
+
+      withErrorsOrWarningsIgnored(['test-only:'], () =>
+        utils.act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Wrapper>
+                <Child logWarning={true} />
+              </Wrapper>
+              <Wrapper>
+                <Wrapper>
+                  <Child logWarning={true} />
+                </Wrapper>
+              </Wrapper>
+            </React.Fragment>,
+            document.createElement('div'),
+          ),
+        ),
+      );
+
+      utils.act(() => TestRenderer.create(<Contexts />));
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▸ <Wrapper>
+          ▸ <Wrapper>
+      `);
+      expect(state.selectedElementIndex).toBe(null);
+
+      selectNextError();
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <Wrapper>
+              <Child>
+          ▸ <Wrapper>
+      `);
+      expect(state.selectedElementIndex).toBe(1);
+
+      selectNextError();
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <Wrapper>
+              <Child>
+          ▾ <Wrapper>
+            ▾ <Wrapper>
+                <Child>
+      `);
+      expect(state.selectedElementIndex).toBe(4);
     });
   });
 });
