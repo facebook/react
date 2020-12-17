@@ -238,8 +238,8 @@ type BaseFiberRootProperties = {|
   entangledLanes: Lanes,
   entanglements: LaneMap<Lanes>,
 
-  caches: LaneMap<Cache | null> | null,
   pooledCache: Cache | null,
+  pooledCacheLanes: Lanes,
 |};
 
 // The following attributes are only used by interaction tracing builds.

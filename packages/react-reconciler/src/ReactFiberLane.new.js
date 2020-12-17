@@ -739,10 +739,18 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
 
   root.entangledLanes &= remainingLanes;
 
+  if (enableCache) {
+    const pooledCacheLanes = (root.pooledCacheLanes &= remainingLanes);
+    if (pooledCacheLanes === NoLanes) {
+      // None of the remaining work relies on the cache pool. Clear it so
+      // subsequent requests get a new cache.
+      root.pooledCache = null;
+    }
+  }
+
   const entanglements = root.entanglements;
   const eventTimes = root.eventTimes;
   const expirationTimes = root.expirationTimes;
-  const pooledCache = root.pooledCache;
 
   // Clear the lanes that no longer have pending work
   let lanes = noLongerPendingLanes;
@@ -753,30 +761,6 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
     entanglements[index] = NoLanes;
     eventTimes[index] = NoTimestamp;
     expirationTimes[index] = NoTimestamp;
-
-    if (enableCache) {
-      // Subsequent loads in this lane should use a fresh cache.
-      // TODO: If a cache is no longer associated with any lane, we should issue
-      // an abort signal.
-      const caches = root.caches;
-      if (caches !== null) {
-        if (remainingLanes === 0) {
-          // Fast path. Clear all caches at once.
-          root.caches = createLaneMap(null);
-          root.pooledCache = null;
-        } else {
-          const cache = caches[index];
-          if (cache !== null) {
-            caches[index] = null;
-            if (cache === pooledCache) {
-              // The pooled cache is now part of the committed tree. We'll now
-              // clear it so that the next transition gets a fresh cache.
-              root.pooledCache = null;
-            }
-          }
-        }
-      }
-    }
 
     lanes &= ~lane;
   }
@@ -805,64 +789,11 @@ export function requestCacheFromPool(
     return (null: any);
   }
 
-  // 1. Check `root.pooledCache`. This is a batching heuristic — we set it
-  //    whenever a cache is requeted from the pool and it's not already set.
-  //    Subsequent requests to the pool will receive the same cache, until one
-  //    of them finishes and we clear it. The reason we clear `pooledCache` is
-  //    so that any subsequent transitions can get a fresh cache.
-  //
-  //    However, even after we clear it, there may still be pending transitions.
-  //    They should continue using the same cache. So we need to also track the
-  //    caches per-lane for as long as it takes for the shell to commit.
-  //
-  //    If `root.pooledCache` exists, return it and exit.
-  //
-  // 2. If `root.pooledCache` does not exist, check the pool to see if this
-  //    render lane already has a cache associated with it. If it does, this
-  //    is now the pooled cache. Assign `root.pooledCache`, return it, and exit.
-  //
-  // 3. If there is no matching cache in the pool, create a new one and
-  //    associate it with the render lane. Assign `root.pooledCache`, return it,
-  //    and exit.
+  root.pooledCacheLanes |= renderLanes;
 
   const pooledCache = root.pooledCache;
   if (pooledCache !== null) {
     return pooledCache;
-  }
-
-  let caches = root.caches;
-
-  // TODO: There should be a primary render lane, and we should use whatever
-  // cache is associated with that one.
-  if (caches === null) {
-    caches = root.caches = createLaneMap(null);
-  } else {
-    let lanes = renderLanes;
-    while (lanes > 0) {
-      const lane = getHighestPriorityLane(lanes);
-      const index = laneToIndex(lane);
-      const inProgressCache: Cache | null = caches[index];
-      if (inProgressCache !== null) {
-        // This render lane already has a cache associated with it. Reuse it.
-
-        // If the other render lanes are not already associated with a cache,
-        // associate them with this one.
-        let otherRenderLanes = renderLanes & ~lane;
-        while (otherRenderLanes > 0) {
-          const otherIndex = pickArbitraryLaneIndex(otherRenderLanes);
-          const otherLane = 1 << otherIndex;
-          // We shouldn't overwrite a cache that already exists, since that could
-          // lead to dropped requests or data, i.e. if the current render suspends.
-          if (caches[otherIndex] === null) {
-            caches[otherIndex] = inProgressCache;
-          }
-          otherRenderLanes &= ~otherLane;
-        }
-        root.pooledCache = inProgressCache;
-        return inProgressCache;
-      }
-      lanes &= ~lane;
-    }
   }
 
   // Create a fresh cache.
@@ -870,15 +801,6 @@ export function requestCacheFromPool(
 
   // This is now the pooled cache.
   root.pooledCache = cache;
-
-  // Associate the new cache with each of the render lanes.
-  let lanes = renderLanes;
-  while (lanes > 0) {
-    const index = pickArbitraryLaneIndex(lanes);
-    const lane = 1 << index;
-    caches[index] = cache;
-    lanes &= ~lane;
-  }
 
   return cache;
 }

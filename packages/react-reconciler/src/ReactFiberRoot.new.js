@@ -54,8 +54,8 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.entanglements = createLaneMap(NoLanes);
 
   if (enableCache) {
-    this.caches = createLaneMap(null);
     this.pooledCache = null;
+    this.pooledCacheLanes = NoLanes;
   }
 
   if (supportsHydration) {
