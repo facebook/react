@@ -1842,7 +1842,7 @@ describe('InspectedElementContext', () => {
       return {errors, warnings};
     }
 
-    it('during render get recorded', async done => {
+    it('during render get recorded', async () => {
       const Example = () => {
         console.error('test-only: render error');
         console.warn('test-only: render warning');
@@ -1858,12 +1858,25 @@ describe('InspectedElementContext', () => {
       });
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
-      expect(data).toMatchSnapshot();
-
-      done();
+      expect(data).toMatchInlineSnapshot(`
+        Object {
+          "errors": Array [
+            Array [
+              "test-only: render error",
+              1,
+            ],
+          ],
+          "warnings": Array [
+            Array [
+              "test-only: render warning",
+              1,
+            ],
+          ],
+        }
+      `);
     });
 
-    it('during render get deduped', async done => {
+    it('during render get deduped', async () => {
       const Example = () => {
         console.error('test-only: render error');
         console.error('test-only: render error');
@@ -1880,12 +1893,25 @@ describe('InspectedElementContext', () => {
         );
       });
       const data = await getErrorsAndWarningsForElementAtIndex(0);
-      expect(data).toMatchSnapshot();
-
-      done();
+      expect(data).toMatchInlineSnapshot(`
+        Object {
+          "errors": Array [
+            Array [
+              "test-only: render error",
+              2,
+            ],
+          ],
+          "warnings": Array [
+            Array [
+              "test-only: render warning",
+              3,
+            ],
+          ],
+        }
+      `);
     });
 
-    it('during layout (mount) get recorded', async done => {
+    it('during layout (mount) get recorded', async () => {
       const Example = () => {
         // Note we only test mount because once the component unmounts,
         // it is no longer in the store and warnings are ignored.
@@ -1904,12 +1930,25 @@ describe('InspectedElementContext', () => {
       });
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
-      expect(data).toMatchSnapshot();
-
-      done();
+      expect(data).toMatchInlineSnapshot(`
+        Object {
+          "errors": Array [
+            Array [
+              "test-only: useLayoutEffect error",
+              1,
+            ],
+          ],
+          "warnings": Array [
+            Array [
+              "test-only: useLayoutEffect warning",
+              1,
+            ],
+          ],
+        }
+      `);
     });
 
-    it('during passive (mount) get recorded', async done => {
+    it('during passive (mount) get recorded', async () => {
       const Example = () => {
         // Note we only test mount because once the component unmounts,
         // it is no longer in the store and warnings are ignored.
@@ -1928,12 +1967,25 @@ describe('InspectedElementContext', () => {
       });
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
-      expect(data).toMatchSnapshot();
-
-      done();
+      expect(data).toMatchInlineSnapshot(`
+        Object {
+          "errors": Array [
+            Array [
+              "test-only: useEffect error",
+              1,
+            ],
+          ],
+          "warnings": Array [
+            Array [
+              "test-only: useEffect warning",
+              1,
+            ],
+          ],
+        }
+      `);
     });
 
-    it('from react get recorded without a component stack', async done => {
+    it('from react get recorded without a component stack', async () => {
       const Example = () => {
         return [<div />];
       };
@@ -1949,9 +2001,17 @@ describe('InspectedElementContext', () => {
       );
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
-      expect(data).toMatchSnapshot();
-
-      done();
+      expect(data).toMatchInlineSnapshot(`
+        Object {
+          "errors": Array [
+            Array [
+              "Warning: Each child in a list should have a unique \\"key\\" prop. See https://reactjs.org/link/warning-keys for more information.",
+              1,
+            ],
+          ],
+          "warnings": Array [],
+        }
+      `);
     });
   });
 });
