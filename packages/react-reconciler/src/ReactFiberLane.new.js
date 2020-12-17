@@ -8,7 +8,7 @@
  */
 
 import type {FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
-import type {Cache} from './ReactFiberCacheComponent';
+import type {Cache} from './ReactFiberCacheComponent.new';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.

@@ -34,7 +34,7 @@ import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
 import {createUpdate, enqueueUpdate, ForceUpdate} from './ReactUpdateQueue.old';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
-import {CacheContext} from './ReactFiberCacheComponent';
+import {CacheContext} from './ReactFiberCacheComponent.old';
 import {
   enableSuspenseServerRenderer,
   enableCache,

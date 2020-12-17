@@ -27,7 +27,7 @@ import type {
   Cache,
   CacheInstance,
   PooledCacheInstance,
-} from './ReactFiberCacheComponent';
+} from './ReactFiberCacheComponent.old';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
 
 import checkPropTypes from 'shared/checkPropTypes';
@@ -217,7 +217,7 @@ import {
   hasFreshCacheProvider,
   pushCachePool,
   getFreshCacheProviderIfExists,
-} from './ReactFiberCacheComponent';
+} from './ReactFiberCacheComponent.old';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 

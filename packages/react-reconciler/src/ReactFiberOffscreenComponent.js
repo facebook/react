@@ -12,7 +12,7 @@ import type {Lanes} from './ReactFiberLane.old';
 import type {
   CacheInstance,
   PooledCacheInstance,
-} from './ReactFiberCacheComponent';
+} from './ReactFiberCacheComponent.new';
 
 export type OffscreenProps = {|
   // TODO: Pick an API before exposing the Offscreen type. I've chosen an enum

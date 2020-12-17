@@ -25,7 +25,7 @@ import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {Cache} from './ReactFiberCacheComponent';
+import type {Cache} from './ReactFiberCacheComponent.old';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =

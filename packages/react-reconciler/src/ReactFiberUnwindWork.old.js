@@ -14,7 +14,7 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {
   CacheInstance,
   PooledCacheInstance,
-} from './ReactFiberCacheComponent';
+} from './ReactFiberCacheComponent.old';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';
 import {
@@ -47,7 +47,7 @@ import {
 } from './ReactFiberContext.old';
 import {popProvider} from './ReactFiberNewContext.old';
 import {popRenderLanes, getWorkInProgressRoot} from './ReactFiberWorkLoop.old';
-import {popCacheProvider, popCachePool} from './ReactFiberCacheComponent';
+import {popCacheProvider, popCachePool} from './ReactFiberCacheComponent.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
 
 import invariant from 'shared/invariant';

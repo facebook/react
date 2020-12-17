@@ -31,7 +31,7 @@ import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {
   CacheInstance,
   PooledCacheInstance,
-} from './ReactFiberCacheComponent';
+} from './ReactFiberCacheComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 
@@ -161,7 +161,7 @@ import {
 import {resetChildFibers} from './ReactChildFiber.new';
 import {createScopeInstance} from './ReactFiberScope.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
-import {popCacheProvider, popCachePool} from './ReactFiberCacheComponent';
+import {popCacheProvider, popCachePool} from './ReactFiberCacheComponent.new';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into

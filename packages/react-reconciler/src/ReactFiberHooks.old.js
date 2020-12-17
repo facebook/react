@@ -19,7 +19,7 @@ import type {HookFlags} from './ReactHookEffectTags';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
-import type {CacheInstance} from './ReactFiberCacheComponent';
+import type {CacheInstance} from './ReactFiberCacheComponent.old';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -93,7 +93,7 @@ import {
 import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
-import {CacheContext} from './ReactFiberCacheComponent';
+import {CacheContext} from './ReactFiberCacheComponent.old';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.old';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
