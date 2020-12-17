@@ -1179,7 +1179,7 @@ describe('Store', () => {
 
       store.clearErrorsAndWarnings();
       // flush events to the renderer
-      jest.runAllTimers();
+      jest.runOnlyPendingTimers();
 
       expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
         Map {
@@ -1229,7 +1229,7 @@ describe('Store', () => {
 
       store.clearWarningsForElement(2);
       // Flush events to the renderer.
-      jest.runAllTimers();
+      jest.runOnlyPendingTimers();
 
       expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
         Map {
@@ -1279,7 +1279,7 @@ describe('Store', () => {
 
       store.clearErrorsForElement(2);
       // Flush events to the renderer.
-      jest.runAllTimers();
+      jest.runOnlyPendingTimers();
 
       expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
         Map {
