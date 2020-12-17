@@ -11,7 +11,10 @@ import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
-import type {CacheInstance} from './ReactFiberCacheComponent';
+import type {
+  CacheInstance,
+  PooledCacheInstance,
+} from './ReactFiberCacheComponent';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';
 import {
@@ -43,8 +46,8 @@ import {
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext.old';
 import {popProvider} from './ReactFiberNewContext.old';
-import {popRenderLanes} from './ReactFiberWorkLoop.old';
-import {popCacheProvider} from './ReactFiberCacheComponent';
+import {popRenderLanes, getWorkInProgressRoot} from './ReactFiberWorkLoop.old';
+import {popCacheProvider, popCachePool} from './ReactFiberCacheComponent';
 import {transferActualDuration} from './ReactProfilerTimer.old';
 
 import invariant from 'shared/invariant';
@@ -137,9 +140,22 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
     case LegacyHiddenComponent:
       popRenderLanes(workInProgress);
       if (enableCache) {
-        const cacheInstance: CacheInstance | null = (workInProgress.updateQueue: any);
+        const cacheInstance:
+          | CacheInstance
+          | PooledCacheInstance
+          | null = (workInProgress.updateQueue: any);
         if (cacheInstance !== null) {
-          popCacheProvider(workInProgress, cacheInstance);
+          if (cacheInstance.provider !== null) {
+            popCacheProvider(workInProgress, cacheInstance);
+          } else {
+            const root = getWorkInProgressRoot();
+            invariant(
+              root !== null,
+              'Expected a work-in-progress root. This is a bug in React. Please ' +
+                'file an issue.',
+            );
+            popCachePool(root, cacheInstance);
+          }
         }
       }
       return null;
@@ -197,9 +213,22 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
     case LegacyHiddenComponent:
       popRenderLanes(interruptedWork);
       if (enableCache) {
-        const cacheInstance: CacheInstance | null = (interruptedWork.updateQueue: any);
+        const cacheInstance:
+          | CacheInstance
+          | PooledCacheInstance
+          | null = (interruptedWork.updateQueue: any);
         if (cacheInstance !== null) {
-          popCacheProvider(interruptedWork, cacheInstance);
+          if (cacheInstance.provider !== null) {
+            popCacheProvider(interruptedWork, cacheInstance);
+          } else {
+            const root = getWorkInProgressRoot();
+            invariant(
+              root !== null,
+              'Expected a work-in-progress root. This is a bug in React. Please ' +
+                'file an issue.',
+            );
+            popCachePool(root, cacheInstance);
+          }
         }
       }
       break;

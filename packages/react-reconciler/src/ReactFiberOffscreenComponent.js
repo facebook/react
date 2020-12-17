@@ -9,7 +9,10 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Lanes} from './ReactFiberLane.old';
-import type {CacheInstance} from './ReactFiberCacheComponent';
+import type {
+  CacheInstance,
+  PooledCacheInstance,
+} from './ReactFiberCacheComponent';
 
 export type OffscreenProps = {|
   // TODO: Pick an API before exposing the Offscreen type. I've chosen an enum
@@ -29,5 +32,5 @@ export type OffscreenState = {|
   // will represent the pending work that must be included in the render in
   // order to unhide the component.
   baseLanes: Lanes,
-  cache: CacheInstance | null,
+  cache: CacheInstance | PooledCacheInstance | null,
 |};

@@ -8,6 +8,7 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
+import type {FiberRoot} from './ReactInternalTypes';
 
 import {enableCache} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
@@ -18,8 +19,13 @@ import {pushProvider, popProvider} from './ReactFiberNewContext.new';
 export type Cache = Map<() => mixed, mixed>;
 
 export type CacheInstance = {|
-  cache: Cache | null,
+  cache: Cache,
   provider: Fiber,
+|};
+
+export type PooledCacheInstance = {|
+  cache: Cache,
+  provider: null,
 |};
 
 export const CacheContext: ReactContext<CacheInstance> = {
@@ -114,4 +120,36 @@ export function getFreshCacheProviderIfExists(): CacheInstance | null {
     return null;
   }
   return freshCacheInstance;
+}
+
+export function pushCachePool(
+  root: FiberRoot,
+  cacheInstance: PooledCacheInstance,
+) {
+  // This will temporarily override the root's pooled cache, so that any new
+  // Cache boundaries in the subtree use this one. The previous value on the
+  // "stack" is stored on the cache instance. We will restore it during the
+  // complete phase.
+  //
+  // The more straightforward way to do this would be to use the array-based
+  // stack (push/pop). Maybe this is too clever.
+  const prevPooledCacheOnStack = root.pooledCache;
+  root.pooledCache = cacheInstance.cache;
+  // This is never supposed to be null. I'm cheating. Sorry. It will be reset to
+  // the correct type when we pop.
+  cacheInstance.cache = ((prevPooledCacheOnStack: any): Cache);
+}
+
+export function popCachePool(
+  root: FiberRoot,
+  cacheInstance: PooledCacheInstance,
+) {
+  const retryCache: Cache = (root.pooledCache: any);
+  if (__DEV__) {
+    if (retryCache === null) {
+      console.error('Expected to have a pooled cache. This is a bug in React.');
+    }
+  }
+  root.pooledCache = cacheInstance.cache;
+  cacheInstance.cache = retryCache;
 }

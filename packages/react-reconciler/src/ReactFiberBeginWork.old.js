@@ -23,7 +23,11 @@ import type {
   OffscreenProps,
   OffscreenState,
 } from './ReactFiberOffscreenComponent';
-import type {CacheInstance} from './ReactFiberCacheComponent';
+import type {
+  Cache,
+  CacheInstance,
+  PooledCacheInstance,
+} from './ReactFiberCacheComponent';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
 
 import checkPropTypes from 'shared/checkPropTypes';
@@ -211,6 +215,7 @@ import {
   pushFreshCacheProvider,
   pushStaleCacheProvider,
   hasFreshCacheProvider,
+  pushCachePool,
   getFreshCacheProviderIfExists,
 } from './ReactFiberCacheComponent';
 
@@ -592,7 +597,7 @@ function updateOffscreenComponent(
   // the previous render. We will push this to the cache context so that we can
   // resume in-flight requests. However, we don't do this if there's already a
   // fresh cache provider on the stack.
-  let cacheInstance: CacheInstance | null = null;
+  let cacheInstance: CacheInstance | PooledCacheInstance | null = null;
 
   if (
     nextProps.mode === 'hidden' ||
@@ -658,9 +663,23 @@ function updateOffscreenComponent(
         const prevCacheInstance = prevState.cache;
         if (prevCacheInstance !== null) {
           cacheInstance = prevCacheInstance;
-          pushFreshCacheProvider(workInProgress, prevCacheInstance);
-          // This isn't a refresh, it's a continuation of a previous render.
-          // So we don't need to propagate a context change.
+          const provider = cacheInstance.provider;
+          // If the resumed cache has a provider, then it's a fresh cache. We
+          // should push it to the stack. Otherwise, it's from the cache pool
+          // and we should override the cache pool.
+          if (provider !== null) {
+            pushFreshCacheProvider(workInProgress, prevCacheInstance);
+            // This isn't a refresh, it's a continuation of a previous render.
+            // So we don't need to propagate a context change.
+          } else {
+            const root = getWorkInProgressRoot();
+            invariant(
+              root !== null,
+              'Expected a work-in-progress root. This is a bug in React. Please ' +
+                'file an issue.',
+            );
+            pushCachePool(root, prevCacheInstance);
+          }
         }
       }
 
@@ -689,9 +708,22 @@ function updateOffscreenComponent(
         const prevCacheInstance = prevState.cache;
         if (prevCacheInstance !== null) {
           cacheInstance = prevCacheInstance;
-          pushFreshCacheProvider(workInProgress, prevCacheInstance);
-          // This isn't a refresh, it's a continuation of a previous render.
-          // So we don't need to propagate a context change.
+          // If the resumed cache has a provider, then it's a fresh cache. We
+          // should push it to the stack. Otherwise, it's from the cache pool
+          // and we should override the cache pool.
+          if (cacheInstance.provider !== null) {
+            pushFreshCacheProvider(workInProgress, prevCacheInstance);
+            // This isn't a refresh, it's a continuation of a previous render.
+            // So we don't need to propagate a context change.
+          } else {
+            const root = getWorkInProgressRoot();
+            invariant(
+              root !== null,
+              'Expected a work-in-progress root. This is a bug in React. Please ' +
+                'file an issue.',
+            );
+            pushCachePool(root, prevCacheInstance);
+          }
         }
       }
 
@@ -752,7 +784,11 @@ function updateCacheComponent(
       );
       // This will always be different from the parent cache; otherwise we would
       // have detected a fresh cache provider in the earlier branch.
-      cacheInstance = requestCacheFromPool(root, workInProgress, renderLanes);
+      const cache = requestCacheFromPool(root, renderLanes);
+      cacheInstance = {
+        cache,
+        provider: workInProgress,
+      };
       initialState = {
         cacheInstance,
       };
@@ -1748,11 +1784,11 @@ const SUSPENDED_MARKER: SuspenseState = {
 };
 
 function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {
-  let cache = null;
+  let cacheInstance: CacheInstance | PooledCacheInstance | null = null;
   if (enableCache) {
     // Keep a reference to the in-flight cache so we can resume later.
-    cache = getFreshCacheProviderIfExists();
-    if (cache === null) {
+    cacheInstance = getFreshCacheProviderIfExists();
+    if (cacheInstance === null) {
       // If there's no cache on the stack, a nested Cache boundary may have
       // spawned a new one. Check the cache pool.
       const root = getWorkInProgressRoot();
@@ -1767,12 +1803,18 @@ function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {
       // pool, to account for infinite transitions that are not triggered by a
       // `refresh` call, since those won't put a fresh context on the stack.
       // However, that's not idiomatic so this might be fine for now.
-      cache = root.pooledCache;
+      const pooledCache = root.pooledCache;
+      if (pooledCache !== null) {
+        cacheInstance = {
+          cache: (pooledCache: Cache),
+          provider: null,
+        };
+      }
     }
   }
   return {
     baseLanes: renderLanes,
-    cache,
+    cache: cacheInstance,
   };
 }
 
@@ -1780,16 +1822,16 @@ function updateSuspenseOffscreenState(
   prevOffscreenState: OffscreenState,
   renderLanes: Lanes,
 ): OffscreenState {
-  let cache = null;
+  let cacheInstance = null;
   if (enableCache) {
     // Keep a reference to the in-flight cache so we can resume later.
-    cache = getFreshCacheProviderIfExists();
-    if (cache === null) {
+    cacheInstance = getFreshCacheProviderIfExists();
+    if (cacheInstance === null) {
       // If there's no cache on the stack, check if there's a cache from the
       // previous render. This is what we would have used for new content
       // during the first pass when we attempted to unhide.
-      cache = prevOffscreenState.cache;
-      if (cache === null) {
+      cacheInstance = prevOffscreenState.cache;
+      if (cacheInstance === null) {
         // If there's no previous cache, then we can check the pool. If a nested
         // cache accessed the pool during this render, it will be assigned to
         // root.pooledCache.
@@ -1799,13 +1841,19 @@ function updateSuspenseOffscreenState(
           'Expected a work-in-progress root. This is a bug in React. Please ' +
             'file an issue.',
         );
-        cache = root.pooledCache;
+        const pooledCache = root.pooledCache;
+        if (pooledCache !== null) {
+          cacheInstance = {
+            cache: (pooledCache: Cache),
+            provider: null,
+          };
+        }
       }
     }
   }
   return {
     baseLanes: mergeLanes(prevOffscreenState.baseLanes, renderLanes),
-    cache,
+    cache: cacheInstance,
   };
 }
 

@@ -28,7 +28,10 @@ import type {
 } from './ReactFiberSuspenseComponent.new';
 import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
-import type {CacheInstance} from './ReactFiberCacheComponent';
+import type {
+  CacheInstance,
+  PooledCacheInstance,
+} from './ReactFiberCacheComponent';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 
@@ -145,6 +148,7 @@ import {
   popRenderLanes,
   getRenderTargetTime,
   subtreeRenderLanes,
+  getWorkInProgressRoot,
 } from './ReactFiberWorkLoop.new';
 import {createFundamentalStateInstance} from './ReactFiberFundamental.new';
 import {
@@ -157,7 +161,7 @@ import {
 import {resetChildFibers} from './ReactChildFiber.new';
 import {createScopeInstance} from './ReactFiberScope.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
-import {popCacheProvider} from './ReactFiberCacheComponent';
+import {popCacheProvider, popCachePool} from './ReactFiberCacheComponent';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -1491,9 +1495,22 @@ function completeWork(
       }
 
       if (enableCache) {
-        const cacheInstance: CacheInstance | null = (workInProgress.updateQueue: any);
+        const cacheInstance:
+          | CacheInstance
+          | PooledCacheInstance
+          | null = (workInProgress.updateQueue: any);
         if (cacheInstance !== null) {
-          popCacheProvider(workInProgress, cacheInstance);
+          if (cacheInstance.provider !== null) {
+            popCacheProvider(workInProgress, cacheInstance);
+          } else {
+            const root = getWorkInProgressRoot();
+            invariant(
+              root !== null,
+              'Expected a work-in-progress root. This is a bug in React. Please ' +
+                'file an issue.',
+            );
+            popCachePool(root, cacheInstance);
+          }
         }
       }
 

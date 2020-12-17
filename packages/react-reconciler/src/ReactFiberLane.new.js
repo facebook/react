@@ -8,7 +8,7 @@
  */
 
 import type {FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
-import type {CacheInstance} from './ReactFiberCacheComponent';
+import type {Cache} from './ReactFiberCacheComponent';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
@@ -799,9 +799,8 @@ export function markRootEntangled(root: FiberRoot, entangledLanes: Lanes) {
 
 export function requestCacheFromPool(
   root: FiberRoot,
-  provider: Fiber,
   renderLanes: Lanes,
-): CacheInstance {
+): Cache {
   if (!enableCache) {
     return (null: any);
   }
@@ -842,7 +841,7 @@ export function requestCacheFromPool(
     while (lanes > 0) {
       const lane = getHighestPriorityLane(lanes);
       const index = laneToIndex(lane);
-      const inProgressCache: CacheInstance | null = caches[index];
+      const inProgressCache: Cache | null = caches[index];
       if (inProgressCache !== null) {
         // This render lane already has a cache associated with it. Reuse it.
 
@@ -867,24 +866,21 @@ export function requestCacheFromPool(
   }
 
   // Create a fresh cache.
-  const cacheInstance = {
-    cache: new Map(),
-    provider,
-  };
+  const cache = new Map();
 
   // This is now the pooled cache.
-  root.pooledCache = cacheInstance;
+  root.pooledCache = cache;
 
   // Associate the new cache with each of the render lanes.
   let lanes = renderLanes;
   while (lanes > 0) {
     const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
-    caches[index] = cacheInstance;
+    caches[index] = cache;
     lanes &= ~lane;
   }
 
-  return cacheInstance;
+  return cache;
 }
 
 export function getBumpedLaneForHydration(

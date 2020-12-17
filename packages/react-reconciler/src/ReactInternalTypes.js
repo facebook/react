@@ -25,7 +25,7 @@ import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {CacheInstance} from './ReactFiberCacheComponent';
+import type {Cache} from './ReactFiberCacheComponent';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -238,8 +238,8 @@ type BaseFiberRootProperties = {|
   entangledLanes: Lanes,
   entanglements: LaneMap<Lanes>,
 
-  caches: LaneMap<CacheInstance | null> | null,
-  pooledCache: CacheInstance | null,
+  caches: LaneMap<Cache | null> | null,
+  pooledCache: Cache | null,
 |};
 
 // The following attributes are only used by interaction tracing builds.
