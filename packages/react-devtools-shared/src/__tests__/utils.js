@@ -222,7 +222,7 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
 export function withErrorsOrWarningsIgnored<T: void | Promise<void>>(
   errorOrWarningMessages: string[],
   fn: () => T,
-): void {
+): T {
   let resetIgnoredErrorOrWarningMessages = true;
   try {
     global._ignoredErrorOrWarningMessages = errorOrWarningMessages;
