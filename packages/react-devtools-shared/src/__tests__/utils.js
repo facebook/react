@@ -219,14 +219,31 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
  * @param errorOrWarningMessages Messages are matched partially (i.e. indexOf), pre-formatting.
  * @param fn
  */
-export function withErrorsOrWarningsIgnored(
+export function withErrorsOrWarningsIgnored<T: void | Promise<void>>(
   errorOrWarningMessages: string[],
-  fn: () => void,
+  fn: () => T,
 ): void {
+  let resetIgnoredErrorOrWarningMessages = true;
   try {
     global._ignoredErrorOrWarningMessages = errorOrWarningMessages;
-    fn();
+    const maybeThenable = fn();
+    if (
+      maybeThenable !== undefined &&
+      typeof maybeThenable.then === 'function'
+    ) {
+      resetIgnoredErrorOrWarningMessages = false;
+      return maybeThenable.then(
+        () => {
+          global._ignoredErrorOrWarningMessages = [];
+        },
+        () => {
+          global._ignoredErrorOrWarningMessages = [];
+        },
+      );
+    }
   } finally {
-    global._ignoredErrorOrWarningMessages = [];
+    if (resetIgnoredErrorOrWarningMessages) {
+      global._ignoredErrorOrWarningMessages = [];
+    }
   }
 }

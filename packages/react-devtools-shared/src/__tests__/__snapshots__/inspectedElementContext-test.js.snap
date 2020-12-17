@@ -4,13 +4,13 @@ exports[`InspectedElementContext inline errors and warnings during layout (mount
 Object {
   "errors": Array [
     Array [
-      "useLayoutEffect error",
+      "test-only: useLayoutEffect error",
       1,
     ],
   ],
   "warnings": Array [
     Array [
-      "useLayoutEffect warning",
+      "test-only: useLayoutEffect warning",
       1,
     ],
   ],
@@ -21,13 +21,13 @@ exports[`InspectedElementContext inline errors and warnings during passive (moun
 Object {
   "errors": Array [
     Array [
-      "useEffect error",
+      "test-only: useEffect error",
       1,
     ],
   ],
   "warnings": Array [
     Array [
-      "useEffect warning",
+      "test-only: useEffect warning",
       1,
     ],
   ],
@@ -38,13 +38,13 @@ exports[`InspectedElementContext inline errors and warnings during render get de
 Object {
   "errors": Array [
     Array [
-      "render error",
+      "test-only: render error",
       2,
     ],
   ],
   "warnings": Array [
     Array [
-      "render warning",
+      "test-only: render warning",
       3,
     ],
   ],
@@ -55,13 +55,13 @@ exports[`InspectedElementContext inline errors and warnings during render get re
 Object {
   "errors": Array [
     Array [
-      "render error",
+      "test-only: render error",
       1,
     ],
   ],
   "warnings": Array [
     Array [
-      "render warning",
+      "test-only: render warning",
       1,
     ],
   ],

@@ -15,6 +15,7 @@ import type {
 } from 'react-devtools-shared/src/devtools/views/Components/InspectedElementContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
+import {withErrorsOrWarningsIgnored} from 'react-devtools-shared/src/__tests__/utils';
 
 describe('InspectedElementContext', () => {
   let React;
@@ -64,6 +65,10 @@ describe('InspectedElementContext', () => {
       .StoreContext;
     TreeContextController = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
       .TreeContextController;
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   const Contexts = ({
@@ -386,10 +391,10 @@ describe('InspectedElementContext', () => {
   it('should temporarily disable console logging when re-running a component to inspect its hooks', async done => {
     let targetRenderCount = 0;
 
-    const errorSpy = ((console: any).error = jest.fn());
-    const infoSpy = ((console: any).info = jest.fn());
-    const logSpy = ((console: any).log = jest.fn());
-    const warnSpy = ((console: any).warn = jest.fn());
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'info').mockImplementation(() => {});
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
 
     const Target = React.memo(props => {
       targetRenderCount++;
@@ -407,14 +412,14 @@ describe('InspectedElementContext', () => {
     );
 
     expect(targetRenderCount).toBe(1);
-    expect(errorSpy).toHaveBeenCalledTimes(1);
-    expect(errorSpy).toHaveBeenCalledWith('error');
-    expect(infoSpy).toHaveBeenCalledTimes(1);
-    expect(infoSpy).toHaveBeenCalledWith('info');
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledWith('log');
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy).toHaveBeenCalledWith('warn');
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith('error');
+    expect(console.info).toHaveBeenCalledTimes(1);
+    expect(console.info).toHaveBeenCalledWith('info');
+    expect(console.log).toHaveBeenCalledTimes(1);
+    expect(console.log).toHaveBeenCalledWith('log');
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith('warn');
 
     const id = ((store.getElementIDAtIndex(0): any): number);
 
@@ -442,10 +447,10 @@ describe('InspectedElementContext', () => {
 
     expect(inspectedElement).not.toBe(null);
     expect(targetRenderCount).toBe(2);
-    expect(errorSpy).toHaveBeenCalledTimes(1);
-    expect(infoSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.info).toHaveBeenCalledTimes(1);
+    expect(console.log).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledTimes(1);
 
     done();
   });
@@ -1569,21 +1574,20 @@ describe('InspectedElementContext', () => {
     );
     expect(storeAsGlobal).not.toBeNull();
 
-    const logSpy = jest.fn();
-    spyOn(console, 'log').and.callFake(logSpy);
+    jest.spyOn(console, 'log').mockImplementation(() => {});
 
     // Should store the whole value (not just the hydrated parts)
     storeAsGlobal(id, ['props', 'nestedObject']);
     jest.runOnlyPendingTimers();
-    expect(logSpy).toHaveBeenCalledWith('$reactTemp1');
+    expect(console.log).toHaveBeenCalledWith('$reactTemp1');
     expect(global.$reactTemp1).toBe(nestedObject);
 
-    logSpy.mockReset();
+    console.log.mockReset();
 
     // Should store the nested property specified (not just the outer value)
     storeAsGlobal(id, ['props', 'nestedObject', 'a', 'b']);
     jest.runOnlyPendingTimers();
-    expect(logSpy).toHaveBeenCalledWith('$reactTemp2');
+    expect(console.log).toHaveBeenCalledWith('$reactTemp2');
     expect(global.$reactTemp2).toBe(nestedObject.a.b);
 
     done();
@@ -1840,15 +1844,18 @@ describe('InspectedElementContext', () => {
 
     it('during render get recorded', async done => {
       const Example = () => {
-        console.error('render error');
-        console.warn('render warning');
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
         return null;
       };
 
       const container = document.createElement('div');
-      await utils.actAsync(() =>
-        ReactDOM.render(<Example repeatWarningCount={1} />, container),
-      );
+
+      await withErrorsOrWarningsIgnored(['test-only: '], async () => {
+        await utils.actAsync(() =>
+          ReactDOM.render(<Example repeatWarningCount={1} />, container),
+        );
+      });
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
       expect(data).toMatchSnapshot();
@@ -1858,19 +1865,20 @@ describe('InspectedElementContext', () => {
 
     it('during render get deduped', async done => {
       const Example = () => {
-        console.error('render error');
-        console.error('render error');
-        console.warn('render warning');
-        console.warn('render warning');
-        console.warn('render warning');
+        console.error('test-only: render error');
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        console.warn('test-only: render warning');
+        console.warn('test-only: render warning');
         return null;
       };
 
       const container = document.createElement('div');
-      await utils.actAsync(() =>
-        ReactDOM.render(<Example repeatWarningCount={1} />, container),
-      );
-
+      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
+        await utils.actAsync(() =>
+          ReactDOM.render(<Example repeatWarningCount={1} />, container),
+        );
+      });
       const data = await getErrorsAndWarningsForElementAtIndex(0);
       expect(data).toMatchSnapshot();
 
@@ -1882,16 +1890,18 @@ describe('InspectedElementContext', () => {
         // Note we only test mount because once the component unmounts,
         // it is no longer in the store and warnings are ignored.
         React.useLayoutEffect(() => {
-          console.error('useLayoutEffect error');
-          console.warn('useLayoutEffect warning');
+          console.error('test-only: useLayoutEffect error');
+          console.warn('test-only: useLayoutEffect warning');
         }, []);
         return null;
       };
 
       const container = document.createElement('div');
-      await utils.actAsync(() =>
-        ReactDOM.render(<Example repeatWarningCount={1} />, container),
-      );
+      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
+        await utils.actAsync(() =>
+          ReactDOM.render(<Example repeatWarningCount={1} />, container),
+        );
+      });
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
       expect(data).toMatchSnapshot();
@@ -1904,16 +1914,18 @@ describe('InspectedElementContext', () => {
         // Note we only test mount because once the component unmounts,
         // it is no longer in the store and warnings are ignored.
         React.useEffect(() => {
-          console.error('useEffect error');
-          console.warn('useEffect warning');
+          console.error('test-only: useEffect error');
+          console.warn('test-only: useEffect warning');
         }, []);
         return null;
       };
 
       const container = document.createElement('div');
-      await utils.actAsync(() =>
-        ReactDOM.render(<Example repeatWarningCount={1} />, container),
-      );
+      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
+        await utils.actAsync(() =>
+          ReactDOM.render(<Example repeatWarningCount={1} />, container),
+        );
+      });
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
       expect(data).toMatchSnapshot();
@@ -1927,8 +1939,13 @@ describe('InspectedElementContext', () => {
       };
 
       const container = document.createElement('div');
-      await utils.actAsync(() =>
-        ReactDOM.render(<Example repeatWarningCount={1} />, container),
+      await utils.withErrorsOrWarningsIgnored(
+        ['Warning: Each child in a list should have a unique "key" prop.'],
+        async () => {
+          await utils.actAsync(() =>
+            ReactDOM.render(<Example repeatWarningCount={1} />, container),
+          );
+        },
       );
 
       const data = await getErrorsAndWarningsForElementAtIndex(0);
