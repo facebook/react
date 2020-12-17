@@ -1811,6 +1811,13 @@ describe('InspectedElementContext', () => {
   });
 
   describe('inline errors and warnings', () => {
+    // Some actions require the Fiber id.
+    // In those instances you might want to make assertions based on the ID instead of the index.
+    function getErrorsAndWarningsForElement(id: number) {
+      const index = ((store.getIndexOfElementID(id): any): number);
+      return getErrorsAndWarningsForElementAtIndex(index);
+    }
+
     async function getErrorsAndWarningsForElementAtIndex(index) {
       const id = ((store.getElementIDAtIndex(index): any): number);
 
@@ -1825,19 +1832,21 @@ describe('InspectedElementContext', () => {
         return null;
       }
 
-      await utils.actAsync(
-        () =>
-          TestRenderer.create(
-            <Contexts
-              defaultSelectedElementID={id}
-              defaultSelectedElementIndex={index}>
-              <React.Suspense fallback={null}>
-                <Suspender target={id} />
-              </React.Suspense>
-            </Contexts>,
-          ),
-        false,
-      );
+      let root;
+      await utils.actAsync(() => {
+        root = TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={index}>
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>,
+        );
+      }, false);
+      await utils.actAsync(() => {
+        root.unmount();
+      }, false);
 
       return {errors, warnings};
     }
@@ -2011,6 +2020,209 @@ describe('InspectedElementContext', () => {
           ],
           "warnings": Array [],
         }
+      `);
+    });
+
+    it('can be cleared for the whole app', async () => {
+      const Example = () => {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      };
+
+      const container = document.createElement('div');
+      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
+        await utils.actAsync(() =>
+          ReactDOM.render(<Example repeatWarningCount={1} />, container),
+        );
+      });
+
+      store.clearErrorsAndWarnings();
+      // Flush events to the renderer.
+      jest.runOnlyPendingTimers();
+
+      const data = await getErrorsAndWarningsForElementAtIndex(0);
+      expect(data).toMatchInlineSnapshot(`
+        Object {
+          "errors": Array [],
+          "warnings": Array [],
+        }
+      `);
+    });
+
+    it('can be cleared for a particular Fiber (only errors)', async () => {
+      const Example = ({id}) => {
+        console.error(`test-only: render error #${id}`);
+        console.warn(`test-only: render warning #${id}`);
+        return null;
+      };
+
+      const container = document.createElement('div');
+      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
+        await utils.actAsync(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Example id={1} />
+              <Example id={2} />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+
+      store.clearWarningsForElement(2);
+      // Flush events to the renderer.
+      jest.runOnlyPendingTimers();
+
+      let data = [
+        await getErrorsAndWarningsForElement(1),
+        await getErrorsAndWarningsForElement(2),
+      ];
+      expect(data).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "errors": Array [
+              Array [
+                "test-only: render error #1",
+                1,
+              ],
+            ],
+            "warnings": Array [
+              Array [
+                "test-only: render warning #1",
+                1,
+              ],
+            ],
+          },
+          Object {
+            "errors": Array [
+              Array [
+                "test-only: render error #2",
+                1,
+              ],
+            ],
+            "warnings": Array [],
+          },
+        ]
+      `);
+
+      store.clearWarningsForElement(1);
+      // Flush events to the renderer.
+      jest.runOnlyPendingTimers();
+
+      data = [
+        await getErrorsAndWarningsForElement(1),
+        await getErrorsAndWarningsForElement(2),
+      ];
+      expect(data).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "errors": Array [
+              Array [
+                "test-only: render error #1",
+                1,
+              ],
+            ],
+            "warnings": Array [],
+          },
+          Object {
+            "errors": Array [
+              Array [
+                "test-only: render error #2",
+                1,
+              ],
+            ],
+            "warnings": Array [],
+          },
+        ]
+      `);
+    });
+
+    it('can be cleared for a particular Fiber (only warnings)', async () => {
+      const Example = ({id}) => {
+        console.error(`test-only: render error #${id}`);
+        console.warn(`test-only: render warning #${id}`);
+        return null;
+      };
+
+      const container = document.createElement('div');
+      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
+        await utils.actAsync(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Example id={1} />
+              <Example id={2} />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+
+      store.clearErrorsForElement(2);
+      // Flush events to the renderer.
+      jest.runOnlyPendingTimers();
+
+      let data = [
+        await getErrorsAndWarningsForElement(1),
+        await getErrorsAndWarningsForElement(2),
+      ];
+      expect(data).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "errors": Array [
+              Array [
+                "test-only: render error #1",
+                1,
+              ],
+            ],
+            "warnings": Array [
+              Array [
+                "test-only: render warning #1",
+                1,
+              ],
+            ],
+          },
+          Object {
+            "errors": Array [],
+            "warnings": Array [
+              Array [
+                "test-only: render warning #2",
+                1,
+              ],
+            ],
+          },
+        ]
+      `);
+
+      store.clearErrorsForElement(1);
+      // Flush events to the renderer.
+      jest.runOnlyPendingTimers();
+
+      data = [
+        await getErrorsAndWarningsForElement(1),
+        await getErrorsAndWarningsForElement(2),
+      ];
+      expect(data).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "errors": Array [],
+            "warnings": Array [
+              Array [
+                "test-only: render warning #1",
+                1,
+              ],
+            ],
+          },
+          Object {
+            "errors": Array [],
+            "warnings": Array [
+              Array [
+                "test-only: render warning #2",
+                1,
+              ],
+            ],
+          },
+        ]
       `);
     });
   });
