@@ -959,6 +959,10 @@ export default class Store extends EventEmitter<{|
                 set.delete(id);
               }
             }
+
+            if (this._errorsAndWarnings.has(id)) {
+              this._errorsAndWarnings.delete(id);
+            }
           }
           break;
         }

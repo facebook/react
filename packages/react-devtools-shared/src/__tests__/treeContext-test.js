@@ -1136,5 +1136,85 @@ describe('TreeListContext', () => {
       `);
       expect(state.selectedElementIndex).toBe(4);
     });
+
+    it('should properly handle when components filters are updated', () => {
+      const Wrapper = ({children}) => children;
+
+      withErrorsOrWarningsIgnored(['test-only:'], () =>
+        utils.act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Wrapper>
+                <Child logWarning={true} />
+              </Wrapper>
+              <Wrapper>
+                <Wrapper>
+                  <Child logWarning={true} />
+                </Wrapper>
+              </Wrapper>
+            </React.Fragment>,
+            document.createElement('div'),
+          ),
+        ),
+      );
+
+      utils.act(() => TestRenderer.create(<Contexts />));
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <Wrapper>
+              <Child>
+          ▾ <Wrapper>
+            ▾ <Wrapper>
+                <Child>
+      `);
+      expect(state.selectedElementIndex).toBe(null);
+
+      selectNextError();
+      expect(state.selectedElementIndex).toBe(1);
+
+      utils.act(() => {
+        store.componentFilters = [utils.createDisplayNameFilter('Wrapper')];
+      });
+      expect(store).toMatchInlineSnapshot(`
+          [root]
+              <Child>
+              <Child>
+        `);
+      expect(state.selectedElementIndex).toBe(null); // TODO (inliner-errors) This should not null out the error
+
+      selectNextError();
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+            <Child>
+            <Child>
+      `);
+      expect(state.selectedElementIndex).toBe(null); // TODO (inliner-errors) This should not null out the error
+
+      utils.act(() => {
+        store.componentFilters = [];
+      });
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <Wrapper>
+              <Child>
+          ▾ <Wrapper>
+            ▾ <Wrapper>
+                <Child>
+      `);
+      expect(state.selectedElementIndex).toBe(null); // TODO (inliner-errors) This should not null out the error
+
+      selectPreviousError();
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+          ▾ <Wrapper>
+              <Child>
+          ▾ <Wrapper>
+            ▾ <Wrapper>
+                <Child>
+      `);
+      expect(state.selectedElementIndex).toBe(null); // TODO (inliner-errors) This should not null out the error
+    });
+
+    // TODO Add test for a Fiber hidden from the tree initially, with a warning, then unfiltered.
   });
 });
