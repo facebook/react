@@ -1785,25 +1785,21 @@ function updateSuspenseOffscreenState(
     // Keep a reference to the in-flight cache so we can resume later.
     cache = getFreshCacheProviderIfExists();
     if (cache === null) {
-      // If there's no cache on the stack, a nested Cache boundary may have
-      // spawned a new one. Check the cache pool.
-      const root = getWorkInProgressRoot();
-      invariant(
-        root !== null,
-        'Expected a work-in-progress root. This is a bug in React. Please ' +
-          'file an issue.',
-      );
-      // If a nested cache accessed the pool during this render, it will be
-      // assigned to root.pooledCache. No need to check the lane-indexed pool.
-      // TODO: Actually I think I'm wrong and we do need to check the lane-indexed
-      // pool, to account for infinite transitions that are not triggered by a
-      // `refresh` call, since those won't put a fresh context on the stack.
-      // However, that's not idiomatic so this might be fine for now.
-      cache = root.pooledCache;
+      // If there's no cache on the stack, check if there's a cache from the
+      // previous render. This is what we would have used for new content
+      // during the first pass when we attempted to unhide.
+      cache = prevOffscreenState.cache;
       if (cache === null) {
-        // If there's no cache in the pool, there might be one from a previous
-        // render. If so, reuse it.
-        cache = prevOffscreenState.cache;
+        // If there's no previous cache, then we can check the pool. If a nested
+        // cache accessed the pool during this render, it will be assigned to
+        // root.pooledCache.
+        const root = getWorkInProgressRoot();
+        invariant(
+          root !== null,
+          'Expected a work-in-progress root. This is a bug in React. Please ' +
+            'file an issue.',
+        );
+        cache = root.pooledCache;
       }
     }
   }
