@@ -68,6 +68,18 @@ Object {
 }
 `;
 
+exports[`InspectedElementContext inline errors and warnings from react get recorded withou a component stack 1`] = `
+Object {
+  "errors": Array [
+    Array [
+      "Warning: Each child in a list should have a unique \\"key\\" prop. See https://reactjs.org/link/warning-keys for more information.",
+      1,
+    ],
+  ],
+  "warnings": Array [],
+}
+`;
+
 exports[`InspectedElementContext inline errors and warnings from react get recorded without a component stack 1`] = `
 Object {
   "errors": Array [
