@@ -68,7 +68,7 @@ Object {
 }
 `;
 
-exports[`InspectedElementContext inline errors and warnings from react get recorded withou a component stack 1`] = `
+exports[`InspectedElementContext inline errors and warnings from react get recorded without a component stack 1`] = `
 Object {
   "errors": Array [
     Array [
