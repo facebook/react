@@ -56,6 +56,7 @@ export const enableDoubleInvokingEffects = false;
 export const enableUseRefAccessWarning = false;
 
 export const enableRecursiveCommitTraversal = false;
+export const disableSchedulerTimeoutInWorkLoop = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
