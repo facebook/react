@@ -1921,7 +1921,7 @@ describe('InspectedElementContext', () => {
       done();
     });
 
-    it('from react get recorded withou a component stack', async done => {
+    it('from react get recorded without a component stack', async done => {
       const Example = () => {
         return [<div />];
       };

@@ -39,6 +39,18 @@ env.beforeEach(() => {
   // Fake timers let us flush Bridge operations between setup and assertions.
   jest.useFakeTimers();
 
+  // Use utils.js#withErrorsOrWarningsIgnored instead of directly mutating this array.
+  global._ignoredErrorOrWarningMessages = [];
+  function shouldIgnoreConsoleErrorOrWarn(args) {
+    const firstArg = args[0];
+    if (typeof firstArg !== 'string') {
+      return false;
+    }
+    return global._ignoredErrorOrWarningMessages.some(errorOrWarningMessage => {
+      return firstArg.indexOf(errorOrWarningMessage) !== -1;
+    });
+  }
+
   const originalConsoleError = console.error;
   // $FlowFixMe
   console.error = (...args) => {
@@ -55,8 +67,22 @@ env.beforeEach(() => {
       // DevTools intentionally wraps updates with acts from both DOM and test-renderer,
       // since test updates are expected to impact both renderers.
       return;
+    } else if (shouldIgnoreConsoleErrorOrWarn(args)) {
+      // Allows testing how DevTools behaves when it encounters console.error without cluttering the test output.
+      // Errors can be ignored by running in a special context provided by utils.js#withErrorsOrWarningsIgnored
+      return;
     }
     originalConsoleError.apply(console, args);
+  };
+  const originalConsoleWarn = console.warn;
+  // $FlowFixMe
+  console.warn = (...args) => {
+    if (shouldIgnoreConsoleErrorOrWarn(args)) {
+      // Allows testing how DevTools behaves when it encounters console.warn without cluttering the test output.
+      // Warnings can be ignored by running in a special context provided by utils.js#withErrorsOrWarningsIgnored
+      return;
+    }
+    originalConsoleWarn.apply(console, args);
   };
 
   // Initialize filters to a known good state.

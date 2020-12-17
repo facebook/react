@@ -14,6 +14,7 @@ describe('Store', () => {
   let act;
   let getRendererID;
   let store;
+  let withErrorsOrWarningsIgnored;
 
   beforeEach(() => {
     agent = global.agent;
@@ -25,6 +26,7 @@ describe('Store', () => {
     const utils = require('./utils');
     act = utils.act;
     getRendererID = utils.getRendererID;
+    withErrorsOrWarningsIgnored = utils.withErrorsOrWarningsIgnored;
   });
 
   it('should not allow a root node to be collapsed', () => {
@@ -1006,6 +1008,199 @@ describe('Store', () => {
       expect(store).toMatchSnapshot('2: unmounted');
 
       done();
+    });
+  });
+
+  describe('inline errors and warnings', () => {
+    test('during render are counted', () => {
+      function Example() {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      }
+      const container = document.createElement('div');
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => ReactDOM.render(<Example />, container));
+      });
+
+      expect(store.errorsAndWarnings).toEqual(
+        new Map([[2, {errors: 1, warnings: 1}]]),
+      );
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => ReactDOM.render(<Example rerender={1} />, container));
+      });
+
+      expect(store.errorsAndWarnings).toEqual(
+        new Map([[2, {errors: 2, warnings: 2}]]),
+      );
+    });
+
+    test('during layout get counted', () => {
+      function Example() {
+        React.useLayoutEffect(() => {
+          console.error('test-only: layout error');
+          console.warn('test-only: layout warning');
+        });
+        return null;
+      }
+      const container = document.createElement('div');
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => ReactDOM.render(<Example />, container));
+      });
+
+      expect(store.errorsAndWarnings).toEqual(
+        new Map([[2, {errors: 1, warnings: 1}]]),
+      );
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => ReactDOM.render(<Example rerender={1} />, container));
+      });
+
+      expect(store.errorsAndWarnings).toEqual(
+        new Map([[2, {errors: 2, warnings: 2}]]),
+      );
+    });
+
+    test('during passive get counted', () => {
+      function Example() {
+        React.useEffect(() => {
+          console.error('test-only: passive error');
+          console.warn('test-only: passive warning');
+        });
+        return null;
+      }
+      const container = document.createElement('div');
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => ReactDOM.render(<Example />, container));
+      });
+
+      expect(store.errorsAndWarnings).toEqual(
+        new Map([[2, {errors: 1, warnings: 1}]]),
+      );
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => ReactDOM.render(<Example rerender={1} />, container));
+      });
+
+      expect(store.errorsAndWarnings).toEqual(
+        new Map([[2, {errors: 2, warnings: 2}]]),
+      );
+    });
+
+    // TODO (inline errors) The fiber for the recorded error is considered to be not mounted by renderer.js#isFiberMounted.
+    test('from react get counted', () => {
+      const container = document.createElement('div');
+      function Example() {
+        return <div data-camelCased="should be lowercase" />;
+      }
+
+      withErrorsOrWarningsIgnored(
+        ['Warning: React does not recognize the `%s` prop on a DOM element.'],
+        () => {
+          act(() => ReactDOM.render(<Example />, container));
+        },
+      );
+
+      expect(store.errorsAndWarnings).toEqual(
+        new Map([[2, {errors: 1, warnings: 0}]]),
+      );
+    });
+
+    test('can be cleared for the whole app', () => {
+      function Example() {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      }
+      const container = document.createElement('div');
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Example />
+              <Example />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+
+      store.clearErrorsAndWarnings();
+      // flush events to the renderer
+      jest.runAllTimers();
+
+      expect(store.errorsAndWarnings).toEqual(
+        new Map([
+          [2, {errors: 0, warnings: 0}],
+          [3, {errors: 0, warnings: 0}],
+        ]),
+      );
+    });
+
+    test('can be cleared for particular Fiber (only warnings)', () => {
+      function Example() {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      }
+      const container = document.createElement('div');
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Example />
+              <Example />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+
+      store.clearWarningsForElement(2);
+      // Flush events to the renderer.
+      jest.runAllTimers();
+
+      expect(store.errorsAndWarnings).toEqual(
+        new Map([
+          [2, {errors: 1, warnings: 0}],
+          [3, {errors: 1, warnings: 1}],
+        ]),
+      );
+    });
+
+    test('can be cleared for a particular Fiber (only errors)', () => {
+      function Example() {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      }
+      const container = document.createElement('div');
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Example />
+              <Example />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+
+      store.clearErrorsForElement(3);
+      // Flush events to the renderer.
+      jest.runAllTimers();
+
+      expect(store.errorsAndWarnings).toEqual(
+        new Map([
+          [2, {errors: 1, warnings: 1}],
+          [3, {errors: 0, warnings: 1}],
+        ]),
+      );
     });
   });
 });
