@@ -28,19 +28,21 @@ export type PooledCacheInstance = {|
   provider: null,
 |};
 
-export const CacheContext: ReactContext<CacheInstance> = {
-  $$typeof: REACT_CONTEXT_TYPE,
-  // We don't use Consumer/Provider for Cache components. So we'll cheat.
-  Consumer: (null: any),
-  Provider: (null: any),
-  _calculateChangedBits: null,
-  // We'll initialize these at the root.
-  _currentValue: (null: any),
-  _currentValue2: (null: any),
-  _threadCount: 0,
-};
+export const CacheContext: ReactContext<CacheInstance> = enableCache
+  ? {
+      $$typeof: REACT_CONTEXT_TYPE,
+      // We don't use Consumer/Provider for Cache components. So we'll cheat.
+      Consumer: (null: any),
+      Provider: (null: any),
+      _calculateChangedBits: null,
+      // We'll initialize these at the root.
+      _currentValue: (null: any),
+      _currentValue2: (null: any),
+      _threadCount: 0,
+    }
+  : (null: any);
 
-if (__DEV__) {
+if (__DEV__ && enableCache) {
   CacheContext._currentRenderer = null;
   CacheContext._currentRenderer2 = null;
 }

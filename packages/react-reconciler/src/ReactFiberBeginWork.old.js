@@ -1203,8 +1203,6 @@ function updateHostRoot(current, workInProgress, renderLanes) {
   cloneUpdateQueue(current, workInProgress);
   processUpdateQueue(workInProgress, nextProps, null, renderLanes);
   const nextState = workInProgress.memoizedState;
-  // Caution: React DevTools currently depends on this property
-  // being called "element".
 
   if (enableCache) {
     const nextCacheInstance: CacheInstance = nextState.cacheInstance;
@@ -1221,6 +1219,8 @@ function updateHostRoot(current, workInProgress, renderLanes) {
     }
   }
 
+  // Caution: React DevTools currently depends on this property
+  // being called "element".
   const nextChildren = nextState.element;
   if (nextChildren === prevChildren) {
     resetHydrationState();
