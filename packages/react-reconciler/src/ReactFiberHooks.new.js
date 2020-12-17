@@ -1921,7 +1921,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
 };
 if (enableCache) {
   (ContextOnlyDispatcher: Dispatcher).getCacheForType = getCacheForType;
-  (ContextOnlyDispatcher: Dispatcher).useRefresh = throwInvalidHookError;
+  (ContextOnlyDispatcher: Dispatcher).useCacheRefresh = throwInvalidHookError;
 }
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -1946,7 +1946,7 @@ const HooksDispatcherOnMount: Dispatcher = {
 };
 if (enableCache) {
   (HooksDispatcherOnMount: Dispatcher).getCacheForType = getCacheForType;
-  (HooksDispatcherOnMount: Dispatcher).useRefresh = mountRefresh;
+  (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
 }
 
 const HooksDispatcherOnUpdate: Dispatcher = {
@@ -1971,7 +1971,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 };
 if (enableCache) {
   (HooksDispatcherOnUpdate: Dispatcher).getCacheForType = getCacheForType;
-  (HooksDispatcherOnUpdate: Dispatcher).useRefresh = updateRefresh;
+  (HooksDispatcherOnUpdate: Dispatcher).useCacheRefresh = updateRefresh;
 }
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -1996,7 +1996,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
 };
 if (enableCache) {
   (HooksDispatcherOnRerender: Dispatcher).getCacheForType = getCacheForType;
-  (HooksDispatcherOnRerender: Dispatcher).useRefresh = updateRefresh;
+  (HooksDispatcherOnRerender: Dispatcher).useCacheRefresh = updateRefresh;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -2154,8 +2154,8 @@ if (__DEV__) {
   };
   if (enableCache) {
     (HooksDispatcherOnMountInDEV: Dispatcher).getCacheForType = getCacheForType;
-    (HooksDispatcherOnMountInDEV: Dispatcher).useRefresh = function useRefresh() {
-      currentHookNameInDev = 'useRefresh';
+    (HooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
       mountHookTypesDev();
       return mountRefresh();
     };
@@ -2284,8 +2284,8 @@ if (__DEV__) {
   };
   if (enableCache) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).getCacheForType = getCacheForType;
-    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useRefresh = function useRefresh() {
-      currentHookNameInDev = 'useRefresh';
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
       updateHookTypesDev();
       return mountRefresh();
     };
@@ -2414,8 +2414,8 @@ if (__DEV__) {
   };
   if (enableCache) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).getCacheForType = getCacheForType;
-    (HooksDispatcherOnUpdateInDEV: Dispatcher).useRefresh = function useRefresh() {
-      currentHookNameInDev = 'useRefresh';
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
       updateHookTypesDev();
       return updateRefresh();
     };
@@ -2545,8 +2545,8 @@ if (__DEV__) {
   };
   if (enableCache) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).getCacheForType = getCacheForType;
-    (HooksDispatcherOnRerenderInDEV: Dispatcher).useRefresh = function useRefresh() {
-      currentHookNameInDev = 'useRefresh';
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
       updateHookTypesDev();
       return updateRefresh();
     };
@@ -2690,8 +2690,8 @@ if (__DEV__) {
   };
   if (enableCache) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).getCacheForType = getCacheForType;
-    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useRefresh = function useRefresh() {
-      currentHookNameInDev = 'useRefresh';
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
       updateHookTypesDev();
       return mountRefresh();
     };
@@ -2835,8 +2835,8 @@ if (__DEV__) {
   };
   if (enableCache) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).getCacheForType = getCacheForType;
-    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useRefresh = function useRefresh() {
-      currentHookNameInDev = 'useRefresh';
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
       updateHookTypesDev();
       return updateRefresh();
     };
@@ -2981,8 +2981,8 @@ if (__DEV__) {
   };
   if (enableCache) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).getCacheForType = getCacheForType;
-    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useRefresh = function useRefresh() {
-      currentHookNameInDev = 'useRefresh';
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
       updateHookTypesDev();
       return updateRefresh();
     };

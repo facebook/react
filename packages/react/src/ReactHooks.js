@@ -181,8 +181,8 @@ export function useMutableSource<Source, Snapshot>(
   return dispatcher.useMutableSource(source, getSnapshot, subscribe);
 }
 
-export function useRefresh(): <T>(?() => T, ?T) => void {
+export function useCacheRefresh(): <T>(?() => T, ?T) => void {
   const dispatcher = resolveDispatcher();
   // $FlowFixMe This is unstable, thus optional
-  return dispatcher.useRefresh();
+  return dispatcher.useCacheRefresh();
 }

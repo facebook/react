@@ -4,7 +4,7 @@ let Cache;
 let getCacheForType;
 let Scheduler;
 let Suspense;
-let useRefresh;
+let useCacheRefresh;
 
 let textService;
 let textServiceVersion;
@@ -19,7 +19,7 @@ describe('ReactCache', () => {
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
     getCacheForType = React.unstable_getCacheForType;
-    useRefresh = React.unstable_useRefresh;
+    useCacheRefresh = React.unstable_useCacheRefresh;
 
     // Represents some data service that returns text. It likely has additional
     // caching layers, like a CDN or the local browser cache. It can be mutated
@@ -417,7 +417,7 @@ describe('ReactCache', () => {
   test('refresh a cache', async () => {
     let refresh;
     function App() {
-      refresh = useRefresh();
+      refresh = useCacheRefresh();
       return <AsyncText showVersion={true} text="A" />;
     }
 
@@ -461,7 +461,7 @@ describe('ReactCache', () => {
   test('refresh the root cache', async () => {
     let refresh;
     function App() {
-      refresh = useRefresh();
+      refresh = useCacheRefresh();
       return <AsyncText showVersion={true} text="A" />;
     }
 
@@ -503,7 +503,7 @@ describe('ReactCache', () => {
   test('refresh a cache with seed data', async () => {
     let refresh;
     function App() {
-      refresh = useRefresh();
+      refresh = useCacheRefresh();
       return <AsyncText showVersion={true} text="A" />;
     }
 
@@ -551,7 +551,7 @@ describe('ReactCache', () => {
   test('refreshing a parent cache also refreshes its children', async () => {
     let refreshShell;
     function RefreshShell() {
-      refreshShell = useRefresh();
+      refreshShell = useCacheRefresh();
       return null;
     }
 
@@ -629,7 +629,7 @@ describe('ReactCache', () => {
     async () => {
       let refreshFirstBoundary;
       function RefreshFirstBoundary() {
-        refreshFirstBoundary = useRefresh();
+        refreshFirstBoundary = useCacheRefresh();
         return null;
       }
 

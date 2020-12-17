@@ -489,7 +489,7 @@ function useOpaqueIdentifier(): OpaqueIDType {
   );
 }
 
-function useRefresh(): <T>(?() => T, ?T) => void {
+function useCacheRefresh(): <T>(?() => T, ?T) => void {
   invariant(false, 'Not implemented.');
 }
 
@@ -524,5 +524,5 @@ export const Dispatcher: DispatcherType = {
 
 if (enableCache) {
   Dispatcher.getCacheForType = getCacheForType;
-  Dispatcher.useRefresh = useRefresh;
+  Dispatcher.useCacheRefresh = useCacheRefresh;
 }
