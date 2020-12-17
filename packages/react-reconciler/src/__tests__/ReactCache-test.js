@@ -5,6 +5,8 @@ let getCacheForType;
 let Scheduler;
 let Suspense;
 let useCacheRefresh;
+let startTransition;
+let useState;
 
 let textService;
 let textServiceVersion;
@@ -20,6 +22,8 @@ describe('ReactCache', () => {
     Suspense = React.Suspense;
     getCacheForType = React.unstable_getCacheForType;
     useCacheRefresh = React.unstable_useCacheRefresh;
+    startTransition = React.unstable_startTransition;
+    useState = React.useState;
 
     // Represents some data service that returns text. It likely has additional
     // caching layers, like a CDN or the local browser cache. It can be mutated
@@ -695,4 +699,218 @@ describe('ReactCache', () => {
       expect(root).toMatchRenderedOutput('A [v2]A [v1]');
     },
   );
+
+  // @gate experimental
+  test(
+    'mount a new Cache boundary in a sibling while simultaneously ' +
+      'resolving a Suspense boundary',
+    async () => {
+      function App({showMore}) {
+        return (
+          <>
+            {showMore ? (
+              <Suspense fallback={<Text text="Loading..." />}>
+                <Cache>
+                  <AsyncText showVersion={true} text="A" />
+                </Cache>
+              </Suspense>
+            ) : null}
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Cache>
+                {' '}
+                <AsyncText showVersion={true} text="A" />{' '}
+                <AsyncText showVersion={true} text="B" />
+              </Cache>
+            </Suspense>
+          </>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+      await ReactNoop.act(async () => {
+        root.render(<App showMore={false} />);
+      });
+      expect(Scheduler).toHaveYielded([
+        'Cache miss! [A]',
+        'Cache miss! [B]',
+        'Loading...',
+      ]);
+
+      await ReactNoop.act(async () => {
+        // This will resolve the content in the first cache
+        resolveText('A');
+        resolveText('B');
+        // Now let's simulate a mutation
+        mutateRemoteTextService();
+        // And mount the second tree, which includes new content
+        root.render(<App showMore={true} />);
+      });
+      expect(Scheduler).toHaveYielded([
+        // The new tree should use a fresh cache
+        'Cache miss! [A]',
+        'Loading...',
+        // The other tree uses the cached responses. This demonstrates that the
+        // requests are not dropped.
+        'A [v1]',
+        'B [v1]',
+      ]);
+
+      // Now resolve the second tree
+      await ReactNoop.act(async () => {
+        resolveText('A');
+      });
+      expect(Scheduler).toHaveYielded(['A [v2]']);
+      expect(root).toMatchRenderedOutput('A [v2] A [v1] B [v1]');
+    },
+  );
+
+  // @gate experimental
+  test('cache pool is cleared once transitions that depend on it commit their shell', async () => {
+    function Child({text}) {
+      return (
+        <Cache>
+          <AsyncText text={text} />
+        </Cache>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(
+        <Suspense fallback={<Text text="Loading..." />}>(empty)</Suspense>,
+      );
+    });
+    expect(Scheduler).toHaveYielded([]);
+    expect(root).toMatchRenderedOutput('(empty)');
+
+    await ReactNoop.act(async () => {
+      startTransition(() => {
+        root.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Child text="A" />
+          </Suspense>,
+        );
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(root).toMatchRenderedOutput('(empty)');
+
+    await ReactNoop.act(async () => {
+      startTransition(() => {
+        root.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Child text="A" />
+            <Child text="A" />
+          </Suspense>,
+        );
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      // No cache miss, because it uses the pooled cache
+      'Loading...',
+    ]);
+    expect(root).toMatchRenderedOutput('(empty)');
+
+    // Resolve the request
+    await ReactNoop.act(async () => {
+      await resolveText('A');
+    });
+    expect(Scheduler).toHaveYielded(['A', 'A']);
+    expect(root).toMatchRenderedOutput('AA');
+
+    // Now do another transition
+    await ReactNoop.act(async () => {
+      startTransition(() => {
+        root.render(
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Child text="A" />
+            <Child text="A" />
+            <Child text="A" />
+          </Suspense>,
+        );
+      });
+    });
+    expect(Scheduler).toHaveYielded([
+      // First two children use the old cache because they already finished
+      'A',
+      'A',
+      // The new child uses a fresh cache
+      'Cache miss! [A]',
+      'Loading...',
+      'A',
+      'A',
+      'A',
+    ]);
+    expect(root).toMatchRenderedOutput('AAA');
+  });
+
+  // @gate experimental
+  test('cache pool is not cleared by arbitrary commits', async () => {
+    function App() {
+      return (
+        <>
+          <ShowMore />
+          <Unrelated />
+        </>
+      );
+    }
+
+    let showMore;
+    function ShowMore() {
+      const [shouldShow, _showMore] = useState(false);
+      showMore = () => _showMore(true);
+      return (
+        <>
+          <Suspense fallback={<Text text="Loading..." />}>
+            {shouldShow ? (
+              <Cache>
+                <AsyncText text="A" />
+              </Cache>
+            ) : null}
+          </Suspense>
+        </>
+      );
+    }
+
+    let updateUnrelated;
+    function Unrelated() {
+      const [count, _updateUnrelated] = useState(0);
+      updateUnrelated = _updateUnrelated;
+      return <Text text={count + ''} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App showMore={false} />);
+    });
+    expect(Scheduler).toHaveYielded(['0']);
+    expect(root).toMatchRenderedOutput('0');
+
+    await ReactNoop.act(async () => {
+      startTransition(() => {
+        showMore();
+      });
+    });
+    expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
+    expect(root).toMatchRenderedOutput('0');
+
+    await ReactNoop.act(async () => {
+      updateUnrelated(1);
+    });
+    expect(Scheduler).toHaveYielded([
+      '1',
+
+      // Happens to re-render the fallback. Doesn't need to, but not relevant
+      // to this test.
+      'Loading...',
+    ]);
+    expect(root).toMatchRenderedOutput('1');
+
+    await ReactNoop.act(async () => {
+      resolveText('A');
+      mutateRemoteTextService();
+    });
+    expect(Scheduler).toHaveYielded(['A']);
+    expect(root).toMatchRenderedOutput('A1');
+  });
 });
