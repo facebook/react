@@ -142,4 +142,4 @@ export const enableUseRefAccessWarning = false;
 
 export const enableRecursiveCommitTraversal = false;
 
-export const enableSchedulerTimeoutInWorkLoop = false;
+export const disableSchedulerTimeoutInWorkLoop = false;
