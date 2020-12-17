@@ -448,7 +448,7 @@ describe('ReactCache', () => {
     // Mutate the text service, then refresh for new data.
     mutateRemoteTextService();
     await ReactNoop.act(async () => {
-      refresh();
+      startTransition(() => refresh());
     });
     expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('A [v1]');
@@ -490,7 +490,7 @@ describe('ReactCache', () => {
     // Mutate the text service, then refresh for new data.
     mutateRemoteTextService();
     await ReactNoop.act(async () => {
-      refresh();
+      startTransition(() => refresh());
     });
     expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
     expect(root).toMatchRenderedOutput('A [v1]');
@@ -544,7 +544,7 @@ describe('ReactCache', () => {
         status: 'resolved',
         value: textServiceVersion,
       });
-      refresh(createTextCache, seededCache);
+      startTransition(() => refresh(createTextCache, seededCache));
     });
     // The root should re-render without a cache miss.
     expect(Scheduler).toHaveYielded(['A [v2]']);
@@ -610,7 +610,7 @@ describe('ReactCache', () => {
     // refresh, since its cache is nested inside the outer one.
     mutateRemoteTextService();
     await ReactNoop.act(async () => {
-      refreshShell();
+      startTransition(() => refreshShell());
     });
     expect(Scheduler).toHaveYielded([
       'Cache miss! [A]',

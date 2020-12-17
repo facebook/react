@@ -1729,40 +1729,31 @@ function refreshCache<T>(
 ) {
   const provider = cacheInstance.provider;
 
-  // Inlined startTransition
-  // TODO: Maybe we shouldn't automatically give this transition priority. Are
-  // there valid use cases for a high-pri refresh? Like if the content is
-  // super stale and you want to immediately hide it.
-  const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = 1;
-  // TODO: Do we really need the try/finally? I don't think any of these
-  // functions would ever throw unless there's an internal error.
-  try {
-    const eventTime = requestEventTime();
-    const lane = requestUpdateLane(provider);
-    // TODO: Does Cache work in legacy mode? Should decide and write a test.
-    const root = scheduleUpdateOnFiber(provider, lane, eventTime);
+  // TODO: Consider warning if the refresh is at discrete priority, or if we
+  // otherwise suspect that it wasn't batched properly.
 
-    const seededCache = new Map();
-    if (seedKey !== null && seedKey !== undefined && root !== null) {
-      // Seed the cache with the value passed by the caller. This could be from
-      // a server mutation, or it could be a streaming response.
-      seededCache.set(seedKey, seedValue);
-    }
+  const eventTime = requestEventTime();
+  const lane = requestUpdateLane(provider);
+  // TODO: Does Cache work in legacy mode? Should decide and write a test.
+  const root = scheduleUpdateOnFiber(provider, lane, eventTime);
 
-    // Schedule an update on the cache boundary to trigger a refresh.
-    const refreshUpdate = createUpdate(eventTime, lane);
-    const payload = {
-      cacheInstance: {
-        provider: provider,
-        cache: seededCache,
-      },
-    };
-    refreshUpdate.payload = payload;
-    enqueueUpdate(provider, refreshUpdate);
-  } finally {
-    ReactCurrentBatchConfig.transition = prevTransition;
+  const seededCache = new Map();
+  if (seedKey !== null && seedKey !== undefined && root !== null) {
+    // Seed the cache with the value passed by the caller. This could be from
+    // a server mutation, or it could be a streaming response.
+    seededCache.set(seedKey, seedValue);
   }
+
+  // Schedule an update on the cache boundary to trigger a refresh.
+  const refreshUpdate = createUpdate(eventTime, lane);
+  const payload = {
+    cacheInstance: {
+      provider: provider,
+      cache: seededCache,
+    },
+  };
+  refreshUpdate.payload = payload;
+  enqueueUpdate(provider, refreshUpdate);
 }
 
 function dispatchAction<S, A>(
