@@ -15,21 +15,22 @@ import typeof * as DynamicFeatureFlags from './ReactFeatureFlags.www-dynamic';
 const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
 
 export const {
-  debugRenderPhaseSideEffectsForStrictMode,
-  disableInputAttributeSyncing,
-  enableTrustedTypesIntegration,
-  disableSchedulerTimeoutBasedOnReactExpirationTime,
-  warnAboutSpreadingKeyToJSX,
-  replayFailedUnitOfWorkWithInvokeGuardedCallback,
-  enableFilterEmptyStringAttributesDOM,
-  enableLegacyFBSupport,
-  deferRenderPhaseUpdateToNextBatch,
-  decoupleUpdatePriorityFromScheduler,
-  enableDebugTracing,
-  enableDoubleInvokingEffects,
-  enableUseRefAccessWarning,
-  disableNativeComponentFrames,
-} = dynamicFeatureFlags;
+         debugRenderPhaseSideEffectsForStrictMode,
+         disableInputAttributeSyncing,
+         enableTrustedTypesIntegration,
+         disableSchedulerTimeoutBasedOnReactExpirationTime,
+         warnAboutSpreadingKeyToJSX,
+         replayFailedUnitOfWorkWithInvokeGuardedCallback,
+         enableFilterEmptyStringAttributesDOM,
+         enableLegacyFBSupport,
+         deferRenderPhaseUpdateToNextBatch,
+         decoupleUpdatePriorityFromScheduler,
+         enableDebugTracing,
+         enableDoubleInvokingEffects,
+         enableUseRefAccessWarning,
+         disableNativeComponentFrames,
+         enableSchedulerTimeoutInWorkLoop,
+       } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
 // It's not used anywhere in production yet.
