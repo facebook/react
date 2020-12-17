@@ -524,17 +524,97 @@ export function attach(
     typeof setSuspenseHandler === 'function' &&
     typeof scheduleUpdate === 'function';
 
+  let flushErrorOrWarningUpdatesTimoutID: TimeoutID | null = null;
+
+  // Set of Fibers (IDs) with recently changed number of error/warning messages.
+  const fibersWithChangedErrorOrWarningCounts: Set<number> = new Set();
+
   // Mapping of fiber IDs to error/warning messages and counts.
   const fiberToErrorsMap: Map<number, Map<string, number>> = new Map();
   const fiberToWarningsMap: Map<number, Map<string, number>> = new Map();
 
-  function recordErrorOrWarningOnFiber(
-    type: 'error' | 'warn',
-    args: $ReadOnlyArray<any>,
+  function clearErrorsAndWarnings() {
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const id of fiberToErrorsMap.keys()) {
+      fibersWithChangedErrorOrWarningCounts.add(id);
+      updateMostRecentlyInspectedElementIfNecessary(id);
+    }
+
+    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
+    for (const id of fiberToWarningsMap.keys()) {
+      fibersWithChangedErrorOrWarningCounts.add(id);
+      updateMostRecentlyInspectedElementIfNecessary(id);
+    }
+
+    fiberToErrorsMap.clear();
+    fiberToWarningsMap.clear();
+
+    scheduleErrorOrWarningUpdates();
+  }
+
+  function clearErrorsForFiberID(id: number) {
+    if (fiberToErrorsMap.has(id)) {
+      fiberToErrorsMap.delete(id);
+      fibersWithChangedErrorOrWarningCounts.add(id);
+      scheduleErrorOrWarningUpdates();
+    }
+
+    updateMostRecentlyInspectedElementIfNecessary(id);
+  }
+
+  function clearWarningsForFiberID(id: number) {
+    if (fiberToWarningsMap.has(id)) {
+      fiberToWarningsMap.delete(id);
+      fibersWithChangedErrorOrWarningCounts.add(id);
+      scheduleErrorOrWarningUpdates();
+    }
+
+    updateMostRecentlyInspectedElementIfNecessary(id);
+  }
+
+  function updateMostRecentlyInspectedElementIfNecessary(
     fiberID: number,
   ): void {
+    if (
+      mostRecentlyInspectedElement !== null &&
+      mostRecentlyInspectedElement.id === fiberID
+    ) {
+      hasElementUpdatedSinceLastInspected = true;
+    }
+  }
+
+  function onErrorOrWarning(
+    fiber: Fiber,
+    type: 'error' | 'warn',
+    args: $ReadOnlyArray<any>,
+  ): void {
+    // There are a few places that errors might be logged:
+    // 1. During render (either for initial mount or an update)
+    // 2. During commit effects (both active and passive)
+    // 3. During unmounts (or commit effect cleanup functions)
+    //
+    // Initial render presents a special challenge-
+    // since neither backend nor frontend Store know about a Fiber until it has mounted (and committed).
+    // In this case, we need to hold onto errors until the subsequent commit hook is called.
+    //
+    // Passive effects also present a special challenge-
+    // since the commit hook is called before passive effects, are run,
+    // meaning that we might not want to wait until the subsequent commit hook to notify the frontend.
+    //
+    // For this reason, warnings/errors are sent to the frontend periodically (on a timer).
+    // When processing errors, any Fiber that is not still registered is assumed to be unmounted.
+
     const message = format(...args);
 
+    // Note that by calling this function, we may be creating the ID for the first time.
+    // If the Fiber is then never mounted, we are responsible for clearing the ID out.
+    // TODO (inline-errors) Clear these too during flush so they don't cause leaks.
+    const fiberID = getFiberID(getPrimaryFiber(fiber));
+
+    // Mark this Fiber as needed its warning/error count updated during the next flush.
+    fibersWithChangedErrorOrWarningCounts.add(fiberID);
+
+    // Update the error/warning messages and counts for the Fiber.
     const fiberMap = type === 'error' ? fiberToErrorsMap : fiberToWarningsMap;
     const messageMap = fiberMap.get(fiberID);
     if (messageMap != null) {
@@ -543,101 +623,26 @@ export function attach(
     } else {
       fiberMap.set(fiberID, new Map([[message, 1]]));
     }
+
+    // If this Fiber is currently being inspected, mark it as needing an udpate as well.
+    updateMostRecentlyInspectedElementIfNecessary(fiberID);
+
+    scheduleErrorOrWarningUpdates();
   }
 
-  function clearErrorsAndWarnings() {
-    const updatedFiberIDs = new Set(fiberToErrorsMap.keys());
-    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-    for (const key of fiberToWarningsMap.keys()) {
-      updatedFiberIDs.add(key);
-    }
-
-    fiberToErrorsMap.clear();
-    fiberToWarningsMap.clear();
-
-    emitErrorOrWarningUpdates(updatedFiberIDs);
-  }
-
-  function clearErrorsForFiberID(id: number) {
-    if (fiberToErrorsMap.has(id)) {
-      fiberToErrorsMap.delete(id);
-      emitErrorOrWarningUpdates(new Set([id]));
+  function scheduleErrorOrWarningUpdates() {
+    if (flushErrorOrWarningUpdatesTimoutID === null) {
+      flushErrorOrWarningUpdatesTimoutID = setTimeout(
+        flushErrorOrWarningUpdates,
+        1000,
+      );
     }
   }
 
-  function clearWarningsForFiberID(id: number) {
-    if (fiberToWarningsMap.has(id)) {
-      fiberToWarningsMap.delete(id);
-      emitErrorOrWarningUpdates(new Set([id]));
-    }
-  }
+  function flushErrorOrWarningUpdates() {
+    flushErrorOrWarningUpdatesTimoutID = null;
 
-  function onErrorsAndWarningsUpdate(
-    errorsAndWarnings: Array<{|
-      fiber: Fiber,
-      type: 'error' | 'warn',
-      args: $ReadOnlyArray<any>,
-    |}>,
-  ): void {
-    const updatedFiberIDs: Set<number> = new Set();
-    errorsAndWarnings.forEach(({args, fiber, type}) => {
-      if (isFiberMounted(fiber)) {
-        const fiberID = getFiberID(getPrimaryFiber(fiber));
-        updatedFiberIDs.add(fiberID);
-        recordErrorOrWarningOnFiber(type, args, fiberID);
-      }
-    });
-
-    emitErrorOrWarningUpdates(updatedFiberIDs);
-  }
-
-  function emitErrorOrWarningUpdates(updatedIDs: Set<number>) {
-    // TODO (inline errors) Do we just want to push to pendingEvents and flush?
-    const operations = new Array(
-      // Identify which renderer this update is coming from.
-      2 + // [rendererID, rootFiberID]
-      // How big is the string table?
-      0 + // [stringTableLength]
-        // Regular operations
-        updatedIDs.size,
-    );
-    let i = 0;
-    operations[i++] = rendererID;
-    operations[i++] = currentRootID; // Use this ID in case the root was unmounted!
-    operations[i++] = 0; // No strings to send.
-
-    const mostRecentlyInspectedElementID =
-      mostRecentlyInspectedElement !== null
-        ? mostRecentlyInspectedElement.id
-        : null;
-    updatedIDs.forEach(fiberID => {
-      const errorCountsMap = fiberToErrorsMap.get(fiberID);
-      const warningCountsMap = fiberToWarningsMap.get(fiberID);
-
-      let errorCount = 0;
-      let warningCount = 0;
-      if (errorCountsMap != null) {
-        errorCountsMap.forEach(count => {
-          errorCount += count;
-        });
-      }
-      if (warningCountsMap != null) {
-        warningCountsMap.forEach(count => {
-          warningCount += count;
-        });
-      }
-
-      operations[i++] = TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS;
-      operations[i++] = fiberID;
-      operations[i++] = errorCount;
-      operations[i++] = warningCount;
-
-      if (fiberID === mostRecentlyInspectedElementID) {
-        hasElementUpdatedSinceLastInspected = true;
-      }
-    });
-
-    hook.emit('operations', operations);
+    flushPendingEvents();
   }
 
   // Patching the console enables DevTools to do a few useful things:
@@ -646,7 +651,7 @@ export function attach(
   //
   // Don't patch in test environments because we don't want to interfere with Jest's own console overrides.
   if (process.env.NODE_ENV !== 'test') {
-    registerRendererWithConsole(renderer, onErrorsAndWarningsUpdate);
+    registerRendererWithConsole(renderer, onErrorOrWarning);
 
     // The renderer interface can't read these preferences directly,
     // because it is stored in localStorage within the context of the extension.
@@ -927,17 +932,6 @@ export function attach(
     return fiber;
   }
 
-  function isFiberMounted(fiber: Fiber): boolean {
-    if (primaryFibers.has(fiber)) {
-      return true;
-    }
-    const {alternate} = fiber;
-    if (alternate != null && primaryFibers.has(alternate)) {
-      return true;
-    }
-    return false;
-  }
-
   const fiberToIDMap: Map<Fiber, number> = new Map();
   const idToFiberMap: Map<number, Fiber> = new Map();
   const primaryFibers: Set<Fiber> = new Set();
@@ -1187,7 +1181,37 @@ export function attach(
     pendingOperations.push(op);
   }
 
+  function recordErrorsAndWarnings() {
+    fibersWithChangedErrorOrWarningCounts.forEach(fiberID => {
+      const errorCountsMap = fiberToErrorsMap.get(fiberID);
+      const warningCountsMap = fiberToWarningsMap.get(fiberID);
+
+      let errorCount = 0;
+      let warningCount = 0;
+      if (errorCountsMap != null) {
+        errorCountsMap.forEach(count => {
+          errorCount += count;
+        });
+      }
+      if (warningCountsMap != null) {
+        warningCountsMap.forEach(count => {
+          warningCount += count;
+        });
+      }
+
+      pushOperation(TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS);
+      pushOperation(fiberID);
+      pushOperation(errorCount);
+      pushOperation(warningCount);
+    });
+    fibersWithChangedErrorOrWarningCounts.clear();
+  }
+
   function flushPendingEvents(root: Object): void {
+    // Add any pending errors and warnings to the operations array.
+    // We do this just before flushing, so we can ignore errors for no-longer-mounted Fibers.
+    recordErrorsAndWarnings();
+
     if (
       pendingOperations.length === 0 &&
       pendingRealUnmountedIDs.length === 0 &&
