@@ -1563,7 +1563,7 @@ describe('TreeListContext', () => {
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 1
              <Child>
              <Child> ⚠
              <Child>
@@ -1573,7 +1573,7 @@ describe('TreeListContext', () => {
 
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 1
              <Child>
         →    <Child> ⚠
              <Child>
@@ -1583,7 +1583,7 @@ describe('TreeListContext', () => {
 
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 1
              <Child>
              <Child> ⚠
              <Child>
@@ -1593,7 +1593,7 @@ describe('TreeListContext', () => {
 
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 1
              <Child>
         →    <Child> ⚠
              <Child>
@@ -1620,7 +1620,7 @@ describe('TreeListContext', () => {
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 1
              <Child>
              <Child> ⚠
              <Child>
@@ -1630,7 +1630,7 @@ describe('TreeListContext', () => {
 
       selectPreviousErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 1
              <Child>
              <Child> ⚠
              <Child>
@@ -1640,7 +1640,7 @@ describe('TreeListContext', () => {
 
       selectPreviousErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 1
              <Child>
         →    <Child> ⚠
              <Child>
@@ -1650,7 +1650,7 @@ describe('TreeListContext', () => {
 
       selectPreviousErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 1
              <Child>
              <Child> ⚠
              <Child>
@@ -1676,7 +1676,7 @@ describe('TreeListContext', () => {
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 2, ⚠ 2
              <Child> ⚠
              <Child> ✕
              <Child> ✕
@@ -1686,7 +1686,7 @@ describe('TreeListContext', () => {
       // Select the first item in the list
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 2, ⚠ 2
         →    <Child> ⚠
              <Child> ✕
              <Child> ✕
@@ -1697,7 +1697,7 @@ describe('TreeListContext', () => {
       clearWarningsForElement(store.getElementIDAtIndex(1));
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 2, ⚠ 2
              <Child> ⚠
         →    <Child> ✕
              <Child> ✕
@@ -1709,7 +1709,7 @@ describe('TreeListContext', () => {
       // Should step to the (now) next one in the list.
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 2
              <Child> ⚠
              <Child> ✕
              <Child>
@@ -1719,7 +1719,7 @@ describe('TreeListContext', () => {
       // Should skip over the (now) cleared Fiber
       selectPreviousErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 2
              <Child> ⚠
         →    <Child> ✕
              <Child>
@@ -1742,14 +1742,14 @@ describe('TreeListContext', () => {
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 1
              <Child> ⚠
              <Child> ✕
       `);
 
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 1
         →    <Child> ⚠
              <Child> ✕
       `);
@@ -1757,7 +1757,7 @@ describe('TreeListContext', () => {
       clearWarningsForElement(store.getElementIDAtIndex(0));
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 0
              <Child>
         →    <Child> ✕
       `);
@@ -1782,7 +1782,7 @@ describe('TreeListContext', () => {
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 1
              <Child> ⚠
              <Child>
              <Child>
@@ -1791,7 +1791,7 @@ describe('TreeListContext', () => {
 
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 1
         →    <Child> ⚠
              <Child>
              <Child>
@@ -1814,7 +1814,7 @@ describe('TreeListContext', () => {
 
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 2
              <Child> ⚠
         →    <Child> ⚠
              <Child>
@@ -1823,7 +1823,7 @@ describe('TreeListContext', () => {
 
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 2
              <Child> ⚠
              <Child> ⚠
              <Child>
@@ -1832,7 +1832,7 @@ describe('TreeListContext', () => {
 
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 2
         →    <Child> ⚠
              <Child> ⚠
              <Child>
@@ -1855,14 +1855,14 @@ describe('TreeListContext', () => {
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 1
              <Child> ⚠
              <Child> ✕
       `);
 
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 1
         →    <Child> ⚠
              <Child> ✕
       `);
@@ -1909,14 +1909,14 @@ describe('TreeListContext', () => {
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 0, ⚠ 2
            ▸ <Wrapper>
            ▸ <Wrapper>
       `);
 
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 0, ⚠ 2
            ▾ <Wrapper>
         →      <Child> ⚠
            ▸ <Wrapper>
@@ -1924,7 +1924,7 @@ describe('TreeListContext', () => {
 
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 0, ⚠ 2
            ▾ <Wrapper>
                <Child> ⚠
            ▾ <Wrapper>
@@ -1956,7 +1956,7 @@ describe('TreeListContext', () => {
 
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 0, ⚠ 2
            ▾ <Wrapper>
                <Child> ⚠
            ▾ <Wrapper>
@@ -1966,7 +1966,7 @@ describe('TreeListContext', () => {
 
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 0, ⚠ 2
            ▾ <Wrapper>
         →      <Child> ⚠
            ▾ <Wrapper>
@@ -1978,14 +1978,14 @@ describe('TreeListContext', () => {
         store.componentFilters = [utils.createDisplayNameFilter('Wrapper')];
       });
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 0, ⚠ 2
         →    <Child> ⚠
              <Child> ⚠
       `);
 
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 0, ⚠ 2
              <Child> ⚠
         →    <Child> ⚠
       `);
@@ -1994,7 +1994,7 @@ describe('TreeListContext', () => {
         store.componentFilters = [];
       });
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 0, ⚠ 2
            ▾ <Wrapper>
                <Child> ⚠
            ▾ <Wrapper>
@@ -2004,7 +2004,7 @@ describe('TreeListContext', () => {
 
       selectPreviousErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 0, ⚠ 2
            ▾ <Wrapper>
         →      <Child> ⚠
            ▾ <Wrapper>
@@ -2048,7 +2048,7 @@ describe('TreeListContext', () => {
         store.componentFilters = [];
       });
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 0, ⚠ 2
            ▾ <Wrapper>
                <Child> ⚠
            ▾ <Wrapper>
@@ -2058,7 +2058,7 @@ describe('TreeListContext', () => {
 
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 0, ⚠ 2
            ▾ <Wrapper>
         →      <Child> ⚠
            ▾ <Wrapper>

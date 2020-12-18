@@ -1024,26 +1024,18 @@ describe('Store', () => {
         act(() => ReactDOM.render(<Example />, container));
       });
 
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          1 => Object {
-            "errors": 1,
-            "warnings": 1,
-          },
-        }
+      expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 1, ⚠ 1
+            <Example> ✕⚠
       `);
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
         act(() => ReactDOM.render(<Example rerender={1} />, container));
       });
 
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          1 => Object {
-            "errors": 2,
-            "warnings": 2,
-          },
-        }
+      expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 2, ⚠ 2
+            <Example> ✕⚠
       `);
     });
 
@@ -1061,26 +1053,18 @@ describe('Store', () => {
         act(() => ReactDOM.render(<Example />, container));
       });
 
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          1 => Object {
-            "errors": 1,
-            "warnings": 1,
-          },
-        }
+      expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 1, ⚠ 1
+            <Example> ✕⚠
       `);
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
         act(() => ReactDOM.render(<Example rerender={1} />, container));
       });
 
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          1 => Object {
-            "errors": 2,
-            "warnings": 2,
-          },
-        }
+      expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 2, ⚠ 2
+            <Example> ✕⚠
       `);
     });
 
@@ -1098,26 +1082,18 @@ describe('Store', () => {
         act(() => ReactDOM.render(<Example />, container));
       });
 
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          2 => Object {
-            "errors": 1,
-            "warnings": 1,
-          },
-        }
+      expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 1, ⚠ 1
+            <Example> ✕⚠
       `);
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
         act(() => ReactDOM.render(<Example rerender={1} />, container));
       });
 
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          2 => Object {
-            "errors": 2,
-            "warnings": 2,
-          },
-        }
+      expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 2, ⚠ 2
+            <Example> ✕⚠
       `);
     });
 
@@ -1137,13 +1113,10 @@ describe('Store', () => {
         },
       );
 
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          1 => Object {
-            "errors": 1,
-            "warnings": 0,
-          },
-        }
+      expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 1, ⚠ 0
+          ▾ <Example> ✕
+              <Child>
       `);
     });
 
@@ -1166,24 +1139,21 @@ describe('Store', () => {
         );
       });
 
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          1 => Object {
-            "errors": 1,
-            "warnings": 1,
-          },
-          2 => Object {
-            "errors": 1,
-            "warnings": 1,
-          },
-        }
+      expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 2, ⚠ 2
+            <Example> ✕⚠
+            <Example> ✕⚠
       `);
 
       store.clearErrorsAndWarnings();
       // flush events to the renderer
       jest.runAllTimers();
 
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`Map {}`);
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+            <Example>
+            <Example>
+      `);
     });
 
     it('can be cleared for particular Fiber (only warnings)', () => {
@@ -1205,34 +1175,20 @@ describe('Store', () => {
         );
       });
 
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          1 => Object {
-            "errors": 1,
-            "warnings": 1,
-          },
-          2 => Object {
-            "errors": 1,
-            "warnings": 1,
-          },
-        }
+      expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 2, ⚠ 2
+            <Example> ✕⚠
+            <Example> ✕⚠
       `);
 
       store.clearWarningsForElement(2);
       // Flush events to the renderer.
       jest.runAllTimers();
 
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          1 => Object {
-            "errors": 1,
-            "warnings": 1,
-          },
-          2 => Object {
-            "errors": 1,
-            "warnings": 0,
-          },
-        }
+      expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 2, ⚠ 1
+            <Example> ✕⚠
+            <Example> ✕
       `);
     });
 
@@ -1255,34 +1211,20 @@ describe('Store', () => {
         );
       });
 
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          1 => Object {
-            "errors": 1,
-            "warnings": 1,
-          },
-          2 => Object {
-            "errors": 1,
-            "warnings": 1,
-          },
-        }
+      expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 2, ⚠ 2
+            <Example> ✕⚠
+            <Example> ✕⚠
       `);
 
       store.clearErrorsForElement(2);
       // Flush events to the renderer.
       jest.runAllTimers();
 
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          1 => Object {
-            "errors": 1,
-            "warnings": 1,
-          },
-          2 => Object {
-            "errors": 0,
-            "warnings": 1,
-          },
-        }
+      expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 1, ⚠ 2
+            <Example> ✕⚠
+            <Example> ⚠
       `);
     });
 
@@ -1313,21 +1255,11 @@ describe('Store', () => {
           ),
         );
       });
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          1 => Object {
-            "errors": 1,
-            "warnings": 0,
-          },
-          2 => Object {
-            "errors": 0,
-            "warnings": 1,
-          },
-          3 => Object {
-            "errors": 1,
-            "warnings": 1,
-          },
-        }
+      expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 2, ⚠ 2
+            <ComponentWithError> ✕
+            <ComponentWithWarning> ⚠
+            <ComponentWithWarningAndError> ✕⚠
       `);
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
@@ -1341,17 +1273,10 @@ describe('Store', () => {
           ),
         );
       });
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          5 => Object {
-            "errors": 0,
-            "warnings": 1,
-          },
-          6 => Object {
-            "errors": 1,
-            "warnings": 1,
-          },
-        }
+      expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 1, ⚠ 2
+            <ComponentWithWarning> ⚠
+            <ComponentWithWarningAndError> ✕⚠
       `);
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
@@ -1364,18 +1289,15 @@ describe('Store', () => {
           ),
         );
       });
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          5 => Object {
-            "errors": 0,
-            "warnings": 2,
-          },
-        }
+      expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 0, ⚠ 2
+            <ComponentWithWarning> ⚠
       `);
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
         act(() => ReactDOM.render(<React.Fragment />, container));
       });
+      expect(store).toMatchInlineSnapshot(`[root]`);
       expect(store.errorsAndWarnings).toMatchInlineSnapshot(`Map {}`);
     });
   });

@@ -94,7 +94,21 @@ export function printStore(
     store.roots.forEach(rootID => {
       const {weight} = ((store.getElementByID(rootID): any): Element);
 
-      snapshotLines.push('[root]' + (includeWeight ? ` (${weight})` : ''));
+      const maybeWeightLabel = includeWeight ? ` (${weight})` : '';
+      let maybeErrorsAndWarningsCount = '';
+      if (store.errorsAndWarnings.size > 0) {
+        let errorsSum = 0;
+        let warningsSum = 0;
+        store.errorsAndWarnings.forEach(({errors, warnings}) => {
+          errorsSum += errors;
+          warningsSum += warnings;
+        });
+
+        maybeErrorsAndWarningsCount = ` ✕ ${errorsSum}, ⚠ ${warningsSum}`;
+      }
+      snapshotLines.push(
+        `[root]${maybeWeightLabel}${maybeErrorsAndWarningsCount}`,
+      );
 
       for (let i = rootWeight; i < rootWeight + weight; i++) {
         const element = store.getElementAtIndex(i);

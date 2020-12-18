@@ -402,26 +402,10 @@ describe('Store component filters', () => {
 
       act(() => (store.componentFilters = []));
       expect(store).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 2, ⚠ 2
             <ComponentWithError> ✕
             <ComponentWithWarning> ⚠
             <ComponentWithWarningAndError> ✕⚠
-      `);
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          1 => Object {
-            "errors": 1,
-            "warnings": 0,
-          },
-          3 => Object {
-            "errors": 1,
-            "warnings": 1,
-          },
-          2 => Object {
-            "errors": 0,
-            "warnings": 1,
-          },
-        }
       `);
 
       act(
@@ -429,16 +413,8 @@ describe('Store component filters', () => {
           (store.componentFilters = [utils.createDisplayNameFilter('Warning')]),
       );
       expect(store).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 1, ⚠ 0
             <ComponentWithError> ✕
-      `);
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          1 => Object {
-            "errors": 1,
-            "warnings": 0,
-          },
-        }
       `);
 
       act(
@@ -446,16 +422,8 @@ describe('Store component filters', () => {
           (store.componentFilters = [utils.createDisplayNameFilter('Error')]),
       );
       expect(store).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 0, ⚠ 1
             <ComponentWithWarning> ⚠
-      `);
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          2 => Object {
-            "errors": 0,
-            "warnings": 1,
-          },
-        }
       `);
 
       act(
@@ -470,26 +438,10 @@ describe('Store component filters', () => {
 
       act(() => (store.componentFilters = []));
       expect(store).toMatchInlineSnapshot(`
-        [root]
+        [root] ✕ 2, ⚠ 2
             <ComponentWithError> ✕
             <ComponentWithWarning> ⚠
             <ComponentWithWarningAndError> ✕⚠
-      `);
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
-        Map {
-          1 => Object {
-            "errors": 1,
-            "warnings": 0,
-          },
-          3 => Object {
-            "errors": 1,
-            "warnings": 1,
-          },
-          2 => Object {
-            "errors": 0,
-            "warnings": 1,
-          },
-        }
       `);
     });
   });
