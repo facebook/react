@@ -119,6 +119,10 @@ const getPublicPackages = isExperimental => {
       'react-test-renderer',
       'use-subscription',
       'scheduler',
+      'react-fetch',
+      'react-fs',
+      'react-pg',
+      'react-server-dom-webpack',
     ];
   } else {
     return [
