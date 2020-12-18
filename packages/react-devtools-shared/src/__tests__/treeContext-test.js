@@ -2067,33 +2067,306 @@ describe('TreeListContext', () => {
       `);
     });
 
-    xit('should do what with warnings/errors of uncommitted renders?', () => {
-      const NeverResolves = React.lazy(() => new Promise(() => {}));
+    describe('suspense', () => {
+      // This verifies that we don't flush before the tree has been committed.
+      it('should properly handle errors/warnings from components inside of delayed Suspense', async () => {
+        const NeverResolves = React.lazy(() => new Promise(() => {}));
 
-      withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() =>
-          ReactDOM.render(
-            <React.Suspense fallback={null}>
-              <Child logWarning={true} />
-              <NeverResolves />
-            </React.Suspense>,
-            document.createElement('div'),
+        withErrorsOrWarningsIgnored(['test-only:'], () =>
+          utils.act(() =>
+            ReactDOM.render(
+              <React.Suspense fallback={null}>
+                <Child logWarning={true} />
+                <NeverResolves />
+              </React.Suspense>,
+              document.createElement('div'),
+            ),
           ),
-        ),
-      );
-      utils.act(() => TestRenderer.create(<Contexts />));
+        );
+        utils.act(() => TestRenderer.create(<Contexts />));
 
-      expect(state).toMatchInlineSnapshot(`
-        [root] ✕ 0, ⚠ 1
+        jest.runAllTimers();
+
+        expect(state).toMatchInlineSnapshot(`
+        [root]
              <Suspense>
       `);
 
-      selectNextErrorOrWarning();
+        selectNextErrorOrWarning();
 
-      expect(state).toMatchInlineSnapshot(`
-        [root] ⚠ 1
+        expect(state).toMatchInlineSnapshot(`
+        [root]
              <Suspense>
       `);
+      });
+
+      it('should properly handle errors/warnings from components that dont mount because of Suspense', async () => {
+        async function fakeImport(result) {
+          return {default: result};
+        }
+        const LazyComponent = React.lazy(() => fakeImport(Child));
+
+        const container = document.createElement('div');
+
+        withErrorsOrWarningsIgnored(['test-only:'], () =>
+          utils.act(() =>
+            ReactDOM.render(
+              <React.Suspense fallback={null}>
+                <Child logWarning={true} />
+                <LazyComponent />
+              </React.Suspense>,
+              container,
+            ),
+          ),
+        );
+        utils.act(() => TestRenderer.create(<Contexts />));
+
+        expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Suspense>
+      `);
+
+        await Promise.resolve();
+        withErrorsOrWarningsIgnored(['test-only:'], () =>
+          utils.act(() =>
+            ReactDOM.render(
+              <React.Suspense fallback={null}>
+                <Child logWarning={true} />
+                <LazyComponent />
+              </React.Suspense>,
+              container,
+            ),
+          ),
+        );
+
+        expect(state).toMatchInlineSnapshot(`
+        [root] ✕ 0, ⚠ 2
+           ▾ <Suspense>
+               <Child> ⚠
+               <Child>
+      `);
+      });
+
+      it('should properly show errors/warnings from components in the Suspense fallback tree', async () => {
+        async function fakeImport(result) {
+          return {default: result};
+        }
+        const LazyComponent = React.lazy(() => fakeImport(Child));
+
+        const Fallback = () => <Child logError={true} />;
+
+        const container = document.createElement('div');
+
+        withErrorsOrWarningsIgnored(['test-only:'], () =>
+          utils.act(() =>
+            ReactDOM.render(
+              <React.Suspense fallback={<Fallback />}>
+                <LazyComponent />
+              </React.Suspense>,
+              container,
+            ),
+          ),
+        );
+        utils.act(() => TestRenderer.create(<Contexts />));
+
+        expect(state).toMatchInlineSnapshot(`
+        [root] ✕ 1, ⚠ 0
+           ▾ <Suspense>
+             ▾ <Fallback>
+                 <Child> ✕
+      `);
+
+        await Promise.resolve();
+        withErrorsOrWarningsIgnored(['test-only:'], () =>
+          utils.act(() =>
+            ReactDOM.render(
+              <React.Suspense fallback={<Fallback />}>
+                <LazyComponent />
+              </React.Suspense>,
+              container,
+            ),
+          ),
+        );
+
+        expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Suspense>
+               <Child>
+      `);
+      });
+    });
+
+    describe('error boundaries', () => {
+      it('should properly handle errors/warnings from components that dont mount because of an error', () => {
+        class ErrorBoundary extends React.Component {
+          state = {error: null};
+          static getDerivedStateFromError(error) {
+            return {error};
+          }
+          render() {
+            if (this.state.error) {
+              return null;
+            }
+            return this.props.children;
+          }
+        }
+
+        class BadRender extends React.Component {
+          render() {
+            console.error('test-only: I am about to throw!');
+            throw new Error('test-only: Oops!');
+          }
+        }
+
+        const container = document.createElement('div');
+        withErrorsOrWarningsIgnored(
+          ['test-only:', 'React will try to recreate this component tree'],
+          () => {
+            utils.act(() =>
+              ReactDOM.render(
+                <ErrorBoundary>
+                  <BadRender />
+                </ErrorBoundary>,
+                container,
+              ),
+            );
+          },
+        );
+
+        utils.act(() => TestRenderer.create(<Contexts />));
+
+        expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 1, ⚠ 0
+            <ErrorBoundary> ✕
+      `);
+
+        selectNextErrorOrWarning();
+        expect(state).toMatchInlineSnapshot(`
+        [root] ✕ 1, ⚠ 0
+        →    <ErrorBoundary> ✕
+      `);
+
+        utils.act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(state).toMatchInlineSnapshot(``);
+
+        // Should be a noop
+        selectNextErrorOrWarning();
+        expect(state).toMatchInlineSnapshot(``);
+      });
+
+      it('should properly handle errors/warnings from components that dont mount because of an error', () => {
+        class ErrorBoundary extends React.Component {
+          state = {error: null};
+          static getDerivedStateFromError(error) {
+            return {error};
+          }
+          render() {
+            if (this.state.error) {
+              return null;
+            }
+            return this.props.children;
+          }
+        }
+
+        class LogsWarning extends React.Component {
+          render() {
+            console.warn('test-only: I am about to throw!');
+            return <ThrowsError />;
+          }
+        }
+        class ThrowsError extends React.Component {
+          render() {
+            throw new Error('test-only: Oops!');
+          }
+        }
+
+        const container = document.createElement('div');
+        withErrorsOrWarningsIgnored(
+          ['test-only:', 'React will try to recreate this component tree'],
+          () => {
+            utils.act(() =>
+              ReactDOM.render(
+                <ErrorBoundary>
+                  <LogsWarning />
+                </ErrorBoundary>,
+                container,
+              ),
+            );
+          },
+        );
+
+        utils.act(() => TestRenderer.create(<Contexts />));
+
+        expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 1, ⚠ 0
+            <ErrorBoundary> ✕
+      `);
+
+        selectNextErrorOrWarning();
+        expect(state).toMatchInlineSnapshot(`
+        [root] ✕ 1, ⚠ 0
+        →    <ErrorBoundary> ✕
+      `);
+
+        utils.act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(state).toMatchInlineSnapshot(``);
+
+        // Should be a noop
+        selectNextErrorOrWarning();
+        expect(state).toMatchInlineSnapshot(``);
+      });
+
+      it('should properly handle errors/warnings from inside of an error boundary', () => {
+        class ErrorBoundary extends React.Component {
+          state = {error: null};
+          static getDerivedStateFromError(error) {
+            return {error};
+          }
+          render() {
+            if (this.state.error) {
+              return <Child logError={true} />;
+            }
+            return this.props.children;
+          }
+        }
+
+        class BadRender extends React.Component {
+          render() {
+            console.error('test-only: I am about to throw!');
+            throw new Error('test-only: Oops!');
+          }
+        }
+
+        const container = document.createElement('div');
+        withErrorsOrWarningsIgnored(
+          ['test-only:', 'React will try to recreate this component tree'],
+          () => {
+            utils.act(() =>
+              ReactDOM.render(
+                <ErrorBoundary>
+                  <BadRender />
+                </ErrorBoundary>,
+                container,
+              ),
+            );
+          },
+        );
+
+        utils.act(() => TestRenderer.create(<Contexts />));
+
+        expect(store).toMatchInlineSnapshot(`
+        [root] ✕ 2, ⚠ 0
+          ▾ <ErrorBoundary> ✕
+              <Child> ✕
+      `);
+
+        selectNextErrorOrWarning();
+        expect(state).toMatchInlineSnapshot(`
+        [root] ✕ 2, ⚠ 0
+        →  ▾ <ErrorBoundary> ✕
+               <Child> ✕
+      `);
+      });
     });
   });
 });

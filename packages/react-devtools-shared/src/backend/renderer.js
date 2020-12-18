@@ -120,6 +120,7 @@ type ReactTypeOfSideEffectType = {|
   NoFlags: number,
   PerformedWork: number,
   Placement: number,
+  Incomplete: number,
 |};
 
 function getFiberFlags(fiber: Fiber): number {
@@ -146,6 +147,7 @@ export function getInternalReactConstants(
     NoFlags: 0b00,
     PerformedWork: 0b01,
     Placement: 0b10,
+    Incomplete: 0b10000000000000,
   };
 
   // **********************************************************
@@ -482,7 +484,7 @@ export function attach(
     ReactTypeOfWork,
     ReactTypeOfSideEffect,
   } = getInternalReactConstants(renderer.version);
-  const {NoFlags, PerformedWork, Placement} = ReactTypeOfSideEffect;
+  const {Incomplete, NoFlags, PerformedWork, Placement} = ReactTypeOfSideEffect;
   const {
     FunctionComponent,
     ClassComponent,
@@ -1204,6 +1206,11 @@ export function attach(
     fibersWithChangedErrorOrWarningCounts.forEach(fiberID => {
       const fiber = idToFiberMap.get(fiberID);
       if (fiber != null) {
+        // Don't send updates for Fibers that didn't mount due to e.g. Suspense or an error boundary.
+        if (isFiberMountedImpl(fiber) !== MOUNTED) {
+          return;
+        }
+
         let errorCount = 0;
         let warningCount = 0;
 
@@ -2209,16 +2216,41 @@ export function attach(
   // https://github.com/facebook/react/blob/master/packages/react-reconciler/src/ReactFiberTreeReflection.js
   function isFiberMountedImpl(fiber: Fiber): number {
     let node = fiber;
+    let prevNode = null;
     if (!fiber.alternate) {
       // If there is no alternate, this might be a new tree that isn't inserted
       // yet. If it is, then it will have a pending insertion effect on it.
       if ((getFiberFlags(node) & Placement) !== NoFlags) {
         return MOUNTING;
       }
+      // This indicates an error during render.
+      if ((getFiberFlags(node) & Incomplete) !== NoFlags) {
+        return UNMOUNTED;
+      }
       while (node.return) {
+        prevNode = node;
         node = node.return;
+
         if ((getFiberFlags(node) & Placement) !== NoFlags) {
           return MOUNTING;
+        }
+        // This indicates an error during render.
+        if ((getFiberFlags(node) & Incomplete) !== NoFlags) {
+          return UNMOUNTED;
+        }
+
+        // If this node is inside of a timed out suspense subtree, we should also ignore errors/warnings.
+        const isTimedOutSuspense =
+          node.tag === SuspenseComponent && node.memoizedState !== null;
+        if (isTimedOutSuspense) {
+          // Note that this does not include errors/warnings in the Fallback tree though!
+          const primaryChildFragment = node.child;
+          const fallbackChildFragment = primaryChildFragment
+            ? primaryChildFragment.sibling
+            : null;
+          if (prevNode !== fallbackChildFragment) {
+            return UNMOUNTED;
+          }
         }
       }
     } else {
