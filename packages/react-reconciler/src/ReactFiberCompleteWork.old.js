@@ -29,8 +29,10 @@ import type {
 import type {SuspenseContext} from './ReactFiberSuspenseContext.old';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {
-  CacheInstance,
-  PooledCacheInstance,
+  SuspendedCache,
+  SuspendedCacheFresh,
+  SuspendedCachePool,
+  Cache,
 } from './ReactFiberCacheComponent.old';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';
@@ -161,6 +163,7 @@ import {resetChildFibers} from './ReactChildFiber.old';
 import {createScopeInstance} from './ReactFiberScope.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
 import {
+  SuspendedCacheFreshTag,
   popCacheProvider,
   popRootCachePool,
   popCachePool,
@@ -824,9 +827,8 @@ function completeWork(
       if (enableCache) {
         popRootCachePool(fiberRoot, renderLanes);
 
-        const cacheInstance: CacheInstance =
-          workInProgress.memoizedState.cacheInstance;
-        popCacheProvider(workInProgress, cacheInstance);
+        const cache: Cache = workInProgress.memoizedState.cache;
+        popCacheProvider(workInProgress, cache);
       }
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
@@ -1500,15 +1502,15 @@ function completeWork(
       }
 
       if (enableCache) {
-        const cacheInstance:
-          | CacheInstance
-          | PooledCacheInstance
-          | null = (workInProgress.updateQueue: any);
-        if (cacheInstance !== null) {
-          if (cacheInstance.provider !== null) {
-            popCacheProvider(workInProgress, cacheInstance);
+        const suspendedCache: SuspendedCache | null = (workInProgress.updateQueue: any);
+        if (suspendedCache !== null) {
+          if (suspendedCache.tag === SuspendedCacheFreshTag) {
+            popCacheProvider(
+              workInProgress,
+              (suspendedCache: SuspendedCacheFresh).cache,
+            );
           } else {
-            popCachePool(cacheInstance);
+            popCachePool((suspendedCache: SuspendedCachePool));
           }
         }
       }
@@ -1517,10 +1519,10 @@ function completeWork(
     }
     case CacheComponent: {
       if (enableCache) {
-        const ownCacheInstance: CacheInstance | null = workInProgress.stateNode;
-        if (ownCacheInstance !== null) {
+        const cache: Cache | null = workInProgress.stateNode;
+        if (cache !== null) {
           // This is a cache provider.
-          popCacheProvider(workInProgress, ownCacheInstance);
+          popCacheProvider(workInProgress, cache);
         }
         bubbleProperties(workInProgress);
         return null;

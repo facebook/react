@@ -109,10 +109,7 @@ export function createFiberRoot(
       // For the root cache, we won't bother to lazily initialize the map. Seed an
       // empty one. This saves use the trouble of having to initialize in an
       // updater function.
-      cacheInstance: {
-        cache: new Map(),
-        provider: uninitializedFiber,
-      },
+      cache: new Map(),
     };
     uninitializedFiber.memoizedState = initialState;
   } else {

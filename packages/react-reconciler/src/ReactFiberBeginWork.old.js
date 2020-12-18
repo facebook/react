@@ -25,8 +25,9 @@ import type {
 } from './ReactFiberOffscreenComponent';
 import type {
   Cache,
-  CacheInstance,
-  PooledCacheInstance,
+  SuspendedCache,
+  SuspendedCacheFresh,
+  SuspendedCachePool,
 } from './ReactFiberCacheComponent.old';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
 
@@ -211,6 +212,8 @@ import {
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {setWorkInProgressVersion} from './ReactMutableSource.old';
 import {
+  SuspendedCacheFreshTag,
+  SuspendedCachePoolTag,
   pushFreshCacheProvider,
   pushStaleCacheProvider,
   hasFreshCacheProvider,
@@ -599,7 +602,7 @@ function updateOffscreenComponent(
   // the previous render. We will push this to the cache context so that we can
   // resume in-flight requests. However, we don't do this if there's already a
   // fresh cache provider on the stack.
-  let cacheInstance: CacheInstance | PooledCacheInstance | null = null;
+  let suspendedCache: SuspendedCache | null = null;
 
   if (
     nextProps.mode === 'hidden' ||
@@ -627,9 +630,14 @@ function updateOffscreenComponent(
           // Keep a reference to the in-flight cache so we can resume later. If
           // there's no fresh cache on the stack, there might be one from a
           // previous render. If so, reuse it.
-          cacheInstance = hasFreshCacheProvider()
-            ? getFreshCacheProviderIfExists()
-            : prevState.cache;
+          const freshCache = getFreshCacheProviderIfExists();
+          suspendedCache =
+            freshCache !== null
+              ? ({
+                  tag: SuspendedCacheFreshTag,
+                  cache: freshCache,
+                }: SuspendedCacheFresh)
+              : prevState.cache;
           // We don't need to push to the cache context because we're about to
           // bail out. There won't be a context mismatch because we only pop
           // the cache context if `updateQueue` is non-null.
@@ -647,7 +655,7 @@ function updateOffscreenComponent(
       );
       const nextState: OffscreenState = {
         baseLanes: nextBaseLanes,
-        cache: cacheInstance,
+        cache: suspendedCache,
       };
       workInProgress.memoizedState = nextState;
       workInProgress.updateQueue = null;
@@ -662,19 +670,21 @@ function updateOffscreenComponent(
       if (enableCache && !hasFreshCacheProvider() && prevState !== null) {
         // If there was a fresh cache during the render that spawned this one,
         // resume using it.
-        const prevCacheInstance = prevState.cache;
-        if (prevCacheInstance !== null) {
-          cacheInstance = prevCacheInstance;
-          const provider = cacheInstance.provider;
+        const prevSuspendedCache = prevState.cache;
+        if (prevSuspendedCache !== null) {
+          suspendedCache = prevSuspendedCache;
           // If the resumed cache has a provider, then it's a fresh cache. We
           // should push it to the stack. Otherwise, it's from the cache pool
           // and we should override the cache pool.
-          if (provider !== null) {
-            pushFreshCacheProvider(workInProgress, prevCacheInstance);
+          if (suspendedCache.tag === SuspendedCacheFreshTag) {
+            pushFreshCacheProvider(
+              workInProgress,
+              (suspendedCache: SuspendedCacheFresh).cache,
+            );
             // This isn't a refresh, it's a continuation of a previous render.
             // So we don't need to propagate a context change.
           } else {
-            pushCachePool(prevCacheInstance);
+            pushCachePool((suspendedCache: SuspendedCachePool));
           }
         }
       }
@@ -701,18 +711,21 @@ function updateOffscreenComponent(
       if (enableCache && !hasFreshCacheProvider()) {
         // If there was a fresh cache during the render that spawned this one,
         // resume using it.
-        const prevCacheInstance = prevState.cache;
-        if (prevCacheInstance !== null) {
-          cacheInstance = prevCacheInstance;
+        const prevSuspendedCache = prevState.cache;
+        if (prevSuspendedCache !== null) {
+          suspendedCache = prevSuspendedCache;
           // If the resumed cache has a provider, then it's a fresh cache. We
           // should push it to the stack. Otherwise, it's from the cache pool
           // and we should override the cache pool.
-          if (cacheInstance.provider !== null) {
-            pushFreshCacheProvider(workInProgress, prevCacheInstance);
+          if (suspendedCache.tag === SuspendedCacheFreshTag) {
+            pushFreshCacheProvider(
+              workInProgress,
+              (suspendedCache: SuspendedCacheFresh).cache,
+            );
             // This isn't a refresh, it's a continuation of a previous render.
             // So we don't need to propagate a context change.
           } else {
-            pushCachePool(prevCacheInstance);
+            pushCachePool((suspendedCache: SuspendedCachePool));
           }
         }
       }
@@ -729,10 +742,10 @@ function updateOffscreenComponent(
   }
 
   if (enableCache) {
-    // If we have a cache instance from a previous render attempt, then this will
-    // be non-null. We can use this to infer whether to push/pop the
+    // If we have a suspended cache from a previous render attempt, then this
+    // will be non-null. We can use this to infer whether to push/pop the
     // cache context.
-    workInProgress.updateQueue = cacheInstance;
+    workInProgress.updateQueue = suspendedCache;
   }
 
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
@@ -754,16 +767,12 @@ function updateCacheComponent(
     return null;
   }
 
-  let cacheInstance: CacheInstance | null = null;
+  let cache: Cache | null = null;
   if (current === null) {
-    let initialState;
     if (hasFreshCacheProvider()) {
       // Fast path. The parent Cache is either a new mount or a refresh. We can
       // inherit its cache.
-      cacheInstance = null;
-      initialState = {
-        cache: null,
-      };
+      cache = null;
     } else {
       // This is a newly mounted component. Request a fresh cache.
       const root = getWorkInProgressRoot();
@@ -774,26 +783,19 @@ function updateCacheComponent(
       );
       // This will always be different from the parent cache; otherwise we would
       // have detected a fresh cache provider in the earlier branch.
-      const cache = requestCacheFromPool(renderLanes);
-      cacheInstance = {
-        cache,
-        provider: workInProgress,
-      };
-      initialState = {
-        cacheInstance,
-      };
-      pushFreshCacheProvider(workInProgress, cacheInstance);
+      cache = requestCacheFromPool(renderLanes);
+      pushFreshCacheProvider(workInProgress, cache);
       // No need to propagate a refresh, because this is a new tree.
     }
     // Initialize an update queue. We use this for refreshes.
-    workInProgress.memoizedState = initialState;
+    workInProgress.memoizedState = {cache};
     initializeUpdateQueue(workInProgress);
   } else {
     // This component already mounted.
     if (hasFreshCacheProvider()) {
       // Fast path. The parent Cache is either a new mount or a refresh. We can
       // inherit its cache.
-      cacheInstance = null;
+      cache = null;
     } else if (includesSomeLane(renderLanes, updateLanes)) {
       // A refresh was scheduled. If it was a refresh on this fiber, then we
       // will have an update in the queue. Otherwise, it must have been an
@@ -802,20 +804,18 @@ function updateCacheComponent(
       // First check the update queue.
       cloneUpdateQueue(current, workInProgress);
       processUpdateQueue(workInProgress, null, null, renderLanes);
-      const prevCacheInstance: CacheInstance =
-        current.memoizedState.cacheInstance;
-      const nextCacheInstance: CacheInstance =
-        workInProgress.memoizedState.cacheInstance;
-      if (nextCacheInstance !== prevCacheInstance) {
+      const prevCache: Cache = current.memoizedState.cache;
+      const nextCache: Cache = workInProgress.memoizedState.cache;
+      if (nextCache !== prevCache) {
         // Received a refresh.
-        cacheInstance = nextCacheInstance;
-        pushFreshCacheProvider(workInProgress, cacheInstance);
+        cache = nextCache;
+        pushFreshCacheProvider(workInProgress, cache);
         // Refreshes propagate through the entire subtree. The refreshed cache
         // will override nested caches.
         propagateCacheRefresh(workInProgress, renderLanes);
       } else {
         // A parent cache boundary refreshed. So we can use the cache context.
-        cacheInstance = null;
+        cache = null;
 
         // If the update queue is empty, disconnect the old cache from the tree
         // so it can be garbage collected.
@@ -826,10 +826,10 @@ function updateCacheComponent(
       }
     } else {
       // Reuse the memoized cache.
-      cacheInstance = current.stateNode;
-      if (cacheInstance !== null) {
+      cache = current.stateNode;
+      if (cache !== null) {
         // There was no refresh, so no need to propagate to nested boundaries.
-        pushStaleCacheProvider(workInProgress, cacheInstance);
+        pushStaleCacheProvider(workInProgress, cache);
       }
     }
   }
@@ -838,7 +838,7 @@ function updateCacheComponent(
   // point to a cache instance. Otherwise, a null instance indicates that this
   // CacheComponent inherits from a parent boundary. We can use this to infer
   // whether to push/pop the cache context.
-  workInProgress.stateNode = cacheInstance;
+  workInProgress.stateNode = cache;
 
   const nextChildren = workInProgress.pendingProps.children;
   reconcileChildren(current, workInProgress, nextChildren, renderLanes);
@@ -1199,16 +1199,16 @@ function updateHostRoot(current, workInProgress, renderLanes) {
   if (enableCache) {
     pushRootCachePool(root);
 
-    const nextCacheInstance: CacheInstance = nextState.cacheInstance;
-    if (nextCacheInstance !== prevState.cacheInstance) {
-      pushFreshCacheProvider(workInProgress, nextCacheInstance);
+    const nextCache: Cache = nextState.cache;
+    if (nextCache !== prevState.cache) {
+      pushFreshCacheProvider(workInProgress, nextCache);
       propagateCacheRefresh(workInProgress, renderLanes);
     } else {
       if (prevChildren === null) {
         // If there are no children, this must be the initial render.
-        pushFreshCacheProvider(workInProgress, nextCacheInstance);
+        pushFreshCacheProvider(workInProgress, nextCache);
       } else {
-        pushStaleCacheProvider(workInProgress, nextCacheInstance);
+        pushStaleCacheProvider(workInProgress, nextCache);
       }
     }
   }
@@ -1777,11 +1777,16 @@ const SUSPENDED_MARKER: SuspenseState = {
 };
 
 function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {
-  let cacheInstance: CacheInstance | PooledCacheInstance | null = null;
+  let suspendedCache: SuspendedCache | null = null;
   if (enableCache) {
     // Keep a reference to the in-flight cache so we can resume later.
-    cacheInstance = getFreshCacheProviderIfExists();
-    if (cacheInstance === null) {
+    const freshCache = getFreshCacheProviderIfExists();
+    if (freshCache !== null) {
+      suspendedCache = ({
+        tag: SuspendedCacheFreshTag,
+        cache: freshCache,
+      }: SuspendedCacheFresh);
+    } else {
       // If there's no cache on the stack, a nested Cache boundary may have
       // spawned a new one. Check the cache pool.
       const root = getWorkInProgressRoot();
@@ -1796,16 +1801,16 @@ function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {
       // cache that would have been claimed by any nested caches.
       const pooledCache = getPooledCacheIfExists();
       if (pooledCache !== null) {
-        cacheInstance = {
-          cache: (pooledCache: Cache),
-          provider: null,
-        };
+        suspendedCache = ({
+          tag: SuspendedCachePoolTag,
+          cache: pooledCache,
+        }: SuspendedCachePool);
       }
     }
   }
   return {
     baseLanes: renderLanes,
-    cache: cacheInstance,
+    cache: suspendedCache,
   };
 }
 
@@ -1813,33 +1818,38 @@ function updateSuspenseOffscreenState(
   prevOffscreenState: OffscreenState,
   renderLanes: Lanes,
 ): OffscreenState {
-  let cacheInstance = null;
+  let suspendedCache: SuspendedCache | null = null;
   if (enableCache) {
     // Keep a reference to the in-flight cache so we can resume later.
-    cacheInstance = getFreshCacheProviderIfExists();
-    if (cacheInstance === null) {
+    const freshCache = getFreshCacheProviderIfExists();
+    if (freshCache !== null) {
+      suspendedCache = ({
+        tag: SuspendedCacheFreshTag,
+        cache: freshCache,
+      }: SuspendedCacheFresh);
+    } else {
       // If there's no cache on the stack, check if there's a cache from the
       // previous render. This is what we would have used for new content
       // during the first pass when we attempted to unhide.
-      cacheInstance = prevOffscreenState.cache;
-      if (cacheInstance === null) {
+      suspendedCache = prevOffscreenState.cache;
+      if (suspendedCache === null) {
         // If a nested cache accessed the pool during this render, it will
         // returned by this function. It will also return a cache that was
         // accessed by a sibling tree, but that's also fine, since that's the
         // cache that would have been claimed by any nested caches.
         const pooledCache = getPooledCacheIfExists();
         if (pooledCache !== null) {
-          cacheInstance = {
-            cache: (pooledCache: Cache),
-            provider: null,
-          };
+          suspendedCache = ({
+            tag: SuspendedCachePoolTag,
+            cache: pooledCache,
+          }: SuspendedCachePool);
         }
       }
     }
   }
   return {
     baseLanes: mergeLanes(prevOffscreenState.baseLanes, renderLanes),
-    cache: cacheInstance,
+    cache: suspendedCache,
   };
 }
 
@@ -3341,9 +3351,8 @@ function beginWork(
             const root: FiberRoot = workInProgress.stateNode;
             pushRootCachePool(root);
 
-            const nextCacheInstance: CacheInstance =
-              current.memoizedState.cacheInstance;
-            pushStaleCacheProvider(workInProgress, nextCacheInstance);
+            const nextCache: Cache = current.memoizedState.cache;
+            pushStaleCacheProvider(workInProgress, nextCache);
           }
           resetHydrationState();
           break;
@@ -3514,11 +3523,11 @@ function beginWork(
         }
         case CacheComponent: {
           if (enableCache) {
-            const ownCacheInstance: CacheInstance | null = current.stateNode;
-            if (ownCacheInstance !== null) {
-              pushStaleCacheProvider(workInProgress, ownCacheInstance);
+            const cache: Cache | null = current.stateNode;
+            if (cache !== null) {
+              pushStaleCacheProvider(workInProgress, cache);
             }
-            workInProgress.stateNode = ownCacheInstance;
+            workInProgress.stateNode = cache;
           }
           break;
         }

@@ -19,17 +19,22 @@ import {pushProvider, popProvider} from './ReactFiberNewContext.old';
 
 export type Cache = Map<() => mixed, mixed>;
 
-export type CacheInstance = {|
+export type SuspendedCacheFresh = {|
+  tag: 0,
   cache: Cache,
-  provider: Fiber,
 |};
 
-export type PooledCacheInstance = {|
+export type SuspendedCachePool = {|
+  tag: 1,
   cache: Cache,
-  provider: null,
 |};
 
-export const CacheContext: ReactContext<CacheInstance> = enableCache
+export type SuspendedCache = SuspendedCacheFresh | SuspendedCachePool;
+
+export const SuspendedCacheFreshTag = 0;
+export const SuspendedCachePoolTag = 1;
+
+export const CacheContext: ReactContext<Cache> = enableCache
   ? {
       $$typeof: REACT_CONTEXT_TYPE,
       // We don't use Consumer/Provider for Cache components. So we'll cheat.
@@ -50,38 +55,32 @@ if (__DEV__ && enableCache) {
 
 // A parent cache refresh always overrides any nested cache. So there will only
 // ever be a single fresh cache on the context stack.
-let freshCacheInstance: CacheInstance | null = null;
+let freshCache: Cache | null = null;
 
 // The cache that we retrived from the pool during this render, if any
 let pooledCache: Cache | null = null;
 
-export function pushStaleCacheProvider(
-  workInProgress: Fiber,
-  cacheInstance: CacheInstance,
-) {
+export function pushStaleCacheProvider(workInProgress: Fiber, cache: Cache) {
   if (!enableCache) {
     return;
   }
   if (__DEV__) {
-    if (freshCacheInstance !== null) {
+    if (freshCache !== null) {
       console.error(
         'Already inside a fresh cache boundary. This is a bug in React.',
       );
     }
   }
-  pushProvider(workInProgress, CacheContext, cacheInstance);
+  pushProvider(workInProgress, CacheContext, cache);
 }
 
-export function pushFreshCacheProvider(
-  workInProgress: Fiber,
-  cacheInstance: CacheInstance,
-) {
+export function pushFreshCacheProvider(workInProgress: Fiber, cache: Cache) {
   if (!enableCache) {
     return;
   }
   if (__DEV__) {
     if (
-      freshCacheInstance !== null &&
+      freshCache !== null &&
       // TODO: Remove this exception for roots. There are a few tests that throw
       // in pushHostContainer, before the cache context is pushed. Not a huge
       // issue, but should still fix.
@@ -92,25 +91,22 @@ export function pushFreshCacheProvider(
       );
     }
   }
-  freshCacheInstance = cacheInstance;
-  pushProvider(workInProgress, CacheContext, cacheInstance);
+  freshCache = cache;
+  pushProvider(workInProgress, CacheContext, cache);
 }
 
-export function popCacheProvider(
-  workInProgress: Fiber,
-  cacheInstance: CacheInstance,
-) {
+export function popCacheProvider(workInProgress: Fiber, cache: Cache) {
   if (!enableCache) {
     return;
   }
   if (__DEV__) {
-    if (freshCacheInstance !== null && freshCacheInstance !== cacheInstance) {
+    if (freshCache !== null && freshCache !== cache) {
       console.error(
         'Unexpected cache instance on context. This is a bug in React.',
       );
     }
   }
-  freshCacheInstance = null;
+  freshCache = null;
   popProvider(CacheContext, workInProgress);
 }
 
@@ -118,14 +114,14 @@ export function hasFreshCacheProvider() {
   if (!enableCache) {
     return false;
   }
-  return freshCacheInstance !== null;
+  return freshCache !== null;
 }
 
-export function getFreshCacheProviderIfExists(): CacheInstance | null {
+export function getFreshCacheProviderIfExists(): Cache | null {
   if (!enableCache) {
     return null;
   }
-  return freshCacheInstance;
+  return freshCache;
 }
 
 export function requestCacheFromPool(renderLanes: Lanes): Cache {
@@ -168,7 +164,7 @@ export function popRootCachePool(root: FiberRoot, renderLanes: Lanes) {
   root.pooledCacheLanes |= renderLanes;
 }
 
-export function pushCachePool(cacheInstance: PooledCacheInstance) {
+export function pushCachePool(suspendedCache: SuspendedCachePool) {
   if (!enableCache) {
     return;
   }
@@ -180,13 +176,13 @@ export function pushCachePool(cacheInstance: PooledCacheInstance) {
   // The more straightforward way to do this would be to use the array-based
   // stack (push/pop). Maybe this is too clever.
   const prevPooledCacheOnStack = pooledCache;
-  pooledCache = cacheInstance.cache;
+  pooledCache = suspendedCache.cache;
   // This is never supposed to be null. I'm cheating. Sorry. It will be reset to
   // the correct type when we pop.
-  cacheInstance.cache = ((prevPooledCacheOnStack: any): Cache);
+  suspendedCache.cache = ((prevPooledCacheOnStack: any): Cache);
 }
 
-export function popCachePool(cacheInstance: PooledCacheInstance) {
+export function popCachePool(suspendedCache: SuspendedCachePool) {
   if (!enableCache) {
     return;
   }
@@ -196,6 +192,6 @@ export function popCachePool(cacheInstance: PooledCacheInstance) {
       console.error('Expected to have a pooled cache. This is a bug in React.');
     }
   }
-  pooledCache = cacheInstance.cache;
-  cacheInstance.cache = retryCache;
+  pooledCache = suspendedCache.cache;
+  suspendedCache.cache = retryCache;
 }

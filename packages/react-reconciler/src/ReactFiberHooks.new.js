@@ -19,7 +19,7 @@ import type {HookFlags} from './ReactHookEffectTags';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
-import type {CacheInstance} from './ReactFiberCacheComponent.new';
+import type {Cache} from './ReactFiberCacheComponent.new';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -47,6 +47,7 @@ import {
   DefaultLanePriority,
 } from './ReactFiberLane.new';
 import {readContext} from './ReactFiberNewContext.new';
+import {HostRoot, CacheComponent} from './ReactWorkTags';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
@@ -1711,49 +1712,53 @@ function rerenderOpaqueIdentifier(): OpaqueIDType | void {
 }
 
 function mountRefresh() {
-  const cacheInstance: CacheInstance = readContext(CacheContext);
-  return mountCallback(refreshCache.bind(null, cacheInstance), [cacheInstance]);
+  const hook = mountWorkInProgressHook();
+  const refresh = (hook.memoizedState = refreshCache.bind(
+    null,
+    currentlyRenderingFiber,
+  ));
+  return refresh;
 }
 
 function updateRefresh() {
-  const cacheInstance: CacheInstance = readContext(CacheContext);
-  return updateCallback(refreshCache.bind(null, cacheInstance), [
-    cacheInstance,
-  ]);
+  const hook = updateWorkInProgressHook();
+  return hook.memoizedState;
 }
 
-function refreshCache<T>(
-  cacheInstance: CacheInstance,
-  seedKey: ?() => T,
-  seedValue: T,
-) {
-  const provider = cacheInstance.provider;
-
+function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
   // TODO: Consider warning if the refresh is at discrete priority, or if we
   // otherwise suspect that it wasn't batched properly.
+  let provider = fiber.return;
+  while (provider !== null) {
+    switch (provider.tag) {
+      case CacheComponent:
+      case HostRoot: {
+        const eventTime = requestEventTime();
+        const lane = requestUpdateLane(provider);
+        // TODO: Does Cache work in legacy mode? Should decide and write a test.
+        const root = scheduleUpdateOnFiber(provider, lane, eventTime);
 
-  const eventTime = requestEventTime();
-  const lane = requestUpdateLane(provider);
-  // TODO: Does Cache work in legacy mode? Should decide and write a test.
-  const root = scheduleUpdateOnFiber(provider, lane, eventTime);
+        const seededCache = new Map();
+        if (seedKey !== null && seedKey !== undefined && root !== null) {
+          // Seed the cache with the value passed by the caller. This could be
+          // from a server mutation, or it could be a streaming response.
+          seededCache.set(seedKey, seedValue);
+        }
 
-  const seededCache = new Map();
-  if (seedKey !== null && seedKey !== undefined && root !== null) {
-    // Seed the cache with the value passed by the caller. This could be from
-    // a server mutation, or it could be a streaming response.
-    seededCache.set(seedKey, seedValue);
+        // Schedule an update on the cache boundary to trigger a refresh.
+        const refreshUpdate = createUpdate(eventTime, lane);
+        const payload = {
+          cache: seededCache,
+        };
+        refreshUpdate.payload = payload;
+        enqueueUpdate(provider, refreshUpdate);
+        return;
+      }
+    }
+    provider = provider.return;
   }
 
-  // Schedule an update on the cache boundary to trigger a refresh.
-  const refreshUpdate = createUpdate(eventTime, lane);
-  const payload = {
-    cacheInstance: {
-      provider: provider,
-      cache: seededCache,
-    },
-  };
-  refreshUpdate.payload = payload;
-  enqueueUpdate(provider, refreshUpdate);
+  // TODO: Warn if unmounted?
 }
 
 function dispatchAction<S, A>(
@@ -1870,24 +1875,13 @@ function getCacheForType<T>(resourceType: () => T): T {
   if (!enableCache) {
     invariant(false, 'Not implemented.');
   }
-  const cacheInstance: CacheInstance = readContext(CacheContext);
-  let cache = cacheInstance.cache;
-  if (cache === null) {
-    cache = cacheInstance.cache = new Map();
-    // TODO: Warn if constructor returns undefined? Creates ambiguity with
-    // existence check above. (I don't want to use `has`. Two map lookups
-    // instead of one? Silly.)
-    const cacheForType = resourceType();
+  const cache: Cache = readContext(CacheContext);
+  let cacheForType: T | void = (cache.get(resourceType): any);
+  if (cacheForType === undefined) {
+    cacheForType = resourceType();
     cache.set(resourceType, cacheForType);
-    return cacheForType;
-  } else {
-    let cacheForType: T | void = (cache.get(resourceType): any);
-    if (cacheForType === undefined) {
-      cacheForType = resourceType();
-      cache.set(resourceType, cacheForType);
-    }
-    return cacheForType;
   }
+  return cacheForType;
 }
 
 export const ContextOnlyDispatcher: Dispatcher = {

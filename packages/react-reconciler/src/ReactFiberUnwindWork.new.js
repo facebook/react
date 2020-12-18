@@ -12,8 +12,10 @@ import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {
-  CacheInstance,
-  PooledCacheInstance,
+  Cache,
+  SuspendedCache,
+  SuspendedCacheFresh,
+  SuspendedCachePool,
 } from './ReactFiberCacheComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
@@ -48,6 +50,7 @@ import {
 import {popProvider} from './ReactFiberNewContext.new';
 import {popRenderLanes} from './ReactFiberWorkLoop.new';
 import {
+  SuspendedCacheFreshTag,
   popCacheProvider,
   popRootCachePool,
   popCachePool,
@@ -81,9 +84,8 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
         const root: FiberRoot = workInProgress.stateNode;
         popRootCachePool(root, renderLanes);
 
-        const cacheInstance: CacheInstance =
-          workInProgress.memoizedState.cacheInstance;
-        popCacheProvider(workInProgress, cacheInstance);
+        const cache: Cache = workInProgress.memoizedState.cache;
+        popCacheProvider(workInProgress, cache);
       }
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
@@ -147,24 +149,24 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
     case LegacyHiddenComponent:
       popRenderLanes(workInProgress);
       if (enableCache) {
-        const cacheInstance:
-          | CacheInstance
-          | PooledCacheInstance
-          | null = (workInProgress.updateQueue: any);
-        if (cacheInstance !== null) {
-          if (cacheInstance.provider !== null) {
-            popCacheProvider(workInProgress, cacheInstance);
+        const suspendedCache: SuspendedCache | null = (workInProgress.updateQueue: any);
+        if (suspendedCache !== null) {
+          if (suspendedCache.tag === SuspendedCacheFreshTag) {
+            popCacheProvider(
+              workInProgress,
+              (suspendedCache: SuspendedCacheFresh).cache,
+            );
           } else {
-            popCachePool(cacheInstance);
+            popCachePool((suspendedCache: SuspendedCachePool));
           }
         }
       }
       return null;
     case CacheComponent:
       if (enableCache) {
-        const ownCacheInstance: CacheInstance | null = workInProgress.stateNode;
-        if (ownCacheInstance !== null) {
-          popCacheProvider(workInProgress, ownCacheInstance);
+        const cache: Cache | null = workInProgress.stateNode;
+        if (cache !== null) {
+          popCacheProvider(workInProgress, cache);
         }
       }
       return null;
@@ -187,9 +189,8 @@ function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
         const root: FiberRoot = interruptedWork.stateNode;
         popRootCachePool(root, renderLanes);
 
-        const cacheInstance: CacheInstance =
-          interruptedWork.memoizedState.cacheInstance;
-        popCacheProvider(interruptedWork, cacheInstance);
+        const cache: Cache = interruptedWork.memoizedState.cache;
+        popCacheProvider(interruptedWork, cache);
       }
       popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
@@ -217,25 +218,24 @@ function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
     case LegacyHiddenComponent:
       popRenderLanes(interruptedWork);
       if (enableCache) {
-        const cacheInstance:
-          | CacheInstance
-          | PooledCacheInstance
-          | null = (interruptedWork.updateQueue: any);
-        if (cacheInstance !== null) {
-          if (cacheInstance.provider !== null) {
-            popCacheProvider(interruptedWork, cacheInstance);
+        const suspendedCache: SuspendedCache | null = (interruptedWork.updateQueue: any);
+        if (suspendedCache !== null) {
+          if (suspendedCache.tag === SuspendedCacheFreshTag) {
+            popCacheProvider(
+              interruptedWork,
+              (suspendedCache: SuspendedCacheFresh).cache,
+            );
           } else {
-            popCachePool(cacheInstance);
+            popCachePool((suspendedCache: SuspendedCachePool));
           }
         }
       }
       break;
     case CacheComponent:
       if (enableCache) {
-        const ownCacheInstance: CacheInstance | null =
-          interruptedWork.stateNode;
-        if (ownCacheInstance !== null) {
-          popCacheProvider(interruptedWork, ownCacheInstance);
+        const cache: Cache | null = interruptedWork.stateNode;
+        if (cache !== null) {
+          popCacheProvider(interruptedWork, cache);
         }
       }
       break;
