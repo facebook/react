@@ -57,10 +57,10 @@ module.exports = Object.assign({}, baseConfig, {
       '../../packages/react-devtools-shared/src/__tests__/inspectedElementSerializer.js'
     ),
     require.resolve(
-      '../../packages/react-devtools-shared/src/__tests__/statefulStoreSerializer.js'
+      '../../packages/react-devtools-shared/src/__tests__/storeSerializer.js'
     ),
     require.resolve(
-      '../../packages/react-devtools-shared/src/__tests__/storeSerializer.js'
+      '../../packages/react-devtools-shared/src/__tests__/treeContextStateSerializer.js'
     ),
   ],
   setupFiles: [

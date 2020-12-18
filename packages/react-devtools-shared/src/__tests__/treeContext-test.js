@@ -91,43 +91,111 @@ describe('TreeListContext', () => {
         ReactDOM.render(<Grandparent />, document.createElement('div')),
       );
 
-      expect(store).toMatchSnapshot('0: mount');
-
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
-      expect(state).toMatchSnapshot('1: initial state');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
+
+      // Test stepping through to the end
 
       utils.act(() => dispatch({type: 'SELECT_NEXT_ELEMENT_IN_TREE'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('2: select first element');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+        →  ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
 
-      while (
-        state.selectedElementIndex !== null &&
-        state.selectedElementIndex < store.numElements - 1
-      ) {
-        const index = ((state.selectedElementIndex: any): number);
-        utils.act(() => dispatch({type: 'SELECT_NEXT_ELEMENT_IN_TREE'}));
-        utils.act(() => renderer.update(<Contexts />));
-        expect(state).toMatchSnapshot(`3: select element after (${index})`);
-      }
+      utils.act(() => dispatch({type: 'SELECT_NEXT_ELEMENT_IN_TREE'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+        →    ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
 
-      while (
-        state.selectedElementIndex !== null &&
-        state.selectedElementIndex > 0
-      ) {
-        const index = ((state.selectedElementIndex: any): number);
-        utils.act(() => dispatch({type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE'}));
-        utils.act(() => renderer.update(<Contexts />));
-        expect(state).toMatchSnapshot(`4: select element before (${index})`);
-      }
+      utils.act(() => dispatch({type: 'SELECT_NEXT_ELEMENT_IN_TREE'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+        →        <Child>
+                 <Child>
+      `);
+
+      utils.act(() => dispatch({type: 'SELECT_NEXT_ELEMENT_IN_TREE'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child>
+        →        <Child>
+      `);
+
+      // Test stepping back to the beginning
 
       utils.act(() => dispatch({type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('5: select previous wraps around to last');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+        →        <Child>
+                 <Child>
+      `);
+
+      utils.act(() => dispatch({type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+        →    ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
+
+      utils.act(() => dispatch({type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+        →  ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
+
+      // Test wrap around behavior
+
+      utils.act(() => dispatch({type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child>
+        →        <Child>
+      `);
 
       utils.act(() => dispatch({type: 'SELECT_NEXT_ELEMENT_IN_TREE'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('6: select next wraps around to first');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+        →  ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
     });
 
     it('should select child elements', () => {
@@ -149,30 +217,71 @@ describe('TreeListContext', () => {
         ReactDOM.render(<Grandparent />, document.createElement('div')),
       );
 
-      expect(store).toMatchSnapshot('0: mount');
-
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
-      expect(state).toMatchSnapshot('1: initial state');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
 
       utils.act(() => dispatch({type: 'SELECT_ELEMENT_AT_INDEX', payload: 0}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('2: select first element');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+        →  ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
 
       utils.act(() => dispatch({type: 'SELECT_CHILD_ELEMENT_IN_TREE'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('3: select Parent');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+        →    ▾ <Parent>
+                 <Child>
+                 <Child>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
 
       utils.act(() => dispatch({type: 'SELECT_CHILD_ELEMENT_IN_TREE'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('4: select Child');
-
-      const previousState = state;
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+        →        <Child>
+                 <Child>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
 
       // There are no more children to select, so this should be a no-op
       utils.act(() => dispatch({type: 'SELECT_CHILD_ELEMENT_IN_TREE'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toEqual(previousState);
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+        →        <Child>
+                 <Child>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
     });
 
     it('should select parent elements and then collapse', () => {
@@ -194,27 +303,78 @@ describe('TreeListContext', () => {
         ReactDOM.render(<Grandparent />, document.createElement('div')),
       );
 
-      expect(store).toMatchSnapshot('0: mount');
-
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
-      expect(state).toMatchSnapshot('1: initial state');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
 
       const lastChildID = store.getElementIDAtIndex(store.numElements - 1);
 
+      // Select the last child
       utils.act(() =>
         dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: lastChildID}),
       );
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('2: select last child');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+             ▾ <Parent>
+                 <Child>
+        →        <Child>
+      `);
 
+      // Select its parent
       utils.act(() => dispatch({type: 'SELECT_PARENT_ELEMENT_IN_TREE'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('3: select Parent');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+        →    ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
 
+      // Select grandparent
       utils.act(() => dispatch({type: 'SELECT_PARENT_ELEMENT_IN_TREE'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('4: select Grandparent');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+        →  ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
+
+      // No-op
+      utils.act(() => dispatch({type: 'SELECT_PARENT_ELEMENT_IN_TREE'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+        →  ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
 
       const previousState = state;
 
@@ -224,7 +384,7 @@ describe('TreeListContext', () => {
       expect(state).toEqual(previousState);
     });
 
-    it('should clear selection if the selected element is unmounted', async done => {
+    it('should clear selection if the selected element is unmounted', async () => {
       const Grandparent = props => props.children || null;
       const Parent = props => props.children || null;
       const Child = () => null;
@@ -242,16 +402,28 @@ describe('TreeListContext', () => {
         ),
       );
 
-      expect(store).toMatchSnapshot('0: mount');
-
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
-      expect(state).toMatchSnapshot('1: initial state');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
 
+      // Select the second child
       utils.act(() => dispatch({type: 'SELECT_ELEMENT_AT_INDEX', payload: 3}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('2: select second child');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child>
+        →        <Child>
+      `);
 
+      // Remove the child (which should auto-select the parent)
       await utils.actAsync(() =>
         ReactDOM.render(
           <Grandparent>
@@ -260,16 +432,15 @@ describe('TreeListContext', () => {
           container,
         ),
       );
-      expect(state).toMatchSnapshot(
-        '3: remove children (parent should now be selected)',
-      );
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+        →      <Parent>
+      `);
 
+      // Unmount the root (so that nothing is selected)
       await utils.actAsync(() => ReactDOM.unmountComponentAtNode(container));
-      expect(state).toMatchSnapshot(
-        '4: unmount root (nothing should be selected)',
-      );
-
-      done();
+      expect(state).toMatchInlineSnapshot(``);
     });
 
     it('should navigate next/previous sibling and skip over children in between', () => {
@@ -290,21 +461,6 @@ describe('TreeListContext', () => {
         ReactDOM.render(<Grandparent />, document.createElement('div')),
       );
 
-      /*
-       * 0  ▾ <Grandparent>
-       * 1    ▾ <Parent>
-       * 2        <Child key="0">
-       * 3    ▾ <Parent>
-       * 4        <Child key="0">
-       * 5        <Child key="1">
-       * 6        <Child key="2">
-       * 7    ▾ <Parent>
-       * 8        <Child key="0">
-       * 9        <Child key="1">
-       */
-
-      expect(store).toMatchSnapshot('0: mount');
-
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
 
@@ -314,31 +470,131 @@ describe('TreeListContext', () => {
         dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: firstParentID}),
       );
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.selectedElementIndex).toBe(1);
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+        →    ▾ <Parent>
+                 <Child key="0">
+             ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+                 <Child key="2">
+             ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+      `);
 
       utils.act(() => dispatch({type: 'SELECT_NEXT_SIBLING_IN_TREE'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.selectedElementIndex).toBe(3);
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child key="0">
+        →    ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+                 <Child key="2">
+             ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+      `);
 
       utils.act(() => dispatch({type: 'SELECT_NEXT_SIBLING_IN_TREE'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.selectedElementIndex).toBe(7);
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child key="0">
+             ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+                 <Child key="2">
+        →    ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+      `);
 
       utils.act(() => dispatch({type: 'SELECT_NEXT_SIBLING_IN_TREE'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.selectedElementIndex).toBe(1);
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+        →    ▾ <Parent>
+                 <Child key="0">
+             ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+                 <Child key="2">
+             ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+      `);
 
       utils.act(() => dispatch({type: 'SELECT_PREVIOUS_SIBLING_IN_TREE'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.selectedElementIndex).toBe(7);
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child key="0">
+             ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+                 <Child key="2">
+        →    ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+      `);
 
       utils.act(() => dispatch({type: 'SELECT_PREVIOUS_SIBLING_IN_TREE'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.selectedElementIndex).toBe(3);
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child key="0">
+        →    ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+                 <Child key="2">
+             ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+      `);
 
       utils.act(() => dispatch({type: 'SELECT_PREVIOUS_SIBLING_IN_TREE'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.selectedElementIndex).toBe(1);
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+        →    ▾ <Parent>
+                 <Child key="0">
+             ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+                 <Child key="2">
+             ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+      `);
+
+      utils.act(() => dispatch({type: 'SELECT_PREVIOUS_SIBLING_IN_TREE'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child key="0">
+             ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+                 <Child key="2">
+        →    ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+      `);
     });
 
     it('should navigate the owner hierarchy', () => {
@@ -366,24 +622,6 @@ describe('TreeListContext', () => {
         ReactDOM.render(<Grandparent />, document.createElement('div')),
       );
 
-      /*
-       *  0  ▾ <Grandparent>
-       *  1    ▾ <Wrapper>
-       *  2      ▾ <Parent>
-       *  3          <Child key="0">
-       *  4    ▾ <Wrapper>
-       *  5      ▾ <Parent>
-       *  6          <Child key="0">
-       *  7          <Child key="1">
-       *  8          <Child key="2">
-       *  9    ▾ <Wrapper>
-       * 10      ▾ <Parent>
-       * 11          <Child key="0">
-       * 12          <Child key="1">
-       */
-
-      expect(store).toMatchSnapshot('0: mount');
-
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
 
@@ -392,86 +630,281 @@ describe('TreeListContext', () => {
         dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: childID}),
       );
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.ownerSubtreeLeafElementID).toBeNull();
-      expect(state.selectedElementIndex).toBe(7);
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+        →          <Child key="1">
+                   <Child key="2">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+      `);
 
       // Basic navigation test
       utils.act(() =>
         dispatch({type: 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE'}),
       );
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.ownerSubtreeLeafElementID).toBe(childID);
-      expect(state.selectedElementIndex).toBe(5);
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+             ▾ <Wrapper>
+        →      ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+                   <Child key="2">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+      `);
 
       utils.act(() =>
         dispatch({type: 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE'}),
       );
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.selectedElementIndex).toBe(0);
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+        →  ▾ <Grandparent>
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+                   <Child key="2">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+      `);
 
+      // Noop (since we're at the root already)
       utils.act(() =>
         dispatch({type: 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE'}),
       );
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.selectedElementIndex).toBe(0); // noop since we're at the top
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+        →  ▾ <Grandparent>
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+                   <Child key="2">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+      `);
 
       utils.act(() =>
         dispatch({type: 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE'}),
       );
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.selectedElementIndex).toBe(5);
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+             ▾ <Wrapper>
+        →      ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+                   <Child key="2">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+      `);
 
       utils.act(() =>
         dispatch({type: 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE'}),
       );
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.selectedElementIndex).toBe(7);
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+        →          <Child key="1">
+                   <Child key="2">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+      `);
 
+      // Noop (since we're at the leaf node)
       utils.act(() =>
         dispatch({type: 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE'}),
       );
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.selectedElementIndex).toBe(7); // noop since we're at the leaf node
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+        →          <Child key="1">
+                   <Child key="2">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+      `);
 
       // Other navigational actions should clear out the temporary owner chain.
       utils.act(() => dispatch({type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.selectedElementIndex).toBe(6);
-      expect(state.ownerSubtreeLeafElementID).toBeNull();
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+             ▾ <Wrapper>
+               ▾ <Parent>
+        →          <Child key="0">
+                   <Child key="1">
+                   <Child key="2">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+      `);
 
+      // Start a new tree on parent
       const parentID = ((store.getElementIDAtIndex(5): any): number);
       utils.act(() =>
         dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: parentID}),
       );
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.ownerSubtreeLeafElementID).toBeNull();
-      expect(state.selectedElementIndex).toBe(5);
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+             ▾ <Wrapper>
+        →      ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+                   <Child key="2">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+      `);
 
+      utils.act(() =>
+        dispatch({type: 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE'}),
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+        →  ▾ <Grandparent>
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+                   <Child key="2">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+      `);
+
+      // Noop (since we're at the top)
+      utils.act(() =>
+        dispatch({type: 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE'}),
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+        →  ▾ <Grandparent>
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+                   <Child key="2">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+      `);
+
+      utils.act(() =>
+        dispatch({type: 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE'}),
+      );
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+             ▾ <Wrapper>
+        →      ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+                   <Child key="2">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+      `);
+
+      // Noop (since we're at the leaf of this owner tree)
       // It should not be possible to navigate beyond the owner chain leaf.
       utils.act(() =>
-        dispatch({type: 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE'}),
-      );
-      utils.act(() => renderer.update(<Contexts />));
-      expect(state.ownerSubtreeLeafElementID).toBe(parentID);
-      expect(state.selectedElementIndex).toBe(0);
-
-      utils.act(() =>
-        dispatch({type: 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE'}),
-      );
-      utils.act(() => renderer.update(<Contexts />));
-      expect(state.selectedElementIndex).toBe(0); // noop since we're at the top
-
-      utils.act(() =>
         dispatch({type: 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE'}),
       );
       utils.act(() => renderer.update(<Contexts />));
-      expect(state.selectedElementIndex).toBe(5);
-
-      utils.act(() =>
-        dispatch({type: 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE'}),
-      );
-      utils.act(() => renderer.update(<Contexts />));
-      expect(state.selectedElementIndex).toBe(5); // noop since we're at the leaf node
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+             ▾ <Wrapper>
+        →      ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+                   <Child key="2">
+             ▾ <Wrapper>
+               ▾ <Parent>
+                   <Child key="0">
+                   <Child key="1">
+      `);
     });
   });
 
@@ -496,31 +929,59 @@ describe('TreeListContext', () => {
         ),
       );
 
-      expect(store).toMatchSnapshot('0: mount');
-
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
-      expect(state).toMatchSnapshot('1: initial state');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+             <Bar>
+             <Baz>
+             <Qux> [withHOC]
+      `);
 
       // NOTE: multi-match
       utils.act(() => dispatch({type: 'SET_SEARCH_TEXT', payload: 'ba'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('2: search for "ba"');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+        →    <Bar>
+             <Baz>
+             <Qux> [withHOC]
+      `);
 
       // NOTE: single match
       utils.act(() => dispatch({type: 'SET_SEARCH_TEXT', payload: 'f'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('3: search for "f"');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+        →    <Foo>
+             <Bar>
+             <Baz>
+             <Qux> [withHOC]
+      `);
 
       // NOTE: no match
       utils.act(() => dispatch({type: 'SET_SEARCH_TEXT', payload: 'y'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('4: search for "y"');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+        →    <Foo>
+             <Bar>
+             <Baz>
+             <Qux> [withHOC]
+      `);
 
       // NOTE: HOC match
       utils.act(() => dispatch({type: 'SET_SEARCH_TEXT', payload: 'w'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('5: search for "w"');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+             <Bar>
+             <Baz>
+        →    <Qux> [withHOC]
+      `);
     });
 
     it('should select the next and previous items within the search results', () => {
@@ -540,42 +1001,95 @@ describe('TreeListContext', () => {
         ),
       );
 
-      expect(store).toMatchSnapshot('0: mount');
-
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
-      expect(state).toMatchSnapshot('1: initial state');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+             <Baz>
+             <Bar>
+             <Baz>
+      `);
 
+      // search for "ba"
       utils.act(() => dispatch({type: 'SET_SEARCH_TEXT', payload: 'ba'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('2: search for "ba"');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+        →    <Baz>
+             <Bar>
+             <Baz>
+      `);
 
+      // go to second result
       utils.act(() => dispatch({type: 'GO_TO_NEXT_SEARCH_RESULT'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('3: go to second result');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+             <Baz>
+        →    <Bar>
+             <Baz>
+      `);
 
+      // go to third result
       utils.act(() => dispatch({type: 'GO_TO_NEXT_SEARCH_RESULT'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('4: go to third result');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+             <Baz>
+             <Bar>
+        →    <Baz>
+      `);
 
+      // go to second result
       utils.act(() => dispatch({type: 'GO_TO_PREVIOUS_SEARCH_RESULT'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('5: go to second result');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+             <Baz>
+        →    <Bar>
+             <Baz>
+      `);
 
+      // go to first result
       utils.act(() => dispatch({type: 'GO_TO_PREVIOUS_SEARCH_RESULT'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('6: go to first result');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+        →    <Baz>
+             <Bar>
+             <Baz>
+      `);
 
+      // wrap to last result
       utils.act(() => dispatch({type: 'GO_TO_PREVIOUS_SEARCH_RESULT'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('7: wrap to last result');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+             <Baz>
+             <Bar>
+        →    <Baz>
+      `);
 
+      // wrap to first result
       utils.act(() => dispatch({type: 'GO_TO_NEXT_SEARCH_RESULT'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('8: wrap to first result');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+        →    <Baz>
+             <Bar>
+             <Baz>
+      `);
     });
 
-    it('should add newly mounted elements to the search results set if they match the current text', async done => {
+    it('should add newly mounted elements to the search results set if they match the current text', async () => {
       const Foo = () => null;
       const Bar = () => null;
       const Baz = () => null;
@@ -592,15 +1106,21 @@ describe('TreeListContext', () => {
         ),
       );
 
-      expect(store).toMatchSnapshot('0: mount');
-
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
-      expect(state).toMatchSnapshot('1: initial state');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+             <Bar>
+      `);
 
       utils.act(() => dispatch({type: 'SET_SEARCH_TEXT', payload: 'ba'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('2: search for "ba"');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+        →    <Bar>
+      `);
 
       await utils.actAsync(() =>
         ReactDOM.render(
@@ -613,12 +1133,24 @@ describe('TreeListContext', () => {
         ),
       );
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('3: mount Baz');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+        →    <Bar>
+             <Baz>
+      `);
 
-      done();
+      utils.act(() => dispatch({type: 'GO_TO_NEXT_SEARCH_RESULT'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+             <Bar>
+        →    <Baz>
+      `);
     });
 
-    it('should remove unmounted elements from the search results set', async done => {
+    it('should remove unmounted elements from the search results set', async () => {
       const Foo = () => null;
       const Bar = () => null;
       const Baz = () => null;
@@ -636,19 +1168,32 @@ describe('TreeListContext', () => {
         ),
       );
 
-      expect(store).toMatchSnapshot('0: mount');
-
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
-      expect(state).toMatchSnapshot('1: initial state');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+             <Bar>
+             <Baz>
+      `);
 
       utils.act(() => dispatch({type: 'SET_SEARCH_TEXT', payload: 'ba'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('2: search for "ba"');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+        →    <Bar>
+             <Baz>
+      `);
 
       utils.act(() => dispatch({type: 'GO_TO_NEXT_SEARCH_RESULT'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('3: go to second result');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+             <Bar>
+        →    <Baz>
+      `);
 
       await utils.actAsync(() =>
         ReactDOM.render(
@@ -660,9 +1205,28 @@ describe('TreeListContext', () => {
         ),
       );
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('4: unmount Baz');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+             <Bar>
+      `);
 
-      done();
+      utils.act(() => dispatch({type: 'GO_TO_NEXT_SEARCH_RESULT'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+        →    <Bar>
+      `);
+
+      // Noop since the list is now one item long
+      utils.act(() => dispatch({type: 'GO_TO_NEXT_SEARCH_RESULT'}));
+      utils.act(() => renderer.update(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+             <Foo>
+        →    <Bar>
+      `);
     });
   });
 
@@ -681,23 +1245,38 @@ describe('TreeListContext', () => {
         ReactDOM.render(<Grandparent />, document.createElement('div')),
       );
 
-      expect(store).toMatchSnapshot('0: mount');
-
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
-      expect(state).toMatchSnapshot('1: initial state');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
 
       const parentID = ((store.getElementIDAtIndex(1): any): number);
       utils.act(() => dispatch({type: 'SELECT_OWNER', payload: parentID}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('2: parent owners tree');
+      expect(state).toMatchInlineSnapshot(`
+        [owners]
+        →  ▾ <Parent>
+               <Child>
+               <Child>
+      `);
 
       utils.act(() => dispatch({type: 'RESET_OWNER_STACK'}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('3: final state');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+        →    ▾ <Parent>
+                 <Child>
+                 <Child>
+      `);
     });
 
-    it('should remove an element from the owners list if it is unmounted', async done => {
+    it('should remove an element from the owners list if it is unmounted', async () => {
       const Grandparent = ({count}) => <Parent count={count} />;
       const Parent = ({count}) =>
         new Array(count).fill(true).map((_, index) => <Child key={index} />);
@@ -706,31 +1285,45 @@ describe('TreeListContext', () => {
       const container = document.createElement('div');
       utils.act(() => ReactDOM.render(<Grandparent count={2} />, container));
 
-      expect(store).toMatchSnapshot('0: mount');
-
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
-      expect(state).toMatchSnapshot('1: initial state');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Grandparent>
+             ▾ <Parent>
+                 <Child key="0">
+                 <Child key="1">
+      `);
 
       const parentID = ((store.getElementIDAtIndex(1): any): number);
       utils.act(() => dispatch({type: 'SELECT_OWNER', payload: parentID}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('2: parent owners tree');
+      expect(state).toMatchInlineSnapshot(`
+        [owners]
+        →  ▾ <Parent>
+               <Child key="0">
+               <Child key="1">
+      `);
 
       await utils.actAsync(() =>
         ReactDOM.render(<Grandparent count={1} />, container),
       );
-      expect(state).toMatchSnapshot('3: remove second child');
+      expect(state).toMatchInlineSnapshot(`
+        [owners]
+        →  ▾ <Parent>
+               <Child key="0">
+      `);
 
       await utils.actAsync(() =>
         ReactDOM.render(<Grandparent count={0} />, container),
       );
-      expect(state).toMatchSnapshot('4: remove first child');
-
-      done();
+      expect(state).toMatchInlineSnapshot(`
+        [owners]
+        →    <Parent>
+      `);
     });
 
-    it('should exit the owners list if the current owner is unmounted', async done => {
+    it('should exit the owners list if the current owner is unmounted', async () => {
       const Parent = props => props.children || null;
       const Child = () => null;
 
@@ -744,29 +1337,38 @@ describe('TreeListContext', () => {
         ),
       );
 
-      expect(store).toMatchSnapshot('0: mount');
-
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
-      expect(state).toMatchSnapshot('1: initial state');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Parent>
+               <Child>
+      `);
 
       const childID = ((store.getElementIDAtIndex(1): any): number);
       utils.act(() => dispatch({type: 'SELECT_OWNER', payload: childID}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('2: child owners tree');
+      expect(state).toMatchInlineSnapshot(`
+        [owners]
+        →    <Child>
+      `);
 
       await utils.actAsync(() => ReactDOM.render(<Parent />, container));
-      expect(state).toMatchSnapshot('3: remove child');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+        →    <Parent>
+      `);
 
       const parentID = ((store.getElementIDAtIndex(0): any): number);
       utils.act(() => dispatch({type: 'SELECT_OWNER', payload: parentID}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('4: parent owners tree');
+      expect(state).toMatchInlineSnapshot(`
+        [owners]
+        →    <Parent>
+      `);
 
       await utils.actAsync(() => ReactDOM.unmountComponentAtNode(container));
-      expect(state).toMatchSnapshot('5: unmount root');
-
-      done();
+      expect(state).toMatchInlineSnapshot(``);
     });
 
     // This tests ensures support for toggling Suspense boundaries outside of the active owners list.
@@ -786,11 +1388,16 @@ describe('TreeListContext', () => {
       const container = document.createElement('div');
       utils.act(() => ReactDOM.render(<Parent />, container));
 
-      expect(store).toMatchSnapshot('0: mount');
-
       let renderer;
       utils.act(() => (renderer = TestRenderer.create(<Contexts />)));
-      expect(state).toMatchSnapshot('1: initial state');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Parent>
+             ▾ <Suspense>
+               ▾ <Child>
+                 ▾ <Suspense>
+                     <Grandchild>
+      `);
 
       const outerSuspenseID = ((store.getElementIDAtIndex(1): any): number);
       const childID = ((store.getElementIDAtIndex(2): any): number);
@@ -798,21 +1405,38 @@ describe('TreeListContext', () => {
 
       utils.act(() => dispatch({type: 'SELECT_OWNER', payload: childID}));
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('2: child owners tree');
+      expect(state).toMatchInlineSnapshot(`
+        [owners]
+        →  ▾ <Child>
+             ▾ <Suspense>
+                 <Grandchild>
+      `);
 
       // Toggling a Suspense boundary inside of the flat list should update selected index
       utils.act(() =>
         dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: innerSuspenseID}),
       );
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('3: child owners tree');
+      expect(state).toMatchInlineSnapshot(`
+        [owners]
+           ▾ <Child>
+        →    ▾ <Suspense>
+                 <Grandchild>
+      `);
 
       // Toggling a Suspense boundary outside of the flat list should exit owners list and update index
       utils.act(() =>
         dispatch({type: 'SELECT_ELEMENT_BY_ID', payload: outerSuspenseID}),
       );
       utils.act(() => renderer.update(<Contexts />));
-      expect(state).toMatchSnapshot('4: main tree');
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Parent>
+        →    ▾ <Suspense>
+               ▾ <Child>
+                 ▾ <Suspense>
+                     <Grandchild>
+      `);
     });
   });
 
@@ -872,8 +1496,8 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      let statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child>
              <Child>
@@ -882,16 +1506,14 @@ describe('TreeListContext', () => {
 
       // Next/previous errors should be a no-op
       selectPreviousErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child>
              <Child>
              <Child>
       `);
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child>
              <Child>
@@ -899,8 +1521,7 @@ describe('TreeListContext', () => {
       `);
 
       utils.act(() => dispatch({type: 'SELECT_ELEMENT_AT_INDEX', payload: 0}));
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
         →    <Child>
              <Child>
@@ -909,16 +1530,14 @@ describe('TreeListContext', () => {
 
       // Next/previous errors should still be a no-op
       selectPreviousErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
         →    <Child>
              <Child>
              <Child>
       `);
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
         →    <Child>
              <Child>
@@ -943,8 +1562,7 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      let statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child>
              <Child> ⚠
@@ -954,8 +1572,7 @@ describe('TreeListContext', () => {
       `);
 
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child>
         →    <Child> ⚠
@@ -965,8 +1582,7 @@ describe('TreeListContext', () => {
       `);
 
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child>
              <Child> ⚠
@@ -976,8 +1592,7 @@ describe('TreeListContext', () => {
       `);
 
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child>
         →    <Child> ⚠
@@ -1004,8 +1619,7 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      let statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child>
              <Child> ⚠
@@ -1015,8 +1629,7 @@ describe('TreeListContext', () => {
       `);
 
       selectPreviousErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child>
              <Child> ⚠
@@ -1026,8 +1639,7 @@ describe('TreeListContext', () => {
       `);
 
       selectPreviousErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child>
         →    <Child> ⚠
@@ -1037,8 +1649,7 @@ describe('TreeListContext', () => {
       `);
 
       selectPreviousErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child>
              <Child> ⚠
@@ -1064,8 +1675,7 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      let statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child> ⚠
              <Child> ✕
@@ -1075,8 +1685,7 @@ describe('TreeListContext', () => {
 
       // Select the first item in the list
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
         →    <Child> ⚠
              <Child> ✕
@@ -1087,8 +1696,7 @@ describe('TreeListContext', () => {
       // Clear warnings (but the next Fiber has only errors)
       clearWarningsForElement(store.getElementIDAtIndex(1));
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child> ⚠
         →    <Child> ✕
@@ -1100,8 +1708,7 @@ describe('TreeListContext', () => {
 
       // Should step to the (now) next one in the list.
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child> ⚠
              <Child> ✕
@@ -1111,8 +1718,7 @@ describe('TreeListContext', () => {
 
       // Should skip over the (now) cleared Fiber
       selectPreviousErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child> ⚠
         →    <Child> ✕
@@ -1135,16 +1741,14 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      let statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child> ⚠
              <Child> ✕
       `);
 
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
         →    <Child> ⚠
              <Child> ✕
@@ -1152,8 +1756,7 @@ describe('TreeListContext', () => {
 
       clearWarningsForElement(store.getElementIDAtIndex(0));
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child>
         →    <Child> ✕
@@ -1178,8 +1781,7 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child> ⚠
              <Child>
@@ -1188,8 +1790,7 @@ describe('TreeListContext', () => {
       `);
 
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
         →    <Child> ⚠
              <Child>
@@ -1212,8 +1813,7 @@ describe('TreeListContext', () => {
       );
 
       selectNextErrorOrWarning();
-      let statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child> ⚠
         →    <Child> ⚠
@@ -1222,8 +1822,7 @@ describe('TreeListContext', () => {
       `);
 
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child> ⚠
              <Child> ⚠
@@ -1232,8 +1831,7 @@ describe('TreeListContext', () => {
       `);
 
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
         →    <Child> ⚠
              <Child> ⚠
@@ -1256,16 +1854,14 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      let statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
              <Child> ⚠
              <Child> ✕
       `);
 
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
         →    <Child> ⚠
              <Child> ✕
@@ -1274,16 +1870,14 @@ describe('TreeListContext', () => {
       clearAllErrors();
 
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
         →    <Child>
              <Child>
       `);
 
       selectPreviousErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
         →    <Child>
              <Child>
@@ -1314,16 +1908,14 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      let statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
            ▸ <Wrapper>
            ▸ <Wrapper>
       `);
 
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
            ▾ <Wrapper>
         →      <Child> ⚠
@@ -1331,8 +1923,7 @@ describe('TreeListContext', () => {
       `);
 
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
            ▾ <Wrapper>
                <Child> ⚠
@@ -1364,8 +1955,17 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      let statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
+        [root]
+           ▾ <Wrapper>
+               <Child> ⚠
+           ▾ <Wrapper>
+             ▾ <Wrapper>
+                 <Child> ⚠
+      `);
+
+      selectNextErrorOrWarning();
+      expect(state).toMatchInlineSnapshot(`
         [root]
            ▾ <Wrapper>
         →      <Child> ⚠
@@ -1374,23 +1974,17 @@ describe('TreeListContext', () => {
                  <Child> ⚠
       `);
 
-      selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot();
-
       utils.act(() => {
         store.componentFilters = [utils.createDisplayNameFilter('Wrapper')];
       });
-      statefulStore = {state, store};
       expect(store).toMatchInlineSnapshot(`
-          [root]
-               <Child> ⚠
-          →    <Child> ⚠
-        `);
+        [root]
+            <Child> ⚠
+            <Child> ⚠
+      `);
 
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
         →    <Child> ⚠
              <Child> ⚠
@@ -1399,19 +1993,17 @@ describe('TreeListContext', () => {
       utils.act(() => {
         store.componentFilters = [];
       });
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
            ▾ <Wrapper>
-        →      <Child> ⚠
+               <Child> ⚠
            ▾ <Wrapper>
              ▾ <Wrapper>
                  <Child> ⚠
       `);
 
       selectPreviousErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
            ▾ <Wrapper>
                <Child> ⚠
@@ -1442,22 +2034,20 @@ describe('TreeListContext', () => {
         ),
       );
 
-      store.componentFilters = [utils.createDisplayNameFilter('Wrapper')];
+      store.componentFilters = [utils.createDisplayNameFilter('Child')];
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      utils.act(() => TestRenderer.create(<Contexts />));
-      let statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
-             <Child> ⚠
-             <Child> ⚠
+             <Wrapper>
+           ▾ <Wrapper>
+               <Wrapper>
       `);
 
       utils.act(() => {
         store.componentFilters = [];
       });
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
            ▾ <Wrapper>
                <Child> ⚠
@@ -1467,15 +2057,14 @@ describe('TreeListContext', () => {
       `);
 
       selectNextErrorOrWarning();
-      statefulStore = {state, store};
-      expect(statefulStore).toMatchInlineSnapshot(`
-      [root]
-         ▾ <Wrapper>
-      →      <Child> ⚠
-         ▾ <Wrapper>
+      expect(state).toMatchInlineSnapshot(`
+        [root]
            ▾ <Wrapper>
-               <Child> ⚠
-    `);
+        →      <Child> ⚠
+           ▾ <Wrapper>
+             ▾ <Wrapper>
+                 <Child> ⚠
+      `);
     });
   });
 });
