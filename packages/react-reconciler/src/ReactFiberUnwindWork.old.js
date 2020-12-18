@@ -170,7 +170,6 @@ function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
       break;
     }
     case HostRoot: {
-      popHostContainer(interruptedWork);
       if (enableCache) {
         const root: FiberRoot = interruptedWork.stateNode;
         popRootCachePool(root, renderLanes);
@@ -178,6 +177,7 @@ function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
         const cache: Cache = interruptedWork.memoizedState.cache;
         popCacheProvider(interruptedWork, cache);
       }
+      popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
       resetMutableSourceWorkInProgressVersions();
       break;

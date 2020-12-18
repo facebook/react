@@ -15,6 +15,7 @@ import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {Effect as HookEffect} from './ReactFiberHooks.new';
 import type {StackCursor} from './ReactFiberStack.new';
+import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 
 import {
   warnAboutDeprecatedLifecycles,
