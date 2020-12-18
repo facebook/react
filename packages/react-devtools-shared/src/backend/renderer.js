@@ -527,8 +527,6 @@ export function attach(
     typeof setSuspenseHandler === 'function' &&
     typeof scheduleUpdate === 'function';
 
-  let flushErrorOrWarningUpdatesTimoutID: TimeoutID | null = null;
-
   // Set of Fibers (IDs) with recently changed number of error/warning messages.
   const fibersWithChangedErrorOrWarningCounts: Set<number> = new Set();
 
@@ -552,14 +550,14 @@ export function attach(
     fiberToErrorsMap.clear();
     fiberToWarningsMap.clear();
 
-    scheduleErrorOrWarningUpdates();
+    flushPendingEvents();
   }
 
   function clearErrorsForFiberID(id: number) {
     if (fiberToErrorsMap.has(id)) {
       fiberToErrorsMap.delete(id);
       fibersWithChangedErrorOrWarningCounts.add(id);
-      scheduleErrorOrWarningUpdates();
+      flushPendingEvents();
     }
 
     updateMostRecentlyInspectedElementIfNecessary(id);
@@ -569,7 +567,7 @@ export function attach(
     if (fiberToWarningsMap.has(id)) {
       fiberToWarningsMap.delete(id);
       fibersWithChangedErrorOrWarningCounts.add(id);
-      scheduleErrorOrWarningUpdates();
+      flushPendingEvents();
     }
 
     updateMostRecentlyInspectedElementIfNecessary(id);
@@ -629,23 +627,6 @@ export function attach(
 
     // If this Fiber is currently being inspected, mark it as needing an udpate as well.
     updateMostRecentlyInspectedElementIfNecessary(fiberID);
-
-    scheduleErrorOrWarningUpdates();
-  }
-
-  function scheduleErrorOrWarningUpdates() {
-    if (flushErrorOrWarningUpdatesTimoutID === null) {
-      flushErrorOrWarningUpdatesTimoutID = setTimeout(
-        flushErrorOrWarningUpdates,
-        1000,
-      );
-    }
-  }
-
-  function flushErrorOrWarningUpdates() {
-    flushErrorOrWarningUpdatesTimoutID = null;
-
-    flushPendingEvents();
   }
 
   // Patching the console enables DevTools to do a few useful things:

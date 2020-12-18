@@ -1068,7 +1068,10 @@ describe('Store', () => {
       `);
     });
 
-    it('during passive get counted', () => {
+    // This is not great, but it seems safer than potentially flushing between commits.
+    // Our logic for determining how to handle e.g. suspended trees or error boundaries
+    // is built on the assumption that we're evaluating the results of a commit, not an in-progress render.
+    it('during passive get counted (but not until the next commit)', () => {
       function Example() {
         React.useEffect(() => {
           console.error('test-only: passive error');
@@ -1083,8 +1086,8 @@ describe('Store', () => {
       });
 
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 1, ⚠ 1
-            <Example> ✕⚠
+        [root]
+            <Example>
       `);
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
@@ -1092,9 +1095,12 @@ describe('Store', () => {
       });
 
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 2, ⚠ 2
+        [root] ✕ 1, ⚠ 1
             <Example> ✕⚠
       `);
+
+      act(() => ReactDOM.unmountComponentAtNode(container));
+      expect(store).toMatchInlineSnapshot(``);
     });
 
     it('from react get counted', () => {
