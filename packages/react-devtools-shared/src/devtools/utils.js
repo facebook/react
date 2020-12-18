@@ -53,7 +53,7 @@ export function printOwnersList(
 export function printStore(
   store: Store,
   includeWeight: boolean = false,
-  state: StateContext = null,
+  state: StateContext | null = null,
 ) {
   const snapshotLines = [];
 
