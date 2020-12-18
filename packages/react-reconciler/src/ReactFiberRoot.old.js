@@ -104,12 +104,11 @@ export function createFiberRoot(
   uninitializedFiber.stateNode = root;
 
   if (enableCache) {
+    const initialCache = new Map();
+    root.pooledCache = initialCache;
     const initialState = {
       element: null,
-      // For the root cache, we won't bother to lazily initialize the map. Seed an
-      // empty one. This saves use the trouble of having to initialize in an
-      // updater function.
-      cache: new Map(),
+      cache: initialCache,
     };
     uninitializedFiber.memoizedState = initialState;
   } else {

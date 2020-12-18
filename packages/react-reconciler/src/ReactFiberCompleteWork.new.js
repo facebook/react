@@ -28,12 +28,7 @@ import type {
 } from './ReactFiberSuspenseComponent.new';
 import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
-import type {
-  SuspendedCache,
-  SuspendedCacheFresh,
-  SuspendedCachePool,
-  Cache,
-} from './ReactFiberCacheComponent.new';
+import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 
@@ -163,7 +158,6 @@ import {resetChildFibers} from './ReactChildFiber.new';
 import {createScopeInstance} from './ReactFiberScope.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
 import {
-  SuspendedCacheFreshTag,
   popCacheProvider,
   popRootCachePool,
   popCachePool,
@@ -1502,16 +1496,9 @@ function completeWork(
       }
 
       if (enableCache) {
-        const suspendedCache: SuspendedCache | null = (workInProgress.updateQueue: any);
-        if (suspendedCache !== null) {
-          if (suspendedCache.tag === SuspendedCacheFreshTag) {
-            popCacheProvider(
-              workInProgress,
-              (suspendedCache: SuspendedCacheFresh).cache,
-            );
-          } else {
-            popCachePool((suspendedCache: SuspendedCachePool));
-          }
+        const spawnedCachePool: SpawnedCachePool | null = (workInProgress.updateQueue: any);
+        if (spawnedCachePool !== null) {
+          popCachePool(workInProgress);
         }
       }
 
@@ -1519,11 +1506,8 @@ function completeWork(
     }
     case CacheComponent: {
       if (enableCache) {
-        const cache: Cache | null = workInProgress.stateNode;
-        if (cache !== null) {
-          // This is a cache provider.
-          popCacheProvider(workInProgress, cache);
-        }
+        const cache: Cache = workInProgress.memoizedState.cache;
+        popCacheProvider(workInProgress, cache);
         bubbleProperties(workInProgress);
         return null;
       }

@@ -11,12 +11,7 @@ import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
-import type {
-  Cache,
-  SuspendedCache,
-  SuspendedCacheFresh,
-  SuspendedCachePool,
-} from './ReactFiberCacheComponent.new';
+import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 import {
@@ -50,7 +45,6 @@ import {
 import {popProvider} from './ReactFiberNewContext.new';
 import {popRenderLanes} from './ReactFiberWorkLoop.new';
 import {
-  SuspendedCacheFreshTag,
   popCacheProvider,
   popRootCachePool,
   popCachePool,
@@ -149,25 +143,16 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
     case LegacyHiddenComponent:
       popRenderLanes(workInProgress);
       if (enableCache) {
-        const suspendedCache: SuspendedCache | null = (workInProgress.updateQueue: any);
-        if (suspendedCache !== null) {
-          if (suspendedCache.tag === SuspendedCacheFreshTag) {
-            popCacheProvider(
-              workInProgress,
-              (suspendedCache: SuspendedCacheFresh).cache,
-            );
-          } else {
-            popCachePool((suspendedCache: SuspendedCachePool));
-          }
+        const spawnedCachePool: SpawnedCachePool | null = (workInProgress.updateQueue: any);
+        if (spawnedCachePool !== null) {
+          popCachePool(workInProgress);
         }
       }
       return null;
     case CacheComponent:
       if (enableCache) {
-        const cache: Cache | null = workInProgress.stateNode;
-        if (cache !== null) {
-          popCacheProvider(workInProgress, cache);
-        }
+        const cache: Cache = workInProgress.memoizedState.cache;
+        popCacheProvider(workInProgress, cache);
       }
       return null;
     default:
@@ -218,25 +203,17 @@ function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
     case LegacyHiddenComponent:
       popRenderLanes(interruptedWork);
       if (enableCache) {
-        const suspendedCache: SuspendedCache | null = (interruptedWork.updateQueue: any);
-        if (suspendedCache !== null) {
-          if (suspendedCache.tag === SuspendedCacheFreshTag) {
-            popCacheProvider(
-              interruptedWork,
-              (suspendedCache: SuspendedCacheFresh).cache,
-            );
-          } else {
-            popCachePool((suspendedCache: SuspendedCachePool));
-          }
+        const spawnedCachePool: SpawnedCachePool | null = (interruptedWork.updateQueue: any);
+        if (spawnedCachePool !== null) {
+          popCachePool(interruptedWork);
         }
       }
+
       break;
     case CacheComponent:
       if (enableCache) {
-        const cache: Cache | null = interruptedWork.stateNode;
-        if (cache !== null) {
-          popCacheProvider(interruptedWork, cache);
-        }
+        const cache: Cache = interruptedWork.memoizedState.cache;
+        popCacheProvider(interruptedWork, cache);
       }
       break;
     default:

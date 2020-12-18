@@ -218,7 +218,7 @@ describe('ReactCache', () => {
     'nested cache boundaries share the same cache as the root during ' +
       'the initial render',
     async () => {
-      function App({text}) {
+      function App() {
         return (
           <Suspense fallback={<Text text="Loading..." />}>
             <AsyncText text="A" />
@@ -231,7 +231,7 @@ describe('ReactCache', () => {
 
       const root = ReactNoop.createRoot();
       await ReactNoop.act(async () => {
-        root.render(<App showMore={false} />);
+        root.render(<App />);
       });
       // Even though there are two new <Cache /> trees, they should share the same
       // data cache. So there should be only a single cache miss for A.

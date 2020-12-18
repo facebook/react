@@ -1726,6 +1726,7 @@ function updateRefresh() {
 }
 
 function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
+  // TODO: Does Cache work in legacy mode? Should decide and write a test.
   // TODO: Consider warning if the refresh is at discrete priority, or if we
   // otherwise suspect that it wasn't batched properly.
   let provider = fiber.return;
@@ -1733,9 +1734,8 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
     switch (provider.tag) {
       case CacheComponent:
       case HostRoot: {
-        const eventTime = requestEventTime();
         const lane = requestUpdateLane(provider);
-        // TODO: Does Cache work in legacy mode? Should decide and write a test.
+        const eventTime = requestEventTime();
         const root = scheduleUpdateOnFiber(provider, lane, eventTime);
 
         const seededCache = new Map();
@@ -1757,7 +1757,6 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
     }
     provider = provider.return;
   }
-
   // TODO: Warn if unmounted?
 }
 

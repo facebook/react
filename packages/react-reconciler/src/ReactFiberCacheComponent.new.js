@@ -10,29 +10,26 @@
 import type {ReactContext} from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
+import type {StackCursor} from './ReactFiberStack.new';
 
 import {enableCache} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
-import {HostRoot} from './ReactWorkTags';
 
+import {isPrimaryRenderer} from './ReactFiberHostConfig';
+import {createCursor, push, pop} from './ReactFiberStack.new';
 import {pushProvider, popProvider} from './ReactFiberNewContext.new';
 
 export type Cache = Map<() => mixed, mixed>;
 
-export type SuspendedCacheFresh = {|
-  tag: 0,
-  cache: Cache,
+export type CacheComponentState = {|
+  +parent: Cache,
+  +cache: Cache,
 |};
 
-export type SuspendedCachePool = {|
-  tag: 1,
-  cache: Cache,
+export type SpawnedCachePool = {|
+  +parent: Cache,
+  +pool: Cache,
 |};
-
-export type SuspendedCache = SuspendedCacheFresh | SuspendedCachePool;
-
-export const SuspendedCacheFreshTag = 0;
-export const SuspendedCachePoolTag = 1;
 
 export const CacheContext: ReactContext<Cache> = enableCache
   ? {
@@ -53,45 +50,18 @@ if (__DEV__ && enableCache) {
   CacheContext._currentRenderer2 = null;
 }
 
-// A parent cache refresh always overrides any nested cache. So there will only
-// ever be a single fresh cache on the context stack.
-let freshCache: Cache | null = null;
-
-// The cache that we retrived from the pool during this render, if any
+// The cache that newly mounted Cache boundaries should use. It's either
+// retrieved from the cache pool, or the result of a refresh.
 let pooledCache: Cache | null = null;
 
-export function pushStaleCacheProvider(workInProgress: Fiber, cache: Cache) {
-  if (!enableCache) {
-    return;
-  }
-  if (__DEV__) {
-    if (freshCache !== null) {
-      console.error(
-        'Already inside a fresh cache boundary. This is a bug in React.',
-      );
-    }
-  }
-  pushProvider(workInProgress, CacheContext, cache);
-}
+// When retrying a Suspense/Offscreen boundary, we override pooledCache with the
+// cache from the render that suspended.
+const prevFreshCacheOnStack: StackCursor<Cache | null> = createCursor(null);
 
-export function pushFreshCacheProvider(workInProgress: Fiber, cache: Cache) {
+export function pushCacheProvider(workInProgress: Fiber, cache: Cache) {
   if (!enableCache) {
     return;
   }
-  if (__DEV__) {
-    if (
-      freshCache !== null &&
-      // TODO: Remove this exception for roots. There are a few tests that throw
-      // in pushHostContainer, before the cache context is pushed. Not a huge
-      // issue, but should still fix.
-      workInProgress.tag !== HostRoot
-    ) {
-      console.error(
-        'Already inside a fresh cache boundary. This is a bug in React.',
-      );
-    }
-  }
-  freshCache = cache;
   pushProvider(workInProgress, CacheContext, cache);
 }
 
@@ -99,29 +69,7 @@ export function popCacheProvider(workInProgress: Fiber, cache: Cache) {
   if (!enableCache) {
     return;
   }
-  if (__DEV__) {
-    if (freshCache !== null && freshCache !== cache) {
-      console.error(
-        'Unexpected cache instance on context. This is a bug in React.',
-      );
-    }
-  }
-  freshCache = null;
   popProvider(CacheContext, workInProgress);
-}
-
-export function hasFreshCacheProvider() {
-  if (!enableCache) {
-    return false;
-  }
-  return freshCache !== null;
-}
-
-export function getFreshCacheProviderIfExists(): Cache | null {
-  if (!enableCache) {
-    return null;
-  }
-  return freshCache;
 }
 
 export function requestCacheFromPool(renderLanes: Lanes): Cache {
@@ -133,10 +81,6 @@ export function requestCacheFromPool(renderLanes: Lanes): Cache {
   }
   // Create a fresh cache.
   pooledCache = new Map();
-  return pooledCache;
-}
-
-export function getPooledCacheIfExists(): Cache | null {
   return pooledCache;
 }
 
@@ -161,37 +105,100 @@ export function popRootCachePool(root: FiberRoot, renderLanes: Lanes) {
   // once all the transitions that depend on it (which we track with
   // `pooledCacheLanes`) have committed.
   root.pooledCache = pooledCache;
-  root.pooledCacheLanes |= renderLanes;
+  if (pooledCache !== null) {
+    root.pooledCacheLanes |= renderLanes;
+  }
 }
 
-export function pushCachePool(suspendedCache: SuspendedCachePool) {
+export function restoreSpawnedCachePool(
+  offscreenWorkInProgress: Fiber,
+  prevCachePool: SpawnedCachePool,
+): SpawnedCachePool | null {
+  if (!enableCache) {
+    return (null: any);
+  }
+  const nextParentCache = isPrimaryRenderer
+    ? CacheContext._currentValue
+    : CacheContext._currentValue2;
+  if (nextParentCache !== prevCachePool.parent) {
+    // There was a refresh. Don't bother restoring anything since the refresh
+    // will override it.
+    return null;
+  } else {
+    // No refresh. Resume with the previous cache. This will override the cache
+    // pool so that any new Cache boundaries in the subtree use this one instead
+    // of requesting a fresh one.
+    push(prevFreshCacheOnStack, pooledCache, offscreenWorkInProgress);
+    pooledCache = prevCachePool.pool;
+
+    // Return the cache pool to signal that we did in fact push it. We will
+    // assign this to the field on the fiber so we know to pop the context.
+    return prevCachePool;
+  }
+}
+
+// Note: Ideally, `popCachePool` would return this value, and then we would pass
+// it to `getSuspendedCachePool`. But factoring reasons, those two functions are
+// in different phases/files. They are always called in sequence, though, so we
+// can stash the value here temporarily.
+let _suspendedPooledCache: Cache | null = null;
+
+export function popCachePool(workInProgress: Fiber) {
   if (!enableCache) {
     return;
   }
-  // This will temporarily override the pooled cache for this render, so that
-  // any new Cache boundaries in the subtree use this one. The previous value on
-  // the "stack" is stored on the cache instance. We will restore it during the
-  // complete phase.
-  //
-  // The more straightforward way to do this would be to use the array-based
-  // stack (push/pop). Maybe this is too clever.
-  const prevPooledCacheOnStack = pooledCache;
-  pooledCache = suspendedCache.cache;
-  // This is never supposed to be null. I'm cheating. Sorry. It will be reset to
-  // the correct type when we pop.
-  suspendedCache.cache = ((prevPooledCacheOnStack: any): Cache);
+  _suspendedPooledCache = pooledCache;
+  pooledCache = prevFreshCacheOnStack.current;
+  pop(prevFreshCacheOnStack, workInProgress);
 }
 
-export function popCachePool(suspendedCache: SuspendedCachePool) {
+export function getSuspendedCachePool(): SpawnedCachePool | null {
   if (!enableCache) {
-    return;
+    return null;
   }
-  const retryCache: Cache = (pooledCache: any);
-  if (__DEV__) {
-    if (retryCache === null) {
-      console.error('Expected to have a pooled cache. This is a bug in React.');
+
+  // We check the cache on the stack first, since that's the one any new Caches
+  // would have accessed.
+  let pool = pooledCache;
+  if (pool === null) {
+    // There's no pooled cache above us in the stack. However, a child in the
+    // suspended tree may have requested a fresh cache pool. If so, we would
+    // have unwound it with `popCachePool`.
+    if (_suspendedPooledCache !== null) {
+      pool = _suspendedPooledCache;
+      _suspendedPooledCache = null;
+    } else {
+      // There's no suspended cache pool.
+      return null;
     }
   }
-  pooledCache = suspendedCache.cache;
-  suspendedCache.cache = retryCache;
+
+  return {
+    // We must also save the parent, so that when we resume we can detect
+    // a refresh.
+    parent: isPrimaryRenderer
+      ? CacheContext._currentValue
+      : CacheContext._currentValue2,
+    pool,
+  };
+}
+
+export function getOffscreenDeferredCachePool(): SpawnedCachePool | null {
+  if (!enableCache) {
+    return null;
+  }
+
+  if (pooledCache === null) {
+    // There's no deferred cache pool.
+    return null;
+  }
+
+  return {
+    // We must also store the parent, so that when we resume we can detect
+    // a refresh.
+    parent: isPrimaryRenderer
+      ? CacheContext._currentValue
+      : CacheContext._currentValue2,
+    pool: pooledCache,
+  };
 }

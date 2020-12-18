@@ -19,7 +19,6 @@ import {
   ContextProvider,
   ClassComponent,
   DehydratedFragment,
-  CacheComponent,
 } from './ReactWorkTags';
 import {
   NoLanes,
@@ -34,11 +33,7 @@ import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
 import {createUpdate, enqueueUpdate, ForceUpdate} from './ReactUpdateQueue.new';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.new';
-import {CacheContext} from './ReactFiberCacheComponent.new';
-import {
-  enableSuspenseServerRenderer,
-  enableCache,
-} from 'shared/ReactFeatureFlags';
+import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
@@ -186,9 +181,9 @@ export function scheduleWorkOnParentPath(
   }
 }
 
-export function propagateContextChange(
+export function propagateContextChange<T>(
   workInProgress: Fiber,
-  context: ReactContext<mixed>,
+  context: ReactContext<T>,
   changedBits: number,
   renderLanes: Lanes,
 ): void {
@@ -269,114 +264,6 @@ export function propagateContextChange(
       // this fiber to indicate that a context has changed.
       scheduleWorkOnParentPath(parentSuspense, renderLanes);
       nextFiber = fiber.sibling;
-    } else {
-      // Traverse down.
-      nextFiber = fiber.child;
-    }
-
-    if (nextFiber !== null) {
-      // Set the return pointer of the child to the work-in-progress fiber.
-      nextFiber.return = fiber;
-    } else {
-      // No child. Traverse to next sibling.
-      nextFiber = fiber;
-      while (nextFiber !== null) {
-        if (nextFiber === workInProgress) {
-          // We're back to the root of this subtree. Exit.
-          nextFiber = null;
-          break;
-        }
-        const sibling = nextFiber.sibling;
-        if (sibling !== null) {
-          // Set the return pointer of the sibling to the work-in-progress fiber.
-          sibling.return = nextFiber.return;
-          nextFiber = sibling;
-          break;
-        }
-        // No more siblings. Traverse up.
-        nextFiber = nextFiber.return;
-      }
-    }
-    fiber = nextFiber;
-  }
-}
-
-export function propagateCacheRefresh(
-  workInProgress: Fiber,
-  renderLanes: Lanes,
-): void {
-  if (!enableCache) {
-    return;
-  }
-
-  let fiber = workInProgress.child;
-  if (fiber !== null) {
-    // Set the return pointer of the child to the work-in-progress fiber.
-    fiber.return = workInProgress;
-  }
-  while (fiber !== null) {
-    let nextFiber;
-
-    // Visit this fiber.
-    const list = fiber.dependencies;
-    if (list !== null) {
-      nextFiber = fiber.child;
-
-      let dependency = list.firstContext;
-      while (dependency !== null) {
-        // Check if the context matches.
-        if (dependency.context === CacheContext) {
-          // Match! Schedule an update on this fiber.
-
-          if (fiber.tag === ClassComponent) {
-            // Schedule a force update on the work-in-progress.
-            const update = createUpdate(
-              NoTimestamp,
-              pickArbitraryLane(renderLanes),
-            );
-            update.tag = ForceUpdate;
-            // TODO: Because we don't have a work-in-progress, this will add the
-            // update to the current fiber, too, which means it will persist even if
-            // this render is thrown away. Since it's a race condition, not sure it's
-            // worth fixing.
-            enqueueUpdate(fiber, update);
-          }
-          fiber.lanes = mergeLanes(fiber.lanes, renderLanes);
-          const alternate = fiber.alternate;
-          if (alternate !== null) {
-            alternate.lanes = mergeLanes(alternate.lanes, renderLanes);
-          }
-          scheduleWorkOnParentPath(fiber.return, renderLanes);
-
-          // Mark the updated lanes on the list, too.
-          list.lanes = mergeLanes(list.lanes, renderLanes);
-
-          // Since we already found a match, we can stop traversing the
-          // dependency list.
-          break;
-        }
-        dependency = dependency.next;
-      }
-    } else if (fiber.tag === CacheComponent) {
-      const nestedCache = fiber.memoizedState;
-      if (nestedCache !== null) {
-        // Found a nested cache boundary with its own cache. The parent refresh
-        // should override it. Mark it with an update.
-        fiber.lanes = mergeLanes(fiber.lanes, renderLanes);
-        const alternate = fiber.alternate;
-        if (alternate !== null) {
-          alternate.lanes = mergeLanes(alternate.lanes, renderLanes);
-        }
-        scheduleWorkOnParentPath(fiber.return, renderLanes);
-      }
-
-      // Unlike propagateContextChange, we don't stop traversing when we reach a
-      // nested cache boundary; refreshes propagate through the entire subtree.
-      // The refreshed cache will override nested caches.
-      //
-      // We also don't need to do anything special with DehydratedFragments,
-      // since the Fast Boot renderer is not allowed to fetch data.
-      nextFiber = fiber.child;
     } else {
       // Traverse down.
       nextFiber = fiber.child;
