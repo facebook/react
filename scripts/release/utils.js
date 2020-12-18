@@ -3,7 +3,7 @@
 const {exec} = require('child-process-promise');
 const {createPatch} = require('diff');
 const {hashElement} = require('folder-hash');
-const {readdirSync, readFileSync, statSync, writeFileSync} = require('fs');
+const {readFileSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
 const http = require('request-promise-json');
 const logUpdate = require('log-update');
@@ -11,14 +11,6 @@ const {join} = require('path');
 const createLogger = require('progress-estimator');
 const prompt = require('prompt-promise');
 const theme = require('./theme');
-
-// The following packages are published to NPM but not by this script.
-// They are released through a separate process.
-const RELEASE_SCRIPT_PACKAGE_SKIPLIST = [
-  'react-devtools',
-  'react-devtools-core',
-  'react-devtools-inline',
-];
 
 // https://www.npmjs.com/package/progress-estimator#configuration
 const logger = createLogger({
@@ -112,31 +104,38 @@ const getChecksumForCurrentRevision = async cwd => {
   return hashedPackages.hash.slice(0, 7);
 };
 
-const getPublicPackages = () => {
-  const packagesRoot = join(__dirname, '..', '..', 'packages');
-
-  return readdirSync(packagesRoot).filter(dir => {
-    if (RELEASE_SCRIPT_PACKAGE_SKIPLIST.includes(dir)) {
-      return false;
-    }
-
-    const packagePath = join(packagesRoot, dir, 'package.json');
-
-    if (dir.charAt(0) !== '.') {
-      let stat;
-      try {
-        stat = statSync(packagePath);
-      } catch (err) {
-        return false;
-      }
-      if (stat.isFile()) {
-        const packageJSON = JSON.parse(readFileSync(packagePath));
-        return packageJSON.private !== true;
-      }
-    }
-
-    return false;
-  });
+const getPublicPackages = isExperimental => {
+  if (isExperimental) {
+    return [
+      'create-subscription',
+      'eslint-plugin-react-hooks',
+      'jest-react',
+      'react',
+      'react-art',
+      'react-dom',
+      'react-is',
+      'react-reconciler',
+      'react-refresh',
+      'react-test-renderer',
+      'use-subscription',
+      'scheduler',
+    ];
+  } else {
+    return [
+      'create-subscription',
+      'eslint-plugin-react-hooks',
+      'jest-react',
+      'react',
+      'react-art',
+      'react-dom',
+      'react-is',
+      'react-reconciler',
+      'react-refresh',
+      'react-test-renderer',
+      'use-subscription',
+      'scheduler',
+    ];
+  }
 };
 
 const handleError = error => {
@@ -199,7 +198,8 @@ const splitCommaParams = array => {
 // It is based on the version of React in the local package.json (e.g. 16.12.0-01974a867).
 // Both numbers will be replaced if the "next" release is promoted to a stable release.
 const updateVersionsForNext = async (cwd, reactVersion, version) => {
-  const packages = getPublicPackages(join(cwd, 'packages'));
+  const isExperimental = reactVersion.includes('experimental');
+  const packages = getPublicPackages(isExperimental);
   const packagesDir = join(cwd, 'packages');
 
   // Update the shared React version source file.
