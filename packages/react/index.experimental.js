@@ -46,6 +46,8 @@ export {
   SuspenseList as unstable_SuspenseList,
   unstable_useOpaqueIdentifier,
   unstable_getCacheForType,
+  unstable_Cache,
+  unstable_useCacheRefresh,
   // enableDebugTracing
   unstable_DebugTracingMode,
 } from './src/React';

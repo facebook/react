@@ -531,7 +531,7 @@ export function scheduleUpdateOnFiber(
   fiber: Fiber,
   lane: Lane,
   eventTime: number,
-) {
+): FiberRoot | null {
   checkForNestedUpdates();
   warnAboutRenderPhaseUpdatesInDEV(fiber);
 
@@ -653,6 +653,8 @@ export function scheduleUpdateOnFiber(
   // the same root, then it's not a huge deal, we just might batch more stuff
   // together more than necessary.
   mostRecentlyUpdatedRoot = root;
+
+  return root;
 }
 
 // This is split into a separate function so we can mark a fiber with pending
@@ -1371,7 +1373,7 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
   if (workInProgress !== null) {
     let interruptedWork = workInProgress.return;
     while (interruptedWork !== null) {
-      unwindInterruptedWork(interruptedWork);
+      unwindInterruptedWork(interruptedWork, workInProgressRootRenderLanes);
       interruptedWork = interruptedWork.return;
     }
   }
@@ -2303,7 +2305,10 @@ function commitBeforeMutationEffects() {
   }
 }
 
-function commitMutationEffects(root: FiberRoot, renderPriorityLevel) {
+function commitMutationEffects(
+  root: FiberRoot,
+  renderPriorityLevel: ReactPriorityLevel,
+) {
   // TODO: Should probably move the bulk of this function to commitWork.
   while (nextEffect !== null) {
     setCurrentDebugFiberInDEV(nextEffect);
@@ -3047,7 +3052,7 @@ if (__DEV__ && replayFailedUnitOfWorkWithInvokeGuardedCallback) {
       // same fiber again.
 
       // Unwind the failed stack frame
-      unwindInterruptedWork(unitOfWork);
+      unwindInterruptedWork(unitOfWork, workInProgressRootRenderLanes);
 
       // Restore the original properties of the fiber.
       assignFiberPropertiesInDEV(unitOfWork, originalWorkInProgressCopy);

@@ -758,6 +758,13 @@ function unsupportedHook(): void {
   invariant(false, 'This Hook is not supported in Server Components.');
 }
 
+function unsupportedRefresh(): void {
+  invariant(
+    currentCache,
+    'Refreshing the cache is not supported in Server Components.',
+  );
+}
+
 let currentCache: Map<Function, mixed> | null = null;
 
 const Dispatcher: DispatcherType = {
@@ -797,4 +804,7 @@ const Dispatcher: DispatcherType = {
   useEffect: (unsupportedHook: any),
   useOpaqueIdentifier: (unsupportedHook: any),
   useMutableSource: (unsupportedHook: any),
+  useCacheRefresh(): <T>(?() => T, ?T) => void {
+    return unsupportedRefresh;
+  },
 };

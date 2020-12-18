@@ -44,6 +44,7 @@ export function waitForSuspense<T>(fn: () => T): Promise<T> {
     useTransition: unsupported,
     useOpaqueIdentifier: unsupported,
     useMutableSource: unsupported,
+    useCacheRefresh: unsupported,
   };
   // Not using async/await because we don't compile it.
   return new Promise((resolve, reject) => {

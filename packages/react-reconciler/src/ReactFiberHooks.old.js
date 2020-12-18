@@ -19,6 +19,7 @@ import type {HookFlags} from './ReactHookEffectTags';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
+import type {Cache} from './ReactFiberCacheComponent.old';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -46,6 +47,7 @@ import {
   DefaultLanePriority,
 } from './ReactFiberLane.old';
 import {readContext} from './ReactFiberNewContext.old';
+import {HostRoot, CacheComponent} from './ReactWorkTags';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
@@ -92,6 +94,8 @@ import {
 import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
+import {CacheContext} from './ReactFiberCacheComponent.old';
+import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.old';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -1707,6 +1711,55 @@ function rerenderOpaqueIdentifier(): OpaqueIDType | void {
   return id;
 }
 
+function mountRefresh() {
+  const hook = mountWorkInProgressHook();
+  const refresh = (hook.memoizedState = refreshCache.bind(
+    null,
+    currentlyRenderingFiber,
+  ));
+  return refresh;
+}
+
+function updateRefresh() {
+  const hook = updateWorkInProgressHook();
+  return hook.memoizedState;
+}
+
+function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
+  // TODO: Does Cache work in legacy mode? Should decide and write a test.
+  // TODO: Consider warning if the refresh is at discrete priority, or if we
+  // otherwise suspect that it wasn't batched properly.
+  let provider = fiber.return;
+  while (provider !== null) {
+    switch (provider.tag) {
+      case CacheComponent:
+      case HostRoot: {
+        const lane = requestUpdateLane(provider);
+        const eventTime = requestEventTime();
+        const root = scheduleUpdateOnFiber(provider, lane, eventTime);
+
+        const seededCache = new Map();
+        if (seedKey !== null && seedKey !== undefined && root !== null) {
+          // Seed the cache with the value passed by the caller. This could be
+          // from a server mutation, or it could be a streaming response.
+          seededCache.set(seedKey, seedValue);
+        }
+
+        // Schedule an update on the cache boundary to trigger a refresh.
+        const refreshUpdate = createUpdate(eventTime, lane);
+        const payload = {
+          cache: seededCache,
+        };
+        refreshUpdate.payload = payload;
+        enqueueUpdate(provider, refreshUpdate);
+        return;
+      }
+    }
+    provider = provider.return;
+  }
+  // TODO: Warn if unmounted?
+}
+
 function dispatchAction<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
@@ -1818,7 +1871,16 @@ function dispatchAction<S, A>(
 }
 
 function getCacheForType<T>(resourceType: () => T): T {
-  invariant(false, 'Not implemented.');
+  if (!enableCache) {
+    invariant(false, 'Not implemented.');
+  }
+  const cache: Cache = readContext(CacheContext);
+  let cacheForType: T | void = (cache.get(resourceType): any);
+  if (cacheForType === undefined) {
+    cacheForType = resourceType();
+    cache.set(resourceType, cacheForType);
+  }
+  return cacheForType;
 }
 
 export const ContextOnlyDispatcher: Dispatcher = {
@@ -1843,6 +1905,7 @@ export const ContextOnlyDispatcher: Dispatcher = {
 };
 if (enableCache) {
   (ContextOnlyDispatcher: Dispatcher).getCacheForType = getCacheForType;
+  (ContextOnlyDispatcher: Dispatcher).useCacheRefresh = throwInvalidHookError;
 }
 
 const HooksDispatcherOnMount: Dispatcher = {
@@ -1865,6 +1928,10 @@ const HooksDispatcherOnMount: Dispatcher = {
 
   unstable_isNewReconciler: enableNewReconciler,
 };
+if (enableCache) {
+  (HooksDispatcherOnMount: Dispatcher).getCacheForType = getCacheForType;
+  (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
+}
 
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
@@ -1888,6 +1955,7 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 };
 if (enableCache) {
   (HooksDispatcherOnUpdate: Dispatcher).getCacheForType = getCacheForType;
+  (HooksDispatcherOnUpdate: Dispatcher).useCacheRefresh = updateRefresh;
 }
 
 const HooksDispatcherOnRerender: Dispatcher = {
@@ -1912,6 +1980,7 @@ const HooksDispatcherOnRerender: Dispatcher = {
 };
 if (enableCache) {
   (HooksDispatcherOnRerender: Dispatcher).getCacheForType = getCacheForType;
+  (HooksDispatcherOnRerender: Dispatcher).useCacheRefresh = updateRefresh;
 }
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
@@ -2069,6 +2138,11 @@ if (__DEV__) {
   };
   if (enableCache) {
     (HooksDispatcherOnMountInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (HooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      mountHookTypesDev();
+      return mountRefresh();
+    };
   }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
@@ -2194,6 +2268,11 @@ if (__DEV__) {
   };
   if (enableCache) {
     (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return mountRefresh();
+    };
   }
 
   HooksDispatcherOnUpdateInDEV = {
@@ -2319,6 +2398,11 @@ if (__DEV__) {
   };
   if (enableCache) {
     (HooksDispatcherOnUpdateInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    };
   }
 
   HooksDispatcherOnRerenderInDEV = {
@@ -2445,6 +2529,11 @@ if (__DEV__) {
   };
   if (enableCache) {
     (HooksDispatcherOnRerenderInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    };
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
@@ -2585,6 +2674,11 @@ if (__DEV__) {
   };
   if (enableCache) {
     (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return mountRefresh();
+    };
   }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
@@ -2725,6 +2819,11 @@ if (__DEV__) {
   };
   if (enableCache) {
     (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    };
   }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
@@ -2866,5 +2965,10 @@ if (__DEV__) {
   };
   if (enableCache) {
     (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    };
   }
 }

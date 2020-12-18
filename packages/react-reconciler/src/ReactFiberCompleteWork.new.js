@@ -12,6 +12,7 @@ import type {Lanes, Lane} from './ReactFiberLane.new';
 import type {
   ReactFundamentalComponentInstance,
   ReactScopeInstance,
+  ReactContext,
 } from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {
@@ -27,6 +28,7 @@ import type {
 } from './ReactFiberSuspenseComponent.new';
 import type {SuspenseContext} from './ReactFiberSuspenseContext.new';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
+import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 
@@ -56,6 +58,7 @@ import {
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
+  CacheComponent,
 } from './ReactWorkTags';
 import {
   NoMode,
@@ -132,6 +135,7 @@ import {
   enableFundamentalAPI,
   enableScopeAPI,
   enableProfilerTimer,
+  enableCache,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -153,6 +157,11 @@ import {
 import {resetChildFibers} from './ReactChildFiber.new';
 import {createScopeInstance} from './ReactFiberScope.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
+import {
+  popCacheProvider,
+  popRootCachePool,
+  popCachePool,
+} from './ReactFiberCacheComponent.new';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -808,10 +817,16 @@ function completeWork(
       return null;
     }
     case HostRoot: {
+      const fiberRoot = (workInProgress.stateNode: FiberRoot);
+      if (enableCache) {
+        popRootCachePool(fiberRoot, renderLanes);
+
+        const cache: Cache = workInProgress.memoizedState.cache;
+        popCacheProvider(workInProgress, cache);
+      }
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       resetMutableSourceWorkInProgressVersions();
-      const fiberRoot = (workInProgress.stateNode: FiberRoot);
       if (fiberRoot.pendingContext) {
         fiberRoot.context = fiberRoot.pendingContext;
         fiberRoot.pendingContext = null;
@@ -1135,7 +1150,8 @@ function completeWork(
       return null;
     case ContextProvider:
       // Pop provider fiber
-      popProvider(workInProgress);
+      const context: ReactContext<any> = workInProgress.type._context;
+      popProvider(context, workInProgress);
       bubbleProperties(workInProgress);
       return null;
     case IncompleteClassComponent: {
@@ -1479,7 +1495,22 @@ function completeWork(
         bubbleProperties(workInProgress);
       }
 
+      if (enableCache) {
+        const spawnedCachePool: SpawnedCachePool | null = (workInProgress.updateQueue: any);
+        if (spawnedCachePool !== null) {
+          popCachePool(workInProgress);
+        }
+      }
+
       return null;
+    }
+    case CacheComponent: {
+      if (enableCache) {
+        const cache: Cache = workInProgress.memoizedState.cache;
+        popCacheProvider(workInProgress, cache);
+        bubbleProperties(workInProgress);
+        return null;
+      }
     }
   }
   invariant(
