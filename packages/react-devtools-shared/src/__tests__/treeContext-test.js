@@ -835,13 +835,13 @@ describe('TreeListContext', () => {
       jest.runAllTimers();
     }
 
-    function selectNextError() {
+    function selectNextErrorOrWarning() {
       utils.act(() =>
         dispatch({type: 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE'}),
       );
     }
 
-    function selectPreviousError() {
+    function selectPreviousErrorOrWarning() {
       utils.act(() =>
         dispatch({
           type: 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE',
@@ -875,18 +875,18 @@ describe('TreeListContext', () => {
       expect(state.selectedElementIndex).toBe(null);
 
       // Next/previous errors should be a no-op
-      selectPreviousError();
+      selectPreviousErrorOrWarning();
       expect(state.selectedElementIndex).toBe(null);
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(null);
 
       utils.act(() => dispatch({type: 'SELECT_ELEMENT_AT_INDEX', payload: 0}));
       expect(state.selectedElementIndex).toBe(0);
 
       // Next/previous errors should still be a no-op
-      selectPreviousError();
+      selectPreviousErrorOrWarning();
       expect(state.selectedElementIndex).toBe(0);
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(0);
     });
 
@@ -909,13 +909,13 @@ describe('TreeListContext', () => {
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state.selectedElementIndex).toBe(null);
 
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(1);
 
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(3);
 
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(1);
     });
 
@@ -938,13 +938,13 @@ describe('TreeListContext', () => {
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state.selectedElementIndex).toBe(null);
 
-      selectPreviousError();
+      selectPreviousErrorOrWarning();
       expect(state.selectedElementIndex).toBe(3);
 
-      selectPreviousError();
+      selectPreviousErrorOrWarning();
       expect(state.selectedElementIndex).toBe(1);
 
-      selectPreviousError();
+      selectPreviousErrorOrWarning();
       expect(state.selectedElementIndex).toBe(3);
     });
 
@@ -967,22 +967,22 @@ describe('TreeListContext', () => {
       expect(state.selectedElementIndex).toBe(null);
 
       // Select the first item in the list
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(0);
 
       // Clear warnings (but the next Fiber has only errors)
       clearWarningsForElement(store.getElementIDAtIndex(1));
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(1);
 
       clearErrorsForElement(store.getElementIDAtIndex(2));
 
       // Should step to the (now) next one in the list.
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(3);
 
       // Should skip over the (now) cleared Fiber
-      selectPreviousError();
+      selectPreviousErrorOrWarning();
       expect(state.selectedElementIndex).toBe(1);
     });
 
@@ -1002,11 +1002,11 @@ describe('TreeListContext', () => {
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state.selectedElementIndex).toBe(null);
 
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(0);
 
       clearWarningsForElement(store.getElementIDAtIndex(0));
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(1);
     });
 
@@ -1030,7 +1030,7 @@ describe('TreeListContext', () => {
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state.selectedElementIndex).toBe(null);
 
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(0);
 
       withErrorsOrWarningsIgnored(['test-only:'], () =>
@@ -1047,13 +1047,13 @@ describe('TreeListContext', () => {
         ),
       );
 
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(1);
 
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(3);
 
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(0);
     });
 
@@ -1073,15 +1073,15 @@ describe('TreeListContext', () => {
       utils.act(() => TestRenderer.create(<Contexts />));
       expect(state.selectedElementIndex).toBe(null);
 
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(0);
 
       clearAllErrors();
 
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(0);
 
-      selectPreviousError();
+      selectPreviousErrorOrWarning();
       expect(state.selectedElementIndex).toBe(0);
     });
 
@@ -1116,7 +1116,7 @@ describe('TreeListContext', () => {
       `);
       expect(state.selectedElementIndex).toBe(null);
 
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Wrapper>
@@ -1125,7 +1125,7 @@ describe('TreeListContext', () => {
       `);
       expect(state.selectedElementIndex).toBe(1);
 
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Wrapper>
@@ -1169,7 +1169,7 @@ describe('TreeListContext', () => {
       `);
       expect(state.selectedElementIndex).toBe(null);
 
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(1);
 
       utils.act(() => {
@@ -1182,7 +1182,7 @@ describe('TreeListContext', () => {
         `);
       expect(state.selectedElementIndex).toBe(null);
 
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(store).toMatchInlineSnapshot(`
         [root]
             <Child>
@@ -1203,7 +1203,7 @@ describe('TreeListContext', () => {
       `);
       expect(state.selectedElementIndex).toBe(null);
 
-      selectPreviousError();
+      selectPreviousErrorOrWarning();
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Wrapper>
@@ -1260,7 +1260,7 @@ describe('TreeListContext', () => {
       `);
       expect(state.selectedElementIndex).toBe(null);
 
-      selectNextError();
+      selectNextErrorOrWarning();
       expect(state.selectedElementIndex).toBe(1);
     });
   });
