@@ -1933,7 +1933,7 @@ describe('TreeListContext', () => {
       `);
     });
 
-    xit('should properly handle when components filters are updated', () => {
+    it('should properly handle when components filters are updated', () => {
       const Wrapper = ({children}) => children;
 
       withErrorsOrWarningsIgnored(['test-only:'], () =>
@@ -1977,17 +1977,17 @@ describe('TreeListContext', () => {
       utils.act(() => {
         store.componentFilters = [utils.createDisplayNameFilter('Wrapper')];
       });
-      expect(store).toMatchInlineSnapshot(`
+      expect(state).toMatchInlineSnapshot(`
         [root]
-            <Child> ⚠
-            <Child> ⚠
+        →    <Child> ⚠
+             <Child> ⚠
       `);
 
       selectNextErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
         [root]
-        →    <Child> ⚠
              <Child> ⚠
+        →    <Child> ⚠
       `);
 
       utils.act(() => {
@@ -1999,21 +1999,21 @@ describe('TreeListContext', () => {
                <Child> ⚠
            ▾ <Wrapper>
              ▾ <Wrapper>
-                 <Child> ⚠
+        →        <Child> ⚠
       `);
 
       selectPreviousErrorOrWarning();
       expect(state).toMatchInlineSnapshot(`
         [root]
            ▾ <Wrapper>
-               <Child> ⚠
+        →      <Child> ⚠
            ▾ <Wrapper>
              ▾ <Wrapper>
-        →        <Child> ⚠
+                 <Child> ⚠
       `);
     });
 
-    xit('should preserve errors for fibers even if they are filtered out of the tree initially', () => {
+    it('should preserve errors for fibers even if they are filtered out of the tree initially', () => {
       const Wrapper = ({children}) => children;
 
       withErrorsOrWarningsIgnored(['test-only:'], () =>

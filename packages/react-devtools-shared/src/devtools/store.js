@@ -12,9 +12,10 @@ import {inspect} from 'util';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
+  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
-  TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
+  TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
 import {ElementTypeRoot} from '../types';
 import {
@@ -964,6 +965,34 @@ export default class Store extends EventEmitter<{|
               this._errorsAndWarnings.delete(id);
             }
           }
+          break;
+        }
+        case TREE_OPERATION_REMOVE_ROOT: {
+          i += 1;
+
+          if (__DEBUG__) {
+            debug('Remove all fibers');
+          }
+
+          const recursivelyDeleteElements = elementID => {
+            const element = this._idToElement.get(elementID);
+            this._idToElement.delete(elementID);
+            if (element) {
+              // Mostly for Flow's sake
+              for (let index = 0; index < element.children.length; index++) {
+                recursivelyDeleteElements(element.children[index]);
+              }
+            }
+          };
+
+          const id = operations[1];
+          const root = ((this._idToElement.get(id): any): Element);
+          recursivelyDeleteElements(id);
+
+          this._rootIDToCapabilities.delete(id);
+          this._rootIDToRendererID.delete(id);
+          this._roots = this._roots.filter(rootID => rootID !== id);
+          this._weightAcrossRoots -= root.weight;
           break;
         }
         case TREE_OPERATION_REORDER_CHILDREN: {

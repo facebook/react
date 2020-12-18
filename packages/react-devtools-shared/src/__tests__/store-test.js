@@ -1121,15 +1121,17 @@ describe('Store', () => {
       `);
     });
 
-    // TODO (inline errors) The fiber for the recorded error is considered to be not mounted by renderer.js#isFiberMounted.
     it('from react get counted', () => {
       const container = document.createElement('div');
       function Example() {
-        return <div data-camelCased="should be lowercase" />;
+        return [<Child />];
+      }
+      function Child() {
+        return null;
       }
 
       withErrorsOrWarningsIgnored(
-        ['Warning: React does not recognize the `%s` prop on a DOM element.'],
+        ['Warning: Each child in a list should have a unique "key" prop'],
         () => {
           act(() => ReactDOM.render(<Example />, container));
         },
@@ -1282,6 +1284,99 @@ describe('Store', () => {
           },
         }
       `);
+    });
+
+    it('are updated when fibers are removed from the tree', () => {
+      function ComponentWithWarning() {
+        console.warn('test-only: render warning');
+        return null;
+      }
+      function ComponentWithError() {
+        console.error('test-only: render error');
+        return null;
+      }
+      function ComponentWithWarningAndError() {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      }
+      const container = document.createElement('div');
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <ComponentWithError />
+              <ComponentWithWarning />
+              <ComponentWithWarningAndError />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
+        Map {
+          1 => Object {
+            "errors": 1,
+            "warnings": 0,
+          },
+          2 => Object {
+            "errors": 0,
+            "warnings": 1,
+          },
+          3 => Object {
+            "errors": 1,
+            "warnings": 1,
+          },
+        }
+      `);
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <ComponentWithWarning />
+              <ComponentWithWarningAndError />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
+        Map {
+          5 => Object {
+            "errors": 0,
+            "warnings": 1,
+          },
+          6 => Object {
+            "errors": 1,
+            "warnings": 1,
+          },
+        }
+      `);
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <ComponentWithWarning />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`
+        Map {
+          5 => Object {
+            "errors": 0,
+            "warnings": 2,
+          },
+        }
+      `);
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => ReactDOM.render(<React.Fragment />, container));
+      });
+      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`Map {}`);
     });
   });
 });

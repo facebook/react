@@ -26,9 +26,10 @@ import {REACT_SUSPENSE_LIST_TYPE as SuspenseList} from 'shared/ReactSymbols';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
+  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
-  TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
   TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
+  TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from './constants';
 import {ElementTypeRoot} from 'react-devtools-shared/src/types';
 import {
@@ -204,6 +205,12 @@ export function printOperationsArray(operations: Array<number>) {
 
           logs.push(`Remove node ${id}`);
         }
+        break;
+      }
+      case TREE_OPERATION_REMOVE_ROOT: {
+        i += 1;
+
+        logs.push(`Remove all nodes`);
         break;
       }
       case TREE_OPERATION_REORDER_CHILDREN: {
