@@ -10,6 +10,7 @@
 import JSON5 from 'json5';
 
 import type {Element} from './views/Components/types';
+import type {StateContext} from './views/Components/TreeContext';
 import type Store from './store';
 
 export function printElement(element: Element, includeWeight: boolean = false) {
@@ -49,10 +50,32 @@ export function printOwnersList(
     .join('\n');
 }
 
-export function printStore(store: Store, includeWeight: boolean = false) {
+export function printStore(
+  store: Store,
+  includeWeight: boolean = false,
+  state: StateContext = null,
+) {
   const snapshotLines = [];
 
   let rootWeight = 0;
+
+  function printSelectedMarker(index: number): string {
+    if (state === null) {
+      return '';
+    }
+    return state.selectedElementIndex === index ? `→` : ' ';
+  }
+
+  function printErrorsAndWarnings(element: Element): string {
+    const {errors, warnings} = store.errorsAndWarnings.get(element.id) || {
+      errors: 0,
+      warnings: 0,
+    };
+    if (errors === 0 && warnings === 0) {
+      return '';
+    }
+    return ` ${errors > 0 ? '✕' : ''}${warnings > 0 ? '⚠' : ''}`;
+  }
 
   store.roots.forEach(rootID => {
     const {weight} = ((store.getElementByID(rootID): any): Element);
@@ -66,7 +89,12 @@ export function printStore(store: Store, includeWeight: boolean = false) {
         throw Error(`Could not find element at index ${i}`);
       }
 
-      snapshotLines.push(printElement(element, includeWeight));
+      const printedSelectedMarker = printSelectedMarker(i);
+      const printedElement = printElement(element, includeWeight);
+      const printedErrorsAndWarnings = printErrorsAndWarnings(element);
+      snapshotLines.push(
+        `${printedSelectedMarker}${printedElement}${printedErrorsAndWarnings}`,
+      );
     }
 
     rootWeight += weight;

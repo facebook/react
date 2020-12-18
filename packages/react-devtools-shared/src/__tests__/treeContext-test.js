@@ -1120,7 +1120,7 @@ describe('TreeListContext', () => {
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Wrapper>
-              <Child>
+              <Child> ⚠
           ▸ <Wrapper>
       `);
       expect(state.selectedElementIndex).toBe(1);
@@ -1129,10 +1129,10 @@ describe('TreeListContext', () => {
       expect(store).toMatchInlineSnapshot(`
         [root]
           ▾ <Wrapper>
-              <Child>
+              <Child> ⚠
           ▾ <Wrapper>
             ▾ <Wrapper>
-                <Child>
+                <Child> ⚠
       `);
       expect(state.selectedElementIndex).toBe(4);
     });
