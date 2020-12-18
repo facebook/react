@@ -80,6 +80,10 @@ export default class Store extends EventEmitter<{|
 |}> {
   _bridge: FrontendBridge;
 
+  // Computed whenever _errorsAndWarnings Map changes.
+  _cachedErrorCount: number = 0;
+  _cachedWarningCount: number = 0;
+
   // Should new nodes be collapsed by default when added to the tree?
   _collapseNodesByDefault: boolean = true;
 
@@ -297,8 +301,8 @@ export default class Store extends EventEmitter<{|
     this.emit('componentFilters');
   }
 
-  get errorsAndWarnings(): Map<number, {errors: number, warnings: number}> {
-    return this._errorsAndWarnings;
+  get errorCount(): number {
+    return this._cachedErrorCount;
   }
 
   get hasOwnerMetadata(): boolean {
@@ -367,6 +371,10 @@ export default class Store extends EventEmitter<{|
 
   get unsupportedRendererVersionDetected(): boolean {
     return this._unsupportedRendererVersionDetected;
+  }
+
+  get warningCount(): number {
+    return this._cachedWarningCount;
   }
 
   clearErrorsAndWarnings(): void {
@@ -471,6 +479,45 @@ export default class Store extends EventEmitter<{|
     }
 
     return element;
+  }
+
+  // Returns a tuple of [id, index]
+  getElementsWithErrorsAndWarnings(): Array<{|id: number, index: number|}> {
+    const sortedArray: Array<{|id: number, index: number|}> = [];
+
+    this._errorsAndWarnings.forEach((_, id) => {
+      const index = this.getIndexOfElementID(id);
+      if (index !== null) {
+        let low = 0;
+        let high = sortedArray.length;
+        while (low < high) {
+          const mid = (low + high) >> 1;
+          if (sortedArray[mid].index > index) {
+            high = mid;
+          } else {
+            low = mid + 1;
+          }
+        }
+
+        sortedArray.splice(low, 0, {id, index});
+      }
+    });
+
+    return sortedArray;
+  }
+
+  getErrorAndWarningCountForElementID(
+    id: number,
+  ): {|errorCount: number, warningCount: number|} {
+    const map = this._errorsAndWarnings.get(id);
+    if (map != null) {
+      return {
+        errorCount: map.errors,
+        warningCount: map.warnings,
+      };
+    } else {
+      return {errorCount: 0, warningCount: 0};
+    }
   }
 
   getIndexOfElementID(id: number): number | null {
@@ -757,6 +804,7 @@ export default class Store extends EventEmitter<{|
     }
 
     let haveRootsChanged = false;
+    let haveErrorsOrWarningsChanged = false;
 
     // The first two values are always rendererID and rootID
     const rendererID = operations[0];
@@ -961,6 +1009,7 @@ export default class Store extends EventEmitter<{|
 
             if (this._errorsAndWarnings.has(id)) {
               this._errorsAndWarnings.delete(id);
+              haveErrorsOrWarningsChanged = true;
             }
           }
           break;
@@ -1053,6 +1102,7 @@ export default class Store extends EventEmitter<{|
           } else if (this._errorsAndWarnings.has(id)) {
             this._errorsAndWarnings.delete(id);
           }
+          haveErrorsOrWarningsChanged = true;
           break;
         default:
           throw Error(`Unsupported Bridge operation ${operation}`);
@@ -1060,6 +1110,19 @@ export default class Store extends EventEmitter<{|
     }
 
     this._revision++;
+
+    if (haveErrorsOrWarningsChanged) {
+      let errorCount = 0;
+      let warningCount = 0;
+
+      this._errorsAndWarnings.forEach(({errors, warnings}) => {
+        errorCount += errors;
+        warningCount += warnings;
+      });
+
+      this._cachedErrorCount = errorCount;
+      this._cachedWarningCount = warningCount;
+    }
 
     if (haveRootsChanged) {
       const prevSupportsProfiling = this._supportsProfiling;

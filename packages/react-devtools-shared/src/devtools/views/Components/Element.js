@@ -53,7 +53,9 @@ export default function Element({data, index, style}: Props) {
   const errorsAndWarningsSubscription = useMemo(
     () => ({
       getCurrentValue: () =>
-        store.errorsAndWarnings.get(element === null ? -1 : element.id),
+        element === null
+          ? {errorCount: 0, warningCount: 0}
+          : store.getErrorAndWarningCountForElementID(element.id),
       subscribe: (callback: Function) => {
         store.addListener('mutated', callback);
         return () => store.removeListener('mutated', callback);
@@ -61,11 +63,10 @@ export default function Element({data, index, style}: Props) {
     }),
     [store, element],
   );
-  const {errors = 0, warnings = 0} =
-    useSubscription<{
-      errors: number,
-      warnings: number,
-    } | void>(errorsAndWarningsSubscription) || {};
+  const {errorCount, warningCount} = useSubscription<{|
+    errorCount: number,
+    warningCount: number,
+  |}>(errorsAndWarningsSubscription);
 
   const handleDoubleClick = () => {
     if (id !== null) {
@@ -169,7 +170,7 @@ export default function Element({data, index, style}: Props) {
             />
           </Badge>
         ) : null}
-        {showInlineWarningsAndErrors && errors > 0 && (
+        {showInlineWarningsAndErrors && errorCount > 0 && (
           <Icon
             type="error"
             className={
@@ -179,7 +180,7 @@ export default function Element({data, index, style}: Props) {
             }
           />
         )}
-        {showInlineWarningsAndErrors && warnings > 0 && (
+        {showInlineWarningsAndErrors && warningCount > 0 && (
           <Icon
             type="warning"
             className={

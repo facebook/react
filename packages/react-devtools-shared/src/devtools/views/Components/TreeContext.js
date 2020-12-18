@@ -381,88 +381,79 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
         }
         break;
       case 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE': {
-        if (store.errorsAndWarnings.size === 0) {
+        if (store.errorCount === 0 && store.warningCount === 0) {
           return state;
         }
 
-        // Mapping of ID -> Index in the flat tree
-        const elementIndicesWithErrorsOrWarnings: [
-          number,
-          number,
-        ][] = Array.from(store.errorsAndWarnings.keys())
-          .map(elementId => {
-            // $FlowFixMe https://github.com/facebook/flow/issues/1414
-            return [elementId, store.getIndexOfElementID(elementId)];
-          })
-          .filter(([, elementIndex]) => {
-            return elementIndex !== null;
-          });
-        elementIndicesWithErrorsOrWarnings.sort(([, a], [, b]) => {
-          return b - a;
-        });
+        const elementIndicesWithErrorsOrWarnings = store.getElementsWithErrorsAndWarnings();
 
-        const flatSelectedElementIndex =
-          // Selected element in a collapsed tree?
-          selectedElementIndex === null && selectedElementID !== null
-            ? store.getIndexOfElementID(selectedElementID)
-            : selectedElementIndex;
-        const predecessors = elementIndicesWithErrorsOrWarnings.filter(
-          ([, elementIndex]) => {
-            return (
-              flatSelectedElementIndex === null ||
-              elementIndex < flatSelectedElementIndex
-            );
-          },
-        );
-        if (predecessors.length === 0) {
-          selectedElementID = elementIndicesWithErrorsOrWarnings[0][0];
-        } else {
-          selectedElementID = predecessors[0][0];
+        let flatIndex = 0;
+        if (selectedElementIndex !== null) {
+          // Resume from the current position in the list.
+          // Otherwise step to the previous item, relative to the current selection.
+          for (
+            let i = elementIndicesWithErrorsOrWarnings.length - 1;
+            i >= 0;
+            i--
+          ) {
+            const {index} = elementIndicesWithErrorsOrWarnings[i];
+            if (index >= selectedElementIndex) {
+              flatIndex = i;
+            } else {
+              break;
+            }
+          }
         }
-        selectedElementIndex = store.getIndexOfElementID(selectedElementID);
+
+        let prevEntry;
+        if (flatIndex === 0) {
+          prevEntry =
+            elementIndicesWithErrorsOrWarnings[
+              elementIndicesWithErrorsOrWarnings.length - 1
+            ];
+          selectedElementID = prevEntry.id;
+          selectedElementIndex = prevEntry.index;
+        } else {
+          prevEntry = elementIndicesWithErrorsOrWarnings[flatIndex - 1];
+          selectedElementID = prevEntry.id;
+          selectedElementIndex = prevEntry.index;
+        }
+
         lookupIDForIndex = false;
         break;
       }
       case 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE': {
-        if (store.errorsAndWarnings.size === 0) {
+        if (store.errorCount === 0 && store.warningCount === 0) {
           return state;
         }
 
-        // Mapping of ID -> Index in the flat tree
-        const elementIndicesWithErrorsOrWarnings: [
-          number,
-          number,
-        ][] = Array.from(store.errorsAndWarnings.keys())
-          .map(elementId => {
-            // $FlowFixMe https://github.com/facebook/flow/issues/1414
-            return [elementId, store.getIndexOfElementID(elementId)];
-          })
-          .filter(([, elementIndex]) => {
-            return elementIndex !== null;
-          });
-        elementIndicesWithErrorsOrWarnings.sort(([, a], [, b]) => {
-          return a - b;
-        });
+        const elementIndicesWithErrorsOrWarnings = store.getElementsWithErrorsAndWarnings();
 
-        const flatSelectedElementIndex =
-          // Selected element in a collapsed tree?
-          selectedElementIndex === null && selectedElementID !== null
-            ? store.getIndexOfElementID(selectedElementID)
-            : selectedElementIndex;
-        const successors = elementIndicesWithErrorsOrWarnings.filter(
-          ([, elementIndex]) => {
-            return (
-              flatSelectedElementIndex === null ||
-              elementIndex > flatSelectedElementIndex
-            );
-          },
-        );
-        if (successors.length === 0) {
-          selectedElementID = elementIndicesWithErrorsOrWarnings[0][0];
-        } else {
-          selectedElementID = successors[0][0];
+        let flatIndex = -1;
+        if (selectedElementIndex !== null) {
+          // Resume from the current position in the list.
+          // Otherwise step to the next item, relative to the current selection.
+          for (let i = 0; i < elementIndicesWithErrorsOrWarnings.length; i++) {
+            const {index} = elementIndicesWithErrorsOrWarnings[i];
+            if (index <= selectedElementIndex) {
+              flatIndex = i;
+            } else {
+              break;
+            }
+          }
         }
-        selectedElementIndex = store.getIndexOfElementID(selectedElementID);
+
+        let nextEntry;
+        if (flatIndex >= elementIndicesWithErrorsOrWarnings.length - 1) {
+          nextEntry = elementIndicesWithErrorsOrWarnings[0];
+          selectedElementID = nextEntry.id;
+          selectedElementIndex = nextEntry.index;
+        } else {
+          nextEntry = elementIndicesWithErrorsOrWarnings[flatIndex + 1];
+          selectedElementID = nextEntry.id;
+          selectedElementIndex = nextEntry.index;
+        }
+
         lookupIDForIndex = false;
         break;
       }

@@ -1304,7 +1304,8 @@ describe('Store', () => {
         act(() => ReactDOM.render(<React.Fragment />, container));
       });
       expect(store).toMatchInlineSnapshot(`[root]`);
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`Map {}`);
+      expect(store.errorCount).toBe(0);
+      expect(store.warningCount).toBe(0);
     });
   });
 });

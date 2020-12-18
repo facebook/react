@@ -314,16 +314,10 @@ export default function Tree(props: Props) {
 
   const errorsOrWarningsSubscription = useMemo(
     () => ({
-      getCurrentValue: () => {
-        let errorsSum = 0;
-        let warningsSum = 0;
-        store.errorsAndWarnings.forEach(({errors, warnings}) => {
-          errorsSum += errors;
-          warningsSum += warnings;
-        });
-
-        return {errors: errorsSum, warnings: warningsSum};
-      },
+      getCurrentValue: () => ({
+        errors: store.errorCount,
+        warnings: store.warningCount,
+      }),
       subscribe: (callback: Function) => {
         store.addListener('mutated', callback);
         return () => store.removeListener('mutated', callback);

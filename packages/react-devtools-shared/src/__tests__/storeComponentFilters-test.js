@@ -398,7 +398,8 @@ describe('Store component filters', () => {
       });
 
       expect(store).toMatchInlineSnapshot(`[root]`);
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`Map {}`);
+      expect(store.errorCount).toBe(0);
+      expect(store.warningCount).toBe(0);
 
       act(() => (store.componentFilters = []));
       expect(store).toMatchInlineSnapshot(`
@@ -434,7 +435,8 @@ describe('Store component filters', () => {
           ]),
       );
       expect(store).toMatchInlineSnapshot(`[root]`);
-      expect(store.errorsAndWarnings).toMatchInlineSnapshot(`Map {}`);
+      expect(store.errorCount).toBe(0);
+      expect(store.warningCount).toBe(0);
 
       act(() => (store.componentFilters = []));
       expect(store).toMatchInlineSnapshot(`

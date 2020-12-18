@@ -67,14 +67,14 @@ export function printStore(
   }
 
   function printErrorsAndWarnings(element: Element): string {
-    const {errors, warnings} = store.errorsAndWarnings.get(element.id) || {
-      errors: 0,
-      warnings: 0,
-    };
-    if (errors === 0 && warnings === 0) {
+    const {
+      errorCount,
+      warningCount,
+    } = store.getErrorAndWarningCountForElementID(element.id);
+    if (errorCount === 0 && warningCount === 0) {
       return '';
     }
-    return ` ${errors > 0 ? '✕' : ''}${warnings > 0 ? '⚠' : ''}`;
+    return ` ${errorCount > 0 ? '✕' : ''}${warningCount > 0 ? '⚠' : ''}`;
   }
 
   const ownerFlatTree = state !== null ? state.ownerFlatTree : null;
@@ -94,12 +94,16 @@ export function printStore(
     store.roots.forEach(rootID => {
       const {weight} = ((store.getElementByID(rootID): any): Element);
 
+      // This value not directly exposed to UI; only used for snapshot serialization.
+      // Store does not (yet) expose a way to get errors/warnings per root.
+      const errorsAndWarnings = store._errorsAndWarnings;
+
       const maybeWeightLabel = includeWeight ? ` (${weight})` : '';
       let maybeErrorsAndWarningsCount = '';
-      if (store.errorsAndWarnings.size > 0) {
+      if (errorsAndWarnings.size > 0) {
         let errorsSum = 0;
         let warningsSum = 0;
-        store.errorsAndWarnings.forEach(({errors, warnings}) => {
+        errorsAndWarnings.forEach(({errors, warnings}) => {
           errorsSum += errors;
           warningsSum += warnings;
         });
