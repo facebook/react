@@ -70,7 +70,6 @@ export type Capabilities = {|
 export default class Store extends EventEmitter<{|
   collapseNodesByDefault: [],
   componentFilters: [],
-  errorsAndWarnings: [],
   mutated: [[Array<number>, Map<number, number>]],
   recordChangeDescriptions: [],
   roots: [],
@@ -758,7 +757,6 @@ export default class Store extends EventEmitter<{|
     }
 
     let haveRootsChanged = false;
-    let haveWarningsAndErrorsChanged = false;
 
     // The first two values are always rendererID and rootID
     const rendererID = operations[0];
@@ -1055,7 +1053,6 @@ export default class Store extends EventEmitter<{|
           } else if (this._errorsAndWarnings.has(id)) {
             this._errorsAndWarnings.delete(id);
           }
-          haveWarningsAndErrorsChanged = true;
           break;
         default:
           throw Error(`Unsupported Bridge operation ${operation}`);
@@ -1085,10 +1082,6 @@ export default class Store extends EventEmitter<{|
       if (this._supportsProfiling !== prevSupportsProfiling) {
         this.emit('supportsProfiling');
       }
-    }
-
-    if (haveWarningsAndErrorsChanged) {
-      this.emit('errorsAndWarnings');
     }
 
     if (__DEBUG__) {

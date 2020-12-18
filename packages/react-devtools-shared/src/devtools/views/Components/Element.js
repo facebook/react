@@ -55,8 +55,8 @@ export default function Element({data, index, style}: Props) {
       getCurrentValue: () =>
         store.errorsAndWarnings.get(element === null ? -1 : element.id),
       subscribe: (callback: Function) => {
-        store.addListener('errorsAndWarnings', callback);
-        return () => store.removeListener('errorsAndWarnings', callback);
+        store.addListener('mutated', callback);
+        return () => store.removeListener('mutated', callback);
       },
     }),
     [store, element],

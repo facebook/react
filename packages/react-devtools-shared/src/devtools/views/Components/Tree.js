@@ -325,8 +325,8 @@ export default function Tree(props: Props) {
         return {errors: errorsSum, warnings: warningsSum};
       },
       subscribe: (callback: Function) => {
-        store.addListener('errorsAndWarnings', callback);
-        return () => store.removeListener('errorsAndWarnings', callback);
+        store.addListener('mutated', callback);
+        return () => store.removeListener('mutated', callback);
       },
     }),
     [store],
