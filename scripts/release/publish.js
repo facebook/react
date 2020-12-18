@@ -3,6 +3,7 @@
 'use strict';
 
 const {join} = require('path');
+const {readJsonSync} = require('fs-extra');
 const {getPublicPackages, handleError} = require('./utils');
 const theme = require('./theme');
 
@@ -20,8 +21,13 @@ const validateSkipPackages = require('./publish-commands/validate-skip-packages'
 const run = async () => {
   try {
     const params = parseParams();
+
+    const version = readJsonSync('./build/node_modules/react/package.json')
+      .version;
+    const isExperimental = version.includes('experimental');
+
     params.cwd = join(__dirname, '..', '..');
-    params.packages = await getPublicPackages();
+    params.packages = await getPublicPackages(isExperimental);
 
     // Pre-filter any skipped packages to simplify the following commands.
     // As part of doing this we can also validate that none of the skipped packages were misspelled.
