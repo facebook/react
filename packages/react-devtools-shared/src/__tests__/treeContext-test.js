@@ -2066,5 +2066,34 @@ describe('TreeListContext', () => {
                  <Child> ⚠
       `);
     });
+
+    xit('should do what with warnings/errors of uncommitted renders?', () => {
+      const NeverResolves = React.lazy(() => new Promise(() => {}));
+
+      withErrorsOrWarningsIgnored(['test-only:'], () =>
+        utils.act(() =>
+          ReactDOM.render(
+            <React.Suspense fallback={null}>
+              <Child logWarning={true} />
+              <NeverResolves />
+            </React.Suspense>,
+            document.createElement('div'),
+          ),
+        ),
+      );
+      utils.act(() => TestRenderer.create(<Contexts />));
+
+      expect(state).toMatchInlineSnapshot(`
+        [root] ✕ 0, ⚠ 1
+             <Suspense>
+      `);
+
+      selectNextErrorOrWarning();
+
+      expect(state).toMatchInlineSnapshot(`
+        [root] ⚠ 1
+             <Suspense>
+      `);
+    });
   });
 });
