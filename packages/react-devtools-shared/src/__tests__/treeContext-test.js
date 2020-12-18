@@ -872,22 +872,58 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      expect(state.selectedElementIndex).toBe(null);
+      let statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child>
+             <Child>
+             <Child>
+      `);
 
       // Next/previous errors should be a no-op
       selectPreviousErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(null);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child>
+             <Child>
+             <Child>
+      `);
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(null);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child>
+             <Child>
+             <Child>
+      `);
 
       utils.act(() => dispatch({type: 'SELECT_ELEMENT_AT_INDEX', payload: 0}));
-      expect(state.selectedElementIndex).toBe(0);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+        →    <Child>
+             <Child>
+             <Child>
+      `);
 
       // Next/previous errors should still be a no-op
       selectPreviousErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(0);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+        →    <Child>
+             <Child>
+             <Child>
+      `);
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(0);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+        →    <Child>
+             <Child>
+             <Child>
+      `);
     });
 
     it('should cycle through the next errors/warnings and wrap around', () => {
@@ -907,16 +943,48 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      expect(state.selectedElementIndex).toBe(null);
+      let statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child>
+             <Child> ⚠
+             <Child>
+             <Child> ✕
+             <Child>
+      `);
 
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(1);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child>
+        →    <Child> ⚠
+             <Child>
+             <Child> ✕
+             <Child>
+      `);
 
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(3);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child>
+             <Child> ⚠
+             <Child>
+        →    <Child> ✕
+             <Child>
+      `);
 
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(1);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child>
+        →    <Child> ⚠
+             <Child>
+             <Child> ✕
+             <Child>
+      `);
     });
 
     it('should cycle through the previous errors/warnings and wrap around', () => {
@@ -936,16 +1004,48 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      expect(state.selectedElementIndex).toBe(null);
+      let statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child>
+             <Child> ⚠
+             <Child>
+             <Child> ✕
+             <Child>
+      `);
 
       selectPreviousErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(3);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child>
+             <Child> ⚠
+             <Child>
+        →    <Child> ✕
+             <Child>
+      `);
 
       selectPreviousErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(1);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child>
+        →    <Child> ⚠
+             <Child>
+             <Child> ✕
+             <Child>
+      `);
 
       selectPreviousErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(3);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child>
+             <Child> ⚠
+             <Child>
+        →    <Child> ✕
+             <Child>
+      `);
     });
 
     it('should update correctly when errors/warnings are cleared for a fiber in the list', () => {
@@ -964,26 +1064,61 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      expect(state.selectedElementIndex).toBe(null);
+      let statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child> ⚠
+             <Child> ✕
+             <Child> ✕
+             <Child> ⚠
+      `);
 
       // Select the first item in the list
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(0);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+        →    <Child> ⚠
+             <Child> ✕
+             <Child> ✕
+             <Child> ⚠
+      `);
 
       // Clear warnings (but the next Fiber has only errors)
       clearWarningsForElement(store.getElementIDAtIndex(1));
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(1);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child> ⚠
+        →    <Child> ✕
+             <Child> ✕
+             <Child> ⚠
+      `);
 
       clearErrorsForElement(store.getElementIDAtIndex(2));
 
       // Should step to the (now) next one in the list.
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(3);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child> ⚠
+             <Child> ✕
+             <Child>
+        →    <Child> ⚠
+      `);
 
       // Should skip over the (now) cleared Fiber
       selectPreviousErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(1);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child> ⚠
+        →    <Child> ✕
+             <Child>
+             <Child> ⚠
+      `);
     });
 
     it('should update correctly when errors/warnings are cleared for the currently selected fiber', () => {
@@ -1000,14 +1135,29 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      expect(state.selectedElementIndex).toBe(null);
+      let statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child> ⚠
+             <Child> ✕
+      `);
 
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(0);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+        →    <Child> ⚠
+             <Child> ✕
+      `);
 
       clearWarningsForElement(store.getElementIDAtIndex(0));
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(1);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child>
+        →    <Child> ✕
+      `);
     });
 
     it('should update correctly when new errors/warnings are added', () => {
@@ -1028,10 +1178,24 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      expect(state.selectedElementIndex).toBe(null);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child> ⚠
+             <Child>
+             <Child>
+             <Child> ✕
+      `);
 
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(0);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+        →    <Child> ⚠
+             <Child>
+             <Child>
+             <Child> ✕
+      `);
 
       withErrorsOrWarningsIgnored(['test-only:'], () =>
         utils.act(() =>
@@ -1048,13 +1212,34 @@ describe('TreeListContext', () => {
       );
 
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(1);
+      let statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child> ⚠
+        →    <Child> ⚠
+             <Child>
+             <Child> ✕
+      `);
 
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(3);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child> ⚠
+             <Child> ⚠
+             <Child>
+        →    <Child> ✕
+      `);
 
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(0);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+        →    <Child> ⚠
+             <Child> ⚠
+             <Child>
+             <Child> ✕
+      `);
     });
 
     it('should update correctly when all errors/warnings are cleared', () => {
@@ -1071,18 +1256,38 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      expect(state.selectedElementIndex).toBe(null);
+      let statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+             <Child> ⚠
+             <Child> ✕
+      `);
 
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(0);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+        →    <Child> ⚠
+             <Child> ✕
+      `);
 
       clearAllErrors();
 
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(0);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+        →    <Child>
+             <Child>
+      `);
 
       selectPreviousErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(0);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+        [root]
+        →    <Child>
+             <Child>
+      `);
     });
 
     it('should update select and auto-expand parts components within hidden parts of the tree', () => {
@@ -1109,32 +1314,32 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      expect(store).toMatchInlineSnapshot(`
+      let statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
         [root]
-          ▸ <Wrapper>
-          ▸ <Wrapper>
+           ▸ <Wrapper>
+           ▸ <Wrapper>
       `);
-      expect(state.selectedElementIndex).toBe(null);
 
       selectNextErrorOrWarning();
-      expect(store).toMatchInlineSnapshot(`
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
         [root]
-          ▾ <Wrapper>
-              <Child> ⚠
-          ▸ <Wrapper>
+           ▾ <Wrapper>
+        →      <Child> ⚠
+           ▸ <Wrapper>
       `);
-      expect(state.selectedElementIndex).toBe(1);
 
       selectNextErrorOrWarning();
-      expect(store).toMatchInlineSnapshot(`
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
         [root]
-          ▾ <Wrapper>
-              <Child> ⚠
-          ▾ <Wrapper>
-            ▾ <Wrapper>
-                <Child> ⚠
+           ▾ <Wrapper>
+               <Child> ⚠
+           ▾ <Wrapper>
+             ▾ <Wrapper>
+        →        <Child> ⚠
       `);
-      expect(state.selectedElementIndex).toBe(4);
     });
 
     xit('should properly handle when components filters are updated', () => {
@@ -1159,60 +1364,61 @@ describe('TreeListContext', () => {
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
-      expect(store).toMatchInlineSnapshot(`
+      let statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
         [root]
-          ▾ <Wrapper>
-              <Child>
-          ▾ <Wrapper>
-            ▾ <Wrapper>
-                <Child>
+           ▾ <Wrapper>
+        →      <Child> ⚠
+           ▾ <Wrapper>
+             ▾ <Wrapper>
+                 <Child> ⚠
       `);
-      expect(state.selectedElementIndex).toBe(null);
 
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(1);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot();
 
       utils.act(() => {
         store.componentFilters = [utils.createDisplayNameFilter('Wrapper')];
       });
+      statefulStore = {state, store};
       expect(store).toMatchInlineSnapshot(`
           [root]
-              <Child>
-              <Child>
+               <Child> ⚠
+          →    <Child> ⚠
         `);
-      expect(state.selectedElementIndex).toBe(null);
 
       selectNextErrorOrWarning();
-      expect(store).toMatchInlineSnapshot(`
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
         [root]
-            <Child>
-            <Child>
+        →    <Child> ⚠
+             <Child> ⚠
       `);
-      expect(state.selectedElementIndex).toBe(0);
 
       utils.act(() => {
         store.componentFilters = [];
       });
-      expect(store).toMatchInlineSnapshot(`
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
         [root]
-          ▾ <Wrapper>
-              <Child>
-          ▾ <Wrapper>
-            ▾ <Wrapper>
-                <Child>
+           ▾ <Wrapper>
+        →      <Child> ⚠
+           ▾ <Wrapper>
+             ▾ <Wrapper>
+                 <Child> ⚠
       `);
-      expect(state.selectedElementIndex).toBe(null);
 
       selectPreviousErrorOrWarning();
-      expect(store).toMatchInlineSnapshot(`
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
         [root]
-          ▾ <Wrapper>
-              <Child>
-          ▾ <Wrapper>
-            ▾ <Wrapper>
-                <Child>
+           ▾ <Wrapper>
+               <Child> ⚠
+           ▾ <Wrapper>
+             ▾ <Wrapper>
+        →        <Child> ⚠
       `);
-      expect(state.selectedElementIndex).toBe(1);
     });
 
     xit('should preserve errors for fibers even if they are filtered out of the tree initially', () => {
@@ -1240,28 +1446,36 @@ describe('TreeListContext', () => {
 
       utils.act(() => TestRenderer.create(<Contexts />));
       utils.act(() => TestRenderer.create(<Contexts />));
-      expect(store).toMatchInlineSnapshot(`
+      let statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
         [root]
-            <Child>
-            <Child>
+             <Child> ⚠
+             <Child> ⚠
       `);
-      expect(state.selectedElementIndex).toBe(null);
 
       utils.act(() => {
         store.componentFilters = [];
       });
-      expect(store).toMatchInlineSnapshot(`
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
         [root]
-          ▾ <Wrapper>
-              <Child>
-          ▾ <Wrapper>
-            ▾ <Wrapper>
-                <Child>
+           ▾ <Wrapper>
+               <Child> ⚠
+           ▾ <Wrapper>
+             ▾ <Wrapper>
+                 <Child> ⚠
       `);
-      expect(state.selectedElementIndex).toBe(null);
 
       selectNextErrorOrWarning();
-      expect(state.selectedElementIndex).toBe(1);
+      statefulStore = {state, store};
+      expect(statefulStore).toMatchInlineSnapshot(`
+      [root]
+         ▾ <Wrapper>
+      →      <Child> ⚠
+         ▾ <Wrapper>
+           ▾ <Wrapper>
+               <Child> ⚠
+    `);
     });
   });
 });
