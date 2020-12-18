@@ -148,7 +148,6 @@ import {
   popRenderLanes,
   getRenderTargetTime,
   subtreeRenderLanes,
-  getWorkInProgressRoot,
 } from './ReactFiberWorkLoop.old';
 import {createFundamentalStateInstance} from './ReactFiberFundamental.old';
 import {
@@ -161,7 +160,11 @@ import {
 import {resetChildFibers} from './ReactChildFiber.old';
 import {createScopeInstance} from './ReactFiberScope.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
-import {popCacheProvider, popCachePool} from './ReactFiberCacheComponent.old';
+import {
+  popCacheProvider,
+  popRootCachePool,
+  popCachePool,
+} from './ReactFiberCacheComponent.old';
 
 function markUpdate(workInProgress: Fiber) {
   // Tag the fiber with an update effect. This turns a Placement into
@@ -817,7 +820,10 @@ function completeWork(
       return null;
     }
     case HostRoot: {
+      const fiberRoot = (workInProgress.stateNode: FiberRoot);
       if (enableCache) {
+        popRootCachePool(fiberRoot, renderLanes);
+
         const cacheInstance: CacheInstance =
           workInProgress.memoizedState.cacheInstance;
         popCacheProvider(workInProgress, cacheInstance);
@@ -825,7 +831,6 @@ function completeWork(
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       resetMutableSourceWorkInProgressVersions();
-      const fiberRoot = (workInProgress.stateNode: FiberRoot);
       if (fiberRoot.pendingContext) {
         fiberRoot.context = fiberRoot.pendingContext;
         fiberRoot.pendingContext = null;
@@ -1503,13 +1508,7 @@ function completeWork(
           if (cacheInstance.provider !== null) {
             popCacheProvider(workInProgress, cacheInstance);
           } else {
-            const root = getWorkInProgressRoot();
-            invariant(
-              root !== null,
-              'Expected a work-in-progress root. This is a bug in React. Please ' +
-                'file an issue.',
-            );
-            popCachePool(root, cacheInstance);
+            popCachePool(cacheInstance);
           }
         }
       }

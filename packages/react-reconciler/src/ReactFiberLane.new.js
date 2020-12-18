@@ -8,7 +8,6 @@
  */
 
 import type {FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
-import type {Cache} from './ReactFiberCacheComponent.new';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
@@ -779,30 +778,6 @@ export function markRootEntangled(root: FiberRoot, entangledLanes: Lanes) {
 
     lanes &= ~lane;
   }
-}
-
-export function requestCacheFromPool(
-  root: FiberRoot,
-  renderLanes: Lanes,
-): Cache {
-  if (!enableCache) {
-    return (null: any);
-  }
-
-  root.pooledCacheLanes |= renderLanes;
-
-  const pooledCache = root.pooledCache;
-  if (pooledCache !== null) {
-    return pooledCache;
-  }
-
-  // Create a fresh cache.
-  const cache = new Map();
-
-  // This is now the pooled cache.
-  root.pooledCache = cache;
-
-  return cache;
 }
 
 export function getBumpedLaneForHydration(

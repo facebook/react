@@ -9,6 +9,7 @@
 
 import type {ReactContext} from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
+import type {Lanes} from './ReactFiberLane.old';
 
 import {enableCache} from 'shared/ReactFeatureFlags';
 import {REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
@@ -50,6 +51,9 @@ if (__DEV__ && enableCache) {
 // A parent cache refresh always overrides any nested cache. So there will only
 // ever be a single fresh cache on the context stack.
 let freshCacheInstance: CacheInstance | null = null;
+
+// The cache that we retrived from the pool during this render, if any
+let pooledCache: Cache | null = null;
 
 export function pushStaleCacheProvider(
   workInProgress: Fiber,
@@ -124,34 +128,74 @@ export function getFreshCacheProviderIfExists(): CacheInstance | null {
   return freshCacheInstance;
 }
 
-export function pushCachePool(
-  root: FiberRoot,
-  cacheInstance: PooledCacheInstance,
-) {
-  // This will temporarily override the root's pooled cache, so that any new
-  // Cache boundaries in the subtree use this one. The previous value on the
-  // "stack" is stored on the cache instance. We will restore it during the
+export function requestCacheFromPool(renderLanes: Lanes): Cache {
+  if (!enableCache) {
+    return (null: any);
+  }
+  if (pooledCache !== null) {
+    return pooledCache;
+  }
+  // Create a fresh cache.
+  pooledCache = new Map();
+  return pooledCache;
+}
+
+export function getPooledCacheIfExists(): Cache | null {
+  return pooledCache;
+}
+
+export function pushRootCachePool(root: FiberRoot) {
+  if (!enableCache) {
+    return;
+  }
+  // When we start rendering a tree, read the pooled cache for this render
+  // from `root.pooledCache`. If it's currently `null`, we will lazily
+  // initialize it the first type it's requested. However, we only mutate
+  // the root itself during the complete/unwind phase of the HostRoot.
+  pooledCache = root.pooledCache;
+}
+
+export function popRootCachePool(root: FiberRoot, renderLanes: Lanes) {
+  if (!enableCache) {
+    return;
+  }
+  // The `pooledCache` variable points to the cache that was used for new
+  // cache boundaries during this render, if any. Stash it on the root so that
+  // parallel transitions may share the same cache. We will clear this field
+  // once all the transitions that depend on it (which we track with
+  // `pooledCacheLanes`) have committed.
+  root.pooledCache = pooledCache;
+  root.pooledCacheLanes |= renderLanes;
+}
+
+export function pushCachePool(cacheInstance: PooledCacheInstance) {
+  if (!enableCache) {
+    return;
+  }
+  // This will temporarily override the pooled cache for this render, so that
+  // any new Cache boundaries in the subtree use this one. The previous value on
+  // the "stack" is stored on the cache instance. We will restore it during the
   // complete phase.
   //
   // The more straightforward way to do this would be to use the array-based
   // stack (push/pop). Maybe this is too clever.
-  const prevPooledCacheOnStack = root.pooledCache;
-  root.pooledCache = cacheInstance.cache;
+  const prevPooledCacheOnStack = pooledCache;
+  pooledCache = cacheInstance.cache;
   // This is never supposed to be null. I'm cheating. Sorry. It will be reset to
   // the correct type when we pop.
   cacheInstance.cache = ((prevPooledCacheOnStack: any): Cache);
 }
 
-export function popCachePool(
-  root: FiberRoot,
-  cacheInstance: PooledCacheInstance,
-) {
-  const retryCache: Cache = (root.pooledCache: any);
+export function popCachePool(cacheInstance: PooledCacheInstance) {
+  if (!enableCache) {
+    return;
+  }
+  const retryCache: Cache = (pooledCache: any);
   if (__DEV__) {
     if (retryCache === null) {
       console.error('Expected to have a pooled cache. This is a bug in React.');
     }
   }
-  root.pooledCache = cacheInstance.cache;
+  pooledCache = cacheInstance.cache;
   cacheInstance.cache = retryCache;
 }

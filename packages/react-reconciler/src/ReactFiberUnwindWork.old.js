@@ -8,7 +8,7 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {
@@ -46,8 +46,12 @@ import {
   popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext.old';
 import {popProvider} from './ReactFiberNewContext.old';
-import {popRenderLanes, getWorkInProgressRoot} from './ReactFiberWorkLoop.old';
-import {popCacheProvider, popCachePool} from './ReactFiberCacheComponent.old';
+import {popRenderLanes} from './ReactFiberWorkLoop.old';
+import {
+  popCacheProvider,
+  popRootCachePool,
+  popCachePool,
+} from './ReactFiberCacheComponent.old';
 import {transferActualDuration} from './ReactProfilerTimer.old';
 
 import invariant from 'shared/invariant';
@@ -74,6 +78,9 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
     }
     case HostRoot: {
       if (enableCache) {
+        const root: FiberRoot = workInProgress.stateNode;
+        popRootCachePool(root, renderLanes);
+
         const cacheInstance: CacheInstance =
           workInProgress.memoizedState.cacheInstance;
         popCacheProvider(workInProgress, cacheInstance);
@@ -148,13 +155,7 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
           if (cacheInstance.provider !== null) {
             popCacheProvider(workInProgress, cacheInstance);
           } else {
-            const root = getWorkInProgressRoot();
-            invariant(
-              root !== null,
-              'Expected a work-in-progress root. This is a bug in React. Please ' +
-                'file an issue.',
-            );
-            popCachePool(root, cacheInstance);
+            popCachePool(cacheInstance);
           }
         }
       }
@@ -172,7 +173,7 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
   }
 }
 
-function unwindInterruptedWork(interruptedWork: Fiber) {
+function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
   switch (interruptedWork.tag) {
     case ClassComponent: {
       const childContextTypes = interruptedWork.type.childContextTypes;
@@ -184,6 +185,9 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
     case HostRoot: {
       popHostContainer(interruptedWork);
       if (enableCache) {
+        const root: FiberRoot = interruptedWork.stateNode;
+        popRootCachePool(root, renderLanes);
+
         const cacheInstance: CacheInstance =
           interruptedWork.memoizedState.cacheInstance;
         popCacheProvider(interruptedWork, cacheInstance);
@@ -221,13 +225,7 @@ function unwindInterruptedWork(interruptedWork: Fiber) {
           if (cacheInstance.provider !== null) {
             popCacheProvider(interruptedWork, cacheInstance);
           } else {
-            const root = getWorkInProgressRoot();
-            invariant(
-              root !== null,
-              'Expected a work-in-progress root. This is a bug in React. Please ' +
-                'file an issue.',
-            );
-            popCachePool(root, cacheInstance);
+            popCachePool(cacheInstance);
           }
         }
       }

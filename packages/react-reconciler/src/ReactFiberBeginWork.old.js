@@ -123,7 +123,6 @@ import {
   removeLanes,
   mergeLanes,
   getBumpedLaneForHydration,
-  requestCacheFromPool,
 } from './ReactFiberLane.old';
 import {
   ConcurrentMode,
@@ -215,8 +214,11 @@ import {
   pushFreshCacheProvider,
   pushStaleCacheProvider,
   hasFreshCacheProvider,
+  requestCacheFromPool,
+  pushRootCachePool,
   pushCachePool,
   getFreshCacheProviderIfExists,
+  getPooledCacheIfExists,
 } from './ReactFiberCacheComponent.old';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
@@ -672,13 +674,7 @@ function updateOffscreenComponent(
             // This isn't a refresh, it's a continuation of a previous render.
             // So we don't need to propagate a context change.
           } else {
-            const root = getWorkInProgressRoot();
-            invariant(
-              root !== null,
-              'Expected a work-in-progress root. This is a bug in React. Please ' +
-                'file an issue.',
-            );
-            pushCachePool(root, prevCacheInstance);
+            pushCachePool(prevCacheInstance);
           }
         }
       }
@@ -716,13 +712,7 @@ function updateOffscreenComponent(
             // This isn't a refresh, it's a continuation of a previous render.
             // So we don't need to propagate a context change.
           } else {
-            const root = getWorkInProgressRoot();
-            invariant(
-              root !== null,
-              'Expected a work-in-progress root. This is a bug in React. Please ' +
-                'file an issue.',
-            );
-            pushCachePool(root, prevCacheInstance);
+            pushCachePool(prevCacheInstance);
           }
         }
       }
@@ -784,7 +774,7 @@ function updateCacheComponent(
       );
       // This will always be different from the parent cache; otherwise we would
       // have detected a fresh cache provider in the earlier branch.
-      const cache = requestCacheFromPool(root, renderLanes);
+      const cache = requestCacheFromPool(renderLanes);
       cacheInstance = {
         cache,
         provider: workInProgress,
@@ -1204,7 +1194,11 @@ function updateHostRoot(current, workInProgress, renderLanes) {
   processUpdateQueue(workInProgress, nextProps, null, renderLanes);
   const nextState = workInProgress.memoizedState;
 
+  const root: FiberRoot = workInProgress.stateNode;
+
   if (enableCache) {
+    pushRootCachePool(root);
+
     const nextCacheInstance: CacheInstance = nextState.cacheInstance;
     if (nextCacheInstance !== prevState.cacheInstance) {
       pushFreshCacheProvider(workInProgress, nextCacheInstance);
@@ -1226,7 +1220,6 @@ function updateHostRoot(current, workInProgress, renderLanes) {
     resetHydrationState();
     return bailoutOnAlreadyFinishedWork(current, workInProgress, renderLanes);
   }
-  const root: FiberRoot = workInProgress.stateNode;
   if (root.hydrate && enterHydrationState(workInProgress)) {
     // If we don't have any current children this might be the first pass.
     // We always try to hydrate. If this isn't a hydration pass there won't
@@ -1797,13 +1790,11 @@ function mountSuspenseOffscreenState(renderLanes: Lanes): OffscreenState {
         'Expected a work-in-progress root. This is a bug in React. Please ' +
           'file an issue.',
       );
-      // If a nested cache accessed the pool during this render, it will be
-      // assigned to root.pooledCache. No need to check the lane-indexed pool.
-      // TODO: Actually I think I'm wrong and we do need to check the lane-indexed
-      // pool, to account for infinite transitions that are not triggered by a
-      // `refresh` call, since those won't put a fresh context on the stack.
-      // However, that's not idiomatic so this might be fine for now.
-      const pooledCache = root.pooledCache;
+      // If a nested cache accessed the pool during this render, it will
+      // returned by this function. It will also return a cache that was
+      // accessed by a sibling tree, but that's also fine, since that's the
+      // cache that would have been claimed by any nested caches.
+      const pooledCache = getPooledCacheIfExists();
       if (pooledCache !== null) {
         cacheInstance = {
           cache: (pooledCache: Cache),
@@ -1832,16 +1823,11 @@ function updateSuspenseOffscreenState(
       // during the first pass when we attempted to unhide.
       cacheInstance = prevOffscreenState.cache;
       if (cacheInstance === null) {
-        // If there's no previous cache, then we can check the pool. If a nested
-        // cache accessed the pool during this render, it will be assigned to
-        // root.pooledCache.
-        const root = getWorkInProgressRoot();
-        invariant(
-          root !== null,
-          'Expected a work-in-progress root. This is a bug in React. Please ' +
-            'file an issue.',
-        );
-        const pooledCache = root.pooledCache;
+        // If a nested cache accessed the pool during this render, it will
+        // returned by this function. It will also return a cache that was
+        // accessed by a sibling tree, but that's also fine, since that's the
+        // cache that would have been claimed by any nested caches.
+        const pooledCache = getPooledCacheIfExists();
         if (pooledCache !== null) {
           cacheInstance = {
             cache: (pooledCache: Cache),
@@ -3352,6 +3338,9 @@ function beginWork(
         case HostRoot:
           pushHostRootContext(workInProgress);
           if (enableCache) {
+            const root: FiberRoot = workInProgress.stateNode;
+            pushRootCachePool(root);
+
             const nextCacheInstance: CacheInstance =
               current.memoizedState.cacheInstance;
             pushStaleCacheProvider(workInProgress, nextCacheInstance);
