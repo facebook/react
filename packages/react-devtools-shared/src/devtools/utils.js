@@ -91,28 +91,24 @@ export function printStore(
       );
     });
   } else {
+    const errorsAndWarnings = store._errorsAndWarnings;
+    if (errorsAndWarnings.size > 0) {
+      let errorsSum = 0;
+      let warningsSum = 0;
+      errorsAndWarnings.forEach(({errors, warnings}) => {
+        errorsSum += errors;
+        warningsSum += warnings;
+      });
+
+      snapshotLines.push(`✕ ${errorsSum}, ⚠ ${warningsSum}`);
+    }
+
     store.roots.forEach(rootID => {
       const {weight} = ((store.getElementByID(rootID): any): Element);
-
-      // This value not directly exposed to UI; only used for snapshot serialization.
-      // Store does not (yet) expose a way to get errors/warnings per root.
-      const errorsAndWarnings = store._errorsAndWarnings;
-
       const maybeWeightLabel = includeWeight ? ` (${weight})` : '';
-      let maybeErrorsAndWarningsCount = '';
-      if (errorsAndWarnings.size > 0) {
-        let errorsSum = 0;
-        let warningsSum = 0;
-        errorsAndWarnings.forEach(({errors, warnings}) => {
-          errorsSum += errors;
-          warningsSum += warnings;
-        });
 
-        maybeErrorsAndWarningsCount = ` ✕ ${errorsSum}, ⚠ ${warningsSum}`;
-      }
-      snapshotLines.push(
-        `[root]${maybeWeightLabel}${maybeErrorsAndWarningsCount}`,
-      );
+      // Store does not (yet) expose a way to get errors/warnings per root.
+      snapshotLines.push(`[root]${maybeWeightLabel}`);
 
       for (let i = rootWeight; i < rootWeight + weight; i++) {
         const element = store.getElementAtIndex(i);
