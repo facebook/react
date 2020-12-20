@@ -403,7 +403,8 @@ describe('Store component filters', () => {
 
       act(() => (store.componentFilters = []));
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 2, ⚠ 2
+        ✕ 2, ⚠ 2
+        [root]
             <ComponentWithError> ✕
             <ComponentWithWarning> ⚠
             <ComponentWithWarningAndError> ✕⚠
@@ -414,7 +415,8 @@ describe('Store component filters', () => {
           (store.componentFilters = [utils.createDisplayNameFilter('Warning')]),
       );
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 1, ⚠ 0
+        ✕ 1, ⚠ 0
+        [root]
             <ComponentWithError> ✕
       `);
 
@@ -423,7 +425,8 @@ describe('Store component filters', () => {
           (store.componentFilters = [utils.createDisplayNameFilter('Error')]),
       );
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 0, ⚠ 1
+        ✕ 0, ⚠ 1
+        [root]
             <ComponentWithWarning> ⚠
       `);
 
@@ -440,7 +443,8 @@ describe('Store component filters', () => {
 
       act(() => (store.componentFilters = []));
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 2, ⚠ 2
+        ✕ 2, ⚠ 2
+        [root]
             <ComponentWithError> ✕
             <ComponentWithWarning> ⚠
             <ComponentWithWarningAndError> ✕⚠

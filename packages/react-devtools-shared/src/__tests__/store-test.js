@@ -1025,7 +1025,8 @@ describe('Store', () => {
       });
 
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 1, ⚠ 1
+        ✕ 1, ⚠ 1
+        [root]
             <Example> ✕⚠
       `);
 
@@ -1034,7 +1035,8 @@ describe('Store', () => {
       });
 
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 2, ⚠ 2
+        ✕ 2, ⚠ 2
+        [root]
             <Example> ✕⚠
       `);
     });
@@ -1054,7 +1056,8 @@ describe('Store', () => {
       });
 
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 1, ⚠ 1
+        ✕ 1, ⚠ 1
+        [root]
             <Example> ✕⚠
       `);
 
@@ -1063,7 +1066,8 @@ describe('Store', () => {
       });
 
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 2, ⚠ 2
+        ✕ 2, ⚠ 2
+        [root]
             <Example> ✕⚠
       `);
     });
@@ -1095,7 +1099,8 @@ describe('Store', () => {
       });
 
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 1, ⚠ 1
+        ✕ 1, ⚠ 1
+        [root]
             <Example> ✕⚠
       `);
 
@@ -1120,7 +1125,8 @@ describe('Store', () => {
       );
 
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 1, ⚠ 0
+        ✕ 1, ⚠ 0
+        [root]
           ▾ <Example> ✕
               <Child>
       `);
@@ -1146,7 +1152,8 @@ describe('Store', () => {
       });
 
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 2, ⚠ 2
+        ✕ 2, ⚠ 2
+        [root]
             <Example> ✕⚠
             <Example> ✕⚠
       `);
@@ -1182,7 +1189,8 @@ describe('Store', () => {
       });
 
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 2, ⚠ 2
+        ✕ 2, ⚠ 2
+        [root]
             <Example> ✕⚠
             <Example> ✕⚠
       `);
@@ -1192,7 +1200,8 @@ describe('Store', () => {
       jest.runAllTimers();
 
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 2, ⚠ 1
+        ✕ 2, ⚠ 1
+        [root]
             <Example> ✕⚠
             <Example> ✕
       `);
@@ -1218,7 +1227,8 @@ describe('Store', () => {
       });
 
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 2, ⚠ 2
+        ✕ 2, ⚠ 2
+        [root]
             <Example> ✕⚠
             <Example> ✕⚠
       `);
@@ -1228,7 +1238,8 @@ describe('Store', () => {
       jest.runAllTimers();
 
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 1, ⚠ 2
+        ✕ 1, ⚠ 2
+        [root]
             <Example> ✕⚠
             <Example> ⚠
       `);
@@ -1262,7 +1273,8 @@ describe('Store', () => {
         );
       });
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 2, ⚠ 2
+        ✕ 2, ⚠ 2
+        [root]
             <ComponentWithError> ✕
             <ComponentWithWarning> ⚠
             <ComponentWithWarningAndError> ✕⚠
@@ -1280,7 +1292,8 @@ describe('Store', () => {
         );
       });
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 1, ⚠ 2
+        ✕ 1, ⚠ 2
+        [root]
             <ComponentWithWarning> ⚠
             <ComponentWithWarningAndError> ✕⚠
       `);
@@ -1296,7 +1309,8 @@ describe('Store', () => {
         );
       });
       expect(store).toMatchInlineSnapshot(`
-        [root] ✕ 0, ⚠ 2
+        ✕ 0, ⚠ 2
+        [root]
             <ComponentWithWarning> ⚠
       `);
 
