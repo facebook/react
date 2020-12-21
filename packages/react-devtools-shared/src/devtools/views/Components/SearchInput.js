@@ -34,25 +34,6 @@ export default function SearchInput(props: Props) {
     [dispatch],
   );
 
-  const handleKeyDown = useCallback(
-    event => {
-      // For convenience, let up/down arrow keys change Tree selection.
-      switch (event.key) {
-        case 'ArrowDown':
-          dispatch({type: 'SELECT_NEXT_ELEMENT_IN_TREE'});
-          event.preventDefault();
-          break;
-        case 'ArrowUp':
-          dispatch({type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE'});
-          event.preventDefault();
-          break;
-        default:
-          break;
-      }
-    },
-    [dispatch],
-  );
-
   const handleInputKeyPress = useCallback(
     ({key, shiftKey}) => {
       if (key === 'Enter') {
@@ -98,7 +79,6 @@ export default function SearchInput(props: Props) {
       <input
         className={styles.Input}
         onChange={handleTextChange}
-        onKeyDown={handleKeyDown}
         onKeyPress={handleInputKeyPress}
         placeholder="Search (text or /regex/)"
         ref={inputRef}
@@ -115,14 +95,23 @@ export default function SearchInput(props: Props) {
         className={styles.IconButton}
         disabled={!searchText}
         onClick={() => dispatch({type: 'GO_TO_PREVIOUS_SEARCH_RESULT'})}
-        title="Scroll to previous search result">
+        title={
+          <React.Fragment>
+            Scroll to previous search result (<kbd>Shift</kbd> +{' '}
+            <kbd>Enter</kbd>)
+          </React.Fragment>
+        }>
         <ButtonIcon type="up" />
       </Button>
       <Button
         className={styles.IconButton}
         disabled={!searchText}
         onClick={() => dispatch({type: 'GO_TO_NEXT_SEARCH_RESULT'})}
-        title="Scroll to next search result">
+        title={
+          <React.Fragment>
+            Scroll to next search result (<kbd>Enter</kbd>)
+          </React.Fragment>
+        }>
         <ButtonIcon type="down" />
       </Button>
       <Button
