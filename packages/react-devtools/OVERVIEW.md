@@ -141,6 +141,7 @@ While profiling is in progress, we send an extra operation any time a fiber is a
 For example, updating the base duration for a fiber with an id of 1:
 ```js
 [
+  4,  // update tree base duration operation
   4,  // tree base duration operation
   1,  // fiber id
   32, // new tree base duration value
@@ -156,18 +157,24 @@ We only send the serialized messages as part of the `inspectElement` event.
 
 ```js
 [
+  5, // update error/warning counts operation
   4, // fiber id
   0, // number of calls to console.error from that fiber
   3, // number of calls to console.warn from that fiber
 ]
 ```
 
-#### Clearing a root
+#### Removing a root
 
-Special case of unmounting a fiber. Lets us avoid sending all the fiber ids of this root (reducing bridge traffic) and preserves fiber ids if we immediately remount when e.g. applying a component filter.
+Special case of unmounting an entire root (include its decsendants). This specialized message replaces what would otherwise be a series of remove-node operations. It is currently only used in one case: updating component filters. The primary motivation for this is actually to preserve fiber ids for components that are re-added to the tree after the updated filters have been applied. This preserves mappings between the Fiber (id) and things like error and warning logs.
 
-This operation has no additional payload because the root id is already sent in the second entry of the update.
+```js
+[
+  6, // remove root operation
+]
+```
 
+This operation has no additional payload because renderer and root ids are already sent at the beginning of every operations payload.
 
 ## Reconstructing the tree
 

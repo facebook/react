@@ -1017,8 +1017,10 @@ export default class Store extends EventEmitter<{|
         case TREE_OPERATION_REMOVE_ROOT: {
           i += 1;
 
+          const id = operations[1];
+
           if (__DEBUG__) {
-            debug('Remove all fibers');
+            debug(`Remove root ${id}`);
           }
 
           const recursivelyDeleteElements = elementID => {
@@ -1032,7 +1034,6 @@ export default class Store extends EventEmitter<{|
             }
           };
 
-          const id = operations[1];
           const root = ((this._idToElement.get(id): any): Element);
           recursivelyDeleteElements(id);
 

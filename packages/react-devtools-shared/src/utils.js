@@ -210,7 +210,7 @@ export function printOperationsArray(operations: Array<number>) {
       case TREE_OPERATION_REMOVE_ROOT: {
         i += 1;
 
-        logs.push(`Remove all nodes`);
+        logs.push(`Remove root ${rootID}`);
         break;
       }
       case TREE_OPERATION_REORDER_CHILDREN: {
