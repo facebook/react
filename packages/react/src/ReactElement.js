@@ -123,6 +123,19 @@ function warnIfStringRefCannotBeAutoConverted(config) {
   }
 }
 
+
+ function danger () {
+  // danger should not be called at any time. Block it
+  if (__DEV__) {
+   throw Error(
+     'The ReactElement.toString is danger! ' +
+     'Check that your Component returns ReactElement as another compoennt value'
+     );
+  }
+  // avoid return undefined.
+  return '';
+}
+
 /**
  * Factory method to create a new React element. This no longer adheres to
  * the class pattern, so do not use new to call it. Also, instanceof check
@@ -158,6 +171,8 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
     _owner: owner,
   };
 
+  element.toString = danger
+
   if (__DEV__) {
     // The validation flag is currently mutative. We put it on
     // an external backing store so that we can freeze the whole object.
@@ -190,6 +205,7 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
       writable: false,
       value: source,
     });
+
     if (Object.freeze) {
       Object.freeze(element.props);
       Object.freeze(element);
