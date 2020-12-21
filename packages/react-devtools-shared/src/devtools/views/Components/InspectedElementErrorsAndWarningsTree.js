@@ -8,12 +8,14 @@
  */
 
 import * as React from 'react';
+import {useContext} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Store from '../../store';
 import sharedStyles from './InspectedElementSharedStyles.css';
 import styles from './InspectedElementErrorsAndWarningsTree.css';
 import {SettingsContext} from '../Settings/SettingsContext';
+import {InspectedElementContext} from './InspectedElementContext';
 
 import type {InspectedElement} from './types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
@@ -29,7 +31,9 @@ export default function InspectedElementErrorsAndWarningsTree({
   inspectedElement,
   store,
 }: Props) {
-  const {showInlineWarningsAndErrors} = React.useContext(SettingsContext);
+  const {refreshInspectedElement} = useContext(InspectedElementContext);
+
+  const {showInlineWarningsAndErrors} = useContext(SettingsContext);
   if (!showInlineWarningsAndErrors) {
     return null;
   }
@@ -37,11 +41,23 @@ export default function InspectedElementErrorsAndWarningsTree({
   const {errors, warnings} = inspectedElement;
 
   const clearErrors = () => {
-    store.clearErrorsForElement(inspectedElement.id);
+    const {id} = inspectedElement;
+    store.clearErrorsForElement(id);
+
+    // Immediately poll for updated data.
+    // This avoids a delay between clicking the clear button and refreshing errors.
+    // Ideally this would be done with useTranstion but that requires updating to a newer Cache strategy.
+    refreshInspectedElement();
   };
 
   const clearWarnings = () => {
-    store.clearWarningsForElement(inspectedElement.id);
+    const {id} = inspectedElement;
+    store.clearWarningsForElement(id);
+
+    // Immediately poll for updated data.
+    // This avoids a delay between clicking the clear button and refreshing warnings.
+    // Ideally this would be done with useTranstion but that requires updating to a newer Cache strategy.
+    refreshInspectedElement();
   };
 
   return (

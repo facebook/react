@@ -51,10 +51,13 @@ export type GetInspectedElement = (
   id: number,
 ) => InspectedElementFrontend | null;
 
+type RefreshInspectedElement = () => void;
+
 export type InspectedElementContextType = {|
   copyInspectedElementPath: CopyInspectedElementPath,
   getInspectedElementPath: GetInspectedElementPath,
   getInspectedElement: GetInspectedElement,
+  refreshInspectedElement: RefreshInspectedElement,
   storeAsGlobal: StoreAsGlobal,
 |};
 
@@ -158,6 +161,15 @@ function InspectedElementContextController({children}: Props) {
   // Otherwise the effect that sends the "inspect" message across the bridge-
   // would itself be blocked by the same render that suspends (waiting for the data).
   const {selectedElementID} = useContext(TreeStateContext);
+
+  const refreshInspectedElement = useCallback<RefreshInspectedElement>(() => {
+    if (selectedElementID !== null) {
+      const rendererID = store.getRendererIDForElement(selectedElementID);
+      if (rendererID !== null) {
+        bridge.send('inspectElement', {id: selectedElementID, rendererID});
+      }
+    }
+  }, [bridge, selectedElementID]);
 
   const [
     currentlyInspectedElement,
@@ -347,6 +359,7 @@ function InspectedElementContextController({children}: Props) {
       copyInspectedElementPath,
       getInspectedElement,
       getInspectedElementPath,
+      refreshInspectedElement,
       storeAsGlobal,
     }),
     // InspectedElement is used to invalidate the cache and schedule an update with React.
@@ -355,6 +368,7 @@ function InspectedElementContextController({children}: Props) {
       currentlyInspectedElement,
       getInspectedElement,
       getInspectedElementPath,
+      refreshInspectedElement,
       storeAsGlobal,
     ],
   );
