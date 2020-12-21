@@ -396,6 +396,10 @@ export default class Store extends EventEmitter<{|
         rendererID,
         id,
       });
+
+      // Immediately refresh the inspected element.
+      // Waiting for the polling timer makes the action feel less responsive.
+      this._bridge.send('inspectElement', {id, rendererID});
     }
   }
 
@@ -410,6 +414,10 @@ export default class Store extends EventEmitter<{|
         rendererID,
         id,
       });
+
+      // Immediately refresh the inspected element.
+      // Waiting for the polling timer makes the action feel less responsive.
+      this._bridge.send('inspectElement', {id, rendererID});
     }
   }
 

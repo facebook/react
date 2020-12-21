@@ -36,11 +36,6 @@ export default function InspectedElementErrorsAndWarningsTree({
 
   const {errors, warnings} = inspectedElement;
 
-  // TODO (inline errors) Would be nice if there were some way to either:
-  // (1) Temporarily disable the button after click (unstable_useTransition?) or
-  // (2) Immediately reflect the cleared list of warnings/errors.
-  // The current clear button feels a little unresponsive because we wait to poll for new values.
-
   const clearErrors = () => {
     store.clearErrorsForElement(inspectedElement.id);
   };
