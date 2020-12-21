@@ -1547,24 +1547,18 @@ describe('TreeListContext', () => {
 
     it('should cycle through the next errors/warnings and wrap around', () => {
       withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() => {
+        utils.act(() =>
           ReactDOM.render(
             <React.Fragment>
               <Child />
               <Child logWarning={true} />
               <Child />
-            </React.Fragment>,
-            document.createElement('div'),
-          );
-          ReactDOM.render(
-            <React.Fragment>
-              <Child />
               <Child logError={true} />
               <Child />
             </React.Fragment>,
             document.createElement('div'),
-          );
-        }),
+          ),
+        ),
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
@@ -1573,8 +1567,6 @@ describe('TreeListContext', () => {
         [root]
              <Child>
              <Child> ⚠
-             <Child>
-        [root]
              <Child>
              <Child> ✕
              <Child>
@@ -1587,8 +1579,6 @@ describe('TreeListContext', () => {
              <Child>
         →    <Child> ⚠
              <Child>
-        [root]
-             <Child>
              <Child> ✕
              <Child>
       `);
@@ -1599,8 +1589,6 @@ describe('TreeListContext', () => {
         [root]
              <Child>
              <Child> ⚠
-             <Child>
-        [root]
              <Child>
         →    <Child> ✕
              <Child>
@@ -1612,8 +1600,6 @@ describe('TreeListContext', () => {
         [root]
              <Child>
         →    <Child> ⚠
-             <Child>
-        [root]
              <Child>
              <Child> ✕
              <Child>
@@ -1622,24 +1608,18 @@ describe('TreeListContext', () => {
 
     it('should cycle through the previous errors/warnings and wrap around', () => {
       withErrorsOrWarningsIgnored(['test-only:'], () =>
-        utils.act(() => {
+        utils.act(() =>
           ReactDOM.render(
             <React.Fragment>
               <Child />
               <Child logWarning={true} />
               <Child />
-            </React.Fragment>,
-            document.createElement('div'),
-          );
-          ReactDOM.render(
-            <React.Fragment>
-              <Child />
               <Child logError={true} />
               <Child />
             </React.Fragment>,
             document.createElement('div'),
-          );
-        }),
+          ),
+        ),
       );
 
       utils.act(() => TestRenderer.create(<Contexts />));
@@ -1648,8 +1628,6 @@ describe('TreeListContext', () => {
         [root]
              <Child>
              <Child> ⚠
-             <Child>
-        [root]
              <Child>
              <Child> ✕
              <Child>
@@ -1661,8 +1639,6 @@ describe('TreeListContext', () => {
         [root]
              <Child>
              <Child> ⚠
-             <Child>
-        [root]
              <Child>
         →    <Child> ✕
              <Child>
@@ -1675,6 +1651,119 @@ describe('TreeListContext', () => {
              <Child>
         →    <Child> ⚠
              <Child>
+             <Child> ✕
+             <Child>
+      `);
+
+      selectPreviousErrorOrWarning();
+      expect(state).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 1
+        [root]
+             <Child>
+             <Child> ⚠
+             <Child>
+        →    <Child> ✕
+             <Child>
+      `);
+    });
+
+    it('should cycle through the next errors/warnings and wrap around with multiple roots', () => {
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        utils.act(() => {
+          ReactDOM.render(
+            <React.Fragment>
+              <Child />
+              <Child logWarning={true} />,
+            </React.Fragment>,
+            document.createElement('div'),
+          );
+          ReactDOM.render(
+            <React.Fragment>
+              <Child />
+              <Child logError={true} />
+              <Child />
+            </React.Fragment>,
+            document.createElement('div'),
+          );
+        });
+      });
+
+      utils.act(() => TestRenderer.create(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 1
+        [root]
+             <Child>
+             <Child> ⚠
+        [root]
+             <Child>
+             <Child> ✕
+             <Child>
+      `);
+
+      selectNextErrorOrWarning();
+      expect(state).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 1
+        [root]
+             <Child>
+        →    <Child> ⚠
+        [root]
+             <Child>
+             <Child> ✕
+             <Child>
+      `);
+
+      selectNextErrorOrWarning();
+      expect(state).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 1
+        [root]
+             <Child>
+             <Child> ⚠
+        [root]
+             <Child>
+        →    <Child> ✕
+             <Child>
+      `);
+
+      selectNextErrorOrWarning();
+      expect(state).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 1
+        [root]
+             <Child>
+        →    <Child> ⚠
+        [root]
+             <Child>
+             <Child> ✕
+             <Child>
+      `);
+    });
+
+    it('should cycle through the previous errors/warnings and wrap around with multiple roots', () => {
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        utils.act(() => {
+          ReactDOM.render(
+            <React.Fragment>
+              <Child />
+              <Child logWarning={true} />,
+            </React.Fragment>,
+            document.createElement('div'),
+          );
+          ReactDOM.render(
+            <React.Fragment>
+              <Child />
+              <Child logError={true} />
+              <Child />
+            </React.Fragment>,
+            document.createElement('div'),
+          );
+        });
+      });
+
+      utils.act(() => TestRenderer.create(<Contexts />));
+      expect(state).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 1
+        [root]
+             <Child>
+             <Child> ⚠
         [root]
              <Child>
              <Child> ✕
@@ -1687,7 +1776,30 @@ describe('TreeListContext', () => {
         [root]
              <Child>
              <Child> ⚠
+        [root]
              <Child>
+        →    <Child> ✕
+             <Child>
+      `);
+
+      selectPreviousErrorOrWarning();
+      expect(state).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 1
+        [root]
+             <Child>
+        →    <Child> ⚠
+        [root]
+             <Child>
+             <Child> ✕
+             <Child>
+      `);
+
+      selectPreviousErrorOrWarning();
+      expect(state).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 1
+        [root]
+             <Child>
+             <Child> ⚠
         [root]
              <Child>
         →    <Child> ✕
