@@ -584,32 +584,21 @@ export function attach(
     }
   }
 
+  // Called when an error or warning is logged during render, commit, or passive (including unmount functions).
   function onErrorOrWarning(
     fiber: Fiber,
     type: 'error' | 'warn',
     args: $ReadOnlyArray<any>,
   ): void {
-    // There are a few places that errors might be logged:
-    // 1. During render (either for initial mount or an update)
-    // 2. During commit effects (both active and passive)
-    // 3. During unmounts (or commit effect cleanup functions)
-    //
-    // Initial render presents a special challenge-
-    // since neither backend nor frontend Store know about a Fiber until it has mounted (and committed).
-    // In this case, we need to hold onto errors until the subsequent commit hook is called.
-    //
-    // Passive effects also present a special challenge-
-    // since the commit hook is called before passive effects, are run,
-    // meaning that we might not want to wait until the subsequent commit hook to notify the frontend.
-    //
-    // For this reason, warnings/errors are sent to the frontend periodically (on a timer).
-    // When processing errors, any Fiber that is not still registered is assumed to be unmounted.
-
     const message = format(...args);
 
-    // Note that by calling this function, we may be creating the ID for the first time.
-    // If the Fiber is then never mounted, we are responsible for clearing the ID out.
-    // TODO (inline-errors) Clear these too during flush so they don't cause leaks.
+    // Note that by calling these functions we may be creating the ID for the first time.
+    // If the Fiber is then never mounted, we are responsible for cleaning up after ourselves.
+    // This is important because getPrimaryFiber() stores a Fiber in the primaryFibers Set.
+    // If a Fiber never mounts, and we don't clean up after this code, we could leak.
+    // Fortunately we would only leak Fibers that have errors/warnings associated with them,
+    // which is hopefully only a small set and only in DEV mode– but this is still not great.
+    // We should clean up Fibers like this when flushing; see recordPendingErrorsAndWarnings().
     const fiberID = getFiberID(getPrimaryFiber(fiber));
 
     // Mark this Fiber as needed its warning/error count updated during the next flush.
@@ -1188,7 +1177,12 @@ export function attach(
       const fiber = idToFiberMap.get(fiberID);
       if (fiber != null) {
         // Don't send updates for Fibers that didn't mount due to e.g. Suspense or an error boundary.
+        // We may also need to clean up after ourselves to avoid leaks.
+        // See inline comments in onErrorOrWarning() for more info.
         if (isFiberMountedImpl(fiber) !== MOUNTED) {
+          fiberToIDMap.delete(fiber);
+          idToFiberMap.delete(fiberID);
+          primaryFibers.delete(fiber);
           return;
         }
 

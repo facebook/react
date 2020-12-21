@@ -169,9 +169,8 @@ export function patch({
             if (current != null) {
               try {
                 if (shouldShowInlineWarningsAndErrors) {
-                  // TODO (inline errors) The renderer is injected in two places:
-                  // 1. First by "react-devtools-shared/src/hook" which isn't stateful and doesn't supply onErrorOrWarning()
-                  // 2. Second by "react-devtools-shared/src/backend/renderer" which is and does
+                  // patch() is called by two places: (1) the hook and (2) the renderer backend.
+                  // The backend is what impliments a message queue, so it's the only one that injects onErrorOrWarning.
                   if (typeof onErrorOrWarning === 'function') {
                     onErrorOrWarning(
                       current,
