@@ -34,6 +34,7 @@ import {
   LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
+  LOCAL_STORAGE_SHOULD_SUPPRESS_DOUBLE_LOGGING,
 } from './constants';
 import {ComponentFilterElementType, ElementTypeHostComponent} from './types';
 import {
@@ -278,6 +279,25 @@ export function getBreakOnConsoleErrors(): boolean {
   try {
     const raw = localStorageGetItem(
       LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
+    );
+    if (raw != null) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {}
+  return false;
+}
+
+export function setsuppressDoubleLogging(value: boolean): void {
+  localStorageSetItem(
+    LOCAL_STORAGE_SHOULD_SUPPRESS_DOUBLE_LOGGING,
+    JSON.stringify(value),
+  );
+}
+
+export function getsuppressDoubleLogging(): boolean {
+  try {
+    const raw = localStorageGetItem(
+      LOCAL_STORAGE_SHOULD_SUPPRESS_DOUBLE_LOGGING,
     );
     if (raw != null) {
       return JSON.parse(raw);

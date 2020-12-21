@@ -21,6 +21,7 @@ import {
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
+  LOCAL_STORAGE_SHOULD_SUPPRESS_DOUBLE_LOGGING,
 } from 'react-devtools-shared/src/constants';
 import {useLocalStorage} from '../hooks';
 import {BridgeContext} from '../context';
@@ -37,6 +38,9 @@ type Context = {|
   // Derived from display density.
   // Specified as a separate prop so it can trigger a re-render of FixedSizeList.
   lineHeight: number,
+
+  suppressDoubleLogging: boolean,
+  setsuppressDoubleLogging: (value: boolean) => void,
 
   appendComponentStack: boolean,
   setAppendComponentStack: (value: boolean) => void,
@@ -79,6 +83,15 @@ function SettingsContextController({
     'React::DevTools::theme',
     'auto',
   );
+
+  const [
+    suppressDoubleLogging,
+    setsuppressDoubleLogging,
+  ] = useLocalStorage<boolean>(
+    LOCAL_STORAGE_SHOULD_SUPPRESS_DOUBLE_LOGGING,
+    false,
+  );
+
   const [
     appendComponentStack,
     setAppendComponentStack,
@@ -147,8 +160,14 @@ function SettingsContextController({
     bridge.send('updateConsolePatchSettings', {
       appendComponentStack,
       breakOnConsoleErrors,
+      suppressDoubleLogging,
     });
-  }, [bridge, appendComponentStack, breakOnConsoleErrors]);
+  }, [
+    bridge,
+    appendComponentStack,
+    breakOnConsoleErrors,
+    suppressDoubleLogging,
+  ]);
 
   useEffect(() => {
     bridge.send('setTraceUpdatesEnabled', traceUpdatesEnabled);
@@ -158,6 +177,7 @@ function SettingsContextController({
     () => ({
       appendComponentStack,
       breakOnConsoleErrors,
+      suppressDoubleLogging,
       displayDensity,
       lineHeight:
         displayDensity === 'compact'
@@ -165,6 +185,7 @@ function SettingsContextController({
           : COMFORTABLE_LINE_HEIGHT,
       setAppendComponentStack,
       setBreakOnConsoleErrors,
+      setsuppressDoubleLogging,
       setDisplayDensity,
       setTheme,
       setTraceUpdatesEnabled,
@@ -175,8 +196,10 @@ function SettingsContextController({
       appendComponentStack,
       breakOnConsoleErrors,
       displayDensity,
+      suppressDoubleLogging,
       setAppendComponentStack,
       setBreakOnConsoleErrors,
+      setsuppressDoubleLogging,
       setDisplayDensity,
       setTheme,
       setTraceUpdatesEnabled,
