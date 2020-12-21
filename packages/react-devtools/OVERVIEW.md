@@ -162,6 +162,11 @@ We only send the serialized messages as part of the `inspectElement` event.
 ]
 ```
 
+#### Clearing a root
+
+Special case of unmounting a fiber. Lets us avoid sending all the fiber ids of this root (reducing bridge traffic) and preserves fiber ids if we immediately remount when e.g. applying a component filter.
+
+This operation has no additional payload because the root id is already sent in the second entry of the update.
 
 
 ## Reconstructing the tree
