@@ -141,3 +141,5 @@ export const enableDoubleInvokingEffects = false;
 export const enableUseRefAccessWarning = false;
 
 export const enableRecursiveCommitTraversal = false;
+
+export const disableSchedulerTimeoutInWorkLoop = false;

@@ -489,6 +489,10 @@ function useOpaqueIdentifier(): OpaqueIDType {
   );
 }
 
+function useCacheRefresh(): <T>(?() => T, ?T) => void {
+  invariant(false, 'Not implemented.');
+}
+
 function noop(): void {}
 
 export let currentPartialRenderer: PartialRenderer = (null: any);
@@ -520,4 +524,5 @@ export const Dispatcher: DispatcherType = {
 
 if (enableCache) {
   Dispatcher.getCacheForType = getCacheForType;
+  Dispatcher.useCacheRefresh = useCacheRefresh;
 }

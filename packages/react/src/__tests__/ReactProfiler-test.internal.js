@@ -4874,8 +4874,10 @@ describe('Profiler', () => {
       });
 
       if (__DEV__) {
+        // @gate dfsEffectsRefactor
+        // @gate enableDoubleInvokingEffects
         it('double invoking does not disconnect wrapped async work', () => {
-          ReactFeatureFlags.enableDoubleInvokingEffects = !__VARIANT__;
+          ReactFeatureFlags.enableDoubleInvokingEffects = true;
 
           const callback = jest.fn(() => {
             const wrappedInteractions = SchedulerTracing.unstable_getCurrent();
@@ -4913,11 +4915,7 @@ describe('Profiler', () => {
 
           jest.runAllTimers();
 
-          if (ReactFeatureFlags.enableDoubleInvokingEffects) {
-            expect(callback).toHaveBeenCalledTimes(4); // 2x per effect
-          } else {
-            expect(callback).toHaveBeenCalledTimes(2);
-          }
+          expect(callback).toHaveBeenCalledTimes(4); // 2x per effect
 
           expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
         });

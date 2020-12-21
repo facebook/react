@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "react-pg",
   "description": "React bindings for PostgreSQL",
   "version": "0.0.0",

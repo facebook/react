@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "react-fs",
   "description": "React bindings for the filesystem",
   "version": "0.0.0",

@@ -15,7 +15,7 @@ const run = async () => {
   try {
     const params = parseParams();
     params.cwd = join(__dirname, '..', '..');
-    params.packages = await getPublicPackages();
+    params.packages = await getPublicPackages(true);
 
     if (!params.build) {
       params.build = await getLatestMasterBuildNumber(true);

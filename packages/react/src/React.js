@@ -17,6 +17,7 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
   REACT_SCOPE_TYPE,
+  REACT_CACHE_TYPE,
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
@@ -48,6 +49,7 @@ import {
   useTransition,
   useDeferredValue,
   useOpaqueIdentifier,
+  useCacheRefresh,
 } from './ReactHooks';
 import {
   createElementWithValidation,
@@ -112,6 +114,8 @@ export {
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
   getCacheForType as unstable_getCacheForType,
+  useCacheRefresh as unstable_useCacheRefresh,
+  REACT_CACHE_TYPE as unstable_Cache,
   // enableFundamentalAPI
   createFundamental as unstable_createFundamental,
   // enableScopeAPI

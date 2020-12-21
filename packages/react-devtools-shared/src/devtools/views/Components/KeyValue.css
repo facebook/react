@@ -24,6 +24,7 @@
   overflow: hidden;
   text-overflow: ellipsis;
   cursor: default;
+  flex: 1;
 }
 
 .None {
