@@ -83,6 +83,7 @@ export default class Store extends EventEmitter<{|
   // Computed whenever _errorsAndWarnings Map changes.
   _cachedErrorCount: number = 0;
   _cachedWarningCount: number = 0;
+  _cachedErrorAndWarningTuples: Array<{|id: number, index: number|}> = [];
 
   // Should new nodes be collapsed by default when added to the tree?
   _collapseNodesByDefault: boolean = true;
@@ -483,27 +484,7 @@ export default class Store extends EventEmitter<{|
 
   // Returns a tuple of [id, index]
   getElementsWithErrorsAndWarnings(): Array<{|id: number, index: number|}> {
-    const sortedArray: Array<{|id: number, index: number|}> = [];
-
-    this._errorsAndWarnings.forEach((_, id) => {
-      const index = this.getIndexOfElementID(id);
-      if (index !== null) {
-        let low = 0;
-        let high = sortedArray.length;
-        while (low < high) {
-          const mid = (low + high) >> 1;
-          if (sortedArray[mid].index > index) {
-            high = mid;
-          } else {
-            low = mid + 1;
-          }
-        }
-
-        sortedArray.splice(low, 0, {id, index});
-      }
-    });
-
-    return sortedArray;
+    return this._cachedErrorAndWarningTuples;
   }
 
   getErrorAndWarningCountForElementID(
@@ -1123,6 +1104,28 @@ export default class Store extends EventEmitter<{|
 
       this._cachedErrorCount = errorCount;
       this._cachedWarningCount = warningCount;
+
+      const errorAndWarningTuples: Array<{|id: number, index: number|}> = [];
+
+      this._errorsAndWarnings.forEach((_, id) => {
+        const index = this.getIndexOfElementID(id);
+        if (index !== null) {
+          let low = 0;
+          let high = errorAndWarningTuples.length;
+          while (low < high) {
+            const mid = (low + high) >> 1;
+            if (errorAndWarningTuples[mid].index > index) {
+              high = mid;
+            } else {
+              low = mid + 1;
+            }
+          }
+
+          errorAndWarningTuples.splice(low, 0, {id, index});
+        }
+      });
+
+      this._cachedErrorAndWarningTuples = errorAndWarningTuples;
     }
 
     if (haveRootsChanged) {
