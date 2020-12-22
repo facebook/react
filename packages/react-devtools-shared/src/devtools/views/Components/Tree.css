@@ -60,6 +60,12 @@
   color: var(--color-dim);
 }
 
+.IconAndCount {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-sans-normal);
+}
+
 .ErrorIcon, .WarningIcon {
   width: 0.75rem;
   height: 0.75rem;

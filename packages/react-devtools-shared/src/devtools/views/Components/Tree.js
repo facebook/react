@@ -346,16 +346,16 @@ export default function Tree(props: Props) {
             (errors > 0 || warnings > 0) && (
               <React.Fragment>
                 {errors > 0 && (
-                  <React.Fragment>
+                  <div className={styles.IconAndCount}>
                     <Icon className={styles.ErrorIcon} type="error" />
                     {errors}
-                  </React.Fragment>
+                  </div>
                 )}
                 {warnings > 0 && (
-                  <React.Fragment>
+                  <div className={styles.IconAndCount}>
                     <Icon className={styles.WarningIcon} type="warning" />
                     {warnings}
-                  </React.Fragment>
+                  </div>
                 )}
                 <Button
                   onClick={handlePreviousErrorOrWarningClick}
