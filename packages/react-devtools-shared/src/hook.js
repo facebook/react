@@ -183,7 +183,7 @@ export function installHook(target: any): DevToolsHook | null {
         const breakOnConsoleErrors =
           window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ === true;
         const showInlineWarningsAndErrors =
-          window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ === true;
+          window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ !== false;
 
         // The installHook() function is injected by being stringified in the browser,
         // so imports outside of this function do not get included.
