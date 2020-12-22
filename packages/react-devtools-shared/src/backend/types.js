@@ -234,6 +234,8 @@ export type InspectedElement = {|
   props: Object | null,
   state: Object | null,
   key: number | string | null,
+  errors: Array<[string, number]>,
+  warnings: Array<[string, number]>,
 
   // List of owners
   owners: Array<Owner> | null,
@@ -294,6 +296,9 @@ type Type = 'props' | 'hooks' | 'state' | 'context';
 
 export type RendererInterface = {
   cleanup: () => void,
+  clearErrorsAndWarnings: () => void,
+  clearErrorsForFiberID: (id: number) => void,
+  clearWarningsForFiberID: (id: number) => void,
   copyElementPath: (id: number, path: Array<string | number>) => void,
   deletePath: (
     type: Type,

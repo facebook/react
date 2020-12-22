@@ -14,6 +14,7 @@ describe('Store', () => {
   let act;
   let getRendererID;
   let store;
+  let withErrorsOrWarningsIgnored;
 
   beforeEach(() => {
     agent = global.agent;
@@ -25,6 +26,7 @@ describe('Store', () => {
     const utils = require('./utils');
     act = utils.act;
     getRendererID = utils.getRendererID;
+    withErrorsOrWarningsIgnored = utils.withErrorsOrWarningsIgnored;
   });
 
   it('should not allow a root node to be collapsed', () => {
@@ -1006,6 +1008,318 @@ describe('Store', () => {
       expect(store).toMatchSnapshot('2: unmounted');
 
       done();
+    });
+  });
+
+  describe('inline errors and warnings', () => {
+    it('during render are counted', () => {
+      function Example() {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      }
+      const container = document.createElement('div');
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => ReactDOM.render(<Example />, container));
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 1
+        [root]
+            <Example> ✕⚠
+      `);
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => ReactDOM.render(<Example rerender={1} />, container));
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 2
+        [root]
+            <Example> ✕⚠
+      `);
+    });
+
+    it('during layout get counted', () => {
+      function Example() {
+        React.useLayoutEffect(() => {
+          console.error('test-only: layout error');
+          console.warn('test-only: layout warning');
+        });
+        return null;
+      }
+      const container = document.createElement('div');
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => ReactDOM.render(<Example />, container));
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 1
+        [root]
+            <Example> ✕⚠
+      `);
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => ReactDOM.render(<Example rerender={1} />, container));
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 2
+        [root]
+            <Example> ✕⚠
+      `);
+    });
+
+    // This is not great, but it seems safer than potentially flushing between commits.
+    // Our logic for determining how to handle e.g. suspended trees or error boundaries
+    // is built on the assumption that we're evaluating the results of a commit, not an in-progress render.
+    it('during passive get counted (but not until the next commit)', () => {
+      function Example() {
+        React.useEffect(() => {
+          console.error('test-only: passive error');
+          console.warn('test-only: passive warning');
+        });
+        return null;
+      }
+      const container = document.createElement('div');
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => ReactDOM.render(<Example />, container));
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+            <Example>
+      `);
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => ReactDOM.render(<Example rerender={1} />, container));
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 1
+        [root]
+            <Example> ✕⚠
+      `);
+
+      act(() => ReactDOM.unmountComponentAtNode(container));
+      expect(store).toMatchInlineSnapshot(``);
+    });
+
+    it('from react get counted', () => {
+      const container = document.createElement('div');
+      function Example() {
+        return [<Child />];
+      }
+      function Child() {
+        return null;
+      }
+
+      withErrorsOrWarningsIgnored(
+        ['Warning: Each child in a list should have a unique "key" prop'],
+        () => {
+          act(() => ReactDOM.render(<Example />, container));
+        },
+      );
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 0
+        [root]
+          ▾ <Example> ✕
+              <Child>
+      `);
+    });
+
+    it('can be cleared for the whole app', () => {
+      function Example() {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      }
+      const container = document.createElement('div');
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Example />
+              <Example />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 2
+        [root]
+            <Example> ✕⚠
+            <Example> ✕⚠
+      `);
+
+      store.clearErrorsAndWarnings();
+      // flush events to the renderer
+      jest.runAllTimers();
+
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+            <Example>
+            <Example>
+      `);
+    });
+
+    it('can be cleared for particular Fiber (only warnings)', () => {
+      function Example() {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      }
+      const container = document.createElement('div');
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Example />
+              <Example />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 2
+        [root]
+            <Example> ✕⚠
+            <Example> ✕⚠
+      `);
+
+      store.clearWarningsForElement(2);
+      // Flush events to the renderer.
+      jest.runAllTimers();
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 1
+        [root]
+            <Example> ✕⚠
+            <Example> ✕
+      `);
+    });
+
+    it('can be cleared for a particular Fiber (only errors)', () => {
+      function Example() {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      }
+      const container = document.createElement('div');
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Example />
+              <Example />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 2
+        [root]
+            <Example> ✕⚠
+            <Example> ✕⚠
+      `);
+
+      store.clearErrorsForElement(2);
+      // Flush events to the renderer.
+      jest.runAllTimers();
+
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 2
+        [root]
+            <Example> ✕⚠
+            <Example> ⚠
+      `);
+    });
+
+    it('are updated when fibers are removed from the tree', () => {
+      function ComponentWithWarning() {
+        console.warn('test-only: render warning');
+        return null;
+      }
+      function ComponentWithError() {
+        console.error('test-only: render error');
+        return null;
+      }
+      function ComponentWithWarningAndError() {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      }
+      const container = document.createElement('div');
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <ComponentWithError />
+              <ComponentWithWarning />
+              <ComponentWithWarningAndError />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 2, ⚠ 2
+        [root]
+            <ComponentWithError> ✕
+            <ComponentWithWarning> ⚠
+            <ComponentWithWarningAndError> ✕⚠
+      `);
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <ComponentWithWarning />
+              <ComponentWithWarningAndError />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 1, ⚠ 2
+        [root]
+            <ComponentWithWarning> ⚠
+            <ComponentWithWarningAndError> ✕⚠
+      `);
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <ComponentWithWarning />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+      expect(store).toMatchInlineSnapshot(`
+        ✕ 0, ⚠ 2
+        [root]
+            <ComponentWithWarning> ⚠
+      `);
+
+      withErrorsOrWarningsIgnored(['test-only:'], () => {
+        act(() => ReactDOM.render(<React.Fragment />, container));
+      });
+      expect(store).toMatchInlineSnapshot(`[root]`);
+      expect(store.errorCount).toBe(0);
+      expect(store.warningCount).toBe(0);
     });
   });
 });

@@ -19,6 +19,8 @@ export default function DebuggingSettings(_: {||}) {
     breakOnConsoleErrors,
     setAppendComponentStack,
     setBreakOnConsoleErrors,
+    setShowInlineWarningsAndErrors,
+    showInlineWarningsAndErrors,
   } = useContext(SettingsContext);
 
   return (
@@ -40,6 +42,19 @@ export default function DebuggingSettings(_: {||}) {
         <label>
           <input
             type="checkbox"
+            checked={showInlineWarningsAndErrors}
+            onChange={({currentTarget}) =>
+              setShowInlineWarningsAndErrors(currentTarget.checked)
+            }
+          />{' '}
+          Show inline warnings and errors.
+        </label>
+      </div>
+
+      <div className={styles.Setting}>
+        <label>
+          <input
+            type="checkbox"
             checked={breakOnConsoleErrors}
             onChange={({currentTarget}) =>
               setBreakOnConsoleErrors(currentTarget.checked)
@@ -47,6 +62,10 @@ export default function DebuggingSettings(_: {||}) {
           />{' '}
           Break on warnings
         </label>
+      </div>
+
+      <div className={styles.ConsoleAPIWarning}>
+        These settings require DevTools to override native console APIs.
       </div>
     </div>
   );

@@ -15,6 +15,7 @@ import type {
 } from 'react-devtools-shared/src/devtools/views/Components/InspectedElementContext';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type Store from 'react-devtools-shared/src/devtools/store';
+import {withErrorsOrWarningsIgnored} from 'react-devtools-shared/src/__tests__/utils';
 
 describe('InspectedElementContext', () => {
   let React;
@@ -64,6 +65,10 @@ describe('InspectedElementContext', () => {
       .StoreContext;
     TreeContextController = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
       .TreeContextController;
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   const Contexts = ({
@@ -386,10 +391,10 @@ describe('InspectedElementContext', () => {
   it('should temporarily disable console logging when re-running a component to inspect its hooks', async done => {
     let targetRenderCount = 0;
 
-    const errorSpy = ((console: any).error = jest.fn());
-    const infoSpy = ((console: any).info = jest.fn());
-    const logSpy = ((console: any).log = jest.fn());
-    const warnSpy = ((console: any).warn = jest.fn());
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+    jest.spyOn(console, 'info').mockImplementation(() => {});
+    jest.spyOn(console, 'log').mockImplementation(() => {});
+    jest.spyOn(console, 'warn').mockImplementation(() => {});
 
     const Target = React.memo(props => {
       targetRenderCount++;
@@ -407,14 +412,14 @@ describe('InspectedElementContext', () => {
     );
 
     expect(targetRenderCount).toBe(1);
-    expect(errorSpy).toHaveBeenCalledTimes(1);
-    expect(errorSpy).toHaveBeenCalledWith('error');
-    expect(infoSpy).toHaveBeenCalledTimes(1);
-    expect(infoSpy).toHaveBeenCalledWith('info');
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledWith('log');
-    expect(warnSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy).toHaveBeenCalledWith('warn');
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledWith('error');
+    expect(console.info).toHaveBeenCalledTimes(1);
+    expect(console.info).toHaveBeenCalledWith('info');
+    expect(console.log).toHaveBeenCalledTimes(1);
+    expect(console.log).toHaveBeenCalledWith('log');
+    expect(console.warn).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledWith('warn');
 
     const id = ((store.getElementIDAtIndex(0): any): number);
 
@@ -442,10 +447,10 @@ describe('InspectedElementContext', () => {
 
     expect(inspectedElement).not.toBe(null);
     expect(targetRenderCount).toBe(2);
-    expect(errorSpy).toHaveBeenCalledTimes(1);
-    expect(infoSpy).toHaveBeenCalledTimes(1);
-    expect(logSpy).toHaveBeenCalledTimes(1);
-    expect(warnSpy).toHaveBeenCalledTimes(1);
+    expect(console.error).toHaveBeenCalledTimes(1);
+    expect(console.info).toHaveBeenCalledTimes(1);
+    expect(console.log).toHaveBeenCalledTimes(1);
+    expect(console.warn).toHaveBeenCalledTimes(1);
 
     done();
   });
@@ -1569,21 +1574,20 @@ describe('InspectedElementContext', () => {
     );
     expect(storeAsGlobal).not.toBeNull();
 
-    const logSpy = jest.fn();
-    spyOn(console, 'log').and.callFake(logSpy);
+    jest.spyOn(console, 'log').mockImplementation(() => {});
 
     // Should store the whole value (not just the hydrated parts)
     storeAsGlobal(id, ['props', 'nestedObject']);
     jest.runOnlyPendingTimers();
-    expect(logSpy).toHaveBeenCalledWith('$reactTemp1');
+    expect(console.log).toHaveBeenCalledWith('$reactTemp1');
     expect(global.$reactTemp1).toBe(nestedObject);
 
-    logSpy.mockReset();
+    console.log.mockReset();
 
     // Should store the nested property specified (not just the outer value)
     storeAsGlobal(id, ['props', 'nestedObject', 'a', 'b']);
     jest.runOnlyPendingTimers();
-    expect(logSpy).toHaveBeenCalledWith('$reactTemp2');
+    expect(console.log).toHaveBeenCalledWith('$reactTemp2');
     expect(global.$reactTemp2).toBe(nestedObject.a.b);
 
     done();
@@ -1804,5 +1808,422 @@ describe('InspectedElementContext', () => {
     expect(inspectedElement).toMatchSnapshot('DisplayedComplexValue');
 
     done();
+  });
+
+  describe('inline errors and warnings', () => {
+    // Some actions require the Fiber id.
+    // In those instances you might want to make assertions based on the ID instead of the index.
+    function getErrorsAndWarningsForElement(id: number) {
+      const index = ((store.getIndexOfElementID(id): any): number);
+      return getErrorsAndWarningsForElementAtIndex(index);
+    }
+
+    async function getErrorsAndWarningsForElementAtIndex(index) {
+      const id = ((store.getElementIDAtIndex(index): any): number);
+
+      let errors = null;
+      let warnings = null;
+
+      function Suspender({target}) {
+        const {getInspectedElement} = React.useContext(InspectedElementContext);
+        const inspectedElement = getInspectedElement(id);
+        errors = inspectedElement.errors;
+        warnings = inspectedElement.warnings;
+        return null;
+      }
+
+      let root;
+      await utils.actAsync(() => {
+        root = TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={index}>
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>,
+        );
+      }, false);
+      await utils.actAsync(() => {
+        root.unmount();
+      }, false);
+
+      return {errors, warnings};
+    }
+
+    it('during render get recorded', async () => {
+      const Example = () => {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      };
+
+      const container = document.createElement('div');
+
+      await withErrorsOrWarningsIgnored(['test-only: '], async () => {
+        await utils.actAsync(() =>
+          ReactDOM.render(<Example repeatWarningCount={1} />, container),
+        );
+      });
+
+      const data = await getErrorsAndWarningsForElementAtIndex(0);
+      expect(data).toMatchInlineSnapshot(`
+        Object {
+          "errors": Array [
+            Array [
+              "test-only: render error",
+              1,
+            ],
+          ],
+          "warnings": Array [
+            Array [
+              "test-only: render warning",
+              1,
+            ],
+          ],
+        }
+      `);
+    });
+
+    it('during render get deduped', async () => {
+      const Example = () => {
+        console.error('test-only: render error');
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        console.warn('test-only: render warning');
+        console.warn('test-only: render warning');
+        return null;
+      };
+
+      const container = document.createElement('div');
+      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
+        await utils.actAsync(() =>
+          ReactDOM.render(<Example repeatWarningCount={1} />, container),
+        );
+      });
+      const data = await getErrorsAndWarningsForElementAtIndex(0);
+      expect(data).toMatchInlineSnapshot(`
+        Object {
+          "errors": Array [
+            Array [
+              "test-only: render error",
+              2,
+            ],
+          ],
+          "warnings": Array [
+            Array [
+              "test-only: render warning",
+              3,
+            ],
+          ],
+        }
+      `);
+    });
+
+    it('during layout (mount) get recorded', async () => {
+      const Example = () => {
+        // Note we only test mount because once the component unmounts,
+        // it is no longer in the store and warnings are ignored.
+        React.useLayoutEffect(() => {
+          console.error('test-only: useLayoutEffect error');
+          console.warn('test-only: useLayoutEffect warning');
+        }, []);
+        return null;
+      };
+
+      const container = document.createElement('div');
+      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
+        await utils.actAsync(() =>
+          ReactDOM.render(<Example repeatWarningCount={1} />, container),
+        );
+      });
+
+      const data = await getErrorsAndWarningsForElementAtIndex(0);
+      expect(data).toMatchInlineSnapshot(`
+        Object {
+          "errors": Array [
+            Array [
+              "test-only: useLayoutEffect error",
+              1,
+            ],
+          ],
+          "warnings": Array [
+            Array [
+              "test-only: useLayoutEffect warning",
+              1,
+            ],
+          ],
+        }
+      `);
+    });
+
+    it('during passive (mount) get recorded', async () => {
+      const Example = () => {
+        // Note we only test mount because once the component unmounts,
+        // it is no longer in the store and warnings are ignored.
+        React.useEffect(() => {
+          console.error('test-only: useEffect error');
+          console.warn('test-only: useEffect warning');
+        }, []);
+        return null;
+      };
+
+      const container = document.createElement('div');
+      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
+        await utils.actAsync(() =>
+          ReactDOM.render(<Example repeatWarningCount={1} />, container),
+        );
+      });
+
+      const data = await getErrorsAndWarningsForElementAtIndex(0);
+      expect(data).toMatchInlineSnapshot(`
+        Object {
+          "errors": Array [
+            Array [
+              "test-only: useEffect error",
+              1,
+            ],
+          ],
+          "warnings": Array [
+            Array [
+              "test-only: useEffect warning",
+              1,
+            ],
+          ],
+        }
+      `);
+    });
+
+    it('from react get recorded without a component stack', async () => {
+      const Example = () => {
+        return [<div />];
+      };
+
+      const container = document.createElement('div');
+      await utils.withErrorsOrWarningsIgnored(
+        ['Warning: Each child in a list should have a unique "key" prop.'],
+        async () => {
+          await utils.actAsync(() =>
+            ReactDOM.render(<Example repeatWarningCount={1} />, container),
+          );
+        },
+      );
+
+      const data = await getErrorsAndWarningsForElementAtIndex(0);
+      expect(data).toMatchInlineSnapshot(`
+        Object {
+          "errors": Array [
+            Array [
+              "Warning: Each child in a list should have a unique \\"key\\" prop. See https://reactjs.org/link/warning-keys for more information.",
+              1,
+            ],
+          ],
+          "warnings": Array [],
+        }
+      `);
+    });
+
+    it('can be cleared for the whole app', async () => {
+      const Example = () => {
+        console.error('test-only: render error');
+        console.warn('test-only: render warning');
+        return null;
+      };
+
+      const container = document.createElement('div');
+      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
+        await utils.actAsync(() =>
+          ReactDOM.render(<Example repeatWarningCount={1} />, container),
+        );
+      });
+
+      store.clearErrorsAndWarnings();
+      // Flush events to the renderer.
+      jest.runOnlyPendingTimers();
+
+      const data = await getErrorsAndWarningsForElementAtIndex(0);
+      expect(data).toMatchInlineSnapshot(`
+        Object {
+          "errors": Array [],
+          "warnings": Array [],
+        }
+      `);
+    });
+
+    it('can be cleared for a particular Fiber (only errors)', async () => {
+      const Example = ({id}) => {
+        console.error(`test-only: render error #${id}`);
+        console.warn(`test-only: render warning #${id}`);
+        return null;
+      };
+
+      const container = document.createElement('div');
+      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
+        await utils.actAsync(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Example id={1} />
+              <Example id={2} />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+
+      store.clearWarningsForElement(2);
+      // Flush events to the renderer.
+      jest.runOnlyPendingTimers();
+
+      let data = [
+        await getErrorsAndWarningsForElement(1),
+        await getErrorsAndWarningsForElement(2),
+      ];
+      expect(data).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "errors": Array [
+              Array [
+                "test-only: render error #1",
+                1,
+              ],
+            ],
+            "warnings": Array [
+              Array [
+                "test-only: render warning #1",
+                1,
+              ],
+            ],
+          },
+          Object {
+            "errors": Array [
+              Array [
+                "test-only: render error #2",
+                1,
+              ],
+            ],
+            "warnings": Array [],
+          },
+        ]
+      `);
+
+      store.clearWarningsForElement(1);
+      // Flush events to the renderer.
+      jest.runOnlyPendingTimers();
+
+      data = [
+        await getErrorsAndWarningsForElement(1),
+        await getErrorsAndWarningsForElement(2),
+      ];
+      expect(data).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "errors": Array [
+              Array [
+                "test-only: render error #1",
+                1,
+              ],
+            ],
+            "warnings": Array [],
+          },
+          Object {
+            "errors": Array [
+              Array [
+                "test-only: render error #2",
+                1,
+              ],
+            ],
+            "warnings": Array [],
+          },
+        ]
+      `);
+    });
+
+    it('can be cleared for a particular Fiber (only warnings)', async () => {
+      const Example = ({id}) => {
+        console.error(`test-only: render error #${id}`);
+        console.warn(`test-only: render warning #${id}`);
+        return null;
+      };
+
+      const container = document.createElement('div');
+      await utils.withErrorsOrWarningsIgnored(['test-only:'], async () => {
+        await utils.actAsync(() =>
+          ReactDOM.render(
+            <React.Fragment>
+              <Example id={1} />
+              <Example id={2} />
+            </React.Fragment>,
+            container,
+          ),
+        );
+      });
+
+      store.clearErrorsForElement(2);
+      // Flush events to the renderer.
+      jest.runOnlyPendingTimers();
+
+      let data = [
+        await getErrorsAndWarningsForElement(1),
+        await getErrorsAndWarningsForElement(2),
+      ];
+      expect(data).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "errors": Array [
+              Array [
+                "test-only: render error #1",
+                1,
+              ],
+            ],
+            "warnings": Array [
+              Array [
+                "test-only: render warning #1",
+                1,
+              ],
+            ],
+          },
+          Object {
+            "errors": Array [],
+            "warnings": Array [
+              Array [
+                "test-only: render warning #2",
+                1,
+              ],
+            ],
+          },
+        ]
+      `);
+
+      store.clearErrorsForElement(1);
+      // Flush events to the renderer.
+      jest.runOnlyPendingTimers();
+
+      data = [
+        await getErrorsAndWarningsForElement(1),
+        await getErrorsAndWarningsForElement(2),
+      ];
+      expect(data).toMatchInlineSnapshot(`
+        Array [
+          Object {
+            "errors": Array [],
+            "warnings": Array [
+              Array [
+                "test-only: render warning #1",
+                1,
+              ],
+            ],
+          },
+          Object {
+            "errors": Array [],
+            "warnings": Array [
+              Array [
+                "test-only: render warning #2",
+                1,
+              ],
+            ],
+          },
+        ]
+      `);
+    });
   });
 });

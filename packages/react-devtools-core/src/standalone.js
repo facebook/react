@@ -20,6 +20,7 @@ import {
   getAppendComponentStack,
   getBreakOnConsoleErrors,
   getSavedComponentFilters,
+  getShowInlineWarningsAndErrors,
 } from 'react-devtools-shared/src/utils';
 import {Server} from 'ws';
 import {join} from 'path';
@@ -303,6 +304,9 @@ function startServer(
       )};
       window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
         getSavedComponentFilters(),
+      )};
+      window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ = ${JSON.stringify(
+        getShowInlineWarningsAndErrors(),
       )};`;
 
     response.end(

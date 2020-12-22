@@ -59,6 +59,9 @@ module.exports = Object.assign({}, baseConfig, {
     require.resolve(
       '../../packages/react-devtools-shared/src/__tests__/storeSerializer.js'
     ),
+    require.resolve(
+      '../../packages/react-devtools-shared/src/__tests__/treeContextStateSerializer.js'
+    ),
   ],
   setupFiles: [
     ...baseConfig.setupFiles,

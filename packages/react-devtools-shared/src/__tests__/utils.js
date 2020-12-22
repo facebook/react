@@ -213,3 +213,37 @@ export function exportImportHelper(bridge: FrontendBridge, store: Store): void {
     profilerStore.profilingData = profilingDataFrontend;
   });
 }
+
+/**
+ * Runs `fn` while preventing console error and warnings that partially match any given `errorOrWarningMessages` from appearing in the console.
+ * @param errorOrWarningMessages Messages are matched partially (i.e. indexOf), pre-formatting.
+ * @param fn
+ */
+export function withErrorsOrWarningsIgnored<T: void | Promise<void>>(
+  errorOrWarningMessages: string[],
+  fn: () => T,
+): T {
+  let resetIgnoredErrorOrWarningMessages = true;
+  try {
+    global._ignoredErrorOrWarningMessages = errorOrWarningMessages;
+    const maybeThenable = fn();
+    if (
+      maybeThenable !== undefined &&
+      typeof maybeThenable.then === 'function'
+    ) {
+      resetIgnoredErrorOrWarningMessages = false;
+      return maybeThenable.then(
+        () => {
+          global._ignoredErrorOrWarningMessages = [];
+        },
+        () => {
+          global._ignoredErrorOrWarningMessages = [];
+        },
+      );
+    }
+  } finally {
+    if (resetIgnoredErrorOrWarningMessages) {
+      global._ignoredErrorOrWarningMessages = [];
+    }
+  }
+}

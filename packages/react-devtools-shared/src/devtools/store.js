@@ -12,7 +12,9 @@ import {inspect} from 'util';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
+  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
+  TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
 import {ElementTypeRoot} from '../types';
@@ -78,10 +80,21 @@ export default class Store extends EventEmitter<{|
 |}> {
   _bridge: FrontendBridge;
 
+  // Computed whenever _errorsAndWarnings Map changes.
+  _cachedErrorCount: number = 0;
+  _cachedWarningCount: number = 0;
+  _cachedErrorAndWarningTuples: Array<{|id: number, index: number|}> = [];
+
   // Should new nodes be collapsed by default when added to the tree?
   _collapseNodesByDefault: boolean = true;
 
   _componentFilters: Array<ComponentFilter>;
+
+  // Map of ID to number of recorded error and warning message IDs.
+  _errorsAndWarnings: Map<
+    number,
+    {|errorCount: number, warningCount: number|},
+  > = new Map();
 
   // At least one of the injected renderers contains (DEV only) owner metadata.
   _hasOwnerMetadata: boolean = false;
@@ -289,6 +302,10 @@ export default class Store extends EventEmitter<{|
     this.emit('componentFilters');
   }
 
+  get errorCount(): number {
+    return this._cachedErrorCount;
+  }
+
   get hasOwnerMetadata(): boolean {
     return this._hasOwnerMetadata;
   }
@@ -357,6 +374,46 @@ export default class Store extends EventEmitter<{|
     return this._unsupportedRendererVersionDetected;
   }
 
+  get warningCount(): number {
+    return this._cachedWarningCount;
+  }
+
+  clearErrorsAndWarnings(): void {
+    this._rootIDToRendererID.forEach(rendererID => {
+      this._bridge.send('clearErrorsAndWarnings', {
+        rendererID,
+      });
+    });
+  }
+
+  clearErrorsForElement(id: number): void {
+    const rendererID = this.getRendererIDForElement(id);
+    if (rendererID === null) {
+      console.warn(
+        `Unable to find rendererID for element ${id} when clearing errors.`,
+      );
+    } else {
+      this._bridge.send('clearErrorsForFiberID', {
+        rendererID,
+        id,
+      });
+    }
+  }
+
+  clearWarningsForElement(id: number): void {
+    const rendererID = this.getRendererIDForElement(id);
+    if (rendererID === null) {
+      console.warn(
+        `Unable to find rendererID for element ${id} when clearing warnings.`,
+      );
+    } else {
+      this._bridge.send('clearWarningsForFiberID', {
+        rendererID,
+        id,
+      });
+    }
+  }
+
   containsElement(id: number): boolean {
     return this._idToElement.get(id) != null;
   }
@@ -423,6 +480,17 @@ export default class Store extends EventEmitter<{|
     }
 
     return element;
+  }
+
+  // Returns a tuple of [id, index]
+  getElementsWithErrorsAndWarnings(): Array<{|id: number, index: number|}> {
+    return this._cachedErrorAndWarningTuples;
+  }
+
+  getErrorAndWarningCountForElementID(
+    id: number,
+  ): {|errorCount: number, warningCount: number|} {
+    return this._errorsAndWarnings.get(id) || {errorCount: 0, warningCount: 0};
   }
 
   getIndexOfElementID(id: number): number | null {
@@ -709,6 +777,7 @@ export default class Store extends EventEmitter<{|
     }
 
     let haveRootsChanged = false;
+    let haveErrorsOrWarningsChanged = false;
 
     // The first two values are always rendererID and rootID
     const rendererID = operations[0];
@@ -910,7 +979,41 @@ export default class Store extends EventEmitter<{|
                 set.delete(id);
               }
             }
+
+            if (this._errorsAndWarnings.has(id)) {
+              this._errorsAndWarnings.delete(id);
+              haveErrorsOrWarningsChanged = true;
+            }
           }
+          break;
+        }
+        case TREE_OPERATION_REMOVE_ROOT: {
+          i += 1;
+
+          const id = operations[1];
+
+          if (__DEBUG__) {
+            debug(`Remove root ${id}`);
+          }
+
+          const recursivelyDeleteElements = elementID => {
+            const element = this._idToElement.get(elementID);
+            this._idToElement.delete(elementID);
+            if (element) {
+              // Mostly for Flow's sake
+              for (let index = 0; index < element.children.length; index++) {
+                recursivelyDeleteElements(element.children[index]);
+              }
+            }
+          };
+
+          const root = ((this._idToElement.get(id): any): Element);
+          recursivelyDeleteElements(id);
+
+          this._rootIDToCapabilities.delete(id);
+          this._rootIDToRendererID.delete(id);
+          this._roots = this._roots.filter(rootID => rootID !== id);
+          this._weightAcrossRoots -= root.weight;
           break;
         }
         case TREE_OPERATION_REORDER_CHILDREN: {
@@ -958,12 +1061,61 @@ export default class Store extends EventEmitter<{|
           // The profiler UI uses them lazily in order to generate the tree.
           i += 3;
           break;
+        case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS:
+          const id = operations[i + 1];
+          const errorCount = operations[i + 2];
+          const warningCount = operations[i + 3];
+
+          i += 4;
+
+          if (errorCount > 0 || warningCount > 0) {
+            this._errorsAndWarnings.set(id, {errorCount, warningCount});
+          } else if (this._errorsAndWarnings.has(id)) {
+            this._errorsAndWarnings.delete(id);
+          }
+          haveErrorsOrWarningsChanged = true;
+          break;
         default:
           throw Error(`Unsupported Bridge operation ${operation}`);
       }
     }
 
     this._revision++;
+
+    if (haveErrorsOrWarningsChanged) {
+      let errorCount = 0;
+      let warningCount = 0;
+
+      this._errorsAndWarnings.forEach(entry => {
+        errorCount += entry.errorCount;
+        warningCount += entry.warningCount;
+      });
+
+      this._cachedErrorCount = errorCount;
+      this._cachedWarningCount = warningCount;
+
+      const errorAndWarningTuples: Array<{|id: number, index: number|}> = [];
+
+      this._errorsAndWarnings.forEach((_, id) => {
+        const index = this.getIndexOfElementID(id);
+        if (index !== null) {
+          let low = 0;
+          let high = errorAndWarningTuples.length;
+          while (low < high) {
+            const mid = (low + high) >> 1;
+            if (errorAndWarningTuples[mid].index > index) {
+              high = mid;
+            } else {
+              low = mid + 1;
+            }
+          }
+
+          errorAndWarningTuples.splice(low, 0, {id, index});
+        }
+      });
+
+      this._cachedErrorAndWarningTuples = errorAndWarningTuples;
+    }
 
     if (haveRootsChanged) {
       const prevSupportsProfiling = this._supportsProfiling;
