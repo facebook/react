@@ -93,7 +93,7 @@ export default class Store extends EventEmitter<{|
   // Map of ID to number of recorded error and warning message IDs.
   _errorsAndWarnings: Map<
     number,
-    {errors: number, warnings: number},
+    {|errorCount: number, warningCount: number|},
   > = new Map();
 
   // At least one of the injected renderers contains (DEV only) owner metadata.
@@ -490,15 +490,7 @@ export default class Store extends EventEmitter<{|
   getErrorAndWarningCountForElementID(
     id: number,
   ): {|errorCount: number, warningCount: number|} {
-    const map = this._errorsAndWarnings.get(id);
-    if (map != null) {
-      return {
-        errorCount: map.errors,
-        warningCount: map.warnings,
-      };
-    } else {
-      return {errorCount: 0, warningCount: 0};
-    }
+    return this._errorsAndWarnings.get(id) || {errorCount: 0, warningCount: 0};
   }
 
   getIndexOfElementID(id: number): number | null {
@@ -1071,16 +1063,13 @@ export default class Store extends EventEmitter<{|
           break;
         case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS:
           const id = operations[i + 1];
-          const numErrors = operations[i + 2];
-          const numWarnings = operations[i + 3];
+          const errorCount = operations[i + 2];
+          const warningCount = operations[i + 3];
 
           i += 4;
 
-          if (numErrors > 0 || numWarnings > 0) {
-            this._errorsAndWarnings.set(id, {
-              errors: numErrors,
-              warnings: numWarnings,
-            });
+          if (errorCount > 0 || warningCount > 0) {
+            this._errorsAndWarnings.set(id, {errorCount, warningCount});
           } else if (this._errorsAndWarnings.has(id)) {
             this._errorsAndWarnings.delete(id);
           }
@@ -1097,9 +1086,9 @@ export default class Store extends EventEmitter<{|
       let errorCount = 0;
       let warningCount = 0;
 
-      this._errorsAndWarnings.forEach(({errors, warnings}) => {
-        errorCount += errors;
-        warningCount += warnings;
+      this._errorsAndWarnings.forEach(entry => {
+        errorCount += entry.errorCount;
+        warningCount += entry.warningCount;
       });
 
       this._cachedErrorCount = errorCount;

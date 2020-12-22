@@ -93,14 +93,14 @@ export function printStore(
   } else {
     const errorsAndWarnings = store._errorsAndWarnings;
     if (errorsAndWarnings.size > 0) {
-      let errorsSum = 0;
-      let warningsSum = 0;
-      errorsAndWarnings.forEach(({errors, warnings}) => {
-        errorsSum += errors;
-        warningsSum += warnings;
+      let errorCount = 0;
+      let warningCount = 0;
+      errorsAndWarnings.forEach(entry => {
+        errorCount += entry.errorCount;
+        warningCount += entry.warningCount;
       });
 
-      snapshotLines.push(`✕ ${errorsSum}, ⚠ ${warningsSum}`);
+      snapshotLines.push(`✕ ${errorCount}, ⚠ ${warningCount}`);
     }
 
     store.roots.forEach(rootID => {
