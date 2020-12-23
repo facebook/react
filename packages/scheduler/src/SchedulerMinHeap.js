@@ -16,73 +16,56 @@ type Node = {|
 export function push(heap: Heap, node: Node): void {
   const index = heap.length;
   heap.push(node);
-  siftUp(heap, node, index);
+  siftUp(heap, index);
 }
 
 export function peek(heap: Heap): Node | null {
-  const first = heap[0];
-  return first === undefined ? null : first;
+  if (heap.length === 0) return null;
+  return heap[0];
 }
 
 export function pop(heap: Heap): Node | null {
+  if (heap.length === 0) return null;
+  if (heap.length === 1) return heap.pop();
+
   const first = heap[0];
-  if (first !== undefined) {
-    const last = heap.pop();
-    if (last !== first) {
-      heap[0] = last;
-      siftDown(heap, last, 0);
-    }
-    return first;
-  } else {
-    return null;
-  }
+  heap[0] = heap.pop();
+  siftDown(heap, 0);
+  return first;
 }
 
-function siftUp(heap, node, i) {
-  let index = i;
-  while (true) {
+function siftUp(heap, index) {
+  while (index !== 0) {
     const parentIndex = (index - 1) >>> 1;
-    const parent = heap[parentIndex];
-    if (parent !== undefined && compare(parent, node) > 0) {
-      // The parent is larger. Swap positions.
-      heap[parentIndex] = node;
-      heap[index] = parent;
-      index = parentIndex;
-    } else {
-      // The parent is smaller. Exit.
-      return;
-    }
+    const minIndex = indexOfSmaller(heap, index, parentIndex);
+
+    // The parent is smaller. Exit.
+    if (minIndex === parentIndex) return;
+
+    swap(heap, index, parentIndex);
+    index = parentIndex;
   }
 }
 
-function siftDown(heap, node, i) {
-  let index = i;
+function siftDown(heap, index) {
   const length = heap.length;
-  while (index < length) {
-    const leftIndex = (index + 1) * 2 - 1;
-    const left = heap[leftIndex];
-    const rightIndex = leftIndex + 1;
-    const right = heap[rightIndex];
+  while (validLeft(index, length) || validRight(index, length)) {
+    const leftIndex = getLeftIndex(index);
+    const rightIndex = getRightIndex(index);
 
-    // If the left or right node is smaller, swap with the smaller of those.
-    if (left !== undefined && compare(left, node) < 0) {
-      if (right !== undefined && compare(right, left) < 0) {
-        heap[index] = right;
-        heap[rightIndex] = node;
-        index = rightIndex;
-      } else {
-        heap[index] = left;
-        heap[leftIndex] = node;
-        index = leftIndex;
-      }
-    } else if (right !== undefined && compare(right, node) < 0) {
-      heap[index] = right;
-      heap[rightIndex] = node;
-      index = rightIndex;
+    // Get index of the smallest node among current and its child(ren).
+    let minIndex;
+    if (validRight(index, length)) {
+      minIndex = indexOfSmaller(heap, index, indexOfSmaller(heap, leftIndex, rightIndex));
     } else {
-      // Neither child is smaller. Exit.
-      return;
+      minIndex = indexOfSmaller(heap, index, leftIndex);
     }
+
+    // Neither child is smaller. Exit.
+    if (minIndex === index) return;
+
+    swap(heap, index, minIndex);
+    index = minIndex;
   }
 }
 
@@ -90,4 +73,30 @@ function compare(a, b) {
   // Compare sort index first, then task id.
   const diff = a.sortIndex - b.sortIndex;
   return diff !== 0 ? diff : a.id - b.id;
+}
+
+function indexOfSmaller(heap, i, j) {
+  return compare(heap[i], heap[j]) < 0 ? i : j;
+}
+
+function getLeftIndex(i) {
+  return i * 2 + 1;
+}
+
+function getRightIndex(i) {
+  return i * 2 + 2;
+}
+
+function validLeft(i, n) {
+  return getLeftIndex(i) < n;
+}
+
+function validRight(i, n) {
+  return getRightIndex(i) < n;
+}
+
+function swap(heap, i, j) {
+  const temp = heap[i];
+  heap[i] = heap[j];
+  heap[j] = temp;
 }
