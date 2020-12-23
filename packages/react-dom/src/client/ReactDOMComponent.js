@@ -77,6 +77,7 @@ import {
 
 let didWarnInvalidHydration = false;
 let didWarnScriptTags = false;
+let didWarnScriptTagsInnerHtml = false;
 
 const DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
 const SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
@@ -292,6 +293,21 @@ function setInitialDOMProperties(
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       const nextHtml = nextProp ? nextProp[HTML] : undefined;
       if (nextHtml != null) {
+        if (__DEV__) {
+          if (
+            typeof nextHtml === 'string' &&
+            nextHtml.indexOf('<script') >= 0 &&
+            !didWarnScriptTagsInnerHtml
+          ) {
+            console.error(
+              'Encountered a script tag while rendering using dangerouslySetInnerHTML. ' +
+                'Scripts rendered using dangerouslySetInnerHTML are never executed when rendering ' +
+                'on the client.',
+            );
+            didWarnScriptTagsInnerHtml = true;
+          }
+        }
+
         setInnerHTML(domElement, nextHtml);
       }
     } else if (propKey === CHILDREN) {
@@ -345,6 +361,20 @@ function updateDOMProperties(
     if (propKey === STYLE) {
       setValueForStyles(domElement, propValue);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
+      if (__DEV__) {
+        if (
+          typeof propValue === 'string' &&
+          propValue.indexOf('<script') >= 0 &&
+          !didWarnScriptTagsInnerHtml
+        ) {
+          console.error(
+            'Encountered a script tag while rendering using dangerouslySetInnerHTML. ' +
+              'Scripts rendered using dangerouslySetInnerHTML are never executed when rendering ' +
+              'on the client.',
+          );
+          didWarnScriptTagsInnerHtml = true;
+        }
+      }
       setInnerHTML(domElement, propValue);
     } else if (propKey === CHILDREN) {
       setTextContent(domElement, propValue);
