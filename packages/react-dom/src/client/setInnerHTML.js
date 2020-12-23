@@ -11,6 +11,8 @@ import {Namespaces} from '../shared/DOMNamespaces';
 import createMicrosoftUnsafeLocalFunction from '../shared/createMicrosoftUnsafeLocalFunction';
 import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 
+let didWarnScriptTagsInnerHtml = false;
+
 // SVG temp container for IE lacking innerHTML
 let reusableSVGContainer;
 
@@ -61,6 +63,20 @@ const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
     }
   }
   node.innerHTML = (html: any);
+
+  if (__DEV__) {
+    if (
+      node.querySelectorAll('script').length > 0 &&
+      !didWarnScriptTagsInnerHtml
+    ) {
+      console.error(
+        'Encountered a script tag while rendering using dangerouslySetInnerHTML. ' +
+          'Scripts rendered using dangerouslySetInnerHTML are never executed when rendering ' +
+          'on the client.',
+      );
+      didWarnScriptTagsInnerHtml = true;
+    }
+  }
 });
 
 export default setInnerHTML;
