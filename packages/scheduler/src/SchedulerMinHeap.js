@@ -34,7 +34,8 @@ export function pop(heap: Heap): Node | null {
   return first;
 }
 
-function siftUp(heap, index) {
+function siftUp(heap, i) {
+  let index = i;
   while (index !== 0) {
     const parentIndex = (index - 1) >>> 1;
     const minIndex = indexOfSmaller(heap, index, parentIndex);
@@ -47,7 +48,8 @@ function siftUp(heap, index) {
   }
 }
 
-function siftDown(heap, index) {
+function siftDown(heap, i) {
+  let index = i;
   const length = heap.length;
   while (validLeft(index, length) || validRight(index, length)) {
     const leftIndex = getLeftIndex(index);
@@ -56,7 +58,11 @@ function siftDown(heap, index) {
     // Get index of the smallest node among current and its child(ren).
     let minIndex;
     if (validRight(index, length)) {
-      minIndex = indexOfSmaller(heap, index, indexOfSmaller(heap, leftIndex, rightIndex));
+      minIndex = indexOfSmaller(
+        heap,
+        index,
+        indexOfSmaller(heap, leftIndex, rightIndex),
+      );
     } else {
       minIndex = indexOfSmaller(heap, index, leftIndex);
     }
