@@ -3,11 +3,10 @@ let Fragment;
 let ReactNoop;
 let Scheduler;
 let Suspense;
-let textCache;
+let getCacheForType;
 
-let readText;
-let resolveText;
-let rejectText;
+let caches;
+let seededCache;
 
 describe('ReactSuspenseWithNoopRenderer', () => {
   beforeEach(() => {
@@ -19,78 +18,142 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
 
-    textCache = new Map();
+    getCacheForType = React.unstable_getCacheForType;
 
-    readText = text => {
-      const record = textCache.get(text);
-      if (record !== undefined) {
-        switch (record.status) {
-          case 'pending':
-            throw record.promise;
-          case 'rejected':
-            throw Error('Failed to load: ' + text);
-          case 'resolved':
-            return text;
-        }
-      } else {
-        let ping;
-        const promise = new Promise(resolve => (ping = resolve));
-        const newRecord = {
-          status: 'pending',
-          ping: ping,
-          promise,
-        };
-        textCache.set(text, newRecord);
-        throw promise;
-      }
-    };
-
-    resolveText = text => {
-      const record = textCache.get(text);
-      if (record !== undefined) {
-        if (record.status === 'pending') {
-          record.ping();
-          record.ping = null;
-          record.status = 'resolved';
-          clearTimeout(record.promise._timer);
-          record.promise = null;
-        }
-      } else {
-        const newRecord = {
-          ping: null,
-          status: 'resolved',
-          promise: null,
-        };
-        textCache.set(text, newRecord);
-      }
-    };
-
-    rejectText = text => {
-      const record = textCache.get(text);
-      if (record !== undefined) {
-        if (record.status === 'pending') {
-          record.ping();
-          record.status = 'rejected';
-          clearTimeout(record.promise._timer);
-          record.promise = null;
-        }
-      } else {
-        const newRecord = {
-          ping: null,
-          status: 'rejected',
-          promise: null,
-        };
-        textCache.set(text, newRecord);
-      }
-    };
+    caches = [];
+    seededCache = null;
   });
 
-  // function div(...children) {
-  //   children = children.map(
-  //     c => (typeof c === 'string' ? {text: c, hidden: false} : c),
-  //   );
-  //   return {type: 'div', children, prop: undefined, hidden: false};
-  // }
+  function createTextCache() {
+    if (seededCache !== null) {
+      // Trick to seed a cache before it exists.
+      // TODO: Need a built-in API to seed data before the initial render (i.e.
+      // not a refresh because nothing has mounted yet).
+      const cache = seededCache;
+      seededCache = null;
+      return cache;
+    }
+
+    const data = new Map();
+    const version = caches.length + 1;
+    const cache = {
+      version,
+      data,
+      resolve(text) {
+        const record = data.get(text);
+        if (record === undefined) {
+          const newRecord = {
+            status: 'resolved',
+            value: text,
+          };
+          data.set(text, newRecord);
+        } else if (record.status === 'pending') {
+          const thenable = record.value;
+          record.status = 'resolved';
+          record.value = text;
+          thenable.pings.forEach(t => t());
+        }
+      },
+      reject(text, error) {
+        const record = data.get(text);
+        if (record === undefined) {
+          const newRecord = {
+            status: 'rejected',
+            value: error,
+          };
+          data.set(text, newRecord);
+        } else if (record.status === 'pending') {
+          const thenable = record.value;
+          record.status = 'rejected';
+          record.value = error;
+          thenable.pings.forEach(t => t());
+        }
+      },
+    };
+    caches.push(cache);
+    return cache;
+  }
+
+  function readText(text) {
+    const textCache = getCacheForType(createTextCache);
+    const record = textCache.data.get(text);
+    if (record !== undefined) {
+      switch (record.status) {
+        case 'pending':
+          Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+          throw record.value;
+        case 'rejected':
+          Scheduler.unstable_yieldValue(`Error! [${text}]`);
+          throw record.value;
+        case 'resolved':
+          return textCache.version;
+      }
+    } else {
+      Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+
+      const thenable = {
+        pings: [],
+        then(resolve) {
+          if (newRecord.status === 'pending') {
+            thenable.pings.push(resolve);
+          } else {
+            Promise.resolve().then(() => resolve(newRecord.value));
+          }
+        },
+      };
+
+      const newRecord = {
+        status: 'pending',
+        value: thenable,
+      };
+      textCache.data.set(text, newRecord);
+
+      throw thenable;
+    }
+  }
+
+  function Text({text}) {
+    Scheduler.unstable_yieldValue(text);
+    return <span prop={text} />;
+  }
+
+  function AsyncText({text, showVersion}) {
+    const version = readText(text);
+    const fullText = showVersion ? `${text} [v${version}]` : text;
+    Scheduler.unstable_yieldValue(fullText);
+    return <span prop={fullText} />;
+  }
+
+  function seedNextTextCache(text) {
+    if (seededCache === null) {
+      seededCache = createTextCache();
+    }
+    seededCache.resolve(text);
+  }
+
+  function resolveMostRecentTextCache(text) {
+    if (caches.length === 0) {
+      throw Error('Cache does not exist.');
+    } else {
+      // Resolve the most recently created cache. An older cache can by
+      // resolved with `caches[index].resolve(text)`.
+      caches[caches.length - 1].resolve(text);
+    }
+  }
+
+  const resolveText = resolveMostRecentTextCache;
+
+  function rejectMostRecentTextCache(text, error) {
+    if (caches.length === 0) {
+      throw Error('Cache does not exist.');
+    } else {
+      // Resolve the most recently created cache. An older cache can by
+      // resolved with `caches[index].reject(text, error)`.
+      caches[caches.length - 1].reject(text, error);
+    }
+  }
+
+  const rejectText = rejectMostRecentTextCache;
 
   function span(prop) {
     return {type: 'span', children: [], prop, hidden: false};
@@ -112,27 +175,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     return Promise.resolve().then(() => {});
   }
 
-  function Text(props) {
-    Scheduler.unstable_yieldValue(props.text);
-    return <span prop={props.text} ref={props.hostRef} />;
-  }
-
-  function AsyncText(props) {
-    const text = props.text;
-    try {
-      readText(text);
-      Scheduler.unstable_yieldValue(text);
-      return <span prop={text} />;
-    } catch (promise) {
-      if (typeof promise.then === 'function') {
-        Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
-      } else {
-        Scheduler.unstable_yieldValue(`Error! [${text}]`);
-      }
-      throw promise;
-    }
-  }
-
   // Note: This is based on a similar component we use in www. We can delete
   // once the extra div wrapper is no longer necessary.
   function LegacyHiddenDiv({children, mode}) {
@@ -146,6 +188,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   }
 
+  // @gate enableCache
   it('does not restart rendering for initial render', async () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -208,6 +251,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
   });
 
+  // @gate enableCache
   it('suspends rendering and continues later', async () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -252,6 +296,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
   });
 
+  // @gate enableCache
   it('suspends siblings and later recovers each independently', async () => {
     // Render two sibling Suspense components
     ReactNoop.render(
@@ -290,6 +335,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
   });
 
+  // @gate enableCache
   it('continues rendering siblings after suspending', async () => {
     // A shell is needed. The update cause it to suspend.
     ReactNoop.render(<Suspense fallback={<Text text="Loading..." />} />);
@@ -329,6 +375,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   // Second condition is redundant but guarantees that the test runs in prod.
   // TODO: Delete this feature flag.
   // @gate !replayFailedUnitOfWorkWithInvokeGuardedCallback || !__DEV__
+  // @gate enableCache
   it('retries on error', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -367,7 +414,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toFlushAndYield(['Suspend! [Result]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([]);
 
-    await rejectText('Result');
+    await rejectText('Result', new Error('Failed to load: Result'));
 
     expect(Scheduler).toFlushAndYield([
       'Error! [Result]',
@@ -386,6 +433,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   // Second condition is redundant but guarantees that the test runs in prod.
   // TODO: Delete this feature flag.
   // @gate !replayFailedUnitOfWorkWithInvokeGuardedCallback || !__DEV__
+  // @gate enableCache
   it('retries on error after falling back to a placeholder', async () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -418,7 +466,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toFlushAndYield(['Suspend! [Result]', 'Loading...']);
     expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
 
-    await rejectText('Result');
+    await rejectText('Result', new Error('Failed to load: Result'));
 
     expect(Scheduler).toFlushAndYield([
       'Error! [Result]',
@@ -435,6 +483,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
   });
 
+  // @gate enableCache
   it('can update at a higher priority while in a suspended state', async () => {
     function App(props) {
       return (
@@ -474,6 +523,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('B'), span('1')]);
   });
 
+  // @gate enableCache
   it('keeps working on lower priority work after being pinged', async () => {
     // Advance the virtual time so that we're close to the edge of a bucket.
     ReactNoop.expire(149);
@@ -507,6 +557,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
   });
 
+  // @gate enableCache
   it('tries rendering a lower priority pending update even if a higher priority one suspends', async () => {
     function App(props) {
       if (props.hide) {
@@ -539,6 +590,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   // Note: This test was written to test a heuristic used in the expiration
   // times model. Might not make sense in the new model.
+  // @gate enableCache
   it('tries each subsequent level after suspending', async () => {
     const root = ReactNoop.createRoot();
 
@@ -610,6 +662,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
   });
 
+  // @gate enableCache
   it('forces an expiration after an update times out', async () => {
     ReactNoop.render(
       <Fragment>
@@ -654,6 +707,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Async'), span('Sync')]);
   });
 
+  // @gate enableCache
   it('switches to an inner fallback after suspending for a while', async () => {
     // Advance the virtual time so that we're closer to the edge of a bucket.
     ReactNoop.expire(200);
@@ -718,6 +772,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
   });
 
+  // @gate enableCache
   it('renders an expiration boundary synchronously', async () => {
     spyOnDev(console, 'error');
     // Synchronously render a tree that suspends
@@ -748,6 +803,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Async'), span('Sync')]);
   });
 
+  // @gate enableCache
   it('suspending inside an expired expiration boundary will bubble to the next one', async () => {
     ReactNoop.flushSync(() =>
       ReactNoop.render(
@@ -771,6 +827,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Loading (outer)...')]);
   });
 
+  // @gate enableCache
   it('expires early by default', async () => {
     ReactNoop.render(
       <Fragment>
@@ -812,6 +869,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Async'), span('Sync')]);
   });
 
+  // @gate enableCache
   it('resolves successfully even if fallback render is pending', async () => {
     ReactNoop.render(
       <>
@@ -840,6 +898,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Async')]);
   });
 
+  // @gate enableCache
   it('throws a helpful error when an update is suspends without a placeholder', () => {
     ReactNoop.render(<AsyncText text="Async" />);
     expect(Scheduler).toFlushAndThrow(
@@ -847,6 +906,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
+  // @gate enableCache
   it('a Suspense component correctly handles more than one suspended child', async () => {
     ReactNoop.render(
       <Suspense fallback={<Text text="Loading..." />}>
@@ -868,6 +928,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
   });
 
+  // @gate enableCache
   it('can resume rendering earlier than a timeout', async () => {
     ReactNoop.render(<Suspense fallback={<Text text="Loading..." />} />);
     expect(Scheduler).toFlushAndYield([]);
@@ -888,6 +949,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate experimental
+  // @gate enableCache
   it('starts working on an update even if its priority falls between two suspended levels', async () => {
     function App(props) {
       return (
@@ -938,6 +1000,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('C')]);
   });
 
+  // @gate enableCache
   it('flushes all expired updates in a single batch', async () => {
     class Foo extends React.Component {
       componentDidUpdate() {
@@ -983,6 +1046,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('goodbye')]);
   });
 
+  // @gate enableCache
   it('a suspended update that expires', async () => {
     // Regression test. This test used to fall into an infinite loop.
     function ExpensiveText({text}) {
@@ -1025,6 +1089,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   describe('legacy mode mode', () => {
+    // @gate enableCache
     it('times out immediately', async () => {
       function App() {
         return (
@@ -1045,6 +1110,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Result')]);
     });
 
+    // @gate enableCache
     it('times out immediately when Suspense is in legacy mode', async () => {
       class UpdatingText extends React.Component {
         state = {step: 1};
@@ -1074,7 +1140,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       }
 
       // Initial mount.
-      await resolveText('Step: 1');
+      await seedNextTextCache('Step: 1');
       ReactNoop.renderLegacySyncRoot(<App />);
       expect(Scheduler).toHaveYielded(['Step: 1', 'Sibling']);
       expect(ReactNoop).toMatchRenderedOutput(
@@ -1116,6 +1182,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     });
 
+    // @gate enableCache
     it('does not re-render siblings in loose mode', async () => {
       class TextWithLifecycle extends React.Component {
         componentDidMount() {
@@ -1188,23 +1255,15 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     });
 
+    // @gate enableCache
     it('suspends inside constructor', async () => {
       class AsyncTextInConstructor extends React.Component {
         constructor(props) {
           super(props);
           const text = props.text;
           Scheduler.unstable_yieldValue('constructor');
-          try {
-            readText(text);
-            this.state = {text};
-          } catch (promise) {
-            if (typeof promise.then === 'function') {
-              Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
-            } else {
-              Scheduler.unstable_yieldValue(`Error! [${text}]`);
-            }
-            throw promise;
-          }
+          readText(text);
+          this.state = {text};
         }
         componentDidMount() {
           Scheduler.unstable_yieldValue('componentDidMount');
@@ -1238,6 +1297,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
     });
 
+    // @gate enableCache
     it('does not infinite loop if fallback contains lifecycle method', async () => {
       class Fallback extends React.Component {
         state = {
@@ -1278,6 +1338,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     if (global.__PERSISTENT__) {
+      // @gate enableCache
       it('hides/unhides suspended children before layout effects fire (persistent)', async () => {
         const {useRef, useLayoutEffect} = React;
 
@@ -1319,6 +1380,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         expect(Scheduler).toFlushExpired(['Hi']);
       });
     } else {
+      // @gate enableCache
       it('hides/unhides suspended children before layout effects fire (mutation)', async () => {
         const {useRef, useLayoutEffect} = React;
 
@@ -1361,6 +1423,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       });
     }
 
+    // @gate enableCache
     it('handles errors in the return path of a component that suspends', async () => {
       // Covers an edge case where an error is thrown inside the complete phase
       // of a component that is in the return path of a component that suspends.
@@ -1445,6 +1508,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
   });
 
+  // @gate enableCache
   it('does not call lifecycles of a suspended component', async () => {
     class TextWithLifecycle extends React.Component {
       componentDidMount() {
@@ -1473,18 +1537,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       }
       render() {
         const text = this.props.text;
-        try {
-          readText(text);
-          Scheduler.unstable_yieldValue(text);
-          return <span prop={text} />;
-        } catch (promise) {
-          if (typeof promise.then === 'function') {
-            Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
-          } else {
-            Scheduler.unstable_yieldValue(`Error! [${text}]`);
-          }
-          throw promise;
-        }
+        readText(text);
+        Scheduler.unstable_yieldValue(text);
+        return <span prop={text} />;
       }
     }
 
@@ -1523,6 +1578,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
+  // @gate enableCache
   it('does not call lifecycles of a suspended component (hooks)', async () => {
     function TextWithLifecycle(props) {
       React.useLayoutEffect(() => {
@@ -1558,18 +1614,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         };
       }, [props.text]);
       const text = props.text;
-      try {
-        readText(text);
-        Scheduler.unstable_yieldValue(text);
-        return <span prop={text} />;
-      } catch (promise) {
-        if (typeof promise.then === 'function') {
-          Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
-        } else {
-          Scheduler.unstable_yieldValue(`Error! [${text}]`);
-        }
-        throw promise;
-      }
+      readText(text);
+      Scheduler.unstable_yieldValue(text);
+      return <span prop={text} />;
     }
 
     function App({text}) {
@@ -1663,6 +1710,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ]);
   });
 
+  // @gate enableCache
   it('suspends for longer if something took a long (CPU bound) time to render', async () => {
     function Foo({renderContent}) {
       Scheduler.unstable_yieldValue('Foo');
@@ -1714,6 +1762,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('A')]);
   });
 
+  // @gate enableCache
   it('does not suspends if a fallback has been shown for a long time', async () => {
     function Foo() {
       Scheduler.unstable_yieldValue('Foo');
@@ -1766,6 +1815,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
   });
 
+  // @gate enableCache
   it('does suspend if a fallback has been shown for a short time', async () => {
     function Foo() {
       Scheduler.unstable_yieldValue('Foo');
@@ -1815,6 +1865,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('B')]);
   });
 
+  // @gate enableCache
   it('does not suspend for very long after a higher priority update', async () => {
     function Foo({renderContent}) {
       Scheduler.unstable_yieldValue('Foo');
@@ -1859,6 +1910,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // TODO: flip to "warns" when this is implemented again.
+  // @gate enableCache
   it('does not warn when a low priority update suspends inside a high priority update for functional components', async () => {
     let _setShow;
     function App() {
@@ -1885,6 +1937,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // TODO: flip to "warns" when this is implemented again.
+  // @gate enableCache
   it('does not warn when a low priority update suspends inside a high priority update for class components', async () => {
     let show;
     class App extends React.Component {
@@ -1913,6 +1966,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
   });
 
+  // @gate enableCache
   it('does not warn about wrong Suspense priority if no new fallbacks are shown', async () => {
     let showB;
     class App extends React.Component {
@@ -1947,6 +2001,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // TODO: flip to "warns" when this is implemented again.
+  // @gate enableCache
   it(
     'does not warn when component that triggered user-blocking update is between Suspense boundary ' +
       'and component that suspended',
@@ -1978,6 +2033,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     },
   );
 
+  // @gate enableCache
   it('normal priority updates suspending do not warn for class components', async () => {
     let show;
     class App extends React.Component {
@@ -2006,6 +2062,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
   });
 
+  // @gate enableCache
   it('normal priority updates suspending do not warn for functional components', async () => {
     let _setShow;
     function App() {
@@ -2031,6 +2088,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
   });
 
+  // @gate enableCache
   it('shows the parent fallback if the inner fallback should be avoided', async () => {
     function Foo({showC}) {
       Scheduler.unstable_yieldValue('Foo');
@@ -2087,6 +2145,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('C'), span('B')]);
   });
 
+  // @gate enableCache
   it('favors showing the inner fallback for nested top level avoided fallback', async () => {
     function Foo({showB}) {
       Scheduler.unstable_yieldValue('Foo');
@@ -2118,6 +2177,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('Loading B...')]);
   });
 
+  // @gate enableCache
   it('keeps showing an avoided parent fallback if it is already showing', async () => {
     function Foo({showB}) {
       Scheduler.unstable_yieldValue('Foo');
@@ -2161,6 +2221,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('A'), span('Loading B...')]);
   });
 
+  // @gate enableCache
   it('commits a suspended idle pri render within a reasonable time', async () => {
     function Foo({renderContent}) {
       return (
@@ -2212,6 +2273,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   describe('startTransition', () => {
     // @gate experimental
+    // @gate enableCache
     it('top level render', async () => {
       function App({page}) {
         return (
@@ -2251,6 +2313,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     // @gate experimental
+    // @gate enableCache
     it('hooks', async () => {
       let transitionToPage;
       function App() {
@@ -2303,6 +2366,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     // @gate experimental
+    // @gate enableCache
     it('classes', async () => {
       let transitionToPage;
       class App extends React.Component {
@@ -2360,6 +2424,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   describe('delays transitions when using React.startTranistion', () => {
     // @gate experimental
+    // @gate enableCache
     it('top level render', async () => {
       function App({page}) {
         return (
@@ -2410,6 +2475,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     // @gate experimental
+    // @gate enableCache
     it('hooks', async () => {
       let transitionToPage;
       function App() {
@@ -2477,6 +2543,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
 
     // @gate experimental
+    // @gate enableCache
     it('classes', async () => {
       let transitionToPage;
       class App extends React.Component {
@@ -2547,6 +2614,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate experimental
+  // @gate enableCache
   it('do not show placeholder when updating an avoided boundary with startTransition', async () => {
     function App({page}) {
       return (
@@ -2591,6 +2659,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate experimental
+  // @gate enableCache
   it('do not show placeholder when mounting an avoided boundary with startTransition', async () => {
     function App({page}) {
       return (
@@ -2643,6 +2712,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   // TODO: This test is specifically about avoided commits that suspend for a
   // JND. We may remove this behavior.
+  // @gate enableCache
   it("suspended commit remains suspended even if there's another update at same expiration", async () => {
     // Regression test
     function App({text}) {
@@ -2742,6 +2812,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate experimental
+  // @gate enableCache
   it('should not render hidden content while suspended on higher pri', async () => {
     function Offscreen() {
       Scheduler.unstable_yieldValue('Offscreen');
@@ -2792,6 +2863,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate experimental
+  // @gate enableCache
   it('should be able to unblock higher pri content before suspended hidden', async () => {
     function Offscreen() {
       Scheduler.unstable_yieldValue('Offscreen');
@@ -2846,6 +2918,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
+  // @gate enableCache
   it(
     'multiple updates originating inside a Suspense boundary at different ' +
       'priority levels are not dropped',
@@ -2870,7 +2943,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         return <AsyncText text={text} />;
       }
 
-      await resolveText('A');
+      await seedNextTextCache('A');
       await ReactNoop.act(async () => {
         root.render(<Parent />);
       });
@@ -2899,6 +2972,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     },
   );
 
+  // @gate enableCache
   it(
     'multiple updates originating inside a Suspense boundary at different ' +
       'priority levels are not dropped, including Idle updates',
@@ -2923,7 +2997,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         return <AsyncText text={text} />;
       }
 
-      await resolveText('A');
+      await seedNextTextCache('A');
       await ReactNoop.act(async () => {
         root.render(<Parent />);
       });
@@ -2966,6 +3040,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     },
   );
 
+  // @gate enableCache
   it(
     'fallback component can update itself even after a high pri update to ' +
       'the primary tree suspends',
@@ -2994,7 +3069,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       }
 
       // Resolve the initial tree
-      await resolveText('A');
+      await seedNextTextCache('A');
       await ReactNoop.act(async () => {
         root.render(<App />);
       });
@@ -3050,6 +3125,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     },
   );
 
+  // @gate enableCache
   it(
     'regression: primary fragment fiber is not always part of setState ' +
       'return path',
@@ -3078,7 +3154,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       }
 
       // Mount an initial tree. Resolve A so that it doesn't suspend.
-      await resolveText('A');
+      await seedNextTextCache('A');
       await ReactNoop.act(async () => {
         root.render(<Parent />);
       });
@@ -3128,6 +3204,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     },
   );
 
+  // @gate enableCache
   it(
     'regression: primary fragment fiber is not always part of setState ' +
       'return path (another case)',
@@ -3154,7 +3231,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       }
 
       // Mount an initial tree. Resolve A so that it doesn't suspend.
-      await resolveText('A');
+      await seedNextTextCache('A');
       await ReactNoop.act(async () => {
         root.render(<Parent />);
       });
@@ -3212,6 +3289,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     },
   );
 
+  // @gate enableCache
   it(
     'after showing fallback, should not flip back to primary content until ' +
       'the update that suspended finishes',
@@ -3265,7 +3343,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       }
 
       // Mount an initial tree. Resolve A so that it doesn't suspend.
-      await resolveText('Inner text: A');
+      await seedNextTextCache('Inner text: A');
       await ReactNoop.act(async () => {
         root.render(<Parent step={0} />);
       });
@@ -3355,6 +3433,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     },
   );
 
+  // @gate enableCache
   it('a high pri update can unhide a boundary that suspended at a different level', async () => {
     const {useState, useEffect} = React;
     const root = ReactNoop.createRoot();
@@ -3403,7 +3482,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     }
 
     // Mount an initial tree. Resolve A so that it doesn't suspend.
-    await resolveText('Inner: A0');
+    await seedNextTextCache('Inner: A0');
     await ReactNoop.act(async () => {
       root.render(<Parent step={0} />);
     });
@@ -3451,6 +3530,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
+  // @gate enableCache
   it('regression: empty render at high priority causes update to be dropped', async () => {
     // Reproduces a bug where flushDiscreteUpdates starts a new (empty) render
     // pass which cancels a scheduled timeout and causes the fallback never to
@@ -3500,6 +3580,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate experimental
+  // @gate enableCache
   it('regression: ping at high priority causes update to be dropped', async () => {
     const {useState, unstable_useTransition: useTransition} = React;
 
@@ -3539,8 +3620,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     const root = ReactNoop.createRoot();
     await ReactNoop.act(async () => {
-      await resolveText('A');
-      await resolveText('B');
+      await seedNextTextCache('A');
+      await seedNextTextCache('B');
       root.render(<App />);
     });
     expect(Scheduler).toHaveYielded(['A', 'B']);
@@ -3610,6 +3691,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   // Regression: https://github.com/facebook/react/issues/18486
   // @gate experimental
+  // @gate enableCache
   it('does not get stuck in pending state with render phase updates', async () => {
     let setTextWithShortTransition;
     let setTextWithLongTransition;
@@ -3723,6 +3805,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     });
   });
 
+  // @gate enableCache
   it('regression: #18657', async () => {
     const {useState} = React;
 
@@ -3735,7 +3818,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     const root = ReactNoop.createRoot();
     await ReactNoop.act(async () => {
-      await resolveText('A');
+      await seedNextTextCache('A');
       root.render(
         <Suspense fallback={<Text text="Loading..." />}>
           <App />
@@ -3772,6 +3855,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(root).toMatchRenderedOutput(<span prop="B" />);
   });
 
+  // @gate enableCache
   it('retries have lower priority than normal updates', async () => {
     const {useState} = React;
 
@@ -3826,6 +3910,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
+  // @gate enableCache
   it('should fire effect clean-up when deleting suspended tree', async () => {
     const {useEffect} = React;
 
@@ -3873,6 +3958,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(Scheduler).toHaveYielded(['Unmount Child']);
   });
 
+  // @gate enableCache
   it('should fire effect clean-up when deleting suspended tree (legacy)', async () => {
     const {useEffect} = React;
 
