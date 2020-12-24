@@ -1436,6 +1436,28 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          const stableResult = useCustomStableHook();
+          useEffect(() => {
+            console.log(stableResult);
+          }, []);
+        }
+      `,
+      options: [{ stableHooksPattern: 'useCustomStableHook' }],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          const myCustomRef = useMyCustomRef();
+          useEffect(() => {
+            console.log(myCustomRef.current);
+          }, []);
+        }
+      `,
+      options: [{ stableHooksPattern: 'use(.*)Ref' }],
+    },
   ],
   invalid: [
     {
@@ -7499,6 +7521,61 @@ const tests = {
           message:
             "The 'foo' object makes the dependencies of useEffect Hook (at line 9) change on every render. " +
             "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          const otherSomething = useOtherSomething();
+          useEffect(() => {
+            console.log(otherSomething);
+          }, []);
+        }
+      `,
+      options: [{ stableHooksPattern: 'useSomething' }],
+      errors: [
+        {
+          message:
+            "React Hook useCallback has a missing dependency: 'otherSomething'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [otherSomething]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  const otherSomething = useOtherSomething();
+                  useEffect(() => {
+                    console.log(otherSomething);
+                  }, [otherSomething]);
+                }
+              `,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const customRef = useCustomRef();
+          useEffect(() => {
+            const handleMove = () => {};
+            customRef.current.addEventListener('mousemove', handleMove);
+            return () => customRef.current.removeEventListener('mousemove', handleMove);
+          }, []);
+          return <div ref={customRef} />;
+        }
+      `,
+      options: [{ stableHooksPattern: 'useCustomRef' }],
+      errors: [
+        {
+          message:
+            `The ref value 'customRef.current' will likely have changed by the time ` +
+            `this effect cleanup function runs. If this ref points to a node ` +
+            `rendered by React, copy 'customRef.current' to a variable inside the effect, ` +
+            `and use that variable in the cleanup function.`,
           suggestions: undefined,
         },
       ],
