@@ -41,7 +41,7 @@ import {enableIsInputPending} from '../SchedulerFeatureFlags';
 
 let getCurrentTime;
 const hasPerformanceNow =
-  typeof performance === 'object' && typeof performance.now === 'function';
+  window.performance && typeof performance === 'object' && typeof performance.now === 'function';
 
 if (hasPerformanceNow) {
   const localPerformance = performance;
