@@ -32,6 +32,9 @@ export default {
           enableDangerousAutofixThisMayCauseInfiniteLoops: {
             type: 'boolean',
           },
+          stableHooksPattern: {
+            type: 'string',
+          },
         },
       },
     ],
@@ -51,9 +54,17 @@ export default {
         context.options[0].enableDangerousAutofixThisMayCauseInfiniteLoops) ||
       false;
 
+    const stableHooksPattern =
+      context.options &&
+      context.options[0] &&
+      context.options[0].stableHooksPattern
+        ? new RegExp(context.options[0].stableHooksPattern)
+        : undefined;
+
     const options = {
       additionalHooks,
       enableDangerousAutofixThisMayCauseInfiniteLoops,
+      stableHooksPattern,
     };
 
     function reportProblem(problem) {
@@ -218,7 +229,12 @@ export default {
         }
         const id = def.node.id;
         const {name} = callee;
-        if (name === 'useRef' && id.type === 'Identifier') {
+        if (
+          options.stableHooksPattern &&
+          options.stableHooksPattern.test(name)
+        ) {
+          return true;
+        } else if (name === 'useRef' && id.type === 'Identifier') {
           // useRef() return value is stable.
           return true;
         } else if (name === 'useState' || name === 'useReducer') {
