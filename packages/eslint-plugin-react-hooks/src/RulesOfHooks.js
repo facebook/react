@@ -452,7 +452,10 @@ export default {
               // path segments.
               //
               // Special case when we think there might be an early return.
-              if (!cycled && pathsFromStartToEnd !== allPathsFromStartToEnd) {
+              if (
+                (!cycled && pathsFromStartToEnd !== allPathsFromStartToEnd) ||
+                isInsideExitableTryBlock(hook)
+              ) {
                 const message =
                   `React Hook "${context.getSource(hook)}" is called ` +
                   'conditionally. React Hooks must be called in the exact ' +
@@ -599,6 +602,39 @@ function getFunctionName(node) {
   } else {
     return undefined;
   }
+}
+
+/**
+ * Traverses the node's parents until it finds a `TryStatement`. This helps to
+ * ensure hooks aren't called conditionally in try-catch blocks, as
+ * ESLint treats the first CallExpression inside a try-block as part of the
+ * non-try-block segment:
+ *
+ *  ```js
+ *  function Component() {
+ *    useNonConditionalHook(); // ---+
+ *    try {                    //    | same code path segment
+ *      useConditionalHook1(); // ---+
+ *      useConditionalHook2(); // new segment with mismatching path lengths
+ *    } catch { }
+ *  }
+ *  ```
+ */
+function isInsideExitableTryBlock(node) {
+  while (node.parent != null) {
+    switch (node.parent.type) {
+      case 'TryStatement':
+        const isFinalizerBlock = node === node.parent.finalizer;
+        return !isFinalizerBlock;
+
+      case 'FunctionExpression':
+        return false;
+    }
+
+    node = node.parent;
+  }
+
+  return false;
 }
 
 /**
