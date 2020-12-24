@@ -1,3 +1,19 @@
+# TO EVERYONE WHO STILL WORKS WITH THIS COMPANY
+
+> You are employees, willingly working and helping this company to fullfil their part down to total authorism and the New World Order.
+> I know that most of you must know that. Otherwise I cannot tell how can someone that programs is laking of logic and awareness. 
+> There will be suffering for what needs to be done, but we and our children will suffer even more if we comply.
+> We could come out better as it was before, we could use the time make live what it should be. Is the time in there we are now what you want to last forever?
+> They will never stop to break us, torture and even kill us for their goal. Almost ONE YEAR we are now in on the global scale torture adventure ...
+> ... and where are the people working for the companies that censurship every video, message, note etc .. that is not in favor of their agenda?
+> Praise the bug, fear him .. if you hug > you will die .. if you kiss > you will die .. if you love > you will die .. that's the message beeing planted in
+> our head.... and EVEN WORSE -> IN THE HEAD OF OUR CHILDREN
+> ... It's all on you, no only on them, stopp complying .. stop and think .. stop and find back to life .. 
+> Here must be so many smart people. What the hell is wrong with you ... Is there not one though within Facebook's crowd having second thoughts? .. 
+> ARE YOU OK WITH WHAT IS GOING ON???? ARE YOU FEELLING COMFORT THAT YOUR CHILDREN WILL HAVE NO FREEDOM, NO SOCIAL CONTACT, 
+> NO FIRST DATE, NO FIRST KISS -> IT's dangerous ................... PLEASE OPEN YOUR EYES ........ (I'm sure that there are so many type errors and misspelled words .. not a native)
+
+
 # [React](https://reactjs.org/) &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/facebook/react/blob/master/LICENSE) [![npm version](https://img.shields.io/npm/v/react.svg?style=flat)](https://www.npmjs.com/package/react) [![CircleCI Status](https://circleci.com/gh/facebook/react.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/facebook/react) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](https://reactjs.org/docs/how-to-contribute.html#your-first-pull-request)
 
 React is a JavaScript library for building user interfaces.
