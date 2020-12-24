@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import assign from 'object-assign';
+import {assign} from '../utils';
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 import ReactCurrentBatchConfig from './ReactCurrentBatchConfig';
 import ReactCurrentOwner from './ReactCurrentOwner';
@@ -17,7 +17,6 @@ const ReactSharedInternals = {
   ReactCurrentBatchConfig,
   ReactCurrentOwner,
   IsSomeRendererActing,
-  // Used by renderers to avoid bundling object-assign twice in UMD bundles:
   assign,
 };
 
