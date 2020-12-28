@@ -119,6 +119,10 @@ export default class ReactFlightWebpackPlugin {
       );
     };
 
+    const manifestFilename = this.manifestFilename;
+    // To target both webpack v4 & webpack v5, we have to listen to certain hooks.
+    let hooksInstalled = false;
+
     compiler.hooks.run.tapAsync(PLUGIN_NAME, run);
     compiler.hooks.watchRun.tapAsync(PLUGIN_NAME, run);
     compiler.hooks.compilation.tap(
@@ -163,9 +167,86 @@ export default class ReactFlightWebpackPlugin {
             }
           }
         });
+
+        if (!compilation.hooks.processAssets) {
+          return;
+        }
+        hooksInstalled = true;
+
+        compilation.hooks.processAssets.tap(
+          {
+            name: PLUGIN_NAME,
+            // We derive the manifest from the existing assets.
+            stage: require('webpack').Compilation.PROCESS_ASSETS_STAGE_DERIVED,
+          },
+          () => {
+            const json = {};
+            /** @type {ChunkGraph} */
+            const chunkGraph = compilation.chunkGraph;
+            /** @type {ModuleGraph} */
+            const moduleGraph = compilation.moduleGraph;
+
+            compilation.chunkGroups.forEach(function(chunkGroup) {
+              const chunkIds = chunkGroup.chunks.map(function(c) {
+                return c.id;
+              });
+
+              function recordModule(id, mod) {
+                // TODO: Hook into deps instead of the target module.
+                // That way we know by the type of dep whether to include.
+                // It also resolves conflicts when the same module is in multiple chunks.
+                if (!/\.client\.tsx$/.test(mod.resource)) {
+                  // TODO: The above is using JS, instead of TSX
+                  return;
+                }
+
+                const moduleExports = {};
+                // const providedExports = mod.buildMeta ? mod.buildMeta.providedExports : [];
+                const providedExports = moduleGraph.getProvidedExports(mod);
+                ['', '*'].concat(providedExports).forEach(function(name) {
+                  moduleExports[name] = {
+                    id: id,
+                    chunks: chunkIds,
+                    name: name,
+                  };
+                });
+                const href = URL.pathToFileURL(mod.resource).href;
+
+                if (href !== undefined) {
+                  json[href] = moduleExports;
+                }
+              }
+
+              chunkGroup.chunks.forEach(function(chunk) {
+                chunk.getModules().forEach(function(mod) {
+                  const id = chunkGraph.getModuleId(mod);
+                  recordModule(id, mod);
+                  // If this is a concatenation, register each child to the parent ID.
+                  if (mod.modules) {
+                    mod.modules.forEach(function(concatenatedMod) {
+                      recordModule(id, concatenatedMod);
+                    });
+                  }
+                });
+              });
+            });
+            const output = JSON.stringify(json, null, 2);
+            compilation.assets[manifestFilename] = {
+              source: function() {
+                return output;
+              },
+              size: function() {
+                return output.length;
+              },
+            };
+          },
+        );
       },
     );
 
+    if (hooksInstalled) {
+      return;
+    }
     compiler.hooks.emit.tap(PLUGIN_NAME, compilation => {
       const json = {};
       compilation.chunkGroups.forEach(chunkGroup => {
@@ -205,7 +286,7 @@ export default class ReactFlightWebpackPlugin {
         });
       });
       const output = JSON.stringify(json, null, 2);
-      compilation.assets[this.manifestFilename] = {
+      compilation.assets[manifestFilename] = {
         source() {
           return output;
         },
