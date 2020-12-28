@@ -961,7 +961,6 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(Scheduler).toFlushAndYield(['Foo']);
   });
 
-  // @gate skipUnmountedBoundaries
   it('should not attempt to recover an unmounting error boundary', () => {
     class Parent extends React.Component {
       componentWillUnmount() {
@@ -993,17 +992,12 @@ describe('ReactIncrementalErrorHandling', () => {
 
     ReactNoop.render(<Parent />);
     expect(Scheduler).toFlushWithoutYielding();
-
-    // Because the error boundary is also unmounting,
-    // an error in ThrowsOnUnmount should be rethrown.
-    expect(() => {
-      ReactNoop.render(null);
-      expect(Scheduler).toFlushAndYield([
-        'Parent componentWillUnmount',
-        'ThrowsOnUnmount componentWillUnmount',
-      ]);
-    }).toThrow('unmount error');
-
+    ReactNoop.render(null);
+    expect(Scheduler).toFlushAndYield([
+      // Parent unmounts before the error is thrown.
+      'Parent componentWillUnmount',
+      'ThrowsOnUnmount componentWillUnmount',
+    ]);
     ReactNoop.render(<Parent />);
   });
 

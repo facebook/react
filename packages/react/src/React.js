@@ -17,6 +17,7 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
   REACT_SCOPE_TYPE,
+  REACT_CACHE_TYPE,
 } from 'shared/ReactSymbols';
 
 import {Component, PureComponent} from './ReactBaseClasses';
@@ -32,8 +33,8 @@ import {createContext} from './ReactContext';
 import {lazy} from './ReactLazy';
 import {forwardRef} from './ReactForwardRef';
 import {memo} from './ReactMemo';
-import {block} from './ReactBlock';
 import {
+  getCacheForType,
   useCallback,
   useContext,
   useEffect,
@@ -48,6 +49,7 @@ import {
   useTransition,
   useDeferredValue,
   useOpaqueIdentifier,
+  useCacheRefresh,
 } from './ReactHooks';
 import {
   createElementWithValidation,
@@ -111,8 +113,9 @@ export {
   useDeferredValue,
   REACT_SUSPENSE_LIST_TYPE as SuspenseList,
   REACT_LEGACY_HIDDEN_TYPE as unstable_LegacyHidden,
-  // enableBlocksAPI
-  block,
+  getCacheForType as unstable_getCacheForType,
+  useCacheRefresh as unstable_useCacheRefresh,
+  REACT_CACHE_TYPE as unstable_Cache,
   // enableFundamentalAPI
   createFundamental as unstable_createFundamental,
   // enableScopeAPI

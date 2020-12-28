@@ -169,6 +169,9 @@ export default class Agent extends EventEmitter<{|
 
     this._bridge = bridge;
 
+    bridge.addListener('clearErrorsAndWarnings', this.clearErrorsAndWarnings);
+    bridge.addListener('clearErrorsForFiberID', this.clearErrorsForFiberID);
+    bridge.addListener('clearWarningsForFiberID', this.clearWarningsForFiberID);
     bridge.addListener('copyElementPath', this.copyElementPath);
     bridge.addListener('deletePath', this.deletePath);
     bridge.addListener('getProfilingData', this.getProfilingData);
@@ -225,6 +228,33 @@ export default class Agent extends EventEmitter<{|
   get rendererInterfaces(): {[key: RendererID]: RendererInterface, ...} {
     return this._rendererInterfaces;
   }
+
+  clearErrorsAndWarnings = ({rendererID}: {|rendererID: RendererID|}) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}"`);
+    } else {
+      renderer.clearErrorsAndWarnings();
+    }
+  };
+
+  clearErrorsForFiberID = ({id, rendererID}: ElementAndRendererID) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}"`);
+    } else {
+      renderer.clearErrorsForFiberID(id);
+    }
+  };
+
+  clearWarningsForFiberID = ({id, rendererID}: ElementAndRendererID) => {
+    const renderer = this._rendererInterfaces[rendererID];
+    if (renderer == null) {
+      console.warn(`Invalid renderer id "${rendererID}"`);
+    } else {
+      renderer.clearWarningsForFiberID(id);
+    }
+  };
 
   copyElementPath = ({id, path, rendererID}: CopyElementParams) => {
     const renderer = this._rendererInterfaces[rendererID];
@@ -571,16 +601,22 @@ export default class Agent extends EventEmitter<{|
   updateConsolePatchSettings = ({
     appendComponentStack,
     breakOnConsoleErrors,
+    showInlineWarningsAndErrors,
   }: {|
     appendComponentStack: boolean,
     breakOnConsoleErrors: boolean,
+    showInlineWarningsAndErrors: boolean,
   |}) => {
     // If the frontend preference has change,
     // or in the case of React Native- if the backend is just finding out the preference-
     // then install or uninstall the console overrides.
     // It's safe to call these methods multiple times, so we don't need to worry about that.
     if (appendComponentStack || breakOnConsoleErrors) {
-      patchConsole({appendComponentStack, breakOnConsoleErrors});
+      patchConsole({
+        appendComponentStack,
+        breakOnConsoleErrors,
+        showInlineWarningsAndErrors,
+      });
     } else {
       unpatchConsole();
     }

@@ -24,7 +24,13 @@ import {
   HostRoot,
   SuspenseComponent,
 } from './ReactWorkTags';
-import {Deletion, Placement, Hydrating} from './ReactFiberFlags';
+import {
+  Deletion,
+  ChildDeletion,
+  Placement,
+  Hydrating,
+  StaticMask,
+} from './ReactFiberFlags';
 import invariant from 'shared/invariant';
 
 import {
@@ -55,7 +61,7 @@ import {
   didNotFindHydratableSuspenseInstance,
 } from './ReactFiberHostConfig';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
-import {OffscreenLane} from './ReactFiberLane';
+import {OffscreenLane} from './ReactFiberLane.old';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
@@ -124,7 +130,7 @@ function deleteHydratableInstance(
   const childToDelete = createFiberFromHostInstanceForDeletion();
   childToDelete.stateNode = instance;
   childToDelete.return = returnFiber;
-  childToDelete.flags = Deletion;
+  childToDelete.flags = (childToDelete.flags & StaticMask) | Deletion;
 
   // This might seem like it belongs on progressedFirstDeletion. However,
   // these children are not part of the reconciliation list of children.
@@ -137,6 +143,15 @@ function deleteHydratableInstance(
   } else {
     returnFiber.firstEffect = returnFiber.lastEffect = childToDelete;
   }
+
+  let deletions = returnFiber.deletions;
+  if (deletions === null) {
+    deletions = returnFiber.deletions = [childToDelete];
+    returnFiber.flags |= ChildDeletion;
+  } else {
+    deletions.push(childToDelete);
+  }
+  childToDelete.deletions = deletions;
 }
 
 function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {

@@ -1,5 +1,341 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`commit tree Lazy should support Lazy components (createRoot): 0: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 0,
+      "type": 11,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+      ],
+      "displayName": "App",
+      "hocDisplayNames": null,
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 0,
+      "type": 5,
+    },
+    3 => Object {
+      "children": Array [],
+      "displayName": "Suspense",
+      "hocDisplayNames": null,
+      "id": 3,
+      "key": null,
+      "parentID": 2,
+      "treeBaseDuration": 0,
+      "type": 12,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`commit tree Lazy should support Lazy components (createRoot): 1: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 0,
+      "type": 11,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+      ],
+      "displayName": "App",
+      "hocDisplayNames": null,
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 0,
+      "type": 5,
+    },
+    3 => Object {
+      "children": Array [
+        4,
+      ],
+      "displayName": "Suspense",
+      "hocDisplayNames": null,
+      "id": 3,
+      "key": null,
+      "parentID": 2,
+      "treeBaseDuration": 0,
+      "type": 12,
+    },
+    4 => Object {
+      "children": Array [],
+      "displayName": "LazyInnerComponent",
+      "hocDisplayNames": null,
+      "id": 4,
+      "key": null,
+      "parentID": 3,
+      "treeBaseDuration": 0,
+      "type": 5,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`commit tree Lazy should support Lazy components (legacy render): 0: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 0,
+      "type": 11,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+      ],
+      "displayName": "App",
+      "hocDisplayNames": null,
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 0,
+      "type": 5,
+    },
+    3 => Object {
+      "children": Array [],
+      "displayName": "Suspense",
+      "hocDisplayNames": null,
+      "id": 3,
+      "key": null,
+      "parentID": 2,
+      "treeBaseDuration": 0,
+      "type": 12,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`commit tree Lazy should support Lazy components (legacy render): 1: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 0,
+      "type": 11,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+      ],
+      "displayName": "App",
+      "hocDisplayNames": null,
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 0,
+      "type": 5,
+    },
+    3 => Object {
+      "children": Array [
+        4,
+      ],
+      "displayName": "Suspense",
+      "hocDisplayNames": null,
+      "id": 3,
+      "key": null,
+      "parentID": 2,
+      "treeBaseDuration": 0,
+      "type": 12,
+    },
+    4 => Object {
+      "children": Array [],
+      "displayName": "LazyInnerComponent",
+      "hocDisplayNames": null,
+      "id": 4,
+      "key": null,
+      "parentID": 3,
+      "treeBaseDuration": 0,
+      "type": 5,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`commit tree Lazy should support Lazy components that are unmounted before resolving (createRoot): 0: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 0,
+      "type": 11,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+      ],
+      "displayName": "App",
+      "hocDisplayNames": null,
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 0,
+      "type": 5,
+    },
+    3 => Object {
+      "children": Array [],
+      "displayName": "Suspense",
+      "hocDisplayNames": null,
+      "id": 3,
+      "key": null,
+      "parentID": 2,
+      "treeBaseDuration": 0,
+      "type": 12,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`commit tree Lazy should support Lazy components that are unmounted before resolving (createRoot): 1: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 0,
+      "type": 11,
+    },
+    2 => Object {
+      "children": Array [],
+      "displayName": "App",
+      "hocDisplayNames": null,
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 0,
+      "type": 5,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`commit tree Lazy should support Lazy components that are unmounted before resolving (legacy render): 0: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 0,
+      "type": 11,
+    },
+    2 => Object {
+      "children": Array [
+        3,
+      ],
+      "displayName": "App",
+      "hocDisplayNames": null,
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 0,
+      "type": 5,
+    },
+    3 => Object {
+      "children": Array [],
+      "displayName": "Suspense",
+      "hocDisplayNames": null,
+      "id": 3,
+      "key": null,
+      "parentID": 2,
+      "treeBaseDuration": 0,
+      "type": 12,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
+exports[`commit tree Lazy should support Lazy components that are unmounted before resolving (legacy render): 1: CommitTree 1`] = `
+Object {
+  "nodes": Map {
+    1 => Object {
+      "children": Array [
+        2,
+      ],
+      "displayName": null,
+      "hocDisplayNames": null,
+      "id": 1,
+      "key": null,
+      "parentID": 0,
+      "treeBaseDuration": 0,
+      "type": 11,
+    },
+    2 => Object {
+      "children": Array [],
+      "displayName": "App",
+      "hocDisplayNames": null,
+      "id": 2,
+      "key": null,
+      "parentID": 1,
+      "treeBaseDuration": 0,
+      "type": 5,
+    },
+  },
+  "rootID": 1,
+}
+`;
+
 exports[`commit tree should be able to rebuild the store tree for each commit: 0: CommitTree 1`] = `
 Object {
   "nodes": Map {

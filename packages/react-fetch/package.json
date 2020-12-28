@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "react-fetch",
   "description": "Helpers for creating React data sources",
   "version": "0.0.0",

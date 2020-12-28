@@ -1,5 +1,63 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`Store Lazy should support Lazy components (legacy render): 1: mounted + loading 1`] = `
+[root]
+  ▾ <App>
+      <Suspense>
+`;
+
+exports[`Store Lazy should support Lazy components (legacy render): 2: mounted + loaded 1`] = `
+[root]
+  ▾ <App>
+    ▾ <Suspense>
+        <LazyInnerComponent>
+`;
+
+exports[`Store Lazy should support Lazy components (legacy render): 3: unmounted 1`] = `
+[root]
+    <App>
+`;
+
+exports[`Store Lazy should support Lazy components in (createRoot): 1: mounted + loading 1`] = `
+[root]
+  ▾ <App>
+      <Suspense>
+`;
+
+exports[`Store Lazy should support Lazy components in (createRoot): 2: mounted + loaded 1`] = `
+[root]
+  ▾ <App>
+    ▾ <Suspense>
+        <LazyInnerComponent>
+`;
+
+exports[`Store Lazy should support Lazy components in (createRoot): 3: unmounted 1`] = `
+[root]
+    <App>
+`;
+
+exports[`Store Lazy should support Lazy components that are unmounted before they finish loading (legacy render): 1: mounted + loading 1`] = `
+[root]
+  ▾ <App>
+      <Suspense>
+`;
+
+exports[`Store Lazy should support Lazy components that are unmounted before they finish loading (legacy render): 2: unmounted 1`] = `
+[root]
+    <App>
+`;
+
+exports[`Store Lazy should support Lazy components that are unmounted before they finish loading in (createRoot): 1: mounted + loading 1`] = `
+[root]
+  ▾ <App>
+      <Suspense>
+`;
+
+exports[`Store Lazy should support Lazy components that are unmounted before they finish loading in (createRoot): 2: unmounted 1`] = `
+[root]
+    <App>
+`;
+
 exports[`Store collapseNodesByDefault:false should display Suspense nodes properly in various states: 1: loading 1`] = `
 [root]
   ▾ <Wrapper>
@@ -624,8 +682,6 @@ exports[`Store should show the right display names for special component types 1
       <MyComponent4> [Memo]
     ▾ <MyComponent> [Memo]
         <MyComponent> [ForwardRef]
-    ▾ <Suspense>
-        <MyComponent5>
       <Baz> [withFoo][withBar]
       <Baz> [Memo][withFoo][withBar]
       <Baz> [ForwardRef][withFoo][withBar]

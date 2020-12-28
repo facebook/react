@@ -16,13 +16,15 @@ export type IconType =
   | 'code'
   | 'components'
   | 'copy'
+  | 'error'
   | 'flame-chart'
   | 'interactions'
   | 'profiler'
   | 'ranked-chart'
   | 'search'
   | 'settings'
-  | 'store-as-global-variable';
+  | 'store-as-global-variable'
+  | 'warning';
 
 type Props = {|
   className?: string,
@@ -47,6 +49,9 @@ export default function Icon({className = '', type}: Props) {
     case 'copy':
       pathData = PATH_COPY;
       break;
+    case 'error':
+      pathData = PATH_ERROR;
+      break;
     case 'flame-chart':
       pathData = PATH_FLAME_CHART;
       break;
@@ -67,6 +72,9 @@ export default function Icon({className = '', type}: Props) {
       break;
     case 'store-as-global-variable':
       pathData = PATH_STORE_AS_GLOBAL_VARIABLE;
+      break;
+    case 'warning':
+      pathData = PATH_WARNING;
       break;
     default:
       console.warn(`Unsupported type "${type}" specified for Icon`);
@@ -106,6 +114,8 @@ const PATH_COPY = `
   M3 13h2v-2H3v2zm0 4h2v-2H3v2zm2 4v-2H3a2 2 0 0 0 2 2zM3 9h2V7H3v2zm12 12h2v-2h-2v2zm4-18H9a2 2 0 0 0-2
   2v10a2 2 0 0 0 2 2h10c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 12H9V5h10v10zm-8 6h2v-2h-2v2zm-4 0h2v-2H7v2z
 `;
+
+const PATH_ERROR = `M16.971 0h-9.942l-7.029 7.029v9.941l7.029 7.03h9.941l7.03-7.029v-9.942l-7.029-7.029zm-1.402 16.945l-3.554-3.521-3.518 3.568-1.418-1.418 3.507-3.566-3.586-3.472 1.418-1.417 3.581 3.458 3.539-3.583 1.431 1.431-3.535 3.568 3.566 3.522-1.431 1.43z`;
 
 const PATH_FLAME_CHART = `
   M10.0650893,21.5040462 C7.14020814,20.6850349 5,18.0558698 5,14.9390244 C5,14.017627
@@ -154,3 +164,5 @@ const PATH_STORE_AS_GLOBAL_VARIABLE = `
   1.79 2.97 3 5.19 3s4.15-1.21 5.19-3H20v-2h-2.09c.05-.33.09-.66.09-1v-1h2v-2h-2v-1c0-.34-.04-.67-.09-1H20V8zm-6
   8h-4v-2h4v2zm0-4h-4v-2h4v2z
 `;
+
+const PATH_WARNING = `M12 1l-12 22h24l-12-22zm-1 8h2v7h-2v-7zm1 11.25c-.69 0-1.25-.56-1.25-1.25s.56-1.25 1.25-1.25 1.25.56 1.25 1.25-.56 1.25-1.25 1.25z`;

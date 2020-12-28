@@ -33,7 +33,9 @@ function unmount(dom) {
 
 beforeEach(() => {
   jest.resetModules();
-  jest.unmock('scheduler');
+  jest.mock('scheduler', () =>
+    require.requireActual('scheduler/unstable_no_dom'),
+  );
   yields = [];
   React = require('react');
   ReactDOM = require('react-dom');

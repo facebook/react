@@ -36,6 +36,13 @@ export const enableProfilerTimer = __PROFILE__;
 // Record durations for commit and passive effects phases.
 export const enableProfilerCommitHooks = false;
 
+// Phase param passed to onRender callback differentiates between an "update" and a "cascading-update".
+export const enableProfilerNestedUpdatePhase = false;
+
+// Profiler API accepts a function to be called when a nested update is scheduled.
+// This callback accepts the component type (class instance or function) the update is scheduled for.
+export const enableProfilerNestedUpdateScheduledHook = false;
+
 // Trace which interactions trigger each commit.
 export const enableSchedulerTracing = __PROFILE__;
 
@@ -44,8 +51,8 @@ export const enableSuspenseServerRenderer = __EXPERIMENTAL__;
 export const enableSelectiveHydration = __EXPERIMENTAL__;
 
 // Flight experiments
-export const enableBlocksAPI = __EXPERIMENTAL__;
 export const enableLazyElements = __EXPERIMENTAL__;
+export const enableCache = __EXPERIMENTAL__;
 
 // Only used in www builds.
 export const enableSchedulerDebugging = false;
@@ -92,11 +99,7 @@ export const enableComponentStackLocations = true;
 
 export const enableNewReconciler = false;
 
-// Errors that are thrown while unmounting (or after in the case of passive effects)
-// should bypass any error boundaries that are also unmounting (or have unmounted)
-// and be handled by the nearest still-mounted boundary.
-// If there are no still-mounted boundaries, the errors should be rethrown.
-export const skipUnmountedBoundaries = false;
+export const disableNativeComponentFrames = false;
 
 // --------------------------
 // Future APIs to be deprecated
@@ -136,3 +139,7 @@ export const enableDiscreteEventFlushingChange = false;
 export const enableDoubleInvokingEffects = false;
 
 export const enableUseRefAccessWarning = false;
+
+export const enableRecursiveCommitTraversal = false;
+
+export const disableSchedulerTimeoutInWorkLoop = false;
