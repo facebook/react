@@ -1,5 +1,5 @@
 
-const ClientComponent = require('./Form.client');
+const ClientComponent = require('./Form.client').Form;
 const ServerComponent = require('./FormServer.server.js');
 
 console.log(
