@@ -1445,7 +1445,7 @@ const tests = {
           }, []);
         }
       `,
-      options: [{ stableHooksPattern: 'useCustomStableHook' }],
+      options: [{stableHooksPattern: 'useCustomStableHook'}],
     },
     {
       code: normalizeIndent`
@@ -1456,7 +1456,7 @@ const tests = {
           }, []);
         }
       `,
-      options: [{ stableHooksPattern: 'use(.*)Ref' }],
+      options: [{stableHooksPattern: 'use(.*)Ref'}],
     },
   ],
   invalid: [
@@ -7534,11 +7534,11 @@ const tests = {
           }, []);
         }
       `,
-      options: [{ stableHooksPattern: 'useSomething' }],
+      options: [{stableHooksPattern: 'useSomething'}],
       errors: [
         {
           message:
-            "React Hook useCallback has a missing dependency: 'otherSomething'. " +
+            "React Hook useEffect has a missing dependency: 'otherSomething'. " +
             'Either include it or remove the dependency array.',
           suggestions: [
             {
@@ -7568,7 +7568,7 @@ const tests = {
           return <div ref={customRef} />;
         }
       `,
-      options: [{ stableHooksPattern: 'useCustomRef' }],
+      options: [{stableHooksPattern: 'useCustomRef'}],
       errors: [
         {
           message:
