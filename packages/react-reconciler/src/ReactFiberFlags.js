@@ -74,6 +74,6 @@ export const LayoutMask = Update | Callback | Ref;
 export const PassiveMask = Passive | Deletion;
 
 // Union of tags that don't get reset on clones.
-// This allows certain concepts to persist without recalculting them,
+// This allows certain concepts to persist without recalculating them,
 // e.g. whether a subtree contains passive effects or portals.
 export const StaticMask = PassiveStatic;

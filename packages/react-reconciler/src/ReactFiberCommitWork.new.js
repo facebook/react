@@ -555,7 +555,7 @@ function recursivelyCommitLayoutEffects(
     }
 
     // case Offscreen: {
-    //   TODO: Fast path to invoke all nested layout effects when Offscren goes from hidden to visible.
+    //   TODO: Fast path to invoke all nested layout effects when Offscreen goes from hidden to visible.
     //   break;
     // }
 
