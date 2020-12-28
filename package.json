@@ -139,5 +139,8 @@
     "version-check": "node ./scripts/tasks/version-check.js",
     "merge-fork": "node ./scripts/merge-fork/merge-fork.js",
     "replace-fork": "node ./scripts/merge-fork/replace-fork.js"
+  },
+  "dependencies": {
+    "webpack5": "npm:webpack@5"
   }
 }
