@@ -341,7 +341,7 @@
   "349": "Expected a work-in-progress root. This is a bug in React. Please file an issue.",
   "350": "Cannot read from mutable source during the current render without tearing. This is a bug in React. Please file an issue.",
   "351": "Unsupported server component type: %s",
-  "352": "React Blocks (and Lazy Components) are expected to be replaced by a compiler on the server. Try configuring your compiler set up and avoid using React.lazy inside of Blocks.",
+  "352": "React Lazy Components are not yet supported on the server.",
   "353": "A server block should never encode any other slots. This is a bug in React.",
   "354": "getInspectorDataForViewAtPoint() is not available in production.",
   "355": "The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.",
@@ -364,8 +364,13 @@
   "373": "This Hook is not supported in Server Components.",
   "374": "Event handlers cannot be passed to client component props. Remove %s from these props if possible: %s\nIf you need interactivity, consider converting part of this to a client component.",
   "375": "Functions cannot be passed directly to client components because they're not serializable. Remove %s (%s) from this object, or avoid the entire object: %s",
-  "376": "Symbol values (%s) cannot be passed to client components. Remove %s from this object, or avoid the entire object: %s",
+  "376": "Only global symbols received from Symbol.for(...) can be passed to client components. The symbol Symbol.for(%s) cannot be found among global symbols. Remove %s from this object, or avoid the entire object: %s",
   "377": "BigInt (%s) is not yet supported in client component props. Remove %s from this object or use a plain number instead: %s",
   "378": "Type %s is not supported in client component props. Remove %s from this object, or avoid the entire object: %s",
-  "379": "Refs cannot be used in server components, nor passed to client components."
+  "379": "Refs cannot be used in server components, nor passed to client components.",
+  "380": "Reading the cache is only supported while rendering.",
+  "381": "This feature is not supported by ReactSuspenseTestUtils.",
+  "382": "This query has received more parameters than the last time the same query was used. Always pass the exact number of parameters that the query needs.",
+  "383": "This query has received fewer parameters than the last time the same query was used. Always pass the exact number of parameters that the query needs.",
+  "384": "Refreshing the cache is not supported in Server Components."
 }

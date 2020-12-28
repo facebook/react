@@ -22,7 +22,7 @@ import {
   SyncLanePriority,
   getCurrentUpdateLanePriority,
   setCurrentUpdateLanePriority,
-} from './ReactFiberLane';
+} from './ReactFiberLane.old';
 
 const {
   unstable_runWithPriority: Scheduler_runWithPriority,

@@ -25,5 +25,9 @@
   },
   "engines": {
     "node": ">=0.10.0"
+  },
+  "devDependencies": {
+    "react-16-8": "npm:react@16.8.0",
+    "react-dom-16-8": "npm:react-dom@16.8.0"
   }
 }

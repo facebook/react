@@ -26,7 +26,9 @@ import {REACT_SUSPENSE_LIST_TYPE as SuspenseList} from 'shared/ReactSymbols';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
+  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
+  TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from './constants';
 import {ElementTypeRoot} from 'react-devtools-shared/src/types';
@@ -34,6 +36,7 @@ import {
   LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
+  LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
 } from './constants';
 import {ComponentFilterElementType, ElementTypeHostComponent} from './types';
 import {
@@ -204,6 +207,12 @@ export function printOperationsArray(operations: Array<number>) {
         }
         break;
       }
+      case TREE_OPERATION_REMOVE_ROOT: {
+        i += 1;
+
+        logs.push(`Remove root ${rootID}`);
+        break;
+      }
       case TREE_OPERATION_REORDER_CHILDREN: {
         const id = ((operations[i + 1]: any): number);
         const numChildren = ((operations[i + 2]: any): number);
@@ -219,6 +228,17 @@ export function printOperationsArray(operations: Array<number>) {
         // We can ignore them at this point.
         // The profiler UI uses them lazily in order to generate the tree.
         i += 3;
+        break;
+      case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS:
+        const id = operations[i + 1];
+        const numErrors = operations[i + 2];
+        const numWarnings = operations[i + 3];
+
+        i += 4;
+
+        logs.push(
+          `Node ${id} has ${numErrors} errors and ${numWarnings} warnings`,
+        );
         break;
       default:
         throw Error(`Unsupported Bridge operation ${operation}`);
@@ -289,6 +309,25 @@ export function getBreakOnConsoleErrors(): boolean {
 export function setBreakOnConsoleErrors(value: boolean): void {
   localStorageSetItem(
     LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
+    JSON.stringify(value),
+  );
+}
+
+export function getShowInlineWarningsAndErrors(): boolean {
+  try {
+    const raw = localStorageGetItem(
+      LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
+    );
+    if (raw != null) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {}
+  return true;
+}
+
+export function setShowInlineWarningsAndErrors(value: boolean): void {
+  localStorageSetItem(
+    LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
     JSON.stringify(value),
   );
 }

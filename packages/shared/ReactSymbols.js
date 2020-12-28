@@ -25,14 +25,13 @@ export let REACT_SUSPENSE_TYPE = 0xead1;
 export let REACT_SUSPENSE_LIST_TYPE = 0xead8;
 export let REACT_MEMO_TYPE = 0xead3;
 export let REACT_LAZY_TYPE = 0xead4;
-export let REACT_BLOCK_TYPE = 0xead9;
-export let REACT_SERVER_BLOCK_TYPE = 0xeada;
 export let REACT_FUNDAMENTAL_TYPE = 0xead5;
 export let REACT_SCOPE_TYPE = 0xead7;
 export let REACT_OPAQUE_ID_TYPE = 0xeae0;
 export let REACT_DEBUG_TRACING_MODE_TYPE = 0xeae1;
 export let REACT_OFFSCREEN_TYPE = 0xeae2;
 export let REACT_LEGACY_HIDDEN_TYPE = 0xeae3;
+export let REACT_CACHE_TYPE = 0xeae4;
 
 if (typeof Symbol === 'function' && Symbol.for) {
   const symbolFor = Symbol.for;
@@ -48,14 +47,13 @@ if (typeof Symbol === 'function' && Symbol.for) {
   REACT_SUSPENSE_LIST_TYPE = symbolFor('react.suspense_list');
   REACT_MEMO_TYPE = symbolFor('react.memo');
   REACT_LAZY_TYPE = symbolFor('react.lazy');
-  REACT_BLOCK_TYPE = symbolFor('react.block');
-  REACT_SERVER_BLOCK_TYPE = symbolFor('react.server.block');
   REACT_FUNDAMENTAL_TYPE = symbolFor('react.fundamental');
   REACT_SCOPE_TYPE = symbolFor('react.scope');
   REACT_OPAQUE_ID_TYPE = symbolFor('react.opaque.id');
   REACT_DEBUG_TRACING_MODE_TYPE = symbolFor('react.debug_trace_mode');
   REACT_OFFSCREEN_TYPE = symbolFor('react.offscreen');
   REACT_LEGACY_HIDDEN_TYPE = symbolFor('react.legacy_hidden');
+  REACT_CACHE_TYPE = symbolFor('react.cache');
 }
 
 const MAYBE_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;

@@ -78,10 +78,11 @@ export {
   useDeferredValue as unstable_useDeferredValue,
   SuspenseList,
   SuspenseList as unstable_SuspenseList,
-  block,
-  block as unstable_block,
   unstable_LegacyHidden,
   unstable_createFundamental,
   unstable_Scope,
   unstable_useOpaqueIdentifier,
+  unstable_getCacheForType,
+  unstable_Cache,
+  unstable_useCacheRefresh,
 } from './src/React';
