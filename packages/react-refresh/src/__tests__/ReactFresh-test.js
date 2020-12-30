@@ -3667,6 +3667,12 @@ describe('ReactFresh', () => {
       expect(
         ReactFreshRuntime.isLikelyComponentType(function $$default() {}),
       ).toBe(true);
+      expect(ReactFreshRuntime.isLikelyComponentType(function make() {})).toBe(
+        true,
+      );
+      expect(
+        ReactFreshRuntime.isLikelyComponentType(function make$1() {}),
+      ).toBe(true);
       expect(
         ReactFreshRuntime.isLikelyComponentType({make: function make() {}}),
       ).toBe(true);
@@ -3719,6 +3725,18 @@ describe('ReactFresh', () => {
         expect(ReactFreshRuntime.isLikelyComponentType(Figure)).toBe(false);
         class Point extends Figure {}
         expect(ReactFreshRuntime.isLikelyComponentType(Point)).toBe(false);
+        expect(
+          ReactFreshRuntime.isLikelyComponentType(function $$default() {}),
+        ).toBe(true);
+        expect(ReactFreshRuntime.isLikelyComponentType(function make() {})).toBe(
+          true,
+        );
+        expect(
+          ReactFreshRuntime.isLikelyComponentType(function make$1() {}),
+        ).toBe(true);
+        expect(
+          ReactFreshRuntime.isLikelyComponentType({make: function make() {}}),
+        ).toBe(true);
       `,
       )(global, React, ReactFreshRuntime, expect, createReactClass);
     }
