@@ -1436,6 +1436,31 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => props.someEffect(), [props.someEffect]);
+        }
+      `,
+      options: [{ignoreThisDependency: 'always'}],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          const foo = {bar: () => null}
+          useEffect(() => foo.bar(), [foo.bar]);
+        }
+      `,
+      options: [{ignoreThisDependency: 'always'}],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => props.someEffect(), [props.someEffect]);
+        }
+      `,
+      options: [{ignoreThisDependency: 'props'}],
+    },
   ],
   invalid: [
     {
@@ -7566,6 +7591,33 @@ const tests = {
             "The 'foo' object makes the dependencies of useEffect Hook (at line 9) change on every render. " +
             "To fix this, wrap the initialization of 'foo' in its own useMemo() Hook.",
           suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          const foo = {bar: () => null}
+          useEffect(() => foo.bar(), [foo.bar]);
+        }
+      `,
+      options: [{ignoreThisDependency: 'props'}],
+      errors: [
+        {
+          message:
+            "React Hook useEffect has a missing dependency: 'foo'. " +
+            'Either include it or remove the dependency array.',
+          suggestions: [
+            {
+              desc: 'Update the dependencies array to be: [foo, foo.bar]',
+              output: normalizeIndent`
+                function MyComponent(props) {
+                  const foo = {bar: () => null}
+                  useEffect(() => foo.bar(), [foo, foo.bar]);
+                }
+              `,
+            },
+          ],
         },
       ],
     },
