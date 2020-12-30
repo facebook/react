@@ -1,4 +1,3 @@
-
 export function Form() {
-  console.log('Form Rendered!')
+  console.log('Form Rendered!');
 }

@@ -1,5 +1,3 @@
-
-
 export default function Foo() {
-  console.log('Form!')
+  console.log('Form!');
 }

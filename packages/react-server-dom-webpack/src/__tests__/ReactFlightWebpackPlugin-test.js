@@ -88,8 +88,6 @@ describe('ReactFlightWebpackPlugin', () => {
       mode: 'development',
     });
 
-
-
     const originalFileSystem = output.outputFileSystem;
 
     output.outputFileSystem = {
@@ -97,7 +95,7 @@ describe('ReactFlightWebpackPlugin', () => {
       writeFile: jest.fn((dest, contents, cb) => {
         // Call the callback, but don't actually write anything.
         cb(null);
-      })
+      }),
     };
 
     output.run((err, stats) => {
@@ -106,18 +104,20 @@ describe('ReactFlightWebpackPlugin', () => {
       expect(output.outputFileSystem.writeFile).toHaveBeenCalledWith(
         expect.stringContaining(fileName),
         expect.anything(),
-        expect.anything()
+        expect.anything(),
       );
       const calls = output.outputFileSystem.writeFile.mock.calls;
       // Get the idx that was called with the fileName,
       const idx = calls.findIndex(val => {
         return val[0].includes(fileName);
-      })
+      });
 
-      const contents = output.outputFileSystem.writeFile.mock.calls[idx][1].toString();
+      const contents = output.outputFileSystem.writeFile.mock.calls[
+        idx
+      ][1].toString();
 
       // Check that the contents match with what we expect
-      assert(contents)
+      assert(contents);
       done();
     });
   });
