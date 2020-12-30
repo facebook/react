@@ -692,11 +692,21 @@ export function isLikelyComponentType(type: any): boolean {
           // This looks like a regular function with empty prototype.
         }
         // For plain functions and arrows, use name as a heuristic.
+        //
+        // - For JavaScript the name has to start with a capital letter when the
+        //   function is used in JSX
+        // - For ReScript, React-components can be named `$$default` for the
+        //   default export and they can be named `make`, or `make$` + a number
         const name = type.name || type.displayName;
-        return typeof name === 'string' && /^[A-Z]/.test(name);
+        return (
+          typeof name === 'string' &&
+          (/^[A-Z]/.test(name) || /^make/.test(name) || name === '$$default')
+        );
       }
       case 'object': {
         if (type != null) {
+          // `in` doesn't trigger proxy getters
+          if ('make' in type) return true;
           switch (getProperty(type, '$$typeof')) {
             case REACT_FORWARD_REF_TYPE:
             case REACT_MEMO_TYPE:
