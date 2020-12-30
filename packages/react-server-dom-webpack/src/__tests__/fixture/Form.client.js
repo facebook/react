@@ -1,4 +1,4 @@
 
-module.exports.Form = function Form() {
+export function Form() {
   console.log('Form Rendered!')
 }

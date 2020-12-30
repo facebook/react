@@ -53,13 +53,11 @@ describe('ReactFlightWebpackPlugin', () => {
 
     output.run((err, stats) => {
       expect(err).toBeNull();
-      const fileName = plugin.manifestFilename; //'react-client-manifest.json'
-
+      // in webpack 4, we can read the assets of the compilation object. This doesn't work in webpack 5
+      // as webpack 5 removes the source from the assets object, to prevent memory leaks.
+      const fileName = plugin.manifestFilename;
       const pluginOutput = stats.compilation.assets[fileName];
-      console.log(pluginOutput);
-
       const producedManifest = pluginOutput.source();
-
       assert(producedManifest);
 
       done();
@@ -82,25 +80,45 @@ describe('ReactFlightWebpackPlugin', () => {
       cache: undefined,
       output: {
         // Output
-        path: path.resolve(path.join(os.tmpdir(), 'output')),
+        path: path.resolve(path.join(os.tmpdir(), 'output+2')),
+        // Make webpack always want to emit files, regardless if they exist or not
+        // This aids in development of the tests, as webpack 5 will not emit fi the file is already existing.
+        compareBeforeEmit: false,
       },
       mode: 'development',
     });
+
+
 
     const originalFileSystem = output.outputFileSystem;
 
     output.outputFileSystem = {
       ...originalFileSystem,
-      writeFile: (dest, contents, err) => {
-        if (dest.includes(fileName)) {
-          assert(contents.toString());
-          done();
-        }
-      },
+      writeFile: jest.fn((dest, contents, cb) => {
+        // Call the callback, but don't actually write anything.
+        cb(null);
+      })
     };
 
-    output.run((err, stats, foo) => {
+    output.run((err, stats) => {
       expect(err).toBeNull();
+
+      expect(output.outputFileSystem.writeFile).toHaveBeenCalledWith(
+        expect.stringContaining(fileName),
+        expect.anything(),
+        expect.anything()
+      );
+      const calls = output.outputFileSystem.writeFile.mock.calls;
+      // Get the idx that was called with the fileName,
+      const idx = calls.findIndex(val => {
+        return val[0].includes(fileName);
+      })
+
+      const contents = output.outputFileSystem.writeFile.mock.calls[idx][1].toString();
+
+      // Check that the contents match with what we expect
+      assert(contents)
+      done();
     });
   });
 });
@@ -110,7 +128,7 @@ function assert(manifestContents) {
     'file://' + path.resolve(path.join(__dirname, 'fixture', 'Form.client.js'));
   const manifestObj = JSON.parse(manifestContents);
 
-  expect(manifestObj[key]).toBe(
+  expect(manifestObj[key]).toStrictEqual(
     expect.objectContaining({
       '': {
         chunks: ['client'],
@@ -122,7 +140,7 @@ function assert(manifestContents) {
         chunks: ['client'],
         id:
           './packages/react-server-dom-webpack/src/__tests__/fixture/Form.client.js',
-        name: '',
+        name: '*',
       },
       Form: {
         chunks: ['client'],
