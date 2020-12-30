@@ -16,6 +16,7 @@ import ModuleDependency from 'webpack/lib/dependencies/ModuleDependency';
 import NullDependency from 'webpack/lib/dependencies/NullDependency';
 import AsyncDependenciesBlock from 'webpack/lib/AsyncDependenciesBlock';
 import Template from 'webpack/lib/Template';
+import {RawSource} from 'webpack-sources';
 
 class ClientReferenceDependency extends ModuleDependency {
   constructor(request) {
@@ -94,6 +95,51 @@ export default class ReactFlightWebpackPlugin {
       options.manifestFilename || 'react-client-manifest.json';
   }
 
+  get webpackVersion(): 'wp5' | 'wp4' {
+    return require('webpack').version.match(/4\.[0-9]*\.[0-9]*/)
+      ? 'wp4'
+      : 'wp5';
+  }
+
+  pluginOutput = {};
+
+  recordModule = (
+    id: string,
+    {
+      getExports,
+      resource,
+      chunkIds,
+    }: {getExports: () => string[], resource: string, chunkIds: string[]},
+  ) => {
+    // TODO: Hook into deps instead of the target module.
+    // That way we know by the type of dep whether to include.
+    // It also resolves conflicts when the same module is in multiple chunks.
+    if (!/\.client\.(tsx|jsx|js|ts)$/.test(resource)) {
+      return;
+    }
+
+    const moduleExports = {};
+    const providedExports = getExports();
+    ['', '*'].concat(providedExports).forEach(function(name) {
+      moduleExports[name] = {
+        id: id,
+        chunks: chunkIds,
+        name: name,
+      };
+    });
+    const href = pathToFileURL(resource).href;
+
+    if (href !== undefined) {
+      this.pluginOutput[href] = moduleExports;
+    }
+  };
+
+  //
+  output(compilation) {
+    const output = JSON.stringify(this.pluginOutput, null, 2);
+    compilation.emitAsset(this.manifestFilename, new RawSource(output));
+  }
+
   apply(compiler: any) {
     let resolvedClientReferences;
     const run = (params, callback) => {
@@ -163,56 +209,87 @@ export default class ReactFlightWebpackPlugin {
             }
           }
         });
+
+        // ProcessAssests hook is only supported by webpack v5.
+        if (this.webpackVersion !== 'wp5') {
+          return;
+        }
+
+        compilation.hooks.processAssets.tap(
+          {
+            name: PLUGIN_NAME,
+            // We derive the manifest from the existing assets.
+            stage: require('webpack').Compilation.PROCESS_ASSETS_STAGE_DERIVED,
+          },
+          () => {
+            const chunkGraph = compilation.chunkGraph;
+            const moduleGraph = compilation.moduleGraph;
+
+            compilation.chunkGroups.forEach(chunkGroup => {
+              const chunkIds = chunkGroup.chunks.map(function(c) {
+                return c.id;
+              });
+              chunkGroup.chunks.forEach(chunk => {
+                chunk.getModules().forEach(mod => {
+                  const id = chunkGraph.getModuleId(mod);
+                  this.recordModule(id, {
+                    getExports: () => moduleGraph.getProvidedExports(mod),
+                    chunkIds,
+                    resource: mod.resource,
+                  });
+                  // If this is a concatenation, register each child to the parent ID.
+                  if (mod.modules) {
+                    mod.modules.forEach(concatenatedMod => {
+                      this.recordModule(id, {
+                        getExports: () =>
+                          moduleGraph.getProvidedExports(concatenatedMod),
+                        resource: concatenatedMod.resource,
+                        chunkIds,
+                      });
+                    });
+                  }
+                });
+              });
+            });
+
+            this.output(compilation);
+          },
+        );
       },
     );
 
+    if (this.webpackVersion === 'wp5') {
+      return;
+    }
     compiler.hooks.emit.tap(PLUGIN_NAME, compilation => {
-      const json = {};
       compilation.chunkGroups.forEach(chunkGroup => {
         const chunkIds = chunkGroup.chunks.map(c => c.id);
 
-        function recordModule(id, mod) {
-          // TODO: Hook into deps instead of the target module.
-          // That way we know by the type of dep whether to include.
-          // It also resolves conflicts when the same module is in multiple chunks.
-          if (!/\.client\.js$/.test(mod.resource)) {
-            return;
-          }
-          const moduleExports = {};
-          ['', '*'].concat(mod.buildMeta.providedExports).forEach(name => {
-            moduleExports[name] = {
-              id: id,
-              chunks: chunkIds,
-              name: name,
-            };
-          });
-          const href = pathToFileURL(mod.resource).href;
-          if (href !== undefined) {
-            json[href] = moduleExports;
-          }
-        }
-
         chunkGroup.chunks.forEach(chunk => {
           chunk.getModules().forEach(mod => {
-            recordModule(mod.id, mod);
+            this.recordModule(mod.id, {
+              chunkIds,
+              // TODO: This can return `true` in some cases, which is likely not expected
+              // It seems to return true in the case of cjs exports `module.exports.foo`
+              getExports: () => mod.buildMeta.providedExports,
+              resource: mod.resource,
+            });
             // If this is a concatenation, register each child to the parent ID.
             if (mod.modules) {
               mod.modules.forEach(concatenatedMod => {
-                recordModule(mod.id, concatenatedMod);
+                this.recordModule(mod.id, {
+                  chunkIds,
+                  // TODO: This can return `true` in some cases, which is likely not expected
+                  getExports: () => concatenatedMod.buildMeta.providedExports,
+                  resource: concatenatedMod.resource,
+                });
               });
             }
           });
         });
+
+        this.output(compilation);
       });
-      const output = JSON.stringify(json, null, 2);
-      compilation.assets[this.manifestFilename] = {
-        source() {
-          return output;
-        },
-        size() {
-          return output.length;
-        },
-      };
     });
   }
 
