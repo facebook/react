@@ -72,30 +72,33 @@ declare function __webpack_require__(id: string): any;
 
 declare module 'fs' {
   declare function existsSync(path: string): boolean;
-  declare function readFileSync(
-    path: string | Buffer | URL | number
-  ): Buffer;
+  declare function readFileSync(path: string | Buffer | URL | number): Buffer;
   declare function readFileSync(
     path: string | Buffer | URL | number,
-    encoding: string
+    encoding: string,
   ): string;
-  declare function readFileSync(path: string | Buffer | URL | number, options: { encoding: string, flag?: string }): string;
-  declare function readFileSync(path: string | Buffer | URL | number, options: { encoding?: void, flag?: string }): Buffer;
+  declare function readFileSync(
+    path: string | Buffer | URL | number,
+    options: {encoding: string, flag?: string},
+  ): string;
+  declare function readFileSync(
+    path: string | Buffer | URL | number,
+    options: {encoding?: void, flag?: string},
+  ): Buffer;
   declare function writeFileSync(
     filename: string,
     data: Buffer | string,
-    options?: string | {
-      encoding?: ?string,
-      mode?: number,
-      flag?: string
-    }
+    options?:
+      | string
+      | {
+          encoding?: ?string,
+          mode?: number,
+          flag?: string,
+        },
   ): void;
   declare class FSPromise {
-    access(path: string, mode?: number): Promise<void>,
-    lstat(
-      path: string,
-      options?: ?{bigint?: boolean},
-    ): Promise<mixed>,
+    access(path: string, mode?: number): Promise<void>;
+    lstat(path: string, options?: ?{bigint?: boolean}): Promise<mixed>;
     readdir(
       path: string,
       options?:
@@ -104,7 +107,7 @@ declare module 'fs' {
             encoding?: ?string,
             withFileTypes?: ?boolean,
           },
-    ): Promise<Buffer>,
+    ): Promise<Buffer>;
     readFile(
       path: string,
       options?:
@@ -112,7 +115,7 @@ declare module 'fs' {
         | {
             encoding?: ?string,
           },
-    ): Promise<Buffer>,
+    ): Promise<Buffer>;
     readlink(
       path: string,
       options?:
@@ -120,7 +123,7 @@ declare module 'fs' {
         | {
             encoding?: ?string,
           },
-    ): Promise<mixed>,
+    ): Promise<mixed>;
     realpath(
       path: string,
       options?:
@@ -128,11 +131,8 @@ declare module 'fs' {
         | {
             encoding?: ?string,
           },
-    ): Promise<mixed>,
-    stat(
-      path: string,
-      options?: ?{bigint?: boolean},
-    ): Promise<mixed>
+    ): Promise<mixed>;
+    stat(path: string, options?: ?{bigint?: boolean}): Promise<mixed>;
   }
   declare var promises: FSPromise;
 }
