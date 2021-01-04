@@ -10,7 +10,7 @@
 import type {Wakeable, Thenable} from 'shared/ReactTypes';
 
 import {unstable_getCacheForType} from 'react';
-import * as fs from 'fs/promises';
+import {promises as fs} from 'fs';
 import {isAbsolute, normalize} from 'path';
 
 const Pending = 0;
