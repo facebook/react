@@ -70,50 +70,73 @@ declare module 'EventListener' {
 declare function __webpack_chunk_load__(id: string): Promise<mixed>;
 declare function __webpack_require__(id: string): any;
 
-declare module 'fs/promises' {
-  declare var access: (path: string, mode?: number) => Promise<void>;
-  declare var lstat: (
-    path: string,
-    options?: ?{bigint?: boolean},
-  ) => Promise<mixed>;
-  declare var readdir: (
-    path: string,
-    options?:
-      | ?string
-      | {
-          encoding?: ?string,
-          withFileTypes?: ?boolean,
-        },
-  ) => Promise<Buffer>;
-  declare var readFile: (
-    path: string,
-    options?:
-      | ?string
-      | {
-          encoding?: ?string,
-        },
-  ) => Promise<Buffer>;
-  declare var readlink: (
-    path: string,
-    options?:
-      | ?string
-      | {
-          encoding?: ?string,
-        },
-  ) => Promise<mixed>;
-  declare var realpath: (
-    path: string,
-    options?:
-      | ?string
-      | {
-          encoding?: ?string,
-        },
-  ) => Promise<mixed>;
-  declare var stat: (
-    path: string,
-    options?: ?{bigint?: boolean},
-  ) => Promise<mixed>;
+declare module 'fs' {
+  declare function existsSync(path: string): boolean;
+  declare function readFileSync(
+    path: string | Buffer | URL | number
+  ): Buffer;
+  declare function readFileSync(
+    path: string | Buffer | URL | number,
+    encoding: string
+  ): string;
+  declare function readFileSync(path: string | Buffer | URL | number, options: { encoding: string, flag?: string }): string;
+  declare function readFileSync(path: string | Buffer | URL | number, options: { encoding?: void, flag?: string }): Buffer;
+  declare function writeFileSync(
+    filename: string,
+    data: Buffer | string,
+    options?: string | {
+      encoding?: ?string,
+      mode?: number,
+      flag?: string
+    }
+  ): void;
+  declare class FSPromise {
+    access(path: string, mode?: number): Promise<void>,
+    lstat(
+      path: string,
+      options?: ?{bigint?: boolean},
+    ): Promise<mixed>,
+    readdir(
+      path: string,
+      options?:
+        | ?string
+        | {
+            encoding?: ?string,
+            withFileTypes?: ?boolean,
+          },
+    ): Promise<Buffer>,
+    readFile(
+      path: string,
+      options?:
+        | ?string
+        | {
+            encoding?: ?string,
+          },
+    ): Promise<Buffer>,
+    readlink(
+      path: string,
+      options?:
+        | ?string
+        | {
+            encoding?: ?string,
+          },
+    ): Promise<mixed>,
+    realpath(
+      path: string,
+      options?:
+        | ?string
+        | {
+            encoding?: ?string,
+          },
+    ): Promise<mixed>,
+    stat(
+      path: string,
+      options?: ?{bigint?: boolean},
+    ): Promise<mixed>
+  }
+  declare var promises: FSPromise;
 }
+
 declare module 'pg' {
   declare var Pool: (
     options: mixed,
