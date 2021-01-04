@@ -206,7 +206,7 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '17.0.0-alpha')) {
     ReactTypeOfWork = {
-      CacheComponent: -1, // Doens't exist yet
+      CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 1,
       ContextConsumer: 9,
       ContextProvider: 10,
