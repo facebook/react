@@ -18,9 +18,7 @@ var BallmerPeakCalculator = React.createClass({
     this.setState({bac: event.target.value});
   },
   render: function() {
-    var bac;
-    var pct;
-    pct = computeBallmerPeak(this.state.bac);
+    var pct = computeBallmerPeak(this.state.bac);
     if (isNaN(pct)) {
       pct = 'N/A';
     } else {

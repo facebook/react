@@ -10,7 +10,7 @@ var reactVersionExp = /\bReact\.version\s*=\s*['"]([^'"]+)['"];/;
 
 module.exports = function() {
   var reactVersion = reactVersionExp.exec(
-    grunt.file.read('./src/browser/React.js')
+    grunt.file.read('./src/browser/ui/React.js')
   )[1];
   var npmReactVersion = grunt.file.readJSON('./npm-react/package.json').version;
   var reactToolsVersion = grunt.config.data.pkg.version;

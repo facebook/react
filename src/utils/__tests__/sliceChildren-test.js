@@ -53,7 +53,7 @@ describe('sliceChildren', function() {
 
   function renderAndSlice(set, start, end) {
     var instance = <Partial start={start} end={end}>{set}</Partial>;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     var rendered = reactComponentExpect(instance)
       .expectRenderedChild()
       .instance();
@@ -106,7 +106,7 @@ describe('sliceChildren', function() {
     var c = <div />;
 
     var instance = <Partial start={1} end={2}>{a}{b}{c}</Partial>;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     var rendered = reactComponentExpect(instance)
       .expectRenderedChild()
       .instance();

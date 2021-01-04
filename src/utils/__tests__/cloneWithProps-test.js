@@ -19,16 +19,18 @@
 
 "use strict";
 
-require('mock-modules').dontMock('cloneWithProps');
+require('mock-modules')
+  .dontMock('cloneWithProps')
+  .dontMock('emptyObject');
 
 var mocks = require('mocks');
-
-var cloneWithProps = require('cloneWithProps');
 
 var React;
 var ReactTestUtils;
 
 var onlyChild;
+var cloneWithProps;
+var emptyObject;
 
 describe('cloneWithProps', function() {
 
@@ -36,6 +38,8 @@ describe('cloneWithProps', function() {
     React = require('React');
     ReactTestUtils = require('ReactTestUtils');
     onlyChild = require('onlyChild');
+    cloneWithProps = require('cloneWithProps');
+    emptyObject = require('emptyObject');
   });
 
   it('should clone a DOM component with new props', function() {
@@ -107,7 +111,7 @@ describe('cloneWithProps', function() {
       console.warn = mocks.getMockFunction();
 
       var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
-      expect(component.refs).toBe(undefined);
+      expect(component.refs).toBe(emptyObject);
       expect(console.warn.mock.calls.length).toBe(1);
     } finally {
       console.warn = _warn;

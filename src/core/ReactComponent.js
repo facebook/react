@@ -18,7 +18,6 @@
 
 "use strict";
 
-var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactOwner = require('ReactOwner');
 var ReactUpdates = require('ReactUpdates');
@@ -26,6 +25,7 @@ var ReactUpdates = require('ReactUpdates');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 var merge = require('merge');
+var monitorCodeUse = require('monitorCodeUse');
 
 /**
  * Every React component is in one of these life cycles.
@@ -50,8 +50,31 @@ var ComponentLifeCycle = keyMirror({
 
 var ownerHasExplicitKeyWarning = {};
 var ownerHasPropertyWarning = {};
+var ownerHasMonitoredObjectMap = {};
 
 var NUMERIC_PROPERTY_REGEX = /^\d+$/;
+
+var injected = false;
+
+/**
+ * Optionally injectable environment dependent cleanup hook. (server vs.
+ * browser etc). Example: A browser system caches DOM nodes based on component
+ * ID and must remove that cache entry when this instance is unmounted.
+ *
+ * @private
+ */
+var unmountIDFromEnvironment = null;
+
+/**
+ * The "image" of a component tree, is the platform specific (typically
+ * serialized) data that represents a tree of lower level UI building blocks.
+ * On the web, this "image" is HTML markup which describes a construction of
+ * low level `div` and `span` nodes. Other platforms may have different
+ * encoding of this "image". This must be injected.
+ *
+ * @private
+ */
+var mountImageIntoNode = null;
 
 /**
  * Warn if the component doesn't have an explicit key assigned to it.
@@ -82,9 +105,11 @@ function validateExplicitKey(component) {
 
   var message = 'Each child in an array should have a unique "key" prop. ' +
                 'Check the render method of ' + currentName + '.';
+
+  var childOwnerName = null;
   if (!component.isOwnedBy(ReactCurrentOwner.current)) {
     // Name of the component that originally created this child.
-    var childOwnerName =
+    childOwnerName =
       component._owner &&
       component._owner.constructor.displayName;
 
@@ -95,6 +120,10 @@ function validateExplicitKey(component) {
   }
 
   message += ' See http://fb.me/react-warning-keys for more information.';
+  monitorCodeUse('react_key_warning', {
+    component: currentName,
+    componentOwner: childOwnerName
+  });
   console.warn(message);
 }
 
@@ -115,12 +144,32 @@ function validatePropertyKey(name) {
     }
     ownerHasPropertyWarning[currentName] = true;
 
+    monitorCodeUse('react_numeric_key_warning');
     console.warn(
       'Child objects should have non-numeric keys so ordering is preserved. ' +
       'Check the render method of ' + currentName + '. ' +
       'See http://fb.me/react-warning-keys for more information.'
     );
   }
+}
+
+/**
+ * Log that we're using an object map. We're considering deprecating this
+ * feature and replace it with proper Map and ImmutableMap data structures.
+ *
+ * @internal
+ */
+function monitorUseOfObjectMap() {
+  // Name of the component whose render method tried to pass children.
+  // We only use this to avoid spewing the logs. We lose additional
+  // owner stacks but hopefully one level is enough to trace the source.
+  var currentName = (ReactCurrentOwner.current &&
+                    ReactCurrentOwner.current.constructor.displayName) || '';
+  if (ownerHasMonitoredObjectMap.hasOwnProperty(currentName)) {
+    return;
+  }
+  ownerHasMonitoredObjectMap[currentName] = true;
+  monitorCodeUse('react_object_map_children');
 }
 
 /**
@@ -144,6 +193,7 @@ function validateChildKeys(component) {
     // This component was passed in a valid location.
     component.__keyValidated__ = true;
   } else if (component && typeof component === 'object') {
+    monitorUseOfObjectMap();
     for (var name in component) {
       validatePropertyKey(name, component);
     }
@@ -177,6 +227,23 @@ function validateChildKeys(component) {
  */
 var ReactComponent = {
 
+  injection: {
+    injectEnvironment: function(ReactComponentEnvironment) {
+      invariant(
+        !injected,
+        'ReactComponent: injectEnvironment() can only be called once.'
+      );
+      mountImageIntoNode = ReactComponentEnvironment.mountImageIntoNode;
+      unmountIDFromEnvironment =
+        ReactComponentEnvironment.unmountIDFromEnvironment;
+      ReactComponent.BackendIDOperations =
+        ReactComponentEnvironment.BackendIDOperations;
+      ReactComponent.ReactReconcileTransaction =
+        ReactComponentEnvironment.ReactReconcileTransaction;
+      injected = true;
+    }
+  },
+
   /**
    * @param {?object} object
    * @return {boolean} True if `object` is a valid component.
@@ -209,27 +276,7 @@ var ReactComponent = {
    *
    * @internal
    */
-  BackendIDOperations: ReactComponentEnvironment.BackendIDOperations,
-
-  /**
-   * Optionally injectable environment dependent cleanup hook. (server vs.
-   * browser etc). Example: A browser system caches DOM nodes based on component
-   * ID and must remove that cache entry when this instance is unmounted.
-   *
-   * @private
-   */
-  unmountIDFromEnvironment: ReactComponentEnvironment.unmountIDFromEnvironment,
-
-  /**
-   * The "image" of a component tree, is the platform specific (typically
-   * serialized) data that represents a tree of lower level UI building blocks.
-   * On the web, this "image" is HTML markup which describes a construction of
-   * low level `div` and `span` nodes. Other platforms may have different
-   * encoding of this "image". This must be injected.
-   *
-   * @private
-   */
-  mountImageIntoNode: ReactComponentEnvironment.mountImageIntoNode,
+  BackendIDOperations: null,
 
   /**
    * React references `ReactReconcileTransaction` using this property in order
@@ -237,8 +284,7 @@ var ReactComponent = {
    *
    * @internal
    */
-  ReactReconcileTransaction:
-    ReactComponentEnvironment.ReactReconcileTransaction,
+  ReactReconcileTransaction: null,
 
   /**
    * Base functionality for every ReactComponent constructor. Mixed into the
@@ -246,7 +292,7 @@ var ReactComponent = {
    *
    * @lends {ReactComponent.prototype}
    */
-  Mixin: merge(ReactComponentEnvironment.Mixin, {
+  Mixin: {
 
     /**
      * Checks whether or not this component is mounted.
@@ -354,7 +400,7 @@ var ReactComponent = {
      * `ReactComponent.Mixin.mountComponent.call(this, ...)`.
      *
      * @param {string} rootID DOM ID of the root node.
-     * @param {ReactReconcileTransaction} transaction
+     * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
      * @param {number} mountDepth number of components in the owner hierarchy.
      * @return {?string} Rendered markup to be inserted into the DOM.
      * @internal
@@ -396,7 +442,7 @@ var ReactComponent = {
       if (props.ref != null) {
         ReactOwner.removeComponentAsRefFrom(this, props.ref, this._owner);
       }
-      ReactComponent.unmountIDFromEnvironment(this._rootNodeID);
+      unmountIDFromEnvironment(this._rootNodeID);
       this._rootNodeID = null;
       this._lifeCycleState = ComponentLifeCycle.UNMOUNTED;
     },
@@ -425,7 +471,6 @@ var ReactComponent = {
     /**
      * Call `_performUpdateIfNecessary` within a new transaction.
      *
-     * @param {ReactReconcileTransaction} transaction
      * @internal
      */
     performUpdateIfNecessary: function() {
@@ -514,7 +559,7 @@ var ReactComponent = {
         transaction,
         shouldReuseMarkup) {
       var markup = this.mountComponent(rootID, transaction, 0);
-      ReactComponent.mountImageIntoNode(markup, container, shouldReuseMarkup);
+      mountImageIntoNode(markup, container, shouldReuseMarkup);
     },
 
     /**
@@ -544,7 +589,7 @@ var ReactComponent = {
       }
       return owner.refs[ref];
     }
-  })
+  }
 };
 
 module.exports = ReactComponent;

@@ -26,7 +26,7 @@ var UserGist = React.createClass({
     $.get(this.props.source, function(result) {
       var lastGist = result[0];
       this.setState({
-        username: lastGist.user.login,
+        username: lastGist.owner.login,
         lastGistUrl: lastGist.html_url
       });
     }.bind(this));

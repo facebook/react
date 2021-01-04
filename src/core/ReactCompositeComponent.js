@@ -29,12 +29,15 @@ var ReactPropTypeLocations = require('ReactPropTypeLocations');
 var ReactPropTypeLocationNames = require('ReactPropTypeLocationNames');
 var ReactUpdates = require('ReactUpdates');
 
+var instantiateReactComponent = require('instantiateReactComponent');
 var invariant = require('invariant');
 var keyMirror = require('keyMirror');
 var merge = require('merge');
 var mixInto = require('mixInto');
+var monitorCodeUse = require('monitorCodeUse');
 var objMap = require('objMap');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
+var warning = require('warning');
 
 /**
  * Policies that describe methods in `ReactCompositeComponentInterface`.
@@ -60,6 +63,9 @@ var SpecPolicy = keyMirror({
    */
   DEFINE_MANY_MERGED: null
 });
+
+
+var injectedMixins = [];
 
 /**
  * Composite components are higher-level components that compose other composite
@@ -498,7 +504,7 @@ function mixStaticSpecIntoComponent(ConvenienceConstructor, statics) {
   }
   for (var name in statics) {
     var property = statics[name];
-    if (!statics.hasOwnProperty(name) || !property) {
+    if (!statics.hasOwnProperty(name)) {
       return;
     }
 
@@ -590,19 +596,52 @@ if (__DEV__) {
     constructor: true,
     construct: true,
     isOwnedBy: true, // should be deprecated but can have code mod (internal)
-    mountComponent: true,
-    mountComponentIntoNode: true,
-    props: true,
     type: true,
-    _checkPropTypes: true,
-    _mountComponentIntoNode: true,
-    _processContext: true
+    props: true,
+    // currently private but belong on the descriptor and are valid for use
+    // inside the framework:
+    __keyValidated__: true,
+    _owner: true,
+    _currentContext: true
+  };
+
+  var componentInstanceProperties = {
+    __keyValidated__: true,
+    __keySetters: true,
+    _compositeLifeCycleState: true,
+    _currentContext: true,
+    _defaultProps: true,
+    _instance: true,
+    _lifeCycleState: true,
+    _mountDepth: true,
+    _owner: true,
+    _pendingCallbacks: true,
+    _pendingContext: true,
+    _pendingForceUpdate: true,
+    _pendingOwner: true,
+    _pendingProps: true,
+    _pendingState: true,
+    _renderedComponent: true,
+    _rootNodeID: true,
+    context: true,
+    props: true,
+    refs: true,
+    state: true,
+
+    // These are known instance properties coming from other sources
+    _pendingQueries: true,
+    _queryPropListeners: true,
+    queryParams: true
+
   };
 
   var hasWarnedOnComponentType = {};
 
-  var warnIfUnmounted = function(instance, key) {
-    if (instance.__hasBeenMounted) {
+  var warningStackCounter = 0;
+
+  var issueMembraneWarning = function(instance, key) {
+    var isWhitelisted = unmountedPropertyWhitelist.hasOwnProperty(key);
+    if (warningStackCounter > 0 || isWhitelisted) {
       return;
     }
     var name = instance.constructor.displayName || 'Unknown';
@@ -618,11 +657,36 @@ if (__DEV__) {
     var context = owner ? ' in ' + ownerName + '.' : ' at the top level.';
     var staticMethodExample = '<' + name + ' />.type.' + key + '(...)';
 
+    monitorCodeUse('react_descriptor_property_access', { component: name });
     console.warn(
       'Invalid access to component property "' + key + '" on ' + name +
       context + ' See http://fb.me/react-warning-descriptors .' +
       ' Use a static method instead: ' + staticMethodExample
     );
+  };
+
+  var wrapInMembraneFunction = function(fn, thisBinding) {
+    if (fn.__reactMembraneFunction && fn.__reactMembraneSelf === thisBinding) {
+      return fn.__reactMembraneFunction;
+    }
+    return fn.__reactMembraneFunction = function() {
+      /**
+       * By getting this function, you've already received a warning. The
+       * internals of this function will likely cause more warnings. To avoid
+       * Spamming too much we disable any warning triggered inside of this
+       * stack.
+       */
+      warningStackCounter++;
+      try {
+        // If the this binding is unchanged, we defer to the real component.
+        // This is important to keep some referential integrity in the
+        // internals. E.g. owner equality check.
+        var self = this === thisBinding ? this.__realComponentInstance : this;
+        return fn.apply(self, arguments);
+      } finally {
+        warningStackCounter--;
+      }
+    };
   };
 
   var defineMembraneProperty = function(membrane, prototype, key) {
@@ -632,31 +696,33 @@ if (__DEV__) {
       enumerable: true,
 
       get: function() {
-        if (this !== membrane) {
-          // When this is accessed through a prototype chain we need to check if
-          // this component was mounted.
-          warnIfUnmounted(this, key);
+        if (this === membrane) {
+          // We're allowed to access the prototype directly.
+          return prototype[key];
         }
-        return prototype[key];
+        issueMembraneWarning(this, key);
+
+        var realValue = this.__realComponentInstance[key];
+        // If the real value is a function, we need to provide a wrapper that
+        // disables nested warnings. The properties type and constructors are
+        // expected to the be constructors and therefore is often use with an
+        // equality check and we shouldn't try to rebind those.
+        if (typeof realValue === 'function' &&
+            key !== 'type' &&
+            key !== 'constructor') {
+          return wrapInMembraneFunction(realValue, this);
+        }
+        return realValue;
       },
 
       set: function(value) {
-        if (this !== membrane) {
-          // When this is accessed through a prototype chain, we first check if
-          // this component was mounted. Then we define a value on "this"
-          // instance, effectively disabling the membrane on that prototype
-          // chain.
-          warnIfUnmounted(this, key);
-          Object.defineProperty(this, key, {
-            enumerable: true,
-            configurable: true,
-            writable: true,
-            value: value
-          });
-        } else {
-          // Otherwise, this should modify the prototype
+        if (this === membrane) {
+          // We're allowed to set a value on the prototype directly.
           prototype[key] = value;
+          return;
         }
+        issueMembraneWarning(this, key);
+        this.__realComponentInstance[key] = value;
       }
 
     });
@@ -671,26 +737,51 @@ if (__DEV__) {
    * @private
    */
   var createMountWarningMembrane = function(prototype) {
-    try {
-      var membrane = Object.create(prototype);
-      for (var key in prototype) {
-        if (unmountedPropertyWhitelist.hasOwnProperty(key)) {
-          continue;
-        }
+    var membrane = {};
+    var key;
+    for (key in prototype) {
+      defineMembraneProperty(membrane, prototype, key);
+    }
+    // These are properties that goes into the instance but not the prototype.
+    // We can create the membrane on the prototype even though this will
+    // result in a faulty hasOwnProperty check it's better perf.
+    for (key in componentInstanceProperties) {
+      if (componentInstanceProperties.hasOwnProperty(key) &&
+          !(key in prototype)) {
         defineMembraneProperty(membrane, prototype, key);
       }
+    }
+    return membrane;
+  };
 
-      membrane.mountComponent = function() {
-        this.__hasBeenMounted = true;
-        return prototype.mountComponent.apply(this, arguments);
+  /**
+   * Creates a membrane constructor which wraps the component that gets mounted.
+   *
+   * @param {function} constructor Original constructor.
+   * @return {function} The membrane constructor.
+   * @private
+   */
+  var createDescriptorProxy = function(constructor) {
+    try {
+      var ProxyConstructor = function() {
+        this.__realComponentInstance = new constructor();
+
+        // We can only safely pass through known instance variables. Unknown
+        // expandos are not safe. Use the real mounted instance to avoid this
+        // problem if it blows something up.
+        Object.freeze(this);
       };
 
-      return membrane;
+      ProxyConstructor.prototype = createMountWarningMembrane(
+        constructor.prototype
+      );
+
+      return ProxyConstructor;
     } catch(x) {
       // In IE8 define property will fail on non-DOM objects. If anything in
-      // the membrane creation fails, we'll bail out and just use the prototype
-      // without warnings.
-      return prototype;
+      // the membrane creation fails, we'll bail out and just use the plain
+      // constructor without warnings.
+      return constructor;
     }
   };
 
@@ -761,15 +852,32 @@ var ReactCompositeComponentMixin = {
   construct: function(initialProps, children) {
     // Children can be either an array or more than one argument
     ReactComponent.Mixin.construct.apply(this, arguments);
+    ReactOwner.Mixin.construct.apply(this, arguments);
 
     this.state = null;
     this._pendingState = null;
 
-    this.context = this._processContext(ReactContext.current);
+    this.context = null;
     this._currentContext = ReactContext.current;
     this._pendingContext = null;
 
+    // The descriptor that was used to instantiate this component. Will be
+    // set by the instantiator instead of the constructor since this
+    // constructor is currently used by both instances and descriptors.
+    this._descriptor = null;
+
     this._compositeLifeCycleState = null;
+  },
+
+  /**
+   * Components in the intermediate state now has cyclic references. To avoid
+   * breaking JSON serialization we expose a custom JSON format.
+   * @return {object} JSON compatible representation.
+   * @internal
+   * @final
+   */
+  toJSON: function() {
+    return { type: this.type, props: this.props };
   },
 
   /**
@@ -787,7 +895,7 @@ var ReactCompositeComponentMixin = {
    * Initializes the component, renders markup, and registers event listeners.
    *
    * @param {string} rootID DOM ID of the root node.
-   * @param {ReactReconcileTransaction} transaction
+   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {number} mountDepth number of components in the owner hierarchy
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final
@@ -805,6 +913,7 @@ var ReactCompositeComponentMixin = {
       );
       this._compositeLifeCycleState = CompositeLifeCycle.MOUNTING;
 
+      this.context = this._processContext(this._currentContext);
       this._defaultProps = this.getDefaultProps ? this.getDefaultProps() : null;
       this.props = this._processProps(this.props);
 
@@ -832,7 +941,9 @@ var ReactCompositeComponentMixin = {
         }
       }
 
-      this._renderedComponent = this._renderValidatedComponent();
+      this._renderedComponent = instantiateReactComponent(
+        this._renderValidatedComponent()
+      );
 
       // Done with mounting, `setState` will now trigger UI changes.
       this._compositeLifeCycleState = null;
@@ -868,10 +979,6 @@ var ReactCompositeComponentMixin = {
 
     ReactComponent.Mixin.unmountComponent.call(this);
 
-    if (this.refs) {
-      this.refs = null;
-    }
-
     // Some existing components rely on this.props even after they've been
     // destroyed (in event handlers).
     // TODO: this.props = null;
@@ -901,12 +1008,11 @@ var ReactCompositeComponentMixin = {
       'setState(...): takes an object of state variables to update.'
     );
     if (__DEV__){
-      if (partialState == null) {
-        console.warn(
-          'setState(...): You passed an undefined or null state object; ' +
-          'instead, use forceUpdate().'
-        );
-      }
+      warning(
+        partialState != null,
+        'setState(...): You passed an undefined or null state object; ' +
+        'instead, use forceUpdate().'
+      );
     }
     // Merge with `_pendingState` if it exists, otherwise with existing state.
     this.replaceState(
@@ -1170,12 +1276,15 @@ var ReactCompositeComponentMixin = {
   },
 
   receiveComponent: function(nextComponent, transaction) {
-    if (nextComponent === this) {
+    if (nextComponent === this._descriptor) {
       // Since props and context are immutable after the component is
       // mounted, we can do a cheap identity compare here to determine
       // if this is a superfluous reconcile.
       return;
     }
+
+    // Update the descriptor that was last used by this component instance
+    this._descriptor = nextComponent;
 
     this._pendingContext = nextComponent._currentContext;
     ReactComponent.Mixin.receiveComponent.call(
@@ -1209,17 +1318,19 @@ var ReactCompositeComponentMixin = {
         prevProps,
         prevOwner
       );
-      var prevComponent = this._renderedComponent;
+
+
+      var prevComponentInstance = this._renderedComponent;
       var nextComponent = this._renderValidatedComponent();
-      if (shouldUpdateReactComponent(prevComponent, nextComponent)) {
-        prevComponent.receiveComponent(nextComponent, transaction);
+      if (shouldUpdateReactComponent(prevComponentInstance, nextComponent)) {
+        prevComponentInstance.receiveComponent(nextComponent, transaction);
       } else {
         // These two IDs are actually the same! But nothing should rely on that.
         var thisID = this._rootNodeID;
-        var prevComponentID = prevComponent._rootNodeID;
-        prevComponent.unmountComponent();
-        this._renderedComponent = nextComponent;
-        var nextMarkup = nextComponent.mountComponent(
+        var prevComponentID = prevComponentInstance._rootNodeID;
+        prevComponentInstance.unmountComponent();
+        this._renderedComponent = instantiateReactComponent(nextComponent);
+        var nextMarkup = this._renderedComponent.mountComponent(
           thisID,
           transaction,
           this._mountDepth + 1
@@ -1329,11 +1440,13 @@ var ReactCompositeComponentMixin = {
         // ignore the value of "this" that the user is trying to use, so
         // let's warn.
         if (newThis !== component && newThis !== null) {
+          monitorCodeUse('react_bind_warning', { component: componentName });
           console.warn(
             'bind(): React component methods may only be bound to the ' +
             'component instance. See ' + componentName
           );
         } else if (!args.length) {
+          monitorCodeUse('react_bind_warning', { component: componentName });
           console.warn(
             'bind(): You are binding a component method to the component. ' +
             'React does this for you automatically in a high-performance ' +
@@ -1396,14 +1509,20 @@ var ReactCompositeComponent = {
     Constructor.prototype = new ReactCompositeComponentBase();
     Constructor.prototype.constructor = Constructor;
 
+    var DescriptorConstructor = Constructor;
+
     var ConvenienceConstructor = function(props, children) {
-      var instance = new Constructor();
-      instance.construct.apply(instance, arguments);
-      return instance;
+      var descriptor = new DescriptorConstructor();
+      descriptor.construct.apply(descriptor, arguments);
+      return descriptor;
     };
     ConvenienceConstructor.componentConstructor = Constructor;
     Constructor.ConvenienceConstructor = ConvenienceConstructor;
     ConvenienceConstructor.originalSpec = spec;
+
+    injectedMixins.forEach(
+      mixSpecIntoComponent.bind(null, ConvenienceConstructor)
+    );
 
     mixSpecIntoComponent(ConvenienceConstructor, spec);
 
@@ -1414,6 +1533,10 @@ var ReactCompositeComponent = {
 
     if (__DEV__) {
       if (Constructor.prototype.componentShouldUpdate) {
+        monitorCodeUse(
+          'react_component_should_update_warning',
+          { component: spec.displayName }
+        );
         console.warn(
           (spec.displayName || 'A component') + ' has a method called ' +
           'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
@@ -1439,13 +1562,22 @@ var ReactCompositeComponent = {
     }
 
     if (__DEV__) {
-      Constructor.prototype = createMountWarningMembrane(Constructor.prototype);
+      // In DEV the convenience constructor generates a proxy to another
+      // instance around it to warn about access to properties on the
+      // descriptor.
+      DescriptorConstructor = createDescriptorProxy(Constructor);
     }
 
     return ConvenienceConstructor;
   },
 
-  isValidClass: isValidClass
+  isValidClass: isValidClass,
+
+  injection: {
+    injectMixin: function(mixin) {
+      injectedMixins.push(mixin);
+    }
+  }
 };
 
 module.exports = ReactCompositeComponent;

@@ -318,7 +318,7 @@ describe('ReactUpdates', function() {
     expect(childRenderCount).toBe(0);
 
     var instance = <Parent />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
 
     expect(parentRenderCount).toBe(1);
     expect(childRenderCount).toBe(1);
@@ -437,7 +437,7 @@ describe('ReactUpdates', function() {
     });
 
     var root = <App />;
-    ReactTestUtils.renderIntoDocument(root);
+    root = ReactTestUtils.renderIntoDocument(root);
 
     function expectUpdates(desiredWillUpdates, desiredDidUpdates) {
       expect(willUpdates).toEqual(desiredWillUpdates);

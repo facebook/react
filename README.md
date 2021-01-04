@@ -40,12 +40,12 @@ The fastest way to get started is to serve JavaScript from the CDN (also availab
 
 ```html
 <!-- The core React library -->
-<script src="http://fb.me/react-0.8.0.js"></script>
+<script src="http://fb.me/react-0.10.0.js"></script>
 <!-- In-browser JSX transformer, remove when pre-compiling JSX. -->
-<script src="http://fb.me/JSXTransformer-0.8.0.js"></script>
+<script src="http://fb.me/JSXTransformer-0.10.0.js"></script>
 ```
 
-We've also built a [starter kit](http://facebook.github.io/react/downloads/react-0.8.0.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
+We've also built a [starter kit](http://facebook.github.io/react/downloads/react-0.10.0.zip) which might be useful if this is your first time using React. It includes a webpage with an example of using React with live code.
 
 If you'd like to use [bower](http://bower.io), it's as easy as:
 
@@ -87,6 +87,8 @@ We use grunt to automate many tasks. Run `grunt -h` to see a mostly complete lis
 ```sh
 # Build and run tests with PhantomJS
 grunt test
+# Build and run tests in your browser
+grunt test --debug
 # Lint the code with JSHint
 grunt lint
 # Wipe out build directory

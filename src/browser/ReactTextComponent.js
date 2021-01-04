@@ -20,6 +20,7 @@
 "use strict";
 
 var DOMPropertyOperations = require('DOMPropertyOperations');
+var ReactBrowserComponentMixin = require('ReactBrowserComponentMixin');
 var ReactComponent = require('ReactComponent');
 
 var escapeTextForBrowser = require('escapeTextForBrowser');
@@ -44,7 +45,18 @@ var ReactTextComponent = function(initialText) {
   this.construct({text: initialText});
 };
 
+/**
+ * Used to clone the text descriptor object before it's mounted.
+ *
+ * @param {object} props
+ * @return {object} A new ReactTextComponent instance
+ */
+ReactTextComponent.ConvenienceConstructor = function(props) {
+  return new ReactTextComponent(props.text);
+};
+
 mixInto(ReactTextComponent, ReactComponent.Mixin);
+mixInto(ReactTextComponent, ReactBrowserComponentMixin);
 mixInto(ReactTextComponent, {
 
   /**
@@ -52,7 +64,7 @@ mixInto(ReactTextComponent, {
    * any features besides containing text content.
    *
    * @param {string} rootID DOM ID of the root node.
-   * @param {ReactReconcileTransaction} transaction
+   * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
    * @param {number} mountDepth number of components in the owner hierarchy
    * @return {string} Markup for this text node.
    * @internal
@@ -64,9 +76,19 @@ mixInto(ReactTextComponent, {
       transaction,
       mountDepth
     );
+
+    var escapedText = escapeTextForBrowser(this.props.text);
+
+    if (transaction.renderToStaticMarkup) {
+      // Normally we'd wrap this in a `span` for the reasons stated above, but
+      // since this is a situation where React won't take over (static pages),
+      // we can simply return the text as it is.
+      return escapedText;
+    }
+
     return (
       '<span ' + DOMPropertyOperations.createMarkupForID(rootID) + '>' +
-        escapeTextForBrowser(this.props.text) +
+        escapedText +
       '</span>'
     );
   },

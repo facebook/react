@@ -98,9 +98,9 @@ describe('Transaction', function() {
      */
     var TestTransaction = function() {
       this.reinitializeTransaction();
-      this.firstCloseParam = INIT_ERRORED;   // WON'T be set to something else
+      this.firstCloseParam = INIT_ERRORED;   // WILL be set to something else
       this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
-      this.lastCloseParam = INIT_ERRORED;    // WON'T be set to something else
+      this.lastCloseParam = INIT_ERRORED;    // WILL be set to something else
     };
     mixInto(TestTransaction, Transaction.Mixin);
     TestTransaction.prototype.getTransactionWrappers = function() {
@@ -159,9 +159,9 @@ describe('Transaction', function() {
      */
     var TestTransaction = function() {
       this.reinitializeTransaction();
-      this.firstCloseParam = INIT_ERRORED;   // WON'T be set to something else
+      this.firstCloseParam = INIT_ERRORED;   // WILL be set to something else
       this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
-      this.lastCloseParam = INIT_ERRORED;    // WON'T be set to something else
+      this.lastCloseParam = INIT_ERRORED;    // WILL be set to something else
     };
     mixInto(TestTransaction, Transaction.Mixin);
     // Now, none of the close/inits throw, but the operation we wrap will throw.
@@ -254,9 +254,7 @@ describe('Transaction', function() {
      */
     var TestTransaction = function() {
       this.reinitializeTransaction();
-      this.firstCloseParam = INIT_ERRORED;   // WON'T be set to something else
-      this.secondCloseParam = INIT_ERRORED;  // WILL be set to something else
-      this.lastCloseParam = INIT_ERRORED;    // WON'T be set to something else
+      this.firstCloseParam = INIT_ERRORED; // WILL be set to something else
     };
     mixInto(TestTransaction, Transaction.Mixin);
     TestTransaction.prototype.getTransactionWrappers = function() {

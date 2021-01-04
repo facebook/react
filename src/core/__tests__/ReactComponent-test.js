@@ -52,7 +52,7 @@ describe('ReactComponent', function() {
   it('should throw when supplying a ref outside of render method', function() {
     var instance = <div ref="badDiv" />;
     expect(function() {
-      ReactTestUtils.renderIntoDocument(instance);
+      instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
   });
 
@@ -68,7 +68,7 @@ describe('ReactComponent', function() {
     var instance = <Component child={<span />} />;
 
     expect(function() {
-      ReactTestUtils.renderIntoDocument(instance);
+      instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow(
       'Invariant Violation: attachRef(test, ...): Only a component\'s owner ' +
       'can store a ref to it.'
@@ -91,7 +91,7 @@ describe('ReactComponent', function() {
     });
 
     var instance = <Component child={<span />} />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
   });
 
   it('should not have refs on unmounted components', function() {
@@ -110,7 +110,7 @@ describe('ReactComponent', function() {
     });
 
     var instance = <Parent child={<span />} />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
   });
 
   it('should correctly determine if a component is mounted', function() {
@@ -146,7 +146,7 @@ describe('ReactComponent', function() {
     });
 
     var instance = <Owner />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance._mountDepth).toBe(0);
     expect(instance.refs.child._mountDepth).toBe(1);
   });
@@ -197,7 +197,7 @@ describe('ReactComponent', function() {
     });
 
     var root = <App />;
-    ReactTestUtils.renderIntoDocument(root);
+    root = ReactTestUtils.renderIntoDocument(root);
 
     expect(root._mountDepth).toBe(0);
     expect(root.refs.switcher._mountDepth).toBe(1);

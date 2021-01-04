@@ -92,7 +92,7 @@ describe('ReactCompositeComponent', function() {
 
   it('should support rendering to different child types over time', function() {
     var instance = <MorphingComponent />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
 
     reactComponentExpect(instance)
       .expectRenderedChild()
@@ -111,7 +111,7 @@ describe('ReactCompositeComponent', function() {
 
   it('should react to state changes from callbacks', function() {
     var instance = <MorphingComponent />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
 
     var renderedChild = reactComponentExpect(instance)
       .expectRenderedChild()
@@ -125,7 +125,7 @@ describe('ReactCompositeComponent', function() {
 
   it('should rewire refs when rendering to different child types', function() {
     var instance = <MorphingComponent />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
 
     reactComponentExpect(instance.refs.x).toBeDOMComponentWithTag('a');
     instance._toggleActivatedState();
@@ -136,7 +136,7 @@ describe('ReactCompositeComponent', function() {
 
   it('should not cache old DOM nodes when switching constructors', function() {
     var instance = <ChildUpdates renderAnchor={true} anchorClassOn={false}/>;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     instance.setProps({anchorClassOn: true});  // Warm any cache
     instance.setProps({renderAnchor: false});  // Clear out the anchor
     // rerender
@@ -168,36 +168,37 @@ describe('ReactCompositeComponent', function() {
     });
     var instance = <ComponentClass />;
 
-    // These are controversial assertions for now, they just exist
-    // because existing code depends on these assumptions.
-    // These are expected to log a warning. This use case will be deprecated.
-    expect(function() {
-      instance.methodToBeExplicitlyBound.bind(instance)();
-    }).not.toThrow();
-    expect(function() {
-      instance.methodAutoBound();
-    }).not.toThrow();
-    expect(function() {
-      instance.methodExplicitlyNotBound();
-    }).not.toThrow();
-
     // Next, prove that once mounted, the scope is bound correctly to the actual
     // component.
-    ReactTestUtils.renderIntoDocument(instance);
-    expect(console.warn.argsForCall.length).toBe(3);
-    var explicitlyBound = instance.methodToBeExplicitlyBound.bind(instance);
-    expect(console.warn.argsForCall.length).toBe(4);
-    var autoBound = instance.methodAutoBound;
-    var explicitlyNotBound = instance.methodExplicitlyNotBound;
+    var mountedInstance = ReactTestUtils.renderIntoDocument(instance);
+
+    expect(function() {
+      mountedInstance.methodToBeExplicitlyBound.bind(instance)();
+    }).not.toThrow();
+    expect(function() {
+      mountedInstance.methodAutoBound();
+    }).not.toThrow();
+    expect(function() {
+      mountedInstance.methodExplicitlyNotBound();
+    }).not.toThrow();
+
+    expect(console.warn.argsForCall.length).toBe(1);
+    var explicitlyBound = mountedInstance.methodToBeExplicitlyBound.bind(
+      mountedInstance
+    );
+    expect(console.warn.argsForCall.length).toBe(2);
+    var autoBound = mountedInstance.methodAutoBound;
+    var explicitlyNotBound = mountedInstance.methodExplicitlyNotBound;
 
     var context = {};
-    expect(explicitlyBound.call(context)).toBe(instance);
-    expect(autoBound.call(context)).toBe(instance);
+    expect(explicitlyBound.call(context)).toBe(mountedInstance);
+    expect(autoBound.call(context)).toBe(mountedInstance);
     expect(explicitlyNotBound.call(context)).toBe(context);
 
-    expect(explicitlyBound.call(instance)).toBe(instance);
-    expect(autoBound.call(instance)).toBe(instance);
-    expect(explicitlyNotBound.call(instance)).toBe(instance);
+    expect(explicitlyBound.call(mountedInstance)).toBe(mountedInstance);
+    expect(autoBound.call(mountedInstance)).toBe(mountedInstance);
+    // This one is the weird one
+    expect(explicitlyNotBound.call(mountedInstance)).toBe(mountedInstance);
 
   });
 
@@ -212,15 +213,15 @@ describe('ReactCompositeComponent', function() {
     });
 
     var instance1 = <Component />;
-    ReactTestUtils.renderIntoDocument(instance1);
+    instance1 = ReactTestUtils.renderIntoDocument(instance1);
     reactComponentExpect(instance1).scalarPropsEqual({key: 'testKey'});
 
     var instance2 = <Component key={undefined} />;
-    ReactTestUtils.renderIntoDocument(instance2);
+    instance2 = ReactTestUtils.renderIntoDocument(instance2);
     reactComponentExpect(instance2).scalarPropsEqual({key: 'testKey'});
 
     var instance3 = <Component key={null} />;
-    ReactTestUtils.renderIntoDocument(instance3);
+    instance3 = ReactTestUtils.renderIntoDocument(instance3);
     reactComponentExpect(instance3).scalarPropsEqual({key: null});
   });
 
@@ -236,7 +237,7 @@ describe('ReactCompositeComponent', function() {
 
     var inputProps = {};
     var instance1 = Component(inputProps);
-    ReactTestUtils.renderIntoDocument(instance1);
+    instance1 = ReactTestUtils.renderIntoDocument(instance1);
     expect(instance1.props.key).toBe('testKey');
 
     // We don't mutate the input, just in case the caller wants to do something
@@ -279,8 +280,7 @@ describe('ReactCompositeComponent', function() {
       }
     });
 
-    var instance = <Component />;
-    ReactTestUtils.renderIntoDocument(instance);
+    var instance = ReactTestUtils.renderIntoDocument(<Component />);
     reactComponentExpect(instance).scalarPropsEqual({key: 'testKey'});
     reactComponentExpect(instance).scalarStateEqual({key: 'testKeyState'});
 
@@ -409,7 +409,7 @@ describe('ReactCompositeComponent', function() {
       'mounted or mounting components.'
     );
 
-    React.renderComponent(instance, container);
+    instance = React.renderComponent(instance, container);
     expect(function() {
       instance.forceUpdate();
     }).not.toThrow();
@@ -434,7 +434,7 @@ describe('ReactCompositeComponent', function() {
     expect(ReactCurrentOwner.current).toBe(null);
 
     expect(function() {
-      ReactTestUtils.renderIntoDocument(instance);
+      instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow();
 
     expect(ReactCurrentOwner.current).toBe(null);
@@ -456,7 +456,7 @@ describe('ReactCompositeComponent', function() {
       }
     });
     var instance = <Component />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state.component).toBe(true);
     expect(instance.state.mixin).toBe(true);
   });
@@ -478,7 +478,7 @@ describe('ReactCompositeComponent', function() {
     });
     var instance = <Component />;
     expect(function() {
-      ReactTestUtils.renderIntoDocument(instance);
+      instance = ReactTestUtils.renderIntoDocument(instance);
     }).toThrow(
       'Invariant Violation: mergeObjectsWithNoDuplicateKeys(): ' +
       'Tried to merge two objects with the same key: x'
@@ -497,7 +497,7 @@ describe('ReactCompositeComponent', function() {
       }
     });
     var instance = <Component />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state.occupation).toEqual('clown');
   });
 
@@ -513,7 +513,7 @@ describe('ReactCompositeComponent', function() {
       });
       var instance = <Component />;
       expect(function() {
-        ReactTestUtils.renderIntoDocument(instance);
+        instance = ReactTestUtils.renderIntoDocument(instance);
       }).toThrow(
         'Invariant Violation: Component.getInitialState(): ' +
         'must return an object or null'
@@ -558,7 +558,7 @@ describe('ReactCompositeComponent', function() {
     ).not.toThrow();
 
     instance = <Component />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state).toEqual({foo: 'bar'});
 
     // Also the other way round should work
@@ -581,7 +581,7 @@ describe('ReactCompositeComponent', function() {
     ).not.toThrow();
 
     instance = <Component />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state).toEqual({foo: 'bar'});
 
     // Multiple mixins should be fine too
@@ -599,7 +599,7 @@ describe('ReactCompositeComponent', function() {
     ).not.toThrow();
 
     instance = <Component />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state).toEqual({foo: 'bar', x: true});
   });
 
@@ -615,7 +615,7 @@ describe('ReactCompositeComponent', function() {
       }
     });
     var instance = <Component />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state.occupation).toEqual('clown');
   });
 
@@ -631,7 +631,7 @@ describe('ReactCompositeComponent', function() {
       });
       var instance = <Component />;
       expect(function() {
-        ReactTestUtils.renderIntoDocument(instance);
+        instance = ReactTestUtils.renderIntoDocument(instance);
       }).toThrow(
         'Invariant Violation: Component.getInitialState(): ' +
         'must return an object or null'
@@ -802,8 +802,7 @@ describe('ReactCompositeComponent', function() {
       },
 
       render: function() {
-        childInstance = <Child />;
-        return childInstance;
+        return <Child />;
       }
     });
 
@@ -824,8 +823,8 @@ describe('ReactCompositeComponent', function() {
       },
 
       render: function() {
-        grandchildInstance = <Grandchild />;
-        return grandchildInstance;
+        childInstance = this;
+        return <Grandchild />;
       }
     });
 
@@ -836,12 +835,12 @@ describe('ReactCompositeComponent', function() {
       },
 
       render: function() {
+        grandchildInstance = this;
         return <div />;
       }
     });
 
-    var instance = <Parent />;
-    ReactTestUtils.renderIntoDocument(instance);
+    ReactTestUtils.renderIntoDocument(<Parent />);
     reactComponentExpect(childInstance).scalarContextEqual({foo: 'bar', depth: 0});
     reactComponentExpect(grandchildInstance).scalarContextEqual({foo: 'bar', depth: 1});
   });
@@ -939,7 +938,7 @@ describe('ReactCompositeComponent', function() {
     var instance = React.withContext({foo: 'abc', bar: 123}, function() {
       return <Component />;
     });
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     reactComponentExpect(instance).scalarContextEqual({foo: 'abc'});
   });
 
@@ -996,7 +995,7 @@ describe('ReactCompositeComponent', function() {
     });
 
     var instance = <Parent foo="abc" />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     instance.replaceProps({foo: "def"});
     expect(actualComponentWillReceiveProps).toEqual({foo: 'def'});
     expect(actualShouldComponentUpdate).toEqual({foo: 'def'});
@@ -1007,7 +1006,10 @@ describe('ReactCompositeComponent', function() {
   it('should support statics', function() {
     var Component = React.createClass({
       statics: {
-        abc: 'def'
+        abc: 'def',
+        def: 0,
+        ghi: null,
+        jkl: 'mno'
       },
 
       render: function() {
@@ -1015,9 +1017,15 @@ describe('ReactCompositeComponent', function() {
       }
     });
     var instance = <Component />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.constructor.abc).toBe('def');
     expect(Component.abc).toBe('def');
+    expect(instance.constructor.def).toBe(0);
+    expect(Component.def).toBe(0);
+    expect(instance.constructor.ghi).toBe(null);
+    expect(Component.ghi).toBe(null);
+    expect(instance.constructor.jkl).toBe('mno');
+    expect(Component.jkl).toBe('mno');
   });
 
   it('should support statics in mixins', function() {
@@ -1038,7 +1046,7 @@ describe('ReactCompositeComponent', function() {
       }
     });
     var instance = <Component />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.constructor.foo).toBe('bar');
     expect(Component.foo).toBe('bar');
     expect(instance.constructor.abc).toBe('def');
@@ -1122,7 +1130,7 @@ describe('ReactCompositeComponent', function() {
       }
     });
     var instance = <Component />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
   });
 
   it('should include the mixin keys in even if their values are falsy',
@@ -1143,7 +1151,7 @@ describe('ReactCompositeComponent', function() {
         }
       });
       var instance = <Component />;
-      ReactTestUtils.renderIntoDocument(instance);
+      instance = ReactTestUtils.renderIntoDocument(instance);
   });
 
   it('should warn if an umounted component is touched', function() {
@@ -1170,9 +1178,8 @@ describe('ReactCompositeComponent', function() {
     expect(console.warn.argsForCall.length).toBe(0);
 
     var unmountedInstance = <ComponentClass />;
-    var result = unmountedInstance.someMethod();
+    unmountedInstance.someMethod();
     expect(console.warn.argsForCall.length).toBe(1);
-    expect(result).toBe(unmountedInstance);
 
     var unmountedInstance2 = <ComponentClass />;
     unmountedInstance2.someOtherMethod = 'override';

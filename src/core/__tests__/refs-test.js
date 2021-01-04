@@ -236,5 +236,17 @@ describe('ref swapping', function() {
     expect(refHopsAround.refs.divTwoRef).toEqual(secondDiv);
     expect(refHopsAround.refs.divThreeRef).toEqual(thirdDiv);
   });
+
+
+  it('always has a value for this.refs', function() {
+    var Component = React.createClass({
+      render: function() {
+        return <div />;
+      }
+    });
+
+    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    expect(!!instance.refs).toBe(true);
+  });
 });
 

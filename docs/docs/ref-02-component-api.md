@@ -9,7 +9,7 @@ next: component-specs.html
 
 ## ReactComponent
 
-Component classes created by `createClass()` return instances of `ReactComponent` when called. Most of the time when you're using React you're either creating or consuming these component objects.
+Component classes created by `React.createClass()` return instances of `ReactComponent` when called. Most of the time when you're using React you're either creating or consuming these component objects.
 
 
 ### getDOMNode
@@ -24,20 +24,24 @@ If this component has been mounted into the DOM, this returns the corresponding 
 ### setProps
 
 ```javascript
-setProps(object nextProps)
+setProps(object nextProps[, function callback])
 ```
 
-When you're integrating with an external JavaScript application you may want to signal a change to a React component rendered with `renderComponent()`. Simply call `setProps()` to change its properties and trigger a re-render.
+When you're integrating with an external JavaScript application you may want to signal a change to a React component rendered with `React.renderComponent()`.
+
+Though calling `React.renderComponent()` again on the same node is the preferred way to update a root-level component, you can also call `setProps()` to change its properties and trigger a re-render. In addition, you can supply an optional callback function that is executed once `setProps` is completed and the component is re-rendered.
 
 > Note:
 >
-> This method can only be called on a root-level component. That is, it's only available on the component passed directly to `renderComponent()` and none of its children. If you're inclined to use `setProps()` on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it's created in `render()`.
+> When possible, the declarative approach of calling `React.renderComponent()` again is preferred; it tends to make updates easier to reason about. (There's no significant performance difference between the two approaches.)
+>
+> This method can only be called on a root-level component. That is, it's only available on the component passed directly to `React.renderComponent()` and none of its children. If you're inclined to use `setProps()` on a child component, instead take advantage of reactive updates and pass the new prop to the child component when it's created in `render()`.
 
 
 ### replaceProps
 
 ```javascript
-replaceProps(object nextProps)
+replaceProps(object nextProps[, function callback])
 ```
 
 Like `setProps()` but deletes any pre-existing props instead of merging the two objects.
@@ -76,7 +80,7 @@ Properties that are specified directly on the target component instance (such as
 setState(object nextState[, function callback])
 ```
 
-Merges nextState with the current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.  In addition, you can supply an optional callback function that is executed once `setState` is completed.
+Merges nextState with the current state. This is the primary method you use to trigger UI updates from event handlers and server request callbacks.  In addition, you can supply an optional callback function that is executed once `setState` is completed and the component is re-rendered.
 
 > Notes:
 >

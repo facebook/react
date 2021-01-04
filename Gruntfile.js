@@ -179,7 +179,13 @@ module.exports = function(grunt) {
     'test:webdriver:phantomjs',
     'coverage:parse'
   ]);
-  grunt.registerTask('test', ['build:test', 'build:basic', 'test:webdriver:phantomjs']);
+  grunt.registerTask('test', function() {
+    if (grunt.option('debug')) {
+      grunt.task.run('build:test', 'build:basic', 'connect:server:keepalive');
+    } else {
+      grunt.task.run('build:test', 'build:basic', 'test:webdriver:phantomjs');
+    }
+  });
   grunt.registerTask('perf', ['build:perf', 'perf:webdriver:phantomjs']);
   grunt.registerTask('npm:test', ['build', 'npm:pack']);
 

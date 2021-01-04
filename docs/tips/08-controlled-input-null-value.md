@@ -20,5 +20,5 @@ React.renderComponent(<input value="hi" />, mountNode);
 
 setTimeout(function() {
   React.renderComponent(<input value={null} />, mountNode);
-}, 2000);
+}, 1000);
 ```

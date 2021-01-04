@@ -22,6 +22,7 @@
 var ReactPropTransferer = require('ReactPropTransferer');
 
 var keyOf = require('keyOf');
+var warning = require('warning');
 
 var CHILDREN_PROP = keyOf({children: null});
 
@@ -36,13 +37,12 @@ var CHILDREN_PROP = keyOf({children: null});
  */
 function cloneWithProps(child, props) {
   if (__DEV__) {
-    if (child.props.ref) {
-      console.warn(
-        'You are calling cloneWithProps() on a child with a ref. This is ' +
-        'dangerous because you\'re creating a new child which will not be ' +
-        'added as a ref to its parent.'
-      );
-    }
+    warning(
+      !child.props.ref,
+      'You are calling cloneWithProps() on a child with a ref. This is ' +
+      'dangerous because you\'re creating a new child which will not be ' +
+      'added as a ref to its parent.'
+    );
   }
 
   var newProps = ReactPropTransferer.mergeProps(props, child.props);

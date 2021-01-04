@@ -60,7 +60,7 @@ function visitReactTag(traverse, object, path, state) {
        'Namespace tags are not supported. ReactJSX is not XML.');
   }
 
-  var isFallbackTag = FALLBACK_TAGS[nameObject.name];
+  var isFallbackTag = FALLBACK_TAGS.hasOwnProperty(nameObject.name);
   utils.append(
     (isFallbackTag ? jsxObjIdent + '.' : '') + (nameObject.name) + '(',
     state
@@ -101,7 +101,7 @@ function visitReactTag(traverse, object, path, state) {
       utils.move(attr.name.range[1], state);
       // Use catchupWhiteSpace to skip over the '=' in the attribute
       utils.catchupWhiteSpace(attr.value.range[0], state);
-      if (JSX_ATTRIBUTE_TRANSFORMS[attr.name.name]) {
+      if (JSX_ATTRIBUTE_TRANSFORMS.hasOwnProperty(attr.name.name)) {
         utils.append(JSX_ATTRIBUTE_TRANSFORMS[attr.name.name](attr), state);
         utils.move(attr.value.range[1], state);
         if (!isLast) {
@@ -133,12 +133,23 @@ function visitReactTag(traverse, object, path, state) {
              && child.value.match(/^[ \t]*[\r\n][ \t\r\n]*$/));
   });
   if (childrenToRender.length > 0) {
-    utils.append(', ', state);
+    var lastRenderableIndex;
+
+    childrenToRender.forEach(function(child, index) {
+      if (child.type !== Syntax.XJSExpressionContainer ||
+          child.expression.type !== Syntax.XJSEmptyExpression) {
+        lastRenderableIndex = index;
+      }
+    });
+
+    if (lastRenderableIndex !== undefined) {
+      utils.append(', ', state);
+    }
 
     childrenToRender.forEach(function(child, index) {
       utils.catchup(child.range[0], state);
 
-      var isLast = index === childrenToRender.length - 1;
+      var isLast = index >= lastRenderableIndex;
 
       if (child.type === Syntax.Literal) {
         renderXJSLiteral(child, isLast, state);

@@ -14,9 +14,7 @@ var normal = {
   getConfig: function() {
     return {
       commonerConfig: grunt.config.data.pkg.commonerConfig,
-      constants: {
-        __VERSION__: grunt.config.data.pkg.version
-      }
+      constants: {}
     };
   },
   sourceDir: "src",

@@ -53,6 +53,8 @@
       title: Test Utilities
     - id: clone-with-props
       title: Cloning Components
+    - id: update
+      title: Immutability Helpers
 - title: Reference
   items:
   - id: top-level-api
@@ -71,3 +73,9 @@
     title: Special Non-DOM Attributes
   - id: reconciliation
     title: Reconciliation
+- title: Flux
+  items:
+  - id: flux-overview
+    title: Flux Overview
+  - id: flux-todo-list
+    title: Flux Todo List

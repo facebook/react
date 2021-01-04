@@ -35,7 +35,7 @@ describe('ReactCompositeComponent-error', function() {
     });
 
     var instance = <Component />;
-    ReactTestUtils.renderIntoDocument(instance);
+    instance = ReactTestUtils.renderIntoDocument(instance);
     expect(ReactErrorUtils.guard.mostRecentCall.args[1])
       .toEqual('Component.someHandler');
   });

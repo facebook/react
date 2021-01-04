@@ -61,14 +61,14 @@ describe('autobinding', function() {
     });
 
     var instance1 = <TestBindComponent />;
-    ReactTestUtils.renderIntoDocument(instance1);
-    var rendered1 = reactComponentExpect(instance1)
+    var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
+    var rendered1 = reactComponentExpect(mountedInstance1)
       .expectRenderedChild()
       .instance();
 
     var instance2 = <TestBindComponent />;
-    ReactTestUtils.renderIntoDocument(instance2);
-    var rendered2 = reactComponentExpect(instance2)
+    var mountedInstance2 = ReactTestUtils.renderIntoDocument(instance2);
+    var rendered2 = reactComponentExpect(mountedInstance2)
       .expectRenderedChild()
       .instance();
 
@@ -77,25 +77,25 @@ describe('autobinding', function() {
       badIdea();
     }).toThrow();
 
-    expect(instance1.onMouseEnter).toBe(instance2.onMouseEnter);
-    expect(instance1.onMouseLeave).toBe(instance2.onMouseLeave);
-    expect(instance1.onClick).not.toBe(instance2.onClick);
+    expect(mountedInstance1.onMouseEnter).toBe(mountedInstance2.onMouseEnter);
+    expect(mountedInstance1.onMouseLeave).toBe(mountedInstance2.onMouseLeave);
+    expect(mountedInstance1.onClick).not.toBe(mountedInstance2.onClick);
 
     ReactTestUtils.Simulate.click(rendered1);
     expect(mouseDidClick.mock.instances.length).toBe(1);
-    expect(mouseDidClick.mock.instances[0]).toBe(instance1);
+    expect(mouseDidClick.mock.instances[0]).toBe(mountedInstance1);
 
     ReactTestUtils.Simulate.click(rendered2);
     expect(mouseDidClick.mock.instances.length).toBe(2);
-    expect(mouseDidClick.mock.instances[1]).toBe(instance2);
+    expect(mouseDidClick.mock.instances[1]).toBe(mountedInstance2);
 
     ReactTestUtils.Simulate.mouseOver(rendered1);
     expect(mouseDidEnter.mock.instances.length).toBe(1);
-    expect(mouseDidEnter.mock.instances[0]).toBe(instance1);
+    expect(mouseDidEnter.mock.instances[0]).toBe(mountedInstance1);
 
     ReactTestUtils.Simulate.mouseOver(rendered2);
     expect(mouseDidEnter.mock.instances.length).toBe(2);
-    expect(mouseDidEnter.mock.instances[1]).toBe(instance2);
+    expect(mouseDidEnter.mock.instances[1]).toBe(mountedInstance2);
 
     ReactTestUtils.Simulate.mouseOut(rendered1);
     expect(mouseDidLeave.mock.instances.length).toBe(1);
@@ -122,14 +122,14 @@ describe('autobinding', function() {
     });
 
     var instance1 = <TestBindComponent />;
-    ReactTestUtils.renderIntoDocument(instance1);
-    var rendered1 = reactComponentExpect(instance1)
+    var mountedInstance1 = ReactTestUtils.renderIntoDocument(instance1);
+    var rendered1 = reactComponentExpect(mountedInstance1)
       .expectRenderedChild()
       .instance();
 
     ReactTestUtils.Simulate.click(rendered1);
     expect(mouseDidClick.mock.instances.length).toBe(1);
-    expect(mouseDidClick.mock.instances[0]).toBe(instance1);
+    expect(mouseDidClick.mock.instances[0]).toBe(mountedInstance1);
   });
 
 });

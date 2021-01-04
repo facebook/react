@@ -4,9 +4,9 @@
 @import '_solarized';
 
 @mixin code-typography {
-  font-family: 'source-code-pro', Menlo, 'Courier New', Consolas, monospace;
-  font-size: 13px;
-  line-height: 20px;
+  font-family: 'source-code-pro', Menlo, Consolas, 'Courier New', monospace;
+  font-size: 0.8em;
+  line-height: 1.5;
 }
 
 $skinnyContentWidth: 650px;
@@ -683,7 +683,12 @@ p code {
 }
 
 .highlight pre code {
-  font-size: inherit;
+  /* Respect line-height defined in <code> styles above */
+  display: block;
+
+  /* Cancel out styles for `li code` in case we have a <pre> within an <li>. */
+  background: none;
+  padding: 0;
 }
 
 .highlight pre .lineno {

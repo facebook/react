@@ -23,6 +23,7 @@ var ReactComponent = require('ReactComponent');
 var ReactMultiChildUpdateTypes = require('ReactMultiChildUpdateTypes');
 
 var flattenChildren = require('flattenChildren');
+var instantiateReactComponent = require('instantiateReactComponent');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 
 /**
@@ -192,14 +193,18 @@ var ReactMultiChild = {
       for (var name in children) {
         var child = children[name];
         if (children.hasOwnProperty(name)) {
+          // The rendered children must be turned into instances as they're
+          // mounted.
+          var childInstance = instantiateReactComponent(child);
+          children[name] = childInstance;
           // Inlined for performance, see `ReactInstanceHandles.createReactID`.
           var rootID = this._rootNodeID + name;
-          var mountImage = child.mountComponent(
+          var mountImage = childInstance.mountComponent(
             rootID,
             transaction,
             this._mountDepth + 1
           );
-          child._mountIndex = index;
+          childInstance._mountIndex = index;
           mountImages.push(mountImage);
           index++;
         }
@@ -293,8 +298,10 @@ var ReactMultiChild = {
             lastIndex = Math.max(prevChild._mountIndex, lastIndex);
             this._unmountChildByName(prevChild, name);
           }
+          // The child must be instantiated before it's mounted.
+          var nextChildInstance = instantiateReactComponent(nextChild);
           this._mountChildByNameAtIndex(
-            nextChild, name, nextIndex, transaction
+            nextChildInstance, name, nextIndex, transaction
           );
         }
         nextIndex++;
