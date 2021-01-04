@@ -888,6 +888,7 @@ describe('Store', () => {
         <FakeHigherOrderComponent />
         <MemoizedFakeHigherOrderComponent />
         <ForwardRefFakeHigherOrderComponent />
+        <React.unstable_Cache />
       </React.Fragment>
     );
 

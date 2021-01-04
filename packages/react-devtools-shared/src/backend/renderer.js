@@ -176,6 +176,7 @@ export function getInternalReactConstants(
   // Currently the version in Git is 17.0.2 (but that version has not been/may not end up being released).
   if (gt(version, '17.0.1')) {
     ReactTypeOfWork = {
+      CacheComponent: 24, // Experimental
       ClassComponent: 1,
       ContextConsumer: 9,
       ContextProvider: 10,
@@ -205,6 +206,7 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '17.0.0-alpha')) {
     ReactTypeOfWork = {
+      CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 1,
       ContextConsumer: 9,
       ContextProvider: 10,
@@ -234,6 +236,7 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
+      CacheComponent: -1, // Doens't exist yet
       ClassComponent: 1,
       ContextConsumer: 9,
       ContextProvider: 10,
@@ -263,6 +266,7 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.4.3-alpha')) {
     ReactTypeOfWork = {
+      CacheComponent: -1, // Doens't exist yet
       ClassComponent: 2,
       ContextConsumer: 11,
       ContextProvider: 12,
@@ -292,6 +296,7 @@ export function getInternalReactConstants(
     };
   } else {
     ReactTypeOfWork = {
+      CacheComponent: -1, // Doens't exist yet
       ClassComponent: 2,
       ContextConsumer: 12,
       ContextProvider: 13,
@@ -335,6 +340,7 @@ export function getInternalReactConstants(
   }
 
   const {
+    CacheComponent,
     ClassComponent,
     IncompleteClassComponent,
     FunctionComponent,
@@ -382,6 +388,8 @@ export function getInternalReactConstants(
     let resolvedContext: any = null;
 
     switch (tag) {
+      case CacheComponent:
+        return 'Cache';
       case ClassComponent:
       case IncompleteClassComponent:
         return getDisplayName(resolvedType);
@@ -486,12 +494,13 @@ export function attach(
   } = getInternalReactConstants(renderer.version);
   const {Incomplete, NoFlags, PerformedWork, Placement} = ReactTypeOfSideEffect;
   const {
-    FunctionComponent,
+    CacheComponent,
     ClassComponent,
     ContextConsumer,
     DehydratedSuspenseComponent,
-    Fragment,
     ForwardRef,
+    Fragment,
+    FunctionComponent,
     HostRoot,
     HostPortal,
     HostComponent,
@@ -2518,6 +2527,10 @@ export function attach(
         tag === ForwardRef) &&
       (!!memoizedState || !!dependencies);
 
+    // TODO Show custom UI for Cache like we do for Suspense
+    // For now, just hide state data entirely since it's not meant to be inspected.
+    const showState = !usesHooks && tag !== CacheComponent;
+
     const typeSymbol = getTypeSymbol(type);
 
     let canViewSource = false;
@@ -2687,7 +2700,7 @@ export function attach(
       context,
       hooks,
       props: memoizedProps,
-      state: usesHooks ? null : memoizedState,
+      state: showState ? memoizedState : null,
       errors: Array.from(errors.entries()),
       warnings: Array.from(warnings.entries()),
 

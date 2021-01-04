@@ -26,6 +26,7 @@ export type WorkFlags = number;
 export type ExpirationTime = number;
 
 export type WorkTagMap = {|
+  CacheComponent: WorkTag,
   ClassComponent: WorkTag,
   ContextConsumer: WorkTag,
   ContextProvider: WorkTag,
