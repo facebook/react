@@ -1,0 +1,22 @@
+{
+  "private": true,
+  "name": "react-cache",
+  "description": "A basic cache for React applications",
+  "version": "2.0.0-alpha.0",
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/facebook/react.git",
+    "directory": "packages/react-cache"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "build-info.json",
+    "index.js",
+    "cjs/",
+    "umd/"
+  ],
+  "peerDependencies": {
+    "react": "^17.0.0"
+  }
+}

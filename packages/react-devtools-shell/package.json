@@ -1,0 +1,33 @@
+{
+  "private": true,
+  "name": "react-devtools-shell",
+  "version": "0.0.0",
+  "scripts": {
+    "build": "cross-env NODE_ENV=development cross-env TARGET=remote webpack --config webpack.config.js",
+    "deploy": "yarn run build && now deploy && now alias react-devtools-experimental",
+    "start": "cross-env NODE_ENV=development cross-env TARGET=local webpack-dev-server --open"
+  },
+  "dependencies": {
+    "immutable": "^4.0.0-rc.12",
+    "react-native-web": "0.0.0-26873b469"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.11.1",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/plugin-transform-flow-strip-types": "^7.10.4",
+    "@babel/plugin-transform-react-jsx-source": "^7.10.5",
+    "@babel/preset-env": "^7.11.0",
+    "@babel/preset-flow": "^7.10.4",
+    "@babel/preset-react": "^7.10.4",
+    "babel-core": "^7.0.0-bridge",
+    "babel-eslint": "^9.0.0",
+    "babel-loader": "^8.0.4",
+    "cross-env": "^3.1.4",
+    "css-loader": "^1.0.1",
+    "raw-loader": "^3.1.0",
+    "style-loader": "^0.23.1",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.10.3"
+  }
+}

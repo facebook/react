@@ -1,6 +1,0 @@
-{
-  "name": "react",
-  "jstest": {
-    "useAutoMock": false
-  }
-}

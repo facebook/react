@@ -1,0 +1,52 @@
+{
+  "name": "react-dom",
+  "version": "17.0.2",
+  "description": "React package for working with the DOM.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/facebook/react.git",
+    "directory": "packages/react-dom"
+  },
+  "keywords": [
+    "react"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "homepage": "https://reactjs.org/",
+  "dependencies": {
+    "loose-envify": "^1.1.0",
+    "object-assign": "^4.1.1",
+    "scheduler": "^0.20.1"
+  },
+  "peerDependencies": {
+    "react": "17.0.2"
+  },
+  "files": [
+    "LICENSE",
+    "README.md",
+    "build-info.json",
+    "index.js",
+    "profiling.js",
+    "server.js",
+    "server.browser.js",
+    "server.node.js",
+    "test-utils.js",
+    "unstable-fizz.js",
+    "unstable-fizz.browser.js",
+    "unstable-fizz.node.js",
+    "cjs/",
+    "umd/"
+  ],
+  "browser": {
+    "./server.js": "./server.browser.js",
+    "./unstable-fizz.js": "./unstable-fizz.browser.js"
+  },
+  "browserify": {
+    "transform": [
+      "loose-envify"
+    ]
+  }
+}

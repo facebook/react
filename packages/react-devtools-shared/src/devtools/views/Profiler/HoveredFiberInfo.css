@@ -1,0 +1,36 @@
+.Toolbar {
+  padding: 0.25rem 0;
+  margin-bottom: 0.25rem;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.Content {
+  user-select: none;
+  overflow-y: auto;
+}
+
+.Component {
+  flex: 1;
+  font-weight: bold;
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+  white-space: nowrap;
+  overflow-x: hidden;
+  text-overflow: ellipsis;
+}
+
+.Label {
+  font-weight: bold;
+}
+
+.CurrentCommit {
+  margin: 0.25rem 0;
+  display: block;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+}

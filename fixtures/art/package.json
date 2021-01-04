@@ -1,0 +1,16 @@
+{
+  "devDependencies": {
+    "@babel/core": "^7.10.5",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/preset-env": "^7.10.4",
+    "@babel/preset-react": "^7.10.4",
+    "babel-loader": "^8.1.0",
+    "react": "link:../../build/node_modules/react",
+    "react-art": "link:../../build/node_modules/react-art/",
+    "react-dom": "link:../../build/node_modules/react-dom",
+    "webpack": "^1.14.0"
+  },
+  "scripts": {
+    "build": "webpack app.js bundle.js"
+  }
+}

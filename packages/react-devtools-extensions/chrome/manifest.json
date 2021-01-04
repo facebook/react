@@ -1,0 +1,52 @@
+{
+  "manifest_version": 2,
+  "name": "React Developer Tools",
+  "description": "Adds React debugging tools to the Chrome Developer Tools.",
+  "version": "4.10.1",
+  "version_name": "4.10.1",
+
+  "minimum_chrome_version": "49",
+
+  "icons": {
+    "16": "icons/16-production.png",
+    "32": "icons/32-production.png",
+    "48": "icons/48-production.png",
+    "128": "icons/128-production.png"
+  },
+
+  "browser_action": {
+    "default_icon": {
+      "16": "icons/16-disabled.png",
+      "32": "icons/32-disabled.png",
+      "48": "icons/48-disabled.png",
+      "128": "icons/128-disabled.png"
+    },
+
+    "default_popup": "popups/disabled.html"
+  },
+
+  "devtools_page": "main.html",
+
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "web_accessible_resources": [
+    "main.html",
+    "panel.html",
+    "build/react_devtools_backend.js",
+    "build/renderer.js"
+  ],
+
+  "background": {
+    "scripts": ["build/background.js"],
+    "persistent": false
+  },
+
+  "permissions": ["file:///*", "http://*/*", "https://*/*"],
+
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["build/injectGlobalHook.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

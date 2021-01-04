@@ -1,0 +1,51 @@
+{
+  "name": "react-devtools-extensions",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {
+    "build": "cross-env NODE_ENV=production yarn run build:chrome && yarn run build:firefox && yarn run build:edge",
+    "build:dev": "cross-env NODE_ENV=development yarn run build:chrome:dev && yarn run build:firefox:dev && yarn run build:edge:dev",
+    "build:chrome": "cross-env NODE_ENV=production node ./chrome/build",
+    "build:chrome:crx": "cross-env NODE_ENV=production node ./chrome/build --crx",
+    "build:chrome:dev": "cross-env NODE_ENV=development node ./chrome/build",
+    "build:firefox": "cross-env NODE_ENV=production node ./firefox/build",
+    "build:firefox:dev": "cross-env NODE_ENV=development node ./firefox/build",
+    "build:edge": "cross-env NODE_ENV=production node ./edge/build",
+    "build:edge:crx": "cross-env NODE_ENV=production node ./edge/build --crx",
+    "build:edge:dev": "cross-env NODE_ENV=development node ./edge/build",
+    "test:chrome": "node ./chrome/test",
+    "test:firefox": "node ./firefox/test",
+    "test:edge": "node ./edge/test"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.11.1",
+    "@babel/plugin-proposal-class-properties": "^7.10.4",
+    "@babel/plugin-transform-flow-strip-types": "^7.10.4",
+    "@babel/plugin-transform-react-jsx-source": "^7.10.5",
+    "@babel/preset-env": "^7.11.0",
+    "@babel/preset-flow": "^7.10.4",
+    "@babel/preset-react": "^7.10.4",
+    "archiver": "^3.0.0",
+    "babel-core": "^7.0.0-bridge",
+    "babel-eslint": "^9.0.0",
+    "babel-loader": "^8.0.4",
+    "child-process-promise": "^2.2.1",
+    "chrome-launch": "^1.1.4",
+    "crx": "^5.0.0",
+    "css-loader": "^1.0.1",
+    "firefox-profile": "^1.0.2",
+    "node-libs-browser": "0.5.3",
+    "nullthrows": "^1.0.0",
+    "open": "^7.0.2",
+    "os-name": "^3.1.0",
+    "raw-loader": "^3.1.0",
+    "style-loader": "^0.23.1",
+    "web-ext": "^3.0.0",
+    "webpack": "^4.43.0",
+    "webpack-cli": "^3.3.11",
+    "webpack-dev-server": "^3.10.3"
+  },
+  "dependencies": {
+    "web-ext": "^4"
+  }
+}

@@ -1,0 +1,23 @@
+# Third party
+**/node_modules
+
+# Not written by hand
+packages/react-art/npm/lib
+
+# Build products
+build/
+coverage/
+fixtures/
+scripts/bench/benchmarks/**/*.js
+
+# React repository clone
+scripts/bench/remote-repo/
+
+packages/react-devtools-core/dist
+packages/react-devtools-extensions/chrome/build
+packages/react-devtools-extensions/firefox/build
+packages/react-devtools-extensions/shared/build
+packages/react-devtools-inline/dist
+packages/react-devtools-shell/dist
+packages/react-devtools-scheduling-profiler/dist
+packages/react-devtools-scheduling-profiler/static

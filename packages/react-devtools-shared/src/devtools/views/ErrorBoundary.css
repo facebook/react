@@ -1,0 +1,54 @@
+.ErrorBoundary {
+  height: 100%;
+  width: 100%;
+  background-color: var(--color-background);
+  padding: 0.5rem;
+  overflow: auto;
+}
+
+.Header {
+  font-size: var(--font-size-sans-large);
+  font-weight: bold;
+  color: var(--color-error-text);
+}
+
+.Stack {
+  margin-top: 0.5rem;
+  white-space: pre-wrap;
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+  -webkit-font-smoothing: initial;
+  background-color: var(--color-error-background);
+  border: 1px solid var(--color-error-border);
+  color: var(--color-error-text);
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+}
+
+.IconAndLinkRow {
+  display: flex;
+  align-items: center;
+  margin-top: 0.5rem;
+  color: var(--color-text);
+}
+
+.RetryIcon {
+  margin-right: 0.25rem;
+  color: var(--color-button-active);
+}
+
+.RetryButton {
+  margin-right: 0.25rem;
+  color: var(--color-text);
+}
+.RetryButton:hover {
+  color: var(--color-button-hover);
+}
+
+.ReportIcon {
+  margin-right: 0.25rem;
+}
+
+.ReportLink {
+  color: var(--color-link);
+}
