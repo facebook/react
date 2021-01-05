@@ -1,0 +1,47 @@
+import React, { Component } from "react";
+import "./App.css";
+import Person from "./Person";
+
+class App extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      Person: [
+        { name: "nabarun", age: 20 },
+        { name: "adhikary", age: 29 },
+        { name: "babu", age: 39 },
+      ],
+      outherState: "some outher value",
+      showPersons: false,
+    };
+  }
+  nameChangeHandeler = (event) => {
+    console.log("was clicked!");
+    this.setState({
+      Person: [
+        { name: event.target.value, age: 15 },
+        { name: "adhikary", age: 28 },
+        { name: "babu", age: 20 },
+        { name: "nabarun", age: 20 },
+        { name: "adhikary", age: 29 },
+        { name: "babu", age: 30 },
+      ],
+    });
+  };
+
+  render() {
+    return (
+      <div className="App">
+        <h1> i am react</h1>
+        <p>its working</p>
+        <button onClick={this.nameChangeHandeler}>switch name</button>
+        {this.state.Person.map((item, index) => {
+          return <Person key={index} name={item.name} age={item.age} />;
+        })}
+        <Person />
+      </div>
+    );
+  }
+}
+export default App;
+
