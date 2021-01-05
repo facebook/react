@@ -70,7 +70,6 @@ import {
   Snapshot,
   Update,
   Passive,
-  PassiveStatic,
   PassiveMask,
   PassiveUnmountPendingDev,
 } from './ReactFiberFlags';
@@ -2007,7 +2006,8 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
   while (nextEffect !== null) {
     const fiber = nextEffect;
     const child = fiber.child;
-    if ((fiber.subtreeFlags & PassiveStatic) !== NoFlags && child !== null) {
+    // TODO: Only traverse subtree if it has a PassiveStatic flag
+    if (child !== null) {
       ensureCorrectReturnPointer(child, fiber);
       nextEffect = child;
     } else {
@@ -2023,11 +2023,10 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_complete(
 ) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
-    if ((fiber.flags & PassiveStatic) !== NoFlags) {
-      setCurrentDebugFiberInDEV(fiber);
-      commitPassiveUnmountInsideDeletedTreeOnFiber(fiber);
-      resetCurrentDebugFiberInDEV();
-    }
+    // TODO: Check if fiber has a PassiveStatic flag
+    setCurrentDebugFiberInDEV(fiber);
+    commitPassiveUnmountInsideDeletedTreeOnFiber(fiber);
+    resetCurrentDebugFiberInDEV();
 
     if (fiber === deletedSubtreeRoot) {
       nextEffect = null;
