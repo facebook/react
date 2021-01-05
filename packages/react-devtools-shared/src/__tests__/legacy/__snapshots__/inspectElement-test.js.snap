@@ -1,5 +1,26 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`InspectedElementContext should allow component prop value and value\`s prototype has same name params.: 1: Initially inspect element 1`] = `
+Object {
+  "id": 2,
+  "type": "full-data",
+  "value": {
+  "id": 2,
+  "owners": null,
+  "context": {},
+  "hooks": null,
+  "props": {
+    "data": {
+      "b": null,
+      "c": null,
+      "d": "normal"
+    }
+  },
+  "state": null
+},
+}
+`;
+
 exports[`InspectedElementContext should inspect the currently selected element: 1: Initial inspection 1`] = `
 Object {
   "id": 2,

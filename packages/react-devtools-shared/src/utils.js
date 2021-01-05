@@ -70,8 +70,8 @@ export function alphaSortKeys(
 
 export function getAllEnumerableKeys(
   obj: Object,
-): Array<string | number | Symbol> {
-  const keys = [];
+): Set<string | number | Symbol> {
+  const keys = new Set();
   let current = obj;
   while (current != null) {
     const currentKeys = [
@@ -82,7 +82,7 @@ export function getAllEnumerableKeys(
     currentKeys.forEach(key => {
       // $FlowFixMe: key can be a Symbol https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor
       if (descriptors[key].enumerable) {
-        keys.push(key);
+        keys.add(key);
       }
     });
     current = Object.getPrototypeOf(current);
@@ -767,7 +767,7 @@ export function formatDataForPreview(
       return data.toString();
     case 'object':
       if (showFormattedValue) {
-        const keys = getAllEnumerableKeys(data).sort(alphaSortKeys);
+        const keys = Array.from(getAllEnumerableKeys(data)).sort(alphaSortKeys);
 
         let formatted = '';
         for (let i = 0; i < keys.length; i++) {

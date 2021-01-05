@@ -1,5 +1,22 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`InspectedElementContext should allow component prop value and value\`s prototype has same name params.: 1: Inspected element 2 1`] = `
+{
+  "id": 2,
+  "owners": null,
+  "context": null,
+  "hooks": null,
+  "props": {
+    "data": {
+      "b": null,
+      "c": null,
+      "d": "normal"
+    }
+  },
+  "state": null
+}
+`;
+
 exports[`InspectedElementContext should dehydrate complex nested values when requested: 1: Initially inspect element 1`] = `
 {
   "id": 2,

@@ -537,6 +537,59 @@ describe('InspectedElementContext', () => {
     done();
   });
 
+  it('should allow component prop value and value`s prototype has same name params.', async done => {
+    const testData = Object.create(
+      {
+        a: undefined,
+        b: Infinity,
+        c: NaN,
+        d: 'normal',
+      },
+      {
+        a: {
+          value: undefined,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        },
+        b: {
+          value: Infinity,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        },
+        c: {
+          value: NaN,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        },
+        d: {
+          value: 'normal',
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        },
+      },
+    );
+    const Example = ({data}) => null;
+    act(() =>
+      ReactDOM.render(
+        <Example data={testData} />,
+        document.createElement('div'),
+      ),
+    );
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    const inspectedElement = await read(id);
+    expect(inspectedElement).toMatchSnapshot('1: Initially inspect element');
+    const {props} = inspectedElement.value;
+    expect(props.data.a).toBeUndefined();
+    expect(Number.isFinite(props.data.b)).toBe(false);
+    expect(props.data.c).toBeNaN();
+
+    done();
+  });
+
   it('should not dehydrate nested values until explicitly requested', async done => {
     const Example = () => null;
 
