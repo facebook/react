@@ -8,7 +8,7 @@
  */
 
 import * as React from 'react';
-import {useContext} from 'react';
+import {useContext, unstable_useTransition as useTransition} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Store from '../../store';
@@ -31,7 +31,10 @@ export default function InspectedElementErrorsAndWarningsTree({
   inspectedElement,
   store,
 }: Props) {
-  const {refreshInspectedElement} = useContext(InspectedElementContext);
+  const {
+    clearErrorsForInspectedElement,
+    clearWarningsForInspectedElement,
+  } = useContext(InspectedElementContext);
 
   const {showInlineWarningsAndErrors} = useContext(SettingsContext);
   if (!showInlineWarningsAndErrors) {
@@ -40,26 +43,6 @@ export default function InspectedElementErrorsAndWarningsTree({
 
   const {errors, warnings} = inspectedElement;
 
-  const clearErrors = () => {
-    const {id} = inspectedElement;
-    store.clearErrorsForElement(id);
-
-    // Immediately poll for updated data.
-    // This avoids a delay between clicking the clear button and refreshing errors.
-    // Ideally this would be done with useTranstion but that requires updating to a newer Cache strategy.
-    refreshInspectedElement();
-  };
-
-  const clearWarnings = () => {
-    const {id} = inspectedElement;
-    store.clearWarningsForElement(id);
-
-    // Immediately poll for updated data.
-    // This avoids a delay between clicking the clear button and refreshing warnings.
-    // Ideally this would be done with useTranstion but that requires updating to a newer Cache strategy.
-    refreshInspectedElement();
-  };
-
   return (
     <React.Fragment>
       {errors.length > 0 && (
@@ -67,7 +50,7 @@ export default function InspectedElementErrorsAndWarningsTree({
           badgeClassName={styles.ErrorBadge}
           bridge={bridge}
           className={styles.ErrorTree}
-          clearMessages={clearErrors}
+          clearMessages={clearErrorsForInspectedElement}
           entries={errors}
           label="errors"
           messageClassName={styles.Error}
@@ -78,7 +61,7 @@ export default function InspectedElementErrorsAndWarningsTree({
           badgeClassName={styles.WarningBadge}
           bridge={bridge}
           className={styles.WarningTree}
-          clearMessages={clearWarnings}
+          clearMessages={clearWarningsForInspectedElement}
           entries={warnings}
           label="warnings"
           messageClassName={styles.Warning}
@@ -107,6 +90,8 @@ function Tree({
   label,
   messageClassName,
 }: TreeProps) {
+  const [startTransition, isPending] = useTransition();
+
   if (entries.length === 0) {
     return null;
   }
@@ -115,7 +100,12 @@ function Tree({
       <div className={`${sharedStyles.HeaderRow} ${styles.HeaderRow}`}>
         <div className={sharedStyles.Header}>{label}</div>
         <Button
-          onClick={clearMessages}
+          disabled={isPending}
+          onClick={() => {
+            startTransition(() => {
+              clearMessages();
+            });
+          }}
           title={`Clear all ${label} for this component`}>
           <ButtonIcon type="clear" />
         </Button>

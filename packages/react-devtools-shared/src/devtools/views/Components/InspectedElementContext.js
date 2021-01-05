@@ -10,6 +10,9 @@
 import * as React from 'react';
 import {
   createContext,
+  unstable_getCacheForType as getCacheForType,
+  unstable_startTransition as startTransition,
+  unstable_useCacheRefresh as useCacheRefresh,
   useCallback,
   useContext,
   useEffect,
@@ -17,8 +20,6 @@ import {
   useRef,
   useState,
 } from 'react';
-import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
-import {createResource} from '../../cache';
 import {BridgeContext, StoreContext} from '../context';
 import {hydrate, fillInPath} from 'react-devtools-shared/src/hydration';
 import {TreeStateContext} from './TreeContext';
@@ -33,7 +34,6 @@ import type {
   Element,
   InspectedElement as InspectedElementFrontend,
 } from 'react-devtools-shared/src/devtools/views/Components/types';
-import type {Resource, Thenable} from '../../cache';
 
 export type StoreAsGlobal = (id: number, path: Array<string | number>) => void;
 
@@ -51,13 +51,15 @@ export type GetInspectedElement = (
   id: number,
 ) => InspectedElementFrontend | null;
 
-type RefreshInspectedElement = () => void;
+type ClearErrorsForInspectedElement = () => void;
+type ClearWarningsForInspectedElement = () => void;
 
 export type InspectedElementContextType = {|
+  clearErrorsForInspectedElement: ClearErrorsForInspectedElement,
+  clearWarningsForInspectedElement: ClearWarningsForInspectedElement,
   copyInspectedElementPath: CopyInspectedElementPath,
   getInspectedElementPath: GetInspectedElementPath,
   getInspectedElement: GetInspectedElement,
-  refreshInspectedElement: RefreshInspectedElement,
   storeAsGlobal: StoreAsGlobal,
 |};
 
@@ -67,35 +69,68 @@ const InspectedElementContext = createContext<InspectedElementContextType>(
 InspectedElementContext.displayName = 'InspectedElementContext';
 
 type ResolveFn = (inspectedElement: InspectedElementFrontend) => void;
-type InProgressRequest = {|
-  promise: Thenable<InspectedElementFrontend>,
-  resolveFn: ResolveFn,
+type Callback = (inspectedElement: InspectedElementFrontend) => void;
+type Thenable = {|
+  callbacks: Set<Callback>,
+  then: (callback: Callback) => void,
+  resolve: ResolveFn,
 |};
 
-const inProgressRequests: WeakMap<Element, InProgressRequest> = new WeakMap();
-const resource: Resource<
-  Element,
-  Element,
-  InspectedElementFrontend,
-> = createResource(
-  (element: Element) => {
-    const request = inProgressRequests.get(element);
-    if (request != null) {
-      return request.promise;
-    }
+const inspectedElementThenables: WeakMap<Element, Thenable> = new WeakMap();
 
-    let resolveFn = ((null: any): ResolveFn);
-    const promise = new Promise(resolve => {
-      resolveFn = resolve;
-    });
+type InspectedElementCache = WeakMap<Element, InspectedElementFrontend>;
 
-    inProgressRequests.set(element, {promise, resolveFn});
+function createInspectedElementCache(): InspectedElementCache {
+  return new WeakMap();
+}
 
-    return promise;
-  },
-  (element: Element) => element,
-  {useWeakMap: true},
-);
+function getInspectedElementCache(): InspectedElementCache {
+  return getCacheForType(createInspectedElementCache);
+}
+
+function setInspectedElement(
+  element: Element,
+  inspectedElement: InspectedElementFrontend,
+  inspectedElementCache: InspectedElementCache,
+): void {
+  // TODO (cache) This mutation seems sketchy.
+  // Probably need to refresh the cache with a new seed.
+  inspectedElementCache.set(element, inspectedElement);
+
+  const maybeThenable = inspectedElementThenables.get(element);
+  if (maybeThenable != null) {
+    inspectedElementThenables.delete(element);
+
+    maybeThenable.resolve(inspectedElement);
+  }
+}
+
+function getInspectedElement(element: Element): InspectedElementFrontend {
+  const inspectedElementCache = getInspectedElementCache();
+  const maybeInspectedElement = inspectedElementCache.get(element);
+  if (maybeInspectedElement !== undefined) {
+    return maybeInspectedElement;
+  }
+
+  const maybeThenable = inspectedElementThenables.get(element);
+  if (maybeThenable != null) {
+    throw maybeThenable;
+  }
+
+  const thenable: Thenable = {
+    callbacks: new Set(),
+    then: callback => {
+      thenable.callbacks.add(callback);
+    },
+    resolve: inspectedElement => {
+      thenable.callbacks.forEach(callback => callback(inspectedElement));
+    },
+  };
+
+  inspectedElementThenables.set(element, thenable);
+
+  throw thenable;
+}
 
 type Props = {|
   children: React$Node,
@@ -145,14 +180,13 @@ function InspectedElementContextController({children}: Props) {
     [bridge, store],
   );
 
-  const getInspectedElement = useCallback<GetInspectedElement>(
+  const getInspectedElementWrapper = useCallback<GetInspectedElement>(
     (id: number) => {
       const element = store.getElementByID(id);
       if (element !== null) {
-        return resource.read(element);
-      } else {
-        return null;
+        return getInspectedElement(element);
       }
+      return null;
     },
     [store],
   );
@@ -162,11 +196,32 @@ function InspectedElementContextController({children}: Props) {
   // would itself be blocked by the same render that suspends (waiting for the data).
   const {selectedElementID} = useContext(TreeStateContext);
 
-  const refreshInspectedElement = useCallback<RefreshInspectedElement>(() => {
+  const refresh = useCacheRefresh();
+
+  const clearErrorsForInspectedElement = useCallback<ClearErrorsForInspectedElement>(() => {
     if (selectedElementID !== null) {
       const rendererID = store.getRendererIDForElement(selectedElementID);
       if (rendererID !== null) {
         bridge.send('inspectElement', {id: selectedElementID, rendererID});
+
+        startTransition(() => {
+          store.clearErrorsForElement(selectedElementID);
+          refresh();
+        });
+      }
+    }
+  }, [bridge, selectedElementID]);
+
+  const clearWarningsForInspectedElement = useCallback<ClearWarningsForInspectedElement>(() => {
+    if (selectedElementID !== null) {
+      const rendererID = store.getRendererIDForElement(selectedElementID);
+      if (rendererID !== null) {
+        bridge.send('inspectElement', {id: selectedElementID, rendererID});
+
+        startTransition(() => {
+          store.clearWarningsForElement(selectedElementID);
+          refresh();
+        });
       }
     }
   }, [bridge, selectedElementID]);
@@ -175,6 +230,8 @@ function InspectedElementContextController({children}: Props) {
     currentlyInspectedElement,
     setCurrentlyInspectedElement,
   ] = useState<InspectedElementFrontend | null>(null);
+
+  const inspectedElementCache = getInspectedElementCache();
 
   // This effect handler invalidates the suspense cache and schedules rendering updates with React.
   useEffect(() => {
@@ -198,7 +255,11 @@ function InspectedElementContextController({children}: Props) {
 
               fillInPath(inspectedElement, data.value, data.path, value);
 
-              resource.write(element, inspectedElement);
+              setInspectedElement(
+                element,
+                inspectedElement,
+                inspectedElementCache,
+              );
 
               // Schedule update with React if the currently-selected element has been invalidated.
               if (id === selectedElementID) {
@@ -277,20 +338,15 @@ function InspectedElementContextController({children}: Props) {
 
           element = store.getElementByID(id);
           if (element !== null) {
-            const request = inProgressRequests.get(element);
-            if (request != null) {
-              inProgressRequests.delete(element);
-              batchedUpdates(() => {
-                request.resolveFn(inspectedElement);
-                setCurrentlyInspectedElement(inspectedElement);
-              });
-            } else {
-              resource.write(element, inspectedElement);
+            setInspectedElement(
+              element,
+              inspectedElement,
+              inspectedElementCache,
+            );
 
-              // Schedule update with React if the currently-selected element has been invalidated.
-              if (id === selectedElementID) {
-                setCurrentlyInspectedElement(inspectedElement);
-              }
+            // Schedule update with React if the currently-selected element has been invalidated.
+            if (id === selectedElementID) {
+              setCurrentlyInspectedElement(inspectedElement);
             }
           }
           break;
@@ -356,19 +412,21 @@ function InspectedElementContextController({children}: Props) {
 
   const value = useMemo(
     () => ({
+      clearErrorsForInspectedElement,
+      clearWarningsForInspectedElement,
       copyInspectedElementPath,
-      getInspectedElement,
+      getInspectedElement: getInspectedElementWrapper,
       getInspectedElementPath,
-      refreshInspectedElement,
       storeAsGlobal,
     }),
     // InspectedElement is used to invalidate the cache and schedule an update with React.
     [
+      clearErrorsForInspectedElement,
+      clearWarningsForInspectedElement,
       copyInspectedElementPath,
       currentlyInspectedElement,
       getInspectedElement,
       getInspectedElementPath,
-      refreshInspectedElement,
       storeAsGlobal,
     ],
   );

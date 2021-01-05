@@ -39,6 +39,8 @@ export default function InspectedElementWrapper(_: Props) {
   const {dispatch: modalDialogDispatch} = useContext(ModalDialogContext);
 
   const {
+    clearErrorsForInspectedElement,
+    clearWarningsForInspectedElement,
     copyInspectedElementPath,
     getInspectedElementPath,
     getInspectedElement,
@@ -228,6 +230,8 @@ export default function InspectedElementWrapper(_: Props) {
           key={
             inspectedElementID /* Force reset when selected Element changes */
           }
+          clearErrorsForInspectedElement={clearErrorsForInspectedElement}
+          clearWarningsForInspectedElement={clearWarningsForInspectedElement}
           copyInspectedElementPath={copyInspectedElementPath}
           element={element}
           getInspectedElementPath={getInspectedElementPath}
