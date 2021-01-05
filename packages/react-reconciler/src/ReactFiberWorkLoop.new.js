@@ -15,6 +15,7 @@ import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {Effect as HookEffect} from './ReactFiberHooks.new';
 import type {StackCursor} from './ReactFiberStack.new';
+import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -51,6 +52,10 @@ import {
   flushSyncCallbackQueue,
   scheduleSyncCallback,
 } from './SchedulerWithReactIntegration.new';
+import {
+  NoFlags as NoHookEffect,
+  Passive as HookPassive,
+} from './ReactHookEffectTags';
 import {
   logCommitStarted,
   logCommitStopped,
@@ -128,7 +133,7 @@ import {
   Snapshot,
   Callback,
   Passive,
-  PassiveUnmountPendingDev,
+  PassiveStatic,
   Incomplete,
   HostEffectMask,
   Hydrating,
@@ -195,6 +200,7 @@ import {
   commitResetTextContent,
   isSuspenseBoundaryBeingHidden,
   commitPassiveMountEffects,
+  commitPassiveUnmountEffects,
   detachFiberAfterEffects,
 } from './ReactFiberCommitWork.new';
 import {enqueueUpdate} from './ReactUpdateQueue.new';
@@ -214,9 +220,7 @@ import {
 import {
   markNestedUpdateScheduled,
   recordCommitTime,
-  recordPassiveEffectDuration,
   resetNestedUpdateFlag,
-  startPassiveEffectTimer,
   startProfilerTimer,
   stopProfilerTimerIfRunningAndRecordDelta,
   syncNestedUpdateFlag,
@@ -342,7 +346,6 @@ let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoSchedulerPriority;
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
-let pendingPassiveHookEffectsUnmount: Array<HookEffect | Fiber> = [];
 let pendingPassiveProfilerEffects: Array<Fiber> = [];
 
 let rootsWithPendingDiscreteUpdates: Set<FiberRoot> | null = null;
@@ -2512,14 +2515,6 @@ export function enqueuePendingPassiveHookEffectUnmount(
   fiber: Fiber,
   effect: HookEffect,
 ): void {
-  pendingPassiveHookEffectsUnmount.push(effect, fiber);
-  if (__DEV__) {
-    fiber.flags |= PassiveUnmountPendingDev;
-    const alternate = fiber.alternate;
-    if (alternate !== null) {
-      alternate.flags |= PassiveUnmountPendingDev;
-    }
-  }
   if (!rootDoesHavePassiveEffects) {
     rootDoesHavePassiveEffects = true;
     scheduleCallback(NormalSchedulerPriority, () => {
@@ -2562,74 +2557,7 @@ function flushPassiveEffectsImpl() {
   executionContext |= CommitContext;
   const prevInteractions = pushInteractions(root);
 
-  // It's important that ALL pending passive effect destroy functions are called
-  // before ANY passive effect create functions are called.
-  // Otherwise effects in sibling components might interfere with each other.
-  // e.g. a destroy function in one component may unintentionally override a ref
-  // value set by a create function in another component.
-  // Layout effects have the same constraint.
-
-  // First pass: Destroy stale passive effects.
-  const unmountEffects = pendingPassiveHookEffectsUnmount;
-  pendingPassiveHookEffectsUnmount = [];
-  for (let i = 0; i < unmountEffects.length; i += 2) {
-    const effect = ((unmountEffects[i]: any): HookEffect);
-    const fiber = ((unmountEffects[i + 1]: any): Fiber);
-    const destroy = effect.destroy;
-    effect.destroy = undefined;
-
-    if (__DEV__) {
-      fiber.flags &= ~PassiveUnmountPendingDev;
-      const alternate = fiber.alternate;
-      if (alternate !== null) {
-        alternate.flags &= ~PassiveUnmountPendingDev;
-      }
-    }
-
-    if (typeof destroy === 'function') {
-      if (__DEV__) {
-        setCurrentDebugFiberInDEV(fiber);
-        if (
-          enableProfilerTimer &&
-          enableProfilerCommitHooks &&
-          fiber.mode & ProfileMode
-        ) {
-          startPassiveEffectTimer();
-          invokeGuardedCallback(null, destroy, null);
-          recordPassiveEffectDuration(fiber);
-        } else {
-          invokeGuardedCallback(null, destroy, null);
-        }
-        if (hasCaughtError()) {
-          invariant(fiber !== null, 'Should be working on an effect.');
-          const error = clearCaughtError();
-          captureCommitPhaseError(fiber, error);
-        }
-        resetCurrentDebugFiberInDEV();
-      } else {
-        try {
-          if (
-            enableProfilerTimer &&
-            enableProfilerCommitHooks &&
-            fiber.mode & ProfileMode
-          ) {
-            try {
-              startPassiveEffectTimer();
-              destroy();
-            } finally {
-              recordPassiveEffectDuration(fiber);
-            }
-          } else {
-            destroy();
-          }
-        } catch (error) {
-          invariant(fiber !== null, 'Should be working on an effect.');
-          captureCommitPhaseError(fiber, error);
-        }
-      }
-    }
-  }
-  // Second pass: Create new passive effects.
+  commitPassiveUnmountEffects(root.current);
   commitPassiveMountEffects(root, root.current);
 
   // TODO: Move to commitPassiveMountEffects
@@ -3017,12 +2945,25 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
       return;
     }
 
-    // If there are pending passive effects unmounts for this Fiber,
-    // we can assume that they would have prevented this update.
-    if ((fiber.flags & PassiveUnmountPendingDev) !== NoFlags) {
-      return;
-    }
+    if ((fiber.flags & PassiveStatic) !== NoFlags) {
+      const updateQueue: FunctionComponentUpdateQueue | null = (fiber.updateQueue: any);
+      if (updateQueue !== null) {
+        const lastEffect = updateQueue.lastEffect;
+        if (lastEffect !== null) {
+          const firstEffect = lastEffect.next;
 
+          let effect = firstEffect;
+          do {
+            if (effect.destroy !== undefined) {
+              if ((effect.tag & HookPassive) !== NoHookEffect) {
+                return;
+              }
+            }
+            effect = effect.next;
+          } while (effect !== firstEffect);
+        }
+      }
+    }
     // We show the whole stack but dedupe on the top component's name because
     // the problematic code almost always lies inside that component.
     const componentName = getComponentName(fiber.type) || 'ReactComponent';
