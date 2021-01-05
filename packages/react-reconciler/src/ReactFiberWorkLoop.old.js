@@ -122,6 +122,7 @@ import {
   Update,
   PlacementAndUpdate,
   Deletion,
+  ChildDeletion,
   Ref,
   ContentReset,
   Snapshot,
@@ -194,6 +195,7 @@ import {
   commitResetTextContent,
   isSuspenseBoundaryBeingHidden,
   commitPassiveMountEffects,
+  detachFiberAfterEffects,
 } from './ReactFiberCommitWork.old';
 import {enqueueUpdate} from './ReactUpdateQueue.old';
 import {resetContextDependencies} from './ReactFiberNewContext.old';
@@ -2129,13 +2131,21 @@ function commitRootImpl(root, renderPriorityLevel) {
   } else {
     // We are done with the effect chain at this point so let's clear the
     // nextEffect pointers to assist with GC. If we have passive effects, we'll
-    // clear this in flushPassiveEffects.
+    // clear this in flushPassiveEffects
+    // TODO: We should always do this in the passive phase, by scheduling
+    // a passive callback for every deletion.
     nextEffect = firstEffect;
     while (nextEffect !== null) {
       const nextNextEffect = nextEffect.nextEffect;
       nextEffect.nextEffect = null;
-      if (nextEffect.flags & Deletion) {
-        detachFiberAfterEffects(nextEffect);
+      if (nextEffect.flags & ChildDeletion) {
+        const deletions = nextEffect.deletions;
+        if (deletions !== null) {
+          for (let i = 0; i < deletions.length; i++) {
+            const deletion = deletions[i];
+            detachFiberAfterEffects(deletion);
+          }
+        }
       }
       nextEffect = nextNextEffect;
     }
@@ -3707,9 +3717,4 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
       },
     };
   }
-}
-
-function detachFiberAfterEffects(fiber: Fiber): void {
-  fiber.sibling = null;
-  fiber.stateNode = null;
 }
