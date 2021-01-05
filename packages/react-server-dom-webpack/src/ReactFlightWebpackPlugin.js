@@ -175,7 +175,7 @@ export default class ReactFlightWebpackPlugin {
           // TODO: Hook into deps instead of the target module.
           // That way we know by the type of dep whether to include.
           // It also resolves conflicts when the same module is in multiple chunks.
-          if (!/\.client\.js$/.test(mod.resource)) {
+          if (!/\.client\.(js|jsx|ts|tsx)$/.test(mod.resource)) {
             return;
           }
           const moduleExports = {};
