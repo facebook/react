@@ -365,7 +365,7 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
 
   // Reset the effect flags but keep any Placement tags, since that's something
   // that child fiber is setting, not the reconciliation.
-  workInProgress.flags &= Placement;
+  workInProgress.flags &= StaticMask | Placement;
 
   // The effect list is no longer valid.
   workInProgress.nextEffect = null;
