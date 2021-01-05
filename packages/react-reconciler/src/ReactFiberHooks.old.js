@@ -49,6 +49,7 @@ import {readContext} from './ReactFiberNewContext.old';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
+  PassiveStatic as PassiveStaticEffect,
 } from './ReactFiberFlags';
 import {
   HasEffect as HookHasEffect,
@@ -1304,7 +1305,7 @@ function mountEffect(
     }
   }
   return mountEffectImpl(
-    UpdateEffect | PassiveEffect,
+    UpdateEffect | PassiveEffect | PassiveStaticEffect,
     HookPassive,
     create,
     deps,

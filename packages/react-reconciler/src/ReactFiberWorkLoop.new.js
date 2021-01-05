@@ -132,6 +132,7 @@ import {
   HostEffectMask,
   Hydrating,
   HydratingAndUpdate,
+  StaticMask,
 } from './ReactFiberFlags';
 import {
   NoLanePriority,
@@ -1781,7 +1782,7 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
         // Skip both NoWork and PerformedWork tags when creating the effect
         // list. PerformedWork effect is read by React DevTools but shouldn't be
         // committed.
-        if (flags > PerformedWork) {
+        if ((flags & ~StaticMask) > PerformedWork) {
           if (returnFiber.lastEffect !== null) {
             returnFiber.lastEffect.nextEffect = completedWork;
           } else {
