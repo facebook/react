@@ -679,7 +679,7 @@ function markUpdateLaneFromFiberToRoot(
       warnAboutUpdateOnNotYetMountedFiberInDEV(sourceFiber);
     }
   }
-  // Walk the parent path to the root and update the child expiration time.
+  // Walk the parent path to the root and update the child lanes.
   let node = sourceFiber;
   let parent = sourceFiber.return;
   while (parent !== null) {
