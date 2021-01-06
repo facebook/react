@@ -1,11 +1,11 @@
-name: Issue Reply
+name: Issue Labeled
 
 on:
   issues:
     types: [labeled]
 
 jobs:
-  reply-helper:
+  issue-reply:
     runs-on: ubuntu-latest
     steps:
       - name: need more info
