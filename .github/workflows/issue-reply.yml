@@ -1,0 +1,23 @@
+name: Issue Reply
+
+on:
+  issues:
+    types: [labeled]
+
+jobs:
+  reply-helper:
+    runs-on: ubuntu-latest
+    steps:
+      - name: need more info
+        if: github.event.label.name == 'Resolution: Needs More Information'
+        uses: actions-cool/issues-helper@v1.7
+        with:
+          actions: 'create-comment'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            Hi @${{ github.event.issue.user.login }}. We cannot pinpoint your problem.
+
+            Please provide a CodeSandbox (https://react.new/), a link to a repository on GitHub, or provide a minimal code example that reproduces the problem.
+
+            Here are some tips for providing a minimal example: https://stackoverflow.com/help/mcve
