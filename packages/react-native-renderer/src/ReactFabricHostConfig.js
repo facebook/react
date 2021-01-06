@@ -176,6 +176,16 @@ class ReactFabricHostComponent {
 
     return;
   }
+
+  sendAccessibilityEvent(eventType: string) {
+    if (__DEV__) {
+      console.warn(
+        'Warning: sendAccessibilityEvent is not currently supported in Fabric (coming soon)',
+      );
+    }
+
+    return;
+  }
 }
 
 // eslint-disable-next-line no-unused-expressions
