@@ -22,7 +22,6 @@ import type {Instance} from './ReactNativeHostConfig';
 import {
   TextInputState,
   UIManager,
-  DeprecatedAccessibilityInfo,
 } from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 import {create} from './ReactNativeAttributePayload';
@@ -123,14 +122,6 @@ class ReactNativeFiberHostComponent {
         this.viewConfig.uiViewClassName,
         updatePayload,
       );
-    }
-  }
-
-  sendAccessibilityEvent(eventType: string) {
-    if (eventType === 'focus') {
-      DeprecatedAccessibilityInfo.setAccessibilityFocus(this._nativeTag);
-    } else {
-      throw Error('eventType ' + eventType + ' is not currently supported.');
     }
   }
 }

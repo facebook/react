@@ -150,6 +150,7 @@ export type ReactNativeType = {
   ): ?ElementRef<HostComponent<mixed>>,
   findNodeHandle(componentOrHandle: any): ?number,
   dispatchCommand(handle: any, command: string, args: Array<any>): void,
+  sendAccessibilityEvent(handle: any, eventType: string): void,
   render(
     element: React$Element<any>,
     containerTag: any,
@@ -169,6 +170,7 @@ export type ReactFabricType = {
   ): ?ElementRef<HostComponent<mixed>>,
   findNodeHandle(componentOrHandle: any): ?number,
   dispatchCommand(handle: any, command: string, args: Array<any>): void,
+  sendAccessibilityEvent(handle: any, eventType: string): void,
   render(
     element: React$Element<any>,
     containerTag: any,
@@ -190,7 +192,7 @@ export type ReactNativeEventTarget = {
   ...
 };
 
-export type ReactFaricEventTouch = {
+export type ReactFabricEventTouch = {
   identifier: number,
   locationX: number,
   locationY: number,
@@ -204,7 +206,7 @@ export type ReactFaricEventTouch = {
   ...
 };
 
-export type ReactFaricEvent = {
+export type ReactFabricEvent = {
   touches: Array<ReactFaricEventTouch>,
   changedTouches: Array<ReactFaricEventTouch>,
   targetTouches: Array<ReactFaricEventTouch>,
