@@ -149,8 +149,8 @@ export type ReactNativeType = {
     componentOrHandle: any,
   ): ?ElementRef<HostComponent<mixed>>,
   findNodeHandle(componentOrHandle: any): ?number,
-  dispatchCommand(handle: any, command: string, args: Array<any>): void,
-  sendAccessibilityEvent(handle: any, eventType: string): void,
+  dispatchCommand(handle: ElementRef<HostComponent<mixed>>, command: string, args: Array<any>): void,
+  sendAccessibilityEvent(handle: ElementRef<HostComponent<mixed>>, eventType: string): void,
   render(
     element: React$Element<any>,
     containerTag: any,
@@ -169,8 +169,8 @@ export type ReactFabricType = {
     componentOrHandle: any,
   ): ?ElementRef<HostComponent<mixed>>,
   findNodeHandle(componentOrHandle: any): ?number,
-  dispatchCommand(handle: any, command: string, args: Array<any>): void,
-  sendAccessibilityEvent(handle: any, eventType: string): void,
+  dispatchCommand(handle: ElementRef<HostComponent<mixed>>, command: string, args: Array<any>): void,
+  sendAccessibilityEvent(handle: ElementRef<HostComponent<mixed>>, eventType: string): void,
   render(
     element: React$Element<any>,
     containerTag: any,
