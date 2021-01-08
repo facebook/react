@@ -150,7 +150,7 @@ export function lstat(path: string, options?: {bigint?: boolean}): mixed {
     }
   }
   if (!record) {
-    const thenable = fs.lstat(path, {bigint});
+    const thenable = (fs: any).lstat(path, {bigint});
     record = createRecordFromThenable(thenable);
     lstatCache.push(bigint, record);
   }
@@ -297,7 +297,7 @@ export function readlink(
     }
   }
   if (!record) {
-    const thenable = fs.readlink(path, {encoding});
+    const thenable = (fs: any).readlink(path, {encoding});
     record = createRecordFromThenable(thenable);
     readlinkCache.push(encoding, record);
   }
@@ -338,7 +338,7 @@ export function realpath(
     }
   }
   if (!record) {
-    const thenable = fs.realpath(path, {encoding});
+    const thenable = (fs: any).realpath(path, {encoding});
     record = createRecordFromThenable(thenable);
     realpathCache.push(encoding, record);
   }
@@ -372,7 +372,7 @@ export function stat(path: string, options?: {bigint?: boolean}): mixed {
     }
   }
   if (!record) {
-    const thenable = fs.stat(path, {bigint});
+    const thenable = (fs: any).stat(path, {bigint});
     record = createRecordFromThenable(thenable);
     statCache.push(bigint, record);
   }
