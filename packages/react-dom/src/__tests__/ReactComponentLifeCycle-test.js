@@ -659,7 +659,7 @@ describe('ReactComponentLifeCycle', () => {
     ]);
   });
 
-  it('should call nested new lifecycle methods in the right order', () => {
+  fit('should call nested new lifecycle methods in the right order', () => {
     let log;
     const logger = function(msg) {
       return function() {
@@ -704,9 +704,10 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const container = document.createElement('div');
     log = [];
-    ReactDOM.render(<Outer x={1} />, container);
+    ReactNoop.act(() => {
+      ReactNoop.render(<Outer x={1} />);
+    });
     expect(log).toEqual([
       'outer getDerivedStateFromProps',
       'inner getDerivedStateFromProps',
@@ -716,7 +717,9 @@ describe('ReactComponentLifeCycle', () => {
 
     // Dedup warnings
     log = [];
-    ReactDOM.render(<Outer x={2} />, container);
+    ReactNoop.act(() => {
+      ReactNoop.render(<Outer x={2} />);
+    });
     expect(log).toEqual([
       'outer getDerivedStateFromProps',
       'outer shouldComponentUpdate',
@@ -729,14 +732,16 @@ describe('ReactComponentLifeCycle', () => {
     ]);
 
     log = [];
-    ReactDOM.unmountComponentAtNode(container);
+    ReactNoop.act(() => {
+      ReactNoop.render(null);
+    });
     expect(log).toEqual([
       'outer componentWillUnmount',
       'inner componentWillUnmount',
     ]);
   });
 
-  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
+  fit('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
     class Component extends React.Component {
       state = {};
       static getDerivedStateFromProps() {
@@ -756,11 +761,14 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const container = document.createElement('div');
     expect(() => {
-      expect(() => ReactDOM.render(<Component />, container)).toErrorDev(
-        'Unsafe legacy lifecycles will not be called for components using new component APIs.',
-      );
+      expect(() => {
+        ReactNoop.act(() => {
+          ReactNoop.render(<Component />);
+        }).toErrorDev(
+          'Unsafe legacy lifecycles will not be called for components using new component APIs.',
+        );
+      });
     }).toWarnDev(
       [
         'componentWillMount has been renamed',
@@ -771,7 +779,7 @@ describe('ReactComponentLifeCycle', () => {
     );
   });
 
-  it('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
+  fit('should not invoke deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
     class Component extends React.Component {
       state = {};
       getSnapshotBeforeUpdate() {
@@ -792,13 +800,14 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const container = document.createElement('div');
     expect(() => {
-      expect(() =>
-        ReactDOM.render(<Component value={1} />, container),
-      ).toErrorDev(
-        'Unsafe legacy lifecycles will not be called for components using new component APIs.',
-      );
+      expect(() => {
+        ReactNoop.act(() => {
+          ReactNoop.render(<Component value={1} />);
+        }).toErrorDev(
+          'Unsafe legacy lifecycles will not be called for components using new component APIs.',
+        );
+      });
     }).toWarnDev(
       [
         'componentWillMount has been renamed',
@@ -807,10 +816,12 @@ describe('ReactComponentLifeCycle', () => {
       ],
       {withoutStack: true},
     );
-    ReactDOM.render(<Component value={2} />, container);
+    ReactNoop.act(() => {
+      ReactNoop.render(<Component value={2} />);
+    })
   });
 
-  it('should not invoke new unsafe lifecycles (cWM/cWRP/cWU) if static gDSFP is present', () => {
+  fit('should not invoke new unsafe lifecycles (cWM/cWRP/cWU) if static gDSFP is present', () => {
     class Component extends React.Component {
       state = {};
       static getDerivedStateFromProps() {
@@ -830,17 +841,19 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const container = document.createElement('div');
-    expect(() =>
-      ReactDOM.render(<Component value={1} />, container),
-    ).toErrorDev(
+    expect(() => {
+      ReactNoop.act(() => {
+        ReactNoop.render(<Component value={1} />);
+      });
+    }).toErrorDev(
       'Unsafe legacy lifecycles will not be called for components using new component APIs.',
     );
-    ReactDOM.render(<Component value={2} />, container);
+    ReactNoop.act(() => {
+      ReactNoop.render(<Component value={2} />);
+    });
   });
 
-  it('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
-    const container = document.createElement('div');
+  fit('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new static gDSFP is present', () => {
 
     class AllLegacyLifecycles extends React.Component {
       state = {};
@@ -856,9 +869,11 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     expect(() => {
-      expect(() =>
-        ReactDOM.render(<AllLegacyLifecycles />, container),
-      ).toErrorDev(
+      expect(() => {
+        ReactNoop.act(() => {
+          ReactNoop.render(<AllLegacyLifecycles />);
+        });
+      }).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'AllLegacyLifecycles uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
           '  componentWillMount\n' +
@@ -886,13 +901,17 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => ReactDOM.render(<WillMount />, container)).toErrorDev(
-      'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
-        'WillMount uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
-        '  UNSAFE_componentWillMount\n\n' +
-        'The above lifecycles should be removed. Learn more about this warning here:\n' +
-        'https://reactjs.org/link/unsafe-component-lifecycles',
-    );
+    expect(() => {
+      ReactNoop.act(() => {
+        ReactNoop.render(<WillMount />);
+      }).toErrorDev(
+        'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
+          'WillMount uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
+          '  UNSAFE_componentWillMount\n\n' +
+          'The above lifecycles should be removed. Learn more about this warning here:\n' +
+          'https://reactjs.org/link/unsafe-component-lifecycles',
+      );
+    });
 
     class WillMountAndUpdate extends React.Component {
       state = {};
@@ -907,9 +926,11 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     expect(() => {
-      expect(() =>
-        ReactDOM.render(<WillMountAndUpdate />, container),
-      ).toErrorDev(
+      expect(() => {
+        ReactNoop.act(() => {
+          ReactNoop.render(<WillMountAndUpdate />);
+        });
+      }).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'WillMountAndUpdate uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
           '  componentWillMount\n' +
@@ -933,7 +954,11 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     expect(() => {
-      expect(() => ReactDOM.render(<WillReceiveProps />, container)).toErrorDev(
+      expect(() => {
+        ReactNoop.act(() => {
+          ReactNoop.render(<WillReceiveProps />);
+        })
+      }).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'WillReceiveProps uses getDerivedStateFromProps() but also contains the following legacy lifecycles:\n' +
           '  componentWillReceiveProps\n\n' +
@@ -945,9 +970,7 @@ describe('ReactComponentLifeCycle', () => {
     });
   });
 
-  it('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
-    const container = document.createElement('div');
-
+  fit('should warn about deprecated lifecycles (cWM/cWRP/cWU) if new getSnapshotBeforeUpdate is present', () => {
     class AllLegacyLifecycles extends React.Component {
       state = {};
       getSnapshotBeforeUpdate() {}
@@ -961,9 +984,11 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     expect(() => {
-      expect(() =>
-        ReactDOM.render(<AllLegacyLifecycles />, container),
-      ).toErrorDev(
+      expect(() => {
+        ReactNoop.act(() => {
+          ReactNoop.render(<AllLegacyLifecycles />);
+        });
+      }).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'AllLegacyLifecycles uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
           '  componentWillMount\n' +
@@ -990,7 +1015,11 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    expect(() => ReactDOM.render(<WillMount />, container)).toErrorDev(
+    expect(() => {
+      ReactNoop.act(() => {
+        ReactNoop.render(<WillMount />);
+      });
+    }).toErrorDev(
       'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
         'WillMount uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
         '  UNSAFE_componentWillMount\n\n' +
@@ -1010,9 +1039,11 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     expect(() => {
-      expect(() =>
-        ReactDOM.render(<WillMountAndUpdate />, container),
-      ).toErrorDev(
+      expect(() => {
+        ReactNoop.act(() => {
+          ReactNoop.render(<WillMountAndUpdate />);
+        });
+      }).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'WillMountAndUpdate uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
           '  componentWillMount\n' +
@@ -1035,7 +1066,11 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     expect(() => {
-      expect(() => ReactDOM.render(<WillReceiveProps />, container)).toErrorDev(
+      expect(() => {
+        ReactNoop.act(() => {
+          ReactNoop.render(<WillReceiveProps />);
+        });
+      }).toErrorDev(
         'Unsafe legacy lifecycles will not be called for components using new component APIs.\n\n' +
           'WillReceiveProps uses getSnapshotBeforeUpdate() but also contains the following legacy lifecycles:\n' +
           '  componentWillReceiveProps\n\n' +
