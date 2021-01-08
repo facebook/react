@@ -1143,7 +1143,9 @@ describe('ReactComponentLifeCycle', () => {
     });
   }
 
-  it('should warn if getDerivedStateFromProps returns undefined', () => {
+  // We have no distinction between nil and undefined, so this might not be
+  // useful unless we want to try to capture missing return
+  xit('should warn if getDerivedStateFromProps returns undefined', () => {
     class MyComponent extends React.Component {
       state = {};
       static getDerivedStateFromProps() {}
@@ -1162,7 +1164,7 @@ describe('ReactComponentLifeCycle', () => {
     ReactDOM.render(<MyComponent />, div);
   });
 
-  it('should warn if state is not initialized before getDerivedStateFromProps', () => {
+  fit('should warn if state is not initialized before getDerivedStateFromProps', () => {
     class MyComponent extends React.Component {
       static getDerivedStateFromProps() {
         return null;
@@ -1172,8 +1174,11 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const div = document.createElement('div');
-    expect(() => ReactDOM.render(<MyComponent />, div)).toErrorDev(
+    expect(() => {
+      ReactNoop.act(() => {
+        ReactNoop.render(<MyComponent />);
+      })
+    }).toErrorDev(
       '`MyComponent` uses `getDerivedStateFromProps` but its initial state is ' +
         'undefined. This is not recommended. Instead, define the initial state by ' +
         'assigning an object to `this.state` in the constructor of `MyComponent`. ' +
@@ -1181,10 +1186,12 @@ describe('ReactComponentLifeCycle', () => {
     );
 
     // De-duped
-    ReactDOM.render(<MyComponent />, div);
+    ReactNoop.act(() => {
+      ReactNoop.render(<MyComponent />);
+    })
   });
 
-  it('should invoke both deprecated and new lifecycles if both are present', () => {
+  fit('should invoke both deprecated and new lifecycles if both are present', () => {
     const log = [];
 
     class MyComponent extends React.Component {
@@ -1212,7 +1219,11 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     const div = document.createElement('div');
-    expect(() => ReactDOM.render(<MyComponent foo="bar" />, div)).toWarnDev(
+    expect(() => {
+      ReactNoop.act(() => {
+        ReactNoop.render(<MyComponent foo="bar" />);
+      });
+    }).toWarnDev(
       [
         'componentWillMount has been renamed',
         'componentWillReceiveProps has been renamed',
@@ -1224,7 +1235,9 @@ describe('ReactComponentLifeCycle', () => {
 
     log.length = 0;
 
-    ReactDOM.render(<MyComponent foo="baz" />, div);
+    ReactNoop.act(() => {
+      ReactNoop.render(<MyComponent foo="baz" />);
+    });
     expect(log).toEqual([
       'componentWillReceiveProps',
       'UNSAFE_componentWillReceiveProps',
@@ -1233,7 +1246,8 @@ describe('ReactComponentLifeCycle', () => {
     ]);
   });
 
-  it('should not override state with stale values if prevState is spread within getDerivedStateFromProps', () => {
+  // This would be hard to get working without more DOM logic simulation
+  xit('should not override state with stale values if prevState is spread within getDerivedStateFromProps', () => {
     const divRef = React.createRef();
     let childInstance;
 
@@ -1268,25 +1282,22 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const container = document.createElement('div');
-    document.body.appendChild(container);
-    try {
-      ReactDOM.render(<Parent />, container);
-      expect(divRef.current.textContent).toBe('remote:0, local:0');
+    ReactNoop.act(() => {
+      ReactNoop.render(<Parent />);
+    });
 
-      // Trigger setState() calls
-      childInstance.updateState();
-      expect(divRef.current.textContent).toBe('remote:1, local:1');
+    expect(divRef.current.textContent).toBe('remote:0, local:0');
 
-      // Trigger batched setState() calls
-      divRef.current.click();
-      expect(divRef.current.textContent).toBe('remote:2, local:2');
-    } finally {
-      document.body.removeChild(container);
-    }
+    // Trigger setState() calls
+    childInstance.updateState();
+    expect(divRef.current.textContent).toBe('remote:1, local:1');
+
+    // Trigger batched setState() calls
+    divRef.current.click();
+    expect(divRef.current.textContent).toBe('remote:2, local:2');
   });
 
-  it('should pass the return value from getSnapshotBeforeUpdate to componentDidUpdate', () => {
+  fit('should pass the return value from getSnapshotBeforeUpdate to componentDidUpdate', () => {
     const log = [];
 
     class MyComponent extends React.Component {
@@ -1315,22 +1326,23 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const div = document.createElement('div');
-    ReactDOM.render(
-      <div>
-        <MyComponent value="foo" />
-      </div>,
-      div,
-    );
+    ReactNoop.act(() => {
+      ReactNoop.render(
+        <div>
+          <MyComponent value="foo" />
+        </div>,
+      );
+    });
     expect(log).toEqual(['render']);
     log.length = 0;
 
-    ReactDOM.render(
-      <div>
-        <MyComponent value="bar" />
-      </div>,
-      div,
-    );
+    ReactNoop.act(() => {
+      ReactNoop.render(
+        <div>
+          <MyComponent value="bar" />
+        </div>,
+      );
+    });
     expect(log).toEqual([
       'render',
       'getSnapshotBeforeUpdate() prevProps:foo prevState:1',
@@ -1338,12 +1350,13 @@ describe('ReactComponentLifeCycle', () => {
     ]);
     log.length = 0;
 
-    ReactDOM.render(
-      <div>
-        <MyComponent value="baz" />
-      </div>,
-      div,
-    );
+    ReactNoop.act(() => {
+      ReactNoop.render(
+        <div>
+          <MyComponent value="baz" />
+        </div>,
+      );
+    });
     expect(log).toEqual([
       'render',
       'getSnapshotBeforeUpdate() prevProps:bar prevState:2',
@@ -1351,12 +1364,15 @@ describe('ReactComponentLifeCycle', () => {
     ]);
     log.length = 0;
 
-    ReactDOM.render(<div />, div);
+    ReactNoop.act(() => {
+      ReactNoop.render(<div />);
+    });
     expect(log).toEqual([]);
   });
 
-  it('should pass previous state to shouldComponentUpdate even with getDerivedStateFromProps', () => {
+  fit('should pass previous state to shouldComponentUpdate even with getDerivedStateFromProps', () => {
     const divRef = React.createRef();
+    let capturedValue;
     class SimpleComponent extends React.Component {
       constructor(props) {
         super(props);
@@ -1377,19 +1393,23 @@ describe('ReactComponentLifeCycle', () => {
       }
 
       render() {
+        capturedValue = this.state.value;
         return <div ref={divRef}>value: {this.state.value}</div>;
       }
     }
 
-    const div = document.createElement('div');
-
-    ReactDOM.render(<SimpleComponent value="initial" />, div);
-    expect(divRef.current.textContent).toBe('value: initial');
-    ReactDOM.render(<SimpleComponent value="updated" />, div);
-    expect(divRef.current.textContent).toBe('value: updated');
+    ReactNoop.act(() => {
+      ReactNoop.render(<SimpleComponent value="initial" />);
+    });
+    expect(capturedValue).toBe('initial');
+    ReactNoop.act(() => {
+      ReactNoop.render(<SimpleComponent value="updated" />);
+    });
+    expect(capturedValue).toBe('updated');
   });
 
-  it('should call getSnapshotBeforeUpdate before mutations are committed', () => {
+  // Don't think we can convert this, since it relies on refs and DOM objects
+  xit('should call getSnapshotBeforeUpdate before mutations are committed', () => {
     const log = [];
 
     class MyComponent extends React.Component {
@@ -1428,7 +1448,9 @@ describe('ReactComponentLifeCycle', () => {
     log.length = 0;
   });
 
-  it('should warn if getSnapshotBeforeUpdate returns undefined', () => {
+  // We have no distinction between nil and undefined, so this might not be
+  // useful unless we want to try to capture missing return
+  xit('should warn if getSnapshotBeforeUpdate returns undefined', () => {
     class MyComponent extends React.Component {
       getSnapshotBeforeUpdate() {}
       componentDidUpdate() {}
@@ -1448,7 +1470,7 @@ describe('ReactComponentLifeCycle', () => {
     ReactDOM.render(<MyComponent value="baz" />, div);
   });
 
-  it('should warn if getSnapshotBeforeUpdate is defined with no componentDidUpdate', () => {
+  fit('should warn if getSnapshotBeforeUpdate is defined with no componentDidUpdate', () => {
     class MyComponent extends React.Component {
       getSnapshotBeforeUpdate() {
         return null;
@@ -1459,16 +1481,22 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     const div = document.createElement('div');
-    expect(() => ReactDOM.render(<MyComponent />, div)).toErrorDev(
+    expect(() => {
+      ReactNoop.act(() => {
+        ReactNoop.render(<MyComponent />);
+      }).toErrorDev(
       'MyComponent: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). ' +
         'This component defines getSnapshotBeforeUpdate() only.',
-    );
+      );
+    });
 
     // De-duped
-    ReactDOM.render(<MyComponent />, div);
+    ReactNoop.act(() => {
+      ReactNoop.render(<MyComponent />);
+    });
   });
 
-  it('warns about deprecated unsafe lifecycles', function() {
+  fit('warns about deprecated unsafe lifecycles', function() {
     class MyComponent extends React.Component {
       componentWillMount() {}
       componentWillReceiveProps() {}
@@ -1478,8 +1506,11 @@ describe('ReactComponentLifeCycle', () => {
       }
     }
 
-    const container = document.createElement('div');
-    expect(() => ReactDOM.render(<MyComponent x={1} />, container)).toWarnDev(
+    expect(() => {
+      ReactNoop.act(() => {
+        ReactNoop.render(<MyComponent x={1} />);
+      });
+    }).toWarnDev(
       [
         /* eslint-disable max-len */
         `Warning: componentWillMount has been renamed, and is not recommended for use. See https://reactjs.org/link/unsafe-component-lifecycles for details.
@@ -1507,14 +1538,16 @@ Please update the following components: MyComponent`,
     );
 
     // Dedupe check (update and instantiate new)
-    ReactDOM.render(<MyComponent x={2} />, container);
-    ReactDOM.render(<MyComponent key="new" x={1} />, container);
+    ReactNoop.act(() => {
+      ReactNoop.render(<MyComponent x={2} />);
+      ReactNoop.render(<MyComponent key="new" x={1} />);
+    });
   });
 
   describe('react-lifecycles-compat', () => {
     const {polyfill} = require('react-lifecycles-compat');
 
-    it('should not warn for components with polyfilled getDerivedStateFromProps', () => {
+    xit('should not warn for components with polyfilled getDerivedStateFromProps', () => {
       class PolyfilledComponent extends React.Component {
         state = {};
         static getDerivedStateFromProps() {
@@ -1536,7 +1569,7 @@ Please update the following components: MyComponent`,
       );
     });
 
-    it('should not warn for components with polyfilled getSnapshotBeforeUpdate', () => {
+    xit('should not warn for components with polyfilled getSnapshotBeforeUpdate', () => {
       class PolyfilledComponent extends React.Component {
         getSnapshotBeforeUpdate() {
           return null;
