@@ -690,7 +690,13 @@ describe('ReactDOMServerIntegration', () => {
 
     itRenders('unknown `on*` attributes for custom elements', async render => {
       const e = await render(<custom-element onunknown="bar" />);
-      expect(e.getAttribute('onunknown')).toBe('bar');
+      if (render === clientCleanRender) {
+        // TODO add actual tests for custom event listener behavior
+        expect(e.getAttribute('onunknown')).toBe(null);
+      } else {
+        // TODO we probably shouldn't server render on* attributes
+        expect(e.getAttribute('onunknown')).toBe('bar');
+      }
     });
 
     itRenders('unknown boolean `true` attributes as strings', async render => {

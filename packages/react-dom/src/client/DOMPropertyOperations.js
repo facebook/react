@@ -143,6 +143,25 @@ export function setValueForProperty(
   if (shouldIgnoreAttribute(name, propertyInfo, isCustomComponentTag)) {
     return;
   }
+  if (isCustomComponentTag && name[0] === 'o' && name[1] === 'n') {
+    const useCapture = name !== (name = name.replace(/Capture$/, ''));
+    const nameLower = name.toLowerCase();
+    if (nameLower in node) name = nameLower;
+    name = name.slice(2);
+
+    if (!(node: any)._listeners)
+      (node: any)._listeners = {};
+    const listenersObjName = name + (useCapture ? 'true' : 'false');
+    const alreadyHadListener = (node: any)._listeners[listenersObjName];
+    (node: any)._listeners[listenersObjName] = value;
+    const proxy = useCapture ? eventProxyCapture : eventProxy;
+    if (value) {
+      if (!alreadyHadListener) node.addEventListener(name, proxy, useCapture);
+    } else {
+      node.removeEventListener(name, proxy, useCapture);
+    }
+    return;
+  }
   if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponentTag)) {
     value = null;
   }
@@ -203,4 +222,12 @@ export function setValueForProperty(
       node.setAttribute(attributeName, attributeValue);
     }
   }
+}
+
+function eventProxy(e: Event) {
+  this._listeners[e.type + 'false'](e);
+}
+
+function eventProxyCapture(e: Event) {
+  this._listeners[e.type + 'true'](e);
 }
