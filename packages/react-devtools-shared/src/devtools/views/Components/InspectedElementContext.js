@@ -98,7 +98,7 @@ function setInspectedElement(
   inspectedElementCache.set(element, inspectedElement);
 
   const maybeThenable = inspectedElementThenables.get(element);
-  if (maybeThenable != null) {
+  if (maybeThenable !== undefined) {
     inspectedElementThenables.delete(element);
 
     maybeThenable.resolve(inspectedElement);
@@ -113,7 +113,7 @@ function getInspectedElement(element: Element): InspectedElementFrontend {
   }
 
   const maybeThenable = inspectedElementThenables.get(element);
-  if (maybeThenable != null) {
+  if (maybeThenable !== undefined) {
     throw maybeThenable;
   }
 
@@ -226,10 +226,7 @@ function InspectedElementContextController({children}: Props) {
     }
   }, [bridge, selectedElementID]);
 
-  const [
-    currentlyInspectedElement,
-    setCurrentlyInspectedElement,
-  ] = useState<InspectedElementFrontend | null>(null);
+  const [memoKey, setMemoKey] = useState<number>(0);
 
   const inspectedElementCache = getInspectedElementCache();
 
@@ -249,9 +246,10 @@ function InspectedElementContextController({children}: Props) {
           // Merge new data into previous object and invalidate cache
           element = store.getElementByID(id);
           if (element !== null) {
-            if (currentlyInspectedElement != null) {
+            const maybeInspectedElement = inspectedElementCache.get(element);
+            if (maybeInspectedElement !== undefined) {
               const value = hydrateHelper(data.value, data.path);
-              const inspectedElement = {...currentlyInspectedElement};
+              const inspectedElement = {...maybeInspectedElement};
 
               fillInPath(inspectedElement, data.value, data.path, value);
 
@@ -263,7 +261,7 @@ function InspectedElementContextController({children}: Props) {
 
               // Schedule update with React if the currently-selected element has been invalidated.
               if (id === selectedElementID) {
-                setCurrentlyInspectedElement(inspectedElement);
+                setMemoKey(prevMemoKey => prevMemoKey + 1);
               }
             }
           }
@@ -346,7 +344,7 @@ function InspectedElementContextController({children}: Props) {
 
             // Schedule update with React if the currently-selected element has been invalidated.
             if (id === selectedElementID) {
-              setCurrentlyInspectedElement(inspectedElement);
+              setMemoKey(prevMemoKey => prevMemoKey + 1);
             }
           }
           break;
@@ -357,7 +355,7 @@ function InspectedElementContextController({children}: Props) {
 
     bridge.addListener('inspectedElement', onInspectedElement);
     return () => bridge.removeListener('inspectedElement', onInspectedElement);
-  }, [bridge, currentlyInspectedElement, selectedElementID, store]);
+  }, [bridge, inspectedElementCache, selectedElementID, store]);
 
   // This effect handler polls for updates on the currently selected element.
   useEffect(() => {
@@ -419,15 +417,20 @@ function InspectedElementContextController({children}: Props) {
       getInspectedElementPath,
       storeAsGlobal,
     }),
-    // InspectedElement is used to invalidate the cache and schedule an update with React.
     [
       clearErrorsForInspectedElement,
       clearWarningsForInspectedElement,
       copyInspectedElementPath,
-      currentlyInspectedElement,
       getInspectedElement,
       getInspectedElementPath,
       storeAsGlobal,
+
+      // Functions passed down by this context are memoized to prevent many unnecessary re-renders.
+      // Re-renders are required when the underlying data changes,
+      // but this component can't access the underlying data (it can't suspend because it has no fallback).
+      // So instead, we use a manually incremented key to invalid the memoized cache
+      // and rely on lower level context consumers (within a Suspense fallback) to actually read and suspend.
+      memoKey,
     ],
   );
 
