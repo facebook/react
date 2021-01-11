@@ -1126,7 +1126,7 @@ export default {
         reportProblem({
           node: reactiveHook,
           message:
-            `React Hook ${reactiveHookName} will crash when called with no arguments. ` +
+            `React Hook ${reactiveHookName} requires an effect callback. ` +
             `Did you forget to pass a callback to the hook?`,
         });
         return;

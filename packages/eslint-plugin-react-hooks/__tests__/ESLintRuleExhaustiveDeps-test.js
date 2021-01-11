@@ -1704,25 +1704,25 @@ const tests = {
       errors: [
         {
           message:
-            'React Hook useEffect will crash when called with no arguments. ' +
+            'React Hook useEffect requires an effect callback. ' +
             'Did you forget to pass a callback to the hook?',
           suggestions: undefined,
         },
         {
           message:
-            'React Hook useLayoutEffect will crash when called with no arguments. ' +
+            'React Hook useLayoutEffect requires an effect callback. ' +
             'Did you forget to pass a callback to the hook?',
           suggestions: undefined,
         },
         {
           message:
-            'React Hook useCallback will crash when called with no arguments. ' +
+            'React Hook useCallback requires an effect callback. ' +
             'Did you forget to pass a callback to the hook?',
           suggestions: undefined,
         },
         {
           message:
-            'React Hook useMemo will crash when called with no arguments. ' +
+            'React Hook useMemo requires an effect callback. ' +
             'Did you forget to pass a callback to the hook?',
           suggestions: undefined,
         },
