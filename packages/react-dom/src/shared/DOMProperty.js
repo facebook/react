@@ -202,8 +202,28 @@ export function shouldRemoveAttribute(
   return false;
 }
 
-export function getPropertyInfo(name: string): PropertyInfo | null {
-  return properties.hasOwnProperty(name) ? properties[name] : null;
+export function getPropertyInfo(
+  name: string,
+  node?: Element,
+  isCustomComponentTag?: boolean,
+): PropertyInfo | null {
+  if (properties.hasOwnProperty(name)) {
+    return properties[name];
+  }
+  if (isCustomComponentTag && node && name in (node: any)) {
+    const acceptsBooleans = (typeof (node: any)[name]) === 'boolean';
+    return {
+      acceptsBooleans,
+      type: acceptsBooleans ? BOOLEAN : STRING,
+      mustUseProperty: true,
+      propertyName: name,
+      attributeName: name,
+      attributeNamespace: null,
+      sanitizeURL: false,
+      removeEmptyString: false,
+    };
+  }
+  return null;
 }
 
 function PropertyInfoRecord(

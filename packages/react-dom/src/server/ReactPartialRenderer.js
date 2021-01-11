@@ -50,7 +50,6 @@ import {
 } from './ReactPartialRendererContext';
 import {allocThreadID, freeThreadID} from './ReactThreadIDAllocator';
 import {
-  createMarkupForCustomAttribute,
   createMarkupForProperty,
 } from './DOMMarkupOperations';
 import escapeTextForBrowser from './escapeTextForBrowser';
@@ -345,12 +344,6 @@ function flattenOptionChildren(children: mixed): ?string {
 }
 
 const STYLE = 'style';
-const RESERVED_PROPS = {
-  children: null,
-  dangerouslySetInnerHTML: null,
-  suppressContentEditableWarning: null,
-  suppressHydrationWarning: null,
-};
 
 function createOpenTagMarkup(
   tagVerbatim: string,
@@ -375,14 +368,7 @@ function createOpenTagMarkup(
     if (propKey === STYLE) {
       propValue = createMarkupForStyles(propValue);
     }
-    let markup = null;
-    if (isCustomComponent) {
-      if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-        markup = createMarkupForCustomAttribute(propKey, propValue);
-      }
-    } else {
-      markup = createMarkupForProperty(propKey, propValue);
-    }
+    const markup = createMarkupForProperty(propKey, propValue, isCustomComponent);
     if (markup) {
       ret += ' ' + markup;
     }

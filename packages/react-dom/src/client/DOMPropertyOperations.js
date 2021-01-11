@@ -139,7 +139,7 @@ export function setValueForProperty(
   value: mixed,
   isCustomComponentTag: boolean,
 ) {
-  const propertyInfo = getPropertyInfo(name);
+  const propertyInfo = getPropertyInfo(name, node, isCustomComponentTag);
   if (shouldIgnoreAttribute(name, propertyInfo, isCustomComponentTag)) {
     return;
   }
@@ -147,7 +147,7 @@ export function setValueForProperty(
     value = null;
   }
   // If the prop isn't in the special list, treat it as a simple attribute.
-  if (isCustomComponentTag || propertyInfo === null) {
+  if (propertyInfo === null) {
     if (isAttributeNameSafe(name)) {
       const attributeName = name;
       if (value === null) {

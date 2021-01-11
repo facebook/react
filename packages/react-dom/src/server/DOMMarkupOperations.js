@@ -29,12 +29,12 @@ import quoteAttributeValueForBrowser from './quoteAttributeValueForBrowser';
  * @param {*} value
  * @return {?string} Markup string, or null if the property was invalid.
  */
-export function createMarkupForProperty(name: string, value: mixed): string {
-  const propertyInfo = getPropertyInfo(name);
-  if (name !== 'style' && shouldIgnoreAttribute(name, propertyInfo, false)) {
+export function createMarkupForProperty(name: string, value: mixed, isCustomComponent: boolean): string {
+  const propertyInfo = getPropertyInfo(name, undefined, isCustomComponent);
+  if (name !== 'style' && shouldIgnoreAttribute(name, propertyInfo, isCustomComponent)) {
     return '';
   }
-  if (shouldRemoveAttribute(name, value, propertyInfo, false)) {
+  if (shouldRemoveAttribute(name, value, propertyInfo, isCustomComponent)) {
     return '';
   }
   if (propertyInfo !== null) {
@@ -53,26 +53,4 @@ export function createMarkupForProperty(name: string, value: mixed): string {
     return name + '=' + quoteAttributeValueForBrowser(value);
   }
   return '';
-}
-
-/**
- * Creates markup for a custom property.
- *
- * @param {string} name
- * @param {*} value
- * @return {string} Markup string, or empty string if the property was invalid.
- */
-export function createMarkupForCustomAttribute(
-  name: string,
-  value: mixed,
-): string {
-  if (
-    !isAttributeNameSafe(name) ||
-    value == null ||
-    typeof value === 'function' ||
-    typeof value === 'symbol'
-  ) {
-    return '';
-  }
-  return name + '=' + quoteAttributeValueForBrowser(value);
 }
