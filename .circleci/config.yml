@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 aliases:
   - &docker
@@ -455,37 +455,20 @@ jobs:
           command: yarn lint-build
       - run: scripts/circleci/check_minified_errors.sh
 
-  yarn_test-stable_build:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test-stable --build --ci
-
   yarn_test_build:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
+    parameters:
+      args:
+        type: string
     steps:
       - checkout
-      - attach_workspace: *attach_workspace
+      - attach_workspace:
+          at: build2
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
-      - run: yarn test --build --ci
-
-  yarn_test_build_devtools:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test --project=devtools --build --ci
+      - run: yarn test --build <<parameters.args>> --ci
 
   RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
     docker: *docker
@@ -517,28 +500,6 @@ jobs:
           command: |
             FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci
             FUZZ_TEST_SEED=$RANDOM yarn test --prod fuzz --ci
-
-  yarn_test-stable_build_prod:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test-stable --build --prod --ci
-
-  yarn_test_build_prod:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test --build --prod --ci
 
 workflows:
   version: 2
@@ -584,12 +545,6 @@ workflows:
       - RELEASE_CHANNEL_stable_yarn_lint_build:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
-      - yarn_test-stable_build:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
-      - yarn_test-stable_build_prod:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
       - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
@@ -624,16 +579,7 @@ workflows:
       - sizebot_experimental:
           requires:
             - yarn_build
-      - yarn_test_build:
-          requires:
-            - yarn_build
-      - yarn_test_build_prod:
-          requires:
-            - yarn_build
       - yarn_lint_build:
-          requires:
-            - yarn_build
-      - yarn_test_build_devtools:
           requires:
             - yarn_build
       - build_devtools_and_process_artifacts:
@@ -660,6 +606,32 @@ workflows:
       - process_artifacts_combined:
           requires:
             - yarn_build_combined
+      - yarn_test_build:
+          requires:
+            - yarn_build_combined
+          matrix:
+            parameters:
+              args:
+                # Intentionally passing these as strings instead of creating a
+                # separate parameter per CLI argument, since it's easier to
+                # control/see which combinations we want to run.
+                - "-r=stable --env=development"
+                - "-r=stable --env=production"
+                - "-r=experimental --env=development"
+                - "-r=experimental --env=production"
+
+                # Dev Tools
+                - "--project=devtools -r=experimental"
+
+                # TODO: Update test config to support www build tests
+                # - "-r=www-classic --env=development"
+                # - "-r=www-classic --env=production"
+                # - "-r=www-classic --env=development --variant"
+                # - "-r=www-classic --env=production --variant"
+                # - "-r=www-modern --env=development"
+                # - "-r=www-modern --env=production"
+                # - "-r=www-modern --env=development --variant"
+                # - "-r=www-modern --env=production --variant"
 
   fuzz_tests:
     triggers:
