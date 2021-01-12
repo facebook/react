@@ -293,6 +293,45 @@ jobs:
             - dist
             - sizes/*.json
 
+  yarn_build_combined:
+    docker: *docker
+    environment: *environment
+    parallelism: 40
+    steps:
+      - checkout
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          command: |
+            ./scripts/circleci/add_build_info_json.sh
+            ./scripts/circleci/update_package_versions.sh
+            yarn build-combined
+      - persist_to_workspace:
+          root: build2
+          paths:
+            - facebook-www
+            - facebook-react-native
+            - facebook-relay
+            - oss-stable
+            - oss-experimental
+            - react-native
+            - dist
+            - sizes/*.json
+
+  process_artifacts_combined:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build2
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+        # Compress build directory into a single tarball for easy download
+      - run: tar -zcvf ./build2.tgz ./build2
+      - store_artifacts:
+          path: ./build2.tgz
+
   build_devtools_and_process_artifacts:
     docker: *docker
     environment: *environment
@@ -610,6 +649,17 @@ workflows:
             branches:
               only:
                 - master
+
+  # New workflow that will replace "stable" and "experimental"
+  combined:
+    jobs:
+      - setup
+      - yarn_build_combined:
+          requires:
+            - setup
+      - process_artifacts_combined:
+          requires:
+            - yarn_build_combined
 
   fuzz_tests:
     triggers:
