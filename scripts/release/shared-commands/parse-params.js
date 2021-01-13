@@ -17,6 +17,12 @@ const paramDefinitions = [
     description: 'Skip automated fixture tests.',
     defaultValue: false,
   },
+  {
+    name: 'releaseChannel',
+    alias: 'r',
+    type: String,
+    description: 'Release channel (stable or experimental)',
+  },
 ];
 
 module.exports = () => {

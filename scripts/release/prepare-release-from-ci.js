@@ -3,8 +3,7 @@
 'use strict';
 
 const {join} = require('path');
-const {readJsonSync} = require('fs-extra');
-const {getPublicPackages, handleError} = require('./utils');
+const {handleError} = require('./utils');
 
 const checkEnvironmentVariables = require('./shared-commands/check-environment-variables');
 const downloadBuildArtifacts = require('./shared-commands/download-build-artifacts');
@@ -19,17 +18,20 @@ const run = async () => {
     const params = parseParams();
     params.cwd = join(__dirname, '..', '..');
 
+    const channel = params.releaseChannel;
+    if (channel !== 'experimental' && channel !== 'stable') {
+      console.error(
+        `Invalid release channel: "${channel}". Must be "stable" or "experimental".`
+      );
+      process.exit(1);
+    }
+
     if (!params.build) {
       params.build = await getLatestMasterBuildNumber(false);
     }
 
     await checkEnvironmentVariables(params);
     await downloadBuildArtifacts(params);
-
-    const version = readJsonSync('./build/node_modules/react/package.json')
-      .version;
-    const isExperimental = version.includes('experimental');
-    params.packages = await getPublicPackages(isExperimental);
 
     if (!params.skipTests) {
       await testPackagingFixture(params);

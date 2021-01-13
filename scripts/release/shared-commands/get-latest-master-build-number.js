@@ -5,11 +5,7 @@
 const http = require('request-promise-json');
 const {logPromise} = require('../utils');
 
-const run = async useExperimentalBuild => {
-  const targetJobName = useExperimentalBuild
-    ? 'process_artifacts_experimental'
-    : 'process_artifacts';
-
+const run = async () => {
   // https://circleci.com/docs/api/#recent-builds-for-a-project-branch
   const metadataURL = `https://circleci.com/api/v1.1/project/github/facebook/react/tree/master`;
   const metadata = await http.get(metadataURL, true);
@@ -17,7 +13,7 @@ const run = async useExperimentalBuild => {
     entry =>
       entry.branch === 'master' &&
       entry.status === 'success' &&
-      entry.workflows.job_name === targetJobName
+      entry.workflows.job_name === 'process_artifacts_combined'
   ).build_num;
 
   return build;
