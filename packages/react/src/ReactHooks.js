@@ -98,6 +98,13 @@ export function useReducer<S, I, A>(
   const dispatcher = resolveDispatcher();
   return dispatcher.useReducer(reducer, initialArg, init);
 }
+  
+// Combines dictionary of key: reducers into one reducer
+export const combineReducers = (reducerDict) => (state, action) =>
+    Object.keys(reducerDict).reduce((acc, curr) => ({
+            ...acc, 
+            [curr]: reducerDict[curr](state[curr], action) 
+        }), state);
 
 export function useRef<T>(initialValue: T): {|current: T|} {
   const dispatcher = resolveDispatcher();
