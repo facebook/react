@@ -168,11 +168,7 @@ jobs:
       - checkout
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
-      - run:
-          command: |
-            ./scripts/circleci/add_build_info_json.sh
-            ./scripts/circleci/update_package_versions.sh
-            yarn build-combined
+      - run: yarn build-combined
       - persist_to_workspace:
           root: build2
           paths:
