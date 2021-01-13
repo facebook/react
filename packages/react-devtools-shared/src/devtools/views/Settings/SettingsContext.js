@@ -21,6 +21,7 @@ import {
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
+  LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
 } from 'react-devtools-shared/src/constants';
 import {useLocalStorage} from '../hooks';
 import {BridgeContext} from '../context';
@@ -43,6 +44,9 @@ type Context = {|
 
   breakOnConsoleErrors: boolean,
   setBreakOnConsoleErrors: (value: boolean) => void,
+
+  showInlineWarningsAndErrors: boolean,
+  setShowInlineWarningsAndErrors: (value: boolean) => void,
 
   theme: Theme,
   setTheme(value: Theme): void,
@@ -89,6 +93,13 @@ function SettingsContextController({
   ] = useLocalStorage<boolean>(
     LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
     false,
+  );
+  const [
+    showInlineWarningsAndErrors,
+    setShowInlineWarningsAndErrors,
+  ] = useLocalStorage<boolean>(
+    LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
+    true,
   );
   const [
     traceUpdatesEnabled,
@@ -147,8 +158,14 @@ function SettingsContextController({
     bridge.send('updateConsolePatchSettings', {
       appendComponentStack,
       breakOnConsoleErrors,
+      showInlineWarningsAndErrors,
     });
-  }, [bridge, appendComponentStack, breakOnConsoleErrors]);
+  }, [
+    bridge,
+    appendComponentStack,
+    breakOnConsoleErrors,
+    showInlineWarningsAndErrors,
+  ]);
 
   useEffect(() => {
     bridge.send('setTraceUpdatesEnabled', traceUpdatesEnabled);
@@ -168,6 +185,8 @@ function SettingsContextController({
       setDisplayDensity,
       setTheme,
       setTraceUpdatesEnabled,
+      setShowInlineWarningsAndErrors,
+      showInlineWarningsAndErrors,
       theme,
       traceUpdatesEnabled,
     }),
@@ -180,6 +199,8 @@ function SettingsContextController({
       setDisplayDensity,
       setTheme,
       setTraceUpdatesEnabled,
+      setShowInlineWarningsAndErrors,
+      showInlineWarningsAndErrors,
       theme,
       traceUpdatesEnabled,
     ],
@@ -324,6 +345,25 @@ export function updateThemeVariables(
     'color-component-badge-count-inverted',
     documentElements,
   );
+  updateStyleHelper(theme, 'color-console-error-badge-text', documentElements);
+  updateStyleHelper(theme, 'color-console-error-background', documentElements);
+  updateStyleHelper(theme, 'color-console-error-border', documentElements);
+  updateStyleHelper(theme, 'color-console-error-icon', documentElements);
+  updateStyleHelper(theme, 'color-console-error-text', documentElements);
+  updateStyleHelper(
+    theme,
+    'color-console-warning-badge-text',
+    documentElements,
+  );
+  updateStyleHelper(
+    theme,
+    'color-console-warning-background',
+    documentElements,
+  );
+  updateStyleHelper(theme, 'color-console-warning-border', documentElements);
+  updateStyleHelper(theme, 'color-console-warning-icon', documentElements);
+  updateStyleHelper(theme, 'color-console-warning-text', documentElements);
+  updateStyleHelper(theme, 'color-context-border', documentElements);
   updateStyleHelper(theme, 'color-context-background', documentElements);
   updateStyleHelper(theme, 'color-context-background-hover', documentElements);
   updateStyleHelper(

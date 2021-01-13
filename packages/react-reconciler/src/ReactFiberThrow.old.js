@@ -9,7 +9,7 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {Lane, Lanes} from './ReactFiberLane';
+import type {Lane, Lanes} from './ReactFiberLane.old';
 import type {CapturedValue} from './ReactCapturedValue';
 import type {Update} from './ReactUpdateQueue.old';
 import type {Wakeable} from 'shared/ReactTypes';
@@ -21,6 +21,9 @@ import {
   HostRoot,
   SuspenseComponent,
   IncompleteClassComponent,
+  FunctionComponent,
+  ForwardRef,
+  SimpleMemoComponent,
 } from './ReactWorkTags';
 import {
   DidCapture,
@@ -67,7 +70,7 @@ import {
   includesSomeLane,
   mergeLanes,
   pickArbitraryLane,
-} from './ReactFiberLane';
+} from './ReactFiberLane.old';
 
 const PossiblyWeakMap = typeof WeakMap === 'function' ? WeakMap : Map;
 
@@ -209,9 +212,15 @@ function throwException(
       markComponentSuspended(sourceFiber, wakeable);
     }
 
-    if ((sourceFiber.mode & BlockingMode) === NoMode) {
-      // Reset the memoizedState to what it was before we attempted
-      // to render it.
+    // Reset the memoizedState to what it was before we attempted to render it.
+    // A legacy mode Suspense quirk, only relevant to hook components.
+    const tag = sourceFiber.tag;
+    if (
+      (sourceFiber.mode & BlockingMode) === NoMode &&
+      (tag === FunctionComponent ||
+        tag === ForwardRef ||
+        tag === SimpleMemoComponent)
+    ) {
       const currentSource = sourceFiber.alternate;
       if (currentSource) {
         sourceFiber.updateQueue = currentSource.updateQueue;
@@ -256,7 +265,15 @@ function throwException(
         // Note: It doesn't matter whether the component that suspended was
         // inside a blocking mode tree. If the Suspense is outside of it, we
         // should *not* suspend the commit.
-        if ((workInProgress.mode & BlockingMode) === NoMode) {
+        //
+        // If the suspense boundary suspended itself suspended, we don't have to
+        // do this trick because nothing was partially started. We can just
+        // directly do a second pass over the fallback in this render and
+        // pretend we meant to render that directly.
+        if (
+          (workInProgress.mode & BlockingMode) === NoMode &&
+          workInProgress !== returnFiber
+        ) {
           workInProgress.flags |= DidCapture;
           sourceFiber.flags |= ForceUpdateForLegacySuspense;
 

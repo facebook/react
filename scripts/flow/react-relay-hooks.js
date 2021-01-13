@@ -35,21 +35,9 @@ declare module 'JSResourceReferenceImpl' {
 declare module 'ReactFlightDOMRelayServerIntegration' {
   declare export opaque type Destination;
   declare export opaque type BundlerConfig;
-  declare export function emitModel(
+  declare export function emitRow(
     destination: Destination,
-    id: number,
     json: JSONValue,
-  ): void;
-  declare export function emitModule(
-    destination: Destination,
-    id: number,
-    json: ModuleMetaData,
-  ): void;
-  declare export function emitError(
-    destination: Destination,
-    id: number,
-    message: string,
-    stack: string,
   ): void;
   declare export function close(destination: Destination): void;
 
@@ -76,21 +64,9 @@ declare module 'ReactFlightDOMRelayClientIntegration' {
 declare module 'ReactFlightNativeRelayServerIntegration' {
   declare export opaque type Destination;
   declare export opaque type BundlerConfig;
-  declare export function emitModel(
+  declare export function emitRow(
     destination: Destination,
-    id: number,
     json: JSONValue,
-  ): void;
-  declare export function emitModule(
-    destination: Destination,
-    id: number,
-    json: ModuleMetaData,
-  ): void;
-  declare export function emitError(
-    destination: Destination,
-    id: number,
-    message: string,
-    stack: string,
   ): void;
   declare export function close(destination: Destination): void;
 

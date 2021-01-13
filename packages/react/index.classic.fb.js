@@ -50,6 +50,9 @@ export {
   startTransition as unstable_startTransition,
   SuspenseList,
   SuspenseList as unstable_SuspenseList,
+  unstable_getCacheForType,
+  unstable_Cache,
+  unstable_useCacheRefresh,
   // enableScopeAPI
   unstable_Scope,
   unstable_useOpaqueIdentifier,

@@ -120,4 +120,19 @@ describe('ProfilerStore', () => {
     expect(data.commitData).toHaveLength(1);
     expect(data.operations).toHaveLength(1);
   });
+
+  it('should throw if component filters are modified while profiling', () => {
+    utils.act(() => store.profilerStore.startProfiling());
+
+    expect(() => {
+      utils.act(() => {
+        const {
+          ElementTypeHostComponent,
+        } = require('react-devtools-shared/src/types');
+        store.componentFilters = [
+          utils.createElementTypeFilter(ElementTypeHostComponent),
+        ];
+      });
+    }).toThrow('Cannot modify filter preferences while profiling');
+  });
 });

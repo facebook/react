@@ -10,10 +10,15 @@
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane';
+import type {Lanes} from './ReactFiberLane.old';
 
 import getComponentName from 'shared/getComponentName';
-import {Placement, Deletion} from './ReactFiberFlags';
+import {
+  Deletion,
+  ChildDeletion,
+  Placement,
+  StaticMask,
+} from './ReactFiberFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -246,6 +251,12 @@ function warnOnFunctionType(returnFiber: Fiber) {
   }
 }
 
+function resolveLazy(lazyType) {
+  const payload = lazyType._payload;
+  const init = lazyType._init;
+  return init(payload);
+}
+
 // This wrapper function exists because I expect to clone the code in each path
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
@@ -269,7 +280,24 @@ function ChildReconciler(shouldTrackSideEffects) {
       returnFiber.firstEffect = returnFiber.lastEffect = childToDelete;
     }
     childToDelete.nextEffect = null;
-    childToDelete.flags = Deletion;
+    childToDelete.flags = (childToDelete.flags & StaticMask) | Deletion;
+
+    let deletions = returnFiber.deletions;
+    if (deletions === null) {
+      deletions = returnFiber.deletions = [childToDelete];
+      returnFiber.flags |= ChildDeletion;
+    } else {
+      deletions.push(childToDelete);
+    }
+    // Stash a reference to the return fiber's deletion array on each of the
+    // deleted children. This is really weird, but it's a temporary workaround
+    // while we're still using the effect list to traverse effect fibers. A
+    // better workaround would be to follow the `.return` pointer in the commit
+    // phase, but unfortunately we can't assume that `.return` points to the
+    // correct fiber, even in the commit phase, because `findDOMNode` might
+    // mutate it.
+    // TODO: Remove this line.
+    childToDelete.deletions = deletions;
   }
 
   function deleteRemainingChildren(
@@ -336,7 +364,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       const oldIndex = current.index;
       if (oldIndex < lastPlacedIndex) {
         // This is a move.
-        newFiber.flags = Placement;
+        newFiber.flags |= Placement;
         return lastPlacedIndex;
       } else {
         // This item can stay in place.
@@ -344,7 +372,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       }
     } else {
       // This is an insertion.
-      newFiber.flags = Placement;
+      newFiber.flags |= Placement;
       return lastPlacedIndex;
     }
   }
@@ -353,7 +381,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     // This is simpler for the single child case. We only need to do a
     // placement for inserting new children.
     if (shouldTrackSideEffects && newFiber.alternate === null) {
-      newFiber.flags = Placement;
+      newFiber.flags |= Placement;
     }
     return newFiber;
   }
@@ -383,11 +411,32 @@ function ChildReconciler(shouldTrackSideEffects) {
     element: ReactElement,
     lanes: Lanes,
   ): Fiber {
+    const elementType = element.type;
+    if (elementType === REACT_FRAGMENT_TYPE) {
+      return updateFragment(
+        returnFiber,
+        current,
+        element.props.children,
+        lanes,
+        element.key,
+      );
+    }
     if (current !== null) {
       if (
-        current.elementType === element.type ||
+        current.elementType === elementType ||
         // Keep this check inline so it only runs on the false path:
-        (__DEV__ ? isCompatibleFamilyForHotReloading(current, element) : false)
+        (__DEV__
+          ? isCompatibleFamilyForHotReloading(current, element)
+          : false) ||
+        // Lazy types should reconcile their resolved type.
+        // We need to do this after the Hot Reloading check above,
+        // because hot reloading has different semantics than prod because
+        // it doesn't resuspend. So we can't let the call below suspend.
+        (enableLazyElements &&
+          typeof elementType === 'object' &&
+          elementType !== null &&
+          elementType.$$typeof === REACT_LAZY_TYPE &&
+          resolveLazy(elementType) === current.type)
       ) {
         // Move based on index
         const existing = useFiber(current, element.props);
@@ -551,15 +600,6 @@ function ChildReconciler(shouldTrackSideEffects) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
           if (newChild.key === key) {
-            if (newChild.type === REACT_FRAGMENT_TYPE) {
-              return updateFragment(
-                returnFiber,
-                oldFiber,
-                newChild.props.children,
-                lanes,
-                key,
-              );
-            }
             return updateElement(returnFiber, oldFiber, newChild, lanes);
           } else {
             return null;
@@ -622,15 +662,6 @@ function ChildReconciler(shouldTrackSideEffects) {
             existingChildren.get(
               newChild.key === null ? newIdx : newChild.key,
             ) || null;
-          if (newChild.type === REACT_FRAGMENT_TYPE) {
-            return updateFragment(
-              returnFiber,
-              matchedFiber,
-              newChild.props.children,
-              lanes,
-              newChild.key,
-            );
-          }
           return updateElement(returnFiber, matchedFiber, newChild, lanes);
         }
         case REACT_PORTAL_TYPE: {
@@ -1101,39 +1132,44 @@ function ChildReconciler(shouldTrackSideEffects) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
       if (child.key === key) {
-        switch (child.tag) {
-          case Fragment: {
-            if (element.type === REACT_FRAGMENT_TYPE) {
-              deleteRemainingChildren(returnFiber, child.sibling);
-              const existing = useFiber(child, element.props.children);
-              existing.return = returnFiber;
-              if (__DEV__) {
-                existing._debugSource = element._source;
-                existing._debugOwner = element._owner;
-              }
-              return existing;
+        const elementType = element.type;
+        if (elementType === REACT_FRAGMENT_TYPE) {
+          if (child.tag === Fragment) {
+            deleteRemainingChildren(returnFiber, child.sibling);
+            const existing = useFiber(child, element.props.children);
+            existing.return = returnFiber;
+            if (__DEV__) {
+              existing._debugSource = element._source;
+              existing._debugOwner = element._owner;
             }
-            break;
+            return existing;
           }
-          default: {
-            if (
-              child.elementType === element.type ||
-              // Keep this check inline so it only runs on the false path:
-              (__DEV__
-                ? isCompatibleFamilyForHotReloading(child, element)
-                : false)
-            ) {
-              deleteRemainingChildren(returnFiber, child.sibling);
-              const existing = useFiber(child, element.props);
-              existing.ref = coerceRef(returnFiber, child, element);
-              existing.return = returnFiber;
-              if (__DEV__) {
-                existing._debugSource = element._source;
-                existing._debugOwner = element._owner;
-              }
-              return existing;
+        } else {
+          if (
+            child.elementType === elementType ||
+            // Keep this check inline so it only runs on the false path:
+            (__DEV__
+              ? isCompatibleFamilyForHotReloading(child, element)
+              : false) ||
+            // Lazy types should reconcile their resolved type.
+            // We need to do this after the Hot Reloading check above,
+            // because hot reloading has different semantics than prod because
+            // it doesn't resuspend. So we can't let the call below suspend.
+            (enableLazyElements &&
+              typeof elementType === 'object' &&
+              elementType !== null &&
+              elementType.$$typeof === REACT_LAZY_TYPE &&
+              resolveLazy(elementType) === child.type)
+          ) {
+            deleteRemainingChildren(returnFiber, child.sibling);
+            const existing = useFiber(child, element.props);
+            existing.ref = coerceRef(returnFiber, child, element);
+            existing.return = returnFiber;
+            if (__DEV__) {
+              existing._debugSource = element._source;
+              existing._debugOwner = element._owner;
             }
-            break;
+            return existing;
           }
         }
         // Didn't match.

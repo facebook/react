@@ -10,7 +10,7 @@
 import type {ReactNodeList, Wakeable} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
-import type {Lane} from './ReactFiberLane';
+import type {Lane} from './ReactFiberLane.new';
 import {SuspenseComponent, SuspenseListComponent} from './ReactWorkTags';
 import {NoFlags, DidCapture} from './ReactFiberFlags';
 import {
@@ -60,6 +60,9 @@ export type SuspenseListRenderState = {|
   tail: null | Fiber,
   // Tail insertions setting.
   tailMode: SuspenseListTailMode,
+  // Last Effect before we rendered the "rendering" item.
+  // Used to remove new effects added by the rendered item.
+  lastEffect: null | Fiber,
 |};
 
 export function shouldCaptureSuspense(

@@ -8,7 +8,7 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane';
+import type {Lanes} from './ReactFiberLane.old';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
 
 import * as React from 'react';
@@ -42,7 +42,7 @@ import {
   initializeUpdateQueue,
   cloneUpdateQueue,
 } from './ReactUpdateQueue.old';
-import {NoLanes} from './ReactFiberLane';
+import {NoLanes} from './ReactFiberLane.old';
 import {
   cacheContext,
   getMaskedContext,

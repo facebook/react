@@ -93,6 +93,9 @@ type ACTION_SELECT_ELEMENT_BY_ID = {|
 type ACTION_SELECT_NEXT_ELEMENT_IN_TREE = {|
   type: 'SELECT_NEXT_ELEMENT_IN_TREE',
 |};
+type ACTION_SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE = {|
+  type: 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE',
+|};
 type ACTION_SELECT_NEXT_SIBLING_IN_TREE = {|
   type: 'SELECT_NEXT_SIBLING_IN_TREE',
 |};
@@ -105,6 +108,9 @@ type ACTION_SELECT_PARENT_ELEMENT_IN_TREE = {|
 |};
 type ACTION_SELECT_PREVIOUS_ELEMENT_IN_TREE = {|
   type: 'SELECT_PREVIOUS_ELEMENT_IN_TREE',
+|};
+type ACTION_SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE = {|
+  type: 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE',
 |};
 type ACTION_SELECT_PREVIOUS_SIBLING_IN_TREE = {|
   type: 'SELECT_PREVIOUS_SIBLING_IN_TREE',
@@ -132,10 +138,12 @@ type Action =
   | ACTION_SELECT_ELEMENT_AT_INDEX
   | ACTION_SELECT_ELEMENT_BY_ID
   | ACTION_SELECT_NEXT_ELEMENT_IN_TREE
+  | ACTION_SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE
   | ACTION_SELECT_NEXT_SIBLING_IN_TREE
   | ACTION_SELECT_OWNER
   | ACTION_SELECT_PARENT_ELEMENT_IN_TREE
   | ACTION_SELECT_PREVIOUS_ELEMENT_IN_TREE
+  | ACTION_SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE
   | ACTION_SELECT_PREVIOUS_SIBLING_IN_TREE
   | ACTION_SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE
   | ACTION_SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE
@@ -372,6 +380,83 @@ function reduceTreeState(store: Store, state: State, action: Action): State {
           }
         }
         break;
+      case 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE': {
+        if (store.errorCount === 0 && store.warningCount === 0) {
+          return state;
+        }
+
+        const elementIndicesWithErrorsOrWarnings = store.getElementsWithErrorsAndWarnings();
+
+        let flatIndex = 0;
+        if (selectedElementIndex !== null) {
+          // Resume from the current position in the list.
+          // Otherwise step to the previous item, relative to the current selection.
+          for (
+            let i = elementIndicesWithErrorsOrWarnings.length - 1;
+            i >= 0;
+            i--
+          ) {
+            const {index} = elementIndicesWithErrorsOrWarnings[i];
+            if (index >= selectedElementIndex) {
+              flatIndex = i;
+            } else {
+              break;
+            }
+          }
+        }
+
+        let prevEntry;
+        if (flatIndex === 0) {
+          prevEntry =
+            elementIndicesWithErrorsOrWarnings[
+              elementIndicesWithErrorsOrWarnings.length - 1
+            ];
+          selectedElementID = prevEntry.id;
+          selectedElementIndex = prevEntry.index;
+        } else {
+          prevEntry = elementIndicesWithErrorsOrWarnings[flatIndex - 1];
+          selectedElementID = prevEntry.id;
+          selectedElementIndex = prevEntry.index;
+        }
+
+        lookupIDForIndex = false;
+        break;
+      }
+      case 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE': {
+        if (store.errorCount === 0 && store.warningCount === 0) {
+          return state;
+        }
+
+        const elementIndicesWithErrorsOrWarnings = store.getElementsWithErrorsAndWarnings();
+
+        let flatIndex = -1;
+        if (selectedElementIndex !== null) {
+          // Resume from the current position in the list.
+          // Otherwise step to the next item, relative to the current selection.
+          for (let i = 0; i < elementIndicesWithErrorsOrWarnings.length; i++) {
+            const {index} = elementIndicesWithErrorsOrWarnings[i];
+            if (index <= selectedElementIndex) {
+              flatIndex = i;
+            } else {
+              break;
+            }
+          }
+        }
+
+        let nextEntry;
+        if (flatIndex >= elementIndicesWithErrorsOrWarnings.length - 1) {
+          nextEntry = elementIndicesWithErrorsOrWarnings[0];
+          selectedElementID = nextEntry.id;
+          selectedElementIndex = nextEntry.index;
+        } else {
+          nextEntry = elementIndicesWithErrorsOrWarnings[flatIndex + 1];
+          selectedElementID = nextEntry.id;
+          selectedElementIndex = nextEntry.index;
+        }
+
+        lookupIDForIndex = false;
+        break;
+      }
       default:
         // React can bailout of no-op updates.
         return state;
@@ -776,11 +861,13 @@ function TreeContextController({
         case 'SELECT_ELEMENT_BY_ID':
         case 'SELECT_CHILD_ELEMENT_IN_TREE':
         case 'SELECT_NEXT_ELEMENT_IN_TREE':
+        case 'SELECT_NEXT_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE':
         case 'SELECT_NEXT_SIBLING_IN_TREE':
         case 'SELECT_OWNER_LIST_NEXT_ELEMENT_IN_TREE':
         case 'SELECT_OWNER_LIST_PREVIOUS_ELEMENT_IN_TREE':
         case 'SELECT_PARENT_ELEMENT_IN_TREE':
         case 'SELECT_PREVIOUS_ELEMENT_IN_TREE':
+        case 'SELECT_PREVIOUS_ELEMENT_WITH_ERROR_OR_WARNING_IN_TREE':
         case 'SELECT_PREVIOUS_SIBLING_IN_TREE':
         case 'SELECT_OWNER':
         case 'UPDATE_INSPECTED_ELEMENT_ID':

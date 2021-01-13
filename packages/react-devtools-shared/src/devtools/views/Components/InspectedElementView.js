@@ -19,6 +19,7 @@ import ButtonIcon from '../ButtonIcon';
 import Icon from '../Icon';
 import HocBadges from './HocBadges';
 import InspectedElementContextTree from './InspectedElementContextTree';
+import InspectedElementErrorsAndWarningsTree from './InspectedElementErrorsAndWarningsTree';
 import InspectedElementHooksTree from './InspectedElementHooksTree';
 import InspectedElementPropsTree from './InspectedElementPropsTree';
 import InspectedElementStateTree from './InspectedElementStateTree';
@@ -114,6 +115,13 @@ export default function InspectedElementView({
         />
 
         <InspectedElementContextTree
+          bridge={bridge}
+          getInspectedElementPath={getInspectedElementPath}
+          inspectedElement={inspectedElement}
+          store={store}
+        />
+
+        <InspectedElementErrorsAndWarningsTree
           bridge={bridge}
           getInspectedElementPath={getInspectedElementPath}
           inspectedElement={inspectedElement}

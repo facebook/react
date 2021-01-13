@@ -10,7 +10,7 @@
 import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber, ContextDependency} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.new';
-import type {Lanes} from './ReactFiberLane';
+import type {Lanes} from './ReactFiberLane.new';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.new';
@@ -27,7 +27,7 @@ import {
   includesSomeLane,
   mergeLanes,
   pickArbitraryLane,
-} from './ReactFiberLane';
+} from './ReactFiberLane.new';
 
 import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
@@ -72,9 +72,11 @@ export function exitDisallowedContextReadInDEV(): void {
   }
 }
 
-export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
-  const context: ReactContext<T> = providerFiber.type._context;
-
+export function pushProvider<T>(
+  providerFiber: Fiber,
+  context: ReactContext<T>,
+  nextValue: T,
+): void {
   if (isPrimaryRenderer) {
     push(valueCursor, context._currentValue, providerFiber);
 
@@ -112,12 +114,12 @@ export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
   }
 }
 
-export function popProvider(providerFiber: Fiber): void {
+export function popProvider(
+  context: ReactContext<any>,
+  providerFiber: Fiber,
+): void {
   const currentValue = valueCursor.current;
-
   pop(valueCursor, providerFiber);
-
-  const context: ReactContext<any> = providerFiber.type._context;
   if (isPrimaryRenderer) {
     context._currentValue = currentValue;
   } else {
@@ -179,9 +181,9 @@ export function scheduleWorkOnParentPath(
   }
 }
 
-export function propagateContextChange(
+export function propagateContextChange<T>(
   workInProgress: Fiber,
-  context: ReactContext<mixed>,
+  context: ReactContext<T>,
   changedBits: number,
   renderLanes: Lanes,
 ): void {

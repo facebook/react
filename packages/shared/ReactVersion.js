@@ -6,4 +6,8 @@
  */
 
 // TODO: this is special because it gets imported during build.
-export default '17.0.1';
+//
+// TODO: 17.0.2 has not been released to NPM;
+// It exists as a placeholder so that DevTools can support work tag changes between releases.
+// When we next publish a release (either 17.0.2 or 17.1.0), update the matching TODO in backend/renderer.js
+export default '17.0.2';

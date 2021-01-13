@@ -18,13 +18,14 @@ export const disableInputAttributeSyncing = __VARIANT__;
 export const enableFilterEmptyStringAttributesDOM = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
 export const decoupleUpdatePriorityFromScheduler = __VARIANT__;
-export const skipUnmountedBoundaries = __VARIANT__;
 
 // Enable this flag to help with concurrent mode debugging.
 // It logs information to the console about React scheduling, rendering, and commit phases.
 //
 // NOTE: This feature will only work in DEV mode; all callsights are wrapped with __DEV__.
 export const enableDebugTracing = __EXPERIMENTAL__;
+
+export const enableSchedulingProfiler = __VARIANT__;
 
 // This only has an effect in the new reconciler. But also, the new reconciler
 // is only enabled when __VARIANT__ is true. So this is set to the opposite of
@@ -46,6 +47,10 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 // to __VARIANT__.
 export const enableTrustedTypesIntegration = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+export const disableNativeComponentFrames = false;
 
 export const enableDoubleInvokingEffects = false;
 export const enableUseRefAccessWarning = __VARIANT__;
+
+export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
+export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;

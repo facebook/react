@@ -12,6 +12,7 @@ import type {Response} from './ReactFlightClientHostConfigStream';
 import {
   resolveModule,
   resolveModel,
+  resolveSymbol,
   resolveError,
   createResponse as createResponseBase,
   parseModelString,
@@ -32,26 +33,28 @@ function processFullRow(response: Response, row: string): void {
     return;
   }
   const tag = row[0];
+  // When tags that are not text are added, check them here before
+  // parsing the row as text.
+  // switch (tag) {
+  // }
+  const colon = row.indexOf(':', 1);
+  const id = parseInt(row.substring(1, colon), 16);
+  const text = row.substring(colon + 1);
   switch (tag) {
     case 'J': {
-      const colon = row.indexOf(':', 1);
-      const id = parseInt(row.substring(1, colon), 16);
-      const json = row.substring(colon + 1);
-      resolveModel(response, id, json);
+      resolveModel(response, id, text);
       return;
     }
     case 'M': {
-      const colon = row.indexOf(':', 1);
-      const id = parseInt(row.substring(1, colon), 16);
-      const json = row.substring(colon + 1);
-      resolveModule(response, id, json);
+      resolveModule(response, id, text);
+      return;
+    }
+    case 'S': {
+      resolveSymbol(response, id, JSON.parse(text));
       return;
     }
     case 'E': {
-      const colon = row.indexOf(':', 1);
-      const id = parseInt(row.substring(1, colon), 16);
-      const json = row.substring(colon + 1);
-      const errorInfo = JSON.parse(json);
+      const errorInfo = JSON.parse(text);
       resolveError(response, id, errorInfo.message, errorInfo.stack);
       return;
     }

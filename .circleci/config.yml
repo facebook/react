@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 aliases:
   - &docker
@@ -104,139 +104,6 @@ jobs:
       - *restore_node_modules
       - run: node ./scripts/tasks/flow-ci
 
-  yarn_test-stable:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-
-    steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test-stable --ci
-
-  yarn_test:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test --ci
-
-  yarn_test-classic:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test-classic --ci
-
-  yarn_test-classic_variant:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test-classic --variant --ci
-
-  yarn_test-classic_prod:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test-classic --prod --ci
-
-  yarn_test-classic_prod_variant:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test-classic --prod --variant --ci
-
-  yarn_test-www:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test-www --ci
-
-  yarn_test-www_variant:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test-www --variant --ci
-
-  yarn_test-www_prod:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test-www --prod --ci
-
-  yarn_test-www_prod_variant:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test-www --prod --variant --ci
-
-  yarn_test-stable_persistent:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-
-    steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test-stable --persistent --ci
-
-  yarn_test-stable_prod:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-
-    steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test-stable --prod --ci
-
-  yarn_test_prod:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test --prod --ci
-
   RELEASE_CHANNEL_stable_yarn_build:
     docker: *docker
     environment: *environment
@@ -292,6 +159,45 @@ jobs:
             - react-native
             - dist
             - sizes/*.json
+
+  yarn_build_combined:
+    docker: *docker
+    environment: *environment
+    parallelism: 40
+    steps:
+      - checkout
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          command: |
+            ./scripts/circleci/add_build_info_json.sh
+            ./scripts/circleci/update_package_versions.sh
+            yarn build-combined
+      - persist_to_workspace:
+          root: build2
+          paths:
+            - facebook-www
+            - facebook-react-native
+            - facebook-relay
+            - oss-stable
+            - oss-experimental
+            - react-native
+            - dist
+            - sizes/*.json
+
+  process_artifacts_combined:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: build2
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+        # Compress build directory into a single tarball for easy download
+      - run: tar -zcvf ./build2.tgz ./build2
+      - store_artifacts:
+          path: ./build2.tgz
 
   build_devtools_and_process_artifacts:
     docker: *docker
@@ -416,37 +322,33 @@ jobs:
           command: yarn lint-build
       - run: scripts/circleci/check_minified_errors.sh
 
-  yarn_test-stable_build:
+  yarn_test:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
+    parameters:
+      args:
+        type: string
     steps:
       - checkout
-      - attach_workspace: *attach_workspace
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
-      - run: yarn test-stable --build --ci
+      - run: yarn test <<parameters.args>> --ci
 
   yarn_test_build:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
+    parameters:
+      args:
+        type: string
     steps:
       - checkout
-      - attach_workspace: *attach_workspace
+      - attach_workspace:
+          at: build2
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
-      - run: yarn test --build --ci
-
-  yarn_test_build_devtools:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test --project=devtools --build --ci
+      - run: yarn test --build <<parameters.args>> --ci
 
   RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
     docker: *docker
@@ -479,28 +381,6 @@ jobs:
             FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci
             FUZZ_TEST_SEED=$RANDOM yarn test --prod fuzz --ci
 
-  yarn_test-stable_build_prod:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test-stable --build --prod --ci
-
-  yarn_test_build_prod:
-    docker: *docker
-    environment: *environment
-    parallelism: *TEST_PARALLELISM
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      - run: yarn test --build --prod --ci
-
 workflows:
   version: 2
   stable:
@@ -510,27 +390,6 @@ workflows:
           requires:
             - setup
       - yarn_flow:
-          requires:
-            - setup
-      - yarn_test-stable:
-          requires:
-            - setup
-      - yarn_test-stable_prod:
-          requires:
-            - setup
-      - yarn_test-stable_persistent:
-          requires:
-            - setup
-      - yarn_test-classic:
-          requires:
-            - setup
-      - yarn_test-classic_variant:
-          requires:
-            - setup
-      - yarn_test-classic_prod:
-          requires:
-            - setup
-      - yarn_test-classic_prod_variant:
           requires:
             - setup
       - RELEASE_CHANNEL_stable_yarn_build:
@@ -545,12 +404,6 @@ workflows:
       - RELEASE_CHANNEL_stable_yarn_lint_build:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
-      - yarn_test-stable_build:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
-      - yarn_test-stable_build_prod:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
       - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
@@ -558,24 +411,6 @@ workflows:
   experimental:
     jobs:
       - setup
-      - yarn_test:
-          requires:
-            - setup
-      - yarn_test_prod:
-          requires:
-            - setup
-      - yarn_test-www:
-          requires:
-            - setup
-      - yarn_test-www_variant:
-          requires:
-            - setup
-      - yarn_test-www_prod:
-          requires:
-            - setup
-      - yarn_test-www_prod_variant:
-          requires:
-            - setup
       - yarn_build:
           requires:
             - setup
@@ -585,16 +420,7 @@ workflows:
       - sizebot_experimental:
           requires:
             - yarn_build
-      - yarn_test_build:
-          requires:
-            - yarn_build
-      - yarn_test_build_prod:
-          requires:
-            - yarn_build
       - yarn_lint_build:
-          requires:
-            - yarn_build
-      - yarn_test_build_devtools:
           requires:
             - yarn_build
       - build_devtools_and_process_artifacts:
@@ -611,6 +437,68 @@ workflows:
               only:
                 - master
 
+  # New workflow that will replace "stable" and "experimental"
+  build_and_test:
+    jobs:
+      - setup
+      - yarn_test:
+          requires:
+            - setup
+          matrix:
+            parameters:
+              args:
+                # Intentionally passing these as strings instead of creating a
+                # separate parameter per CLI argument, since it's easier to
+                # control/see which combinations we want to run.
+                - "-r=stable --env=development"
+                - "-r=stable --env=production"
+                - "-r=experimental --env=development"
+                - "-r=experimental --env=production"
+                - "-r=www-classic --env=development"
+                - "-r=www-classic --env=production"
+                - "-r=www-classic --env=development --variant"
+                - "-r=www-classic --env=production --variant"
+                - "-r=www-modern --env=development"
+                - "-r=www-modern --env=production"
+                - "-r=www-modern --env=development --variant"
+                - "-r=www-modern --env=production --variant"
+
+                # TODO: Test more persistent configurations?
+                - '-r=stable --env=development --persistent'
+      - yarn_build_combined:
+          requires:
+            - setup
+      - process_artifacts_combined:
+          requires:
+            - yarn_build_combined
+      - yarn_test_build:
+          requires:
+            - yarn_build_combined
+          matrix:
+            parameters:
+              args:
+                # Intentionally passing these as strings instead of creating a
+                # separate parameter per CLI argument, since it's easier to
+                # control/see which combinations we want to run.
+                - "-r=stable --env=development"
+                - "-r=stable --env=production"
+                - "-r=experimental --env=development"
+                - "-r=experimental --env=production"
+
+                # Dev Tools
+                - "--project=devtools -r=experimental"
+
+                # TODO: Update test config to support www build tests
+                # - "-r=www-classic --env=development"
+                # - "-r=www-classic --env=production"
+                # - "-r=www-classic --env=development --variant"
+                # - "-r=www-classic --env=production --variant"
+                # - "-r=www-modern --env=development"
+                # - "-r=www-modern --env=production"
+                # - "-r=www-modern --env=development --variant"
+                # - "-r=www-modern --env=production --variant"
+
+                # TODO: Test more persistent configurations?
   fuzz_tests:
     triggers:
       - schedule:

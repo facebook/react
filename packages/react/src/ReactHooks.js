@@ -36,6 +36,12 @@ function resolveDispatcher() {
   return dispatcher;
 }
 
+export function getCacheForType<T>(resourceType: () => T): T {
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe This is unstable, thus optional
+  return dispatcher.getCacheForType(resourceType);
+}
+
 export function useContext<T>(
   Context: ReactContext<T>,
   unstable_observedBits: number | boolean | void,
@@ -173,4 +179,10 @@ export function useMutableSource<Source, Snapshot>(
 ): Snapshot {
   const dispatcher = resolveDispatcher();
   return dispatcher.useMutableSource(source, getSnapshot, subscribe);
+}
+
+export function useCacheRefresh(): <T>(?() => T, ?T) => void {
+  const dispatcher = resolveDispatcher();
+  // $FlowFixMe This is unstable, thus optional
+  return dispatcher.useCacheRefresh();
 }

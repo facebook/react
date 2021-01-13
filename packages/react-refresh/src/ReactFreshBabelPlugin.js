@@ -226,8 +226,8 @@ export default function(babel, opts = {}) {
       case 'React.useRef':
       case 'useContext':
       case 'React.useContext':
-      case 'useImperativeMethods':
-      case 'React.useImperativeMethods':
+      case 'useImperativeHandle':
+      case 'React.useImperativeHandle':
       case 'useDebugValue':
       case 'React.useDebugValue':
         return true;

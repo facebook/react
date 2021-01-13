@@ -1693,6 +1693,42 @@ const tests = {
       ],
     },
     {
+      code: normalizeIndent`
+        function MyComponent() {
+          useEffect()
+          useLayoutEffect()
+          useCallback()
+          useMemo()
+        }
+      `,
+      errors: [
+        {
+          message:
+            'React Hook useEffect requires an effect callback. ' +
+            'Did you forget to pass a callback to the hook?',
+          suggestions: undefined,
+        },
+        {
+          message:
+            'React Hook useLayoutEffect requires an effect callback. ' +
+            'Did you forget to pass a callback to the hook?',
+          suggestions: undefined,
+        },
+        {
+          message:
+            'React Hook useCallback requires an effect callback. ' +
+            'Did you forget to pass a callback to the hook?',
+          suggestions: undefined,
+        },
+        {
+          message:
+            'React Hook useMemo requires an effect callback. ' +
+            'Did you forget to pass a callback to the hook?',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
       // Regression test
       code: normalizeIndent`
         function MyComponent() {
