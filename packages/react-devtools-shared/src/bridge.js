@@ -114,7 +114,6 @@ type NativeStyleEditor_SetValueParams = {|
 type UpdateConsolePatchSettingsParams = {|
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
-  showInlineWarningsAndErrors: boolean,
 |};
 
 type BackendEvents = {|
@@ -142,10 +141,7 @@ type BackendEvents = {|
 |};
 
 type FrontendEvents = {|
-  clearErrorsAndWarnings: [{|rendererID: RendererID|}],
-  clearErrorsForFiberID: [ElementAndRendererID],
   clearNativeElementHighlight: [],
-  clearWarningsForFiberID: [ElementAndRendererID],
   copyElementPath: [CopyElementPathParams],
   deletePath: [DeletePath],
   getOwnersList: [ElementAndRendererID],

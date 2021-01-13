@@ -22,9 +22,8 @@ import {
   REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
-  REACT_CACHE_TYPE,
 } from 'shared/ReactSymbols';
-import {enableScopeAPI, enableCache} from './ReactFeatureFlags';
+import {enableScopeAPI} from './ReactFeatureFlags';
 
 let REACT_MODULE_REFERENCE: number | Symbol = 0;
 if (typeof Symbol === 'function') {
@@ -45,8 +44,7 @@ export default function isValidElementType(type: mixed) {
     type === REACT_SUSPENSE_TYPE ||
     type === REACT_SUSPENSE_LIST_TYPE ||
     type === REACT_LEGACY_HIDDEN_TYPE ||
-    (enableScopeAPI && type === REACT_SCOPE_TYPE) ||
-    (enableCache && type === REACT_CACHE_TYPE)
+    (enableScopeAPI && type === REACT_SCOPE_TYPE)
   ) {
     return true;
   }

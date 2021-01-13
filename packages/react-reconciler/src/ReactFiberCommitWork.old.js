@@ -24,7 +24,6 @@ import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
-import type {HookFlags} from './ReactHookEffectTags';
 
 import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {
@@ -36,6 +35,7 @@ import {
   enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
+  enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -66,19 +66,11 @@ import {
   NoFlags,
   ContentReset,
   Placement,
-  ChildDeletion,
   Snapshot,
   Update,
-  Passive,
-  PassiveMask,
-  PassiveUnmountPendingDev,
 } from './ReactFiberFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'shared/invariant';
-import {
-  resetCurrentFiber as resetCurrentDebugFiberInDEV,
-  setCurrentFiber as setCurrentDebugFiberInDEV,
-} from './ReactCurrentFiber';
 
 import {onCommitUnmount} from './ReactFiberDevToolsHook.old';
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
@@ -87,8 +79,6 @@ import {
   getCommitTime,
   recordLayoutEffectDuration,
   startLayoutEffectTimer,
-  recordPassiveEffectDuration,
-  startPassiveEffectTimer,
 } from './ReactProfilerTimer.old';
 import {ProfileMode} from './ReactTypeOfMode';
 import {commitUpdateQueue} from './ReactUpdateQueue.old';
@@ -144,8 +134,6 @@ if (__DEV__) {
 }
 
 const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
-
-let nextEffect: Fiber | null = null;
 
 const callComponentWillUnmountWithTimer = function(current, instance) {
   instance.props = current.memoizedProps;
@@ -343,19 +331,19 @@ function commitBeforeMutationLifeCycles(
   );
 }
 
-function commitHookEffectListUnmount(flags: HookFlags, finishedWork: Fiber) {
+function commitHookEffectListUnmount(tag: number, finishedWork: Fiber) {
   const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
   const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
   if (lastEffect !== null) {
     const firstEffect = lastEffect.next;
     let effect = firstEffect;
     do {
-      if ((effect.tag & flags) === flags) {
+      if ((effect.tag & tag) === tag) {
         // Unmount
         const destroy = effect.destroy;
         effect.destroy = undefined;
         if (destroy !== undefined) {
-          safelyCallDestroy(finishedWork, destroy);
+          destroy();
         }
       }
       effect = effect.next;
@@ -1072,42 +1060,30 @@ function commitNestedUnmounts(
 }
 
 function detachFiberMutation(fiber: Fiber) {
-  // Cut off the return pointer to disconnect it from the tree.
-  // This enables us to detect and warn against state updates on an unmounted component.
-  // It also prevents events from bubbling from within disconnected components.
-  //
-  // Ideally, we should also clear the child pointer of the parent alternate to let this
+  // Cut off the return pointers to disconnect it from the tree. Ideally, we
+  // should clear the child pointer of the parent alternate to let this
   // get GC:ed but we don't know which for sure which parent is the current
-  // one so we'll settle for GC:ing the subtree of this child.
-  // This child itself will be GC:ed when the parent updates the next time.
+  // one so we'll settle for GC:ing the subtree of this child. This child
+  // itself will be GC:ed when the parent updates the next time.
+  // Note: we cannot null out sibling here, otherwise it can cause issues
+  // with findDOMNode and how it requires the sibling field to carry out
+  // traversal in a later effect. See PR #16820. We now clear the sibling
+  // field after effects, see: detachFiberAfterEffects.
   //
-  // Note that we can't clear child or sibling pointers yet.
-  // They're needed for passive effects and for findDOMNode.
-  // We defer those fields, and all other cleanup, to the passive phase (see detachFiberAfterEffects).
-  const alternate = fiber.alternate;
-  if (alternate !== null) {
-    alternate.return = null;
-    fiber.alternate = null;
-  }
-  fiber.return = null;
-}
-
-export function detachFiberAfterEffects(fiber: Fiber): void {
-  // Null out fields to improve GC for references that may be lingering (e.g. DevTools).
-  // Note that we already cleared the return pointer in detachFiberMutation().
+  // Don't disconnect stateNode now; it will be detached in detachFiberAfterEffects.
+  // It may be required if the current component is an error boundary,
+  // and one of its descendants throws while unmounting a passive effect.
+  fiber.alternate = null;
   fiber.child = null;
   fiber.deletions = null;
   fiber.dependencies = null;
+  fiber.firstEffect = null;
+  fiber.lastEffect = null;
   fiber.memoizedProps = null;
   fiber.memoizedState = null;
   fiber.pendingProps = null;
-  fiber.sibling = null;
-  fiber.stateNode = null;
+  fiber.return = null;
   fiber.updateQueue = null;
-  fiber.nextEffect = null;
-  fiber.firstEffect = null;
-  fiber.lastEffect = null;
-
   if (__DEV__) {
     fiber._debugOwner = null;
   }
@@ -1823,263 +1799,114 @@ function commitResetTextContent(current: Fiber) {
   resetTextContent(current.stateNode);
 }
 
-export function commitPassiveMountEffects(
-  root: FiberRoot,
-  firstChild: Fiber,
-): void {
-  nextEffect = firstChild;
-  commitPassiveMountEffects_begin(firstChild, root);
-}
-
-function commitPassiveMountEffects_begin(subtreeRoot: Fiber, root: FiberRoot) {
-  while (nextEffect !== null) {
-    const fiber = nextEffect;
-    const firstChild = fiber.child;
-    if ((fiber.subtreeFlags & PassiveMask) !== NoFlags && firstChild !== null) {
-      ensureCorrectReturnPointer(firstChild, fiber);
-      nextEffect = firstChild;
-    } else {
-      commitPassiveMountEffects_complete(subtreeRoot, root);
-    }
-  }
-}
-
-function commitPassiveMountEffects_complete(
-  subtreeRoot: Fiber,
-  root: FiberRoot,
-) {
-  while (nextEffect !== null) {
-    const fiber = nextEffect;
-    if ((fiber.flags & Passive) !== NoFlags) {
-      if (__DEV__) {
-        setCurrentDebugFiberInDEV(fiber);
+function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
+  if (__DEV__ && enableDoubleInvokingEffects) {
+    switch (fiber.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent: {
         invokeGuardedCallback(
           null,
-          commitPassiveMountOnFiber,
+          commitHookEffectListMount,
           null,
-          root,
+          HookLayout | HookHasEffect,
           fiber,
         );
         if (hasCaughtError()) {
-          const error = clearCaughtError();
-          captureCommitPhaseError(fiber, error);
+          const mountError = clearCaughtError();
+          captureCommitPhaseError(fiber, mountError);
         }
-        resetCurrentDebugFiberInDEV();
-      } else {
-        try {
-          commitPassiveMountOnFiber(root, fiber);
-        } catch (error) {
-          captureCommitPhaseError(fiber, error);
+        break;
+      }
+      case ClassComponent: {
+        const instance = fiber.stateNode;
+        invokeGuardedCallback(null, instance.componentDidMount, instance);
+        if (hasCaughtError()) {
+          const mountError = clearCaughtError();
+          captureCommitPhaseError(fiber, mountError);
         }
+        break;
       }
     }
-
-    if (fiber === subtreeRoot) {
-      nextEffect = null;
-      return;
-    }
-
-    const sibling = fiber.sibling;
-    if (sibling !== null) {
-      ensureCorrectReturnPointer(sibling, fiber.return);
-      nextEffect = sibling;
-      return;
-    }
-
-    nextEffect = fiber.return;
   }
 }
 
-function commitPassiveMountOnFiber(
-  finishedRoot: FiberRoot,
-  finishedWork: Fiber,
-): void {
-  switch (finishedWork.tag) {
-    case FunctionComponent:
-    case ForwardRef:
-    case SimpleMemoComponent: {
-      if (
-        enableProfilerTimer &&
-        enableProfilerCommitHooks &&
-        finishedWork.mode & ProfileMode
-      ) {
-        startPassiveEffectTimer();
-        try {
-          commitHookEffectListMount(HookPassive | HookHasEffect, finishedWork);
-        } finally {
-          recordPassiveEffectDuration(finishedWork);
+function invokePassiveEffectMountInDEV(fiber: Fiber): void {
+  if (__DEV__ && enableDoubleInvokingEffects) {
+    switch (fiber.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent: {
+        invokeGuardedCallback(
+          null,
+          commitHookEffectListMount,
+          null,
+          HookPassive | HookHasEffect,
+          fiber,
+        );
+        if (hasCaughtError()) {
+          const mountError = clearCaughtError();
+          captureCommitPhaseError(fiber, mountError);
         }
-      } else {
-        commitHookEffectListMount(HookPassive | HookHasEffect, finishedWork);
+        break;
       }
-      break;
     }
   }
 }
 
-export function commitPassiveUnmountEffects(firstChild: Fiber): void {
-  nextEffect = firstChild;
-  commitPassiveUnmountEffects_begin();
-}
-
-function commitPassiveUnmountEffects_begin() {
-  while (nextEffect !== null) {
-    const fiber = nextEffect;
-    const child = fiber.child;
-
-    if ((nextEffect.flags & ChildDeletion) !== NoFlags) {
-      const deletions = fiber.deletions;
-      if (deletions !== null) {
-        for (let i = 0; i < deletions.length; i++) {
-          const fiberToDelete = deletions[i];
-          nextEffect = fiberToDelete;
-          commitPassiveUnmountEffectsInsideOfDeletedTree_begin(fiberToDelete);
-
-          // Now that passive effects have been processed, it's safe to detach lingering pointers.
-          detachFiberAfterEffects(fiberToDelete);
+function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
+  if (__DEV__ && enableDoubleInvokingEffects) {
+    switch (fiber.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent: {
+        invokeGuardedCallback(
+          null,
+          commitHookEffectListUnmount,
+          null,
+          HookLayout | HookHasEffect,
+          fiber,
+          fiber.return,
+        );
+        if (hasCaughtError()) {
+          const unmountError = clearCaughtError();
+          captureCommitPhaseError(fiber, unmountError);
         }
-        nextEffect = fiber;
+        break;
+      }
+      case ClassComponent: {
+        const instance = fiber.stateNode;
+        if (typeof instance.componentWillUnmount === 'function') {
+          safelyCallComponentWillUnmount(fiber, instance);
+        }
+        break;
       }
     }
-
-    if ((fiber.subtreeFlags & PassiveMask) !== NoFlags && child !== null) {
-      ensureCorrectReturnPointer(child, fiber);
-      nextEffect = child;
-    } else {
-      commitPassiveUnmountEffects_complete();
-    }
   }
 }
 
-function commitPassiveUnmountEffects_complete() {
-  while (nextEffect !== null) {
-    const fiber = nextEffect;
-    if ((fiber.flags & Passive) !== NoFlags) {
-      setCurrentDebugFiberInDEV(fiber);
-      commitPassiveUnmountOnFiber(fiber);
-      resetCurrentDebugFiberInDEV();
-    }
-
-    const sibling = fiber.sibling;
-    if (sibling !== null) {
-      ensureCorrectReturnPointer(sibling, fiber.return);
-      nextEffect = sibling;
-      return;
-    }
-
-    nextEffect = fiber.return;
-  }
-}
-
-function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
-  if (__DEV__) {
-    finishedWork.flags &= ~PassiveUnmountPendingDev;
-    const alternate = finishedWork.alternate;
-    if (alternate !== null) {
-      alternate.flags &= ~PassiveUnmountPendingDev;
-    }
-  }
-
-  switch (finishedWork.tag) {
-    case FunctionComponent:
-    case ForwardRef:
-    case SimpleMemoComponent: {
-      if (
-        enableProfilerTimer &&
-        enableProfilerCommitHooks &&
-        finishedWork.mode & ProfileMode
-      ) {
-        startPassiveEffectTimer();
-        commitHookEffectListUnmount(HookPassive | HookHasEffect, finishedWork);
-        recordPassiveEffectDuration(finishedWork);
-      } else {
-        commitHookEffectListUnmount(HookPassive | HookHasEffect, finishedWork);
+function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
+  if (__DEV__ && enableDoubleInvokingEffects) {
+    switch (fiber.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent: {
+        invokeGuardedCallback(
+          null,
+          commitHookEffectListUnmount,
+          null,
+          HookPassive | HookHasEffect,
+          fiber,
+          fiber.return,
+        );
+        if (hasCaughtError()) {
+          const unmountError = clearCaughtError();
+          captureCommitPhaseError(fiber, unmountError);
+        }
+        break;
       }
-      break;
     }
   }
-}
-
-function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
-  deletedSubtreeRoot: Fiber,
-) {
-  while (nextEffect !== null) {
-    const fiber = nextEffect;
-    const child = fiber.child;
-    // TODO: Only traverse subtree if it has a PassiveStatic flag
-    if (child !== null) {
-      ensureCorrectReturnPointer(child, fiber);
-      nextEffect = child;
-    } else {
-      commitPassiveUnmountEffectsInsideOfDeletedTree_complete(
-        deletedSubtreeRoot,
-      );
-    }
-  }
-}
-
-function commitPassiveUnmountEffectsInsideOfDeletedTree_complete(
-  deletedSubtreeRoot: Fiber,
-) {
-  while (nextEffect !== null) {
-    const fiber = nextEffect;
-    // TODO: Check if fiber has a PassiveStatic flag
-    setCurrentDebugFiberInDEV(fiber);
-    commitPassiveUnmountInsideDeletedTreeOnFiber(fiber);
-    resetCurrentDebugFiberInDEV();
-
-    if (fiber === deletedSubtreeRoot) {
-      nextEffect = null;
-      return;
-    }
-
-    const sibling = fiber.sibling;
-    if (sibling !== null) {
-      ensureCorrectReturnPointer(sibling, fiber.return);
-      nextEffect = sibling;
-      return;
-    }
-
-    nextEffect = fiber.return;
-  }
-}
-
-function commitPassiveUnmountInsideDeletedTreeOnFiber(current: Fiber): void {
-  switch (current.tag) {
-    case FunctionComponent:
-    case ForwardRef:
-    case SimpleMemoComponent: {
-      if (
-        enableProfilerTimer &&
-        enableProfilerCommitHooks &&
-        current.mode & ProfileMode
-      ) {
-        startPassiveEffectTimer();
-        commitHookEffectListUnmount(HookPassive, current);
-        recordPassiveEffectDuration(current);
-      } else {
-        commitHookEffectListUnmount(HookPassive, current);
-      }
-      break;
-    }
-  }
-}
-
-let didWarnWrongReturnPointer = false;
-function ensureCorrectReturnPointer(fiber, expectedReturnFiber) {
-  if (__DEV__) {
-    if (!didWarnWrongReturnPointer && fiber.return !== expectedReturnFiber) {
-      didWarnWrongReturnPointer = true;
-      console.error(
-        'Internal React error: Return pointer is inconsistent ' +
-          'with parent.',
-      );
-    }
-  }
-
-  // TODO: Remove this assignment once we're confident that it won't break
-  // anything, by checking the warning logs for the above invariant
-  fiber.return = expectedReturnFiber;
 }
 
 export {
@@ -2091,4 +1918,8 @@ export {
   commitLifeCycles,
   commitAttachRef,
   commitDetachRef,
+  invokeLayoutEffectMountInDEV,
+  invokeLayoutEffectUnmountInDEV,
+  invokePassiveEffectMountInDEV,
+  invokePassiveEffectUnmountInDEV,
 };

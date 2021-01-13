@@ -72,11 +72,9 @@ export function exitDisallowedContextReadInDEV(): void {
   }
 }
 
-export function pushProvider<T>(
-  providerFiber: Fiber,
-  context: ReactContext<T>,
-  nextValue: T,
-): void {
+export function pushProvider<T>(providerFiber: Fiber, nextValue: T): void {
+  const context: ReactContext<T> = providerFiber.type._context;
+
   if (isPrimaryRenderer) {
     push(valueCursor, context._currentValue, providerFiber);
 
@@ -114,12 +112,12 @@ export function pushProvider<T>(
   }
 }
 
-export function popProvider(
-  context: ReactContext<any>,
-  providerFiber: Fiber,
-): void {
+export function popProvider(providerFiber: Fiber): void {
   const currentValue = valueCursor.current;
+
   pop(valueCursor, providerFiber);
+
+  const context: ReactContext<any> = providerFiber.type._context;
   if (isPrimaryRenderer) {
     context._currentValue = currentValue;
   } else {
@@ -181,9 +179,9 @@ export function scheduleWorkOnParentPath(
   }
 }
 
-export function propagateContextChange<T>(
+export function propagateContextChange(
   workInProgress: Fiber,
-  context: ReactContext<T>,
+  context: ReactContext<mixed>,
   changedBits: number,
   renderLanes: Lanes,
 ): void {

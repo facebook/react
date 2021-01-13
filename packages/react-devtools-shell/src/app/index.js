@@ -12,7 +12,6 @@ import Iframe from './Iframe';
 import EditableProps from './EditableProps';
 import ElementTypes from './ElementTypes';
 import Hydration from './Hydration';
-import InlineWarnings from './InlineWarnings';
 import InspectableElements from './InspectableElements';
 import InteractionTracing from './InteractionTracing';
 import PriorityLevels from './PriorityLevels';
@@ -54,7 +53,6 @@ function mountTestApp() {
   mountHelper(Hydration);
   mountHelper(ElementTypes);
   mountHelper(EditableProps);
-  mountHelper(InlineWarnings);
   mountHelper(PriorityLevels);
   mountHelper(ReactNativeWeb);
   mountHelper(Toggle);

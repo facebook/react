@@ -25,7 +25,6 @@ import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
-import type {Cache} from './ReactFiberCacheComponent.old';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -42,8 +41,7 @@ export type HookType =
   | 'useDeferredValue'
   | 'useTransition'
   | 'useMutableSource'
-  | 'useOpaqueIdentifier'
-  | 'useCacheRefresh';
+  | 'useOpaqueIdentifier';
 
 export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
 
@@ -237,9 +235,6 @@ type BaseFiberRootProperties = {|
 
   entangledLanes: Lanes,
   entanglements: LaneMap<Lanes>,
-
-  pooledCache: Cache | null,
-  pooledCacheLanes: Lanes,
 |};
 
 // The following attributes are only used by interaction tracing builds.
@@ -319,7 +314,6 @@ export type Dispatcher = {|
     subscribe: MutableSourceSubscribeFn<Source, Snapshot>,
   ): Snapshot,
   useOpaqueIdentifier(): any,
-  useCacheRefresh?: () => <T>(?() => T, ?T) => void,
 
   unstable_isNewReconciler?: boolean,
 |};

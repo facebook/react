@@ -685,5 +685,4 @@ exports[`Store should show the right display names for special component types 1
       <Baz> [withFoo][withBar]
       <Baz> [Memo][withFoo][withBar]
       <Baz> [ForwardRef][withFoo][withBar]
-      <Cache>
 `;

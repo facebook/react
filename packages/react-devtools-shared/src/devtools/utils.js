@@ -10,7 +10,6 @@
 import JSON5 from 'json5';
 
 import type {Element} from './views/Components/types';
-import type {StateContext} from './views/Components/TreeContext';
 import type Store from './store';
 
 export function printElement(element: Element, includeWeight: boolean = false) {
@@ -50,95 +49,39 @@ export function printOwnersList(
     .join('\n');
 }
 
-export function printStore(
-  store: Store,
-  includeWeight: boolean = false,
-  state: StateContext | null = null,
-) {
+export function printStore(store: Store, includeWeight: boolean = false) {
   const snapshotLines = [];
 
   let rootWeight = 0;
 
-  function printSelectedMarker(index: number): string {
-    if (state === null) {
-      return '';
-    }
-    return state.selectedElementIndex === index ? `→` : ' ';
-  }
+  store.roots.forEach(rootID => {
+    const {weight} = ((store.getElementByID(rootID): any): Element);
 
-  function printErrorsAndWarnings(element: Element): string {
-    const {
-      errorCount,
-      warningCount,
-    } = store.getErrorAndWarningCountForElementID(element.id);
-    if (errorCount === 0 && warningCount === 0) {
-      return '';
-    }
-    return ` ${errorCount > 0 ? '✕' : ''}${warningCount > 0 ? '⚠' : ''}`;
-  }
+    snapshotLines.push('[root]' + (includeWeight ? ` (${weight})` : ''));
 
-  const ownerFlatTree = state !== null ? state.ownerFlatTree : null;
-  if (ownerFlatTree !== null) {
-    snapshotLines.push(
-      '[owners]' + (includeWeight ? ` (${ownerFlatTree.length})` : ''),
-    );
-    ownerFlatTree.forEach((element, index) => {
-      const printedSelectedMarker = printSelectedMarker(index);
-      const printedElement = printElement(element, false);
-      const printedErrorsAndWarnings = printErrorsAndWarnings(element);
-      snapshotLines.push(
-        `${printedSelectedMarker}${printedElement}${printedErrorsAndWarnings}`,
-      );
-    });
-  } else {
-    const errorsAndWarnings = store._errorsAndWarnings;
-    if (errorsAndWarnings.size > 0) {
-      let errorCount = 0;
-      let warningCount = 0;
-      errorsAndWarnings.forEach(entry => {
-        errorCount += entry.errorCount;
-        warningCount += entry.warningCount;
-      });
+    for (let i = rootWeight; i < rootWeight + weight; i++) {
+      const element = store.getElementAtIndex(i);
 
-      snapshotLines.push(`✕ ${errorCount}, ⚠ ${warningCount}`);
-    }
-
-    store.roots.forEach(rootID => {
-      const {weight} = ((store.getElementByID(rootID): any): Element);
-      const maybeWeightLabel = includeWeight ? ` (${weight})` : '';
-
-      // Store does not (yet) expose a way to get errors/warnings per root.
-      snapshotLines.push(`[root]${maybeWeightLabel}`);
-
-      for (let i = rootWeight; i < rootWeight + weight; i++) {
-        const element = store.getElementAtIndex(i);
-
-        if (element == null) {
-          throw Error(`Could not find element at index ${i}`);
-        }
-
-        const printedSelectedMarker = printSelectedMarker(i);
-        const printedElement = printElement(element, includeWeight);
-        const printedErrorsAndWarnings = printErrorsAndWarnings(element);
-        snapshotLines.push(
-          `${printedSelectedMarker}${printedElement}${printedErrorsAndWarnings}`,
-        );
+      if (element == null) {
+        throw Error(`Could not find element at index ${i}`);
       }
 
-      rootWeight += weight;
-    });
-
-    // Make sure the pretty-printed test align with the Store's reported number of total rows.
-    if (rootWeight !== store.numElements) {
-      throw Error(
-        `Inconsistent Store state. Individual root weights (${rootWeight}) do not match total weight (${store.numElements})`,
-      );
+      snapshotLines.push(printElement(element, includeWeight));
     }
 
-    // If roots have been unmounted, verify that they've been removed from maps.
-    // This helps ensure the Store doesn't leak memory.
-    store.assertExpectedRootMapSizes();
+    rootWeight += weight;
+  });
+
+  // Make sure the pretty-printed test align with the Store's reported number of total rows.
+  if (rootWeight !== store.numElements) {
+    throw Error(
+      `Inconsistent Store state. Individual root weights (${rootWeight}) do not match total weight (${store.numElements})`,
+    );
   }
+
+  // If roots have been unmounted, verify that they've been removed from maps.
+  // This helps ensure the Store doesn't leak memory.
+  store.assertExpectedRootMapSizes();
 
   return snapshotLines.join('\n');
 }

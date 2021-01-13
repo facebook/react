@@ -73,10 +73,6 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       Dispatcher.useState(null);
       Dispatcher.useReducer((s, a) => s, null);
       Dispatcher.useRef(null);
-      if (typeof Dispatcher.useCacheRefresh === 'function') {
-        // This type check is for Flow only.
-        Dispatcher.useCacheRefresh();
-      }
       Dispatcher.useLayoutEffect(() => {});
       Dispatcher.useEffect(() => {});
       Dispatcher.useImperativeHandle(undefined, () => null);
@@ -173,16 +169,6 @@ function useRef<T>(initialValue: T): {|current: T|} {
     value: ref.current,
   });
   return ref;
-}
-
-function useCacheRefresh(): () => void {
-  const hook = nextHook();
-  hookLog.push({
-    primitive: 'CacheRefresh',
-    stackError: new Error(),
-    value: hook !== null ? hook.memoizedState : function refresh() {},
-  });
-  return () => {};
 }
 
 function useLayoutEffect(
@@ -319,7 +305,6 @@ function useOpaqueIdentifier(): OpaqueIDType | void {
 const Dispatcher: DispatcherType = {
   getCacheForType,
   readContext,
-  useCacheRefresh,
   useCallback,
   useContext,
   useEffect,

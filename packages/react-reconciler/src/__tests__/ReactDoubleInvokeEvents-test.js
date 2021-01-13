@@ -26,9 +26,7 @@ describe('ReactDoubleInvokeEvents', () => {
   function supportsDoubleInvokeEffects() {
     return gate(
       flags =>
-        flags.build === 'development' &&
-        flags.enableDoubleInvokingEffects &&
-        flags.dfsEffectsRefactor,
+        flags.build === 'development' && flags.enableDoubleInvokingEffects,
     );
   }
 
