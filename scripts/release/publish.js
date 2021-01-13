@@ -48,8 +48,22 @@ const run = async () => {
     await confirmVersionAndTags(params);
     await validateSkipPackages(params);
     await checkNPMPermissions(params);
-    const otp = await promptForOTP(params);
-    await publishToNPM(params, otp);
+
+    while (true) {
+      try {
+        const otp = await promptForOTP(params);
+        await publishToNPM(params, otp);
+        break;
+      } catch (error) {
+        console.error(error.message);
+        console.log();
+        console.log(
+          theme.error`Publish failed. Enter a fresh otp code to retry.`
+        );
+        continue;
+      }
+    }
+
     await updateStableVersionNumbers(params);
     await printFollowUpInstructions(params);
   } catch (error) {
