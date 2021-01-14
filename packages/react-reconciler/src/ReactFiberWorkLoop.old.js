@@ -2148,7 +2148,11 @@ function commitRootImpl(root, renderPriorityLevel) {
         if (deletions !== null) {
           for (let i = 0; i < deletions.length; i++) {
             const deletion = deletions[i];
+            const alternate = deletion.alternate;
             detachFiberAfterEffects(deletion);
+            if (alternate !== null) {
+              detachFiberAfterEffects(alternate);
+            }
           }
         }
       }

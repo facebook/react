@@ -1084,17 +1084,17 @@ function detachFiberMutation(fiber: Fiber) {
   // Note that we can't clear child or sibling pointers yet.
   // They're needed for passive effects and for findDOMNode.
   // We defer those fields, and all other cleanup, to the passive phase (see detachFiberAfterEffects).
-  const alternate = fiber.alternate;
-  if (alternate !== null) {
-    alternate.return = null;
-    fiber.alternate = null;
-  }
+  //
+  // Don't reset the alternate yet, either. We need that so we can detach the
+  // alternate's fields in the passive phase. Clearing the return pointer is
+  // sufficient for findDOMNode semantics.
   fiber.return = null;
 }
 
 export function detachFiberAfterEffects(fiber: Fiber): void {
   // Null out fields to improve GC for references that may be lingering (e.g. DevTools).
   // Note that we already cleared the return pointer in detachFiberMutation().
+  fiber.alternate = null;
   fiber.child = null;
   fiber.deletions = null;
   fiber.dependencies = null;
@@ -1936,7 +1936,11 @@ function commitPassiveUnmountEffects_begin() {
           commitPassiveUnmountEffectsInsideOfDeletedTree_begin(fiberToDelete);
 
           // Now that passive effects have been processed, it's safe to detach lingering pointers.
+          const alternate = fiberToDelete.alternate;
           detachFiberAfterEffects(fiberToDelete);
+          if (alternate !== null) {
+            detachFiberAfterEffects(alternate);
+          }
         }
         nextEffect = fiber;
       }
