@@ -1,0 +1,1293 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`TreeListContext owners state should exit the owners list if an element outside the list is selected: 0: mount 1`] = `
+[root]
+  ▾ <Parent>
+    ▾ <Suspense>
+      ▾ <Child>
+        ▾ <Suspense>
+            <Grandchild>
+`;
+
+exports[`TreeListContext owners state should exit the owners list if an element outside the list is selected: 1: initial state 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 5,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext owners state should exit the owners list if an element outside the list is selected: 2: child owners tree 1`] = `
+Object {
+  "inspectedElementID": 4,
+  "numElements": 3,
+  "ownerFlatTree": Array [
+    Object {
+      "children": Array [
+        5,
+      ],
+      "depth": 0,
+      "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 4,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 2,
+      "parentID": 3,
+      "type": 5,
+      "weight": 3,
+    },
+    Object {
+      "children": Array [
+        6,
+      ],
+      "depth": 1,
+      "displayName": "Suspense",
+      "hocDisplayNames": null,
+      "id": 5,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 4,
+      "parentID": 4,
+      "type": 12,
+      "weight": 2,
+    },
+    Object {
+      "children": Array [],
+      "depth": 2,
+      "displayName": "Grandchild",
+      "hocDisplayNames": null,
+      "id": 6,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 4,
+      "parentID": 5,
+      "type": 5,
+      "weight": 1,
+    },
+  ],
+  "ownerID": 4,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 4,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext owners state should exit the owners list if an element outside the list is selected: 3: child owners tree 1`] = `
+Object {
+  "inspectedElementID": 5,
+  "numElements": 3,
+  "ownerFlatTree": Array [
+    Object {
+      "children": Array [
+        5,
+      ],
+      "depth": 0,
+      "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 4,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 2,
+      "parentID": 3,
+      "type": 5,
+      "weight": 3,
+    },
+    Object {
+      "children": Array [
+        6,
+      ],
+      "depth": 1,
+      "displayName": "Suspense",
+      "hocDisplayNames": null,
+      "id": 5,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 4,
+      "parentID": 4,
+      "type": 12,
+      "weight": 2,
+    },
+    Object {
+      "children": Array [],
+      "depth": 2,
+      "displayName": "Grandchild",
+      "hocDisplayNames": null,
+      "id": 6,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 4,
+      "parentID": 5,
+      "type": 5,
+      "weight": 1,
+    },
+  ],
+  "ownerID": 4,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 5,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext owners state should exit the owners list if an element outside the list is selected: 4: main tree 1`] = `
+Object {
+  "inspectedElementID": 5,
+  "numElements": 5,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 5,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext owners state should exit the owners list if the current owner is unmounted: 0: mount 1`] = `
+[root]
+  ▾ <Parent>
+      <Child>
+`;
+
+exports[`TreeListContext owners state should exit the owners list if the current owner is unmounted: 1: initial state 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 2,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext owners state should exit the owners list if the current owner is unmounted: 2: child owners tree 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 1,
+  "ownerFlatTree": Array [
+    Object {
+      "children": Array [],
+      "depth": 0,
+      "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 3,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 0,
+      "parentID": 2,
+      "type": 5,
+      "weight": 1,
+    },
+  ],
+  "ownerID": 3,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 3,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext owners state should exit the owners list if the current owner is unmounted: 3: remove child 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 1,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext owners state should exit the owners list if the current owner is unmounted: 4: parent owners tree 1`] = `
+Object {
+  "inspectedElementID": 2,
+  "numElements": 1,
+  "ownerFlatTree": Array [
+    Object {
+      "children": Array [],
+      "depth": 0,
+      "displayName": "Parent",
+      "hocDisplayNames": null,
+      "id": 2,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 0,
+      "parentID": 1,
+      "type": 5,
+      "weight": 1,
+    },
+  ],
+  "ownerID": 2,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 2,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext owners state should exit the owners list if the current owner is unmounted: 5: unmount root 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 0,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext owners state should remove an element from the owners list if it is unmounted: 0: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`TreeListContext owners state should remove an element from the owners list if it is unmounted: 1: initial state 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext owners state should remove an element from the owners list if it is unmounted: 2: parent owners tree 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 3,
+  "ownerFlatTree": Array [
+    Object {
+      "children": Array [
+        4,
+        5,
+      ],
+      "depth": 0,
+      "displayName": "Parent",
+      "hocDisplayNames": null,
+      "id": 3,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 2,
+      "parentID": 2,
+      "type": 5,
+      "weight": 3,
+    },
+    Object {
+      "children": Array [],
+      "depth": 1,
+      "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 4,
+      "isCollapsed": false,
+      "key": "0",
+      "ownerID": 3,
+      "parentID": 3,
+      "type": 5,
+      "weight": 1,
+    },
+    Object {
+      "children": Array [],
+      "depth": 1,
+      "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 5,
+      "isCollapsed": false,
+      "key": "1",
+      "ownerID": 3,
+      "parentID": 3,
+      "type": 5,
+      "weight": 1,
+    },
+  ],
+  "ownerID": 3,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 3,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext owners state should remove an element from the owners list if it is unmounted: 3: remove second child 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 2,
+  "ownerFlatTree": Array [
+    Object {
+      "children": Array [
+        4,
+      ],
+      "depth": 0,
+      "displayName": "Parent",
+      "hocDisplayNames": null,
+      "id": 3,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 2,
+      "parentID": 2,
+      "type": 5,
+      "weight": 2,
+    },
+    Object {
+      "children": Array [],
+      "depth": 1,
+      "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 4,
+      "isCollapsed": false,
+      "key": "0",
+      "ownerID": 3,
+      "parentID": 3,
+      "type": 5,
+      "weight": 1,
+    },
+  ],
+  "ownerID": 3,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 3,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext owners state should remove an element from the owners list if it is unmounted: 4: remove first child 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 1,
+  "ownerFlatTree": Array [
+    Object {
+      "children": Array [],
+      "depth": 0,
+      "displayName": "Parent",
+      "hocDisplayNames": null,
+      "id": 3,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 2,
+      "parentID": 2,
+      "type": 5,
+      "weight": 1,
+    },
+  ],
+  "ownerID": 3,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 3,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext owners state should support entering and existing the owners tree view: 0: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child>
+        <Child>
+`;
+
+exports[`TreeListContext owners state should support entering and existing the owners tree view: 1: initial state 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext owners state should support entering and existing the owners tree view: 2: parent owners tree 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 3,
+  "ownerFlatTree": Array [
+    Object {
+      "children": Array [
+        4,
+        5,
+      ],
+      "depth": 0,
+      "displayName": "Parent",
+      "hocDisplayNames": null,
+      "id": 3,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 2,
+      "parentID": 2,
+      "type": 5,
+      "weight": 3,
+    },
+    Object {
+      "children": Array [],
+      "depth": 1,
+      "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 4,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 3,
+      "parentID": 3,
+      "type": 5,
+      "weight": 1,
+    },
+    Object {
+      "children": Array [],
+      "depth": 1,
+      "displayName": "Child",
+      "hocDisplayNames": null,
+      "id": 5,
+      "isCollapsed": false,
+      "key": null,
+      "ownerID": 3,
+      "parentID": 3,
+      "type": 5,
+      "weight": 1,
+    },
+  ],
+  "ownerID": 3,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 3,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext owners state should support entering and existing the owners tree view: 3: final state 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 3,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext search state should add newly mounted elements to the search results set if they match the current text: 0: mount 1`] = `
+[root]
+    <Foo>
+    <Bar>
+`;
+
+exports[`TreeListContext search state should add newly mounted elements to the search results set if they match the current text: 1: initial state 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 2,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext search state should add newly mounted elements to the search results set if they match the current text: 2: search for "ba" 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 2,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": 0,
+  "searchResults": Array [
+    3,
+  ],
+  "searchText": "ba",
+  "selectedElementID": 3,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext search state should add newly mounted elements to the search results set if they match the current text: 3: mount Baz 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 3,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": 0,
+  "searchResults": Array [
+    3,
+    4,
+  ],
+  "searchText": "ba",
+  "selectedElementID": 3,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext search state should find elements matching search text: 0: mount 1`] = `
+[root]
+    <Foo>
+    <Bar>
+    <Baz>
+    <Qux> [withHOC]
+`;
+
+exports[`TreeListContext search state should find elements matching search text: 1: initial state 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext search state should find elements matching search text: 2: search for "ba" 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": 0,
+  "searchResults": Array [
+    3,
+    4,
+  ],
+  "searchText": "ba",
+  "selectedElementID": 3,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext search state should find elements matching search text: 3: search for "f" 1`] = `
+Object {
+  "inspectedElementID": 2,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": 0,
+  "searchResults": Array [
+    2,
+  ],
+  "searchText": "f",
+  "selectedElementID": 2,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext search state should find elements matching search text: 4: search for "y" 1`] = `
+Object {
+  "inspectedElementID": 2,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "y",
+  "selectedElementID": 2,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext search state should find elements matching search text: 5: search for "w" 1`] = `
+Object {
+  "inspectedElementID": 5,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": 0,
+  "searchResults": Array [
+    5,
+  ],
+  "searchText": "w",
+  "selectedElementID": 5,
+  "selectedElementIndex": 3,
+}
+`;
+
+exports[`TreeListContext search state should remove unmounted elements from the search results set: 0: mount 1`] = `
+[root]
+    <Foo>
+    <Bar>
+    <Baz>
+`;
+
+exports[`TreeListContext search state should remove unmounted elements from the search results set: 1: initial state 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 3,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext search state should remove unmounted elements from the search results set: 2: search for "ba" 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 3,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": 0,
+  "searchResults": Array [
+    3,
+    4,
+  ],
+  "searchText": "ba",
+  "selectedElementID": 3,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext search state should remove unmounted elements from the search results set: 3: go to second result 1`] = `
+Object {
+  "inspectedElementID": 4,
+  "numElements": 3,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": 1,
+  "searchResults": Array [
+    3,
+    4,
+  ],
+  "searchText": "ba",
+  "selectedElementID": 4,
+  "selectedElementIndex": 2,
+}
+`;
+
+exports[`TreeListContext search state should remove unmounted elements from the search results set: 4: unmount Baz 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 2,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": 0,
+  "searchResults": Array [
+    3,
+  ],
+  "searchText": "ba",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext search state should select the next and previous items within the search results: 0: mount 1`] = `
+[root]
+    <Foo>
+    <Baz>
+    <Bar>
+    <Baz>
+`;
+
+exports[`TreeListContext search state should select the next and previous items within the search results: 1: initial state 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext search state should select the next and previous items within the search results: 2: search for "ba" 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": 0,
+  "searchResults": Array [
+    3,
+    4,
+    5,
+  ],
+  "searchText": "ba",
+  "selectedElementID": 3,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext search state should select the next and previous items within the search results: 3: go to second result 1`] = `
+Object {
+  "inspectedElementID": 4,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": 1,
+  "searchResults": Array [
+    3,
+    4,
+    5,
+  ],
+  "searchText": "ba",
+  "selectedElementID": 4,
+  "selectedElementIndex": 2,
+}
+`;
+
+exports[`TreeListContext search state should select the next and previous items within the search results: 4: go to third result 1`] = `
+Object {
+  "inspectedElementID": 5,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": 2,
+  "searchResults": Array [
+    3,
+    4,
+    5,
+  ],
+  "searchText": "ba",
+  "selectedElementID": 5,
+  "selectedElementIndex": 3,
+}
+`;
+
+exports[`TreeListContext search state should select the next and previous items within the search results: 5: go to second result 1`] = `
+Object {
+  "inspectedElementID": 4,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": 1,
+  "searchResults": Array [
+    3,
+    4,
+    5,
+  ],
+  "searchText": "ba",
+  "selectedElementID": 4,
+  "selectedElementIndex": 2,
+}
+`;
+
+exports[`TreeListContext search state should select the next and previous items within the search results: 6: go to first result 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": 0,
+  "searchResults": Array [
+    3,
+    4,
+    5,
+  ],
+  "searchText": "ba",
+  "selectedElementID": 3,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext search state should select the next and previous items within the search results: 7: wrap to last result 1`] = `
+Object {
+  "inspectedElementID": 5,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": 2,
+  "searchResults": Array [
+    3,
+    4,
+    5,
+  ],
+  "searchText": "ba",
+  "selectedElementID": 5,
+  "selectedElementIndex": 3,
+}
+`;
+
+exports[`TreeListContext search state should select the next and previous items within the search results: 8: wrap to first result 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": 0,
+  "searchResults": Array [
+    3,
+    4,
+    5,
+  ],
+  "searchText": "ba",
+  "selectedElementID": 3,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext tree state should clear selection if the selected element is unmounted: 0: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child>
+        <Child>
+`;
+
+exports[`TreeListContext tree state should clear selection if the selected element is unmounted: 1: initial state 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext tree state should clear selection if the selected element is unmounted: 2: select second child 1`] = `
+Object {
+  "inspectedElementID": 5,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 5,
+  "selectedElementIndex": 3,
+}
+`;
+
+exports[`TreeListContext tree state should clear selection if the selected element is unmounted: 3: remove children (parent should now be selected) 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 2,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 3,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext tree state should clear selection if the selected element is unmounted: 4: unmount root (nothing should be selected) 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 0,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext tree state should navigate next/previous sibling and skip over children in between: 0: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child key="0">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+        <Child key="2">
+    ▾ <Parent>
+        <Child key="0">
+        <Child key="1">
+`;
+
+exports[`TreeListContext tree state should navigate the owner hierarchy: 0: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Wrapper>
+      ▾ <Parent>
+          <Child key="0">
+    ▾ <Wrapper>
+      ▾ <Parent>
+          <Child key="0">
+          <Child key="1">
+          <Child key="2">
+    ▾ <Wrapper>
+      ▾ <Parent>
+          <Child key="0">
+          <Child key="1">
+`;
+
+exports[`TreeListContext tree state should select child elements: 0: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child>
+        <Child>
+    ▾ <Parent>
+        <Child>
+        <Child>
+`;
+
+exports[`TreeListContext tree state should select child elements: 1: initial state 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 7,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext tree state should select child elements: 2: select first element 1`] = `
+Object {
+  "inspectedElementID": 2,
+  "numElements": 7,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 2,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext tree state should select child elements: 3: select Parent 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 7,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 3,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext tree state should select child elements: 4: select Child 1`] = `
+Object {
+  "inspectedElementID": 4,
+  "numElements": 7,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 4,
+  "selectedElementIndex": 2,
+}
+`;
+
+exports[`TreeListContext tree state should select parent elements and then collapse: 0: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child>
+        <Child>
+    ▾ <Parent>
+        <Child>
+        <Child>
+`;
+
+exports[`TreeListContext tree state should select parent elements and then collapse: 1: initial state 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 7,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext tree state should select parent elements and then collapse: 2: select last child 1`] = `
+Object {
+  "inspectedElementID": 8,
+  "numElements": 7,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 8,
+  "selectedElementIndex": 6,
+}
+`;
+
+exports[`TreeListContext tree state should select parent elements and then collapse: 3: select Parent 1`] = `
+Object {
+  "inspectedElementID": 6,
+  "numElements": 7,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 6,
+  "selectedElementIndex": 4,
+}
+`;
+
+exports[`TreeListContext tree state should select parent elements and then collapse: 4: select Grandparent 1`] = `
+Object {
+  "inspectedElementID": 2,
+  "numElements": 7,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 2,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext tree state should select the next and previous elements in the tree: 0: mount 1`] = `
+[root]
+  ▾ <Grandparent>
+    ▾ <Parent>
+        <Child>
+        <Child>
+`;
+
+exports[`TreeListContext tree state should select the next and previous elements in the tree: 1: initial state 1`] = `
+Object {
+  "inspectedElementID": null,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": null,
+  "selectedElementIndex": null,
+}
+`;
+
+exports[`TreeListContext tree state should select the next and previous elements in the tree: 2: select first element 1`] = `
+Object {
+  "inspectedElementID": 2,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 2,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext tree state should select the next and previous elements in the tree: 3: select element after (0) 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 3,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext tree state should select the next and previous elements in the tree: 3: select element after (1) 1`] = `
+Object {
+  "inspectedElementID": 4,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 4,
+  "selectedElementIndex": 2,
+}
+`;
+
+exports[`TreeListContext tree state should select the next and previous elements in the tree: 3: select element after (2) 1`] = `
+Object {
+  "inspectedElementID": 5,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 5,
+  "selectedElementIndex": 3,
+}
+`;
+
+exports[`TreeListContext tree state should select the next and previous elements in the tree: 4: select element before (1) 1`] = `
+Object {
+  "inspectedElementID": 2,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 2,
+  "selectedElementIndex": 0,
+}
+`;
+
+exports[`TreeListContext tree state should select the next and previous elements in the tree: 4: select element before (2) 1`] = `
+Object {
+  "inspectedElementID": 3,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 3,
+  "selectedElementIndex": 1,
+}
+`;
+
+exports[`TreeListContext tree state should select the next and previous elements in the tree: 4: select element before (3) 1`] = `
+Object {
+  "inspectedElementID": 4,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 4,
+  "selectedElementIndex": 2,
+}
+`;
+
+exports[`TreeListContext tree state should select the next and previous elements in the tree: 5: select previous wraps around to last 1`] = `
+Object {
+  "inspectedElementID": 5,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 5,
+  "selectedElementIndex": 3,
+}
+`;
+
+exports[`TreeListContext tree state should select the next and previous elements in the tree: 6: select next wraps around to first 1`] = `
+Object {
+  "inspectedElementID": 2,
+  "numElements": 4,
+  "ownerFlatTree": null,
+  "ownerID": null,
+  "ownerSubtreeLeafElementID": null,
+  "searchIndex": null,
+  "searchResults": Array [],
+  "searchText": "",
+  "selectedElementID": 2,
+  "selectedElementIndex": 0,
+}
+`;

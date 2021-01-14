@@ -7,11 +7,9 @@
  * @flow
  */
 
-import type {ReactContext} from 'shared/ReactTypes';
-import type {Fiber, FiberRoot} from './ReactInternalTypes';
+import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
-import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.new';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.new';
 import {
@@ -24,14 +22,12 @@ import {
   SuspenseListComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
-  CacheComponent,
 } from './ReactWorkTags';
 import {DidCapture, NoFlags, ShouldCapture} from './ReactFiberFlags';
 import {NoMode, ProfileMode} from './ReactTypeOfMode';
 import {
   enableSuspenseServerRenderer,
   enableProfilerTimer,
-  enableCache,
 } from 'shared/ReactFeatureFlags';
 
 import {popHostContainer, popHostContext} from './ReactFiberHostContext.new';
@@ -44,11 +40,6 @@ import {
 } from './ReactFiberContext.new';
 import {popProvider} from './ReactFiberNewContext.new';
 import {popRenderLanes} from './ReactFiberWorkLoop.new';
-import {
-  popCacheProvider,
-  popRootCachePool,
-  popCachePool,
-} from './ReactFiberCacheComponent.new';
 import {transferActualDuration} from './ReactProfilerTimer.new';
 
 import invariant from 'shared/invariant';
@@ -74,13 +65,6 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       return null;
     }
     case HostRoot: {
-      if (enableCache) {
-        const root: FiberRoot = workInProgress.stateNode;
-        popRootCachePool(root, renderLanes);
-
-        const cache: Cache = workInProgress.memoizedState.cache;
-        popCacheProvider(workInProgress, cache);
-      }
       popHostContainer(workInProgress);
       popTopLevelLegacyContextObject(workInProgress);
       resetMutableSourceWorkInProgressVersions();
@@ -136,31 +120,18 @@ function unwindWork(workInProgress: Fiber, renderLanes: Lanes) {
       popHostContainer(workInProgress);
       return null;
     case ContextProvider:
-      const context: ReactContext<any> = workInProgress.type._context;
-      popProvider(context, workInProgress);
+      popProvider(workInProgress);
       return null;
     case OffscreenComponent:
     case LegacyHiddenComponent:
       popRenderLanes(workInProgress);
-      if (enableCache) {
-        const spawnedCachePool: SpawnedCachePool | null = (workInProgress.updateQueue: any);
-        if (spawnedCachePool !== null) {
-          popCachePool(workInProgress);
-        }
-      }
-      return null;
-    case CacheComponent:
-      if (enableCache) {
-        const cache: Cache = workInProgress.memoizedState.cache;
-        popCacheProvider(workInProgress, cache);
-      }
       return null;
     default:
       return null;
   }
 }
 
-function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
+function unwindInterruptedWork(interruptedWork: Fiber) {
   switch (interruptedWork.tag) {
     case ClassComponent: {
       const childContextTypes = interruptedWork.type.childContextTypes;
@@ -170,13 +141,6 @@ function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
       break;
     }
     case HostRoot: {
-      if (enableCache) {
-        const root: FiberRoot = interruptedWork.stateNode;
-        popRootCachePool(root, renderLanes);
-
-        const cache: Cache = interruptedWork.memoizedState.cache;
-        popCacheProvider(interruptedWork, cache);
-      }
       popHostContainer(interruptedWork);
       popTopLevelLegacyContextObject(interruptedWork);
       resetMutableSourceWorkInProgressVersions();
@@ -196,25 +160,11 @@ function unwindInterruptedWork(interruptedWork: Fiber, renderLanes: Lanes) {
       popSuspenseContext(interruptedWork);
       break;
     case ContextProvider:
-      const context: ReactContext<any> = interruptedWork.type._context;
-      popProvider(context, interruptedWork);
+      popProvider(interruptedWork);
       break;
     case OffscreenComponent:
     case LegacyHiddenComponent:
       popRenderLanes(interruptedWork);
-      if (enableCache) {
-        const spawnedCachePool: SpawnedCachePool | null = (interruptedWork.updateQueue: any);
-        if (spawnedCachePool !== null) {
-          popCachePool(interruptedWork);
-        }
-      }
-
-      break;
-    case CacheComponent:
-      if (enableCache) {
-        const cache: Cache = interruptedWork.memoizedState.cache;
-        popCacheProvider(interruptedWork, cache);
-      }
       break;
     default:
       break;

@@ -12,19 +12,19 @@ Array [
   Object {
     "displayName": "Grandparent",
     "hocDisplayNames": null,
-    "id": 2,
+    "id": 7,
     "type": 5,
   },
   Object {
     "displayName": "Parent",
     "hocDisplayNames": null,
-    "id": 3,
+    "id": 9,
     "type": 5,
   },
   Object {
     "displayName": "Child",
     "hocDisplayNames": null,
-    "id": 4,
+    "id": 8,
     "type": 5,
   },
 ]
@@ -115,7 +115,7 @@ Array [
   Object {
     "displayName": "Grandparent",
     "hocDisplayNames": null,
-    "id": 2,
+    "id": 5,
     "type": 5,
   },
 ]

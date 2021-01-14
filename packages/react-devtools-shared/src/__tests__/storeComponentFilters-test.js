@@ -48,28 +48,22 @@ describe('Store component filters', () => {
   });
 
   it('should support filtering by element type', () => {
-    class ClassComponent extends React.Component<{|children: React$Node|}> {
+    class Root extends React.Component<{|children: React$Node|}> {
       render() {
         return <div>{this.props.children}</div>;
       }
     }
-    const FunctionComponent = () => <div>Hi</div>;
+    const Component = () => <div>Hi</div>;
 
     act(() =>
       ReactDOM.render(
-        <ClassComponent>
-          <FunctionComponent />
-        </ClassComponent>,
+        <Root>
+          <Component />
+        </Root>,
         document.createElement('div'),
       ),
     );
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <ClassComponent>
-          ▾ <div>
-            ▾ <FunctionComponent>
-                <div>
-    `);
+    expect(store).toMatchSnapshot('1: mount');
 
     act(
       () =>
@@ -77,11 +71,8 @@ describe('Store component filters', () => {
           utils.createElementTypeFilter(Types.ElementTypeHostComponent),
         ]),
     );
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <ClassComponent>
-            <FunctionComponent>
-    `);
+
+    expect(store).toMatchSnapshot('2: hide host components');
 
     act(
       () =>
@@ -89,12 +80,8 @@ describe('Store component filters', () => {
           utils.createElementTypeFilter(Types.ElementTypeClass),
         ]),
     );
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <div>
-          ▾ <FunctionComponent>
-              <div>
-    `);
+
+    expect(store).toMatchSnapshot('3: hide class components');
 
     act(
       () =>
@@ -103,11 +90,8 @@ describe('Store component filters', () => {
           utils.createElementTypeFilter(Types.ElementTypeFunction),
         ]),
     );
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <div>
-            <div>
-    `);
+
+    expect(store).toMatchSnapshot('4: hide class and function components');
 
     act(
       () =>
@@ -116,33 +100,15 @@ describe('Store component filters', () => {
           utils.createElementTypeFilter(Types.ElementTypeFunction, false),
         ]),
     );
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <ClassComponent>
-          ▾ <div>
-            ▾ <FunctionComponent>
-                <div>
-    `);
 
-    act(() => (store.componentFilters = []));
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <ClassComponent>
-          ▾ <div>
-            ▾ <FunctionComponent>
-                <div>
-    `);
+    expect(store).toMatchSnapshot('5: disable all filters');
   });
 
   it('should ignore invalid ElementTypeRoot filter', () => {
-    const Component = () => <div>Hi</div>;
+    const Root = () => <div>Hi</div>;
 
-    act(() => ReactDOM.render(<Component />, document.createElement('div')));
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Component>
-            <div>
-    `);
+    act(() => ReactDOM.render(<Root />, document.createElement('div')));
+    expect(store).toMatchSnapshot('1: mount');
 
     act(
       () =>
@@ -151,11 +117,7 @@ describe('Store component filters', () => {
         ]),
     );
 
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Component>
-            <div>
-    `);
+    expect(store).toMatchSnapshot('2: add invalid filter');
   });
 
   it('should filter by display name', () => {
@@ -174,59 +136,27 @@ describe('Store component filters', () => {
         document.createElement('div'),
       ),
     );
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Foo>
-            <Text>
-        ▾ <Bar>
-            <Text>
-        ▾ <Baz>
-            <Text>
-    `);
+    expect(store).toMatchSnapshot('1: mount');
 
     act(
       () => (store.componentFilters = [utils.createDisplayNameFilter('Foo')]),
     );
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-          <Text>
-        ▾ <Bar>
-            <Text>
-        ▾ <Baz>
-            <Text>
-    `);
+    expect(store).toMatchSnapshot('2: filter "Foo"');
 
     act(() => (store.componentFilters = [utils.createDisplayNameFilter('Ba')]));
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Foo>
-            <Text>
-          <Text>
-          <Text>
-    `);
+    expect(store).toMatchSnapshot('3: filter "Ba"');
 
     act(
       () => (store.componentFilters = [utils.createDisplayNameFilter('B.z')]),
     );
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Foo>
-            <Text>
-        ▾ <Bar>
-            <Text>
-          <Text>
-    `);
+    expect(store).toMatchSnapshot('4: filter "B.z"');
   });
 
   it('should filter by path', () => {
     const Component = () => <div>Hi</div>;
 
     act(() => ReactDOM.render(<Component />, document.createElement('div')));
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Component>
-            <div>
-    `);
+    expect(store).toMatchSnapshot('1: mount');
 
     act(
       () =>
@@ -235,7 +165,9 @@ describe('Store component filters', () => {
         ]),
     );
 
-    expect(store).toMatchInlineSnapshot(`[root]`);
+    expect(store).toMatchSnapshot(
+      '2: hide all components declared within this test filed',
+    );
 
     act(
       () =>
@@ -244,11 +176,7 @@ describe('Store component filters', () => {
         ]),
     );
 
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Component>
-            <div>
-    `);
+    expect(store).toMatchSnapshot('3: hide components in a made up fake path');
   });
 
   it('should filter HOCs', () => {
@@ -259,29 +187,15 @@ describe('Store component filters', () => {
     Bar.displayName = 'Bar(Foo(Component))';
 
     act(() => ReactDOM.render(<Bar />, document.createElement('div')));
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Component> [Bar][Foo]
-          ▾ <Component> [Foo]
-            ▾ <Component>
-                <div>
-    `);
+    expect(store).toMatchSnapshot('1: mount');
 
     act(() => (store.componentFilters = [utils.createHOCFilter(true)]));
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Component>
-            <div>
-    `);
+
+    expect(store).toMatchSnapshot('2: hide all HOCs');
 
     act(() => (store.componentFilters = [utils.createHOCFilter(false)]));
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Component> [Bar][Foo]
-          ▾ <Component> [Foo]
-            ▾ <Component>
-                <div>
-    `);
+
+    expect(store).toMatchSnapshot('3: disable HOC filter');
   });
 
   it('should not send a bridge update if the set of enabled filters has not changed', () => {
@@ -338,117 +252,12 @@ describe('Store component filters', () => {
 
     const container = document.createElement('div');
     act(() => ReactDOM.render(<Wrapper shouldSuspend={true} />, container));
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Wrapper>
-          ▾ <Loading>
-              <div>
-    `);
+    expect(store).toMatchSnapshot('1: suspended');
 
     act(() => ReactDOM.render(<Wrapper shouldSuspend={false} />, container));
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Wrapper>
-            <Component>
-    `);
+    expect(store).toMatchSnapshot('2: resolved');
 
     act(() => ReactDOM.render(<Wrapper shouldSuspend={true} />, container));
-    expect(store).toMatchInlineSnapshot(`
-      [root]
-        ▾ <Wrapper>
-          ▾ <Loading>
-              <div>
-    `);
-  });
-
-  describe('inline errors and warnings', () => {
-    it('only counts for unfiltered components', () => {
-      function ComponentWithWarning() {
-        console.warn('test-only: render warning');
-        return null;
-      }
-      function ComponentWithError() {
-        console.error('test-only: render error');
-        return null;
-      }
-      function ComponentWithWarningAndError() {
-        console.error('test-only: render error');
-        console.warn('test-only: render warning');
-        return null;
-      }
-      const container = document.createElement('div');
-      utils.withErrorsOrWarningsIgnored(['test-only:'], () => {
-        act(
-          () =>
-            (store.componentFilters = [
-              utils.createDisplayNameFilter('Warning'),
-              utils.createDisplayNameFilter('Error'),
-            ]),
-        );
-        act(() =>
-          ReactDOM.render(
-            <React.Fragment>
-              <ComponentWithError />
-              <ComponentWithWarning />
-              <ComponentWithWarningAndError />
-            </React.Fragment>,
-            container,
-          ),
-        );
-      });
-
-      expect(store).toMatchInlineSnapshot(`[root]`);
-      expect(store.errorCount).toBe(0);
-      expect(store.warningCount).toBe(0);
-
-      act(() => (store.componentFilters = []));
-      expect(store).toMatchInlineSnapshot(`
-        ✕ 2, ⚠ 2
-        [root]
-            <ComponentWithError> ✕
-            <ComponentWithWarning> ⚠
-            <ComponentWithWarningAndError> ✕⚠
-      `);
-
-      act(
-        () =>
-          (store.componentFilters = [utils.createDisplayNameFilter('Warning')]),
-      );
-      expect(store).toMatchInlineSnapshot(`
-        ✕ 1, ⚠ 0
-        [root]
-            <ComponentWithError> ✕
-      `);
-
-      act(
-        () =>
-          (store.componentFilters = [utils.createDisplayNameFilter('Error')]),
-      );
-      expect(store).toMatchInlineSnapshot(`
-        ✕ 0, ⚠ 1
-        [root]
-            <ComponentWithWarning> ⚠
-      `);
-
-      act(
-        () =>
-          (store.componentFilters = [
-            utils.createDisplayNameFilter('Warning'),
-            utils.createDisplayNameFilter('Error'),
-          ]),
-      );
-      expect(store).toMatchInlineSnapshot(`[root]`);
-      expect(store.errorCount).toBe(0);
-      expect(store.warningCount).toBe(0);
-
-      act(() => (store.componentFilters = []));
-      expect(store).toMatchInlineSnapshot(`
-        ✕ 2, ⚠ 2
-        [root]
-            <ComponentWithError> ✕
-            <ComponentWithWarning> ⚠
-            <ComponentWithWarningAndError> ✕⚠
-      `);
-    });
+    expect(store).toMatchSnapshot('3: suspended');
   });
 });

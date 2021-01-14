@@ -83,6 +83,4 @@ export {
   unstable_Scope,
   unstable_useOpaqueIdentifier,
   unstable_getCacheForType,
-  unstable_Cache,
-  unstable_useCacheRefresh,
 } from './src/React';

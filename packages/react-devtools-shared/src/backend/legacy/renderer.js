@@ -779,10 +779,6 @@ export function attach(
       state = publicInstance.state || null;
     }
 
-    // Not implemented
-    const errors = [];
-    const warnings = [];
-
     return {
       id,
 
@@ -816,8 +812,6 @@ export function attach(
       hooks: null,
       props,
       state,
-      errors,
-      warnings,
 
       // List of owners
       owners,
@@ -1046,22 +1040,7 @@ export function attach(
     return null;
   }
 
-  function clearErrorsAndWarnings() {
-    // Not implemented
-  }
-
-  function clearErrorsForFiberID(id: number) {
-    // Not implemented
-  }
-
-  function clearWarningsForFiberID(id: number) {
-    // Not implemented
-  }
-
   return {
-    clearErrorsAndWarnings,
-    clearErrorsForFiberID,
-    clearWarningsForFiberID,
     cleanup,
     copyElementPath,
     deletePath,

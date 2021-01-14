@@ -49,9 +49,7 @@ import {
   SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
-  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
-  TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from '../constants';
 import {inspectHooksOfFiber} from 'react-debug-tools';
@@ -78,7 +76,6 @@ import {
   MEMO_NUMBER,
   MEMO_SYMBOL_STRING,
 } from './ReactSymbols';
-import {format} from './utils';
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -120,7 +117,6 @@ type ReactTypeOfSideEffectType = {|
   NoFlags: number,
   PerformedWork: number,
   Placement: number,
-  Incomplete: number,
 |};
 
 function getFiberFlags(fiber: Fiber): number {
@@ -147,7 +143,6 @@ export function getInternalReactConstants(
     NoFlags: 0b00,
     PerformedWork: 0b01,
     Placement: 0b10,
-    Incomplete: 0b10000000000000,
   };
 
   // **********************************************************
@@ -176,7 +171,6 @@ export function getInternalReactConstants(
   // Currently the version in Git is 17.0.2 (but that version has not been/may not end up being released).
   if (gt(version, '17.0.1')) {
     ReactTypeOfWork = {
-      CacheComponent: 24, // Experimental
       ClassComponent: 1,
       ContextConsumer: 9,
       ContextProvider: 10,
@@ -206,7 +200,6 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '17.0.0-alpha')) {
     ReactTypeOfWork = {
-      CacheComponent: -1, // Doesn't exist yet
       ClassComponent: 1,
       ContextConsumer: 9,
       ContextProvider: 10,
@@ -236,7 +229,6 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.6.0-beta.0')) {
     ReactTypeOfWork = {
-      CacheComponent: -1, // Doens't exist yet
       ClassComponent: 1,
       ContextConsumer: 9,
       ContextProvider: 10,
@@ -266,7 +258,6 @@ export function getInternalReactConstants(
     };
   } else if (gte(version, '16.4.3-alpha')) {
     ReactTypeOfWork = {
-      CacheComponent: -1, // Doens't exist yet
       ClassComponent: 2,
       ContextConsumer: 11,
       ContextProvider: 12,
@@ -296,7 +287,6 @@ export function getInternalReactConstants(
     };
   } else {
     ReactTypeOfWork = {
-      CacheComponent: -1, // Doens't exist yet
       ClassComponent: 2,
       ContextConsumer: 12,
       ContextProvider: 13,
@@ -340,7 +330,6 @@ export function getInternalReactConstants(
   }
 
   const {
-    CacheComponent,
     ClassComponent,
     IncompleteClassComponent,
     FunctionComponent,
@@ -388,8 +377,6 @@ export function getInternalReactConstants(
     let resolvedContext: any = null;
 
     switch (tag) {
-      case CacheComponent:
-        return 'Cache';
       case ClassComponent:
       case IncompleteClassComponent:
         return getDisplayName(resolvedType);
@@ -492,15 +479,14 @@ export function attach(
     ReactTypeOfWork,
     ReactTypeOfSideEffect,
   } = getInternalReactConstants(renderer.version);
-  const {Incomplete, NoFlags, PerformedWork, Placement} = ReactTypeOfSideEffect;
+  const {NoFlags, PerformedWork, Placement} = ReactTypeOfSideEffect;
   const {
-    CacheComponent,
+    FunctionComponent,
     ClassComponent,
     ContextConsumer,
     DehydratedSuspenseComponent,
-    ForwardRef,
     Fragment,
-    FunctionComponent,
+    ForwardRef,
     HostRoot,
     HostPortal,
     HostComponent,
@@ -536,104 +522,13 @@ export function attach(
     typeof setSuspenseHandler === 'function' &&
     typeof scheduleUpdate === 'function';
 
-  // Set of Fibers (IDs) with recently changed number of error/warning messages.
-  const fibersWithChangedErrorOrWarningCounts: Set<number> = new Set();
-
-  // Mapping of fiber IDs to error/warning messages and counts.
-  const fiberToErrorsMap: Map<number, Map<string, number>> = new Map();
-  const fiberToWarningsMap: Map<number, Map<string, number>> = new Map();
-
-  function clearErrorsAndWarnings() {
-    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-    for (const id of fiberToErrorsMap.keys()) {
-      fibersWithChangedErrorOrWarningCounts.add(id);
-      updateMostRecentlyInspectedElementIfNecessary(id);
-    }
-
-    // eslint-disable-next-line no-for-of-loops/no-for-of-loops
-    for (const id of fiberToWarningsMap.keys()) {
-      fibersWithChangedErrorOrWarningCounts.add(id);
-      updateMostRecentlyInspectedElementIfNecessary(id);
-    }
-
-    fiberToErrorsMap.clear();
-    fiberToWarningsMap.clear();
-
-    flushPendingEvents();
-  }
-
-  function clearErrorsForFiberID(id: number) {
-    if (fiberToErrorsMap.has(id)) {
-      fiberToErrorsMap.delete(id);
-      fibersWithChangedErrorOrWarningCounts.add(id);
-      flushPendingEvents();
-    }
-
-    updateMostRecentlyInspectedElementIfNecessary(id);
-  }
-
-  function clearWarningsForFiberID(id: number) {
-    if (fiberToWarningsMap.has(id)) {
-      fiberToWarningsMap.delete(id);
-      fibersWithChangedErrorOrWarningCounts.add(id);
-      flushPendingEvents();
-    }
-
-    updateMostRecentlyInspectedElementIfNecessary(id);
-  }
-
-  function updateMostRecentlyInspectedElementIfNecessary(
-    fiberID: number,
-  ): void {
-    if (
-      mostRecentlyInspectedElement !== null &&
-      mostRecentlyInspectedElement.id === fiberID
-    ) {
-      hasElementUpdatedSinceLastInspected = true;
-    }
-  }
-
-  // Called when an error or warning is logged during render, commit, or passive (including unmount functions).
-  function onErrorOrWarning(
-    fiber: Fiber,
-    type: 'error' | 'warn',
-    args: $ReadOnlyArray<any>,
-  ): void {
-    const message = format(...args);
-
-    // Note that by calling these functions we may be creating the ID for the first time.
-    // If the Fiber is then never mounted, we are responsible for cleaning up after ourselves.
-    // This is important because getPrimaryFiber() stores a Fiber in the primaryFibers Set.
-    // If a Fiber never mounts, and we don't clean up after this code, we could leak.
-    // Fortunately we would only leak Fibers that have errors/warnings associated with them,
-    // which is hopefully only a small set and only in DEV mode– but this is still not great.
-    // We should clean up Fibers like this when flushing; see recordPendingErrorsAndWarnings().
-    const fiberID = getFiberID(getPrimaryFiber(fiber));
-
-    // Mark this Fiber as needed its warning/error count updated during the next flush.
-    fibersWithChangedErrorOrWarningCounts.add(fiberID);
-
-    // Update the error/warning messages and counts for the Fiber.
-    const fiberMap = type === 'error' ? fiberToErrorsMap : fiberToWarningsMap;
-    const messageMap = fiberMap.get(fiberID);
-    if (messageMap != null) {
-      const count = messageMap.get(message) || 0;
-      messageMap.set(message, count + 1);
-    } else {
-      fiberMap.set(fiberID, new Map([[message, 1]]));
-    }
-
-    // If this Fiber is currently being inspected, mark it as needing an udpate as well.
-    updateMostRecentlyInspectedElementIfNecessary(fiberID);
-  }
-
   // Patching the console enables DevTools to do a few useful things:
   // * Append component stacks to warnings and error messages
   // * Disable logging during re-renders to inspect hooks (see inspectHooksOfFiber)
   //
   // Don't patch in test environments because we don't want to interfere with Jest's own console overrides.
   if (process.env.NODE_ENV !== 'test') {
-    registerRendererWithConsole(renderer, onErrorOrWarning);
+    registerRendererWithConsole(renderer);
 
     // The renderer interface can't read these preferences directly,
     // because it is stored in localStorage within the context of the extension.
@@ -642,13 +537,10 @@ export function attach(
       window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ !== false;
     const breakOnConsoleErrors =
       window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ === true;
-    const showInlineWarningsAndErrors =
-      window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ !== false;
     if (appendComponentStack || breakOnConsoleErrors) {
       patchConsole({
         appendComponentStack,
         breakOnConsoleErrors,
-        showInlineWarningsAndErrors,
       });
     }
   }
@@ -760,11 +652,8 @@ export function attach(
     // Recursively unmount all roots.
     hook.getFiberRoots(rendererID).forEach(root => {
       currentRootID = getFiberID(getPrimaryFiber(root.current));
-      // The TREE_OPERATION_REMOVE_ROOT operation serves two purposes:
-      // 1. It avoids sending unnecessary bridge traffic to clear a root.
-      // 2. It preserves Fiber IDs when remounting (below) which in turn ID to error/warning mapping.
-      pushOperation(TREE_OPERATION_REMOVE_ROOT);
-      flushPendingEvents(root);
+      unmountFiberChildrenRecursively(root.current);
+      recordUnmount(root.current, false);
       currentRootID = -1;
     });
 
@@ -781,10 +670,6 @@ export function attach(
       flushPendingEvents(root);
       currentRootID = -1;
     });
-
-    // Also re-evaluate all error and warning counts given the new filters.
-    reevaluateErrorsAndWarnings();
-    flushPendingEvents();
   }
 
   // NOTICE Keep in sync with get*ForFiber methods
@@ -1170,64 +1055,7 @@ export function attach(
     pendingOperations.push(op);
   }
 
-  function reevaluateErrorsAndWarnings() {
-    fibersWithChangedErrorOrWarningCounts.clear();
-    fiberToErrorsMap.forEach((countMap, fiberID) => {
-      fibersWithChangedErrorOrWarningCounts.add(fiberID);
-    });
-    fiberToWarningsMap.forEach((countMap, fiberID) => {
-      fibersWithChangedErrorOrWarningCounts.add(fiberID);
-    });
-    recordPendingErrorsAndWarnings();
-  }
-
-  function recordPendingErrorsAndWarnings() {
-    fibersWithChangedErrorOrWarningCounts.forEach(fiberID => {
-      const fiber = idToFiberMap.get(fiberID);
-      if (fiber != null) {
-        // Don't send updates for Fibers that didn't mount due to e.g. Suspense or an error boundary.
-        // We may also need to clean up after ourselves to avoid leaks.
-        // See inline comments in onErrorOrWarning() for more info.
-        if (isFiberMountedImpl(fiber) !== MOUNTED) {
-          fiberToIDMap.delete(fiber);
-          idToFiberMap.delete(fiberID);
-          primaryFibers.delete(fiber);
-          return;
-        }
-
-        let errorCount = 0;
-        let warningCount = 0;
-
-        if (!shouldFilterFiber(fiber)) {
-          const errorCountsMap = fiberToErrorsMap.get(fiberID);
-          const warningCountsMap = fiberToWarningsMap.get(fiberID);
-
-          if (errorCountsMap != null) {
-            errorCountsMap.forEach(count => {
-              errorCount += count;
-            });
-          }
-          if (warningCountsMap != null) {
-            warningCountsMap.forEach(count => {
-              warningCount += count;
-            });
-          }
-        }
-
-        pushOperation(TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS);
-        pushOperation(fiberID);
-        pushOperation(errorCount);
-        pushOperation(warningCount);
-      }
-    });
-    fibersWithChangedErrorOrWarningCounts.clear();
-  }
-
   function flushPendingEvents(root: Object): void {
-    // Add any pending errors and warnings to the operations array.
-    // We do this just before flushing, so we can ignore errors for no-longer-mounted Fibers.
-    recordPendingErrorsAndWarnings();
-
     if (
       pendingOperations.length === 0 &&
       pendingRealUnmountedIDs.length === 0 &&
@@ -2200,41 +2028,16 @@ export function attach(
   // https://github.com/facebook/react/blob/master/packages/react-reconciler/src/ReactFiberTreeReflection.js
   function isFiberMountedImpl(fiber: Fiber): number {
     let node = fiber;
-    let prevNode = null;
     if (!fiber.alternate) {
       // If there is no alternate, this might be a new tree that isn't inserted
       // yet. If it is, then it will have a pending insertion effect on it.
       if ((getFiberFlags(node) & Placement) !== NoFlags) {
         return MOUNTING;
       }
-      // This indicates an error during render.
-      if ((getFiberFlags(node) & Incomplete) !== NoFlags) {
-        return UNMOUNTED;
-      }
       while (node.return) {
-        prevNode = node;
         node = node.return;
-
         if ((getFiberFlags(node) & Placement) !== NoFlags) {
           return MOUNTING;
-        }
-        // This indicates an error during render.
-        if ((getFiberFlags(node) & Incomplete) !== NoFlags) {
-          return UNMOUNTED;
-        }
-
-        // If this node is inside of a timed out suspense subtree, we should also ignore errors/warnings.
-        const isTimedOutSuspense =
-          node.tag === SuspenseComponent && node.memoizedState !== null;
-        if (isTimedOutSuspense) {
-          // Note that this does not include errors/warnings in the Fallback tree though!
-          const primaryChildFragment = node.child;
-          const fallbackChildFragment = primaryChildFragment
-            ? primaryChildFragment.sibling
-            : null;
-          if (prevNode !== fallbackChildFragment) {
-            return UNMOUNTED;
-          }
         }
       }
     } else {
@@ -2527,10 +2330,6 @@ export function attach(
         tag === ForwardRef) &&
       (!!memoizedState || !!dependencies);
 
-    // TODO Show custom UI for Cache like we do for Suspense
-    // For now, just hide state data entirely since it's not meant to be inspected.
-    const showState = !usesHooks && tag !== CacheComponent;
-
     const typeSymbol = getTypeSymbol(type);
 
     let canViewSource = false;
@@ -2656,9 +2455,6 @@ export function attach(
       rootType = fiberRoot._debugRootType;
     }
 
-    const errors = fiberToErrorsMap.get(id) || new Map();
-    const warnings = fiberToWarningsMap.get(id) || new Map();
-
     return {
       id,
 
@@ -2700,9 +2496,7 @@ export function attach(
       context,
       hooks,
       props: memoizedProps,
-      state: showState ? memoizedState : null,
-      errors: Array.from(errors.entries()),
-      warnings: Array.from(warnings.entries()),
+      state: usesHooks ? null : memoizedState,
 
       // List of owners
       owners,
@@ -3631,9 +3425,6 @@ export function attach(
 
   return {
     cleanup,
-    clearErrorsAndWarnings,
-    clearErrorsForFiberID,
-    clearWarningsForFiberID,
     copyElementPath,
     deletePath,
     findNativeNodesForFiberID,
