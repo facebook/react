@@ -53,6 +53,7 @@ export {
   useLayoutEffect,
   useMemo,
   useReducer,
+  combineReducers,
   useRef,
   useState,
   useMutableSource,

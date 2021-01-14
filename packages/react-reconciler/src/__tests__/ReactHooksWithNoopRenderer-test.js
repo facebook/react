@@ -22,6 +22,7 @@ let SchedulerTracing;
 let Suspense;
 let useState;
 let useReducer;
+let combineReducers;
 let useEffect;
 let useLayoutEffect;
 let useCallback;
@@ -45,6 +46,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     SchedulerTracing = require('scheduler/tracing');
     useState = React.useState;
     useReducer = React.useReducer;
+    combineReducers = React.combineReducers;
     useEffect = React.useEffect;
     useLayoutEffect = React.useLayoutEffect;
     useCallback = React.useCallback;
@@ -612,6 +614,51 @@ describe('ReactHooksWithNoopRenderer', () => {
         3,
       ]);
       expect(ReactNoop.getChildren()).toEqual([span(3)]);
+    });
+
+    it('can successfully combine reducers', () => {
+      function upReducer(state, action) {
+        return action === 'increment' ? state + 1 : state;
+      }
+
+      function downReducer(state, action) {
+        return action === 'decrement' ? state - 1 : state;
+      }
+
+      const rootReducer = combineReducers({
+        upCount: upReducer,
+        downCount: downReducer
+      });
+
+      const initialState = {
+        upCount: 0,
+        downCount: 0
+      };
+
+      function Counter() {
+        const [{upCount, downCount}, dispatch] = useReducer(rootReducer, initialState);
+        if (upCount < 3) {
+          dispatch('increment');
+          dispatch('decrement');
+        }
+        Scheduler.unstable_yieldValue('Up Render: ' + upCount);
+        Scheduler.unstable_yieldValue('Down Render: ' + downCount);
+        return <Text text={upCount + ' : ' + downCount} />;
+      }
+
+      ReactNoop.render(<Counter />);
+      expect(Scheduler).toFlushAndYield([
+        'Up Render: 0',
+        'Down Render: 0',
+        'Up Render: 1',
+        'Down Render: -1',
+        'Up Render: 2',
+        'Down Render: -2',
+        'Up Render: 3',
+        'Down Render: -3',
+        '3 : -3',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([span('3 : -3')]);
     });
 
     it('uses reducer passed at time of render, not time of dispatch', () => {

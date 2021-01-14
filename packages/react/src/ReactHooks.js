@@ -98,13 +98,18 @@ export function useReducer<S, I, A>(
   const dispatcher = resolveDispatcher();
   return dispatcher.useReducer(reducer, initialArg, init);
 }
-  
-// Combines dictionary of key: reducers into one reducer
-export const combineReducers = (reducerDict) => (state, action) =>
-    Object.keys(reducerDict).reduce((acc, curr) => ({
-            ...acc, 
-            [curr]: reducerDict[curr](state[curr], action) 
-        }), state);
+
+export function combineReducers<A>(reducersDict: Object) {
+  return function(state: Object, action: A) {
+    return Object.keys(reducersDict).reduce(
+      (accumulated: Object, currentKey: string) => ({
+        ...accumulated,
+        [currentKey]: reducersDict[currentKey](state[currentKey], action),
+      }),
+      state,
+    );
+  };
+}
 
 export function useRef<T>(initialValue: T): {|current: T|} {
   const dispatcher = resolveDispatcher();
