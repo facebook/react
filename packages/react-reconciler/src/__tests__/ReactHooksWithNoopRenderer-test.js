@@ -627,16 +627,19 @@ describe('ReactHooksWithNoopRenderer', () => {
 
       const rootReducer = combineReducers({
         upCount: upReducer,
-        downCount: downReducer
+        downCount: downReducer,
       });
 
       const initialState = {
         upCount: 0,
-        downCount: 0
+        downCount: 0,
       };
 
       function Counter() {
-        const [{upCount, downCount}, dispatch] = useReducer(rootReducer, initialState);
+        const [{upCount, downCount}, dispatch] = useReducer(
+          rootReducer,
+          initialState,
+        );
         if (upCount < 3) {
           dispatch('increment');
           dispatch('decrement');
