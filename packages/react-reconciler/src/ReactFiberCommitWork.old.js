@@ -2005,6 +2005,13 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
 ) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
+
+    // Deletion effects fire in parent -> child order
+    // TODO: Check if fiber has a PassiveStatic flag
+    setCurrentDebugFiberInDEV(fiber);
+    commitPassiveUnmountInsideDeletedTreeOnFiber(fiber);
+    resetCurrentDebugFiberInDEV();
+
     const child = fiber.child;
     // TODO: Only traverse subtree if it has a PassiveStatic flag
     if (child !== null) {
@@ -2023,11 +2030,6 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_complete(
 ) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
-    // TODO: Check if fiber has a PassiveStatic flag
-    setCurrentDebugFiberInDEV(fiber);
-    commitPassiveUnmountInsideDeletedTreeOnFiber(fiber);
-    resetCurrentDebugFiberInDEV();
-
     if (fiber === deletedSubtreeRoot) {
       nextEffect = null;
       return;
