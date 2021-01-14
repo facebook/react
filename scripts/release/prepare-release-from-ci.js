@@ -18,14 +18,6 @@ const run = async () => {
     const params = parseParams();
     params.cwd = join(__dirname, '..', '..');
 
-    const channel = params.releaseChannel;
-    if (channel !== 'experimental' && channel !== 'stable') {
-      console.error(
-        `Invalid release channel: "${channel}". Must be "stable" or "experimental".`
-      );
-      process.exit(1);
-    }
-
     if (!params.build) {
       params.build = await getLatestMasterBuildNumber(false);
     }

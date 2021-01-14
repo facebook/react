@@ -28,5 +28,13 @@ const paramDefinitions = [
 module.exports = () => {
   const params = commandLineArgs(paramDefinitions);
 
+  const channel = params.releaseChannel;
+  if (channel !== 'experimental' && channel !== 'stable') {
+    console.error(
+      `Invalid release channel (-r) "${channel}". Must be "stable" or "experimental".`
+    );
+    process.exit(1);
+  }
+
   return params;
 };
