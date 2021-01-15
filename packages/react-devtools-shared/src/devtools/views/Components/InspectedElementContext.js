@@ -121,7 +121,6 @@ export function InspectedElementContextController({children}: Props) {
   }, [element, state]);
 
   // Periodically poll the selected element for updates.
-  // TODO (cache) Reset this timer any time the element we're inspecting gets a new response.
   useEffect(() => {
     if (element !== null) {
       const inspectedPaths = state.inspectedPaths;
@@ -134,7 +133,13 @@ export function InspectedElementContextController({children}: Props) {
         clearTimeout(timeoutID);
       };
     }
-  }, [element, inspectedElement, state]);
+  }, [
+    element,
+    // Reset this timer any time the element we're inspecting gets a new response.
+    // No sense to ping right away after e.g. inspecting/hydrating a path.
+    inspectedElement,
+    state,
+  ]);
 
   const value = useMemo<Context>(
     () => ({
