@@ -270,7 +270,7 @@ describe('InspectedElement', () => {
     done();
   });
 
-  xit('should poll for updates for the currently selected element', async done => {
+  it('should poll for updates for the currently selected element', async done => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -311,7 +311,16 @@ describe('InspectedElement', () => {
       false,
     );
 
-    inspectedElement = null;
+    // TODO (cache)
+    // This test only passes if both the check-for-updates poll AND the test renderer.update() call are included below.
+    // It seems like either one of the two should be sufficient but:
+    // 1. Running only check-for-updates schedules a transition that React never renders.
+    // 2. Running only renderer.update() loads stale data (first props)
+
+    // Wait for our check-for-updates poll to get the new data.
+    jest.runOnlyPendingTimers();
+    await Promise.resolve();
+
     await utils.actAsync(
       () =>
         renderer.update(
