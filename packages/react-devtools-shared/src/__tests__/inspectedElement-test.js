@@ -67,8 +67,6 @@ describe('InspectedElement', () => {
     jest.restoreAllMocks();
   });
 
-  const ViewElementSource = {};
-
   const Contexts = ({
     children,
     defaultSelectedElementID = null,
@@ -97,10 +95,6 @@ describe('InspectedElement', () => {
   function useInspectElementPath(id: number) {
     const {inspectPaths} = React.useContext(InspectedElementContext);
     return inspectPaths;
-  }
-
-  function useStoreAsGlobal() {
-    // TODO (cache)
   }
 
   it('should inspect the currently selected element', async done => {
@@ -331,9 +325,6 @@ describe('InspectedElement', () => {
         ),
       false,
     );
-    // console.log('::::: await?');
-    // jest.runOnlyPendingTimers();
-    // await Promise.resolve()
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       Object {
         "a": 2,
@@ -1168,7 +1159,7 @@ describe('InspectedElement', () => {
     done();
   });
 
-  fit('should not dehydrate nested values until explicitly requested', async done => {
+  it('should not dehydrate nested values until explicitly requested', async done => {
     const Example = () => {
       const [state] = React.useState({
         foo: {
@@ -1358,7 +1349,7 @@ describe('InspectedElement', () => {
     done();
   });
 
-  xit('should dehydrate complex nested values when requested', async done => {
+  it('should dehydrate complex nested values when requested', async done => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -1438,9 +1429,10 @@ describe('InspectedElement', () => {
             "1": 2,
             "2": 3,
           },
-          "1": Dehydrated {
-            "preview_short": Set(3),
-            "preview_long": Set(3) {"a", "b", "c"},
+          "1": Object {
+            "0": "a",
+            "1": "b",
+            "2": "c",
           },
         },
       }
@@ -1449,7 +1441,7 @@ describe('InspectedElement', () => {
     done();
   });
 
-  xit('should include updates for nested values that were previously hydrated', async done => {
+  it('should include updates for nested values that were previously hydrated', async done => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -1546,9 +1538,12 @@ describe('InspectedElement', () => {
             },
             "value": 1,
           },
-          "c": Dehydrated {
-            "preview_short": {…},
-            "preview_long": {d: {…}, value: 1},
+          "c": Object {
+            "d": Dehydrated {
+              "preview_short": {…},
+              "preview_long": {e: {…}, value: 1},
+            },
+            "value": 1,
           },
         },
       }
@@ -1637,7 +1632,7 @@ describe('InspectedElement', () => {
     done();
   });
 
-  xit('should not tear if hydration is requested after an update', async done => {
+  it('should not tear if hydration is requested after an update', async done => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -1766,7 +1761,28 @@ describe('InspectedElement', () => {
 
     function Suspender({target}) {
       const inspectedElement = useInspectedElement(id);
-      expect(inspectedElement).toMatchSnapshot(`1: Inspected element ${id}`);
+      expect(inspectedElement).toMatchInlineSnapshot(`
+        Object {
+          "context": null,
+          "events": undefined,
+          "hooks": Array [
+            Object {
+              "id": null,
+              "isStateEditable": false,
+              "name": "Context",
+              "subHooks": Array [],
+              "value": true,
+            },
+          ],
+          "id": 2,
+          "owners": null,
+          "props": Object {
+            "a": 1,
+            "b": "abc",
+          },
+          "state": null,
+        }
+      `);
       didFinish = true;
       return null;
     }
@@ -1816,8 +1832,20 @@ describe('InspectedElement', () => {
     let storeAsGlobal: StoreAsGlobal = ((null: any): StoreAsGlobal);
 
     function Suspender({target}) {
-      // const context = React.useContext(InspectedElementContext);
-      // storeAsGlobal = context.storeAsGlobal;
+      storeAsGlobal = (elementID: number, path: Array<string | number>) => {
+        const rendererID = store.getRendererIDForElement(elementID);
+        if (rendererID !== null) {
+          const {
+            storeAsGlobal: storeAsGlobalAPI,
+          } = require('react-devtools-shared/src/backendAPI');
+          storeAsGlobalAPI({
+            bridge,
+            id: elementID,
+            path,
+            rendererID,
+          });
+        }
+      };
       return null;
     }
 
@@ -1834,23 +1862,22 @@ describe('InspectedElement', () => {
         ),
       false,
     );
-    expect(storeAsGlobal).not.toBeNull();
 
     jest.spyOn(console, 'log').mockImplementation(() => {});
 
     // Should store the whole value (not just the hydrated parts)
     storeAsGlobal(id, ['props', 'nestedObject']);
     jest.runOnlyPendingTimers();
-    expect(console.log).toHaveBeenCalledWith('$reactTemp1');
-    expect(global.$reactTemp1).toBe(nestedObject);
+    expect(console.log).toHaveBeenCalledWith('$reactTemp0');
+    expect(global.$reactTemp0).toBe(nestedObject);
 
     console.log.mockReset();
 
     // Should store the nested property specified (not just the outer value)
     storeAsGlobal(id, ['props', 'nestedObject', 'a', 'b']);
     jest.runOnlyPendingTimers();
-    expect(console.log).toHaveBeenCalledWith('$reactTemp2');
-    expect(global.$reactTemp2).toBe(nestedObject.a.b);
+    expect(console.log).toHaveBeenCalledWith('$reactTemp1');
+    expect(global.$reactTemp1).toBe(nestedObject.a.b);
 
     done();
   });
@@ -1882,8 +1909,20 @@ describe('InspectedElement', () => {
     let copyPath: CopyInspectedElementPath = ((null: any): CopyInspectedElementPath);
 
     function Suspender({target}) {
-      // const context = React.useContext(InspectedElementContext);
-      // copyPath = context.copyInspectedElementPath;
+      copyPath = (elementID: number, path: Array<string | number>) => {
+        const rendererID = store.getRendererIDForElement(elementID);
+        if (rendererID !== null) {
+          const {
+            copyInspectedElementPath,
+          } = require('react-devtools-shared/src/backendAPI');
+          copyInspectedElementPath({
+            bridge,
+            id: elementID,
+            path,
+            rendererID,
+          });
+        }
+      };
       return null;
     }
 
@@ -1974,8 +2013,20 @@ describe('InspectedElement', () => {
     let copyPath: CopyInspectedElementPath = ((null: any): CopyInspectedElementPath);
 
     function Suspender({target}) {
-      // const context = React.useContext(InspectedElementContext);
-      // copyPath = context.copyInspectedElementPath;
+      copyPath = (elementID: number, path: Array<string | number>) => {
+        const rendererID = store.getRendererIDForElement(elementID);
+        if (rendererID !== null) {
+          const {
+            copyInspectedElementPath,
+          } = require('react-devtools-shared/src/backendAPI');
+          copyInspectedElementPath({
+            bridge,
+            id: elementID,
+            path,
+            rendererID,
+          });
+        }
+      };
       return null;
     }
 
@@ -2023,12 +2074,9 @@ describe('InspectedElement', () => {
   });
 
   it('should display complex values of useDebugValue', async done => {
-    let getInspectedElementPath: GetInspectedElementPath = ((null: any): GetInspectedElementPath);
     let inspectedElement = null;
     function Suspender({target}) {
-      // const context = React.useContext(InspectedElementContext);
-      // getInspectedElementPath = context.getInspectedElementPath;
-      // inspectedElement = context.useInspectedElement(target);
+      inspectedElement = useInspectedElement(target);
       return null;
     }
 
@@ -2065,9 +2113,27 @@ describe('InspectedElement', () => {
         ),
       false,
     );
-    expect(getInspectedElementPath).not.toBeNull();
-    expect(inspectedElement).not.toBeNull();
-    expect(inspectedElement).toMatchSnapshot('DisplayedComplexValue');
+    expect(inspectedElement.hooks).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "id": null,
+          "isStateEditable": false,
+          "name": "DebuggableHook",
+          "subHooks": Array [
+            Object {
+              "id": 0,
+              "isStateEditable": true,
+              "name": "State",
+              "subHooks": Array [],
+              "value": 1,
+            },
+          ],
+          "value": Object {
+            "foo": 2,
+          },
+        },
+      ]
+    `);
 
     done();
   });
@@ -2299,7 +2365,11 @@ describe('InspectedElement', () => {
         );
       });
 
-      store.clearErrorsAndWarnings();
+      const {
+        clearErrorsAndWarnings,
+      } = require('react-devtools-shared/src/backendAPI');
+      clearErrorsAndWarnings({bridge, store});
+
       // Flush events to the renderer.
       jest.runOnlyPendingTimers();
 
@@ -2312,7 +2382,7 @@ describe('InspectedElement', () => {
       `);
     });
 
-    it('can be cleared for a particular Fiber (only errors)', async () => {
+    it('can be cleared for a particular Fiber (only warnings)', async () => {
       const Example = ({id}) => {
         console.error(`test-only: render error #${id}`);
         console.warn(`test-only: render warning #${id}`);
@@ -2332,7 +2402,14 @@ describe('InspectedElement', () => {
         );
       });
 
-      store.clearWarningsForElement(2);
+      let id = ((store.getElementIDAtIndex(1): any): number);
+      const rendererID = store.getRendererIDForElement(id);
+
+      const {
+        clearWarningsForElement,
+      } = require('react-devtools-shared/src/backendAPI');
+      clearWarningsForElement({bridge, id, rendererID});
+
       // Flush events to the renderer.
       jest.runOnlyPendingTimers();
 
@@ -2368,7 +2445,9 @@ describe('InspectedElement', () => {
         ]
       `);
 
-      store.clearWarningsForElement(1);
+      id = ((store.getElementIDAtIndex(0): any): number);
+      clearWarningsForElement({bridge, id, rendererID});
+
       // Flush events to the renderer.
       jest.runOnlyPendingTimers();
 
@@ -2400,7 +2479,7 @@ describe('InspectedElement', () => {
       `);
     });
 
-    it('can be cleared for a particular Fiber (only warnings)', async () => {
+    it('can be cleared for a particular Fiber (only errors)', async () => {
       const Example = ({id}) => {
         console.error(`test-only: render error #${id}`);
         console.warn(`test-only: render warning #${id}`);
@@ -2420,7 +2499,14 @@ describe('InspectedElement', () => {
         );
       });
 
-      store.clearErrorsForElement(2);
+      let id = ((store.getElementIDAtIndex(1): any): number);
+      const rendererID = store.getRendererIDForElement(id);
+
+      const {
+        clearErrorsForElement,
+      } = require('react-devtools-shared/src/backendAPI');
+      clearErrorsForElement({bridge, id, rendererID});
+
       // Flush events to the renderer.
       jest.runOnlyPendingTimers();
 
@@ -2456,7 +2542,9 @@ describe('InspectedElement', () => {
         ]
       `);
 
-      store.clearErrorsForElement(1);
+      id = ((store.getElementIDAtIndex(0): any): number);
+      clearErrorsForElement({bridge, id, rendererID});
+
       // Flush events to the renderer.
       jest.runOnlyPendingTimers();
 

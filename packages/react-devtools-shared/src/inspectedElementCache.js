@@ -122,7 +122,7 @@ export function inspectElement(
 
     inspectElementAPI({
       bridge,
-      forceUpdate,
+      forceUpdate: true,
       id: element.id,
       inspectedPaths,
       rendererID: ((rendererID: any): number),
@@ -131,18 +131,8 @@ export function inspectElement(
         if (newRecord.status === Pending) {
           switch (data.type) {
             case 'no-change':
-              // This code path should never be hit.
-              // It would indicate we invalidated cache without invalidating the insepected element.
-              // There's nothing we can resolve in this case (since we don't have inspected data).
-              // Rejecting the pending promise might cause an error boundary to be shown unncessarily though,
-              // e.g. if we happen to poll for an update between when we reqeust a hydrated path and when it gets returned.
-              // I'm not sure this scenario could ever occur since the bridge forces serialization of messages, but best to play it safe?
-              // TODO (cache) What happens if we leave React indefinitely suspended on a promise like this?
-              // const noChangeRecord = ((newRecord: any): RejectedRecord);
-              // noChangeRecord.status = Rejected;
-              // noChangeRecord.value =
-              //   'Unsupported response type for selected element.';
-              // wake();
+              // This response type should never be received.
+              // We always send forceUpdate:true when we have a cache miss.
               break;
 
             case 'not-found':
@@ -176,6 +166,7 @@ export function inspectElement(
     );
     map.set(element, record);
   }
+
   const response = readRecord(record).value;
   return response;
 }
