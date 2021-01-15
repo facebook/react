@@ -45,9 +45,10 @@ const environmentFlags = {
   // Use this for tests that are known to be broken.
   FIXME: false,
 
-  // Turn this flag back on (or delete) once the effect list is removed in favor
-  // of a depth-first traversal using `subtreeTags`.
-  dfsEffectsRefactor: false,
+  // Turn these flags back on (or delete) once the effect list is removed in
+  // favor of a depth-first traversal using `subtreeTags`.
+  dfsEffectsRefactor: __VARIANT__,
+  enableUseJSStackToTrackPassiveDurations: false,
 };
 
 function getTestFlags() {
