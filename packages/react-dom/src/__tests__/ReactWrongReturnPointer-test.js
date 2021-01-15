@@ -17,7 +17,6 @@ beforeEach(() => {
 
 // Don't feel too guilty if you have to delete this test.
 // @gate dfsEffectsRefactor
-// @gate new
 // @gate __DEV__
 test('warns in DEV if return pointer is inconsistent', async () => {
   const {useRef, useLayoutEffect} = React;
