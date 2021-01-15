@@ -691,6 +691,7 @@ export function attach(
   }
 
   function inspectElement(
+    requestID: number,
     id: number,
     path?: Array<string | number>,
   ): InspectedElementPayload {
@@ -703,6 +704,7 @@ export function attach(
     if (inspectedElement === null) {
       return {
         id,
+        responseID: requestID,
         type: 'not-found',
       };
     }
@@ -731,6 +733,7 @@ export function attach(
 
     return {
       id,
+      responseID: requestID,
       type: 'full-data',
       value: inspectedElement,
     };

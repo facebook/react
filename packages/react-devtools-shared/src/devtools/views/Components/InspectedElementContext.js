@@ -10,7 +10,6 @@
 import * as React from 'react';
 import {
   createContext,
-  unstable_getCacheForType as getCacheForType,
   unstable_startTransition as startTransition,
   unstable_useCacheRefresh as useCacheRefresh,
   useCallback,
@@ -20,418 +19,129 @@ import {
   useRef,
   useState,
 } from 'react';
-import {BridgeContext, StoreContext} from '../context';
-import {hydrate, fillInPath} from 'react-devtools-shared/src/hydration';
 import {TreeStateContext} from './TreeContext';
-import {separateDisplayNameAndHOCs} from 'react-devtools-shared/src/utils';
+import {BridgeContext, StoreContext} from '../context';
+import {
+  checkForUpdate,
+  inspectElement,
+} from 'react-devtools-shared/src/inspectedElementCache';
 
+import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
-  InspectedElement as InspectedElementBackend,
-  InspectedElementPayload,
-} from 'react-devtools-shared/src/backend/types';
-import type {
-  DehydratedData,
   Element,
-  InspectedElement as InspectedElementFrontend,
+  InspectedElement,
 } from 'react-devtools-shared/src/devtools/views/Components/types';
 
-export type StoreAsGlobal = (id: number, path: Array<string | number>) => void;
+type Path = Array<string | number>;
+type InspectPathFunction = (path: Path) => void;
 
-export type CopyInspectedElementPath = (
-  id: number,
-  path: Array<string | number>,
-) => void;
-
-export type GetInspectedElementPath = (
-  id: number,
-  path: Array<string | number>,
-) => void;
-
-export type GetInspectedElement = (
-  id: number,
-) => InspectedElementFrontend | null;
-
-type ClearErrorsForInspectedElement = () => void;
-type ClearWarningsForInspectedElement = () => void;
-
-export type InspectedElementContextType = {|
-  clearErrorsForInspectedElement: ClearErrorsForInspectedElement,
-  clearWarningsForInspectedElement: ClearWarningsForInspectedElement,
-  copyInspectedElementPath: CopyInspectedElementPath,
-  getInspectedElementPath: GetInspectedElementPath,
-  getInspectedElement: GetInspectedElement,
-  storeAsGlobal: StoreAsGlobal,
+type Context = {|
+  inspectedElement: InspectedElement | null,
+  inspectPaths: InspectPathFunction,
 |};
 
-const InspectedElementContext = createContext<InspectedElementContextType>(
-  ((null: any): InspectedElementContextType),
+export const InspectedElementContext = createContext<Context>(
+  ((null: any): Context),
 );
-InspectedElementContext.displayName = 'InspectedElementContext';
 
-type ResolveFn = (inspectedElement: InspectedElementFrontend) => void;
-type Callback = (inspectedElement: InspectedElementFrontend) => void;
-type Thenable = {|
-  callbacks: Set<Callback>,
-  then: (callback: Callback) => void,
-  resolve: ResolveFn,
+const POLL_INTERVAL = 1000;
+
+export type Props = {|
+  children: ReactNodeList,
 |};
 
-const inspectedElementThenables: WeakMap<Element, Thenable> = new WeakMap();
-
-type InspectedElementCache = WeakMap<Element, InspectedElementFrontend>;
-
-function createInspectedElementCache(): InspectedElementCache {
-  return new WeakMap();
-}
-
-function getInspectedElementCache(): InspectedElementCache {
-  return getCacheForType(createInspectedElementCache);
-}
-
-function setInspectedElement(
-  element: Element,
-  inspectedElement: InspectedElementFrontend,
-  inspectedElementCache: InspectedElementCache,
-): void {
-  // TODO (cache) This mutation seems sketchy.
-  // Probably need to refresh the cache with a new seed.
-  inspectedElementCache.set(element, inspectedElement);
-
-  const maybeThenable = inspectedElementThenables.get(element);
-  if (maybeThenable !== undefined) {
-    inspectedElementThenables.delete(element);
-
-    maybeThenable.resolve(inspectedElement);
-  }
-}
-
-function getInspectedElement(element: Element): InspectedElementFrontend {
-  const inspectedElementCache = getInspectedElementCache();
-  const maybeInspectedElement = inspectedElementCache.get(element);
-  if (maybeInspectedElement !== undefined) {
-    return maybeInspectedElement;
-  }
-
-  const maybeThenable = inspectedElementThenables.get(element);
-  if (maybeThenable !== undefined) {
-    throw maybeThenable;
-  }
-
-  const thenable: Thenable = {
-    callbacks: new Set(),
-    then: callback => {
-      thenable.callbacks.add(callback);
-    },
-    resolve: inspectedElement => {
-      thenable.callbacks.forEach(callback => callback(inspectedElement));
-    },
-  };
-
-  inspectedElementThenables.set(element, thenable);
-
-  throw thenable;
-}
-
-type Props = {|
-  children: React$Node,
-|};
-
-function InspectedElementContextController({children}: Props) {
+export function InspectedElementContextController({children}: Props) {
+  const {selectedElementID} = useContext(TreeStateContext);
   const bridge = useContext(BridgeContext);
   const store = useContext(StoreContext);
 
-  const storeAsGlobalCount = useRef(1);
-
-  // Ask the backend to store the value at the specified path as a global variable.
-  const storeAsGlobal = useCallback<GetInspectedElementPath>(
-    (id: number, path: Array<string | number>) => {
-      const rendererID = store.getRendererIDForElement(id);
-      if (rendererID !== null) {
-        bridge.send('storeAsGlobal', {
-          count: storeAsGlobalCount.current++,
-          id,
-          path,
-          rendererID,
-        });
-      }
-    },
-    [bridge, store],
-  );
-
-  // Ask the backend to copy the specified path to the clipboard.
-  const copyInspectedElementPath = useCallback<GetInspectedElementPath>(
-    (id: number, path: Array<string | number>) => {
-      const rendererID = store.getRendererIDForElement(id);
-      if (rendererID !== null) {
-        bridge.send('copyElementPath', {id, path, rendererID});
-      }
-    },
-    [bridge, store],
-  );
-
-  // Ask the backend to fill in a "dehydrated" path; this will result in a "inspectedElement".
-  const getInspectedElementPath = useCallback<GetInspectedElementPath>(
-    (id: number, path: Array<string | number>) => {
-      const rendererID = store.getRendererIDForElement(id);
-      if (rendererID !== null) {
-        bridge.send('inspectElement', {id, path, rendererID});
-      }
-    },
-    [bridge, store],
-  );
-
-  const getInspectedElementWrapper = useCallback<GetInspectedElement>(
-    (id: number) => {
-      const element = store.getElementByID(id);
-      if (element !== null) {
-        return getInspectedElement(element);
-      }
-      return null;
-    },
-    [store],
-  );
-
-  // It's very important that this context consumes selectedElementID and not inspectedElementID.
-  // Otherwise the effect that sends the "inspect" message across the bridge-
-  // would itself be blocked by the same render that suspends (waiting for the data).
-  const {selectedElementID} = useContext(TreeStateContext);
-
   const refresh = useCacheRefresh();
 
-  const clearErrorsForInspectedElement = useCallback<ClearErrorsForInspectedElement>(() => {
-    if (selectedElementID !== null) {
-      const rendererID = store.getRendererIDForElement(selectedElementID);
-      if (rendererID !== null) {
-        bridge.send('inspectElement', {id: selectedElementID, rendererID});
+  // Track when insepected paths have changed; we need to force the backend to send an udpate then.
+  const forceUpdateRef = useRef<boolean>(true);
 
-        startTransition(() => {
-          store.clearErrorsForElement(selectedElementID);
-          refresh();
+  // Track the paths insepected for the currently selected element.
+  const [state, setState] = useState<{|
+    element: Element | null,
+    inspectedPaths: Object,
+  |}>({
+    element: null,
+    inspectedPaths: {},
+  });
+
+  const element =
+    selectedElementID !== null ? store.getElementByID(selectedElementID) : null;
+
+  const elementHasChanged = element !== null && element !== state.element;
+
+  // Reset the cached inspected paths when a new element is selected.
+  if (elementHasChanged) {
+    setState({
+      element,
+      inspectedPaths: {},
+    });
+  }
+
+  // Don't load a stale element from the backend; it wastes bridge bandwidth.
+  const inspectedElement =
+    !elementHasChanged && element !== null
+      ? inspectElement(
+          element,
+          state.inspectedPaths,
+          forceUpdateRef.current,
+          store,
+          bridge,
+        )
+      : null;
+
+  const inspectPaths: InspectPathFunction = useCallback<InspectPathFunction>(
+    (path: Path) => {
+      startTransition(() => {
+        forceUpdateRef.current = true;
+        setState(prevState => {
+          const cloned = {...prevState};
+          let current = cloned.inspectedPaths;
+          path.forEach(key => {
+            if (!current[key]) {
+              current[key] = {};
+            }
+            current = current[key];
+          });
+          return cloned;
         });
-      }
-    }
-  }, [bridge, selectedElementID]);
+        refresh();
+      });
+    },
+    [setState],
+  );
 
-  const clearWarningsForInspectedElement = useCallback<ClearWarningsForInspectedElement>(() => {
-    if (selectedElementID !== null) {
-      const rendererID = store.getRendererIDForElement(selectedElementID);
-      if (rendererID !== null) {
-        bridge.send('inspectElement', {id: selectedElementID, rendererID});
-
-        startTransition(() => {
-          store.clearWarningsForElement(selectedElementID);
-          refresh();
-        });
-      }
-    }
-  }, [bridge, selectedElementID]);
-
-  const [memoKey, setMemoKey] = useState<number>(0);
-
-  const inspectedElementCache = getInspectedElementCache();
-
-  // This effect handler invalidates the suspense cache and schedules rendering updates with React.
+  // Force backend update when inspected paths change.
   useEffect(() => {
-    const onInspectedElement = (data: InspectedElementPayload) => {
-      const {id} = data;
+    forceUpdateRef.current = false;
+  }, [element, state]);
 
-      let element;
-
-      switch (data.type) {
-        case 'no-change':
-        case 'not-found':
-          // No-op
-          break;
-        case 'hydrated-path':
-          // Merge new data into previous object and invalidate cache
-          element = store.getElementByID(id);
-          if (element !== null) {
-            const maybeInspectedElement = inspectedElementCache.get(element);
-            if (maybeInspectedElement !== undefined) {
-              const value = hydrateHelper(data.value, data.path);
-              const inspectedElement = {...maybeInspectedElement};
-
-              fillInPath(inspectedElement, data.value, data.path, value);
-
-              setInspectedElement(
-                element,
-                inspectedElement,
-                inspectedElementCache,
-              );
-
-              // Schedule update with React if the currently-selected element has been invalidated.
-              if (id === selectedElementID) {
-                setMemoKey(prevMemoKey => prevMemoKey + 1);
-              }
-            }
-          }
-          break;
-        case 'full-data':
-          const {
-            canEditFunctionProps,
-            canEditFunctionPropsDeletePaths,
-            canEditFunctionPropsRenamePaths,
-            canEditHooks,
-            canEditHooksAndDeletePaths,
-            canEditHooksAndRenamePaths,
-            canToggleSuspense,
-            canViewSource,
-            hasLegacyContext,
-            source,
-            type,
-            owners,
-            context,
-            hooks,
-            props,
-            rendererPackageName,
-            rendererVersion,
-            rootType,
-            state,
-            key,
-            errors,
-            warnings,
-          } = ((data.value: any): InspectedElementBackend);
-
-          const inspectedElement: InspectedElementFrontend = {
-            canEditFunctionProps,
-            canEditFunctionPropsDeletePaths,
-            canEditFunctionPropsRenamePaths,
-            canEditHooks,
-            canEditHooksAndDeletePaths,
-            canEditHooksAndRenamePaths,
-            canToggleSuspense,
-            canViewSource,
-            hasLegacyContext,
-            id,
-            key,
-            rendererPackageName,
-            rendererVersion,
-            rootType,
-            source,
-            type,
-            owners:
-              owners === null
-                ? null
-                : owners.map(owner => {
-                    const [
-                      displayName,
-                      hocDisplayNames,
-                    ] = separateDisplayNameAndHOCs(
-                      owner.displayName,
-                      owner.type,
-                    );
-                    return {
-                      ...owner,
-                      displayName,
-                      hocDisplayNames,
-                    };
-                  }),
-            context: hydrateHelper(context),
-            hooks: hydrateHelper(hooks),
-            props: hydrateHelper(props),
-            state: hydrateHelper(state),
-            errors,
-            warnings,
-          };
-
-          element = store.getElementByID(id);
-          if (element !== null) {
-            setInspectedElement(
-              element,
-              inspectedElement,
-              inspectedElementCache,
-            );
-
-            // Schedule update with React if the currently-selected element has been invalidated.
-            if (id === selectedElementID) {
-              setMemoKey(prevMemoKey => prevMemoKey + 1);
-            }
-          }
-          break;
-        default:
-          break;
-      }
-    };
-
-    bridge.addListener('inspectedElement', onInspectedElement);
-    return () => bridge.removeListener('inspectedElement', onInspectedElement);
-  }, [bridge, inspectedElementCache, selectedElementID, store]);
-
-  // This effect handler polls for updates on the currently selected element.
+  // Periodically poll the selected element for updates.
+  // TODO (cache) Reset this timer any time the element we're inspecting gets a new response.
   useEffect(() => {
-    if (selectedElementID === null) {
-      return () => {};
-    }
-
-    const rendererID = store.getRendererIDForElement(selectedElementID);
-
-    let timeoutID: TimeoutID | null = null;
-
-    const sendRequest = () => {
-      timeoutID = null;
-
-      if (rendererID !== null) {
-        bridge.send('inspectElement', {id: selectedElementID, rendererID});
-      }
-    };
-
-    // Send the initial inspection request.
-    // We'll poll for an update in the response handler below.
-    sendRequest();
-
-    const onInspectedElement = (data: InspectedElementPayload) => {
-      // If this is the element we requested, wait a little bit and then ask for another update.
-      if (data.id === selectedElementID) {
-        switch (data.type) {
-          case 'no-change':
-          case 'full-data':
-          case 'hydrated-path':
-            if (timeoutID !== null) {
-              clearTimeout(timeoutID);
-            }
-            timeoutID = setTimeout(sendRequest, 1000);
-            break;
-          default:
-            break;
-        }
-      }
-    };
-
-    bridge.addListener('inspectedElement', onInspectedElement);
-
-    return () => {
-      bridge.removeListener('inspectedElement', onInspectedElement);
-
-      if (timeoutID !== null) {
+    if (element !== null) {
+      const inspectedPaths = state.inspectedPaths;
+      const checkForUpdateWrapper = () => {
+        checkForUpdate({bridge, element, inspectedPaths, refresh, store});
+        timeoutID = setTimeout(checkForUpdateWrapper, POLL_INTERVAL);
+      };
+      let timeoutID = setTimeout(checkForUpdateWrapper, POLL_INTERVAL);
+      return () => {
         clearTimeout(timeoutID);
-      }
-    };
-  }, [bridge, selectedElementID, store]);
+      };
+    }
+  }, [element, inspectedElement, state]);
 
-  const value = useMemo(
+  const value = useMemo<Context>(
     () => ({
-      clearErrorsForInspectedElement,
-      clearWarningsForInspectedElement,
-      copyInspectedElementPath,
-      getInspectedElement: getInspectedElementWrapper,
-      getInspectedElementPath,
-      storeAsGlobal,
+      inspectedElement,
+      inspectPaths,
     }),
-    [
-      clearErrorsForInspectedElement,
-      clearWarningsForInspectedElement,
-      copyInspectedElementPath,
-      getInspectedElement,
-      getInspectedElementPath,
-      storeAsGlobal,
-
-      // Functions passed down by this context are memoized to prevent many unnecessary re-renders.
-      // Re-renders are required when the underlying data changes,
-      // but this component can't access the underlying data (it can't suspend because it has no fallback).
-      // So instead, we use a manually incremented key to invalid the memoized cache
-      // and rely on lower level context consumers (within a Suspense fallback) to actually read and suspend.
-      memoKey,
-    ],
+    [inspectedElement, inspectPaths],
   );
 
   return (
@@ -440,33 +150,3 @@ function InspectedElementContextController({children}: Props) {
     </InspectedElementContext.Provider>
   );
 }
-
-function hydrateHelper(
-  dehydratedData: DehydratedData | null,
-  path?: Array<string | number>,
-): Object | null {
-  if (dehydratedData !== null) {
-    const {cleaned, data, unserializable} = dehydratedData;
-
-    if (path) {
-      const {length} = path;
-      if (length > 0) {
-        // Hydration helper requires full paths, but inspection dehydrates with relative paths.
-        // In that event it's important that we adjust the "cleaned" paths to match.
-        return hydrate(
-          data,
-          cleaned.map(cleanedPath => cleanedPath.slice(length)),
-          unserializable.map(unserializablePath =>
-            unserializablePath.slice(length),
-          ),
-        );
-      }
-    }
-
-    return hydrate(data, cleaned, unserializable);
-  } else {
-    return null;
-  }
-}
-
-export {InspectedElementContext, InspectedElementContextController};

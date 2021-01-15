@@ -59,6 +59,9 @@ module.exports = Object.assign({}, baseConfig, {
   testRegex: 'packages/react-devtools-shared/src/__tests__/[^]+.test.js$',
   snapshotSerializers: [
     require.resolve(
+      '../../packages/react-devtools-shared/src/__tests__/dehydratedValueSerializer.js'
+    ),
+    require.resolve(
       '../../packages/react-devtools-shared/src/__tests__/inspectedElementSerializer.js'
     ),
     require.resolve(

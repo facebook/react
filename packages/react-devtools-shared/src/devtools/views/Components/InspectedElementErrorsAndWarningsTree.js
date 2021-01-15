@@ -8,14 +8,21 @@
  */
 
 import * as React from 'react';
-import {useContext, unstable_useTransition as useTransition} from 'react';
+import {
+  useContext,
+  unstable_useCacheRefresh as useCacheRefresh,
+  unstable_useTransition as useTransition,
+} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import Store from '../../store';
 import sharedStyles from './InspectedElementSharedStyles.css';
 import styles from './InspectedElementErrorsAndWarningsTree.css';
 import {SettingsContext} from '../Settings/SettingsContext';
-import {InspectedElementContext} from './InspectedElementContext';
+import {
+  clearErrorsForElement as clearErrorsForElementAPI,
+  clearWarningsForElement as clearWarningsForElementAPI,
+} from 'react-devtools-shared/src/backendAPI';
 
 import type {InspectedElement} from './types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
@@ -31,10 +38,45 @@ export default function InspectedElementErrorsAndWarningsTree({
   inspectedElement,
   store,
 }: Props) {
-  const {
-    clearErrorsForInspectedElement,
-    clearWarningsForInspectedElement,
-  } = useContext(InspectedElementContext);
+  const refresh = useCacheRefresh();
+
+  const [
+    startClearErrorsTransition,
+    isErrorsTransitionPending,
+  ] = useTransition();
+  const clearErrorsForInspectedElement = () => {
+    const {id} = inspectedElement;
+    const rendererID = store.getRendererIDForElement(id);
+    if (rendererID !== null) {
+      startClearErrorsTransition(() => {
+        clearErrorsForElementAPI({
+          bridge,
+          id,
+          rendererID,
+        });
+        refresh();
+      });
+    }
+  };
+
+  const [
+    startClearWarningsTransition,
+    isWarningsTransitionPending,
+  ] = useTransition();
+  const clearWarningsForInspectedElement = () => {
+    const {id} = inspectedElement;
+    const rendererID = store.getRendererIDForElement(id);
+    if (rendererID !== null) {
+      startClearWarningsTransition(() => {
+        clearWarningsForElementAPI({
+          bridge,
+          id,
+          rendererID,
+        });
+        refresh();
+      });
+    }
+  };
 
   const {showInlineWarningsAndErrors} = useContext(SettingsContext);
   if (!showInlineWarningsAndErrors) {
@@ -52,6 +94,7 @@ export default function InspectedElementErrorsAndWarningsTree({
           className={styles.ErrorTree}
           clearMessages={clearErrorsForInspectedElement}
           entries={errors}
+          isTransitionPending={isErrorsTransitionPending}
           label="errors"
           messageClassName={styles.Error}
         />
@@ -63,6 +106,7 @@ export default function InspectedElementErrorsAndWarningsTree({
           className={styles.WarningTree}
           clearMessages={clearWarningsForInspectedElement}
           entries={warnings}
+          isTransitionPending={isWarningsTransitionPending}
           label="warnings"
           messageClassName={styles.Warning}
         />
@@ -77,6 +121,7 @@ type TreeProps = {|
   className: string,
   clearMessages: () => {},
   entries: Array<[string, number]>,
+  isTransitionPending: boolean,
   label: string,
   messageClassName: string,
 |};
@@ -87,11 +132,10 @@ function Tree({
   className,
   clearMessages,
   entries,
+  isTransitionPending,
   label,
   messageClassName,
 }: TreeProps) {
-  const [startTransition, isPending] = useTransition();
-
   if (entries.length === 0) {
     return null;
   }
@@ -100,12 +144,8 @@ function Tree({
       <div className={`${sharedStyles.HeaderRow} ${styles.HeaderRow}`}>
         <div className={sharedStyles.Header}>{label}</div>
         <Button
-          disabled={isPending}
-          onClick={() => {
-            startTransition(() => {
-              clearMessages();
-            });
-          }}
+          disabled={isTransitionPending}
+          onClick={clearMessages}
           title={`Clear all ${label} for this component`}>
           <ButtonIcon type="clear" />
         </Button>
