@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+Hey we are conducting a workshop please join.
+
 import * as React from 'react';
 import ReactVersion from 'shared/ReactVersion';
 import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
