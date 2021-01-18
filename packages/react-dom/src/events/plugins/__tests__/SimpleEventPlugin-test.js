@@ -228,6 +228,43 @@ describe('SimpleEventPlugin', function() {
     expect(button.textContent).toEqual('Count: 3');
   });
 
+  describe('fieldset', () => {
+    it('does not register a click when clicking a child of a form control of a disabled fieldset', function() {
+      // TODO: This test passes in JSDOM but fails in browsers.
+      // Once the bug is fixed upstream, this test will likely fail
+      // Unless we've fixed the root cause already.
+      const element = mounted(
+        <fieldset disabled={true}>
+          <button onClick={onClick}>
+            Click should not be registered here
+            <span>(or here)</span>
+          </button>
+        </fieldset>,
+      );
+      const child = element.querySelector('span');
+
+      child.click();
+      expect(onClick).toHaveBeenCalledTimes(0);
+    });
+
+    it('does register a click when clicking a child of a form control inside a legend of a disabled fieldset', function() {
+      const element = mounted(
+        <fieldset disabled={true}>
+          <legend>
+            <button onClick={onClick}>
+              Click should be registered here
+              <span>(and here)</span>
+            </button>
+          </legend>
+        </fieldset>,
+      );
+      const child = element.querySelector('span');
+
+      child.click();
+      expect(onClick).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('interactive events, in concurrent mode', () => {
     beforeEach(() => {
       jest.resetModules();
