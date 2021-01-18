@@ -75,6 +75,7 @@ import {
   warnIfNotCurrentlyActingUpdatesInDev,
   warnIfNotScopedWithMatchingAct,
   markSkippedUpdateLanes,
+  isInterleavedUpdate,
 } from './ReactFiberWorkLoop.new';
 
 import invariant from 'shared/invariant';
@@ -104,6 +105,7 @@ import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
 import {CacheContext} from './ReactFiberCacheComponent.new';
 import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.new';
+import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -116,8 +118,9 @@ type Update<S, A> = {|
   priority?: ReactPriorityLevel,
 |};
 
-type UpdateQueue<S, A> = {|
+export type UpdateQueue<S, A> = {|
   pending: Update<S, A> | null,
+  interleaved: Update<S, A> | null,
   dispatch: (A => mixed) | null,
   lastRenderedReducer: ((S, A) => S) | null,
   lastRenderedState: S | null,
@@ -650,6 +653,7 @@ function mountReducer<S, I, A>(
   hook.memoizedState = hook.baseState = initialState;
   const queue = (hook.queue = {
     pending: null,
+    interleaved: null,
     dispatch: null,
     lastRenderedReducer: reducer,
     lastRenderedState: (initialState: any),
@@ -790,6 +794,23 @@ function updateReducer<S, I, A>(
     hook.baseQueue = newBaseQueueLast;
 
     queue.lastRenderedState = newState;
+  }
+
+  // Interleaved updates are stored on a separate queue. We aren't going to
+  // process them during this render, but we do need to track which lanes
+  // are remaining.
+  const lastInterleaved = queue.interleaved;
+  if (lastInterleaved !== null) {
+    let interleaved = lastInterleaved;
+    do {
+      const interleavedLane = interleaved.lane;
+      currentlyRenderingFiber.lanes = mergeLanes(
+        currentlyRenderingFiber.lanes,
+        interleavedLane,
+      );
+      markSkippedUpdateLanes(interleavedLane);
+      interleaved = ((interleaved: any).next: Update<S, A>);
+    } while (interleaved !== lastInterleaved);
   }
 
   const dispatch: Dispatch<A> = (queue.dispatch: any);
@@ -1080,6 +1101,7 @@ function useMutableSource<Source, Snapshot>(
     // including any interleaving updates that occur.
     const newQueue = {
       pending: null,
+      interleaved: null,
       dispatch: null,
       lastRenderedReducer: basicStateReducer,
       lastRenderedState: snapshot,
@@ -1135,6 +1157,7 @@ function mountState<S>(
   hook.memoizedState = hook.baseState = initialState;
   const queue = (hook.queue = {
     pending: null,
+    interleaved: null,
     dispatch: null,
     lastRenderedReducer: basicStateReducer,
     lastRenderedState: (initialState: any),
@@ -1812,7 +1835,7 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
           cache: seededCache,
         };
         refreshUpdate.payload = payload;
-        enqueueUpdate(provider, refreshUpdate);
+        enqueueUpdate(provider, refreshUpdate, lane);
         return;
       }
     }
@@ -1847,17 +1870,6 @@ function dispatchAction<S, A>(
     next: (null: any),
   };
 
-  // Append the update to the end of the list.
-  const pending = queue.pending;
-  if (pending === null) {
-    // This is the first update. Create a circular list.
-    update.next = update;
-  } else {
-    update.next = pending.next;
-    pending.next = update;
-  }
-  queue.pending = update;
-
   const alternate = fiber.alternate;
   if (
     fiber === currentlyRenderingFiber ||
@@ -1867,7 +1879,41 @@ function dispatchAction<S, A>(
     // queue -> linked list of updates. After this render pass, we'll restart
     // and apply the stashed updates on top of the work-in-progress hook.
     didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
+    const pending = queue.pending;
+    if (pending === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+    } else {
+      update.next = pending.next;
+      pending.next = update;
+    }
+    queue.pending = update;
   } else {
+    if (isInterleavedUpdate(fiber, lane)) {
+      const interleaved = queue.interleaved;
+      if (interleaved === null) {
+        // This is the first update. Create a circular list.
+        update.next = update;
+        // At the end of the current render, this queue's interleaved updates will
+        // be transfered to the pending queue.
+        pushInterleavedQueue(queue);
+      } else {
+        update.next = interleaved.next;
+        interleaved.next = update;
+      }
+      queue.interleaved = update;
+    } else {
+      const pending = queue.pending;
+      if (pending === null) {
+        // This is the first update. Create a circular list.
+        update.next = update;
+      } else {
+        update.next = pending.next;
+        pending.next = update;
+      }
+      queue.pending = update;
+    }
+
     if (
       fiber.lanes === NoLanes &&
       (alternate === null || alternate.lanes === NoLanes)

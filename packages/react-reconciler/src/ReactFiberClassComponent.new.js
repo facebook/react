@@ -213,7 +213,7 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update);
+    enqueueUpdate(fiber, update, lane);
     scheduleUpdateOnFiber(fiber, lane, eventTime);
 
     if (__DEV__) {
@@ -245,7 +245,7 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update);
+    enqueueUpdate(fiber, update, lane);
     scheduleUpdateOnFiber(fiber, lane, eventTime);
 
     if (__DEV__) {
@@ -276,7 +276,7 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update);
+    enqueueUpdate(fiber, update, lane);
     scheduleUpdateOnFiber(fiber, lane, eventTime);
 
     if (__DEV__) {
