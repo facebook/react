@@ -2,15 +2,14 @@ import {printStore} from 'react-devtools-shared/src/devtools/utils';
 
 // test() is part of Jest's serializer API
 export function test(maybeState) {
-  if (maybeState === null || typeof maybeState !== 'object') {
-    return false;
-  }
-
+  const hasOwnProperty = Object.prototype.hasOwnProperty.bind(maybeState);
   // Duck typing at its finest.
   return (
-    maybeState.hasOwnProperty('inspectedElementID') &&
-    maybeState.hasOwnProperty('ownerFlatTree') &&
-    maybeState.hasOwnProperty('ownerSubtreeLeafElementID')
+    maybeState !== null &&
+    typeof maybeState === 'object' &&
+    hasOwnProperty('inspectedElementID') &&
+    hasOwnProperty('ownerFlatTree') &&
+    hasOwnProperty('ownerSubtreeLeafElementID')
   );
 }
 

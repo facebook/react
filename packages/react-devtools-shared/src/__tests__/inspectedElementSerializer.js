@@ -1,12 +1,20 @@
 // test() is part of Jest's serializer API
 export function test(maybeInspectedElement) {
+  if (
+    maybeInspectedElement === null ||
+    typeof maybeInspectedElement !== 'object'
+  ) {
+    return false;
+  }
+
+  const hasOwnProperty = Object.prototype.hasOwnProperty.bind(
+    maybeInspectedElement,
+  );
   return (
-    maybeInspectedElement !== null &&
-    typeof maybeInspectedElement === 'object' &&
-    maybeInspectedElement.hasOwnProperty('canEditFunctionProps') &&
-    maybeInspectedElement.hasOwnProperty('canEditHooks') &&
-    maybeInspectedElement.hasOwnProperty('canToggleSuspense') &&
-    maybeInspectedElement.hasOwnProperty('canViewSource')
+    hasOwnProperty('canEditFunctionProps') &&
+    hasOwnProperty('canEditHooks') &&
+    hasOwnProperty('canToggleSuspense') &&
+    hasOwnProperty('canViewSource')
   );
 }
 
