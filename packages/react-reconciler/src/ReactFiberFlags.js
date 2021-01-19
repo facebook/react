@@ -60,6 +60,9 @@ export const MountPassiveDev = /*              */ 0b10000000000000000000;
 // don't contain effects, by checking subtreeFlags.
 
 export const BeforeMutationMask =
+  // TODO: Remove Update flag from before mutation phase by re-landing Visiblity
+  // flag logic (see #20043)
+  Update |
   Snapshot |
   (enableCreateEventHandleAPI
     ? // createEventHandle needs to visit deleted and hidden trees to
