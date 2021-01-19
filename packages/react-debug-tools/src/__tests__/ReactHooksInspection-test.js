@@ -67,6 +67,53 @@ describe('ReactHooksInspection', () => {
     ]);
   });
 
+  it('regression test: should inspect a simple custom hook with the name useState (#20613)', () => {
+    const effect = () => {};
+    function useState(value) {
+      const [state] = React.useState(value);
+      React.useDebugValue('custom hook label');
+      React.useEffect(effect);
+      return state;
+    }
+    function Foo(props) {
+      const value = useState('hello world');
+      React.useState('hello world 2');
+      return <div>{value}</div>;
+    }
+    const tree = ReactDebugTools.inspectHooks(Foo, {});
+    expect(tree).toEqual([
+      {
+        isStateEditable: false,
+        id: null,
+        name: 'State',
+        value: __DEV__ ? 'custom hook label' : undefined,
+        subHooks: [
+          {
+            isStateEditable: true,
+            id: 0,
+            name: 'State',
+            value: 'hello world',
+            subHooks: [],
+          },
+          {
+            isStateEditable: false,
+            id: 1,
+            name: 'Effect',
+            subHooks: [],
+            value: effect,
+          },
+        ],
+      },
+      {
+        isStateEditable: true,
+        id: 2,
+        name: 'State',
+        value: 'hello world 2',
+        subHooks: [],
+      },
+    ]);
+  });
+
   it('should inspect a tree of multiple hooks', () => {
     function effect() {}
     function useCustom(value) {
