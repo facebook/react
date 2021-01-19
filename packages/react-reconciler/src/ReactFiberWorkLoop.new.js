@@ -448,12 +448,9 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   // To do that, we're replacing it with an update lane priority.
   const schedulerPriority = getCurrentPriorityLevel();
 
-  // The old behavior was using the priority level of the Scheduler.
-  // This couples React to the Scheduler internals, so we're replacing it
-  // with the currentUpdateLanePriority above. As an example of how this
-  // could be problematic, if we're not inside `Scheduler.runWithPriority`,
-  // then we'll get the priority of the current running Scheduler task,
-  // which is probably not what we want.
+  // Find the correct lane based on priorities. Ideally, this would just be
+  // the update lane priority, but for now we're also checking for discrete
+  // updates and falling back to the scheduler priority.
   let lane;
   if (
     // TODO: Temporary. We're removing the concept of discrete updates.
@@ -461,30 +458,16 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     schedulerPriority === UserBlockingSchedulerPriority
   ) {
     lane = findUpdateLane(InputDiscreteLanePriority, currentEventWipLanes);
+  } else if (
+    decoupleUpdatePriorityFromScheduler &&
+    getCurrentUpdateLanePriority() !== NoLanePriority
+  ) {
+    const currentLanePriority = getCurrentUpdateLanePriority();
+    lane = findUpdateLane(currentLanePriority, currentEventWipLanes);
   } else {
     const schedulerLanePriority = schedulerPriorityToLanePriority(
       schedulerPriority,
     );
-
-    if (decoupleUpdatePriorityFromScheduler) {
-      // In the new strategy, we will track the current update lane priority
-      // inside React and use that priority to select a lane for this update.
-      // For now, we're just logging when they're different so we can assess.
-      const currentUpdateLanePriority = getCurrentUpdateLanePriority();
-
-      if (
-        schedulerLanePriority !== currentUpdateLanePriority &&
-        currentUpdateLanePriority !== NoLanePriority
-      ) {
-        if (__DEV__) {
-          console.error(
-            'Expected current scheduler lane priority %s to match current update lane priority %s',
-            schedulerLanePriority,
-            currentUpdateLanePriority,
-          );
-        }
-      }
-    }
 
     lane = findUpdateLane(schedulerLanePriority, currentEventWipLanes);
   }
