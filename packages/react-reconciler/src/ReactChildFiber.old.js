@@ -282,22 +282,13 @@ function ChildReconciler(shouldTrackSideEffects) {
     childToDelete.nextEffect = null;
     childToDelete.flags = (childToDelete.flags & StaticMask) | Deletion;
 
-    let deletions = returnFiber.deletions;
+    const deletions = returnFiber.deletions;
     if (deletions === null) {
-      deletions = returnFiber.deletions = [childToDelete];
+      returnFiber.deletions = [childToDelete];
       returnFiber.flags |= ChildDeletion;
     } else {
       deletions.push(childToDelete);
     }
-    // Stash a reference to the return fiber's deletion array on each of the
-    // deleted children. This is really weird, but it's a temporary workaround
-    // while we're still using the effect list to traverse effect fibers. A
-    // better workaround would be to follow the `.return` pointer in the commit
-    // phase, but unfortunately we can't assume that `.return` points to the
-    // correct fiber, even in the commit phase, because `findDOMNode` might
-    // mutate it.
-    // TODO: Remove this line.
-    childToDelete.deletions = deletions;
   }
 
   function deleteRemainingChildren(

@@ -2203,14 +2203,13 @@ function updateSuspensePrimaryChildren(
     currentFallbackChildFragment.flags =
       (currentFallbackChildFragment.flags & StaticMask) | Deletion;
     workInProgress.firstEffect = workInProgress.lastEffect = currentFallbackChildFragment;
-    let deletions = workInProgress.deletions;
+    const deletions = workInProgress.deletions;
     if (deletions === null) {
-      deletions = workInProgress.deletions = [currentFallbackChildFragment];
+      workInProgress.deletions = [currentFallbackChildFragment];
       workInProgress.flags |= ChildDeletion;
     } else {
       deletions.push(currentFallbackChildFragment);
     }
-    currentFallbackChildFragment.deletions = deletions;
   }
 
   workInProgress.child = primaryChildFragment;
@@ -3194,14 +3193,13 @@ function remountFiber(
     current.nextEffect = null;
     current.flags = (current.flags & StaticMask) | Deletion;
 
-    let deletions = returnFiber.deletions;
+    const deletions = returnFiber.deletions;
     if (deletions === null) {
-      deletions = returnFiber.deletions = [current];
+      returnFiber.deletions = [current];
       returnFiber.flags |= ChildDeletion;
     } else {
       deletions.push(current);
     }
-    current.deletions = deletions;
 
     newWorkInProgress.flags |= Placement;
 

@@ -47,7 +47,7 @@ const environmentFlags = {
 
   // Turn these flags back on (or delete) once the effect list is removed in
   // favor of a depth-first traversal using `subtreeTags`.
-  dfsEffectsRefactor: __VARIANT__,
+  dfsEffectsRefactor: true,
   enableUseJSStackToTrackPassiveDurations: false,
 };
 
