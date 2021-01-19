@@ -3,6 +3,7 @@
 /* eslint-disable no-for-of-loops/no-for-of-loops */
 
 const fs = require('fs');
+const fse = require('fs-extra');
 const {spawnSync} = require('child_process');
 const path = require('path');
 const tmp = require('tmp');
@@ -50,13 +51,13 @@ if (process.env.CIRCLE_NODE_TOTAL) {
   const stableVersion = '0.0.0-' + sha;
   buildForChannel('stable', '', '');
   const stableDir = tmp.dirSync().name;
-  fs.renameSync('./build', stableDir);
+  crossDeviceRenameSync('./build', stableDir);
   processStable(stableDir, stableVersion);
 
   const experimentalVersion = '0.0.0-experimental-' + sha;
   buildForChannel('experimental', '', '');
   const experimentalDir = tmp.dirSync().name;
-  fs.renameSync('./build', experimentalDir);
+  crossDeviceRenameSync('./build', experimentalDir);
   processExperimental(experimentalDir, experimentalVersion);
 
   // Then merge the experimental folder into the stable one. processExperimental
@@ -68,7 +69,7 @@ if (process.env.CIRCLE_NODE_TOTAL) {
   // Now restore the combined directory back to its original name
   // TODO: Currently storing artifacts as `./build2` so that it doesn't conflict
   // with old build job. Remove once we migrate rest of build/test pipeline.
-  fs.renameSync(stableDir, './build2');
+  crossDeviceRenameSync(stableDir, './build2');
 }
 
 function buildForChannel(channel, nodeTotal, nodeIndex) {
@@ -137,6 +138,10 @@ function processExperimental(buildDir, version) {
       spawnSync('rm', ['-rm', buildDir + '/' + pathName]);
     }
   }
+}
+
+function crossDeviceRenameSync(source, destination) {
+  return fse.moveSync(source, destination, {overwrite: true});
 }
 
 function updatePackageVersions(modulesDir, version) {
