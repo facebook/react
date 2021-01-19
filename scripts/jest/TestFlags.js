@@ -84,6 +84,11 @@ function getTestFlags() {
 
       ...featureFlags,
       ...environmentFlags,
+
+      // FIXME: www-classic has enableCache on, but when running the source
+      // tests, Jest doesn't expose the API correctly. Fix then remove
+      // this override.
+      enableCache: __EXPERIMENTAL__,
     },
     {
       get(flags, flagName) {
