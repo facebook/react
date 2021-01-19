@@ -152,7 +152,7 @@ describe('ReactDOMTracing', () => {
           onInteractionScheduledWorkCompleted,
         ).toHaveBeenLastNotifiedOfInteraction(interaction);
 
-        if (gate(flags => flags.dfsEffectsRefactor)) {
+        if (gate(flags => flags.enableUseJSStackToTrackPassiveDurations)) {
           expect(onRender).toHaveBeenCalledTimes(3);
         } else {
           // TODO: This is 4 instead of 3 because this update was scheduled at
@@ -310,7 +310,7 @@ describe('ReactDOMTracing', () => {
         expect(
           onInteractionScheduledWorkCompleted,
         ).toHaveBeenLastNotifiedOfInteraction(interaction);
-        if (gate(flags => flags.dfsEffectsRefactor)) {
+        if (gate(flags => flags.enableUseJSStackToTrackPassiveDurations)) {
           expect(onRender).toHaveBeenCalledTimes(3);
         } else {
           // TODO: This is 4 instead of 3 because this update was scheduled at

@@ -12,12 +12,14 @@ describe('Store', () => {
   let ReactDOM;
   let agent;
   let act;
+  let bridge;
   let getRendererID;
   let store;
   let withErrorsOrWarningsIgnored;
 
   beforeEach(() => {
     agent = global.agent;
+    bridge = global.bridge;
     store = global.store;
 
     React = require('react');
@@ -888,6 +890,7 @@ describe('Store', () => {
         <FakeHigherOrderComponent />
         <MemoizedFakeHigherOrderComponent />
         <ForwardRefFakeHigherOrderComponent />
+        <React.unstable_Cache />
       </React.Fragment>
     );
 
@@ -1158,7 +1161,11 @@ describe('Store', () => {
             <Example> ✕⚠
       `);
 
-      store.clearErrorsAndWarnings();
+      const {
+        clearErrorsAndWarnings,
+      } = require('react-devtools-shared/src/backendAPI');
+      clearErrorsAndWarnings({bridge, store});
+
       // flush events to the renderer
       jest.runAllTimers();
 
@@ -1195,7 +1202,14 @@ describe('Store', () => {
             <Example> ✕⚠
       `);
 
-      store.clearWarningsForElement(2);
+      const id = ((store.getElementIDAtIndex(1): any): number);
+      const rendererID = store.getRendererIDForElement(id);
+
+      const {
+        clearWarningsForElement,
+      } = require('react-devtools-shared/src/backendAPI');
+      clearWarningsForElement({bridge, id, rendererID});
+
       // Flush events to the renderer.
       jest.runAllTimers();
 
@@ -1233,7 +1247,14 @@ describe('Store', () => {
             <Example> ✕⚠
       `);
 
-      store.clearErrorsForElement(2);
+      const id = ((store.getElementIDAtIndex(1): any): number);
+      const rendererID = store.getRendererIDForElement(id);
+
+      const {
+        clearErrorsForElement,
+      } = require('react-devtools-shared/src/backendAPI');
+      clearErrorsForElement({bridge, id, rendererID});
+
       // Flush events to the renderer.
       jest.runAllTimers();
 

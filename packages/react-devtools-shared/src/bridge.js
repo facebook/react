@@ -89,7 +89,9 @@ type ViewAttributeSourceParams = {|
 
 type InspectElementParams = {|
   ...ElementAndRendererID,
-  path?: Array<string | number>,
+  forceUpdate: boolean,
+  inspectedPaths: Object,
+  requestID: number,
 |};
 
 type StoreAsGlobalParams = {|
@@ -117,7 +119,7 @@ type UpdateConsolePatchSettingsParams = {|
   showInlineWarningsAndErrors: boolean,
 |};
 
-type BackendEvents = {|
+export type BackendEvents = {|
   extensionBackendInitialized: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],

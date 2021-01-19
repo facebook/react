@@ -14,16 +14,15 @@ import {BridgeContext, StoreContext} from '../context';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import {ModalDialogContext} from '../ModalDialog';
-import {InspectedElementContext} from './InspectedElementContext';
 import ViewElementSourceContext from './ViewElementSourceContext';
 import Toggle from '../Toggle';
 import {ElementTypeSuspense} from 'react-devtools-shared/src/types';
 import CannotSuspendWarningMessage from './CannotSuspendWarningMessage';
 import InspectedElementView from './InspectedElementView';
+import {InspectedElementContext} from './InspectedElementContext';
 
 import styles from './InspectedElement.css';
 
-import type {InspectedElementContextType} from './InspectedElementContext';
 import type {InspectedElement} from './types';
 
 export type Props = {||};
@@ -38,20 +37,12 @@ export default function InspectedElementWrapper(_: Props) {
   const store = useContext(StoreContext);
   const {dispatch: modalDialogDispatch} = useContext(ModalDialogContext);
 
-  const {
-    copyInspectedElementPath,
-    getInspectedElementPath,
-    getInspectedElement,
-    storeAsGlobal,
-  } = useContext<InspectedElementContextType>(InspectedElementContext);
+  const {inspectedElement} = useContext(InspectedElementContext);
 
   const element =
     inspectedElementID !== null
       ? store.getElementByID(inspectedElementID)
       : null;
-
-  const inspectedElement =
-    inspectedElementID != null ? getInspectedElement(inspectedElementID) : null;
 
   const highlightElement = useCallback(() => {
     if (element !== null && inspectedElementID !== null) {
@@ -228,11 +219,8 @@ export default function InspectedElementWrapper(_: Props) {
           key={
             inspectedElementID /* Force reset when selected Element changes */
           }
-          copyInspectedElementPath={copyInspectedElementPath}
           element={element}
-          getInspectedElementPath={getInspectedElementPath}
           inspectedElement={inspectedElement}
-          storeAsGlobal={storeAsGlobal}
         />
       )}
     </div>

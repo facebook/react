@@ -8,11 +8,17 @@
  */
 
 import * as React from 'react';
-import {useEffect, useRef, useState} from 'react';
+import {
+  unstable_useTransition as useTransition,
+  useContext,
+  useRef,
+  useState,
+} from 'react';
 import EditableName from './EditableName';
 import EditableValue from './EditableValue';
 import NewArrayValue from './NewArrayValue';
 import NewKeyValue from './NewKeyValue';
+import LoadingAnimation from './LoadingAnimation';
 import ExpandCollapseToggle from './ExpandCollapseToggle';
 import {alphaSortEntries, getMetaValueLabel} from '../utils';
 import {meta} from '../../../hydration';
@@ -22,11 +28,12 @@ import {parseHookPathForEdit} from './utils';
 import styles from './KeyValue.css';
 import Button from 'react-devtools-shared/src/devtools/views/Button';
 import ButtonIcon from 'react-devtools-shared/src/devtools/views/ButtonIcon';
+import {InspectedElementContext} from './InspectedElementContext';
 
 import type {InspectedElement} from './types';
-import type {Element} from 'react';
+import type {Element} from 'react-devtools-shared/src/devtools/views/Components/types';
+import type {Element as ReactElement} from 'react';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
-import type {GetInspectedElementPath} from './InspectedElementContext';
 
 type Type = 'props' | 'state' | 'context' | 'hooks';
 
@@ -38,9 +45,9 @@ type KeyValueProps = {|
   canRenamePaths: boolean,
   canRenamePathsAtDepth?: (depth: number) => boolean,
   depth: number,
+  element: Element,
   hidden: boolean,
   hookID?: ?number,
-  getInspectedElementPath: GetInspectedElementPath,
   inspectedElement: InspectedElement,
   isDirectChildOfAnArray?: boolean,
   name: string,
@@ -58,7 +65,7 @@ export default function KeyValue({
   canRenamePaths,
   canRenamePathsAtDepth,
   depth,
-  getInspectedElementPath,
+  element,
   inspectedElement,
   isDirectChildOfAnArray,
   hidden,
@@ -72,8 +79,9 @@ export default function KeyValue({
   const {id} = inspectedElement;
 
   const [isOpen, setIsOpen] = useState<boolean>(false);
-  const prevIsOpenRef = useRef(isOpen);
   const contextMenuTriggerRef = useRef(null);
+
+  const {inspectPaths} = useContext(InspectedElementContext);
 
   let isInspectable = false;
   let isReadOnly = false;
@@ -82,14 +90,20 @@ export default function KeyValue({
     isReadOnly = value[meta.readonly];
   }
 
-  useEffect(() => {
-    if (isInspectable && isOpen && !prevIsOpenRef.current) {
-      getInspectedElementPath(id, [pathRoot, ...path]);
-    }
-    prevIsOpenRef.current = isOpen;
-  }, [getInspectedElementPath, isInspectable, isOpen, path, pathRoot]);
+  const [startInspectPathsTransition, isInspectPathsPending] = useTransition();
+  const toggleIsOpen = () => {
+    if (isOpen) {
+      setIsOpen(false);
+    } else {
+      setIsOpen(true);
 
-  const toggleIsOpen = () => setIsOpen(prevIsOpen => !prevIsOpen);
+      if (isInspectable) {
+        startInspectPathsTransition(() => {
+          inspectPaths([pathRoot, ...path]);
+        });
+      }
+    }
+  };
 
   useContextMenu({
     data: {
@@ -255,7 +269,7 @@ export default function KeyValue({
         ref={contextMenuTriggerRef}
         style={style}>
         {isInspectable ? (
-          <ExpandCollapseToggle isOpen={isOpen} setIsOpen={setIsOpen} />
+          <ExpandCollapseToggle isOpen={isOpen} setIsOpen={toggleIsOpen} />
         ) : (
           <div className={styles.ExpandCollapseToggleSpacer} />
         )}
@@ -268,6 +282,18 @@ export default function KeyValue({
         </span>
       </div>
     );
+
+    if (isInspectPathsPending) {
+      children = (
+        <>
+          {children}
+          <div className={styles.Item} style={style}>
+            <div className={styles.ExpandCollapseToggleSpacer} />
+            <LoadingAnimation />
+          </div>
+        </>
+      );
+    }
   } else {
     if (Array.isArray(value)) {
       const hasChildren = value.length > 0 || canEditValues;
@@ -283,7 +309,7 @@ export default function KeyValue({
           canRenamePaths={canRenamePaths && !isReadOnly}
           canRenamePathsAtDepth={canRenamePathsAtDepth}
           depth={depth + 1}
-          getInspectedElementPath={getInspectedElementPath}
+          element={element}
           hookID={hookID}
           inspectedElement={inspectedElement}
           isDirectChildOfAnArray={true}
@@ -305,7 +331,7 @@ export default function KeyValue({
             hidden={hidden || !isOpen}
             hookID={hookID}
             index={value.length}
-            getInspectedElementPath={getInspectedElementPath}
+            element={element}
             inspectedElement={inspectedElement}
             path={path}
             store={store}
@@ -347,7 +373,7 @@ export default function KeyValue({
       const hasChildren = entries.length > 0 || canEditValues;
       const displayName = getMetaValueLabel(value);
 
-      children = entries.map<Element<any>>(([key, keyValue]) => (
+      children = entries.map<ReactElement<any>>(([key, keyValue]) => (
         <KeyValue
           key={key}
           alphaSort={alphaSort}
@@ -357,7 +383,7 @@ export default function KeyValue({
           canRenamePaths={canRenamePaths && !isReadOnly}
           canRenamePathsAtDepth={canRenamePathsAtDepth}
           depth={depth + 1}
-          getInspectedElementPath={getInspectedElementPath}
+          element={element}
           hookID={hookID}
           inspectedElement={inspectedElement}
           hidden={hidden || !isOpen}
@@ -375,7 +401,7 @@ export default function KeyValue({
             key="NewKeyValue"
             bridge={bridge}
             depth={depth + 1}
-            getInspectedElementPath={getInspectedElementPath}
+            element={element}
             hidden={hidden || !isOpen}
             hookID={hookID}
             inspectedElement={inspectedElement}

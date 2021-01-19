@@ -70,8 +70,10 @@ type CopyElementParams = {|
 
 type InspectElementParams = {|
   id: number,
-  path?: Array<string | number>,
+  inspectedPaths: Object,
+  forceUpdate: boolean,
   rendererID: number,
+  requestID: number,
 |};
 
 type OverrideHookParams = {|
@@ -328,12 +330,21 @@ export default class Agent extends EventEmitter<{|
     }
   };
 
-  inspectElement = ({id, path, rendererID}: InspectElementParams) => {
+  inspectElement = ({
+    id,
+    inspectedPaths,
+    forceUpdate,
+    rendererID,
+    requestID,
+  }: InspectElementParams) => {
     const renderer = this._rendererInterfaces[rendererID];
     if (renderer == null) {
       console.warn(`Invalid renderer id "${rendererID}" for element "${id}"`);
     } else {
-      this._bridge.send('inspectedElement', renderer.inspectElement(id, path));
+      this._bridge.send(
+        'inspectedElement',
+        renderer.inspectElement(requestID, id, inspectedPaths, forceUpdate),
+      );
 
       // When user selects an element, stop trying to restore the selection,
       // and instead remember the current selection for the next reload.
