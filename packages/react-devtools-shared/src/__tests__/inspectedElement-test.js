@@ -1168,6 +1168,83 @@ describe('InspectedElement', () => {
     done();
   });
 
+  it('should allow component prop value and value`s prototype has same name params.', async done => {
+    const testData = Object.create(
+      {
+        a: undefined,
+        b: Infinity,
+        c: NaN,
+        d: 'normal',
+      },
+      {
+        a: {
+          value: undefined,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        },
+        b: {
+          value: Infinity,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        },
+        c: {
+          value: NaN,
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        },
+        d: {
+          value: 'normal',
+          writable: true,
+          enumerable: true,
+          configurable: true,
+        },
+      },
+    );
+    const Example = ({data}) => null;
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(<Example data={testData} />, container),
+    );
+
+    const id = ((store.getElementIDAtIndex(0): any): number);
+
+    let inspectedElement = null;
+
+    function Suspender({target}) {
+      inspectedElement = useInspectedElement(target);
+      return null;
+    }
+
+    await utils.actAsync(
+      () =>
+        TestRenderer.create(
+          <Contexts
+            defaultSelectedElementID={id}
+            defaultSelectedElementIndex={0}>
+            <React.Suspense fallback={null}>
+              <Suspender target={id} />
+            </React.Suspense>
+          </Contexts>,
+        ),
+      false,
+    );
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "data": Object {
+          "a": undefined,
+          "b": Infinity,
+          "c": NaN,
+          "d": "normal",
+        },
+      }
+    `);
+
+    done();
+  });
+
   it('should not dehydrate nested values until explicitly requested', async done => {
     const Example = () => {
       const [state] = React.useState({
