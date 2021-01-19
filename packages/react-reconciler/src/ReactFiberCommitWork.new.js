@@ -75,9 +75,10 @@ import {
   Hydrating,
   HydratingAndUpdate,
   Passive,
+  BeforeMutationMask,
   MutationMask,
-  PassiveMask,
   LayoutMask,
+  PassiveMask,
   PassiveUnmountPendingDev,
 } from './ReactFiberFlags';
 import getComponentName from 'shared/getComponentName';
@@ -128,6 +129,8 @@ import {
   commitHydratedSuspenseInstance,
   clearContainer,
   prepareScopeUpdate,
+  prepareForCommit,
+  beforeActiveInstanceBlur,
 } from './ReactFiberHostConfig';
 import {
   captureCommitPhaseError,
@@ -144,6 +147,7 @@ import {
   Passive as HookPassive,
 } from './ReactHookEffectTags';
 import {didWarnAboutReassigningProps} from './ReactFiberBeginWork.new';
+import {doesFiberContain} from './ReactFiberTreeReflection';
 
 let didWarnAboutUndefinedSnapshotBeforeUpdate: Set<mixed> | null = null;
 if (__DEV__) {
@@ -259,18 +263,114 @@ function safelyCallDestroy(current: Fiber, destroy: () => void) {
   }
 }
 
-function commitBeforeMutationLifeCycles(
-  current: Fiber | null,
-  finishedWork: Fiber,
-): void {
-  switch (finishedWork.tag) {
-    case FunctionComponent:
-    case ForwardRef:
-    case SimpleMemoComponent: {
+let focusedInstanceHandle: null | Fiber = null;
+let shouldFireAfterActiveInstanceBlur: boolean = false;
+
+export function commitBeforeMutationEffects(
+  root: FiberRoot,
+  firstChild: Fiber,
+) {
+  focusedInstanceHandle = prepareForCommit(root.containerInfo);
+
+  nextEffect = firstChild;
+  commitBeforeMutationEffects_begin();
+
+  // We no longer need to track the active instance fiber
+  const shouldFire = shouldFireAfterActiveInstanceBlur;
+  shouldFireAfterActiveInstanceBlur = false;
+  focusedInstanceHandle = null;
+
+  return shouldFire;
+}
+
+function commitBeforeMutationEffects_begin() {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+
+    // TODO: Should wrap this in flags check, too, as optimization
+    const deletions = fiber.deletions;
+    if (deletions !== null) {
+      for (let i = 0; i < deletions.length; i++) {
+        const deletion = deletions[i];
+        commitBeforeMutationEffectsDeletion(deletion);
+      }
+    }
+
+    const child = fiber.child;
+    if (
+      (fiber.subtreeFlags & BeforeMutationMask) !== NoFlags &&
+      child !== null
+    ) {
+      ensureCorrectReturnPointer(child, fiber);
+      nextEffect = child;
+    } else {
+      commitBeforeMutationEffects_complete();
+    }
+  }
+}
+
+function commitBeforeMutationEffects_complete() {
+  while (nextEffect !== null) {
+    const fiber = nextEffect;
+    if (__DEV__) {
+      setCurrentDebugFiberInDEV(fiber);
+      invokeGuardedCallback(
+        null,
+        commitBeforeMutationEffectsOnFiber,
+        null,
+        fiber,
+      );
+      if (hasCaughtError()) {
+        const error = clearCaughtError();
+        captureCommitPhaseError(fiber, error);
+      }
+      resetCurrentDebugFiberInDEV();
+    } else {
+      try {
+        commitBeforeMutationEffectsOnFiber(fiber);
+      } catch (error) {
+        captureCommitPhaseError(fiber, error);
+      }
+    }
+
+    const sibling = fiber.sibling;
+    if (sibling !== null) {
+      ensureCorrectReturnPointer(sibling, fiber.return);
+      nextEffect = sibling;
       return;
     }
-    case ClassComponent: {
-      if (finishedWork.flags & Snapshot) {
+
+    nextEffect = fiber.return;
+  }
+}
+
+function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
+  const current = finishedWork.alternate;
+  const flags = finishedWork.flags;
+
+  if (!shouldFireAfterActiveInstanceBlur && focusedInstanceHandle !== null) {
+    // Check to see if the focused element was inside of a hidden (Suspense) subtree.
+    // TODO: Move this out of the hot path using a dedicated effect tag.
+    if (
+      finishedWork.tag === SuspenseComponent &&
+      isSuspenseBoundaryBeingHidden(current, finishedWork) &&
+      doesFiberContain(finishedWork, focusedInstanceHandle)
+    ) {
+      shouldFireAfterActiveInstanceBlur = true;
+      beforeActiveInstanceBlur(finishedWork);
+    }
+  }
+
+  if ((flags & Snapshot) !== NoFlags) {
+    setCurrentDebugFiberInDEV(finishedWork);
+
+    switch (finishedWork.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent: {
+        break;
+      }
+      case ClassComponent: {
         if (current !== null) {
           const prevProps = current.memoizedProps;
           const prevState = current.memoizedState;
@@ -324,30 +424,43 @@ function commitBeforeMutationLifeCycles(
           }
           instance.__reactInternalSnapshotBeforeUpdate = snapshot;
         }
+        break;
       }
-      return;
-    }
-    case HostRoot: {
-      if (supportsMutation) {
-        if (finishedWork.flags & Snapshot) {
+      case HostRoot: {
+        if (supportsMutation) {
           const root = finishedWork.stateNode;
           clearContainer(root.containerInfo);
         }
+        break;
       }
-      return;
+      case HostComponent:
+      case HostText:
+      case HostPortal:
+      case IncompleteClassComponent:
+        // Nothing to do for these component types
+        break;
+      default: {
+        invariant(
+          false,
+          'This unit of work tag should not have side-effects. This error is ' +
+            'likely caused by a bug in React. Please file an issue.',
+        );
+      }
     }
-    case HostComponent:
-    case HostText:
-    case HostPortal:
-    case IncompleteClassComponent:
-      // Nothing to do for these component types
-      return;
+
+    resetCurrentDebugFiberInDEV();
   }
-  invariant(
-    false,
-    'This unit of work tag should not have side-effects. This error is ' +
-      'likely caused by a bug in React. Please file an issue.',
-  );
+}
+
+function commitBeforeMutationEffectsDeletion(deletion: Fiber) {
+  // TODO (effects) It would be nice to avoid calling doesFiberContain()
+  // Maybe we can repurpose one of the subtreeFlags positions for this instead?
+  // Use it to store which part of the tree the focused instance is in?
+  // This assumes we can safely determine that instance during the "render" phase.
+  if (doesFiberContain(deletion, ((focusedInstanceHandle: any): Fiber))) {
+    shouldFireAfterActiveInstanceBlur = true;
+    beforeActiveInstanceBlur(deletion);
+  }
 }
 
 function commitHookEffectListUnmount(flags: HookFlags, finishedWork: Fiber) {
@@ -2353,7 +2466,6 @@ function ensureCorrectReturnPointer(fiber, expectedReturnFiber) {
 }
 
 export {
-  commitBeforeMutationLifeCycles,
   commitResetTextContent,
   commitPlacement,
   commitDeletion,
