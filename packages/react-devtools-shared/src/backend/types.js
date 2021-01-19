@@ -257,34 +257,28 @@ export type InspectedElement = {|
 export const InspectElementFullDataType = 'full-data';
 export const InspectElementNoChangeType = 'no-change';
 export const InspectElementNotFoundType = 'not-found';
-export const InspectElementHydratedPathType = 'hydrated-path';
 
 type InspectElementFullData = {|
   id: number,
+  responseID: number,
   type: 'full-data',
   value: InspectedElement,
 |};
 
-type InspectElementHydratedPath = {|
-  id: number,
-  type: 'hydrated-path',
-  path: Array<string | number>,
-  value: any,
-|};
-
 type InspectElementNoChange = {|
   id: number,
+  responseID: number,
   type: 'no-change',
 |};
 
 type InspectElementNotFound = {|
   id: number,
+  responseID: number,
   type: 'not-found',
 |};
 
 export type InspectedElementPayload =
   | InspectElementFullData
-  | InspectElementHydratedPath
   | InspectElementNoChange
   | InspectElementNotFound;
 
@@ -319,8 +313,10 @@ export type RendererInterface = {
   handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   inspectElement: (
+    requestID: number,
     id: number,
-    path?: Array<string | number>,
+    inspectedPaths: Object,
+    forceUpdate: boolean,
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,

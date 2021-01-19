@@ -32,7 +32,7 @@ import SettingsModalContextToggle from 'react-devtools-shared/src/devtools/views
 import SelectedTreeHighlight from './SelectedTreeHighlight';
 import TreeFocusedContext from './TreeFocusedContext';
 import {useHighlightNativeElement, useSubscription} from '../hooks';
-
+import {clearErrorsAndWarnings as clearErrorsAndWarningsAPI} from 'react-devtools-shared/src/backendAPI';
 import styles from './Tree.css';
 import ButtonIcon from '../ButtonIcon';
 import Button from '../Button';
@@ -327,6 +327,10 @@ export default function Tree(props: Props) {
   );
   const {errors, warnings} = useSubscription(errorsOrWarningsSubscription);
 
+  const clearErrorsAndWarnings = () => {
+    clearErrorsAndWarningsAPI({bridge, store});
+  };
+
   return (
     <TreeFocusedContext.Provider value={treeFocused}>
       <div className={styles.Tree} ref={treeRef}>
@@ -368,7 +372,7 @@ export default function Tree(props: Props) {
                   <ButtonIcon type="down" />
                 </Button>
                 <Button
-                  onClick={() => store.clearErrorsAndWarnings()}
+                  onClick={clearErrorsAndWarnings}
                   title="Clear all errors and warnings">
                   <ButtonIcon type="clear" />
                 </Button>

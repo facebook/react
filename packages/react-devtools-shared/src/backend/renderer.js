@@ -2718,7 +2718,6 @@ export function attach(
 
   let mostRecentlyInspectedElement: InspectedElement | null = null;
   let hasElementUpdatedSinceLastInspected: boolean = false;
-  let currentlyInspectedPaths: Object = {};
 
   function isMostRecentlyInspectedElementCurrent(id: number): boolean {
     return (
@@ -2728,21 +2727,10 @@ export function attach(
     );
   }
 
-  // Track the intersection of currently inspected paths,
-  // so that we can send their data along if the element is re-rendered.
-  function mergeInspectedPaths(path: Array<string | number>) {
-    let current = currentlyInspectedPaths;
-    path.forEach(key => {
-      if (!current[key]) {
-        current[key] = {};
-      }
-      current = current[key];
-    });
-  }
-
   function createIsPathAllowed(
     key: string | null,
     secondaryCategory: 'hooks' | null,
+    inspectedPaths: Object,
   ) {
     // This function helps prevent previously-inspected paths from being dehydrated in updates.
     // This is important to avoid a bad user experience where expanded toggles collapse on update.
@@ -2767,8 +2755,7 @@ export function attach(
           break;
       }
 
-      let current =
-        key === null ? currentlyInspectedPaths : currentlyInspectedPaths[key];
+      let current = key === null ? inspectedPaths : inspectedPaths[key];
       if (!current) {
         return false;
       }
@@ -2863,97 +2850,66 @@ export function attach(
   }
 
   function inspectElement(
+    requestID: number,
     id: number,
-    path?: Array<string | number>,
+    inspectedPaths: Object,
+    forceUpdate: boolean,
   ): InspectedElementPayload {
-    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
+    const isCurrent = !forceUpdate && isMostRecentlyInspectedElementCurrent(id);
 
     if (isCurrent) {
-      if (path != null) {
-        mergeInspectedPaths(path);
-
-        let secondaryCategory = null;
-        if (path[0] === 'hooks') {
-          secondaryCategory = 'hooks';
-        }
-
-        // If this element has not been updated since it was last inspected,
-        // we can just return the subset of data in the newly-inspected path.
-        return {
-          id,
-          type: 'hydrated-path',
-          path,
-          value: cleanForBridge(
-            getInObject(
-              ((mostRecentlyInspectedElement: any): InspectedElement),
-              path,
-            ),
-            createIsPathAllowed(null, secondaryCategory),
-            path,
-          ),
-        };
-      } else {
-        // If this element has not been updated since it was last inspected, we don't need to re-run it.
-        // Instead we can just return the ID to indicate that it has not changed.
-        return {
-          id,
-          type: 'no-change',
-        };
-      }
-    } else {
-      hasElementUpdatedSinceLastInspected = false;
-
-      if (
-        mostRecentlyInspectedElement === null ||
-        mostRecentlyInspectedElement.id !== id
-      ) {
-        currentlyInspectedPaths = {};
-      }
-
-      mostRecentlyInspectedElement = inspectElementRaw(id);
-      if (mostRecentlyInspectedElement === null) {
-        return {
-          id,
-          type: 'not-found',
-        };
-      }
-
-      if (path != null) {
-        mergeInspectedPaths(path);
-      }
-
-      // Any time an inspected element has an update,
-      // we should update the selected $r value as wel.
-      // Do this before dehydration (cleanForBridge).
-      updateSelectedElement(mostRecentlyInspectedElement);
-
-      // Clone before cleaning so that we preserve the full data.
-      // This will enable us to send patches without re-inspecting if hydrated paths are requested.
-      // (Reducing how often we shallow-render is a better DX for function components that use hooks.)
-      const cleanedInspectedElement = {...mostRecentlyInspectedElement};
-      cleanedInspectedElement.context = cleanForBridge(
-        cleanedInspectedElement.context,
-        createIsPathAllowed('context', null),
-      );
-      cleanedInspectedElement.hooks = cleanForBridge(
-        cleanedInspectedElement.hooks,
-        createIsPathAllowed('hooks', 'hooks'),
-      );
-      cleanedInspectedElement.props = cleanForBridge(
-        cleanedInspectedElement.props,
-        createIsPathAllowed('props', null),
-      );
-      cleanedInspectedElement.state = cleanForBridge(
-        cleanedInspectedElement.state,
-        createIsPathAllowed('state', null),
-      );
-
+      // If this element has not been updated since it was last inspected, we don't need to return it.
+      // Instead we can just return the ID to indicate that it has not changed.
       return {
         id,
-        type: 'full-data',
-        value: cleanedInspectedElement,
+        responseID: requestID,
+        type: 'no-change',
       };
     }
+
+    hasElementUpdatedSinceLastInspected = false;
+
+    mostRecentlyInspectedElement = inspectElementRaw(id);
+    if (mostRecentlyInspectedElement === null) {
+      return {
+        id,
+        responseID: requestID,
+        type: 'not-found',
+      };
+    }
+
+    // Any time an inspected element has an update,
+    // we should update the selected $r value as wel.
+    // Do this before dehydration (cleanForBridge).
+    updateSelectedElement(mostRecentlyInspectedElement);
+
+    // Clone before cleaning so that we preserve the full data.
+    // This will enable us to send patches without re-inspecting if hydrated paths are requested.
+    // (Reducing how often we shallow-render is a better DX for function components that use hooks.)
+    const cleanedInspectedElement = {...mostRecentlyInspectedElement};
+    cleanedInspectedElement.context = cleanForBridge(
+      cleanedInspectedElement.context,
+      createIsPathAllowed('context', null, inspectedPaths),
+    );
+    cleanedInspectedElement.hooks = cleanForBridge(
+      cleanedInspectedElement.hooks,
+      createIsPathAllowed('hooks', 'hooks', inspectedPaths),
+    );
+    cleanedInspectedElement.props = cleanForBridge(
+      cleanedInspectedElement.props,
+      createIsPathAllowed('props', null, inspectedPaths),
+    );
+    cleanedInspectedElement.state = cleanForBridge(
+      cleanedInspectedElement.state,
+      createIsPathAllowed('state', null, inspectedPaths),
+    );
+
+    return {
+      id,
+      responseID: requestID,
+      type: 'full-data',
+      value: cleanedInspectedElement,
+    };
   }
 
   function logElementToConsole(id) {

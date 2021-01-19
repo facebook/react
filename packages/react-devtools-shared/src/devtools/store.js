@@ -101,7 +101,7 @@ export default class Store extends EventEmitter<{|
 
   // Map of ID to (mutable) Element.
   // Elements are mutated to avoid excessive cloning during tree updates.
-  // The InspectedElementContext also relies on this mutability for its WeakMap usage.
+  // The InspectedElement Suspense cache also relies on this mutability for its WeakMap usage.
   _idToElement: Map<number, Element> = new Map();
 
   // Should the React Native style editor panel be shown?
@@ -376,42 +376,6 @@ export default class Store extends EventEmitter<{|
 
   get warningCount(): number {
     return this._cachedWarningCount;
-  }
-
-  clearErrorsAndWarnings(): void {
-    this._rootIDToRendererID.forEach(rendererID => {
-      this._bridge.send('clearErrorsAndWarnings', {
-        rendererID,
-      });
-    });
-  }
-
-  clearErrorsForElement(id: number): void {
-    const rendererID = this.getRendererIDForElement(id);
-    if (rendererID === null) {
-      console.warn(
-        `Unable to find rendererID for element ${id} when clearing errors.`,
-      );
-    } else {
-      this._bridge.send('clearErrorsForFiberID', {
-        rendererID,
-        id,
-      });
-    }
-  }
-
-  clearWarningsForElement(id: number): void {
-    const rendererID = this.getRendererIDForElement(id);
-    if (rendererID === null) {
-      console.warn(
-        `Unable to find rendererID for element ${id} when clearing warnings.`,
-      );
-    } else {
-      this._bridge.send('clearWarningsForFiberID', {
-        rendererID,
-        id,
-      });
-    }
   }
 
   containsElement(id: number): boolean {
