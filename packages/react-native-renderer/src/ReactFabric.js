@@ -184,7 +184,10 @@ function sendAccessibilityEvent(handle: any, eventType: string) {
   }
 
   if (handle._internalInstanceHandle) {
-    // NOOP for now
+    nativeFabricUIManager.sendAccessibilityEvent(
+      handle._internalInstanceHandle.stateNode.node,
+      eventType
+    );
   } else {
     legacySendAccessibilityEvent(handle._nativeTag, eventType);
   }
