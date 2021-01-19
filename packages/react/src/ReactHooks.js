@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {Dispatcher} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   MutableSource,
   MutableSourceGetSnapshotFn,
@@ -15,8 +16,6 @@ import type {
 } from 'shared/ReactTypes';
 import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 
-import invariant from 'shared/invariant';
-
 import ReactCurrentDispatcher from './ReactCurrentDispatcher';
 
 type BasicStateAction<S> = (S => S) | S;
@@ -24,16 +23,22 @@ type Dispatch<A> = A => void;
 
 function resolveDispatcher() {
   const dispatcher = ReactCurrentDispatcher.current;
-  invariant(
-    dispatcher !== null,
-    'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
-      ' one of the following reasons:\n' +
-      '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
-      '2. You might be breaking the Rules of Hooks\n' +
-      '3. You might have more than one copy of React in the same app\n' +
-      'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
-  );
-  return dispatcher;
+  if (__DEV__) {
+    if (dispatcher === null) {
+      console.error(
+        'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
+          ' one of the following reasons:\n' +
+          '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
+          '2. You might be breaking the Rules of Hooks\n' +
+          '3. You might have more than one copy of React in the same app\n' +
+          'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+      );
+    }
+  }
+  // Will result in a null access error if accessed outside render phase. We
+  // intentionally don't throw our own error because this is in a hot path.
+  // Also helps ensure this is inlined.
+  return ((dispatcher: any): Dispatcher);
 }
 
 export function getCacheForType<T>(resourceType: () => T): T {
