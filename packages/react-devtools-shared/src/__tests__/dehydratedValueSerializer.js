@@ -22,6 +22,18 @@ export function test(maybeDehydratedValue) {
   );
 }
 
+function serializeDehydratedValuePreview(preview) {
+  const date = new Date(preview);
+  const isDatePreview = !Number.isNaN(date.valueOf());
+  if (isDatePreview) {
+    // The preview is just `String(date)` which formats the date in the local timezone.
+    // This results in a snapshot mismatch between tests run in e.g. GMT and ET
+    // WARNING: This does not guard against dates created with the default timezone i.e. the local timezone e.g. new Date('05 October 2011 14:48').
+    return date.toISOString();
+  }
+  return preview;
+}
+
 // print() is part of Jest's serializer API
 export function print(dehydratedValue, serialize, indent) {
   const {meta} = require('react-devtools-shared/src/hydration');
@@ -31,11 +43,11 @@ export function print(dehydratedValue, serialize, indent) {
     'Dehydrated {\n' +
     paddingLeft +
     '  "preview_short": ' +
-    dehydratedValue[meta.preview_short] +
+    serializeDehydratedValuePreview(dehydratedValue[meta.preview_short]) +
     ',\n' +
     paddingLeft +
     '  "preview_long": ' +
-    dehydratedValue[meta.preview_long] +
+    serializeDehydratedValuePreview(dehydratedValue[meta.preview_long]) +
     ',\n' +
     paddingLeft +
     '}'

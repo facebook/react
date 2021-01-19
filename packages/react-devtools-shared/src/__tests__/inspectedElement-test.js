@@ -568,8 +568,8 @@ describe('InspectedElement', () => {
           "preview_long": DataView(3),
         },
         "date": Dehydrated {
-          "preview_short": Wed Jan 01 2020 00:42:42 GMT+0100 (Central European Standard Time),
-          "preview_long": Wed Jan 01 2020 00:42:42 GMT+0100 (Central European Standard Time),
+          "preview_short": 2019-12-31T23:42:42.000Z,
+          "preview_long": 2019-12-31T23:42:42.000Z,
         },
         "fn": Dehydrated {
           "preview_short": ƒ exampleFunction() {},

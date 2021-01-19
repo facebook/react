@@ -236,8 +236,8 @@ describe('InspectedElementContext', () => {
           "preview_long": DataView(3),
         },
         "date": Dehydrated {
-          "preview_short": Thu Jan 01 1970 01:00:00 GMT+0100 (Central European Standard Time),
-          "preview_long": Thu Jan 01 1970 01:00:00 GMT+0100 (Central European Standard Time),
+          "preview_short": 1970-01-01T00:00:00.000Z,
+          "preview_long": 1970-01-01T00:00:00.000Z,
         },
         "fn": Dehydrated {
           "preview_short": ƒ exampleFunction() {},
