@@ -136,8 +136,6 @@ import {
   captureCommitPhaseError,
   resolveRetryWakeable,
   markCommitTimeOfFallback,
-  enqueuePendingPassiveHookEffectMount,
-  enqueuePendingPassiveHookEffectUnmount,
   enqueuePendingPassiveProfilerEffect,
 } from './ReactFiberWorkLoop.new';
 import {
@@ -533,26 +531,6 @@ function commitHookEffectListMount(tag: number, finishedWork: Fiber) {
   }
 }
 
-function schedulePassiveEffects(finishedWork: Fiber) {
-  const updateQueue: FunctionComponentUpdateQueue | null = (finishedWork.updateQueue: any);
-  const lastEffect = updateQueue !== null ? updateQueue.lastEffect : null;
-  if (lastEffect !== null) {
-    const firstEffect = lastEffect.next;
-    let effect = firstEffect;
-    do {
-      const {next, tag} = effect;
-      if (
-        (tag & HookPassive) !== NoHookEffect &&
-        (tag & HookHasEffect) !== NoHookEffect
-      ) {
-        enqueuePendingPassiveHookEffectUnmount(finishedWork, effect);
-        enqueuePendingPassiveHookEffectMount(finishedWork, effect);
-      }
-      effect = next;
-    } while (effect !== firstEffect);
-  }
-}
-
 export function commitPassiveEffectDurations(
   finishedRoot: FiberRoot,
   finishedWork: Fiber,
@@ -639,8 +617,6 @@ function commitLayoutEffectOnFiber(
         } else {
           commitHookEffectListMount(HookLayout | HookHasEffect, finishedWork);
         }
-
-        schedulePassiveEffects(finishedWork);
         break;
       }
       case ClassComponent: {
@@ -1091,9 +1067,7 @@ function commitUnmount(
           do {
             const {destroy, tag} = effect;
             if (destroy !== undefined) {
-              if ((tag & HookPassive) !== NoHookEffect) {
-                enqueuePendingPassiveHookEffectUnmount(current, effect);
-              } else {
+              if ((tag & HookLayout) !== NoHookEffect) {
                 if (
                   enableProfilerTimer &&
                   enableProfilerCommitHooks &&

@@ -13,7 +13,6 @@ import type {Lanes, Lane} from './ReactFiberLane.new';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
-import type {Effect as HookEffect} from './ReactFiberHooks.new';
 import type {StackCursor} from './ReactFiberStack.new';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.new';
 
@@ -120,12 +119,11 @@ import {
   NoFlags,
   PerformedWork,
   Placement,
-  ChildDeletion,
-  Passive,
   PassiveStatic,
   Incomplete,
   HostEffectMask,
   Hydrating,
+  PassiveMask,
   StaticMask,
 } from './ReactFiberFlags';
 import {
@@ -183,7 +181,6 @@ import {
   commitPassiveEffectDurations,
   commitPassiveMountEffects,
   commitPassiveUnmountEffects,
-  detachFiberAfterEffects,
 } from './ReactFiberCommitWork.new';
 import {enqueueUpdate} from './ReactUpdateQueue.new';
 import {resetContextDependencies} from './ReactFiberNewContext.new';
@@ -314,7 +311,6 @@ export function getRenderTargetTime(): number {
   return workInProgressRootRenderTargetTime;
 }
 
-let nextEffect: Fiber | null = null;
 let hasUncaughtError = false;
 let firstUncaughtError = null;
 let legacyErrorBoundariesThatAlreadyFailed: Set<mixed> | null = null;
@@ -1938,8 +1934,8 @@ function commitRootImpl(root, renderPriorityLevel) {
   // TODO: Delete all other places that schedule the passive effect callback
   // They're redundant.
   if (
-    (finishedWork.subtreeFlags & Passive) !== NoFlags ||
-    (finishedWork.flags & Passive) !== NoFlags
+    (finishedWork.subtreeFlags & PassiveMask) !== NoFlags ||
+    (finishedWork.flags & PassiveMask) !== NoFlags
   ) {
     if (!rootDoesHavePassiveEffects) {
       rootDoesHavePassiveEffects = true;
@@ -2061,31 +2057,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsLanes = lanes;
     pendingPassiveEffectsRenderPriority = renderPriorityLevel;
-  } else {
-    // We are done with the effect chain at this point so let's clear the
-    // nextEffect pointers to assist with GC. If we have passive effects, we'll
-    // clear this in flushPassiveEffects
-    // TODO: We should always do this in the passive phase, by scheduling
-    // a passive callback for every deletion.
-    nextEffect = firstEffect;
-    while (nextEffect !== null) {
-      const nextNextEffect = nextEffect.nextEffect;
-      nextEffect.nextEffect = null;
-      if (nextEffect.flags & ChildDeletion) {
-        const deletions = nextEffect.deletions;
-        if (deletions !== null) {
-          for (let i = 0; i < deletions.length; i++) {
-            const deletion = deletions[i];
-            const alternate = deletion.alternate;
-            detachFiberAfterEffects(deletion);
-            if (alternate !== null) {
-              detachFiberAfterEffects(alternate);
-            }
-          }
-        }
-      }
-      nextEffect = nextNextEffect;
-    }
   }
 
   // Read this again, since an effect might have updated it
@@ -2226,32 +2197,6 @@ export function enqueuePendingPassiveProfilerEffect(fiber: Fiber): void {
         return null;
       });
     }
-  }
-}
-
-export function enqueuePendingPassiveHookEffectMount(
-  fiber: Fiber,
-  effect: HookEffect,
-): void {
-  if (!rootDoesHavePassiveEffects) {
-    rootDoesHavePassiveEffects = true;
-    scheduleCallback(NormalSchedulerPriority, () => {
-      flushPassiveEffects();
-      return null;
-    });
-  }
-}
-
-export function enqueuePendingPassiveHookEffectUnmount(
-  fiber: Fiber,
-  effect: HookEffect,
-): void {
-  if (!rootDoesHavePassiveEffects) {
-    rootDoesHavePassiveEffects = true;
-    scheduleCallback(NormalSchedulerPriority, () => {
-      flushPassiveEffects();
-      return null;
-    });
   }
 }
 
