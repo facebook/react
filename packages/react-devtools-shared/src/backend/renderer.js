@@ -2795,6 +2795,7 @@ export function attach(
         break;
       case ForwardRef:
         global.$r = {
+          hooks,
           props,
           type: type.render,
         };
@@ -2802,6 +2803,7 @@ export function attach(
       case MemoComponent:
       case SimpleMemoComponent:
         global.$r = {
+          hooks,
           props,
           type:
             elementType != null && elementType.type != null
