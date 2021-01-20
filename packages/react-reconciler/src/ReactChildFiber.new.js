@@ -13,12 +13,7 @@ import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 
 import getComponentName from 'shared/getComponentName';
-import {
-  Deletion,
-  ChildDeletion,
-  Placement,
-  StaticMask,
-} from './ReactFiberFlags';
+import {Placement, ChildDeletion} from './ReactFiberFlags';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -281,7 +276,6 @@ function ChildReconciler(shouldTrackSideEffects) {
       returnFiber.firstEffect = returnFiber.lastEffect = childToDelete;
     }
     childToDelete.nextEffect = null;
-    childToDelete.flags = (childToDelete.flags & StaticMask) | Deletion;
 
     const deletions = returnFiber.deletions;
     if (deletions === null) {
