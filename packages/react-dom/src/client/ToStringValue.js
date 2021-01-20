@@ -29,6 +29,7 @@ export function getToStringValue(value: mixed): ToStringValue {
     case 'object':
     case 'string':
     case 'undefined':
+    case 'bigint':
       return value;
     default:
       // function, symbol are assigned as empty strings
