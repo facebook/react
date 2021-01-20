@@ -116,7 +116,7 @@ module.exports = {
     'react-internal/no-cross-fork-types': [
       ERROR,
       {
-        old: [],
+        old: ['firstEffect', 'nextEffect'],
         new: [],
       },
     ],

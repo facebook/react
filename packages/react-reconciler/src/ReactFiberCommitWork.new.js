@@ -1213,9 +1213,6 @@ export function detachFiberAfterEffects(fiber: Fiber): void {
   fiber.sibling = null;
   fiber.stateNode = null;
   fiber.updateQueue = null;
-  fiber.nextEffect = null;
-  fiber.firstEffect = null;
-  fiber.lastEffect = null;
 
   if (__DEV__) {
     fiber._debugOwner = null;
