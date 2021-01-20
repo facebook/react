@@ -472,6 +472,8 @@ export function bailoutHooks(
   lanes: Lanes,
 ) {
   workInProgress.updateQueue = current.updateQueue;
+  // TODO: Don't need to reset the flags here, because they're reset in the
+  // complete phase (bubbleProperties).
   workInProgress.flags &= ~(PassiveEffect | UpdateEffect);
   current.lanes = removeLanes(current.lanes, lanes);
 }
@@ -1309,7 +1311,7 @@ function mountEffect(
     }
   }
   return mountEffectImpl(
-    UpdateEffect | PassiveEffect | PassiveStaticEffect,
+    PassiveEffect | PassiveStaticEffect,
     HookPassive,
     create,
     deps,
@@ -1326,12 +1328,7 @@ function updateEffect(
       warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
     }
   }
-  return updateEffectImpl(
-    UpdateEffect | PassiveEffect,
-    HookPassive,
-    create,
-    deps,
-  );
+  return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
 function mountLayoutEffect(
@@ -1683,7 +1680,7 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
     const setId = mountState(id)[1];
 
     if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
-      currentlyRenderingFiber.flags |= UpdateEffect | PassiveEffect;
+      currentlyRenderingFiber.flags |= PassiveEffect;
       pushEffect(
         HookHasEffect | HookPassive,
         () => {
