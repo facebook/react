@@ -12,7 +12,7 @@ export opaque type ToStringValue =
   | number
   | Object
   | string
-  | BigInt
+  | bigint
   | null
   | void;
 
