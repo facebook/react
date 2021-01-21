@@ -36,6 +36,7 @@ import {
   enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
+  enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -2436,6 +2437,135 @@ function ensureCorrectReturnPointer(fiber, expectedReturnFiber) {
   fiber.return = expectedReturnFiber;
 }
 
+function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
+  if (__DEV__ && enableDoubleInvokingEffects) {
+    // We don't need to re-check for legacy roots here.
+    // This function will not be called within legacy roots.
+    switch (fiber.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent: {
+        invokeGuardedCallback(
+          null,
+          commitHookEffectListMount,
+          null,
+          HookLayout | HookHasEffect,
+          fiber,
+        );
+        if (hasCaughtError()) {
+          const mountError = clearCaughtError();
+          captureCommitPhaseError(fiber, mountError);
+        }
+        break;
+      }
+      case ClassComponent: {
+        const instance = fiber.stateNode;
+        invokeGuardedCallback(null, instance.componentDidMount, instance);
+        if (hasCaughtError()) {
+          const mountError = clearCaughtError();
+          captureCommitPhaseError(fiber, mountError);
+        }
+        break;
+      }
+    }
+  }
+}
+
+function invokePassiveEffectMountInDEV(fiber: Fiber): void {
+  if (__DEV__ && enableDoubleInvokingEffects) {
+    // We don't need to re-check for legacy roots here.
+    // This function will not be called within legacy roots.
+    switch (fiber.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent: {
+        invokeGuardedCallback(
+          null,
+          commitHookEffectListMount,
+          null,
+          HookPassive | HookHasEffect,
+          fiber,
+        );
+        if (hasCaughtError()) {
+          const mountError = clearCaughtError();
+          captureCommitPhaseError(fiber, mountError);
+        }
+        break;
+      }
+    }
+  }
+}
+
+function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
+  if (__DEV__ && enableDoubleInvokingEffects) {
+    // We don't need to re-check for legacy roots here.
+    // This function will not be called within legacy roots.
+    switch (fiber.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent: {
+        invokeGuardedCallback(
+          null,
+          commitHookEffectListUnmount,
+          null,
+          HookLayout | HookHasEffect,
+          fiber,
+          fiber.return,
+        );
+        if (hasCaughtError()) {
+          const unmountError = clearCaughtError();
+          captureCommitPhaseError(fiber, unmountError);
+        }
+        break;
+      }
+      case ClassComponent: {
+        const instance = fiber.stateNode;
+        if (typeof instance.componentWillUnmount === 'function') {
+          invokeGuardedCallback(
+            null,
+            safelyCallComponentWillUnmount,
+            null,
+            fiber,
+            instance,
+            fiber.return,
+          );
+          if (hasCaughtError()) {
+            const unmountError = clearCaughtError();
+            captureCommitPhaseError(fiber, unmountError);
+          }
+        }
+        break;
+      }
+    }
+  }
+}
+
+function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
+  if (__DEV__ && enableDoubleInvokingEffects) {
+    // We don't need to re-check for legacy roots here.
+    // This function will not be called within legacy roots.
+    switch (fiber.tag) {
+      case FunctionComponent:
+      case ForwardRef:
+      case SimpleMemoComponent: {
+        invokeGuardedCallback(
+          null,
+          commitHookEffectListUnmount,
+          null,
+          HookPassive | HookHasEffect,
+          fiber,
+          fiber.return,
+        );
+        if (hasCaughtError()) {
+          const unmountError = clearCaughtError();
+          captureCommitPhaseError(fiber, unmountError);
+        }
+        break;
+      }
+    }
+  }
+}
+
 export {
   commitResetTextContent,
   commitPlacement,
@@ -2443,4 +2573,8 @@ export {
   commitWork,
   commitAttachRef,
   commitDetachRef,
+  invokeLayoutEffectMountInDEV,
+  invokeLayoutEffectUnmountInDEV,
+  invokePassiveEffectMountInDEV,
+  invokePassiveEffectUnmountInDEV,
 };

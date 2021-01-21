@@ -16,6 +16,7 @@ import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {Effect as HookEffect} from './ReactFiberHooks.old';
 import type {StackCursor} from './ReactFiberStack.old';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
+import type {Flags} from './ReactFiberFlags';
 
 import {
   warnAboutDeprecatedLifecycles,
@@ -32,6 +33,7 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   disableSchedulerTimeoutInWorkLoop,
+  enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -131,6 +133,8 @@ import {
   HostEffectMask,
   Hydrating,
   StaticMask,
+  MountPassiveDev,
+  MountLayoutDev,
 } from './ReactFiberFlags';
 import {
   NoLanePriority,
@@ -189,6 +193,10 @@ import {
   commitPassiveMountEffects,
   commitPassiveUnmountEffects,
   detachFiberAfterEffects,
+  invokeLayoutEffectMountInDEV,
+  invokePassiveEffectMountInDEV,
+  invokeLayoutEffectUnmountInDEV,
+  invokePassiveEffectUnmountInDEV,
 } from './ReactFiberCommitWork.old';
 import {enqueueUpdate} from './ReactUpdateQueue.old';
 import {resetContextDependencies} from './ReactFiberNewContext.old';
@@ -2126,6 +2134,12 @@ function commitRootImpl(root, renderPriorityLevel) {
     legacyErrorBoundariesThatAlreadyFailed = null;
   }
 
+  if (__DEV__ && enableDoubleInvokingEffects) {
+    if (!rootDidHavePassiveEffects) {
+      commitDoubleInvokeEffectsInDEV(root.current, false);
+    }
+  }
+
   if (enableSchedulerTracing) {
     if (!rootDidHavePassiveEffects) {
       // If there are no passive effects, then we can complete the pending interactions.
@@ -2377,6 +2391,10 @@ function flushPassiveEffectsImpl() {
 
   if (enableSchedulingProfiler) {
     markPassiveEffectsStopped();
+  }
+
+  if (__DEV__ && enableDoubleInvokingEffects) {
+    commitDoubleInvokeEffectsInDEV(root.current, true);
   }
 
   executionContext = prevExecutionContext;
@@ -2658,6 +2676,58 @@ function flushRenderPhaseStrictModeWarningsInDEV() {
 
     if (warnAboutDeprecatedLifecycles) {
       ReactStrictModeWarnings.flushPendingUnsafeLifecycleWarnings();
+    }
+  }
+}
+
+function commitDoubleInvokeEffectsInDEV(
+  fiber: Fiber,
+  hasPassiveEffects: boolean,
+) {
+  if (__DEV__ && enableDoubleInvokingEffects) {
+    // Never double-invoke effects for legacy roots.
+    if ((fiber.mode & (BlockingMode | ConcurrentMode)) === NoMode) {
+      return;
+    }
+
+    setCurrentDebugFiberInDEV(fiber);
+    invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectUnmountInDEV);
+    if (hasPassiveEffects) {
+      invokeEffectsInDev(
+        fiber,
+        MountPassiveDev,
+        invokePassiveEffectUnmountInDEV,
+      );
+    }
+
+    invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectMountInDEV);
+    if (hasPassiveEffects) {
+      invokeEffectsInDev(fiber, MountPassiveDev, invokePassiveEffectMountInDEV);
+    }
+    resetCurrentDebugFiberInDEV();
+  }
+}
+
+// TODO (strict effects) Rewrite to be iterative
+function invokeEffectsInDev(
+  firstChild: Fiber,
+  fiberFlags: Flags,
+  invokeEffectFn: (fiber: Fiber) => void,
+): void {
+  if (__DEV__ && enableDoubleInvokingEffects) {
+    let fiber = firstChild;
+    while (fiber !== null) {
+      if (fiber.child !== null) {
+        const primarySubtreeFlag = fiber.subtreeFlags & fiberFlags;
+        if (primarySubtreeFlag !== NoFlags) {
+          invokeEffectsInDev(fiber.child, fiberFlags, invokeEffectFn);
+        }
+      }
+
+      if ((fiber.flags & fiberFlags) !== NoFlags) {
+        invokeEffectFn(fiber);
+      }
+      fiber = fiber.sibling;
     }
   }
 }

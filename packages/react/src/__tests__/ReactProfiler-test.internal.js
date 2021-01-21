@@ -4874,8 +4874,6 @@ describe('Profiler', () => {
       });
 
       if (__DEV__) {
-        // @gate enableUseJSStackToTrackPassiveDurations
-        // @gate enableDoubleInvokingEffects
         it('double invoking does not disconnect wrapped async work', () => {
           ReactFeatureFlags.enableDoubleInvokingEffects = true;
 
