@@ -29,7 +29,7 @@ export function getToStringValue(value: mixed): ToStringValue {
     case 'number':
     case 'object':
     case 'string':
-    case 'bigint'
+    case 'bigint':
     case 'undefined':
       return value;
     default:
