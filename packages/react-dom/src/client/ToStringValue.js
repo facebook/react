@@ -12,6 +12,7 @@ export opaque type ToStringValue =
   | number
   | Object
   | string
+  | BigInt
   | null
   | void;
 
@@ -28,8 +29,8 @@ export function getToStringValue(value: mixed): ToStringValue {
     case 'number':
     case 'object':
     case 'string':
+    case 'bigint'
     case 'undefined':
-    case 'bigint':
       return value;
     default:
       // function, symbol are assigned as empty strings
