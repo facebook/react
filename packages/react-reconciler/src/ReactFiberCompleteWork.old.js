@@ -72,7 +72,9 @@ import {
   NoFlags,
   DidCapture,
   Snapshot,
+  ChildDeletion,
   StaticMask,
+  MutationMask,
 } from './ReactFiberFlags';
 import invariant from 'shared/invariant';
 
@@ -173,6 +175,31 @@ function markRef(workInProgress: Fiber) {
   workInProgress.flags |= Ref;
 }
 
+function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {
+  const didBailout = current !== null && current.child === completedWork.child;
+  if (didBailout) {
+    return true;
+  }
+
+  if ((completedWork.flags & ChildDeletion) !== NoFlags) {
+    return false;
+  }
+
+  // TODO: If we move the `hadNoMutationsEffects` call after `bubbleProperties`
+  // then we only have to check the `completedWork.subtreeFlags`.
+  let child = completedWork.child;
+  while (child !== null) {
+    if (
+      (child.flags & MutationMask) !== NoFlags ||
+      (child.subtreeFlags & MutationMask) !== NoFlags
+    ) {
+      return false;
+    }
+    child = child.sibling;
+  }
+  return true;
+}
+
 let appendAllChildren;
 let updateHostContainer;
 let updateHostComponent;
@@ -217,7 +244,7 @@ if (supportsMutation) {
     }
   };
 
-  updateHostContainer = function(workInProgress: Fiber) {
+  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
     // Noop
   };
   updateHostComponent = function(
@@ -461,13 +488,13 @@ if (supportsMutation) {
       node = node.sibling;
     }
   };
-  updateHostContainer = function(workInProgress: Fiber) {
+  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
     const portalOrRoot: {
       containerInfo: Container,
       pendingChildren: ChildSet,
       ...
     } = workInProgress.stateNode;
-    const childrenUnchanged = workInProgress.firstEffect === null;
+    const childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
     if (childrenUnchanged) {
       // No changes, just reuse the existing instance.
     } else {
@@ -492,7 +519,7 @@ if (supportsMutation) {
     const oldProps = current.memoizedProps;
     // If there are no effects associated with this node, then none of our children had any updates.
     // This guarantees that we can reuse all of them.
-    const childrenUnchanged = workInProgress.firstEffect === null;
+    const childrenUnchanged = hadNoMutationsEffects(current, workInProgress);
     if (childrenUnchanged && oldProps === newProps) {
       // No changes, just reuse the existing instance.
       // Note that this might release a previous clone.
@@ -575,7 +602,7 @@ if (supportsMutation) {
   };
 } else {
   // No host operations
-  updateHostContainer = function(workInProgress: Fiber) {
+  updateHostContainer = function(current: null | Fiber, workInProgress: Fiber) {
     // Noop
   };
   updateHostComponent = function(
@@ -847,7 +874,7 @@ function completeWork(
           workInProgress.flags |= Snapshot;
         }
       }
-      updateHostContainer(workInProgress);
+      updateHostContainer(current, workInProgress);
       bubbleProperties(workInProgress);
       return null;
     }
@@ -1142,7 +1169,7 @@ function completeWork(
     }
     case HostPortal:
       popHostContainer(workInProgress);
-      updateHostContainer(workInProgress);
+      updateHostContainer(current, workInProgress);
       if (current === null) {
         preparePortalMount(workInProgress.stateNode.containerInfo);
       }
@@ -1226,11 +1253,7 @@ function completeWork(
 
                 // Rerender the whole list, but this time, we'll force fallbacks
                 // to stay in place.
-                // Reset the effect list before doing the second pass since that's now invalid.
-                if (renderState.lastEffect === null) {
-                  workInProgress.firstEffect = null;
-                }
-                workInProgress.lastEffect = renderState.lastEffect;
+                // Reset the effect flags before doing the second pass since that's now invalid.
                 // Reset the child fibers to their original state.
                 workInProgress.subtreeFlags = NoFlags;
                 resetChildFibers(workInProgress, renderLanes);
@@ -1301,15 +1324,6 @@ function completeWork(
               !renderedTail.alternate &&
               !getIsHydrating() // We don't cut it if we're hydrating.
             ) {
-              // We need to delete the row we just rendered.
-              // Reset the effect list to what it was before we rendered this
-              // child. The nested children have already appended themselves.
-              const lastEffect = (workInProgress.lastEffect =
-                renderState.lastEffect);
-              // Remove any effects that were appended after this point.
-              if (lastEffect !== null) {
-                lastEffect.nextEffect = null;
-              }
               // We're done.
               bubbleProperties(workInProgress);
               return null;
@@ -1369,7 +1383,6 @@ function completeWork(
         const next = renderState.tail;
         renderState.rendering = next;
         renderState.tail = next.sibling;
-        renderState.lastEffect = workInProgress.lastEffect;
         renderState.renderingStartTime = now();
         next.sibling = null;
 
