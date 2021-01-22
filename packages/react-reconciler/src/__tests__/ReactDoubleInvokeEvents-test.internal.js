@@ -15,8 +15,9 @@ let ReactNoop;
 let Scheduler;
 
 function shouldDoubleInvokingEffects() {
-  // Reverted temporarily. Need to re-land.
-  return false;
+  // For now, this feature only exists in the old fork (while the new fork is being bisected).
+  // Eventually we'll land it in both forks.
+  return __DEV__;
 }
 
 describe('ReactDoubleInvokeEvents', () => {
@@ -30,7 +31,7 @@ describe('ReactDoubleInvokeEvents', () => {
     ReactFeatureFlags.enableDoubleInvokingEffects = shouldDoubleInvokingEffects();
   });
 
-  it('should not double invoke effects outside of StrictMode', () => {
+  it('should not double invoke effects in legacy mode', () => {
     function App({text}) {
       React.useEffect(() => {
         Scheduler.unstable_yieldValue('useEffect mount');
@@ -55,54 +56,30 @@ describe('ReactDoubleInvokeEvents', () => {
     ]);
   });
 
-  it('should double invoke effects only within StrictMode subtrees', () => {
-    function ComponentWithEffects({label}) {
-      React.useEffect(() => {
-        Scheduler.unstable_yieldValue(`useEffect mount "${label}"`);
-        return () =>
-          Scheduler.unstable_yieldValue(`useEffect unmount "${label}"`);
-      });
+  it('should not double invoke class lifecycles in legacy mode', () => {
+    class App extends React.PureComponent {
+      componentDidMount() {
+        Scheduler.unstable_yieldValue('componentDidMount');
+      }
 
-      React.useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue(`useLayoutEffect mount "${label}"`);
-        return () =>
-          Scheduler.unstable_yieldValue(`useLayoutEffect unmount "${label}"`);
-      });
+      componentDidUpdate() {
+        Scheduler.unstable_yieldValue('componentDidUpdate');
+      }
 
-      return label;
+      componentWillUnmount() {
+        Scheduler.unstable_yieldValue('componentWillUnmount');
+      }
+
+      render() {
+        return this.props.text;
+      }
     }
 
     ReactNoop.act(() => {
-      ReactNoop.renderLegacySyncRoot(
-        <>
-          <ComponentWithEffects label={'loose'} />
-          <React.StrictMode>
-            <ComponentWithEffects label={'strict'} />
-          </React.StrictMode>
-        </>,
-      );
+      ReactNoop.renderLegacySyncRoot(<App text={'mount'} />);
     });
 
-    if (shouldDoubleInvokingEffects()) {
-      expect(Scheduler).toHaveYielded([
-        'useLayoutEffect mount "loose"',
-        'useLayoutEffect mount "strict"',
-        'useEffect mount "loose"',
-        'useEffect mount "strict"',
-
-        'useLayoutEffect unmount "strict"',
-        'useEffect unmount "strict"',
-        'useLayoutEffect mount "strict"',
-        'useEffect mount "strict"',
-      ]);
-    } else {
-      expect(Scheduler).toHaveYielded([
-        'useLayoutEffect mount "loose"',
-        'useLayoutEffect mount "strict"',
-        'useEffect mount "loose"',
-        'useEffect mount "strict"',
-      ]);
-    }
+    expect(Scheduler).toHaveYielded(['componentDidMount']);
   });
 
   it('should flush double-invoked effects within the same frame as layout effects if there are no passive effects', () => {
@@ -117,10 +94,10 @@ describe('ReactDoubleInvokeEvents', () => {
     }
 
     ReactNoop.act(() => {
-      ReactNoop.renderLegacySyncRoot(
-        <React.StrictMode>
+      ReactNoop.render(
+        <>
           <ComponentWithEffects label={'one'} />
-        </React.StrictMode>,
+        </>,
       );
 
       if (shouldDoubleInvokingEffects()) {
@@ -137,11 +114,11 @@ describe('ReactDoubleInvokeEvents', () => {
     });
 
     ReactNoop.act(() => {
-      ReactNoop.renderLegacySyncRoot(
-        <React.StrictMode>
+      ReactNoop.render(
+        <>
           <ComponentWithEffects label={'one'} />
           <ComponentWithEffects label={'two'} />
-        </React.StrictMode>,
+        </>,
       );
 
       if (shouldDoubleInvokingEffects()) {
@@ -185,10 +162,10 @@ describe('ReactDoubleInvokeEvents', () => {
     }
 
     ReactNoop.act(() => {
-      ReactNoop.renderLegacySyncRoot(
-        <React.StrictMode>
+      ReactNoop.render(
+        <>
           <ComponentWithEffects label={'one'} />
-        </React.StrictMode>,
+        </>,
       );
 
       if (shouldDoubleInvokingEffects()) {
@@ -211,11 +188,11 @@ describe('ReactDoubleInvokeEvents', () => {
     });
 
     ReactNoop.act(() => {
-      ReactNoop.renderLegacySyncRoot(
-        <React.StrictMode>
+      ReactNoop.render(
+        <>
           <ComponentWithEffects label={'one'} />
           <ComponentWithEffects label={'two'} />
-        </React.StrictMode>,
+        </>,
       );
 
       if (shouldDoubleInvokingEffects()) {
