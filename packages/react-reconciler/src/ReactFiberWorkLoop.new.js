@@ -204,6 +204,7 @@ import {
   pop as popFromStack,
   createCursor,
 } from './ReactFiberStack.new';
+import {enqueueInterleavedUpdates} from './ReactFiberInterleavedUpdates.new';
 
 import {
   markNestedUpdateScheduled,
@@ -534,6 +535,7 @@ export function scheduleUpdateOnFiber(
     }
   }
 
+  // TODO: Consolidate with `isInterleavedUpdate` check
   if (root === workInProgressRoot) {
     // Received an update to a tree that's in the middle of rendering. Mark
     // that there was an interleaved update work on this root. Unless the
@@ -669,6 +671,22 @@ function markUpdateLaneFromFiberToRoot(
   } else {
     return null;
   }
+}
+
+export function isInterleavedUpdate(fiber: Fiber, lane: Lane) {
+  return (
+    // TODO: Optimize slightly by comparing to root that fiber belongs to.
+    // Requires some refactoring. Not a big deal though since it's rare for
+    // concurrent apps to have more than a single root.
+    workInProgressRoot !== null &&
+    (fiber.mode & BlockingMode) !== NoMode &&
+    // If this is a render phase update (i.e. UNSAFE_componentWillReceiveProps),
+    // then don't treat this as an interleaved update. This pattern is
+    // accompanied by a warning but we haven't fully deprecated it yet. We can
+    // remove once the deferRenderPhaseUpdateToNextBatch flag is enabled.
+    (deferRenderPhaseUpdateToNextBatch ||
+      (executionContext & RenderContext) === NoContext)
+  );
 }
 
 // Use this function to schedule a task for a root. There's only one task per
@@ -1351,6 +1369,8 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
   workInProgressRootSkippedLanes = NoLanes;
   workInProgressRootUpdatedLanes = NoLanes;
   workInProgressRootPingedLanes = NoLanes;
+
+  enqueueInterleavedUpdates();
 
   if (enableSchedulerTracing) {
     spawnedWorkDuringRender = null;
@@ -2282,7 +2302,7 @@ function captureCommitPhaseErrorOnRoot(
 ) {
   const errorInfo = createCapturedValue(error, sourceFiber);
   const update = createRootErrorUpdate(rootFiber, errorInfo, (SyncLane: Lane));
-  enqueueUpdate(rootFiber, update);
+  enqueueUpdate(rootFiber, update, (SyncLane: Lane));
   const eventTime = requestEventTime();
   const root = markUpdateLaneFromFiberToRoot(rootFiber, (SyncLane: Lane));
   if (root !== null) {
@@ -2319,7 +2339,7 @@ export function captureCommitPhaseError(sourceFiber: Fiber, error: mixed) {
           errorInfo,
           (SyncLane: Lane),
         );
-        enqueueUpdate(fiber, update);
+        enqueueUpdate(fiber, update, (SyncLane: Lane));
         const eventTime = requestEventTime();
         const root = markUpdateLaneFromFiberToRoot(fiber, (SyncLane: Lane));
         if (root !== null) {

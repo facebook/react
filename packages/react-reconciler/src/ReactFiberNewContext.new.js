@@ -11,6 +11,7 @@ import type {ReactContext} from 'shared/ReactTypes';
 import type {Fiber, ContextDependency} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.new';
 import type {Lanes} from './ReactFiberLane.new';
+import type {SharedQueue} from './ReactUpdateQueue.new';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.new';
@@ -31,7 +32,7 @@ import {
 
 import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
-import {createUpdate, enqueueUpdate, ForceUpdate} from './ReactUpdateQueue.new';
+import {createUpdate, ForceUpdate} from './ReactUpdateQueue.new';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.new';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
@@ -211,16 +212,30 @@ export function propagateContextChange<T>(
 
           if (fiber.tag === ClassComponent) {
             // Schedule a force update on the work-in-progress.
-            const update = createUpdate(
-              NoTimestamp,
-              pickArbitraryLane(renderLanes),
-            );
+            const lane = pickArbitraryLane(renderLanes);
+            const update = createUpdate(NoTimestamp, lane);
             update.tag = ForceUpdate;
             // TODO: Because we don't have a work-in-progress, this will add the
             // update to the current fiber, too, which means it will persist even if
             // this render is thrown away. Since it's a race condition, not sure it's
             // worth fixing.
-            enqueueUpdate(fiber, update);
+
+            // Inlined `enqueueUpdate` to remove interleaved update check
+            const updateQueue = fiber.updateQueue;
+            if (updateQueue === null) {
+              // Only occurs if the fiber has been unmounted.
+            } else {
+              const sharedQueue: SharedQueue<any> = (updateQueue: any).shared;
+              const pending = sharedQueue.pending;
+              if (pending === null) {
+                // This is the first update. Create a circular list.
+                update.next = update;
+              } else {
+                update.next = pending.next;
+                pending.next = update;
+              }
+              sharedQueue.pending = update;
+            }
           }
           fiber.lanes = mergeLanes(fiber.lanes, renderLanes);
           const alternate = fiber.alternate;
