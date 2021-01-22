@@ -2708,26 +2708,36 @@ function commitDoubleInvokeEffectsInDEV(
   }
 }
 
-// TODO (strict effects) Rewrite to be iterative
 function invokeEffectsInDev(
   firstChild: Fiber,
   fiberFlags: Flags,
   invokeEffectFn: (fiber: Fiber) => void,
 ): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
-    let fiber = firstChild;
-    while (fiber !== null) {
-      if (fiber.child !== null) {
-        const primarySubtreeFlag = fiber.subtreeFlags & fiberFlags;
-        if (primarySubtreeFlag !== NoFlags) {
-          invokeEffectsInDev(fiber.child, fiberFlags, invokeEffectFn);
+    // We don't need to re-check for legacy roots here.
+    // This function will not be called within legacy roots.
+
+    let current = firstChild;
+    let subtreeRoot = null;
+    while (current !== null) {
+      const primarySubtreeFlag = current.subtreeFlags & fiberFlags;
+      if (
+        current !== subtreeRoot &&
+        current.child !== null &&
+        primarySubtreeFlag !== NoFlags
+      ) {
+        current = current.child;
+      } else {
+        if ((current.flags & fiberFlags) !== NoFlags) {
+          invokeEffectFn(current);
+        }
+
+        if (current.sibling !== null) {
+          current = current.sibling;
+        } else {
+          current = subtreeRoot = current.return;
         }
       }
-
-      if ((fiber.flags & fiberFlags) !== NoFlags) {
-        invokeEffectFn(fiber);
-      }
-      fiber = fiber.sibling;
     }
   }
 }
