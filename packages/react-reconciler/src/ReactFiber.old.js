@@ -144,10 +144,6 @@ function FiberNode(
 
   // Effects
   this.flags = NoFlags;
-  this.nextEffect = null;
-
-  this.firstEffect = null;
-  this.lastEffect = null;
   this.subtreeFlags = NoFlags;
   this.deletions = null;
 
@@ -285,10 +281,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     // Reset the effect tag.
     workInProgress.flags = NoFlags;
 
-    // The effect list is no longer valid.
-    workInProgress.nextEffect = null;
-    workInProgress.firstEffect = null;
-    workInProgress.lastEffect = null;
+    // The effects are no longer valid.
     workInProgress.subtreeFlags = NoFlags;
     workInProgress.deletions = null;
 
@@ -370,10 +363,7 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
   // that child fiber is setting, not the reconciliation.
   workInProgress.flags &= StaticMask | Placement;
 
-  // The effect list is no longer valid.
-  workInProgress.nextEffect = null;
-  workInProgress.firstEffect = null;
-  workInProgress.lastEffect = null;
+  // The effects are no longer valid.
 
   const current = workInProgress.alternate;
   if (current === null) {
@@ -403,6 +393,9 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
     workInProgress.lanes = current.lanes;
 
     workInProgress.child = current.child;
+    // TODO: `subtreeFlags` should be reset to NoFlags, like we do in
+    // `createWorkInProgress`. Nothing reads this until the complete phase,
+    // currently, but it might in the future, and we should be consistent.
     workInProgress.subtreeFlags = current.subtreeFlags;
     workInProgress.deletions = null;
     workInProgress.memoizedProps = current.memoizedProps;
@@ -847,9 +840,6 @@ export function assignFiberPropertiesInDEV(
   target.dependencies = source.dependencies;
   target.mode = source.mode;
   target.flags = source.flags;
-  target.nextEffect = source.nextEffect;
-  target.firstEffect = source.firstEffect;
-  target.lastEffect = source.lastEffect;
   target.subtreeFlags = source.subtreeFlags;
   target.deletions = source.deletions;
   target.lanes = source.lanes;

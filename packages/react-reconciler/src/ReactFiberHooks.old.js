@@ -488,8 +488,8 @@ export function bailoutHooks(
     (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
   ) {
     workInProgress.flags &= ~(
-      MountLayoutDevEffect |
       MountPassiveDevEffect |
+      MountLayoutDevEffect |
       PassiveEffect |
       UpdateEffect
     );
@@ -1337,17 +1337,14 @@ function mountEffect(
     (currentlyRenderingFiber.mode & (BlockingMode | ConcurrentMode)) !== NoMode
   ) {
     return mountEffectImpl(
-      MountPassiveDevEffect |
-        UpdateEffect |
-        PassiveEffect |
-        PassiveStaticEffect,
+      MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
       HookPassive,
       create,
       deps,
     );
   } else {
     return mountEffectImpl(
-      UpdateEffect | PassiveEffect | PassiveStaticEffect,
+      PassiveEffect | PassiveStaticEffect,
       HookPassive,
       create,
       deps,
@@ -1365,12 +1362,7 @@ function updateEffect(
       warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
     }
   }
-  return updateEffectImpl(
-    UpdateEffect | PassiveEffect,
-    HookPassive,
-    create,
-    deps,
-  );
+  return updateEffectImpl(PassiveEffect, HookPassive, create, deps);
 }
 
 function mountLayoutEffect(
@@ -1749,10 +1741,9 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
 
     if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
       if (__DEV__ && enableDoubleInvokingEffects) {
-        currentlyRenderingFiber.flags |=
-          MountPassiveDevEffect | UpdateEffect | PassiveEffect;
+        currentlyRenderingFiber.flags |= MountPassiveDevEffect | PassiveEffect;
       } else {
-        currentlyRenderingFiber.flags |= UpdateEffect | PassiveEffect;
+        currentlyRenderingFiber.flags |= PassiveEffect;
       }
       pushEffect(
         HookHasEffect | HookPassive,
