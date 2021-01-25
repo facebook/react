@@ -8,11 +8,11 @@
  */
 
 export opaque type ToStringValue =
+  | BigInt
   | boolean
   | number
   | Object
   | string
-  | BigInt
   | null
   | void;
 
@@ -25,11 +25,11 @@ export function toString(value: ToStringValue): string {
 
 export function getToStringValue(value: mixed): ToStringValue {
   switch (typeof value) {
+    case 'bigint':
     case 'boolean':
     case 'number':
     case 'object':
     case 'string':
-    case 'bigint':
     case 'undefined':
       return value;
     default:
