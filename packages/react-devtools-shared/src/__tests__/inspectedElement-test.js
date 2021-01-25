@@ -33,6 +33,8 @@ describe('InspectedElement', () => {
   let TestUtilsAct;
   let TestRendererAct;
 
+  let testRendererInstance;
+
   beforeEach(() => {
     utils = require('./utils');
     utils.beforeEachProfiling();
@@ -61,6 +63,9 @@ describe('InspectedElement', () => {
       .StoreContext;
     TreeContextController = require('react-devtools-shared/src/devtools/views/Components/TreeContext')
       .TreeContextController;
+
+    // Used by inspectElementAtIndex() helper function
+    testRendererInstance = TestRenderer.create(null);
   });
 
   afterEach(() => {
@@ -87,14 +92,46 @@ describe('InspectedElement', () => {
     </BridgeContext.Provider>
   );
 
-  function useInspectedElement(id: number) {
+  function useInspectedElement() {
     const {inspectedElement} = React.useContext(InspectedElementContext);
     return inspectedElement;
   }
 
-  function useInspectElementPath(id: number) {
+  function useInspectElementPath() {
     const {inspectPaths} = React.useContext(InspectedElementContext);
     return inspectPaths;
+  }
+
+  function noop() {}
+
+  async function inspectElementAtIndex(index, useCustomHook = noop) {
+    let didFinish = false;
+    let inspectedElement = null;
+
+    function Suspender() {
+      useCustomHook();
+      inspectedElement = useInspectedElement();
+      didFinish = true;
+      return null;
+    }
+
+    const id = ((store.getElementIDAtIndex(index): any): number);
+
+    await utils.actAsync(() => {
+      testRendererInstance.update(
+        <Contexts
+          defaultSelectedElementID={id}
+          defaultSelectedElementIndex={index}>
+          <React.Suspense fallback={null}>
+            <Suspender id={id} index={index} />
+          </React.Suspense>
+        </Contexts>,
+      );
+    }, false);
+
+    expect(didFinish).toBe(true);
+
+    return inspectedElement;
   }
 
   it('should inspect the currently selected element', async done => {
@@ -108,52 +145,29 @@ describe('InspectedElement', () => {
       ReactDOM.render(<Example a={1} b="abc" />, container),
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
-    let didFinish = false;
-
-    function Suspender({target}) {
-      const inspectedElement = useInspectedElement(id);
-      expect(inspectedElement).toMatchInlineSnapshot(`
-        Object {
-          "context": null,
-          "events": undefined,
-          "hooks": Array [
-            Object {
-              "id": 0,
-              "isStateEditable": true,
-              "name": "State",
-              "subHooks": Array [],
-              "value": 1,
-            },
-          ],
-          "id": 2,
-          "owners": null,
-          "props": Object {
-            "a": 1,
-            "b": "abc",
+    const inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement).toMatchInlineSnapshot(`
+      Object {
+        "context": null,
+        "events": undefined,
+        "hooks": Array [
+          Object {
+            "id": 0,
+            "isStateEditable": true,
+            "name": "State",
+            "subHooks": Array [],
+            "value": 1,
           },
-          "state": null,
-        }
-      `);
-      didFinish = true;
-      return null;
-    }
-
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
-    expect(didFinish).toBe(true);
+        ],
+        "id": 2,
+        "owners": null,
+        "props": Object {
+          "a": 1,
+          "b": "abc",
+        },
+        "state": null,
+      }
+    `);
 
     done();
   });
@@ -215,57 +229,42 @@ describe('InspectedElement', () => {
       ),
     );
 
-    const ids = [
+    const cases = [
       {
         // <LegacyContextConsumer />
-        id: ((store.getElementIDAtIndex(1): any): number),
+        index: 1,
         shouldHaveLegacyContext: true,
       },
       {
         // <BoolContext.Consumer>
-        id: ((store.getElementIDAtIndex(2): any): number),
+        index: 2,
         shouldHaveLegacyContext: false,
       },
       {
         // <ModernContextType />
-        id: ((store.getElementIDAtIndex(3): any): number),
+        index: 3,
         shouldHaveLegacyContext: false,
       },
       {
         // <ModernContext.Consumer>
-        id: ((store.getElementIDAtIndex(5): any): number),
+        index: 5,
         shouldHaveLegacyContext: false,
       },
     ];
 
-    function Suspender({target, shouldHaveLegacyContext}) {
-      const inspectedElement = useInspectedElement(target);
+    for (let i = 0; i < cases.length; i++) {
+      const {index, shouldHaveLegacyContext} = cases[i];
+
+      // HACK: Recreate TestRenderer instance because we rely on default state values
+      // from props like defaultSelectedElementID and it's easier to reset here than
+      // to read the TreeDispatcherContext and update the selected ID that way.
+      // We're testing the inspected values here, not the context wiring, so that's ok.
+      testRendererInstance = TestRenderer.create(null);
+
+      const inspectedElement = await inspectElementAtIndex(index);
 
       expect(inspectedElement.context).not.toBe(null);
       expect(inspectedElement.hasLegacyContext).toBe(shouldHaveLegacyContext);
-
-      return null;
-    }
-
-    for (let i = 0; i < ids.length; i++) {
-      const {id, shouldHaveLegacyContext} = ids[i];
-
-      await utils.actAsync(
-        () =>
-          TestRenderer.create(
-            <Contexts
-              defaultSelectedElementID={id}
-              defaultSelectedElementIndex={0}>
-              <React.Suspense fallback={null}>
-                <Suspender
-                  target={id}
-                  shouldHaveLegacyContext={shouldHaveLegacyContext}
-                />
-              </React.Suspense>
-            </Contexts>,
-          ),
-        false,
-      );
     }
     done();
   });
@@ -279,26 +278,7 @@ describe('InspectedElement', () => {
       false,
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
-    let inspectedElement = null;
-
-    function Suspender({target}) {
-      inspectedElement = useInspectedElement(id);
-      return null;
-    }
-
-    let renderer;
-
-    await utils.actAsync(() => {
-      renderer = TestRenderer.create(
-        <Contexts defaultSelectedElementID={id} defaultSelectedElementIndex={0}>
-          <React.Suspense fallback={null}>
-            <Suspender target={id} />
-          </React.Suspense>
-        </Contexts>,
-      );
-    }, false);
+    let inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       Object {
         "a": 1,
@@ -321,19 +301,7 @@ describe('InspectedElement', () => {
     jest.runOnlyPendingTimers();
     await Promise.resolve();
 
-    await utils.actAsync(
-      () =>
-        renderer.update(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
+    inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       Object {
         "a": 2,
@@ -365,31 +333,9 @@ describe('InspectedElement', () => {
       ),
     );
 
-    const id = ((store.getElementIDAtIndex(1): any): number);
-
-    let inspectedElement = null;
-
-    function Suspender({target}) {
-      inspectedElement = useInspectedElement(target);
-      return null;
-    }
-
     targetRenderCount = 0;
 
-    let renderer;
-    await utils.actAsync(
-      () =>
-        (renderer = TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={1}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        )),
-      false,
-    );
+    let inspectedElement = await inspectElementAtIndex(1);
     expect(targetRenderCount).toBe(1);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       Object {
@@ -398,28 +344,14 @@ describe('InspectedElement', () => {
       }
     `);
 
-    const initialInspectedElement = inspectedElement;
+    const prevInspectedElement = inspectedElement;
 
     targetRenderCount = 0;
-    inspectedElement = null;
-    await utils.actAsync(
-      () =>
-        renderer.update(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={1}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
+    inspectedElement = await inspectElementAtIndex(1);
     expect(targetRenderCount).toBe(0);
-    expect(inspectedElement).toEqual(initialInspectedElement);
+    expect(inspectedElement).toEqual(prevInspectedElement);
 
     targetRenderCount = 0;
-    inspectedElement = null;
 
     await utils.actAsync(
       () =>
@@ -433,19 +365,7 @@ describe('InspectedElement', () => {
     );
 
     // Target should have been rendered once (by ReactDOM) and once by DevTools for inspection.
-    await utils.actAsync(
-      () =>
-        renderer.update(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={1}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
+    inspectedElement = await inspectElementAtIndex(1);
     expect(targetRenderCount).toBe(2);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       Object {
@@ -490,28 +410,7 @@ describe('InspectedElement', () => {
     expect(console.warn).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledWith('warn');
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
-    let inspectedElement = null;
-
-    function Suspender({target}) {
-      inspectedElement = useInspectedElement(target);
-      return null;
-    }
-
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={1}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
+    const inspectedElement = await inspectElementAtIndex(0);
 
     expect(inspectedElement).not.toBe(null);
     expect(targetRenderCount).toBe(2);
@@ -546,27 +445,7 @@ describe('InspectedElement', () => {
       ),
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-    let inspectedElement = null;
-
-    function Suspender({target}) {
-      inspectedElement = useInspectedElement(id);
-      return null;
-    }
-
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
+    const inspectedElement = await inspectElementAtIndex(0);
 
     const {props} = (inspectedElement: any);
     expect(props.boolean_false).toBe(false);
@@ -665,28 +544,7 @@ describe('InspectedElement', () => {
       ),
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
-    let inspectedElement = null;
-
-    function Suspender({target}) {
-      inspectedElement = useInspectedElement(id);
-      return null;
-    }
-
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
+    const inspectedElement = await inspectElementAtIndex(0);
 
     const {
       anonymous_fn,
@@ -875,28 +733,7 @@ describe('InspectedElement', () => {
       ReactDOM.render(<Example prop={iterable} />, container),
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
-    let inspectedElement = null;
-
-    function Suspender({target}) {
-      inspectedElement = useInspectedElement(id);
-      return null;
-    }
-
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
+    const inspectedElement = await inspectElementAtIndex(0);
 
     const {prop} = (inspectedElement: any).props;
     expect(prop[meta.inspectable]).toBe(false);
@@ -921,29 +758,7 @@ describe('InspectedElement', () => {
       ReactDOM.render(<Example object={object} />, container),
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
-    let inspectedElement = null;
-
-    function Suspender({target}) {
-      inspectedElement = useInspectedElement(id);
-      return null;
-    }
-
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
-
+    const inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       Object {
         "object": Object {
@@ -970,28 +785,7 @@ describe('InspectedElement', () => {
       ReactDOM.render(<Example object={object} />, container),
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
-    let inspectedElement = null;
-
-    function Suspender({target}) {
-      inspectedElement = useInspectedElement(id);
-      return null;
-    }
-
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
+    const inspectedElement = await inspectElementAtIndex(0);
 
     // TRICKY: Don't use toMatchInlineSnapshot() for this test!
     // Our snapshot serializer relies on hasOwnProperty() for feature detection.
@@ -1026,38 +820,15 @@ describe('InspectedElement', () => {
       ReactDOM.render(<Example data={new CustomData()} />, container),
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
-    let didFinish = false;
-
-    function Suspender({target}) {
-      const inspectedElement = useInspectedElement(id);
-      expect(inspectedElement.props).toMatchInlineSnapshot(`
-        Object {
-          "data": Object {
-            "_number": 42,
-            "number": 42,
-          },
-        }
-      `);
-      didFinish = true;
-      return null;
-    }
-
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
-    expect(didFinish).toBe(true);
+    const inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "data": Object {
+          "_number": 42,
+          "number": 42,
+        },
+      }
+    `);
 
     done();
   });
@@ -1130,29 +901,7 @@ describe('InspectedElement', () => {
       ReactDOM.render(<Example object={object} />, container),
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
-    let inspectedElement = null;
-
-    function Suspender({target}) {
-      inspectedElement = useInspectedElement(id);
-      return null;
-    }
-
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
-
+    const inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       Object {
         "object": Object {
@@ -1209,28 +958,7 @@ describe('InspectedElement', () => {
       ReactDOM.render(<Example data={testData} />, container),
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
-    let inspectedElement = null;
-
-    function Suspender({target}) {
-      inspectedElement = useInspectedElement(target);
-      return null;
-    }
-
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
+    const inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       Object {
         "data": Object {
@@ -1280,37 +1008,13 @@ describe('InspectedElement', () => {
       ),
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
     let inspectedElement = null;
     let inspectElementPath = null;
 
-    function Suspender({path, target}) {
-      inspectedElement = useInspectedElement(id);
-      inspectElementPath = useInspectElementPath(id);
-      return null;
-    }
-
-    const renderer = TestRenderer.create(null);
-
-    async function getInspectedElement() {
-      await utils.actAsync(
-        () =>
-          renderer.update(
-            <Contexts
-              defaultSelectedElementID={id}
-              defaultSelectedElementIndex={0}>
-              <React.Suspense fallback={null}>
-                <Suspender target={id} />
-              </React.Suspense>
-            </Contexts>,
-          ),
-        false,
-      );
-    }
-
     // Render once to get a handle on inspectElementPath()
-    await getInspectedElement();
+    inspectedElement = await inspectElementAtIndex(0, () => {
+      inspectElementPath = useInspectElementPath();
+    });
 
     async function loadPath(path) {
       TestUtilsAct(() => {
@@ -1319,7 +1023,8 @@ describe('InspectedElement', () => {
           jest.runOnlyPendingTimers();
         });
       });
-      await getInspectedElement();
+
+      inspectedElement = await inspectElementAtIndex(0);
     }
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
@@ -1448,37 +1153,13 @@ describe('InspectedElement', () => {
       ),
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
     let inspectedElement = null;
     let inspectElementPath = null;
 
-    function Suspender({path, target}) {
-      inspectedElement = useInspectedElement(id);
-      inspectElementPath = useInspectElementPath(id);
-      return null;
-    }
-
-    const renderer = TestRenderer.create(null);
-
-    async function getInspectedElement() {
-      await utils.actAsync(
-        () =>
-          renderer.update(
-            <Contexts
-              defaultSelectedElementID={id}
-              defaultSelectedElementIndex={0}>
-              <React.Suspense fallback={null}>
-                <Suspender target={id} />
-              </React.Suspense>
-            </Contexts>,
-          ),
-        false,
-      );
-    }
-
     // Render once to get a handle on inspectElementPath()
-    await getInspectedElement();
+    inspectedElement = await inspectElementAtIndex(0, () => {
+      inspectElementPath = useInspectElementPath();
+    });
 
     async function loadPath(path) {
       TestUtilsAct(() => {
@@ -1487,7 +1168,8 @@ describe('InspectedElement', () => {
           jest.runOnlyPendingTimers();
         });
       });
-      await getInspectedElement();
+
+      inspectedElement = await inspectElementAtIndex(0);
     }
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
@@ -1556,37 +1238,13 @@ describe('InspectedElement', () => {
       ),
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
     let inspectedElement = null;
     let inspectElementPath = null;
 
-    function Suspender({path, target}) {
-      inspectedElement = useInspectedElement(id);
-      inspectElementPath = useInspectElementPath(id);
-      return null;
-    }
-
-    const renderer = TestRenderer.create(null);
-
-    async function getInspectedElement() {
-      await utils.actAsync(
-        () =>
-          renderer.update(
-            <Contexts
-              defaultSelectedElementID={id}
-              defaultSelectedElementIndex={0}>
-              <React.Suspense fallback={null}>
-                <Suspender target={id} />
-              </React.Suspense>
-            </Contexts>,
-          ),
-        false,
-      );
-    }
-
     // Render once to get a handle on inspectElementPath()
-    await getInspectedElement();
+    inspectedElement = await inspectElementAtIndex(0, () => {
+      inspectElementPath = useInspectElementPath();
+    });
 
     async function loadPath(path) {
       TestUtilsAct(() => {
@@ -1595,7 +1253,8 @@ describe('InspectedElement', () => {
           jest.runOnlyPendingTimers();
         });
       });
-      await getInspectedElement();
+
+      inspectedElement = await inspectElementAtIndex(0);
     }
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
@@ -1690,7 +1349,7 @@ describe('InspectedElement', () => {
     // Wait for pending poll-for-update and then update inspected element data.
     jest.runOnlyPendingTimers();
     await Promise.resolve();
-    await getInspectedElement();
+    inspectedElement = await inspectElementAtIndex(0);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       Object {
@@ -1739,37 +1398,13 @@ describe('InspectedElement', () => {
       ),
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
     let inspectedElement = null;
     let inspectElementPath = null;
 
-    function Suspender({path, target}) {
-      inspectedElement = useInspectedElement(id);
-      inspectElementPath = useInspectElementPath(id);
-      return null;
-    }
-
-    const renderer = TestRenderer.create(null);
-
-    async function getInspectedElement() {
-      await utils.actAsync(
-        () =>
-          renderer.update(
-            <Contexts
-              defaultSelectedElementID={id}
-              defaultSelectedElementIndex={0}>
-              <React.Suspense fallback={null}>
-                <Suspender target={id} />
-              </React.Suspense>
-            </Contexts>,
-          ),
-        false,
-      );
-    }
-
     // Render once to get a handle on inspectElementPath()
-    await getInspectedElement();
+    inspectedElement = await inspectElementAtIndex(0, () => {
+      inspectElementPath = useInspectElementPath();
+    });
 
     async function loadPath(path) {
       TestUtilsAct(() => {
@@ -1778,7 +1413,8 @@ describe('InspectedElement', () => {
           jest.runOnlyPendingTimers();
         });
       });
-      await getInspectedElement();
+
+      inspectedElement = await inspectElementAtIndex(0);
     }
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
@@ -1841,52 +1477,29 @@ describe('InspectedElement', () => {
       ReactDOM.render(<Example a={1} b="abc" />, container),
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
-    let didFinish = false;
-
-    function Suspender({target}) {
-      const inspectedElement = useInspectedElement(id);
-      expect(inspectedElement).toMatchInlineSnapshot(`
-        Object {
-          "context": null,
-          "events": undefined,
-          "hooks": Array [
-            Object {
-              "id": null,
-              "isStateEditable": false,
-              "name": "Context",
-              "subHooks": Array [],
-              "value": true,
-            },
-          ],
-          "id": 2,
-          "owners": null,
-          "props": Object {
-            "a": 1,
-            "b": "abc",
+    const inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement).toMatchInlineSnapshot(`
+      Object {
+        "context": null,
+        "events": undefined,
+        "hooks": Array [
+          Object {
+            "id": null,
+            "isStateEditable": false,
+            "name": "Context",
+            "subHooks": Array [],
+            "value": true,
           },
-          "state": null,
-        }
-      `);
-      didFinish = true;
-      return null;
-    }
-
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
-    expect(didFinish).toBe(true);
+        ],
+        "id": 2,
+        "owners": null,
+        "props": Object {
+          "a": 1,
+          "b": "abc",
+        },
+        "state": null,
+      }
+    `);
 
     done();
   });
@@ -1913,46 +1526,30 @@ describe('InspectedElement', () => {
       ),
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
     let storeAsGlobal: StoreAsGlobal = ((null: any): StoreAsGlobal);
 
-    function Suspender({target}) {
-      storeAsGlobal = (elementID: number, path: Array<string | number>) => {
-        const rendererID = store.getRendererIDForElement(elementID);
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    await inspectElementAtIndex(0, () => {
+      storeAsGlobal = (path: Array<string | number>) => {
+        const rendererID = store.getRendererIDForElement(id);
         if (rendererID !== null) {
           const {
             storeAsGlobal: storeAsGlobalAPI,
           } = require('react-devtools-shared/src/backendAPI');
           storeAsGlobalAPI({
             bridge,
-            id: elementID,
+            id,
             path,
             rendererID,
           });
         }
       };
-      return null;
-    }
-
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
+    });
 
     jest.spyOn(console, 'log').mockImplementation(() => {});
 
     // Should store the whole value (not just the hydrated parts)
-    storeAsGlobal(id, ['props', 'nestedObject']);
+    storeAsGlobal(['props', 'nestedObject']);
     jest.runOnlyPendingTimers();
     expect(console.log).toHaveBeenCalledWith('$reactTemp0');
     expect(global.$reactTemp0).toBe(nestedObject);
@@ -1960,7 +1557,7 @@ describe('InspectedElement', () => {
     console.log.mockReset();
 
     // Should store the nested property specified (not just the outer value)
-    storeAsGlobal(id, ['props', 'nestedObject', 'a', 'b']);
+    storeAsGlobal(['props', 'nestedObject', 'a', 'b']);
     jest.runOnlyPendingTimers();
     expect(console.log).toHaveBeenCalledWith('$reactTemp1');
     expect(global.$reactTemp1).toBe(nestedObject.a.b);
@@ -1990,45 +1587,28 @@ describe('InspectedElement', () => {
       ),
     );
 
-    const id = ((store.getElementIDAtIndex(0): any): number);
-
     let copyPath: CopyInspectedElementPath = ((null: any): CopyInspectedElementPath);
 
-    function Suspender({target}) {
-      copyPath = (elementID: number, path: Array<string | number>) => {
-        const rendererID = store.getRendererIDForElement(elementID);
+    const id = ((store.getElementIDAtIndex(0): any): number);
+    await inspectElementAtIndex(0, () => {
+      copyPath = (path: Array<string | number>) => {
+        const rendererID = store.getRendererIDForElement(id);
         if (rendererID !== null) {
           const {
             copyInspectedElementPath,
           } = require('react-devtools-shared/src/backendAPI');
           copyInspectedElementPath({
             bridge,
-            id: elementID,
+            id,
             path,
             rendererID,
           });
         }
       };
-      return null;
-    }
-
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
-    expect(copyPath).not.toBeNull();
+    });
 
     // Should copy the whole value (not just the hydrated parts)
-    copyPath(id, ['props', 'nestedObject']);
+    copyPath(['props', 'nestedObject']);
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
@@ -2038,7 +1618,7 @@ describe('InspectedElement', () => {
     global.mockClipboardCopy.mockReset();
 
     // Should copy the nested property specified (not just the outer value)
-    copyPath(id, ['props', 'nestedObject', 'a', 'b']);
+    copyPath(['props', 'nestedObject', 'a', 'b']);
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
@@ -2098,48 +1678,32 @@ describe('InspectedElement', () => {
 
     let copyPath: CopyInspectedElementPath = ((null: any): CopyInspectedElementPath);
 
-    function Suspender({target}) {
-      copyPath = (elementID: number, path: Array<string | number>) => {
-        const rendererID = store.getRendererIDForElement(elementID);
+    await inspectElementAtIndex(0, () => {
+      copyPath = (path: Array<string | number>) => {
+        const rendererID = store.getRendererIDForElement(id);
         if (rendererID !== null) {
           const {
             copyInspectedElementPath,
           } = require('react-devtools-shared/src/backendAPI');
           copyInspectedElementPath({
             bridge,
-            id: elementID,
+            id,
             path,
             rendererID,
           });
         }
       };
-      return null;
-    }
-
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={id}
-            defaultSelectedElementIndex={0}>
-            <React.Suspense fallback={null}>
-              <Suspender target={id} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
-    expect(copyPath).not.toBeNull();
+    });
 
     // Should copy the whole value (not just the hydrated parts)
-    copyPath(id, ['props']);
+    copyPath(['props']);
     jest.runOnlyPendingTimers();
     // Should not error despite lots of unserialized values.
 
     global.mockClipboardCopy.mockReset();
 
     // Should copy the nested property specified (not just the outer value)
-    copyPath(id, ['props', 'bigInt']);
+    copyPath(['props', 'bigInt']);
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
@@ -2149,7 +1713,7 @@ describe('InspectedElement', () => {
     global.mockClipboardCopy.mockReset();
 
     // Should copy the nested property specified (not just the outer value)
-    copyPath(id, ['props', 'typedArray']);
+    copyPath(['props', 'typedArray']);
     jest.runOnlyPendingTimers();
     expect(global.mockClipboardCopy).toHaveBeenCalledTimes(1);
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
@@ -2160,12 +1724,6 @@ describe('InspectedElement', () => {
   });
 
   it('should display complex values of useDebugValue', async done => {
-    let inspectedElement = null;
-    function Suspender({target}) {
-      inspectedElement = useInspectedElement(target);
-      return null;
-    }
-
     const container = document.createElement('div');
 
     function useDebuggableHook() {
@@ -2182,23 +1740,7 @@ describe('InspectedElement', () => {
       ReactDOM.render(<DisplayedComplexValue />, container),
     );
 
-    const ignoredComplexValueIndex = 0;
-    const ignoredComplexValueId = ((store.getElementIDAtIndex(
-      ignoredComplexValueIndex,
-    ): any): number);
-    await utils.actAsync(
-      () =>
-        TestRenderer.create(
-          <Contexts
-            defaultSelectedElementID={ignoredComplexValueId}
-            defaultSelectedElementIndex={ignoredComplexValueIndex}>
-            <React.Suspense fallback={null}>
-              <Suspender target={ignoredComplexValueId} />
-            </React.Suspense>
-          </Contexts>,
-        ),
-      false,
-    );
+    const inspectedElement = await inspectElementAtIndex(0);
     expect(inspectedElement.hooks).toMatchInlineSnapshot(`
       Array [
         Object {
@@ -2224,6 +1766,145 @@ describe('InspectedElement', () => {
     done();
   });
 
+  describe('$r', () => {
+    it('should support function components', async done => {
+      const Example = () => {
+        const [count] = React.useState(1);
+        return count;
+      };
+
+      const container = document.createElement('div');
+      await utils.actAsync(() =>
+        ReactDOM.render(<Example a={1} b="abc" />, container),
+      );
+
+      await inspectElementAtIndex(0);
+
+      expect(global.$r).toMatchInlineSnapshot(`
+        Object {
+          "hooks": Array [
+            Object {
+              "id": 0,
+              "isStateEditable": true,
+              "name": "State",
+              "subHooks": Array [],
+              "value": 1,
+            },
+          ],
+          "props": Object {
+            "a": 1,
+            "b": "abc",
+          },
+          "type": [Function],
+        }
+      `);
+
+      done();
+    });
+
+    it('should support memoized function components', async done => {
+      const Example = React.memo(function Example(props) {
+        const [count] = React.useState(1);
+        return count;
+      });
+
+      const container = document.createElement('div');
+      await utils.actAsync(() =>
+        ReactDOM.render(<Example a={1} b="abc" />, container),
+      );
+
+      await inspectElementAtIndex(0);
+
+      expect(global.$r).toMatchInlineSnapshot(`
+        Object {
+          "hooks": Array [
+            Object {
+              "id": 0,
+              "isStateEditable": true,
+              "name": "State",
+              "subHooks": Array [],
+              "value": 1,
+            },
+          ],
+          "props": Object {
+            "a": 1,
+            "b": "abc",
+          },
+          "type": [Function],
+        }
+      `);
+
+      done();
+    });
+
+    it('should support forward refs', async done => {
+      const Example = React.forwardRef(function Example(props, ref) {
+        const [count] = React.useState(1);
+        return count;
+      });
+
+      const container = document.createElement('div');
+      await utils.actAsync(() =>
+        ReactDOM.render(<Example a={1} b="abc" />, container),
+      );
+
+      await inspectElementAtIndex(0);
+
+      expect(global.$r).toMatchInlineSnapshot(`
+        Object {
+          "hooks": Array [
+            Object {
+              "id": 0,
+              "isStateEditable": true,
+              "name": "State",
+              "subHooks": Array [],
+              "value": 1,
+            },
+          ],
+          "props": Object {
+            "a": 1,
+            "b": "abc",
+          },
+          "type": [Function],
+        }
+      `);
+
+      done();
+    });
+
+    it('should support class components', async done => {
+      class Example extends React.Component {
+        state = {
+          count: 0,
+        };
+        render() {
+          return null;
+        }
+      }
+
+      const container = document.createElement('div');
+      await utils.actAsync(() =>
+        ReactDOM.render(<Example a={1} b="abc" />, container),
+      );
+
+      await inspectElementAtIndex(0);
+
+      expect(global.$r.props).toMatchInlineSnapshot(`
+      Object {
+        "a": 1,
+        "b": "abc",
+      }
+      `);
+      expect(global.$r.state).toMatchInlineSnapshot(`
+      Object {
+        "count": 0,
+      }
+      `);
+
+      done();
+    });
+  });
+
   describe('inline errors and warnings', () => {
     // Some actions require the Fiber id.
     // In those instances you might want to make assertions based on the ID instead of the index.
@@ -2239,7 +1920,7 @@ describe('InspectedElement', () => {
       let warnings = null;
 
       function Suspender({target}) {
-        const inspectedElement = useInspectedElement(id);
+        const inspectedElement = useInspectedElement();
         errors = inspectedElement.errors;
         warnings = inspectedElement.warnings;
         return null;
