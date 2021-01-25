@@ -773,12 +773,8 @@ const Dispatcher: DispatcherType = {
     return callback;
   },
   useDebugValue(): void {},
-  useDeferredValue<T>(value: T): T {
-    return value;
-  },
-  useTransition(): [(callback: () => void) => void, boolean] {
-    return [() => {}, false];
-  },
+  useDeferredValue: (unsupportedHook: any),
+  useTransition: (unsupportedHook: any),
   getCacheForType<T>(resourceType: () => T): T {
     invariant(
       currentCache,
