@@ -67,7 +67,7 @@ type ReactModelObject = {+[key: string]: ReactModel};
 
 type Segment = {
   id: number,
-  query: () => ReactModel,
+  model: ReactModel,
   ping: () => void,
 };
 
@@ -113,7 +113,7 @@ export function createRequest(
     },
   };
   request.pendingChunks++;
-  const rootSegment = createSegment(request, () => model);
+  const rootSegment = createSegment(request, model);
   pingedSegments.push(rootSegment);
   return request;
 }
@@ -180,11 +180,11 @@ function pingSegment(request: Request, segment: Segment): void {
   }
 }
 
-function createSegment(request: Request, query: () => ReactModel): Segment {
+function createSegment(request: Request, model: ReactModel): Segment {
   const id = request.nextChunkId++;
   const segment = {
     id,
-    query,
+    model,
     ping: () => pingSegment(request, segment),
   };
   return segment;
@@ -408,7 +408,7 @@ export function resolveModelToJSON(
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Something suspended, we'll need to create a new segment and resolve it later.
         request.pendingChunks++;
-        const newSegment = createSegment(request, () => value);
+        const newSegment = createSegment(request, value);
         const ping = newSegment.ping;
         x.then(ping, ping);
         return serializeByRefID(newSegment.id);
@@ -625,10 +625,8 @@ function emitSymbolChunk(request: Request, id: number, name: string): void {
 }
 
 function retrySegment(request: Request, segment: Segment): void {
-  const query = segment.query;
-  let value;
   try {
-    value = query();
+    let value = segment.model;
     while (
       typeof value === 'object' &&
       value !== null &&
@@ -639,7 +637,7 @@ function retrySegment(request: Request, segment: Segment): void {
       // Attempt to render the server component.
       // Doing this here lets us reuse this same segment if the next component
       // also suspends.
-      segment.query = () => value;
+      segment.model = value;
       value = attemptResolveElement(
         element.type,
         element.key,
