@@ -36,9 +36,14 @@ export function memo<Props>(
         return ownName;
       },
       set: function(name) {
-        ownName = name;
-        if (type.displayName == null) {
+        if (typeof name === 'string') {
+          ownName = name;
           type.displayName = name;
+        } else {
+          console.error(
+            "%s: is not valid displayName type, React memo's displayName should be a string",
+            typeof name,
+          );
         }
       },
     });
