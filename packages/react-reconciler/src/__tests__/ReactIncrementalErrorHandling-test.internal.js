@@ -232,7 +232,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
   });
 
-  it("retries at a lower priority if there's additional pending work", () => {
+  it("retries at a lower priority if there's additional pending work", async () => {
     function App(props) {
       if (props.isBroken) {
         Scheduler.unstable_yieldValue('error');
@@ -252,14 +252,14 @@ describe('ReactIncrementalErrorHandling', () => {
       });
     }
 
-    ReactNoop.discreteUpdates(() => {
-      ReactNoop.render(<App isBroken={true} />, onCommit);
-    });
+    ReactNoop.render(<App isBroken={true} />, onCommit);
     expect(Scheduler).toFlushAndYieldThrough(['error']);
     interrupt();
 
-    // This update is in a separate batch
-    ReactNoop.render(<App isBroken={false} />, onCommit);
+    React.unstable_startTransition(() => {
+      // This update is in a separate batch
+      ReactNoop.render(<App isBroken={false} />, onCommit);
+    });
 
     expect(Scheduler).toFlushAndYieldThrough([
       // The first render fails. But because there's a lower priority pending
@@ -311,16 +311,16 @@ describe('ReactIncrementalErrorHandling', () => {
       });
     }
 
-    ReactNoop.discreteUpdates(() => {
-      ReactNoop.render(<App isBroken={true} />, onCommit);
-    });
+    ReactNoop.render(<App isBroken={true} />, onCommit);
     expect(Scheduler).toFlushAndYieldThrough(['error']);
     interrupt();
 
     expect(ReactNoop).toMatchRenderedOutput(null);
 
-    // This update is in a separate batch
-    ReactNoop.render(<App isBroken={false} />, onCommit);
+    React.unstable_startTransition(() => {
+      // This update is in a separate batch
+      ReactNoop.render(<App isBroken={false} />, onCommit);
+    });
 
     expect(Scheduler).toFlushAndYieldThrough([
       // The first render fails. But because there's a lower priority pending
@@ -1789,16 +1789,17 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     await ReactNoop.act(async () => {
-      ReactNoop.discreteUpdates(() => {
-        root.render(<Oops />);
-      });
+      root.render(<Oops />);
+
       // Render past the component that throws, then yield.
       expect(Scheduler).toFlushAndYieldThrough(['Oops']);
       expect(root).toMatchRenderedOutput(null);
       // Interleaved update. When the root completes, instead of throwing the
       // error, it should try rendering again. This update will cause it to
       // recover gracefully.
-      root.render('Everything is fine.');
+      React.unstable_startTransition(() => {
+        root.render('Everything is fine.');
+      });
     });
 
     // Should finish without throwing.
@@ -1829,21 +1830,20 @@ describe('ReactIncrementalErrorHandling', () => {
     });
 
     await ReactNoop.act(async () => {
-      // Schedule a high pri and a low pri update on the root.
-      ReactNoop.discreteUpdates(() => {
-        root.render(<Oops />);
+      // Schedule a default pri and a low pri update on the root.
+      root.render(<Oops />);
+      React.unstable_startTransition(() => {
+        root.render(<AllGood />);
       });
-      root.render(<AllGood />);
-      // Render through just the high pri update. The low pri update remains on
+
+      // Render through just the default pri update. The low pri update remains on
       // the queue.
       expect(Scheduler).toFlushAndYieldThrough(['Everything is fine.']);
 
-      // Schedule a high pri update on a child that triggers an error.
+      // Schedule a default pri update on a child that triggers an error.
       // The root should capture this error. But since there's still a pending
       // update on the root, the error should be suppressed.
-      ReactNoop.discreteUpdates(() => {
-        setShouldThrow(true);
-      });
+      setShouldThrow(true);
     });
     // Should render the final state without throwing the error.
     expect(Scheduler).toHaveYielded(['Everything is fine.']);
