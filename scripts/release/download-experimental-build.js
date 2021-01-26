@@ -3,7 +3,11 @@
 'use strict';
 
 const {join} = require('path');
-const {getPublicPackages, handleError} = require('./utils');
+const {
+  addDefaultParamValue,
+  getPublicPackages,
+  handleError,
+} = require('./utils');
 
 const checkEnvironmentVariables = require('./shared-commands/check-environment-variables');
 const downloadBuildArtifacts = require('./shared-commands/download-build-artifacts');
@@ -13,6 +17,8 @@ const printSummary = require('./download-experimental-build-commands/print-summa
 
 const run = async () => {
   try {
+    addDefaultParamValue('-r', '--releaseChannel', 'experimental');
+
     const params = parseParams();
     params.cwd = join(__dirname, '..', '..');
     params.packages = await getPublicPackages(true);

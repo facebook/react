@@ -17,6 +17,21 @@ const logger = createLogger({
   storagePath: join(__dirname, '.progress-estimator'),
 });
 
+const addDefaultParamValue = (shortName, longName, defaultValue) => {
+  let found = false;
+  for (let i = 0; i < process.argv.length; i++) {
+    const current = process.argv[i];
+    if (current === shortName || current.startsWith(`${longName}=`)) {
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
+    process.argv.push(shortName, defaultValue);
+  }
+};
+
 const confirm = async message => {
   const confirmation = await prompt(theme`\n{caution ${message}} (y/N) `);
   prompt.done();
@@ -249,6 +264,7 @@ const updateVersionsForNext = async (cwd, reactVersion, version) => {
 };
 
 module.exports = {
+  addDefaultParamValue,
   confirm,
   execRead,
   getArtifactsList,
