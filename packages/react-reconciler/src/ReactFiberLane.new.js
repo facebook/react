@@ -36,7 +36,10 @@ export type Lane = number;
 export type LaneMap<T> = Array<T>;
 
 import invariant from 'shared/invariant';
-import {enableCache} from 'shared/ReactFeatureFlags';
+import {
+  enableCache,
+  enableTransitionEntanglement,
+} from 'shared/ReactFeatureFlags';
 
 import {
   ImmediatePriority as ImmediateSchedulerPriority,
@@ -306,9 +309,15 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
     return NoLanes;
   }
 
-  // If there are higher priority lanes, we'll include them even if they
-  // are suspended.
-  nextLanes = pendingLanes & getEqualOrHigherPriorityLanes(nextLanes);
+  if (enableTransitionEntanglement) {
+    // We don't need to include higher priority lanes, because in this
+    // experiment we always unsuspend all transitions whenever we receive
+    // an update.
+  } else {
+    // If there are higher priority lanes, we'll include them even if they
+    // are suspended.
+    nextLanes = pendingLanes & getEqualOrHigherPriorityLanes(nextLanes);
+  }
 
   // If we're already in the middle of a render, switching lanes will interrupt
   // it and we'll lose our progress. We should only do this if the new lanes are
@@ -673,8 +682,27 @@ export function markRootUpdated(
   // Unsuspend any update at equal or lower priority.
   const higherPriorityLanes = updateLane - 1; // Turns 0b1000 into 0b0111
 
-  root.suspendedLanes &= higherPriorityLanes;
-  root.pingedLanes &= higherPriorityLanes;
+  if (enableTransitionEntanglement) {
+    // If there are any suspended transitions, it's possible this new update
+    // could unblock them. Clear the suspended lanes so that we can try rendering
+    // them again.
+    //
+    // TODO: We really only need to unsuspend only lanes that are in the
+    // `subtreeLanes` of the updated fiber, or the update lanes of the return
+    // path. This would exclude suspended updates in an unrelated sibling tree,
+    // since there's no way for this update to unblock it.
+    //
+    // We don't do this if the incoming update is idle, because we never process
+    // idle updates until after all the regular updates have finished; there's no
+    // way it could unblock a transition.
+    if ((updateLane & IdleLanes) === NoLanes) {
+      root.suspendedLanes = NoLanes;
+      root.pingedLanes = NoLanes;
+    }
+  } else {
+    root.suspendedLanes &= higherPriorityLanes;
+    root.pingedLanes &= higherPriorityLanes;
+  }
 
   const eventTimes = root.eventTimes;
   const index = laneToIndex(updateLane);

@@ -54,3 +54,4 @@ export const enableUseRefAccessWarning = __VARIANT__;
 
 export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
+export const enableTransitionEntanglement = __VARIANT__;
