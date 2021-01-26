@@ -1397,12 +1397,13 @@ describe('useMutableSource', () => {
       // Now mutate A. Both hooks should update.
       // This is at high priority so that it doesn't get batched with default
       // priority updates that might fire during the passive effect
-      ReactNoop.discreteUpdates(() => {
-        mutateA('a1');
+      await ReactNoop.act(async () => {
+        ReactNoop.discreteUpdates(() => {
+          mutateA('a1');
+        });
       });
-      expect(Scheduler).toFlushUntilNextPaint([]);
 
-      expect(root.getChildrenAsJSX()).toEqual('first: a1, second: a1');
+      expect(root).toMatchRenderedOutput('first: a1, second: a1');
     });
 
     expect(root.getChildrenAsJSX()).toEqual('first: a1, second: a1');
