@@ -330,7 +330,7 @@ export function getChildHostContext() {
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
-export function queueMicrotask() {
+export function queueMicrotask(callback: Function) {
   invariant(false, 'Not implemented.');
 }
 

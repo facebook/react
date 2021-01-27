@@ -384,9 +384,9 @@ export const scheduleTimeout: any =
 export const cancelTimeout: any =
   typeof clearTimeout === 'function' ? clearTimeout : (undefined: any);
 export const noTimeout = -1;
-export const queueMicrotask: (Function => void) | undefined =
-  typeof queueMicrotask === 'function'
-    ? queueMicrotask
+export const queueMicrotask: any =
+  typeof global.queueMicrotask === 'function'
+    ? global.queueMicrotask
     : typeof Promise !== 'undefined'
     ? callback =>
         Promise.resolve(null)
