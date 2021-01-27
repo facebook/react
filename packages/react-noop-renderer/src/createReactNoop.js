@@ -29,6 +29,7 @@ import {
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
+import {scheduleTimeout} from 'react-dom/src/client/ReactDOMHostConfig';
 const {IsSomeRendererActing} = ReactSharedInternals;
 
 type Container = {
@@ -371,6 +372,19 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     scheduleTimeout: setTimeout,
     cancelTimeout: clearTimeout,
     noTimeout: -1,
+    queueMicrotask:
+      typeof queueMicrotask === 'function'
+        ? queueMicrotask
+        : typeof Promise !== 'undefined'
+        ? callback =>
+            Promise.resolve(null)
+              .then(callback)
+              .catch(error => {
+                setTimeout(() => {
+                  throw error;
+                });
+              })
+        : scheduleTimeout,
 
     prepareForCommit(): null | Object {
       return null;
