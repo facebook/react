@@ -313,10 +313,13 @@ describe('ReactFabric', () => {
 
     expect(nativeFabricUIManager.sendAccessibilityEvent).not.toBeCalled();
     ReactFabric.sendAccessibilityEvent(viewRef, 'focus');
-    expect(nativeFabricUIManager.sendAccessibilityEvent).toHaveBeenCalledTimes(1);
-    expect(
-      nativeFabricUIManager.sendAccessibilityEvent,
-    ).toHaveBeenCalledWith(expect.any(Object), 'focus');
+    expect(nativeFabricUIManager.sendAccessibilityEvent).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(nativeFabricUIManager.sendAccessibilityEvent).toHaveBeenCalledWith(
+      expect.any(Object),
+      'focus',
+    );
   });
 
   it('should warn and no-op if calling sendAccessibilityEvent on non native refs', () => {

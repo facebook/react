@@ -24,14 +24,16 @@ describe('created with ReactFabric called with ReactNative', () => {
     ReactNative = require('react-native-renderer');
     jest.resetModules();
     ReactNativePrivateInterface = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface');
-    UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').UIManager;
+    UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+      .UIManager;
     jest.mock('shared/ReactFeatureFlags', () =>
       require('shared/forks/ReactFeatureFlags.native-oss'),
     );
 
     React = require('react');
     ReactFabric = require('react-native-renderer/fabric');
-    createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').ReactNativeViewConfigRegistry.register;
+    createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+      .ReactNativeViewConfigRegistry.register;
   });
 
   it('find Fabric instances with the RN renderer', () => {
@@ -105,14 +107,16 @@ describe('created with ReactFabric called with ReactNative', () => {
     ReactFabric.render(<View title="bar" ref={ref} />, 11);
     expect(nativeFabricUIManager.sendAccessibilityEvent).not.toBeCalled();
     ReactNative.sendAccessibilityEvent(ref.current, 'focus');
-    expect(nativeFabricUIManager.sendAccessibilityEvent).toHaveBeenCalledTimes(1);
-    expect(
-      nativeFabricUIManager.sendAccessibilityEvent,
-    ).toHaveBeenCalledWith(expect.any(Object), 'focus');
+    expect(nativeFabricUIManager.sendAccessibilityEvent).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(nativeFabricUIManager.sendAccessibilityEvent).toHaveBeenCalledWith(
+      expect.any(Object),
+      'focus',
+    );
     expect(UIManager.sendAccessibilityEvent).not.toBeCalled();
   });
 });
-
 
 describe('created with ReactNative called with ReactFabric', () => {
   beforeEach(() => {
@@ -202,14 +206,17 @@ describe('created with ReactNative called with ReactFabric', () => {
     const ref = React.createRef();
 
     ReactNative.render(<View title="bar" ref={ref} />, 11);
-    expect(ReactNativePrivateInterface.legacySendAccessibilityEvent).not.toBeCalled();
+    expect(
+      ReactNativePrivateInterface.legacySendAccessibilityEvent,
+    ).not.toBeCalled();
     ReactFabric.sendAccessibilityEvent(ref.current, 'focus');
-    expect(ReactNativePrivateInterface.legacySendAccessibilityEvent).toHaveBeenCalledTimes(1);
+    expect(
+      ReactNativePrivateInterface.legacySendAccessibilityEvent,
+    ).toHaveBeenCalledTimes(1);
     expect(
       ReactNativePrivateInterface.legacySendAccessibilityEvent,
     ).toHaveBeenCalledWith(expect.any(Number), 'focus');
 
     expect(nativeFabricUIManager.sendAccessibilityEvent).not.toBeCalled();
   });
-
 });

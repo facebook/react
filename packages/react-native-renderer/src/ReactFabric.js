@@ -186,7 +186,7 @@ function sendAccessibilityEvent(handle: any, eventType: string) {
   if (handle._internalInstanceHandle) {
     nativeFabricUIManager.sendAccessibilityEvent(
       handle._internalInstanceHandle.stateNode.node,
-      eventType
+      eventType,
     );
   } else {
     legacySendAccessibilityEvent(handle._nativeTag, eventType);

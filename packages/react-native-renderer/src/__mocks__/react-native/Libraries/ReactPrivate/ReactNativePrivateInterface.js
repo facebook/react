@@ -40,5 +40,5 @@ module.exports = {
   },
   get legacySendAccessibilityEvent() {
     return require('./legacySendAccessibilityEvent');
-  }
+  },
 };

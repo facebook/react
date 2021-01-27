@@ -34,7 +34,8 @@ describe('ReactNative', () => {
     StrictMode = React.StrictMode;
     ReactNative = require('react-native-renderer');
     ReactNativePrivateInterface = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface');
-    UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface').UIManager;
+    UIManager = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
+      .UIManager;
     createReactNativeComponentClass = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
       .ReactNativeViewConfigRegistry.register;
     TextInputState = require('react-native/Libraries/ReactPrivate/ReactNativePrivateInterface')
@@ -174,9 +175,13 @@ describe('ReactNative', () => {
       11,
     );
 
-    expect(ReactNativePrivateInterface.legacySendAccessibilityEvent).not.toBeCalled();
+    expect(
+      ReactNativePrivateInterface.legacySendAccessibilityEvent,
+    ).not.toBeCalled();
     ReactNative.sendAccessibilityEvent(viewRef, 'focus');
-    expect(ReactNativePrivateInterface.legacySendAccessibilityEvent).toHaveBeenCalledTimes(1);
+    expect(
+      ReactNativePrivateInterface.legacySendAccessibilityEvent,
+    ).toHaveBeenCalledTimes(1);
     expect(
       ReactNativePrivateInterface.legacySendAccessibilityEvent,
     ).toHaveBeenCalledWith(expect.any(Number), 'focus');
