@@ -3761,7 +3761,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(Scheduler).toHaveYielded(['Unmount A', 'Unmount B']);
   });
 
-  it('effect dependencies are consistent with yielded values when triggering state updates during render', () => {
+  it('effect dependencies are persisted after a render phase update', () => {
     let handleClick;
     function Test() {
       const [count, setCount] = useState(0);
