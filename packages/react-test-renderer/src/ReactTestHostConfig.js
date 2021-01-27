@@ -221,10 +221,10 @@ export const warnsIfNotActing = true;
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const queueMicrotask =
-  typeof queueMicrotask === 'function'
-    ? queueMicrotask
+  typeof global.queueMicrotask === 'function'
+    ? global.queueMicrotask
     : typeof Promise !== 'undefined'
-    ? callback =>
+    ? (callback: Function) =>
         Promise.resolve(null)
           .then(callback)
           .catch(handleErrorInNextTick)
