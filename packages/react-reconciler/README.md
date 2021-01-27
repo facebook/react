@@ -203,6 +203,10 @@ You can proxy this to `clearTimeout` or its equivalent in your environment.
 
 This is a property (not a function) that should be set to something that can never be a valid timeout ID. For example, you can set it to `-1`.
 
+#### `queueMicrotask(fn)`
+
+You can proxy this to `queueMicrotask` or its equivalent in your environment.
+
 #### `isPrimaryRenderer`
 
 This is a property (not a function) that should be set to `true` if your renderer is the main one on the page. For example, if you're writing a renderer for the Terminal, it makes sense to set it to `true`, but if your renderer is used *on top of* React DOM or some other existing renderer, set it to `false`.

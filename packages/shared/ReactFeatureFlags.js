@@ -152,3 +152,5 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 
 // Experiment to simplify/improve how transitions are scheduled
 export const enableTransitionEntanglement = false;
+
+export const enableDiscreteEventMicroTasks = false;

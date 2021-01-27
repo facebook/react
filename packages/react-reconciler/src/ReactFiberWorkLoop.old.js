@@ -34,6 +34,7 @@ import {
   disableSchedulerTimeoutInWorkLoop,
   enableDoubleInvokingEffects,
   skipUnmountedBoundaries,
+  enableDiscreteEventMicroTasks,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -92,6 +93,7 @@ import {
   warnsIfNotActing,
   afterActiveInstanceBlur,
   clearContainer,
+  queueMicrotask,
 } from './ReactFiberHostConfig';
 
 import {
@@ -696,21 +698,34 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     // Special case: There's nothing to work on.
     if (existingCallbackNode !== null) {
       cancelCallback(existingCallbackNode);
-      root.callbackNode = null;
-      root.callbackPriority = NoLanePriority;
     }
+    root.callbackNode = null;
+    root.callbackPriority = NoLanePriority;
     return;
   }
 
   // Check if there's an existing task. We may be able to reuse it.
-  if (existingCallbackNode !== null) {
-    const existingCallbackPriority = root.callbackPriority;
-    if (existingCallbackPriority === newCallbackPriority) {
-      // The priority hasn't changed. We can reuse the existing task. Exit.
-      return;
+  const existingCallbackPriority = root.callbackPriority;
+  if (existingCallbackPriority === newCallbackPriority) {
+    if (__DEV__) {
+      // If we're going to re-use an existing task, it needs to exist.
+      // Assume that discrete update microtasks are non-cancellable and null.
+      // TODO: Temporary until we confirm this warning is not fired.
+      if (
+        existingCallbackNode == null &&
+        existingCallbackPriority !== InputDiscreteLanePriority
+      ) {
+        console.error(
+          'Expected scheduled callback to exist. This error is likely caused by a bug in React. Please file an issue.',
+        );
+      }
     }
-    // The priority changed. Cancel the existing callback. We'll schedule a new
-    // one below.
+    // The priority hasn't changed. We can reuse the existing task. Exit.
+    return;
+  }
+
+  if (existingCallbackNode != null) {
+    // Cancel the existing callback. We'll schedule a new one below.
     cancelCallback(existingCallbackNode);
   }
 
@@ -719,6 +734,8 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   if (newCallbackPriority === SyncLanePriority) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
+
+    // TODO: After enableDiscreteEventMicroTasks lands, we can remove the fake node.
     newCallbackNode = scheduleSyncCallback(
       performSyncWorkOnRoot.bind(null, root),
     );
@@ -727,6 +744,12 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       ImmediateSchedulerPriority,
       performSyncWorkOnRoot.bind(null, root),
     );
+  } else if (
+    enableDiscreteEventMicroTasks &&
+    newCallbackPriority === InputDiscreteLanePriority
+  ) {
+    queueMicrotask(performSyncWorkOnRoot.bind(null, root));
+    newCallbackNode = null;
   } else {
     const schedulerPriorityLevel = lanePriorityToSchedulerPriority(
       newCallbackPriority,
@@ -1851,6 +1874,7 @@ function commitRootImpl(root, renderPriorityLevel) {
   // commitRoot never returns a continuation; it always finishes synchronously.
   // So we can clear these now to allow a new callback to be scheduled.
   root.callbackNode = null;
+  root.callbackPriority = NoLanePriority;
 
   // Update the first and last pending times on this root. The new first
   // pending time is whatever is left on the root fiber.

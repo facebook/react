@@ -228,7 +228,7 @@ export const queueMicrotask =
         Promise.resolve(null)
           .then(callback)
           .catch(handleErrorInNextTick)
-    : scheduleTimeout;
+    : scheduleTimeout; // TODO: Determine the best fallback here.
 
 function handleErrorInNextTick(error) {
   setTimeout(() => {
