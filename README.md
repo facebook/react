@@ -37,7 +37,7 @@ You can improve it by sending pull requests to [this repository](https://github.
 
 ## Examples
 
-We have several examples [on the website](https://reactjs.org/). Here is the first one to get you started:
+We have several examples [on the website](https://reactjs.org/). Here is the first one to ge t you started:
 
 ```jsx
 function HelloMessage({ name }) {
