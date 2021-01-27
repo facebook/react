@@ -45,6 +45,8 @@ import {
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
+  intersectLanes,
+  isTransitionLane,
   markRootEntangled,
   markRootMutableRead,
   getCurrentUpdateLanePriority,
@@ -104,7 +106,11 @@ import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
 import {CacheContext} from './ReactFiberCacheComponent.new';
-import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.new';
+import {
+  createUpdate,
+  enqueueUpdate,
+  entangleTransitions,
+} from './ReactUpdateQueue.new';
 import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
@@ -121,6 +127,7 @@ type Update<S, A> = {|
 export type UpdateQueue<S, A> = {|
   pending: Update<S, A> | null,
   interleaved: Update<S, A> | null,
+  lanes: Lanes,
   dispatch: (A => mixed) | null,
   lastRenderedReducer: ((S, A) => S) | null,
   lastRenderedState: S | null,
@@ -654,6 +661,7 @@ function mountReducer<S, I, A>(
   const queue = (hook.queue = {
     pending: null,
     interleaved: null,
+    lanes: NoLanes,
     dispatch: null,
     lastRenderedReducer: reducer,
     lastRenderedState: (initialState: any),
@@ -811,6 +819,10 @@ function updateReducer<S, I, A>(
       markSkippedUpdateLanes(interleavedLane);
       interleaved = ((interleaved: any).next: Update<S, A>);
     } while (interleaved !== lastInterleaved);
+  } else if (baseQueue === null) {
+    // `queue.lanes` is used for entangling transitions. We can set it back to
+    // zero once the queue is empty.
+    queue.lanes = NoLanes;
   }
 
   const dispatch: Dispatch<A> = (queue.dispatch: any);
@@ -1102,6 +1114,7 @@ function useMutableSource<Source, Snapshot>(
     const newQueue = {
       pending: null,
       interleaved: null,
+      lanes: NoLanes,
       dispatch: null,
       lastRenderedReducer: basicStateReducer,
       lastRenderedState: snapshot,
@@ -1158,6 +1171,7 @@ function mountState<S>(
   const queue = (hook.queue = {
     pending: null,
     interleaved: null,
+    lanes: NoLanes,
     dispatch: null,
     lastRenderedReducer: basicStateReducer,
     lastRenderedState: (initialState: any),
@@ -1821,6 +1835,9 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
         const lane = requestUpdateLane(provider);
         const eventTime = requestEventTime();
         const root = scheduleUpdateOnFiber(provider, lane, eventTime);
+        if (root !== null) {
+          entangleTransitions(root, fiber, lane);
+        }
 
         const seededCache = new Map();
         if (seedKey !== null && seedKey !== undefined && root !== null) {
@@ -1960,7 +1977,25 @@ function dispatchAction<S, A>(
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
-    scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+
+    if (isTransitionLane(lane) && root !== null) {
+      let queueLanes = queue.lanes;
+
+      // If any entangled lanes are no longer pending on the root, then they
+      // must have finished. We can remove them from the shared queue, which
+      // represents a superset of the actually pending lanes. In some cases we
+      // may entangle more than we need to, but that's OK. In fact it's worse if
+      // we *don't* entangle when we should.
+      queueLanes = intersectLanes(queueLanes, root.pendingLanes);
+
+      // Entangle the new transition lane with the other transition lanes.
+      const newQueueLanes = mergeLanes(queueLanes, lane);
+      if (newQueueLanes !== queueLanes) {
+        queue.lanes = newQueueLanes;
+        markRootEntangled(root, newQueueLanes);
+      }
+    }
   }
 
   if (__DEV__) {

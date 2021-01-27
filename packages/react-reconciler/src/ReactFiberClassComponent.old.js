@@ -40,6 +40,7 @@ import {
 
 import {
   enqueueUpdate,
+  entangleTransitions,
   processUpdateQueue,
   checkHasForceUpdateAfterProcessing,
   resetHasForceUpdateBeforeProcessing,
@@ -214,7 +215,10 @@ const classComponentUpdater = {
     }
 
     enqueueUpdate(fiber, update);
-    scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    if (root !== null) {
+      entangleTransitions(root, fiber, lane);
+    }
 
     if (__DEV__) {
       if (enableDebugTracing) {
@@ -246,7 +250,10 @@ const classComponentUpdater = {
     }
 
     enqueueUpdate(fiber, update);
-    scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    if (root !== null) {
+      entangleTransitions(root, fiber, lane);
+    }
 
     if (__DEV__) {
       if (enableDebugTracing) {
@@ -277,7 +284,10 @@ const classComponentUpdater = {
     }
 
     enqueueUpdate(fiber, update);
-    scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    if (root !== null) {
+      entangleTransitions(root, fiber, lane);
+    }
 
     if (__DEV__) {
       if (enableDebugTracing) {
