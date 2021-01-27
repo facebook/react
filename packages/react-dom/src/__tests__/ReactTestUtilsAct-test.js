@@ -187,7 +187,7 @@ function runActTests(label, render, unmount, rerender) {
         expect(Scheduler).toHaveYielded([100]);
       });
 
-      it('flushes effects on every call', () => {
+      it('flushes effects on every call', async () => {
         function App() {
           const [ctr, setCtr] = React.useState(0);
           React.useEffect(() => {
@@ -209,16 +209,16 @@ function runActTests(label, render, unmount, rerender) {
           button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
         }
 
-        act(() => {
+        await act(async () => {
           click();
           click();
           click();
         });
         // it consolidates the 3 updates, then fires the effect
         expect(Scheduler).toHaveYielded([3]);
-        act(click);
+        await act(async () => click());
         expect(Scheduler).toHaveYielded([4]);
-        act(click);
+        await act(async () => click());
         expect(Scheduler).toHaveYielded([5]);
         expect(button.innerHTML).toBe('5');
       });

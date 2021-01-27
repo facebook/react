@@ -13,6 +13,7 @@ describe('SimpleEventPlugin', function() {
   let React;
   let ReactDOM;
   let Scheduler;
+  let TestUtils;
 
   let onClick;
   let container;
@@ -39,6 +40,7 @@ describe('SimpleEventPlugin', function() {
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
+    TestUtils = require('react-dom/test-utils');
 
     onClick = jest.fn();
   });
@@ -314,7 +316,7 @@ describe('SimpleEventPlugin', function() {
     });
 
     // @gate experimental
-    it('end result of many interactive updates is deterministic', () => {
+    it('end result of many interactive updates is deterministic', async () => {
       container = document.createElement('div');
       const root = ReactDOM.unstable_createRoot(container);
       document.body.appendChild(container);
@@ -361,12 +363,14 @@ describe('SimpleEventPlugin', function() {
       expect(button.textContent).toEqual('Count: 0');
 
       // Click the button many more times
-      click();
-      click();
-      click();
-      click();
-      click();
-      click();
+      await TestUtils.act(async () => {
+        click();
+        click();
+        click();
+        click();
+        click();
+        click();
+      });
 
       // Flush the remaining work
       Scheduler.unstable_flushAll();
@@ -375,7 +379,7 @@ describe('SimpleEventPlugin', function() {
     });
 
     // @gate experimental
-    it('flushes discrete updates in order', () => {
+    it('flushes discrete updates in order', async () => {
       container = document.createElement('div');
       document.body.appendChild(container);
 

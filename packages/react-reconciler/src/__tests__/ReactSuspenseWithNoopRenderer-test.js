@@ -570,14 +570,13 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       );
     }
 
-    // Schedule a high pri update and a low pri update, without rendering in
-    // between.
-    ReactNoop.discreteUpdates(() => {
-      // High pri
-      ReactNoop.render(<App />);
-    });
+    // Schedule a default pri update and a low pri update, without rendering in between.
+    // Default pri
+    ReactNoop.render(<App />);
     // Low pri
-    ReactNoop.render(<App hide={true} />);
+    React.unstable_startTransition(() => {
+      ReactNoop.render(<App hide={true} />);
+    });
 
     expect(Scheduler).toFlushAndYield([
       // The first update suspends
@@ -1879,9 +1878,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     ReactNoop.render(<Foo />);
     expect(Scheduler).toFlushAndYield(['Foo']);
 
-    ReactNoop.discreteUpdates(() =>
-      ReactNoop.render(<Foo renderContent={true} />),
-    );
+    ReactNoop.render(<Foo renderContent={true} />);
     expect(Scheduler).toFlushAndYieldThrough(['Foo']);
 
     // Advance some time.
@@ -3080,48 +3077,48 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         // Schedule an update inside the Suspense boundary that suspends.
         setAppText('B');
         expect(Scheduler).toFlushAndYield(['Suspend! [B]', 'Loading...']);
-
-        // Commit the placeholder
-        await advanceTimers(250);
-        expect(root).toMatchRenderedOutput(
-          <>
-            <span hidden={true} prop="A" />
-            <span prop="Loading..." />
-          </>,
-        );
-
-        // Schedule a high pri update on the boundary, and a lower pri update
-        // on the fallback. We're testing to make sure the fallback can still
-        // update even though the primary tree is suspended.{
-        ReactNoop.discreteUpdates(() => {
-          setAppText('C');
-        });
-        setFallbackText('Still loading...');
-
-        expect(Scheduler).toFlushAndYield([
-          // First try to render the high pri update. Still suspended.
-          'Suspend! [C]',
-          'Loading...',
-
-          // In the expiration times model, once the high pri update suspends,
-          // we can't be sure if there's additional work at a lower priority
-          // that might unblock the tree. We do know that there's a lower
-          // priority update *somehwere* in the entire root, though (the update
-          // to the fallback). So we try rendering one more time, just in case.
-          // TODO: We shouldn't need to do this with lanes, because we always
-          // know exactly which lanes have pending work in each tree.
-          'Suspend! [C]',
-
-          // Then complete the update to the fallback.
-          'Still loading...',
-        ]);
-        expect(root).toMatchRenderedOutput(
-          <>
-            <span hidden={true} prop="A" />
-            <span prop="Still loading..." />
-          </>,
-        );
       });
+
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span hidden={true} prop="A" />
+          <span prop="Loading..." />
+        </>,
+      );
+
+      // Schedule a default pri update on the boundary, and a lower pri update
+      // on the fallback. We're testing to make sure the fallback can still
+      // update even though the primary tree is suspended.
+      await ReactNoop.act(async () => {
+        setAppText('C');
+        React.unstable_startTransition(() => {
+          setFallbackText('Still loading...');
+        });
+      });
+
+      expect(Scheduler).toHaveYielded([
+        // First try to render the high pri update. Still suspended.
+        'Suspend! [C]',
+        'Loading...',
+
+        // In the expiration times model, once the high pri update suspends,
+        // we can't be sure if there's additional work at a lower priority
+        // that might unblock the tree. We do know that there's a lower
+        // priority update *somehwere* in the entire root, though (the update
+        // to the fallback). So we try rendering one more time, just in case.
+        // TODO: We shouldn't need to do this with lanes, because we always
+        // know exactly which lanes have pending work in each tree.
+        'Suspend! [C]',
+
+        // Then complete the update to the fallback.
+        'Still loading...',
+      ]);
+      expect(root).toMatchRenderedOutput(
+        <>
+          <span hidden={true} prop="A" />
+          <span prop="Still loading..." />
+        </>,
+      );
     },
   );
 

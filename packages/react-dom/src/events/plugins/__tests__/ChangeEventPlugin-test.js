@@ -685,7 +685,7 @@ describe('ChangeEventPlugin', () => {
     });
 
     // @gate experimental
-    it('is async for non-input events', () => {
+    it('is async for non-input events', async () => {
       const root = ReactDOM.unstable_createRoot(container);
       let input;
 
