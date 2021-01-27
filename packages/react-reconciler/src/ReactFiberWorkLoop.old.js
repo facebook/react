@@ -34,6 +34,7 @@ import {
   disableSchedulerTimeoutInWorkLoop,
   enableDoubleInvokingEffects,
   skipUnmountedBoundaries,
+  enableDiscreteEventMicroTasks,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -92,6 +93,7 @@ import {
   warnsIfNotActing,
   afterActiveInstanceBlur,
   clearContainer,
+  queueMicrotask,
 } from './ReactFiberHostConfig';
 
 import {
@@ -727,6 +729,12 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       ImmediateSchedulerPriority,
       performSyncWorkOnRoot.bind(null, root),
     );
+  } else if (
+    enableDiscreteEventMicroTasks &&
+    newCallbackPriority === InputDiscreteLanePriority
+  ) {
+    queueMicrotask(performSyncWorkOnRoot.bind(null, root));
+    newCallbackNode = null;
   } else {
     const schedulerPriorityLevel = lanePriorityToSchedulerPriority(
       newCallbackPriority,

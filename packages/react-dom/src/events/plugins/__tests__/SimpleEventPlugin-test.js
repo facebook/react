@@ -470,11 +470,24 @@ describe('SimpleEventPlugin', function() {
         'High-pri count: 7, Low-pri count: 0',
       ]);
 
-      // At the end, both counters should equal the total number of clicks
-      expect(Scheduler).toFlushAndYield([
-        'High-pri count: 8, Low-pri count: 0',
-        'High-pri count: 8, Low-pri count: 8',
-      ]);
+      if (gate(flags => flags.enableDiscreteEventMicroTasks)) {
+        // Flush the microtask queue
+        await null;
+
+        // At the end, both counters should equal the total number of clicks
+        expect(Scheduler).toHaveYielded([
+          'High-pri count: 8, Low-pri count: 0',
+
+          // TODO: with cancellation, this required another flush?
+          'High-pri count: 8, Low-pri count: 8',
+        ]);
+      } else {
+        // At the end, both counters should equal the total number of clicks
+        expect(Scheduler).toFlushAndYield([
+          'High-pri count: 8, Low-pri count: 0',
+          'High-pri count: 8, Low-pri count: 8',
+        ]);
+      }
       expect(button.textContent).toEqual('High-pri count: 8, Low-pri count: 8');
     });
   });

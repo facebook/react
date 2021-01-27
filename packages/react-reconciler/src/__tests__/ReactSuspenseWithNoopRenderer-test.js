@@ -3528,6 +3528,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
   });
 
   // @gate enableCache
+  // @gate !enableDiscreteEventMicroTasks
   it('regression: empty render at high priority causes update to be dropped', async () => {
     // Reproduces a bug where flushDiscreteUpdates starts a new (empty) render
     // pass which cancels a scheduled timeout and causes the fallback never to
