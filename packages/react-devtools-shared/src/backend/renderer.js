@@ -1103,7 +1103,7 @@ export function attach(
     );
   }
 
-  function didHookChange(prev: Hook, next: Hook): boolean {
+  function didHookChange(prev: any, next: any): boolean {
     const prevMemoizedState = prev.memoizedState;
     const nextMemoizedState = next.memoizedState;
 
