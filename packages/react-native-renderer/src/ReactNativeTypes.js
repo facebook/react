@@ -207,9 +207,9 @@ export type ReactFabricEventTouch = {
 };
 
 export type ReactFabricEvent = {
-  touches: Array<ReactFaricEventTouch>,
-  changedTouches: Array<ReactFaricEventTouch>,
-  targetTouches: Array<ReactFaricEventTouch>,
+  touches: Array<ReactFabricEventTouch>,
+  changedTouches: Array<ReactFabricEventTouch>,
+  targetTouches: Array<ReactFabricEventTouch>,
   target: number,
   ...
 };
