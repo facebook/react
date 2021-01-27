@@ -708,8 +708,11 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   const existingCallbackPriority = root.callbackPriority;
   if (existingCallbackPriority === newCallbackPriority) {
     if (__DEV__) {
+      // If we're going to re-use an existing task, it needs to exist.
+      // Assume that discrete update microtasks are non-cancellable and null.
       invariant(
-        existingCallbackNode,
+        existingCallbackNode ||
+          newCallbackPriority === InputDiscreteLanePriority,
         'Expected scheduled callback to exist. This error is likely caused by a bug in React. Please file an issue.',
       );
     }
