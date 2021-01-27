@@ -110,7 +110,10 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     ) => void,
     ...
   };
-  declare export var legacySendAccessibilityEvent: (reactTag: number, eventTypeName: string) => void;
+  declare export var legacySendAccessibilityEvent: (
+    reactTag: number,
+    eventTypeName: string,
+  ) => void;
   declare export var BatchedBridge: {
     registerCallableModule: (name: string, module: Object) => void,
     ...
