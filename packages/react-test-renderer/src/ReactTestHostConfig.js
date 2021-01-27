@@ -220,6 +220,21 @@ export const warnsIfNotActing = true;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
+export const queueMicrotask =
+  typeof queueMicrotask === 'function'
+    ? queueMicrotask
+    : typeof Promise !== 'undefined'
+    ? callback =>
+        Promise.resolve(null)
+          .then(callback)
+          .catch(handleErrorInNextTick)
+    : scheduleTimeout;
+
+function handleErrorInNextTick(error) {
+  setTimeout(() => {
+    throw error;
+  });
+}
 export const noTimeout = -1;
 
 // -------------------
