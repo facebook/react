@@ -310,9 +310,8 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   }
 
   if (enableTransitionEntanglement) {
-    // We don't need to include higher priority lanes, because in this
-    // experiment we always unsuspend all transitions whenever we receive
-    // an update.
+    // We don't need to do anything extra here, because we apply per-lane
+    // transition entanglement in the entanglement loop below.
   } else {
     // If there are higher priority lanes, we'll include them even if they
     // are suspended.
@@ -492,6 +491,10 @@ export function includesOnlyTransitions(lanes: Lanes) {
   return (lanes & TransitionLanes) === lanes;
 }
 
+export function isTransitionLane(lane: Lane) {
+  return (lane & TransitionLanes) !== 0;
+}
+
 // To ensure consistency across multiple updates in the same event, this should
 // be a pure function, so that it always returns the same lane for given inputs.
 export function findUpdateLane(
@@ -632,6 +635,10 @@ export function mergeLanes(a: Lanes | Lane, b: Lanes | Lane): Lanes {
 
 export function removeLanes(set: Lanes, subset: Lanes | Lane): Lanes {
   return set & ~subset;
+}
+
+export function intersectLanes(a: Lanes | Lane, b: Lanes | Lane): Lanes {
+  return a & b;
 }
 
 // Seems redundant, but it changes the type from a single lane (used for

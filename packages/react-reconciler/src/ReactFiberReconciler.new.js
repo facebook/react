@@ -65,7 +65,11 @@ import {
   IsThisRendererActing,
   act,
 } from './ReactFiberWorkLoop.new';
-import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.new';
+import {
+  createUpdate,
+  enqueueUpdate,
+  entangleTransitions,
+} from './ReactUpdateQueue.new';
 import {
   isRendering as ReactCurrentFiberIsRendering,
   current as ReactCurrentFiberCurrent,
@@ -315,7 +319,10 @@ export function updateContainer(
   }
 
   enqueueUpdate(current, update, lane);
-  scheduleUpdateOnFiber(current, lane, eventTime);
+  const root = scheduleUpdateOnFiber(current, lane, eventTime);
+  if (root !== null) {
+    entangleTransitions(root, current, lane);
+  }
 
   return lane;
 }
