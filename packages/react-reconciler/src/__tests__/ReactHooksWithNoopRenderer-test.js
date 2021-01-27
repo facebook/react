@@ -3795,7 +3795,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       handleClick();
     });
 
-    expect(Scheduler).toHaveYielded(['Render: 0', 'Effect: 0']);
+    expect(Scheduler).toHaveYielded(['Render: 0']);
 
     ReactNoop.act(() => {
       handleClick();
