@@ -474,6 +474,9 @@ describe('SchedulingProfiler', () => {
     ]);
   });
 
+  // This test is coupled to lane implementation details, so I'm disabling it in
+  // the new fork until it stabilizes so we don't have to repeatedly update it.
+  // @gate !enableTransitionEntanglement
   // @gate enableSchedulingProfiler
   it('should mark cascading passive updates', () => {
     function Example() {

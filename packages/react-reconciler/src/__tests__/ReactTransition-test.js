@@ -548,4 +548,229 @@ describe('ReactTransition', () => {
       expect(root).toMatchRenderedOutput('C');
     },
   );
+
+  // @gate experimental
+  // @gate enableCache
+  test('interrupt a refresh transition if a new transition is scheduled', async () => {
+    const root = ReactNoop.createRoot();
+
+    await ReactNoop.act(async () => {
+      root.render(
+        <>
+          <Suspense fallback={<Text text="Loading..." />} />
+          <Text text="Initial" />
+        </>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Initial']);
+    expect(root).toMatchRenderedOutput('Initial');
+
+    await ReactNoop.act(async () => {
+      // Start a refresh transition
+      startTransition(() => {
+        root.render(
+          <>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <AsyncText text="Async" />
+            </Suspense>
+            <Text text="After Suspense" />
+            <Text text="Sibling" />
+          </>,
+        );
+      });
+
+      // Partially render it.
+      expect(Scheduler).toFlushAndYieldThrough([
+        // Once we the update suspends, we know it's a refresh transition,
+        // because the Suspense boundary has already mounted.
+        'Suspend! [Async]',
+        'Loading...',
+        'After Suspense',
+      ]);
+
+      // Schedule a new transition
+      startTransition(async () => {
+        root.render(
+          <>
+            <Suspense fallback={<Text text="Loading..." />} />
+            <Text text="Updated" />
+          </>,
+        );
+      });
+    });
+
+    // Because the first one is going to suspend regardless, we should
+    // immediately switch to rendering the new transition.
+    expect(Scheduler).toHaveYielded(['Updated']);
+    expect(root).toMatchRenderedOutput('Updated');
+  });
+
+  // @gate experimental
+  // @gate enableCache
+  test(
+    "interrupt a refresh transition when something suspends and we've " +
+      'already bailed out on another transition in a parent',
+    async () => {
+      let setShouldSuspend;
+
+      function Parent({children}) {
+        const [shouldHideInParent, _setShouldHideInParent] = useState(false);
+        setShouldHideInParent = _setShouldHideInParent;
+        Scheduler.unstable_yieldValue(
+          'shouldHideInParent: ' + shouldHideInParent,
+        );
+        if (shouldHideInParent) {
+          return <Text text="(empty)" />;
+        }
+        return children;
+      }
+
+      let setShouldHideInParent;
+      function App() {
+        const [shouldSuspend, _setShouldSuspend] = useState(false);
+        setShouldSuspend = _setShouldSuspend;
+        return (
+          <>
+            <Text text="A" />
+            <Parent>
+              <Suspense fallback={<Text text="Loading..." />}>
+                {shouldSuspend ? <AsyncText text="Async" /> : null}
+              </Suspense>
+            </Parent>
+            <Text text="B" />
+            <Text text="C" />
+          </>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+
+      await act(async () => {
+        root.render(<App />);
+        expect(Scheduler).toFlushAndYield([
+          'A',
+          'shouldHideInParent: false',
+          'B',
+          'C',
+        ]);
+        expect(root).toMatchRenderedOutput('ABC');
+
+        // Schedule an update
+        startTransition(() => {
+          setShouldSuspend(true);
+        });
+
+        // Now we need to trigger schedule another transition in a different
+        // lane from the first one. At the time this was written, all transitions are worked on
+        // simultaneously, unless a transition was already in progress when a
+        // new one was scheduled. So, partially render the first transition.
+        expect(Scheduler).toFlushAndYieldThrough(['A']);
+
+        // Now schedule a second transition. We won't interrupt the first one.
+        React.unstable_startTransition(() => {
+          setShouldHideInParent(true);
+        });
+        // Continue rendering the first transition.
+        expect(Scheduler).toFlushAndYieldThrough([
+          'shouldHideInParent: false',
+          'Suspend! [Async]',
+          'Loading...',
+          'B',
+        ]);
+        // Should not have committed loading state
+        expect(root).toMatchRenderedOutput('ABC');
+
+        // At this point, we've processed the parent update queue, so we know
+        // that it has a pending update from the second transition, even though
+        // we skipped it during this render. And we know this is a refresh
+        // transition, because we had to render a loading state. So the next
+        // time we re-enter the work loop (we don't interrupt immediately, we
+        // just wait for the next time slice), we should throw out the
+        // suspended first transition and try the second one.
+        expect(Scheduler).toFlushUntilNextPaint([
+          'shouldHideInParent: true',
+          '(empty)',
+        ]);
+        expect(root).toMatchRenderedOutput('A(empty)BC');
+
+        // Since the two transitions are not entangled, we then later go back
+        // and finish retry the first transition. Not really relevant to this
+        // test but I'll assert the result anyway.
+        expect(Scheduler).toFlushAndYield([
+          'A',
+          'shouldHideInParent: true',
+          '(empty)',
+          'B',
+          'C',
+        ]);
+        expect(root).toMatchRenderedOutput('A(empty)BC');
+      });
+    },
+  );
+
+  // @gate experimental
+  // @gate enableCache
+  test(
+    'interrupt a refresh transition when something suspends and a parent ' +
+      'component received an interleaved update after its queue was processed',
+    async () => {
+      // Title is confusing so I'll try to explain further: This is similar to
+      // the previous test, except instead of skipped over a transition update
+      // in a parent, the parent receives an interleaved update *after* its
+      // begin phase has already finished.
+
+      function App({shouldSuspend, step}) {
+        return (
+          <>
+            <Text text={`A${step}`} />
+            <Suspense fallback={<Text text="Loading..." />}>
+              {shouldSuspend ? <AsyncText text="Async" ms={2000} /> : null}
+            </Suspense>
+            <Text text={`B${step}`} />
+            <Text text={`C${step}`} />
+          </>
+        );
+      }
+
+      const root = ReactNoop.createRoot();
+
+      await ReactNoop.act(async () => {
+        root.render(<App shouldSuspend={false} step={0} />);
+      });
+      expect(Scheduler).toHaveYielded(['A0', 'B0', 'C0']);
+      expect(root).toMatchRenderedOutput('A0B0C0');
+
+      await ReactNoop.act(async () => {
+        // This update will suspend.
+        startTransition(() => {
+          root.render(<App shouldSuspend={true} step={1} />);
+        });
+        // Flush past the root, but stop before the async component.
+        expect(Scheduler).toFlushAndYieldThrough(['A1']);
+
+        // Schedule another transition on the root, which already completed.
+        startTransition(() => {
+          root.render(<App shouldSuspend={false} step={2} />);
+        });
+        // We'll keep working on the first update.
+        expect(Scheduler).toFlushAndYieldThrough([
+          // Now the async component suspends
+          'Suspend! [Async]',
+          'Loading...',
+          'B1',
+        ]);
+        // Should not have committed loading state
+        expect(root).toMatchRenderedOutput('A0B0C0');
+
+        // After suspending, should abort the first update and switch to the
+        // second update. So, C1 should not appear in the log.
+        // TODO: This should work even if React does not yield to the main
+        // thread. Should use same mechanism as selective hydration to interrupt
+        // the render before the end of the current slice of work.
+        expect(Scheduler).toFlushAndYield(['A2', 'B2', 'C2']);
+
+        expect(root).toMatchRenderedOutput('A2B2C2');
+      });
+    },
+  );
 });

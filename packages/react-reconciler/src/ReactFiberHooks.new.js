@@ -2029,10 +2029,11 @@ function dispatchAction<S, A>(
 
       // Entangle the new transition lane with the other transition lanes.
       const newQueueLanes = mergeLanes(queueLanes, lane);
-      if (newQueueLanes !== queueLanes) {
-        queue.lanes = newQueueLanes;
-        markRootEntangled(root, newQueueLanes);
-      }
+      queue.lanes = newQueueLanes;
+      // Even if queue.lanes already include lane, we don't know for certain if
+      // the lane finished since the last time we entangled it. So we need to
+      // entangle it again, just to be sure.
+      markRootEntangled(root, newQueueLanes);
     }
   }
 

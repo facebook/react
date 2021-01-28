@@ -285,10 +285,11 @@ export function entangleTransitions(root: FiberRoot, fiber: Fiber, lane: Lane) {
 
     // Entangle the new transition lane with the other transition lanes.
     const newQueueLanes = mergeLanes(queueLanes, lane);
-    if (newQueueLanes !== queueLanes) {
-      sharedQueue.lanes = newQueueLanes;
-      markRootEntangled(root, newQueueLanes);
-    }
+    sharedQueue.lanes = newQueueLanes;
+    // Even if queue.lanes already include lane, we don't know for certain if
+    // the lane finished since the last time we entangled it. So we need to
+    // entangle it again, just to be sure.
+    markRootEntangled(root, newQueueLanes);
   }
 }
 
