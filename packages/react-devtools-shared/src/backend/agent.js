@@ -622,7 +622,11 @@ export default class Agent extends EventEmitter<{|
     // or in the case of React Native- if the backend is just finding out the preference-
     // then install or uninstall the console overrides.
     // It's safe to call these methods multiple times, so we don't need to worry about that.
-    if (appendComponentStack || breakOnConsoleErrors) {
+    if (
+      appendComponentStack ||
+      breakOnConsoleErrors ||
+      showInlineWarningsAndErrors
+    ) {
       patchConsole({
         appendComponentStack,
         breakOnConsoleErrors,
