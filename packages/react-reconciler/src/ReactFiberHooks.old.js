@@ -1815,7 +1815,7 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
         const eventTime = requestEventTime();
         const root = scheduleUpdateOnFiber(provider, lane, eventTime);
         if (root !== null) {
-          entangleTransitions(root, fiber, lane);
+          entangleTransitions(root, provider, lane);
         }
 
         const seededCache = new Map();
