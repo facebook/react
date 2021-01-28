@@ -1099,6 +1099,7 @@ export function attach(
       memoizedState.hasOwnProperty('create') &&
       memoizedState.hasOwnProperty('destroy') &&
       memoizedState.hasOwnProperty('deps') &&
+      (memoizedState.deps === null || Array.isArray(memoizedState.deps)) &&
       memoizedState.hasOwnProperty('next')
     );
   }
