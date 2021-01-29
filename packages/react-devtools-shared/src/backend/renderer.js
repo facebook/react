@@ -1109,9 +1109,9 @@ export function attach(
     const nextMemoizedState = next.memoizedState;
 
     if (isEffect(prevMemoizedState) && isEffect(nextMemoizedState)) {
-      return !areHookInputsEqual(
-        nextMemoizedState.deps,
-        prevMemoizedState.deps,
+      return (
+        prevMemoizedState !== nextMemoizedState &&
+        !areHookInputsEqual(nextMemoizedState.deps, prevMemoizedState.deps)
       );
     }
     return nextMemoizedState !== prevMemoizedState;
