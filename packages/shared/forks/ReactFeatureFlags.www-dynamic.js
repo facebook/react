@@ -20,6 +20,11 @@ export const enableLegacyFBSupport = __VARIANT__;
 export const decoupleUpdatePriorityFromScheduler = __VARIANT__;
 export const skipUnmountedBoundaries = __VARIANT__;
 
+// enableStrictEffectsModeDevWarningForFacebookOnly is true for all Facebook builds by default
+// because a GK shouldn't be used to roll a feature to 100% of employees.
+// So this flag is disabled by default in the dynamic file to avoid spamming tests.
+export const bypassStrictEffectsModeDevWarningForFacebookOnly = true;
+
 // Enable this flag to help with concurrent mode debugging.
 // It logs information to the console about React scheduling, rendering, and commit phases.
 //

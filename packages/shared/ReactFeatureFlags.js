@@ -154,3 +154,18 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableTransitionEntanglement = false;
 
 export const enableDiscreteEventMicroTasks = false;
+
+// This flag controls a temporary DEV mode warning that explains strict effects mode.
+// This flag should only be enabled for Facebook builds, because the warning includes
+// Facebook specific instructions for how to disable it (using a GK blocklist).
+// If we decide to add a similar warning for OSS we'll need to revisit both the
+// wording and the opt-out mechansim.
+//
+// This warning is controlled by two flags so that (a) we can enable it for 100%
+// of Facebook engineers¹² only and (b) provide a simple opt-out mechanism for engineers
+// who know about the mode and no longer want to see the warning.
+//
+// ¹ This warning will not be logged for legacy applications that aren't in strict effects mode.
+// ² GKs within Facebook can't be enabled for 100% of a population.
+export const enableStrictEffectsModeDevWarningForFacebookOnly = false;
+export const bypassStrictEffectsModeDevWarningForFacebookOnly = false;

@@ -34,6 +34,8 @@ import {
   disableSchedulerTimeoutInWorkLoop,
   enableDoubleInvokingEffects,
   skipUnmountedBoundaries,
+  enableStrictEffectsModeDevWarningForFacebookOnly,
+  bypassStrictEffectsModeDevWarningForFacebookOnly,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -2578,6 +2580,8 @@ function flushRenderPhaseStrictModeWarningsInDEV() {
   }
 }
 
+let didWarnAboutStrictEffectsMode: boolean = false;
+
 function commitDoubleInvokeEffectsInDEV(
   fiber: Fiber,
   hasPassiveEffects: boolean,
@@ -2586,6 +2590,42 @@ function commitDoubleInvokeEffectsInDEV(
     // Never double-invoke effects for legacy roots.
     if ((fiber.mode & (BlockingMode | ConcurrentMode)) === NoMode) {
       return;
+    }
+
+    if (
+      __DEV__ &&
+      enableStrictEffectsModeDevWarningForFacebookOnly &&
+      !bypassStrictEffectsModeDevWarningForFacebookOnly
+    ) {
+      if (!didWarnAboutStrictEffectsMode) {
+        didWarnAboutStrictEffectsMode = true;
+
+        // While we roll out strict effects mode within Facebook,
+        // let's provide a little more context about what it is and why it exists.
+        // This is primarily intended for people who did not read the internal announcement.
+        //
+        // Note we don't check subtreeFlags here to verify there actually are effects
+        // because it's rare enough for there not to be that it's unnecessary.
+        //
+        // The warning includes Facebook specific instructions for how to disable it
+        // (using a GK blocklist). If we decide to add a similar warning for OSS we'll need
+        // to revisit both the wording and the opt-out mechansim.
+        //
+        // eslint-disable-next-line react-internal/no-production-logging
+        console.warn(
+          'React strict effects mode is enabled for this application. ' +
+            'In this mode, React will run effects twice after a component mounts ' +
+            '(create -> destroy -> recreate) to simulate the component being unmounted ' +
+            'and then remounted as may happen with future React APIs like Offscreen. ' +
+            'Mount-only effects (ones with an empty dependencies array) should be ' +
+            'resilient to being run more than once.' +
+            '\n\nTo disable this warning, add yourself to the blocklist for the' +
+            'react_enable_strict_effects_mode_warning GK here: ' +
+            'https://fburl.com/react-disable-strict-effects-mode-warning' +
+            '\n\nFor more information about strict effects mode, see ' +
+            'https://fburl.com/react-strict-effects-mode',
+        );
+      }
     }
 
     setCurrentDebugFiberInDEV(fiber);

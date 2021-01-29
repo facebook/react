@@ -46,6 +46,8 @@ export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 export const disableNativeComponentFrames = false;
 export const skipUnmountedBoundaries = false;
+export const enableStrictEffectsModeDevWarningForFacebookOnly = false;
+export const bypassStrictEffectsModeDevWarningForFacebookOnly = false;
 
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;

@@ -33,6 +33,7 @@ export const {
   disableSchedulerTimeoutInWorkLoop,
   enableTransitionEntanglement,
   enableDiscreteEventMicroTasks,
+  bypassStrictEffectsModeDevWarningForFacebookOnly,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -86,6 +87,8 @@ export const disableTextareaChildren = __EXPERIMENTAL__;
 export const warnUnstableRenderSubtreeIntoContainer = false;
 
 export const enableDiscreteEventFlushingChange = true;
+
+export const enableStrictEffectsModeDevWarningForFacebookOnly = __DEV__;
 
 // Enable forked reconciler. Piggy-backing on the "variant" global so that we
 // don't have to add another test dimension. The build system will compile this

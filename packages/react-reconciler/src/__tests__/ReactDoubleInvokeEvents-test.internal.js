@@ -31,6 +31,77 @@ describe('ReactDoubleInvokeEvents', () => {
     ReactFeatureFlags.enableDoubleInvokingEffects = shouldDoubleInvokingEffects();
   });
 
+  describe('Facebook strict effects mode warning', () => {
+    beforeEach(() => {
+      ReactFeatureFlags.enableStrictEffectsModeDevWarningForFacebookOnly = true;
+      ReactFeatureFlags.bypassStrictEffectsModeDevWarningForFacebookOnly = false;
+    });
+
+    it('should log before double invoking effects the first time', () => {
+      function Component() {
+        React.useLayoutEffect(() => {}, []);
+        return null;
+      }
+
+      expect(() => {
+        ReactNoop.act(() => {
+          ReactNoop.render(
+            <>
+              <Component key="1" />
+            </>,
+          );
+        });
+      }).toWarnDev(
+        'React strict effects mode is enabled for this application.',
+        {
+          withoutStack: true,
+        },
+      );
+
+      // But not on updates, even if new components have mounted.
+      ReactNoop.act(() => {
+        ReactNoop.render(
+          <>
+            <Component key="1" />
+            <Component key="2" />
+          </>,
+        );
+      });
+    });
+
+    it('should not log for legacy roots even if strict mode is enabled', () => {
+      function Component() {
+        React.useLayoutEffect(() => {}, []);
+        return null;
+      }
+
+      ReactNoop.act(() => {
+        ReactNoop.renderLegacySyncRoot(
+          <React.StrictMode>
+            <Component />
+          </React.StrictMode>,
+        );
+      });
+    });
+
+    it('should not log if bypass flag has been enabled (by GK allowlist)', () => {
+      ReactFeatureFlags.bypassStrictEffectsModeDevWarningForFacebookOnly = true;
+
+      function Component() {
+        React.useLayoutEffect(() => {}, []);
+        return null;
+      }
+
+      ReactNoop.act(() => {
+        ReactNoop.render(
+          <React.StrictMode>
+            <Component />
+          </React.StrictMode>,
+        );
+      });
+    });
+  });
+
   it('should not double invoke effects in legacy mode', () => {
     function App({text}) {
       React.useEffect(() => {
