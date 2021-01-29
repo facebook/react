@@ -3760,4 +3760,47 @@ describe('ReactHooksWithNoopRenderer', () => {
     // effects would not fire.
     expect(Scheduler).toHaveYielded(['Unmount A', 'Unmount B']);
   });
+
+  it('effect dependencies are persisted after a render phase update', () => {
+    let handleClick;
+    function Test() {
+      const [count, setCount] = useState(0);
+
+      useEffect(() => {
+        Scheduler.unstable_yieldValue(`Effect: ${count}`);
+      }, [count]);
+
+      if (count > 0) {
+        setCount(0);
+      }
+
+      handleClick = () => setCount(2);
+
+      return <Text text={`Render: ${count}`} />;
+    }
+
+    ReactNoop.act(() => {
+      ReactNoop.render(<Test />);
+    });
+
+    expect(Scheduler).toHaveYielded(['Render: 0', 'Effect: 0']);
+
+    ReactNoop.act(() => {
+      handleClick();
+    });
+
+    expect(Scheduler).toHaveYielded(['Render: 0']);
+
+    ReactNoop.act(() => {
+      handleClick();
+    });
+
+    expect(Scheduler).toHaveYielded(['Render: 0']);
+
+    ReactNoop.act(() => {
+      handleClick();
+    });
+
+    expect(Scheduler).toHaveYielded(['Render: 0']);
+  });
 });

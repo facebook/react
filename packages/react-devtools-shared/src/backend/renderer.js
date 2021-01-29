@@ -103,6 +103,7 @@ import type {
   ComponentFilter,
   ElementType,
 } from 'react-devtools-shared/src/types';
+import is from 'shared/objectIs';
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
 type getTypeSymbolType = (type: any) => Symbol | number;
@@ -1073,6 +1074,49 @@ export function attach(
     return null;
   }
 
+  function areHookInputsEqual(
+    nextDeps: Array<mixed>,
+    prevDeps: Array<mixed> | null,
+  ) {
+    if (prevDeps === null) {
+      return false;
+    }
+
+    for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+      if (is(nextDeps[i], prevDeps[i])) {
+        continue;
+      }
+      return false;
+    }
+    return true;
+  }
+
+  function isEffect(memoizedState) {
+    return (
+      memoizedState !== null &&
+      typeof memoizedState === 'object' &&
+      memoizedState.hasOwnProperty('tag') &&
+      memoizedState.hasOwnProperty('create') &&
+      memoizedState.hasOwnProperty('destroy') &&
+      memoizedState.hasOwnProperty('deps') &&
+      (memoizedState.deps === null || Array.isArray(memoizedState.deps)) &&
+      memoizedState.hasOwnProperty('next')
+    );
+  }
+
+  function didHookChange(prev: any, next: any): boolean {
+    const prevMemoizedState = prev.memoizedState;
+    const nextMemoizedState = next.memoizedState;
+
+    if (isEffect(prevMemoizedState) && isEffect(nextMemoizedState)) {
+      return (
+        prevMemoizedState !== nextMemoizedState &&
+        !areHookInputsEqual(nextMemoizedState.deps, prevMemoizedState.deps)
+      );
+    }
+    return nextMemoizedState !== prevMemoizedState;
+  }
+
   function didHooksChange(prev: any, next: any): boolean {
     if (prev == null || next == null) {
       return false;
@@ -1086,7 +1130,7 @@ export function attach(
       next.hasOwnProperty('queue')
     ) {
       while (next !== null) {
-        if (next.memoizedState !== prev.memoizedState) {
+        if (didHookChange(prev, next)) {
           return true;
         } else {
           next = next.next;
