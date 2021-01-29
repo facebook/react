@@ -25,9 +25,9 @@ function loadModules() {
   jest.useFakeTimers();
 
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
   ReactFeatureFlags.enableSchedulerTracing = true;
   ReactFeatureFlags.enableProfilerTimer = true;
+
   React = require('react');
   ReactNoop = require('react-noop-renderer');
   Scheduler = require('scheduler');
@@ -1720,6 +1720,84 @@ describe('useMutableSource', () => {
   });
 
   if (__DEV__) {
+    // See https://github.com/facebook/react/issues/19948
+    describe('side effecte detection', () => {
+      // @gate experimental
+      it('should throw if a mutable source is mutated during render', () => {
+        const source = createSource('initial');
+        const mutableSource = createMutableSource(
+          source,
+          param => param.version,
+        );
+
+        function MutateDuringRead() {
+          const value = useMutableSource(
+            mutableSource,
+            defaultGetSnapshot,
+            defaultSubscribe,
+          );
+          Scheduler.unstable_yieldValue('MutateDuringRead:' + value);
+          // Note that mutating an exeternal value during render is a side effect and is not supported.
+          if (value === 'initial') {
+            source.value = 'updated';
+          }
+          return null;
+        }
+
+        expect(() => {
+          expect(() => {
+            act(() => {
+              ReactNoop.renderLegacySyncRoot(
+                <React.StrictMode>
+                  <MutateDuringRead />
+                </React.StrictMode>,
+              );
+            });
+          }).toThrow(
+            'Cannot read from mutable source during the current render without tearing. This may be a bug in React. Please file an issue.',
+          );
+        }).toWarnDev(
+          'A mutable source was mutated while the MutateDuringRead component was rendering. This is not supported. ' +
+            'Move any mutations into event handlers or effects.\n' +
+            '    in MutateDuringRead (at **)',
+        );
+
+        expect(Scheduler).toHaveYielded(['MutateDuringRead:initial']);
+      });
+
+      // @gate experimental
+      it('should not misidentify mutations after render as side effects', () => {
+        const source = createSource('initial');
+        const mutableSource = createMutableSource(
+          source,
+          param => param.version,
+        );
+
+        function MutateDuringRead() {
+          const value = useMutableSource(
+            mutableSource,
+            defaultGetSnapshot,
+            defaultSubscribe,
+          );
+          Scheduler.unstable_yieldValue('MutateDuringRead:' + value);
+          return null;
+        }
+
+        act(() => {
+          ReactNoop.renderLegacySyncRoot(
+            <React.StrictMode>
+              <MutateDuringRead />
+            </React.StrictMode>,
+          );
+          expect(Scheduler).toFlushAndYieldThrough([
+            'MutateDuringRead:initial',
+          ]);
+          source.value = 'updated';
+        });
+        expect(Scheduler).toHaveYielded(['MutateDuringRead:updated']);
+      });
+    });
+
     describe('dev warnings', () => {
       // @gate experimental
       it('should warn if the subscribe function does not return an unsubscribe function', () => {

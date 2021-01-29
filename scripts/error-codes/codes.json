@@ -372,5 +372,6 @@
   "381": "This feature is not supported by ReactSuspenseTestUtils.",
   "382": "This query has received more parameters than the last time the same query was used. Always pass the exact number of parameters that the query needs.",
   "383": "This query has received fewer parameters than the last time the same query was used. Always pass the exact number of parameters that the query needs.",
-  "384": "Refreshing the cache is not supported in Server Components."
+  "384": "Refreshing the cache is not supported in Server Components.",
+  "385": "Cannot read from mutable source during the current render without tearing. This may be a bug in React. Please file an issue."
 }
