@@ -1724,6 +1724,56 @@ describe('useMutableSource', () => {
     describe('side effecte detection', () => {
       // @gate experimental
       it('should throw if a mutable source is mutated during render', () => {
+        const source = createSource(0);
+        const mutableSource = createMutableSource(
+          source,
+          param => param.version,
+        );
+
+        let mutatedValueInRender = 1;
+        function MutateDuringRead() {
+          const value = useMutableSource(
+            mutableSource,
+            defaultGetSnapshot,
+            defaultSubscribe,
+          );
+          Scheduler.unstable_yieldValue('MutateDuringRead:' + value);
+          // Note that mutating an exeternal value during render is a side effect and is not supported.
+          source.value = mutatedValueInRender++;
+          return null;
+        }
+
+        expect(() => {
+          expect(() => {
+            act(() => {
+              ReactNoop.render(<MutateDuringRead />);
+            });
+          }).toThrow(
+            'Cannot read from mutable source during the current render without tearing. This may be a bug in React. Please file an issue.',
+          );
+        }).toWarnDev([
+          // Warns twice because of the retry-on-error render pass. Should
+          // consider only warning during the first attempt, not during the
+          // retry. Or maybe vice versa.
+          'A mutable source was mutated while the MutateDuringRead component was rendering. This is not supported. ' +
+            'Move any mutations into event handlers or effects.\n' +
+            '    in MutateDuringRead (at **)',
+          'A mutable source was mutated while the MutateDuringRead component was rendering. This is not supported. ' +
+            'Move any mutations into event handlers or effects.\n' +
+            '    in MutateDuringRead (at **)',
+        ]);
+
+        expect(Scheduler).toHaveYielded([
+          // First attempt
+          'MutateDuringRead:0',
+
+          // Synchronous retry
+          'MutateDuringRead:1',
+        ]);
+      });
+
+      // @gate experimental
+      it('should throw if a mutable source is mutated during render (legacy mode)', () => {
         const source = createSource('initial');
         const mutableSource = createMutableSource(
           source,
