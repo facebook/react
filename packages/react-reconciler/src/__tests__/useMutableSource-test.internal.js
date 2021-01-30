@@ -1744,24 +1744,14 @@ describe('useMutableSource', () => {
         }
 
         expect(() => {
-          expect(() => {
-            act(() => {
-              ReactNoop.render(<MutateDuringRead />);
-            });
-          }).toThrow(
-            'Cannot read from mutable source during the current render without tearing. This may be a bug in React. Please file an issue.',
-          );
-        }).toWarnDev([
-          // Warns twice because of the retry-on-error render pass. Should
-          // consider only warning during the first attempt, not during the
-          // retry. Or maybe vice versa.
-          'A mutable source was mutated while the MutateDuringRead component was rendering. This is not supported. ' +
-            'Move any mutations into event handlers or effects.\n' +
-            '    in MutateDuringRead (at **)',
-          'A mutable source was mutated while the MutateDuringRead component was rendering. This is not supported. ' +
-            'Move any mutations into event handlers or effects.\n' +
-            '    in MutateDuringRead (at **)',
-        ]);
+          act(() => {
+            ReactNoop.render(<MutateDuringRead />);
+          });
+        }).toThrow(
+          'A mutable source was mutated while the MutateDuringRead component ' +
+            'was rendering. This is not supported. Move any mutations into ' +
+            'event handlers or effects.',
+        );
 
         expect(Scheduler).toHaveYielded([
           // First attempt
@@ -1795,21 +1785,17 @@ describe('useMutableSource', () => {
         }
 
         expect(() => {
-          expect(() => {
-            act(() => {
-              ReactNoop.renderLegacySyncRoot(
-                <React.StrictMode>
-                  <MutateDuringRead />
-                </React.StrictMode>,
-              );
-            });
-          }).toThrow(
-            'Cannot read from mutable source during the current render without tearing. This may be a bug in React. Please file an issue.',
-          );
-        }).toWarnDev(
-          'A mutable source was mutated while the MutateDuringRead component was rendering. This is not supported. ' +
-            'Move any mutations into event handlers or effects.\n' +
-            '    in MutateDuringRead (at **)',
+          act(() => {
+            ReactNoop.renderLegacySyncRoot(
+              <React.StrictMode>
+                <MutateDuringRead />
+              </React.StrictMode>,
+            );
+          });
+        }).toThrow(
+          'A mutable source was mutated while the MutateDuringRead component ' +
+            'was rendering. This is not supported. Move any mutations into ' +
+            'event handlers or effects.',
         );
 
         expect(Scheduler).toHaveYielded(['MutateDuringRead:initial']);
