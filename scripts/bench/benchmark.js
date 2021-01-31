@@ -1,5 +1,7 @@
 'use strict';
 
+// Added
+
 const Lighthouse = require('lighthouse');
 const chromeLauncher = require('chrome-launcher');
 
