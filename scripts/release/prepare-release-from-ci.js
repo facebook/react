@@ -15,7 +15,7 @@ const testTracingFixture = require('./shared-commands/test-tracing-fixture');
 
 const run = async () => {
   try {
-    const params = parseParams();
+    const params = await parseParams();
     params.cwd = join(__dirname, '..', '..');
 
     if (!params.build) {

@@ -19,7 +19,7 @@ const run = async () => {
   try {
     addDefaultParamValue('-r', '--releaseChannel', 'experimental');
 
-    const params = parseParams();
+    const params = await parseParams();
     params.cwd = join(__dirname, '..', '..');
     params.packages = await getPublicPackages(true);
 
