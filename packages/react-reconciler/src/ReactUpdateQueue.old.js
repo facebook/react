@@ -105,7 +105,11 @@ import {Callback, ShouldCapture, DidCapture} from './ReactFiberFlags';
 import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
 
 import {StrictMode} from './ReactTypeOfMode';
-import {markSkippedUpdateLanes} from './ReactFiberWorkLoop.old';
+import {
+  markSkippedUpdateLanes,
+  isInterleavedUpdate,
+} from './ReactFiberWorkLoop.old';
+import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
 
 import invariant from 'shared/invariant';
 
@@ -124,8 +128,9 @@ export type Update<State> = {|
   next: Update<State> | null,
 |};
 
-type SharedQueue<State> = {|
+export type SharedQueue<State> = {|
   pending: Update<State> | null,
+  interleaved: Update<State> | null,
   lanes: Lanes,
 |};
 
@@ -165,6 +170,7 @@ export function initializeUpdateQueue<State>(fiber: Fiber): void {
     lastBaseUpdate: null,
     shared: {
       pending: null,
+      interleaved: null,
       lanes: NoLanes,
     },
     effects: null,
@@ -205,7 +211,11 @@ export function createUpdate(eventTime: number, lane: Lane): Update<*> {
   return update;
 }
 
-export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
+export function enqueueUpdate<State>(
+  fiber: Fiber,
+  update: Update<State>,
+  lane: Lane,
+) {
   const updateQueue = fiber.updateQueue;
   if (updateQueue === null) {
     // Only occurs if the fiber has been unmounted.
@@ -213,15 +223,31 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
   }
 
   const sharedQueue: SharedQueue<State> = (updateQueue: any).shared;
-  const pending = sharedQueue.pending;
-  if (pending === null) {
-    // This is the first update. Create a circular list.
-    update.next = update;
+
+  if (isInterleavedUpdate(fiber, lane)) {
+    const interleaved = sharedQueue.interleaved;
+    if (interleaved === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+      // At the end of the current render, this queue's interleaved updates will
+      // be transfered to the pending queue.
+      pushInterleavedQueue(sharedQueue);
+    } else {
+      update.next = interleaved.next;
+      interleaved.next = update;
+    }
+    sharedQueue.interleaved = update;
   } else {
-    update.next = pending.next;
-    pending.next = update;
+    const pending = sharedQueue.pending;
+    if (pending === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+    } else {
+      update.next = pending.next;
+      pending.next = update;
+    }
+    sharedQueue.pending = update;
   }
-  sharedQueue.pending = update;
 
   if (__DEV__) {
     if (
@@ -591,7 +617,17 @@ export function processUpdateQueue<State>(
     queue.firstBaseUpdate = newFirstBaseUpdate;
     queue.lastBaseUpdate = newLastBaseUpdate;
 
-    if (firstBaseUpdate === null) {
+    // Interleaved updates are stored on a separate queue. We aren't going to
+    // process them during this render, but we do need to track which lanes
+    // are remaining.
+    const lastInterleaved = queue.shared.interleaved;
+    if (lastInterleaved !== null) {
+      let interleaved = lastInterleaved;
+      do {
+        newLanes = mergeLanes(newLanes, interleaved.lane);
+        interleaved = ((interleaved: any).next: Update<State>);
+      } while (interleaved !== lastInterleaved);
+    } else if (firstBaseUpdate === null) {
       // `queue.lanes` is used for entangling transitions. We can set it back to
       // zero once the queue is empty.
       queue.shared.lanes = NoLanes;
