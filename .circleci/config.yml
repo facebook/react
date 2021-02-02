@@ -179,7 +179,8 @@ jobs:
             - oss-experimental
             - react-native
             - dist
-            - sizes/*.json
+            - sizes-stable
+            - sizes-experimental
 
   process_artifacts_combined:
     docker: *docker
