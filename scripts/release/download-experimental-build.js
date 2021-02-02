@@ -18,14 +18,15 @@ const printSummary = require('./download-experimental-build-commands/print-summa
 const run = async () => {
   try {
     addDefaultParamValue('-r', '--releaseChannel', 'experimental');
+    addDefaultParamValue(
+      null,
+      '--build',
+      await getLatestMasterBuildNumber(true)
+    );
 
     const params = await parseParams();
     params.cwd = join(__dirname, '..', '..');
     params.packages = await getPublicPackages(true);
-
-    if (!params.build) {
-      params.build = await getLatestMasterBuildNumber(true);
-    }
 
     await checkEnvironmentVariables(params);
     await downloadBuildArtifacts(params);
