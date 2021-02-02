@@ -293,7 +293,7 @@ function throwException(
               // prevent a bail out.
               const update = createUpdate(NoTimestamp, SyncLane);
               update.tag = ForceUpdate;
-              enqueueUpdate(sourceFiber, update);
+              enqueueUpdate(sourceFiber, update, SyncLane);
             }
           }
 
