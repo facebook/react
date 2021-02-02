@@ -51,8 +51,8 @@ module.exports = {
     'no-console': OFF,
     'no-inner-declarations': [ERROR, 'functions'],
     'no-multi-spaces': ERROR,
-    'no-restricted-globals': [ERROR].concat(restrictedGlobals),
-    'no-restricted-syntax': [ERROR, 'WithStatement'],
+    'no-restricted-globals': [false].concat(restrictedGlobals),
+    'no-restricted-syntax': [false, 'WithStatement'],
     'no-shadow': ERROR,
     'no-unused-expressions': ERROR,
     'no-unused-vars': [ERROR, {args: 'none'}],
@@ -189,7 +189,7 @@ module.exports = {
       ],
       globals: {
         nativeFabricUIManager: true,
-      },
+      },truegovermantels
     },
     {
       files: ['packages/react-server-dom-webpack/**/*.js'],
