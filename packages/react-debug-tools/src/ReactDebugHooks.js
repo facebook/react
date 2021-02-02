@@ -420,7 +420,7 @@ function isReactWrapper(functionName, primitiveName) {
   );
 }
 
-function findPrimitiveIndex(hookStack, hook) {
+function findPrimitiveIndex(hookStack, hook, blocklistedSources) {
   const stackCache = getPrimitiveStackCache();
   const primitiveStack = stackCache.get(hook.primitive);
   if (primitiveStack === undefined) {
@@ -432,12 +432,14 @@ function findPrimitiveIndex(hookStack, hook) {
       // wrappers that the React packager or other packages adds around the dispatcher.
       if (
         i < hookStack.length - 1 &&
+        !blocklistedSources.has(hookStack[i + 1].source) &&
         isReactWrapper(hookStack[i].functionName, hook.primitive)
       ) {
         i++;
       }
       if (
         i < hookStack.length - 1 &&
+        !blocklistedSources.has(hookStack[i + 1].source) &&
         isReactWrapper(hookStack[i].functionName, hook.primitive)
       ) {
         i++;
@@ -448,12 +450,16 @@ function findPrimitiveIndex(hookStack, hook) {
   return -1;
 }
 
-function parseTrimmedStack(rootStack, hook) {
+function parseTrimmedStack(rootStack, hook, blocklistedSources) {
   // Get the stack trace between the primitive hook function and
   // the root function call. I.e. the stack frames of custom hooks.
   const hookStack = ErrorStackParser.parse(hook.stackError);
   const rootIndex = findCommonAncestorIndex(rootStack, hookStack);
-  const primitiveIndex = findPrimitiveIndex(hookStack, hook);
+  const primitiveIndex = findPrimitiveIndex(
+    hookStack,
+    hook,
+    blocklistedSources,
+  );
   if (
     rootIndex === -1 ||
     primitiveIndex === -1 ||
@@ -481,71 +487,113 @@ function parseCustomHookName(functionName: void | string): string {
 
 function buildTree(rootStack, readHookLog): HooksTree {
   const rootChildren = [];
-  let prevStack = null;
-  let levelChildren = rootChildren;
-  let nativeHookID = 0;
-  const stackOfChildren = [];
-  for (let i = 0; i < readHookLog.length; i++) {
-    const hook = readHookLog[i];
-    const stack = parseTrimmedStack(rootStack, hook);
-    if (stack !== null) {
-      // Note: The indices 0 <= n < length-1 will contain the names.
-      // The indices 1 <= n < length will contain the source locations.
-      // That's why we get the name from n - 1 and don't check the source
-      // of index 0.
-      let commonSteps = 0;
-      if (prevStack !== null) {
-        // Compare the current level's stack to the new stack.
-        while (commonSteps < stack.length && commonSteps < prevStack.length) {
-          const stackSource = stack[stack.length - commonSteps - 1].source;
-          const prevSource =
-            prevStack[prevStack.length - commonSteps - 1].source;
-          if (stackSource !== prevSource) {
-            break;
+  const blocklistedSources = new Set();
+
+  // This while loop exists to provide an easy way to restart the parent for loop and reset all initial local state.
+  outerWhile: while (true) {
+    let prevStack = null;
+    let levelChildren = rootChildren;
+    let nativeHookID = 0;
+    const stackOfChildren = [];
+
+    for (let i = 0; i < readHookLog.length; i++) {
+      const hook = readHookLog[i];
+      const stack = parseTrimmedStack(rootStack, hook, blocklistedSources);
+      if (stack !== null) {
+        // Note: The indices 0 <= n < length-1 will contain the names.
+        // The indices 1 <= n < length will contain the source locations.
+        // That's why we get the name from n - 1 and don't check the source of index 0.
+        let commonSteps = 0;
+        if (prevStack !== null) {
+          // Compare the current level's stack to the new stack.
+          while (commonSteps < stack.length && commonSteps < prevStack.length) {
+            const stackSource = stack[stack.length - commonSteps - 1].source;
+            const prevSource =
+              prevStack[prevStack.length - commonSteps - 1].source;
+            if (stackSource !== prevSource) {
+              break;
+            }
+            commonSteps++;
           }
-          commonSteps++;
+
+          // Detect if we've misidentified a custom hook as a primitive hook due to a naming conflict, e.g.
+          //   function useState(value) {
+          //     React.useState(value);
+          //     // ...
+          //   }
+          //
+          // We can detect this has happened if the previous stack is a strict subset of the current stack,
+          // because one primitive hook should never have another primitive hook as a child.
+          // In that event we should re-evaluate the previously parsed stacks.
+          let isStrictSubset = true;
+          let lastCommonSource = null;
+          for (let j = 0; j < prevStack.length && j < stack.length; j++) {
+            const source = stack[stack.length - 1 - j].source;
+            const prevSource = prevStack[prevStack.length - 1 - j].source;
+            if (prevSource === source) {
+              lastCommonSource = source;
+            } else {
+              isStrictSubset = false;
+              break;
+            }
+          }
+
+          if (isStrictSubset) {
+            // We've incorrecetly identified a custom hook as a primitive one.
+            // This means our hooks stack is invalid and we need to restart.
+            // To avoid making the same mistake again, blocklist the misidentified frame/source.
+            blocklistedSources.add(lastCommonSource);
+            rootChildren.length = 0;
+            continue outerWhile;
+          }
+
+          // Pop back the stack as many steps as were not common.
+          for (let j = prevStack.length - 1; j > commonSteps; j--) {
+            levelChildren = stackOfChildren.pop();
+          }
         }
-        // Pop back the stack as many steps as were not common.
-        for (let j = prevStack.length - 1; j > commonSteps; j--) {
-          levelChildren = stackOfChildren.pop();
+
+        // The remaining part of the new stack are custom hooks.
+        // Push them to the tree.
+        for (let j = stack.length - commonSteps - 1; j >= 1; j--) {
+          const children = [];
+          levelChildren.push({
+            id: null,
+            isStateEditable: false,
+            name: parseCustomHookName(stack[j - 1].functionName),
+            value: undefined,
+            subHooks: children,
+          });
+          stackOfChildren.push(levelChildren);
+          levelChildren = children;
         }
+        prevStack = stack;
       }
-      // The remaining part of the new stack are custom hooks. Push them
-      // to the tree.
-      for (let j = stack.length - commonSteps - 1; j >= 1; j--) {
-        const children = [];
-        levelChildren.push({
-          id: null,
-          isStateEditable: false,
-          name: parseCustomHookName(stack[j - 1].functionName),
-          value: undefined,
-          subHooks: children,
-        });
-        stackOfChildren.push(levelChildren);
-        levelChildren = children;
-      }
-      prevStack = stack;
+      const {primitive} = hook;
+
+      // For now, the "id" of stateful hooks is just the stateful hook index.
+      // Custom hooks have no ids, nor do non-stateful native hooks (e.g. Context, DebugValue).
+      const id =
+        primitive === 'Context' || primitive === 'DebugValue'
+          ? null
+          : nativeHookID++;
+
+      // For the time being, only State and Reducer hooks support runtime overrides.
+      const isStateEditable = primitive === 'Reducer' || primitive === 'State';
+
+      levelChildren.push({
+        id,
+        isStateEditable,
+        name: primitive,
+        value: hook.value,
+        subHooks: [],
+      });
     }
-    const {primitive} = hook;
 
-    // For now, the "id" of stateful hooks is just the stateful hook index.
-    // Custom hooks have no ids, nor do non-stateful native hooks (e.g. Context, DebugValue).
-    const id =
-      primitive === 'Context' || primitive === 'DebugValue'
-        ? null
-        : nativeHookID++;
-
-    // For the time being, only State and Reducer hooks support runtime overrides.
-    const isStateEditable = primitive === 'Reducer' || primitive === 'State';
-
-    levelChildren.push({
-      id,
-      isStateEditable,
-      name: primitive,
-      value: hook.value,
-      subHooks: [],
-    });
-  }
+    // If the inner for loop completed successfully, there were no naming conflicts.
+    // So we can always break out of the outer while loop.
+    break;
+  } // end outerWhile
 
   // Associate custom hook values (useDebugValue() hook entries) with the correct hooks.
   processDebugValues(rootChildren, null);

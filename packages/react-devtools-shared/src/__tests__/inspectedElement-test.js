@@ -2343,4 +2343,62 @@ describe('InspectedElement', () => {
       `);
     });
   });
+
+  it('should gracefully handle custom hooks that have the same name as primitive hooks', async done => {
+    function useState() {
+      React.useState(0);
+      React.useEffect(() => {});
+    }
+
+    function HooksNamingConflict() {
+      useState();
+      React.useMemo(() => 0, []);
+      return null;
+    }
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(<HooksNamingConflict />, container),
+    );
+
+    const inspectedElement = await inspectElementAtIndex(0);
+    expect(inspectedElement.hooks).toMatchInlineSnapshot(`
+      Array [
+        Object {
+          "id": null,
+          "isStateEditable": false,
+          "name": "State",
+          "subHooks": Array [
+            Object {
+              "id": 0,
+              "isStateEditable": true,
+              "name": "State",
+              "subHooks": Array [],
+              "value": 0,
+            },
+            Object {
+              "id": 1,
+              "isStateEditable": false,
+              "name": "Effect",
+              "subHooks": Array [],
+              "value": Dehydrated {
+                "preview_short": ƒ () {},
+                "preview_long": ƒ () {},
+              },
+            },
+          ],
+          "value": undefined,
+        },
+        Object {
+          "id": 2,
+          "isStateEditable": false,
+          "name": "Memo",
+          "subHooks": Array [],
+          "value": 0,
+        },
+      ]
+    `);
+
+    done();
+  });
 });
