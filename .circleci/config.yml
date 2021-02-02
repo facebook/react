@@ -191,6 +191,7 @@ jobs:
           at: build2
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
+      - run: echo "<< pipeline.git.revision	>>" >> build2/COMMIT_SHA
         # Compress build directory into a single tarball for easy download
       - run: tar -zcvf ./build2.tgz ./build2
       - store_artifacts:
