@@ -17,18 +17,18 @@ const logger = createLogger({
   storagePath: join(__dirname, '.progress-estimator'),
 });
 
-const addDefaultParamValue = (shortName, longName, defaultValue) => {
+const addDefaultParamValue = (optionalShortName, longName, defaultValue) => {
   let found = false;
   for (let i = 0; i < process.argv.length; i++) {
     const current = process.argv[i];
-    if (current === shortName || current.startsWith(`${longName}=`)) {
+    if (current === optionalShortName || current.startsWith(`${longName}=`)) {
       found = true;
       break;
     }
   }
 
   if (!found) {
-    process.argv.push(shortName, defaultValue);
+    process.argv.push(`${longName}=${defaultValue}`);
   }
 };
 
