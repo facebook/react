@@ -35,12 +35,14 @@ async function getBuildIdForCommit(sha) {
         if (status.state === 'failure') {
           throw new Error(`Build job for commit failed: ${sha}`);
         }
-        if (Date.now() < retryLimit) {
-          await wait(POLLING_INTERVAL);
-          continue retry;
-        }
-        throw new Error('Exceeded retry limit. Build job is still pending.');
       }
+    }
+    if (state === 'pending') {
+      if (Date.now() < retryLimit) {
+        await wait(POLLING_INTERVAL);
+        continue retry;
+      }
+      throw new Error('Exceeded retry limit. Build job is still pending.');
     }
     throw new Error('Could not find build for commit: ' + sha);
   }
