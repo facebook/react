@@ -185,7 +185,6 @@ jobs:
           name: Download artifacts for base revision
           command: |
               git fetch origin master
-              echo "$(git merge-base HEAD origin/master)"
               cd ./scripts/release && yarn && cd ../../
               scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/master)
               mv ./build2 ./base-build
@@ -485,9 +484,17 @@ workflows:
 
                 # TODO: Test more persistent configurations?
       - get_base_build:
+          filters:
+            branches:
+              ignore:
+                - master
           requires:
             - setup
       - sizebot:
+          filters:
+            branches:
+              ignore:
+                - master
           requires:
             - get_base_build
             - yarn_build_combined
