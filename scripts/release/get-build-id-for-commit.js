@@ -2,13 +2,17 @@
 
 const fetch = require('node-fetch');
 
-const POLLING_INTERVAL = 5 * 1000; // 5 seconds
-const RETRY_TIMEOUT = 10 * 60 * 1000; // 10 minutes
+const POLLING_INTERVAL = 10 * 1000; // 10 seconds
+const RETRY_TIMEOUT = 4 * 60 * 1000; // 4 minutes
 
 function wait(ms) {
   return new Promise(resolve => {
     setTimeout(() => resolve(), ms);
   });
+}
+
+function scrapeBuildIDFromStatus(status) {
+  return /\/facebook\/react\/([0-9]+)/.exec(status.target_url)[1];
 }
 
 async function getBuildIdForCommit(sha) {
@@ -30,10 +34,23 @@ async function getBuildIdForCommit(sha) {
       const status = statuses[i];
       if (status.context === `ci/circleci: process_artifacts_combined`) {
         if (status.state === 'success') {
-          return /\/facebook\/react\/([0-9]+)/.exec(status.target_url)[1];
+          return scrapeBuildIDFromStatus(status);
         }
         if (status.state === 'failure') {
           throw new Error(`Build job for commit failed: ${sha}`);
+        }
+        if (status.state === 'pending') {
+          if (Date.now() < retryLimit) {
+            await wait(POLLING_INTERVAL);
+            continue retry;
+          }
+          // GitHub's status API is super flaky. Sometimes it reports a job
+          // as "pending" even after it completes in CircleCI. If it's still
+          // pending when we time out, return the build ID anyway.
+          // TODO: The location of the retry loop is a bit weird. We should
+          // probably combine this function with the one that downloads the
+          // artifacts, and wrap the retry loop around the whole thing.
+          return scrapeBuildIDFromStatus(status);
         }
       }
     }
