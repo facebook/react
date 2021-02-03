@@ -30,14 +30,10 @@ The sections below include meaningful `--tags` in the instructions. However, kee
 
 To prepare a build for a particular commit:
 1. Choose a commit from [the commit log](https://github.com/facebook/react/commits/master).
-2. Click the "“✓" icon and click the Circle CI "Details" link.
-3. Select the `process_artifacts ` job (**not** the `process_artifacts_experimental`job; see the next section)
-   * If it's still pending, you'll need to wait for it to finish. <sup>1</sup>
-4. Copy the build ID from the URL
-   * e.g. the build ID for commit [e5d06e34b](https://github.com/facebook/react/commit/e5d06e34b) is [**124756**](https://circleci.com/gh/facebook/react/124756)
-5. Run the [`prepare-release-from-ci`](#prepare-release-from-ci) script with the build ID <sup>2</sup> you found:
+2. Copy the SHA (by clicking the 📋 button)
+5. Run the [`prepare-release-from-ci`](#prepare-release-from-ci) script with the SHA <sup>1</sup> you found:
 ```sh
-scripts/release/prepare-release-from-ci.js --build=124756
+scripts/release/prepare-release-from-ci.js -r stable --commit=0e526bc
 ```
 
 Once the build has been checked out and tested locally, you're ready to publish it:
@@ -45,20 +41,16 @@ Once the build has been checked out and tested locally, you're ready to publish 
 scripts/release/publish.js --tags next
 ```
 
-If the OTP code expires while publishing, re-run this command and answer "y" to the questions about whether it was expected for already published packages.
-
-<sup>1: This is the most awkward part of cutting a release right now. We have plans to improve it.</sup><br/>
-<sup>2: You can omit the `build` param if you just want to release the latest commit as to "next".</sup>
+<sup>1: You can omit the `commit` param if you just want to release the latest commit as to "next".</sup>
 
 ## Publishing an Experimental Release
 
 Experimental releases are special because they have additional features turned on.
 
-The steps for publishing an experimental release are almost the same as for publishing a "next" release, except in step 3 you should choose the `process_artifacts_experimental ` job (instead of `process_artifacts`) <sup>1</sup>
+The steps for publishing an experimental release are almost the same as for publishing a "next" release except for the release channel (`-r`) flag.
 
-For example, the experimental build ID for commit [e5d06e34b](https://github.com/facebook/react/commit/e5d06e34b) is [**124763**](https://circleci.com/gh/facebook/react/124763):
 ```sh
-scripts/release/prepare-release-from-ci.js --build=124763
+scripts/release/prepare-release-from-ci.js -r experimental --commit=0e526bc
 ```
 
 Once the build has been checked out and tested locally, you're ready to publish it. When publishing an experimental release, use the `experimental` tag:
@@ -66,10 +58,6 @@ Once the build has been checked out and tested locally, you're ready to publish 
 ```sh
 scripts/release/publish.js --tags experimental
 ```
-
-If the OTP code expires while publishing, re-run this command and answer "y" to the questions about whether it was expected for already published packages.
-
-<sup>1: We have plans to make this less awkward. Ideally these releases will be published by a cron job.</sup>
 
 ## Publishing a Stable Release
 
@@ -91,8 +79,6 @@ scripts/release/publish.js --tags latest
 # Or, if you want to bump "next" as well:
 scripts/release/publish.js --tags latest next
 ```
-
-If the OTP code expires while publishing, re-run this command and answer "y" to the questions about whether it was expected for already published packages.
 
 After successfully publishing the release, follow the on-screen instructions to ensure that all of the appropriate post-release steps are executed.
 
@@ -145,9 +131,9 @@ Downloads build artifacts from Circle CI in preparation to be published to NPM a
 All artifacts built by Circle CI have already been unit-tested (both source and bundles) but these candidates should **always be manually tested** before being published. Upon completion, this script prints manual testing instructions.
 
 #### Example usage
-To prepare the artifacts created by [Circle CI build 124756](https://circleci.com/gh/facebook/react/124756#artifacts/containers/0) you would run:
+To prepare the artifacts created by Circle CI for commit [0e526bc](https://github.com/facebook/react/commit/0e526bc) you would run:
 ```sh
-scripts/release/prepare-release-from-ci.js --build=124756
+scripts/release/prepare-release-from-ci.js --commit=0e526bc -r stable
 ```
 
 ## `prepare-release-from-npm`
