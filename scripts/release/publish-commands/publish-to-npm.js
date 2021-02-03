@@ -8,7 +8,7 @@ const {join} = require('path');
 const {confirm, execRead} = require('../utils');
 const theme = require('../theme');
 
-const run = async ({cwd, dry, tags}, packageName, otp) => {
+const run = async ({cwd, dry, tags, ci}, packageName, otp) => {
   const packagePath = join(cwd, 'build/node_modules', packageName);
   const {version} = readJsonSync(join(packagePath, 'package.json'));
 
@@ -21,42 +21,74 @@ const run = async ({cwd, dry, tags}, packageName, otp) => {
     console.log(
       theme`{package ${packageName}} {version ${version}} has already been published.`
     );
-    await confirm('Is this expected?');
+    if (!ci) {
+      await confirm('Is this expected?');
+    }
   } else {
     console.log(theme`{spinnerSuccess ✓} Publishing {package ${packageName}}`);
 
     // Publish the package and tag it.
     if (!dry) {
-      await exec(`npm publish --tag=${tags[0]} --otp=${otp}`, {
-        cwd: packagePath,
-      });
+      if (!ci) {
+        await exec(`npm publish --tag=${tags[0]} --otp=${otp}`, {
+          cwd: packagePath,
+        });
+        console.log(theme.command(`  cd ${packagePath}`));
+        console.log(
+          theme.command(`  npm publish --tag=${tags[0]} --otp=${otp}`)
+        );
+      } else {
+        await exec(`npm publish --tag=${tags[0]}`, {
+          cwd: packagePath,
+        });
+        console.log(theme.command(`  cd ${packagePath}`));
+        console.log(theme.command(`  npm publish --tag=${tags[0]}`));
+      }
     }
-    console.log(theme.command(`  cd ${packagePath}`));
-    console.log(theme.command(`  npm publish --tag=${tags[0]} --otp=${otp}`));
 
     for (let j = 1; j < tags.length; j++) {
       if (!dry) {
-        await exec(
-          `npm dist-tag add ${packageName}@${version} ${tags[j]} --otp=${otp}`,
-          {cwd: packagePath}
-        );
+        if (!ci) {
+          await exec(
+            `npm dist-tag add ${packageName}@${version} ${tags[j]} --otp=${otp}`,
+            {cwd: packagePath}
+          );
+          console.log(
+            theme.command(
+              `  npm dist-tag add ${packageName}@${version} ${tags[j]} --otp=${otp}`
+            )
+          );
+        } else {
+          await exec(`npm dist-tag add ${packageName}@${version} ${tags[j]}`, {
+            cwd: packagePath,
+          });
+          console.log(
+            theme.command(
+              `  npm dist-tag add ${packageName}@${version} ${tags[j]}`
+            )
+          );
+        }
       }
-      console.log(
-        theme.command(
-          `  npm dist-tag add ${packageName}@${version} ${tags[j]} --otp=${otp}`
-        )
-      );
     }
 
     if (tags.includes('untagged')) {
       // npm doesn't let us publish without a tag at all,
       // so for one-off publishes we clean it up ourselves.
       if (!dry) {
-        await exec(`npm dist-tag rm ${packageName} untagged --otp=${otp}`);
+        if (!ci) {
+          await exec(`npm dist-tag rm ${packageName} untagged --otp=${otp}`);
+          console.log(
+            theme.command(
+              `  npm dist-tag rm ${packageName} untagged --otp=${otp}`
+            )
+          );
+        } else {
+          await exec(`npm dist-tag rm ${packageName} untagged`);
+          console.log(
+            theme.command(`  npm dist-tag rm ${packageName} untagged`)
+          );
+        }
       }
-      console.log(
-        theme.command(`  npm dist-tag rm ${packageName} untagged --otp=${otp}`)
-      );
     }
   }
 };

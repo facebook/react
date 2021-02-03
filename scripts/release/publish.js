@@ -50,28 +50,35 @@ const run = async () => {
     await validateSkipPackages(params);
     await checkNPMPermissions(params);
 
-    clear();
-    let otp = await promptForOTP(params);
     const packageNames = params.packages;
-    for (let i = 0; i < packageNames.length; ) {
-      const packageName = packageNames[i];
-      try {
-        await publishToNPM(params, packageName, otp);
-        i++;
-      } catch (error) {
-        console.error(error.message);
-        console.log();
-        console.log(
-          theme.error`Publish failed. Enter a fresh otp code to retry.`
-        );
-        otp = await promptForOTP(params);
-        // Try publishing package again
-        continue;
-      }
-    }
 
-    await updateStableVersionNumbers(params);
-    await printFollowUpInstructions(params);
+    if (params.ci) {
+      for (let i = 0; i < packageNames.length; i++) {
+        const packageName = packageNames[i];
+        await publishToNPM(params, packageName, null);
+      }
+    } else {
+      clear();
+      let otp = await promptForOTP(params);
+      for (let i = 0; i < packageNames.length; ) {
+        const packageName = packageNames[i];
+        try {
+          await publishToNPM(params, packageName, otp);
+          i++;
+        } catch (error) {
+          console.error(error.message);
+          console.log();
+          console.log(
+            theme.error`Publish failed. Enter a fresh otp code to retry.`
+          );
+          otp = await promptForOTP(params);
+          // Try publishing package again
+          continue;
+        }
+      }
+      await updateStableVersionNumbers(params);
+      await printFollowUpInstructions(params);
+    }
   } catch (error) {
     handleError(error);
   }
