@@ -38,12 +38,8 @@ module.exports = async () => {
   const params = commandLineArgs(paramDefinitions);
 
   if (params.build !== null) {
-    if (params.commit !== null) {
-      console.error(
-        '`build` and `commmit` params are mutually exclusive. Choose one or the other.`'
-      );
-      process.exit(1);
-    }
+    // TODO: Should we just remove the `build` param? Seems like `commit` is a
+    // sufficient replacement.
   } else {
     if (params.commit === null) {
       console.error('Must provide either `build` or `commit`.');

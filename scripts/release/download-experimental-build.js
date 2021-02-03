@@ -11,18 +11,13 @@ const {
 
 const checkEnvironmentVariables = require('./shared-commands/check-environment-variables');
 const downloadBuildArtifacts = require('./shared-commands/download-build-artifacts');
-const getLatestMasterBuildNumber = require('./shared-commands/get-latest-master-build-number');
 const parseParams = require('./shared-commands/parse-params');
 const printSummary = require('./download-experimental-build-commands/print-summary');
 
 const run = async () => {
   try {
     addDefaultParamValue('-r', '--releaseChannel', 'experimental');
-    addDefaultParamValue(
-      null,
-      '--build',
-      await getLatestMasterBuildNumber(true)
-    );
+    addDefaultParamValue(null, '--commit', 'master');
 
     const params = await parseParams();
     params.cwd = join(__dirname, '..', '..');
