@@ -5,7 +5,6 @@
 const {join} = require('path');
 const {addDefaultParamValue, handleError} = require('./utils');
 
-const checkEnvironmentVariables = require('./shared-commands/check-environment-variables');
 const downloadBuildArtifacts = require('./shared-commands/download-build-artifacts');
 const parseParams = require('./shared-commands/parse-params');
 const printPrereleaseSummary = require('./shared-commands/print-prerelease-summary');
@@ -19,7 +18,6 @@ const run = async () => {
     const params = await parseParams();
     params.cwd = join(__dirname, '..', '..');
 
-    await checkEnvironmentVariables(params);
     await downloadBuildArtifacts(params);
 
     if (!params.skipTests) {
