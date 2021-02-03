@@ -4,15 +4,9 @@
 
 const commandLineArgs = require('command-line-args');
 const getBuildIdForCommit = require('../get-build-id-for-commit');
+const theme = require('../theme');
 
 const paramDefinitions = [
-  {
-    name: 'build',
-    type: Number,
-    description:
-      'Circle CI build identifier (e.g. https://circleci.com/gh/facebook/react/<build>)',
-    defaultValue: null,
-  },
   {
     name: 'commit',
     type: String,
@@ -37,27 +31,23 @@ const paramDefinitions = [
 module.exports = async () => {
   const params = commandLineArgs(paramDefinitions);
 
-  if (params.build !== null) {
-    // TODO: Should we just remove the `build` param? Seems like `commit` is a
-    // sufficient replacement.
-  } else {
-    if (params.commit === null) {
-      console.error('Must provide either `build` or `commit`.');
-      process.exit(1);
-    }
-    try {
-      params.build = await getBuildIdForCommit(params.commit);
-    } catch (error) {
-      console.error(error.message);
-      process.exit(1);
-    }
-  }
-
   const channel = params.releaseChannel;
   if (channel !== 'experimental' && channel !== 'stable') {
     console.error(
-      `Invalid release channel (-r) "${channel}". Must be "stable" or "experimental".`
+      theme.error`Invalid release channel (-r) "${channel}". Must be "stable" or "experimental".`
     );
+    process.exit(1);
+  }
+
+  if (params.commit === null) {
+    console.error(theme.error`No --commit param specified.`);
+    process.exit(1);
+  }
+
+  try {
+    params.build = await getBuildIdForCommit(params.commit);
+  } catch (error) {
+    console.error(theme.error(error));
     process.exit(1);
   }
 

@@ -3,7 +3,7 @@
 const {exec} = require('child-process-promise');
 const {createPatch} = require('diff');
 const {hashElement} = require('folder-hash');
-const {readFileSync, writeFileSync} = require('fs');
+const {existsSync, readFileSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
 const http = require('request-promise-json');
 const logUpdate = require('log-update');
@@ -45,6 +45,16 @@ const execRead = async (command, options) => {
   const {stdout} = await exec(command, options);
 
   return stdout.trim();
+};
+
+const extractCommitFromVersionNumber = version => {
+  // Support stable version format e.g. "0.0.0-0e526bcec"
+  // and experimental version format e.g. "0.0.0-experimental-0e526bcec"
+  const match = version.match(/0\.0\.0\-([a-z]+\-){0,1}(.+)/);
+  if (match === null) {
+    throw Error(`Could not extra commit from version "${version}"`);
+  }
+  return match[2];
 };
 
 const getArtifactsList = async buildID => {
@@ -113,6 +123,35 @@ const getChecksumForCurrentRevision = async cwd => {
     files: {exclude: ['.DS_Store']},
   });
   return hashedPackages.hash.slice(0, 7);
+};
+
+const getCommitFromCurrentBuild = async () => {
+  const cwd = join(__dirname, '..', '..');
+
+  // If this build includes a build-info.json file, extract the commit from it.
+  // Otherwise fall back to parsing from the package version number.
+  // This is important to make the build reproducible (e.g. by Mozilla reviewers).
+  const buildInfoJSON = join(
+    cwd,
+    'build2',
+    'oss-experimental',
+    'react',
+    'build-info.json'
+  );
+  if (existsSync(buildInfoJSON)) {
+    const buildInfo = await readJson(buildInfoJSON);
+    return buildInfo.commit;
+  } else {
+    const packageJSON = join(
+      cwd,
+      'build2',
+      'oss-experimental',
+      'react',
+      'package.json'
+    );
+    const {version} = await readJson(packageJSON);
+    return extractCommitFromVersionNumber(version);
+  }
 };
 
 const getPublicPackages = isExperimental => {
@@ -270,6 +309,7 @@ module.exports = {
   getArtifactsList,
   getBuildInfo,
   getChecksumForCurrentRevision,
+  getCommitFromCurrentBuild,
   getPublicPackages,
   handleError,
   logPromise,
