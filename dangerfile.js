@@ -26,34 +26,10 @@
 // `DANGER_GITHUB_API_TOKEN=[ENV_ABOVE] yarn danger pr https://github.com/facebook/react/pull/11865
 
 const {markdown, danger, warn} = require('danger');
-const fetch = require('node-fetch');
 
 const {generateResultsArray} = require('./scripts/rollup/stats');
-const {existsSync, readFileSync} = require('fs');
-const {exec} = require('child_process');
-
-// This must match the name of the CI job that creates the build artifacts
-const RELEASE_CHANNEL =
-  process.env.RELEASE_CHANNEL === 'experimental' ? 'experimental' : 'stable';
-const artifactsJobName =
-  process.env.RELEASE_CHANNEL === 'experimental'
-    ? 'process_artifacts_experimental'
-    : 'process_artifacts';
-
-if (!existsSync('./build/bundle-sizes.json')) {
-  // This indicates the build failed previously.
-  // In that case, there's nothing for the Dangerfile to do.
-  // Exit early to avoid leaving a redundant (and potentially confusing) PR comment.
-  warn(
-    'No bundle size information found. This indicates the build ' +
-      'job failed.'
-  );
-  process.exit(0);
-}
-
-const currentBuildResults = JSON.parse(
-  readFileSync('./build/bundle-sizes.json')
-);
+const {readFileSync, readdirSync} = require('fs');
+const path = require('path');
 
 /**
  * Generates a Markdown table
@@ -100,99 +76,23 @@ function setBoldness(row, isBold) {
   }
 }
 
-/**
- * Gets the commit that represents the merge between the current branch
- * and master.
- */
-function git(args) {
-  return new Promise(res => {
-    exec('git ' + args, (err, stdout, stderr) => {
-      if (err) {
-        throw err;
-      } else {
-        res(stdout.trim());
-      }
-    });
-  });
+function getBundleSizes(pathToSizesDir) {
+  const filenames = readdirSync(pathToSizesDir);
+  let bundleSizes = [];
+  for (let i = 0; i < filenames.length; i++) {
+    const filename = filenames[i];
+    if (filename.endsWith('.json')) {
+      const json = readFileSync(path.join(pathToSizesDir, filename));
+      bundleSizes.push(...JSON.parse(json).bundleSizes);
+    }
+  }
+  return {bundleSizes};
 }
 
-(async function() {
-  // Use git locally to grab the commit which represents the place
-  // where the branches differ
-  const upstreamRepo = danger.github.pr.base.repo.full_name;
-  if (upstreamRepo !== 'facebook/react') {
-    // Exit unless we're running in the main repo
-    return;
-  }
-
-  markdown(`## Size changes (${RELEASE_CHANNEL})`);
-
-  const upstreamRef = danger.github.pr.base.ref;
-  await git(`remote add upstream https://github.com/facebook/react.git`);
-  await git('fetch upstream');
-  const baseCommit = await git(`merge-base HEAD upstream/${upstreamRef}`);
-
-  let previousBuildResults = null;
-  try {
-    let baseCIBuildId = null;
-    const statusesResponse = await fetch(
-      `https://api.github.com/repos/facebook/react/commits/${baseCommit}/status`
-    );
-    const {statuses, state} = await statusesResponse.json();
-    if (state === 'failure') {
-      warn(`Base commit is broken: ${baseCommit}`);
-      return;
-    }
-    for (let i = 0; i < statuses.length; i++) {
-      const status = statuses[i];
-      if (status.context === `ci/circleci: ${artifactsJobName}`) {
-        if (status.state === 'success') {
-          baseCIBuildId = /\/facebook\/react\/([0-9]+)/.exec(
-            status.target_url
-          )[1];
-          break;
-        }
-        if (status.state === 'pending') {
-          warn(`Build job for base commit is still pending: ${baseCommit}`);
-          return;
-        }
-      }
-    }
-
-    if (baseCIBuildId === null) {
-      warn(`Could not find build artifacts for base commit: ${baseCommit}`);
-      return;
-    }
-
-    const baseArtifactsInfoResponse = await fetch(
-      `https://circleci.com/api/v1.1/project/github/facebook/react/${baseCIBuildId}/artifacts`
-    );
-    const baseArtifactsInfo = await baseArtifactsInfoResponse.json();
-
-    for (let i = 0; i < baseArtifactsInfo.length; i++) {
-      const info = baseArtifactsInfo[i];
-      if (info.path.endsWith('bundle-sizes.json')) {
-        const resultsResponse = await fetch(info.url);
-        previousBuildResults = await resultsResponse.json();
-        break;
-      }
-    }
-  } catch (error) {
-    warn(`Failed to fetch build artifacts for base commit: ${baseCommit}`);
-    return;
-  }
-
-  if (previousBuildResults === null) {
-    warn(`Could not find build artifacts for base commit: ${baseCommit}`);
-    return;
-  }
-
+async function printResultsForChannel(baseResults, headResults) {
   // Take the JSON of the build response and
   // make an array comparing the results for printing
-  const results = generateResultsArray(
-    currentBuildResults,
-    previousBuildResults
-  );
+  const results = generateResultsArray(baseResults, headResults);
 
   const packagesToShow = results
     .filter(
@@ -281,15 +181,62 @@ function git(args) {
   <details>
   <summary>Details of bundled changes.</summary>
 
-  <p>Comparing: ${baseCommit}...${danger.github.pr.head.sha}</p>
-
-
   ${allTables.join('\n')}
 
   </details>
   `;
-    markdown(summary);
+    return summary;
   } else {
-    markdown('No significant bundle size changes to report.');
+    return 'No significant bundle size changes to report.';
   }
+}
+
+(async function() {
+  // Use git locally to grab the commit which represents the place
+  // where the branches differ
+
+  const upstreamRepo = danger.github.pr.base.repo.full_name;
+  if (upstreamRepo !== 'facebook/react') {
+    // Exit unless we're running in the main repo
+    return;
+  }
+
+  let headSha;
+  let headSizesStable;
+  let headSizesExperimental;
+
+  let baseSha;
+  let baseSizesStable;
+  let baseSizesExperimental;
+
+  try {
+    headSha = (readFileSync('./build2/COMMIT_SHA') + '').trim();
+    headSizesStable = getBundleSizes('./build2/sizes-stable');
+    headSizesExperimental = getBundleSizes('./build2/sizes-experimental');
+
+    baseSha = (readFileSync('./base-build/COMMIT_SHA') + '').trim();
+    baseSizesStable = getBundleSizes('./base-build/sizes-stable');
+    baseSizesExperimental = getBundleSizes('./base-build/sizes-experimental');
+  } catch {
+    warn(
+      "Failed to read build artifacts. It's possible a build configuration " +
+        'has changed upstream. Try pulling the latest changes from the ' +
+        'main branch.'
+    );
+    return;
+  }
+
+  markdown(`
+## Size changes
+
+<p>Comparing: ${baseSha}...${headSha}</p>
+
+### Stable channel
+
+${await printResultsForChannel(baseSizesStable, headSizesStable)}
+
+### Experimental channel
+
+${await printResultsForChannel(baseSizesExperimental, headSizesExperimental)}
+`);
 })();

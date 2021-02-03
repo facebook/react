@@ -170,17 +170,9 @@ jobs:
       - *restore_node_modules
       - run: yarn build-combined
       - persist_to_workspace:
-          root: build2
+          root: .
           paths:
-            - facebook-www
-            - facebook-react-native
-            - facebook-relay
-            - oss-stable
-            - oss-experimental
-            - react-native
-            - dist
-            - sizes-stable
-            - sizes-experimental
+            - build2
 
   get_base_build:
     docker: *docker
@@ -197,17 +189,9 @@ jobs:
               scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/master)
               mv ./build2 ./base-build
       - persist_to_workspace:
-          root: base-build
+          root: .
           paths:
-            - facebook-www
-            - facebook-react-native
-            - facebook-relay
-            - oss-stable
-            - oss-experimental
-            - react-native
-            - dist
-            - sizes-stable
-            - sizes-experimental
+            - base-build
 
   process_artifacts_combined:
     docker: *docker
@@ -215,7 +199,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: build2
+          at: .
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: echo "<< pipeline.git.revision	>>" >> build2/COMMIT_SHA
@@ -223,6 +207,19 @@ jobs:
       - run: tar -zcvf ./build2.tgz ./build2
       - store_artifacts:
           path: ./build2.tgz
+
+  sizebot:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: echo "<< pipeline.git.revision	>>" >> build2/COMMIT_SHA
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          command: node ./scripts/tasks/danger
 
   build_devtools_and_process_artifacts:
     docker: *docker
@@ -290,38 +287,6 @@ jobs:
   process_artifacts: *process_artifacts
   process_artifacts_experimental: *process_artifacts
 
-  sizebot_stable:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      # This runs in the process_artifacts job, too, but it's faster to run
-      # this step in both jobs instead of running the jobs sequentially
-      - run: node ./scripts/rollup/consolidateBundleSizes.js
-      - run:
-          environment:
-            RELEASE_CHANNEL: stable
-          command: node ./scripts/tasks/danger
-
-  sizebot_experimental:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
-      # This runs in the process_artifacts job, too, but it's faster to run
-      # this step in both jobs instead of running the jobs sequentially
-      - run: node ./scripts/rollup/consolidateBundleSizes.js
-      - run:
-          environment:
-            RELEASE_CHANNEL: experimental
-          command: node ./scripts/tasks/danger
-
   yarn_lint_build:
     docker: *docker
     environment: *environment
@@ -370,7 +335,7 @@ jobs:
     steps:
       - checkout
       - attach_workspace:
-          at: build2
+          at: .
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn test --build <<parameters.args>> --ci
@@ -423,9 +388,6 @@ workflows:
       - process_artifacts:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
-      - sizebot_stable:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
       - RELEASE_CHANNEL_stable_yarn_lint_build:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
@@ -440,9 +402,6 @@ workflows:
           requires:
             - setup
       - process_artifacts_experimental:
-          requires:
-            - yarn_build
-      - sizebot_experimental:
           requires:
             - yarn_build
       - yarn_lint_build:
@@ -527,6 +486,10 @@ workflows:
       - get_base_build:
           requires:
             - setup
+      - sizebot:
+          requires:
+            - get_base_build
+            - yarn_build_combined
   fuzz_tests:
     triggers:
       - schedule:
