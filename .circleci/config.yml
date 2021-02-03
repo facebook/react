@@ -23,6 +23,17 @@ aliases:
   - &attach_workspace
     at: build
 
+# The CircleCI API doesn't yet support triggering a specific workflow, but it
+# does support triggering a pipeline. So as a workaround you can triggger the
+# entire pipeline and use parameters to disable everything except the workflow
+# you want. CircleCI recommends this workaround here:
+# https://support.circleci.com/hc/en-us/articles/360050351292-How-to-trigger-a-workflow-via-CircleCI-API-v2-
+parameters:
+  # This is only set when triggering the CI pipeline via an API request.
+  prerelease_commit_sha:
+    type: string
+    default: ''
+
 jobs:
   setup:
     docker: *docker
@@ -341,9 +352,27 @@ jobs:
             FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci
             FUZZ_TEST_SEED=$RANDOM yarn test --prod fuzz --ci
 
+  publish_prerelease:
+    parameters:
+      commit_sha:
+        type: string
+      release_channel:
+        type: string
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      # TODO: This doesn't actually publish anything yet. Just logs the inputs.
+      - run: |
+          echo "<< parameters.commit_sha >>"
+          echo "<< parameters.release_channel >>"
+
 workflows:
   version: 2
   stable:
+    unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
       - setup
       - yarn_lint:
@@ -363,6 +392,7 @@ workflows:
             - RELEASE_CHANNEL_stable_yarn_build
 
   experimental:
+    unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
       - setup
       - yarn_build:
@@ -387,6 +417,7 @@ workflows:
 
   # New workflow that will replace "stable" and "experimental"
   build_and_test:
+    unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
       - setup
       - yarn_test:
@@ -463,6 +494,7 @@ workflows:
             - get_base_build
             - yarn_build_combined
   fuzz_tests:
+    unless: << pipeline.parameters.prerelease_commit_sha >>
     triggers:
       - schedule:
           # Fuzz tests run hourly
@@ -476,3 +508,20 @@ workflows:
       - test_fuzz:
           requires:
             - setup
+
+  # TODO: This workflow doesn't do anything yet, but you should be able to
+  # trigger it using the CircleCI API
+  publish_preleases:
+    when: << pipeline.parameters.prerelease_commit_sha >>
+    jobs:
+      - setup
+      - publish_prerelease:
+          requires:
+            - setup
+          matrix:
+            parameters:
+              commit_sha:
+                - << pipeline.parameters.prerelease_commit_sha >>
+              release_channel:
+                - stable
+                - experimental
