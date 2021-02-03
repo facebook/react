@@ -182,6 +182,33 @@ jobs:
             - sizes-stable
             - sizes-experimental
 
+  get_base_build:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          name: Download artifacts for base revision
+          command: |
+              git fetch origin master
+              cd ./scripts/release && yarn && cd ../../
+              scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/master)
+              mv ./build2 ./base-build
+      - persist_to_workspace:
+          root: base-build
+          paths:
+            - facebook-www
+            - facebook-react-native
+            - facebook-relay
+            - oss-stable
+            - oss-experimental
+            - react-native
+            - dist
+            - sizes-stable
+            - sizes-experimental
+
   process_artifacts_combined:
     docker: *docker
     environment: *environment
@@ -497,6 +524,9 @@ workflows:
                 # - "-r=www-modern --env=production --variant"
 
                 # TODO: Test more persistent configurations?
+      - get_base_build:
+          requires:
+            - setup
   fuzz_tests:
     triggers:
       - schedule:
