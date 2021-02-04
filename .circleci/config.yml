@@ -169,11 +169,18 @@ jobs:
       - *restore_node_modules
       - run:
           name: Download artifacts for base revision
+          # FIXME: I intentionally broke this step to test that it recovers
+          # gracefully. Undo before landing.
           command: |
-              git fetch origin master
-              cd ./scripts/release && yarn && cd ../../
-              scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/master)
-              mv ./build2 ./base-build
+            if [[ $(false) -gt 0 ]]; then
+              echo "Failed to download build artifacts. This likely means the base revision is broken. Try rebasing onto the latest changes."
+              circleci-agent step halt
+            fi
+          # command: |
+          #     git fetch origin master
+          #     cd ./scripts/release && yarn && cd ../../
+          #     scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/master)
+          #     mv ./build2 ./base-build
       - persist_to_workspace:
           root: .
           paths:
