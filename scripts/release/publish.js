@@ -4,6 +4,7 @@
 
 const {join} = require('path');
 const {readJsonSync} = require('fs-extra');
+const clear = require('clear');
 const {getPublicPackages, handleError} = require('./utils');
 const theme = require('./theme');
 
@@ -49,23 +50,49 @@ const run = async () => {
     await validateSkipPackages(params);
     await checkNPMPermissions(params);
 
-    while (true) {
-      try {
-        const otp = await promptForOTP(params);
-        await publishToNPM(params, otp);
-        break;
-      } catch (error) {
-        console.error(error.message);
-        console.log();
-        console.log(
-          theme.error`Publish failed. Enter a fresh otp code to retry.`
-        );
-        continue;
-      }
-    }
+    const packageNames = params.packages;
 
-    await updateStableVersionNumbers(params);
-    await printFollowUpInstructions(params);
+    if (params.ci) {
+      let failed = false;
+      for (let i = 0; i < packageNames.length; i++) {
+        try {
+          const packageName = packageNames[i];
+          await publishToNPM(params, packageName, null);
+        } catch (error) {
+          failed = true;
+          console.error(error.message);
+          console.log();
+          console.log(
+            theme.error`Publish failed. Will attempt to publish remaining packages.`
+          );
+        }
+      }
+      if (failed) {
+        console.log(theme.error`One or more packages failed to publish.`);
+        process.exit(1);
+      }
+    } else {
+      clear();
+      let otp = await promptForOTP(params);
+      for (let i = 0; i < packageNames.length; ) {
+        const packageName = packageNames[i];
+        try {
+          await publishToNPM(params, packageName, otp);
+          i++;
+        } catch (error) {
+          console.error(error.message);
+          console.log();
+          console.log(
+            theme.error`Publish failed. Enter a fresh otp code to retry.`
+          );
+          otp = await promptForOTP(params);
+          // Try publishing package again
+          continue;
+        }
+      }
+      await updateStableVersionNumbers(params);
+      await printFollowUpInstructions(params);
+    }
   } catch (error) {
     handleError(error);
   }

@@ -30,8 +30,11 @@ import {createPortal as createPortalImpl} from 'react-reconciler/src/ReactPortal
 import {setBatchingImplementation} from './legacy-events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 
-// Module provided by RN:
-import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+// Modules provided by RN:
+import {
+  UIManager,
+  legacySendAccessibilityEvent,
+} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 import {getClosestInstanceFromNode} from './ReactFabricComponentTree';
 import {
@@ -169,6 +172,27 @@ function dispatchCommand(handle: any, command: string, args: Array<any>) {
   }
 }
 
+function sendAccessibilityEvent(handle: any, eventType: string) {
+  if (handle._nativeTag == null) {
+    if (__DEV__) {
+      console.error(
+        "sendAccessibilityEvent was called with a ref that isn't a " +
+          'native component. Use React.forwardRef to get access to the underlying native component',
+      );
+    }
+    return;
+  }
+
+  if (handle._internalInstanceHandle) {
+    nativeFabricUIManager.sendAccessibilityEvent(
+      handle._internalInstanceHandle.stateNode.node,
+      eventType,
+    );
+  } else {
+    legacySendAccessibilityEvent(handle._nativeTag, eventType);
+  }
+}
+
 function render(
   element: React$Element<any>,
   containerTag: any,
@@ -224,6 +248,7 @@ export {
   findHostInstance_DEPRECATED,
   findNodeHandle,
   dispatchCommand,
+  sendAccessibilityEvent,
   render,
   // Deprecated - this function is being renamed to stopSurface, use that instead.
   // TODO (T47576999): Delete this once it's no longer called from native code.

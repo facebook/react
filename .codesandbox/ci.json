@@ -6,5 +6,6 @@
     "react-dom": "build/node_modules/react-dom",
     "scheduler": "build/node_modules/scheduler"
   },
-  "sandboxes": ["new"]
+  "sandboxes": ["new"],
+  "silent": true
 }

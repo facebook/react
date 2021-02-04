@@ -384,6 +384,21 @@ export const scheduleTimeout: any =
 export const cancelTimeout: any =
   typeof clearTimeout === 'function' ? clearTimeout : (undefined: any);
 export const noTimeout = -1;
+export const queueMicrotask: any =
+  typeof global.queueMicrotask === 'function'
+    ? global.queueMicrotask
+    : typeof Promise !== 'undefined'
+    ? callback =>
+        Promise.resolve(null)
+          .then(callback)
+          .catch(handleErrorInNextTick)
+    : scheduleTimeout; // TODO: Determine the best fallback here.
+
+function handleErrorInNextTick(error) {
+  setTimeout(() => {
+    throw error;
+  });
+}
 
 // -------------------
 //     Mutation

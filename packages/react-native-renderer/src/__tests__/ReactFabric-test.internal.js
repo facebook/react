@@ -24,6 +24,10 @@ const DISPATCH_COMMAND_REQUIRES_HOST_COMPONENT =
   "Warning: dispatchCommand was called with a ref that isn't a " +
   'native component. Use React.forwardRef to get access to the underlying native component';
 
+const SEND_ACCESSIBILITY_EVENT_REQUIRES_HOST_COMPONENT =
+  "sendAccessibilityEvent was called with a ref that isn't a " +
+  'native component. Use React.forwardRef to get access to the underlying native component';
+
 jest.mock('shared/ReactFeatureFlags', () =>
   require('shared/forks/ReactFeatureFlags.native-oss'),
 );
@@ -287,6 +291,64 @@ describe('ReactFabric', () => {
     });
 
     expect(nativeFabricUIManager.dispatchCommand).not.toBeCalled();
+  });
+
+  it('should call sendAccessibilityEvent for native refs', () => {
+    const View = createReactNativeComponentClass('RCTView', () => ({
+      validAttributes: {foo: true},
+      uiViewClassName: 'RCTView',
+    }));
+
+    nativeFabricUIManager.sendAccessibilityEvent.mockClear();
+
+    let viewRef;
+    ReactFabric.render(
+      <View
+        ref={ref => {
+          viewRef = ref;
+        }}
+      />,
+      11,
+    );
+
+    expect(nativeFabricUIManager.sendAccessibilityEvent).not.toBeCalled();
+    ReactFabric.sendAccessibilityEvent(viewRef, 'focus');
+    expect(nativeFabricUIManager.sendAccessibilityEvent).toHaveBeenCalledTimes(
+      1,
+    );
+    expect(nativeFabricUIManager.sendAccessibilityEvent).toHaveBeenCalledWith(
+      expect.any(Object),
+      'focus',
+    );
+  });
+
+  it('should warn and no-op if calling sendAccessibilityEvent on non native refs', () => {
+    class BasicClass extends React.Component {
+      render() {
+        return <React.Fragment />;
+      }
+    }
+
+    nativeFabricUIManager.sendAccessibilityEvent.mockReset();
+
+    let viewRef;
+    ReactFabric.render(
+      <BasicClass
+        ref={ref => {
+          viewRef = ref;
+        }}
+      />,
+      11,
+    );
+
+    expect(nativeFabricUIManager.sendAccessibilityEvent).not.toBeCalled();
+    expect(() => {
+      ReactFabric.sendAccessibilityEvent(viewRef, 'eventTypeName');
+    }).toErrorDev([SEND_ACCESSIBILITY_EVENT_REQUIRES_HOST_COMPONENT], {
+      withoutStack: true,
+    });
+
+    expect(nativeFabricUIManager.sendAccessibilityEvent).not.toBeCalled();
   });
 
   it('should call FabricUIManager.measure on ref.measure', () => {

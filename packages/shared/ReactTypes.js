@@ -197,6 +197,12 @@ export type MutableSource<Source: $NonMaybeType<mixed>> = {|
   // Used to detect multiple renderers using the same mutable source.
   _currentPrimaryRenderer?: Object | null,
   _currentSecondaryRenderer?: Object | null,
+
+  // DEV only
+  // Used to detect side effects that update a mutable source during render.
+  // See https://github.com/facebook/react/issues/19948
+  _currentlyRenderingFiber?: Fiber | null,
+  _initialVersionAsOfFirstRender?: MutableSourceVersion | null,
 |};
 
 // The subset of a Thenable required by things thrown by Suspense.

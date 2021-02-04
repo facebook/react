@@ -50,9 +50,9 @@ const run = async ({build, cwd, releaseChannel}) => {
   await exec(`cp -r ./build2/${sourceDir} ./build/node_modules`, {cwd});
 };
 
-module.exports = async ({build, cwd, releaseChannel}) => {
+module.exports = async ({build, commit, cwd, releaseChannel}) => {
   return logPromise(
     run({build, cwd, releaseChannel}),
-    theme`Downloading artifacts from Circle CI for build {build ${build}}`
+    theme`Downloading artifacts from Circle CI for commit {commit ${commit}} (build {build ${build}})`
   );
 };

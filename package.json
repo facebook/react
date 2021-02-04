@@ -139,6 +139,7 @@
     "prettier-all": "node ./scripts/prettier/index.js write",
     "version-check": "node ./scripts/tasks/version-check.js",
     "merge-fork": "node ./scripts/merge-fork/merge-fork.js",
-    "replace-fork": "node ./scripts/merge-fork/replace-fork.js"
+    "replace-fork": "node ./scripts/merge-fork/replace-fork.js",
+    "publish-prereleases": "node ./scripts/release/publish-using-ci-workflow.js"
   }
 }

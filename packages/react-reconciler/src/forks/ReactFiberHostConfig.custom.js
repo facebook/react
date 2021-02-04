@@ -54,6 +54,7 @@ export const shouldSetTextContent = $$$hostConfig.shouldSetTextContent;
 export const createTextInstance = $$$hostConfig.createTextInstance;
 export const scheduleTimeout = $$$hostConfig.scheduleTimeout;
 export const cancelTimeout = $$$hostConfig.cancelTimeout;
+export const queueMicrotask = $$$hostConfig.queueMicrotask;
 export const noTimeout = $$$hostConfig.noTimeout;
 export const now = $$$hostConfig.now;
 export const isPrimaryRenderer = $$$hostConfig.isPrimaryRenderer;

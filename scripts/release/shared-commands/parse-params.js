@@ -3,13 +3,16 @@
 'use strict';
 
 const commandLineArgs = require('command-line-args');
+const getBuildIdForCommit = require('../get-build-id-for-commit');
+const theme = require('../theme');
 
 const paramDefinitions = [
   {
-    name: 'build',
-    type: Number,
+    name: 'commit',
+    type: String,
     description:
-      'Circle CI build identifier (e.g. https://circleci.com/gh/facebook/react/<build>)',
+      'GitHub commit SHA. When provided, automatically finds corresponding CI build.',
+    defaultValue: null,
   },
   {
     name: 'skipTests',
@@ -25,14 +28,26 @@ const paramDefinitions = [
   },
 ];
 
-module.exports = () => {
+module.exports = async () => {
   const params = commandLineArgs(paramDefinitions);
 
   const channel = params.releaseChannel;
   if (channel !== 'experimental' && channel !== 'stable') {
     console.error(
-      `Invalid release channel (-r) "${channel}". Must be "stable" or "experimental".`
+      theme.error`Invalid release channel (-r) "${channel}". Must be "stable" or "experimental".`
     );
+    process.exit(1);
+  }
+
+  if (params.commit === null) {
+    console.error(theme.error`No --commit param specified.`);
+    process.exit(1);
+  }
+
+  try {
+    params.build = await getBuildIdForCommit(params.commit);
+  } catch (error) {
+    console.error(theme.error(error));
     process.exit(1);
   }
 

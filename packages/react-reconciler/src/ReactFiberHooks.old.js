@@ -45,6 +45,8 @@ import {
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
+  intersectLanes,
+  isTransitionLane,
   markRootEntangled,
   markRootMutableRead,
   getCurrentUpdateLanePriority,
@@ -75,6 +77,7 @@ import {
   warnIfNotCurrentlyActingUpdatesInDev,
   warnIfNotScopedWithMatchingAct,
   markSkippedUpdateLanes,
+  isInterleavedUpdate,
 } from './ReactFiberWorkLoop.old';
 
 import invariant from 'shared/invariant';
@@ -103,7 +106,12 @@ import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
 import {CacheContext} from './ReactFiberCacheComponent.old';
-import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.old';
+import {
+  createUpdate,
+  enqueueUpdate,
+  entangleTransitions,
+} from './ReactUpdateQueue.old';
+import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -116,8 +124,10 @@ type Update<S, A> = {|
   priority?: ReactPriorityLevel,
 |};
 
-type UpdateQueue<S, A> = {|
+export type UpdateQueue<S, A> = {|
   pending: Update<S, A> | null,
+  interleaved: Update<S, A> | null,
+  lanes: Lanes,
   dispatch: (A => mixed) | null,
   lastRenderedReducer: ((S, A) => S) | null,
   lastRenderedState: S | null,
@@ -650,6 +660,8 @@ function mountReducer<S, I, A>(
   hook.memoizedState = hook.baseState = initialState;
   const queue = (hook.queue = {
     pending: null,
+    interleaved: null,
+    lanes: NoLanes,
     dispatch: null,
     lastRenderedReducer: reducer,
     lastRenderedState: (initialState: any),
@@ -790,6 +802,27 @@ function updateReducer<S, I, A>(
     hook.baseQueue = newBaseQueueLast;
 
     queue.lastRenderedState = newState;
+  }
+
+  // Interleaved updates are stored on a separate queue. We aren't going to
+  // process them during this render, but we do need to track which lanes
+  // are remaining.
+  const lastInterleaved = queue.interleaved;
+  if (lastInterleaved !== null) {
+    let interleaved = lastInterleaved;
+    do {
+      const interleavedLane = interleaved.lane;
+      currentlyRenderingFiber.lanes = mergeLanes(
+        currentlyRenderingFiber.lanes,
+        interleavedLane,
+      );
+      markSkippedUpdateLanes(interleavedLane);
+      interleaved = ((interleaved: any).next: Update<S, A>);
+    } while (interleaved !== lastInterleaved);
+  } else if (baseQueue === null) {
+    // `queue.lanes` is used for entangling transitions. We can set it back to
+    // zero once the queue is empty.
+    queue.lanes = NoLanes;
   }
 
   const dispatch: Dispatch<A> = (queue.dispatch: any);
@@ -933,9 +966,47 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
     // but there's nothing we can do about that (short of throwing here and refusing to continue the render).
     markSourceAsDirty(source);
 
+    // Intentioally throw an error to force React to retry synchronously. During
+    // the synchronous retry, it will block interleaved mutations, so we should
+    // get a consistent read. Therefore, the following error should never be
+    // visible to the user.
+    //
+    // If it were to become visible to the user, it suggests one of two things:
+    // a bug in React, or (more likely), a mutation during the render phase that
+    // caused the second re-render attempt to be different from the first.
+    //
+    // We know it's the second case if the logs are currently disabled. So in
+    // dev, we can present a more accurate error message.
+    if (__DEV__) {
+      // eslint-disable-next-line react-internal/no-production-logging
+      if (console.log.__reactDisabledLog) {
+        // If the logs are disabled, this is the dev-only double render. This is
+        // only reachable if there was a mutation during render. Show a helpful
+        // error message.
+        //
+        // Something interesting to note: because we only double render in
+        // development, this error will never happen during production. This is
+        // actually true of all errors that occur during a double render,
+        // because if the first render had thrown, we would have exited the
+        // begin phase without double rendering. We should consider suppressing
+        // any error from a double render (with a warning) to more closely match
+        // the production behavior.
+        const componentName = getComponentName(currentlyRenderingFiber.type);
+        invariant(
+          false,
+          'A mutable source was mutated while the %s component was rendering. ' +
+            'This is not supported. Move any mutations into event handlers ' +
+            'or effects.',
+          componentName,
+        );
+      }
+    }
+
+    // We expect this error not to be thrown during the synchronous retry,
+    // because we blocked interleaved mutations.
     invariant(
       false,
-      'Cannot read from mutable source during the current render without tearing. This is a bug in React. Please file an issue.',
+      'Cannot read from mutable source during the current render without tearing. This may be a bug in React. Please file an issue.',
     );
   }
 }
@@ -1080,6 +1151,8 @@ function useMutableSource<Source, Snapshot>(
     // including any interleaving updates that occur.
     const newQueue = {
       pending: null,
+      interleaved: null,
+      lanes: NoLanes,
       dispatch: null,
       lastRenderedReducer: basicStateReducer,
       lastRenderedState: snapshot,
@@ -1135,6 +1208,8 @@ function mountState<S>(
   hook.memoizedState = hook.baseState = initialState;
   const queue = (hook.queue = {
     pending: null,
+    interleaved: null,
+    lanes: NoLanes,
     dispatch: null,
     lastRenderedReducer: basicStateReducer,
     lastRenderedState: (initialState: any),
@@ -1305,7 +1380,7 @@ function updateEffectImpl(fiberFlags, hookFlags, create, deps): void {
     if (nextDeps !== null) {
       const prevDeps = prevEffect.deps;
       if (areHookInputsEqual(nextDeps, prevDeps)) {
-        pushEffect(hookFlags, create, destroy, nextDeps);
+        hook.memoizedState = pushEffect(hookFlags, create, destroy, nextDeps);
         return;
       }
     }
@@ -1798,6 +1873,9 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
         const lane = requestUpdateLane(provider);
         const eventTime = requestEventTime();
         const root = scheduleUpdateOnFiber(provider, lane, eventTime);
+        if (root !== null) {
+          entangleTransitions(root, provider, lane);
+        }
 
         const seededCache = new Map();
         if (seedKey !== null && seedKey !== undefined && root !== null) {
@@ -1812,7 +1890,7 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
           cache: seededCache,
         };
         refreshUpdate.payload = payload;
-        enqueueUpdate(provider, refreshUpdate);
+        enqueueUpdate(provider, refreshUpdate, lane);
         return;
       }
     }
@@ -1847,17 +1925,6 @@ function dispatchAction<S, A>(
     next: (null: any),
   };
 
-  // Append the update to the end of the list.
-  const pending = queue.pending;
-  if (pending === null) {
-    // This is the first update. Create a circular list.
-    update.next = update;
-  } else {
-    update.next = pending.next;
-    pending.next = update;
-  }
-  queue.pending = update;
-
   const alternate = fiber.alternate;
   if (
     fiber === currentlyRenderingFiber ||
@@ -1867,7 +1934,41 @@ function dispatchAction<S, A>(
     // queue -> linked list of updates. After this render pass, we'll restart
     // and apply the stashed updates on top of the work-in-progress hook.
     didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
+    const pending = queue.pending;
+    if (pending === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+    } else {
+      update.next = pending.next;
+      pending.next = update;
+    }
+    queue.pending = update;
   } else {
+    if (isInterleavedUpdate(fiber, lane)) {
+      const interleaved = queue.interleaved;
+      if (interleaved === null) {
+        // This is the first update. Create a circular list.
+        update.next = update;
+        // At the end of the current render, this queue's interleaved updates will
+        // be transfered to the pending queue.
+        pushInterleavedQueue(queue);
+      } else {
+        update.next = interleaved.next;
+        interleaved.next = update;
+      }
+      queue.interleaved = update;
+    } else {
+      const pending = queue.pending;
+      if (pending === null) {
+        // This is the first update. Create a circular list.
+        update.next = update;
+      } else {
+        update.next = pending.next;
+        pending.next = update;
+      }
+      queue.pending = update;
+    }
+
     if (
       fiber.lanes === NoLanes &&
       (alternate === null || alternate.lanes === NoLanes)
@@ -1914,7 +2015,25 @@ function dispatchAction<S, A>(
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
-    scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+
+    if (isTransitionLane(lane) && root !== null) {
+      let queueLanes = queue.lanes;
+
+      // If any entangled lanes are no longer pending on the root, then they
+      // must have finished. We can remove them from the shared queue, which
+      // represents a superset of the actually pending lanes. In some cases we
+      // may entangle more than we need to, but that's OK. In fact it's worse if
+      // we *don't* entangle when we should.
+      queueLanes = intersectLanes(queueLanes, root.pendingLanes);
+
+      // Entangle the new transition lane with the other transition lanes.
+      const newQueueLanes = mergeLanes(queueLanes, lane);
+      if (newQueueLanes !== queueLanes) {
+        queue.lanes = newQueueLanes;
+        markRootEntangled(root, newQueueLanes);
+      }
+    }
   }
 
   if (__DEV__) {

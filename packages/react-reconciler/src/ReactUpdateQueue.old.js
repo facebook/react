@@ -84,7 +84,7 @@
 // regardless of priority. Intermediate state may vary according to system
 // resources, but the final state is always the same.
 
-import type {Fiber} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.old';
 
 import {
@@ -92,6 +92,9 @@ import {
   NoLanes,
   isSubsetOfLanes,
   mergeLanes,
+  isTransitionLane,
+  intersectLanes,
+  markRootEntangled,
 } from './ReactFiberLane.old';
 import {
   enterDisallowedContextReadInDEV,
@@ -102,7 +105,11 @@ import {Callback, ShouldCapture, DidCapture} from './ReactFiberFlags';
 import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
 
 import {StrictMode} from './ReactTypeOfMode';
-import {markSkippedUpdateLanes} from './ReactFiberWorkLoop.old';
+import {
+  markSkippedUpdateLanes,
+  isInterleavedUpdate,
+} from './ReactFiberWorkLoop.old';
+import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.old';
 
 import invariant from 'shared/invariant';
 
@@ -121,8 +128,10 @@ export type Update<State> = {|
   next: Update<State> | null,
 |};
 
-type SharedQueue<State> = {|
+export type SharedQueue<State> = {|
   pending: Update<State> | null,
+  interleaved: Update<State> | null,
+  lanes: Lanes,
 |};
 
 export type UpdateQueue<State> = {|
@@ -161,6 +170,8 @@ export function initializeUpdateQueue<State>(fiber: Fiber): void {
     lastBaseUpdate: null,
     shared: {
       pending: null,
+      interleaved: null,
+      lanes: NoLanes,
     },
     effects: null,
   };
@@ -200,7 +211,11 @@ export function createUpdate(eventTime: number, lane: Lane): Update<*> {
   return update;
 }
 
-export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
+export function enqueueUpdate<State>(
+  fiber: Fiber,
+  update: Update<State>,
+  lane: Lane,
+) {
   const updateQueue = fiber.updateQueue;
   if (updateQueue === null) {
     // Only occurs if the fiber has been unmounted.
@@ -208,15 +223,31 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
   }
 
   const sharedQueue: SharedQueue<State> = (updateQueue: any).shared;
-  const pending = sharedQueue.pending;
-  if (pending === null) {
-    // This is the first update. Create a circular list.
-    update.next = update;
+
+  if (isInterleavedUpdate(fiber, lane)) {
+    const interleaved = sharedQueue.interleaved;
+    if (interleaved === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+      // At the end of the current render, this queue's interleaved updates will
+      // be transfered to the pending queue.
+      pushInterleavedQueue(sharedQueue);
+    } else {
+      update.next = interleaved.next;
+      interleaved.next = update;
+    }
+    sharedQueue.interleaved = update;
   } else {
-    update.next = pending.next;
-    pending.next = update;
+    const pending = sharedQueue.pending;
+    if (pending === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+    } else {
+      update.next = pending.next;
+      pending.next = update;
+    }
+    sharedQueue.pending = update;
   }
-  sharedQueue.pending = update;
 
   if (__DEV__) {
     if (
@@ -230,6 +261,33 @@ export function enqueueUpdate<State>(fiber: Fiber, update: Update<State>) {
           'callback.',
       );
       didWarnUpdateInsideUpdate = true;
+    }
+  }
+}
+
+export function entangleTransitions(root: FiberRoot, fiber: Fiber, lane: Lane) {
+  const updateQueue = fiber.updateQueue;
+  if (updateQueue === null) {
+    // Only occurs if the fiber has been unmounted.
+    return;
+  }
+
+  const sharedQueue: SharedQueue<mixed> = (updateQueue: any).shared;
+  if (isTransitionLane(lane)) {
+    let queueLanes = sharedQueue.lanes;
+
+    // If any entangled lanes are no longer pending on the root, then they must
+    // have finished. We can remove them from the shared queue, which represents
+    // a superset of the actually pending lanes. In some cases we may entangle
+    // more than we need to, but that's OK. In fact it's worse if we *don't*
+    // entangle when we should.
+    queueLanes = intersectLanes(queueLanes, root.pendingLanes);
+
+    // Entangle the new transition lane with the other transition lanes.
+    const newQueueLanes = mergeLanes(queueLanes, lane);
+    if (newQueueLanes !== queueLanes) {
+      sharedQueue.lanes = newQueueLanes;
+      markRootEntangled(root, newQueueLanes);
     }
   }
 }
@@ -558,6 +616,22 @@ export function processUpdateQueue<State>(
     queue.baseState = ((newBaseState: any): State);
     queue.firstBaseUpdate = newFirstBaseUpdate;
     queue.lastBaseUpdate = newLastBaseUpdate;
+
+    // Interleaved updates are stored on a separate queue. We aren't going to
+    // process them during this render, but we do need to track which lanes
+    // are remaining.
+    const lastInterleaved = queue.shared.interleaved;
+    if (lastInterleaved !== null) {
+      let interleaved = lastInterleaved;
+      do {
+        newLanes = mergeLanes(newLanes, interleaved.lane);
+        interleaved = ((interleaved: any).next: Update<State>);
+      } while (interleaved !== lastInterleaved);
+    } else if (firstBaseUpdate === null) {
+      // `queue.lanes` is used for entangling transitions. We can set it back to
+      // zero once the queue is empty.
+      queue.shared.lanes = NoLanes;
+    }
 
     // Set the remaining expiration time to be whatever is remaining in the queue.
     // This should be fine because the only two other things that contribute to

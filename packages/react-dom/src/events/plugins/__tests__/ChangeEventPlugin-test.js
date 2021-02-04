@@ -685,7 +685,7 @@ describe('ChangeEventPlugin', () => {
     });
 
     // @gate experimental
-    it('is async for non-input events', () => {
+    it('is async for non-input events', async () => {
       const root = ReactDOM.unstable_createRoot(container);
       let input;
 
@@ -730,8 +730,15 @@ describe('ChangeEventPlugin', () => {
 
       // Flush callbacks.
       // Now the click update has flushed.
-      expect(Scheduler).toFlushAndYield(['render: ']);
-      expect(input.value).toBe('');
+      if (gate(flags => flags.enableDiscreteEventMicroTasks)) {
+        // Flush microtask queue.
+        await null;
+        expect(Scheduler).toHaveYielded(['render: ']);
+        expect(input.value).toBe('');
+      } else {
+        expect(Scheduler).toFlushAndYield(['render: ']);
+        expect(input.value).toBe('');
+      }
     });
 
     // @gate experimental
