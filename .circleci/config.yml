@@ -515,8 +515,7 @@ workflows:
           requires:
             - setup
 
-  # TODO: This workflow doesn't do anything yet, but you should be able to
-  # trigger it using the CircleCI API
+  # Used to publish a prerelease manually via the command line
   publish_preleases:
     when: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
@@ -535,3 +534,33 @@ workflows:
           commit_sha: << pipeline.parameters.prerelease_commit_sha >>
           release_channel: experimental
           dist_tag: experimental
+
+  # Publishes on a cron schedule
+  publish_preleases_nightly:
+    unless: << pipeline.parameters.prerelease_commit_sha >>
+    triggers:
+      - schedule:
+          # At 16:00 UTC (11 am Eastern, 8 am Pacific) on every weekday (Monday
+          # through Friday)
+          cron: "0 16 * * 1-5"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - setup
+      - publish_prerelease:
+          name: Publish to Next channel
+          requires:
+            - setup
+          commit_sha: << pipeline.parameters.prerelease_commit_sha >>
+          release_channel: stable
+          dist_tag: next
+      - publish_prerelease:
+          name: Publish to Experimental channel
+          requires:
+            - setup
+          commit_sha: << pipeline.parameters.prerelease_commit_sha >>
+          release_channel: experimental
+          dist_tag: experimental
+
