@@ -53,9 +53,23 @@ const run = async () => {
     const packageNames = params.packages;
 
     if (params.ci) {
+      let failed = false;
       for (let i = 0; i < packageNames.length; i++) {
-        const packageName = packageNames[i];
-        await publishToNPM(params, packageName, null);
+        try {
+          const packageName = packageNames[i];
+          await publishToNPM(params, packageName, null);
+        } catch (error) {
+          failed = true;
+          console.error(error.message);
+          console.log();
+          console.log(
+            theme.error`Publish failed. Will attempt to publish remaining packages.`
+          );
+        }
+      }
+      if (failed) {
+        console.log(theme.error`One or more packages failed to publish.`);
+        process.exit(1);
       }
     } else {
       clear();
