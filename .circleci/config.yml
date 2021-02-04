@@ -540,9 +540,8 @@ workflows:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     triggers:
       - schedule:
-          # At 16:00 UTC (11 am Eastern, 8 am Pacific) on every weekday (Monday
-          # through Friday)
-          cron: "0 16 * * 1-5"
+          # At 10 minutes past 16:00 on Mon, Tue, Wed, Thu, and Fri
+          cron: "10 16 * * 1,2,3,4,5"
           filters:
             branches:
               only:
