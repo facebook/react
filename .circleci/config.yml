@@ -553,14 +553,14 @@ workflows:
           name: Publish to Next channel
           requires:
             - setup
-          commit_sha: << pipeline.parameters.prerelease_commit_sha >>
+          commit_sha: master
           release_channel: stable
           dist_tag: next
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:
             - setup
-          commit_sha: << pipeline.parameters.prerelease_commit_sha >>
+          commit_sha: master
           release_channel: experimental
           dist_tag: experimental
 
