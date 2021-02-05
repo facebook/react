@@ -90,7 +90,7 @@ export type EventPriority = 0 | 1 | 2;
 
 export const DiscreteEvent: EventPriority = 0;
 export const UserBlockingEvent: EventPriority = 1;
-export const ContinuousEvent: EventPriority = 2;
+export const DefaultEvent: EventPriority = 2;
 
 export type ReactFundamentalComponentInstance<C, H> = {|
   currentFiber: Object,

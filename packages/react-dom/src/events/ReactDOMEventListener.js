@@ -45,7 +45,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {
   UserBlockingEvent,
-  ContinuousEvent,
+  DefaultEvent,
   DiscreteEvent,
 } from 'shared/ReactTypes';
 import {getEventPriorityForPluginSystem} from './DOMEventProperties';
@@ -121,7 +121,7 @@ export function createEventListenerWrapperWithPriority(
     case UserBlockingEvent:
       listenerWrapper = dispatchUserBlockingUpdate;
       break;
-    case ContinuousEvent:
+    case DefaultEvent:
     default:
       listenerWrapper = dispatchEvent;
       break;

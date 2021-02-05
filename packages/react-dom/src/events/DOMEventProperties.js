@@ -20,7 +20,7 @@ import {
 import {
   DiscreteEvent,
   UserBlockingEvent,
-  ContinuousEvent,
+  DefaultEvent,
 } from 'shared/ReactTypes';
 
 import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
@@ -116,7 +116,7 @@ const userBlockingPairsForSimpleEventPlugin: Array<string | DOMEventName> = [
 ];
 
 // prettier-ignore
-const continuousPairsForSimpleEventPlugin: Array<string | DOMEventName> = [
+const defaultPairsForSimpleEventPlugin: Array<string | DOMEventName> = [
   ('abort': DOMEventName), 'abort',
   (ANIMATION_END: DOMEventName), 'animationEnd',
   (ANIMATION_ITERATION: DOMEventName), 'animationIteration',
@@ -190,10 +190,10 @@ export function getEventPriorityForPluginSystem(
   domEventName: DOMEventName,
 ): EventPriority {
   const priority = eventPriorities.get(domEventName);
-  // Default to a ContinuousEvent. Note: we might
+  // Default to a DefaultEvent. Note: we might
   // want to warn if we can't detect the priority
   // for the event.
-  return priority === undefined ? ContinuousEvent : priority;
+  return priority === undefined ? DefaultEvent : priority;
 }
 
 export function getEventPriorityForListenerSystem(
@@ -210,7 +210,7 @@ export function getEventPriorityForListenerSystem(
       type,
     );
   }
-  return ContinuousEvent;
+  return DefaultEvent;
 }
 
 export function registerSimpleEvents() {
@@ -223,8 +223,8 @@ export function registerSimpleEvents() {
     UserBlockingEvent,
   );
   registerSimplePluginEventsAndSetTheirPriorities(
-    continuousPairsForSimpleEventPlugin,
-    ContinuousEvent,
+    defaultPairsForSimpleEventPlugin,
+    DefaultEvent,
   );
   setEventPriorities(otherDiscreteEvents, DiscreteEvent);
 }
