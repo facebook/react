@@ -124,7 +124,7 @@ function attemptResolveElement(
   ref: mixed,
   props: any,
 ): ReactModel {
-  if (ref !== null && ref !== undefined) {
+  if (ref != null) {
     // When the ref moves to the regular props object this will implicitly
     // throw for functions. We could probably relax it to a DEV warning for other
     // cases.

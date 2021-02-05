@@ -112,8 +112,7 @@ if (__DEV__) {
 
     if (
       lowerCasedName === 'is' &&
-      value !== null &&
-      value !== undefined &&
+      value != null &&
       typeof value !== 'string'
     ) {
       console.error(

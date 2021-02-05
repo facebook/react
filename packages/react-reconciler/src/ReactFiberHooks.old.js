@@ -1478,7 +1478,7 @@ function imperativeHandleEffect<T>(
     return () => {
       refCallback(null);
     };
-  } else if (ref !== null && ref !== undefined) {
+  } else if (ref != null) {
     const refObject = ref;
     if (__DEV__) {
       if (!refObject.hasOwnProperty('current')) {
@@ -1514,7 +1514,7 @@ function mountImperativeHandle<T>(
 
   // TODO: If deps are provided, should we skip comparing the ref itself?
   const effectDeps =
-    deps !== null && deps !== undefined ? deps.concat([ref]) : null;
+    deps != null ? deps.concat([ref]) : null;
 
   if (
     __DEV__ &&
@@ -1554,7 +1554,7 @@ function updateImperativeHandle<T>(
 
   // TODO: If deps are provided, should we skip comparing the ref itself?
   const effectDeps =
-    deps !== null && deps !== undefined ? deps.concat([ref]) : null;
+    deps != null ? deps.concat([ref]) : null;
 
   return updateEffectImpl(
     UpdateEffect,
@@ -1878,7 +1878,7 @@ function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
         }
 
         const seededCache = new Map();
-        if (seedKey !== null && seedKey !== undefined && root !== null) {
+        if (seedKey != null && root !== null) {
           // Seed the cache with the value passed by the caller. This could be
           // from a server mutation, or it could be a streaming response.
           seededCache.set(seedKey, seedValue);

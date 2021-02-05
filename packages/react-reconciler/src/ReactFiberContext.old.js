@@ -131,7 +131,7 @@ function isContextProvider(type: Function): boolean {
     return false;
   } else {
     const childContextTypes = type.childContextTypes;
-    return childContextTypes !== null && childContextTypes !== undefined;
+    return childContextTypes != null;
   }
 }
 

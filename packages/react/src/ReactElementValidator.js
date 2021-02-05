@@ -78,7 +78,7 @@ function getSourceInfoErrorAddendum(source) {
 }
 
 function getSourceInfoErrorAddendumForProps(elementProps) {
-  if (elementProps !== null && elementProps !== undefined) {
+  if (elementProps != null) {
     return getSourceInfoErrorAddendum(elementProps.__source);
   }
   return '';

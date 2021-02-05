@@ -219,7 +219,7 @@ export function receiveTouches(
     const nativeEvent = touch;
     let rootNodeID = null;
     const target = nativeEvent.target;
-    if (target !== null && target !== undefined) {
+    if (target != null) {
       if (target < 1) {
         if (__DEV__) {
           console.error(

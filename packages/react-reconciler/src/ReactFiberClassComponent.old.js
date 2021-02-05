@@ -645,7 +645,7 @@ function constructClassInstance(
     unmaskedContext = getUnmaskedContext(workInProgress, ctor, true);
     const contextTypes = ctor.contextTypes;
     isLegacyContextConsumer =
-      contextTypes !== null && contextTypes !== undefined;
+      contextTypes != null;
     context = isLegacyContextConsumer
       ? getMaskedContext(workInProgress, unmaskedContext)
       : emptyContextObject;

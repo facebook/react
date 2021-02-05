@@ -668,7 +668,7 @@ function noResponderTouches(nativeEvent) {
   for (let i = 0; i < touches.length; i++) {
     const activeTouch = touches[i];
     const target = activeTouch.target;
-    if (target !== null && target !== undefined && target !== 0) {
+    if (target != null && target !== 0) {
       // Is the original touch location inside of the current responder?
       const targetInst = getInstanceFromNode(target);
       if (isAncestor(responderInst, targetInst)) {

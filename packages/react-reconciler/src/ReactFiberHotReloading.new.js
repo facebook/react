@@ -100,8 +100,7 @@ export function resolveForwardRefForHotReloading(type: any): any {
     if (family === undefined) {
       // Check if we're dealing with a real forwardRef. Don't want to crash early.
       if (
-        type !== null &&
-        type !== undefined &&
+        type != null &&
         typeof type.render === 'function'
       ) {
         // ForwardRef is special because its resolved .type is an object,
