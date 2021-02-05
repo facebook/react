@@ -92,7 +92,7 @@ function getBundleSizes(pathToSizesDir) {
 async function printResultsForChannel(baseResults, headResults) {
   // Take the JSON of the build response and
   // make an array comparing the results for printing
-  const results = generateResultsArray(baseResults, headResults);
+  const results = generateResultsArray(headResults, baseResults);
 
   const packagesToShow = results
     .filter(
