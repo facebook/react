@@ -17,11 +17,7 @@ import {
   ANIMATION_START,
   TRANSITION_END,
 } from './DOMEventNames';
-import {
-  DiscreteEvent,
-  UserBlockingEvent,
-  DefaultEvent,
-} from 'shared/ReactTypes';
+import {DiscreteEvent, ContinuousEvent, DefaultEvent} from 'shared/ReactTypes';
 
 import {enableCreateEventHandleAPI} from 'shared/ReactFeatureFlags';
 
@@ -97,7 +93,7 @@ if (enableCreateEventHandleAPI) {
 }
 
 // prettier-ignore
-const userBlockingPairsForSimpleEventPlugin: Array<string | DOMEventName> = [
+const continuousPairsForSimpleEventPlugin: Array<string | DOMEventName> = [
   ('drag': DOMEventName), 'drag',
   ('dragenter': DOMEventName), 'dragEnter',
   ('dragexit': DOMEventName), 'dragExit',
@@ -219,8 +215,8 @@ export function registerSimpleEvents() {
     DiscreteEvent,
   );
   registerSimplePluginEventsAndSetTheirPriorities(
-    userBlockingPairsForSimpleEventPlugin,
-    UserBlockingEvent,
+    continuousPairsForSimpleEventPlugin,
+    ContinuousEvent,
   );
   registerSimplePluginEventsAndSetTheirPriorities(
     defaultPairsForSimpleEventPlugin,
