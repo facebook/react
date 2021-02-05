@@ -9,11 +9,7 @@
 
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.old';
-import type {
-  ReactFundamentalComponentInstance,
-  ReactScopeInstance,
-  ReactContext,
-} from 'shared/ReactTypes';
+import type {ReactScopeInstance, ReactContext} from 'shared/ReactTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {
   Instance,
@@ -54,7 +50,6 @@ import {
   SimpleMemoComponent,
   LazyComponent,
   IncompleteClassComponent,
-  FundamentalComponent,
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
@@ -92,10 +87,6 @@ import {
   createContainerChildSet,
   appendChildToContainerChildSet,
   finalizeContainerChildren,
-  getFundamentalComponentInstance,
-  mountFundamentalComponent,
-  cloneFundamentalInstance,
-  shouldUpdateFundamentalComponent,
   preparePortalMount,
   prepareScopeUpdate,
 } from './ReactFiberHostConfig';
@@ -134,7 +125,6 @@ import {
   enableSchedulerTracing,
   enableSuspenseCallback,
   enableSuspenseServerRenderer,
-  enableFundamentalAPI,
   enableScopeAPI,
   enableProfilerTimer,
   enableCache,
@@ -148,7 +138,6 @@ import {
   getRenderTargetTime,
   subtreeRenderLanes,
 } from './ReactFiberWorkLoop.old';
-import {createFundamentalStateInstance} from './ReactFiberFundamental.old';
 import {
   OffscreenLane,
   SomeRetryLane,
@@ -219,8 +208,6 @@ if (supportsMutation) {
     while (node !== null) {
       if (node.tag === HostComponent || node.tag === HostText) {
         appendInitialChild(parent, node.stateNode);
-      } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
-        appendInitialChild(parent, node.stateNode.instance);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
@@ -330,15 +317,6 @@ if (supportsMutation) {
           instance = cloneHiddenTextInstance(instance, text, node);
         }
         appendInitialChild(parent, instance);
-      } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
-        let instance = node.stateNode.instance;
-        if (needsVisibilityToggle && isHidden) {
-          // This child is inside a timed out tree. Hide it.
-          const props = node.memoizedProps;
-          const type = node.type;
-          instance = cloneHiddenInstance(instance, type, props, node);
-        }
-        appendInitialChild(parent, instance);
       } else if (node.tag === HostPortal) {
         // If we have a portal child, then we don't want to traverse
         // down its children. Instead, we'll get insertions from each child in
@@ -422,15 +400,6 @@ if (supportsMutation) {
           // This child is inside a timed out tree. Hide it.
           const text = node.memoizedProps;
           instance = cloneHiddenTextInstance(instance, text, node);
-        }
-        appendChildToContainerChildSet(containerChildSet, instance);
-      } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
-        let instance = node.stateNode.instance;
-        if (needsVisibilityToggle && isHidden) {
-          // This child is inside a timed out tree. Hide it.
-          const props = node.memoizedProps;
-          const type = node.type;
-          instance = cloneHiddenInstance(instance, type, props, node);
         }
         appendChildToContainerChildSet(containerChildSet, instance);
       } else if (node.tag === HostPortal) {
@@ -1405,59 +1374,6 @@ function completeWork(
       }
       bubbleProperties(workInProgress);
       return null;
-    }
-    case FundamentalComponent: {
-      if (enableFundamentalAPI) {
-        const fundamentalImpl = workInProgress.type.impl;
-        let fundamentalInstance: ReactFundamentalComponentInstance<
-          any,
-          any,
-        > | null = workInProgress.stateNode;
-
-        if (fundamentalInstance === null) {
-          const getInitialState = fundamentalImpl.getInitialState;
-          let fundamentalState;
-          if (getInitialState !== undefined) {
-            fundamentalState = getInitialState(newProps);
-          }
-          fundamentalInstance = workInProgress.stateNode = createFundamentalStateInstance(
-            workInProgress,
-            newProps,
-            fundamentalImpl,
-            fundamentalState || {},
-          );
-          const instance = ((getFundamentalComponentInstance(
-            fundamentalInstance,
-          ): any): Instance);
-          fundamentalInstance.instance = instance;
-          if (fundamentalImpl.reconcileChildren === false) {
-            bubbleProperties(workInProgress);
-            return null;
-          }
-          appendAllChildren(instance, workInProgress, false, false);
-          mountFundamentalComponent(fundamentalInstance);
-        } else {
-          // We fire update in commit phase
-          const prevProps = fundamentalInstance.props;
-          fundamentalInstance.prevProps = prevProps;
-          fundamentalInstance.props = newProps;
-          fundamentalInstance.currentFiber = workInProgress;
-          if (supportsPersistence) {
-            const instance = cloneFundamentalInstance(fundamentalInstance);
-            fundamentalInstance.instance = instance;
-            appendAllChildren(instance, workInProgress, false, false);
-          }
-          const shouldUpdate = shouldUpdateFundamentalComponent(
-            fundamentalInstance,
-          );
-          if (shouldUpdate) {
-            markUpdate(workInProgress);
-          }
-        }
-        bubbleProperties(workInProgress);
-        return null;
-      }
-      break;
     }
     case ScopeComponent: {
       if (enableScopeAPI) {

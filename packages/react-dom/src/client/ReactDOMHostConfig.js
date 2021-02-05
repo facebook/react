@@ -16,7 +16,6 @@ import type {
 } from 'react-reconciler/src/ReactTestSelectors';
 import type {RootType} from './ReactDOMRoot';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
-import type {ReactDOMFundamentalComponentInstance} from '../shared/ReactDOMTypes';
 
 import {
   precacheFiberNode,
@@ -64,7 +63,6 @@ import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 import {
   enableSuspenseServerRenderer,
-  enableFundamentalAPI,
   enableCreateEventHandleAPI,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
@@ -985,68 +983,6 @@ export function didNotFindHydratableSuspenseInstance(
 ) {
   if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
     // TODO: warnForInsertedHydratedSuspense(parentInstance);
-  }
-}
-
-export function getFundamentalComponentInstance(
-  fundamentalInstance: ReactDOMFundamentalComponentInstance,
-): Instance {
-  if (enableFundamentalAPI) {
-    const {currentFiber, impl, props, state} = fundamentalInstance;
-    const instance = impl.getInstance(null, props, state);
-    precacheFiberNode(currentFiber, instance);
-    return instance;
-  }
-  // Because of the flag above, this gets around the Flow error;
-  return (null: any);
-}
-
-export function mountFundamentalComponent(
-  fundamentalInstance: ReactDOMFundamentalComponentInstance,
-): void {
-  if (enableFundamentalAPI) {
-    const {impl, instance, props, state} = fundamentalInstance;
-    const onMount = impl.onMount;
-    if (onMount !== undefined) {
-      onMount(null, instance, props, state);
-    }
-  }
-}
-
-export function shouldUpdateFundamentalComponent(
-  fundamentalInstance: ReactDOMFundamentalComponentInstance,
-): boolean {
-  if (enableFundamentalAPI) {
-    const {impl, prevProps, props, state} = fundamentalInstance;
-    const shouldUpdate = impl.shouldUpdate;
-    if (shouldUpdate !== undefined) {
-      return shouldUpdate(null, prevProps, props, state);
-    }
-  }
-  return true;
-}
-
-export function updateFundamentalComponent(
-  fundamentalInstance: ReactDOMFundamentalComponentInstance,
-): void {
-  if (enableFundamentalAPI) {
-    const {impl, instance, prevProps, props, state} = fundamentalInstance;
-    const onUpdate = impl.onUpdate;
-    if (onUpdate !== undefined) {
-      onUpdate(null, instance, prevProps, props, state);
-    }
-  }
-}
-
-export function unmountFundamentalComponent(
-  fundamentalInstance: ReactDOMFundamentalComponentInstance,
-): void {
-  if (enableFundamentalAPI) {
-    const {impl, instance, props, state} = fundamentalInstance;
-    const onUnmount = impl.onUnmount;
-    if (onUnmount !== undefined) {
-      onUnmount(null, instance, props, state);
-    }
   }
 }
 

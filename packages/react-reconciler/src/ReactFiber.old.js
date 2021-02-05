@@ -8,12 +8,7 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {
-  ReactFragment,
-  ReactPortal,
-  ReactFundamentalComponent,
-  ReactScope,
-} from 'shared/ReactTypes';
+import type {ReactFragment, ReactPortal, ReactScope} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
@@ -25,7 +20,6 @@ import type {OffscreenProps} from './ReactFiberOffscreenComponent';
 import invariant from 'shared/invariant';
 import {
   enableProfilerTimer,
-  enableFundamentalAPI,
   enableScopeAPI,
   enableCache,
 } from 'shared/ReactFeatureFlags';
@@ -51,7 +45,6 @@ import {
   MemoComponent,
   SimpleMemoComponent,
   LazyComponent,
-  FundamentalComponent,
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
@@ -86,7 +79,6 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
-  REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
   REACT_OFFSCREEN_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
@@ -525,17 +517,6 @@ export function createFiberFromTypeAndProps(
               fiberTag = LazyComponent;
               resolvedType = null;
               break getTag;
-            case REACT_FUNDAMENTAL_TYPE:
-              if (enableFundamentalAPI) {
-                return createFiberFromFundamental(
-                  type,
-                  pendingProps,
-                  mode,
-                  lanes,
-                  key,
-                );
-              }
-              break;
           }
         }
         let info = '';
@@ -614,20 +595,6 @@ export function createFiberFromFragment(
   key: null | string,
 ): Fiber {
   const fiber = createFiber(Fragment, elements, key, mode);
-  fiber.lanes = lanes;
-  return fiber;
-}
-
-export function createFiberFromFundamental(
-  fundamentalComponent: ReactFundamentalComponent<any, any>,
-  pendingProps: any,
-  mode: TypeOfMode,
-  lanes: Lanes,
-  key: null | string,
-): Fiber {
-  const fiber = createFiber(FundamentalComponent, pendingProps, key, mode);
-  fiber.elementType = fundamentalComponent;
-  fiber.type = fundamentalComponent;
   fiber.lanes = lanes;
   return fiber;
 }

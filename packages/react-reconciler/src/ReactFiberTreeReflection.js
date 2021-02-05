@@ -22,11 +22,9 @@ import {
   HostRoot,
   HostPortal,
   HostText,
-  FundamentalComponent,
   SuspenseComponent,
 } from './ReactWorkTags';
 import {NoFlags, Placement, Hydrating} from './ReactFiberFlags';
-import {enableFundamentalAPI} from 'shared/ReactFeatureFlags';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -297,11 +295,7 @@ export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
 
 function findCurrentHostFiberWithNoPortalsImpl(node: Fiber) {
   // Next we'll drill down this component to find the first HostComponent/Text.
-  if (
-    node.tag === HostComponent ||
-    node.tag === HostText ||
-    (enableFundamentalAPI && node.tag === FundamentalComponent)
-  ) {
+  if (node.tag === HostComponent || node.tag === HostText) {
     return node;
   }
 

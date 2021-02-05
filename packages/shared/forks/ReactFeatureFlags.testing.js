@@ -27,7 +27,6 @@ export const enableCache = false;
 export const disableJavaScriptURLs = false;
 export const disableInputAttributeSyncing = false;
 export const enableSchedulerDebugging = false;
-export const enableFundamentalAPI = false;
 export const enableScopeAPI = false;
 export const enableCreateEventHandleAPI = false;
 export const warnAboutUnmockedScheduler = false;

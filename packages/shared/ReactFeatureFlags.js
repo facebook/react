@@ -60,9 +60,6 @@ export const enableSchedulerDebugging = false;
 // Disable javascript: URL strings in href for XSS protection.
 export const disableJavaScriptURLs = false;
 
-// Experimental Host Component support.
-export const enableFundamentalAPI = false;
-
 // Experimental Scope support.
 export const enableScopeAPI = false;
 

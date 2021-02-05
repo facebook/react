@@ -397,57 +397,6 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     warnsIfNotActing: true,
     supportsHydration: false,
 
-    getFundamentalComponentInstance(fundamentalInstance): Instance {
-      const {impl, props, state} = fundamentalInstance;
-      return impl.getInstance(null, props, state);
-    },
-
-    mountFundamentalComponent(fundamentalInstance): void {
-      const {impl, instance, props, state} = fundamentalInstance;
-      const onMount = impl.onUpdate;
-      if (onMount !== undefined) {
-        onMount(null, instance, props, state);
-      }
-    },
-
-    shouldUpdateFundamentalComponent(fundamentalInstance): boolean {
-      const {impl, instance, prevProps, props, state} = fundamentalInstance;
-      const shouldUpdate = impl.shouldUpdate;
-      if (shouldUpdate !== undefined) {
-        return shouldUpdate(null, instance, prevProps, props, state);
-      }
-      return true;
-    },
-
-    updateFundamentalComponent(fundamentalInstance): void {
-      const {impl, instance, prevProps, props, state} = fundamentalInstance;
-      const onUpdate = impl.onUpdate;
-      if (onUpdate !== undefined) {
-        onUpdate(null, instance, prevProps, props, state);
-      }
-    },
-
-    unmountFundamentalComponent(fundamentalInstance): void {
-      const {impl, instance, props, state} = fundamentalInstance;
-      const onUnmount = impl.onUnmount;
-      if (onUnmount !== undefined) {
-        onUnmount(null, instance, props, state);
-      }
-    },
-
-    cloneFundamentalInstance(fundamentalInstance): Instance {
-      const instance = fundamentalInstance.instance;
-      return {
-        children: [],
-        text: instance.text,
-        type: instance.type,
-        prop: instance.prop,
-        id: instance.id,
-        context: instance.context,
-        hidden: instance.hidden,
-      };
-    },
-
     getInstanceFromNode() {
       throw new Error('Not yet implemented.');
     },

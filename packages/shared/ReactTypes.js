@@ -92,52 +92,6 @@ export const DiscreteEvent: EventPriority = 0;
 export const UserBlockingEvent: EventPriority = 1;
 export const ContinuousEvent: EventPriority = 2;
 
-export type ReactFundamentalComponentInstance<C, H> = {|
-  currentFiber: Object,
-  instance: mixed,
-  prevProps: null | Object,
-  props: Object,
-  impl: ReactFundamentalImpl<C, H>,
-  state: Object,
-|};
-
-export type ReactFundamentalImpl<C, H> = {
-  displayName: string,
-  reconcileChildren: boolean,
-  getInitialState?: (props: Object) => Object,
-  getInstance: (context: C, props: Object, state: Object) => H,
-  getServerSideString?: (context: C, props: Object) => string,
-  getServerSideStringClose?: (context: C, props: Object) => string,
-  onMount: (context: C, instance: mixed, props: Object, state: Object) => void,
-  shouldUpdate?: (
-    context: C,
-    prevProps: null | Object,
-    nextProps: Object,
-    state: Object,
-  ) => boolean,
-  onUpdate?: (
-    context: C,
-    instance: mixed,
-    prevProps: null | Object,
-    nextProps: Object,
-    state: Object,
-  ) => void,
-  onUnmount?: (
-    context: C,
-    instance: mixed,
-    props: Object,
-    state: Object,
-  ) => void,
-  onHydrate?: (context: C, props: Object, state: Object) => boolean,
-  onFocus?: (context: C, props: Object, state: Object) => boolean,
-  ...
-};
-
-export type ReactFundamentalComponent<C, H> = {|
-  $$typeof: Symbol | number,
-  impl: ReactFundamentalImpl<C, H>,
-|};
-
 export type ReactScope = {|
   $$typeof: Symbol | number,
 |};
