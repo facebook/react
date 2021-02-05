@@ -33,7 +33,6 @@ import {
   enableProfilerCommitHooks,
   enableProfilerNestedUpdatePhase,
   enableSuspenseServerRenderer,
-  enableFundamentalAPI,
   enableSuspenseCallback,
   enableScopeAPI,
   enableDoubleInvokingEffects,
@@ -53,7 +52,6 @@ import {
   MemoComponent,
   SimpleMemoComponent,
   SuspenseListComponent,
-  FundamentalComponent,
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
@@ -124,8 +122,6 @@ import {
   hideTextInstance,
   unhideInstance,
   unhideTextInstance,
-  unmountFundamentalComponent,
-  updateFundamentalComponent,
   commitHydratedContainer,
   commitHydratedSuspenseInstance,
   clearContainer,
@@ -909,7 +905,6 @@ function commitLayoutEffectOnFiber(
       }
       case SuspenseListComponent:
       case IncompleteClassComponent:
-      case FundamentalComponent:
       case ScopeComponent:
       case OffscreenComponent:
       case LegacyHiddenComponent:
@@ -1133,16 +1128,6 @@ function commitUnmount(
       }
       return;
     }
-    case FundamentalComponent: {
-      if (enableFundamentalAPI) {
-        const fundamentalInstance = current.stateNode;
-        if (fundamentalInstance !== null) {
-          unmountFundamentalComponent(fundamentalInstance);
-          current.stateNode = null;
-        }
-      }
-      return;
-    }
     case DehydratedFragment: {
       if (enableSuspenseCallback) {
         const hydrationCallbacks = finishedRoot.hydrationCallbacks;
@@ -1271,8 +1256,7 @@ function commitContainer(finishedWork: Fiber) {
   switch (finishedWork.tag) {
     case ClassComponent:
     case HostComponent:
-    case HostText:
-    case FundamentalComponent: {
+    case HostText: {
       return;
     }
     case HostRoot:
@@ -1388,11 +1372,6 @@ function commitPlacement(finishedWork: Fiber): void {
       parent = parentStateNode.containerInfo;
       isContainer = true;
       break;
-    case FundamentalComponent:
-      if (enableFundamentalAPI) {
-        parent = parentStateNode.instance;
-        isContainer = false;
-      }
     // eslint-disable-next-line-no-fallthrough
     default:
       invariant(
@@ -1425,7 +1404,7 @@ function insertOrAppendPlacementNodeIntoContainer(
 ): void {
   const {tag} = node;
   const isHost = tag === HostComponent || tag === HostText;
-  if (isHost || (enableFundamentalAPI && tag === FundamentalComponent)) {
+  if (isHost) {
     const stateNode = isHost ? node.stateNode : node.stateNode.instance;
     if (before) {
       insertInContainerBefore(parent, stateNode, before);
@@ -1456,7 +1435,7 @@ function insertOrAppendPlacementNode(
 ): void {
   const {tag} = node;
   const isHost = tag === HostComponent || tag === HostText;
-  if (isHost || (enableFundamentalAPI && tag === FundamentalComponent)) {
+  if (isHost) {
     const stateNode = isHost ? node.stateNode : node.stateNode.instance;
     if (before) {
       insertBefore(parent, stateNode, before);
@@ -1521,11 +1500,6 @@ function unmountHostComponents(
             currentParent = parentStateNode.containerInfo;
             currentParentIsContainer = true;
             break findParent;
-          case FundamentalComponent:
-            if (enableFundamentalAPI) {
-              currentParent = parentStateNode.instance;
-              currentParentIsContainer = false;
-            }
         }
         parent = parent.return;
       }
@@ -1553,27 +1527,6 @@ function unmountHostComponents(
         );
       }
       // Don't visit children because we already visited them.
-    } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
-      const fundamentalNode = node.stateNode.instance;
-      commitNestedUnmounts(
-        finishedRoot,
-        node,
-        nearestMountedAncestor,
-        renderPriorityLevel,
-      );
-      // After all the children have unmounted, it is now safe to remove the
-      // node from the tree.
-      if (currentParentIsContainer) {
-        removeChildFromContainer(
-          ((currentParent: any): Container),
-          (fundamentalNode: Instance),
-        );
-      } else {
-        removeChild(
-          ((currentParent: any): Instance),
-          (fundamentalNode: Instance),
-        );
-      }
     } else if (
       enableSuspenseServerRenderer &&
       node.tag === DehydratedFragment
@@ -1848,14 +1801,6 @@ function commitWork(current: Fiber | null, finishedWork: Fiber): void {
     }
     case IncompleteClassComponent: {
       return;
-    }
-    case FundamentalComponent: {
-      if (enableFundamentalAPI) {
-        const fundamentalInstance = finishedWork.stateNode;
-        updateFundamentalComponent(fundamentalInstance);
-        return;
-      }
-      break;
     }
     case ScopeComponent: {
       if (enableScopeAPI) {
