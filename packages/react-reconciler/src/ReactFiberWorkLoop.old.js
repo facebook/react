@@ -92,7 +92,7 @@ import {
   warnsIfNotActing,
   afterActiveInstanceBlur,
   clearContainer,
-  queueMicrotask,
+  scheduleMicrotask,
 } from './ReactFiberHostConfig';
 
 import {
@@ -766,7 +766,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     enableDiscreteEventMicroTasks &&
     newCallbackPriority === InputDiscreteLanePriority
   ) {
-    queueMicrotask(performSyncWorkOnRoot.bind(null, root));
+    scheduleMicrotask(performSyncWorkOnRoot.bind(null, root));
     newCallbackNode = null;
   } else {
     const schedulerPriorityLevel = lanePriorityToSchedulerPriority(

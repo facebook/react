@@ -220,9 +220,9 @@ export const warnsIfNotActing = true;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
-export const queueMicrotask =
-  typeof global.queueMicrotask === 'function'
-    ? global.queueMicrotask
+export const scheduleMicrotask =
+  typeof queueMicrotask === 'function'
+    ? queueMicrotask
     : typeof Promise !== 'undefined'
     ? (callback: Function) =>
         Promise.resolve(null)
