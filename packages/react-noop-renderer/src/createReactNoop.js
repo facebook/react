@@ -371,7 +371,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     scheduleTimeout: setTimeout,
     cancelTimeout: clearTimeout,
     noTimeout: -1,
-    queueMicrotask:
+    scheduleMicrotask:
       typeof queueMicrotask === 'function'
         ? queueMicrotask
         : typeof Promise !== 'undefined'

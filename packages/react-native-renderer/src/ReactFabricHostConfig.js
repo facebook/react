@@ -348,7 +348,7 @@ export const warnsIfNotActing = false;
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
-export function queueMicrotask(callback: Function) {
+export function scheduleMicrotask(callback: Function) {
   invariant(false, 'Not implemented.');
 }
 

@@ -203,7 +203,7 @@ You can proxy this to `clearTimeout` or its equivalent in your environment.
 
 This is a property (not a function) that should be set to something that can never be a valid timeout ID. For example, you can set it to `-1`.
 
-#### `queueMicrotask(fn)`
+#### `scheduleMicrotask(fn)`
 
 You can proxy this to `queueMicrotask` or its equivalent in your environment.
 
