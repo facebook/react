@@ -246,25 +246,86 @@ function appendAllChildrenMutation(parent: Instance, workInProgress: Fiber) {
 }
 
 function appendAllChildrenPersistent(parent: Instance, workInProgress: Fiber) {
-  appendAllChildrenPersistentImpl(parent, workInProgress, false, false);
+  if (supportsMutation) {
+    // Should have been checked in caller, but this is extra an safeguard.
+    return;
+  }
+
+  // We only have the top Fiber that was created but we need recurse down its
+  // children to find all the terminal nodes.
+  let node = workInProgress.child;
+  while (node !== null) {
+    if (node.tag === HostComponent) {
+      const instance = node.stateNode;
+      appendInitialChild(parent, instance);
+    } else if (node.tag === HostText) {
+      const instance = node.stateNode;
+      appendInitialChild(parent, instance);
+    } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
+      const instance = node.stateNode.instance;
+      appendInitialChild(parent, instance);
+    } else if (node.tag === HostPortal) {
+      // If we have a portal child, then we don't want to traverse
+      // down its children. Instead, we'll get insertions from each child in
+      // the portal directly.
+    } else if (node.tag === SuspenseComponent) {
+      if ((node.flags & Update) !== NoFlags) {
+        // Need to toggle the visibility of the primary children.
+        const newIsHidden = node.memoizedState !== null;
+        if (newIsHidden) {
+          const primaryChildParent = node.child;
+          if (primaryChildParent !== null) {
+            if (primaryChildParent.child !== null) {
+              primaryChildParent.child.return = primaryChildParent;
+              appendAllChildrenPersistentAndToggleVisibility(
+                parent,
+                primaryChildParent,
+                true,
+              );
+            }
+            const fallbackChildParent = primaryChildParent.sibling;
+            if (fallbackChildParent !== null) {
+              fallbackChildParent.return = node;
+              node = fallbackChildParent;
+              continue;
+            }
+          }
+        } else {
+          // TODO: Need to toggle visibility when unhiding, too. Currently
+          // works because we don't store the cloned instance on the current
+          // tree when hiding.
+        }
+      }
+      if (node.child !== null) {
+        // Continue traversing like normal
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+    } else if (node.child !== null) {
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    // $FlowFixMe This is correct but Flow is confused by the labeled break.
+    node = (node: Fiber);
+    if (node === workInProgress) {
+      return;
+    }
+    while (node.sibling === null) {
+      if (node.return === null || node.return === workInProgress) {
+        return;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
+  }
 }
 
 function appendAllChildrenPersistentAndToggleVisibility(
   parent: Instance,
   workInProgress: Fiber,
-  isHidden: boolean,
-) {
-  appendAllChildrenPersistentImpl(parent, workInProgress, true, isHidden);
-}
-
-// TODO: This function is used both to append the nearest host children, and
-// also sometimes (but not always) toggle the visibility of those nodes during
-// the same traversal. We should fork those implementions into two separate
-// functions, but we haven't yet. That's why this inner function still exists.
-function appendAllChildrenPersistentImpl(
-  parent: Instance,
-  workInProgress: Fiber,
-  needsVisibilityToggle: boolean,
   isHidden: boolean,
 ) {
   if (supportsMutation) {
@@ -276,27 +337,34 @@ function appendAllChildrenPersistentImpl(
   // children to find all the terminal nodes.
   let node = workInProgress.child;
   while (node !== null) {
-    // eslint-disable-next-line no-labels
-    branches: if (node.tag === HostComponent) {
+    if (node.tag === HostComponent) {
       let instance = node.stateNode;
-      if (needsVisibilityToggle && isHidden) {
+      if (isHidden) {
         // This child is inside a timed out tree. Hide it.
         const props = node.memoizedProps;
         const type = node.type;
         instance = cloneHiddenInstance(instance, type, props, node);
+      } else {
+        // TODO: Need to toggle visibility when unhiding, too. Currently
+        // works because we don't store the cloned instance on the current
+        // tree when hiding.
       }
       appendInitialChild(parent, instance);
     } else if (node.tag === HostText) {
       let instance = node.stateNode;
-      if (needsVisibilityToggle && isHidden) {
+      if (isHidden) {
         // This child is inside a timed out tree. Hide it.
         const text = node.memoizedProps;
         instance = cloneHiddenTextInstance(instance, text, node);
+      } else {
+        // TODO: Need to toggle visibility when unhiding, too. Currently
+        // works because we don't store the cloned instance on the current
+        // tree when hiding.
       }
       appendInitialChild(parent, instance);
     } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
       let instance = node.stateNode.instance;
-      if (needsVisibilityToggle && isHidden) {
+      if (isHidden) {
         // This child is inside a timed out tree. Hide it.
         const props = node.memoizedProps;
         const type = node.type;
@@ -367,12 +435,76 @@ function appendAllChildrenToContainer(
   containerChildSet: ChildSet,
   workInProgress: Fiber,
 ) {
-  return appendAllChildrenToContainerImpl(
-    containerChildSet,
-    workInProgress,
-    false,
-    false,
-  );
+  // We only have the top Fiber that was created but we need recurse down its
+  // children to find all the terminal nodes.
+  let node = workInProgress.child;
+  while (node !== null) {
+    if (node.tag === HostComponent) {
+      const instance = node.stateNode;
+      appendChildToContainerChildSet(containerChildSet, instance);
+    } else if (node.tag === HostText) {
+      const instance = node.stateNode;
+      appendChildToContainerChildSet(containerChildSet, instance);
+    } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
+      const instance = node.stateNode.instance;
+      appendChildToContainerChildSet(containerChildSet, instance);
+    } else if (node.tag === HostPortal) {
+      // If we have a portal child, then we don't want to traverse
+      // down its children. Instead, we'll get insertions from each child in
+      // the portal directly.
+    } else if (node.tag === SuspenseComponent) {
+      if ((node.flags & Update) !== NoFlags) {
+        // Need to toggle the visibility of the primary children.
+        const newIsHidden = node.memoizedState !== null;
+        if (newIsHidden) {
+          const primaryChildParent = node.child;
+          if (primaryChildParent !== null) {
+            if (primaryChildParent.child !== null) {
+              primaryChildParent.child.return = primaryChildParent;
+              appendAllChildrenToContainerAndToggleVisibility(
+                containerChildSet,
+                primaryChildParent,
+                true,
+              );
+            }
+            const fallbackChildParent = primaryChildParent.sibling;
+            if (fallbackChildParent !== null) {
+              fallbackChildParent.return = node;
+              node = fallbackChildParent;
+              continue;
+            }
+          }
+        } else {
+          // TODO: Need to toggle visibility when unhiding, too. Currently
+          // works because we don't store the cloned instance on the current
+          // tree when hiding.
+        }
+      }
+      if (node.child !== null) {
+        // Continue traversing like normal
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+    } else if (node.child !== null) {
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    // $FlowFixMe This is correct but Flow is confused by the labeled break.
+    node = (node: Fiber);
+    if (node === workInProgress) {
+      return;
+    }
+    while (node.sibling === null) {
+      if (node.return === null || node.return === workInProgress) {
+        return;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
+  }
 }
 
 function appendAllChildrenToContainerAndToggleVisibility(
@@ -380,58 +512,46 @@ function appendAllChildrenToContainerAndToggleVisibility(
   workInProgress: Fiber,
   isHidden: boolean,
 ) {
-  appendAllChildrenToContainerImpl(
-    containerChildSet,
-    workInProgress,
-    true,
-    isHidden,
-  );
-}
-
-// TODO: This function is used both to append the nearest host children, and
-// also sometimes (but not always) toggle the visibility of those nodes during
-// the same traversal. We should fork those implementions into two separate
-// functions, but we haven't yet. That's why this inner function still exists.
-function appendAllChildrenToContainerImpl(
-  containerChildSet: ChildSet,
-  workInProgress: Fiber,
-  needsVisibilityToggle: boolean,
-  isHidden: boolean,
-) {
-  if (supportsMutation) {
-    // Should have been checked in caller, but this is extra an safeguard.
-    return;
-  }
-
   // We only have the top Fiber that was created but we need recurse down its
   // children to find all the terminal nodes.
   let node = workInProgress.child;
   while (node !== null) {
-    // eslint-disable-next-line no-labels
-    branches: if (node.tag === HostComponent) {
+    if (node.tag === HostComponent) {
       let instance = node.stateNode;
-      if (needsVisibilityToggle && isHidden) {
+      if (isHidden) {
         // This child is inside a timed out tree. Hide it.
         const props = node.memoizedProps;
         const type = node.type;
         instance = cloneHiddenInstance(instance, type, props, node);
+      } else {
+        // TODO: Need to toggle visibility when unhiding, too. Currently
+        // works because we don't store the cloned instance on the current
+        // tree when hiding.
       }
       appendChildToContainerChildSet(containerChildSet, instance);
     } else if (node.tag === HostText) {
       let instance = node.stateNode;
-      if (needsVisibilityToggle && isHidden) {
+      if (isHidden) {
         // This child is inside a timed out tree. Hide it.
         const text = node.memoizedProps;
         instance = cloneHiddenTextInstance(instance, text, node);
+      } else {
+        // TODO: Need to toggle visibility when unhiding, too. Currently
+        // works because we don't store the cloned instance on the current
+        // tree when hiding.
       }
       appendChildToContainerChildSet(containerChildSet, instance);
     } else if (enableFundamentalAPI && node.tag === FundamentalComponent) {
       let instance = node.stateNode.instance;
-      if (needsVisibilityToggle && isHidden) {
+      if (isHidden) {
         // This child is inside a timed out tree. Hide it.
         const props = node.memoizedProps;
         const type = node.type;
         instance = cloneHiddenInstance(instance, type, props, node);
+      } else {
+        // TODO: Need to toggle visibility when unhiding, too. Currently
+        // works because we don't store the cloned instance on the current
+        // tree when hiding.
       }
       appendChildToContainerChildSet(containerChildSet, instance);
     } else if (node.tag === HostPortal) {
