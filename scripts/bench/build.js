@@ -71,7 +71,7 @@ async function buildBenchmarkBundlesFromGitRepo(
   if (!skipBuild) {
     if (clean) {
       //clear remote-repo folder
-      await cleanDir(remoteRepoDir);
+      await cleanDir();
     }
     // check if remote-repo directory already exists
     if (existsSync(join(__dirname, 'remote-repo'))) {

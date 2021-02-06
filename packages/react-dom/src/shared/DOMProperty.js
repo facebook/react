@@ -438,7 +438,7 @@ reservedProps.forEach(name => {
   );
 });
 
-const CAMELIZE = /[\-\:]([a-z])/g;
+const CAMELIZE = /[\-:]([a-z])/g;
 const capitalize = token => token[1].toUpperCase();
 
 // This is a list of all SVG attributes that need special casing, namespacing,
