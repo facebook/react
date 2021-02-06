@@ -7,6 +7,8 @@
 
 'use strict';
 
+/* eslint-disable no-for-of-loops/no-for-of-loops */
+
 // Hi, if this is your first time editing/reading a Dangerfile, here's a summary:
 // It's a JS runtime which helps you provide continuous feedback inside GitHub.
 //
@@ -26,169 +28,65 @@
 // `DANGER_GITHUB_API_TOKEN=[ENV_ABOVE] yarn danger pr https://github.com/facebook/react/pull/11865
 
 const {markdown, danger, warn} = require('danger');
+const {promisify} = require('util');
+const glob = promisify(require('glob'));
+const gzipSize = require('gzip-size');
 
-const {generateResultsArray} = require('./scripts/rollup/stats');
-const {readFileSync, readdirSync} = require('fs');
-const path = require('path');
+const {readFileSync, statSync} = require('fs');
 
-/**
- * Generates a Markdown table
- * @param {string[]} headers
- * @param {string[][]} body
- */
-function generateMDTable(headers, body) {
-  const tableHeaders = [
-    headers.join(' | '),
-    headers.map(() => ' --- ').join(' | '),
-  ];
+const BASE_DIR = 'base-build';
+const HEAD_DIR = 'build2';
 
-  const tablebody = body.map(r => r.join(' | '));
-  return tableHeaders.join('\n') + '\n' + tablebody.join('\n');
+const CRITICAL_THRESHOLD = 0.02;
+const SIGNIFICANCE_THRESHOLD = 0.002;
+const CRITICAL_ARTIFACT_PATHS = new Set([
+  // We always report changes to these bundles, even if the change is
+  // insiginificant or non-existent.
+  'oss-stable/react-dom/cjs/react-dom.production.min.js',
+  'oss-experimental/react-dom/cjs/react-dom.production.min.js',
+  'facebook-www/ReactDOM-prod.classic.js',
+  'facebook-www/ReactDOM-prod.modern.js',
+  'facebook-www/ReactDOMForked-prod.classic.js',
+]);
+
+const kilobyteFormatter = new Intl.NumberFormat('en', {
+  style: 'unit',
+  unit: 'kilobyte',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+function kbs(bytes) {
+  return kilobyteFormatter.format(bytes / 1000);
 }
 
-/**
- * Generates a user-readable string from a percentage change
- * @param {number} change
- * @param {boolean} includeEmoji
- */
-function addPercent(change, includeEmoji) {
-  if (!isFinite(change)) {
-    // When a new package is created
-    return 'n/a';
+const percentFormatter = new Intl.NumberFormat('en', {
+  style: 'percent',
+  signDisplay: 'exceptZero',
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+});
+
+function change(decimal) {
+  if (Number === Infinity) {
+    return 'New file';
   }
-  const formatted = (change * 100).toFixed(1);
-  if (/^-|^0(?:\.0+)$/.test(formatted)) {
-    return `${formatted}%`;
-  } else {
-    if (includeEmoji) {
-      return `:small_red_triangle:+${formatted}%`;
-    } else {
-      return `+${formatted}%`;
-    }
+  if (decimal === -1) {
+    return 'Deleted';
   }
+  if (decimal < 0.0001) {
+    return '=';
+  }
+  return percentFormatter.format(decimal);
 }
 
-function setBoldness(row, isBold) {
-  if (isBold) {
-    return row.map(element => `**${element}**`);
-  } else {
-    return row;
-  }
-}
+const header = `
+  | Name | +/- | Base | Current | +/- gzip | Base gzip | Current gzip |
+  | ---- | --- | ---- | ------- | -------- | --------- | ------------ |`;
 
-function getBundleSizes(pathToSizesDir) {
-  const filenames = readdirSync(pathToSizesDir);
-  let bundleSizes = [];
-  for (let i = 0; i < filenames.length; i++) {
-    const filename = filenames[i];
-    if (filename.endsWith('.json')) {
-      const json = readFileSync(path.join(pathToSizesDir, filename));
-      bundleSizes.push(...JSON.parse(json).bundleSizes);
-    }
-  }
-  return {bundleSizes};
-}
-
-async function printResultsForChannel(baseResults, headResults) {
-  // Take the JSON of the build response and
-  // make an array comparing the results for printing
-  const results = generateResultsArray(headResults, baseResults);
-
-  const packagesToShow = results
-    .filter(
-      r =>
-        Math.abs(r.prevFileSizeAbsoluteChange) >= 300 || // bytes
-        Math.abs(r.prevGzipSizeAbsoluteChange) >= 100 // bytes
-    )
-    .map(r => r.packageName);
-
-  if (packagesToShow.length) {
-    let allTables = [];
-
-    // Highlight React and React DOM changes inline
-    // e.g. react: `react.production.min.js`: -3%, `react.development.js`: +4%
-
-    if (packagesToShow.includes('react')) {
-      const reactProd = results.find(
-        r => r.bundleType === 'UMD_PROD' && r.packageName === 'react'
-      );
-      if (
-        reactProd.prevFileSizeChange !== 0 ||
-        reactProd.prevGzipSizeChange !== 0
-      ) {
-        const changeSize = addPercent(reactProd.prevFileSizeChange, true);
-        const changeGzip = addPercent(reactProd.prevGzipSizeChange, true);
-        markdown(`React: size: ${changeSize}, gzip: ${changeGzip}`);
-      }
-    }
-
-    if (packagesToShow.includes('react-dom')) {
-      const reactDOMProd = results.find(
-        r => r.bundleType === 'UMD_PROD' && r.packageName === 'react-dom'
-      );
-      if (
-        reactDOMProd.prevFileSizeChange !== 0 ||
-        reactDOMProd.prevGzipSizeChange !== 0
-      ) {
-        const changeSize = addPercent(reactDOMProd.prevFileSizeChange, true);
-        const changeGzip = addPercent(reactDOMProd.prevGzipSizeChange, true);
-        markdown(`ReactDOM: size: ${changeSize}, gzip: ${changeGzip}`);
-      }
-    }
-
-    // Show a hidden summary table for all diffs
-
-    // eslint-disable-next-line no-var,no-for-of-loops/no-for-of-loops
-    for (var name of new Set(packagesToShow)) {
-      const thisBundleResults = results.filter(r => r.packageName === name);
-      const changedFiles = thisBundleResults.filter(
-        r => r.prevFileSizeChange !== 0 || r.prevGzipSizeChange !== 0
-      );
-
-      const mdHeaders = [
-        'File',
-        'Filesize Diff',
-        'Gzip Diff',
-        'Prev Size',
-        'Current Size',
-        'Prev Gzip',
-        'Current Gzip',
-        'ENV',
-      ];
-
-      const mdRows = changedFiles.map(r => {
-        const isProd = r.bundleType.includes('PROD');
-        return setBoldness(
-          [
-            r.filename,
-            addPercent(r.prevFileSizeChange, isProd),
-            addPercent(r.prevGzipSizeChange, isProd),
-            r.prevSize,
-            r.prevFileSize,
-            r.prevGzip,
-            r.prevGzipSize,
-            r.bundleType,
-          ],
-          isProd
-        );
-      });
-
-      allTables.push(`\n## ${name}`);
-      allTables.push(generateMDTable(mdHeaders, mdRows));
-    }
-
-    const summary = `
-  <details>
-  <summary>Details of bundled changes.</summary>
-
-  ${allTables.join('\n')}
-
-  </details>
-  `;
-    return summary;
-  } else {
-    return 'No significant bundle size changes to report.';
-  }
+function row(result) {
+  // prettier-ignore
+  return `| ${result.path} | **${change(result.change)}** | ${kbs(result.baseSize)} | ${kbs(result.headSize)} | ${change(result.changeGzip)} | ${kbs(result.baseSizeGzip)} | ${kbs(result.headSizeGzip)}`;
 }
 
 (async function() {
@@ -202,21 +100,10 @@ async function printResultsForChannel(baseResults, headResults) {
   }
 
   let headSha;
-  let headSizesStable;
-  let headSizesExperimental;
-
   let baseSha;
-  let baseSizesStable;
-  let baseSizesExperimental;
-
   try {
-    headSha = (readFileSync('./build2/COMMIT_SHA') + '').trim();
-    headSizesStable = getBundleSizes('./build2/sizes-stable');
-    headSizesExperimental = getBundleSizes('./build2/sizes-experimental');
-
-    baseSha = (readFileSync('./base-build/COMMIT_SHA') + '').trim();
-    baseSizesStable = getBundleSizes('./base-build/sizes-stable');
-    baseSizesExperimental = getBundleSizes('./base-build/sizes-experimental');
+    headSha = (readFileSync(HEAD_DIR + '/COMMIT_SHA') + '').trim();
+    baseSha = (readFileSync(BASE_DIR + '/COMMIT_SHA') + '').trim();
   } catch {
     warn(
       "Failed to read build artifacts. It's possible a build configuration " +
@@ -226,17 +113,135 @@ async function printResultsForChannel(baseResults, headResults) {
     return;
   }
 
+  const resultsMap = new Map();
+
+  // Find all the head (current) artifacts paths.
+  const headArtifactPaths = await glob('**/*.js', {cwd: 'build2'});
+  for (const artifactPath of headArtifactPaths) {
+    try {
+      // This will throw if there's no matching base artifact
+      const baseSize = statSync(BASE_DIR + '/' + artifactPath).size;
+      const baseSizeGzip = gzipSize.fileSync(BASE_DIR + '/' + artifactPath);
+
+      const headSize = statSync(HEAD_DIR + '/' + artifactPath).size;
+      const headSizeGzip = gzipSize.fileSync(HEAD_DIR + '/' + artifactPath);
+      resultsMap.set(artifactPath, {
+        path: artifactPath,
+        headSize,
+        headSizeGzip,
+        baseSize,
+        baseSizeGzip,
+        change: (headSize - baseSize) / baseSize,
+        changeGzip: (headSizeGzip - baseSizeGzip) / baseSizeGzip,
+      });
+    } catch {
+      // There's no matching base artifact. This is a new file.
+      const baseSize = 0;
+      const baseSizeGzip = 0;
+      const headSize = statSync(HEAD_DIR + '/' + artifactPath).size;
+      const headSizeGzip = gzipSize.fileSync(HEAD_DIR + '/' + artifactPath);
+      resultsMap.set(artifactPath, {
+        path: artifactPath,
+        headSize,
+        headSizeGzip,
+        baseSize,
+        baseSizeGzip,
+        change: Infinity,
+        changeGzip: Infinity,
+      });
+    }
+  }
+
+  // Check for base artifacts that were deleted in the head.
+  const baseArtifactPaths = await glob('**/*.js', {cwd: 'base-build'});
+  for (const artifactPath of baseArtifactPaths) {
+    if (!resultsMap.has(artifactPath)) {
+      const baseSize = statSync(BASE_DIR + '/' + artifactPath).size;
+      const baseSizeGzip = gzipSize.fileSync(BASE_DIR + '/' + artifactPath);
+      const headSize = 0;
+      const headSizeGzip = 0;
+      resultsMap.set(artifactPath, {
+        path: artifactPath,
+        headSize,
+        headSizeGzip,
+        baseSize,
+        baseSizeGzip,
+        change: -1,
+        changeGzip: -1,
+      });
+    }
+  }
+
+  const results = Array.from(resultsMap.values());
+  results.sort((a, b) => b.change - a.change);
+
+  let criticalResults = [];
+  for (const artifactPath of CRITICAL_ARTIFACT_PATHS) {
+    const result = resultsMap.get(artifactPath);
+    if (result === undefined) {
+      throw new Error(
+        'Missing expected bundle. If this was an intentional change to the ' +
+          'build configuration, update Dangerfile.js accordingly: ' +
+          artifactPath
+      );
+    }
+    criticalResults.push(row(result));
+  }
+
+  let significantResults = [];
+  for (const result of results) {
+    // If result exceeds critical threshold, add to top section.
+    if (
+      (result.change > CRITICAL_THRESHOLD ||
+        0 - result.change > CRITICAL_THRESHOLD ||
+        // New file
+        result.change === Infinity ||
+        // Deleted file
+        result.change === -1) &&
+      // Skip critical artifacts. We added those earlier, in a fixed order.
+      !CRITICAL_ARTIFACT_PATHS.has(result.path)
+    ) {
+      criticalResults.push(row(result));
+    }
+
+    // Do the same for results that exceed the significant threshold. These
+    // will go into the bottom, collapsed section. Intentionally including
+    // critical artifacts in this section, too.
+    if (
+      result.change > SIGNIFICANCE_THRESHOLD ||
+      0 - result.change > SIGNIFICANCE_THRESHOLD ||
+      result.change === Infinity ||
+      result.change === -1
+    ) {
+      significantResults.push(row(result));
+    }
+  }
+
   markdown(`
-## Size changes
+Comparing: ${baseSha}...${headSha}
 
-<p>Comparing: ${baseSha}...${headSha}</p>
+## Critical size changes
 
-### Stable channel
+Includes critical production bundles, as well as any change greater than ${CRITICAL_THRESHOLD *
+    100}%:
 
-${await printResultsForChannel(baseSizesStable, headSizesStable)}
+${header}
+${criticalResults.join('\n')}
 
-### Experimental channel
+## Significant size changes
 
-${await printResultsForChannel(baseSizesExperimental, headSizesExperimental)}
+Includes any change greater than ${SIGNIFICANCE_THRESHOLD * 100}%:
+
+${
+  significantResults.length > 0
+    ? `
+<details>
+<summary>Expand to show</summary>
+${header}
+${significantResults.join('\n')}
+</details>
+`
+    : '(No significant changes)'
+}
 `);
 })();
