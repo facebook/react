@@ -36,10 +36,7 @@ export type Lane = number;
 export type LaneMap<T> = Array<T>;
 
 import invariant from 'shared/invariant';
-import {
-  enableCache,
-  enableTransitionEntanglement,
-} from 'shared/ReactFeatureFlags';
+import {enableCache} from 'shared/ReactFeatureFlags';
 
 import {
   ImmediatePriority as ImmediateSchedulerPriority,
@@ -307,15 +304,6 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
     // This should only be reachable if we're suspended
     // TODO: Consider warning in this path if a fallback timer is not scheduled.
     return NoLanes;
-  }
-
-  if (enableTransitionEntanglement) {
-    // We don't need to do anything extra here, because we apply per-lane
-    // transition entanglement in the entanglement loop below.
-  } else {
-    // If there are higher priority lanes, we'll include them even if they
-    // are suspended.
-    nextLanes = pendingLanes & getEqualOrHigherPriorityLanes(nextLanes);
   }
 
   // If we're already in the middle of a render, switching lanes will interrupt
@@ -595,16 +583,6 @@ function getHighestPriorityLane(lanes: Lanes) {
   return lanes & -lanes;
 }
 
-function getLowestPriorityLane(lanes: Lanes): Lane {
-  // This finds the most significant non-zero bit.
-  const index = 31 - clz32(lanes);
-  return index < 0 ? NoLanes : 1 << index;
-}
-
-function getEqualOrHigherPriorityLanes(lanes: Lanes | Lane): Lanes {
-  return (getLowestPriorityLane(lanes) << 1) - 1;
-}
-
 export function pickArbitraryLane(lanes: Lanes): Lane {
   // This wrapper function gets inlined. Only exists so to communicate that it
   // doesn't matter which bit is selected; you can pick any bit without
@@ -676,39 +654,21 @@ export function markRootUpdated(
 ) {
   root.pendingLanes |= updateLane;
 
-  // TODO: Theoretically, any update to any lane can unblock any other lane. But
-  // it's not practical to try every single possible combination. We need a
-  // heuristic to decide which lanes to attempt to render, and in which batches.
-  // For now, we use the same heuristic as in the old ExpirationTimes model:
-  // retry any lane at equal or lower priority, but don't try updates at higher
-  // priority without also including the lower priority updates. This works well
-  // when considering updates across different priority levels, but isn't
-  // sufficient for updates within the same priority, since we want to treat
-  // those updates as parallel.
-
-  // Unsuspend any update at equal or lower priority.
-  const higherPriorityLanes = updateLane - 1; // Turns 0b1000 into 0b0111
-
-  if (enableTransitionEntanglement) {
-    // If there are any suspended transitions, it's possible this new update
-    // could unblock them. Clear the suspended lanes so that we can try rendering
-    // them again.
-    //
-    // TODO: We really only need to unsuspend only lanes that are in the
-    // `subtreeLanes` of the updated fiber, or the update lanes of the return
-    // path. This would exclude suspended updates in an unrelated sibling tree,
-    // since there's no way for this update to unblock it.
-    //
-    // We don't do this if the incoming update is idle, because we never process
-    // idle updates until after all the regular updates have finished; there's no
-    // way it could unblock a transition.
-    if ((updateLane & IdleLanes) === NoLanes) {
-      root.suspendedLanes = NoLanes;
-      root.pingedLanes = NoLanes;
-    }
-  } else {
-    root.suspendedLanes &= higherPriorityLanes;
-    root.pingedLanes &= higherPriorityLanes;
+  // If there are any suspended transitions, it's possible this new update
+  // could unblock them. Clear the suspended lanes so that we can try rendering
+  // them again.
+  //
+  // TODO: We really only need to unsuspend only lanes that are in the
+  // `subtreeLanes` of the updated fiber, or the update lanes of the return
+  // path. This would exclude suspended updates in an unrelated sibling tree,
+  // since there's no way for this update to unblock it.
+  //
+  // We don't do this if the incoming update is idle, because we never process
+  // idle updates until after all the regular updates have finished; there's no
+  // way it could unblock a transition.
+  if ((updateLane & IdleLanes) === NoLanes) {
+    root.suspendedLanes = NoLanes;
+    root.pingedLanes = NoLanes;
   }
 
   const eventTimes = root.eventTimes;

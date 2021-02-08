@@ -733,19 +733,10 @@ describe('ReactExpiration', () => {
       // Both normal pri updates should have expired.
       expect(Scheduler).toFlushExpired([
         'Sibling',
-        gate(flags => flags.enableTransitionEntanglement)
-          ? // Notice that the high pri update didn't flush yet. Expiring one lane
-            // doesn't affect other lanes. (Unless they are intentionally
-            // entangled, like we do for overlapping transitions that affect the
-            // same state.)
-            'High pri: 0'
-          : // In the current implementation, once we pick the next lanes to work
-            // on, we entangle it with all pending at equal or higher priority.
-            // We could feasibly change this heuristic so that the high pri
-            // update doesn't render until after the expired updates have
-            // finished. But the important thing in this test is that the normal
-            // updates expired.
-            'High pri: 1',
+        // Notice that the high pri update didn't flush yet. Expiring one lane
+        // doesn't affect other lanes. (Unless they are intentionally entangled,
+        // like we do for overlapping transitions that affect the same state.)
+        'High pri: 0',
         'Normal pri: 2',
         'Sibling',
       ]);
