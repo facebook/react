@@ -24,84 +24,83 @@ export const topLevelEventsToReactNames: Map<
   string | null,
 > = new Map();
 
+// NOTE: Capitalization is important in this list!
+//
+// E.g. it needs "pointerDown", not "pointerdown".
+// This is because we derive both React name ("onPointerDown")
+// and DOM name ("pointerdown") from the same list.
+//
+// Exceptions that don't match this convention are listed separately.
+//
 // prettier-ignore
-const simpleEventPluginNames = [
-  ('cancel': DOMEventName), 'cancel',
-  ('click': DOMEventName), 'click',
-  ('close': DOMEventName), 'close',
-  ('contextmenu': DOMEventName), 'contextMenu',
-  ('copy': DOMEventName), 'copy',
-  ('cut': DOMEventName), 'cut',
-  ('auxclick': DOMEventName), 'auxClick',
-  ('dblclick': DOMEventName), 'doubleClick', // Careful!
-  ('dragend': DOMEventName), 'dragEnd',
-  ('dragstart': DOMEventName), 'dragStart',
-  ('drop': DOMEventName), 'drop',
-  ('focusin': DOMEventName), 'focus', // Careful!
-  ('focusout': DOMEventName), 'blur', // Careful!
-  ('input': DOMEventName), 'input',
-  ('invalid': DOMEventName), 'invalid',
-  ('keydown': DOMEventName), 'keyDown',
-  ('keypress': DOMEventName), 'keyPress',
-  ('keyup': DOMEventName), 'keyUp',
-  ('mousedown': DOMEventName), 'mouseDown',
-  ('mouseup': DOMEventName), 'mouseUp',
-  ('paste': DOMEventName), 'paste',
-  ('pause': DOMEventName), 'pause',
-  ('play': DOMEventName), 'play',
-  ('pointercancel': DOMEventName), 'pointerCancel',
-  ('pointerdown': DOMEventName), 'pointerDown',
-  ('pointerup': DOMEventName), 'pointerUp',
-  ('ratechange': DOMEventName), 'rateChange',
-  ('reset': DOMEventName), 'reset',
-  ('seeked': DOMEventName), 'seeked',
-  ('submit': DOMEventName), 'submit',
-  ('touchcancel': DOMEventName), 'touchCancel',
-  ('touchend': DOMEventName), 'touchEnd',
-  ('touchstart': DOMEventName), 'touchStart',
-  ('volumechange': DOMEventName), 'volumeChange',
-
-  ('drag': DOMEventName), 'drag',
-  ('dragenter': DOMEventName), 'dragEnter',
-  ('dragexit': DOMEventName), 'dragExit',
-  ('dragleave': DOMEventName), 'dragLeave',
-  ('dragover': DOMEventName), 'dragOver',
-  ('mousemove': DOMEventName), 'mouseMove',
-  ('mouseout': DOMEventName), 'mouseOut',
-  ('mouseover': DOMEventName), 'mouseOver',
-  ('pointermove': DOMEventName), 'pointerMove',
-  ('pointerout': DOMEventName), 'pointerOut',
-  ('pointerover': DOMEventName), 'pointerOver',
-  ('scroll': DOMEventName), 'scroll',
-  ('toggle': DOMEventName), 'toggle',
-  ('touchmove': DOMEventName), 'touchMove',
-  ('wheel': DOMEventName), 'wheel',
-
-  ('abort': DOMEventName), 'abort',
-  (ANIMATION_END: DOMEventName), 'animationEnd',
-  (ANIMATION_ITERATION: DOMEventName), 'animationIteration',
-  (ANIMATION_START: DOMEventName), 'animationStart',
-  ('canplay': DOMEventName), 'canPlay',
-  ('canplaythrough': DOMEventName), 'canPlayThrough',
-  ('durationchange': DOMEventName), 'durationChange',
-  ('emptied': DOMEventName), 'emptied',
-  ('encrypted': DOMEventName), 'encrypted',
-  ('ended': DOMEventName), 'ended',
-  ('error': DOMEventName), 'error',
-  ('gotpointercapture': DOMEventName), 'gotPointerCapture',
-  ('load': DOMEventName), 'load',
-  ('loadeddata': DOMEventName), 'loadedData',
-  ('loadedmetadata': DOMEventName), 'loadedMetadata',
-  ('loadstart': DOMEventName), 'loadStart',
-  ('lostpointercapture': DOMEventName), 'lostPointerCapture',
-  ('playing': DOMEventName), 'playing',
-  ('progress': DOMEventName), 'progress',
-  ('seeking': DOMEventName), 'seeking',
-  ('stalled': DOMEventName), 'stalled',
-  ('suspend': DOMEventName), 'suspend',
-  ('timeupdate': DOMEventName), 'timeUpdate',
-  (TRANSITION_END: DOMEventName), 'transitionEnd',
-  ('waiting': DOMEventName), 'waiting',
+const simpleEventPluginEvents = [
+  'abort',
+  'auxClick',
+  'cancel',
+  'canPlay',
+  'canPlayThrough',
+  'click',
+  'close',
+  'contextMenu',
+  'copy',
+  'cut',
+  'drag',
+  'dragEnd',
+  'dragEnter',
+  'dragExit',
+  'dragLeave',
+  'dragOver',
+  'dragStart',
+  'drop',
+  'durationChange',
+  'emptied',
+  'encrypted',
+  'ended',
+  'error',
+  'gotPointerCapture',
+  'input',
+  'invalid',
+  'keyDown',
+  'keyPress',
+  'keyUp',
+  'load',
+  'loadedData',
+  'loadedMetadata',
+  'loadStart',
+  'lostPointerCapture',
+  'mouseDown',
+  'mouseMove',
+  'mouseOut',
+  'mouseOver',
+  'mouseUp',
+  'paste',
+  'pause',
+  'play',
+  'playing',
+  'pointerCancel',
+  'pointerDown',
+  'pointerMove',
+  'pointerOut',
+  'pointerOver',
+  'pointerUp',
+  'progress',
+  'rateChange',
+  'reset',
+  'seeked',
+  'seeking',
+  'stalled',
+  'submit',
+  'suspend',
+  'timeUpdate',
+  'touchCancel',
+  'touchEnd',
+  'touchStart',
+  'volumeChange',
+  'scroll',
+  'toggle',
+  'touchMove',
+  'waiting',
+  'wheel',
 ];
 
 if (enableCreateEventHandleAPI) {
@@ -111,31 +110,24 @@ if (enableCreateEventHandleAPI) {
   topLevelEventsToReactNames.set('afterblur', null);
 }
 
-/**
- * Turns
- * ['abort', ...]
- *
- * into
- *
- * topLevelEventsToReactNames = new Map([
- *   ['abort', 'onAbort'],
- * ]);
- *
- * and registers them.
- */
+function registerSimpleEvent(domEventName, reactName) {
+  topLevelEventsToReactNames.set(domEventName, reactName);
+  registerTwoPhaseEvent(reactName, [domEventName]);
+}
+
 export function registerSimpleEvents() {
-  // As the event types are in pairs of two, we need to iterate
-  // through in twos. The events are in pairs of two to save code
-  // and improve init perf of processing this array, as it will
-  // result in far fewer object allocations and property accesses
-  // if we only use three arrays to process all the categories of
-  // instead of tuples.
-  for (let i = 0; i < simpleEventPluginNames.length; i += 2) {
-    const topEvent = ((simpleEventPluginNames[i]: any): DOMEventName);
-    const event = ((simpleEventPluginNames[i + 1]: any): string);
-    const capitalizedEvent = event[0].toUpperCase() + event.slice(1);
-    const reactName = 'on' + capitalizedEvent;
-    topLevelEventsToReactNames.set(topEvent, reactName);
-    registerTwoPhaseEvent(reactName, [topEvent]);
+  for (let i = 0; i < simpleEventPluginEvents.length; i++) {
+    const eventName = ((simpleEventPluginEvents[i]: any): string);
+    const domEventName = ((eventName.toLowerCase(): any): DOMEventName);
+    const capitalizedEvent = eventName[0].toUpperCase() + eventName.slice(1);
+    registerSimpleEvent(domEventName, 'on' + capitalizedEvent);
   }
+  // Special cases where event names don't match.
+  registerSimpleEvent(ANIMATION_END, 'onAnimationEnd');
+  registerSimpleEvent(ANIMATION_ITERATION, 'onAnimationIteration');
+  registerSimpleEvent(ANIMATION_START, 'onAnimationStart');
+  registerSimpleEvent('dblclick', 'onDoubleClick');
+  registerSimpleEvent('focusin', 'onFocus');
+  registerSimpleEvent('focusout', 'onBlur');
+  registerSimpleEvent(TRANSITION_END, 'onTransitionEnd');
 }
