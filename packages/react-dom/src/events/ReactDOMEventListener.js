@@ -11,6 +11,7 @@ import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
+import type {EventPriority} from 'shared/ReactTypes';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
@@ -44,7 +45,6 @@ import {
   enableNewReconciler,
 } from 'shared/ReactFeatureFlags';
 import {ContinuousEvent, DefaultEvent, DiscreteEvent} from 'shared/ReactTypes';
-import {getEventPriorityForPluginSystem} from './DOMEventProperties';
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 import {
   flushDiscreteUpdatesIfNeeded,
@@ -338,4 +338,77 @@ export function attemptToDispatchEvent(
   );
   // We're not blocked on anything.
   return null;
+}
+
+function getEventPriorityForPluginSystem(
+  domEventName: DOMEventName,
+): EventPriority {
+  switch (domEventName) {
+    // Used by SimpleEventPlugin:
+    case 'cancel':
+    case 'click':
+    case 'close':
+    case 'contextmenu':
+    case 'copy':
+    case 'cut':
+    case 'auxclick':
+    case 'dblclick':
+    case 'dragend':
+    case 'dragstart':
+    case 'drop':
+    case 'focusin':
+    case 'focusout':
+    case 'input':
+    case 'invalid':
+    case 'keydown':
+    case 'keypress':
+    case 'keyup':
+    case 'mousedown':
+    case 'mouseup':
+    case 'paste':
+    case 'pause':
+    case 'play':
+    case 'pointercancel':
+    case 'pointerdown':
+    case 'pointerup':
+    case 'ratechange':
+    case 'reset':
+    case 'seeked':
+    case 'submit':
+    case 'touchcancel':
+    case 'touchend':
+    case 'touchstart':
+    case 'volumechange':
+    // Used by polyfills:
+    // eslint-disable-next-line no-fallthrough
+    case 'change':
+    case 'selectionchange':
+    case 'textInput':
+    case 'compositionstart':
+    case 'compositionend':
+    case 'compositionupdate':
+    // Only enableCreateEventHandleAPI:
+    // eslint-disable-next-line no-fallthrough
+    case 'beforeblur':
+    case 'afterblur':
+      return DiscreteEvent;
+    case 'drag':
+    case 'dragenter':
+    case 'dragexit':
+    case 'dragleave':
+    case 'dragover':
+    case 'mousemove':
+    case 'mouseout':
+    case 'mouseover':
+    case 'pointermove':
+    case 'pointerout':
+    case 'pointerover':
+    case 'scroll':
+    case 'toggle':
+    case 'touchmove':
+    case 'wheel':
+      return ContinuousEvent;
+    default:
+      return DefaultEvent;
+  }
 }
