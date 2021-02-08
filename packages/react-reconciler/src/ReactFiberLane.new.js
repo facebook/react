@@ -36,10 +36,7 @@ export type Lane = number;
 export type LaneMap<T> = Array<T>;
 
 import invariant from 'shared/invariant';
-import {
-  enableCache,
-  enableTransitionEntanglement,
-} from 'shared/ReactFeatureFlags';
+import {enableCache} from 'shared/ReactFeatureFlags';
 
 import {
   ImmediatePriority as ImmediateSchedulerPriority,
@@ -95,6 +92,7 @@ export const DefaultLanes: Lanes = /*                   */ 0b0000000000000000000
 
 const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000001000000000000;
 const TransitionLanes: Lanes = /*                       */ 0b0000000001111111110000000000000;
+const SomeTransitionLane: Lane = /*                     */ 0b0000000000000000010000000000000;
 
 const RetryLanes: Lanes = /*                            */ 0b0000011110000000000000000000000;
 
@@ -112,6 +110,9 @@ export const OffscreenLane: Lane = /*                   */ 0b1000000000000000000
 export const NoTimestamp = -1;
 
 let currentUpdateLanePriority: LanePriority = NoLanePriority;
+
+let nextTransitionLane: Lane = SomeTransitionLane;
+let nextRetryLane: Lane = SomeRetryLane;
 
 export function getCurrentUpdateLanePriority(): LanePriority {
   return currentUpdateLanePriority;
@@ -309,15 +310,6 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
     return NoLanes;
   }
 
-  if (enableTransitionEntanglement) {
-    // We don't need to do anything extra here, because we apply per-lane
-    // transition entanglement in the entanglement loop below.
-  } else {
-    // If there are higher priority lanes, we'll include them even if they
-    // are suspended.
-    nextLanes = pendingLanes & getEqualOrHigherPriorityLanes(nextLanes);
-  }
-
   // If we're already in the middle of a render, switching lanes will interrupt
   // it and we'll lose our progress. We should only do this if the new lanes are
   // higher priority.
@@ -350,6 +342,11 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   // entanglement is usually "best effort": we'll try our best to render the
   // lanes in the same batch, but it's not worth throwing out partially
   // completed work in order to do it.
+  // TODO: Reconsider this. The counter-argument is that the partial work
+  // represents an intermediate state, which we don't want to show to the user.
+  // And by spending extra time finishing it, we're increasing the amount of
+  // time it takes to show the final state, which is what they are actually
+  // waiting for.
   //
   // For those exceptions where entanglement is semantically important, like
   // useMutableSource, we should ensure that there is no partial work at the
@@ -559,50 +556,29 @@ export function findUpdateLane(
   );
 }
 
-// To ensure consistency across multiple updates in the same event, this should
-// be pure function, so that it always returns the same lane for given inputs.
-export function findTransitionLane(wipLanes: Lanes, pendingLanes: Lanes): Lane {
-  // First look for lanes that are completely unclaimed, i.e. have no
-  // pending work.
-  let lane = pickArbitraryLane(TransitionLanes & ~pendingLanes);
-  if (lane === NoLane) {
-    // If all lanes have pending work, look for a lane that isn't currently
-    // being worked on.
-    lane = pickArbitraryLane(TransitionLanes & ~wipLanes);
-    if (lane === NoLane) {
-      // If everything is being worked on, pick any lane. This has the
-      // effect of interrupting the current work-in-progress.
-      lane = pickArbitraryLane(TransitionLanes);
-    }
+export function claimNextTransitionLane(): Lane {
+  // Cycle through the lanes, assigning each new transition to the next lane.
+  // In most cases, this means every transition gets its own lane, until we
+  // run out of lanes and cycle back to the beginning.
+  const lane = nextTransitionLane;
+  nextTransitionLane <<= 1;
+  if ((nextTransitionLane & TransitionLanes) === 0) {
+    nextTransitionLane = SomeTransitionLane;
   }
   return lane;
 }
 
-// To ensure consistency across multiple updates in the same event, this should
-// be pure function, so that it always returns the same lane for given inputs.
-export function findRetryLane(wipLanes: Lanes): Lane {
-  // This is a fork of `findUpdateLane` designed specifically for Suspense
-  // "retries" — a special update that attempts to flip a Suspense boundary
-  // from its placeholder state to its primary/resolved state.
-  let lane = pickArbitraryLane(RetryLanes & ~wipLanes);
-  if (lane === NoLane) {
-    lane = pickArbitraryLane(RetryLanes);
+export function claimNextRetryLane(): Lane {
+  const lane = nextRetryLane;
+  nextRetryLane <<= 1;
+  if ((nextRetryLane & RetryLanes) === 0) {
+    nextRetryLane = SomeRetryLane;
   }
   return lane;
 }
 
 function getHighestPriorityLane(lanes: Lanes) {
   return lanes & -lanes;
-}
-
-function getLowestPriorityLane(lanes: Lanes): Lane {
-  // This finds the most significant non-zero bit.
-  const index = 31 - clz32(lanes);
-  return index < 0 ? NoLanes : 1 << index;
-}
-
-function getEqualOrHigherPriorityLanes(lanes: Lanes | Lane): Lanes {
-  return (getLowestPriorityLane(lanes) << 1) - 1;
 }
 
 export function pickArbitraryLane(lanes: Lanes): Lane {
@@ -676,39 +652,21 @@ export function markRootUpdated(
 ) {
   root.pendingLanes |= updateLane;
 
-  // TODO: Theoretically, any update to any lane can unblock any other lane. But
-  // it's not practical to try every single possible combination. We need a
-  // heuristic to decide which lanes to attempt to render, and in which batches.
-  // For now, we use the same heuristic as in the old ExpirationTimes model:
-  // retry any lane at equal or lower priority, but don't try updates at higher
-  // priority without also including the lower priority updates. This works well
-  // when considering updates across different priority levels, but isn't
-  // sufficient for updates within the same priority, since we want to treat
-  // those updates as parallel.
-
-  // Unsuspend any update at equal or lower priority.
-  const higherPriorityLanes = updateLane - 1; // Turns 0b1000 into 0b0111
-
-  if (enableTransitionEntanglement) {
-    // If there are any suspended transitions, it's possible this new update
-    // could unblock them. Clear the suspended lanes so that we can try rendering
-    // them again.
-    //
-    // TODO: We really only need to unsuspend only lanes that are in the
-    // `subtreeLanes` of the updated fiber, or the update lanes of the return
-    // path. This would exclude suspended updates in an unrelated sibling tree,
-    // since there's no way for this update to unblock it.
-    //
-    // We don't do this if the incoming update is idle, because we never process
-    // idle updates until after all the regular updates have finished; there's no
-    // way it could unblock a transition.
-    if ((updateLane & IdleLanes) === NoLanes) {
-      root.suspendedLanes = NoLanes;
-      root.pingedLanes = NoLanes;
-    }
-  } else {
-    root.suspendedLanes &= higherPriorityLanes;
-    root.pingedLanes &= higherPriorityLanes;
+  // If there are any suspended transitions, it's possible this new update
+  // could unblock them. Clear the suspended lanes so that we can try rendering
+  // them again.
+  //
+  // TODO: We really only need to unsuspend only lanes that are in the
+  // `subtreeLanes` of the updated fiber, or the update lanes of the return
+  // path. This would exclude suspended updates in an unrelated sibling tree,
+  // since there's no way for this update to unblock it.
+  //
+  // We don't do this if the incoming update is idle, because we never process
+  // idle updates until after all the regular updates have finished; there's no
+  // way it could unblock a transition.
+  if ((updateLane & IdleLanes) === NoLanes) {
+    root.suspendedLanes = NoLanes;
+    root.pingedLanes = NoLanes;
   }
 
   const eventTimes = root.eventTimes;
@@ -801,16 +759,32 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
 }
 
 export function markRootEntangled(root: FiberRoot, entangledLanes: Lanes) {
-  root.entangledLanes |= entangledLanes;
+  // In addition to entangling each of the given lanes with each other, we also
+  // have to consider _transitive_ entanglements. For each lane that is already
+  // entangled with *any* of the given lanes, that lane is now transitively
+  // entangled with *all* the given lanes.
+  //
+  // Translated: If C is entangled with A, then entangling A with B also
+  // entangles C with B.
+  //
+  // If this is hard to grasp, it might help to intentionally break this
+  // function and look at the tests that fail in ReactTransition-test.js. Try
+  // commenting out one of the conditions below.
 
+  const rootEntangledLanes = (root.entangledLanes |= entangledLanes);
   const entanglements = root.entanglements;
-  let lanes = entangledLanes;
-  while (lanes > 0) {
+  let lanes = rootEntangledLanes;
+  while (lanes) {
     const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
-
-    entanglements[index] |= entangledLanes;
-
+    if (
+      // Is this one of the newly entangled lanes?
+      (lane & entangledLanes) |
+      // Is this lane transitively entangled with the newly entangled lanes?
+      (entanglements[index] & entangledLanes)
+    ) {
+      entanglements[index] |= entangledLanes;
+    }
     lanes &= ~lane;
   }
 }

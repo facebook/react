@@ -145,8 +145,8 @@ import {
   SyncBatchedLane,
   NoTimestamp,
   findUpdateLane,
-  findTransitionLane,
-  findRetryLane,
+  claimNextTransitionLane,
+  claimNextRetryLane,
   includesSomeLane,
   isSubsetOfLanes,
   mergeLanes,
@@ -302,8 +302,6 @@ let workInProgressRootUpdatedLanes: Lanes = NoLanes;
 // Lanes that were pinged (in an interleaved event) during this render.
 let workInProgressRootPingedLanes: Lanes = NoLanes;
 
-let mostRecentlyUpdatedRoot: FiberRoot | null = null;
-
 // The most recent time we committed a fallback. This lets us ensure a train
 // model where we don't commit new loading states in too quick succession.
 let globalMostRecentFallbackTime: number = 0;
@@ -360,7 +358,7 @@ let spawnedWorkDuringRender: null | Array<Lane | Lanes> = null;
 // between the first and second call.
 let currentEventTime: number = NoTimestamp;
 let currentEventWipLanes: Lanes = NoLanes;
-let currentEventPendingLanes: Lanes = NoLanes;
+let currentEventTransitionLane: Lanes = NoLanes;
 
 // Dev only flag that tracks if passive effects are currently being flushed.
 // We warn about state updates for unmounted components differently in this case.
@@ -428,20 +426,17 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   // event. Then reset the cached values once we can be sure the event is over.
   // Our heuristic for that is whenever we enter a concurrent work loop.
   //
-  // We'll do the same for `currentEventPendingLanes` below.
+  // We'll do the same for `currentEventTransitionLane` below.
   if (currentEventWipLanes === NoLanes) {
     currentEventWipLanes = workInProgressRootIncludedLanes;
   }
 
   const isTransition = requestCurrentTransition() !== NoTransition;
   if (isTransition) {
-    if (currentEventPendingLanes !== NoLanes) {
-      currentEventPendingLanes =
-        mostRecentlyUpdatedRoot !== null
-          ? mostRecentlyUpdatedRoot.pendingLanes
-          : NoLanes;
+    if (currentEventTransitionLane === NoLane) {
+      currentEventTransitionLane = claimNextTransitionLane();
     }
-    return findTransitionLane(currentEventWipLanes, currentEventPendingLanes);
+    return currentEventTransitionLane;
   }
 
   // TODO: Remove this dependency on the Scheduler priority.
@@ -494,7 +489,8 @@ function requestRetryLane(fiber: Fiber) {
   if (currentEventWipLanes === NoLanes) {
     currentEventWipLanes = workInProgressRootIncludedLanes;
   }
-  return findRetryLane(currentEventWipLanes);
+
+  return claimNextRetryLane();
 }
 
 export function scheduleUpdateOnFiber(
@@ -617,13 +613,6 @@ export function scheduleUpdateOnFiber(
     ensureRootIsScheduled(root, eventTime);
     schedulePendingInteractions(root, lane);
   }
-
-  // We use this when assigning a lane for a transition inside
-  // `requestUpdateLane`. We assume it's the same as the root being updated,
-  // since in the common case of a single root app it probably is. If it's not
-  // the same root, then it's not a huge deal, we just might batch more stuff
-  // together more than necessary.
-  mostRecentlyUpdatedRoot = root;
 
   return root;
 }
@@ -793,7 +782,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   // event time. The next update will compute a new event time.
   currentEventTime = NoTimestamp;
   currentEventWipLanes = NoLanes;
-  currentEventPendingLanes = NoLanes;
+  currentEventTransitionLane = NoLanes;
 
   invariant(
     (executionContext & (RenderContext | CommitContext)) === NoContext,
@@ -2461,6 +2450,8 @@ function retryTimedOutBoundary(boundaryFiber: Fiber, retryLane: Lane) {
   // suspended it has resolved, which means at least part of the tree was
   // likely unblocked. Try rendering again, at a new expiration time.
   if (retryLane === NoLane) {
+    // TODO: Assign this to `suspenseState.retryLane`? to avoid
+    // unnecessary entanglement?
     retryLane = requestRetryLane(boundaryFiber);
   }
   // TODO: Special case idle priority?
