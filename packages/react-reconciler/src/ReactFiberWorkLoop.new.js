@@ -35,6 +35,7 @@ import {
   enableDoubleInvokingEffects,
   skipUnmountedBoundaries,
   enableTransitionEntanglement,
+  enableNativeEventPriorityInference,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -94,6 +95,7 @@ import {
   afterActiveInstanceBlur,
   clearContainer,
   scheduleMicrotask,
+  getCurrentEventPriority,
 } from './ReactFiberHostConfig';
 
 import {
@@ -461,11 +463,23 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     const currentLanePriority = getCurrentUpdateLanePriority();
     lane = findUpdateLane(currentLanePriority, currentEventWipLanes);
   } else {
-    const schedulerLanePriority = schedulerPriorityToLanePriority(
-      schedulerPriority,
-    );
-
-    lane = findUpdateLane(schedulerLanePriority, currentEventWipLanes);
+    if (enableNativeEventPriorityInference) {
+      const eventLanePriority = getCurrentEventPriority();
+      if (eventLanePriority === DefaultLanePriority) {
+        // TODO: move this case into the ReactDOM host config.
+        const schedulerLanePriority = schedulerPriorityToLanePriority(
+          schedulerPriority,
+        );
+        lane = findUpdateLane(schedulerLanePriority, currentEventWipLanes);
+      } else {
+        lane = findUpdateLane(eventLanePriority, currentEventWipLanes);
+      }
+    } else {
+      const schedulerLanePriority = schedulerPriorityToLanePriority(
+        schedulerPriority,
+      );
+      lane = findUpdateLane(schedulerLanePriority, currentEventWipLanes);
+    }
   }
 
   return lane;

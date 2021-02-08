@@ -9,6 +9,13 @@
 
 import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 
+import {DefaultLanePriority as DefaultLanePriority_old} from 'react-reconciler/src/ReactFiberLane.old';
+import {DefaultLanePriority as DefaultLanePriority_new} from 'react-reconciler/src/ReactFiberLane.new';
+
+const DefaultLanePriority = enableNewReconciler
+  ? DefaultLanePriority_new
+  : DefaultLanePriority_old;
+
 export type Type = string;
 export type Props = Object;
 export type Container = {|
@@ -211,6 +218,10 @@ export function createTextInstance(
     isHidden: false,
     tag: 'TEXT',
   };
+}
+
+export function getCurrentEventPriority(): * {
+  return DefaultLanePriority;
 }
 
 export const isPrimaryRenderer = false;
