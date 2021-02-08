@@ -192,23 +192,6 @@ export function getEventPriorityForPluginSystem(
   return priority === undefined ? DefaultEvent : priority;
 }
 
-export function getEventPriorityForListenerSystem(
-  type: DOMEventName,
-): EventPriority {
-  const priority = eventPriorities.get(type);
-  if (priority !== undefined) {
-    return priority;
-  }
-  if (__DEV__) {
-    console.warn(
-      'The event "%s" provided to createEventHandle() does not have a known priority type.' +
-        ' This is likely a bug in React.',
-      type,
-    );
-  }
-  return DefaultEvent;
-}
-
 export function registerSimpleEvents() {
   registerSimplePluginEventsAndSetTheirPriorities(
     discreteEventPairsForSimpleEventPlugin,

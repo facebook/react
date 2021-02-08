@@ -19,7 +19,6 @@ export type DispatchConfig = {|
     captured: null | string,
   |},
   registrationName?: string,
-  eventPriority: EventPriority,
 |};
 
 export type CustomDispatchConfig = {|
