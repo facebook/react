@@ -43,11 +43,7 @@ import {
   decoupleUpdatePriorityFromScheduler,
   enableNewReconciler,
 } from 'shared/ReactFeatureFlags';
-import {
-  UserBlockingEvent,
-  ContinuousEvent,
-  DiscreteEvent,
-} from 'shared/ReactTypes';
+import {ContinuousEvent, DefaultEvent, DiscreteEvent} from 'shared/ReactTypes';
 import {getEventPriorityForPluginSystem} from './DOMEventProperties';
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 import {
@@ -118,10 +114,10 @@ export function createEventListenerWrapperWithPriority(
     case DiscreteEvent:
       listenerWrapper = dispatchDiscreteEvent;
       break;
-    case UserBlockingEvent:
-      listenerWrapper = dispatchUserBlockingUpdate;
-      break;
     case ContinuousEvent:
+      listenerWrapper = dispatchContinuousEvent;
+      break;
+    case DefaultEvent:
     default:
       listenerWrapper = dispatchEvent;
       break;
@@ -157,7 +153,7 @@ function dispatchDiscreteEvent(
   );
 }
 
-function dispatchUserBlockingUpdate(
+function dispatchContinuousEvent(
   domEventName,
   eventSystemFlags,
   container,

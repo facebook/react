@@ -89,8 +89,8 @@ export type RefObject = {|
 export type EventPriority = 0 | 1 | 2;
 
 export const DiscreteEvent: EventPriority = 0;
-export const UserBlockingEvent: EventPriority = 1;
-export const ContinuousEvent: EventPriority = 2;
+export const ContinuousEvent: EventPriority = 1;
+export const DefaultEvent: EventPriority = 2;
 
 export type ReactScope = {|
   $$typeof: Symbol | number,
