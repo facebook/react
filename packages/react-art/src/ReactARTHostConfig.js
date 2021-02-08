@@ -7,9 +7,17 @@
 
 import Transform from 'art/core/transform';
 import Mode from 'art/modes/current';
+import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 
 import {TYPES, EVENT_TYPES, childrenAsString} from './ReactARTInternals';
+
+import {DefaultLanePriority as DefaultLanePriority_old} from 'react-reconciler/src/ReactFiberLane.old';
+import {DefaultLanePriority as DefaultLanePriority_new} from 'react-reconciler/src/ReactFiberLane.new';
+
+const DefaultLanePriority = enableNewReconciler
+  ? DefaultLanePriority_new
+  : DefaultLanePriority_old;
 
 const pooledTransform = new Transform();
 
@@ -338,6 +346,10 @@ export function shouldSetTextContent(type, props) {
   return (
     typeof props.children === 'string' || typeof props.children === 'number'
   );
+}
+
+export function getCurrentEventPriority() {
+  return DefaultLanePriority;
 }
 
 // The ART renderer is secondary to the React DOM renderer.
