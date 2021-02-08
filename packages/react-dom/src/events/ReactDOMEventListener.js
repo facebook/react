@@ -11,7 +11,6 @@ import type {AnyNativeEvent} from '../events/PluginModuleType';
 import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
-import type {EventPriority} from 'shared/ReactTypes';
 
 // Intentionally not named imports because Rollup would use dynamic dispatch for
 // CommonJS interop named imports.
@@ -44,7 +43,6 @@ import {
   decoupleUpdatePriorityFromScheduler,
   enableNewReconciler,
 } from 'shared/ReactFeatureFlags';
-import {ContinuousEvent, DefaultEvent, DiscreteEvent} from 'shared/ReactTypes';
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 import {
   flushDiscreteUpdatesIfNeeded,
@@ -52,19 +50,29 @@ import {
 } from './ReactDOMUpdateBatching';
 
 import {
+  InputDiscreteLanePriority as InputDiscreteLanePriority_old,
   InputContinuousLanePriority as InputContinuousLanePriority_old,
+  DefaultLanePriority as DefaultLanePriority_old,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
   setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_old,
 } from 'react-reconciler/src/ReactFiberLane.old';
 import {
+  InputDiscreteLanePriority as InputDiscreteLanePriority_new,
   InputContinuousLanePriority as InputContinuousLanePriority_new,
+  DefaultLanePriority as DefaultLanePriority_new,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
   setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_new,
 } from 'react-reconciler/src/ReactFiberLane.new';
 
+const InputDiscreteLanePriority = enableNewReconciler
+  ? InputDiscreteLanePriority_new
+  : InputDiscreteLanePriority_old;
 const InputContinuousLanePriority = enableNewReconciler
   ? InputContinuousLanePriority_new
   : InputContinuousLanePriority_old;
+const DefaultLanePriority = enableNewReconciler
+  ? DefaultLanePriority_new
+  : DefaultLanePriority_old;
 const getCurrentUpdateLanePriority = enableNewReconciler
   ? getCurrentUpdateLanePriority_new
   : getCurrentUpdateLanePriority_old;
@@ -108,16 +116,16 @@ export function createEventListenerWrapperWithPriority(
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
 ): Function {
-  const eventPriority = getEventPriorityForPluginSystem(domEventName);
+  const eventPriority = getEventPriority(domEventName);
   let listenerWrapper;
   switch (eventPriority) {
-    case DiscreteEvent:
+    case InputDiscreteLanePriority:
       listenerWrapper = dispatchDiscreteEvent;
       break;
-    case ContinuousEvent:
+    case InputContinuousLanePriority:
       listenerWrapper = dispatchContinuousEvent;
       break;
-    case DefaultEvent:
+    case DefaultLanePriority:
     default:
       listenerWrapper = dispatchEvent;
       break;
@@ -340,9 +348,7 @@ export function attemptToDispatchEvent(
   return null;
 }
 
-function getEventPriorityForPluginSystem(
-  domEventName: DOMEventName,
-): EventPriority {
+function getEventPriority(domEventName: DOMEventName) {
   switch (domEventName) {
     // Used by SimpleEventPlugin:
     case 'cancel':
@@ -391,7 +397,7 @@ function getEventPriorityForPluginSystem(
     // eslint-disable-next-line no-fallthrough
     case 'beforeblur':
     case 'afterblur':
-      return DiscreteEvent;
+      return InputDiscreteLanePriority;
     case 'drag':
     case 'dragenter':
     case 'dragexit':
@@ -407,8 +413,8 @@ function getEventPriorityForPluginSystem(
     case 'toggle':
     case 'touchmove':
     case 'wheel':
-      return ContinuousEvent;
+      return InputContinuousLanePriority;
     default:
-      return DefaultEvent;
+      return DefaultLanePriority;
   }
 }
