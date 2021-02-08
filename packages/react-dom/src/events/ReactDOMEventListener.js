@@ -380,6 +380,7 @@ function getEventPriorityForPluginSystem(
     case 'touchstart':
     case 'volumechange':
     // Used by polyfills:
+    // eslint-disable-next-line no-fallthrough
     case 'change':
     case 'selectionchange':
     case 'textInput':
@@ -387,6 +388,7 @@ function getEventPriorityForPluginSystem(
     case 'compositionend':
     case 'compositionupdate':
     // Only enableCreateEventHandleAPI:
+    // eslint-disable-next-line no-fallthrough
     case 'beforeblur':
     case 'afterblur':
       return DiscreteEvent;
