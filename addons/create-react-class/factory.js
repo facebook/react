@@ -807,6 +807,11 @@ function factory(ReactComponent, isValidElement, ReactNoopUpdateQueue) {
     Constructor.prototype = new ReactClassComponent();
     Constructor.prototype.constructor = Constructor;
     Constructor.prototype.__reactAutoBindPairs = [];
+    Constructor.prototype.__componentDebug = null;
+
+    if (process.env.NODE_ENV !== 'production') {
+      Constructor.prototype.__componentDebug = {};
+    }
 
     injectedMixins.forEach(mixSpecIntoComponent.bind(null, Constructor));
 
