@@ -148,13 +148,6 @@ describe('ReactDOMFiberAsync', () => {
   });
 
   describe('concurrent mode', () => {
-    beforeEach(() => {
-      jest.resetModules();
-
-      ReactDOM = require('react-dom');
-      Scheduler = require('scheduler');
-    });
-
     // @gate experimental
     it('does not perform deferred updates synchronously', () => {
       const inputRef = React.createRef();
@@ -399,28 +392,26 @@ describe('ReactDOMFiberAsync', () => {
 
       let formSubmitted = false;
 
-      class Form extends React.Component {
-        state = {active: true};
-        disableForm = () => {
-          this.setState({active: false});
-        };
-        submitForm = () => {
-          formSubmitted = true; // This should not get invoked
-        };
-        render() {
-          return (
-            <div>
-              <button onClick={this.disableForm} ref={disableButtonRef}>
-                Disable
-              </button>
-              {this.state.active ? (
-                <button onClick={this.submitForm} ref={submitButtonRef}>
-                  Submit
-                </button>
-              ) : null}
-            </div>
-          );
+      function Form() {
+        const [active, setActive] = React.useState(true);
+        function disableForm() {
+          setActive(false);
         }
+        function submitForm() {
+          formSubmitted = true; // This should not get invoked
+        }
+        return (
+          <div>
+            <button onClick={disableForm} ref={disableButtonRef}>
+              Disable
+            </button>
+            {active ? (
+              <button onClick={submitForm} ref={submitButtonRef}>
+                Submit
+              </button>
+            ) : null}
+          </div>
+        );
       }
 
       const root = ReactDOM.unstable_createRoot(container);
@@ -461,33 +452,29 @@ describe('ReactDOMFiberAsync', () => {
 
       let formSubmitted = false;
 
-      class Form extends React.Component {
-        state = {active: true};
-        disableForm = () => {
-          this.setState({active: false});
-        };
-        submitForm = () => {
-          formSubmitted = true; // This should not get invoked
-        };
-        disabledSubmitForm = () => {
-          // The form is disabled.
-        };
-        render() {
-          return (
-            <div>
-              <button onClick={this.disableForm} ref={disableButtonRef}>
-                Disable
-              </button>
-              <button
-                onClick={
-                  this.state.active ? this.submitForm : this.disabledSubmitForm
-                }
-                ref={submitButtonRef}>
-                Submit
-              </button>
-            </div>
-          );
+      function Form() {
+        const [active, setActive] = React.useState(true);
+        function disableForm() {
+          setActive(false);
         }
+        function submitForm() {
+          formSubmitted = true; // This should not get invoked
+        }
+        function disabledSubmitForm() {
+          // The form is disabled.
+        }
+        return (
+          <div>
+            <button onClick={disableForm} ref={disableButtonRef}>
+              Disable
+            </button>
+            <button
+              onClick={active ? submitForm : disabledSubmitForm}
+              ref={submitButtonRef}>
+              Submit
+            </button>
+          </div>
+        );
       }
 
       const root = ReactDOM.unstable_createRoot(container);
@@ -526,29 +513,24 @@ describe('ReactDOMFiberAsync', () => {
 
       let formSubmitted = false;
 
-      class Form extends React.Component {
-        state = {active: false};
-        enableForm = () => {
-          this.setState({active: true});
-        };
-        submitForm = () => {
-          formSubmitted = true; // This should happen
-        };
-        render() {
-          return (
-            <div>
-              <button onClick={this.enableForm} ref={enableButtonRef}>
-                Enable
-              </button>
-              <button
-                onClick={this.state.active ? this.submitForm : null}
-                ref={submitButtonRef}>
-                Submit
-              </button>{' '}
-              : null}
-            </div>
-          );
+      function Form() {
+        const [active, setActive] = React.useState(false);
+        function enableForm() {
+          setActive(true);
         }
+        function submitForm() {
+          formSubmitted = true; // This should not get invoked
+        }
+        return (
+          <div>
+            <button onClick={enableForm} ref={enableButtonRef}>
+              Enable
+            </button>
+            <button onClick={active ? submitForm : null} ref={submitButtonRef}>
+              Submit
+            </button>
+          </div>
+        );
       }
 
       const root = ReactDOM.unstable_createRoot(container);
