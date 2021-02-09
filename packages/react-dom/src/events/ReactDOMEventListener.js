@@ -397,6 +397,16 @@ export function getEventPriority(domEventName: DOMEventName): * {
     // eslint-disable-next-line no-fallthrough
     case 'beforeblur':
     case 'afterblur':
+    // Not used by React but could be by user code:
+    // eslint-disable-next-line no-fallthrough
+    case 'beforeinput':
+    case 'blur':
+    case 'fullscreenchange':
+    case 'focus':
+    case 'hashchange':
+    case 'popstate':
+    case 'select':
+    case 'selectstart':
       return InputDiscreteLanePriority;
     case 'drag':
     case 'dragenter':
@@ -413,6 +423,10 @@ export function getEventPriority(domEventName: DOMEventName): * {
     case 'toggle':
     case 'touchmove':
     case 'wheel':
+    // Not used by React but could be by user code:
+    // eslint-disable-next-line no-fallthrough
+    case 'mouseenter':
+    case 'mouseleave':
       return InputContinuousLanePriority;
     default:
       return DefaultLanePriority;

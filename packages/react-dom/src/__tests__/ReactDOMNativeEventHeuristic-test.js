@@ -258,4 +258,37 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       expect(container.textContent).toEqual('hovered');
     });
   });
+
+  // @gate experimental
+  // @gate enableDiscreteEventMicroTasks && enableNativeEventPriorityInference
+  it('mouse enter should be user-blocking but not discrete', async () => {
+    const root = ReactDOM.unstable_createRoot(container);
+
+    const target = React.createRef(null);
+    function Foo() {
+      const [isHover, setHover] = React.useState(false);
+      React.useLayoutEffect(() => {
+        target.current.onmouseenter = () => setHover(true);
+      });
+      return <div ref={target}>{isHover ? 'hovered' : 'not hovered'}</div>;
+    }
+
+    await act(async () => {
+      root.render(<Foo />);
+    });
+    expect(container.textContent).toEqual('not hovered');
+
+    await act(async () => {
+      // Note: React does not use native mouseenter/mouseleave events
+      // but we should still correctly determine their priority.
+      const mouseEnterEvent = document.createEvent('MouseEvents');
+      mouseEnterEvent.initEvent('mouseenter', true, true);
+      dispatchAndSetCurrentEvent(target.current, mouseEnterEvent);
+
+      // 3s should be enough to expire the updates
+      Scheduler.unstable_advanceTime(3000);
+      expect(Scheduler).toFlushExpired([]);
+      expect(container.textContent).toEqual('hovered');
+    });
+  });
 });
