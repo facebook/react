@@ -22,6 +22,18 @@ global.__EXPERIMENTAL__ =
 global.__VARIANT__ = !!process.env.VARIANT;
 
 if (typeof window !== 'undefined') {
+  // We rely on window.event for heuristics so let's set it in tests.
+  window.event = undefined;
+  const oldDispatchEvent = EventTarget.prototype.dispatchEvent;
+  EventTarget.prototype.dispatchEvent = function(e) {
+    try {
+      window.event = e;
+      return oldDispatchEvent.apply(this, arguments);
+    } finally {
+      window.event = undefined;
+    }
+  };
+
   global.requestIdleCallback = function(callback) {
     return setTimeout(() => {
       callback({

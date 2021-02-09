@@ -33,15 +33,6 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     document.body.removeChild(container);
   });
 
-  function dispatchAndSetCurrentEvent(el, event) {
-    try {
-      window.event = event;
-      el.dispatchEvent(event);
-    } finally {
-      window.event = undefined;
-    }
-  }
-
   // @gate experimental
   // @gate enableDiscreteEventMicroTasks && enableNativeEventPriorityInference
   it('ignores discrete events on a pending removed element', async () => {
@@ -78,9 +69,9 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     // Dispatch a click event on the Disable-button.
     const firstEvent = document.createEvent('Event');
     firstEvent.initEvent('click', true, true);
-    expect(() =>
-      dispatchAndSetCurrentEvent(disableButton, firstEvent),
-    ).toErrorDev(['An update to Form inside a test was not wrapped in act']);
+    expect(() => disableButton.dispatchEvent(firstEvent)).toErrorDev([
+      'An update to Form inside a test was not wrapped in act',
+    ]);
 
     // There should now be a pending update to disable the form.
     // This should not have flushed yet since it's in concurrent mode.
@@ -144,7 +135,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     const firstEvent = document.createEvent('Event');
     firstEvent.initEvent('click', true, true);
     expect(() => {
-      dispatchAndSetCurrentEvent(disableButton, firstEvent);
+      disableButton.dispatchEvent(firstEvent);
     }).toErrorDev(['An update to Form inside a test was not wrapped in act']);
 
     // There should now be a pending update to disable the form.
@@ -158,7 +149,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     // Now let's dispatch an event on the submit button.
     const secondEvent = document.createEvent('Event');
     secondEvent.initEvent('click', true, true);
-    dispatchAndSetCurrentEvent(submitButton, secondEvent);
+    submitButton.dispatchEvent(secondEvent);
 
     // Therefore the form should never have been submitted.
     expect(formSubmitted).toBe(false);
@@ -208,7 +199,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     const firstEvent = document.createEvent('Event');
     firstEvent.initEvent('click', true, true);
     expect(() => {
-      dispatchAndSetCurrentEvent(enableButton, firstEvent);
+      enableButton.dispatchEvent(firstEvent);
     }).toErrorDev(['An update to Form inside a test was not wrapped in act']);
 
     // There should now be a pending update to enable the form.
@@ -222,7 +213,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     // Now let's dispatch an event on the submit button.
     const secondEvent = document.createEvent('Event');
     secondEvent.initEvent('click', true, true);
-    dispatchAndSetCurrentEvent(submitButton, secondEvent);
+    submitButton.dispatchEvent(secondEvent);
 
     // Therefore the form should have been submitted.
     expect(formSubmitted).toBe(true);
@@ -250,7 +241,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     await act(async () => {
       const mouseOverEvent = document.createEvent('MouseEvents');
       mouseOverEvent.initEvent('mouseover', true, true);
-      dispatchAndSetCurrentEvent(target.current, mouseOverEvent);
+      target.current.dispatchEvent(mouseOverEvent);
 
       // 3s should be enough to expire the updates
       Scheduler.unstable_advanceTime(3000);
@@ -283,7 +274,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       // but we should still correctly determine their priority.
       const mouseEnterEvent = document.createEvent('MouseEvents');
       mouseEnterEvent.initEvent('mouseenter', true, true);
-      dispatchAndSetCurrentEvent(target.current, mouseEnterEvent);
+      target.current.dispatchEvent(mouseEnterEvent);
 
       // 3s should be enough to expire the updates
       Scheduler.unstable_advanceTime(3000);
