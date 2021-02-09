@@ -31,7 +31,6 @@ export const {
   enableUseRefAccessWarning,
   disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop,
-  enableTransitionEntanglement,
   enableNonInterruptingNormalPri,
   enableDiscreteEventMicroTasks,
   enableNativeEventPriorityInference,

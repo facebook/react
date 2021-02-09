@@ -34,7 +34,6 @@ import {
   disableSchedulerTimeoutInWorkLoop,
   enableDoubleInvokingEffects,
   skipUnmountedBoundaries,
-  enableTransitionEntanglement,
   enableNativeEventPriorityInference,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -455,22 +454,22 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     (executionContext & DiscreteEventContext) !== NoContext &&
     schedulerPriority === UserBlockingSchedulerPriority
   ) {
-    lane = findUpdateLane(InputDiscreteLanePriority, currentEventWipLanes);
+    lane = findUpdateLane(InputDiscreteLanePriority);
   } else if (
     decoupleUpdatePriorityFromScheduler &&
     getCurrentUpdateLanePriority() !== NoLanePriority
   ) {
     const currentLanePriority = getCurrentUpdateLanePriority();
-    lane = findUpdateLane(currentLanePriority, currentEventWipLanes);
+    lane = findUpdateLane(currentLanePriority);
   } else {
     if (enableNativeEventPriorityInference) {
       const eventLanePriority = getCurrentEventPriority();
-      lane = findUpdateLane(eventLanePriority, currentEventWipLanes);
+      lane = findUpdateLane(eventLanePriority);
     } else {
       const schedulerLanePriority = schedulerPriorityToLanePriority(
         schedulerPriority,
       );
-      lane = findUpdateLane(schedulerLanePriority, currentEventWipLanes);
+      lane = findUpdateLane(schedulerLanePriority);
     }
   }
 
@@ -837,22 +836,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   }
 
   let exitStatus = renderRootConcurrent(root, lanes);
-
-  if (
-    !enableTransitionEntanglement &&
-    includesSomeLane(
-      workInProgressRootIncludedLanes,
-      workInProgressRootUpdatedLanes,
-    )
-  ) {
-    // The render included lanes that were updated during the render phase.
-    // For example, when unhiding a hidden tree, we include all the lanes
-    // that were previously skipped when the tree was hidden. That set of
-    // lanes is a superset of the lanes we started rendering with.
-    //
-    // So we'll throw out the current work and restart.
-    prepareFreshStack(root, NoLanes);
-  } else if (exitStatus !== RootIncomplete) {
+  if (exitStatus !== RootIncomplete) {
     if (exitStatus === RootErrored) {
       executionContext |= RetryAfterError;
 
@@ -1044,24 +1028,6 @@ function performSyncWorkOnRoot(root) {
     // rendering it before rendering the rest of the expired work.
     lanes = workInProgressRootRenderLanes;
     exitStatus = renderRootSync(root, lanes);
-    if (
-      !enableTransitionEntanglement &&
-      includesSomeLane(
-        workInProgressRootIncludedLanes,
-        workInProgressRootUpdatedLanes,
-      )
-    ) {
-      // The render included lanes that were updated during the render phase.
-      // For example, when unhiding a hidden tree, we include all the lanes
-      // that were previously skipped when the tree was hidden. That set of
-      // lanes is a superset of the lanes we started rendering with.
-      //
-      // Note that this only happens when part of the tree is rendered
-      // concurrently. If the whole tree is rendered synchronously, then there
-      // are no interleaved events.
-      lanes = getNextLanes(root, lanes);
-      exitStatus = renderRootSync(root, lanes);
-    }
   } else {
     lanes = getNextLanes(root, NoLanes);
     exitStatus = renderRootSync(root, lanes);

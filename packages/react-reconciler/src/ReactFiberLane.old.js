@@ -38,7 +38,6 @@ export type LaneMap<T> = Array<T>;
 import invariant from 'shared/invariant';
 import {
   enableCache,
-  enableTransitionEntanglement,
   enableNonInterruptingNormalPri,
 } from 'shared/ReactFeatureFlags';
 
@@ -509,93 +508,33 @@ export function isTransitionLane(lane: Lane) {
 
 // To ensure consistency across multiple updates in the same event, this should
 // be a pure function, so that it always returns the same lane for given inputs.
-export function findUpdateLane(
-  lanePriority: LanePriority,
-  wipLanes: Lanes,
-): Lane {
-  if (enableTransitionEntanglement) {
-    // Ignore wipLanes. Always assign to the same bit per priority.
-    switch (lanePriority) {
-      case NoLanePriority:
-        break;
-      case SyncLanePriority:
-        return SyncLane;
-      case SyncBatchedLanePriority:
-        return SyncBatchedLane;
-      case InputDiscreteLanePriority: {
-        return pickArbitraryLane(InputDiscreteLanes);
-      }
-      case InputContinuousLanePriority: {
-        return pickArbitraryLane(InputContinuousLanes);
-      }
-      case DefaultLanePriority: {
-        return pickArbitraryLane(DefaultLanes);
-      }
-      case TransitionPriority: // Should be handled by findTransitionLane instead
-      case RetryLanePriority: // Should be handled by findRetryLane instead
-        break;
-      case IdleLanePriority:
-        return pickArbitraryLane(IdleLanes);
-      default:
-        // The remaining priorities are not valid for updates
-        break;
+export function findUpdateLane(lanePriority: LanePriority): Lane {
+  switch (lanePriority) {
+    case NoLanePriority:
+      break;
+    case SyncLanePriority:
+      return SyncLane;
+    case SyncBatchedLanePriority:
+      return SyncBatchedLane;
+    case InputDiscreteLanePriority: {
+      return pickArbitraryLane(InputDiscreteLanes);
     }
-  } else {
-    // Old behavior that uses wipLanes to shift interleaved updates into a
-    // separate lane. This is no longer needed because we put interleaved
-    // updates on a special queue.
-    switch (lanePriority) {
-      case NoLanePriority:
-        break;
-      case SyncLanePriority:
-        return SyncLane;
-      case SyncBatchedLanePriority:
-        return SyncBatchedLane;
-      case InputDiscreteLanePriority: {
-        const lane = pickArbitraryLane(InputDiscreteLanes & ~wipLanes);
-        if (lane === NoLane) {
-          // Shift to the next priority level
-          return findUpdateLane(InputContinuousLanePriority, wipLanes);
-        }
-        return lane;
-      }
-      case InputContinuousLanePriority: {
-        const lane = pickArbitraryLane(InputContinuousLanes & ~wipLanes);
-        if (lane === NoLane) {
-          // Shift to the next priority level
-          return findUpdateLane(DefaultLanePriority, wipLanes);
-        }
-        return lane;
-      }
-      case DefaultLanePriority: {
-        let lane = pickArbitraryLane(DefaultLanes & ~wipLanes);
-        if (lane === NoLane) {
-          // If all the default lanes are already being worked on, look for a
-          // lane in the transition range.
-          lane = pickArbitraryLane(TransitionLanes & ~wipLanes);
-          if (lane === NoLane) {
-            // All the transition lanes are taken, too. This should be very
-            // rare, but as a last resort, pick a default lane. This will have
-            // the effect of interrupting the current work-in-progress render.
-            lane = pickArbitraryLane(DefaultLanes);
-          }
-        }
-        return lane;
-      }
-      case TransitionPriority: // Should be handled by findTransitionLane instead
-      case RetryLanePriority: // Should be handled by findRetryLane instead
-        break;
-      case IdleLanePriority:
-        let lane = pickArbitraryLane(IdleLanes & ~wipLanes);
-        if (lane === NoLane) {
-          lane = pickArbitraryLane(IdleLanes);
-        }
-        return lane;
-      default:
-        // The remaining priorities are not valid for updates
-        break;
+    case InputContinuousLanePriority: {
+      return pickArbitraryLane(InputContinuousLanes);
     }
+    case DefaultLanePriority: {
+      return pickArbitraryLane(DefaultLanes);
+    }
+    case TransitionPriority: // Should be handled by findTransitionLane instead
+    case RetryLanePriority: // Should be handled by findRetryLane instead
+      break;
+    case IdleLanePriority:
+      return pickArbitraryLane(IdleLanes);
+    default:
+      // The remaining priorities are not valid for updates
+      break;
   }
+
   invariant(
     false,
     'Invalid update priority: %s. This is a bug in React.',
