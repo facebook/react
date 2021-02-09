@@ -399,11 +399,7 @@ describe('SchedulingProfiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    gate(({old}) =>
-      old
-        ? expectMarksToContain('--schedule-state-update-1024-Example')
-        : expectMarksToContain('--schedule-state-update-512-Example'),
-    );
+    expectMarksToContain('--schedule-state-update-512-Example');
   });
 
   // @gate enableSchedulingProfiler
@@ -431,11 +427,7 @@ describe('SchedulingProfiler', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    gate(({old}) =>
-      old
-        ? expectMarksToContain('--schedule-forced-update-1024-Example')
-        : expectMarksToContain('--schedule-forced-update-512-Example'),
-    );
+    expectMarksToContain('--schedule-forced-update-512-Example');
   });
 
   // @gate enableSchedulingProfiler
@@ -476,7 +468,6 @@ describe('SchedulingProfiler', () => {
 
   // This test is coupled to lane implementation details, so I'm disabling it in
   // the new fork until it stabilizes so we don't have to repeatedly update it.
-  // @gate !enableTransitionEntanglement
   // @gate enableSchedulingProfiler
   it('should mark cascading passive updates', () => {
     function Example() {
@@ -501,11 +492,11 @@ describe('SchedulingProfiler', () => {
       '--layout-effects-stop',
       '--commit-stop',
       '--passive-effects-start-512',
-      '--schedule-state-update-1024-Example',
+      '--schedule-state-update-512-Example',
       '--passive-effects-stop',
-      '--render-start-1024',
+      '--render-start-512',
       '--render-stop',
-      '--commit-start-1024',
+      '--commit-start-512',
       '--commit-stop',
     ]);
   });
@@ -524,10 +515,6 @@ describe('SchedulingProfiler', () => {
       ReactTestRenderer.create(<Example />, {unstable_isConcurrent: true});
     });
 
-    gate(({old}) =>
-      old
-        ? expectMarksToContain('--schedule-state-update-1024-Example')
-        : expectMarksToContain('--schedule-state-update-512-Example'),
-    );
+    expectMarksToContain('--schedule-state-update-512-Example');
   });
 });
