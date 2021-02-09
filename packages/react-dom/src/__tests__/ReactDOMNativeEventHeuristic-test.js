@@ -13,6 +13,7 @@ let React;
 
 let ReactDOM;
 let Scheduler;
+let act;
 
 describe('ReactDOMNativeEventHeuristic-test', () => {
   let container;
@@ -23,6 +24,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     Scheduler = require('scheduler');
+    act = require('react-dom/test-utils').unstable_concurrentAct;
 
     document.body.appendChild(container);
   });
@@ -224,5 +226,69 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
 
     // Therefore the form should have been submitted.
     expect(formSubmitted).toBe(true);
+  });
+
+  // @gate experimental
+  // @gate enableDiscreteEventMicroTasks && enableNativeEventPriorityInference
+  it('mouse over should be user-blocking but not discrete', async () => {
+    const root = ReactDOM.unstable_createRoot(container);
+
+    const target = React.createRef(null);
+    function Foo() {
+      const [isHover, setHover] = React.useState(false);
+      React.useLayoutEffect(() => {
+        target.current.onmouseover = () => setHover(true);
+      });
+      return <div ref={target}>{isHover ? 'hovered' : 'not hovered'}</div>;
+    }
+
+    await act(async () => {
+      root.render(<Foo />);
+    });
+    expect(container.textContent).toEqual('not hovered');
+
+    await act(async () => {
+      const mouseOverEvent = document.createEvent('MouseEvents');
+      mouseOverEvent.initEvent('mouseover', true, true);
+      dispatchAndSetCurrentEvent(target.current, mouseOverEvent);
+
+      // 3s should be enough to expire the updates
+      Scheduler.unstable_advanceTime(3000);
+      expect(Scheduler).toFlushExpired([]);
+      expect(container.textContent).toEqual('hovered');
+    });
+  });
+
+  // @gate experimental
+  // @gate enableDiscreteEventMicroTasks && enableNativeEventPriorityInference
+  it('mouse enter should be user-blocking but not discrete', async () => {
+    const root = ReactDOM.unstable_createRoot(container);
+
+    const target = React.createRef(null);
+    function Foo() {
+      const [isHover, setHover] = React.useState(false);
+      React.useLayoutEffect(() => {
+        target.current.onmouseenter = () => setHover(true);
+      });
+      return <div ref={target}>{isHover ? 'hovered' : 'not hovered'}</div>;
+    }
+
+    await act(async () => {
+      root.render(<Foo />);
+    });
+    expect(container.textContent).toEqual('not hovered');
+
+    await act(async () => {
+      // Note: React does not use native mouseenter/mouseleave events
+      // but we should still correctly determine their priority.
+      const mouseEnterEvent = document.createEvent('MouseEvents');
+      mouseEnterEvent.initEvent('mouseenter', true, true);
+      dispatchAndSetCurrentEvent(target.current, mouseEnterEvent);
+
+      // 3s should be enough to expire the updates
+      Scheduler.unstable_advanceTime(3000);
+      expect(Scheduler).toFlushExpired([]);
+      expect(container.textContent).toEqual('hovered');
+    });
   });
 });
