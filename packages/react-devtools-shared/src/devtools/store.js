@@ -803,19 +803,23 @@ export default class Store extends EventEmitter<{|
               supportsProfiling,
             });
 
-            this._idToElement.set(id, {
-              children: [],
-              depth: -1,
-              displayName: null,
-              hocDisplayNames: null,
+            this._idToElement.set(
               id,
-              isCollapsed: false, // Never collapse roots; it would hide the entire tree.
-              key: null,
-              ownerID: 0,
-              parentID: 0,
-              type,
-              weight: 0,
-            });
+              (({
+                children: [],
+                depth: -1,
+                displayName: null,
+                hocDisplayNames: null,
+                id,
+                isCollapsed: false, // Never collapse roots; it would hide the entire tree.
+                key: null,
+                ownerID: 0,
+                parentID: 0,
+                type,
+                weight: 0,
+                toString: () => `Element ${id}`,
+              }: any): Element),
+            );
 
             haveRootsChanged = true;
           } else {
@@ -856,7 +860,7 @@ export default class Store extends EventEmitter<{|
               hocDisplayNames,
             ] = separateDisplayNameAndHOCs(displayName, type);
 
-            const element: Element = {
+            const element: Element = (({
               children: [],
               depth: parentElement.depth + 1,
               displayName: displayNameWithoutHOCs,
@@ -866,9 +870,10 @@ export default class Store extends EventEmitter<{|
               key,
               ownerID,
               parentID: parentElement.id,
+              toString: () => `Element ${id}`,
               type,
               weight: 1,
-            };
+            }: any): Element);
 
             this._idToElement.set(id, element);
             addedElementIDs.push(id);
