@@ -147,9 +147,6 @@ export const enableRecursiveCommitTraversal = false;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 
-// Experiment to simplify/improve how transitions are scheduled
-export const enableTransitionEntanglement = false;
-
 export const enableDiscreteEventMicroTasks = false;
 
 export const enableNativeEventPriorityInference = false;

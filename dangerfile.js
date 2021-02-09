@@ -37,8 +37,9 @@ const {readFileSync, statSync} = require('fs');
 const BASE_DIR = 'base-build';
 const HEAD_DIR = 'build2';
 
-const CRITICAL_THRESHOLD = 0.02;
-const SIGNIFICANCE_THRESHOLD = 0.002;
+const CRITICAL_BYTES_THRESHOLD = 500;
+const SIGNIFICANT_RELATIVE_THRESHOLD = 0.02;
+const NOISY_BYTES_THRESHOLD = 3;
 const CRITICAL_ARTIFACT_PATHS = new Set([
   // We always report changes to these bundles, even if the change is
   // insiginificant or non-existent.
@@ -60,24 +61,20 @@ function kbs(bytes) {
   return kilobyteFormatter.format(bytes / 1000);
 }
 
-const percentFormatter = new Intl.NumberFormat('en', {
-  style: 'percent',
-  signDisplay: 'exceptZero',
-  minimumFractionDigits: 2,
-  maximumFractionDigits: 2,
-});
-
-function change(decimal) {
-  if (Number === Infinity) {
+function change(absoluteChange, relativeChange) {
+  if (relativeChange === Infinity) {
     return 'New file';
   }
-  if (decimal === -1) {
+  if (relativeChange === -1) {
     return 'Deleted';
   }
-  if (decimal < 0.0001) {
+  if (
+    absoluteChange < NOISY_BYTES_THRESHOLD &&
+    absoluteChange > 0 - NOISY_BYTES_THRESHOLD
+  ) {
     return '=';
   }
-  return percentFormatter.format(decimal);
+  return kbs(absoluteChange);
 }
 
 const header = `
@@ -85,8 +82,19 @@ const header = `
   | ---- | --- | ---- | ------- | -------- | --------- | ------------ |`;
 
 function row(result) {
-  // prettier-ignore
-  return `| ${result.path} | **${change(result.change)}** | ${kbs(result.baseSize)} | ${kbs(result.headSize)} | ${change(result.changeGzip)} | ${kbs(result.baseSizeGzip)} | ${kbs(result.headSizeGzip)}`;
+  return (
+    '| ' +
+    [
+      result.path,
+      `**${change(result.absoluteChange, result.relativeChange)}**`,
+      kbs(result.baseSize),
+      kbs(result.headSize),
+      change(result.absoluteChangeGzip, result.relativeChangeGzip),
+      kbs(result.baseSizeGzip),
+      kbs(result.headSizeGzip),
+    ].join(' | ') +
+    ' |'
+  );
 }
 
 (async function() {
@@ -131,8 +139,10 @@ function row(result) {
         headSizeGzip,
         baseSize,
         baseSizeGzip,
-        change: (headSize - baseSize) / baseSize,
-        changeGzip: (headSizeGzip - baseSizeGzip) / baseSizeGzip,
+        absoluteChange: headSize - baseSize,
+        absoluteChangeGzip: headSizeGzip - baseSizeGzip,
+        relativeChange: (headSize - baseSize) / baseSize,
+        relativeChangeGzip: (headSizeGzip - baseSizeGzip) / baseSizeGzip,
       });
     } catch {
       // There's no matching base artifact. This is a new file.
@@ -146,8 +156,10 @@ function row(result) {
         headSizeGzip,
         baseSize,
         baseSizeGzip,
-        change: Infinity,
-        changeGzip: Infinity,
+        absoluteChange: headSize,
+        absoluteChangeGzip: headSizeGzip,
+        relativeChange: Infinity,
+        relativeChangeGzip: Infinity,
       });
     }
   }
@@ -166,14 +178,16 @@ function row(result) {
         headSizeGzip,
         baseSize,
         baseSizeGzip,
-        change: -1,
-        changeGzip: -1,
+        absoluteChange: -1 * baseSize,
+        absoluteChangeGzip: -1 * baseSizeGzip,
+        relativeChange: -1,
+        relativeChangeGzip: -1,
       });
     }
   }
 
   const results = Array.from(resultsMap.values());
-  results.sort((a, b) => b.change - a.change);
+  results.sort((a, b) => b.absoluteChange - a.absoluteChange);
 
   let criticalResults = [];
   for (const artifactPath of CRITICAL_ARTIFACT_PATHS) {
@@ -192,12 +206,12 @@ function row(result) {
   for (const result of results) {
     // If result exceeds critical threshold, add to top section.
     if (
-      (result.change > CRITICAL_THRESHOLD ||
-        0 - result.change > CRITICAL_THRESHOLD ||
+      (result.absoluteChange > CRITICAL_BYTES_THRESHOLD ||
+        0 - result.absoluteChange > CRITICAL_BYTES_THRESHOLD ||
         // New file
-        result.change === Infinity ||
+        result.relativeChange === Infinity ||
         // Deleted file
-        result.change === -1) &&
+        result.relativeChange === -1) &&
       // Skip critical artifacts. We added those earlier, in a fixed order.
       !CRITICAL_ARTIFACT_PATHS.has(result.path)
     ) {
@@ -208,10 +222,10 @@ function row(result) {
     // will go into the bottom, collapsed section. Intentionally including
     // critical artifacts in this section, too.
     if (
-      result.change > SIGNIFICANCE_THRESHOLD ||
-      0 - result.change > SIGNIFICANCE_THRESHOLD ||
-      result.change === Infinity ||
-      result.change === -1
+      result.relativeChange > SIGNIFICANT_RELATIVE_THRESHOLD ||
+      0 - result.relativeChange > SIGNIFICANT_RELATIVE_THRESHOLD ||
+      result.relativeChange === Infinity ||
+      result.relativeChange === -1
     ) {
       significantResults.push(row(result));
     }
@@ -222,15 +236,16 @@ Comparing: ${baseSha}...${headSha}
 
 ## Critical size changes
 
-Includes critical production bundles, as well as any change greater than ${CRITICAL_THRESHOLD *
-    100}%:
+Includes critical production bundles, as well as any change greater than ${kbs(
+    CRITICAL_BYTES_THRESHOLD
+  )}:
 
 ${header}
 ${criticalResults.join('\n')}
 
 ## Significant size changes
 
-Includes any change greater than ${SIGNIFICANCE_THRESHOLD * 100}%:
+Includes any change greater than ${change(SIGNIFICANT_RELATIVE_THRESHOLD)}:
 
 ${
   significantResults.length > 0

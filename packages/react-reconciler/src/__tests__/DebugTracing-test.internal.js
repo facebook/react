@@ -276,23 +276,12 @@ describe('DebugTracing', () => {
       expect(Scheduler).toFlushUntilNextPaint([]);
     }).toErrorDev('Cannot update during an existing state transition');
 
-    gate(flags => {
-      if (flags.new) {
-        expect(logs).toEqual([
-          'group: ⚛️ render (0b0000000000000000000001000000000)',
-          'log: ⚛️ Example updated state (0b0000000000000000000001000000000)',
-          'log: ⚛️ Example updated state (0b0000000000000000000001000000000)',
-          'groupEnd: ⚛️ render (0b0000000000000000000001000000000)',
-        ]);
-      } else {
-        expect(logs).toEqual([
-          'group: ⚛️ render (0b0000000000000000000001000000000)',
-          'log: ⚛️ Example updated state (0b0000000000000000000010000000000)',
-          'log: ⚛️ Example updated state (0b0000000000000000000010000000000)',
-          'groupEnd: ⚛️ render (0b0000000000000000000001000000000)',
-        ]);
-      }
-    });
+    expect(logs).toEqual([
+      'group: ⚛️ render (0b0000000000000000000001000000000)',
+      'log: ⚛️ Example updated state (0b0000000000000000000001000000000)',
+      'log: ⚛️ Example updated state (0b0000000000000000000001000000000)',
+      'groupEnd: ⚛️ render (0b0000000000000000000001000000000)',
+    ]);
   });
 
   // @gate experimental && build === 'development' && enableDebugTracing
@@ -327,9 +316,6 @@ describe('DebugTracing', () => {
     ]);
   });
 
-  // This test is coupled to lane implementation details, so I'm disabling it
-  // until it stabilizes so we don't have to repeatedly update it.
-  // @gate !enableTransitionEntanglement
   // @gate experimental && build === 'development' && enableDebugTracing
   it('should log cascading passive updates', () => {
     function Example() {
@@ -350,7 +336,7 @@ describe('DebugTracing', () => {
     });
     expect(logs).toEqual([
       'group: ⚛️ passive effects (0b0000000000000000000001000000000)',
-      'log: ⚛️ Example updated state (0b0000000000000000000010000000000)',
+      'log: ⚛️ Example updated state (0b0000000000000000000001000000000)',
       'groupEnd: ⚛️ passive effects (0b0000000000000000000001000000000)',
     ]);
   });
@@ -374,23 +360,12 @@ describe('DebugTracing', () => {
       );
     });
 
-    gate(flags => {
-      if (flags.new) {
-        expect(logs).toEqual([
-          'group: ⚛️ render (0b0000000000000000000001000000000)',
-          'log: ⚛️ Example updated state (0b0000000000000000000001000000000)',
-          'log: ⚛️ Example updated state (0b0000000000000000000001000000000)', // debugRenderPhaseSideEffectsForStrictMode
-          'groupEnd: ⚛️ render (0b0000000000000000000001000000000)',
-        ]);
-      } else {
-        expect(logs).toEqual([
-          'group: ⚛️ render (0b0000000000000000000001000000000)',
-          'log: ⚛️ Example updated state (0b0000000000000000000010000000000)',
-          'log: ⚛️ Example updated state (0b0000000000000000000010000000000)', // debugRenderPhaseSideEffectsForStrictMode
-          'groupEnd: ⚛️ render (0b0000000000000000000001000000000)',
-        ]);
-      }
-    });
+    expect(logs).toEqual([
+      'group: ⚛️ render (0b0000000000000000000001000000000)',
+      'log: ⚛️ Example updated state (0b0000000000000000000001000000000)',
+      'log: ⚛️ Example updated state (0b0000000000000000000001000000000)', // debugRenderPhaseSideEffectsForStrictMode
+      'groupEnd: ⚛️ render (0b0000000000000000000001000000000)',
+    ]);
   });
 
   // @gate experimental && build === 'development' && enableDebugTracing
