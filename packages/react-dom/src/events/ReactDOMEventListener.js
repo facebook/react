@@ -55,6 +55,7 @@ import {
   DefaultLanePriority as DefaultLanePriority_old,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
   setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_old,
+  schedulerPriorityToLanePriority as schedulerPriorityToLanePriority_old,
 } from 'react-reconciler/src/ReactFiberLane.old';
 import {
   InputDiscreteLanePriority as InputDiscreteLanePriority_new,
@@ -62,7 +63,10 @@ import {
   DefaultLanePriority as DefaultLanePriority_new,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
   setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_new,
+  schedulerPriorityToLanePriority as schedulerPriorityToLanePriority_new,
 } from 'react-reconciler/src/ReactFiberLane.new';
+import {getCurrentPriorityLevel as getCurrentPriorityLevel_old} from 'react-reconciler/src/SchedulerWithReactIntegration.old';
+import {getCurrentPriorityLevel as getCurrentPriorityLevel_new} from 'react-reconciler/src/SchedulerWithReactIntegration.new';
 
 const InputDiscreteLanePriority = enableNewReconciler
   ? InputDiscreteLanePriority_new
@@ -79,6 +83,12 @@ const getCurrentUpdateLanePriority = enableNewReconciler
 const setCurrentUpdateLanePriority = enableNewReconciler
   ? setCurrentUpdateLanePriority_new
   : setCurrentUpdateLanePriority_old;
+const schedulerPriorityToLanePriority = enableNewReconciler
+  ? schedulerPriorityToLanePriority_new
+  : schedulerPriorityToLanePriority_old;
+const getCurrentPriorityLevel = enableNewReconciler
+  ? getCurrentPriorityLevel_new
+  : getCurrentPriorityLevel_old;
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
@@ -428,6 +438,15 @@ export function getEventPriority(domEventName: DOMEventName): * {
     case 'mouseenter':
     case 'mouseleave':
       return InputContinuousLanePriority;
+    case 'message': {
+      // We might be in the Scheduler callback.
+      // Eventually this mechanism will be replaced by a check
+      // of the current priority on the native scheduler.
+      const schedulerPriority = getCurrentPriorityLevel();
+      // TODO: Inline schedulerPriorityToLanePriority into this file
+      // when we delete the enableNativeEventPriorityInference flag.
+      return schedulerPriorityToLanePriority(schedulerPriority);
+    }
     default:
       return DefaultLanePriority;
   }
