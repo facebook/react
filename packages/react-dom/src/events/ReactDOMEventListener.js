@@ -348,7 +348,7 @@ export function attemptToDispatchEvent(
   return null;
 }
 
-function getEventPriority(domEventName: DOMEventName) {
+export function getEventPriority(domEventName: DOMEventName): * {
   switch (domEventName) {
     // Used by SimpleEventPlugin:
     case 'cancel':

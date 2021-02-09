@@ -73,6 +73,7 @@ export const afterActiveInstanceBlur = $$$hostConfig.afterActiveInstanceBlur;
 export const preparePortalMount = $$$hostConfig.preparePortalMount;
 export const prepareScopeUpdate = $$$hostConfig.preparePortalMount;
 export const getInstanceFromScope = $$$hostConfig.getInstanceFromScope;
+export const getCurrentEventPriority = $$$hostConfig.getCurrentEventPriority;
 
 // -------------------
 //      Test selectors

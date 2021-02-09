@@ -391,6 +391,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     resetAfterCommit(): void {},
 
+    getCurrentEventPriority() {
+      return NoopRenderer.DefaultEventPriority;
+    },
+
     now: Scheduler.unstable_now,
 
     isPrimaryRenderer: true,
