@@ -31,31 +31,36 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     document.body.removeChild(container);
   });
 
+  function dispatchAndSetCurrentEvent(el, event) {
+    try {
+      window.event = event;
+      el.dispatchEvent(event);
+    } finally {
+      window.event = undefined;
+    }
+  }
+
   // @gate experimental
-  it('ignores discrete events on a pending removed element', () => {
+  // @gate enableDiscreteEventMicroTasks && enableNativeEventPriorityInference
+  it('ignores discrete events on a pending removed element', async () => {
     const disableButtonRef = React.createRef();
     const submitButtonRef = React.createRef();
 
-    let formSubmitted = false;
-
     function Form() {
       const [active, setActive] = React.useState(true);
+
+      React.useLayoutEffect(() => {
+        disableButtonRef.current.onclick = disableForm;
+      });
+
       function disableForm() {
         setActive(false);
       }
-      function submitForm() {
-        formSubmitted = true; // This should not get invoked
-      }
+
       return (
         <div>
-          <button onClick={disableForm} ref={disableButtonRef}>
-            Disable
-          </button>
-          {active ? (
-            <button onClick={submitForm} ref={submitButtonRef}>
-              Submit
-            </button>
-          ) : null}
+          <button ref={disableButtonRef}>Disable</button>
+          {active ? <button ref={submitButtonRef}>Submit</button> : null}
         </div>
       );
     }
@@ -71,28 +76,25 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     // Dispatch a click event on the Disable-button.
     const firstEvent = document.createEvent('Event');
     firstEvent.initEvent('click', true, true);
-    disableButton.dispatchEvent(firstEvent);
+    expect(() =>
+      dispatchAndSetCurrentEvent(disableButton, firstEvent),
+    ).toErrorDev(['An update to Form inside a test was not wrapped in act']);
 
     // There should now be a pending update to disable the form.
-
     // This should not have flushed yet since it's in concurrent mode.
     const submitButton = submitButtonRef.current;
     expect(submitButton.tagName).toBe('BUTTON');
 
-    // In the meantime, we can dispatch a new client event on the submit button.
-    const secondEvent = document.createEvent('Event');
-    secondEvent.initEvent('click', true, true);
-    // This should force the pending update to flush which disables the submit button before the event is invoked.
-    submitButton.dispatchEvent(secondEvent);
-
-    // Therefore the form should never have been submitted.
-    expect(formSubmitted).toBe(false);
-
+    // Discrete events should be flushed in a microtask.
+    // Verify that the second button was removed.
+    await null;
     expect(submitButtonRef.current).toBe(null);
+    // We'll assume that the browser won't let the user click it.
   });
 
   // @gate experimental
-  it('ignores discrete events on a pending removed event listener', () => {
+  // @gate enableDiscreteEventMicroTasks && enableNativeEventPriorityInference
+  it('ignores discrete events on a pending removed event listener', async () => {
     const disableButtonRef = React.createRef();
     const submitButtonRef = React.createRef();
 
@@ -100,25 +102,30 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
 
     function Form() {
       const [active, setActive] = React.useState(true);
+
+      React.useLayoutEffect(() => {
+        disableButtonRef.current.onclick = disableForm;
+        submitButtonRef.current.onclick = active
+          ? submitForm
+          : disabledSubmitForm;
+      });
+
       function disableForm() {
         setActive(false);
       }
+
       function submitForm() {
         formSubmitted = true; // This should not get invoked
       }
+
       function disabledSubmitForm() {
         // The form is disabled.
       }
+
       return (
         <div>
-          <button onClick={disableForm} ref={disableButtonRef}>
-            Disable
-          </button>
-          <button
-            onClick={active ? submitForm : disabledSubmitForm}
-            ref={submitButtonRef}>
-            Submit
-          </button>
+          <button ref={disableButtonRef}>Disable</button>
+          <button ref={submitButtonRef}>Submit</button>
         </div>
       );
     }
@@ -134,26 +141,30 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     // Dispatch a click event on the Disable-button.
     const firstEvent = document.createEvent('Event');
     firstEvent.initEvent('click', true, true);
-    disableButton.dispatchEvent(firstEvent);
+    expect(() => {
+      dispatchAndSetCurrentEvent(disableButton, firstEvent);
+    }).toErrorDev(['An update to Form inside a test was not wrapped in act']);
 
     // There should now be a pending update to disable the form.
-
     // This should not have flushed yet since it's in concurrent mode.
     const submitButton = submitButtonRef.current;
     expect(submitButton.tagName).toBe('BUTTON');
 
-    // In the meantime, we can dispatch a new client event on the submit button.
+    // Discrete events should be flushed in a microtask.
+    await null;
+
+    // Now let's dispatch an event on the submit button.
     const secondEvent = document.createEvent('Event');
     secondEvent.initEvent('click', true, true);
-    // This should force the pending update to flush which disables the submit button before the event is invoked.
-    submitButton.dispatchEvent(secondEvent);
+    dispatchAndSetCurrentEvent(submitButton, secondEvent);
 
     // Therefore the form should never have been submitted.
     expect(formSubmitted).toBe(false);
   });
 
   // @gate experimental
-  it('uses the newest discrete events on a pending changed event listener', () => {
+  // @gate enableDiscreteEventMicroTasks && enableNativeEventPriorityInference
+  it('uses the newest discrete events on a pending changed event listener', async () => {
     const enableButtonRef = React.createRef();
     const submitButtonRef = React.createRef();
 
@@ -161,20 +172,24 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
 
     function Form() {
       const [active, setActive] = React.useState(false);
+
+      React.useLayoutEffect(() => {
+        enableButtonRef.current.onclick = enableForm;
+        submitButtonRef.current.onclick = active ? submitForm : null;
+      });
+
       function enableForm() {
         setActive(true);
       }
+
       function submitForm() {
         formSubmitted = true; // This should not get invoked
       }
+
       return (
         <div>
-          <button onClick={enableForm} ref={enableButtonRef}>
-            Enable
-          </button>
-          <button onClick={active ? submitForm : null} ref={submitButtonRef}>
-            Submit
-          </button>
+          <button ref={enableButtonRef}>Enable</button>
+          <button ref={submitButtonRef}>Submit</button>
         </div>
       );
     }
@@ -190,19 +205,22 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     // Dispatch a click event on the Enable-button.
     const firstEvent = document.createEvent('Event');
     firstEvent.initEvent('click', true, true);
-    enableButton.dispatchEvent(firstEvent);
+    expect(() => {
+      dispatchAndSetCurrentEvent(enableButton, firstEvent);
+    }).toErrorDev(['An update to Form inside a test was not wrapped in act']);
 
     // There should now be a pending update to enable the form.
-
     // This should not have flushed yet since it's in concurrent mode.
     const submitButton = submitButtonRef.current;
     expect(submitButton.tagName).toBe('BUTTON');
 
-    // In the meantime, we can dispatch a new client event on the submit button.
+    // Discrete events should be flushed in a microtask.
+    await null;
+
+    // Now let's dispatch an event on the submit button.
     const secondEvent = document.createEvent('Event');
     secondEvent.initEvent('click', true, true);
-    // This should force the pending update to flush which enables the submit button before the event is invoked.
-    submitButton.dispatchEvent(secondEvent);
+    dispatchAndSetCurrentEvent(submitButton, secondEvent);
 
     // Therefore the form should have been submitted.
     expect(formSubmitted).toBe(true);
