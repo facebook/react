@@ -34,6 +34,7 @@ import {
   disableSchedulerTimeoutInWorkLoop,
   enableDoubleInvokingEffects,
   skipUnmountedBoundaries,
+  enableTransitionEntanglement,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -832,6 +833,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   let exitStatus = renderRootConcurrent(root, lanes);
 
   if (
+    !enableTransitionEntanglement &&
     includesSomeLane(
       workInProgressRootIncludedLanes,
       workInProgressRootUpdatedLanes,
@@ -1037,6 +1039,7 @@ function performSyncWorkOnRoot(root) {
     lanes = workInProgressRootRenderLanes;
     exitStatus = renderRootSync(root, lanes);
     if (
+      !enableTransitionEntanglement &&
       includesSomeLane(
         workInProgressRootIncludedLanes,
         workInProgressRootUpdatedLanes,
