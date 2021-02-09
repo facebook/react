@@ -1,5 +1,5 @@
 const {createElement, Component, Suspense} = React;
-const {createRoot} = ReactDOM;
+const {unstable_createRoot} = ReactDOM;
 const {
   unstable_subscribe: subscribe,
   unstable_trace: trace,
@@ -90,7 +90,7 @@ subscribe({
 
 const element = document.getElementById('root');
 trace('initial_render', performance.now(), () => {
-  const root = createRoot(element);
+  const root = unstable_createRoot(element);
   log.app('render()');
   root.render(
     createElement(TestApp),
