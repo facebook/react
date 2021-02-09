@@ -443,6 +443,8 @@ export function getEventPriority(domEventName: DOMEventName): * {
       // Eventually this mechanism will be replaced by a check
       // of the current priority on the native scheduler.
       const schedulerPriority = getCurrentPriorityLevel();
+      // TODO: Inline schedulerPriorityToLanePriority into this file
+      // when we delete the enableNativeEventPriorityInference flag.
       return schedulerPriorityToLanePriority(schedulerPriority);
     }
     default:
