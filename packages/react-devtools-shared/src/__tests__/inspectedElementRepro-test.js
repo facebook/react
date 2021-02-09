@@ -31,7 +31,9 @@ describe('InspectedElement', () => {
     Context = React.createContext();
 
     // Used by inspectElementAtIndex() helper function
-    testRendererInstance = TestRenderer.create(null);
+    testRendererInstance = TestRenderer.create(null, {
+      unstable_isConcurrent: true,
+    });
   });
 
   afterEach(() => {
@@ -292,6 +294,9 @@ describe('InspectedElement', () => {
       'Context Element 2 path:foo.bar.baz',
       'cache hit for Element 2? false',
 
+      'Context Element 2 path:null',
+      'cache hit for Element 2? true',
+
       // Resolve and render again
       'Context Element 2 path:foo.bar.baz',
       'cache hit for Element 2? true',
@@ -300,21 +305,6 @@ describe('InspectedElement', () => {
       'Context Element 2 path:null',
       'cache hit for Element 2? true',
     ]);
-
-    // This is the actual observed sequence:
-    // Inspecting path foo.bar.baz
-    //
-    // Context Element 2 path:foo.bar.baz
-    // cache hit for Element 2? true
-    //
-    // Context Element 2 path:null
-    // cache hit for Element 2? true
-    //
-    // Context Element 2 path:null
-    // cache hit for Element 2? false
-    //
-    // Context Element 2 path:null
-    // cache hit for Element 2? true
 
     done();
   });
