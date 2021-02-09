@@ -291,27 +291,6 @@ function ChildReconciler(shouldTrackSideEffects) {
     return null;
   }
 
-  function mapRemainingChildren(
-    returnFiber: Fiber,
-    currentFirstChild: Fiber,
-  ): Map<string | number, Fiber> {
-    // Add the remaining children to a temporary map so that we can find them by
-    // keys quickly. Implicit (null) keys get added to this set with their index
-    // instead.
-    const existingChildren: Map<string | number, Fiber> = new Map();
-
-    let existingChild = currentFirstChild;
-    while (existingChild !== null) {
-      if (existingChild.key !== null) {
-        existingChildren.set(existingChild.key, existingChild);
-      } else {
-        existingChildren.set(existingChild.index, existingChild);
-      }
-      existingChild = existingChild.sibling;
-    }
-    return existingChildren;
-  }
-
   function useFiber(fiber: Fiber, pendingProps: mixed): Fiber {
     // We currently set sibling to null and index to 0 here because it is easy
     // to forget to do before returning it. E.g. for the single child case.
@@ -319,34 +298,6 @@ function ChildReconciler(shouldTrackSideEffects) {
     clone.index = 0;
     clone.sibling = null;
     return clone;
-  }
-
-  function placeChild(
-    newFiber: Fiber,
-    lastPlacedIndex: number,
-    newIndex: number,
-  ): number {
-    newFiber.index = newIndex;
-    if (!shouldTrackSideEffects) {
-      // Noop.
-      return lastPlacedIndex;
-    }
-    const current = newFiber.alternate;
-    if (current !== null) {
-      const oldIndex = current.index;
-      if (oldIndex < lastPlacedIndex) {
-        // This is a move.
-        newFiber.flags |= Placement;
-        return lastPlacedIndex;
-      } else {
-        // This item can stay in place.
-        return oldIndex;
-      }
-    } else {
-      // This is an insertion.
-      newFiber.flags |= Placement;
-      return lastPlacedIndex;
-    }
   }
 
   function placeSingleChild(newFiber: Fiber): Fiber {
@@ -554,35 +505,18 @@ function ChildReconciler(shouldTrackSideEffects) {
     newChild: any,
     lanes: Lanes,
   ): Fiber | null {
-    // Update the fiber if the keys match, otherwise return null.
-
-    const key = oldFiber !== null ? oldFiber.key : null;
 
     if (typeof newChild === 'string' || typeof newChild === 'number') {
-      // Text nodes don't have keys. If the previous node is implicitly keyed
-      // we can continue to replace it without aborting even if it is not a text
-      // node.
-      if (key !== null) {
-        return null;
-      }
       return updateTextNode(returnFiber, oldFiber, '' + newChild, lanes);
     }
 
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          if (newChild.key === key) {
-            return updateElement(returnFiber, oldFiber, newChild, lanes);
-          } else {
-            return null;
-          }
+          return updateElement(returnFiber, oldFiber, newChild, lanes);
         }
         case REACT_PORTAL_TYPE: {
-          if (newChild.key === key) {
-            return updatePortal(returnFiber, oldFiber, newChild, lanes);
-          } else {
-            return null;
-          }
+          return updatePortal(returnFiber, oldFiber, newChild, lanes);
         }
         case REACT_LAZY_TYPE: {
           if (enableLazyElements) {
@@ -594,72 +528,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
-        if (key !== null) {
-          return null;
-        }
-
         return updateFragment(returnFiber, oldFiber, newChild, lanes, null);
-      }
-
-      throwOnInvalidObjectType(returnFiber, newChild);
-    }
-
-    if (__DEV__) {
-      if (typeof newChild === 'function') {
-        warnOnFunctionType(returnFiber);
-      }
-    }
-
-    return null;
-  }
-
-  function updateFromMap(
-    existingChildren: Map<string | number, Fiber>,
-    returnFiber: Fiber,
-    newIdx: number,
-    newChild: any,
-    lanes: Lanes,
-  ): Fiber | null {
-    if (typeof newChild === 'string' || typeof newChild === 'number') {
-      // Text nodes don't have keys, so we neither have to check the old nor
-      // new node for the key. If both are text nodes, they match.
-      const matchedFiber = existingChildren.get(newIdx) || null;
-      return updateTextNode(returnFiber, matchedFiber, '' + newChild, lanes);
-    }
-
-    if (typeof newChild === 'object' && newChild !== null) {
-      switch (newChild.$$typeof) {
-        case REACT_ELEMENT_TYPE: {
-          const matchedFiber =
-            existingChildren.get(
-              newChild.key === null ? newIdx : newChild.key,
-            ) || null;
-          return updateElement(returnFiber, matchedFiber, newChild, lanes);
-        }
-        case REACT_PORTAL_TYPE: {
-          const matchedFiber =
-            existingChildren.get(
-              newChild.key === null ? newIdx : newChild.key,
-            ) || null;
-          return updatePortal(returnFiber, matchedFiber, newChild, lanes);
-        }
-        case REACT_LAZY_TYPE:
-          if (enableLazyElements) {
-            const payload = newChild._payload;
-            const init = newChild._init;
-            return updateFromMap(
-              existingChildren,
-              returnFiber,
-              newIdx,
-              init(payload),
-              lanes,
-            );
-          }
-      }
-
-      if (isArray(newChild) || getIteratorFn(newChild)) {
-        const matchedFiber = existingChildren.get(newIdx) || null;
-        return updateFragment(returnFiber, matchedFiber, newChild, lanes, null);
       }
 
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -728,30 +597,20 @@ function ChildReconciler(shouldTrackSideEffects) {
     return knownKeys;
   }
 
+  function isBothTextNode(oldFiber: Fiber, nextChild: mixed) {
+    const oldIsText =
+      typeof oldFiber === 'number' || typeof oldFiber === 'string';
+    const newIsText =
+      typeof nextChild === 'number' || typeof nextChild === 'string';
+    return oldIsText && newIsText;
+  }
+
   function reconcileChildrenArray(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
     newChildren: Array<*>,
     lanes: Lanes,
   ): Fiber | null {
-    // This algorithm can't optimize by searching from both ends since we
-    // don't have backpointers on fibers. I'm trying to see how far we can get
-    // with that model. If it ends up not being worth the tradeoffs, we can
-    // add it later.
-
-    // Even with a two ended optimization, we'd want to optimize for the case
-    // where there are few changes and brute force the comparison instead of
-    // going for the Map. It'd like to explore hitting that path first in
-    // forward-only mode and only go for the Map once we notice that we need
-    // lots of look ahead. This doesn't handle reversal as well as two ended
-    // search but that's unusual. Besides, for the two ended optimization to
-    // work on Iterables, we'd need to copy the whole set.
-
-    // In this first iteration, we'll just live with hitting the bad case
-    // (adding everything to a Map) in for every insert/move.
-
-    // If you change this code, also update reconcileChildrenIterator() which
-    // uses the same algorithm.
 
     if (__DEV__) {
       // First, validate keys.
@@ -764,120 +623,92 @@ function ChildReconciler(shouldTrackSideEffects) {
 
     let resultingFirstChild: Fiber | null = null;
     let previousNewFiber: Fiber | null = null;
+    let newFiber: Fiber | null = null;
 
-    let oldFiber = currentFirstChild;
-    let lastPlacedIndex = 0;
-    let newIdx = 0;
-    let nextOldFiber = null;
-    for (; oldFiber !== null && newIdx < newChildren.length; newIdx++) {
-      if (oldFiber.index > newIdx) {
-        nextOldFiber = oldFiber;
-        oldFiber = null;
+    if (!shouldTrackSideEffects) {
+      newChildren.forEach(function(child) {
+        newFiber = createChild(returnFiber, child, lanes);
+        if (newFiber !== null) {
+          newFiber.flags |= Placement;
+        }
+        if (previousNewFiber === null) {
+          resultingFirstChild = newFiber;
+        } else {
+          previousNewFiber.sibling = newFiber;
+        }
+        previousNewFiber = newFiber;
+      });
+      return resultingFirstChild;
+    }
+
+    let newIndx = 0;
+    let oldInx = 0;
+    let nextOldFiber = currentFirstChild;
+    let tmp = null;
+    const oldKeyMaps = new Map();
+    const existingChildren = new Map();
+
+    newChildWhile: while (newIndx < newChildren.length) {
+      tmp = newChildren[newIndx];
+      while (nextOldFiber) {
+        if (tmp === undefined || tmp === null) {
+          newIndx++;
+          continue newChildWhile;
+        } else if (
+          nextOldFiber.key === tmp.key ||
+          isBothTextNode(nextOldFiber, tmp)
+        ) {
+          // ① reuse
+          newFiber = updateSlot(returnFiber, nextOldFiber, tmp, lanes);
+          if (newFiber !== null && newIndx !== oldInx) {
+            // This is move
+            newFiber.flags |= Placement;
+          }
+          if (previousNewFiber === null) {
+            if (newFiber !== null) {
+              resultingFirstChild = newFiber;
+            }
+          } else {
+            previousNewFiber.sibling = newFiber;
+          }
+          previousNewFiber = newFiber;
+          newIndx++;
+          oldInx++;
+          nextOldFiber = nextOldFiber.sibling;
+          continue newChildWhile;
+        } else {
+          oldKeyMaps.set(nextOldFiber.key, {
+            element: nextOldFiber,
+            index: oldInx++,
+          });
+          existingChildren.set(nextOldFiber.key, nextOldFiber);
+          nextOldFiber = nextOldFiber.sibling;
+        }
+      }
+      const matchOld = oldKeyMaps.get(tmp.key);
+      if (tmp.key && matchOld !== undefined) {
+        newFiber = updateSlot(returnFiber, matchOld.element, tmp, lanes);
+        oldKeyMaps.delete(tmp.key);
+        existingChildren.delete(tmp.key);
       } else {
-        nextOldFiber = oldFiber.sibling;
-      }
-      const newFiber = updateSlot(
-        returnFiber,
-        oldFiber,
-        newChildren[newIdx],
-        lanes,
-      );
-      if (newFiber === null) {
-        // TODO: This breaks on empty slots like null children. That's
-        // unfortunate because it triggers the slow path all the time. We need
-        // a better way to communicate whether this was a miss or null,
-        // boolean, undefined, etc.
-        if (oldFiber === null) {
-          oldFiber = nextOldFiber;
-        }
-        break;
-      }
-      if (shouldTrackSideEffects) {
-        if (oldFiber && newFiber.alternate === null) {
-          // We matched the slot, but we didn't reuse the existing fiber, so we
-          // need to delete the existing child.
-          deleteChild(returnFiber, oldFiber);
+        newFiber = createChild(returnFiber, tmp, lanes);
+        if (newFiber !== null) {
+          newFiber.flags |= Placement;
         }
       }
-      lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+      newIndx++;
       if (previousNewFiber === null) {
-        // TODO: Move out of the loop. This only happens for the first run.
         resultingFirstChild = newFiber;
       } else {
-        // TODO: Defer siblings if we're not at the right index for this slot.
-        // I.e. if we had null values before, then we want to defer this
-        // for each null value. However, we also don't want to call updateSlot
-        // with the previous one.
         previousNewFiber.sibling = newFiber;
       }
       previousNewFiber = newFiber;
-      oldFiber = nextOldFiber;
     }
-
-    if (newIdx === newChildren.length) {
-      // We've reached the end of the new children. We can delete the rest.
-      deleteRemainingChildren(returnFiber, oldFiber);
-      return resultingFirstChild;
-    }
-
-    if (oldFiber === null) {
-      // If we don't have any more existing children we can choose a fast path
-      // since the rest will all be insertions.
-      for (; newIdx < newChildren.length; newIdx++) {
-        const newFiber = createChild(returnFiber, newChildren[newIdx], lanes);
-        if (newFiber === null) {
-          continue;
-        }
-        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
-        if (previousNewFiber === null) {
-          // TODO: Move out of the loop. This only happens for the first run.
-          resultingFirstChild = newFiber;
-        } else {
-          previousNewFiber.sibling = newFiber;
-        }
-        previousNewFiber = newFiber;
-      }
-      return resultingFirstChild;
-    }
-
-    // Add all children to a key map for quick lookups.
-    const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
-
-    // Keep scanning and use the map to restore deleted items as moves.
-    for (; newIdx < newChildren.length; newIdx++) {
-      const newFiber = updateFromMap(
-        existingChildren,
-        returnFiber,
-        newIdx,
-        newChildren[newIdx],
-        lanes,
-      );
-      if (newFiber !== null) {
-        if (shouldTrackSideEffects) {
-          if (newFiber.alternate !== null) {
-            // The new fiber is a work in progress, but if there exists a
-            // current, that means that we reused the fiber. We need to delete
-            // it from the child list so that we don't add it to the deletion
-            // list.
-            existingChildren.delete(
-              newFiber.key === null ? newIdx : newFiber.key,
-            );
-          }
-        }
-        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
-        if (previousNewFiber === null) {
-          resultingFirstChild = newFiber;
-        } else {
-          previousNewFiber.sibling = newFiber;
-        }
-        previousNewFiber = newFiber;
-      }
-    }
-
-    if (shouldTrackSideEffects) {
-      // Any existing children that weren't consumed above were deleted. We need
-      // to add them to the deletion list.
-      existingChildren.forEach(child => deleteChild(returnFiber, child));
+    existingChildren.forEach(child => deleteChild(returnFiber, child));
+    // In ①. If all newChildren are reused.
+    // OldFiber may have something left and not added to the Map. delete It.
+    if (nextOldFiber) {
+      deleteRemainingChildren(returnFiber, nextOldFiber);
     }
 
     return resultingFirstChild;
@@ -948,123 +779,94 @@ function ChildReconciler(shouldTrackSideEffects) {
 
     let resultingFirstChild: Fiber | null = null;
     let previousNewFiber: Fiber | null = null;
+    let newFiber: Fiber | null = null;
 
-    let oldFiber = currentFirstChild;
-    let lastPlacedIndex = 0;
-    let newIdx = 0;
-    let nextOldFiber = null;
+    if (!shouldTrackSideEffects) {
+      if (newChildren) {
+        let step = newChildren.next();
+        for (; !step.done; step = newChildren.next()) {
+          const child = step.value;
+          newFiber = createChild(returnFiber, child, lanes);
+          if (newFiber !== null) {
+            newFiber.flags |= Placement;
+          }
+          if (previousNewFiber === null) {
+            resultingFirstChild = newFiber;
+          } else {
+            previousNewFiber.sibling = newFiber;
+          }
+          previousNewFiber = newFiber;
+        }
+        return resultingFirstChild;
+      }
+    }
 
-    let step = newChildren.next();
-    for (
-      ;
-      oldFiber !== null && !step.done;
-      newIdx++, step = newChildren.next()
-    ) {
-      if (oldFiber.index > newIdx) {
-        nextOldFiber = oldFiber;
-        oldFiber = null;
+    let stepOne = newChildren.next();
+    let newIndx = 0;
+    let oldInx = 0;
+    let nextOldFiber = currentFirstChild;
+    let tmp = null;
+    const oldKeyMaps = new Map();
+    const existingChildren = new Map();
+
+    newChildWhile: while (!stepOne.done) {
+      tmp = stepOne.value;
+      while (nextOldFiber) {
+        if (tmp === undefined || tmp === null) {
+          newIndx++;
+          continue newChildWhile;
+        } else if (
+          nextOldFiber.key === tmp.key ||
+          isBothTextNode(nextOldFiber, tmp)
+        ) {
+          newFiber = updateSlot(returnFiber, nextOldFiber, tmp, lanes);
+          if (newFiber !== null && newIndx !== oldInx) {
+            newFiber.flags |= Placement;
+          }
+          if (previousNewFiber === null) {
+            resultingFirstChild = newFiber;
+          } else {
+            previousNewFiber.sibling = newFiber;
+          }
+          previousNewFiber = newFiber;
+          newIndx++;
+          oldInx++;
+          nextOldFiber = nextOldFiber.sibling;
+          stepOne = newChildren.next();
+          continue newChildWhile;
+        } else {
+          oldKeyMaps.set(nextOldFiber.key, {
+            element: nextOldFiber,
+            index: oldInx++,
+          });
+          existingChildren.set(nextOldFiber.key, nextOldFiber);
+          nextOldFiber = nextOldFiber.sibling;
+        }
+      }
+      const matchOld = oldKeyMaps.get(tmp.key);
+      if (tmp.key && matchOld !== undefined) {
+        newFiber = updateSlot(returnFiber, matchOld.element, tmp, lanes);
+        oldKeyMaps.delete(tmp.key);
+        existingChildren.delete(tmp.key);
       } else {
-        nextOldFiber = oldFiber.sibling;
-      }
-      const newFiber = updateSlot(returnFiber, oldFiber, step.value, lanes);
-      if (newFiber === null) {
-        // TODO: This breaks on empty slots like null children. That's
-        // unfortunate because it triggers the slow path all the time. We need
-        // a better way to communicate whether this was a miss or null,
-        // boolean, undefined, etc.
-        if (oldFiber === null) {
-          oldFiber = nextOldFiber;
-        }
-        break;
-      }
-      if (shouldTrackSideEffects) {
-        if (oldFiber && newFiber.alternate === null) {
-          // We matched the slot, but we didn't reuse the existing fiber, so we
-          // need to delete the existing child.
-          deleteChild(returnFiber, oldFiber);
+        newFiber = createChild(returnFiber, tmp, lanes);
+        if (newFiber !== null) {
+          newFiber.flags |= Placement;
         }
       }
-      lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
+      newIndx++;
+      stepOne = newChildren.next();
       if (previousNewFiber === null) {
-        // TODO: Move out of the loop. This only happens for the first run.
         resultingFirstChild = newFiber;
       } else {
-        // TODO: Defer siblings if we're not at the right index for this slot.
-        // I.e. if we had null values before, then we want to defer this
-        // for each null value. However, we also don't want to call updateSlot
-        // with the previous one.
         previousNewFiber.sibling = newFiber;
       }
       previousNewFiber = newFiber;
-      oldFiber = nextOldFiber;
     }
-
-    if (step.done) {
-      // We've reached the end of the new children. We can delete the rest.
-      deleteRemainingChildren(returnFiber, oldFiber);
-      return resultingFirstChild;
+    existingChildren.forEach(child => deleteChild(returnFiber, child));
+    if (nextOldFiber) {
+      deleteRemainingChildren(returnFiber, nextOldFiber);
     }
-
-    if (oldFiber === null) {
-      // If we don't have any more existing children we can choose a fast path
-      // since the rest will all be insertions.
-      for (; !step.done; newIdx++, step = newChildren.next()) {
-        const newFiber = createChild(returnFiber, step.value, lanes);
-        if (newFiber === null) {
-          continue;
-        }
-        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
-        if (previousNewFiber === null) {
-          // TODO: Move out of the loop. This only happens for the first run.
-          resultingFirstChild = newFiber;
-        } else {
-          previousNewFiber.sibling = newFiber;
-        }
-        previousNewFiber = newFiber;
-      }
-      return resultingFirstChild;
-    }
-
-    // Add all children to a key map for quick lookups.
-    const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
-
-    // Keep scanning and use the map to restore deleted items as moves.
-    for (; !step.done; newIdx++, step = newChildren.next()) {
-      const newFiber = updateFromMap(
-        existingChildren,
-        returnFiber,
-        newIdx,
-        step.value,
-        lanes,
-      );
-      if (newFiber !== null) {
-        if (shouldTrackSideEffects) {
-          if (newFiber.alternate !== null) {
-            // The new fiber is a work in progress, but if there exists a
-            // current, that means that we reused the fiber. We need to delete
-            // it from the child list so that we don't add it to the deletion
-            // list.
-            existingChildren.delete(
-              newFiber.key === null ? newIdx : newFiber.key,
-            );
-          }
-        }
-        lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
-        if (previousNewFiber === null) {
-          resultingFirstChild = newFiber;
-        } else {
-          previousNewFiber.sibling = newFiber;
-        }
-        previousNewFiber = newFiber;
-      }
-    }
-
-    if (shouldTrackSideEffects) {
-      // Any existing children that weren't consumed above were deleted. We need
-      // to add them to the deletion list.
-      existingChildren.forEach(child => deleteChild(returnFiber, child));
-    }
-
     return resultingFirstChild;
   }
 
