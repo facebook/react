@@ -62,6 +62,7 @@ export type DOMEventName =
   | 'loadeddata'
   | 'loadedmetadata'
   | 'lostpointercapture'
+  | 'message'
   | 'mousedown'
   | 'mouseenter'
   | 'mouseleave'
