@@ -29,15 +29,7 @@ import {
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
-import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 const {IsSomeRendererActing} = ReactSharedInternals;
-
-import {DefaultLanePriority as DefaultLanePriority_old} from 'react-reconciler/src/ReactFiberLane.old';
-import {DefaultLanePriority as DefaultLanePriority_new} from 'react-reconciler/src/ReactFiberLane.new';
-
-const DefaultLanePriority = enableNewReconciler
-  ? DefaultLanePriority_new
-  : DefaultLanePriority_old;
 
 type Container = {
   rootID: string,
@@ -400,7 +392,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     resetAfterCommit(): void {},
 
     getCurrentEventPriority() {
-      return DefaultLanePriority;
+      return NoopRenderer.DefaultEventPriority;
     },
 
     now: Scheduler.unstable_now,
