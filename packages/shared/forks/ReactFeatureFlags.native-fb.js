@@ -58,6 +58,7 @@ export const enableUseRefAccessWarning = false;
 export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableTransitionEntanglement = false;
+export const enableNonInterruptingNormalPri = false;
 export const enableDiscreteEventMicroTasks = false;
 export const enableNativeEventPriorityInference = false;
 

@@ -1849,10 +1849,12 @@ describe('ReactIncrementalErrorHandling', () => {
       // the queue.
       expect(Scheduler).toFlushAndYieldThrough(['Everything is fine.']);
 
-      // Schedule a default pri update on a child that triggers an error.
+      // Schedule a discrete update on a child that triggers an error.
       // The root should capture this error. But since there's still a pending
       // update on the root, the error should be suppressed.
-      setShouldThrow(true);
+      ReactNoop.discreteUpdates(() => {
+        setShouldThrow(true);
+      });
     });
     // Should render the final state without throwing the error.
     expect(Scheduler).toHaveYielded(['Everything is fine.']);
