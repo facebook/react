@@ -18,7 +18,7 @@ const inlinedHostConfigs = require('../shared/inlinedHostConfigs');
 const nodeTotal = process.env.CIRCLE_NODE_TOTAL
   ? parseInt(process.env.CIRCLE_NODE_TOTAL, 10)
   : 1;
-const nodeIndex = process.env.CIRCLE_NODE_TOTAL
+const nodeIndex = process.env.CIRCLE_NODE_INDEX
   ? parseInt(process.env.CIRCLE_NODE_INDEX, 10)
   : 0;
 
