@@ -589,7 +589,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
   // Note: This test was written to test a heuristic used in the expiration
   // times model. Might not make sense in the new model.
-  // @gate enableCache || enableTransitionEntanglement
+  // TODO: This test doesn't over what it was originally designed to test.
+  // Either rewrite or delete.
   it('tries each subsequent level after suspending', async () => {
     const root = ReactNoop.createRoot();
 
@@ -642,26 +643,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       root.render(<App step={4} shouldSuspend={false} />);
     });
 
-    if (gate(flags => flags.enableTransitionEntanglement)) {
-      expect(Scheduler).toHaveYielded(['Sibling', 'Step 4']);
-    } else {
-      // Old implementation
-      expect(Scheduler).toHaveYielded([
-        'Sibling',
-
-        // NOTE: The final of the update got pushed into a lower priority range of
-        // lanes, leading to the extra intermediate render. This is because when
-        // we schedule the fourth update, we're already in the middle of rendering
-        // the three others. Since there are only three lanes in the default
-        // range, the fourth lane is shifted to slightly lower priority. This
-        // could easily change when we tweak our batching heuristics. Ideally,
-        // they'd all have default priority and render in a single batch.
-        'Suspend! [Step 3]',
-        'Sibling',
-
-        'Step 4',
-      ]);
-    }
+    expect(Scheduler).toHaveYielded(['Sibling', 'Step 4']);
   });
 
   // @gate enableCache
@@ -2798,21 +2780,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       foo.setState({suspend: false});
     });
 
-    if (gate(flags => flags.enableTransitionEntanglement)) {
-      expect(Scheduler).toHaveYielded([
-        // First setState
-        'Foo',
-      ]);
-    } else {
-      expect(Scheduler).toHaveYielded([
-        // First setState
-        'Foo',
-        // Second setState. This update was scheduled while we were in the
-        // middle of rendering the previous update, so it was pushed to a separate
-        // batch to avoid invalidating the work-in-progress tree.
-        'Foo',
-      ]);
-    }
+    expect(Scheduler).toHaveYielded([
+      // First setState
+      'Foo',
+    ]);
     expect(root).toMatchRenderedOutput(<span prop="Foo" />);
   });
 
