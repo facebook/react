@@ -105,6 +105,7 @@
    },
    "scripts": {
       "build": "node ./scripts/rollup/build.js",
+      "build-amd": "node ./scripts-amd/build.js",
       "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react-dom,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh --type=NODE",
       "linc": "node ./scripts/tasks/linc.js",
       "lint": "node ./scripts/tasks/eslint.js",
