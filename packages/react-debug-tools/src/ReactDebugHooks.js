@@ -462,7 +462,7 @@ function parseTrimmedStack(rootStack, hook) {
     // Something went wrong. Give up.
     return null;
   }
-  return hookStack.slice(primitiveIndex, rootIndex - 1);
+  return hookStack.slice(primitiveIndex - 1, rootIndex - 1);
 }
 
 function parseCustomHookName(functionName: void | string): string {
@@ -482,6 +482,7 @@ function parseCustomHookName(functionName: void | string): string {
 function buildTree(rootStack, readHookLog): HooksTree {
   const rootChildren = [];
   let prevStack = null;
+  let prevPrimitiveNode = null;
   let levelChildren = rootChildren;
   let nativeHookID = 0;
   const stackOfChildren = [];
@@ -494,7 +495,7 @@ function buildTree(rootStack, readHookLog): HooksTree {
       // That's why we get the name from n - 1 and don't check the source
       // of index 0.
       let commonSteps = 0;
-      if (prevStack !== null) {
+      if (prevStack !== null && prevPrimitiveNode !== null) {
         // Compare the current level's stack to the new stack.
         while (commonSteps < stack.length && commonSteps < prevStack.length) {
           const stackSource = stack[stack.length - commonSteps - 1].source;
@@ -506,13 +507,37 @@ function buildTree(rootStack, readHookLog): HooksTree {
           commonSteps++;
         }
         // Pop back the stack as many steps as were not common.
-        for (let j = prevStack.length - 1; j > commonSteps; j--) {
-          levelChildren = stackOfChildren.pop();
+        if (stack.length - 1 === commonSteps) {
+          // The common steps are included in the previous stack. This means
+          // we're misinterpreting this frame as a primitive when it really
+          // wasn't. We push a fake extra stack frame so that when we compare
+          // later we know to pop.
+          stack.unshift(stack[0]);
+        }
+        if (prevStack.length - 1 === commonSteps) {
+          // All the steps are in common. This means that we misinterpreted
+          // the previous last frame as a primitive when it really wasn't.
+          const revisedChildren = [];
+          const revisedPrimitive = {
+            id: prevPrimitiveNode.id,
+            isStateEditable: prevPrimitiveNode.isStateEditable,
+            name: prevPrimitiveNode.name,
+            value: prevPrimitiveNode.value,
+            subHooks: revisedChildren,
+          };
+          prevPrimitiveNode.id = null;
+          prevPrimitiveNode.isStateEditable = false;
+          prevPrimitiveNode.value = undefined;
+          levelChildren.push(revisedPrimitive);
+        } else {
+          for (let j = prevStack.length - 1; j > commonSteps; j--) {
+            levelChildren = stackOfChildren.pop();
+          }
         }
       }
       // The remaining part of the new stack are custom hooks. Push them
       // to the tree.
-      for (let j = stack.length - commonSteps - 1; j >= 1; j--) {
+      for (let j = stack.length - commonSteps - 1; j >= 2; j--) {
         const children = [];
         levelChildren.push({
           id: null,
@@ -538,13 +563,18 @@ function buildTree(rootStack, readHookLog): HooksTree {
     // For the time being, only State and Reducer hooks support runtime overrides.
     const isStateEditable = primitive === 'Reducer' || primitive === 'State';
 
-    levelChildren.push({
+    const terminalChildren = [];
+    const primitiveNode = {
       id,
       isStateEditable,
       name: primitive,
       value: hook.value,
-      subHooks: [],
-    });
+      subHooks: terminalChildren,
+    };
+    prevPrimitiveNode = primitiveNode;
+    levelChildren.push(prevPrimitiveNode);
+    stackOfChildren.push(levelChildren);
+    levelChildren = terminalChildren;
   }
 
   // Associate custom hook values (useDebugValue() hook entries) with the correct hooks.
