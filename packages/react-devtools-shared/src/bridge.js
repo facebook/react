@@ -89,7 +89,9 @@ type ViewAttributeSourceParams = {|
 
 type InspectElementParams = {|
   ...ElementAndRendererID,
-  path?: Array<string | number>,
+  forceUpdate: boolean,
+  inspectedPaths: Object,
+  requestID: number,
 |};
 
 type StoreAsGlobalParams = {|
@@ -114,9 +116,10 @@ type NativeStyleEditor_SetValueParams = {|
 type UpdateConsolePatchSettingsParams = {|
   appendComponentStack: boolean,
   breakOnConsoleErrors: boolean,
+  showInlineWarningsAndErrors: boolean,
 |};
 
-type BackendEvents = {|
+export type BackendEvents = {|
   extensionBackendInitialized: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
@@ -141,7 +144,10 @@ type BackendEvents = {|
 |};
 
 type FrontendEvents = {|
+  clearErrorsAndWarnings: [{|rendererID: RendererID|}],
+  clearErrorsForFiberID: [ElementAndRendererID],
   clearNativeElementHighlight: [],
+  clearWarningsForFiberID: [ElementAndRendererID],
   copyElementPath: [CopyElementPathParams],
   deletePath: [DeletePath],
   getOwnersList: [ElementAndRendererID],

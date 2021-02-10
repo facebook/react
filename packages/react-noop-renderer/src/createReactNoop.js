@@ -27,6 +27,7 @@ import {
   LegacyRoot,
 } from 'react-reconciler/src/ReactRootTags';
 
+import {enableNativeEventPriorityInference} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
 const {IsSomeRendererActing} = ReactSharedInternals;
@@ -275,6 +276,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       props: Props,
       rootContainerInstance: Container,
       hostContext: HostContext,
+      internalInstanceHandle: Object,
     ): Instance {
       if (type === 'errorInCompletePhase') {
         throw new Error('Error in host config.');
@@ -298,6 +300,10 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       });
       Object.defineProperty(inst, 'context', {
         value: inst.context,
+        enumerable: false,
+      });
+      Object.defineProperty(inst, 'fiber', {
+        value: internalInstanceHandle,
         enumerable: false,
       });
       return inst;
@@ -366,6 +372,19 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     scheduleTimeout: setTimeout,
     cancelTimeout: clearTimeout,
     noTimeout: -1,
+    scheduleMicrotask:
+      typeof queueMicrotask === 'function'
+        ? queueMicrotask
+        : typeof Promise !== 'undefined'
+        ? callback =>
+            Promise.resolve(null)
+              .then(callback)
+              .catch(error => {
+                setTimeout(() => {
+                  throw error;
+                });
+              })
+        : setTimeout,
 
     prepareForCommit(): null | Object {
       return null;
@@ -373,62 +392,15 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     resetAfterCommit(): void {},
 
+    getCurrentEventPriority() {
+      return currentEventPriority;
+    },
+
     now: Scheduler.unstable_now,
 
     isPrimaryRenderer: true,
     warnsIfNotActing: true,
     supportsHydration: false,
-
-    getFundamentalComponentInstance(fundamentalInstance): Instance {
-      const {impl, props, state} = fundamentalInstance;
-      return impl.getInstance(null, props, state);
-    },
-
-    mountFundamentalComponent(fundamentalInstance): void {
-      const {impl, instance, props, state} = fundamentalInstance;
-      const onMount = impl.onUpdate;
-      if (onMount !== undefined) {
-        onMount(null, instance, props, state);
-      }
-    },
-
-    shouldUpdateFundamentalComponent(fundamentalInstance): boolean {
-      const {impl, instance, prevProps, props, state} = fundamentalInstance;
-      const shouldUpdate = impl.shouldUpdate;
-      if (shouldUpdate !== undefined) {
-        return shouldUpdate(null, instance, prevProps, props, state);
-      }
-      return true;
-    },
-
-    updateFundamentalComponent(fundamentalInstance): void {
-      const {impl, instance, prevProps, props, state} = fundamentalInstance;
-      const onUpdate = impl.onUpdate;
-      if (onUpdate !== undefined) {
-        onUpdate(null, instance, prevProps, props, state);
-      }
-    },
-
-    unmountFundamentalComponent(fundamentalInstance): void {
-      const {impl, instance, props, state} = fundamentalInstance;
-      const onUnmount = impl.onUnmount;
-      if (onUnmount !== undefined) {
-        onUnmount(null, instance, props, state);
-      }
-    },
-
-    cloneFundamentalInstance(fundamentalInstance): Instance {
-      const instance = fundamentalInstance.instance;
-      return {
-        children: [],
-        text: instance.text,
-        type: instance.type,
-        prop: instance.prop,
-        id: instance.id,
-        context: instance.context,
-        hidden: instance.hidden,
-      };
-    },
 
     getInstanceFromNode() {
       throw new Error('Not yet implemented.');
@@ -615,6 +587,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const rootContainers = new Map();
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
+
+  let currentEventPriority = NoopRenderer.DefaultEventPriority;
 
   function childToJSX(child, text) {
     if (text !== null) {
@@ -953,6 +927,23 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     unbatchedUpdates: NoopRenderer.unbatchedUpdates,
 
     discreteUpdates: NoopRenderer.discreteUpdates,
+
+    idleUpdates<T>(fn: () => T): T {
+      if (enableNativeEventPriorityInference) {
+        const prevEventPriority = currentEventPriority;
+        currentEventPriority = NoopRenderer.IdleEventPriority;
+        try {
+          fn();
+        } finally {
+          currentEventPriority = prevEventPriority;
+        }
+      } else {
+        return Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_IdlePriority,
+          fn,
+        );
+      }
+    },
 
     flushDiscreteUpdates: NoopRenderer.flushDiscreteUpdates,
 

@@ -465,6 +465,17 @@ export function injectIntoGlobalHook(globalObject: any): void {
       };
     }
 
+    if (hook.isDisabled) {
+      // This isn't a real property on the hook, but it can be set to opt out
+      // of DevTools integration and associated warnings and logs.
+      // Using console['warn'] to evade Babel and ESLint
+      console['warn'](
+        'Something has shimmed the React DevTools global hook (__REACT_DEVTOOLS_GLOBAL_HOOK__). ' +
+          'Fast Refresh is not compatible with this shim and will be disabled.',
+      );
+      return;
+    }
+
     // Here, we just want to get a reference to scheduleRefresh.
     const oldInject = hook.inject;
     hook.inject = function(injected) {

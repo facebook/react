@@ -34,9 +34,6 @@ export const FORWARD_REF_SYMBOL_STRING = 'Symbol(react.forward_ref)';
 export const FRAGMENT_NUMBER = 0xeacb;
 export const FRAGMENT_SYMBOL_STRING = 'Symbol(react.fragment)';
 
-export const FUNDAMENTAL_NUMBER = 0xead5;
-export const FUNDAMENTAL_SYMBOL_STRING = 'Symbol(react.fundamental)';
-
 export const LAZY_NUMBER = 0xead4;
 export const LAZY_SYMBOL_STRING = 'Symbol(react.lazy)';
 

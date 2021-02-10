@@ -26,6 +26,7 @@ export type WorkFlags = number;
 export type ExpirationTime = number;
 
 export type WorkTagMap = {|
+  CacheComponent: WorkTag,
   ClassComponent: WorkTag,
   ContextConsumer: WorkTag,
   ContextProvider: WorkTag,
@@ -42,10 +43,12 @@ export type WorkTagMap = {|
   IncompleteClassComponent: WorkTag,
   IndeterminateComponent: WorkTag,
   LazyComponent: WorkTag,
+  LegacyHiddenComponent: WorkTag,
   MemoComponent: WorkTag,
   Mode: WorkTag,
   OffscreenComponent: WorkTag,
   Profiler: WorkTag,
+  ScopeComponent: WorkTag,
   SimpleMemoComponent: WorkTag,
   SuspenseComponent: WorkTag,
   SuspenseListComponent: WorkTag,
@@ -232,6 +235,8 @@ export type InspectedElement = {|
   props: Object | null,
   state: Object | null,
   key: number | string | null,
+  errors: Array<[string, number]>,
+  warnings: Array<[string, number]>,
 
   // List of owners
   owners: Array<Owner> | null,
@@ -252,34 +257,28 @@ export type InspectedElement = {|
 export const InspectElementFullDataType = 'full-data';
 export const InspectElementNoChangeType = 'no-change';
 export const InspectElementNotFoundType = 'not-found';
-export const InspectElementHydratedPathType = 'hydrated-path';
 
 type InspectElementFullData = {|
   id: number,
+  responseID: number,
   type: 'full-data',
   value: InspectedElement,
 |};
 
-type InspectElementHydratedPath = {|
-  id: number,
-  type: 'hydrated-path',
-  path: Array<string | number>,
-  value: any,
-|};
-
 type InspectElementNoChange = {|
   id: number,
+  responseID: number,
   type: 'no-change',
 |};
 
 type InspectElementNotFound = {|
   id: number,
+  responseID: number,
   type: 'not-found',
 |};
 
 export type InspectedElementPayload =
   | InspectElementFullData
-  | InspectElementHydratedPath
   | InspectElementNoChange
   | InspectElementNotFound;
 
@@ -292,6 +291,9 @@ type Type = 'props' | 'hooks' | 'state' | 'context';
 
 export type RendererInterface = {
   cleanup: () => void,
+  clearErrorsAndWarnings: () => void,
+  clearErrorsForFiberID: (id: number) => void,
+  clearWarningsForFiberID: (id: number) => void,
   copyElementPath: (id: number, path: Array<string | number>) => void,
   deletePath: (
     type: Type,
@@ -311,8 +313,10 @@ export type RendererInterface = {
   handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   inspectElement: (
+    requestID: number,
     id: number,
-    path?: Array<string | number>,
+    inspectedPaths: Object,
+    forceUpdate: boolean,
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,

@@ -132,6 +132,13 @@ function createErrorChunk(response: Response, error: Error): ErroredChunk {
   return new Chunk(ERRORED, error, response);
 }
 
+function createInitializedChunk<T>(
+  response: Response,
+  value: T,
+): InitializedChunk<T> {
+  return new Chunk(INITIALIZED, value, response);
+}
+
 function wakeChunk(listeners: null | Array<() => mixed>) {
   if (listeners !== null) {
     for (let i = 0; i < listeners.length; i++) {
@@ -371,6 +378,17 @@ export function resolveModule(
   } else {
     resolveModuleChunk(chunk, moduleReference);
   }
+}
+
+export function resolveSymbol(
+  response: Response,
+  id: number,
+  name: string,
+): void {
+  const chunks = response._chunks;
+  // We assume that we'll always emit the symbol before anything references it
+  // to save a few bytes.
+  chunks.set(id, createInitializedChunk(response, Symbol.for(name)));
 }
 
 export function resolveError(

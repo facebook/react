@@ -8,11 +8,11 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane';
+import type {Lanes} from './ReactFiberLane.new';
 import type {UpdateQueue} from './ReactUpdateQueue.new';
 
 import * as React from 'react';
-import {Update, Snapshot, MountLayoutDev} from './ReactFiberFlags';
+import {MountLayoutDev, Update, Snapshot} from './ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
@@ -40,6 +40,7 @@ import {
 
 import {
   enqueueUpdate,
+  entangleTransitions,
   processUpdateQueue,
   checkHasForceUpdateAfterProcessing,
   resetHasForceUpdateBeforeProcessing,
@@ -49,7 +50,7 @@ import {
   initializeUpdateQueue,
   cloneUpdateQueue,
 } from './ReactUpdateQueue.new';
-import {NoLanes} from './ReactFiberLane';
+import {NoLanes} from './ReactFiberLane.new';
 import {
   cacheContext,
   getMaskedContext,
@@ -213,8 +214,11 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update);
-    scheduleUpdateOnFiber(fiber, lane, eventTime);
+    enqueueUpdate(fiber, update, lane);
+    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    if (root !== null) {
+      entangleTransitions(root, fiber, lane);
+    }
 
     if (__DEV__) {
       if (enableDebugTracing) {
@@ -245,8 +249,11 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update);
-    scheduleUpdateOnFiber(fiber, lane, eventTime);
+    enqueueUpdate(fiber, update, lane);
+    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    if (root !== null) {
+      entangleTransitions(root, fiber, lane);
+    }
 
     if (__DEV__) {
       if (enableDebugTracing) {
@@ -276,8 +283,11 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update);
-    scheduleUpdateOnFiber(fiber, lane, eventTime);
+    enqueueUpdate(fiber, update, lane);
+    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    if (root !== null) {
+      entangleTransitions(root, fiber, lane);
+    }
 
     if (__DEV__) {
       if (enableDebugTracing) {
@@ -981,6 +991,7 @@ function resumeMountClassInstance(
         enableDoubleInvokingEffects &&
         (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
       ) {
+        // Never double-invoke effects for legacy roots.
         workInProgress.flags |= MountLayoutDev | Update;
       } else {
         workInProgress.flags |= Update;
@@ -1032,6 +1043,7 @@ function resumeMountClassInstance(
         enableDoubleInvokingEffects &&
         (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
       ) {
+        // Never double-invoke effects for legacy roots.
         workInProgress.flags |= MountLayoutDev | Update;
       } else {
         workInProgress.flags |= Update;
@@ -1046,6 +1058,7 @@ function resumeMountClassInstance(
         enableDoubleInvokingEffects &&
         (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
       ) {
+        // Never double-invoke effects for legacy roots.
         workInProgress.flags |= MountLayoutDev | Update;
       } else {
         workInProgress.flags |= Update;

@@ -32,7 +32,7 @@ import {
   flushPassiveEffects,
   IsThisRendererActing,
   attemptSynchronousHydration,
-  attemptUserBlockingHydration,
+  attemptDiscreteHydration,
   attemptContinuousHydration,
   attemptHydrationAtCurrentPriority,
   runWithPriority,
@@ -56,7 +56,7 @@ import {
 import {restoreControlledState} from './ReactDOMComponent';
 import {
   setAttemptSynchronousHydration,
-  setAttemptUserBlockingHydration,
+  setAttemptDiscreteHydration,
   setAttemptContinuousHydration,
   setAttemptHydrationAtCurrentPriority,
   queueExplicitHydrationTarget,
@@ -71,7 +71,7 @@ import {
 } from '../events/ReactDOMControlledComponent';
 
 setAttemptSynchronousHydration(attemptSynchronousHydration);
-setAttemptUserBlockingHydration(attemptUserBlockingHydration);
+setAttemptDiscreteHydration(attemptDiscreteHydration);
 setAttemptContinuousHydration(attemptContinuousHydration);
 setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority);
 setGetCurrentUpdatePriority(getCurrentUpdateLanePriority);

@@ -12,6 +12,8 @@
 }
 
 .Header {
+  display: flex;
+  align-items: center;
   flex: 1 1;
   font-family: var(--font-family-sans);
 }

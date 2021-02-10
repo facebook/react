@@ -16,7 +16,6 @@ import type {
 } from 'react-reconciler/src/ReactTestSelectors';
 import type {RootType} from './ReactDOMRoot';
 import type {ReactScopeInstance} from 'shared/ReactTypes';
-import type {ReactDOMFundamentalComponentInstance} from '../shared/ReactDOMTypes';
 
 import {
   precacheFiberNode,
@@ -48,6 +47,7 @@ import {validateDOMNesting, updatedAncestorInfo} from './validateDOMNesting';
 import {
   isEnabled as ReactBrowserEventEmitterIsEnabled,
   setEnabled as ReactBrowserEventEmitterSetEnabled,
+  getEventPriority,
 } from '../events/ReactDOMEventListener';
 import {getChildNamespace} from '../shared/DOMNamespaces';
 import {
@@ -64,12 +64,19 @@ import {retryIfBlockedOn} from '../events/ReactDOMEventReplaying';
 
 import {
   enableSuspenseServerRenderer,
-  enableFundamentalAPI,
   enableCreateEventHandleAPI,
   enableScopeAPI,
+  enableNewReconciler,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
+
+import {DefaultLanePriority as DefaultLanePriority_old} from 'react-reconciler/src/ReactFiberLane.old';
+import {DefaultLanePriority as DefaultLanePriority_new} from 'react-reconciler/src/ReactFiberLane.new';
+
+const DefaultLanePriority = enableNewReconciler
+  ? DefaultLanePriority_new
+  : DefaultLanePriority_old;
 
 export type Type = string;
 export type Props = {
@@ -374,6 +381,14 @@ export function createTextInstance(
   return textNode;
 }
 
+export function getCurrentEventPriority(): * {
+  const currentEvent = window.event;
+  if (currentEvent === undefined) {
+    return DefaultLanePriority;
+  }
+  return getEventPriority(currentEvent.type);
+}
+
 export const isPrimaryRenderer = true;
 export const warnsIfNotActing = true;
 // This initialization code may run even on server environments
@@ -384,6 +399,21 @@ export const scheduleTimeout: any =
 export const cancelTimeout: any =
   typeof clearTimeout === 'function' ? clearTimeout : (undefined: any);
 export const noTimeout = -1;
+export const scheduleMicrotask: any =
+  typeof queueMicrotask === 'function'
+    ? queueMicrotask
+    : typeof Promise !== 'undefined'
+    ? callback =>
+        Promise.resolve(null)
+          .then(callback)
+          .catch(handleErrorInNextTick)
+    : scheduleTimeout; // TODO: Determine the best fallback here.
+
+function handleErrorInNextTick(error) {
+  setTimeout(() => {
+    throw error;
+  });
+}
 
 // -------------------
 //     Mutation
@@ -970,68 +1000,6 @@ export function didNotFindHydratableSuspenseInstance(
 ) {
   if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
     // TODO: warnForInsertedHydratedSuspense(parentInstance);
-  }
-}
-
-export function getFundamentalComponentInstance(
-  fundamentalInstance: ReactDOMFundamentalComponentInstance,
-): Instance {
-  if (enableFundamentalAPI) {
-    const {currentFiber, impl, props, state} = fundamentalInstance;
-    const instance = impl.getInstance(null, props, state);
-    precacheFiberNode(currentFiber, instance);
-    return instance;
-  }
-  // Because of the flag above, this gets around the Flow error;
-  return (null: any);
-}
-
-export function mountFundamentalComponent(
-  fundamentalInstance: ReactDOMFundamentalComponentInstance,
-): void {
-  if (enableFundamentalAPI) {
-    const {impl, instance, props, state} = fundamentalInstance;
-    const onMount = impl.onMount;
-    if (onMount !== undefined) {
-      onMount(null, instance, props, state);
-    }
-  }
-}
-
-export function shouldUpdateFundamentalComponent(
-  fundamentalInstance: ReactDOMFundamentalComponentInstance,
-): boolean {
-  if (enableFundamentalAPI) {
-    const {impl, prevProps, props, state} = fundamentalInstance;
-    const shouldUpdate = impl.shouldUpdate;
-    if (shouldUpdate !== undefined) {
-      return shouldUpdate(null, prevProps, props, state);
-    }
-  }
-  return true;
-}
-
-export function updateFundamentalComponent(
-  fundamentalInstance: ReactDOMFundamentalComponentInstance,
-): void {
-  if (enableFundamentalAPI) {
-    const {impl, instance, prevProps, props, state} = fundamentalInstance;
-    const onUpdate = impl.onUpdate;
-    if (onUpdate !== undefined) {
-      onUpdate(null, instance, prevProps, props, state);
-    }
-  }
-}
-
-export function unmountFundamentalComponent(
-  fundamentalInstance: ReactDOMFundamentalComponentInstance,
-): void {
-  if (enableFundamentalAPI) {
-    const {impl, instance, props, state} = fundamentalInstance;
-    const onUnmount = impl.onUnmount;
-    if (onUnmount !== undefined) {
-      onUnmount(null, instance, props, state);
-    }
   }
 }
 

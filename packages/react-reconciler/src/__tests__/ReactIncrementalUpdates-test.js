@@ -320,7 +320,16 @@ describe('ReactIncrementalUpdates', () => {
     });
 
     expect(instance.state).toEqual({a: 'a', b: 'b'});
-    expect(Scheduler).toHaveYielded(['componentWillReceiveProps', 'render']);
+
+    if (gate(flags => flags.deferRenderPhaseUpdateToNextBatch)) {
+      expect(Scheduler).toHaveYielded([
+        'componentWillReceiveProps',
+        'render',
+        'render',
+      ]);
+    } else {
+      expect(Scheduler).toHaveYielded(['componentWillReceiveProps', 'render']);
+    }
   });
 
   it('updates triggered from inside a class setState updater', () => {

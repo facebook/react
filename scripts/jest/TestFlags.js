@@ -44,6 +44,11 @@ const environmentFlags = {
 
   // Use this for tests that are known to be broken.
   FIXME: false,
+
+  // Turn these flags back on (or delete) once the effect list is removed in
+  // favor of a depth-first traversal using `subtreeTags`.
+  dfsEffectsRefactor: true,
+  enableUseJSStackToTrackPassiveDurations: false,
 };
 
 function getTestFlags() {
@@ -74,10 +79,16 @@ function getTestFlags() {
       channel: releaseChannel,
       modern: releaseChannel === 'modern',
       classic: releaseChannel === 'classic',
+      source: !process.env.IS_BUILD,
       www,
 
       ...featureFlags,
       ...environmentFlags,
+
+      // FIXME: www-classic has enableCache on, but when running the source
+      // tests, Jest doesn't expose the API correctly. Fix then remove
+      // this override.
+      enableCache: __EXPERIMENTAL__,
     },
     {
       get(flags, flagName) {

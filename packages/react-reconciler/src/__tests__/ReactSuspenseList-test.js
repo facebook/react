@@ -2443,7 +2443,7 @@ describe('ReactSuspenseList', () => {
 
     expect(ReactNoop).toMatchRenderedOutput(null);
 
-    ReactNoop.act(() => {
+    await ReactNoop.act(async () => {
       // Add a few items at the end.
       updateLowPri(true);
 
@@ -2451,33 +2451,22 @@ describe('ReactSuspenseList', () => {
       expect(Scheduler).toFlushAndYieldThrough(['B', 'C']);
 
       // Schedule another update at higher priority.
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_UserBlockingPriority,
-        () => updateHighPri(true),
-      );
+      ReactNoop.flushSync(() => updateHighPri(true));
 
       // That will intercept the previous render.
-    });
+      expect(Scheduler).toHaveYielded([
+        'Suspend! [A]',
+        'Loading A',
+        // Re-render at forced.
+        'Suspend! [A]',
+        'Loading A',
+      ]);
+      expect(ReactNoop).toMatchRenderedOutput(<span>Loading A</span>);
 
-    jest.runAllTimers();
-
-    expect(Scheduler).toHaveYielded([
-      // First attempt at high pri.
-      'Suspend! [A]',
-      'Loading A',
-      // Re-render at forced.
-      'Suspend! [A]',
-      'Loading A',
-      // We auto-commit this on DEV.
       // Try again on low-pri.
-      'Suspend! [A]',
-      'Loading A',
-      // Re-render at forced.
-      'Suspend! [A]',
-      'Loading A',
-    ]);
-
-    expect(ReactNoop).toMatchRenderedOutput(<span>Loading A</span>);
+      expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading A']);
+      expect(ReactNoop).toMatchRenderedOutput(<span>Loading A</span>);
+    });
 
     await AsyncA.resolve();
 

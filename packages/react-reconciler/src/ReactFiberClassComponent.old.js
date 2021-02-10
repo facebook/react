@@ -8,17 +8,18 @@
  */
 
 import type {Fiber} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane';
+import type {Lanes} from './ReactFiberLane.old';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
 
 import * as React from 'react';
-import {Update, Snapshot} from './ReactFiberFlags';
+import {MountLayoutDev, Update, Snapshot} from './ReactFiberFlags';
 import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
   enableDebugTracing,
   enableSchedulingProfiler,
   warnAboutDeprecatedLifecycles,
+  enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
 import {isMounted} from './ReactFiberTreeReflection';
@@ -29,10 +30,17 @@ import invariant from 'shared/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
 import {resolveDefaultProps} from './ReactFiberLazyComponent.old';
-import {DebugTracingMode, StrictMode} from './ReactTypeOfMode';
+import {
+  BlockingMode,
+  ConcurrentMode,
+  DebugTracingMode,
+  NoMode,
+  StrictMode,
+} from './ReactTypeOfMode';
 
 import {
   enqueueUpdate,
+  entangleTransitions,
   processUpdateQueue,
   checkHasForceUpdateAfterProcessing,
   resetHasForceUpdateBeforeProcessing,
@@ -42,7 +50,7 @@ import {
   initializeUpdateQueue,
   cloneUpdateQueue,
 } from './ReactUpdateQueue.old';
-import {NoLanes} from './ReactFiberLane';
+import {NoLanes} from './ReactFiberLane.old';
 import {
   cacheContext,
   getMaskedContext,
@@ -206,8 +214,11 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update);
-    scheduleUpdateOnFiber(fiber, lane, eventTime);
+    enqueueUpdate(fiber, update, lane);
+    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    if (root !== null) {
+      entangleTransitions(root, fiber, lane);
+    }
 
     if (__DEV__) {
       if (enableDebugTracing) {
@@ -238,8 +249,11 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update);
-    scheduleUpdateOnFiber(fiber, lane, eventTime);
+    enqueueUpdate(fiber, update, lane);
+    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    if (root !== null) {
+      entangleTransitions(root, fiber, lane);
+    }
 
     if (__DEV__) {
       if (enableDebugTracing) {
@@ -269,8 +283,11 @@ const classComponentUpdater = {
       update.callback = callback;
     }
 
-    enqueueUpdate(fiber, update);
-    scheduleUpdateOnFiber(fiber, lane, eventTime);
+    enqueueUpdate(fiber, update, lane);
+    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+    if (root !== null) {
+      entangleTransitions(root, fiber, lane);
+    }
 
     if (__DEV__) {
       if (enableDebugTracing) {
@@ -890,7 +907,16 @@ function mountClassInstance(
   }
 
   if (typeof instance.componentDidMount === 'function') {
-    workInProgress.flags |= Update;
+    if (
+      __DEV__ &&
+      enableDoubleInvokingEffects &&
+      (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+    ) {
+      // Never double-invoke effects for legacy roots.
+      workInProgress.flags |= MountLayoutDev | Update;
+    } else {
+      workInProgress.flags |= Update;
+    }
   }
 }
 
@@ -960,7 +986,16 @@ function resumeMountClassInstance(
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.flags |= Update;
+      if (
+        __DEV__ &&
+        enableDoubleInvokingEffects &&
+        (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+      ) {
+        // Never double-invoke effects for legacy roots.
+        workInProgress.flags |= MountLayoutDev | Update;
+      } else {
+        workInProgress.flags |= Update;
+      }
     }
     return false;
   }
@@ -1003,13 +1038,31 @@ function resumeMountClassInstance(
       }
     }
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.flags |= Update;
+      if (
+        __DEV__ &&
+        enableDoubleInvokingEffects &&
+        (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+      ) {
+        // Never double-invoke effects for legacy roots.
+        workInProgress.flags |= MountLayoutDev | Update;
+      } else {
+        workInProgress.flags |= Update;
+      }
     }
   } else {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
     if (typeof instance.componentDidMount === 'function') {
-      workInProgress.flags |= Update;
+      if (
+        __DEV__ &&
+        enableDoubleInvokingEffects &&
+        (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+      ) {
+        // Never double-invoke effects for legacy roots.
+        workInProgress.flags |= MountLayoutDev | Update;
+      } else {
+        workInProgress.flags |= Update;
+      }
     }
 
     // If shouldComponentUpdate returned false, we should still update the

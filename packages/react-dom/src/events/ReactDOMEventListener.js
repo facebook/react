@@ -41,23 +41,54 @@ import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 import {
   enableLegacyFBSupport,
   decoupleUpdatePriorityFromScheduler,
+  enableNewReconciler,
 } from 'shared/ReactFeatureFlags';
-import {
-  UserBlockingEvent,
-  ContinuousEvent,
-  DiscreteEvent,
-} from 'shared/ReactTypes';
-import {getEventPriorityForPluginSystem} from './DOMEventProperties';
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 import {
   flushDiscreteUpdatesIfNeeded,
   discreteUpdates,
 } from './ReactDOMUpdateBatching';
+
 import {
-  InputContinuousLanePriority,
-  getCurrentUpdateLanePriority,
-  setCurrentUpdateLanePriority,
-} from 'react-reconciler/src/ReactFiberLane';
+  InputDiscreteLanePriority as InputDiscreteLanePriority_old,
+  InputContinuousLanePriority as InputContinuousLanePriority_old,
+  DefaultLanePriority as DefaultLanePriority_old,
+  getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
+  setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_old,
+  schedulerPriorityToLanePriority as schedulerPriorityToLanePriority_old,
+} from 'react-reconciler/src/ReactFiberLane.old';
+import {
+  InputDiscreteLanePriority as InputDiscreteLanePriority_new,
+  InputContinuousLanePriority as InputContinuousLanePriority_new,
+  DefaultLanePriority as DefaultLanePriority_new,
+  getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
+  setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_new,
+  schedulerPriorityToLanePriority as schedulerPriorityToLanePriority_new,
+} from 'react-reconciler/src/ReactFiberLane.new';
+import {getCurrentPriorityLevel as getCurrentPriorityLevel_old} from 'react-reconciler/src/SchedulerWithReactIntegration.old';
+import {getCurrentPriorityLevel as getCurrentPriorityLevel_new} from 'react-reconciler/src/SchedulerWithReactIntegration.new';
+
+const InputDiscreteLanePriority = enableNewReconciler
+  ? InputDiscreteLanePriority_new
+  : InputDiscreteLanePriority_old;
+const InputContinuousLanePriority = enableNewReconciler
+  ? InputContinuousLanePriority_new
+  : InputContinuousLanePriority_old;
+const DefaultLanePriority = enableNewReconciler
+  ? DefaultLanePriority_new
+  : DefaultLanePriority_old;
+const getCurrentUpdateLanePriority = enableNewReconciler
+  ? getCurrentUpdateLanePriority_new
+  : getCurrentUpdateLanePriority_old;
+const setCurrentUpdateLanePriority = enableNewReconciler
+  ? setCurrentUpdateLanePriority_new
+  : setCurrentUpdateLanePriority_old;
+const schedulerPriorityToLanePriority = enableNewReconciler
+  ? schedulerPriorityToLanePriority_new
+  : schedulerPriorityToLanePriority_old;
+const getCurrentPriorityLevel = enableNewReconciler
+  ? getCurrentPriorityLevel_new
+  : getCurrentPriorityLevel_old;
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
@@ -95,16 +126,16 @@ export function createEventListenerWrapperWithPriority(
   domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
 ): Function {
-  const eventPriority = getEventPriorityForPluginSystem(domEventName);
+  const eventPriority = getEventPriority(domEventName);
   let listenerWrapper;
   switch (eventPriority) {
-    case DiscreteEvent:
+    case InputDiscreteLanePriority:
       listenerWrapper = dispatchDiscreteEvent;
       break;
-    case UserBlockingEvent:
-      listenerWrapper = dispatchUserBlockingUpdate;
+    case InputContinuousLanePriority:
+      listenerWrapper = dispatchContinuousEvent;
       break;
-    case ContinuousEvent:
+    case DefaultLanePriority:
     default:
       listenerWrapper = dispatchEvent;
       break;
@@ -140,7 +171,7 @@ function dispatchDiscreteEvent(
   );
 }
 
-function dispatchUserBlockingUpdate(
+function dispatchContinuousEvent(
   domEventName,
   eventSystemFlags,
   container,
@@ -252,7 +283,7 @@ export function dispatchEvent(
       return;
     }
     // We need to clear only if we didn't queue because
-    // queueing is accummulative.
+    // queueing is accumulative.
     clearIfContinuousEvent(domEventName, nativeEvent);
   }
 
@@ -325,4 +356,98 @@ export function attemptToDispatchEvent(
   );
   // We're not blocked on anything.
   return null;
+}
+
+export function getEventPriority(domEventName: DOMEventName): * {
+  switch (domEventName) {
+    // Used by SimpleEventPlugin:
+    case 'cancel':
+    case 'click':
+    case 'close':
+    case 'contextmenu':
+    case 'copy':
+    case 'cut':
+    case 'auxclick':
+    case 'dblclick':
+    case 'dragend':
+    case 'dragstart':
+    case 'drop':
+    case 'focusin':
+    case 'focusout':
+    case 'input':
+    case 'invalid':
+    case 'keydown':
+    case 'keypress':
+    case 'keyup':
+    case 'mousedown':
+    case 'mouseup':
+    case 'paste':
+    case 'pause':
+    case 'play':
+    case 'pointercancel':
+    case 'pointerdown':
+    case 'pointerup':
+    case 'ratechange':
+    case 'reset':
+    case 'seeked':
+    case 'submit':
+    case 'touchcancel':
+    case 'touchend':
+    case 'touchstart':
+    case 'volumechange':
+    // Used by polyfills:
+    // eslint-disable-next-line no-fallthrough
+    case 'change':
+    case 'selectionchange':
+    case 'textInput':
+    case 'compositionstart':
+    case 'compositionend':
+    case 'compositionupdate':
+    // Only enableCreateEventHandleAPI:
+    // eslint-disable-next-line no-fallthrough
+    case 'beforeblur':
+    case 'afterblur':
+    // Not used by React but could be by user code:
+    // eslint-disable-next-line no-fallthrough
+    case 'beforeinput':
+    case 'blur':
+    case 'fullscreenchange':
+    case 'focus':
+    case 'hashchange':
+    case 'popstate':
+    case 'select':
+    case 'selectstart':
+      return InputDiscreteLanePriority;
+    case 'drag':
+    case 'dragenter':
+    case 'dragexit':
+    case 'dragleave':
+    case 'dragover':
+    case 'mousemove':
+    case 'mouseout':
+    case 'mouseover':
+    case 'pointermove':
+    case 'pointerout':
+    case 'pointerover':
+    case 'scroll':
+    case 'toggle':
+    case 'touchmove':
+    case 'wheel':
+    // Not used by React but could be by user code:
+    // eslint-disable-next-line no-fallthrough
+    case 'mouseenter':
+    case 'mouseleave':
+      return InputContinuousLanePriority;
+    case 'message': {
+      // We might be in the Scheduler callback.
+      // Eventually this mechanism will be replaced by a check
+      // of the current priority on the native scheduler.
+      const schedulerPriority = getCurrentPriorityLevel();
+      // TODO: Inline schedulerPriorityToLanePriority into this file
+      // when we delete the enableNativeEventPriorityInference flag.
+      return schedulerPriorityToLanePriority(schedulerPriority);
+    }
+    default:
+      return DefaultLanePriority;
+  }
 }

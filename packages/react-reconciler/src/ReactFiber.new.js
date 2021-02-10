@@ -8,25 +8,20 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {
-  ReactFragment,
-  ReactPortal,
-  ReactFundamentalComponent,
-  ReactScope,
-} from 'shared/ReactTypes';
+import type {ReactFragment, ReactPortal, ReactScope} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {Lanes} from './ReactFiberLane';
+import type {Lanes} from './ReactFiberLane.new';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {OffscreenProps} from './ReactFiberOffscreenComponent';
 
 import invariant from 'shared/invariant';
 import {
   enableProfilerTimer,
-  enableFundamentalAPI,
   enableScopeAPI,
+  enableCache,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
@@ -50,10 +45,10 @@ import {
   MemoComponent,
   SimpleMemoComponent,
   LazyComponent,
-  FundamentalComponent,
   ScopeComponent,
   OffscreenComponent,
   LegacyHiddenComponent,
+  CacheComponent,
 } from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -63,7 +58,7 @@ import {
   resolveFunctionForHotReloading,
   resolveForwardRefForHotReloading,
 } from './ReactFiberHotReloading.new';
-import {NoLanes} from './ReactFiberLane';
+import {NoLanes} from './ReactFiberLane.new';
 import {
   NoMode,
   ConcurrentMode,
@@ -84,10 +79,10 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
-  REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
   REACT_OFFSCREEN_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
+  REACT_CACHE_TYPE,
 } from 'shared/ReactSymbols';
 
 export type {Fiber};
@@ -275,6 +270,10 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     workInProgress.type = current.type;
 
     // We already have an alternate.
+    // Reset the effect tag.
+    workInProgress.flags = NoFlags;
+
+    // The effects are no longer valid.
     workInProgress.subtreeFlags = NoFlags;
     workInProgress.deletions = null;
 
@@ -352,9 +351,11 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
   // We assume pendingProps, index, key, ref, return are still untouched to
   // avoid doing another reconciliation.
 
-  // Reset the effect tag but keep any Placement tags, since that's something
+  // Reset the effect flags but keep any Placement tags, since that's something
   // that child fiber is setting, not the reconciliation.
-  workInProgress.flags &= Placement;
+  workInProgress.flags &= StaticMask | Placement;
+
+  // The effects are no longer valid.
 
   const current = workInProgress.alternate;
   if (current === null) {
@@ -384,6 +385,9 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
     workInProgress.lanes = current.lanes;
 
     workInProgress.child = current.child;
+    // TODO: `subtreeFlags` should be reset to NoFlags, like we do in
+    // `createWorkInProgress`. Nothing reads this until the complete phase,
+    // currently, but it might in the future, and we should be consistent.
     workInProgress.subtreeFlags = current.subtreeFlags;
     workInProgress.deletions = null;
     workInProgress.memoizedProps = current.memoizedProps;
@@ -485,6 +489,11 @@ export function createFiberFromTypeAndProps(
           return createFiberFromScope(type, pendingProps, mode, lanes, key);
         }
       // eslint-disable-next-line no-fallthrough
+      case REACT_CACHE_TYPE:
+        if (enableCache) {
+          return createFiberFromCache(pendingProps, mode, lanes, key);
+        }
+      // eslint-disable-next-line no-fallthrough
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
@@ -508,17 +517,6 @@ export function createFiberFromTypeAndProps(
               fiberTag = LazyComponent;
               resolvedType = null;
               break getTag;
-            case REACT_FUNDAMENTAL_TYPE:
-              if (enableFundamentalAPI) {
-                return createFiberFromFundamental(
-                  type,
-                  pendingProps,
-                  mode,
-                  lanes,
-                  key,
-                );
-              }
-              break;
           }
         }
         let info = '';
@@ -597,20 +595,6 @@ export function createFiberFromFragment(
   key: null | string,
 ): Fiber {
   const fiber = createFiber(Fragment, elements, key, mode);
-  fiber.lanes = lanes;
-  return fiber;
-}
-
-export function createFiberFromFundamental(
-  fundamentalComponent: ReactFundamentalComponent<any, any>,
-  pendingProps: any,
-  mode: TypeOfMode,
-  lanes: Lanes,
-  key: null | string,
-): Fiber {
-  const fiber = createFiber(FundamentalComponent, pendingProps, key, mode);
-  fiber.elementType = fundamentalComponent;
-  fiber.type = fundamentalComponent;
   fiber.lanes = lanes;
   return fiber;
 }
@@ -725,6 +709,24 @@ export function createFiberFromLegacyHidden(
     fiber.type = REACT_LEGACY_HIDDEN_TYPE;
   }
   fiber.elementType = REACT_LEGACY_HIDDEN_TYPE;
+  fiber.lanes = lanes;
+  return fiber;
+}
+
+export function createFiberFromCache(
+  pendingProps: any,
+  mode: TypeOfMode,
+  lanes: Lanes,
+  key: null | string,
+) {
+  const fiber = createFiber(CacheComponent, pendingProps, key, mode);
+  // TODO: The Cache fiber shouldn't have a type. It has a tag.
+  // This needs to be fixed in getComponentName so that it relies on the tag
+  // instead.
+  if (__DEV__) {
+    fiber.type = REACT_CACHE_TYPE;
+  }
+  fiber.elementType = REACT_CACHE_TYPE;
   fiber.lanes = lanes;
   return fiber;
 }

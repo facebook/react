@@ -33,10 +33,23 @@ env.beforeEach(() => {
   const {
     getDefaultComponentFilters,
     saveComponentFilters,
+    setShowInlineWarningsAndErrors,
   } = require('react-devtools-shared/src/utils');
 
   // Fake timers let us flush Bridge operations between setup and assertions.
   jest.useFakeTimers();
+
+  // Use utils.js#withErrorsOrWarningsIgnored instead of directly mutating this array.
+  global._ignoredErrorOrWarningMessages = [];
+  function shouldIgnoreConsoleErrorOrWarn(args) {
+    const firstArg = args[0];
+    if (typeof firstArg !== 'string') {
+      return false;
+    }
+    return global._ignoredErrorOrWarningMessages.some(errorOrWarningMessage => {
+      return firstArg.indexOf(errorOrWarningMessage) !== -1;
+    });
+  }
 
   const originalConsoleError = console.error;
   // $FlowFixMe
@@ -54,13 +67,31 @@ env.beforeEach(() => {
       // DevTools intentionally wraps updates with acts from both DOM and test-renderer,
       // since test updates are expected to impact both renderers.
       return;
+    } else if (shouldIgnoreConsoleErrorOrWarn(args)) {
+      // Allows testing how DevTools behaves when it encounters console.error without cluttering the test output.
+      // Errors can be ignored by running in a special context provided by utils.js#withErrorsOrWarningsIgnored
+      return;
     }
     originalConsoleError.apply(console, args);
+  };
+  const originalConsoleWarn = console.warn;
+  // $FlowFixMe
+  console.warn = (...args) => {
+    if (shouldIgnoreConsoleErrorOrWarn(args)) {
+      // Allows testing how DevTools behaves when it encounters console.warn without cluttering the test output.
+      // Warnings can be ignored by running in a special context provided by utils.js#withErrorsOrWarningsIgnored
+      return;
+    }
+    originalConsoleWarn.apply(console, args);
   };
 
   // Initialize filters to a known good state.
   saveComponentFilters(getDefaultComponentFilters());
   global.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = getDefaultComponentFilters();
+
+  // Also initialize inline warnings so that we can test them.
+  setShowInlineWarningsAndErrors(true);
+  global.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ = true;
 
   installHook(global);
 

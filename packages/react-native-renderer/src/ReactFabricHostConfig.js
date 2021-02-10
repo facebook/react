@@ -21,9 +21,17 @@ import type {
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
 
+import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 
 import {dispatchEvent} from './ReactFabricEventEmitter';
+
+import {DefaultLanePriority as DefaultLanePriority_old} from 'react-reconciler/src/ReactFiberLane.old';
+import {DefaultLanePriority as DefaultLanePriority_new} from 'react-reconciler/src/ReactFiberLane.new';
+
+const DefaultLanePriority = enableNewReconciler
+  ? DefaultLanePriority_new
+  : DefaultLanePriority_old;
 
 // Modules provided by RN:
 import {
@@ -339,6 +347,10 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   return false;
 }
 
+export function getCurrentEventPriority(): * {
+  return DefaultLanePriority;
+}
+
 // The Fabric renderer is secondary to the existing React Native renderer.
 export const isPrimaryRenderer = false;
 
@@ -348,6 +360,9 @@ export const warnsIfNotActing = false;
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
+export function scheduleMicrotask(callback: Function) {
+  invariant(false, 'Not implemented.');
+}
 
 // -------------------
 //     Persistence
@@ -434,30 +449,6 @@ export function replaceContainerChildren(
   container: Container,
   newChildren: ChildSet,
 ): void {}
-
-export function getFundamentalComponentInstance(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function mountFundamentalComponent(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function shouldUpdateFundamentalComponent(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function updateFundamentalComponent(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function unmountFundamentalComponent(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function cloneFundamentalInstance(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
 
 export function getInstanceFromNode(node: any) {
   throw new Error('Not yet implemented.');

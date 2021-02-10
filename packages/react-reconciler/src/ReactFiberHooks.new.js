@@ -13,21 +13,23 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
 } from 'shared/ReactTypes';
-import type {Fiber, Dispatcher} from './ReactInternalTypes';
-import type {Lanes, Lane} from './ReactFiberLane';
+import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
+import type {Lanes, Lane} from './ReactFiberLane.new';
 import type {HookFlags} from './ReactHookEffectTags';
 import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
+import type {Cache} from './ReactFiberCacheComponent.new';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   enableDebugTracing,
   enableSchedulingProfiler,
   enableNewReconciler,
+  enableCache,
   decoupleUpdatePriorityFromScheduler,
-  enableDoubleInvokingEffects,
   enableUseRefAccessWarning,
+  enableDoubleInvokingEffects,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -43,14 +45,17 @@ import {
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
+  intersectLanes,
+  isTransitionLane,
   markRootEntangled,
   markRootMutableRead,
   getCurrentUpdateLanePriority,
   setCurrentUpdateLanePriority,
   higherLanePriority,
   DefaultLanePriority,
-} from './ReactFiberLane';
+} from './ReactFiberLane.new';
 import {readContext} from './ReactFiberNewContext.new';
+import {HostRoot, CacheComponent} from './ReactWorkTags';
 import {
   Update as UpdateEffect,
   Passive as PassiveEffect,
@@ -72,6 +77,7 @@ import {
   warnIfNotCurrentlyActingUpdatesInDev,
   warnIfNotScopedWithMatchingAct,
   markSkippedUpdateLanes,
+  isInterleavedUpdate,
 } from './ReactFiberWorkLoop.new';
 
 import invariant from 'shared/invariant';
@@ -99,6 +105,13 @@ import {
 import {getIsRendering} from './ReactCurrentFiber';
 import {logStateUpdateScheduled} from './DebugTracing';
 import {markStateUpdateScheduled} from './SchedulingProfiler';
+import {CacheContext} from './ReactFiberCacheComponent.new';
+import {
+  createUpdate,
+  enqueueUpdate,
+  entangleTransitions,
+} from './ReactUpdateQueue.new';
+import {pushInterleavedQueue} from './ReactFiberInterleavedUpdates.new';
 
 const {ReactCurrentDispatcher, ReactCurrentBatchConfig} = ReactSharedInternals;
 
@@ -111,28 +124,14 @@ type Update<S, A> = {|
   priority?: ReactPriorityLevel,
 |};
 
-type UpdateQueue<S, A> = {|
+export type UpdateQueue<S, A> = {|
   pending: Update<S, A> | null,
+  interleaved: Update<S, A> | null,
+  lanes: Lanes,
   dispatch: (A => mixed) | null,
   lastRenderedReducer: ((S, A) => S) | null,
   lastRenderedState: S | null,
 |};
-
-export type HookType =
-  | 'useState'
-  | 'useReducer'
-  | 'useContext'
-  | 'useRef'
-  | 'useEffect'
-  | 'useLayoutEffect'
-  | 'useCallback'
-  | 'useMemo'
-  | 'useImperativeHandle'
-  | 'useDebugValue'
-  | 'useDeferredValue'
-  | 'useTransition'
-  | 'useMutableSource'
-  | 'useOpaqueIdentifier';
 
 let didWarnAboutMismatchedHooksForComponent;
 let didWarnAboutUseOpaqueIdentifier;
@@ -491,6 +490,8 @@ export function bailoutHooks(
   lanes: Lanes,
 ) {
   workInProgress.updateQueue = current.updateQueue;
+  // TODO: Don't need to reset the flags here, because they're reset in the
+  // complete phase (bubbleProperties).
   if (
     __DEV__ &&
     enableDoubleInvokingEffects &&
@@ -498,8 +499,8 @@ export function bailoutHooks(
   ) {
     workInProgress.flags &= ~(
       MountPassiveDevEffect |
-      PassiveEffect |
       MountLayoutDevEffect |
+      PassiveEffect |
       UpdateEffect
     );
   } else {
@@ -659,6 +660,8 @@ function mountReducer<S, I, A>(
   hook.memoizedState = hook.baseState = initialState;
   const queue = (hook.queue = {
     pending: null,
+    interleaved: null,
+    lanes: NoLanes,
     dispatch: null,
     lastRenderedReducer: reducer,
     lastRenderedState: (initialState: any),
@@ -799,6 +802,27 @@ function updateReducer<S, I, A>(
     hook.baseQueue = newBaseQueueLast;
 
     queue.lastRenderedState = newState;
+  }
+
+  // Interleaved updates are stored on a separate queue. We aren't going to
+  // process them during this render, but we do need to track which lanes
+  // are remaining.
+  const lastInterleaved = queue.interleaved;
+  if (lastInterleaved !== null) {
+    let interleaved = lastInterleaved;
+    do {
+      const interleavedLane = interleaved.lane;
+      currentlyRenderingFiber.lanes = mergeLanes(
+        currentlyRenderingFiber.lanes,
+        interleavedLane,
+      );
+      markSkippedUpdateLanes(interleavedLane);
+      interleaved = ((interleaved: any).next: Update<S, A>);
+    } while (interleaved !== lastInterleaved);
+  } else if (baseQueue === null) {
+    // `queue.lanes` is used for entangling transitions. We can set it back to
+    // zero once the queue is empty.
+    queue.lanes = NoLanes;
   }
 
   const dispatch: Dispatch<A> = (queue.dispatch: any);
@@ -942,9 +966,47 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
     // but there's nothing we can do about that (short of throwing here and refusing to continue the render).
     markSourceAsDirty(source);
 
+    // Intentioally throw an error to force React to retry synchronously. During
+    // the synchronous retry, it will block interleaved mutations, so we should
+    // get a consistent read. Therefore, the following error should never be
+    // visible to the user.
+    //
+    // If it were to become visible to the user, it suggests one of two things:
+    // a bug in React, or (more likely), a mutation during the render phase that
+    // caused the second re-render attempt to be different from the first.
+    //
+    // We know it's the second case if the logs are currently disabled. So in
+    // dev, we can present a more accurate error message.
+    if (__DEV__) {
+      // eslint-disable-next-line react-internal/no-production-logging
+      if (console.log.__reactDisabledLog) {
+        // If the logs are disabled, this is the dev-only double render. This is
+        // only reachable if there was a mutation during render. Show a helpful
+        // error message.
+        //
+        // Something interesting to note: because we only double render in
+        // development, this error will never happen during production. This is
+        // actually true of all errors that occur during a double render,
+        // because if the first render had thrown, we would have exited the
+        // begin phase without double rendering. We should consider suppressing
+        // any error from a double render (with a warning) to more closely match
+        // the production behavior.
+        const componentName = getComponentName(currentlyRenderingFiber.type);
+        invariant(
+          false,
+          'A mutable source was mutated while the %s component was rendering. ' +
+            'This is not supported. Move any mutations into event handlers ' +
+            'or effects.',
+          componentName,
+        );
+      }
+    }
+
+    // We expect this error not to be thrown during the synchronous retry,
+    // because we blocked interleaved mutations.
     invariant(
       false,
-      'Cannot read from mutable source during the current render without tearing. This is a bug in React. Please file an issue.',
+      'Cannot read from mutable source during the current render without tearing. This may be a bug in React. Please file an issue.',
     );
   }
 }
@@ -1089,6 +1151,8 @@ function useMutableSource<Source, Snapshot>(
     // including any interleaving updates that occur.
     const newQueue = {
       pending: null,
+      interleaved: null,
+      lanes: NoLanes,
       dispatch: null,
       lastRenderedReducer: basicStateReducer,
       lastRenderedState: snapshot,
@@ -1144,6 +1208,8 @@ function mountState<S>(
   hook.memoizedState = hook.baseState = initialState;
   const queue = (hook.queue = {
     pending: null,
+    interleaved: null,
+    lanes: NoLanes,
     dispatch: null,
     lastRenderedReducer: basicStateReducer,
     lastRenderedState: (initialState: any),
@@ -1314,7 +1380,7 @@ function updateEffectImpl(fiberFlags, hookFlags, create, deps): void {
     if (nextDeps !== null) {
       const prevDeps = prevEffect.deps;
       if (areHookInputsEqual(nextDeps, prevDeps)) {
-        pushEffect(hookFlags, create, destroy, nextDeps);
+        hook.memoizedState = pushEffect(hookFlags, create, destroy, nextDeps);
         return;
       }
     }
@@ -1336,11 +1402,10 @@ function mountEffect(
 ): void {
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-    if (typeof jest !== 'undefined') {
+    if ('undefined' !== typeof jest) {
       warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
     }
   }
-
   if (
     __DEV__ &&
     enableDoubleInvokingEffects &&
@@ -1368,7 +1433,7 @@ function updateEffect(
 ): void {
   if (__DEV__) {
     // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-    if (typeof jest !== 'undefined') {
+    if ('undefined' !== typeof jest) {
       warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
     }
   }
@@ -1751,10 +1816,9 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
 
     if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
       if (__DEV__ && enableDoubleInvokingEffects) {
-        currentlyRenderingFiber.flags |=
-          MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect;
+        currentlyRenderingFiber.flags |= MountPassiveDevEffect | PassiveEffect;
       } else {
-        currentlyRenderingFiber.flags |= PassiveEffect | PassiveStaticEffect;
+        currentlyRenderingFiber.flags |= PassiveEffect;
       }
       pushEffect(
         HookHasEffect | HookPassive,
@@ -1783,6 +1847,58 @@ function rerenderOpaqueIdentifier(): OpaqueIDType | void {
   return id;
 }
 
+function mountRefresh() {
+  const hook = mountWorkInProgressHook();
+  const refresh = (hook.memoizedState = refreshCache.bind(
+    null,
+    currentlyRenderingFiber,
+  ));
+  return refresh;
+}
+
+function updateRefresh() {
+  const hook = updateWorkInProgressHook();
+  return hook.memoizedState;
+}
+
+function refreshCache<T>(fiber: Fiber, seedKey: ?() => T, seedValue: T) {
+  // TODO: Does Cache work in legacy mode? Should decide and write a test.
+  // TODO: Consider warning if the refresh is at discrete priority, or if we
+  // otherwise suspect that it wasn't batched properly.
+  let provider = fiber.return;
+  while (provider !== null) {
+    switch (provider.tag) {
+      case CacheComponent:
+      case HostRoot: {
+        const lane = requestUpdateLane(provider);
+        const eventTime = requestEventTime();
+        const root = scheduleUpdateOnFiber(provider, lane, eventTime);
+        if (root !== null) {
+          entangleTransitions(root, provider, lane);
+        }
+
+        const seededCache = new Map();
+        if (seedKey !== null && seedKey !== undefined && root !== null) {
+          // Seed the cache with the value passed by the caller. This could be
+          // from a server mutation, or it could be a streaming response.
+          seededCache.set(seedKey, seedValue);
+        }
+
+        // Schedule an update on the cache boundary to trigger a refresh.
+        const refreshUpdate = createUpdate(eventTime, lane);
+        const payload = {
+          cache: seededCache,
+        };
+        refreshUpdate.payload = payload;
+        enqueueUpdate(provider, refreshUpdate, lane);
+        return;
+      }
+    }
+    provider = provider.return;
+  }
+  // TODO: Warn if unmounted?
+}
+
 function dispatchAction<S, A>(
   fiber: Fiber,
   queue: UpdateQueue<S, A>,
@@ -1809,17 +1925,6 @@ function dispatchAction<S, A>(
     next: (null: any),
   };
 
-  // Append the update to the end of the list.
-  const pending = queue.pending;
-  if (pending === null) {
-    // This is the first update. Create a circular list.
-    update.next = update;
-  } else {
-    update.next = pending.next;
-    pending.next = update;
-  }
-  queue.pending = update;
-
   const alternate = fiber.alternate;
   if (
     fiber === currentlyRenderingFiber ||
@@ -1829,7 +1934,41 @@ function dispatchAction<S, A>(
     // queue -> linked list of updates. After this render pass, we'll restart
     // and apply the stashed updates on top of the work-in-progress hook.
     didScheduleRenderPhaseUpdateDuringThisPass = didScheduleRenderPhaseUpdate = true;
+    const pending = queue.pending;
+    if (pending === null) {
+      // This is the first update. Create a circular list.
+      update.next = update;
+    } else {
+      update.next = pending.next;
+      pending.next = update;
+    }
+    queue.pending = update;
   } else {
+    if (isInterleavedUpdate(fiber, lane)) {
+      const interleaved = queue.interleaved;
+      if (interleaved === null) {
+        // This is the first update. Create a circular list.
+        update.next = update;
+        // At the end of the current render, this queue's interleaved updates will
+        // be transfered to the pending queue.
+        pushInterleavedQueue(queue);
+      } else {
+        update.next = interleaved.next;
+        interleaved.next = update;
+      }
+      queue.interleaved = update;
+    } else {
+      const pending = queue.pending;
+      if (pending === null) {
+        // This is the first update. Create a circular list.
+        update.next = update;
+      } else {
+        update.next = pending.next;
+        pending.next = update;
+      }
+      queue.pending = update;
+    }
+
     if (
       fiber.lanes === NoLanes &&
       (alternate === null || alternate.lanes === NoLanes)
@@ -1871,12 +2010,31 @@ function dispatchAction<S, A>(
     }
     if (__DEV__) {
       // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-      if (typeof jest !== 'undefined') {
+      if ('undefined' !== typeof jest) {
         warnIfNotScopedWithMatchingAct(fiber);
         warnIfNotCurrentlyActingUpdatesInDev(fiber);
       }
     }
-    scheduleUpdateOnFiber(fiber, lane, eventTime);
+    const root = scheduleUpdateOnFiber(fiber, lane, eventTime);
+
+    if (isTransitionLane(lane) && root !== null) {
+      let queueLanes = queue.lanes;
+
+      // If any entangled lanes are no longer pending on the root, then they
+      // must have finished. We can remove them from the shared queue, which
+      // represents a superset of the actually pending lanes. In some cases we
+      // may entangle more than we need to, but that's OK. In fact it's worse if
+      // we *don't* entangle when we should.
+      queueLanes = intersectLanes(queueLanes, root.pendingLanes);
+
+      // Entangle the new transition lane with the other transition lanes.
+      const newQueueLanes = mergeLanes(queueLanes, lane);
+      queue.lanes = newQueueLanes;
+      // Even if queue.lanes already include lane, we don't know for certain if
+      // the lane finished since the last time we entangled it. So we need to
+      // entangle it again, just to be sure.
+      markRootEntangled(root, newQueueLanes);
+    }
   }
 
   if (__DEV__) {
@@ -1891,6 +2049,19 @@ function dispatchAction<S, A>(
   if (enableSchedulingProfiler) {
     markStateUpdateScheduled(fiber, lane);
   }
+}
+
+function getCacheForType<T>(resourceType: () => T): T {
+  if (!enableCache) {
+    invariant(false, 'Not implemented.');
+  }
+  const cache: Cache = readContext(CacheContext);
+  let cacheForType: T | void = (cache.get(resourceType): any);
+  if (cacheForType === undefined) {
+    cacheForType = resourceType();
+    cache.set(resourceType, cacheForType);
+  }
+  return cacheForType;
 }
 
 export const ContextOnlyDispatcher: Dispatcher = {
@@ -1913,6 +2084,10 @@ export const ContextOnlyDispatcher: Dispatcher = {
 
   unstable_isNewReconciler: enableNewReconciler,
 };
+if (enableCache) {
+  (ContextOnlyDispatcher: Dispatcher).getCacheForType = getCacheForType;
+  (ContextOnlyDispatcher: Dispatcher).useCacheRefresh = throwInvalidHookError;
+}
 
 const HooksDispatcherOnMount: Dispatcher = {
   readContext,
@@ -1934,6 +2109,10 @@ const HooksDispatcherOnMount: Dispatcher = {
 
   unstable_isNewReconciler: enableNewReconciler,
 };
+if (enableCache) {
+  (HooksDispatcherOnMount: Dispatcher).getCacheForType = getCacheForType;
+  (HooksDispatcherOnMount: Dispatcher).useCacheRefresh = mountRefresh;
+}
 
 const HooksDispatcherOnUpdate: Dispatcher = {
   readContext,
@@ -1955,6 +2134,10 @@ const HooksDispatcherOnUpdate: Dispatcher = {
 
   unstable_isNewReconciler: enableNewReconciler,
 };
+if (enableCache) {
+  (HooksDispatcherOnUpdate: Dispatcher).getCacheForType = getCacheForType;
+  (HooksDispatcherOnUpdate: Dispatcher).useCacheRefresh = updateRefresh;
+}
 
 const HooksDispatcherOnRerender: Dispatcher = {
   readContext,
@@ -1976,6 +2159,10 @@ const HooksDispatcherOnRerender: Dispatcher = {
 
   unstable_isNewReconciler: enableNewReconciler,
 };
+if (enableCache) {
+  (HooksDispatcherOnRerender: Dispatcher).getCacheForType = getCacheForType;
+  (HooksDispatcherOnRerender: Dispatcher).useCacheRefresh = updateRefresh;
+}
 
 let HooksDispatcherOnMountInDEV: Dispatcher | null = null;
 let HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher | null = null;
@@ -2130,6 +2317,14 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    (HooksDispatcherOnMountInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (HooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      mountHookTypesDev();
+      return mountRefresh();
+    };
+  }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
     readContext<T>(
@@ -2252,6 +2447,14 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (HooksDispatcherOnMountWithHookTypesInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return mountRefresh();
+    };
+  }
 
   HooksDispatcherOnUpdateInDEV = {
     readContext<T>(
@@ -2374,6 +2577,14 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (HooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    };
+  }
 
   HooksDispatcherOnRerenderInDEV = {
     readContext<T>(
@@ -2497,6 +2708,14 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (HooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    };
+  }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
     readContext<T>(
@@ -2634,6 +2853,14 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (InvalidNestedHooksDispatcherOnMountInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return mountRefresh();
+    };
+  }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
     readContext<T>(
@@ -2771,6 +2998,14 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (InvalidNestedHooksDispatcherOnUpdateInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    };
+  }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
     readContext<T>(
@@ -2909,4 +3144,12 @@ if (__DEV__) {
 
     unstable_isNewReconciler: enableNewReconciler,
   };
+  if (enableCache) {
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).getCacheForType = getCacheForType;
+    (InvalidNestedHooksDispatcherOnRerenderInDEV: Dispatcher).useCacheRefresh = function useCacheRefresh() {
+      currentHookNameInDev = 'useCacheRefresh';
+      updateHookTypesDev();
+      return updateRefresh();
+    };
+  }
 }

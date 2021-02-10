@@ -31,6 +31,15 @@ describe('useMutableSourceHydration', () => {
     useMutableSource = React.unstable_useMutableSource;
   });
 
+  function dispatchAndSetCurrentEvent(el, event) {
+    try {
+      window.event = event;
+      el.dispatchEvent(event);
+    } finally {
+      window.event = undefined;
+    }
+  }
+
   const defaultGetSnapshot = source => source.value;
   const defaultSubscribe = (source, callback) => source.subscribe(callback);
 
@@ -332,6 +341,7 @@ describe('useMutableSourceHydration', () => {
   });
 
   // @gate experimental
+  // @gate enableNativeEventPriorityInference
   it('should detect a tear during a higher priority interruption', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -371,16 +381,22 @@ describe('useMutableSourceHydration', () => {
         mutableSources: [mutableSource],
       },
     });
+
     expect(() => {
       act(() => {
         root.render(<TestComponent flag={1} />);
         expect(Scheduler).toFlushAndYieldThrough([1]);
 
         // Render an update which will be higher priority than the hydration.
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => root.render(<TestComponent flag={2} />),
-        );
+        // We can do this by scheduling the update inside a mouseover event.
+        const arbitraryElement = document.createElement('div');
+        const mouseOverEvent = document.createEvent('MouseEvents');
+        mouseOverEvent.initEvent('mouseover', true, true);
+        arbitraryElement.addEventListener('mouseover', () => {
+          root.render(<TestComponent flag={2} />);
+        });
+        dispatchAndSetCurrentEvent(arbitraryElement, mouseOverEvent);
+
         expect(Scheduler).toFlushAndYieldThrough([2]);
 
         source.value = 'two';

@@ -134,3 +134,52 @@ export function serializeToString(data: any): string {
     return value;
   });
 }
+
+// based on https://github.com/tmpfs/format-util/blob/0e62d430efb0a1c51448709abd3e2406c14d8401/format.js#L1
+// based on https://developer.mozilla.org/en-US/docs/Web/API/console#Using_string_substitutions
+// Implements s, d, i and f placeholders
+export function format(
+  maybeMessage: any,
+  ...inputArgs: $ReadOnlyArray<any>
+): string {
+  if (typeof maybeMessage !== 'string') {
+    return [maybeMessage, ...inputArgs].join(' ');
+  }
+
+  const re = /(%?)(%([jds]))/g;
+  const args = inputArgs.slice();
+  let formatted: string = maybeMessage;
+
+  if (args.length) {
+    formatted = formatted.replace(re, (match, escaped, ptn, flag) => {
+      let arg = args.shift();
+      switch (flag) {
+        case 's':
+          arg += '';
+          break;
+        case 'd':
+        case 'i':
+          arg = parseInt(arg, 10).toString();
+          break;
+        case 'f':
+          arg = parseFloat(arg).toString();
+          break;
+      }
+      if (!escaped) {
+        return arg;
+      }
+      args.unshift(arg);
+      return match;
+    });
+  }
+
+  // arguments remain after formatting
+  if (args.length) {
+    formatted += ' ' + args.join(' ');
+  }
+
+  // update escaped %% values
+  formatted = formatted.replace(/%{2,2}/g, '%');
+
+  return '' + formatted;
+}

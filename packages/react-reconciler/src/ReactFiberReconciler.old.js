@@ -17,9 +17,8 @@ import type {
   PublicInstance,
 } from './ReactFiberHostConfig';
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
-import {FundamentalComponent} from './ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {Lane, LanePriority} from './ReactFiberLane';
+import type {Lane, LanePriority} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
 import {
@@ -65,7 +64,11 @@ import {
   IsThisRendererActing,
   act,
 } from './ReactFiberWorkLoop.old';
-import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.old';
+import {
+  createUpdate,
+  enqueueUpdate,
+  entangleTransitions,
+} from './ReactUpdateQueue.old';
 import {
   isRendering as ReactCurrentFiberIsRendering,
   current as ReactCurrentFiberCurrent,
@@ -82,7 +85,7 @@ import {
   higherPriorityLane,
   getCurrentUpdateLanePriority,
   setCurrentUpdateLanePriority,
-} from './ReactFiberLane';
+} from './ReactFiberLane.old';
 import {
   scheduleRefresh,
   scheduleRoot,
@@ -90,6 +93,16 @@ import {
   findHostInstancesForRefresh,
 } from './ReactFiberHotReloading.old';
 import {markRenderScheduled} from './SchedulingProfiler';
+
+// Ideally host configs would import these constants from the reconciler
+// entry point, but we can't do this because of a circular dependency.
+// They are used by third-party renderers so they need to stay up to date.
+export {
+  InputDiscreteLanePriority as DiscreteEventPriority,
+  InputContinuousLanePriority as ContinuousEventPriority,
+  DefaultLanePriority as DefaultEventPriority,
+  IdleLanePriority as IdleEventPriority,
+} from './ReactFiberLane.old';
 
 export {registerMutableSourceForHydration} from './ReactMutableSource.new';
 export {createPortal} from './ReactPortal';
@@ -314,8 +327,11 @@ export function updateContainer(
     update.callback = callback;
   }
 
-  enqueueUpdate(current, update);
-  scheduleUpdateOnFiber(current, lane, eventTime);
+  enqueueUpdate(current, update, lane);
+  const root = scheduleUpdateOnFiber(current, lane, eventTime);
+  if (root !== null) {
+    entangleTransitions(root, current, lane);
+  }
 
   return lane;
 }
@@ -390,7 +406,7 @@ function markRetryLaneIfNotHydrated(fiber: Fiber, retryLane: Lane) {
   }
 }
 
-export function attemptUserBlockingHydration(fiber: Fiber): void {
+export function attemptDiscreteHydration(fiber: Fiber): void {
   if (fiber.tag !== SuspenseComponent) {
     // We ignore HostRoots here because we can't increase
     // their priority and they should not suspend on I/O,
@@ -452,9 +468,6 @@ export function findHostInstanceWithNoPortals(
   const hostFiber = findCurrentHostFiberWithNoPortals(fiber);
   if (hostFiber === null) {
     return null;
-  }
-  if (hostFiber.tag === FundamentalComponent) {
-    return hostFiber.stateNode.instance;
   }
   return hostFiber.stateNode;
 }

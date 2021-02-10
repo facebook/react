@@ -11,19 +11,24 @@
 
 let React;
 let ReactFeatureFlags;
-let ReactTestRenderer;
+let ReactNoop;
 let Scheduler;
-let act;
+
+function shouldDoubleInvokingEffects() {
+  // For now, this feature only exists in the old fork (while the new fork is being bisected).
+  // Eventually we'll land it in both forks.
+  return __DEV__;
+}
 
 describe('ReactDoubleInvokeEvents', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactTestRenderer = require('react-test-renderer');
+    ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    ReactFeatureFlags.enableDoubleInvokingEffects = __VARIANT__;
-    act = ReactTestRenderer.unstable_concurrentAct;
+
+    ReactFeatureFlags.enableDoubleInvokingEffects = shouldDoubleInvokingEffects();
   });
 
   it('should not double invoke effects in legacy mode', () => {
@@ -41,8 +46,8 @@ describe('ReactDoubleInvokeEvents', () => {
       return text;
     }
 
-    act(() => {
-      ReactTestRenderer.create(<App text={'mount'} />);
+    ReactNoop.act(() => {
+      ReactNoop.renderLegacySyncRoot(<App text={'mount'} />);
     });
 
     expect(Scheduler).toHaveYielded([
@@ -51,7 +56,179 @@ describe('ReactDoubleInvokeEvents', () => {
     ]);
   });
 
-  it('double invoking for effects works properly', () => {
+  it('should not double invoke class lifecycles in legacy mode', () => {
+    class App extends React.PureComponent {
+      componentDidMount() {
+        Scheduler.unstable_yieldValue('componentDidMount');
+      }
+
+      componentDidUpdate() {
+        Scheduler.unstable_yieldValue('componentDidUpdate');
+      }
+
+      componentWillUnmount() {
+        Scheduler.unstable_yieldValue('componentWillUnmount');
+      }
+
+      render() {
+        return this.props.text;
+      }
+    }
+
+    ReactNoop.act(() => {
+      ReactNoop.renderLegacySyncRoot(<App text={'mount'} />);
+    });
+
+    expect(Scheduler).toHaveYielded(['componentDidMount']);
+  });
+
+  it('should flush double-invoked effects within the same frame as layout effects if there are no passive effects', () => {
+    function ComponentWithEffects({label}) {
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue(`useLayoutEffect mount "${label}"`);
+        return () =>
+          Scheduler.unstable_yieldValue(`useLayoutEffect unmount "${label}"`);
+      });
+
+      return label;
+    }
+
+    ReactNoop.act(() => {
+      ReactNoop.render(
+        <>
+          <ComponentWithEffects label={'one'} />
+        </>,
+      );
+
+      if (shouldDoubleInvokingEffects()) {
+        expect(Scheduler).toFlushUntilNextPaint([
+          'useLayoutEffect mount "one"',
+          'useLayoutEffect unmount "one"',
+          'useLayoutEffect mount "one"',
+        ]);
+      } else {
+        expect(Scheduler).toFlushUntilNextPaint([
+          'useLayoutEffect mount "one"',
+        ]);
+      }
+    });
+
+    ReactNoop.act(() => {
+      ReactNoop.render(
+        <>
+          <ComponentWithEffects label={'one'} />
+          <ComponentWithEffects label={'two'} />
+        </>,
+      );
+
+      if (shouldDoubleInvokingEffects()) {
+        expect(Scheduler).toFlushUntilNextPaint([
+          // Cleanup and re-run "one" (and "two") since there is no dependencies array.
+          'useLayoutEffect unmount "one"',
+          'useLayoutEffect mount "one"',
+          'useLayoutEffect mount "two"',
+
+          // Since "two" is new, it should be double-invoked.
+          'useLayoutEffect unmount "two"',
+          'useLayoutEffect mount "two"',
+        ]);
+      } else {
+        expect(Scheduler).toFlushUntilNextPaint([
+          'useLayoutEffect unmount "one"',
+          'useLayoutEffect mount "one"',
+          'useLayoutEffect mount "two"',
+        ]);
+      }
+    });
+  });
+
+  // This test also verifies that double-invoked effects flush synchronously
+  // within the same frame as passive effects.
+  it('should double invoke effects only for newly mounted components', () => {
+    function ComponentWithEffects({label}) {
+      React.useEffect(() => {
+        Scheduler.unstable_yieldValue(`useEffect mount "${label}"`);
+        return () =>
+          Scheduler.unstable_yieldValue(`useEffect unmount "${label}"`);
+      });
+
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue(`useLayoutEffect mount "${label}"`);
+        return () =>
+          Scheduler.unstable_yieldValue(`useLayoutEffect unmount "${label}"`);
+      });
+
+      return label;
+    }
+
+    ReactNoop.act(() => {
+      ReactNoop.render(
+        <>
+          <ComponentWithEffects label={'one'} />
+        </>,
+      );
+
+      if (shouldDoubleInvokingEffects()) {
+        expect(Scheduler).toFlushAndYieldThrough([
+          'useLayoutEffect mount "one"',
+        ]);
+        expect(Scheduler).toFlushAndYield([
+          'useEffect mount "one"',
+          'useLayoutEffect unmount "one"',
+          'useEffect unmount "one"',
+          'useLayoutEffect mount "one"',
+          'useEffect mount "one"',
+        ]);
+      } else {
+        expect(Scheduler).toFlushAndYieldThrough([
+          'useLayoutEffect mount "one"',
+        ]);
+        expect(Scheduler).toFlushAndYield(['useEffect mount "one"']);
+      }
+    });
+
+    ReactNoop.act(() => {
+      ReactNoop.render(
+        <>
+          <ComponentWithEffects label={'one'} />
+          <ComponentWithEffects label={'two'} />
+        </>,
+      );
+
+      if (shouldDoubleInvokingEffects()) {
+        expect(Scheduler).toFlushAndYieldThrough([
+          // Cleanup and re-run "one" (and "two") since there is no dependencies array.
+          'useLayoutEffect unmount "one"',
+          'useLayoutEffect mount "one"',
+          'useLayoutEffect mount "two"',
+        ]);
+        expect(Scheduler).toFlushAndYield([
+          'useEffect unmount "one"',
+          'useEffect mount "one"',
+          'useEffect mount "two"',
+
+          // Since "two" is new, it should be double-invoked.
+          'useLayoutEffect unmount "two"',
+          'useEffect unmount "two"',
+          'useLayoutEffect mount "two"',
+          'useEffect mount "two"',
+        ]);
+      } else {
+        expect(Scheduler).toFlushAndYieldThrough([
+          'useLayoutEffect unmount "one"',
+          'useLayoutEffect mount "one"',
+          'useLayoutEffect mount "two"',
+        ]);
+        expect(Scheduler).toFlushAndYield([
+          'useEffect unmount "one"',
+          'useEffect mount "one"',
+          'useEffect mount "two"',
+        ]);
+      }
+    });
+  });
+
+  it('double invoking for effects for modern roots', () => {
     function App({text}) {
       React.useEffect(() => {
         Scheduler.unstable_yieldValue('useEffect mount');
@@ -65,15 +242,11 @@ describe('ReactDoubleInvokeEvents', () => {
 
       return text;
     }
-
-    let renderer;
-    act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+    ReactNoop.act(() => {
+      ReactNoop.render(<App text={'mount'} />);
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (shouldDoubleInvokingEffects()) {
       expect(Scheduler).toHaveYielded([
         'useLayoutEffect mount',
         'useEffect mount',
@@ -89,8 +262,8 @@ describe('ReactDoubleInvokeEvents', () => {
       ]);
     }
 
-    act(() => {
-      renderer.update(<App text={'update'} />);
+    ReactNoop.act(() => {
+      ReactNoop.render(<App text={'update'} />);
     });
 
     expect(Scheduler).toHaveYielded([
@@ -100,8 +273,8 @@ describe('ReactDoubleInvokeEvents', () => {
       'useEffect mount',
     ]);
 
-    act(() => {
-      renderer.unmount();
+    ReactNoop.act(() => {
+      ReactNoop.render(null);
     });
 
     expect(Scheduler).toHaveYielded([
@@ -125,14 +298,11 @@ describe('ReactDoubleInvokeEvents', () => {
       return text;
     }
 
-    let renderer;
-    act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+    ReactNoop.act(() => {
+      ReactNoop.render(<App text={'mount'} />);
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (shouldDoubleInvokingEffects()) {
       expect(Scheduler).toHaveYielded([
         'useEffect One mount',
         'useEffect Two mount',
@@ -148,8 +318,8 @@ describe('ReactDoubleInvokeEvents', () => {
       ]);
     }
 
-    act(() => {
-      renderer.update(<App text={'update'} />);
+    ReactNoop.act(() => {
+      ReactNoop.render(<App text={'update'} />);
     });
 
     expect(Scheduler).toHaveYielded([
@@ -159,8 +329,8 @@ describe('ReactDoubleInvokeEvents', () => {
       'useEffect Two mount',
     ]);
 
-    act(() => {
-      renderer.unmount(null);
+    ReactNoop.act(() => {
+      ReactNoop.render(null);
     });
 
     expect(Scheduler).toHaveYielded([
@@ -186,14 +356,11 @@ describe('ReactDoubleInvokeEvents', () => {
       return text;
     }
 
-    let renderer;
-    act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+    ReactNoop.act(() => {
+      ReactNoop.render(<App text={'mount'} />);
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (shouldDoubleInvokingEffects()) {
       expect(Scheduler).toHaveYielded([
         'useLayoutEffect One mount',
         'useLayoutEffect Two mount',
@@ -209,8 +376,8 @@ describe('ReactDoubleInvokeEvents', () => {
       ]);
     }
 
-    act(() => {
-      renderer.update(<App text={'update'} />);
+    ReactNoop.act(() => {
+      ReactNoop.render(<App text={'update'} />);
     });
 
     expect(Scheduler).toHaveYielded([
@@ -220,8 +387,8 @@ describe('ReactDoubleInvokeEvents', () => {
       'useLayoutEffect Two mount',
     ]);
 
-    act(() => {
-      renderer.unmount();
+    ReactNoop.act(() => {
+      ReactNoop.render(null);
     });
 
     expect(Scheduler).toHaveYielded([
@@ -243,14 +410,11 @@ describe('ReactDoubleInvokeEvents', () => {
       return text;
     }
 
-    let renderer;
-    act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+    ReactNoop.act(() => {
+      ReactNoop.render(<App text={'mount'} />);
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (shouldDoubleInvokingEffects()) {
       expect(Scheduler).toHaveYielded([
         'useLayoutEffect mount',
         'useEffect mount',
@@ -264,8 +428,8 @@ describe('ReactDoubleInvokeEvents', () => {
       ]);
     }
 
-    act(() => {
-      renderer.update(<App text={'update'} />);
+    ReactNoop.act(() => {
+      ReactNoop.render(<App text={'update'} />);
     });
 
     expect(Scheduler).toHaveYielded([
@@ -273,8 +437,8 @@ describe('ReactDoubleInvokeEvents', () => {
       'useEffect mount',
     ]);
 
-    act(() => {
-      renderer.unmount();
+    ReactNoop.act(() => {
+      ReactNoop.render(null);
     });
 
     expect(Scheduler).toHaveYielded([]);
@@ -304,11 +468,11 @@ describe('ReactDoubleInvokeEvents', () => {
       }
     }
 
-    act(() => {
-      ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
+    ReactNoop.act(() => {
+      ReactNoop.render(<App />);
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (shouldDoubleInvokingEffects()) {
       expect(Scheduler).toHaveYielded([
         'componentDidMount',
         'componentWillUnmount',
@@ -338,14 +502,11 @@ describe('ReactDoubleInvokeEvents', () => {
       }
     }
 
-    let renderer;
-    act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+    ReactNoop.act(() => {
+      ReactNoop.render(<App text={'mount'} />);
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (shouldDoubleInvokingEffects()) {
       expect(Scheduler).toHaveYielded([
         'componentDidMount',
         'componentWillUnmount',
@@ -355,43 +516,17 @@ describe('ReactDoubleInvokeEvents', () => {
       expect(Scheduler).toHaveYielded(['componentDidMount']);
     }
 
-    act(() => {
-      renderer.update(<App text={'update'} />);
+    ReactNoop.act(() => {
+      ReactNoop.render(<App text={'update'} />);
     });
 
     expect(Scheduler).toHaveYielded(['componentDidUpdate']);
 
-    act(() => {
-      renderer.unmount();
+    ReactNoop.act(() => {
+      ReactNoop.render(null);
     });
 
     expect(Scheduler).toHaveYielded(['componentWillUnmount']);
-  });
-
-  it('should not double invoke class lifecycles in legacy mode', () => {
-    class App extends React.PureComponent {
-      componentDidMount() {
-        Scheduler.unstable_yieldValue('componentDidMount');
-      }
-
-      componentDidUpdate() {
-        Scheduler.unstable_yieldValue('componentDidUpdate');
-      }
-
-      componentWillUnmount() {
-        Scheduler.unstable_yieldValue('componentWillUnmount');
-      }
-
-      render() {
-        return this.props.text;
-      }
-    }
-
-    act(() => {
-      ReactTestRenderer.create(<App text={'mount'} />);
-    });
-
-    expect(Scheduler).toHaveYielded(['componentDidMount']);
   });
 
   it('double flushing passive effects only results in one double invoke', () => {
@@ -414,13 +549,11 @@ describe('ReactDoubleInvokeEvents', () => {
       return text;
     }
 
-    act(() => {
-      ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+    ReactNoop.act(() => {
+      ReactNoop.render(<App text={'mount'} />);
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (shouldDoubleInvokingEffects()) {
       expect(Scheduler).toHaveYielded([
         'mount',
         'useLayoutEffect mount',
@@ -481,11 +614,11 @@ describe('ReactDoubleInvokeEvents', () => {
       return showChild && <Child />;
     }
 
-    act(() => {
-      ReactTestRenderer.create(<App />, {unstable_isConcurrent: true});
+    ReactNoop.act(() => {
+      ReactNoop.render(<App />);
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (shouldDoubleInvokingEffects()) {
       expect(Scheduler).toHaveYielded([
         'App useLayoutEffect mount',
         'App useEffect mount',
@@ -501,11 +634,11 @@ describe('ReactDoubleInvokeEvents', () => {
       ]);
     }
 
-    act(() => {
+    ReactNoop.act(() => {
       _setShowChild(true);
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (shouldDoubleInvokingEffects()) {
       expect(Scheduler).toHaveYielded([
         'App useLayoutEffect unmount',
         'Child useLayoutEffect mount',
@@ -566,14 +699,11 @@ describe('ReactDoubleInvokeEvents', () => {
       );
     }
 
-    let renderer;
-    act(() => {
-      renderer = ReactTestRenderer.create(<App text={'mount'} />, {
-        unstable_isConcurrent: true,
-      });
+    ReactNoop.act(() => {
+      ReactNoop.render(<App text={'mount'} />);
     });
 
-    if (__DEV__ && __VARIANT__) {
+    if (shouldDoubleInvokingEffects()) {
       expect(Scheduler).toHaveYielded([
         'componentDidMount',
         'useLayoutEffect mount',
@@ -593,8 +723,8 @@ describe('ReactDoubleInvokeEvents', () => {
       ]);
     }
 
-    act(() => {
-      renderer.update(<App text={'mount'} />);
+    ReactNoop.act(() => {
+      ReactNoop.render(<App text={'mount'} />);
     });
 
     expect(Scheduler).toHaveYielded([
@@ -604,8 +734,8 @@ describe('ReactDoubleInvokeEvents', () => {
       'useEffect mount',
     ]);
 
-    act(() => {
-      renderer.unmount();
+    ReactNoop.act(() => {
+      ReactNoop.render(null);
     });
 
     expect(Scheduler).toHaveYielded([

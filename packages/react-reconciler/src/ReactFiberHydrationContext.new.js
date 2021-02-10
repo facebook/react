@@ -24,7 +24,7 @@ import {
   HostRoot,
   SuspenseComponent,
 } from './ReactWorkTags';
-import {Deletion, Hydrating, Placement} from './ReactFiberFlags';
+import {ChildDeletion, Placement, Hydrating} from './ReactFiberFlags';
 import invariant from 'shared/invariant';
 
 import {
@@ -55,7 +55,7 @@ import {
   didNotFindHydratableSuspenseInstance,
 } from './ReactFiberHostConfig';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
-import {OffscreenLane} from './ReactFiberLane';
+import {OffscreenLane} from './ReactFiberLane.new';
 
 // The deepest Fiber on the stack involved in a hydration context.
 // This may have been an insertion or a hydration.
@@ -128,8 +128,7 @@ function deleteHydratableInstance(
   const deletions = returnFiber.deletions;
   if (deletions === null) {
     returnFiber.deletions = [childToDelete];
-    // TODO (effects) Rename this to better reflect its new usage (e.g. ChildDeletions)
-    returnFiber.flags |= Deletion;
+    returnFiber.flags |= ChildDeletion;
   } else {
     deletions.push(childToDelete);
   }

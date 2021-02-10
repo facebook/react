@@ -26,6 +26,8 @@ export const skipUnmountedBoundaries = __VARIANT__;
 // NOTE: This feature will only work in DEV mode; all callsights are wrapped with __DEV__.
 export const enableDebugTracing = __EXPERIMENTAL__;
 
+export const enableSchedulingProfiler = __VARIANT__;
+
 // This only has an effect in the new reconciler. But also, the new reconciler
 // is only enabled when __VARIANT__ is true. So this is set to the opposite of
 // __VARIANT__ so that it's `false` when running against the new reconciler.
@@ -46,6 +48,14 @@ export const replayFailedUnitOfWorkWithInvokeGuardedCallback = __DEV__;
 // to __VARIANT__.
 export const enableTrustedTypesIntegration = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
+export const disableNativeComponentFrames = false;
 
 export const enableDoubleInvokingEffects = false;
 export const enableUseRefAccessWarning = __VARIANT__;
+
+export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
+export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
+export const enableTransitionEntanglement = __VARIANT__;
+export const enableNonInterruptingNormalPri = __VARIANT__;
+export const enableDiscreteEventMicroTasks = __VARIANT__;
+export const enableNativeEventPriorityInference = __VARIANT__;

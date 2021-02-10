@@ -116,13 +116,8 @@ module.exports = {
     'react-internal/no-cross-fork-types': [
       ERROR,
       {
-        old: [
-          'firstEffect',
-          'nextEffect',
-          // Disabled because it's also used by the Hook type.
-          // 'lastEffect',
-        ],
-        new: ['subtreeFlags'],
+        old: [],
+        new: [],
       },
     ],
   },
@@ -188,13 +183,16 @@ module.exports = {
       },
     },
     {
-      files: ['packages/react-native-renderer/**/*.js'],
+      files: [
+        'packages/react-native-renderer/**/*.js',
+        'packages/react-server-native-relay/**/*.js',
+      ],
       globals: {
         nativeFabricUIManager: true,
       },
     },
     {
-      files: ['packages/react-transport-dom-webpack/**/*.js'],
+      files: ['packages/react-server-dom-webpack/**/*.js'],
       globals: {
         __webpack_chunk_load__: true,
         __webpack_require__: true,

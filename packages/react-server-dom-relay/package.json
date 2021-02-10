@@ -1,0 +1,18 @@
+{
+  "name": "react-server-dom-relay",
+  "version": "0.1.0",
+  "private": true,
+  "repository": {
+    "type" : "git",
+    "url" : "https://github.com/facebook/react.git",
+    "directory": "packages/react-server-dom-relay"
+  },
+  "dependencies": {
+    "object-assign": "^4.1.1",
+    "scheduler": "^0.11.0"
+  },
+  "peerDependencies": {
+    "react": "^17.0.0",
+    "react-dom": "^17.0.0"
+  }
+}

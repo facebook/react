@@ -14,6 +14,7 @@
     "@babel/plugin-proposal-class-properties": "^7.10.4",
     "@babel/plugin-proposal-object-rest-spread": "^7.11.0",
     "@babel/plugin-syntax-dynamic-import": "^7.8.3",
+    "@babel/plugin-syntax-import-meta": "^7.10.4",
     "@babel/plugin-syntax-jsx": "^7.10.4",
     "@babel/plugin-transform-arrow-functions": "^7.10.4",
     "@babel/plugin-transform-async-to-generator": "^7.10.4",
@@ -105,7 +106,10 @@
   },
   "scripts": {
     "build": "node ./scripts/rollup/build.js",
-    "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build react/index,react-dom,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh --type=NODE",
+    "build-combined": "node ./scripts/rollup/build-all-release-channels.js",
+    "build-for-devtools": "cross-env RELEASE_CHANNEL=experimental yarn build-combined react/index,react-dom,react-is,react-debug-tools,scheduler,react-test-renderer,react-refresh",
+    "build-for-devtools-dev": "yarn build-for-devtools --type=NODE_DEV",
+    "build-for-devtools-prod": "yarn build-for-devtools --type=NODE_PROD",
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "lint-build": "node ./scripts/rollup/validate/index.js",
@@ -135,6 +139,7 @@
     "prettier-all": "node ./scripts/prettier/index.js write",
     "version-check": "node ./scripts/tasks/version-check.js",
     "merge-fork": "node ./scripts/merge-fork/merge-fork.js",
-    "replace-fork": "node ./scripts/merge-fork/replace-fork.js"
+    "replace-fork": "node ./scripts/merge-fork/replace-fork.js",
+    "publish-prereleases": "node ./scripts/release/publish-using-ci-workflow.js"
   }
 }
