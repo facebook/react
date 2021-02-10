@@ -36,6 +36,11 @@ import {createUpdate, ForceUpdate} from './ReactUpdateQueue.old';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.old';
 import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
 
+export type ContextId = number;
+export type Contexts = number;
+
+export const NoContext: Contexts = 0;
+
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
 let rendererSigil;
@@ -71,6 +76,34 @@ export function exitDisallowedContextReadInDEV(): void {
   if (__DEV__) {
     isDisallowedContextReadInDEV = false;
   }
+}
+
+export function hasContext(
+  contexts: Contexts,
+  context: ReactContext<any>,
+): boolean {
+  return (contexts & context._id) !== NoContext;
+}
+
+export function addContext(
+  contexts: Contexts,
+  context: ReactContext<any>,
+): Contexts {
+  return contexts | context._id;
+}
+
+export function removeContext(
+  contexts: Contexts,
+  context: ReactContext<any>,
+): Contexts {
+  return contexts ^ context._id;
+}
+
+export function mergeContexts(
+  contexts1: Contexts,
+  contexts2: Contexts,
+): Contexts {
+  return contexts1 | contexts2;
 }
 
 export function pushProvider<T>(
@@ -394,5 +427,36 @@ export function readContext<T>(
       lastContextDependency = lastContextDependency.next = contextItem;
     }
   }
+
+  if (!hasContext(currentlyRenderingFiber, context)) {
+    let fiber = currentlyRenderingFiber;
+    while (fiber !== null) {
+      if (hasContext(fiber, context) || fiber.type === context.Provider) {
+        fiber = null;
+      } else {
+        fiber.contexts = addContext(fiber, context);
+        fiber = fiber.return;
+      }
+    }
+  }
+
   return isPrimaryRenderer ? context._currentValue : context._currentValue2;
+}
+
+export function markParentPathContexts(
+  workInProgress: Fiber,
+  contexts: Contexts,
+): void {
+  let fiber = workInProgress.return;
+  let remainingContexts = contexts;
+  while (fiber !== null) {
+    if (fiber.tag === ContextProvider) {
+      remainingContexts = removeContext(
+        remainingContexts,
+        fiber.type._context.id,
+      );
+    }
+    fiber.contexts = mergeContexts(fiber.contexts, contexts);
+    fiber = fiber.return;
+  }
 }

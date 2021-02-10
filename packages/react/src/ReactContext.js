@@ -11,6 +11,19 @@ import {REACT_PROVIDER_TYPE, REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 
 import type {ReactContext} from 'shared/ReactTypes';
 
+let id = 0;
+
+export const ContextNoId = 0;
+
+function createId() {
+  if (id < 32) {
+    const nextId = 1 << id;
+    id++;
+    return nextId;
+  }
+  return ContextNoId;
+}
+
 export function createContext<T>(
   defaultValue: T,
   calculateChangedBits: ?(a: T, b: T) => number,
@@ -48,6 +61,7 @@ export function createContext<T>(
     // These are circular
     Provider: (null: any),
     Consumer: (null: any),
+    _id: createId(),
   };
 
   context.Provider = {

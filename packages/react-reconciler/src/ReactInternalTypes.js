@@ -26,6 +26,7 @@ import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {Cache} from './ReactFiberCacheComponent.old';
+import type {Contexts} from './ReactFiberNewContext.old';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -150,6 +151,8 @@ export type Fiber = {|
 
   lanes: Lanes,
   childLanes: Lanes,
+
+  contexts: Contexts,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save

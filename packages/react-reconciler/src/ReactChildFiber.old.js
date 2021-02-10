@@ -35,6 +35,7 @@ import {
   warnAboutStringRefs,
   enableLazyElements,
 } from 'shared/ReactFeatureFlags';
+import {markParentPathContexts} from './ReactFiberNewContext.old';
 
 import {
   createWorkInProgress,
@@ -1374,6 +1375,8 @@ export function cloneChildFibers(
       currentChild.pendingProps,
     );
     newChild.return = workInProgress;
+    newChild.contexts = currentChild.contexts;
+    markParentPathContexts(newChild, currentChild.contexts);
   }
   newChild.sibling = null;
 }
