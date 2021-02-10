@@ -15,6 +15,7 @@ let ReactNoop;
 let Scheduler;
 let Suspense;
 let useState;
+let useLayoutEffect;
 let useTransition;
 let startTransition;
 let act;
@@ -30,6 +31,7 @@ describe('ReactTransition', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     useState = React.useState;
+    useLayoutEffect = React.useLayoutEffect;
     useTransition = React.unstable_useTransition;
     Suspense = React.Suspense;
     startTransition = React.unstable_startTransition;
@@ -773,4 +775,204 @@ describe('ReactTransition', () => {
       });
     },
   );
+
+  // @gate experimental
+  // @gate enableCache
+  it('should render normal pri updates scheduled after transitions before transitions', async () => {
+    let updateTransitionPri;
+    let updateNormalPri;
+    function App() {
+      const [normalPri, setNormalPri] = useState(0);
+      const [transitionPri, setTransitionPri] = useState(0);
+      updateTransitionPri = () =>
+        startTransition(() => setTransitionPri(n => n + 1));
+      updateNormalPri = () => setNormalPri(n => n + 1);
+
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Commit');
+      });
+
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          <Text text={'Transition pri: ' + transitionPri} />
+          {', '}
+          <Text text={'Normal pri: ' + normalPri} />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    // Initial render.
+    expect(Scheduler).toHaveYielded([
+      'Transition pri: 0',
+      'Normal pri: 0',
+      'Commit',
+    ]);
+    expect(root).toMatchRenderedOutput('Transition pri: 0, Normal pri: 0');
+
+    await act(async () => {
+      updateTransitionPri();
+      updateNormalPri();
+    });
+
+    expect(Scheduler).toHaveYielded([
+      // Normal update first.
+      'Transition pri: 0',
+      'Normal pri: 1',
+      'Commit',
+
+      // Then transition update.
+      'Transition pri: 1',
+      'Normal pri: 1',
+      'Commit',
+    ]);
+    expect(root).toMatchRenderedOutput('Transition pri: 1, Normal pri: 1');
+  });
+
+  // @gate experimental
+  // @gate enableCache
+  it('should render normal pri updates before transition suspense retries', async () => {
+    let updateTransitionPri;
+    let updateNormalPri;
+    function App() {
+      const [transitionPri, setTransitionPri] = useState(false);
+      const [normalPri, setNormalPri] = useState(0);
+
+      updateTransitionPri = () => startTransition(() => setTransitionPri(true));
+      updateNormalPri = () => setNormalPri(n => n + 1);
+
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Commit');
+      });
+
+      return (
+        <Suspense fallback={<Text text="Loading..." />}>
+          {transitionPri ? <AsyncText text="Async" /> : <Text text="(empty)" />}
+          {', '}
+          <Text text={'Normal pri: ' + normalPri} />
+        </Suspense>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await act(async () => {
+      root.render(<App />);
+    });
+
+    // Initial render.
+    expect(Scheduler).toHaveYielded(['(empty)', 'Normal pri: 0', 'Commit']);
+    expect(root).toMatchRenderedOutput('(empty), Normal pri: 0');
+
+    await act(async () => {
+      updateTransitionPri();
+    });
+
+    expect(Scheduler).toHaveYielded([
+      // Suspend.
+      'Suspend! [Async]',
+      'Normal pri: 0',
+      'Loading...',
+    ]);
+    expect(root).toMatchRenderedOutput('(empty), Normal pri: 0');
+
+    await act(async () => {
+      await resolveText('Async');
+      updateNormalPri();
+    });
+
+    expect(Scheduler).toHaveYielded([
+      // Normal pri update.
+      '(empty)',
+      'Normal pri: 1',
+      'Commit',
+
+      // Promise resolved, retry flushed.
+      'Async',
+      'Normal pri: 1',
+      'Commit',
+    ]);
+    expect(root).toMatchRenderedOutput('Async, Normal pri: 1');
+  });
+
+  // @gate experimental
+  // @gate enableCache
+  it('should not interrupt transitions with normal pri updates', async () => {
+    let updateNormalPri;
+    let updateTransitionPri;
+    function App() {
+      const [transitionPri, setTransitionPri] = useState(0);
+      const [normalPri, setNormalPri] = useState(0);
+      updateTransitionPri = () =>
+        startTransition(() => setTransitionPri(n => n + 1));
+      updateNormalPri = () => setNormalPri(n => n + 1);
+
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Commit');
+      });
+      return (
+        <>
+          <Text text={'Transition pri: ' + transitionPri} />
+          {', '}
+          <Text text={'Normal pri: ' + normalPri} />
+        </>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Transition pri: 0',
+      'Normal pri: 0',
+      'Commit',
+    ]);
+    expect(root).toMatchRenderedOutput('Transition pri: 0, Normal pri: 0');
+
+    await ReactNoop.act(async () => {
+      updateTransitionPri();
+
+      expect(Scheduler).toFlushAndYieldThrough([
+        // Start transition update.
+        'Transition pri: 1',
+      ]);
+
+      // Schedule normal pri update during transition update.
+      // This should not interrupt.
+      updateNormalPri();
+    });
+
+    if (gate(flags => flags.enableNonInterruptingNormalPri)) {
+      expect(Scheduler).toHaveYielded([
+        // Finish transition update.
+        'Normal pri: 0',
+        'Commit',
+
+        // Normal pri update.
+        'Transition pri: 1',
+        'Normal pri: 1',
+        'Commit',
+      ]);
+
+      expect(root).toMatchRenderedOutput('Transition pri: 1, Normal pri: 1');
+    } else {
+      expect(Scheduler).toHaveYielded([
+        // Interrupt! Render normal pri update.
+        'Transition pri: 0',
+        'Normal pri: 1',
+        'Commit',
+
+        // Restart transition update.
+        'Transition pri: 1',
+        'Normal pri: 1',
+        'Commit',
+      ]);
+
+      expect(root).toMatchRenderedOutput('Transition pri: 1, Normal pri: 1');
+    }
+  });
 });

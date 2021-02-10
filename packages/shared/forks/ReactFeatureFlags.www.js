@@ -32,6 +32,7 @@ export const {
   disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop,
   enableTransitionEntanglement,
+  enableNonInterruptingNormalPri,
   enableDiscreteEventMicroTasks,
   enableNativeEventPriorityInference,
 } = dynamicFeatureFlags;

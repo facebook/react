@@ -39,6 +39,7 @@ import invariant from 'shared/invariant';
 import {
   enableCache,
   enableTransitionEntanglement,
+  enableNonInterruptingNormalPri,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -327,7 +328,16 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   ) {
     getHighestPriorityLanes(wipLanes);
     const wipLanePriority = return_highestLanePriority;
-    if (nextLanePriority <= wipLanePriority) {
+    if (
+      nextLanePriority <= wipLanePriority ||
+      // Default priority updates should not interrupt transition updates. The
+      // only difference between default updates and transition updates is that
+      // default updates do not support refresh transitions.
+      (enableNonInterruptingNormalPri &&
+        nextLanePriority === DefaultLanePriority &&
+        wipLanePriority === TransitionPriority)
+    ) {
+      // Keep working on the existing in-progress tree. Do not interrupt.
       return wipLanes;
     } else {
       return_highestLanePriority = nextLanePriority;
