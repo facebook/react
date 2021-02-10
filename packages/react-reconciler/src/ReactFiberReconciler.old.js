@@ -103,7 +103,7 @@ export {
   DefaultLanePriority as DefaultEventPriority,
 } from './ReactFiberLane.old';
 
-export {registerMutableSourceForHydration} from './ReactMutableSource.new';
+export {registerMutableSourceForHydration} from './ReactMutableSource.old';
 export {createPortal} from './ReactPortal';
 export {
   createComponentSelector,
