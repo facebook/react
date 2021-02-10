@@ -83,6 +83,7 @@ jobs:
   yarn_flow:
     docker: *docker
     environment: *environment
+    parallelism: 5
 
     steps:
       - checkout
@@ -384,9 +385,6 @@ workflows:
       - yarn_lint:
           requires:
             - setup
-      - yarn_flow:
-          requires:
-            - setup
       - RELEASE_CHANNEL_stable_yarn_build:
           requires:
             - setup
@@ -426,6 +424,9 @@ workflows:
     unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
       - setup
+      - yarn_flow:
+          requires:
+            - setup
       - yarn_test:
           requires:
             - setup
