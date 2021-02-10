@@ -27,6 +27,7 @@ import {
   LegacyRoot,
 } from 'react-reconciler/src/ReactRootTags';
 
+import {enableNativeEventPriorityInference} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
 const {IsSomeRendererActing} = ReactSharedInternals;
@@ -392,7 +393,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     resetAfterCommit(): void {},
 
     getCurrentEventPriority() {
-      return NoopRenderer.DefaultEventPriority;
+      return currentEventPriority;
     },
 
     now: Scheduler.unstable_now,
@@ -586,6 +587,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const rootContainers = new Map();
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
+
+  let currentEventPriority = NoopRenderer.DefaultEventPriority;
 
   function childToJSX(child, text) {
     if (text !== null) {
@@ -924,6 +927,23 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     unbatchedUpdates: NoopRenderer.unbatchedUpdates,
 
     discreteUpdates: NoopRenderer.discreteUpdates,
+
+    idleUpdates<T>(fn: () => T): T {
+      if (enableNativeEventPriorityInference) {
+        const prevEventPriority = currentEventPriority;
+        currentEventPriority = NoopRenderer.IdleEventPriority;
+        try {
+          fn();
+        } finally {
+          currentEventPriority = prevEventPriority;
+        }
+      } else {
+        return Scheduler.unstable_runWithPriority(
+          Scheduler.unstable_IdlePriority,
+          fn,
+        );
+      }
+    },
 
     flushDiscreteUpdates: NoopRenderer.flushDiscreteUpdates,
 

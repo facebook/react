@@ -403,23 +403,23 @@ describe('ReactExpiration', () => {
     expect(ReactNoop).toMatchRenderedOutput('Hi');
   });
 
-  it('prevents starvation by high priority updates', async () => {
+  it('prevents starvation by sync updates', async () => {
     const {useState} = React;
 
-    let updateHighPri;
+    let updateSyncPri;
     let updateNormalPri;
     function App() {
       const [highPri, setHighPri] = useState(0);
       const [normalPri, setNormalPri] = useState(0);
-      updateHighPri = () =>
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => setHighPri(n => n + 1),
-        );
+      updateSyncPri = () => {
+        ReactNoop.flushSync(() => {
+          setHighPri(n => n + 1);
+        });
+      };
       updateNormalPri = () => setNormalPri(n => n + 1);
       return (
         <>
-          <Text text={'High pri: ' + highPri} />
+          <Text text={'Sync pri: ' + highPri} />
           {', '}
           <Text text={'Normal pri: ' + normalPri} />
         </>
@@ -430,29 +430,29 @@ describe('ReactExpiration', () => {
     await ReactNoop.act(async () => {
       root.render(<App />);
     });
-    expect(Scheduler).toHaveYielded(['High pri: 0', 'Normal pri: 0']);
-    expect(root).toMatchRenderedOutput('High pri: 0, Normal pri: 0');
+    expect(Scheduler).toHaveYielded(['Sync pri: 0', 'Normal pri: 0']);
+    expect(root).toMatchRenderedOutput('Sync pri: 0, Normal pri: 0');
 
     // First demonstrate what happens when there's no starvation
     await ReactNoop.act(async () => {
       updateNormalPri();
-      expect(Scheduler).toFlushAndYieldThrough(['High pri: 0']);
-      updateHighPri();
+      expect(Scheduler).toFlushAndYieldThrough(['Sync pri: 0']);
+      updateSyncPri();
     });
     expect(Scheduler).toHaveYielded([
       // Interrupt high pri update to render sync update
-      'High pri: 1',
+      'Sync pri: 1',
       'Normal pri: 0',
       // Now render normal pri
-      'High pri: 1',
+      'Sync pri: 1',
       'Normal pri: 1',
     ]);
-    expect(root).toMatchRenderedOutput('High pri: 1, Normal pri: 1');
+    expect(root).toMatchRenderedOutput('Sync pri: 1, Normal pri: 1');
 
     // Do the same thing, but starve the first update
     await ReactNoop.act(async () => {
       updateNormalPri();
-      expect(Scheduler).toFlushAndYieldThrough(['High pri: 1']);
+      expect(Scheduler).toFlushAndYieldThrough(['Sync pri: 1']);
 
       // This time, a lot of time has elapsed since the normal pri update
       // started rendering. (This should advance time by some number that's
@@ -461,86 +461,16 @@ describe('ReactExpiration', () => {
       Scheduler.unstable_advanceTime(10000);
 
       // So when we get a high pri update, we shouldn't interrupt
-      updateHighPri();
+      updateSyncPri();
     });
     expect(Scheduler).toHaveYielded([
       // Finish normal pri update
       'Normal pri: 2',
       // Then do high pri update
-      'High pri: 2',
+      'Sync pri: 2',
       'Normal pri: 2',
     ]);
-    expect(root).toMatchRenderedOutput('High pri: 2, Normal pri: 2');
-  });
-
-  it('prevents starvation by sync updates', async () => {
-    const {useState} = React;
-
-    let updateSyncPri;
-    let updateHighPri;
-    function App() {
-      const [syncPri, setSyncPri] = useState(0);
-      const [highPri, setHighPri] = useState(0);
-      updateSyncPri = () => ReactNoop.flushSync(() => setSyncPri(n => n + 1));
-      updateHighPri = () =>
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => setHighPri(n => n + 1),
-        );
-      return (
-        <>
-          <Text text={'Sync pri: ' + syncPri} />
-          {', '}
-          <Text text={'High pri: ' + highPri} />
-        </>
-      );
-    }
-
-    const root = ReactNoop.createRoot();
-    await ReactNoop.act(async () => {
-      root.render(<App />);
-    });
-    expect(Scheduler).toHaveYielded(['Sync pri: 0', 'High pri: 0']);
-    expect(root).toMatchRenderedOutput('Sync pri: 0, High pri: 0');
-
-    // First demonstrate what happens when there's no starvation
-    await ReactNoop.act(async () => {
-      updateHighPri();
-      expect(Scheduler).toFlushAndYieldThrough(['Sync pri: 0']);
-      updateSyncPri();
-    });
-    expect(Scheduler).toHaveYielded([
-      // Interrupt high pri update to render sync update
-      'Sync pri: 1',
-      'High pri: 0',
-      // Now render high pri
-      'Sync pri: 1',
-      'High pri: 1',
-    ]);
-    expect(root).toMatchRenderedOutput('Sync pri: 1, High pri: 1');
-
-    // Do the same thing, but starve the first update
-    await ReactNoop.act(async () => {
-      updateHighPri();
-      expect(Scheduler).toFlushAndYieldThrough(['Sync pri: 1']);
-
-      // This time, a lot of time has elapsed since the high pri update started
-      // rendering. (This should advance time by some number that's definitely
-      // bigger than the constant heuristic we use to detect starvation of user
-      // interactions, but not as high as the onse used for normal pri updates.)
-      Scheduler.unstable_advanceTime(1500);
-
-      // So when we get a sync update, we shouldn't interrupt
-      updateSyncPri();
-    });
-    expect(Scheduler).toHaveYielded([
-      // Finish high pri update
-      'High pri: 2',
-      // Then do sync update
-      'Sync pri: 2',
-      'High pri: 2',
-    ]);
-    expect(root).toMatchRenderedOutput('Sync pri: 2, High pri: 2');
+    expect(root).toMatchRenderedOutput('Sync pri: 2, Normal pri: 2');
   });
 
   it('idle work never expires', async () => {
@@ -553,10 +483,9 @@ describe('ReactExpiration', () => {
       const [highPri, setIdlePri] = useState(0);
       updateSyncPri = () => ReactNoop.flushSync(() => setSyncPri(n => n + 1));
       updateIdlePri = () =>
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_IdlePriority,
-          () => setIdlePri(n => n + 1),
-        );
+        ReactNoop.idleUpdates(() => {
+          setIdlePri(n => n + 1);
+        });
       return (
         <>
           <Text text={'Sync pri: ' + syncPri} />
@@ -695,11 +624,11 @@ describe('ReactExpiration', () => {
     function App() {
       const [highPri, setHighPri] = useState(0);
       const [normalPri, setNormalPri] = useState(0);
-      updateHighPri = () =>
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => setHighPri(n => n + 1),
-        );
+      updateHighPri = () => {
+        ReactNoop.flushSync(() => {
+          setHighPri(n => n + 1);
+        });
+      };
       updateNormalPri = () => setNormalPri(n => n + 1);
       return (
         <>
@@ -735,20 +664,34 @@ describe('ReactExpiration', () => {
       expect(Scheduler).toFlushAndYieldThrough(['Normal pri: 1']);
       // More time goes by. This expires both of the updates just scheduled.
       Scheduler.unstable_advanceTime(10000);
+      expect(Scheduler).toHaveYielded([]);
 
       // Attempt to interrupt with a high pri update.
       updateHighPri();
 
       // Both normal pri updates should have expired.
-      expect(Scheduler).toFlushExpired([
-        'Sibling',
-        // Notice that the high pri update didn't flush yet. Expiring one lane
-        // doesn't affect other lanes. (Unless they are intentionally entangled,
-        // like we do for overlapping transitions that affect the same state.)
-        'High pri: 0',
-        'Normal pri: 2',
-        'Sibling',
-      ]);
+      if (gate(flags => flags.FIXME)) {
+        // The sync update and the expired normal pri updates render in a
+        // single batch.
+        expect(Scheduler).toHaveYielded([
+          'Sibling',
+          'High pri: 1',
+          'Normal pri: 2',
+          'Sibling',
+        ]);
+      } else {
+        expect(Scheduler).toHaveYielded([
+          'Sibling',
+          'High pri: 0',
+          'Normal pri: 2',
+          'Sibling',
+          // TODO: This is the sync update. We should have rendered it in the same
+          // batch as the expired update.
+          'High pri: 1',
+          'Normal pri: 2',
+          'Sibling',
+        ]);
+      }
     });
   });
 

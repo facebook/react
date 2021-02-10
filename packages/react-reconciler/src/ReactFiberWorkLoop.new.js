@@ -465,15 +465,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   } else {
     if (enableNativeEventPriorityInference) {
       const eventLanePriority = getCurrentEventPriority();
-      if (eventLanePriority === DefaultLanePriority) {
-        // TODO: move this case into the ReactDOM host config.
-        const schedulerLanePriority = schedulerPriorityToLanePriority(
-          schedulerPriority,
-        );
-        lane = findUpdateLane(schedulerLanePriority, currentEventWipLanes);
-      } else {
-        lane = findUpdateLane(eventLanePriority, currentEventWipLanes);
-      }
+      lane = findUpdateLane(eventLanePriority, currentEventWipLanes);
     } else {
       const schedulerLanePriority = schedulerPriorityToLanePriority(
         schedulerPriority,

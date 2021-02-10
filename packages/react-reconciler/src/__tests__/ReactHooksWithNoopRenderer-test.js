@@ -1351,11 +1351,10 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(Scheduler).toFlushAndYieldThrough(['Child one render']);
 
         // Schedule unmount for the parent that unmounts children with pending update.
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => setParentState(false),
-        );
-        expect(Scheduler).toFlushAndYieldThrough([
+        ReactNoop.flushSync(() => {
+          setParentState(false);
+        });
+        expect(Scheduler).toHaveYielded([
           'Parent false render',
           'Parent false commit',
         ]);
