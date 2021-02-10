@@ -47,6 +47,7 @@ import {validateDOMNesting, updatedAncestorInfo} from './validateDOMNesting';
 import {
   isEnabled as ReactBrowserEventEmitterIsEnabled,
   setEnabled as ReactBrowserEventEmitterSetEnabled,
+  getEventPriority,
 } from '../events/ReactDOMEventListener';
 import {getChildNamespace} from '../shared/DOMNamespaces';
 import {
@@ -65,9 +66,17 @@ import {
   enableSuspenseServerRenderer,
   enableCreateEventHandleAPI,
   enableScopeAPI,
+  enableNewReconciler,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
+
+import {DefaultLanePriority as DefaultLanePriority_old} from 'react-reconciler/src/ReactFiberLane.old';
+import {DefaultLanePriority as DefaultLanePriority_new} from 'react-reconciler/src/ReactFiberLane.new';
+
+const DefaultLanePriority = enableNewReconciler
+  ? DefaultLanePriority_new
+  : DefaultLanePriority_old;
 
 export type Type = string;
 export type Props = {
@@ -370,6 +379,14 @@ export function createTextInstance(
   const textNode: TextInstance = createTextNode(text, rootContainerInstance);
   precacheFiberNode(internalInstanceHandle, textNode);
   return textNode;
+}
+
+export function getCurrentEventPriority(): * {
+  const currentEvent = window.event;
+  if (currentEvent === undefined) {
+    return DefaultLanePriority;
+  }
+  return getEventPriority(currentEvent.type);
 }
 
 export const isPrimaryRenderer = true;

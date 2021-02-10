@@ -34,6 +34,8 @@ import {
   disableSchedulerTimeoutInWorkLoop,
   enableDoubleInvokingEffects,
   skipUnmountedBoundaries,
+  enableTransitionEntanglement,
+  enableNativeEventPriorityInference,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -93,6 +95,7 @@ import {
   afterActiveInstanceBlur,
   clearContainer,
   scheduleMicrotask,
+  getCurrentEventPriority,
 } from './ReactFiberHostConfig';
 
 import {
@@ -460,11 +463,15 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     const currentLanePriority = getCurrentUpdateLanePriority();
     lane = findUpdateLane(currentLanePriority, currentEventWipLanes);
   } else {
-    const schedulerLanePriority = schedulerPriorityToLanePriority(
-      schedulerPriority,
-    );
-
-    lane = findUpdateLane(schedulerLanePriority, currentEventWipLanes);
+    if (enableNativeEventPriorityInference) {
+      const eventLanePriority = getCurrentEventPriority();
+      lane = findUpdateLane(eventLanePriority, currentEventWipLanes);
+    } else {
+      const schedulerLanePriority = schedulerPriorityToLanePriority(
+        schedulerPriority,
+      );
+      lane = findUpdateLane(schedulerLanePriority, currentEventWipLanes);
+    }
   }
 
   return lane;
@@ -832,6 +839,7 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   let exitStatus = renderRootConcurrent(root, lanes);
 
   if (
+    !enableTransitionEntanglement &&
     includesSomeLane(
       workInProgressRootIncludedLanes,
       workInProgressRootUpdatedLanes,
@@ -1037,6 +1045,7 @@ function performSyncWorkOnRoot(root) {
     lanes = workInProgressRootRenderLanes;
     exitStatus = renderRootSync(root, lanes);
     if (
+      !enableTransitionEntanglement &&
       includesSomeLane(
         workInProgressRootIncludedLanes,
         workInProgressRootUpdatedLanes,

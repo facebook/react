@@ -55,6 +55,7 @@ import {
   DefaultLanePriority as DefaultLanePriority_old,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
   setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_old,
+  schedulerPriorityToLanePriority as schedulerPriorityToLanePriority_old,
 } from 'react-reconciler/src/ReactFiberLane.old';
 import {
   InputDiscreteLanePriority as InputDiscreteLanePriority_new,
@@ -62,7 +63,10 @@ import {
   DefaultLanePriority as DefaultLanePriority_new,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
   setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_new,
+  schedulerPriorityToLanePriority as schedulerPriorityToLanePriority_new,
 } from 'react-reconciler/src/ReactFiberLane.new';
+import {getCurrentPriorityLevel as getCurrentPriorityLevel_old} from 'react-reconciler/src/SchedulerWithReactIntegration.old';
+import {getCurrentPriorityLevel as getCurrentPriorityLevel_new} from 'react-reconciler/src/SchedulerWithReactIntegration.new';
 
 const InputDiscreteLanePriority = enableNewReconciler
   ? InputDiscreteLanePriority_new
@@ -79,6 +83,12 @@ const getCurrentUpdateLanePriority = enableNewReconciler
 const setCurrentUpdateLanePriority = enableNewReconciler
   ? setCurrentUpdateLanePriority_new
   : setCurrentUpdateLanePriority_old;
+const schedulerPriorityToLanePriority = enableNewReconciler
+  ? schedulerPriorityToLanePriority_new
+  : schedulerPriorityToLanePriority_old;
+const getCurrentPriorityLevel = enableNewReconciler
+  ? getCurrentPriorityLevel_new
+  : getCurrentPriorityLevel_old;
 
 const {
   unstable_UserBlockingPriority: UserBlockingPriority,
@@ -348,7 +358,7 @@ export function attemptToDispatchEvent(
   return null;
 }
 
-function getEventPriority(domEventName: DOMEventName) {
+export function getEventPriority(domEventName: DOMEventName): * {
   switch (domEventName) {
     // Used by SimpleEventPlugin:
     case 'cancel':
@@ -397,6 +407,16 @@ function getEventPriority(domEventName: DOMEventName) {
     // eslint-disable-next-line no-fallthrough
     case 'beforeblur':
     case 'afterblur':
+    // Not used by React but could be by user code:
+    // eslint-disable-next-line no-fallthrough
+    case 'beforeinput':
+    case 'blur':
+    case 'fullscreenchange':
+    case 'focus':
+    case 'hashchange':
+    case 'popstate':
+    case 'select':
+    case 'selectstart':
       return InputDiscreteLanePriority;
     case 'drag':
     case 'dragenter':
@@ -413,7 +433,20 @@ function getEventPriority(domEventName: DOMEventName) {
     case 'toggle':
     case 'touchmove':
     case 'wheel':
+    // Not used by React but could be by user code:
+    // eslint-disable-next-line no-fallthrough
+    case 'mouseenter':
+    case 'mouseleave':
       return InputContinuousLanePriority;
+    case 'message': {
+      // We might be in the Scheduler callback.
+      // Eventually this mechanism will be replaced by a check
+      // of the current priority on the native scheduler.
+      const schedulerPriority = getCurrentPriorityLevel();
+      // TODO: Inline schedulerPriorityToLanePriority into this file
+      // when we delete the enableNativeEventPriorityInference flag.
+      return schedulerPriorityToLanePriority(schedulerPriority);
+    }
     default:
       return DefaultLanePriority;
   }

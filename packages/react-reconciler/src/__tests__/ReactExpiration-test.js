@@ -14,6 +14,7 @@ let ReactNoop;
 let Scheduler;
 let readText;
 let resolveText;
+let startTransition;
 
 describe('ReactExpiration', () => {
   beforeEach(() => {
@@ -22,6 +23,7 @@ describe('ReactExpiration', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    startTransition = React.unstable_startTransition;
 
     const textCache = new Map();
 
@@ -610,6 +612,7 @@ describe('ReactExpiration', () => {
     expect(root).toMatchRenderedOutput('Sync pri: 2, Idle pri: 2');
   });
 
+  // @gate experimental
   it('a single update can expire without forcing all other updates to expire', async () => {
     const {useState} = React;
 
@@ -648,12 +651,18 @@ describe('ReactExpiration', () => {
 
     await ReactNoop.act(async () => {
       // Partially render an update
-      updateNormalPri();
+      startTransition(() => {
+        updateNormalPri();
+      });
       expect(Scheduler).toFlushAndYieldThrough(['High pri: 0']);
-      // Some time goes by. In an interleaved event, schedule another update.
+
+      // Some time goes by. Schedule another update.
       // This will be placed into a separate batch.
       Scheduler.unstable_advanceTime(4000);
-      updateNormalPri();
+
+      startTransition(() => {
+        updateNormalPri();
+      });
       // Keep rendering the first update
       expect(Scheduler).toFlushAndYieldThrough(['Normal pri: 1']);
       // More time goes by. Enough to expire the first batch, but not the
@@ -662,20 +671,20 @@ describe('ReactExpiration', () => {
       // Attempt to interrupt with a high pri update.
       updateHighPri();
 
-      // The first update expired, so first will finish it without interrupting.
-      // But not the second update, which hasn't expired yet.
+      // The first update expired, so first will finish it without
+      // interrupting. But not the second update, which hasn't expired yet.
       expect(Scheduler).toFlushExpired(['Sibling']);
+      expect(Scheduler).toFlushAndYield([
+        // Then render the high pri update
+        'High pri: 1',
+        'Normal pri: 1',
+        'Sibling',
+        // Then the second normal pri update
+        'High pri: 1',
+        'Normal pri: 2',
+        'Sibling',
+      ]);
     });
-    expect(Scheduler).toHaveYielded([
-      // Then render the high pri update
-      'High pri: 1',
-      'Normal pri: 1',
-      'Sibling',
-      // Then the second normal pri update
-      'High pri: 1',
-      'Normal pri: 2',
-      'Sibling',
-    ]);
   });
 
   it('detects starvation in multiple batches', async () => {

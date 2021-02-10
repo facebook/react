@@ -19,6 +19,7 @@ let NormalPriority;
 let LowPriority;
 let IdlePriority;
 let runWithPriority;
+let startTransition;
 
 describe('ReactSchedulerIntegration', () => {
   beforeEach(() => {
@@ -33,6 +34,7 @@ describe('ReactSchedulerIntegration', () => {
     LowPriority = Scheduler.unstable_LowPriority;
     IdlePriority = Scheduler.unstable_IdlePriority;
     runWithPriority = Scheduler.unstable_runWithPriority;
+    startTransition = React.unstable_startTransition;
   });
 
   function getCurrentPriorityAsString() {
@@ -446,6 +448,7 @@ describe(
       React = require('react');
       ReactNoop = require('react-noop-renderer');
       Scheduler = require('scheduler');
+      startTransition = React.unstable_startTransition;
     });
 
     afterEach(() => {
@@ -494,6 +497,7 @@ describe(
       });
     });
 
+    // @gate experimental
     it('mock Scheduler module to check if `shouldYield` is called', async () => {
       // This test reproduces a bug where React's Scheduler task timed out but
       // the `shouldYield` method returned true. Usually we try not to mock
@@ -518,7 +522,9 @@ describe(
 
       await ReactNoop.act(async () => {
         // Partially render the tree, then yield
-        ReactNoop.render(<App />);
+        startTransition(() => {
+          ReactNoop.render(<App />);
+        });
         expect(Scheduler).toFlushAndYieldThrough(['A']);
 
         // Start logging whenever shouldYield is called
@@ -535,7 +541,9 @@ describe(
         // We only check before yielding to the main thread (to avoid starvation
         // by other main thread work) or when receiving an update (to avoid
         // starvation by incoming updates).
-        ReactNoop.render(<App />);
+        startTransition(() => {
+          ReactNoop.render(<App />);
+        });
 
         // Because the render expired, React should finish the tree without
         // consulting `shouldYield` again
