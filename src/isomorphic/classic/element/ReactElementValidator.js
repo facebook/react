@@ -186,11 +186,13 @@ function validatePropTypes(element) {
     );
   }
   if (typeof componentClass.getDefaultProps === 'function') {
-    warning(
-      componentClass.getDefaultProps.isReactClassApproved,
-      'getDefaultProps is only used on classic React.createClass ' +
-        'definitions. Use a static property named `defaultProps` instead.',
-    );
+    if (componentClass.prototype.__componentDebug) {
+      warning(
+        componentClass.getDefaultProps.isReactClassApproved,
+        'getDefaultProps is only used on classic React.createClass ' +
+          'definitions. Use a static property named `defaultProps` instead.',
+      );
+    }
   }
 }
 

@@ -30,6 +30,12 @@ function ReactComponent(props, context, updater) {
 
 ReactComponent.prototype.isReactComponent = {};
 
+// Set the debug flag for additional validations
+// and events in development mode.
+if (__DEV__) {
+  ReactComponent.prototype.__componentDebug = {};
+}
+
 /**
  * Sets a subset of the state. Always use this to mutate
  * state. You should treat `this.state` as immutable.
