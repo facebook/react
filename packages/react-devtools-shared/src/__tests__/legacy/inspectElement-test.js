@@ -26,15 +26,14 @@ describe('InspectedElementContext', () => {
 
   async function read(
     id: number,
-    inspectedPaths?: Object = {},
+    path?: Array<string | number> = null,
   ): Promise<Object> {
     const rendererID = ((store.getRendererIDForElement(id): any): number);
     const promise = backendAPI
       .inspectElement({
         bridge,
-        forceUpdate: true,
         id,
-        inspectedPaths,
+        path,
         rendererID,
       })
       .then(data =>
@@ -686,7 +685,7 @@ describe('InspectedElementContext', () => {
       }
     `);
 
-    inspectedElement = await read(id, {props: {nestedObject: {a: {}}}});
+    inspectedElement = await read(id, ['props', 'nestedObject', 'a']);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       Object {
         "nestedObject": Object {
@@ -702,9 +701,7 @@ describe('InspectedElementContext', () => {
       }
     `);
 
-    inspectedElement = await read(id, {
-      props: {nestedObject: {a: {b: {c: {}}}}},
-    });
+    inspectedElement = await read(id, ['props', 'nestedObject', 'a', 'b', 'c']);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       Object {
         "nestedObject": Object {
@@ -724,9 +721,15 @@ describe('InspectedElementContext', () => {
       }
     `);
 
-    inspectedElement = await read(id, {
-      props: {nestedObject: {a: {b: {c: {0: {d: {}}}}}}},
-    });
+    inspectedElement = await read(id, [
+      'props',
+      'nestedObject',
+      'a',
+      'b',
+      'c',
+      0,
+      'd',
+    ]);
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       Object {
         "nestedObject": Object {

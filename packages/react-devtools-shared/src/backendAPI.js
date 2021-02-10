@@ -86,15 +86,13 @@ export function copyInspectedElementPath({
 
 export function inspectElement({
   bridge,
-  forceUpdate,
   id,
-  inspectedPaths,
+  path,
   rendererID,
 }: {|
   bridge: FrontendBridge,
-  forceUpdate: boolean,
   id: number,
-  inspectedPaths: Object,
+  path: Array<string | number> | null,
   rendererID: number,
 |}): Promise<InspectedElementPayload> {
   const requestID = requestCounter++;
@@ -105,9 +103,8 @@ export function inspectElement({
   );
 
   bridge.send('inspectElement', {
-    forceUpdate,
     id,
-    inspectedPaths,
+    path,
     rendererID,
     requestID,
   });
@@ -254,7 +251,7 @@ export function convertInspectedElementBackendToFrontend(
   return inspectedElement;
 }
 
-function hydrateHelper(
+export function hydrateHelper(
   dehydratedData: DehydratedData | null,
   path?: Array<string | number>,
 ): Object | null {

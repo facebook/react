@@ -65,7 +65,9 @@ describe('InspectedElement', () => {
       .TreeContextController;
 
     // Used by inspectElementAtIndex() helper function
-    testRendererInstance = TestRenderer.create(null);
+    testRendererInstance = TestRenderer.create(null, {
+      unstable_isConcurrent: true,
+    });
   });
 
   afterEach(() => {
@@ -259,7 +261,9 @@ describe('InspectedElement', () => {
       // from props like defaultSelectedElementID and it's easier to reset here than
       // to read the TreeDispatcherContext and update the selected ID that way.
       // We're testing the inspected values here, not the context wiring, so that's ok.
-      testRendererInstance = TestRenderer.create(null);
+      testRendererInstance = TestRenderer.create(null, {
+        unstable_isConcurrent: true,
+      });
 
       const inspectedElement = await inspectElementAtIndex(index);
 
@@ -1197,10 +1201,9 @@ describe('InspectedElement', () => {
             "1": 2,
             "2": 3,
           },
-          "1": Object {
-            "0": "a",
-            "1": "b",
-            "2": "c",
+          "1": Dehydrated {
+            "preview_short": Set(3),
+            "preview_long": Set(3) {"a", "b", "c"},
           },
         },
       }
@@ -1283,12 +1286,9 @@ describe('InspectedElement', () => {
             },
             "value": 1,
           },
-          "c": Object {
-            "d": Dehydrated {
-              "preview_short": {…},
-              "preview_long": {e: {…}, value: 1},
-            },
-            "value": 1,
+          "c": Dehydrated {
+            "preview_short": {…},
+            "preview_long": {d: {…}, value: 1},
           },
         },
       }
@@ -1350,6 +1350,143 @@ describe('InspectedElement', () => {
     jest.runOnlyPendingTimers();
     await Promise.resolve();
     inspectedElement = await inspectElementAtIndex(0);
+
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "nestedObject": Object {
+          "a": Object {
+            "b": Object {
+              "value": 2,
+            },
+            "value": 2,
+          },
+          "c": Object {
+            "d": Object {
+              "e": Dehydrated {
+                "preview_short": {…},
+                "preview_long": {value: 2},
+              },
+              "value": 2,
+            },
+            "value": 2,
+          },
+        },
+      }
+    `);
+
+    done();
+  });
+
+  it('should return a full update if a path is inspected for an object that has other pending changes', async done => {
+    const Example = () => null;
+
+    const container = document.createElement('div');
+    await utils.actAsync(() =>
+      ReactDOM.render(
+        <Example
+          nestedObject={{
+            a: {
+              value: 1,
+              b: {
+                value: 1,
+              },
+            },
+            c: {
+              value: 1,
+              d: {
+                value: 1,
+                e: {
+                  value: 1,
+                },
+              },
+            },
+          }}
+        />,
+        container,
+      ),
+    );
+
+    let inspectedElement = null;
+    let inspectElementPath = null;
+
+    // Render once to get a handle on inspectElementPath()
+    inspectedElement = await inspectElementAtIndex(0, () => {
+      inspectElementPath = useInspectElementPath();
+    });
+
+    async function loadPath(path) {
+      TestUtilsAct(() => {
+        TestRendererAct(() => {
+          inspectElementPath(path);
+          jest.runOnlyPendingTimers();
+        });
+      });
+
+      inspectedElement = await inspectElementAtIndex(0);
+    }
+
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "nestedObject": Object {
+          "a": Dehydrated {
+            "preview_short": {…},
+            "preview_long": {b: {…}, value: 1},
+          },
+          "c": Dehydrated {
+            "preview_short": {…},
+            "preview_long": {d: {…}, value: 1},
+          },
+        },
+      }
+    `);
+
+    await loadPath(['props', 'nestedObject', 'a']);
+
+    expect(inspectedElement.props).toMatchInlineSnapshot(`
+      Object {
+        "nestedObject": Object {
+          "a": Object {
+            "b": Object {
+              "value": 1,
+            },
+            "value": 1,
+          },
+          "c": Dehydrated {
+            "preview_short": {…},
+            "preview_long": {d: {…}, value: 1},
+          },
+        },
+      }
+    `);
+
+    TestRendererAct(() => {
+      TestUtilsAct(() => {
+        ReactDOM.render(
+          <Example
+            nestedObject={{
+              a: {
+                value: 2,
+                b: {
+                  value: 2,
+                },
+              },
+              c: {
+                value: 2,
+                d: {
+                  value: 2,
+                  e: {
+                    value: 2,
+                  },
+                },
+              },
+            }}
+          />,
+          container,
+        );
+      });
+    });
+
+    await loadPath(['props', 'nestedObject', 'c']);
 
     expect(inspectedElement.props).toMatchInlineSnapshot(`
       Object {
@@ -1936,6 +2073,7 @@ describe('InspectedElement', () => {
               <Suspender target={id} />
             </React.Suspense>
           </Contexts>,
+          {unstable_isConcurrent: true},
         );
       }, false);
       await utils.actAsync(() => {

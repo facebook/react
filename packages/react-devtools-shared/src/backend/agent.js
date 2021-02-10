@@ -70,8 +70,7 @@ type CopyElementParams = {|
 
 type InspectElementParams = {|
   id: number,
-  inspectedPaths: Object,
-  forceUpdate: boolean,
+  path: Array<string | number> | null,
   rendererID: number,
   requestID: number,
 |};
@@ -332,8 +331,7 @@ export default class Agent extends EventEmitter<{|
 
   inspectElement = ({
     id,
-    inspectedPaths,
-    forceUpdate,
+    path,
     rendererID,
     requestID,
   }: InspectElementParams) => {
@@ -343,7 +341,7 @@ export default class Agent extends EventEmitter<{|
     } else {
       this._bridge.send(
         'inspectedElement',
-        renderer.inspectElement(requestID, id, inspectedPaths, forceUpdate),
+        renderer.inspectElement(requestID, id, path),
       );
 
       // When user selects an element, stop trying to restore the selection,
