@@ -82,7 +82,10 @@ export function hasContext(
   contexts: Contexts,
   context: ReactContext<any>,
 ): boolean {
-  return (contexts & context._id) !== NoContext;
+  // if context._id === NoContext, that means there are more than 32 contexts
+  // we can't determine if the context exists in child tree
+  // thus always return true
+  return context._id === NoContext || (contexts & context._id) !== NoContext;
 }
 
 export function addContext(
@@ -231,7 +234,7 @@ export function propagateContextChange<T>(
 
     // Visit this fiber.
     const list = fiber.dependencies;
-    if (list !== null) {
+    if (hasContext(fiber.contexts, context) && list !== null) {
       nextFiber = fiber.child;
 
       let dependency = list.firstContext;
@@ -317,7 +320,7 @@ export function propagateContextChange<T>(
       nextFiber = fiber.child;
     }
 
-    if (nextFiber !== null) {
+    if (nextFiber !== null && hasContext(nextFiber.contexts, context)) {
       // Set the return pointer of the child to the work-in-progress fiber.
       nextFiber.return = fiber;
     } else {
