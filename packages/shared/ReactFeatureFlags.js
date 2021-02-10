@@ -135,7 +135,7 @@ export const enableLegacyFBSupport = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
 
 // Replacement for runWithPriority in React internals.
-export const decoupleUpdatePriorityFromScheduler = false;
+export const decoupleUpdatePriorityFromScheduler = true;
 
 export const enableDiscreteEventFlushingChange = false;
 
@@ -149,6 +149,6 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 
 export const enableNonInterruptingNormalPri = false;
 
-export const enableDiscreteEventMicroTasks = false;
+export const enableDiscreteEventMicroTasks = true;
 
-export const enableNativeEventPriorityInference = false;
+export const enableNativeEventPriorityInference = true;
