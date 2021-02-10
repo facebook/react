@@ -376,6 +376,23 @@ jobs:
             cp ./scripts/release/ci-npmrc ~/.npmrc
             scripts/release/publish.js --ci --tags << parameters.dist_tag >>
 
+  # We don't always keep the reconciler forks in sync (otherwise it we wouldn't
+  # have forked it) but during periods when they are meant to be in sync, we
+  # use this job to confirm there are no differences.
+  sync_reconciler_forks:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          name: Confirm reconciler forks are the same
+          command: |
+            yarn replace-fork
+            git diff --quiet || (echo "Reconciler forks are not the same! Run yarn replace-fork. Or, if this was intentional, disable this CI check." && false)
+
+
 workflows:
   version: 2
   stable:
@@ -425,6 +442,11 @@ workflows:
     jobs:
       - setup
       - yarn_flow:
+          requires:
+            - setup
+      # NOTE: This job is only enabled when we want the forks to be in sync.
+      # When the forks intentionally diverge, comment out the job to disable it.
+      - sync_reconciler_forks:
           requires:
             - setup
       - yarn_test:
