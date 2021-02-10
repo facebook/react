@@ -28,6 +28,7 @@ let onWorkStopped;
 // This is hard coded directly to avoid needing to import, and
 // we'll remove this as we replace runWithPriority with React APIs.
 const IdleLanePriority = 2;
+const InputContinuousPriority = 10;
 
 function loadModules() {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -427,6 +428,7 @@ describe('ReactDOMTracing', () => {
       });
 
       // @gate experimental
+      // @gate enableNativeEventPriorityInference
       it('should properly trace interactions when there is work of interleaved priorities', () => {
         const Child = () => {
           Scheduler.unstable_yieldValue('Child');
@@ -502,9 +504,8 @@ describe('ReactDOMTracing', () => {
           let interaction = null;
           SchedulerTracing.unstable_trace('update', 0, () => {
             interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
-            Scheduler.unstable_runWithPriority(
-              Scheduler.unstable_UserBlockingPriority,
-              () => scheduleUpdateWithHidden(),
+            ReactDOM.unstable_runWithPriority(InputContinuousPriority, () =>
+              scheduleUpdateWithHidden(),
             );
           });
           scheduleUpdate();
@@ -549,6 +550,7 @@ describe('ReactDOMTracing', () => {
       });
 
       // @gate experimental
+      // @gate enableNativeEventPriorityInference
       it('should properly trace interactions through a multi-pass SuspenseList render', () => {
         const SuspenseList = React.SuspenseList;
         const Suspense = React.Suspense;
@@ -610,10 +612,9 @@ describe('ReactDOMTracing', () => {
           // Schedule an unrelated low priority update that shouldn't be included
           // in the previous interaction. This is meant to ensure that we don't
           // rely on the whole tree completing to cover up bugs.
-          Scheduler.unstable_runWithPriority(
-            Scheduler.unstable_IdlePriority,
-            () => root.render(<App />),
-          );
+          ReactDOM.unstable_runWithPriority(IdleLanePriority, () => {
+            root.render(<App />);
+          });
 
           expect(onInteractionTraced).toHaveBeenCalledTimes(1);
           expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(

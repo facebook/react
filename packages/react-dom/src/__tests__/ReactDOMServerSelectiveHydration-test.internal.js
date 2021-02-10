@@ -92,6 +92,21 @@ function dispatchClickEvent(target) {
   return target.dispatchEvent(mouseOutEvent);
 }
 
+// TODO: There's currently no React DOM API to opt into Idle priority updates,
+// and there's no native DOM event that maps to idle priority, so this is a
+// temporary workaround. Need something like ReactDOM.unstable_IdleUpdates.
+function TODO_scheduleIdleDOMSchedulerTask(fn) {
+  Scheduler.unstable_runWithPriority(Scheduler.unstable_IdlePriority, () => {
+    const prevEvent = window.event;
+    window.event = {type: 'message'};
+    try {
+      fn();
+    } finally {
+      window.event = prevEvent;
+    }
+  });
+}
+
 describe('ReactDOMServerSelectiveHydration', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
@@ -889,12 +904,10 @@ describe('ReactDOMServerSelectiveHydration', () => {
       expect(Scheduler).toFlushAndYieldThrough(['App', 'Commit']);
 
       // Render an update at Idle priority that needs to update A.
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_IdlePriority,
-        () => {
-          root.render(<App a="AA" />);
-        },
-      );
+
+      TODO_scheduleIdleDOMSchedulerTask(() => {
+        root.render(<App a="AA" />);
+      });
 
       // Start rendering. This will force the first boundary to hydrate
       // by scheduling it at one higher pri than Idle.

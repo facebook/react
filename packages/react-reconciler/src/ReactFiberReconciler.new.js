@@ -101,6 +101,7 @@ export {
   InputDiscreteLanePriority as DiscreteEventPriority,
   InputContinuousLanePriority as ContinuousEventPriority,
   DefaultLanePriority as DefaultEventPriority,
+  IdleLanePriority as IdleEventPriority,
 } from './ReactFiberLane.new';
 
 export {registerMutableSourceForHydration} from './ReactMutableSource.new';

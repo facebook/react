@@ -2248,9 +2248,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Schedule an update at idle pri.
-    Scheduler.unstable_runWithPriority(Scheduler.unstable_IdlePriority, () =>
-      ReactNoop.render(<Foo renderContent={2} />),
-    );
+    ReactNoop.idleUpdates(() => ReactNoop.render(<Foo renderContent={2} />));
     // We won't even work on Idle priority.
     expect(Scheduler).toFlushAndYield([]);
 
@@ -3018,12 +3016,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         setText('B');
 
         await resolveText('C');
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_IdlePriority,
-          () => {
-            setText('C');
-          },
-        );
+        ReactNoop.idleUpdates(() => {
+          setText('C');
+        });
 
         expect(Scheduler).toFlushAndYield([
           // First we attempt the high pri update. It suspends.
@@ -3282,12 +3277,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
         // And another update at lower priority. This will unblock.
         await resolveText('E');
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_IdlePriority,
-          () => {
-            setText('E');
-          },
-        );
+        ReactNoop.idleUpdates(() => {
+          setText('E');
+        });
       });
       // Even though the fragment fiber is not part of the return path, we should
       // be able to finish rendering.
@@ -3838,12 +3830,9 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     await ReactNoop.act(async () => {
       setText('B');
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_IdlePriority,
-        () => {
-          setText('B');
-        },
-      );
+      ReactNoop.idleUpdates(() => {
+        setText('B');
+      });
       // Suspend the first update. The second update doesn't run because it has
       // Idle priority.
       expect(Scheduler).toFlushAndYield(['Suspend! [B]', 'Loading...']);

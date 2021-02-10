@@ -55,6 +55,7 @@ import {
   DefaultEventPriority as DefaultEventPriority_old,
   DiscreteEventPriority as DiscreteEventPriority_old,
   ContinuousEventPriority as ContinuousEventPriority_old,
+  IdleEventPriority as IdleEventPriority_old,
 } from './ReactFiberReconciler.old';
 
 import {
@@ -98,6 +99,7 @@ import {
   DefaultEventPriority as DefaultEventPriority_new,
   DiscreteEventPriority as DiscreteEventPriority_new,
   ContinuousEventPriority as ContinuousEventPriority_new,
+  IdleEventPriority as IdleEventPriority_new,
 } from './ReactFiberReconciler.new';
 
 export const createContainer = enableNewReconciler
@@ -183,6 +185,9 @@ export const DiscreteEventPriority = enableNewReconciler
 export const ContinuousEventPriority = enableNewReconciler
   ? ContinuousEventPriority_new
   : ContinuousEventPriority_old;
+export const IdleEventPriority = enableNewReconciler
+  ? IdleEventPriority_new
+  : IdleEventPriority_old;
 
 //TODO: "psuedo" is spelled "pseudo"
 export const createHasPsuedoClassSelector = enableNewReconciler
