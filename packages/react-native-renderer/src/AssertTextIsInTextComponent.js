@@ -4,10 +4,9 @@ export type HostContext = $ReadOnly<{|
   isInAParentText: boolean,
 |}>;
 
-function stripInformation(
-  internalInstanceHandle: Object,
-) {
-  const possibleCause = '\n\nProbably result of a conditional rendering using boolean concatination as in `cond && <Component ...>`.';
+function stripInformation(internalInstanceHandle: Object) {
+  const possibleCause =
+    '\n\nProbably result of a conditional rendering using boolean concatination as in `cond && <Component ...>`.';
   if (internalInstanceHandle && internalInstanceHandle.sibling) {
     const debugOwner = internalInstanceHandle.sibling._debugOwner;
     const debugSource = internalInstanceHandle.sibling._debugSource;

@@ -29,7 +29,7 @@ import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
 import {DefaultLanePriority as DefaultLanePriority_old} from 'react-reconciler/src/ReactFiberLane.old';
 import {DefaultLanePriority as DefaultLanePriority_new} from 'react-reconciler/src/ReactFiberLane.new';
-import { assertTextInTextComponent } from './AssertTextIsInTextComponent';
+import {assertTextInTextComponent} from './AssertTextIsInTextComponent';
 
 const DefaultLanePriority = enableNewReconciler
   ? DefaultLanePriority_new

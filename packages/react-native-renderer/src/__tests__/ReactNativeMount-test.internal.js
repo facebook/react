@@ -498,7 +498,9 @@ describe('ReactNative', () => {
         </Text>,
         11,
       ),
-    ).toThrow('Text string "hi hello hi" must be rendered within a <Text> component.\n\nProbably result of a conditional rendering using boolean concatination as in `cond && <Component ...>`.');
+    ).toThrow(
+      'Text string "hi hello hi" must be rendered within a <Text> component.\n\nProbably result of a conditional rendering using boolean concatination as in `cond && <Component ...>`.',
+    );
   });
 
   it('should not throw for text inside of an indirect <Text> ancestor', () => {
