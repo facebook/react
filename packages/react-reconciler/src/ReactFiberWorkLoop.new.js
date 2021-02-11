@@ -726,7 +726,8 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       // TODO: Temporary until we confirm this warning is not fired.
       if (
         existingCallbackNode == null &&
-        existingCallbackPriority !== InputDiscreteLanePriority
+        existingCallbackPriority !== InputDiscreteLanePriority &&
+        existingCallbackPriority !== SyncLanePriority
       ) {
         console.error(
           'Expected scheduled callback to exist. This error is likely caused by a bug in React. Please file an issue.',
@@ -747,11 +748,8 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
   if (newCallbackPriority === SyncLanePriority) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
-
-    // TODO: After enableDiscreteEventMicroTasks lands, we can remove the fake node.
-    newCallbackNode = scheduleSyncCallback(
-      performSyncWorkOnRoot.bind(null, root),
-    );
+    scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
+    newCallbackNode = null;
   } else if (newCallbackPriority === SyncBatchedLanePriority) {
     newCallbackNode = scheduleCallback(
       ImmediateSchedulerPriority,
