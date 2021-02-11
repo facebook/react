@@ -471,6 +471,21 @@ export function renderWithHooks<Props, SecondArg>(
     currentHookNameInDev = null;
     hookTypesDev = null;
     hookTypesUpdateIndexDev = -1;
+
+    // Confirm that a static flag was not added or removed since the last
+    // render. If this fires, it suggests that we incorrectly reset the static
+    // flags in some other part of the codebase. This has happened before, for
+    // example, in the SuspenseList implementation.
+    if (
+      current !== null &&
+      (current.flags & PassiveStaticEffect) !==
+        (workInProgress.flags & PassiveStaticEffect)
+    ) {
+      console.error(
+        'Internal React error: Expected static flag was missing. Please ' +
+          'notify the React team.',
+      );
+    }
   }
 
   didScheduleRenderPhaseUpdate = false;
