@@ -70,6 +70,7 @@ export type ReactContext<T> = {
   // to improve DEV tooling display names
   displayName?: string,
   _id: number;
+  _rank: number;
   ...
 };
 

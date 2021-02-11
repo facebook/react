@@ -59,7 +59,6 @@ import {
   resolveForwardRefForHotReloading,
 } from './ReactFiberHotReloading.old';
 import {NoLanes} from './ReactFiberLane.old';
-import {NoContext} from "./ReactFiberNewContext.old";
 import {
   NoMode,
   ConcurrentMode,
@@ -145,7 +144,7 @@ function FiberNode(
 
   this.alternate = null;
 
-  this.contexts = 0;
+  this.contexts = [];
 
   if (enableProfilerTimer) {
     // Note: The following is done to avoid a v8 performance cliff.
@@ -296,7 +295,7 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
 
-  workInProgress.contexts = NoContext;
+  workInProgress.contexts = [];
 
   workInProgress.child = current.child;
   workInProgress.memoizedProps = current.memoizedProps;

@@ -26,7 +26,6 @@ import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {Cache} from './ReactFiberCacheComponent.old';
-import type {Contexts} from './ReactFiberNewContext.old';
 
 // Unwind Circular: moved from ReactFiberHooks.old
 export type HookType =
@@ -60,6 +59,8 @@ export type Dependencies = {
   firstContext: ContextDependency<mixed> | null,
   ...
 };
+
+export type Contexts = number[];
 
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
@@ -127,6 +128,9 @@ export type Fiber = {|
   // Dependencies (contexts, events) for this fiber, if it has any
   dependencies: Dependencies | null,
 
+  // Context bitset
+  contexts: Contexts,
+
   // Bitfield that describes properties about the fiber and its subtree. E.g.
   // the ConcurrentMode flag indicates whether the subtree should be async-by-
   // default. When a fiber is created, it inherits the mode of its
@@ -151,8 +155,6 @@ export type Fiber = {|
 
   lanes: Lanes,
   childLanes: Lanes,
-
-  contexts: Contexts,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save

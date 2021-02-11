@@ -12,17 +12,7 @@ import {REACT_PROVIDER_TYPE, REACT_CONTEXT_TYPE} from 'shared/ReactSymbols';
 import type {ReactContext} from 'shared/ReactTypes';
 
 let id = 0;
-
-export const ContextNoId = 0;
-
-function createId() {
-  if (id < 32) {
-    const nextId = 1 << id;
-    id++;
-    return nextId;
-  }
-  return ContextNoId;
-}
+let rank = 0;
 
 export function createContext<T>(
   defaultValue: T,
@@ -45,6 +35,13 @@ export function createContext<T>(
     }
   }
 
+  if (id === 32) {
+    id = 0;
+    rank++;
+  }
+  const nextId = 1 << id;
+  id++;
+
   const context: ReactContext<T> = {
     $$typeof: REACT_CONTEXT_TYPE,
     _calculateChangedBits: calculateChangedBits,
@@ -61,7 +58,8 @@ export function createContext<T>(
     // These are circular
     Provider: (null: any),
     Consumer: (null: any),
-    _id: createId(),
+    _id: nextId,
+    _rank: rank,
   };
 
   context.Provider = {
