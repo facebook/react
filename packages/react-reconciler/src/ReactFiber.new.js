@@ -289,7 +289,12 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
 
   // Reset all effects except static ones.
   // Static effects are not specific to a render.
-  workInProgress.flags = current.flags & StaticMask;
+  // FIXME: I intentionally broke this to confirm that it triggers a warning
+  // in dev. We should not reset the whole `flags` bitmask; we should preserve
+  // the static flags.
+  // workInProgress.flags = current.flags & StaticMask;
+  workInProgress.flags = NoFlags;
+
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
 
