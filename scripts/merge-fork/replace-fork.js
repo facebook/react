@@ -5,20 +5,22 @@
 // Copies the contents of the new fork into the old fork
 
 const {promisify} = require('util');
-const glob = promisify(require('glob'));
 const {spawnSync} = require('child_process');
 const fs = require('fs');
-const minimist = require('minimist');
+const path = require('path');
 
 const stat = promisify(fs.stat);
 const copyFile = promisify(fs.copyFile);
 
-const argv = minimist(process.argv.slice(2), {
-  boolean: ['reverse'],
-});
+const RECONCILER_SRC = 'packages/react-reconciler/src/';
+const argv = process.argv.slice(2);
 
 async function main() {
-  const oldFilenames = await glob('packages/react-reconciler/**/*.old.js');
+  const oldFilenames = fs
+    .readdirSync(path.resolve(__dirname, '../../', RECONCILER_SRC))
+    .filter(fn => fn.endsWith('.old.js'))
+    .map(filename => 'packages/react-reconciler/src/' + filename);
+
   await Promise.all(oldFilenames.map(unforkFile));
 
   // Use ESLint to autofix imports
@@ -47,7 +49,7 @@ async function unforkFile(oldFilename) {
     return;
   }
 
-  if (argv.reverse) {
+  if (argv.indexOf('--reverse') >= 0) {
     await copyFile(oldFilename, newFilename);
   } else {
     await copyFile(newFilename, oldFilename);

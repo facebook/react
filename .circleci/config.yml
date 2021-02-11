@@ -384,8 +384,6 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - run: yarn workspaces info | head -n -1 > workspace_info.txt
-      - *restore_node_modules
       - run:
           name: Confirm reconciler forks are the same
           command: |
