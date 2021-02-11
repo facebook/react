@@ -20,6 +20,7 @@ import type {
 
 import {mountSafeCallback_NOT_REALLY_SAFE} from './NativeMethodsMixinUtils';
 import {create, diff} from './ReactNativeAttributePayload';
+import {assertTextInTextComponent} from './AssertTextIsInTextComponent';
 
 import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
@@ -250,10 +251,7 @@ export function createTextInstance(
   hostContext: HostContext,
   internalInstanceHandle: Object,
 ): TextInstance {
-  invariant(
-    hostContext.isInAParentText,
-    'Text strings must be rendered within a <Text> component.',
-  );
+  assertTextInTextComponent(hostContext, text, internalInstanceHandle);
 
   const tag = nextReactTag;
   nextReactTag += 2;

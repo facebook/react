@@ -29,6 +29,7 @@ import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
 
 import {DefaultLanePriority as DefaultLanePriority_old} from 'react-reconciler/src/ReactFiberLane.old';
 import {DefaultLanePriority as DefaultLanePriority_new} from 'react-reconciler/src/ReactFiberLane.new';
+import { assertTextInTextComponent } from './AssertTextIsInTextComponent';
 
 const DefaultLanePriority = enableNewReconciler
   ? DefaultLanePriority_new
@@ -152,10 +153,7 @@ export function createTextInstance(
   hostContext: HostContext,
   internalInstanceHandle: Object,
 ): TextInstance {
-  invariant(
-    hostContext.isInAParentText,
-    'Text strings must be rendered within a <Text> component.',
-  );
+  assertTextInTextComponent(hostContext, text, internalInstanceHandle);
 
   const tag = allocateTag();
 
