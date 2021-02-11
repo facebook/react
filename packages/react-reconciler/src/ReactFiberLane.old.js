@@ -93,8 +93,8 @@ const InputContinuousLane: Lanes = /*                   */ 0b0000000000000000000
 export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000001000000;
 export const DefaultLane: Lanes = /*                    */ 0b0000000000000000000000010000000;
 
-const TransitionLanes: Lanes = /*                       */ 0b0000000011111111111111100000000;
 const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000000000100000000;
+const TransitionLanes: Lanes = /*                       */ 0b0000000011111111111111000000000;
 const TransitionLane1: Lane = /*                        */ 0b0000000000000000000001000000000;
 const TransitionLane2: Lane = /*                        */ 0b0000000000000000000010000000000;
 const TransitionLane3: Lane = /*                        */ 0b0000000000000000000100000000000;
