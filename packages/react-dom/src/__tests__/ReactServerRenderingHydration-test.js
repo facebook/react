@@ -601,4 +601,15 @@ describe('ReactDOMServerHydration', () => {
       'Warning: Did not expect server HTML to contain a <p> in <div>',
     );
   });
+
+  it('should warn if there is a mismatch on defaultChecked prop', () => {
+    const element = document.createElement('div');
+    element.innerHTML = '<input type="radio" checked />';
+
+    expect(() => {
+      ReactDOM.hydrate(<input type="radio" defaultChecked={false} />, element);
+    }).toErrorDev(
+      'Warning: Prop `defaultChecked` did not match. Server: "true" Client: "false"',
+    );
+  });
 });

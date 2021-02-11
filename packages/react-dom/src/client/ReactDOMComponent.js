@@ -1103,6 +1103,17 @@ export function diffHydratedProperties(
         if (nextProp !== serverValue && !isMismatchDueToBadCasing) {
           warnForPropDifference(propKey, serverValue, nextProp);
         }
+      } else if (propKey === 'defaultChecked') {
+        const isMismatch =
+          (domElement.hasAttribute('checked') && nextProp === false) ||
+          (!domElement.hasAttribute('checked') && nextProp !== false);
+        if (isMismatch) {
+          warnForPropDifference(
+            propKey,
+            domElement.hasAttribute('checked'),
+            nextProp,
+          );
+        }
       }
     }
   }
