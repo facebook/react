@@ -595,7 +595,7 @@ describe('ChangeEventPlugin', () => {
     });
 
     // @gate experimental
-    it('works with label activation behavior in a browser when clicking a label', () => {
+    it('works with label activation behavior in a browser when clicking a label', async () => {
       // We're simulating what would happen in a browser (tested in Chrome 84) if a label that is associated with a checkbox is clicked.
       // A user click on the label creates the following event order:
       // - mousedown event on label
@@ -611,20 +611,24 @@ describe('ChangeEventPlugin', () => {
       const eventLog = [];
       function ControlledInput() {
         const [checked, setChecked] = React.useState(false);
-        const [, setFocused] = React.useState(false);
+        const [focused, setFocused] = React.useState(false);
 
-        Scheduler.unstable_yieldValue(`render`);
+        Scheduler.unstable_yieldValue(
+          `render (checked: ${checked}, focused: ${focused})`,
+        );
 
         return (
           <input
             checked={checked}
             onChange={event => {
-              eventLog.push('change');
+              eventLog.push(`change (checked: ${event.target.checked})`);
               setChecked(event.target.checked);
             }}
-            onClick={() => eventLog.push('click')}
-            onFocus={() => {
-              eventLog.push('focus');
+            onClick={event => {
+              eventLog.push(`click (checked: ${event.target.checked})`);
+            }}
+            onFocus={event => {
+              eventLog.push(`focus (checked: ${event.target.checked})`);
               setFocused(true);
             }}
             ref={el => (input = el)}
@@ -634,16 +638,51 @@ describe('ChangeEventPlugin', () => {
       }
       root.render(<ControlledInput />);
 
-      expect(Scheduler).toFlushAndYield(['render']);
+      expect(Scheduler).toFlushAndYield([
+        'render (checked: false, focused: false)',
+      ]);
+      expect(eventLog).toEqual([]);
+
       expect(input.checked).toBe(false);
 
-      input.focus();
-      input.click();
+      // We don't actually want to flush here.
+      // focus and click events should be dispatched synchronously mimicking the behavior a label-click would cause.
+      // We have to flush in a browser as well: https://codesandbox.io/s/focus-must-be-flushed-before-click-lnmeh?file=/src/index.js
+      if (gate(flags => flags.enableDiscreteEventMicroTasks)) {
+        input.dispatchEvent(
+          new FocusEvent('focusin', {bubbles: true, cancelable: false}),
+        );
+        await null;
+      } else {
+        TestUtils.unstable_concurrentAct(() => {
+          input.dispatchEvent(
+            new FocusEvent('focusin', {bubbles: true, cancelable: false}),
+          );
+        });
+      }
+      if (gate(flags => flags.enableDiscreteEventMicroTasks)) {
+        input.dispatchEvent(
+          new MouseEvent('click', {bubbles: true, cancelable: true}),
+        );
+        await null;
+      } else {
+        TestUtils.unstable_concurrentAct(() => {
+          input.dispatchEvent(
+            new MouseEvent('click', {bubbles: true, cancelable: true}),
+          );
+        });
+      }
 
-      // TODO what state should be yielded?
-      expect(eventLog).toEqual(['focus', 'click']);
-      expect(Scheduler).toHaveYielded(['render']);
       expect(input.checked).toBe(true);
+      expect(eventLog).toEqual([
+        'focus (checked: false)',
+        'click (checked: true)',
+        'change (checked: true)',
+      ]);
+      expect(Scheduler).toHaveYielded([
+        'render (checked: false, focused: true)',
+        'render (checked: true, focused: true)',
+      ]);
     });
 
     // @gate experimental
