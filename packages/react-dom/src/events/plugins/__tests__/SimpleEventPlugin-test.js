@@ -477,8 +477,8 @@ describe('SimpleEventPlugin', function() {
         // At the end, both counters should equal the total number of clicks
         expect(Scheduler).toHaveYielded([
           'High-pri count: 8, Low-pri count: 0',
-
-          // TODO: with cancellation, this required another flush?
+        ]);
+        expect(Scheduler).toFlushAndYield([
           'High-pri count: 8, Low-pri count: 8',
         ]);
       } else {
