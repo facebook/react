@@ -1432,12 +1432,11 @@ function updateEffectImpl(fiberFlags, hookFlags, create, deps): void {
   }
 
   if (__DEV__) {
-    if (
-      (hookFlags & HookPassive) !== HookNoFlags &&
-      // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
-      'undefined' !== typeof jest
-    ) {
-      warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
+    // $FlowExpectedError - jest isn't a global, and isn't recognized outside of tests
+    if ('undefined' !== typeof jest) {
+      if ((hookFlags & HookPassive) !== HookNoFlags) {
+        warnIfNotCurrentlyActingEffectsInDEV(currentlyRenderingFiber);
+      }
     }
   }
 
