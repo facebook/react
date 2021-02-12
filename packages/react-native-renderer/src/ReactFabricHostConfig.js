@@ -193,6 +193,7 @@ export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMutation';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
 
 export function appendInitialChild(
   parentInstance: Instance,
@@ -360,9 +361,6 @@ export const warnsIfNotActing = false;
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
 export const noTimeout = -1;
-export function scheduleMicrotask(callback: Function) {
-  invariant(false, 'Not implemented.');
-}
 
 // -------------------
 //     Persistence

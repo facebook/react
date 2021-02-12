@@ -93,8 +93,9 @@ import {
   warnsIfNotActing,
   afterActiveInstanceBlur,
   clearContainer,
-  scheduleMicrotask,
   getCurrentEventPriority,
+  supportsMicrotasks,
+  scheduleMicrotask,
 } from './ReactFiberHostConfig';
 
 import {
@@ -219,7 +220,6 @@ import {
   syncNestedUpdateFlag,
 } from './ReactProfilerTimer.new';
 
-import {enableDiscreteEventMicroTasks} from 'shared/ReactFeatureFlags';
 // DEV stuff
 import getComponentName from 'shared/getComponentName';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
@@ -756,7 +756,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       performSyncWorkOnRoot.bind(null, root),
     );
   } else if (
-    enableDiscreteEventMicroTasks &&
+    supportsMicrotasks &&
     newCallbackPriority === InputDiscreteLanePriority
   ) {
     scheduleMicrotask(performSyncWorkOnRoot.bind(null, root));
