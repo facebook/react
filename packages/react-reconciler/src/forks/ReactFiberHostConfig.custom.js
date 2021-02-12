@@ -54,7 +54,6 @@ export const shouldSetTextContent = $$$hostConfig.shouldSetTextContent;
 export const createTextInstance = $$$hostConfig.createTextInstance;
 export const scheduleTimeout = $$$hostConfig.scheduleTimeout;
 export const cancelTimeout = $$$hostConfig.cancelTimeout;
-export const scheduleMicrotask = $$$hostConfig.scheduleMicrotask;
 export const noTimeout = $$$hostConfig.noTimeout;
 export const now = $$$hostConfig.now;
 export const isPrimaryRenderer = $$$hostConfig.isPrimaryRenderer;
@@ -74,6 +73,13 @@ export const preparePortalMount = $$$hostConfig.preparePortalMount;
 export const prepareScopeUpdate = $$$hostConfig.preparePortalMount;
 export const getInstanceFromScope = $$$hostConfig.getInstanceFromScope;
 export const getCurrentEventPriority = $$$hostConfig.getCurrentEventPriority;
+
+// -------------------
+//      Microtasks
+//     (optional)
+// -------------------
+export const supportsMicrotasks = $$$hostConfig.supportsMicrotasks;
+export const scheduleMicrotask = $$$hostConfig.scheduleMicrotask;
 
 // -------------------
 //      Test selectors

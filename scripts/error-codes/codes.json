@@ -373,5 +373,6 @@
   "382": "This query has received more parameters than the last time the same query was used. Always pass the exact number of parameters that the query needs.",
   "383": "This query has received fewer parameters than the last time the same query was used. Always pass the exact number of parameters that the query needs.",
   "384": "Refreshing the cache is not supported in Server Components.",
-  "385": "A mutable source was mutated while the %s component was rendering. This is not supported. Move any mutations into event handlers or effects."
+  "385": "A mutable source was mutated while the %s component was rendering. This is not supported. Move any mutations into event handlers or effects.",
+  "386": "The current renderer does not support microtasks. This error is likely caused by a bug in React. Please file an issue."
 }

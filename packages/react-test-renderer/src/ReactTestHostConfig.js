@@ -58,6 +58,7 @@ export type RendererInspectionConfig = $ReadOnly<{||}>;
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
 
 const NO_CONTEXT = {};
 const UPDATE_SIGNAL = {};
@@ -230,21 +231,7 @@ export const warnsIfNotActing = true;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
-export const scheduleMicrotask =
-  typeof queueMicrotask === 'function'
-    ? queueMicrotask
-    : typeof Promise !== 'undefined'
-    ? (callback: Function) =>
-        Promise.resolve(null)
-          .then(callback)
-          .catch(handleErrorInNextTick)
-    : scheduleTimeout; // TODO: Determine the best fallback here.
 
-function handleErrorInNextTick(error) {
-  setTimeout(() => {
-    throw error;
-  });
-}
 export const noTimeout = -1;
 
 // -------------------

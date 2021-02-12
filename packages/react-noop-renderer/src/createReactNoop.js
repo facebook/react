@@ -27,7 +27,10 @@ import {
   LegacyRoot,
 } from 'react-reconciler/src/ReactRootTags';
 
-import {enableNativeEventPriorityInference} from 'shared/ReactFeatureFlags';
+import {
+  enableNativeEventPriorityInference,
+  enableDiscreteEventMicroTasks,
+} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
 const {IsSomeRendererActing} = ReactSharedInternals;
@@ -372,6 +375,8 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     scheduleTimeout: setTimeout,
     cancelTimeout: clearTimeout,
     noTimeout: -1,
+
+    supportsMicrotasks: enableDiscreteEventMicroTasks,
     scheduleMicrotask:
       typeof queueMicrotask === 'function'
         ? queueMicrotask
