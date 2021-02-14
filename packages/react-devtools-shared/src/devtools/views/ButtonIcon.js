@@ -23,6 +23,7 @@ export type IconType =
   | 'export'
   | 'filter'
   | 'import'
+  | 'launch-editor'
   | 'log-data'
   | 'more'
   | 'next'
@@ -81,6 +82,9 @@ export default function ButtonIcon({className = '', type}: Props) {
       break;
     case 'import':
       pathData = PATH_IMPORT;
+      break;
+    case 'launch-editor':
+      pathData = PATH_LAUNCH_EDITOR;
       break;
     case 'log-data':
       pathData = PATH_LOG_DATA;
@@ -244,3 +248,9 @@ const PATH_VIEW_DOM = `
 const PATH_VIEW_SOURCE = `
   M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z
   `;
+
+const PATH_LAUNCH_EDITOR = `M896 435.2a25.6 25.6 0 0 1-25.6-25.6v-256H640a25.6 25.6 0 1 1 0-51.2h256a25.6 25.6 0 0 1 25.6
+  25.6v281.6a25.6 25.6 0 0 1-25.6 25.6zM844.8 921.6H128a25.6 25.6 0 0 1-25.6-25.6V179.2a25.6 25.6 0 0 1 25.6-25.6h358.4a25.6
+  25.6 0 1 1 0 51.2H153.6v665.6h665.6V537.6a25.6 25.6 0 1 1 51.2 0V896a25.6 25.6 0 0 1-25.6 25.6zM533.952 515.648a25.6
+  25.6 0 0 1-18.112-43.712l362.048-362.048a25.6 25.6 0 0 1 36.224 36.224L552.064 508.16a25.472 25.472 0 0 1-18.112 7.488z
+`;

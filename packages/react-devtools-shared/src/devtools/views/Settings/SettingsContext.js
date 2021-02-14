@@ -18,10 +18,12 @@ import {
 import {
   COMFORTABLE_LINE_HEIGHT,
   COMPACT_LINE_HEIGHT,
+  DEFAULT_OPEN_EDITOR_ENDPOINT,
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
   LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY,
   LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
+  LOCAL_STORAGE_OPEN_EDITOR_ENDPOINT_KEY,
 } from 'react-devtools-shared/src/constants';
 import {useLocalStorage} from '../hooks';
 import {BridgeContext} from '../context';
@@ -44,6 +46,9 @@ type Context = {|
 
   breakOnConsoleErrors: boolean,
   setBreakOnConsoleErrors: (value: boolean) => void,
+
+  launchEditorEndpoint: string,
+  setLaunchEditorEndpoint(value: string): void,
 
   showInlineWarningsAndErrors: boolean,
   setShowInlineWarningsAndErrors: (value: boolean) => void,
@@ -83,6 +88,7 @@ function SettingsContextController({
     'React::DevTools::theme',
     'auto',
   );
+
   const [
     appendComponentStack,
     setAppendComponentStack,
@@ -93,6 +99,13 @@ function SettingsContextController({
   ] = useLocalStorage<boolean>(
     LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
     false,
+  );
+  const [
+    launchEditorEndpoint,
+    setLaunchEditorEndpoint,
+  ] = useLocalStorage<string>(
+    LOCAL_STORAGE_OPEN_EDITOR_ENDPOINT_KEY,
+    DEFAULT_OPEN_EDITOR_ENDPOINT,
   );
   const [
     showInlineWarningsAndErrors,
@@ -176,6 +189,7 @@ function SettingsContextController({
       appendComponentStack,
       breakOnConsoleErrors,
       displayDensity,
+      launchEditorEndpoint,
       lineHeight:
         displayDensity === 'compact'
           ? COMPACT_LINE_HEIGHT
@@ -183,6 +197,7 @@ function SettingsContextController({
       setAppendComponentStack,
       setBreakOnConsoleErrors,
       setDisplayDensity,
+      setLaunchEditorEndpoint,
       setTheme,
       setTraceUpdatesEnabled,
       setShowInlineWarningsAndErrors,
@@ -194,9 +209,11 @@ function SettingsContextController({
       appendComponentStack,
       breakOnConsoleErrors,
       displayDensity,
+      launchEditorEndpoint,
       setAppendComponentStack,
       setBreakOnConsoleErrors,
       setDisplayDensity,
+      setLaunchEditorEndpoint,
       setTheme,
       setTraceUpdatesEnabled,
       setShowInlineWarningsAndErrors,

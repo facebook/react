@@ -119,6 +119,12 @@ type UpdateConsolePatchSettingsParams = {|
   showInlineWarningsAndErrors: boolean,
 |};
 
+type LauchEditorParams = {|
+  launchEditorEndpoint: string,
+  fileName: string,
+  lineNumber: string,
+|};
+
 export type BackendEvents = {|
   extensionBackendInitialized: [],
   inspectedElement: [InspectedElementPayload],
@@ -155,6 +161,7 @@ type FrontendEvents = {|
   getProfilingStatus: [],
   highlightNativeElement: [HighlightElementInDOM],
   inspectElement: [InspectElementParams],
+  launchEditor: [LauchEditorParams],
   logElementToConsole: [ElementAndRendererID],
   overrideSuspense: [OverrideSuspense],
   overrideValueAtPath: [OverrideValueAtPath],
