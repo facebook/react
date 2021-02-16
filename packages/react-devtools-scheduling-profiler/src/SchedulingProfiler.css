@@ -1,0 +1,108 @@
+.SchedulingProfiler {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sans-normal);
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+.SchedulingProfiler, .SchedulingProfiler * {
+  box-sizing: border-box;
+  -webkit-font-smoothing: var(--font-smoothing);
+}
+
+.Content {
+  position: relative;
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.Paragraph {
+  text-align: center;
+}
+
+.ErrorMessage {
+  margin: 0.5rem 0;
+  color: var(--color-dim);
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+}
+
+.Row {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  flex-flow: wrap;
+}
+
+.EmptyStateContainer {
+  text-align: center;
+}
+
+.Header {
+  font-size: var(--font-size-sans-large);
+  margin-bottom: 0.5rem;
+}
+
+.Toolbar {
+  height: 2.25rem;
+  padding: 0 0.25rem;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.VRule {
+  height: 20px;
+  width: 1px;
+  border-left: 1px solid var(--color-border);
+  padding-left: 0.25rem;
+  margin-left: 0.25rem;
+}
+
+.Spacer {
+  flex: 1;
+}
+
+.Link {
+  color: var(--color-button);
+}
+
+.ScreenshotWrapper {
+  max-width: 30rem;
+  padding: 0 1rem;
+  margin-bottom: 2rem;
+}
+
+.Screenshot {
+  width: 100%;
+  border-radius: 0.4em;
+  border: 2px solid var(--color-border);
+}
+
+.AppName {
+  font-size: var(--font-size-sans-large);
+  margin-right: 0.5rem;
+  user-select: none;
+}
+
+@media screen and (max-width: 350px) {
+  .AppName {
+    display: none;
+  }
+}
+
+@media screen and (max-height: 600px) {
+  .ScreenshotWrapper {
+    display: none;
+  }
+}

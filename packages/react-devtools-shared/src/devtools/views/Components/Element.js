@@ -14,12 +14,15 @@ import Badge from './Badge';
 import ButtonIcon from '../ButtonIcon';
 import {createRegExp} from '../utils';
 import {TreeDispatcherContext, TreeStateContext} from './TreeContext';
+import {SettingsContext} from '../Settings/SettingsContext';
 import {StoreContext} from '../context';
+import {useSubscription} from '../hooks';
 
 import type {ItemData} from './Tree';
-import type {Element} from './types';
+import type {Element as ElementType} from './types';
 
 import styles from './Element.css';
+import Icon from '../Icon';
 
 type Props = {
   data: ItemData,
@@ -28,12 +31,13 @@ type Props = {
   ...
 };
 
-export default function ElementView({data, index, style}: Props) {
+export default function Element({data, index, style}: Props) {
   const store = useContext(StoreContext);
   const {ownerFlatTree, ownerID, selectedElementID} = useContext(
     TreeStateContext,
   );
   const dispatch = useContext(TreeDispatcherContext);
+  const {showInlineWarningsAndErrors} = React.useContext(SettingsContext);
 
   const element =
     ownerFlatTree !== null
@@ -45,6 +49,24 @@ export default function ElementView({data, index, style}: Props) {
   const {isNavigatingWithKeyboard, onElementMouseEnter, treeFocused} = data;
   const id = element === null ? null : element.id;
   const isSelected = selectedElementID === id;
+
+  const errorsAndWarningsSubscription = useMemo(
+    () => ({
+      getCurrentValue: () =>
+        element === null
+          ? {errorCount: 0, warningCount: 0}
+          : store.getErrorAndWarningCountForElementID(element.id),
+      subscribe: (callback: Function) => {
+        store.addListener('mutated', callback);
+        return () => store.removeListener('mutated', callback);
+      },
+    }),
+    [store, element],
+  );
+  const {errorCount, warningCount} = useSubscription<{|
+    errorCount: number,
+    warningCount: number,
+  |}>(errorsAndWarningsSubscription);
 
   const handleDoubleClick = () => {
     if (id !== null) {
@@ -81,7 +103,7 @@ export default function ElementView({data, index, style}: Props) {
 
   // Handle elements that are removed from the tree while an async render is in progress.
   if (element == null) {
-    console.warn(`<ElementView> Could not find element at index ${index}`);
+    console.warn(`<Element> Could not find element at index ${index}`);
 
     // This return needs to happen after hooks, since hooks can't be conditional.
     return null;
@@ -93,7 +115,7 @@ export default function ElementView({data, index, style}: Props) {
     hocDisplayNames,
     key,
     type,
-  } = ((element: any): Element);
+  } = ((element: any): ElementType);
 
   let className = styles.Element;
   if (isSelected) {
@@ -148,6 +170,26 @@ export default function ElementView({data, index, style}: Props) {
             />
           </Badge>
         ) : null}
+        {showInlineWarningsAndErrors && errorCount > 0 && (
+          <Icon
+            type="error"
+            className={
+              isSelected && treeFocused
+                ? styles.ErrorIconContrast
+                : styles.ErrorIcon
+            }
+          />
+        )}
+        {showInlineWarningsAndErrors && warningCount > 0 && (
+          <Icon
+            type="warning"
+            className={
+              isSelected && treeFocused
+                ? styles.WarningIconContrast
+                : styles.WarningIcon
+            }
+          />
+        )}
       </div>
     </div>
   );
@@ -160,7 +202,7 @@ const swallowDoubleClick = event => {
 };
 
 type ExpandCollapseToggleProps = {|
-  element: Element,
+  element: ElementType,
   store: Store,
 |};
 

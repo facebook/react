@@ -16,6 +16,7 @@ let ReactFeatureFlags;
 let Scheduler;
 let SchedulerTracing;
 let TestUtils;
+let act;
 let onInteractionScheduledWorkCompleted;
 let onInteractionTraced;
 let onWorkCanceled;
@@ -27,6 +28,7 @@ let onWorkStopped;
 // This is hard coded directly to avoid needing to import, and
 // we'll remove this as we replace runWithPriority with React APIs.
 const IdleLanePriority = 2;
+const InputContinuousPriority = 10;
 
 function loadModules() {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -41,6 +43,8 @@ function loadModules() {
   Scheduler = require('scheduler');
   SchedulerTracing = require('scheduler/tracing');
   TestUtils = require('react-dom/test-utils');
+
+  act = TestUtils.unstable_concurrentAct;
 
   onInteractionScheduledWorkCompleted = jest.fn();
   onInteractionTraced = jest.fn();
@@ -118,7 +122,7 @@ describe('ReactDOMTracing', () => {
         const root = ReactDOM.createRoot(container);
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
-          TestUtils.act(() => {
+          act(() => {
             root.render(
               <React.Profiler id="test" onRender={onRender}>
                 <App />
@@ -148,12 +152,17 @@ describe('ReactDOMTracing', () => {
         expect(
           onInteractionScheduledWorkCompleted,
         ).toHaveBeenLastNotifiedOfInteraction(interaction);
-        // TODO: This is 4 instead of 3 because this update was scheduled at
-        // idle priority, and idle updates are slightly higher priority than
-        // offscreen work. So it takes two render passes to finish it. Profiler
-        // calls `onRender` for the first render even though everything
-        // bails out.
-        expect(onRender).toHaveBeenCalledTimes(4);
+
+        if (gate(flags => flags.enableUseJSStackToTrackPassiveDurations)) {
+          expect(onRender).toHaveBeenCalledTimes(3);
+        } else {
+          // TODO: This is 4 instead of 3 because this update was scheduled at
+          // idle priority, and idle updates are slightly higher priority than
+          // offscreen work. So it takes two render passes to finish it. Profiler
+          // calls `onRender` for the first render even though everything
+          // bails out.
+          expect(onRender).toHaveBeenCalledTimes(4);
+        }
         expect(onRender).toHaveLastRenderedWithInteractions(
           new Set([interaction]),
         );
@@ -190,7 +199,7 @@ describe('ReactDOMTracing', () => {
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
 
-          TestUtils.act(() => {
+          act(() => {
             root.render(
               <React.Profiler id="test" onRender={onRender}>
                 <App />
@@ -269,7 +278,7 @@ describe('ReactDOMTracing', () => {
         const root = ReactDOM.createRoot(container);
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
-          TestUtils.act(() => {
+          act(() => {
             root.render(
               <React.Profiler id="test" onRender={onRender}>
                 <App />
@@ -302,12 +311,16 @@ describe('ReactDOMTracing', () => {
         expect(
           onInteractionScheduledWorkCompleted,
         ).toHaveBeenLastNotifiedOfInteraction(interaction);
-        // TODO: This is 4 instead of 3 because this update was scheduled at
-        // idle priority, and idle updates are slightly higher priority than
-        // offscreen work. So it takes two render passes to finish it. Profiler
-        // calls `onRender` for the first render even though everything
-        // bails out.
-        expect(onRender).toHaveBeenCalledTimes(4);
+        if (gate(flags => flags.enableUseJSStackToTrackPassiveDurations)) {
+          expect(onRender).toHaveBeenCalledTimes(3);
+        } else {
+          // TODO: This is 4 instead of 3 because this update was scheduled at
+          // idle priority, and idle updates are slightly higher priority than
+          // offscreen work. So it takes two render passes to finish it. Profiler
+          // calls `onRender` for the first render even though everything
+          // bails out.
+          expect(onRender).toHaveBeenCalledTimes(4);
+        }
         expect(onRender).toHaveLastRenderedWithInteractions(
           new Set([interaction]),
         );
@@ -364,7 +377,7 @@ describe('ReactDOMTracing', () => {
         const root = ReactDOM.createRoot(container);
 
         // Schedule some idle work without any interactions.
-        TestUtils.act(() => {
+        act(() => {
           root.render(
             <React.Profiler id="test" onRender={onRender}>
               <App />
@@ -415,6 +428,7 @@ describe('ReactDOMTracing', () => {
       });
 
       // @gate experimental
+      // @gate enableNativeEventPriorityInference
       it('should properly trace interactions when there is work of interleaved priorities', () => {
         const Child = () => {
           Scheduler.unstable_yieldValue('Child');
@@ -468,7 +482,7 @@ describe('ReactDOMTracing', () => {
         const container = document.createElement('div');
         const root = ReactDOM.createRoot(container);
 
-        TestUtils.act(() => {
+        act(() => {
           root.render(
             <React.Profiler id="test" onRender={onRender}>
               <App />
@@ -490,9 +504,8 @@ describe('ReactDOMTracing', () => {
           let interaction = null;
           SchedulerTracing.unstable_trace('update', 0, () => {
             interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
-            Scheduler.unstable_runWithPriority(
-              Scheduler.unstable_UserBlockingPriority,
-              () => scheduleUpdateWithHidden(),
+            ReactDOM.unstable_runWithPriority(InputContinuousPriority, () =>
+              scheduleUpdateWithHidden(),
             );
           });
           scheduleUpdate();
@@ -537,6 +550,7 @@ describe('ReactDOMTracing', () => {
       });
 
       // @gate experimental
+      // @gate enableNativeEventPriorityInference
       it('should properly trace interactions through a multi-pass SuspenseList render', () => {
         const SuspenseList = React.SuspenseList;
         const Suspense = React.Suspense;
@@ -568,7 +582,7 @@ describe('ReactDOMTracing', () => {
 
         let interaction;
 
-        TestUtils.act(() => {
+        act(() => {
           SchedulerTracing.unstable_trace('initialization', 0, () => {
             interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
             // This render is only CPU bound. Nothing suspends.
@@ -598,10 +612,9 @@ describe('ReactDOMTracing', () => {
           // Schedule an unrelated low priority update that shouldn't be included
           // in the previous interaction. This is meant to ensure that we don't
           // rely on the whole tree completing to cover up bugs.
-          Scheduler.unstable_runWithPriority(
-            Scheduler.unstable_IdlePriority,
-            () => root.render(<App />),
-          );
+          ReactDOM.unstable_runWithPriority(IdleLanePriority, () => {
+            root.render(<App />);
+          });
 
           expect(onInteractionTraced).toHaveBeenCalledTimes(1);
           expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(

@@ -22,6 +22,8 @@ module.exports = {
   timers: 'fake',
   snapshotSerializers: [require.resolve('jest-snapshot-serializer-raw')],
 
+  testSequencer: require.resolve('./jestSequencer'),
+
   // TODO: Upgrade to Jest 26 which uses jsdom 16 by default.
   testEnvironment: require.resolve('jest-environment-jsdom-sixteen'),
 };

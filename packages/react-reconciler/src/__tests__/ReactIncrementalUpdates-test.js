@@ -17,7 +17,7 @@ let Scheduler;
 // Copied from ReactFiberLanes. Don't do this!
 // This is hard coded directly to avoid needing to import, and
 // we'll remove this as we replace runWithPriority with React APIs.
-const InputContinuousLanePriority = 12;
+const InputContinuousLanePriority = 10;
 
 describe('ReactIncrementalUpdates', () => {
   beforeEach(() => {
@@ -320,7 +320,16 @@ describe('ReactIncrementalUpdates', () => {
     });
 
     expect(instance.state).toEqual({a: 'a', b: 'b'});
-    expect(Scheduler).toHaveYielded(['componentWillReceiveProps', 'render']);
+
+    if (gate(flags => flags.deferRenderPhaseUpdateToNextBatch)) {
+      expect(Scheduler).toHaveYielded([
+        'componentWillReceiveProps',
+        'render',
+        'render',
+      ]);
+    } else {
+      expect(Scheduler).toHaveYielded(['componentWillReceiveProps', 'render']);
+    }
   });
 
   it('updates triggered from inside a class setState updater', () => {

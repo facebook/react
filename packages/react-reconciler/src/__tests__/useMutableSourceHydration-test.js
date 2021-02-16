@@ -14,6 +14,7 @@ let ReactDOM;
 let ReactDOMServer;
 let Scheduler;
 let act;
+let createMutableSource;
 let useMutableSource;
 
 describe('useMutableSourceHydration', () => {
@@ -25,9 +26,19 @@ describe('useMutableSourceHydration', () => {
     ReactDOMServer = require('react-dom/server');
     Scheduler = require('scheduler');
 
-    useMutableSource = React.useMutableSource;
-    act = require('react-dom/test-utils').act;
+    act = require('react-dom/test-utils').unstable_concurrentAct;
+    createMutableSource = React.unstable_createMutableSource;
+    useMutableSource = React.unstable_useMutableSource;
   });
+
+  function dispatchAndSetCurrentEvent(el, event) {
+    try {
+      window.event = event;
+      el.dispatchEvent(event);
+    } finally {
+      window.event = undefined;
+    }
+  }
 
   const defaultGetSnapshot = source => source.value;
   const defaultSubscribe = (source, callback) => source.subscribe(callback);
@@ -123,10 +134,6 @@ describe('useMutableSourceHydration', () => {
     };
   }
 
-  function createMutableSource(source) {
-    return React.createMutableSource(source, param => param.version);
-  }
-
   function Component({getSnapshot, label, mutableSource, subscribe}) {
     const snapshot = useMutableSource(mutableSource, getSnapshot, subscribe);
     Scheduler.unstable_yieldValue(`${label}:${snapshot}`);
@@ -136,7 +143,7 @@ describe('useMutableSourceHydration', () => {
   // @gate experimental
   it('should render and hydrate', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     function TestComponent() {
       return (
@@ -173,7 +180,7 @@ describe('useMutableSourceHydration', () => {
   // @gate experimental
   it('should detect a tear before hydrating a component', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     function TestComponent() {
       return (
@@ -217,7 +224,7 @@ describe('useMutableSourceHydration', () => {
   // @gate experimental
   it('should detect a tear between hydrating components', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     function TestComponent() {
       return (
@@ -269,7 +276,7 @@ describe('useMutableSourceHydration', () => {
   // @gate experimental
   it('should detect a tear between hydrating components reading from different parts of a source', () => {
     const source = createComplexSource('a:one', 'b:one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     // Subscribe to part of the store.
     const getSnapshotA = s => s.valueA;
@@ -334,9 +341,10 @@ describe('useMutableSourceHydration', () => {
   });
 
   // @gate experimental
+  // @gate enableNativeEventPriorityInference
   it('should detect a tear during a higher priority interruption', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     function Unrelated({flag}) {
       Scheduler.unstable_yieldValue(flag);
@@ -373,16 +381,22 @@ describe('useMutableSourceHydration', () => {
         mutableSources: [mutableSource],
       },
     });
+
     expect(() => {
       act(() => {
         root.render(<TestComponent flag={1} />);
         expect(Scheduler).toFlushAndYieldThrough([1]);
 
         // Render an update which will be higher priority than the hydration.
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => root.render(<TestComponent flag={2} />),
-        );
+        // We can do this by scheduling the update inside a mouseover event.
+        const arbitraryElement = document.createElement('div');
+        const mouseOverEvent = document.createEvent('MouseEvents');
+        mouseOverEvent.initEvent('mouseover', true, true);
+        arbitraryElement.addEventListener('mouseover', () => {
+          root.render(<TestComponent flag={2} />);
+        });
+        dispatchAndSetCurrentEvent(arbitraryElement, mouseOverEvent);
+
         expect(Scheduler).toFlushAndYieldThrough([2]);
 
         source.value = 'two';

@@ -28,12 +28,9 @@ export default class Chrome extends Component {
             <div>
               <ThemeToggleButton
                 onChange={theme => {
-                  React.unstable_withSuspenseConfig(
-                    () => {
-                      this.setState({theme});
-                    },
-                    {timeoutMs: 6000}
-                  );
+                  React.startTransition(() => {
+                    this.setState({theme});
+                  });
                 }}
               />
             </div>

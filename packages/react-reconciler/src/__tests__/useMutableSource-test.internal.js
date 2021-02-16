@@ -16,22 +16,24 @@ let React;
 let ReactFeatureFlags;
 let ReactNoop;
 let Scheduler;
-let useMutableSource;
 let act;
+let createMutableSource;
+let useMutableSource;
 
 function loadModules() {
   jest.resetModules();
   jest.useFakeTimers();
 
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
   ReactFeatureFlags.enableSchedulerTracing = true;
   ReactFeatureFlags.enableProfilerTimer = true;
+
   React = require('react');
   ReactNoop = require('react-noop-renderer');
   Scheduler = require('scheduler');
-  useMutableSource = React.useMutableSource;
   act = ReactNoop.act;
+  createMutableSource = React.unstable_createMutableSource;
+  useMutableSource = React.unstable_useMutableSource;
 }
 
 describe('useMutableSource', () => {
@@ -129,10 +131,6 @@ describe('useMutableSource', () => {
     };
   }
 
-  function createMutableSource(source) {
-    return React.createMutableSource(source, param => param.version);
-  }
-
   function Component({getSnapshot, label, mutableSource, subscribe}) {
     const snapshot = useMutableSource(mutableSource, getSnapshot, subscribe);
     Scheduler.unstable_yieldValue(`${label}:${snapshot}`);
@@ -144,7 +142,7 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('should subscribe to a source and schedule updates when it changes', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     act(() => {
       ReactNoop.renderToRootWithID(
@@ -212,7 +210,7 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('should restart work if a new source is mutated during render', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     act(() => {
       ReactNoop.render(
@@ -247,7 +245,7 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('should schedule an update if a new source is mutated between render and commit (subscription)', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     act(() => {
       ReactNoop.render(
@@ -287,10 +285,16 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('should unsubscribe and resubscribe if a new source is used', () => {
     const sourceA = createSource('a-one');
-    const mutableSourceA = createMutableSource(sourceA);
+    const mutableSourceA = createMutableSource(
+      sourceA,
+      param => param.versionA,
+    );
 
     const sourceB = createSource('b-one');
-    const mutableSourceB = createMutableSource(sourceB);
+    const mutableSourceB = createMutableSource(
+      sourceB,
+      param => param.versionB,
+    );
 
     act(() => {
       ReactNoop.render(
@@ -338,7 +342,7 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('should unsubscribe and resubscribe if a new subscribe function is provided', () => {
     const source = createSource('a-one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     const unsubscribeA = jest.fn();
     const subscribeA = jest.fn(s => {
@@ -403,7 +407,7 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('should re-use previously read snapshot value when reading is unsafe', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     act(() => {
       ReactNoop.render(
@@ -460,7 +464,7 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('should read from source on newly mounted subtree if no pending updates are scheduled for source', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     act(() => {
       ReactNoop.render(
@@ -500,7 +504,7 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('should throw and restart render if source and snapshot are unavailable during an update', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     act(() => {
       ReactNoop.render(
@@ -525,7 +529,7 @@ describe('useMutableSource', () => {
 
       // Changing values should schedule an update with React.
       // Start working on this update but don't finish it.
-      Scheduler.unstable_runWithPriority(Scheduler.unstable_LowPriority, () => {
+      ReactNoop.idleUpdates(() => {
         source.value = 'two';
         expect(Scheduler).toFlushAndYieldThrough(['a:two']);
       });
@@ -534,29 +538,26 @@ describe('useMutableSource', () => {
 
       // Force a higher priority render with a new config.
       // This should signal that the snapshot is not safe and trigger a full re-render.
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_UserBlockingPriority,
-        () => {
-          ReactNoop.render(
-            <>
-              <Component
-                label="a"
-                getSnapshot={newGetSnapshot}
-                mutableSource={mutableSource}
-                subscribe={defaultSubscribe}
-              />
-              <Component
-                label="b"
-                getSnapshot={newGetSnapshot}
-                mutableSource={mutableSource}
-                subscribe={defaultSubscribe}
-              />
-            </>,
-            () => Scheduler.unstable_yieldValue('Sync effect'),
-          );
-        },
-      );
-      expect(Scheduler).toFlushAndYieldThrough([
+      ReactNoop.flushSync(() => {
+        ReactNoop.render(
+          <>
+            <Component
+              label="a"
+              getSnapshot={newGetSnapshot}
+              mutableSource={mutableSource}
+              subscribe={defaultSubscribe}
+            />
+            <Component
+              label="b"
+              getSnapshot={newGetSnapshot}
+              mutableSource={mutableSource}
+              subscribe={defaultSubscribe}
+            />
+          </>,
+          () => Scheduler.unstable_yieldValue('Sync effect'),
+        );
+      });
+      expect(Scheduler).toHaveYielded([
         'a:new:two',
         'b:new:two',
         'Sync effect',
@@ -567,7 +568,7 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('should throw and restart render if source and snapshot are unavailable during a sync update', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     act(() => {
       ReactNoop.render(
@@ -592,7 +593,7 @@ describe('useMutableSource', () => {
 
       // Changing values should schedule an update with React.
       // Start working on this update but don't finish it.
-      Scheduler.unstable_runWithPriority(Scheduler.unstable_LowPriority, () => {
+      ReactNoop.idleUpdates(() => {
         source.value = 'two';
         expect(Scheduler).toFlushAndYieldThrough(['a:two']);
       });
@@ -631,7 +632,7 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('should only update components whose subscriptions fire', () => {
     const source = createComplexSource('a:one', 'b:one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     // Subscribe to part of the store.
     const getSnapshotA = s => s.valueA;
@@ -670,7 +671,7 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('should detect tearing in part of the store not yet subscribed to', () => {
     const source = createComplexSource('a:one', 'b:one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     // Subscribe to part of the store.
     const getSnapshotA = s => s.valueA;
@@ -737,7 +738,7 @@ describe('useMutableSource', () => {
     const MockComponent = jest.fn(Component);
 
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     act(() => {
       ReactNoop.render(
@@ -762,7 +763,7 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('should throw and restart if getSnapshot changes between scheduled update and re-render', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     const newGetSnapshot = s => 'new:' + defaultGetSnapshot(s);
 
@@ -789,26 +790,21 @@ describe('useMutableSource', () => {
       ReactNoop.flushPassiveEffects();
 
       // Change the source (and schedule an update).
-      Scheduler.unstable_runWithPriority(Scheduler.unstable_LowPriority, () => {
-        source.value = 'two';
-      });
+      source.value = 'two';
 
       // Schedule a higher priority update that changes getSnapshot.
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_UserBlockingPriority,
-        () => {
-          updateGetSnapshot(() => newGetSnapshot);
-        },
-      );
+      ReactNoop.flushSync(() => {
+        updateGetSnapshot(() => newGetSnapshot);
+      });
 
-      expect(Scheduler).toFlushAndYield(['only:new:two']);
+      expect(Scheduler).toHaveYielded(['only:new:two']);
     });
   });
 
   // @gate experimental
   it('should recover from a mutation during yield when other work is scheduled', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     act(() => {
       // Start a render that uses the mutable source.
@@ -842,7 +838,7 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('should not throw if the new getSnapshot returns the same snapshot value', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     const onRenderA = jest.fn();
     const onRenderB = jest.fn();
@@ -897,7 +893,7 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('should not throw if getSnapshot changes but the source can be safely read from anyway', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     const newGetSnapshot = s => 'new:' + defaultGetSnapshot(s);
 
@@ -942,7 +938,7 @@ describe('useMutableSource', () => {
         {id: 2, name: 'Bar'},
       ],
     });
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     function FriendsList() {
       const getSnapshot = React.useCallback(
@@ -1004,7 +1000,7 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('should not warn about updates that fire between unmount and passive unsubscribe', () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     function Wrapper() {
       React.useLayoutEffect(() => () => {
@@ -1044,7 +1040,7 @@ describe('useMutableSource', () => {
       a: 'initial',
       b: 'initial',
     });
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     const getSnapshotA = () => source.value.a;
     const getSnapshotB = () => source.value.b;
@@ -1089,7 +1085,7 @@ describe('useMutableSource', () => {
       a: 'initial',
       b: 'initial',
     });
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     const getSnapshotA = () => source.value.a;
     const getSnapshotB = () => source.value.b;
@@ -1144,8 +1140,14 @@ describe('useMutableSource', () => {
   it('should clear the update queue when source changes with pending lower priority updates', async () => {
     const sourceA = createSource('initial');
     const sourceB = createSource('initial');
-    const mutableSourceA = createMutableSource(sourceA);
-    const mutableSourceB = createMutableSource(sourceB);
+    const mutableSourceA = createMutableSource(
+      sourceA,
+      param => param.versionA,
+    );
+    const mutableSourceB = createMutableSource(
+      sourceB,
+      param => param.versionB,
+    );
 
     function App({toggle}) {
       const state = useMutableSource(
@@ -1185,7 +1187,7 @@ describe('useMutableSource', () => {
       a: 'foo',
       b: 'bar',
     });
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     const getSnapshotA = () => source.value.a;
     const getSnapshotB = () => source.value.b;
@@ -1275,7 +1277,7 @@ describe('useMutableSource', () => {
       a: 'foo',
       b: 'bar',
     });
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     function mutateB(newB) {
       source.value = {
@@ -1334,7 +1336,7 @@ describe('useMutableSource', () => {
       a: 'a0',
       b: 'b0',
     });
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     const getSnapshotA = () => source.value.a;
     const getSnapshotB = () => source.value.b;
@@ -1387,12 +1389,13 @@ describe('useMutableSource', () => {
       // Now mutate A. Both hooks should update.
       // This is at high priority so that it doesn't get batched with default
       // priority updates that might fire during the passive effect
-      ReactNoop.discreteUpdates(() => {
-        mutateA('a1');
+      await ReactNoop.act(async () => {
+        ReactNoop.discreteUpdates(() => {
+          mutateA('a1');
+        });
       });
-      expect(Scheduler).toFlushUntilNextPaint([]);
 
-      expect(root.getChildrenAsJSX()).toEqual('first: a1, second: a1');
+      expect(root).toMatchRenderedOutput('first: a1, second: a1');
     });
 
     expect(root.getChildrenAsJSX()).toEqual('first: a1, second: a1');
@@ -1408,7 +1411,7 @@ describe('useMutableSource', () => {
         a: 'a0',
         b: 'b0',
       });
-      const mutableSource = createMutableSource(source);
+      const mutableSource = createMutableSource(source, param => param.version);
 
       const getSnapshotA = () => source.value.a;
       const getSnapshotB = () => source.value.b;
@@ -1496,7 +1499,7 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('warns about functions being used as snapshot values', async () => {
     const source = createSource(() => 'a');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     const getSnapshot = () => source.value;
 
@@ -1526,7 +1529,7 @@ describe('useMutableSource', () => {
     const {useEffect} = React;
 
     const source = createComplexSource('1', '2');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     // Subscribe to part of the store.
     const getSnapshotA = s => s.valueA;
@@ -1630,7 +1633,7 @@ describe('useMutableSource', () => {
   // @gate experimental
   it('should not tear with newly mounted component when updates were scheduled at a lower priority', async () => {
     const source = createSource('one');
-    const mutableSource = createMutableSource(source);
+    const mutableSource = createMutableSource(source, param => param.version);
 
     let committedA = null;
     let committedB = null;
@@ -1709,11 +1712,128 @@ describe('useMutableSource', () => {
   });
 
   if (__DEV__) {
+    // See https://github.com/facebook/react/issues/19948
+    describe('side effecte detection', () => {
+      // @gate experimental
+      it('should throw if a mutable source is mutated during render', () => {
+        const source = createSource(0);
+        const mutableSource = createMutableSource(
+          source,
+          param => param.version,
+        );
+
+        let mutatedValueInRender = 1;
+        function MutateDuringRead() {
+          const value = useMutableSource(
+            mutableSource,
+            defaultGetSnapshot,
+            defaultSubscribe,
+          );
+          Scheduler.unstable_yieldValue('MutateDuringRead:' + value);
+          // Note that mutating an exeternal value during render is a side effect and is not supported.
+          source.value = mutatedValueInRender++;
+          return null;
+        }
+
+        expect(() => {
+          act(() => {
+            ReactNoop.render(<MutateDuringRead />);
+          });
+        }).toThrow(
+          'A mutable source was mutated while the MutateDuringRead component ' +
+            'was rendering. This is not supported. Move any mutations into ' +
+            'event handlers or effects.',
+        );
+
+        expect(Scheduler).toHaveYielded([
+          // First attempt
+          'MutateDuringRead:0',
+
+          // Synchronous retry
+          'MutateDuringRead:1',
+        ]);
+      });
+
+      // @gate experimental
+      it('should throw if a mutable source is mutated during render (legacy mode)', () => {
+        const source = createSource('initial');
+        const mutableSource = createMutableSource(
+          source,
+          param => param.version,
+        );
+
+        function MutateDuringRead() {
+          const value = useMutableSource(
+            mutableSource,
+            defaultGetSnapshot,
+            defaultSubscribe,
+          );
+          Scheduler.unstable_yieldValue('MutateDuringRead:' + value);
+          // Note that mutating an exeternal value during render is a side effect and is not supported.
+          if (value === 'initial') {
+            source.value = 'updated';
+          }
+          return null;
+        }
+
+        expect(() => {
+          act(() => {
+            ReactNoop.renderLegacySyncRoot(
+              <React.StrictMode>
+                <MutateDuringRead />
+              </React.StrictMode>,
+            );
+          });
+        }).toThrow(
+          'A mutable source was mutated while the MutateDuringRead component ' +
+            'was rendering. This is not supported. Move any mutations into ' +
+            'event handlers or effects.',
+        );
+
+        expect(Scheduler).toHaveYielded(['MutateDuringRead:initial']);
+      });
+
+      // @gate experimental
+      it('should not misidentify mutations after render as side effects', () => {
+        const source = createSource('initial');
+        const mutableSource = createMutableSource(
+          source,
+          param => param.version,
+        );
+
+        function MutateDuringRead() {
+          const value = useMutableSource(
+            mutableSource,
+            defaultGetSnapshot,
+            defaultSubscribe,
+          );
+          Scheduler.unstable_yieldValue('MutateDuringRead:' + value);
+          return null;
+        }
+
+        act(() => {
+          ReactNoop.renderLegacySyncRoot(
+            <React.StrictMode>
+              <MutateDuringRead />
+            </React.StrictMode>,
+          );
+          expect(Scheduler).toFlushAndYieldThrough([
+            'MutateDuringRead:initial',
+          ]);
+          source.value = 'updated';
+        });
+        expect(Scheduler).toHaveYielded(['MutateDuringRead:updated']);
+      });
+    });
+
     describe('dev warnings', () => {
       // @gate experimental
       it('should warn if the subscribe function does not return an unsubscribe function', () => {
         const source = createSource('one');
-        const mutableSource = createMutableSource(source);
+        const mutableSource = createMutableSource(
+          source,
+          param => param.version,
+        );
 
         const brokenSubscribe = () => {};
 
@@ -1736,7 +1856,10 @@ describe('useMutableSource', () => {
       // @gate experimental
       it('should error if multiple renderers of the same type use a mutable source at the same time', () => {
         const source = createSource('one');
-        const mutableSource = createMutableSource(source);
+        const mutableSource = createMutableSource(
+          source,
+          param => param.version,
+        );
 
         act(() => {
           // Start a render that uses the mutable source.
@@ -1793,7 +1916,10 @@ describe('useMutableSource', () => {
       // @gate experimental
       it('should error if multiple renderers of the same type use a mutable source at the same time with mutation between', () => {
         const source = createSource('one');
-        const mutableSource = createMutableSource(source);
+        const mutableSource = createMutableSource(
+          source,
+          param => param.version,
+        );
 
         act(() => {
           // Start a render that uses the mutable source.

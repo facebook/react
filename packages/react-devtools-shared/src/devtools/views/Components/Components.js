@@ -17,7 +17,6 @@ import {
   useRef,
 } from 'react';
 import Tree from './Tree';
-import {InspectedElementContextController} from './InspectedElementContext';
 import {OwnersListContextController} from './OwnersListContext';
 import portaledContent from '../portaledContent';
 import {SettingsModalContextController} from 'react-devtools-shared/src/devtools/views/Settings/SettingsModalContext';
@@ -25,7 +24,9 @@ import {
   localStorageGetItem,
   localStorageSetItem,
 } from 'react-devtools-shared/src/storage';
-import SelectedElement from './SelectedElement';
+import InspectedElementErrorBoundary from './InspectedElementErrorBoundary';
+import InspectedElement from './InspectedElement';
+import {InspectedElementContextController} from './InspectedElementContext';
 import {ModalDialog} from '../ModalDialog';
 import SettingsModal from 'react-devtools-shared/src/devtools/views/Settings/SettingsModal';
 import {NativeStyleContextController} from './NativeStyleEditor/context';
@@ -151,32 +152,34 @@ function Components(_: {||}) {
   return (
     <SettingsModalContextController>
       <OwnersListContextController>
-        <InspectedElementContextController>
-          <div
-            ref={wrapperElementRef}
-            className={styles.Components}
-            onMouseMove={onResize}
-            onMouseLeave={onResizeEnd}
-            onMouseUp={onResizeEnd}>
-            <Fragment>
-              <div ref={resizeElementRef} className={styles.TreeWrapper}>
-                <Tree />
-              </div>
-              <div className={styles.ResizeBarWrapper}>
-                <div onMouseDown={onResizeStart} className={styles.ResizeBar} />
-              </div>
-              <div className={styles.SelectedElementWrapper}>
-                <NativeStyleContextController>
+        <div
+          ref={wrapperElementRef}
+          className={styles.Components}
+          onMouseMove={onResize}
+          onMouseLeave={onResizeEnd}
+          onMouseUp={onResizeEnd}>
+          <Fragment>
+            <div ref={resizeElementRef} className={styles.TreeWrapper}>
+              <Tree />
+            </div>
+            <div className={styles.ResizeBarWrapper}>
+              <div onMouseDown={onResizeStart} className={styles.ResizeBar} />
+            </div>
+            <div className={styles.InspectedElementWrapper}>
+              <NativeStyleContextController>
+                <InspectedElementErrorBoundary>
                   <Suspense fallback={<Loading />}>
-                    <SelectedElement />
+                    <InspectedElementContextController>
+                      <InspectedElement />
+                    </InspectedElementContextController>
                   </Suspense>
-                </NativeStyleContextController>
-              </div>
-              <ModalDialog />
-              <SettingsModal />
-            </Fragment>
-          </div>
-        </InspectedElementContextController>
+                </InspectedElementErrorBoundary>
+              </NativeStyleContextController>
+            </div>
+            <ModalDialog />
+            <SettingsModal />
+          </Fragment>
+        </div>
       </OwnersListContextController>
     </SettingsModalContextController>
   );

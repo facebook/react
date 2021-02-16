@@ -35,14 +35,13 @@ import {
   markContainerAsRoot,
   unmarkContainerAsRoot,
 } from './ReactDOMComponentTree';
-import {eagerlyTrapReplayableEvents} from '../events/ReactDOMEventReplaying';
+import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 import {
   ELEMENT_NODE,
   COMMENT_NODE,
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
-import {ensureListeningTo} from './ReactDOMComponent';
 
 import {
   createContainer,
@@ -131,22 +130,10 @@ function createRootImpl(
     null;
   const root = createContainer(container, tag, hydrate, hydrationCallbacks);
   markContainerAsRoot(root.current, container);
-  const containerNodeType = container.nodeType;
 
-  if (hydrate && tag !== LegacyRoot) {
-    const doc =
-      containerNodeType === DOCUMENT_NODE ? container : container.ownerDocument;
-    // We need to cast this because Flow doesn't work
-    // with the hoisted containerNodeType. If we inline
-    // it, then Flow doesn't complain. We intentionally
-    // hoist it to reduce code-size.
-    eagerlyTrapReplayableEvents(container, ((doc: any): Document));
-  } else if (
-    containerNodeType !== DOCUMENT_FRAGMENT_NODE &&
-    containerNodeType !== DOCUMENT_NODE
-  ) {
-    ensureListeningTo(container, 'onMouseEnter', null);
-  }
+  const rootContainerElement =
+    container.nodeType === COMMENT_NODE ? container.parentNode : container;
+  listenToAllSupportedEvents(rootContainerElement);
 
   if (mutableSources) {
     for (let i = 0; i < mutableSources.length; i++) {

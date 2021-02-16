@@ -7,4 +7,5 @@
  * @flow
  */
 
-// No types
+declare var __EXTENSION__: boolean;
+declare var __TEST__: boolean;

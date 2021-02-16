@@ -1,4 +1,4 @@
-version: 2
+version: 2.1
 
 aliases:
   - &docker
@@ -9,61 +9,62 @@ aliases:
 
   - &restore_yarn_cache
     restore_cache:
+      name: Restore yarn cache
+      key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
+
+  - &restore_node_modules
+    restore_cache:
       name: Restore node_modules cache
       keys:
-        - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
-        - v2-node-{{ arch }}-{{ .Branch }}-
-        - v2-node-{{ arch }}-
-  - &run_yarn
-    run:
-      name: Install Packages
-      command: yarn --frozen-lockfile
+        - v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}-node-modules
+
+  - &TEST_PARALLELISM 20
 
   - &attach_workspace
     at: build
 
-  - &process_artifacts
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: node ./scripts/rollup/consolidateBundleSizes.js
-      - run: ./scripts/circleci/pack_and_store_artifact.sh
-      - store_artifacts:
-          path: ./node_modules.tgz
-      - store_artifacts:
-          path: ./build.tgz
-      - store_artifacts:
-          path: ./build/bundle-sizes.json
-      - store_artifacts:
-          # TODO: Update release script to use local file instead of pulling
-          # from artifacts.
-          path: ./scripts/error-codes/codes.json
-      - persist_to_workspace:
-          root: build
-          paths:
-            - bundle-sizes.json
+# The CircleCI API doesn't yet support triggering a specific workflow, but it
+# does support triggering a pipeline. So as a workaround you can triggger the
+# entire pipeline and use parameters to disable everything except the workflow
+# you want. CircleCI recommends this workaround here:
+# https://support.circleci.com/hc/en-us/articles/360050351292-How-to-trigger-a-workflow-via-CircleCI-API-v2-
+parameters:
+  # This is only set when triggering the CI pipeline via an API request.
+  prerelease_commit_sha:
+    type: string
+    default: ''
 
 jobs:
   setup:
     docker: *docker
     environment: *environment
-
     steps:
       - checkout
       - run:
           name: Nodejs Version
           command: node --version
       - *restore_yarn_cache
-      - *run_yarn
+      - run:
+          name: Install Packages
+          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - save_cache:
-          name: Save node_modules cache
-          key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          # Store the yarn cache globally for all lock files with this same
+          # checksum. This will speed up the setup job for all PRs where the
+          # lockfile is the same.
+          name: Save yarn cache for future installs
+          key: v2-node-{{ arch }}-{{ checksum "yarn.lock" }}-yarn
           paths:
             - ~/.cache/yarn
+      - save_cache:
+          # Store node_modules for all jobs in this workflow so that they don't
+          # need to each run a yarn install for each job. This will speed up
+          # all jobs run on this branch with the same lockfile.
+          name: Save node_modules cache
+          # This cache key is per branch, a yarn install in setup is required.
+          key: v2-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}-{{ checksum "workspace_info.txt" }}-node-modules
+          paths:
+            - node_modules
 
   yarn_lint:
     docker: *docker
@@ -71,8 +72,8 @@ jobs:
 
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
       - run: node ./scripts/prettier/index
       - run: node ./scripts/tasks/eslint
       - run: ./scripts/circleci/check_license.sh
@@ -82,141 +83,22 @@ jobs:
   yarn_flow:
     docker: *docker
     environment: *environment
+    parallelism: 5
 
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
       - run: node ./scripts/tasks/flow-ci
-
-  RELEASE_CHANNEL_stable_yarn_test:
-    docker: *docker
-    environment: *environment
-
-    steps:
-      - checkout
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --release-channel=stable --ci
-
-  yarn_test:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --ci
-
-  RELEASE_CHANNEL_stable_yarn_test_www:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --release-channel=www-classic --ci
-
-  RELEASE_CHANNEL_stable_yarn_test_www_variant:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --release-channel=www-classic --variant --ci
-
-  RELEASE_CHANNEL_stable_yarn_test_prod_www:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --release-channel=www-classic --prod --ci
-
-  RELEASE_CHANNEL_stable_yarn_test_prod_www_variant:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --release-channel=www-classic --prod --variant --ci
-
-  yarn_test_www:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --release-channel=www-modern --ci
-
-  yarn_test_www_variant:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --release-channel=www-modern --variant --ci
-
-  yarn_test_prod_www:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --release-channel=www-modern --prod --ci
-
-  yarn_test_prod_www_variant:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --release-channel=www-modern --prod --variant --ci
-
-  RELEASE_CHANNEL_stable_yarn_test_persistent:
-    docker: *docker
-    environment: *environment
-
-    steps:
-      - checkout
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --release-channel=stable --persistent --ci
-
-  RELEASE_CHANNEL_stable_yarn_test_prod:
-    docker: *docker
-    environment: *environment
-
-    steps:
-      - checkout
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --release-channel=stable --prod --ci
-
-  yarn_test_prod:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --release-channel=experimental --prod --ci
 
   RELEASE_CHANNEL_stable_yarn_build:
     docker: *docker
     environment: *environment
-    parallelism: 20
+    parallelism: *TEST_PARALLELISM
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
       - run:
           environment:
             RELEASE_CHANNEL: stable
@@ -231,6 +113,7 @@ jobs:
             - RELEASE_CHANNEL
             - facebook-www
             - facebook-react-native
+            - facebook-relay
             - node_modules
             - react-native
             - dist
@@ -242,8 +125,8 @@ jobs:
     parallelism: 20
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
       - run:
           environment:
             RELEASE_CHANNEL: experimental
@@ -258,20 +141,85 @@ jobs:
             - RELEASE_CHANNEL
             - facebook-www
             - facebook-react-native
+            - facebook-relay
             - node_modules
             - react-native
             - dist
             - sizes/*.json
 
+  yarn_build_combined:
+    docker: *docker
+    environment: *environment
+    parallelism: 40
+    steps:
+      - checkout
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run: yarn build-combined
+      - persist_to_workspace:
+          root: .
+          paths:
+            - build2
+
+  get_base_build:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          name: Download artifacts for base revision
+          command: |
+              git fetch origin master
+              cd ./scripts/release && yarn && cd ../../
+              scripts/release/download-experimental-build.js --commit=$(git merge-base HEAD origin/master)
+              mv ./build2 ./base-build
+      - persist_to_workspace:
+          root: .
+          paths:
+            - base-build
+
+  process_artifacts_combined:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run: echo "<< pipeline.git.revision	>>" >> build2/COMMIT_SHA
+        # Compress build directory into a single tarball for easy download
+      - run: tar -zcvf ./build2.tgz ./build2
+      - store_artifacts:
+          path: ./build2.tgz
+
+  sizebot:
+    docker: *docker
+    environment: *environment
+    steps:
+      - checkout
+      - attach_workspace:
+          at: .
+      - run: echo "<< pipeline.git.revision	>>" >> build2/COMMIT_SHA
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          command: node ./scripts/tasks/danger
+
   build_devtools_and_process_artifacts:
     docker: *docker
     environment: *environment
-    parallelism: 20
     steps:
       - checkout
       - attach_workspace: *attach_workspace
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_yarn_cache
-      - *run_yarn
+      - *restore_node_modules
+      - run:
+          name: Install Packages
+          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
       - run:
           environment:
             RELEASE_CHANNEL: experimental
@@ -279,42 +227,47 @@ jobs:
       - store_artifacts:
           path: ./build/devtools.tgz
 
-  # These jobs are named differently so we can distinguish the stable and
-  # and experimental artifacts
-  process_artifacts: *process_artifacts
-  process_artifacts_experimental: *process_artifacts
-
-  sizebot_stable:
+  build_devtools_scheduling_profiler:
     docker: *docker
     environment: *environment
     steps:
       - checkout
       - attach_workspace: *attach_workspace
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_yarn_cache
-      - *run_yarn
-      # This runs in the process_artifacts job, too, but it's faster to run
-      # this step in both jobs instead of running the jobs sequentially
-      - run: node ./scripts/rollup/consolidateBundleSizes.js
+      - *restore_node_modules
       - run:
-          environment:
-            RELEASE_CHANNEL: stable
-          command: node ./scripts/tasks/danger
+          name: Install Packages
+          command: yarn --frozen-lockfile --cache-folder ~/.cache/yarn
+      - run:
+          name: Build and archive
+          command: |
+            mkdir -p build/devtools
+            cd packages/react-devtools-scheduling-profiler
+            yarn build
+            cd dist
+            tar -zcvf ../../../build/devtools-scheduling-profiler.tgz .
+      - store_artifacts:
+          path: ./build/devtools-scheduling-profiler.tgz
+      - persist_to_workspace:
+          root: packages/react-devtools-scheduling-profiler
+          paths:
+            - dist
 
-  sizebot_experimental:
+  deploy_devtools_scheduling_profiler:
     docker: *docker
     environment: *environment
     steps:
       - checkout
-      - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
-      # This runs in the process_artifacts job, too, but it's faster to run
-      # this step in both jobs instead of running the jobs sequentially
-      - run: node ./scripts/rollup/consolidateBundleSizes.js
+      - attach_workspace:
+          at: packages/react-devtools-scheduling-profiler
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
       - run:
-          environment:
-            RELEASE_CHANNEL: experimental
-          command: node ./scripts/tasks/danger
+          name: Deploy
+          command: |
+            cd packages/react-devtools-scheduling-profiler
+            yarn vercel deploy dist --prod --confirm --token $SCHEDULING_PROFILER_DEPLOY_VERCEL_TOKEN
 
   yarn_lint_build:
     docker: *docker
@@ -322,8 +275,8 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
       - run: yarn lint-build
       - run: scripts/circleci/check_minified_errors.sh
 
@@ -333,43 +286,41 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
       - run:
           environment:
             RELEASE_CHANNEL: stable
           command: yarn lint-build
       - run: scripts/circleci/check_minified_errors.sh
 
-  RELEASE_CHANNEL_stable_yarn_test_build:
+  yarn_test:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
+    parameters:
+      args:
+        type: string
     steps:
       - checkout
-      - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --release-channel=stable --build --ci
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run: yarn test <<parameters.args>> --ci
 
   yarn_test_build:
     docker: *docker
     environment: *environment
+    parallelism: *TEST_PARALLELISM
+    parameters:
+      args:
+        type: string
     steps:
       - checkout
-      - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --release-channel=experimental --build --ci
-
-  yarn_test_build_devtools:
-    docker: *docker
-    environment: *environment
-    steps:
-      - checkout
-      - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --project=devtools --build --ci
+      - attach_workspace:
+          at: .
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run: yarn test --build <<parameters.args>> --ci
 
   RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
     docker: *docker
@@ -377,7 +328,8 @@ jobs:
     steps:
       - checkout
       - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
       - run:
           name: Run DOM fixture tests
           environment:
@@ -393,82 +345,67 @@ jobs:
     environment: *environment
     steps:
       - checkout
-      - *restore_yarn_cache
-      - *run_yarn
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
       - run:
           name: Run fuzz tests
           command: |
             FUZZ_TEST_SEED=$RANDOM yarn test fuzz --ci
             FUZZ_TEST_SEED=$RANDOM yarn test --prod fuzz --ci
 
-  RELEASE_CHANNEL_stable_yarn_test_build_prod:
+  publish_prerelease:
+    parameters:
+      commit_sha:
+        type: string
+      release_channel:
+        type: string
+      dist_tag:
+        type: string
     docker: *docker
     environment: *environment
     steps:
       - checkout
-      - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --release-channel=stable --build --prod --ci
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          name: Run publish script
+          command: |
+            git fetch origin master
+            cd ./scripts/release && yarn && cd ../../
+            scripts/release/prepare-release-from-ci.js --skipTests -r << parameters.release_channel >> --commit=<< parameters.commit_sha >>
+            cp ./scripts/release/ci-npmrc ~/.npmrc
+            scripts/release/publish.js --ci --tags << parameters.dist_tag >>
 
-  yarn_test_build_prod:
+  # We don't always keep the reconciler forks in sync (otherwise it we wouldn't
+  # have forked it) but during periods when they are meant to be in sync, we
+  # use this job to confirm there are no differences.
+  sync_reconciler_forks:
     docker: *docker
     environment: *environment
     steps:
       - checkout
-      - attach_workspace: *attach_workspace
-      - *restore_yarn_cache
-      - *run_yarn
-      - run: yarn test --release-channel=experimental --build --prod --ci
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run:
+          name: Confirm reconciler forks are the same
+          command: |
+            yarn replace-fork
+            git diff --quiet || (echo "Reconciler forks are not the same! Run yarn replace-fork. Or, if this was intentional, disable this CI check." && false)
+
 
 workflows:
   version: 2
   stable:
+    unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
       - setup
       - yarn_lint:
           requires:
             - setup
-      - yarn_flow:
-          requires:
-            - setup
-      - RELEASE_CHANNEL_stable_yarn_test:
-          requires:
-            - setup
-      - RELEASE_CHANNEL_stable_yarn_test_prod:
-          requires:
-            - setup
-      - RELEASE_CHANNEL_stable_yarn_test_persistent:
-          requires:
-            - setup
-      - RELEASE_CHANNEL_stable_yarn_test_www:
-          requires:
-            - setup
-      - RELEASE_CHANNEL_stable_yarn_test_www_variant:
-          requires:
-            - setup
-      - RELEASE_CHANNEL_stable_yarn_test_prod_www:
-          requires:
-            - setup
-      - RELEASE_CHANNEL_stable_yarn_test_prod_www_variant:
-          requires:
-            - setup
       - RELEASE_CHANNEL_stable_yarn_build:
           requires:
             - setup
-      - process_artifacts:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
-      - sizebot_stable:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
       - RELEASE_CHANNEL_stable_yarn_lint_build:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
-      - RELEASE_CHANNEL_stable_yarn_test_build:
-          requires:
-            - RELEASE_CHANNEL_stable_yarn_build
-      - RELEASE_CHANNEL_stable_yarn_test_build_prod:
           requires:
             - RELEASE_CHANNEL_stable_yarn_build
       - RELEASE_CHANNEL_stable_yarn_test_dom_fixtures:
@@ -476,53 +413,117 @@ workflows:
             - RELEASE_CHANNEL_stable_yarn_build
 
   experimental:
+    unless: << pipeline.parameters.prerelease_commit_sha >>
     jobs:
       - setup
-      - yarn_test:
-          requires:
-            - setup
-      - yarn_test_prod:
-          requires:
-            - setup
-      - yarn_test_www:
-          requires:
-            - setup
-      - yarn_test_www_variant:
-          requires:
-            - setup
-      - yarn_test_prod_www:
-          requires:
-            - setup
-      - yarn_test_prod_www_variant:
-          requires:
-            - setup
       - yarn_build:
           requires:
             - setup
-      - process_artifacts_experimental:
-          requires:
-            - yarn_build
-      - sizebot_experimental:
-          requires:
-            - yarn_build
-      - yarn_test_build:
-          requires:
-            - yarn_build
-      - yarn_test_build_prod:
-          requires:
-            - yarn_build
       - yarn_lint_build:
           requires:
             - yarn_build
-      - yarn_test_build_devtools:
+      - build_devtools_and_process_artifacts:
           requires:
             - yarn_build
-      # FIXME: Temporarily disabled to unblock master.
-      # - build_devtools_and_process_artifacts:
-      #     requires:
-      #       - yarn_build
+      - build_devtools_scheduling_profiler:
+          requires:
+            - yarn_build
+      - deploy_devtools_scheduling_profiler:
+          requires:
+            - build_devtools_scheduling_profiler
+          filters:
+            branches:
+              only:
+                - master
 
+  # New workflow that will replace "stable" and "experimental"
+  build_and_test:
+    unless: << pipeline.parameters.prerelease_commit_sha >>
+    jobs:
+      - setup
+      - yarn_flow:
+          requires:
+            - setup
+      # NOTE: This job is only enabled when we want the forks to be in sync.
+      # When the forks intentionally diverge, comment out the job to disable it.
+      - sync_reconciler_forks:
+          requires:
+            - setup
+      - yarn_test:
+          requires:
+            - setup
+          matrix:
+            parameters:
+              args:
+                # Intentionally passing these as strings instead of creating a
+                # separate parameter per CLI argument, since it's easier to
+                # control/see which combinations we want to run.
+                - "-r=stable --env=development"
+                - "-r=stable --env=production"
+                - "-r=experimental --env=development"
+                - "-r=experimental --env=production"
+                - "-r=www-classic --env=development"
+                - "-r=www-classic --env=production"
+                - "-r=www-classic --env=development --variant"
+                - "-r=www-classic --env=production --variant"
+                - "-r=www-modern --env=development"
+                - "-r=www-modern --env=production"
+                - "-r=www-modern --env=development --variant"
+                - "-r=www-modern --env=production --variant"
+
+                # TODO: Test more persistent configurations?
+                - '-r=stable --env=development --persistent'
+      - yarn_build_combined:
+          requires:
+            - setup
+      - process_artifacts_combined:
+          requires:
+            - yarn_build_combined
+      - yarn_test_build:
+          requires:
+            - yarn_build_combined
+          matrix:
+            parameters:
+              args:
+                # Intentionally passing these as strings instead of creating a
+                # separate parameter per CLI argument, since it's easier to
+                # control/see which combinations we want to run.
+                - "-r=stable --env=development"
+                - "-r=stable --env=production"
+                - "-r=experimental --env=development"
+                - "-r=experimental --env=production"
+
+                # Dev Tools
+                - "--project=devtools -r=experimental"
+
+                # TODO: Update test config to support www build tests
+                # - "-r=www-classic --env=development"
+                # - "-r=www-classic --env=production"
+                # - "-r=www-classic --env=development --variant"
+                # - "-r=www-classic --env=production --variant"
+                # - "-r=www-modern --env=development"
+                # - "-r=www-modern --env=production"
+                # - "-r=www-modern --env=development --variant"
+                # - "-r=www-modern --env=production --variant"
+
+                # TODO: Test more persistent configurations?
+      - get_base_build:
+          filters:
+            branches:
+              ignore:
+                - master
+          requires:
+            - setup
+      - sizebot:
+          filters:
+            branches:
+              ignore:
+                - master
+          requires:
+            - get_base_build
+            - yarn_build_combined
   fuzz_tests:
+    unless: << pipeline.parameters.prerelease_commit_sha >>
     triggers:
       - schedule:
           # Fuzz tests run hourly
@@ -536,3 +537,60 @@ workflows:
       - test_fuzz:
           requires:
             - setup
+
+  # Used to publish a prerelease manually via the command line
+  publish_preleases:
+    when: << pipeline.parameters.prerelease_commit_sha >>
+    jobs:
+      - setup
+      - publish_prerelease:
+          name: Publish to Next channel
+          requires:
+            - setup
+          commit_sha: << pipeline.parameters.prerelease_commit_sha >>
+          release_channel: stable
+          dist_tag: next
+      - publish_prerelease:
+          name: Publish to Experimental channel
+          requires:
+            # NOTE: Intentionally running these jobs sequentially because npm
+            # will sometimes fail if you try to concurrently publish two
+            # different versions of the same package, even if they use different
+            # dist tags.
+            - Publish to Next channel
+          commit_sha: << pipeline.parameters.prerelease_commit_sha >>
+          release_channel: experimental
+          dist_tag: experimental
+
+  # Publishes on a cron schedule
+  publish_preleases_nightly:
+    unless: << pipeline.parameters.prerelease_commit_sha >>
+    triggers:
+      - schedule:
+          # At 10 minutes past 16:00 on Mon, Tue, Wed, Thu, and Fri
+          cron: "10 16 * * 1,2,3,4,5"
+          filters:
+            branches:
+              only:
+                - master
+    jobs:
+      - setup
+      - publish_prerelease:
+          name: Publish to Next channel
+          requires:
+            - setup
+          commit_sha: master
+          release_channel: stable
+          dist_tag: next
+      - publish_prerelease:
+          name: Publish to Experimental channel
+          requires:
+            # NOTE: Intentionally running these jobs sequentially because npm
+            # will sometimes fail if you try to concurrently publish two
+            # different versions of the same package, even if they use different
+            # dist tags.
+            - Publish to Next channel
+          commit_sha: master
+          release_channel: experimental
+          dist_tag: experimental
+

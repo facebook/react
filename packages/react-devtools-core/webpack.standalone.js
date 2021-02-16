@@ -4,6 +4,7 @@ const {
   GITHUB_URL,
   getVersionString,
 } = require('react-devtools-extensions/utils');
+const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -19,7 +20,7 @@ const DEVTOOLS_VERSION = getVersionString();
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
-  devtool: __DEV__ ? 'cheap-module-eval-source-map' : false,
+  devtool: __DEV__ ? 'cheap-module-eval-source-map' : 'source-map',
   target: 'electron-main',
   entry: {
     standalone: './src/standalone.js',
@@ -33,8 +34,9 @@ module.exports = {
   resolve: {
     alias: {
       react: resolve(builtModulesDir, 'react'),
-      'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
+      'react-devtools-feature-flags': resolveFeatureFlags('core/standalone'),
+      'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },
@@ -47,9 +49,11 @@ module.exports = {
   },
   plugins: [
     new DefinePlugin({
-      __DEV__: false,
-      __PROFILE__: false,
+      __DEV__,
       __EXPERIMENTAL__: true,
+      __EXTENSION__: false,
+      __PROFILE__: false,
+      __TEST__: NODE_ENV === 'test',
       'process.env.DEVTOOLS_VERSION': `"${DEVTOOLS_VERSION}"`,
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
       'process.env.NODE_ENV': `"${NODE_ENV}"`,

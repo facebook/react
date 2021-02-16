@@ -19,6 +19,7 @@ let NormalPriority;
 let LowPriority;
 let IdlePriority;
 let runWithPriority;
+let startTransition;
 
 describe('ReactSchedulerIntegration', () => {
   beforeEach(() => {
@@ -33,6 +34,7 @@ describe('ReactSchedulerIntegration', () => {
     LowPriority = Scheduler.unstable_LowPriority;
     IdlePriority = Scheduler.unstable_IdlePriority;
     runWithPriority = Scheduler.unstable_runWithPriority;
+    startTransition = React.unstable_startTransition;
   });
 
   function getCurrentPriorityAsString() {
@@ -77,6 +79,10 @@ describe('ReactSchedulerIntegration', () => {
     expect(Scheduler).toHaveYielded(['Priority: Immediate']);
   });
 
+  // TODO: Figure out what to do with these tests. I don't think most of them
+  // make sense once we decouple Scheduler from React. Perhaps need similar
+  // tests for React DOM.
+  // @gate !enableNativeEventPriorityInference
   it('has correct priority during rendering', () => {
     function ReadPriority() {
       Scheduler.unstable_yieldValue(
@@ -98,6 +104,10 @@ describe('ReactSchedulerIntegration', () => {
     expect(Scheduler).toFlushAndYield(['Priority: Idle']);
   });
 
+  // TODO: Figure out what to do with these tests. I don't think most of them
+  // make sense once we decouple Scheduler from React. Perhaps need similar
+  // tests for React DOM.
+  // @gate !enableNativeEventPriorityInference
   it('has correct priority when continuing a render after yielding', () => {
     function ReadPriority() {
       Scheduler.unstable_yieldValue(
@@ -150,6 +160,10 @@ describe('ReactSchedulerIntegration', () => {
     ]);
   });
 
+  // TODO: Figure out what to do with these tests. I don't think most of them
+  // make sense once we decouple Scheduler from React. Perhaps need similar
+  // tests for React DOM.
+  // @gate !enableNativeEventPriorityInference
   it('passive effects never have higher than normal priority', async () => {
     const {useEffect} = React;
     function ReadPriority({step}) {
@@ -203,6 +217,10 @@ describe('ReactSchedulerIntegration', () => {
     ]);
   });
 
+  // TODO: Figure out what to do with these tests. I don't think most of them
+  // make sense once we decouple Scheduler from React. Perhaps need similar
+  // tests for React DOM.
+  // @gate !enableNativeEventPriorityInference
   it('passive effects have correct priority even if they are flushed early', async () => {
     const {useEffect} = React;
     function ReadPriority({step}) {
@@ -231,6 +249,10 @@ describe('ReactSchedulerIntegration', () => {
     ]);
   });
 
+  // TODO: Figure out what to do with these tests. I don't think most of them
+  // make sense once we decouple Scheduler from React. Perhaps need similar
+  // tests for React DOM.
+  // @gate !enableNativeEventPriorityInference
   it('passive effect clean-up functions have correct priority even when component is deleted', async () => {
     const {useEffect} = React;
     function ReadPriority({step}) {
@@ -320,6 +342,10 @@ describe('ReactSchedulerIntegration', () => {
     ]);
   });
 
+  // TODO: Figure out what to do with these tests. I don't think most of them
+  // make sense once we decouple Scheduler from React. Perhaps need similar
+  // tests for React DOM.
+  // @gate !enableNativeEventPriorityInference
   it('after completing a level of work, infers priority of the next batch based on its expiration time', () => {
     function App({label}) {
       Scheduler.unstable_yieldValue(
@@ -446,8 +472,7 @@ describe(
       React = require('react');
       ReactNoop = require('react-noop-renderer');
       Scheduler = require('scheduler');
-
-      React = require('react');
+      startTransition = React.unstable_startTransition;
     });
 
     afterEach(() => {
@@ -496,6 +521,7 @@ describe(
       });
     });
 
+    // @gate experimental
     it('mock Scheduler module to check if `shouldYield` is called', async () => {
       // This test reproduces a bug where React's Scheduler task timed out but
       // the `shouldYield` method returned true. Usually we try not to mock
@@ -520,7 +546,9 @@ describe(
 
       await ReactNoop.act(async () => {
         // Partially render the tree, then yield
-        ReactNoop.render(<App />);
+        startTransition(() => {
+          ReactNoop.render(<App />);
+        });
         expect(Scheduler).toFlushAndYieldThrough(['A']);
 
         // Start logging whenever shouldYield is called
@@ -531,6 +559,16 @@ describe(
 
         // Expire the task
         Scheduler.unstable_advanceTime(10000);
+        // Scheduling a new update is a trick to force the expiration to kick
+        // in. We don't check if a update has been starved at the beginning of
+        // working on it, since there's no point — we're already working on it.
+        // We only check before yielding to the main thread (to avoid starvation
+        // by other main thread work) or when receiving an update (to avoid
+        // starvation by incoming updates).
+        startTransition(() => {
+          ReactNoop.render(<App />);
+        });
+
         // Because the render expired, React should finish the tree without
         // consulting `shouldYield` again
         expect(Scheduler).toFlushExpired(['B', 'C']);

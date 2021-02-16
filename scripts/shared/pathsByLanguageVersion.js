@@ -10,6 +10,7 @@
 const esNextPaths = [
   // Internal forwarding modules
   'packages/*/*.js',
+  'packages/*/esm/*.js',
   // Source files
   'packages/*/src/**/*.js',
   'packages/dom-event-testing-library/**/*.js',

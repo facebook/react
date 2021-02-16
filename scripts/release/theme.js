@@ -15,6 +15,7 @@ theme.package = theme.hex(colors.green);
 theme.version = theme.hex(colors.yellow);
 theme.tag = theme.hex(colors.yellow);
 theme.build = theme.hex(colors.yellow);
+theme.commit = theme.hex(colors.yellow);
 theme.error = theme.hex(colors.red).bold;
 theme.dimmed = theme.hex(colors.gray);
 theme.caution = theme.hex(colors.red).bold;

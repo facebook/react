@@ -2443,7 +2443,7 @@ describe('ReactSuspenseList', () => {
 
     expect(ReactNoop).toMatchRenderedOutput(null);
 
-    ReactNoop.act(() => {
+    await ReactNoop.act(async () => {
       // Add a few items at the end.
       updateLowPri(true);
 
@@ -2451,33 +2451,22 @@ describe('ReactSuspenseList', () => {
       expect(Scheduler).toFlushAndYieldThrough(['B', 'C']);
 
       // Schedule another update at higher priority.
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_UserBlockingPriority,
-        () => updateHighPri(true),
-      );
+      ReactNoop.flushSync(() => updateHighPri(true));
 
       // That will intercept the previous render.
-    });
+      expect(Scheduler).toHaveYielded([
+        'Suspend! [A]',
+        'Loading A',
+        // Re-render at forced.
+        'Suspend! [A]',
+        'Loading A',
+      ]);
+      expect(ReactNoop).toMatchRenderedOutput(<span>Loading A</span>);
 
-    jest.runAllTimers();
-
-    expect(Scheduler).toHaveYielded([
-      // First attempt at high pri.
-      'Suspend! [A]',
-      'Loading A',
-      // Re-render at forced.
-      'Suspend! [A]',
-      'Loading A',
-      // We auto-commit this on DEV.
       // Try again on low-pri.
-      'Suspend! [A]',
-      'Loading A',
-      // Re-render at forced.
-      'Suspend! [A]',
-      'Loading A',
-    ]);
-
-    expect(ReactNoop).toMatchRenderedOutput(<span>Loading A</span>);
+      expect(Scheduler).toFlushAndYield(['Suspend! [A]', 'Loading A']);
+      expect(ReactNoop).toMatchRenderedOutput(<span>Loading A</span>);
+    });
 
     await AsyncA.resolve();
 
@@ -2552,6 +2541,147 @@ describe('ReactSuspenseList', () => {
       <>
         <span>A</span>
         <span>B</span>
+      </>,
+    );
+  });
+
+  // @gate experimental
+  it('should be able to progressively show CPU expensive rows with two pass rendering', async () => {
+    function TwoPass({text}) {
+      const [pass, setPass] = React.useState(0);
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + text);
+        setPass(1);
+      }, []);
+      return <Text text={pass === 0 ? 'First Pass ' + text : text} />;
+    }
+
+    function Sleep({time, children}) {
+      Scheduler.unstable_advanceTime(time);
+      return children;
+    }
+
+    function App() {
+      Scheduler.unstable_yieldValue('App');
+      return (
+        <SuspenseList revealOrder="forwards" tail="hidden">
+          <Suspense fallback={<Text text="Loading A" />}>
+            <Sleep time={600}>
+              <TwoPass text="A" />
+            </Sleep>
+          </Suspense>
+          <Suspense fallback={<Text text="Loading B" />}>
+            <Sleep time={600}>
+              <TwoPass text="B" />
+            </Sleep>
+          </Suspense>
+          <Sleep time={600}>
+            <Text text="C" />
+          </Sleep>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<App />);
+
+    expect(Scheduler).toFlushAndYieldThrough([
+      'App',
+      'First Pass A',
+      'Mount A',
+      'A',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput(<span>A</span>);
+
+    expect(Scheduler).toFlushAndYieldThrough(['First Pass B', 'Mount B', 'B']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+      </>,
+    );
+
+    expect(Scheduler).toFlushAndYield(['C']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
+      </>,
+    );
+  });
+
+  // @gate experimental
+  it('should be able to progressively show rows with two pass rendering and visible', async () => {
+    function TwoPass({text}) {
+      const [pass, setPass] = React.useState(0);
+      React.useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + text);
+        setPass(1);
+      }, []);
+      return <Text text={pass === 0 ? 'First Pass ' + text : text} />;
+    }
+
+    function Sleep({time, children}) {
+      Scheduler.unstable_advanceTime(time);
+      return children;
+    }
+
+    function App() {
+      Scheduler.unstable_yieldValue('App');
+      return (
+        <SuspenseList revealOrder="forwards">
+          <Suspense fallback={<Text text="Loading A" />}>
+            <Sleep time={600}>
+              <TwoPass text="A" />
+            </Sleep>
+          </Suspense>
+          <Suspense fallback={<Text text="Loading B" />}>
+            <Sleep time={600}>
+              <TwoPass text="B" />
+            </Sleep>
+          </Suspense>
+          <Suspense fallback={<Text text="Loading C" />}>
+            <Sleep time={600}>
+              <Text text="C" />
+            </Sleep>
+          </Suspense>
+        </SuspenseList>
+      );
+    }
+
+    ReactNoop.render(<App />);
+
+    expect(Scheduler).toFlushAndYieldThrough([
+      'App',
+      'First Pass A',
+      'Loading B',
+      'Loading C',
+      'Mount A',
+      'A',
+    ]);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>Loading B</span>
+        <span>Loading C</span>
+      </>,
+    );
+
+    expect(Scheduler).toFlushAndYieldThrough(['First Pass B', 'Mount B', 'B']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>Loading C</span>
+      </>,
+    );
+
+    expect(Scheduler).toFlushAndYield(['C']);
+    expect(ReactNoop).toMatchRenderedOutput(
+      <>
+        <span>A</span>
+        <span>B</span>
+        <span>C</span>
       </>,
     );
   });

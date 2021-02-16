@@ -13,8 +13,6 @@ import type {
   MutableSourceSubscribeFn,
   ReactContext,
   ReactProviderType,
-  ReactEventResponder,
-  ReactEventResponderListener,
 } from 'shared/ReactTypes';
 import type {
   Fiber,
@@ -22,10 +20,10 @@ import type {
 } from 'react-reconciler/src/ReactInternalTypes';
 import type {OpaqueIDType} from 'react-reconciler/src/ReactFiberHostConfig';
 
-import type {SuspenseConfig} from 'react-reconciler/src/ReactFiberSuspenseConfig';
 import {NoMode} from 'react-reconciler/src/ReactTypeOfMode';
 
 import ErrorStackParser from 'error-stack-parser';
+import invariant from 'shared/invariant';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
 import {
@@ -33,7 +31,6 @@ import {
   SimpleMemoComponent,
   ContextProvider,
   ForwardRef,
-  Block,
 } from 'react-reconciler/src/ReactWorkTags';
 
 type CurrentDispatcherRef = typeof ReactSharedInternals.ReactCurrentDispatcher;
@@ -64,10 +61,6 @@ type Hook = {
   next: Hook | null,
 };
 
-type TimeoutConfig = {|
-  timeoutMs: number,
-|};
-
 function getPrimitiveStackCache(): Map<string, Array<any>> {
   // This initializes a cache of all primitive hooks so that the top
   // most stack frames added by calling the primitive hook can be removed.
@@ -80,22 +73,16 @@ function getPrimitiveStackCache(): Map<string, Array<any>> {
       Dispatcher.useState(null);
       Dispatcher.useReducer((s, a) => s, null);
       Dispatcher.useRef(null);
+      if (typeof Dispatcher.useCacheRefresh === 'function') {
+        // This type check is for Flow only.
+        Dispatcher.useCacheRefresh();
+      }
       Dispatcher.useLayoutEffect(() => {});
       Dispatcher.useEffect(() => {});
       Dispatcher.useImperativeHandle(undefined, () => null);
       Dispatcher.useDebugValue(null);
       Dispatcher.useCallback(() => {});
       Dispatcher.useMemo(() => null);
-      Dispatcher.useMutableSource(
-        {
-          _source: {},
-          _getVersion: () => 1,
-          _workInProgressVersionPrimary: null,
-          _workInProgressVersionSecondary: null,
-        },
-        () => null,
-        () => () => {},
-      );
     } finally {
       readHookLog = hookLog;
       hookLog = [];
@@ -116,6 +103,10 @@ function nextHook(): null | Hook {
     currentHook = hook.next;
   }
   return hook;
+}
+
+function getCacheForType<T>(resourceType: () => T): T {
+  invariant(false, 'Not implemented.');
 }
 
 function readContext<T>(
@@ -182,6 +173,16 @@ function useRef<T>(initialValue: T): {|current: T|} {
     value: ref.current,
   });
   return ref;
+}
+
+function useCacheRefresh(): () => void {
+  const hook = nextHook();
+  hookLog.push({
+    primitive: 'CacheRefresh',
+    stackError: new Error(),
+    value: hook !== null ? hook.memoizedState : function refresh() {},
+  });
+  return () => {};
 }
 
 function useLayoutEffect(
@@ -270,25 +271,7 @@ function useMutableSource<Source, Snapshot>(
   return value;
 }
 
-function useResponder(
-  responder: ReactEventResponder<any, any>,
-  listenerProps: Object,
-): ReactEventResponderListener<any, any> {
-  // Don't put the actual event responder object in, just its displayName
-  const value = {
-    responder: responder.displayName || 'EventResponder',
-    props: listenerProps,
-  };
-  hookLog.push({primitive: 'Responder', stackError: new Error(), value});
-  return {
-    responder,
-    props: listenerProps,
-  };
-}
-
-function useTransition(
-  config: SuspenseConfig | null | void,
-): [(() => void) => void, boolean] {
+function useTransition(): [(() => void) => void, boolean] {
   // useTransition() composes multiple hooks internally.
   // Advance the current hook index the same number of times
   // so that subsequent hooks have the right memoized state.
@@ -297,12 +280,12 @@ function useTransition(
   hookLog.push({
     primitive: 'Transition',
     stackError: new Error(),
-    value: config,
+    value: undefined,
   });
   return [callback => {}, false];
 }
 
-function useDeferredValue<T>(value: T, config: TimeoutConfig | null | void): T {
+function useDeferredValue<T>(value: T): T {
   // useDeferredValue() composes multiple hooks internally.
   // Advance the current hook index the same number of times
   // so that subsequent hooks have the right memoized state.
@@ -334,7 +317,9 @@ function useOpaqueIdentifier(): OpaqueIDType | void {
 }
 
 const Dispatcher: DispatcherType = {
+  getCacheForType,
   readContext,
+  useCacheRefresh,
   useCallback,
   useContext,
   useEffect,
@@ -345,7 +330,6 @@ const Dispatcher: DispatcherType = {
   useReducer,
   useRef,
   useState,
-  useResponder,
   useTransition,
   useMutableSource,
   useDeferredValue,
@@ -703,8 +687,7 @@ export function inspectHooksOfFiber(
   if (
     fiber.tag !== FunctionComponent &&
     fiber.tag !== SimpleMemoComponent &&
-    fiber.tag !== ForwardRef &&
-    fiber.tag !== Block
+    fiber.tag !== ForwardRef
   ) {
     throw new Error(
       'Unknown Fiber. Needs to be a function component to inspect hooks.',

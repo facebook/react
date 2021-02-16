@@ -21,7 +21,7 @@ import {
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_LAZY_TYPE,
-  REACT_BLOCK_TYPE,
+  REACT_CACHE_TYPE,
 } from 'shared/ReactSymbols';
 import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
 
@@ -66,13 +66,15 @@ function getComponentName(type: mixed): string | null {
     case REACT_PORTAL_TYPE:
       return 'Portal';
     case REACT_PROFILER_TYPE:
-      return `Profiler`;
+      return 'Profiler';
     case REACT_STRICT_MODE_TYPE:
       return 'StrictMode';
     case REACT_SUSPENSE_TYPE:
       return 'Suspense';
     case REACT_SUSPENSE_LIST_TYPE:
       return 'SuspenseList';
+    case REACT_CACHE_TYPE:
+      return 'Cache';
   }
   if (typeof type === 'object') {
     switch (type.$$typeof) {
@@ -86,8 +88,6 @@ function getComponentName(type: mixed): string | null {
         return getWrappedName(type, type.render, 'ForwardRef');
       case REACT_MEMO_TYPE:
         return getComponentName(type.type);
-      case REACT_BLOCK_TYPE:
-        return getComponentName(type._render);
       case REACT_LAZY_TYPE: {
         const lazyComponent: LazyComponent<any, any> = (type: any);
         const payload = lazyComponent._payload;

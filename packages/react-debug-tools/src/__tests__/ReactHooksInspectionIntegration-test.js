@@ -22,7 +22,7 @@ describe('ReactHooksInspectionIntegration', () => {
     React = require('react');
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
-    act = ReactTestRenderer.act;
+    act = ReactTestRenderer.unstable_concurrentAct;
     ReactDebugTools = require('react-debug-tools');
   });
 
@@ -787,7 +787,7 @@ describe('ReactHooksInspectionIntegration', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
 
     expect(getterCalls).toBe(1);
@@ -797,7 +797,7 @@ describe('ReactHooksInspectionIntegration', () => {
   });
 
   // This test case is based on an open source bug report:
-  // facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
+  // https://github.com/facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
   it('should properly advance the current hook for useContext', () => {
     const MyContext = React.createContext(1);
 
@@ -848,9 +848,9 @@ describe('ReactHooksInspectionIntegration', () => {
 
   if (__EXPERIMENTAL__) {
     it('should support composite useMutableSource hook', () => {
-      const mutableSource = React.createMutableSource({}, () => 1);
+      const mutableSource = React.unstable_createMutableSource({}, () => 1);
       function Foo(props) {
-        React.useMutableSource(
+        React.unstable_useMutableSource(
           mutableSource,
           () => 'snapshot',
           () => {},
