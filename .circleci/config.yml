@@ -579,7 +579,7 @@ workflows:
           name: Publish to Next channel
           requires:
             - setup
-          commit_sha: master
+          commit_sha: << pipeline.git.revision >>
           release_channel: stable
           dist_tag: next
       - publish_prerelease:
@@ -590,7 +590,7 @@ workflows:
             # different versions of the same package, even if they use different
             # dist tags.
             - Publish to Next channel
-          commit_sha: master
+          commit_sha: << pipeline.git.revision >>
           release_channel: experimental
           dist_tag: experimental
 

@@ -77,14 +77,19 @@ async function pollUntilWorkflowFinishes(workflowID) {
 }
 
 async function main() {
+  const headCommitResponse = await fetch(
+    'https://api.github.com/repos/facebook/react/commits/master'
+  );
+  const headCommitJSON = await headCommitResponse.json();
+  const headCommitSha = headCommitJSON.sha;
+
   const pipelineResponse = await fetch(
     'https://circleci.com/api/v2/project/github/facebook/react/pipeline',
     {
       method: 'post',
       body: JSON.stringify({
         parameters: {
-          // TODO: Make commit SHA configurable
-          prerelease_commit_sha: 'master',
+          prerelease_commit_sha: headCommitSha,
         },
       }),
       headers: {
