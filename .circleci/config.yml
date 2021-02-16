@@ -553,7 +553,11 @@ workflows:
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:
-            - setup
+            # NOTE: Intentionally running these jobs sequentially because npm
+            # will sometimes fail if you try to concurrently publish two
+            # different versions of the same package, even if they use different
+            # dist tags.
+            - Publish to Next channel
           commit_sha: << pipeline.parameters.prerelease_commit_sha >>
           release_channel: experimental
           dist_tag: experimental
@@ -581,7 +585,11 @@ workflows:
       - publish_prerelease:
           name: Publish to Experimental channel
           requires:
-            - setup
+            # NOTE: Intentionally running these jobs sequentially because npm
+            # will sometimes fail if you try to concurrently publish two
+            # different versions of the same package, even if they use different
+            # dist tags.
+            - Publish to Next channel
           commit_sha: master
           release_channel: experimental
           dist_tag: experimental
