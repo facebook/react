@@ -29,7 +29,9 @@ let NormalPriority;
 //
 // This test suite mocks all browser methods used in our implementation. It
 // assumes as little as possible about the order and timing of events.
-describe('SchedulerDOMSetImmediate', () => {
+
+// FIXME: temporarily skipped until we enable the flag.
+describe.skip('SchedulerDOMSetImmediate', () => {
   beforeEach(() => {
     jest.resetModules();
 
