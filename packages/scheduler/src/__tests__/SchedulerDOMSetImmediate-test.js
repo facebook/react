@@ -85,7 +85,9 @@ describe('SchedulerDOMSetImmediate', () => {
     };
 
     // Unused: we expect setImmediate to be preferred.
-    window.MessageChannel = function() {};
+    global.MessageChannel = function() {
+      throw Error('Should be unused');
+    };
 
     let pendingSetImmediateCallback = null;
     window.setImmediate = function(cb) {
