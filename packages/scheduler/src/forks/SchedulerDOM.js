@@ -88,7 +88,7 @@ var isHostTimeoutScheduled = false;
 // Capture local references to native APIs, in case a polyfill overrides them.
 const setTimeout = window.setTimeout;
 const clearTimeout = window.clearTimeout;
-const setImmediate = window.setImmediate; // IE and Node.js
+const setImmediate = window.setImmediate; // IE and Node.js + jsdom
 
 if (typeof console !== 'undefined') {
   // TODO: Scheduler no longer requires these methods to be polyfilled. But
