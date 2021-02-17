@@ -24,7 +24,7 @@ export const sharedProfilingBuffer = enableProfiling
   ?
   isEnabledSharedArrayBuffer
     ? new SharedArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT)
-    : // $FlowFixMe Flow doesn't know about ArrayBuffer
+    :
     typeof ArrayBuffer === 'function'
     ? new ArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT)
     : null // Don't crash the init path on IE9
