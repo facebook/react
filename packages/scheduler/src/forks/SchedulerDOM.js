@@ -533,7 +533,7 @@ const performWorkUntilDeadline = () => {
       if (hasMoreWork) {
         // If there's more work, schedule the next message event at the end
         // of the preceding one.
-        port.postMessage(null);
+        schedulePerformWorkUntilDeadline();
       } else {
         isMessageLoopRunning = false;
         scheduledHostCallback = null;
@@ -551,11 +551,15 @@ const channel = new MessageChannel();
 const port = channel.port2;
 channel.port1.onmessage = performWorkUntilDeadline;
 
+const schedulePerformWorkUntilDeadline = () => {
+  port.postMessage(null);
+};
+
 function requestHostCallback(callback) {
   scheduledHostCallback = callback;
   if (!isMessageLoopRunning) {
     isMessageLoopRunning = true;
-    port.postMessage(null);
+    schedulePerformWorkUntilDeadline();
   }
 }
 
