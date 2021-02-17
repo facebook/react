@@ -91,9 +91,9 @@ describe('SchedulerDOMSetImmediate', () => {
         port2: {
           postMessage() {
             throw Error('Should be unused');
-          }
-        }
-      }
+          },
+        },
+      };
     };
 
     let pendingSetImmediateCallback = null;
