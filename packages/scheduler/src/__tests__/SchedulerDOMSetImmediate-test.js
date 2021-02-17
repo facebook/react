@@ -29,7 +29,7 @@ let NormalPriority;
 //
 // This test suite mocks all browser methods used in our implementation. It
 // assumes as little as possible about the order and timing of events.
-describe('SchedulerBrowser', () => {
+describe('SchedulerDOMSetImmediate', () => {
   beforeEach(() => {
     jest.resetModules();
 
@@ -53,8 +53,6 @@ describe('SchedulerBrowser', () => {
   });
 
   function installMockBrowserRuntime() {
-    let hasPendingMessageEvent = false;
-
     let timerIDCounter = 0;
     // let timerIDs = new Map();
 
@@ -86,19 +84,16 @@ describe('SchedulerBrowser', () => {
       // TODO
     };
 
-    const port1 = {};
-    const port2 = {
-      postMessage() {
-        if (hasPendingMessageEvent) {
-          throw Error('Message event already scheduled');
-        }
-        log('Post Message');
-        hasPendingMessageEvent = true;
-      },
-    };
-    global.MessageChannel = function MessageChannel() {
-      this.port1 = port1;
-      this.port2 = port2;
+    // Unused: we expect setImmediate to be preferred.
+    window.MessageChannel = function() {};
+
+    let pendingSetImmediateCallback = null;
+    window.setImmediate = function(cb) {
+      if (pendingSetImmediateCallback) {
+        throw Error('Message event already scheduled');
+      }
+      log('Set Immediate');
+      pendingSetImmediateCallback = cb;
     };
 
     function ensureLogIsEmpty() {
@@ -109,15 +104,15 @@ describe('SchedulerBrowser', () => {
     function advanceTime(ms) {
       currentTime += ms;
     }
-    function fireMessageEvent() {
+    function fireSetImmediate() {
       ensureLogIsEmpty();
-      if (!hasPendingMessageEvent) {
-        throw Error('No message event was scheduled');
+      if (!pendingSetImmediateCallback) {
+        throw Error('No setImmediate was scheduled');
       }
-      hasPendingMessageEvent = false;
-      const onMessage = port1.onmessage;
-      log('Message Event');
-      onMessage();
+      const cb = pendingSetImmediateCallback;
+      pendingSetImmediateCallback = null;
+      log('setImmediate Callback');
+      cb();
     }
     function log(val) {
       eventLog.push(val);
@@ -132,7 +127,7 @@ describe('SchedulerBrowser', () => {
     }
     return {
       advanceTime,
-      fireMessageEvent,
+      fireSetImmediate,
       log,
       isLogEmpty,
       assertLog,
@@ -143,9 +138,9 @@ describe('SchedulerBrowser', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Task');
     });
-    runtime.assertLog(['Post Message']);
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'Task']);
+    runtime.assertLog(['Set Immediate']);
+    runtime.fireSetImmediate();
+    runtime.assertLog(['setImmediate Callback', 'Task']);
   });
 
   it('task with continuation', () => {
@@ -159,18 +154,18 @@ describe('SchedulerBrowser', () => {
         runtime.log('Continuation');
       };
     });
-    runtime.assertLog(['Post Message']);
+    runtime.assertLog(['Set Immediate']);
 
-    runtime.fireMessageEvent();
+    runtime.fireSetImmediate();
     runtime.assertLog([
-      'Message Event',
+      'setImmediate Callback',
       'Task',
       'Yield at 5ms',
-      'Post Message',
+      'Set Immediate',
     ]);
 
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'Continuation']);
+    runtime.fireSetImmediate();
+    runtime.assertLog(['setImmediate Callback', 'Continuation']);
   });
 
   it('multiple tasks', () => {
@@ -180,9 +175,9 @@ describe('SchedulerBrowser', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('B');
     });
-    runtime.assertLog(['Post Message']);
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'A', 'B']);
+    runtime.assertLog(['Set Immediate']);
+    runtime.fireSetImmediate();
+    runtime.assertLog(['setImmediate Callback', 'A', 'B']);
   });
 
   it('multiple tasks with a yield in between', () => {
@@ -193,23 +188,23 @@ describe('SchedulerBrowser', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('B');
     });
-    runtime.assertLog(['Post Message']);
-    runtime.fireMessageEvent();
+    runtime.assertLog(['Set Immediate']);
+    runtime.fireSetImmediate();
     runtime.assertLog([
-      'Message Event',
+      'setImmediate Callback',
       'A',
       // Ran out of time. Post a continuation event.
-      'Post Message',
+      'Set Immediate',
     ]);
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'B']);
+    runtime.fireSetImmediate();
+    runtime.assertLog(['setImmediate Callback', 'B']);
   });
 
   it('cancels tasks', () => {
     const task = scheduleCallback(NormalPriority, () => {
       runtime.log('Task');
     });
-    runtime.assertLog(['Post Message']);
+    runtime.assertLog(['Set Immediate']);
     cancelCallback(task);
     runtime.assertLog([]);
   });
@@ -222,13 +217,13 @@ describe('SchedulerBrowser', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Yay');
     });
-    runtime.assertLog(['Post Message']);
+    runtime.assertLog(['Set Immediate']);
 
-    expect(() => runtime.fireMessageEvent()).toThrow('Oops!');
-    runtime.assertLog(['Message Event', 'Oops!', 'Post Message']);
+    expect(() => runtime.fireSetImmediate()).toThrow('Oops!');
+    runtime.assertLog(['setImmediate Callback', 'Oops!', 'Set Immediate']);
 
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'Yay']);
+    runtime.fireSetImmediate();
+    runtime.assertLog(['setImmediate Callback', 'Yay']);
   });
 
   it('schedule new task after queue has emptied', () => {
@@ -236,16 +231,16 @@ describe('SchedulerBrowser', () => {
       runtime.log('A');
     });
 
-    runtime.assertLog(['Post Message']);
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'A']);
+    runtime.assertLog(['Set Immediate']);
+    runtime.fireSetImmediate();
+    runtime.assertLog(['setImmediate Callback', 'A']);
 
     scheduleCallback(NormalPriority, () => {
       runtime.log('B');
     });
-    runtime.assertLog(['Post Message']);
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'B']);
+    runtime.assertLog(['Set Immediate']);
+    runtime.fireSetImmediate();
+    runtime.assertLog(['setImmediate Callback', 'B']);
   });
 
   it('schedule new task after a cancellation', () => {
@@ -253,17 +248,17 @@ describe('SchedulerBrowser', () => {
       runtime.log('A');
     });
 
-    runtime.assertLog(['Post Message']);
+    runtime.assertLog(['Set Immediate']);
     cancelCallback(handle);
 
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event']);
+    runtime.fireSetImmediate();
+    runtime.assertLog(['setImmediate Callback']);
 
     scheduleCallback(NormalPriority, () => {
       runtime.log('B');
     });
-    runtime.assertLog(['Post Message']);
-    runtime.fireMessageEvent();
-    runtime.assertLog(['Message Event', 'B']);
+    runtime.assertLog(['Set Immediate']);
+    runtime.fireSetImmediate();
+    runtime.assertLog(['setImmediate Callback', 'B']);
   });
 });
