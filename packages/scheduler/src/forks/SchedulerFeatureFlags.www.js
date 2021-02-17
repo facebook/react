@@ -9,8 +9,7 @@
 export const {
   enableIsInputPending,
   enableSchedulerDebugging,
-  enableProfiling: enableProfilingFeatureFlag,
   enableSetImmediate,
 } = require('SchedulerFeatureFlags');
 
-export const enableProfiling = __PROFILE__ && enableProfilingFeatureFlag;
+export const enableProfiling = false;
