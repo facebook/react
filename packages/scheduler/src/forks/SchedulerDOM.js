@@ -11,6 +11,7 @@
 import {
   enableSchedulerDebugging,
   enableProfiling,
+  enableSetImmediate,
 } from '../SchedulerFeatureFlags';
 
 import {push, pop, peek} from '../SchedulerMinHeap';
@@ -88,6 +89,7 @@ var isHostTimeoutScheduled = false;
 // Capture local references to native APIs, in case a polyfill overrides them.
 const setTimeout = window.setTimeout;
 const clearTimeout = window.clearTimeout;
+const setImmediate = window.setImmediate; // IE and Node.js + jsdom
 
 if (typeof console !== 'undefined') {
   // TODO: Scheduler no longer requires these methods to be polyfilled. But
@@ -533,7 +535,7 @@ const performWorkUntilDeadline = () => {
       if (hasMoreWork) {
         // If there's more work, schedule the next message event at the end
         // of the preceding one.
-        port.postMessage(null);
+        schedulePerformWorkUntilDeadline();
       } else {
         isMessageLoopRunning = false;
         scheduledHostCallback = null;
@@ -547,15 +549,36 @@ const performWorkUntilDeadline = () => {
   needsPaint = false;
 };
 
-const channel = new MessageChannel();
-const port = channel.port2;
-channel.port1.onmessage = performWorkUntilDeadline;
+let schedulePerformWorkUntilDeadline;
+if (enableSetImmediate && typeof setImmediate === 'function') {
+  // Node.js and old IE.
+  // There's a few reasons for why we prefer setImmediate.
+  //
+  // Unlike MessageChannel, it doesn't prevent a Node.js process from exiting.
+  // (Even though this is a DOM fork of the Scheduler, you could get here
+  // with a mix of Node.js 15+, which has a MessageChannel, and jsdom.)
+  // https://github.com/facebook/react/issues/20756
+  //
+  // But also, it runs earlier which is the semantic we want.
+  // If other browsers ever implement it, it's better to use it.
+  // Although both of these would be inferior to native scheduling.
+  schedulePerformWorkUntilDeadline = () => {
+    setImmediate(performWorkUntilDeadline);
+  };
+} else {
+  const channel = new MessageChannel();
+  const port = channel.port2;
+  channel.port1.onmessage = performWorkUntilDeadline;
+  schedulePerformWorkUntilDeadline = () => {
+    port.postMessage(null);
+  };
+}
 
 function requestHostCallback(callback) {
   scheduledHostCallback = callback;
   if (!isMessageLoopRunning) {
     isMessageLoopRunning = true;
-    port.postMessage(null);
+    schedulePerformWorkUntilDeadline();
   }
 }
 
