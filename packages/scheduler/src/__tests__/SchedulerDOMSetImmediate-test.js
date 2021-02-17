@@ -29,9 +29,7 @@ let NormalPriority;
 //
 // This test suite mocks all browser methods used in our implementation. It
 // assumes as little as possible about the order and timing of events.
-
-// FIXME: temporarily skipped until we enable the flag.
-describe.skip('SchedulerDOMSetImmediate', () => {
+describe('SchedulerDOMSetImmediate', () => {
   beforeEach(() => {
     jest.resetModules();
 
@@ -88,7 +86,14 @@ describe.skip('SchedulerDOMSetImmediate', () => {
 
     // Unused: we expect setImmediate to be preferred.
     global.MessageChannel = function() {
-      throw Error('Should be unused');
+      return {
+        port1: {},
+        port2: {
+          postMessage() {
+            throw Error('Should be unused');
+          }
+        }
+      }
     };
 
     let pendingSetImmediateCallback = null;
@@ -138,6 +143,7 @@ describe.skip('SchedulerDOMSetImmediate', () => {
     };
   }
 
+  // @gate enableSchedulerSetImmediate
   it('task that finishes before deadline', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Task');
@@ -147,6 +153,7 @@ describe.skip('SchedulerDOMSetImmediate', () => {
     runtime.assertLog(['setImmediate Callback', 'Task']);
   });
 
+  // @gate enableSchedulerSetImmediate
   it('task with continuation', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Task');
@@ -172,6 +179,7 @@ describe.skip('SchedulerDOMSetImmediate', () => {
     runtime.assertLog(['setImmediate Callback', 'Continuation']);
   });
 
+  // @gate enableSchedulerSetImmediate
   it('multiple tasks', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('A');
@@ -184,6 +192,7 @@ describe.skip('SchedulerDOMSetImmediate', () => {
     runtime.assertLog(['setImmediate Callback', 'A', 'B']);
   });
 
+  // @gate enableSchedulerSetImmediate
   it('multiple tasks with a yield in between', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('A');
@@ -204,6 +213,7 @@ describe.skip('SchedulerDOMSetImmediate', () => {
     runtime.assertLog(['setImmediate Callback', 'B']);
   });
 
+  // @gate enableSchedulerSetImmediate
   it('cancels tasks', () => {
     const task = scheduleCallback(NormalPriority, () => {
       runtime.log('Task');
@@ -213,6 +223,7 @@ describe.skip('SchedulerDOMSetImmediate', () => {
     runtime.assertLog([]);
   });
 
+  // @gate enableSchedulerSetImmediate
   it('throws when a task errors then continues in a new event', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Oops!');
@@ -230,6 +241,7 @@ describe.skip('SchedulerDOMSetImmediate', () => {
     runtime.assertLog(['setImmediate Callback', 'Yay']);
   });
 
+  // @gate enableSchedulerSetImmediate
   it('schedule new task after queue has emptied', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('A');
@@ -247,6 +259,7 @@ describe.skip('SchedulerDOMSetImmediate', () => {
     runtime.assertLog(['setImmediate Callback', 'B']);
   });
 
+  // @gate enableSchedulerSetImmediate
   it('schedule new task after a cancellation', () => {
     const handle = scheduleCallback(NormalPriority, () => {
       runtime.log('A');

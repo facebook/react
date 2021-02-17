@@ -55,6 +55,7 @@ function getTestFlags() {
   // These are required on demand because some of our tests mutate them. We try
   // not to but there are exceptions.
   const featureFlags = require('shared/ReactFeatureFlags');
+  const schedulerFeatureFlags = require('scheduler/src/SchedulerFeatureFlags');
 
   // TODO: This is a heuristic to detect the release channel by checking a flag
   // that is known to only be enabled in www. What we should do instead is set
@@ -89,6 +90,10 @@ function getTestFlags() {
       // tests, Jest doesn't expose the API correctly. Fix then remove
       // this override.
       enableCache: __EXPERIMENTAL__,
+
+      // This is from SchedulerFeatureFlags. Needed because there's no equivalent
+      // of ReactFeatureFlags-www.dynamic for it. Remove when enableSetImmediate is gone.
+      enableSchedulerSetImmediate: schedulerFeatureFlags.enableSetImmediate,
     },
     {
       get(flags, flagName) {
