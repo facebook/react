@@ -11,6 +11,7 @@
 import {
   enableSchedulerDebugging,
   enableProfiling,
+  enableSetImmediate,
 } from '../SchedulerFeatureFlags';
 
 import {push, pop, peek} from '../SchedulerMinHeap';
@@ -549,7 +550,7 @@ const performWorkUntilDeadline = () => {
 };
 
 let schedulePerformWorkUntilDeadline;
-if (typeof setImmediate === 'function') {
+if (enableSetImmediate && typeof setImmediate === 'function') {
   // Node.js and old IE.
   // There's a few reasons for why we prefer setImmediate.
   //
