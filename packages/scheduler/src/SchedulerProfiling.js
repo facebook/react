@@ -15,13 +15,18 @@ import {NoPriority} from './SchedulerPriorities';
 let runIdCounter: number = 0;
 let mainThreadIdCounter: number = 0;
 
+const isEnabledSharedArrayBuffer =
+  // $FlowFixMe Flow doesn't know about SharedArrayBuffer
+  typeof SharedArrayBuffer === 'function' &&
+  // We only use SharedArrayBuffer when cross origin isolation is enabled.
+  typeof window !== 'undefined' &&
+  window.crossOriginIsolated === true;
+
 const profilingStateSize = 4;
 export const sharedProfilingBuffer = enableProfiling
-  ? // $FlowFixMe Flow doesn't know about SharedArrayBuffer
-    typeof SharedArrayBuffer === 'function'
+  ? isEnabledSharedArrayBuffer
     ? new SharedArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT)
-    : // $FlowFixMe Flow doesn't know about ArrayBuffer
-    typeof ArrayBuffer === 'function'
+    : typeof ArrayBuffer === 'function'
     ? new ArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT)
     : null // Don't crash the init path on IE9
   : null;
