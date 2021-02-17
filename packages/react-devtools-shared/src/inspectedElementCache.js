@@ -19,6 +19,7 @@ import type {Wakeable} from 'shared/ReactTypes';
 import type {
   Element,
   InspectedElement as InspectedElementFrontend,
+  InspectedElementResponseType,
 } from 'react-devtools-shared/src/devtools/views/Components/types';
 
 const Pending = 0;
@@ -122,7 +123,7 @@ export function inspectElement(
       path,
       rendererID: ((rendererID: any): number),
     }).then(
-      (inspectedElement: InspectedElementFrontend) => {
+      ([inspectedElement: InspectedElementFrontend]) => {
         const resolvedRecord = ((newRecord: any): ResolvedRecord<InspectedElementFrontend>);
         resolvedRecord.status = Resolved;
         resolvedRecord.value = inspectedElement;
@@ -174,12 +175,18 @@ export function checkForUpdate({
       element,
       path: null,
       rendererID: ((rendererID: any): number),
-    }).then((inspectedElement: InspectedElementFrontend) => {
-      // TODO only start transition if we got an update; right now we over-update even after "no-change"
-      startTransition(() => {
-        const [key, value] = createCacheSeed(element, inspectedElement);
-        refresh(key, value);
-      });
-    });
+    }).then(
+      ([
+        inspectedElement: InspectedElementFrontend,
+        responseType: InspectedElementResponseType,
+      ]) => {
+        if (responseType === 'full-data') {
+          startTransition(() => {
+            const [key, value] = createCacheSeed(element, inspectedElement);
+            refresh(key, value);
+          });
+        }
+      },
+    );
   }
 }

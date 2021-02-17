@@ -22,6 +22,7 @@ import type {
 import type {
   Element,
   InspectedElement as InspectedElementFrontend,
+  InspectedElementResponseType,
 } from 'react-devtools-shared/src/devtools/views/Components/types';
 
 // Map an Element in the Store to the most recent copy of its inspected data.
@@ -36,6 +37,11 @@ const inspectedElementMap: WeakMap<
 
 type Path = Array<string | number>;
 
+type InspectElementReturnType = [
+  InspectedElementFrontend,
+  InspectedElementResponseType,
+];
+
 export function inspectElement({
   bridge,
   element,
@@ -46,7 +52,7 @@ export function inspectElement({
   element: Element,
   path: Path | null,
   rendererID: number,
-|}): Promise<InspectedElementFrontend> {
+|}): Promise<InspectElementReturnType> {
   const {id} = element;
   return inspectElementAPI({
     bridge,
@@ -62,7 +68,7 @@ export function inspectElement({
         // This is a no-op for the purposes of our cache.
         inspectedElement = inspectedElementMap.get(element);
         if (inspectedElement != null) {
-          return inspectedElement;
+          return [inspectedElement, type];
         }
         break;
 
@@ -84,7 +90,7 @@ export function inspectElement({
 
         inspectedElementMap.set(element, inspectedElement);
 
-        return inspectedElement;
+        return [inspectedElement, type];
 
       case 'hydrated-path':
         const hydratedPathData = ((data: any): InspectElementHydratedPath);
@@ -107,7 +113,7 @@ export function inspectElement({
 
           inspectedElementMap.set(element, inspectedElement);
 
-          return inspectedElement;
+          return [inspectedElement, type];
         }
         break;
 
