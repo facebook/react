@@ -125,7 +125,7 @@ import {
   ConcurrentMode,
   NoMode,
   ProfileMode,
-  StrictMode,
+  StrictModeL1,
   BlockingMode,
 } from './ReactTypeOfMode';
 import {
@@ -357,7 +357,7 @@ function updateForwardRef(
     );
     if (
       debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictMode
+      workInProgress.mode & StrictModeL1
     ) {
       disableLogs();
       try {
@@ -889,7 +889,7 @@ function updateFunctionComponent(
     );
     if (
       debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictMode
+      workInProgress.mode & StrictModeL1
     ) {
       disableLogs();
       try {
@@ -1068,7 +1068,7 @@ function finishClassComponent(
       nextChildren = instance.render();
       if (
         debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictMode
+        workInProgress.mode & StrictModeL1
       ) {
         disableLogs();
         try {
@@ -1478,7 +1478,7 @@ function mountIndeterminateComponent(
       }
     }
 
-    if (workInProgress.mode & StrictMode) {
+    if (workInProgress.mode & StrictModeL1) {
       ReactStrictModeWarnings.recordLegacyContextWarning(workInProgress, null);
     }
 
@@ -1615,7 +1615,7 @@ function mountIndeterminateComponent(
 
       if (
         debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictMode
+        workInProgress.mode & StrictModeL1
       ) {
         disableLogs();
         try {

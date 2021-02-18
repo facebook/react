@@ -20,8 +20,12 @@ export const enableDebugTracing = false;
 export const enableSchedulingProfiler = __PROFILE__ && __EXPERIMENTAL__;
 
 // Helps identify side effects in render-phase lifecycle hooks and setState
-// reducers by double invoking them in Strict Mode.
+// reducers by double invoking them in StrictModeL1.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
+
+// Helps identify code that is not safe for planned Offscreen API and Suspense semantics;
+// this feature flag only impacts StrictModeL2.
+export const enableDoubleInvokingEffects = false;
 
 // To preserve the "Pause on caught exceptions" behavior of the debugger, we
 // replay the begin phase of a failed component inside invokeGuardedCallback.
@@ -138,8 +142,6 @@ export const deferRenderPhaseUpdateToNextBatch = true;
 export const decoupleUpdatePriorityFromScheduler = false;
 
 export const enableDiscreteEventFlushingChange = false;
-
-export const enableDoubleInvokingEffects = false;
 
 export const enableUseRefAccessWarning = false;
 

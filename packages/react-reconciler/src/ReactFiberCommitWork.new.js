@@ -2476,8 +2476,8 @@ function ensureCorrectReturnPointer(fiber, expectedReturnFiber) {
 
 function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
-    // We don't need to re-check for legacy roots here.
-    // This function will not be called within legacy roots.
+    // We don't need to re-check StrictModeL2 here.
+    // This function is only called if that check has already passed.
     switch (fiber.tag) {
       case FunctionComponent:
       case ForwardRef:
@@ -2510,8 +2510,8 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
 
 function invokePassiveEffectMountInDEV(fiber: Fiber): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
-    // We don't need to re-check for legacy roots here.
-    // This function will not be called within legacy roots.
+    // We don't need to re-check StrictModeL2 here.
+    // This function is only called if that check has already passed.
     switch (fiber.tag) {
       case FunctionComponent:
       case ForwardRef:
@@ -2535,8 +2535,8 @@ function invokePassiveEffectMountInDEV(fiber: Fiber): void {
 
 function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
-    // We don't need to re-check for legacy roots here.
-    // This function will not be called within legacy roots.
+    // We don't need to re-check StrictModeL2 here.
+    // This function is only called if that check has already passed.
     switch (fiber.tag) {
       case FunctionComponent:
       case ForwardRef:
@@ -2579,8 +2579,8 @@ function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
 
 function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
-    // We don't need to re-check for legacy roots here.
-    // This function will not be called within legacy roots.
+    // We don't need to re-check StrictModeL2 here.
+    // This function is only called if that check has already passed.
     switch (fiber.tag) {
       case FunctionComponent:
       case ForwardRef:

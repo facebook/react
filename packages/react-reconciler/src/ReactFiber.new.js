@@ -19,9 +19,10 @@ import type {OffscreenProps} from './ReactFiberOffscreenComponent';
 
 import invariant from 'shared/invariant';
 import {
+  enableCache,
+  enableDoubleInvokingEffects,
   enableProfilerTimer,
   enableScopeAPI,
-  enableCache,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
@@ -64,7 +65,8 @@ import {
   ConcurrentMode,
   DebugTracingMode,
   ProfileMode,
-  StrictMode,
+  StrictModeL1,
+  StrictModeL2,
   BlockingMode,
 } from './ReactTypeOfMode';
 import {
@@ -421,9 +423,17 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
 export function createHostRootFiber(tag: RootTag): Fiber {
   let mode;
   if (tag === ConcurrentRoot) {
-    mode = ConcurrentMode | BlockingMode | StrictMode;
+    if (enableDoubleInvokingEffects) {
+      mode = ConcurrentMode | BlockingMode | StrictModeL1 | StrictModeL2;
+    } else {
+      mode = ConcurrentMode | BlockingMode | StrictModeL1;
+    }
   } else if (tag === BlockingRoot) {
-    mode = BlockingMode | StrictMode;
+    if (enableDoubleInvokingEffects) {
+      mode = BlockingMode | StrictModeL1 | StrictModeL2;
+    } else {
+      mode = BlockingMode | StrictModeL1;
+    }
   } else {
     mode = NoMode;
   }
@@ -472,7 +482,8 @@ export function createFiberFromTypeAndProps(
         break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
-        mode |= StrictMode;
+        // TODO (StrictModeL2) Add support for new strict mode "level" attribute
+        mode |= StrictModeL1;
         break;
       case REACT_PROFILER_TYPE:
         return createFiberFromProfiler(pendingProps, mode, lanes, key);

@@ -104,7 +104,7 @@ import {Callback, ShouldCapture, DidCapture} from './ReactFiberFlags';
 
 import {debugRenderPhaseSideEffectsForStrictMode} from 'shared/ReactFeatureFlags';
 
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictModeL1} from './ReactTypeOfMode';
 import {
   markSkippedUpdateLanes,
   isInterleavedUpdate,
@@ -392,7 +392,7 @@ function getStateFromUpdate<State>(
         if (__DEV__) {
           if (
             debugRenderPhaseSideEffectsForStrictMode &&
-            workInProgress.mode & StrictMode
+            workInProgress.mode & StrictModeL1
           ) {
             disableLogs();
             try {
@@ -425,7 +425,7 @@ function getStateFromUpdate<State>(
         if (__DEV__) {
           if (
             debugRenderPhaseSideEffectsForStrictMode &&
-            workInProgress.mode & StrictMode
+            workInProgress.mode & StrictModeL1
           ) {
             disableLogs();
             try {

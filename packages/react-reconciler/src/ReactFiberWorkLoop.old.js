@@ -104,7 +104,8 @@ import {
 } from './ReactFiber.old';
 import {
   NoMode,
-  StrictMode,
+  StrictModeL1,
+  StrictModeL2,
   ProfileMode,
   BlockingMode,
   ConcurrentMode,
@@ -2561,8 +2562,8 @@ function commitDoubleInvokeEffectsInDEV(
   hasPassiveEffects: boolean,
 ) {
   if (__DEV__ && enableDoubleInvokingEffects) {
-    // Never double-invoke effects for legacy roots.
-    if ((fiber.mode & (BlockingMode | ConcurrentMode)) === NoMode) {
+    // Never double-invoke effects outside of StrictModeL2.
+    if ((fiber.mode & StrictModeL2) === NoMode) {
       return;
     }
 
@@ -2590,8 +2591,8 @@ function invokeEffectsInDev(
   invokeEffectFn: (fiber: Fiber) => void,
 ): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
-    // We don't need to re-check for legacy roots here.
-    // This function will not be called within legacy roots.
+    // We don't need to re-check StrictModeL2 here.
+    // This function is only called if that check has already passed.
 
     let current = firstChild;
     let subtreeRoot = null;
@@ -2934,7 +2935,7 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
       warnsIfNotActing === true &&
-      (fiber.mode & StrictMode) !== NoMode &&
+      (fiber.mode & StrictModeL1) !== NoMode &&
       IsSomeRendererActing.current === false &&
       IsThisRendererActing.current === false
     ) {
