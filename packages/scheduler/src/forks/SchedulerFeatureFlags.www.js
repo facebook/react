@@ -11,5 +11,3 @@ export const {
   enableSchedulerDebugging,
   enableSetImmediate,
 } = require('SchedulerFeatureFlags');
-
-export const enableProfiling = false;

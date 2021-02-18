@@ -243,6 +243,3 @@ export function unstable_continueExecution() {}
 export function unstable_getFirstCallbackNode() {
   return null;
 }
-
-// Currently no profiling build
-export const unstable_Profiling = null;

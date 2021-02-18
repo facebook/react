@@ -10,7 +10,6 @@
 
 import {
   enableSchedulerDebugging,
-  enableProfiling,
   enableSetImmediate,
 } from '../SchedulerFeatureFlags';
 
@@ -24,19 +23,6 @@ import {
   LowPriority,
   IdlePriority,
 } from '../SchedulerPriorities';
-import {
-  sharedProfilingBuffer,
-  markTaskRun,
-  markTaskYield,
-  markTaskCompleted,
-  markTaskCanceled,
-  markTaskErrored,
-  markSchedulerSuspended,
-  markSchedulerUnsuspended,
-  markTaskStart,
-  stopLoggingProfilingEvents,
-  startLoggingProfilingEvents,
-} from '../SchedulerProfiling';
 
 import {enableIsInputPending} from '../SchedulerFeatureFlags';
 
@@ -128,10 +114,6 @@ function advanceTimers(currentTime) {
       pop(timerQueue);
       timer.sortIndex = timer.expirationTime;
       push(taskQueue, timer);
-      if (enableProfiling) {
-        markTaskStart(timer, currentTime);
-        timer.isQueued = true;
-      }
     } else {
       // Remaining timers are pending.
       return;
@@ -158,10 +140,6 @@ function handleTimeout(currentTime) {
 }
 
 function flushWork(hasTimeRemaining, initialTime) {
-  if (enableProfiling) {
-    markSchedulerUnsuspended(initialTime);
-  }
-
   // We'll need a host callback the next time work is scheduled.
   isHostCallbackScheduled = false;
   if (isHostTimeoutScheduled) {
@@ -173,29 +151,12 @@ function flushWork(hasTimeRemaining, initialTime) {
   isPerformingWork = true;
   const previousPriorityLevel = currentPriorityLevel;
   try {
-    if (enableProfiling) {
-      try {
-        return workLoop(hasTimeRemaining, initialTime);
-      } catch (error) {
-        if (currentTask !== null) {
-          const currentTime = getCurrentTime();
-          markTaskErrored(currentTask, currentTime);
-          currentTask.isQueued = false;
-        }
-        throw error;
-      }
-    } else {
-      // No catch in prod code path.
-      return workLoop(hasTimeRemaining, initialTime);
-    }
+    // No catch in prod code path.
+    return workLoop(hasTimeRemaining, initialTime);
   } finally {
     currentTask = null;
     currentPriorityLevel = previousPriorityLevel;
     isPerformingWork = false;
-    if (enableProfiling) {
-      const currentTime = getCurrentTime();
-      markSchedulerSuspended(currentTime);
-    }
   }
 }
 
@@ -219,17 +180,11 @@ function workLoop(hasTimeRemaining, initialTime) {
       currentTask.callback = null;
       currentPriorityLevel = currentTask.priorityLevel;
       const didUserCallbackTimeout = currentTask.expirationTime <= currentTime;
-      markTaskRun(currentTask, currentTime);
       const continuationCallback = callback(didUserCallbackTimeout);
       currentTime = getCurrentTime();
       if (typeof continuationCallback === 'function') {
         currentTask.callback = continuationCallback;
-        markTaskYield(currentTask, currentTime);
       } else {
-        if (enableProfiling) {
-          markTaskCompleted(currentTask, currentTime);
-          currentTask.isQueued = false;
-        }
         if (currentTask === peek(taskQueue)) {
           pop(taskQueue);
         }
@@ -359,9 +314,6 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
     expirationTime,
     sortIndex: -1,
   };
-  if (enableProfiling) {
-    newTask.isQueued = false;
-  }
 
   if (startTime > currentTime) {
     // This is a delayed task.
@@ -381,10 +333,6 @@ function unstable_scheduleCallback(priorityLevel, callback, options) {
   } else {
     newTask.sortIndex = expirationTime;
     push(taskQueue, newTask);
-    if (enableProfiling) {
-      markTaskStart(newTask, currentTime);
-      newTask.isQueued = true;
-    }
     // Schedule a host callback, if needed. If we're already performing work,
     // wait until the next time we yield.
     if (!isHostCallbackScheduled && !isPerformingWork) {
@@ -413,14 +361,6 @@ function unstable_getFirstCallbackNode() {
 }
 
 function unstable_cancelCallback(task) {
-  if (enableProfiling) {
-    if (task.isQueued) {
-      const currentTime = getCurrentTime();
-      markTaskCanceled(task, currentTime);
-      task.isQueued = false;
-    }
-  }
-
   // Null out the callback to indicate the task has been canceled. (Can't
   // remove from the queue because you can't remove arbitrary nodes from an
   // array based heap, only the first one.)
@@ -615,11 +555,3 @@ export {
   getCurrentTime as unstable_now,
   forceFrameRate as unstable_forceFrameRate,
 };
-
-export const unstable_Profiling = enableProfiling
-  ? {
-      startLoggingProfilingEvents,
-      stopLoggingProfilingEvents,
-      sharedProfilingBuffer,
-    }
-  : null;
