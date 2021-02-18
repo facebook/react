@@ -44,7 +44,8 @@ function priorityLevelToString(priorityLevel) {
 }
 
 describe('Scheduler', () => {
-  if (!__PROFILE__) {
+  const {enableProfiling} = require('scheduler/src/SchedulerFeatureFlags');
+  if (!enableProfiling) {
     // The tests in this suite only apply when profiling is on
     it('profiling APIs are not available', () => {
       Scheduler = require('scheduler');
