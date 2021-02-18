@@ -24,7 +24,6 @@ import {
   IdlePriority,
 } from '../SchedulerPriorities';
 import {
-  sharedProfilingBuffer,
   markTaskRun,
   markTaskYield,
   markTaskCompleted,
@@ -595,6 +594,5 @@ export const unstable_Profiling = enableProfiling
   ? {
       startLoggingProfilingEvents,
       stopLoggingProfilingEvents,
-      sharedProfilingBuffer,
     }
   : null;
