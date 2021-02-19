@@ -14,6 +14,8 @@ import '@reach/tooltip/styles.css';
 
 import * as React from 'react';
 import {useEffect, useLayoutEffect, useMemo, useRef} from 'react';
+import SchedulingProfiler from 'react-devtools-scheduling-profiler/src/SchedulingProfiler';
+import {enableIntegratedSchedulingProfiler} from '../../DevToolsFeatureFlags';
 import Store from '../store';
 import {BridgeContext, ContextMenuContext, StoreContext} from './context';
 import Components from './Components/Components';
@@ -37,7 +39,7 @@ import type {InspectedElement} from 'react-devtools-shared/src/devtools/views/Co
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 
 export type BrowserTheme = 'dark' | 'light';
-export type TabID = 'components' | 'profiler';
+export type TabID = 'components' | 'profiler' | 'scheduling-profiler';
 export type ViewElementSource = (
   id: number,
   inspectedElement: InspectedElement,
@@ -74,6 +76,7 @@ export type Props = {|
   // but individual tabs (e.g. Components, Profiling) can be rendered into portals within their browser panels.
   componentsPortalContainer?: Element,
   profilerPortalContainer?: Element,
+  schedulingProfilerPortalContainer?: Element,
 |};
 
 const componentsTab = {
@@ -88,8 +91,16 @@ const profilerTab = {
   label: 'Profiler',
   title: 'React Profiler',
 };
+const schedulingProfilerTab = {
+  id: ('scheduling-profiler': TabID),
+  icon: 'profiler',
+  label: 'Scheduling Profiler',
+  title: 'React Scheduling Profiler',
+};
 
-const tabs = [componentsTab, profilerTab];
+const tabs = enableIntegratedSchedulingProfiler
+  ? [componentsTab, profilerTab, schedulingProfilerTab]
+  : [componentsTab, profilerTab];
 
 export default function DevTools({
   bridge,
@@ -100,6 +111,7 @@ export default function DevTools({
   enabledInspectedElementContextMenu = false,
   overrideTab,
   profilerPortalContainer,
+  schedulingProfilerPortalContainer,
   showTabBar = false,
   store,
   warnIfLegacyBackendDetected = false,
@@ -188,7 +200,10 @@ export default function DevTools({
             <SettingsContextController
               browserTheme={browserTheme}
               componentsPortalContainer={componentsPortalContainer}
-              profilerPortalContainer={profilerPortalContainer}>
+              profilerPortalContainer={profilerPortalContainer}
+              schedulingProfilerPortalContainer={
+                schedulingProfilerPortalContainer
+              }>
               <ViewElementSourceContext.Provider value={viewElementSource}>
                 <TreeContextController>
                   <ProfilerContextController>
@@ -220,6 +235,13 @@ export default function DevTools({
                         className={styles.TabContent}
                         hidden={tab !== 'profiler'}>
                         <Profiler portalContainer={profilerPortalContainer} />
+                      </div>
+                      <div
+                        className={styles.TabContent}
+                        hidden={tab !== 'scheduling-profiler'}>
+                        <SchedulingProfiler
+                          portalContainer={schedulingProfilerPortalContainer}
+                        />
                       </div>
                     </div>
                   </ProfilerContextController>

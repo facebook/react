@@ -17,7 +17,7 @@ import {
   updateDisplayDensity,
   updateThemeVariables,
 } from 'react-devtools-shared/src/devtools/views/Settings/SettingsContext';
-import {enableDarkMode} from './SchedulingProfilerFeatureFlags';
+import {enableSchedulingProfilerDarkMode} from 'react-devtools-shared/src/DevToolsFeatureFlags';
 
 export type BrowserTheme = 'dark' | 'light';
 
@@ -44,7 +44,7 @@ export function useBrowserTheme(): void {
 
   useLayoutEffect(() => {
     const documentElements = [((document.documentElement: any): HTMLElement)];
-    if (enableDarkMode) {
+    if (enableSchedulingProfilerDarkMode) {
       switch (theme) {
         case 'light':
           updateThemeVariables('light', documentElements);

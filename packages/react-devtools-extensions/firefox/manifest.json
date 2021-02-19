@@ -32,7 +32,7 @@
 
   "devtools_page": "main.html",
 
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
+  "content_security_policy": "script-src 'self' 'unsafe-eval' blob:; object-src 'self'",
   "web_accessible_resources": [
     "main.html",
     "panel.html",

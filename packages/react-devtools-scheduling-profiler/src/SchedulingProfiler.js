@@ -14,6 +14,7 @@ import type {ImportWorkerOutputData} from './import-worker/import.worker';
 import * as React from 'react';
 import {Suspense, useCallback, useState} from 'react';
 import {createResource} from 'react-devtools-shared/src/devtools/cache';
+import portaledContent from 'react-devtools-shared/src/devtools/views/portaledContent';
 import ReactLogo from 'react-devtools-shared/src/devtools/views/ReactLogo';
 
 import ImportButton from './ImportButton';
@@ -55,7 +56,7 @@ function createDataResourceFromImportedFile(file: File): DataResource {
   );
 }
 
-export function SchedulingProfiler(_: {||}) {
+export function SchedulingProfiler({showAppInfo}: {|showAppInfo?: boolean|}) {
   const [dataResource, setDataResource] = useState<DataResource | null>(null);
 
   const handleFileSelect = useCallback((file: File) => {
@@ -65,9 +66,13 @@ export function SchedulingProfiler(_: {||}) {
   return (
     <div className={styles.SchedulingProfiler}>
       <div className={styles.Toolbar}>
-        <ReactLogo />
-        <span className={styles.AppName}>Concurrent Mode Profiler</span>
-        <div className={styles.VRule} />
+        {showAppInfo && (
+          <>
+            <ReactLogo />
+            <span className={styles.AppName}>Concurrent Mode Profiler</span>
+            <div className={styles.VRule} />
+          </>
+        )}
         <ImportButton onFileSelect={handleFileSelect} />
         <div className={styles.Spacer} />
       </div>
@@ -143,3 +148,5 @@ const DataResourceComponent = ({
   }
   return <CanvasPage profilerData={dataOrError} />;
 };
+
+export default portaledContent(SchedulingProfiler);
