@@ -2476,7 +2476,7 @@ function ensureCorrectReturnPointer(fiber, expectedReturnFiber) {
 
 function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
-    // We don't need to re-check StrictModeL2 here.
+    // We don't need to re-check StrictEffectsMode here.
     // This function is only called if that check has already passed.
     switch (fiber.tag) {
       case FunctionComponent:
@@ -2510,7 +2510,7 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
 
 function invokePassiveEffectMountInDEV(fiber: Fiber): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
-    // We don't need to re-check StrictModeL2 here.
+    // We don't need to re-check StrictEffectsMode here.
     // This function is only called if that check has already passed.
     switch (fiber.tag) {
       case FunctionComponent:
@@ -2535,7 +2535,7 @@ function invokePassiveEffectMountInDEV(fiber: Fiber): void {
 
 function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
-    // We don't need to re-check StrictModeL2 here.
+    // We don't need to re-check StrictEffectsMode here.
     // This function is only called if that check has already passed.
     switch (fiber.tag) {
       case FunctionComponent:
@@ -2579,7 +2579,7 @@ function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
 
 function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
   if (__DEV__ && enableDoubleInvokingEffects) {
-    // We don't need to re-check StrictModeL2 here.
+    // We don't need to re-check StrictEffectsMode here.
     // This function is only called if that check has already passed.
     switch (fiber.tag) {
       case FunctionComponent:

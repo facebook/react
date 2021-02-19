@@ -65,8 +65,8 @@ import {
   ConcurrentMode,
   DebugTracingMode,
   ProfileMode,
-  StrictModeL1,
-  StrictModeL2,
+  StrictLegacyMode,
+  StrictEffectsMode,
   BlockingMode,
 } from './ReactTypeOfMode';
 import {
@@ -424,15 +424,16 @@ export function createHostRootFiber(tag: RootTag): Fiber {
   let mode;
   if (tag === ConcurrentRoot) {
     if (enableDoubleInvokingEffects) {
-      mode = ConcurrentMode | BlockingMode | StrictModeL1 | StrictModeL2;
+      mode =
+        ConcurrentMode | BlockingMode | StrictLegacyMode | StrictEffectsMode;
     } else {
-      mode = ConcurrentMode | BlockingMode | StrictModeL1;
+      mode = ConcurrentMode | BlockingMode | StrictLegacyMode;
     }
   } else if (tag === BlockingRoot) {
     if (enableDoubleInvokingEffects) {
-      mode = BlockingMode | StrictModeL1 | StrictModeL2;
+      mode = BlockingMode | StrictLegacyMode | StrictEffectsMode;
     } else {
-      mode = BlockingMode | StrictModeL1;
+      mode = BlockingMode | StrictLegacyMode;
     }
   } else {
     mode = NoMode;
@@ -482,8 +483,8 @@ export function createFiberFromTypeAndProps(
         break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
-        // TODO (StrictModeL2) Add support for new strict mode "level" attribute
-        mode |= StrictModeL1;
+        // TODO (StrictEffectsMode) Add support for new strict mode "level" attribute
+        mode |= StrictLegacyMode;
         break;
       case REACT_PROFILER_TYPE:
         return createFiberFromProfiler(pendingProps, mode, lanes, key);

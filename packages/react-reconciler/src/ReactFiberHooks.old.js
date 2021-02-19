@@ -36,7 +36,7 @@ import {
   NoMode,
   BlockingMode,
   DebugTracingMode,
-  StrictModeL2,
+  StrictEffectsMode,
 } from './ReactTypeOfMode';
 import {
   NoLane,
@@ -510,7 +510,7 @@ export function bailoutHooks(
   if (
     __DEV__ &&
     enableDoubleInvokingEffects &&
-    (workInProgress.mode & StrictModeL2) !== NoMode
+    (workInProgress.mode & StrictEffectsMode) !== NoMode
   ) {
     workInProgress.flags &= ~(
       MountPassiveDevEffect |
@@ -1424,7 +1424,7 @@ function mountEffect(
   if (
     __DEV__ &&
     enableDoubleInvokingEffects &&
-    (currentlyRenderingFiber.mode & StrictModeL2) !== NoMode
+    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
     return mountEffectImpl(
       MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
@@ -1462,7 +1462,7 @@ function mountLayoutEffect(
   if (
     __DEV__ &&
     enableDoubleInvokingEffects &&
-    (currentlyRenderingFiber.mode & StrictModeL2) !== NoMode
+    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
     return mountEffectImpl(
       MountLayoutDevEffect | UpdateEffect,
@@ -1534,7 +1534,7 @@ function mountImperativeHandle<T>(
   if (
     __DEV__ &&
     enableDoubleInvokingEffects &&
-    (currentlyRenderingFiber.mode & StrictModeL2) !== NoMode
+    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
     return mountEffectImpl(
       MountLayoutDevEffect | UpdateEffect,
@@ -1833,7 +1833,7 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
       if (
         __DEV__ &&
         enableDoubleInvokingEffects &&
-        (currentlyRenderingFiber.mode & StrictModeL2) === NoMode
+        (currentlyRenderingFiber.mode & StrictEffectsMode) === NoMode
       ) {
         currentlyRenderingFiber.flags |= MountPassiveDevEffect | PassiveEffect;
       } else {

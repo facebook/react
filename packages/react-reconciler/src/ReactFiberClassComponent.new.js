@@ -33,8 +33,8 @@ import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
 import {
   DebugTracingMode,
   NoMode,
-  StrictModeL1,
-  StrictModeL2,
+  StrictLegacyMode,
+  StrictEffectsMode,
 } from './ReactTypeOfMode';
 
 import {
@@ -164,7 +164,7 @@ export function applyDerivedStateFromProps(
   if (__DEV__) {
     if (
       debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictModeL1
+      workInProgress.mode & StrictLegacyMode
     ) {
       disableLogs();
       try {
@@ -317,7 +317,7 @@ function checkShouldComponentUpdate(
     if (__DEV__) {
       if (
         debugRenderPhaseSideEffectsForStrictMode &&
-        workInProgress.mode & StrictModeL1
+        workInProgress.mode & StrictLegacyMode
       ) {
         disableLogs();
         try {
@@ -654,7 +654,7 @@ function constructClassInstance(
   if (__DEV__) {
     if (
       debugRenderPhaseSideEffectsForStrictMode &&
-      workInProgress.mode & StrictModeL1
+      workInProgress.mode & StrictLegacyMode
     ) {
       disableLogs();
       try {
@@ -861,7 +861,7 @@ function mountClassInstance(
       }
     }
 
-    if (workInProgress.mode & StrictModeL1) {
+    if (workInProgress.mode & StrictLegacyMode) {
       ReactStrictModeWarnings.recordLegacyContextWarning(
         workInProgress,
         instance,
@@ -909,7 +909,7 @@ function mountClassInstance(
     if (
       __DEV__ &&
       enableDoubleInvokingEffects &&
-      (workInProgress.mode & StrictModeL2) !== NoMode
+      (workInProgress.mode & StrictEffectsMode) !== NoMode
     ) {
       // Never double-invoke effects for legacy roots.
       workInProgress.flags |= MountLayoutDev | Update;
@@ -988,7 +988,7 @@ function resumeMountClassInstance(
       if (
         __DEV__ &&
         enableDoubleInvokingEffects &&
-        (workInProgress.mode & StrictModeL2) !== NoMode
+        (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
         // Never double-invoke effects for legacy roots.
         workInProgress.flags |= MountLayoutDev | Update;
@@ -1040,7 +1040,7 @@ function resumeMountClassInstance(
       if (
         __DEV__ &&
         enableDoubleInvokingEffects &&
-        (workInProgress.mode & StrictModeL2) !== NoMode
+        (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
         // Never double-invoke effects for legacy roots.
         workInProgress.flags |= MountLayoutDev | Update;
@@ -1055,7 +1055,7 @@ function resumeMountClassInstance(
       if (
         __DEV__ &&
         enableDoubleInvokingEffects &&
-        (workInProgress.mode & StrictModeL2) !== NoMode
+        (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
         // Never double-invoke effects for legacy roots.
         workInProgress.flags |= MountLayoutDev | Update;
