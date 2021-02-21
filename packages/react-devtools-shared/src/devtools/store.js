@@ -141,6 +141,9 @@ export default class Store extends EventEmitter<{|
   _supportsReloadAndProfile: boolean = false;
   _supportsTraceUpdates: boolean = false;
 
+  // Needed for reload and profile - assume supported until told otherwise
+  _supportsSynchronousXHR: boolean = true;
+
   _unsupportedRendererVersionDetected: boolean = false;
 
   // Total number of visible elements (within all roots).
@@ -204,6 +207,10 @@ export default class Store extends EventEmitter<{|
     bridge.addListener(
       'unsupportedRendererVersion',
       this.onBridgeUnsupportedRendererVersion,
+    );
+    bridge.addListener(
+      'isSynchronousXHRSupported',
+      this.onBridgeSynchronousXHRSupported,
     );
 
     this._profilerStore = new ProfilerStore(bridge, this, isProfiling);
@@ -364,6 +371,9 @@ export default class Store extends EventEmitter<{|
     // And if so, can the backend use the localStorage API?
     // Both of these are required for the reload-and-profile feature to work.
     return this._supportsReloadAndProfile && this._isBackendStorageAPISupported;
+  }
+  get supportsSynchronousXHR(): boolean {
+    return this._supportsSynchronousXHR;
   }
 
   get supportsTraceUpdates(): boolean {
@@ -1148,5 +1158,11 @@ export default class Store extends EventEmitter<{|
     this._unsupportedRendererVersionDetected = true;
 
     this.emit('unsupportedRendererVersionDetected');
+  };
+
+  onBridgeSynchronousXHRSupported = (isSynchronousXHRSupported: boolean) => {
+    this._supportsSynchronousXHR = isSynchronousXHRSupported;
+
+    this.emit('supportsSynchronousXHR');
   };
 }

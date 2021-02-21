@@ -8,11 +8,12 @@
  */
 
 import * as React from 'react';
-import {useCallback, useContext, useMemo} from 'react';
+import {useCallback, useContext, useMemo, useEffect} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import {BridgeContext, StoreContext} from '../context';
 import {useSubscription} from '../hooks';
+import {ModalDialogContext} from '../ModalDialog';
 
 type SubscriptionData = {|
   recordChangeDescriptions: boolean,
@@ -28,13 +29,16 @@ export default function ReloadAndProfileButton() {
       getCurrentValue: () => ({
         recordChangeDescriptions: store.recordChangeDescriptions,
         supportsReloadAndProfile: store.supportsReloadAndProfile,
+        supportsSynchronousXHR: store.supportsSynchronousXHR,
       }),
       subscribe: (callback: Function) => {
         store.addListener('recordChangeDescriptions', callback);
         store.addListener('supportsReloadAndProfile', callback);
+        store.addListener('supportsSynchronousXHR', callback);
         return () => {
           store.removeListener('recordChangeDescriptions', callback);
           store.removeListener('supportsReloadAndProfile', callback);
+          store.removeListener('supportsSynchronousXHR', callback);
         };
       },
     }),
@@ -43,7 +47,19 @@ export default function ReloadAndProfileButton() {
   const {
     recordChangeDescriptions,
     supportsReloadAndProfile,
+    supportsSynchronousXHR,
   } = useSubscription<SubscriptionData>(subscription);
+
+  const {dispatch: modalDialogDispatch} = useContext(ModalDialogContext);
+  useEffect(() => {
+    if (!supportsSynchronousXHR) {
+      modalDialogDispatch({
+        type: 'SHOW',
+        content:
+          'Synchronous XHR is required for reload and profile but is disabled on this site.',
+      });
+    }
+  }, [supportsSynchronousXHR, modalDialogDispatch]);
 
   const reloadAndProfile = useCallback(() => {
     // TODO If we want to support reload-and-profile for e.g. React Native,
@@ -61,7 +77,7 @@ export default function ReloadAndProfileButton() {
 
   return (
     <Button
-      disabled={!store.supportsProfiling}
+      disabled={!store.supportsProfiling || !supportsSynchronousXHR}
       onClick={reloadAndProfile}
       title="Reload and start profiling">
       <ButtonIcon type="reload" />
