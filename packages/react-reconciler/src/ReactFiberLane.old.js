@@ -36,10 +36,7 @@ export type Lane = number;
 export type LaneMap<T> = Array<T>;
 
 import invariant from 'shared/invariant';
-import {
-  enableCache,
-  enableNonInterruptingNormalPri,
-} from 'shared/ReactFeatureFlags';
+import {enableCache} from 'shared/ReactFeatureFlags';
 
 import {
   ImmediatePriority as ImmediateSchedulerPriority,
@@ -348,8 +345,7 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
       // Default priority updates should not interrupt transition updates. The
       // only difference between default updates and transition updates is that
       // default updates do not support refresh transitions.
-      (enableNonInterruptingNormalPri &&
-        nextLanePriority === DefaultLanePriority &&
+      (nextLanePriority === DefaultLanePriority &&
         wipLanePriority === TransitionPriority)
     ) {
       // Keep working on the existing in-progress tree. Do not interrupt.
