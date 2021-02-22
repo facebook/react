@@ -946,33 +946,17 @@ describe('ReactTransition', () => {
       updateNormalPri();
     });
 
-    if (gate(flags => flags.enableNonInterruptingNormalPri)) {
-      expect(Scheduler).toHaveYielded([
-        // Finish transition update.
-        'Normal pri: 0',
-        'Commit',
+    expect(Scheduler).toHaveYielded([
+      // Finish transition update.
+      'Normal pri: 0',
+      'Commit',
 
-        // Normal pri update.
-        'Transition pri: 1',
-        'Normal pri: 1',
-        'Commit',
-      ]);
+      // Normal pri update.
+      'Transition pri: 1',
+      'Normal pri: 1',
+      'Commit',
+    ]);
 
-      expect(root).toMatchRenderedOutput('Transition pri: 1, Normal pri: 1');
-    } else {
-      expect(Scheduler).toHaveYielded([
-        // Interrupt! Render normal pri update.
-        'Transition pri: 0',
-        'Normal pri: 1',
-        'Commit',
-
-        // Restart transition update.
-        'Transition pri: 1',
-        'Normal pri: 1',
-        'Commit',
-      ]);
-
-      expect(root).toMatchRenderedOutput('Transition pri: 1, Normal pri: 1');
-    }
+    expect(root).toMatchRenderedOutput('Transition pri: 1, Normal pri: 1');
   });
 });
