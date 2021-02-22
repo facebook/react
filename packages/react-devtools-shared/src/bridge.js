@@ -89,8 +89,7 @@ type ViewAttributeSourceParams = {|
 
 type InspectElementParams = {|
   ...ElementAndRendererID,
-  forceUpdate: boolean,
-  inspectedPaths: Object,
+  path: Array<number | string> | null,
   requestID: number,
 |};
 

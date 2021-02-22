@@ -16,7 +16,6 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
 } from 'react';
 import {TreeStateContext} from './TreeContext';
@@ -57,16 +56,16 @@ export function InspectedElementContextController({children}: Props) {
 
   const refresh = useCacheRefresh();
 
-  // Track when insepected paths have changed; we need to force the backend to send an udpate then.
-  const forceUpdateRef = useRef<boolean>(true);
-
-  // Track the paths insepected for the currently selected element.
+  // Temporarily stores most recently-inspected (hydrated) path.
+  // The transition that updates this causes the component to re-render and ask the cache->backend for the new path.
+  // When a path is sent along with an "inspectElement" request,
+  // the backend knows to send its dehydrated data even if the element hasn't updated since the last request.
   const [state, setState] = useState<{|
     element: Element | null,
-    inspectedPaths: Object,
+    path: Array<number | string> | null,
   |}>({
     element: null,
-    inspectedPaths: {},
+    path: null,
   });
 
   const element =
@@ -78,54 +77,45 @@ export function InspectedElementContextController({children}: Props) {
   if (elementHasChanged) {
     setState({
       element,
-      inspectedPaths: {},
+      path: null,
     });
   }
 
   // Don't load a stale element from the backend; it wastes bridge bandwidth.
-  const inspectedElement =
-    !elementHasChanged && element !== null
-      ? inspectElement(
-          element,
-          state.inspectedPaths,
-          forceUpdateRef.current,
-          store,
-          bridge,
-        )
-      : null;
+  let inspectedElement = null;
+  if (!elementHasChanged && element !== null) {
+    inspectedElement = inspectElement(element, state.path, store, bridge);
+  }
 
   const inspectPaths: InspectPathFunction = useCallback<InspectPathFunction>(
     (path: Path) => {
       startTransition(() => {
-        forceUpdateRef.current = true;
-        setState(prevState => {
-          const cloned = {...prevState};
-          let current = cloned.inspectedPaths;
-          path.forEach(key => {
-            if (!current[key]) {
-              current[key] = {};
-            }
-            current = current[key];
-          });
-          return cloned;
+        setState({
+          element: state.element,
+          path,
         });
         refresh();
       });
     },
-    [setState],
+    [setState, state],
   );
 
-  // Force backend update when inspected paths change.
+  // Reset path now that we've asked the backend to hydrate it.
+  // The backend is stateful, so we don't need to remember this path the next time we inspect.
   useEffect(() => {
-    forceUpdateRef.current = false;
-  }, [element, state]);
+    if (state.path !== null) {
+      setState({
+        element: state.element,
+        path: null,
+      });
+    }
+  }, [state]);
 
   // Periodically poll the selected element for updates.
   useEffect(() => {
     if (element !== null) {
-      const inspectedPaths = state.inspectedPaths;
       const checkForUpdateWrapper = () => {
-        checkForUpdate({bridge, element, inspectedPaths, refresh, store});
+        checkForUpdate({bridge, element, refresh, store});
         timeoutID = setTimeout(checkForUpdateWrapper, POLL_INTERVAL);
       };
       let timeoutID = setTimeout(checkForUpdateWrapper, POLL_INTERVAL);

@@ -584,12 +584,25 @@ export function attach(
   }
 
   let currentlyInspectedElementID: number | null = null;
+  let currentlyInspectedPaths: Object = {};
 
-  function createIsPathAllowed(key: string, inspectedPaths: Object) {
+  // Track the intersection of currently inspected paths,
+  // so that we can send their data along if the element is re-rendered.
+  function mergeInspectedPaths(path: Array<string | number>) {
+    let current = currentlyInspectedPaths;
+    path.forEach(key => {
+      if (!current[key]) {
+        current[key] = {};
+      }
+      current = current[key];
+    });
+  }
+
+  function createIsPathAllowed(key: string) {
     // This function helps prevent previously-inspected paths from being dehydrated in updates.
     // This is important to avoid a bad user experience where expanded toggles collapse on update.
     return function isPathAllowed(path: Array<string | number>): boolean {
-      let current = inspectedPaths[key];
+      let current = currentlyInspectedPaths[key];
       if (!current) {
         return false;
       }
@@ -680,10 +693,11 @@ export function attach(
   function inspectElement(
     requestID: number,
     id: number,
-    inspectedPaths: Object,
+    path: Array<string | number> | null,
   ): InspectedElementPayload {
     if (currentlyInspectedElementID !== id) {
       currentlyInspectedElementID = id;
+      currentlyInspectedPaths = {};
     }
 
     const inspectedElement = inspectElementRaw(id);
@@ -695,6 +709,10 @@ export function attach(
       };
     }
 
+    if (path !== null) {
+      mergeInspectedPaths(path);
+    }
+
     // Any time an inspected element has an update,
     // we should update the selected $r value as wel.
     // Do this before dehyration (cleanForBridge).
@@ -702,15 +720,15 @@ export function attach(
 
     inspectedElement.context = cleanForBridge(
       inspectedElement.context,
-      createIsPathAllowed('context', inspectedPaths),
+      createIsPathAllowed('context'),
     );
     inspectedElement.props = cleanForBridge(
       inspectedElement.props,
-      createIsPathAllowed('props', inspectedPaths),
+      createIsPathAllowed('props'),
     );
     inspectedElement.state = cleanForBridge(
       inspectedElement.state,
-      createIsPathAllowed('state', inspectedPaths),
+      createIsPathAllowed('state'),
     );
 
     return {

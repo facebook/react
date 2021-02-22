@@ -2458,8 +2458,7 @@ export function attach(
     id: number,
     path: Array<string | number>,
   ): void {
-    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
-    if (isCurrent) {
+    if (isMostRecentlyInspectedElement(id)) {
       window.$attribute = getInObject(
         ((mostRecentlyInspectedElement: any): InspectedElement),
         path,
@@ -2766,19 +2765,36 @@ export function attach(
 
   let mostRecentlyInspectedElement: InspectedElement | null = null;
   let hasElementUpdatedSinceLastInspected: boolean = false;
+  let currentlyInspectedPaths: Object = {};
+
+  function isMostRecentlyInspectedElement(id: number): boolean {
+    return (
+      mostRecentlyInspectedElement !== null &&
+      mostRecentlyInspectedElement.id === id
+    );
+  }
 
   function isMostRecentlyInspectedElementCurrent(id: number): boolean {
     return (
-      mostRecentlyInspectedElement !== null &&
-      mostRecentlyInspectedElement.id === id &&
-      !hasElementUpdatedSinceLastInspected
+      isMostRecentlyInspectedElement(id) && !hasElementUpdatedSinceLastInspected
     );
+  }
+
+  // Track the intersection of currently inspected paths,
+  // so that we can send their data along if the element is re-rendered.
+  function mergeInspectedPaths(path: Array<string | number>) {
+    let current = currentlyInspectedPaths;
+    path.forEach(key => {
+      if (!current[key]) {
+        current[key] = {};
+      }
+      current = current[key];
+    });
   }
 
   function createIsPathAllowed(
     key: string | null,
     secondaryCategory: 'hooks' | null,
-    inspectedPaths: Object,
   ) {
     // This function helps prevent previously-inspected paths from being dehydrated in updates.
     // This is important to avoid a bad user experience where expanded toggles collapse on update.
@@ -2803,7 +2819,8 @@ export function attach(
           break;
       }
 
-      let current = key === null ? inspectedPaths : inspectedPaths[key];
+      let current =
+        key === null ? currentlyInspectedPaths : currentlyInspectedPaths[key];
       if (!current) {
         return false;
       }
@@ -2870,9 +2887,7 @@ export function attach(
     path: Array<string | number>,
     count: number,
   ): void {
-    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
-
-    if (isCurrent) {
+    if (isMostRecentlyInspectedElement(id)) {
       const value = getInObject(
         ((mostRecentlyInspectedElement: any): InspectedElement),
         path,
@@ -2887,9 +2902,7 @@ export function attach(
   }
 
   function copyElementPath(id: number, path: Array<string | number>): void {
-    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
-
-    if (isCurrent) {
+    if (isMostRecentlyInspectedElement(id)) {
       copyToClipboard(
         getInObject(
           ((mostRecentlyInspectedElement: any): InspectedElement),
@@ -2902,19 +2915,48 @@ export function attach(
   function inspectElement(
     requestID: number,
     id: number,
-    inspectedPaths: Object,
-    forceUpdate: boolean,
+    path: Array<string | number> | null,
   ): InspectedElementPayload {
-    const isCurrent = !forceUpdate && isMostRecentlyInspectedElementCurrent(id);
+    if (path !== null) {
+      mergeInspectedPaths(path);
+    }
 
-    if (isCurrent) {
-      // If this element has not been updated since it was last inspected, we don't need to return it.
-      // Instead we can just return the ID to indicate that it has not changed.
-      return {
-        id,
-        responseID: requestID,
-        type: 'no-change',
-      };
+    if (isMostRecentlyInspectedElement(id)) {
+      if (!hasElementUpdatedSinceLastInspected) {
+        if (path !== null) {
+          let secondaryCategory = null;
+          if (path[0] === 'hooks') {
+            secondaryCategory = 'hooks';
+          }
+
+          // If this element has not been updated since it was last inspected,
+          // we can just return the subset of data in the newly-inspected path.
+          return {
+            id,
+            responseID: requestID,
+            type: 'hydrated-path',
+            path,
+            value: cleanForBridge(
+              getInObject(
+                ((mostRecentlyInspectedElement: any): InspectedElement),
+                path,
+              ),
+              createIsPathAllowed(null, secondaryCategory),
+              path,
+            ),
+          };
+        } else {
+          // If this element has not been updated since it was last inspected, we don't need to return it.
+          // Instead we can just return the ID to indicate that it has not changed.
+          return {
+            id,
+            responseID: requestID,
+            type: 'no-change',
+          };
+        }
+      }
+    } else {
+      currentlyInspectedPaths = {};
     }
 
     hasElementUpdatedSinceLastInspected = false;
@@ -2939,19 +2981,19 @@ export function attach(
     const cleanedInspectedElement = {...mostRecentlyInspectedElement};
     cleanedInspectedElement.context = cleanForBridge(
       cleanedInspectedElement.context,
-      createIsPathAllowed('context', null, inspectedPaths),
+      createIsPathAllowed('context', null),
     );
     cleanedInspectedElement.hooks = cleanForBridge(
       cleanedInspectedElement.hooks,
-      createIsPathAllowed('hooks', 'hooks', inspectedPaths),
+      createIsPathAllowed('hooks', 'hooks'),
     );
     cleanedInspectedElement.props = cleanForBridge(
       cleanedInspectedElement.props,
-      createIsPathAllowed('props', null, inspectedPaths),
+      createIsPathAllowed('props', null),
     );
     cleanedInspectedElement.state = cleanForBridge(
       cleanedInspectedElement.state,
-      createIsPathAllowed('state', null, inspectedPaths),
+      createIsPathAllowed('state', null),
     );
 
     return {

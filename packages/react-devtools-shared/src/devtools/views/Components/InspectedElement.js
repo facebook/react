@@ -27,6 +27,8 @@ import type {InspectedElement} from './types';
 
 export type Props = {||};
 
+// TODO Make edits and deletes also use transition API!
+
 export default function InspectedElementWrapper(_: Props) {
   const {inspectedElementID} = useContext(TreeStateContext);
   const dispatch = useContext(TreeDispatcherContext);

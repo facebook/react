@@ -258,20 +258,28 @@ export const InspectElementFullDataType = 'full-data';
 export const InspectElementNoChangeType = 'no-change';
 export const InspectElementNotFoundType = 'not-found';
 
-type InspectElementFullData = {|
+export type InspectElementFullData = {|
   id: number,
   responseID: number,
   type: 'full-data',
   value: InspectedElement,
 |};
 
-type InspectElementNoChange = {|
+export type InspectElementHydratedPath = {|
+  id: number,
+  responseID: number,
+  type: 'hydrated-path',
+  path: Array<string | number>,
+  value: any,
+|};
+
+export type InspectElementNoChange = {|
   id: number,
   responseID: number,
   type: 'no-change',
 |};
 
-type InspectElementNotFound = {|
+export type InspectElementNotFound = {|
   id: number,
   responseID: number,
   type: 'not-found',
@@ -279,6 +287,7 @@ type InspectElementNotFound = {|
 
 export type InspectedElementPayload =
   | InspectElementFullData
+  | InspectElementHydratedPath
   | InspectElementNoChange
   | InspectElementNotFound;
 
@@ -316,7 +325,6 @@ export type RendererInterface = {
     requestID: number,
     id: number,
     inspectedPaths: Object,
-    forceUpdate: boolean,
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,
