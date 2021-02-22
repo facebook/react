@@ -56,7 +56,10 @@ export function InspectedElementContextController({children}: Props) {
 
   const refresh = useCacheRefresh();
 
-  // Track the paths insepected for the currently selected element.
+  // Temporarily stores most recently-inspected (hydrated) path.
+  // The transition that updates this causes the component to re-render and ask the cache->backend for the new path.
+  // When a path is sent along with an "inspectElement" request,
+  // the backend knows to send its dehydrated data even if the element hasn't updated since the last request.
   const [state, setState] = useState<{|
     element: Element | null,
     path: Array<number | string> | null,
@@ -97,7 +100,8 @@ export function InspectedElementContextController({children}: Props) {
     [setState, state],
   );
 
-  // Reset path
+  // Reset path now that we've asked the backend to hydrate it.
+  // The backend is stateful, so we don't need to remember this path the next time we inspect.
   useEffect(() => {
     if (state.path !== null) {
       setState({
