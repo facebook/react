@@ -85,17 +85,23 @@ var isPerformingWork = false;
 var isHostCallbackScheduled = false;
 var isHostTimeoutScheduled = false;
 
+// Web Workers can't access window.
+// Many browsers provide a globalThis property for this reason.
+// For legacy reasons (mostly unit tests) this code prefers window if defined.
+// eslint-disable-next-line no-undef
+const globalObject = typeof window !== 'undefined' ? window : globalThis;
+
 // Capture local references to native APIs, in case a polyfill overrides them.
-const setTimeout = window.setTimeout;
-const clearTimeout = window.clearTimeout;
-const setImmediate = window.setImmediate; // IE and Node.js + jsdom
+const setTimeout = globalObject.setTimeout;
+const clearTimeout = globalObject.clearTimeout;
+const setImmediate = globalObject.setImmediate; // IE and Node.js + jsdom
 
 if (typeof console !== 'undefined') {
   // TODO: Scheduler no longer requires these methods to be polyfilled. But
   // maybe we want to continue warning if they don't exist, to preserve the
   // option to rely on it in the future?
-  const requestAnimationFrame = window.requestAnimationFrame;
-  const cancelAnimationFrame = window.cancelAnimationFrame;
+  const requestAnimationFrame = globalObject.requestAnimationFrame;
+  const cancelAnimationFrame = globalObject.cancelAnimationFrame;
 
   if (typeof requestAnimationFrame !== 'function') {
     // Using console['error'] to evade Babel and ESLint
