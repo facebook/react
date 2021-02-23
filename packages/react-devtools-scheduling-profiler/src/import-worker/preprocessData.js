@@ -82,6 +82,7 @@ function markWorkStarted(
   type: ReactMeasureType,
   startTime: Milliseconds,
   lanes: ReactLane[],
+  laneLabels: Array<string>,
   currentProfilerData: ReactProfilerData,
   state: ProcessorState,
 ) {
@@ -96,6 +97,7 @@ function markWorkStarted(
     batchUID,
     depth,
     lanes,
+    laneLabels,
     timestamp: startTime,
     duration: 0,
   });
@@ -168,18 +170,20 @@ function processTimelineEvent(
 
   // React Events - schedule
   if (name.startsWith('--schedule-render-')) {
-    const [laneBitmaskString, ...splitComponentStack] = name
+    const [laneBitmaskString, laneLabels, ...splitComponentStack] = name
       .substr(18)
       .split('-');
     currentProfilerData.events.push({
       type: 'schedule-render',
       lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
+      laneLabels: laneLabels ? laneLabels.split(',') : [],
       componentStack: splitComponentStack.join('-'),
       timestamp: startTime,
     });
   } else if (name.startsWith('--schedule-forced-update-')) {
     const [
       laneBitmaskString,
+      laneLabels,
       componentName,
       ...splitComponentStack
     ] = name.substr(25).split('-');
@@ -189,6 +193,7 @@ function processTimelineEvent(
     currentProfilerData.events.push({
       type: 'schedule-force-update',
       lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
+      laneLabels: laneLabels ? laneLabels.split(',') : [],
       componentName,
       componentStack: splitComponentStack.join('-'),
       timestamp: startTime,
@@ -197,6 +202,7 @@ function processTimelineEvent(
   } else if (name.startsWith('--schedule-state-update-')) {
     const [
       laneBitmaskString,
+      laneLabels,
       componentName,
       ...splitComponentStack
     ] = name.substr(24).split('-');
@@ -206,6 +212,7 @@ function processTimelineEvent(
     currentProfilerData.events.push({
       type: 'schedule-state-update',
       lanes: getLanesFromTransportDecimalBitmask(laneBitmaskString),
+      laneLabels: laneLabels ? laneLabels.split(',') : [],
       componentName,
       componentStack: splitComponentStack.join('-'),
       timestamp: startTime,
@@ -255,7 +262,7 @@ function processTimelineEvent(
       state.nextRenderShouldGenerateNewBatchID = false;
       state.batchUID = ((state.uidCounter++: any): BatchUID);
     }
-    const laneBitmaskString = name.substr(15);
+    const [laneBitmaskString, laneLabels] = name.substr(15).split('-');
     const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
     throwIfIncomplete('render', state.measureStack);
     if (getLastType(state.measureStack) !== 'render-idle') {
@@ -263,11 +270,19 @@ function processTimelineEvent(
         'render-idle',
         startTime,
         lanes,
+        laneLabels ? laneLabels.split(',') : [],
         currentProfilerData,
         state,
       );
     }
-    markWorkStarted('render', startTime, lanes, currentProfilerData, state);
+    markWorkStarted(
+      'render',
+      startTime,
+      lanes,
+      laneLabels ? laneLabels.split(',') : [],
+      currentProfilerData,
+      state,
+    );
   } else if (
     name.startsWith('--render-stop') ||
     name.startsWith('--render-yield')
@@ -297,9 +312,16 @@ function processTimelineEvent(
   // React Measures - commits
   else if (name.startsWith('--commit-start-')) {
     state.nextRenderShouldGenerateNewBatchID = true;
-    const laneBitmaskString = name.substr(15);
+    const [laneBitmaskString, laneLabels] = name.substr(15).split('-');
     const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
-    markWorkStarted('commit', startTime, lanes, currentProfilerData, state);
+    markWorkStarted(
+      'commit',
+      startTime,
+      lanes,
+      laneLabels ? laneLabels.split(',') : [],
+      currentProfilerData,
+      state,
+    );
   } else if (name.startsWith('--commit-stop')) {
     markWorkCompleted(
       'commit',
@@ -317,12 +339,13 @@ function processTimelineEvent(
 
   // React Measures - layout effects
   else if (name.startsWith('--layout-effects-start-')) {
-    const laneBitmaskString = name.substr(23);
+    const [laneBitmaskString, laneLabels] = name.substr(23).split('-');
     const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
     markWorkStarted(
       'layout-effects',
       startTime,
       lanes,
+      laneLabels ? laneLabels.split(',') : [],
       currentProfilerData,
       state,
     );
@@ -337,12 +360,13 @@ function processTimelineEvent(
 
   // React Measures - passive effects
   else if (name.startsWith('--passive-effects-start-')) {
-    const laneBitmaskString = name.substr(24);
+    const [laneBitmaskString, laneLabels] = name.substr(24).split('-');
     const lanes = getLanesFromTransportDecimalBitmask(laneBitmaskString);
     markWorkStarted(
       'passive-effects',
       startTime,
       lanes,
+      laneLabels ? laneLabels.split(',') : [],
       currentProfilerData,
       state,
     );
@@ -366,6 +390,9 @@ function processTimelineEvent(
     // TODO: Begin user timing measure
   } else if (ph === 'e') {
     // TODO: End user timing measure
+  } else if (ph === 'i' || ph === 'I') {
+    // Instant events.
+    // Note that the capital "I" is a deprecated value that exists in Chrome Canary traces.
   } // eslint-disable-line brace-style
 
   // Unrecognized event
