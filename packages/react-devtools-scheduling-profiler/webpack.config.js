@@ -49,6 +49,7 @@ const config = {
       react: resolve(builtModulesDir, 'react'),
       'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-refresh': resolve(builtModulesDir, 'react-refresh'),
+      scheduler: resolve(builtModulesDir, 'scheduler'),
     },
   },
   plugins: [
