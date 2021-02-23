@@ -208,6 +208,7 @@ module.exports = {
 
   globals: {
     SharedArrayBuffer: true,
+    globalThis: true,
 
     spyOnDev: true,
     spyOnDevAndProd: true,

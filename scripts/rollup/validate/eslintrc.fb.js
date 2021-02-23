@@ -30,6 +30,7 @@ module.exports = {
     SharedArrayBuffer: true,
     Int32Array: true,
     ArrayBuffer: true,
+    globalThis: true,
 
     TaskController: true,
 

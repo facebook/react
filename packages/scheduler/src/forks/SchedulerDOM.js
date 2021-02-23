@@ -88,7 +88,6 @@ var isHostTimeoutScheduled = false;
 // Web Workers can't access window.
 // Many browsers provide a globalThis property for this reason.
 // For legacy reasons (mostly unit tests) this code prefers window if defined.
-// eslint-disable-next-line no-undef
 const globalObject = typeof window !== 'undefined' ? window : globalThis;
 
 // Capture local references to native APIs, in case a polyfill overrides them.
