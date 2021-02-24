@@ -1792,7 +1792,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     it(
       'in legacy mode, useEffect is deferred and updates finish synchronously ' +
         '(in a single batch)',
-      () => {
+      async () => {
         function Counter(props) {
           const [count, updateCount] = useState('(empty)');
           useEffect(() => {
@@ -1807,11 +1807,21 @@ describe('ReactHooksWithNoopRenderer', () => {
           }, [props.count]);
           return <Text text={'Count: ' + count} />;
         }
-        act(() => {
+        await act(async () => {
           ReactNoop.renderLegacySyncRoot(<Counter count={0} />);
-          // Even in legacy mode, effects are deferred until after paint
-          expect(Scheduler).toFlushAndYieldThrough(['Count: (empty)']);
-          expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
+
+          if (gate(flags => flags.enableDiscreteEventMicroTasks)) {
+            // Flush microtasks.
+            await null;
+
+            // Even in legacy mode, effects are deferred until after paint
+            expect(Scheduler).toHaveYielded(['Count: (empty)']);
+            expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
+          } else {
+            // Even in legacy mode, effects are deferred until after paint
+            expect(Scheduler).toFlushAndYieldThrough(['Count: (empty)']);
+            expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
+          }
         });
 
         // effects get forced on exiting act()

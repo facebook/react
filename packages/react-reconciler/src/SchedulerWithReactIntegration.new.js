@@ -23,6 +23,7 @@ import {
   getCurrentUpdateLanePriority,
   setCurrentUpdateLanePriority,
 } from './ReactFiberLane.new';
+import {scheduleMicrotask, supportsMicrotasks} from './ReactFiberHostConfig';
 
 const {
   unstable_runWithPriority: Scheduler_runWithPriority,
@@ -147,10 +148,14 @@ export function scheduleSyncCallback(callback: SchedulerCallback) {
     // Flush the queue in the next tick, at the earliest.
     // TODO: Figure out how to remove this It's only here as a last resort if we
     // forget to explicitly flush.
-    immediateQueueCallbackNode = Scheduler_scheduleCallback(
-      Scheduler_ImmediatePriority,
-      flushSyncCallbackQueueImpl,
-    );
+    if (supportsMicrotasks) {
+      scheduleMicrotask(flushSyncCallbackQueueImpl);
+    } else {
+      immediateQueueCallbackNode = Scheduler_scheduleCallback(
+        Scheduler_ImmediatePriority,
+        flushSyncCallbackQueueImpl,
+      );
+    }
   } else {
     // Push onto existing queue. Don't need to schedule a callback because
     // we already scheduled one when we created the queue.

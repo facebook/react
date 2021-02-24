@@ -98,8 +98,16 @@ describe('ReactOffscreen', () => {
           <Text text="Outside" />
         </>,
       );
-      // Should not defer the hidden tree
-      expect(Scheduler).toFlushUntilNextPaint(['A', 'Outside']);
+      if (gate(flags => flags.enableDiscreteEventMicroTasks)) {
+        // Flush microtasks.
+        await null;
+
+        // Should not defer the hidden tree
+        expect(Scheduler).toHaveYielded(['A', 'Outside']);
+      } else {
+        // Should not defer the hidden tree
+        expect(Scheduler).toFlushUntilNextPaint(['A', 'Outside']);
+      }
     });
     expect(root).toMatchRenderedOutput(
       <>

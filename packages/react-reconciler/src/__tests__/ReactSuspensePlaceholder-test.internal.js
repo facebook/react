@@ -310,7 +310,7 @@ describe('ReactSuspensePlaceholder', () => {
     });
 
     describe('when suspending during mount', () => {
-      it('properly accounts for base durations when a suspended times out in a legacy tree', () => {
+      it('properly accounts for base durations when a suspended times out in a legacy tree', async () => {
         ReactNoop.renderLegacySyncRoot(<App shouldSuspend={true} />);
         expect(Scheduler).toHaveYielded([
           'App',
@@ -331,7 +331,14 @@ describe('ReactSuspensePlaceholder', () => {
         jest.advanceTimersByTime(1000);
 
         expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
-        expect(Scheduler).toFlushExpired(['Loaded']);
+        if (gate(flags => flags.enableDiscreteEventMicroTasks)) {
+          // Flush microtasks
+          await null;
+
+          expect(Scheduler).toHaveYielded(['Loaded']);
+        } else {
+          expect(Scheduler).toFlushExpired(['Loaded']);
+        }
         expect(ReactNoop).toMatchRenderedOutput('LoadedText');
         expect(onRender).toHaveBeenCalledTimes(2);
 
@@ -378,7 +385,7 @@ describe('ReactSuspensePlaceholder', () => {
     });
 
     describe('when suspending during update', () => {
-      it('properly accounts for base durations when a suspended times out in a legacy tree', () => {
+      it('properly accounts for base durations when a suspended times out in a legacy tree', async () => {
         ReactNoop.renderLegacySyncRoot(
           <App shouldSuspend={false} textRenderDuration={5} />,
         );
@@ -427,7 +434,15 @@ describe('ReactSuspensePlaceholder', () => {
         jest.advanceTimersByTime(1000);
 
         expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
-        expect(Scheduler).toFlushExpired(['Loaded']);
+
+        if (gate(flags => flags.enableDiscreteEventMicroTasks)) {
+          // Flush microtasks
+          await null;
+
+          expect(Scheduler).toHaveYielded(['Loaded']);
+        } else {
+          expect(Scheduler).toFlushExpired(['Loaded']);
+        }
         expect(ReactNoop).toMatchRenderedOutput('LoadedNew');
         expect(onRender).toHaveBeenCalledTimes(4);
 

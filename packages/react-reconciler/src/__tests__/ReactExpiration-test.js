@@ -598,12 +598,13 @@ describe('ReactExpiration', () => {
       // second one.
       Scheduler.unstable_advanceTime(1000);
       // Attempt to interrupt with a high pri update.
-      updateHighPri();
+      await ReactNoop.act(async () => {
+        updateHighPri();
+      });
 
-      // The first update expired, so first will finish it without
-      // interrupting. But not the second update, which hasn't expired yet.
-      expect(Scheduler).toFlushExpired(['Sibling']);
-      expect(Scheduler).toFlushAndYield([
+      expect(Scheduler).toHaveYielded([
+        // The first update expired
+        'Sibling',
         // Then render the high pri update
         'High pri: 1',
         'Normal pri: 1',

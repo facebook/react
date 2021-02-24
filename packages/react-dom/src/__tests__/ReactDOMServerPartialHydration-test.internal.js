@@ -380,6 +380,7 @@ describe('ReactDOMServerPartialHydration', () => {
     resolve();
     await promise;
     Scheduler.unstable_flushAll();
+    await null;
     jest.runAllTimers();
 
     // We should now have hydrated with a ref on the existing span.

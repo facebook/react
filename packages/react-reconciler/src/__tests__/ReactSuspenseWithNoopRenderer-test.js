@@ -1088,9 +1088,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       expect(Scheduler).toHaveYielded(['Suspend! [Result]', 'Loading...']);
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
 
-      await resolveText('Result');
+      await ReactNoop.act(async () => {
+        resolveText('Result');
+      });
 
-      expect(Scheduler).toFlushExpired(['Result']);
+      expect(Scheduler).toHaveYielded(['Result']);
       expect(ReactNoop.getChildren()).toEqual([span('Result')]);
     });
 
@@ -1156,8 +1158,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </>,
       );
 
-      await resolveText('Step: 2');
-      expect(Scheduler).toFlushExpired(['Step: 2']);
+      await ReactNoop.act(async () => {
+        resolveText('Step: 2');
+      });
+      expect(Scheduler).toHaveYielded(['Step: 2']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="Step: 2" />
@@ -1227,9 +1231,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         </>,
       );
 
-      await resolveText('B');
+      await ReactNoop.act(async () => {
+        resolveText('B');
+      });
 
-      expect(Scheduler).toFlushExpired(['B']);
+      expect(Scheduler).toHaveYielded(['B']);
       expect(ReactNoop).toMatchRenderedOutput(
         <>
           <span prop="A" />
@@ -1271,9 +1277,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       ]);
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
 
-      await resolveText('Hi');
+      await ReactNoop.act(async () => {
+        resolveText('Hi');
+      });
 
-      expect(Scheduler).toFlushExpired([
+      expect(Scheduler).toHaveYielded([
         'constructor',
         'Hi',
         'componentDidMount',
@@ -1316,8 +1324,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
         'Loading...',
       ]);
       expect(ReactNoop.getChildren()).toEqual([span('Loading...')]);
-      await resolveText('Hi');
-      expect(Scheduler).toFlushExpired(['Hi']);
+      await ReactNoop.act(async () => {
+        resolveText('Hi');
+      });
+      expect(Scheduler).toHaveYielded(['Hi']);
       expect(ReactNoop.getChildren()).toEqual([span('Hi')]);
     });
 
@@ -1360,8 +1370,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           </>,
         ]);
 
-        await resolveText('Hi');
-        expect(Scheduler).toFlushExpired(['Hi']);
+        await ReactNoop.act(async () => {
+          resolveText('Hi');
+        });
+        expect(Scheduler).toHaveYielded(['Hi']);
       });
     } else {
       // @gate enableCache
@@ -1401,9 +1413,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
           'Child is hidden: true',
         ]);
 
-        await resolveText('Hi');
+        await ReactNoop.act(async () => {
+          resolveText('Hi');
+        });
 
-        expect(Scheduler).toFlushExpired(['Hi']);
+        expect(Scheduler).toHaveYielded(['Hi']);
       });
     }
 
@@ -1647,9 +1661,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       </>,
     );
 
-    await resolveText('B');
+    await ReactNoop.act(async () => {
+      resolveText('B');
+    });
 
-    expect(Scheduler).toFlushAndYield([
+    expect(Scheduler).toHaveYielded([
       'B',
       'Destroy Layout Effect [Loading...]',
       'Layout Effect [B]',
@@ -1681,9 +1697,11 @@ describe('ReactSuspenseWithNoopRenderer', () => {
       'Effect [Loading...]',
     ]);
 
-    await resolveText('B2');
+    await ReactNoop.act(async () => {
+      resolveText('B2');
+    });
 
-    expect(Scheduler).toFlushAndYield([
+    expect(Scheduler).toHaveYielded([
       'B2',
       'Destroy Layout Effect [Loading...]',
       'Destroy Layout Effect [B]',

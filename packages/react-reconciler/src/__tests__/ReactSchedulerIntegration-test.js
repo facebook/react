@@ -569,9 +569,17 @@ describe(
           ReactNoop.render(<App />);
         });
 
-        // Because the render expired, React should finish the tree without
-        // consulting `shouldYield` again
-        expect(Scheduler).toFlushExpired(['B', 'C']);
+        if (gate(flags => flags.enableDiscreteEventMicroTasks)) {
+          await null;
+
+          // Because the render expired, React should finish the tree without
+          // consulting `shouldYield` again
+          expect(Scheduler).toHaveYielded(['B', 'C']);
+        } else {
+          // Because the render expired, React should finish the tree without
+          // consulting `shouldYield` again
+          expect(Scheduler).toFlushExpired(['B', 'C']);
+        }
       });
     });
   },

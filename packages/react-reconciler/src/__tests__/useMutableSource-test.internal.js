@@ -1794,7 +1794,7 @@ describe('useMutableSource', () => {
       });
 
       // @gate experimental
-      it('should not misidentify mutations after render as side effects', () => {
+      it('should not misidentify mutations after render as side effects', async () => {
         const source = createSource('initial');
         const mutableSource = createMutableSource(
           source,
@@ -1811,15 +1811,16 @@ describe('useMutableSource', () => {
           return null;
         }
 
-        act(() => {
+        await act(async () => {
           ReactNoop.renderLegacySyncRoot(
             <React.StrictMode>
               <MutateDuringRead />
             </React.StrictMode>,
           );
-          expect(Scheduler).toFlushAndYieldThrough([
-            'MutateDuringRead:initial',
-          ]);
+        });
+        expect(Scheduler).toHaveYielded(['MutateDuringRead:initial']);
+
+        await act(async () => {
           source.value = 'updated';
         });
         expect(Scheduler).toHaveYielded(['MutateDuringRead:updated']);
