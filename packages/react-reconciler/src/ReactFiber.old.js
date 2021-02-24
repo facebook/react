@@ -19,9 +19,11 @@ import type {OffscreenProps} from './ReactFiberOffscreenComponent';
 
 import invariant from 'shared/invariant';
 import {
+  createRootStrictEffectsByDefault,
+  enableCache,
+  enableStrictEffects,
   enableProfilerTimer,
   enableScopeAPI,
-  enableCache,
 } from 'shared/ReactFeatureFlags';
 import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
@@ -64,7 +66,8 @@ import {
   ConcurrentMode,
   DebugTracingMode,
   ProfileMode,
-  StrictMode,
+  StrictLegacyMode,
+  StrictEffectsMode,
   BlockingMode,
 } from './ReactTypeOfMode';
 import {
@@ -418,12 +421,47 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
   return workInProgress;
 }
 
-export function createHostRootFiber(tag: RootTag): Fiber {
+export function createHostRootFiber(
+  tag: RootTag,
+  strictModeLevelOverride: null | number,
+): Fiber {
   let mode;
   if (tag === ConcurrentRoot) {
-    mode = ConcurrentMode | BlockingMode | StrictMode;
+    mode = ConcurrentMode | BlockingMode;
+    if (strictModeLevelOverride !== null) {
+      if (strictModeLevelOverride >= 1) {
+        mode |= StrictLegacyMode;
+      }
+      if (enableStrictEffects) {
+        if (strictModeLevelOverride >= 2) {
+          mode |= StrictEffectsMode;
+        }
+      }
+    } else {
+      if (enableStrictEffects && createRootStrictEffectsByDefault) {
+        mode |= StrictLegacyMode | StrictEffectsMode;
+      } else {
+        mode |= StrictLegacyMode;
+      }
+    }
   } else if (tag === BlockingRoot) {
-    mode = BlockingMode | StrictMode;
+    mode = BlockingMode;
+    if (strictModeLevelOverride !== null) {
+      if (strictModeLevelOverride >= 1) {
+        mode |= StrictLegacyMode;
+      }
+      if (enableStrictEffects) {
+        if (strictModeLevelOverride >= 2) {
+          mode |= StrictEffectsMode;
+        }
+      }
+    } else {
+      if (enableStrictEffects && createRootStrictEffectsByDefault) {
+        mode |= StrictLegacyMode | StrictEffectsMode;
+      } else {
+        mode |= StrictLegacyMode;
+      }
+    }
   } else {
     mode = NoMode;
   }
@@ -472,7 +510,21 @@ export function createFiberFromTypeAndProps(
         break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
-        mode |= StrictMode;
+
+        // Legacy strict mode (<StrictMode> without any level prop) defaults to level 1.
+        const level =
+          pendingProps.unstable_level == null ? 1 : pendingProps.unstable_level;
+
+        // Levels cascade; higher levels inherit all lower level modes.
+        // It is explicitly not supported to lower a mode with nesting, only to increase it.
+        if (level >= 1) {
+          mode |= StrictLegacyMode;
+        }
+        if (enableStrictEffects) {
+          if (level >= 2) {
+            mode |= StrictEffectsMode;
+          }
+        }
         break;
       case REACT_PROFILER_TYPE:
         return createFiberFromProfiler(pendingProps, mode, lanes, key);

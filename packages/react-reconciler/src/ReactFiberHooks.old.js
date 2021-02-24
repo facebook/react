@@ -29,14 +29,14 @@ import {
   enableCache,
   decoupleUpdatePriorityFromScheduler,
   enableUseRefAccessWarning,
-  enableDoubleInvokingEffects,
+  enableStrictEffects,
 } from 'shared/ReactFeatureFlags';
 
 import {
   NoMode,
   BlockingMode,
-  ConcurrentMode,
   DebugTracingMode,
+  StrictEffectsMode,
 } from './ReactTypeOfMode';
 import {
   NoLane,
@@ -509,8 +509,8 @@ export function bailoutHooks(
   // complete phase (bubbleProperties).
   if (
     __DEV__ &&
-    enableDoubleInvokingEffects &&
-    (workInProgress.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+    enableStrictEffects &&
+    (workInProgress.mode & StrictEffectsMode) !== NoMode
   ) {
     workInProgress.flags &= ~(
       MountPassiveDevEffect |
@@ -1423,8 +1423,8 @@ function mountEffect(
   }
   if (
     __DEV__ &&
-    enableDoubleInvokingEffects &&
-    (currentlyRenderingFiber.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+    enableStrictEffects &&
+    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
     return mountEffectImpl(
       MountPassiveDevEffect | PassiveEffect | PassiveStaticEffect,
@@ -1461,8 +1461,8 @@ function mountLayoutEffect(
 ): void {
   if (
     __DEV__ &&
-    enableDoubleInvokingEffects &&
-    (currentlyRenderingFiber.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+    enableStrictEffects &&
+    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
     return mountEffectImpl(
       MountLayoutDevEffect | UpdateEffect,
@@ -1533,8 +1533,8 @@ function mountImperativeHandle<T>(
 
   if (
     __DEV__ &&
-    enableDoubleInvokingEffects &&
-    (currentlyRenderingFiber.mode & (BlockingMode | ConcurrentMode)) !== NoMode
+    enableStrictEffects &&
+    (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
     return mountEffectImpl(
       MountLayoutDevEffect | UpdateEffect,
@@ -1830,7 +1830,11 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
     const setId = mountState(id)[1];
 
     if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
-      if (__DEV__ && enableDoubleInvokingEffects) {
+      if (
+        __DEV__ &&
+        enableStrictEffects &&
+        (currentlyRenderingFiber.mode & StrictEffectsMode) === NoMode
+      ) {
         currentlyRenderingFiber.flags |= MountPassiveDevEffect | PassiveEffect;
       } else {
         currentlyRenderingFiber.flags |= PassiveEffect;

@@ -32,7 +32,7 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   disableSchedulerTimeoutInWorkLoop,
-  enableDoubleInvokingEffects,
+  enableStrictEffects,
   skipUnmountedBoundaries,
   enableNativeEventPriorityInference,
 } from 'shared/ReactFeatureFlags';
@@ -104,7 +104,7 @@ import {
 } from './ReactFiber.new';
 import {
   NoMode,
-  StrictMode,
+  StrictLegacyMode,
   ProfileMode,
   BlockingMode,
   ConcurrentMode,
@@ -2070,7 +2070,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     legacyErrorBoundariesThatAlreadyFailed = null;
   }
 
-  if (__DEV__ && enableDoubleInvokingEffects) {
+  if (__DEV__ && enableStrictEffects) {
     if (!rootDidHavePassiveEffects) {
       commitDoubleInvokeEffectsInDEV(root.current, false);
     }
@@ -2257,7 +2257,7 @@ function flushPassiveEffectsImpl() {
     markPassiveEffectsStopped();
   }
 
-  if (__DEV__ && enableDoubleInvokingEffects) {
+  if (__DEV__ && enableStrictEffects) {
     commitDoubleInvokeEffectsInDEV(root.current, true);
   }
 
@@ -2560,11 +2560,10 @@ function commitDoubleInvokeEffectsInDEV(
   fiber: Fiber,
   hasPassiveEffects: boolean,
 ) {
-  if (__DEV__ && enableDoubleInvokingEffects) {
-    // Never double-invoke effects for legacy roots.
-    if ((fiber.mode & (BlockingMode | ConcurrentMode)) === NoMode) {
-      return;
-    }
+  if (__DEV__ && enableStrictEffects) {
+    // TODO (StrictEffects) Should we set a marker on the root if it contains strict effects
+    // so we don't traverse unnecessarily? similar to subtreeFlags but just at the root level.
+    // Maybe not a big deal since this is DEV only behavior.
 
     setCurrentDebugFiberInDEV(fiber);
     invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectUnmountInDEV);
@@ -2589,9 +2588,9 @@ function invokeEffectsInDev(
   fiberFlags: Flags,
   invokeEffectFn: (fiber: Fiber) => void,
 ): void {
-  if (__DEV__ && enableDoubleInvokingEffects) {
-    // We don't need to re-check for legacy roots here.
-    // This function will not be called within legacy roots.
+  if (__DEV__ && enableStrictEffects) {
+    // We don't need to re-check StrictEffectsMode here.
+    // This function is only called if that check has already passed.
 
     let current = firstChild;
     let subtreeRoot = null;
@@ -2934,7 +2933,7 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
   if (__DEV__) {
     if (
       warnsIfNotActing === true &&
-      (fiber.mode & StrictMode) !== NoMode &&
+      (fiber.mode & StrictLegacyMode) !== NoMode &&
       IsSomeRendererActing.current === false &&
       IsThisRendererActing.current === false
     ) {

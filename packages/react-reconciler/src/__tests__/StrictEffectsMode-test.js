@@ -14,7 +14,7 @@ let ReactTestRenderer;
 let Scheduler;
 let act;
 
-describe('ReactDoubleInvokeEvents', () => {
+describe('StrictEffectsMode', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
@@ -27,7 +27,8 @@ describe('ReactDoubleInvokeEvents', () => {
     return gate(
       flags =>
         flags.build === 'development' &&
-        flags.enableDoubleInvokingEffects &&
+        flags.enableStrictEffects &&
+        flags.createRootStrictEffectsByDefault &&
         flags.dfsEffectsRefactor,
     );
   }

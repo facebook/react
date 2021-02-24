@@ -14,7 +14,7 @@ import {
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
 import getComponentName from 'shared/getComponentName';
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictLegacyMode} from './ReactTypeOfMode';
 
 type FiberArray = Array<Fiber>;
 type FiberToFiberComponentsMap = Map<Fiber, FiberArray>;
@@ -33,7 +33,7 @@ if (__DEV__) {
 
     let node = fiber;
     while (node !== null) {
-      if (node.mode & StrictMode) {
+      if (node.mode & StrictLegacyMode) {
         maybeStrictRoot = node;
       }
       node = node.return;
@@ -78,7 +78,7 @@ if (__DEV__) {
     }
 
     if (
-      fiber.mode & StrictMode &&
+      fiber.mode & StrictLegacyMode &&
       typeof instance.UNSAFE_componentWillMount === 'function'
     ) {
       pendingUNSAFE_ComponentWillMountWarnings.push(fiber);
@@ -92,7 +92,7 @@ if (__DEV__) {
     }
 
     if (
-      fiber.mode & StrictMode &&
+      fiber.mode & StrictLegacyMode &&
       typeof instance.UNSAFE_componentWillReceiveProps === 'function'
     ) {
       pendingUNSAFE_ComponentWillReceivePropsWarnings.push(fiber);
@@ -106,7 +106,7 @@ if (__DEV__) {
     }
 
     if (
-      fiber.mode & StrictMode &&
+      fiber.mode & StrictLegacyMode &&
       typeof instance.UNSAFE_componentWillUpdate === 'function'
     ) {
       pendingUNSAFE_ComponentWillUpdateWarnings.push(fiber);

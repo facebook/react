@@ -20,8 +20,16 @@ export const enableDebugTracing = false;
 export const enableSchedulingProfiler = __PROFILE__ && __EXPERIMENTAL__;
 
 // Helps identify side effects in render-phase lifecycle hooks and setState
-// reducers by double invoking them in Strict Mode.
+// reducers by double invoking them in StrictLegacyMode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
+
+// Helps identify code that is not safe for planned Offscreen API and Suspense semantics;
+// this feature flag only impacts StrictEffectsMode.
+export const enableStrictEffects = false;
+
+// If TRUE, trees rendered with createRoot (and createBlockingRoot) APIs will be StrictEffectsMode.
+// If FALSE, these trees will be StrictLegacyMode.
+export const createRootStrictEffectsByDefault = false;
 
 // To preserve the "Pause on caught exceptions" behavior of the debugger, we
 // replay the begin phase of a failed component inside invokeGuardedCallback.
@@ -138,8 +146,6 @@ export const deferRenderPhaseUpdateToNextBatch = true;
 export const decoupleUpdatePriorityFromScheduler = false;
 
 export const enableDiscreteEventFlushingChange = false;
-
-export const enableDoubleInvokingEffects = false;
 
 export const enableUseRefAccessWarning = false;
 

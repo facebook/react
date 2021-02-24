@@ -27,6 +27,7 @@ export type RootOptions = {
     mutableSources?: Array<MutableSource<any>>,
     ...
   },
+  unstable_strictModeLevel?: number,
   ...
 };
 
@@ -128,7 +129,18 @@ function createRootImpl(
       options.hydrationOptions != null &&
       options.hydrationOptions.mutableSources) ||
     null;
-  const root = createContainer(container, tag, hydrate, hydrationCallbacks);
+  const strictModeLevelOverride =
+    options != null && options.unstable_strictModeLevel != null
+      ? options.unstable_strictModeLevel
+      : null;
+
+  const root = createContainer(
+    container,
+    tag,
+    hydrate,
+    hydrationCallbacks,
+    strictModeLevelOverride,
+  );
   markContainerAsRoot(root.current, container);
 
   const rootContainerElement =

@@ -50,7 +50,8 @@ export const enableTrustedTypesIntegration = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const disableNativeComponentFrames = false;
 
-export const enableDoubleInvokingEffects = false;
+export const createRootStrictEffectsByDefault = false;
+export const enableStrictEffects = false;
 export const enableUseRefAccessWarning = __VARIANT__;
 
 export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
