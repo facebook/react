@@ -105,7 +105,6 @@ import {
 import {
   NoMode,
   StrictLegacyMode,
-  StrictEffectsMode,
   ProfileMode,
   BlockingMode,
   ConcurrentMode,
@@ -2562,10 +2561,9 @@ function commitDoubleInvokeEffectsInDEV(
   hasPassiveEffects: boolean,
 ) {
   if (__DEV__ && enableStrictEffects) {
-    // Never double-invoke effects outside of StrictEffectsMode.
-    if ((fiber.mode & StrictEffectsMode) === NoMode) {
-      return;
-    }
+    // TODO (StrictEffects) Should we set a marker on the root if it contains strict effects
+    // so we don't traverse unnecessarily? similar to subtreeFlags but just at the root level.
+    // Maybe not a big deal since this is DEV only behavior.
 
     setCurrentDebugFiberInDEV(fiber);
     invokeEffectsInDev(fiber, MountLayoutDev, invokeLayoutEffectUnmountInDEV);

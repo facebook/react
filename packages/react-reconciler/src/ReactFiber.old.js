@@ -421,20 +421,46 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
   return workInProgress;
 }
 
-export function createHostRootFiber(tag: RootTag): Fiber {
+export function createHostRootFiber(
+  tag: RootTag,
+  strictModeLevelOverride: null | number,
+): Fiber {
   let mode;
   if (tag === ConcurrentRoot) {
-    if (enableStrictEffects && createRootStrictEffectsByDefault) {
-      mode =
-        ConcurrentMode | BlockingMode | StrictLegacyMode | StrictEffectsMode;
+    mode = ConcurrentMode | BlockingMode;
+    if (strictModeLevelOverride !== null) {
+      if (strictModeLevelOverride >= 1) {
+        mode |= StrictLegacyMode;
+      }
+      if (enableStrictEffects) {
+        if (strictModeLevelOverride >= 2) {
+          mode |= StrictEffectsMode;
+        }
+      }
     } else {
-      mode = ConcurrentMode | BlockingMode | StrictLegacyMode;
+      if (enableStrictEffects && createRootStrictEffectsByDefault) {
+        mode |= StrictLegacyMode | StrictEffectsMode;
+      } else {
+        mode |= StrictLegacyMode;
+      }
     }
   } else if (tag === BlockingRoot) {
-    if (enableStrictEffects && createRootStrictEffectsByDefault) {
-      mode = BlockingMode | StrictLegacyMode | StrictEffectsMode;
+    mode = BlockingMode;
+    if (strictModeLevelOverride !== null) {
+      if (strictModeLevelOverride >= 1) {
+        mode |= StrictLegacyMode;
+      }
+      if (enableStrictEffects) {
+        if (strictModeLevelOverride >= 2) {
+          mode |= StrictEffectsMode;
+        }
+      }
     } else {
-      mode = BlockingMode | StrictLegacyMode;
+      if (enableStrictEffects && createRootStrictEffectsByDefault) {
+        mode |= StrictLegacyMode | StrictEffectsMode;
+      } else {
+        mode |= StrictLegacyMode;
+      }
     }
   } else {
     mode = NoMode;
@@ -484,8 +510,21 @@ export function createFiberFromTypeAndProps(
         break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
-        // TODO (StrictEffectsMode) Add support for new strict mode "level" attribute
-        mode |= StrictLegacyMode;
+
+        // Legacy strict mode (<StrictMode> without any level prop) defaults to level 1.
+        const level =
+          pendingProps.unstable_level == null ? 1 : pendingProps.unstable_level;
+
+        // Levels cascade; higher levels inherit all lower level modes.
+        // It is explicitly not supported to lower a mode with nesting, only to increase it.
+        if (level >= 1) {
+          mode |= StrictLegacyMode;
+        }
+        if (enableStrictEffects) {
+          if (level >= 2) {
+            mode |= StrictEffectsMode;
+          }
+        }
         break;
       case REACT_PROFILER_TYPE:
         return createFiberFromProfiler(pendingProps, mode, lanes, key);

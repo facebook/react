@@ -451,6 +451,7 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
     isConcurrent ? ConcurrentRoot : LegacyRoot,
     false,
     null,
+    null,
   );
   invariant(root != null, 'something went wrong');
   updateContainer(element, root, null, null);
