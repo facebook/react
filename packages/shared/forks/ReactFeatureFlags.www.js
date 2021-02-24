@@ -28,6 +28,7 @@ export const {
   skipUnmountedBoundaries,
   enableStrictEffects,
   createRootStrictEffectsByDefault,
+  enableSuspenseLayoutEffectSemantics,
   enableUseRefAccessWarning,
   disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop,
