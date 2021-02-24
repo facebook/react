@@ -19,7 +19,7 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   warnAboutDeprecatedLifecycles,
-  enableDoubleInvokingEffects,
+  enableStrictEffects,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
 import {isMounted} from './ReactFiberTreeReflection';
@@ -908,7 +908,7 @@ function mountClassInstance(
   if (typeof instance.componentDidMount === 'function') {
     if (
       __DEV__ &&
-      enableDoubleInvokingEffects &&
+      enableStrictEffects &&
       (workInProgress.mode & StrictEffectsMode) !== NoMode
     ) {
       // Never double-invoke effects for legacy roots.
@@ -987,7 +987,7 @@ function resumeMountClassInstance(
     if (typeof instance.componentDidMount === 'function') {
       if (
         __DEV__ &&
-        enableDoubleInvokingEffects &&
+        enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
         // Never double-invoke effects for legacy roots.
@@ -1039,7 +1039,7 @@ function resumeMountClassInstance(
     if (typeof instance.componentDidMount === 'function') {
       if (
         __DEV__ &&
-        enableDoubleInvokingEffects &&
+        enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
         // Never double-invoke effects for legacy roots.
@@ -1054,7 +1054,7 @@ function resumeMountClassInstance(
     if (typeof instance.componentDidMount === 'function') {
       if (
         __DEV__ &&
-        enableDoubleInvokingEffects &&
+        enableStrictEffects &&
         (workInProgress.mode & StrictEffectsMode) !== NoMode
       ) {
         // Never double-invoke effects for legacy roots.

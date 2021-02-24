@@ -4875,7 +4875,8 @@ describe('Profiler', () => {
 
       if (__DEV__) {
         it('double invoking does not disconnect wrapped async work', () => {
-          ReactFeatureFlags.enableDoubleInvokingEffects = true;
+          ReactFeatureFlags.enableStrictEffects = true;
+          ReactFeatureFlags.createRootStrictEffectsByDefault = true;
 
           const callback = jest.fn(() => {
             const wrappedInteractions = SchedulerTracing.unstable_getCurrent();

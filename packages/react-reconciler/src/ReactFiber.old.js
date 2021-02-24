@@ -19,8 +19,9 @@ import type {OffscreenProps} from './ReactFiberOffscreenComponent';
 
 import invariant from 'shared/invariant';
 import {
+  createRootStrictEffectsByDefault,
   enableCache,
-  enableDoubleInvokingEffects,
+  enableStrictEffects,
   enableProfilerTimer,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
@@ -423,14 +424,14 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
 export function createHostRootFiber(tag: RootTag): Fiber {
   let mode;
   if (tag === ConcurrentRoot) {
-    if (enableDoubleInvokingEffects) {
+    if (enableStrictEffects && createRootStrictEffectsByDefault) {
       mode =
         ConcurrentMode | BlockingMode | StrictLegacyMode | StrictEffectsMode;
     } else {
       mode = ConcurrentMode | BlockingMode | StrictLegacyMode;
     }
   } else if (tag === BlockingRoot) {
-    if (enableDoubleInvokingEffects) {
+    if (enableStrictEffects && createRootStrictEffectsByDefault) {
       mode = BlockingMode | StrictLegacyMode | StrictEffectsMode;
     } else {
       mode = BlockingMode | StrictLegacyMode;

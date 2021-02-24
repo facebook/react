@@ -29,7 +29,7 @@ import {
   enableCache,
   decoupleUpdatePriorityFromScheduler,
   enableUseRefAccessWarning,
-  enableDoubleInvokingEffects,
+  enableStrictEffects,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -509,7 +509,7 @@ export function bailoutHooks(
   // complete phase (bubbleProperties).
   if (
     __DEV__ &&
-    enableDoubleInvokingEffects &&
+    enableStrictEffects &&
     (workInProgress.mode & StrictEffectsMode) !== NoMode
   ) {
     workInProgress.flags &= ~(
@@ -1423,7 +1423,7 @@ function mountEffect(
   }
   if (
     __DEV__ &&
-    enableDoubleInvokingEffects &&
+    enableStrictEffects &&
     (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
     return mountEffectImpl(
@@ -1461,7 +1461,7 @@ function mountLayoutEffect(
 ): void {
   if (
     __DEV__ &&
-    enableDoubleInvokingEffects &&
+    enableStrictEffects &&
     (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
     return mountEffectImpl(
@@ -1533,7 +1533,7 @@ function mountImperativeHandle<T>(
 
   if (
     __DEV__ &&
-    enableDoubleInvokingEffects &&
+    enableStrictEffects &&
     (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
     return mountEffectImpl(
@@ -1832,7 +1832,7 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
     if ((currentlyRenderingFiber.mode & BlockingMode) === NoMode) {
       if (
         __DEV__ &&
-        enableDoubleInvokingEffects &&
+        enableStrictEffects &&
         (currentlyRenderingFiber.mode & StrictEffectsMode) === NoMode
       ) {
         currentlyRenderingFiber.flags |= MountPassiveDevEffect | PassiveEffect;

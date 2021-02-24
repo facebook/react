@@ -32,7 +32,7 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   disableSchedulerTimeoutInWorkLoop,
-  enableDoubleInvokingEffects,
+  enableStrictEffects,
   skipUnmountedBoundaries,
   enableNativeEventPriorityInference,
 } from 'shared/ReactFeatureFlags';
@@ -2071,7 +2071,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     legacyErrorBoundariesThatAlreadyFailed = null;
   }
 
-  if (__DEV__ && enableDoubleInvokingEffects) {
+  if (__DEV__ && enableStrictEffects) {
     if (!rootDidHavePassiveEffects) {
       commitDoubleInvokeEffectsInDEV(root.current, false);
     }
@@ -2258,7 +2258,7 @@ function flushPassiveEffectsImpl() {
     markPassiveEffectsStopped();
   }
 
-  if (__DEV__ && enableDoubleInvokingEffects) {
+  if (__DEV__ && enableStrictEffects) {
     commitDoubleInvokeEffectsInDEV(root.current, true);
   }
 
@@ -2561,7 +2561,7 @@ function commitDoubleInvokeEffectsInDEV(
   fiber: Fiber,
   hasPassiveEffects: boolean,
 ) {
-  if (__DEV__ && enableDoubleInvokingEffects) {
+  if (__DEV__ && enableStrictEffects) {
     // Never double-invoke effects outside of StrictEffectsMode.
     if ((fiber.mode & StrictEffectsMode) === NoMode) {
       return;
@@ -2590,7 +2590,7 @@ function invokeEffectsInDev(
   fiberFlags: Flags,
   invokeEffectFn: (fiber: Fiber) => void,
 ): void {
-  if (__DEV__ && enableDoubleInvokingEffects) {
+  if (__DEV__ && enableStrictEffects) {
     // We don't need to re-check StrictEffectsMode here.
     // This function is only called if that check has already passed.
 

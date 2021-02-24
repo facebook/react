@@ -25,7 +25,11 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 
 // Helps identify code that is not safe for planned Offscreen API and Suspense semantics;
 // this feature flag only impacts StrictEffectsMode.
-export const enableDoubleInvokingEffects = false;
+export const enableStrictEffects = false;
+
+// If TRUE, trees rendered with createRoot (and createBlockingRoot) APIs will be StrictEffectsMode.
+// If FALSE, these trees will be StrictLegacyMode.
+export const createRootStrictEffectsByDefault = false;
 
 // To preserve the "Pause on caught exceptions" behavior of the debugger, we
 // replay the begin phase of a failed component inside invokeGuardedCallback.

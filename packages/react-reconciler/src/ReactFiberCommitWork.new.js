@@ -35,7 +35,7 @@ import {
   enableSuspenseServerRenderer,
   enableSuspenseCallback,
   enableScopeAPI,
-  enableDoubleInvokingEffects,
+  enableStrictEffects,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -2475,7 +2475,7 @@ function ensureCorrectReturnPointer(fiber, expectedReturnFiber) {
 }
 
 function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
-  if (__DEV__ && enableDoubleInvokingEffects) {
+  if (__DEV__ && enableStrictEffects) {
     // We don't need to re-check StrictEffectsMode here.
     // This function is only called if that check has already passed.
     switch (fiber.tag) {
@@ -2509,7 +2509,7 @@ function invokeLayoutEffectMountInDEV(fiber: Fiber): void {
 }
 
 function invokePassiveEffectMountInDEV(fiber: Fiber): void {
-  if (__DEV__ && enableDoubleInvokingEffects) {
+  if (__DEV__ && enableStrictEffects) {
     // We don't need to re-check StrictEffectsMode here.
     // This function is only called if that check has already passed.
     switch (fiber.tag) {
@@ -2534,7 +2534,7 @@ function invokePassiveEffectMountInDEV(fiber: Fiber): void {
 }
 
 function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
-  if (__DEV__ && enableDoubleInvokingEffects) {
+  if (__DEV__ && enableStrictEffects) {
     // We don't need to re-check StrictEffectsMode here.
     // This function is only called if that check has already passed.
     switch (fiber.tag) {
@@ -2578,7 +2578,7 @@ function invokeLayoutEffectUnmountInDEV(fiber: Fiber): void {
 }
 
 function invokePassiveEffectUnmountInDEV(fiber: Fiber): void {
-  if (__DEV__ && enableDoubleInvokingEffects) {
+  if (__DEV__ && enableStrictEffects) {
     // We don't need to re-check StrictEffectsMode here.
     // This function is only called if that check has already passed.
     switch (fiber.tag) {

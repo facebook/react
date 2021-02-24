@@ -51,7 +51,8 @@ export const deferRenderPhaseUpdateToNextBatch = true;
 export const decoupleUpdatePriorityFromScheduler = false;
 export const enableDiscreteEventFlushingChange = false;
 
-export const enableDoubleInvokingEffects = false;
+export const enableStrictEffects = false;
+export const createRootStrictEffectsByDefault = false;
 export const enableUseRefAccessWarning = false;
 
 export const enableRecursiveCommitTraversal = false;
