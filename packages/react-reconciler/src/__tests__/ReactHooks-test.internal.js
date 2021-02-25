@@ -599,7 +599,7 @@ describe('ReactHooks', () => {
     expect(root).toMatchRenderedOutput('105');
   });
 
-  it('warns about variable number of dependencies', () => {
+  it('warns about variable number of dependencies, but also re-runs', () => {
     const {useLayoutEffect} = React;
     function App(props) {
       useLayoutEffect(() => {
@@ -613,13 +613,14 @@ describe('ReactHooks', () => {
     expect(Scheduler).toHaveYielded(['Did commit: A']);
     expect(() => {
       root.update(<App dependencies={['A', 'B']} />);
-    }).toErrorDev([
-      'Warning: The final argument passed to useLayoutEffect changed size ' +
-        'between renders. The order and size of this array must remain ' +
-        'constant.\n\n' +
+    }).toWarnDev([
+      'The final argument passed to useLayoutEffect changed size between renders. ' +
+        'When you insert multiple variable-length arrays into this array always prepend ' +
+        'the length to avoid accidental matches.\n\n' +
         'Previous: [A]\n' +
         'Incoming: [A, B]\n',
     ]);
+    expect(Scheduler).toHaveYielded(['Did commit: A, B']);
   });
 
   it('warns if switching from dependencies to no dependencies', () => {

@@ -101,13 +101,13 @@ function areHookInputsEqual(
     return false;
   }
 
-  if (__DEV__) {
-    // Don't bother comparing lengths in prod because these arrays should be
-    // passed inline.
-    if (nextDeps.length !== prevDeps.length) {
-      console.error(
-        'The final argument passed to %s changed size between renders. The ' +
-          'order and size of this array must remain constant.\n\n' +
+  if (nextDeps.length !== prevDeps.length) {
+    if (__DEV__) {
+      // Warn the developer about accidental matches in dev
+      console.warn(
+        'The final argument passed to %s changed size between renders. When you insert ' +
+          'multiple variable-length arrays into this array always prepend the length ' +
+          'to avoid accidental matches.\n\n' +
           'Previous: %s\n' +
           'Incoming: %s',
         currentHookNameInDev,
@@ -115,8 +115,9 @@ function areHookInputsEqual(
         `[${prevDeps.join(', ')}]`,
       );
     }
+    return false;
   }
-  for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+  for (let i = 0; i < prevDeps.length; i++) {
     if (is(nextDeps[i], prevDeps[i])) {
       continue;
     }
