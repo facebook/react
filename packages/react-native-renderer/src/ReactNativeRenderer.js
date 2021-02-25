@@ -9,6 +9,7 @@
 
 import type {HostComponent} from './ReactNativeTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ElementRef, Element, ElementType} from 'react';
 
 import './ReactNativeInjection';
 
@@ -193,10 +194,10 @@ function sendAccessibilityEvent(handle: any, eventType: string) {
 }
 
 function render(
-  element: React$Element<any>,
-  containerTag: any,
-  callback: ?Function,
-) {
+  element: Element<ElementType>,
+  containerTag: number,
+  callback: ?() => void,
+): ?ElementRef<ElementType> {
   let root = roots.get(containerTag);
 
   if (!root) {
@@ -207,6 +208,7 @@ function render(
   }
   updateContainer(element, root, null, callback);
 
+  // $FlowIssue Flow has hardcoded values for React DOM that don't work with RN
   return getPublicRootInstance(root);
 }
 

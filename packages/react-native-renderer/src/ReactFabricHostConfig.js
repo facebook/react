@@ -14,7 +14,7 @@ import type {
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
   NativeMethods,
-  ReactNativeBaseComponentViewConfig,
+  ViewConfig,
   TouchedViewDataAtPoint,
 } from './ReactNativeTypes';
 
@@ -111,13 +111,13 @@ if (registerEventHandler) {
  */
 class ReactFabricHostComponent {
   _nativeTag: number;
-  viewConfig: ReactNativeBaseComponentViewConfig<>;
+  viewConfig: ViewConfig;
   currentProps: Props;
   _internalInstanceHandle: Object;
 
   constructor(
     tag: number,
-    viewConfig: ReactNativeBaseComponentViewConfig<>,
+    viewConfig: ViewConfig,
     props: Props,
     internalInstanceHandle: Object,
   ) {
