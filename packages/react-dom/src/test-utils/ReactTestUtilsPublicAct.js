@@ -67,6 +67,80 @@ function flushWorkAndMicroTasks(onDone: (err: ?Error) => void) {
   }
 }
 
+// Returns a stack object/array
+// TODO: add tsx notations
+// TODO: confirm that this is the best solution for react
+const getStackTrace = function() {
+  const obj = {};
+  Error.captureStackTrace(obj, getStackTrace);
+  return obj.stack;
+};
+
+// Returns a unique non-clashing uuid
+// Note: unashamedly yoinked from stackoverflow and have done almost zero vetting
+//       https://stackoverflow.com/a/47475081/13929637
+// TODO: this probably already exists in react somewhere, and probably
+//       better/faster/stronger
+function uuid4(): string {
+  // define a hacky getRandomValues as `crypto` may not be present
+  // FIXME: there muc=st be a better way, cross-platform
+  function getRandomValues(array: Uint8Array) {
+    return array.map(() => Math.floor(Math.random() * 256));
+  }
+
+  function hex(s, b) {
+    return (
+      s +
+      (b >>> 4).toString(16) + // high nibble
+      (b & 0b1111).toString(16)
+    ); // low nibble
+  }
+
+  const r = getRandomValues(new Uint8Array(16));
+
+  r[6] = (r[6] >>> 4) | 0b01000000; // Set type 4: 0100
+  r[8] = (r[8] >>> 3) | 0b10000000; // Set variant: 100
+
+  return (
+    r.slice(0, 4).reduce(hex, '') +
+    r.slice(4, 6).reduce(hex, '-') +
+    r.slice(6, 8).reduce(hex, '-') +
+    r.slice(8, 10).reduce(hex, '-') +
+    r.slice(10, 16).reduce(hex, '-')
+  );
+}
+
+// Ronseal global variable. Stores the call-stacks/traces invoked for each
+// act() call currently active
+const activeActStacks = {};
+
+// Track the call-stack at invocation, returning a uuid lookup-key of that trace
+// The intent here is that the returned id can be used in scope to later remove
+// the stack off the heap when the act() has completed.
+function captureScope(): string {
+  const stackString = getStackTrace();
+  const uuid = uuid4(); // can be used later to delete the stack when done
+  activeActStacks[uuid] = stackString;
+  return uuid;
+}
+
+// Returns a string that can be read to determine where the overlapping act()
+// calls were invoked from
+// TODO: return a tidied callstack, removing node_modules etc. as appropriate
+// TODO: profile and optmise
+function stringifyActiveActStacks(): string {
+  let ret = "";
+  const keys = Object.keys(activeActStacks);
+  for (let i = 0; i < keys.length; i += 1) {
+    const stackPrefix = `\nstack ${i} | `;
+    const stackString = `${activeActStacks[keys[i]]}`
+      .replace('\n', stackPrefix)
+      .replace('\r', stackPrefix);
+    ret += `\n${stackPrefix}${stackString}\n`;
+  }
+  return ret;
+}
+
 // we track the 'depth' of the act() calls with this counter,
 // so we can tell if any async act() calls try to run in parallel.
 
@@ -86,6 +160,15 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
   const previousActingUpdatesScopeDepth = actingUpdatesScopeDepth;
   actingUpdatesScopeDepth++;
 
+  let scopeUUID = null;
+  if (__DEV__) {
+    // the scopeUUID is only used to remove scopes that have completed so that
+    // we can debug-log the 'active' scopes in the onDone function
+    // TODO: profile this.
+    // TODO: if slow, optimise or add a cli-option to enable/disable this
+    scopeUUID = captureScope();
+  }
+
   const previousIsSomeRendererActing = IsSomeRendererActing.current;
   const previousIsThisRendererActing = IsThisRendererActing.current;
   IsSomeRendererActing.current = true;
@@ -100,8 +183,14 @@ export function act(callback: () => Thenable<mixed>): Thenable<void> {
         // if it's _less than_ previousActingUpdatesScopeDepth, then we can assume the 'other' one has warned
         console.error(
           'You seem to have overlapping act() calls, this is not supported. ' +
-            'Be sure to await previous act() calls before making a new one. ',
+            'Be sure to await previous act() calls before making a new one. %s',
+          stringifyActiveActStacks(),
         );
+      }
+
+      // Always try to remove the current act() scopes from the stack-db, if added.
+      if (scopeUUID !== null) {
+        delete activeActStacks[scopeUUID];
       }
     }
   }
