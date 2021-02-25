@@ -11,6 +11,5 @@ export {
   COMFORTABLE_LINE_HEIGHT,
   COMPACT_LINE_HEIGHT,
 } from 'react-devtools-shared/src/constants.js';
-import {TotalLanes} from 'react-reconciler/src/ReactFiberLane.new';
 
-export const REACT_TOTAL_NUM_LANES = TotalLanes;
+export const REACT_TOTAL_NUM_LANES = 31;
