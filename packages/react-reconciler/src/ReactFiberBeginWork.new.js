@@ -3074,6 +3074,10 @@ export function markWorkInProgressReceivedUpdate() {
   didReceiveUpdate = true;
 }
 
+export function checkIfWorkInProgressReceivedUpdate() {
+  return didReceiveUpdate;
+}
+
 function bailoutOnAlreadyFinishedWork(
   current: Fiber | null,
   workInProgress: Fiber,

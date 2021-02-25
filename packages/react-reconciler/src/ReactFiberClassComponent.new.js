@@ -20,6 +20,7 @@ import {
   enableSchedulingProfiler,
   warnAboutDeprecatedLifecycles,
   enableStrictEffects,
+  enableLazyContextPropagation,
 } from 'shared/ReactFeatureFlags';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
 import {isMounted} from './ReactFiberTreeReflection';
@@ -58,7 +59,7 @@ import {
   hasContextChanged,
   emptyContextObject,
 } from './ReactFiberContext.new';
-import {readContext} from './ReactFiberNewContext.new';
+import {readContext, checkIfContextChanged} from './ReactFiberNewContext.new';
 import {
   requestEventTime,
   requestUpdateLane,
@@ -1150,7 +1151,13 @@ function updateClassInstance(
     unresolvedOldProps === unresolvedNewProps &&
     oldState === newState &&
     !hasContextChanged() &&
-    !checkHasForceUpdateAfterProcessing()
+    !checkHasForceUpdateAfterProcessing() &&
+    !(
+      enableLazyContextPropagation &&
+      current !== null &&
+      current.dependencies !== null &&
+      checkIfContextChanged(current.dependencies)
+    )
   ) {
     // If an update was already in progress, we should schedule an Update
     // effect even though we're bailing out, so that cWU/cDU are called.
@@ -1193,7 +1200,15 @@ function updateClassInstance(
       oldState,
       newState,
       nextContext,
-    );
+    ) ||
+    // TODO: In some cases, we'll end up checking if context has changed twice,
+    // both before and after `shouldComponentUpdate` has been called. Not ideal,
+    // but I'm loath to refactor this function. This only happens for memoized
+    // components so it's not that common.
+    (enableLazyContextPropagation &&
+      current !== null &&
+      current.dependencies !== null &&
+      checkIfContextChanged(current.dependencies));
 
   if (shouldUpdate) {
     // In order to support react-lifecycles-compat polyfilled components,

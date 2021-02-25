@@ -30,6 +30,7 @@ import {
   decoupleUpdatePriorityFromScheduler,
   enableUseRefAccessWarning,
   enableStrictEffects,
+  enableLazyContextPropagation,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -54,7 +55,7 @@ import {
   higherLanePriority,
   DefaultLanePriority,
 } from './ReactFiberLane.new';
-import {readContext} from './ReactFiberNewContext.new';
+import {readContext, checkIfContextChanged} from './ReactFiberNewContext.new';
 import {HostRoot, CacheComponent} from './ReactWorkTags';
 import {
   Update as UpdateEffect,
@@ -83,7 +84,10 @@ import {
 import invariant from 'shared/invariant';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import is from 'shared/objectIs';
-import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.new';
+import {
+  markWorkInProgressReceivedUpdate,
+  checkIfWorkInProgressReceivedUpdate,
+} from './ReactFiberBeginWork.new';
 import {
   UserBlockingPriority,
   NormalPriority,
@@ -495,6 +499,27 @@ export function renderWithHooks<Props, SecondArg>(
     'Rendered fewer hooks than expected. This may be caused by an accidental ' +
       'early return statement.',
   );
+
+  if (enableLazyContextPropagation) {
+    if (current !== null) {
+      if (!checkIfWorkInProgressReceivedUpdate()) {
+        // If there were no changes to props or state, we need to check if there
+        // was a context change. We didn't already do this because there's no
+        // 1:1 correspondence between dependencies and hooks. Although, because
+        // there almost always is in the common case (`readContext` is an
+        // internal API), we could compare in there. OTOH, we only hit this case
+        // if everything else bails out, so on the whole it might be better to
+        // keep the comparison out of the common path.
+        const currentDependencies = current.dependencies;
+        if (
+          currentDependencies !== null &&
+          checkIfContextChanged(currentDependencies)
+        ) {
+          markWorkInProgressReceivedUpdate();
+        }
+      }
+    }
+  }
 
   return children;
 }

@@ -35,6 +35,7 @@ export const {
   enableDiscreteEventMicroTasks,
   enableSyncMicroTasks,
   enableNativeEventPriorityInference,
+  enableLazyContextPropagation,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.

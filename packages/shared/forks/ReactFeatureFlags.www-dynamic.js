@@ -59,3 +59,4 @@ export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
 export const enableDiscreteEventMicroTasks = __VARIANT__;
 export const enableSyncMicroTasks = __VARIANT__;
 export const enableNativeEventPriorityInference = __VARIANT__;
+export const enableLazyContextPropagation = __VARIANT__;

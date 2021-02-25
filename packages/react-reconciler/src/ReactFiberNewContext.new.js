@@ -8,7 +8,11 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
-import type {Fiber, ContextDependency} from './ReactInternalTypes';
+import type {
+  Fiber,
+  ContextDependency,
+  Dependencies,
+} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.new';
 import type {Lanes} from './ReactFiberLane.new';
 import type {SharedQueue} from './ReactUpdateQueue.new';
@@ -34,7 +38,10 @@ import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
 import {createUpdate, ForceUpdate} from './ReactUpdateQueue.new';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.new';
-import {enableSuspenseServerRenderer} from 'shared/ReactFeatureFlags';
+import {
+  enableSuspenseServerRenderer,
+  enableLazyContextPropagation,
+} from 'shared/ReactFeatureFlags';
 
 const valueCursor: StackCursor<mixed> = createCursor(null);
 
@@ -210,42 +217,52 @@ export function propagateContextChange<T>(
         ) {
           // Match! Schedule an update on this fiber.
 
-          if (fiber.tag === ClassComponent) {
-            // Schedule a force update on the work-in-progress.
-            const lane = pickArbitraryLane(renderLanes);
-            const update = createUpdate(NoTimestamp, lane);
-            update.tag = ForceUpdate;
-            // TODO: Because we don't have a work-in-progress, this will add the
-            // update to the current fiber, too, which means it will persist even if
-            // this render is thrown away. Since it's a race condition, not sure it's
-            // worth fixing.
+          if (enableLazyContextPropagation) {
+            // In the lazy implemenation, don't mark a dirty flag on the
+            // dependency itself. Not all changes are propagated, so we can't
+            // rely on the propagation function alone to determine whether
+            // something has changed; the consumer will check. In the future,
+            // we could add back a dirty flag as an optimization to avoid
+            // double checking, but until we have selectors it's not really
+            // worth the trouble.
+          } else {
+            if (fiber.tag === ClassComponent) {
+              // Schedule a force update on the work-in-progress.
+              const lane = pickArbitraryLane(renderLanes);
+              const update = createUpdate(NoTimestamp, lane);
+              update.tag = ForceUpdate;
+              // TODO: Because we don't have a work-in-progress, this will add the
+              // update to the current fiber, too, which means it will persist even if
+              // this render is thrown away. Since it's a race condition, not sure it's
+              // worth fixing.
 
-            // Inlined `enqueueUpdate` to remove interleaved update check
-            const updateQueue = fiber.updateQueue;
-            if (updateQueue === null) {
-              // Only occurs if the fiber has been unmounted.
-            } else {
-              const sharedQueue: SharedQueue<any> = (updateQueue: any).shared;
-              const pending = sharedQueue.pending;
-              if (pending === null) {
-                // This is the first update. Create a circular list.
-                update.next = update;
+              // Inlined `enqueueUpdate` to remove interleaved update check
+              const updateQueue = fiber.updateQueue;
+              if (updateQueue === null) {
+                // Only occurs if the fiber has been unmounted.
               } else {
-                update.next = pending.next;
-                pending.next = update;
+                const sharedQueue: SharedQueue<any> = (updateQueue: any).shared;
+                const pending = sharedQueue.pending;
+                if (pending === null) {
+                  // This is the first update. Create a circular list.
+                  update.next = update;
+                } else {
+                  update.next = pending.next;
+                  pending.next = update;
+                }
+                sharedQueue.pending = update;
               }
-              sharedQueue.pending = update;
             }
+            // Mark the updated lanes on the list, too.
+            list.lanes = mergeLanes(list.lanes, renderLanes);
           }
+
           fiber.lanes = mergeLanes(fiber.lanes, renderLanes);
           const alternate = fiber.alternate;
           if (alternate !== null) {
             alternate.lanes = mergeLanes(alternate.lanes, renderLanes);
           }
           scheduleWorkOnParentPath(fiber.return, renderLanes);
-
-          // Mark the updated lanes on the list, too.
-          list.lanes = mergeLanes(list.lanes, renderLanes);
 
           // Since we already found a match, we can stop traversing the
           // dependency list.
@@ -311,6 +328,30 @@ export function propagateContextChange<T>(
   }
 }
 
+export function checkIfContextChanged(currentDependencies: Dependencies) {
+  if (!enableLazyContextPropagation) {
+    return false;
+  }
+  // Iterate over the current dependencies to see if something changed. This
+  // only gets called if props and state has already bailed out, so it's a
+  // relatively uncommon path, except at the root of a changed subtree.
+  // Alternatively, we could move these comparisons into `readContext`, but
+  // that's a much hotter path, so I think this is an appropriate trade off.
+  let dependency = currentDependencies.firstContext;
+  while (dependency !== null) {
+    const context = dependency.context;
+    const newValue = isPrimaryRenderer
+      ? context._currentValue
+      : context._currentValue2;
+    const oldValue = dependency.memoizedValue;
+    if (!is(newValue, oldValue)) {
+      return true;
+    }
+    dependency = dependency.next;
+  }
+  return false;
+}
+
 export function prepareToReadContext(
   workInProgress: Fiber,
   renderLanes: Lanes,
@@ -321,14 +362,19 @@ export function prepareToReadContext(
 
   const dependencies = workInProgress.dependencies;
   if (dependencies !== null) {
-    const firstContext = dependencies.firstContext;
-    if (firstContext !== null) {
-      if (includesSomeLane(dependencies.lanes, renderLanes)) {
-        // Context list has a pending update. Mark that this fiber performed work.
-        markWorkInProgressReceivedUpdate();
-      }
+    if (enableLazyContextPropagation) {
       // Reset the work-in-progress list
       dependencies.firstContext = null;
+    } else {
+      const firstContext = dependencies.firstContext;
+      if (firstContext !== null) {
+        if (includesSomeLane(dependencies.lanes, renderLanes)) {
+          // Context list has a pending update. Mark that this fiber performed work.
+          markWorkInProgressReceivedUpdate();
+        }
+        // Reset the work-in-progress list
+        dependencies.firstContext = null;
+      }
     }
   }
 }
@@ -350,6 +396,10 @@ export function readContext<T>(
     }
   }
 
+  const value = isPrimaryRenderer
+    ? context._currentValue
+    : context._currentValue2;
+
   if (lastContextWithAllBitsObserved === context) {
     // Nothing to do. We already observe everything in this context.
   } else if (observedBits === false || observedBits === 0) {
@@ -370,6 +420,7 @@ export function readContext<T>(
     const contextItem = {
       context: ((context: any): ReactContext<mixed>),
       observedBits: resolvedObservedBits,
+      memoizedValue: value,
       next: null,
     };
 
@@ -387,6 +438,8 @@ export function readContext<T>(
       currentlyRenderingFiber.dependencies = {
         lanes: NoLanes,
         firstContext: contextItem,
+
+        // TODO: This is an old field. Delete it.
         responders: null,
       };
     } else {
@@ -394,5 +447,5 @@ export function readContext<T>(
       lastContextDependency = lastContextDependency.next = contextItem;
     }
   }
-  return isPrimaryRenderer ? context._currentValue : context._currentValue2;
+  return value;
 }
