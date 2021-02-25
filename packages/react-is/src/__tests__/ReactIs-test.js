@@ -190,12 +190,18 @@ describe('ReactIs', () => {
   it('should identify suspense list', () => {
     expect(ReactIs.isValidElementType(React.unstable_SuspenseList)).toBe(true);
     expect(ReactIs.typeOf(<React.unstable_SuspenseList />)).toBe(
-      ReactIs.SuspenseList,
+      ReactIs.unstable_SuspenseList,
     );
-    expect(ReactIs.isSuspenseList(<React.unstable_SuspenseList />)).toBe(true);
-    expect(ReactIs.isSuspenseList({type: ReactIs.SuspenseList})).toBe(false);
-    expect(ReactIs.isSuspenseList('React.SuspenseList')).toBe(false);
-    expect(ReactIs.isSuspenseList(<div />)).toBe(false);
+    expect(
+      ReactIs.unstable_isSuspenseList(<React.unstable_SuspenseList />),
+    ).toBe(true);
+    expect(
+      ReactIs.unstable_isSuspenseList({type: ReactIs.unstable_SuspenseList}),
+    ).toBe(false);
+    expect(ReactIs.unstable_isSuspenseList('React.unstable_SuspenseList')).toBe(
+      false,
+    );
+    expect(ReactIs.unstable_isSuspenseList(<div />)).toBe(false);
   });
 
   it('should identify profile root', () => {
