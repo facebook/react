@@ -186,6 +186,24 @@ describe('ReactIs', () => {
     expect(ReactIs.isSuspense(<div />)).toBe(false);
   });
 
+  // @gate experimental
+  it('should identify suspense list', () => {
+    expect(ReactIs.isValidElementType(React.unstable_SuspenseList)).toBe(true);
+    expect(ReactIs.typeOf(<React.unstable_SuspenseList />)).toBe(
+      ReactIs.unstable_SuspenseList,
+    );
+    expect(
+      ReactIs.unstable_isSuspenseList(<React.unstable_SuspenseList />),
+    ).toBe(true);
+    expect(
+      ReactIs.unstable_isSuspenseList({type: ReactIs.unstable_SuspenseList}),
+    ).toBe(false);
+    expect(ReactIs.unstable_isSuspenseList('React.unstable_SuspenseList')).toBe(
+      false,
+    );
+    expect(ReactIs.unstable_isSuspenseList(<div />)).toBe(false);
+  });
+
   it('should identify profile root', () => {
     expect(ReactIs.isValidElementType(React.Profiler)).toBe(true);
     expect(
