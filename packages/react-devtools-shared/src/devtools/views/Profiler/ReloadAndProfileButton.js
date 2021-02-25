@@ -18,6 +18,7 @@ import {ModalDialogContext} from '../ModalDialog';
 type SubscriptionData = {|
   recordChangeDescriptions: boolean,
   supportsReloadAndProfile: boolean,
+  supportsSynchronousXHR: boolean,
 |};
 
 export default function ReloadAndProfileButton() {

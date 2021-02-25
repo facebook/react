@@ -17,6 +17,7 @@ import type {
   RendererID,
 } from 'react-devtools-shared/src/backend/types';
 import type {StyleAndLayout as StyleAndLayoutPayload} from 'react-devtools-shared/src/backend/NativeStyleEditor/types';
+import {boolean} from 'yargs';
 
 const BATCH_DURATION = 100;
 
@@ -134,6 +135,7 @@ export type BackendEvents = {|
   syncSelectionFromNativeElementsPanel: [],
   syncSelectionToNativeElementsPanel: [],
   unsupportedRendererVersion: [RendererID],
+  isSynchronousXHRSupported: [boolean],
 
   // React Native style editor plug-in.
   isNativeStyleEditorSupported: [
