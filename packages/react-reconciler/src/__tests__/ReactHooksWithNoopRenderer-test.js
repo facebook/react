@@ -1810,18 +1810,10 @@ describe('ReactHooksWithNoopRenderer', () => {
         await act(async () => {
           ReactNoop.renderLegacySyncRoot(<Counter count={0} />);
 
-          if (gate(flags => flags.enableDiscreteEventMicroTasks)) {
-            // Flush microtasks.
-            await null;
-
-            // Even in legacy mode, effects are deferred until after paint
-            expect(Scheduler).toHaveYielded(['Count: (empty)']);
-            expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
-          } else {
-            // Even in legacy mode, effects are deferred until after paint
-            expect(Scheduler).toFlushAndYieldThrough(['Count: (empty)']);
-            expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
-          }
+          // Even in legacy mode, effects are deferred until after paint
+          ReactNoop.flushSync();
+          expect(Scheduler).toHaveYielded(['Count: (empty)']);
+          expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
         });
 
         // effects get forced on exiting act()

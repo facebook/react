@@ -16,6 +16,7 @@ import {__interactionsRef} from 'scheduler/tracing';
 import {
   enableSchedulerTracing,
   decoupleUpdatePriorityFromScheduler,
+  enableSyncMicroTasks,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import {
@@ -145,12 +146,13 @@ export function scheduleSyncCallback(callback: SchedulerCallback) {
   // the next tick, or earlier if something calls `flushSyncCallbackQueue`.
   if (syncQueue === null) {
     syncQueue = [callback];
-    // Flush the queue in the next tick, at the earliest.
-    // TODO: Figure out how to remove this It's only here as a last resort if we
-    // forget to explicitly flush.
-    if (supportsMicrotasks) {
+    if (enableSyncMicroTasks && supportsMicrotasks) {
+      // Flush the queue in a microtask.
       scheduleMicrotask(flushSyncCallbackQueueImpl);
     } else {
+      // Flush the queue in the next tick, at the earliest.
+      // TODO: Figure out how to remove this It's only here as a last resort if we
+      // forget to explicitly flush.
       immediateQueueCallbackNode = Scheduler_scheduleCallback(
         Scheduler_ImmediatePriority,
         flushSyncCallbackQueueImpl,

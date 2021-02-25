@@ -1400,6 +1400,10 @@ describe('ReactIncrementalErrorHandling', () => {
       'BrokenRenderAndUnmount componentWillUnmount',
     ]);
     expect(ReactNoop.getChildren()).toEqual([]);
+
+    expect(() => {
+      ReactNoop.flushSync();
+    }).toThrow('One does not simply unmount me.');
   });
 
   it('does not interrupt unmounting if detaching a ref throws', () => {

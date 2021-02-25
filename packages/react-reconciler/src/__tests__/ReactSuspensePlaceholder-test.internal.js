@@ -331,14 +331,10 @@ describe('ReactSuspensePlaceholder', () => {
         jest.advanceTimersByTime(1000);
 
         expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
-        if (gate(flags => flags.enableDiscreteEventMicroTasks)) {
-          // Flush microtasks
-          await null;
 
-          expect(Scheduler).toHaveYielded(['Loaded']);
-        } else {
-          expect(Scheduler).toFlushExpired(['Loaded']);
-        }
+        ReactNoop.flushSync();
+
+        expect(Scheduler).toHaveYielded(['Loaded']);
         expect(ReactNoop).toMatchRenderedOutput('LoadedText');
         expect(onRender).toHaveBeenCalledTimes(2);
 
@@ -435,14 +431,9 @@ describe('ReactSuspensePlaceholder', () => {
 
         expect(Scheduler).toHaveYielded(['Promise resolved [Loaded]']);
 
-        if (gate(flags => flags.enableDiscreteEventMicroTasks)) {
-          // Flush microtasks
-          await null;
+        ReactNoop.flushSync();
 
-          expect(Scheduler).toHaveYielded(['Loaded']);
-        } else {
-          expect(Scheduler).toFlushExpired(['Loaded']);
-        }
+        expect(Scheduler).toHaveYielded(['Loaded']);
         expect(ReactNoop).toMatchRenderedOutput('LoadedNew');
         expect(onRender).toHaveBeenCalledTimes(4);
 

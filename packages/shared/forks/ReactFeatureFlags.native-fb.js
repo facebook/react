@@ -59,6 +59,7 @@ export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableNonInterruptingNormalPri = false;
 export const enableDiscreteEventMicroTasks = false;
+export const enableSyncMicroTasks = false;
 export const enableNativeEventPriorityInference = false;
 
 // Flow magic to verify the exports of this file match the original version.
