@@ -98,8 +98,11 @@ describe('ReactOffscreen', () => {
           <Text text="Outside" />
         </>,
       );
+
+      ReactNoop.flushSync();
+
       // Should not defer the hidden tree
-      expect(Scheduler).toFlushUntilNextPaint(['A', 'Outside']);
+      expect(Scheduler).toHaveYielded(['A', 'Outside']);
     });
     expect(root).toMatchRenderedOutput(
       <>

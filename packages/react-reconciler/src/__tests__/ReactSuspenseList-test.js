@@ -292,9 +292,11 @@ describe('ReactSuspenseList', () => {
       </>,
     );
 
-    await C.resolve();
+    await ReactNoop.act(async () => {
+      C.resolve();
+    });
 
-    expect(Scheduler).toFlushAndYield(['C']);
+    expect(Scheduler).toHaveYielded(['C']);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>
@@ -304,9 +306,11 @@ describe('ReactSuspenseList', () => {
       </>,
     );
 
-    await B.resolve();
+    await ReactNoop.act(async () => {
+      B.resolve();
+    });
 
-    expect(Scheduler).toFlushAndYield(['B']);
+    expect(Scheduler).toHaveYielded(['B']);
 
     expect(ReactNoop).toMatchRenderedOutput(
       <>

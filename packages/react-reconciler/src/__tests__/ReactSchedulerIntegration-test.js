@@ -569,9 +569,11 @@ describe(
           ReactNoop.render(<App />);
         });
 
+        ReactNoop.flushSync();
+
         // Because the render expired, React should finish the tree without
         // consulting `shouldYield` again
-        expect(Scheduler).toFlushExpired(['B', 'C']);
+        expect(Scheduler).toHaveYielded(['B', 'C']);
       });
     });
   },

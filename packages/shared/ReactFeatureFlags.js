@@ -155,4 +155,6 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 
 export const enableDiscreteEventMicroTasks = false;
 
+export const enableSyncMicroTasks = false;
+
 export const enableNativeEventPriorityInference = false;
