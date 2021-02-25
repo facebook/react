@@ -146,13 +146,14 @@ export function scheduleSyncCallback(callback: SchedulerCallback) {
   // the next tick, or earlier if something calls `flushSyncCallbackQueue`.
   if (syncQueue === null) {
     syncQueue = [callback];
+
+    // TODO: Figure out how to remove this It's only here as a last resort if we
+    // forget to explicitly flush.
     if (enableSyncMicroTasks && supportsMicrotasks) {
       // Flush the queue in a microtask.
       scheduleMicrotask(flushSyncCallbackQueueImpl);
     } else {
-      // Flush the queue in the next tick, at the earliest.
-      // TODO: Figure out how to remove this It's only here as a last resort if we
-      // forget to explicitly flush.
+      // Flush the queue in the next tick.
       immediateQueueCallbackNode = Scheduler_scheduleCallback(
         Scheduler_ImmediatePriority,
         flushSyncCallbackQueueImpl,
