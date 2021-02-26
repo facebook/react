@@ -57,11 +57,7 @@ function ReactDOMRoot(container: Container, options: void | RootOptions) {
   this._internalRoot = createRootImpl(container, ConcurrentRoot, options);
 }
 
-function ReactDOMLegacyRoot(
-  container: Container,
-  tag: RootTag,
-  options: void | RootOptions,
-) {
+function ReactDOMLegacyRoot(container: Container, options: void | RootOptions) {
   this._internalRoot = createRootImpl(container, LegacyRoot, options);
 }
 
@@ -169,7 +165,7 @@ export function createLegacyRoot(
   container: Container,
   options?: RootOptions,
 ): RootType {
-  return new ReactDOMLegacyRoot(container, LegacyRoot, options);
+  return new ReactDOMLegacyRoot(container, options);
 }
 
 export function isValidContainer(node: mixed): boolean {
