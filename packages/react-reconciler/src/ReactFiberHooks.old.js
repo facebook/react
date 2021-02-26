@@ -1793,26 +1793,27 @@ function warnOnOpaqueIdentifierAccessInDEV(fiber) {
   }
 }
 
-
-function warnOnDuplicateOpaqueIdentifierKeyInDEV(fiber){
-  if(__DEV__){
-    const name=getComponentName(fiber.type) || "Unknown";
-    if(getIsRendering() && !didWarnAboutDuplicateOpaqueIdentifierKeys[name]){
+function warnOnDuplicateOpaqueIdentifierKeyInDEV(fiber) {
+  if (__DEV__) {
+    const name = getComponentName(fiber.type) || 'Unknown';
+    if (getIsRendering() && !didWarnAboutDuplicateOpaqueIdentifierKeys[name]) {
       console.error(
-        'Warning: Detected that two nested opaque identifiers with the same parent were created with identical keys. Keys must be unique.'
+        'Warning: Detected that two nested opaque identifiers with the same parent were created with identical keys. Keys must be unique.',
       );
     }
-    didWarnAboutDuplicateOpaqueIdentifierKeys[name]=true;
+    didWarnAboutDuplicateOpaqueIdentifierKeys[name] = true;
   }
 }
-
 
 function mountOpaqueIdentifier(): OpaqueIDType | void {
   const makeId = __DEV__
     ? makeClientIdInDEV.bind(
         null,
         warnOnOpaqueIdentifierAccessInDEV.bind(null, currentlyRenderingFiber),
-        warnOnDuplicateOpaqueIdentifierKeyInDEV.bind(null, currentlyRenderingFiber),
+        warnOnDuplicateOpaqueIdentifierKeyInDEV.bind(
+          null,
+          currentlyRenderingFiber,
+        ),
       )
     : makeClientId;
 

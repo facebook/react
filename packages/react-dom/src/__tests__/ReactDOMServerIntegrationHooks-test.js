@@ -1981,12 +1981,12 @@ describe('ReactDOMServerHooks', () => {
     it('nested makeNewFromKey generates unique ids for server string render', async () => {
       function App(props) {
         const baseId = useOpaqueIdentifier();
-        const nestedOne=baseId.makeNewFromKey("key1");
-        const nestedTwo=baseId.makeNewFromKey("key2");
-        const nestedOneOne=nestedOne.makeNewFromKey("key1");
-        const nestedOneTwo=nestedOne.makeNewFromKey("key2");
-        const nestedTwoOne=nestedTwo.makeNewFromKey("key1");
-        const nestedTwoTwo=nestedTwo.makeNewFromKey("key2");
+        const nestedOne = baseId.makeNewFromKey('key1');
+        const nestedTwo = baseId.makeNewFromKey('key2');
+        const nestedOneOne = nestedOne.makeNewFromKey('key1');
+        const nestedOneTwo = nestedOne.makeNewFromKey('key2');
+        const nestedTwoOne = nestedTwo.makeNewFromKey('key1');
+        const nestedTwoTwo = nestedTwo.makeNewFromKey('key2');
         return (
           <div id={baseId}>
             <div id={nestedOne}>
@@ -2000,41 +2000,41 @@ describe('ReactDOMServerHooks', () => {
           </div>
         );
       }
-  
+
       const domNode = await serverRender(<App />);
-      
+
       expect(domNode.children.length).toEqual(2);
       expect(domNode.children[0].children.length).toEqual(2);
       expect(domNode.children[1].children.length).toEqual(2);
-      expect(domNode.children[0].children[0].getAttribute('aria-labelledby')).not.toEqual(
+      expect(
+        domNode.children[0].children[0].getAttribute('aria-labelledby'),
+      ).not.toEqual(domNode.children[0].children[1].getAttribute('id'));
+      expect(
+        domNode.children[1].children[0].getAttribute('aria-labelledby'),
+      ).not.toEqual(domNode.children[1].children[1].getAttribute('id'));
+      const idList = [
+        domNode.getAttribute('id'),
+        domNode.children[0].getAttribute('id'),
+        domNode.children[0].children[0].getAttribute('aria-labelledby'),
         domNode.children[0].children[1].getAttribute('id'),
-      );
-      expect(domNode.children[1].children[0].getAttribute('aria-labelledby')).not.toEqual(
+        domNode.children[1].getAttribute('id'),
+        domNode.children[1].children[0].getAttribute('aria-labelledby'),
         domNode.children[1].children[1].getAttribute('id'),
-      );
-      const idList=[
-        domNode.getAttribute("id"),
-        domNode.children[0].getAttribute("id"),
-        domNode.children[0].children[0].getAttribute("aria-labelledby"),
-        domNode.children[0].children[1].getAttribute("id"),
-        domNode.children[1].getAttribute("id"),
-        domNode.children[1].children[0].getAttribute("aria-labelledby"),
-        domNode.children[1].children[1].getAttribute("id"),
       ];
       expect(idList).not.toContain(null);
-      expect((new Set(idList)).size).toEqual(idList.length);
+      expect(new Set(idList).size).toEqual(idList.length);
     });
-  
+
     // @gate experimental
     it('nested makeNewFromKey generates unique ids for server stream render', async () => {
       function App(props) {
         const baseId = useOpaqueIdentifier();
-        const nestedOne=baseId.makeNewFromKey("key1");
-        const nestedTwo=baseId.makeNewFromKey("key2");
-        const nestedOneOne=nestedOne.makeNewFromKey("key1");
-        const nestedOneTwo=nestedOne.makeNewFromKey("key2");
-        const nestedTwoOne=nestedTwo.makeNewFromKey("key1");
-        const nestedTwoTwo=nestedTwo.makeNewFromKey("key2");
+        const nestedOne = baseId.makeNewFromKey('key1');
+        const nestedTwo = baseId.makeNewFromKey('key2');
+        const nestedOneOne = nestedOne.makeNewFromKey('key1');
+        const nestedOneTwo = nestedOne.makeNewFromKey('key2');
+        const nestedTwoOne = nestedTwo.makeNewFromKey('key1');
+        const nestedTwoTwo = nestedTwo.makeNewFromKey('key2');
         return (
           <div id={baseId}>
             <div id={nestedOne}>
@@ -2048,41 +2048,41 @@ describe('ReactDOMServerHooks', () => {
           </div>
         );
       }
-  
+
       const domNode = await streamRender(<App />);
-      
+
       expect(domNode.children.length).toEqual(2);
       expect(domNode.children[0].children.length).toEqual(2);
       expect(domNode.children[1].children.length).toEqual(2);
-      expect(domNode.children[0].children[0].getAttribute('aria-labelledby')).not.toEqual(
+      expect(
+        domNode.children[0].children[0].getAttribute('aria-labelledby'),
+      ).not.toEqual(domNode.children[0].children[1].getAttribute('id'));
+      expect(
+        domNode.children[1].children[0].getAttribute('aria-labelledby'),
+      ).not.toEqual(domNode.children[1].children[1].getAttribute('id'));
+      const idList = [
+        domNode.getAttribute('id'),
+        domNode.children[0].getAttribute('id'),
+        domNode.children[0].children[0].getAttribute('aria-labelledby'),
         domNode.children[0].children[1].getAttribute('id'),
-      );
-      expect(domNode.children[1].children[0].getAttribute('aria-labelledby')).not.toEqual(
+        domNode.children[1].getAttribute('id'),
+        domNode.children[1].children[0].getAttribute('aria-labelledby'),
         domNode.children[1].children[1].getAttribute('id'),
-      );
-      const idList=[
-        domNode.getAttribute("id"),
-        domNode.children[0].getAttribute("id"),
-        domNode.children[0].children[0].getAttribute("aria-labelledby"),
-        domNode.children[0].children[1].getAttribute("id"),
-        domNode.children[1].getAttribute("id"),
-        domNode.children[1].children[0].getAttribute("aria-labelledby"),
-        domNode.children[1].children[1].getAttribute("id"),
       ];
       expect(idList).not.toContain(null);
-      expect((new Set(idList)).size).toEqual(idList.length);
+      expect(new Set(idList).size).toEqual(idList.length);
     });
-  
+
     // @gate experimental
     it('nested makeNewFromKey generates unique ids for client render', async () => {
       function App(props) {
         const baseId = useOpaqueIdentifier();
-        const nestedOne=baseId.makeNewFromKey("key1");
-        const nestedTwo=baseId.makeNewFromKey("key2");
-        const nestedOneOne=nestedOne.makeNewFromKey("key1");
-        const nestedOneTwo=nestedOne.makeNewFromKey("key2");
-        const nestedTwoOne=nestedTwo.makeNewFromKey("key1");
-        const nestedTwoTwo=nestedTwo.makeNewFromKey("key2");
+        const nestedOne = baseId.makeNewFromKey('key1');
+        const nestedTwo = baseId.makeNewFromKey('key2');
+        const nestedOneOne = nestedOne.makeNewFromKey('key1');
+        const nestedOneTwo = nestedOne.makeNewFromKey('key2');
+        const nestedTwoOne = nestedTwo.makeNewFromKey('key1');
+        const nestedTwoTwo = nestedTwo.makeNewFromKey('key2');
         return (
           <div id={baseId}>
             <div id={nestedOne}>
@@ -2096,39 +2096,39 @@ describe('ReactDOMServerHooks', () => {
           </div>
         );
       }
-  
+
       const domNode = await clientCleanRender(<App />);
-      
+
       expect(domNode.children.length).toEqual(2);
       expect(domNode.children[0].children.length).toEqual(2);
       expect(domNode.children[1].children.length).toEqual(2);
-      expect(domNode.children[0].children[0].getAttribute('aria-labelledby')).not.toEqual(
+      expect(
+        domNode.children[0].children[0].getAttribute('aria-labelledby'),
+      ).not.toEqual(domNode.children[0].children[1].getAttribute('id'));
+      expect(
+        domNode.children[1].children[0].getAttribute('aria-labelledby'),
+      ).not.toEqual(domNode.children[1].children[1].getAttribute('id'));
+      const idList = [
+        domNode.getAttribute('id'),
+        domNode.children[0].getAttribute('id'),
+        domNode.children[0].children[0].getAttribute('aria-labelledby'),
         domNode.children[0].children[1].getAttribute('id'),
-      );
-      expect(domNode.children[1].children[0].getAttribute('aria-labelledby')).not.toEqual(
+        domNode.children[1].getAttribute('id'),
+        domNode.children[1].children[0].getAttribute('aria-labelledby'),
         domNode.children[1].children[1].getAttribute('id'),
-      );
-      const idList=[
-        domNode.getAttribute("id"),
-        domNode.children[0].getAttribute("id"),
-        domNode.children[0].children[0].getAttribute("aria-labelledby"),
-        domNode.children[0].children[1].getAttribute("id"),
-        domNode.children[1].getAttribute("id"),
-        domNode.children[1].children[0].getAttribute("aria-labelledby"),
-        domNode.children[1].children[1].getAttribute("id"),
       ];
       expect(idList).not.toContain(null);
-      expect((new Set(idList)).size).toEqual(idList.length);
+      expect(new Set(idList).size).toEqual(idList.length);
     });
     it('nested makeNewFromKey generates unique ids for client render on good server markup', async () => {
       function App(props) {
         const baseId = useOpaqueIdentifier();
-        const nestedOne=baseId.makeNewFromKey("key1");
-        const nestedTwo=baseId.makeNewFromKey("key2");
-        const nestedOneOne=nestedOne.makeNewFromKey("key1");
-        const nestedOneTwo=nestedOne.makeNewFromKey("key2");
-        const nestedTwoOne=nestedTwo.makeNewFromKey("key1");
-        const nestedTwoTwo=nestedTwo.makeNewFromKey("key2");
+        const nestedOne = baseId.makeNewFromKey('key1');
+        const nestedTwo = baseId.makeNewFromKey('key2');
+        const nestedOneOne = nestedOne.makeNewFromKey('key1');
+        const nestedOneTwo = nestedOne.makeNewFromKey('key2');
+        const nestedTwoOne = nestedTwo.makeNewFromKey('key1');
+        const nestedTwoTwo = nestedTwo.makeNewFromKey('key2');
         return (
           <div id={baseId}>
             <div id={nestedOne}>
@@ -2144,37 +2144,37 @@ describe('ReactDOMServerHooks', () => {
       }
 
       const domNode = await clientRenderOnServerString(<App />);
-      
+
       expect(domNode.children.length).toEqual(2);
       expect(domNode.children[0].children.length).toEqual(2);
       expect(domNode.children[1].children.length).toEqual(2);
-      expect(domNode.children[0].children[0].getAttribute('aria-labelledby')).not.toEqual(
+      expect(
+        domNode.children[0].children[0].getAttribute('aria-labelledby'),
+      ).not.toEqual(domNode.children[0].children[1].getAttribute('id'));
+      expect(
+        domNode.children[1].children[0].getAttribute('aria-labelledby'),
+      ).not.toEqual(domNode.children[1].children[1].getAttribute('id'));
+      const idList = [
+        domNode.getAttribute('id'),
+        domNode.children[0].getAttribute('id'),
+        domNode.children[0].children[0].getAttribute('aria-labelledby'),
         domNode.children[0].children[1].getAttribute('id'),
-      );
-      expect(domNode.children[1].children[0].getAttribute('aria-labelledby')).not.toEqual(
+        domNode.children[1].getAttribute('id'),
+        domNode.children[1].children[0].getAttribute('aria-labelledby'),
         domNode.children[1].children[1].getAttribute('id'),
-      );
-      const idList=[
-        domNode.getAttribute("id"),
-        domNode.children[0].getAttribute("id"),
-        domNode.children[0].children[0].getAttribute("aria-labelledby"),
-        domNode.children[0].children[1].getAttribute("id"),
-        domNode.children[1].getAttribute("id"),
-        domNode.children[1].children[0].getAttribute("aria-labelledby"),
-        domNode.children[1].children[1].getAttribute("id"),
       ];
       expect(idList).not.toContain(null);
-      expect((new Set(idList)).size).toEqual(idList.length);
+      expect(new Set(idList).size).toEqual(idList.length);
     });
     it('makeNewFromKey warns on duplicate keys', async () => {
       function App() {
         const id = useOpaqueIdentifier();
-        const nestedOne=id.makeNewFromKey("key1");
-        const nestedTwo=id.makeNewFromKey("key1");
-        return(
+        const nestedOne = id.makeNewFromKey('key1');
+        const nestedTwo = id.makeNewFromKey('key1');
+        return (
           <div>
-            <span id={nestedOne}/>
-            <span id={nestedTwo}/>
+            <span id={nestedOne} />
+            <span id={nestedTwo} />
           </div>
         );
       }

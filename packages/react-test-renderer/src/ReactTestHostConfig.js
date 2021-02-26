@@ -46,12 +46,11 @@ export type ChildSet = void; // Unused
 export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 export type EventResponder = any;
-export opaque type OpaqueIDType =
-    {
-      makeNewFromKey: (string) => OpaqueIDType,
-      toString: () => string | void,
-      valueOf: () => string | void,
-    };
+export opaque type OpaqueIDType = {
+  makeNewFromKey: string => OpaqueIDType,
+  toString: () => string | void,
+  valueOf: () => string | void,
+};
 
 export type RendererInspectionConfig = $ReadOnly<{||}>;
 
@@ -306,18 +305,18 @@ export function getInstanceFromNode(mockNode: Object) {
 
 function makeNestedClientId(
   parent: OpaqueIDType,
-  getValueOfKey: () => string ,
-  depth: number
+  getValueOfKey: () => string,
+  depth: number,
 ): OpaqueIDType {
   return {
-    makeNewFromKey(key : string) {
-      return makeNestedClientId(this, () => key, depth+1);
+    makeNewFromKey(key: string) {
+      return makeNestedClientId(this, () => key, depth + 1);
     },
     toString() {
-      return parent.toString()+getValueOfKey()+":"+depth.toString(32);
+      return parent.toString() + getValueOfKey() + ':' + depth.toString(32);
     },
     valueOf() {
-      return parent.valueOf()+getValueOfKey()+":"+depth.toString(32);
+      return parent.valueOf() + getValueOfKey() + ':' + depth.toString(32);
     },
   };
 }
@@ -342,39 +341,46 @@ function makeNestedClientIdInDEV(
   warnOnDuplicateKey: () => void,
   parent: OpaqueIDType,
   getValueOfKey: () => string,
-  depth: number
+  depth: number,
 ): OpaqueIDType {
-  let keySet: Set<string> = new Set();
+  const keySet: Set<string> = new Set();
   return {
     makeNewFromKey(key: string) {
-      if(keySet.has(key)){
+      if (keySet.has(key)) {
         warnOnDuplicateKey();
       } else {
         keySet.add(key);
       }
-      return makeNestedClientIdInDEV(warnOnDuplicateKey, this, () => key, depth+1);
+      return makeNestedClientIdInDEV(
+        warnOnDuplicateKey,
+        this,
+        () => key,
+        depth + 1,
+      );
     },
     toString() {
-      return parent.toString()+getValueOfKey()+":"+depth.toString(32);
+      return parent.toString() + getValueOfKey() + ':' + depth.toString(32);
     },
     valueOf() {
-      return parent.valueOf()+getValueOfKey()+":"+depth.toString(32);
+      return parent.valueOf() + getValueOfKey() + ':' + depth.toString(32);
     },
   };
 }
 
-
-export function makeClientIdInDEV(warnOnAccessInDEV: () => void, warnOnDuplicateKey: () => void): OpaqueIDType {
+export function makeClientIdInDEV(
+  warnOnAccessInDEV: () => void,
+  warnOnDuplicateKey: () => void,
+): OpaqueIDType {
   const id = 'c_' + (clientId++).toString(36);
-  let keySet: Set<string> = new Set();
+  const keySet: Set<string> = new Set();
   return {
     makeNewFromKey(key: string) {
-      if(keySet.has(key)){
+      if (keySet.has(key)) {
         warnOnDuplicateKey();
       } else {
-        keySet.add(key)
+        keySet.add(key);
       }
-      return makeNestedClientId(this, () => key, 0);
+      return makeNestedClientIdInDEV(this, () => key, 0);
     },
     toString() {
       warnOnAccessInDEV();
@@ -397,19 +403,19 @@ export function isOpaqueHydratingObject(value: mixed): boolean {
 
 function makeNestedOpaqueHydratingObjectFromKey(
   parent: OpaqueIDType,
-  getValueOfKey: () => string ,
-  depth: number
+  getValueOfKey: () => string,
+  depth: number,
 ): OpaqueIDType {
   return {
     $$typeof: REACT_OPAQUE_ID_TYPE,
-    makeNewFromKey(key : string) {
-      return makeNestedOpaqueHydratingObjectFromKey(this, () => key, depth+1);
+    makeNewFromKey(key: string) {
+      return makeNestedOpaqueHydratingObjectFromKey(this, () => key, depth + 1);
     },
     toString() {
-      return parent.toString()+getValueOfKey()+":"+depth.toString(32);
+      return parent.toString() + getValueOfKey() + ':' + depth.toString(32);
     },
     valueOf() {
-      return parent.valueOf()+getValueOfKey()+":"+depth.toString(32);
+      return parent.valueOf() + getValueOfKey() + ':' + depth.toString(32);
     },
   };
 }
@@ -419,7 +425,7 @@ export function makeOpaqueHydratingObject(
 ): OpaqueIDType {
   return {
     $$typeof: REACT_OPAQUE_ID_TYPE,
-    makeNewFromKey(key : string) {
+    makeNewFromKey(key: string) {
       return makeNestedOpaqueHydratingObjectFromKey(this, () => key, 0);
     },
     toString() {

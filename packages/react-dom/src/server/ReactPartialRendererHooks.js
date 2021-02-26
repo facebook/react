@@ -42,12 +42,11 @@ type Hook = {|
   next: Hook | null,
 |};
 
-type OpaqueIDType =
-  {
-    makeNewFromKey: (string) => OpaqueIDType,
-    toString: () => string,
-    valueOf: () => string,
-  };
+type OpaqueIDType = {
+  makeNewFromKey: string => OpaqueIDType,
+  toString: () => string,
+  valueOf: () => string,
+};
 let currentlyRenderingComponent: Object | null = null;
 let firstWorkInProgressHook: Hook | null = null;
 let workInProgressHook: Hook | null = null;
@@ -485,70 +484,81 @@ function useTransition(): [(callback: () => void) => void, boolean] {
   return [startTransition, false];
 }
 
-
-
 function makeNestedOpaqueHydratingObjectFromKey(
   parent: OpaqueIDType,
-  getValueOfKey: () => string 
+  getValueOfKey: () => string,
 ): OpaqueIDType {
-  let keys : {
-    unsorted : Array<string>,
+  const keys: {
+    unsorted: Array<string>,
     map: Map<string, number>,
-  }={
+  } = {
     unsorted: [],
     map: new Map(),
-  }
+  };
   return {
-    makeNewFromKey(key : string) {
+    makeNewFromKey(key: string) {
       keys.unsorted.push(key);
       return makeNestedOpaqueHydratingObjectFromKey(this, () => {
-        if(keys.map.size!==keys.unsorted.length){
-          keys.map=new Map();
-          keys.unsorted.sort((a : string, b : string) : number => {
-            return a.length === b.length ? a.localeCompare(b) : a.length-b.length;
+        if (keys.map.size !== keys.unsorted.length) {
+          keys.map = new Map();
+          keys.unsorted.sort((a: string, b: string): number => {
+            return a.length === b.length
+              ? a.localeCompare(b)
+              : a.length - b.length;
           });
-          for(const [index, element] of keys.unsorted.entries()){
+          keys.unsorted.forEach((element, index) => {
             keys.map.set(element, index);
-          }
+          });
         }
-        const index=keys.map.get(key);
-        invariant(typeof index==="number", "The key was not found in the index map in makeNewFromKey. This is a bug in react.")
+        const index = keys.map.get(key);
+        invariant(
+          typeof index === 'number',
+          'The key was not found in the index map in makeNewFromKey. This is a bug in react.',
+        );
         return index.toString(36);
       });
     },
     toString() {
-      return parent.toString()+":"+getValueOfKey();
+      return parent.toString() + ':' + getValueOfKey();
     },
     valueOf() {
-      return parent.valueOf()+":"+getValueOfKey();
+      return parent.valueOf() + ':' + getValueOfKey();
     },
   };
 }
 
 function useOpaqueIdentifier(): OpaqueIDType {
-  const id=(currentPartialRenderer.identifierPrefix || '') + 'R:' + (currentPartialRenderer.uniqueID++).toString(36);
-  let keys: {
+  const id =
+    (currentPartialRenderer.identifierPrefix || '') +
+    'R:' +
+    (currentPartialRenderer.uniqueID++).toString(36);
+  const keys: {
     unsorted: Array<string>,
-    map: Map<string, number>
-  }={
+    map: Map<string, number>,
+  } = {
     unsorted: [],
     map: new Map(),
-  }
-  return ({
-    makeNewFromKey(key : string) {
+  };
+  return {
+    makeNewFromKey(key: string) {
       keys.unsorted.push(key);
       return makeNestedOpaqueHydratingObjectFromKey(this, () => {
-        if(keys.map.size!==keys.unsorted.length){
-          keys.map=new Map();
-          keys.unsorted.sort((a : string, b : string) : number => {
-            return a.length === b.length ? a.localeCompare(b) : a.length-b.length;
+        if (keys.map.size !== keys.unsorted.length) {
+          keys.map = new Map();
+          keys.unsorted.sort((a: string, b: string): number => {
+            return a.length === b.length
+              ? a.localeCompare(b)
+              : a.length - b.length;
           });
-          for(const [index, element] of keys.unsorted.entries()){
+          keys.unsorted.forEach((element, index) => {
             keys.map.set(element, index);
-          }
+          });
         }
-        const index=keys.map.get(key);
-        invariant(typeof index==="number", "The key was not found in the index map in makeNewFromKey. This is a bug in react.")
+        const index = keys.map.get(key);
+        invariant(
+          typeof index === 'number',
+          'The key was not found in the index map in makeNewFromKey. This is a bug in react.',
+        );
         return index.toString(36);
       });
     },
@@ -558,7 +568,7 @@ function useOpaqueIdentifier(): OpaqueIDType {
     valueOf() {
       return id;
     },
-  });
+  };
 }
 
 function useCacheRefresh(): <T>(?() => T, ?T) => void {

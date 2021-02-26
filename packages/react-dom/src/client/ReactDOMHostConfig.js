@@ -131,12 +131,11 @@ export type TimeoutHandle = TimeoutID;
 export type NoTimeout = -1;
 export type RendererInspectionConfig = $ReadOnly<{||}>;
 
-export opaque type OpaqueIDType =
-    {
-      makeNewFromKey: (string) => OpaqueIDType,
-      toString: () => string | void,
-      valueOf: () => string | void,
-    };
+export opaque type OpaqueIDType = {
+  makeNewFromKey: string => OpaqueIDType,
+  toString: () => string | void,
+  valueOf: () => string | void,
+};
 
 type SelectionInformation = {|
   focusedElem: null | HTMLElement,
@@ -1013,23 +1012,22 @@ export function getInstanceFromNode(node: HTMLElement): null | Object {
   return getClosestInstanceFromNode(node) || null;
 }
 
-
 function makeNestedClientId(
   parent: OpaqueIDType,
   getValueOfKey: () => string,
-  depth: number
+  depth: number,
 ): OpaqueIDType {
   return {
-    makeNewFromKey(key : string) {
-      return makeNestedClientId(this, () => key, depth+1);
+    makeNewFromKey(key: string) {
+      return makeNestedClientId(this, () => key, depth + 1);
     },
     toString() {
       //$FlowFixMe toString is only ever void if attemptToReadValue throws, which means we don't get here anyway
-      return parent.toString()+getValueOfKey()+":"+depth.toString(32);
+      return parent.toString() + getValueOfKey() + ':' + depth.toString(32);
     },
     valueOf() {
       //$FlowFixMe toString is only ever void if attemptToReadValue throws, which means we don't get here anyway
-      return parent.valueOf()+getValueOfKey()+":"+depth.toString(32);
+      return parent.valueOf() + getValueOfKey() + ':' + depth.toString(32);
     },
   };
 }
@@ -1054,38 +1052,41 @@ function makeNestedClientIdInDEV(
   warnOnDuplicateKey: () => void,
   parent: OpaqueIDType,
   getValueOfKey: () => string,
-  depth: number
+  depth: number,
 ): OpaqueIDType {
-  let keySet: Set<string> = new Set();
+  const keySet: Set<string> = new Set();
   return {
     makeNewFromKey(key: string) {
-      if(keySet.has(key)){
+      if (keySet.has(key)) {
         warnOnDuplicateKey();
       } else {
-        keySet.add(key)
+        keySet.add(key);
       }
       return makeNestedClientIdInDEV(warnOnDuplicateKey, this, () => key, 0);
     },
     toString() {
       //$FlowFixMe toString is only ever void if attemptToReadValue throws, which means we don't get here anyway
-      return parent.toString()+getValueOfKey()+":"+depth.toString(32);
+      return parent.toString() + getValueOfKey() + ':' + depth.toString(32);
     },
     valueOf() {
       //$FlowFixMe toString is only ever void if attemptToReadValue throws, which means we don't get here anyway
-      return parent.valueOf()+getValueOfKey()+":"+depth.toString(32);
+      return parent.valueOf() + getValueOfKey() + ':' + depth.toString(32);
     },
   };
 }
 
-export function makeClientIdInDEV(warnOnAccessInDEV: () => void, warnOnDuplicateKey: () => void): OpaqueIDType {
+export function makeClientIdInDEV(
+  warnOnAccessInDEV: () => void,
+  warnOnDuplicateKey: () => void,
+): OpaqueIDType {
   const id = 'r:' + (clientId++).toString(36);
-  let keySet: Set<string> = new Set();
+  const keySet: Set<string> = new Set();
   return {
     makeNewFromKey(key: string) {
-      if(keySet.has(key)){
+      if (keySet.has(key)) {
         warnOnDuplicateKey();
       } else {
-        keySet.add(key)
+        keySet.add(key);
       }
       return makeNestedClientIdInDEV(warnOnDuplicateKey, this, () => key, 0);
     },
@@ -1111,27 +1112,27 @@ export function isOpaqueHydratingObject(value: mixed): boolean {
 function makeNestedOpaqueHydratingObjectFromKey(
   warnOnDuplicateKey: () => void,
   parent: OpaqueIDType,
-  getValueOfKey: () => string ,
-  depth: number
+  getValueOfKey: () => string,
+  depth: number,
 ): OpaqueIDType {
-  let keySet: Set<string> = new Set();
+  const keySet: Set<string> = new Set();
   return {
     $$typeof: REACT_OPAQUE_ID_TYPE,
-    makeNewFromKey(key : string) {
-      if(keySet.has(key)){
+    makeNewFromKey(key: string) {
+      if (keySet.has(key)) {
         warnOnDuplicateKey();
       } else {
-        keySet.add(key)
+        keySet.add(key);
       }
-      return makeNestedOpaqueHydratingObjectFromKey(this, () => key, depth+1);
+      return makeNestedOpaqueHydratingObjectFromKey(this, () => key, depth + 1);
     },
     toString() {
       //$FlowFixMe: if this is null, then attemptToReadValue already threw, so we won't get here anyway
-      return parent.toString()+getValueOfKey()+":"+depth.toString(32);
+      return parent.toString() + getValueOfKey() + ':' + depth.toString(32);
     },
     valueOf() {
       //$FlowFixMe: if this is null, then attemptToReadValue already threw, so we won't get here anyway
-      return parent.valueOf()+getValueOfKey()+":"+depth.toString(32);
+      return parent.valueOf() + getValueOfKey() + ':' + depth.toString(32);
     },
   };
 }
@@ -1140,14 +1141,14 @@ export function makeOpaqueHydratingObject(
   attemptToReadValue: () => void,
   warnOnDuplicateKey: () => void,
 ): OpaqueIDType {
-  let keySet: Set<string> = new Set();
+  const keySet: Set<string> = new Set();
   return {
     $$typeof: REACT_OPAQUE_ID_TYPE,
-    makeNewFromKey(key : string) {
-      if(keySet.has(key)){
+    makeNewFromKey(key: string) {
+      if (keySet.has(key)) {
         warnOnDuplicateKey();
       } else {
-        keySet.add(key)
+        keySet.add(key);
       }
       return makeNestedOpaqueHydratingObjectFromKey(this, () => key, 0);
     },
