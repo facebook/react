@@ -459,6 +459,8 @@ describe('ReactDOM', () => {
     });
 
     testDestroy('reset document', () => {
+      // We need delete first since window.document has only a getter
+      delete global.document;
       global.document = null;
     });
   });
