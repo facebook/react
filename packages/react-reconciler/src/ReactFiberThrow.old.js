@@ -261,7 +261,7 @@ function throwException(
         // subsequent synchronous update to re-render the Suspense.
         //
         // Note: It doesn't matter whether the component that suspended was
-        // inside a legacy tree. If the Suspense is outside of it, we
+        // inside a concurrent mode tree. If the Suspense is outside of it, we
         // should *not* suspend the commit.
         //
         // If the suspense boundary suspended itself suspended, we don't have to
