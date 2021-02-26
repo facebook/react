@@ -15,6 +15,7 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
+let act;
 
 function initModules() {
   // Reset warning cache.
@@ -24,6 +25,7 @@ function initModules() {
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
   ReactTestUtils = require('react-dom/test-utils');
+  act = ReactTestUtils.unstable_concurrentAct;
 
   // Make them available to the helpers.
   return {
@@ -101,6 +103,39 @@ describe('ReactDOMServerSuspense', () => {
     expect(e.innerHTML).toBe(
       '<div>Children</div><!--$!--><div>Fallback</div><!--/$-->',
     );
+  });
+
+  // @gate experimental
+  it('server renders a SuspenseList component and its children', async () => {
+    const example = (
+      <React.SuspenseList>
+        <React.Suspense fallback="Loading A">
+          <div>A</div>
+        </React.Suspense>
+        <React.Suspense fallback="Loading B">
+          <div>B</div>
+        </React.Suspense>
+      </React.SuspenseList>
+    );
+    const element = await serverRender(example);
+    const parent = element.parentNode;
+    const divA = parent.children[0];
+    expect(divA.tagName).toBe('DIV');
+    expect(divA.textContent).toBe('A');
+    const divB = parent.children[1];
+    expect(divB.tagName).toBe('DIV');
+    expect(divB.textContent).toBe('B');
+
+    act(() => {
+      const root = ReactDOM.createRoot(parent, {hydrate: true});
+      root.render(example);
+    });
+
+    const parent2 = element.parentNode;
+    const divA2 = parent2.children[0];
+    const divB2 = parent2.children[1];
+    expect(divA).toBe(divA2);
+    expect(divB).toBe(divB2);
   });
 
   // TODO: Remove this in favor of @gate pragma
