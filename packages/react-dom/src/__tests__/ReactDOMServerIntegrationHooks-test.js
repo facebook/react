@@ -2187,11 +2187,9 @@ describe('ReactDOMServerHooks', () => {
 
       container.innerHTML = ReactDOMServer.renderToString(<App />);
       ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
-      expect(() => Scheduler.unstable_flushAll()).toErrorDev(
-        [
-          'Warning: Detected that two nested opaque identifiers with the same parent were created with identical keys. Keys must be unique.',
-        ],
-      );
+      expect(() => Scheduler.unstable_flushAll()).toErrorDev([
+        'Warning: Detected that two nested opaque identifiers with the same parent were created with identical keys. Keys must be unique.',
+      ]);
     });
   });
 });
