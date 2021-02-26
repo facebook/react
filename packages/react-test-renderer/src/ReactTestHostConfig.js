@@ -313,9 +313,11 @@ function makeNestedClientId(
       return makeNestedClientId(this, () => key, depth + 1);
     },
     toString() {
+      //$FlowFixMe toString is only ever void if attemptToReadValue throws, which means we don't get here anyway
       return parent.toString() + getValueOfKey() + ':' + depth.toString(32);
     },
     valueOf() {
+      //$FlowFixMe toString is only ever void if attemptToReadValue throws, which means we don't get here anyway
       return parent.valueOf() + getValueOfKey() + ':' + depth.toString(32);
     },
   };
@@ -359,9 +361,11 @@ function makeNestedClientIdInDEV(
       );
     },
     toString() {
+      //$FlowFixMe toString is only ever void if attemptToReadValue throws, which means we don't get here anyway
       return parent.toString() + getValueOfKey() + ':' + depth.toString(32);
     },
     valueOf() {
+      //$FlowFixMe toString is only ever void if attemptToReadValue throws, which means we don't get here anyway
       return parent.valueOf() + getValueOfKey() + ':' + depth.toString(32);
     },
   };
@@ -402,19 +406,33 @@ export function isOpaqueHydratingObject(value: mixed): boolean {
 }
 
 function makeNestedOpaqueHydratingObjectFromKey(
+  warnOnDuplicateKey: () => void,
   parent: OpaqueIDType,
   getValueOfKey: () => string,
   depth: number,
 ): OpaqueIDType {
+  const keySet: Set<string> = new Set();
   return {
     $$typeof: REACT_OPAQUE_ID_TYPE,
     makeNewFromKey(key: string) {
-      return makeNestedOpaqueHydratingObjectFromKey(this, () => key, depth + 1);
+      if (keySet.has(key)) {
+        warnOnDuplicateKey();
+      } else {
+        keySet.add(key);
+      }
+      return makeNestedOpaqueHydratingObjectFromKey(
+        warnOnDuplicateKey,
+        this,
+        () => key,
+        depth + 1,
+      );
     },
     toString() {
+      //$FlowFixMe toString is only ever void if attemptToReadValue throws, which means we don't get here anyway
       return parent.toString() + getValueOfKey() + ':' + depth.toString(32);
     },
     valueOf() {
+      //$FlowFixMe toString is only ever void if attemptToReadValue throws, which means we don't get here anyway
       return parent.valueOf() + getValueOfKey() + ':' + depth.toString(32);
     },
   };
@@ -422,11 +440,23 @@ function makeNestedOpaqueHydratingObjectFromKey(
 
 export function makeOpaqueHydratingObject(
   attemptToReadValue: () => void,
+  warnOnDuplicateKey: () => void,
 ): OpaqueIDType {
+  const keySet: Set<string> = new Set();
   return {
     $$typeof: REACT_OPAQUE_ID_TYPE,
     makeNewFromKey(key: string) {
-      return makeNestedOpaqueHydratingObjectFromKey(this, () => key, 0);
+      if (keySet.has(key)) {
+        warnOnDuplicateKey();
+      } else {
+        keySet.add(key);
+      }
+      return makeNestedOpaqueHydratingObjectFromKey(
+        warnOnDuplicateKey,
+        this,
+        () => key,
+        0,
+      );
     },
     toString() {
       return attemptToReadValue();
