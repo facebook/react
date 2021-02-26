@@ -23,7 +23,7 @@ describe('ReactDOM', () => {
     ReactTestUtils = require('react-dom/test-utils');
   });
 
-  it('should bubble onSubmit', function () {
+  it('should bubble onSubmit', function() {
     const container = document.createElement('div');
 
     let count = 0;
@@ -32,7 +32,7 @@ describe('ReactDOM', () => {
     function Parent() {
       return (
         <div
-          onSubmit={(event) => {
+          onSubmit={event => {
             event.preventDefault();
             count++;
           }}>
@@ -44,7 +44,7 @@ describe('ReactDOM', () => {
     function Child() {
       return (
         <form>
-          <input type="submit" ref={(button) => (buttonRef = button)} />
+          <input type="submit" ref={button => (buttonRef = button)} />
         </form>
       );
     }
@@ -235,9 +235,9 @@ describe('ReactDOM', () => {
       render() {
         return (
           <div>
-            <input id="one" ref={(r) => (input = input || r)} />
+            <input id="one" ref={r => (input = input || r)} />
             {this.props.showTwo && (
-              <input id="two" ref={(r) => (input2 = input2 || r)} />
+              <input id="two" ref={r => (input2 = input2 || r)} />
             )}
           </div>
         );
@@ -264,9 +264,9 @@ describe('ReactDOM', () => {
       // deterministically force without relying intensely on React DOM
       // implementation details)
       const div = container.firstChild;
-      ['appendChild', 'insertBefore'].forEach((name) => {
+      ['appendChild', 'insertBefore'].forEach(name => {
         const mutator = div[name];
-        div[name] = function () {
+        div[name] = function() {
           if (input) {
             input.blur();
             expect(document.activeElement.tagName).toBe('BODY');
@@ -298,7 +298,7 @@ describe('ReactDOM', () => {
       // This test needs to determine that focus is called after mount.
       // Can't check document.activeElement because PhantomJS is too permissive;
       // It doesn't require element to be in the DOM to be focused.
-      HTMLElement.prototype.focus = function () {
+      HTMLElement.prototype.focus = function() {
         focusedElement = this;
         inputFocusedAfterMount = !!this.parentNode;
       };
@@ -337,13 +337,13 @@ describe('ReactDOM', () => {
                 actual.push('1st node clicked');
                 this.ref2.click();
               }}
-              ref={(ref) => (this.ref1 = ref)}
+              ref={ref => (this.ref1 = ref)}
             />
             <div
-              onClick={(ref) => {
+              onClick={ref => {
                 actual.push("2nd node clicked imperatively from 1st's handler");
               }}
-              ref={(ref) => (this.ref2 = ref)}
+              ref={ref => (this.ref2 = ref)}
             />
           </div>
         );
@@ -369,9 +369,9 @@ describe('ReactDOM', () => {
   it('should not crash with devtools installed', () => {
     try {
       global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
-        inject: function () {},
-        onCommitFiberRoot: function () {},
-        onCommitFiberUnmount: function () {},
+        inject: function() {},
+        onCommitFiberRoot: function() {},
+        onCommitFiberUnmount: function() {},
         supportsFiber: true,
       };
       jest.resetModules();
