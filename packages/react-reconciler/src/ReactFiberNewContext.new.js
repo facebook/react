@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {ReactContext} from 'shared/ReactTypes';
+import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
 import type {
   Fiber,
   ContextDependency,
@@ -33,6 +33,7 @@ import {
   mergeLanes,
   pickArbitraryLane,
 } from './ReactFiberLane.new';
+import {NoFlags, DidPropagateContext} from './ReactFiberFlags';
 
 import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
@@ -326,6 +327,77 @@ export function propagateContextChange<T>(
     }
     fiber = nextFiber;
   }
+}
+
+export function lazilyPropagateParentContextChanges(
+  current: Fiber,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  propagateParentContextChanges(current, workInProgress, renderLanes, false);
+}
+
+export function propagateParentContextChangesToDeferredTree(
+  current: Fiber,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  propagateParentContextChanges(current, workInProgress, renderLanes, true);
+}
+
+function propagateParentContextChanges(
+  current: Fiber,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+  // TODO: This argument is currently unused. I think there's a way to optimize
+  // for the many providers case, where if the first propagation finds a match,
+  // the second one can avoid scanning down that same path. The trouble is that
+  // there could be a nested bailout below that.
+  forcePropagateEntireTree: boolean,
+) {
+  if (!enableLazyContextPropagation) {
+    return false;
+  }
+
+  let parent = workInProgress;
+  while (parent !== null && (parent.flags & DidPropagateContext) === NoFlags) {
+    if (parent.tag === ContextProvider) {
+      const currentParent = parent.alternate;
+      if (currentParent !== null) {
+        const oldProps = currentParent.memoizedProps;
+        if (oldProps !== null) {
+          const providerType: ReactProviderType<any> = parent.type;
+          const context: ReactContext<any> = providerType._context;
+
+          const newProps = parent.pendingProps;
+          const newValue = newProps.value;
+
+          const oldValue = oldProps.value;
+
+          const changedBits = calculateChangedBits(context, newValue, oldValue);
+          if (changedBits !== 0) {
+            // The context value changed. Search for matching consumers and
+            // schedule them to update.
+            propagateContextChange(
+              workInProgress,
+              context,
+              changedBits,
+              renderLanes,
+            );
+          }
+        }
+      }
+    }
+    parent = parent.return;
+  }
+
+  // This is an optimization so that we only propagate each provider once per
+  // subtree. (We will propagate the same provider to different subtrees, though
+  // — that's why the flag is on the fiber that bailed out, not the provider.)
+  // If a deeply nested child bails out, and it calls this propagation function,
+  // it uses this flag to know that the remaining ancestor providers have
+  // already been propagated.
+  workInProgress.flags |= DidPropagateContext;
 }
 
 export function checkIfContextChanged(currentDependencies: Dependencies) {
