@@ -2624,7 +2624,7 @@ function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber) {
       return;
     }
 
-    if (!(fiber.mode & (ConcurrentMode | ConcurrentMode))) {
+    if (!(fiber.mode & ConcurrentMode)) {
       return;
     }
 
