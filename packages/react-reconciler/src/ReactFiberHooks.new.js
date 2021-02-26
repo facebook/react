@@ -1806,7 +1806,7 @@ function warnOnDuplicateOpaqueIdentifierKeyInDEV(fiber) {
 }
 
 function mountOpaqueIdentifier(): OpaqueIDType | void {
-  const warnOnDuplicateKeys=warnOnDuplicateOpaqueIdentifierKeyInDEV.bind(
+  const warnOnDuplicateKeys = warnOnDuplicateOpaqueIdentifierKeyInDEV.bind(
     null,
     currentlyRenderingFiber,
   );
