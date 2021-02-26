@@ -27,7 +27,7 @@ export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
 // this feature flag only impacts StrictEffectsMode.
 export const enableStrictEffects = false;
 
-// If TRUE, trees rendered with createRoot (and createBlockingRoot) APIs will be StrictEffectsMode.
+// If TRUE, trees rendered with createRoot will be StrictEffectsMode.
 // If FALSE, these trees will be StrictLegacyMode.
 export const createRootStrictEffectsByDefault = false;
 

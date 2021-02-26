@@ -67,23 +67,6 @@ describe('ReactStrictMode', () => {
     });
 
     // @gate experimental
-    it('should support overriding default via createBlockingRoot option', () => {
-      act(() => {
-        const container = document.createElement('div');
-        const root = ReactDOM.createBlockingRoot(container, {
-          unstable_strictModeLevel: 0,
-        });
-        root.render(<Component label="A" />);
-      });
-
-      expect(log).toEqual([
-        'A: render',
-        'A: useLayoutEffect mount',
-        'A: useEffect mount',
-      ]);
-    });
-
-    // @gate experimental
     it('should disable strict mode if level 0 is specified', () => {
       act(() => {
         const container = document.createElement('div');
