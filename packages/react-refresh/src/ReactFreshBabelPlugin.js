@@ -130,9 +130,9 @@ export default function(babel, opts = {}) {
             if (calleeType === 'Import') {
               return false;
             } else if (calleeType === 'Identifier') {
-              if (callee.name.indexOf('require') === 0) {
+              if (callee.name.startsWith('require')) {
                 return false;
-              } else if (callee.name.indexOf('import') === 0) {
+              } else if (callee.name.startsWith('import')) {
                 return false;
               }
               // Neither require nor import. Might be a HOC.

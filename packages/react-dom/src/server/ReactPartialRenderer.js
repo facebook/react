@@ -228,7 +228,7 @@ function createMarkupForStyles(styles): string | null {
     if (!styles.hasOwnProperty(styleName)) {
       continue;
     }
-    const isCustomProperty = styleName.indexOf('--') === 0;
+    const isCustomProperty = styleName.startsWith('--');
     const styleValue = styles[styleName];
     if (__DEV__) {
       if (!isCustomProperty) {

@@ -31,7 +31,7 @@ export function createDangerousStringForStyles(styles) {
       }
       const styleValue = styles[styleName];
       if (styleValue != null) {
-        const isCustomProperty = styleName.indexOf('--') === 0;
+        const isCustomProperty = styleName.startsWith('--');
         serialized +=
           delimiter +
           (isCustomProperty ? styleName : hyphenateStyleName(styleName)) +
@@ -62,7 +62,7 @@ export function setValueForStyles(node, styles) {
     if (!styles.hasOwnProperty(styleName)) {
       continue;
     }
-    const isCustomProperty = styleName.indexOf('--') === 0;
+    const isCustomProperty = styleName.startsWith('--');
     if (__DEV__) {
       if (!isCustomProperty) {
         warnValidStyle(styleName, styles[styleName]);
