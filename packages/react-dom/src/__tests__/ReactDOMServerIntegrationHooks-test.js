@@ -1763,7 +1763,7 @@ describe('ReactDOMServerHooks', () => {
       ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         [
-          'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
+          'Warning: The object passed back from useOpaqueIdentifier and those made from it are meant to be passed through to attributes only. Do not read the value directly.',
           'Warning: Did not expect server HTML to contain a <span> in <div>.',
         ],
         {withoutStack: 1},
@@ -1788,7 +1788,7 @@ describe('ReactDOMServerHooks', () => {
       ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         [
-          'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
+          'Warning: The object passed back from useOpaqueIdentifier and those made from it are meant to be passed through to attributes only. Do not read the value directly.',
           'Warning: Did not expect server HTML to contain a <span> in <div>.',
         ],
         {withoutStack: 1},
@@ -1812,7 +1812,7 @@ describe('ReactDOMServerHooks', () => {
       ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         [
-          'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
+          'Warning: The object passed back from useOpaqueIdentifier and those made from it are meant to be passed through to attributes only. Do not read the value directly.',
           'Warning: Did not expect server HTML to contain a <div> in <div>.',
         ],
         {withoutStack: 1},
@@ -1833,7 +1833,7 @@ describe('ReactDOMServerHooks', () => {
       ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         [
-          'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
+          'Warning: The object passed back from useOpaqueIdentifier and those made from it are meant to be passed through to attributes only. Do not read the value directly.',
           'Warning: Did not expect server HTML to contain a <div> in <div>.',
         ],
         {withoutStack: 1},
@@ -1863,20 +1863,17 @@ describe('ReactDOMServerHooks', () => {
 
       if (gate(flags => flags.deferRenderPhaseUpdateToNextBatch)) {
         expect(() => Scheduler.unstable_flushAll()).toErrorDev([
-          'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
-            'Do not read the value directly.',
+          'Warning: The object passed back from useOpaqueIdentifier and those made from it are meant to be passed through to attributes only. Do not read the value directly.',
         ]);
       } else {
         // This error isn't surfaced to the user; only the warning is.
         // The error is just the mechanism that restarts the render.
         expect(() =>
           expect(() => Scheduler.unstable_flushAll()).toThrow(
-            'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
-              'Do not read the value directly.',
+            'Warning: The object passed back from useOpaqueIdentifier and those made from it are meant to be passed through to attributes only. Do not read the value directly.',
           ),
         ).toErrorDev([
-          'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
-            'Do not read the value directly.',
+          'Warning: The object passed back from useOpaqueIdentifier and those made from it are meant to be passed through to attributes only. Do not read the value directly.',
         ]);
       }
     });
@@ -1906,20 +1903,17 @@ describe('ReactDOMServerHooks', () => {
 
       if (gate(flags => flags.deferRenderPhaseUpdateToNextBatch)) {
         expect(() => Scheduler.unstable_flushAll()).toErrorDev([
-          'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
-            'Do not read the value directly.',
+          'Warning: The object passed back from useOpaqueIdentifier and those made from it are meant to be passed through to attributes only. Do not read the value directly.',
         ]);
       } else {
         // This error isn't surfaced to the user; only the warning is.
         // The error is just the mechanism that restarts the render.
         expect(() =>
           expect(() => Scheduler.unstable_flushAll()).toThrow(
-            'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
-              'Do not read the value directly.',
+            'Warning: The object passed back from useOpaqueIdentifier and those made from it are meant to be passed through to attributes only. Do not read the value directly.',
           ),
         ).toErrorDev([
-          'The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. ' +
-            'Do not read the value directly.',
+          'Warning: The object passed back from useOpaqueIdentifier and those made from it are meant to be passed through to attributes only. Do not read the value directly.',
         ]);
       }
     });
@@ -1983,6 +1977,220 @@ describe('ReactDOMServerHooks', () => {
       expect(
         container.getElementsByTagName('span')[0].getAttribute('id'),
       ).not.toBeNull();
+    });
+    it('nested makeNewFromKey generates unique ids for server string render', async () => {
+      function App(props) {
+        const baseId = useOpaqueIdentifier();
+        const nestedOne=baseId.makeNewFromKey("key1");
+        const nestedTwo=baseId.makeNewFromKey("key2");
+        const nestedOneOne=nestedOne.makeNewFromKey("key1");
+        const nestedOneTwo=nestedOne.makeNewFromKey("key2");
+        const nestedTwoOne=nestedTwo.makeNewFromKey("key1");
+        const nestedTwoTwo=nestedTwo.makeNewFromKey("key2");
+        return (
+          <div id={baseId}>
+            <div id={nestedOne}>
+              <div aria-labelledby={nestedOneOne} />
+              <div id={nestedOneTwo} />
+            </div>
+            <div id={nestedTwo}>
+              <span aria-labelledby={nestedTwoOne} />
+              <span id={nestedTwoTwo} />
+            </div>
+          </div>
+        );
+      }
+  
+      const domNode = await serverRender(<App />);
+      
+      expect(domNode.children.length).toEqual(2);
+      expect(domNode.children[0].children.length).toEqual(2);
+      expect(domNode.children[1].children.length).toEqual(2);
+      expect(domNode.children[0].children[0].getAttribute('aria-labelledby')).not.toEqual(
+        domNode.children[0].children[1].getAttribute('id'),
+      );
+      expect(domNode.children[1].children[0].getAttribute('aria-labelledby')).not.toEqual(
+        domNode.children[1].children[1].getAttribute('id'),
+      );
+      const idList=[
+        domNode.getAttribute("id"),
+        domNode.children[0].getAttribute("id"),
+        domNode.children[0].children[0].getAttribute("aria-labelledby"),
+        domNode.children[0].children[1].getAttribute("id"),
+        domNode.children[1].getAttribute("id"),
+        domNode.children[1].children[0].getAttribute("aria-labelledby"),
+        domNode.children[1].children[1].getAttribute("id"),
+      ];
+      expect(idList).not.toContain(null);
+      expect((new Set(idList)).size).toEqual(idList.length);
+    });
+  
+    // @gate experimental
+    it('nested makeNewFromKey generates unique ids for server stream render', async () => {
+      function App(props) {
+        const baseId = useOpaqueIdentifier();
+        const nestedOne=baseId.makeNewFromKey("key1");
+        const nestedTwo=baseId.makeNewFromKey("key2");
+        const nestedOneOne=nestedOne.makeNewFromKey("key1");
+        const nestedOneTwo=nestedOne.makeNewFromKey("key2");
+        const nestedTwoOne=nestedTwo.makeNewFromKey("key1");
+        const nestedTwoTwo=nestedTwo.makeNewFromKey("key2");
+        return (
+          <div id={baseId}>
+            <div id={nestedOne}>
+              <div aria-labelledby={nestedOneOne} />
+              <div id={nestedOneTwo} />
+            </div>
+            <div id={nestedTwo}>
+              <span aria-labelledby={nestedTwoOne} />
+              <span id={nestedTwoTwo} />
+            </div>
+          </div>
+        );
+      }
+  
+      const domNode = await streamRender(<App />);
+      
+      expect(domNode.children.length).toEqual(2);
+      expect(domNode.children[0].children.length).toEqual(2);
+      expect(domNode.children[1].children.length).toEqual(2);
+      expect(domNode.children[0].children[0].getAttribute('aria-labelledby')).not.toEqual(
+        domNode.children[0].children[1].getAttribute('id'),
+      );
+      expect(domNode.children[1].children[0].getAttribute('aria-labelledby')).not.toEqual(
+        domNode.children[1].children[1].getAttribute('id'),
+      );
+      const idList=[
+        domNode.getAttribute("id"),
+        domNode.children[0].getAttribute("id"),
+        domNode.children[0].children[0].getAttribute("aria-labelledby"),
+        domNode.children[0].children[1].getAttribute("id"),
+        domNode.children[1].getAttribute("id"),
+        domNode.children[1].children[0].getAttribute("aria-labelledby"),
+        domNode.children[1].children[1].getAttribute("id"),
+      ];
+      expect(idList).not.toContain(null);
+      expect((new Set(idList)).size).toEqual(idList.length);
+    });
+  
+    // @gate experimental
+    it('nested makeNewFromKey generates unique ids for client render', async () => {
+      function App(props) {
+        const baseId = useOpaqueIdentifier();
+        const nestedOne=baseId.makeNewFromKey("key1");
+        const nestedTwo=baseId.makeNewFromKey("key2");
+        const nestedOneOne=nestedOne.makeNewFromKey("key1");
+        const nestedOneTwo=nestedOne.makeNewFromKey("key2");
+        const nestedTwoOne=nestedTwo.makeNewFromKey("key1");
+        const nestedTwoTwo=nestedTwo.makeNewFromKey("key2");
+        return (
+          <div id={baseId}>
+            <div id={nestedOne}>
+              <div aria-labelledby={nestedOneOne} />
+              <div id={nestedOneTwo} />
+            </div>
+            <div id={nestedTwo}>
+              <span aria-labelledby={nestedTwoOne} />
+              <span id={nestedTwoTwo} />
+            </div>
+          </div>
+        );
+      }
+  
+      const domNode = await clientCleanRender(<App />);
+      
+      expect(domNode.children.length).toEqual(2);
+      expect(domNode.children[0].children.length).toEqual(2);
+      expect(domNode.children[1].children.length).toEqual(2);
+      expect(domNode.children[0].children[0].getAttribute('aria-labelledby')).not.toEqual(
+        domNode.children[0].children[1].getAttribute('id'),
+      );
+      expect(domNode.children[1].children[0].getAttribute('aria-labelledby')).not.toEqual(
+        domNode.children[1].children[1].getAttribute('id'),
+      );
+      const idList=[
+        domNode.getAttribute("id"),
+        domNode.children[0].getAttribute("id"),
+        domNode.children[0].children[0].getAttribute("aria-labelledby"),
+        domNode.children[0].children[1].getAttribute("id"),
+        domNode.children[1].getAttribute("id"),
+        domNode.children[1].children[0].getAttribute("aria-labelledby"),
+        domNode.children[1].children[1].getAttribute("id"),
+      ];
+      expect(idList).not.toContain(null);
+      expect((new Set(idList)).size).toEqual(idList.length);
+    });
+    it('nested makeNewFromKey generates unique ids for client render on good server markup', async () => {
+      function App(props) {
+        const baseId = useOpaqueIdentifier();
+        const nestedOne=baseId.makeNewFromKey("key1");
+        const nestedTwo=baseId.makeNewFromKey("key2");
+        const nestedOneOne=nestedOne.makeNewFromKey("key1");
+        const nestedOneTwo=nestedOne.makeNewFromKey("key2");
+        const nestedTwoOne=nestedTwo.makeNewFromKey("key1");
+        const nestedTwoTwo=nestedTwo.makeNewFromKey("key2");
+        return (
+          <div id={baseId}>
+            <div id={nestedOne}>
+              <div aria-labelledby={nestedOneOne} />
+              <div id={nestedOneTwo} />
+            </div>
+            <div id={nestedTwo}>
+              <span aria-labelledby={nestedTwoOne} />
+              <span id={nestedTwoTwo} />
+            </div>
+          </div>
+        );
+      }
+
+      const domNode = await clientRenderOnServerString(<App />);
+      
+      expect(domNode.children.length).toEqual(2);
+      expect(domNode.children[0].children.length).toEqual(2);
+      expect(domNode.children[1].children.length).toEqual(2);
+      expect(domNode.children[0].children[0].getAttribute('aria-labelledby')).not.toEqual(
+        domNode.children[0].children[1].getAttribute('id'),
+      );
+      expect(domNode.children[1].children[0].getAttribute('aria-labelledby')).not.toEqual(
+        domNode.children[1].children[1].getAttribute('id'),
+      );
+      const idList=[
+        domNode.getAttribute("id"),
+        domNode.children[0].getAttribute("id"),
+        domNode.children[0].children[0].getAttribute("aria-labelledby"),
+        domNode.children[0].children[1].getAttribute("id"),
+        domNode.children[1].getAttribute("id"),
+        domNode.children[1].children[0].getAttribute("aria-labelledby"),
+        domNode.children[1].children[1].getAttribute("id"),
+      ];
+      expect(idList).not.toContain(null);
+      expect((new Set(idList)).size).toEqual(idList.length);
+    });
+    it('makeNewFromKey warns on duplicate keys', async () => {
+      function App() {
+        const id = useOpaqueIdentifier();
+        const nestedOne=id.makeNewFromKey("key1");
+        const nestedTwo=id.makeNewFromKey("key1");
+        return(
+          <div>
+            <span id={nestedOne}/>
+            <span id={nestedTwo}/>
+          </div>
+        );
+      }
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+
+      container.innerHTML = ReactDOMServer.renderToString(<App />);
+      ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
+      expect(() => Scheduler.unstable_flushAll()).toErrorDev(
+        [
+          'Warning: Detected that two nested opaque identifiers with the same parent were created with identical keys. Keys must be unique.',
+          'Warning: Did not expect server HTML to contain a <div> in <div>.',
+        ],
+        {withoutStack: 1},
+      );
     });
   });
 });
