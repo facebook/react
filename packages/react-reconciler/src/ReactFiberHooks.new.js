@@ -1806,14 +1806,15 @@ function warnOnDuplicateOpaqueIdentifierKeyInDEV(fiber) {
 }
 
 function mountOpaqueIdentifier(): OpaqueIDType | void {
+  const warnOnDuplicateKeys=warnOnDuplicateOpaqueIdentifierKeyInDEV.bind(
+    null,
+    currentlyRenderingFiber,
+  );
   const makeId = __DEV__
     ? makeClientIdInDEV.bind(
         null,
         warnOnOpaqueIdentifierAccessInDEV.bind(null, currentlyRenderingFiber),
-        warnOnDuplicateOpaqueIdentifierKeyInDEV.bind(
-          null,
-          currentlyRenderingFiber,
-        ),
+        warnOnDuplicateKeys,
       )
     : makeClientId;
 
@@ -1840,7 +1841,7 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
         'Warning: The object passed back from useOpaqueIdentifier and those made from it are meant to be passed through to attributes only. Do not read the value directly.',
       );
     };
-    const id = makeOpaqueHydratingObject(readValue);
+    const id = makeOpaqueHydratingObject(readValue, warnOnDuplicateKeys);
 
     const setId = mountState(id)[1];
 
