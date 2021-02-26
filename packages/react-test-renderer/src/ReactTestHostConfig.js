@@ -380,7 +380,7 @@ export function makeClientIdInDEV(
       } else {
         keySet.add(key);
       }
-      return makeNestedClientIdInDEV(this, () => key, 0);
+      return makeNestedClientIdInDEV(warnOnDuplicateKey, this, () => key, 0);
     },
     toString() {
       warnOnAccessInDEV();

@@ -1124,7 +1124,7 @@ function makeNestedOpaqueHydratingObjectFromKey(
       } else {
         keySet.add(key);
       }
-      return makeNestedOpaqueHydratingObjectFromKey(this, () => key, depth + 1);
+      return makeNestedOpaqueHydratingObjectFromKey(warnOnDuplicateKey, this, () => key, depth + 1);
     },
     toString() {
       //$FlowFixMe: if this is null, then attemptToReadValue already threw, so we won't get here anyway
@@ -1150,7 +1150,7 @@ export function makeOpaqueHydratingObject(
       } else {
         keySet.add(key);
       }
-      return makeNestedOpaqueHydratingObjectFromKey(this, () => key, 0);
+      return makeNestedOpaqueHydratingObjectFromKey(warnOnDuplicateKey, this, () => key, 0);
     },
     toString() {
       return attemptToReadValue();
