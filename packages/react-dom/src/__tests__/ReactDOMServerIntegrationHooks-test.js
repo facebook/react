@@ -1978,6 +1978,7 @@ describe('ReactDOMServerHooks', () => {
         container.getElementsByTagName('span')[0].getAttribute('id'),
       ).not.toBeNull();
     });
+    // @gate experimental
     it('nested makeNewFromKey generates unique ids for server string render', async () => {
       function App(props) {
         const baseId = useOpaqueIdentifier();
@@ -2120,6 +2121,7 @@ describe('ReactDOMServerHooks', () => {
       expect(idList).not.toContain(null);
       expect(new Set(idList).size).toEqual(idList.length);
     });
+    // @gate experimental
     it('nested makeNewFromKey generates unique ids for client render on good server markup', async () => {
       function App(props) {
         const baseId = useOpaqueIdentifier();
@@ -2166,6 +2168,7 @@ describe('ReactDOMServerHooks', () => {
       expect(idList).not.toContain(null);
       expect(new Set(idList).size).toEqual(idList.length);
     });
+    // @gate experimental
     it('makeNewFromKey warns on duplicate keys', async () => {
       function App() {
         const id = useOpaqueIdentifier();
