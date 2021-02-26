@@ -2190,9 +2190,7 @@ describe('ReactDOMServerHooks', () => {
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         [
           'Warning: Detected that two nested opaque identifiers with the same parent were created with identical keys. Keys must be unique.',
-          'Warning: Did not expect server HTML to contain a <div> in <div>.',
         ],
-        {withoutStack: 1},
       );
     });
   });

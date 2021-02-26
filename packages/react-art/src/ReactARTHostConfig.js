@@ -448,6 +448,7 @@ export function isOpaqueHydratingObject(value: mixed): boolean {
 
 export function makeOpaqueHydratingObject(
   attemptToReadValue: () => void,
+  warnOnDuplicateKey: () => void,
 ): OpaqueIDType {
   throw new Error('Not yet implemented.');
 }

@@ -515,6 +515,7 @@ export function isOpaqueHydratingObject(value: mixed): boolean {
 
 export function makeOpaqueHydratingObject(
   attemptToReadValue: () => void,
+  warnOnDuplicateKey: () => void,
 ): OpaqueIDType {
   throw new Error('Not yet implemented.');
 }
@@ -523,7 +524,10 @@ export function makeClientId(): OpaqueIDType {
   throw new Error('Not yet implemented');
 }
 
-export function makeClientIdInDEV(warnOnAccessInDEV: () => void): OpaqueIDType {
+export function makeClientIdInDEV(
+  warnOnAccessInDEV: () => void,
+  warnOnDuplicateKey: () => void,
+): OpaqueIDType {
   throw new Error('Not yet implemented');
 }
 
