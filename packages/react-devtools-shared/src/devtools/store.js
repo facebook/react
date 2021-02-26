@@ -142,8 +142,8 @@ export default class Store extends EventEmitter<{|
   _supportsReloadAndProfile: boolean = false;
   _supportsTraceUpdates: boolean = false;
 
-  // Needed for reload and profile - assume supported until told otherwise
-  _supportsSynchronousXHR: boolean = true;
+  // Needed for reload and profile
+  _supportsSynchronousXHR: boolean = false;
 
   _unsupportedRendererVersionDetected: boolean = false;
 

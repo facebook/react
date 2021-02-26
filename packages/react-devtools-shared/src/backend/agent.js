@@ -222,6 +222,7 @@ export default class Agent extends EventEmitter<{|
       isBackendStorageAPISupported = true;
     } catch (error) {}
     bridge.send('isBackendStorageAPISupported', isBackendStorageAPISupported);
+    bridge.send('isSynchronousXHRSupported', isSynchronousXHRSupported());
 
     setupHighlighter(bridge, this);
     setupTraceUpdates(this);
@@ -493,20 +494,16 @@ export default class Agent extends EventEmitter<{|
   };
 
   reloadAndProfile = (recordChangeDescriptions: boolean) => {
-    if (isSynchronousXHRSupported()) {
-      sessionStorageSetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
-      sessionStorageSetItem(
-        SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
-        recordChangeDescriptions ? 'true' : 'false',
-      );
+    sessionStorageSetItem(SESSION_STORAGE_RELOAD_AND_PROFILE_KEY, 'true');
+    sessionStorageSetItem(
+      SESSION_STORAGE_RECORD_CHANGE_DESCRIPTIONS_KEY,
+      recordChangeDescriptions ? 'true' : 'false',
+    );
 
-      // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
-      // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
-      // The agent can't do this in a way that is renderer agnostic.
-      this._bridge.send('reloadAppForProfiling');
-    } else {
-      this._bridge.send('isSynchronousXHRSupported', false);
-    }
+    // This code path should only be hit if the shell has explicitly told the Store that it supports profiling.
+    // In that case, the shell must also listen for this specific message to know when it needs to reload the app.
+    // The agent can't do this in a way that is renderer agnostic.
+    this._bridge.send('reloadAppForProfiling');
   };
 
   renamePath = ({

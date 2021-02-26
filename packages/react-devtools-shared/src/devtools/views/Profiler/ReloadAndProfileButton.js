@@ -8,12 +8,11 @@
  */
 
 import * as React from 'react';
-import {useCallback, useContext, useMemo, useEffect} from 'react';
+import {useCallback, useContext, useMemo} from 'react';
 import Button from '../Button';
 import ButtonIcon from '../ButtonIcon';
 import {BridgeContext, StoreContext} from '../context';
 import {useSubscription} from '../hooks';
-import {ModalDialogContext} from '../ModalDialog';
 
 type SubscriptionData = {|
   recordChangeDescriptions: boolean,
@@ -51,17 +50,6 @@ export default function ReloadAndProfileButton() {
     supportsSynchronousXHR,
   } = useSubscription<SubscriptionData>(subscription);
 
-  const {dispatch: modalDialogDispatch} = useContext(ModalDialogContext);
-  useEffect(() => {
-    if (!supportsSynchronousXHR) {
-      modalDialogDispatch({
-        type: 'SHOW',
-        content:
-          'Synchronous XHR is required for reload and profile but is disabled on this site.',
-      });
-    }
-  }, [supportsSynchronousXHR, modalDialogDispatch]);
-
   const reloadAndProfile = useCallback(() => {
     // TODO If we want to support reload-and-profile for e.g. React Native,
     // we might need to also start profiling here before reloading the app (since DevTools itself isn't reloaded).
@@ -76,11 +64,15 @@ export default function ReloadAndProfileButton() {
     return null;
   }
 
+  const buttonTitle = supportsSynchronousXHR
+    ? 'Reload and start profiling'
+    : 'Reload and start profiling has been disabled because synchronous XHR is not supported on this site';
+
   return (
     <Button
       disabled={!store.supportsProfiling || !supportsSynchronousXHR}
       onClick={reloadAndProfile}
-      title="Reload and start profiling">
+      title={buttonTitle}>
       <ButtonIcon type="reload" />
     </Button>
   );
