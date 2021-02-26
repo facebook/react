@@ -452,15 +452,15 @@ describe('ReactDOM', () => {
           Object.defineProperty(global, 'document', documentDescriptor);
         }
       });
-
-      testDestroy('delete document', () => {
-        delete global.document;
-      });
-
-      testDestroy('reset document', () => {
-        global.document = null;
-      });
     }
+
+    testDestroy('delete document', () => {
+      delete global.document;
+    });
+
+    testDestroy('reset document', () => {
+      global.document = null;
+    });
   });
 
   it('reports stacks with re-entrant renderToString() calls on the client', () => {
