@@ -40,7 +40,7 @@ import {
   act as act_old,
   createPortal as createPortal_old,
   createComponentSelector as createComponentSelector_old,
-  createHasPsuedoClassSelector as createHasPsuedoClassSelector_old,
+  createHasPseudoClassSelector as createHasPseudoClassSelector_old,
   createRoleSelector as createRoleSelector_old,
   createTestNameSelector as createTestNameSelector_old,
   createTextSelector as createTextSelector_old,
@@ -84,7 +84,7 @@ import {
   act as act_new,
   createPortal as createPortal_new,
   createComponentSelector as createComponentSelector_new,
-  createHasPsuedoClassSelector as createHasPsuedoClassSelector_new,
+  createHasPseudoClassSelector as createHasPseudoClassSelector_new,
   createRoleSelector as createRoleSelector_new,
   createTestNameSelector as createTestNameSelector_new,
   createTextSelector as createTextSelector_new,
@@ -190,9 +190,9 @@ export const IdleEventPriority = enableNewReconciler
   : IdleEventPriority_old;
 
 //TODO: "psuedo" is spelled "pseudo"
-export const createHasPsuedoClassSelector = enableNewReconciler
-  ? createHasPsuedoClassSelector_new
-  : createHasPsuedoClassSelector_old;
+export const createHasPseudoClassSelector = enableNewReconciler
+  ? createHasPseudoClassSelector_new
+  : createHasPseudoClassSelector_old;
 export const createRoleSelector = enableNewReconciler
   ? createRoleSelector_new
   : createRoleSelector_old;
