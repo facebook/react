@@ -23,7 +23,7 @@ describe('ReactDOM', () => {
     ReactTestUtils = require('react-dom/test-utils');
   });
 
-  it('should bubble onSubmit', function() {
+  it('should bubble onSubmit', function () {
     const container = document.createElement('div');
 
     let count = 0;
@@ -32,7 +32,7 @@ describe('ReactDOM', () => {
     function Parent() {
       return (
         <div
-          onSubmit={event => {
+          onSubmit={(event) => {
             event.preventDefault();
             count++;
           }}>
@@ -44,7 +44,7 @@ describe('ReactDOM', () => {
     function Child() {
       return (
         <form>
-          <input type="submit" ref={button => (buttonRef = button)} />
+          <input type="submit" ref={(button) => (buttonRef = button)} />
         </form>
       );
     }
@@ -235,9 +235,9 @@ describe('ReactDOM', () => {
       render() {
         return (
           <div>
-            <input id="one" ref={r => (input = input || r)} />
+            <input id="one" ref={(r) => (input = input || r)} />
             {this.props.showTwo && (
-              <input id="two" ref={r => (input2 = input2 || r)} />
+              <input id="two" ref={(r) => (input2 = input2 || r)} />
             )}
           </div>
         );
@@ -264,9 +264,9 @@ describe('ReactDOM', () => {
       // deterministically force without relying intensely on React DOM
       // implementation details)
       const div = container.firstChild;
-      ['appendChild', 'insertBefore'].forEach(name => {
+      ['appendChild', 'insertBefore'].forEach((name) => {
         const mutator = div[name];
-        div[name] = function() {
+        div[name] = function () {
           if (input) {
             input.blur();
             expect(document.activeElement.tagName).toBe('BODY');
@@ -298,7 +298,7 @@ describe('ReactDOM', () => {
       // This test needs to determine that focus is called after mount.
       // Can't check document.activeElement because PhantomJS is too permissive;
       // It doesn't require element to be in the DOM to be focused.
-      HTMLElement.prototype.focus = function() {
+      HTMLElement.prototype.focus = function () {
         focusedElement = this;
         inputFocusedAfterMount = !!this.parentNode;
       };
@@ -337,13 +337,13 @@ describe('ReactDOM', () => {
                 actual.push('1st node clicked');
                 this.ref2.click();
               }}
-              ref={ref => (this.ref1 = ref)}
+              ref={(ref) => (this.ref1 = ref)}
             />
             <div
-              onClick={ref => {
+              onClick={(ref) => {
                 actual.push("2nd node clicked imperatively from 1st's handler");
               }}
-              ref={ref => (this.ref2 = ref)}
+              ref={(ref) => (this.ref2 = ref)}
             />
           </div>
         );
@@ -369,9 +369,9 @@ describe('ReactDOM', () => {
   it('should not crash with devtools installed', () => {
     try {
       global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
-        inject: function() {},
-        onCommitFiberRoot: function() {},
-        onCommitFiberUnmount: function() {},
+        inject: function () {},
+        onCommitFiberRoot: function () {},
+        onCommitFiberUnmount: function () {},
         supportsFiber: true,
       };
       jest.resetModules();
@@ -408,46 +408,58 @@ describe('ReactDOM', () => {
     }
   });
 
-  it('throws in DEV if jsdom is destroyed by the time setState() is called', () => {
-    class App extends React.Component {
-      state = {x: 1};
-      componentDidUpdate() {}
-      render() {
-        return <div />;
-      }
-    }
-    const container = document.createElement('div');
-    const instance = ReactDOM.render(<App />, container);
-    const documentDescriptor = Object.getOwnPropertyDescriptor(
-      global,
-      'document',
-    );
-    try {
-      // Emulate jsdom environment cleanup.
-      // This is roughly what happens if the test finished and then
-      // an asynchronous callback tried to setState() after this.
-      delete global.document;
-
-      // The error we're interested in is thrown by invokeGuardedCallback, which
-      // in DEV is used 1) to replay a failed begin phase, or 2) when calling
-      // lifecycle methods. We're triggering the second case here.
-      const fn = () => instance.setState({x: 2});
-      if (__DEV__) {
-        expect(fn).toThrow(
-          'The `document` global was defined when React was initialized, but is not ' +
-            'defined anymore. This can happen in a test environment if a component ' +
-            'schedules an update from an asynchronous callback, but the test has already ' +
-            'finished running. To solve this, you can either unmount the component at ' +
-            'the end of your test (and ensure that any asynchronous operations get ' +
-            'canceled in `componentWillUnmount`), or you can change the test itself ' +
-            'to be asynchronous.',
+  describe('throws in DEV if jsdom is destroyed by the time setState() is called', () => {
+    function testDestroy(name, destroyFn) {
+      it(name, () => {
+        class App extends React.Component {
+          state = {x: 1};
+          componentDidUpdate() {}
+          render() {
+            return <div />;
+          }
+        }
+        const container = document.createElement('div');
+        const instance = ReactDOM.render(<App />, container);
+        const documentDescriptor = Object.getOwnPropertyDescriptor(
+          global,
+          'document',
         );
-      } else {
-        expect(fn).not.toThrow();
-      }
-    } finally {
-      // Don't break other tests.
-      Object.defineProperty(global, 'document', documentDescriptor);
+        try {
+          // Emulate jsdom environment cleanup.
+          // This is roughly what happens if the test finished and then
+          // an asynchronous callback tried to setState() after this.
+          destroyFn();
+
+          // The error we're interested in is thrown by invokeGuardedCallback, which
+          // in DEV is used 1) to replay a failed begin phase, or 2) when calling
+          // lifecycle methods. We're triggering the second case here.
+          const fn = () => instance.setState({x: 2});
+          if (__DEV__) {
+            expect(fn).toThrow(
+              'The `document` global was defined when React was initialized, but is not ' +
+                'defined anymore. This can happen in a test environment if a component ' +
+                'schedules an update from an asynchronous callback, but the test has already ' +
+                'finished running. To solve this, you can either unmount the component at ' +
+                'the end of your test (and ensure that any asynchronous operations get ' +
+                'canceled in `componentWillUnmount`), or you can change the test itself ' +
+                'to be asynchronous.',
+            );
+          } else {
+            expect(fn).not.toThrow();
+          }
+        } finally {
+          // Don't break other tests.
+          Object.defineProperty(global, 'document', documentDescriptor);
+        }
+      });
+
+      testDestroy('delete document', () => {
+        delete global.document;
+      });
+
+      testDestroy('reset document', () => {
+        global.document = null;
+      });
     }
   });
 
