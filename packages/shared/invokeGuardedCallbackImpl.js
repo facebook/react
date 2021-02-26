@@ -84,7 +84,7 @@ if (__DEV__) {
       // errors: https://github.com/facebook/create-react-app/issues/3482
       // So we preemptively throw with a better message instead.
       invariant(
-        typeof document !== 'undefined',
+        typeof document !== 'undefined' && document !== null,
         'The `document` global was defined when React was initialized, but is not ' +
           'defined anymore. This can happen in a test environment if a component ' +
           'schedules an update from an asynchronous callback, but the test has already ' +
