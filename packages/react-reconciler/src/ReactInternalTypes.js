@@ -31,6 +31,7 @@ export type HookType =
   | 'useState'
   | 'useReducer'
   | 'useContext'
+  | 'useContextSelector'
   | 'useRef'
   | 'useEffect'
   | 'useLayoutEffect'
@@ -44,16 +45,19 @@ export type HookType =
   | 'useOpaqueIdentifier'
   | 'useCacheRefresh';
 
-export type ContextDependency<T> = {
-  context: ReactContext<T>,
-  next: ContextDependency<mixed> | null,
-  memoizedValue: T,
+export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
+
+export type ContextDependency<C, S> = {
+  context: ReactContext<C>,
+  selector: (C => S) | null,
+  next: ContextDependency<mixed, mixed> | null,
+  memoizedValue: C,
   ...
 };
 
 export type Dependencies = {
   lanes: Lanes,
-  firstContext: ContextDependency<mixed> | null,
+  firstContext: ContextDependency<mixed, mixed> | null,
   ...
 };
 
@@ -280,6 +284,7 @@ export type Dispatcher = {|
     init?: (I) => S,
   ): [S, Dispatch<A>],
   useContext<T>(context: ReactContext<T>): T,
+  useContextSelector<C, S>(context: ReactContext<C>, selector: (C) => S): C,
   useRef<T>(initialValue: T): {|current: T|},
   useEffect(
     create: () => (() => void) | void,

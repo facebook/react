@@ -38,6 +38,7 @@ export {
   unstable_Scope,
   unstable_getCacheForType,
   unstable_useCacheRefresh,
+  unstable_useContextSelector,
   unstable_useOpaqueIdentifier,
   useCallback,
   useContext,

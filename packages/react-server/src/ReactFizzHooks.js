@@ -244,6 +244,17 @@ function useContext<T>(context: ReactContext<T>): T {
   return readContextImpl(context);
 }
 
+function useContextSelector<C, S>(
+  context: ReactContext<C>,
+  selector: C => S,
+): C {
+  if (__DEV__) {
+    currentHookNameInDev = 'useContextSelector';
+  }
+  resolveCurrentlyRenderingComponent();
+  return readContextImpl(context);
+}
+
 function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
   // $FlowFixMe: Flow doesn't like mixed types
   return typeof action === 'function' ? action(state) : action;
@@ -492,6 +503,7 @@ function noop(): void {}
 export const Dispatcher: DispatcherType = {
   readContext,
   useContext,
+  useContextSelector,
   useMemo,
   useReducer,
   useRef,

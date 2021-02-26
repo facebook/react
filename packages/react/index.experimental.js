@@ -35,6 +35,7 @@ export {
   unstable_Offscreen,
   unstable_getCacheForType,
   unstable_useCacheRefresh,
+  unstable_useContextSelector,
   unstable_useOpaqueIdentifier,
   useCallback,
   useContext,

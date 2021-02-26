@@ -56,7 +56,7 @@ if (__DEV__) {
 }
 
 let currentlyRenderingFiber: Fiber | null = null;
-let lastContextDependency: ContextDependency<mixed> | null = null;
+let lastContextDependency: ContextDependency<mixed, mixed> | null = null;
 let lastFullyObservedContext: ReactContext<any> | null = null;
 
 let isDisallowedContextReadInDEV: boolean = false;
@@ -212,6 +212,7 @@ function propagateContextChange_eager<T>(
       let dependency = list.firstContext;
       while (dependency !== null) {
         // Check if the context matches.
+        // TODO: Compare selected values to bail out early.
         if (dependency.context === context) {
           // Match! Schedule an update on this fiber.
           if (fiber.tag === ClassComponent) {
@@ -568,8 +569,18 @@ export function checkIfContextChanged(currentDependencies: Dependencies) {
       ? context._currentValue
       : context._currentValue2;
     const oldValue = dependency.memoizedValue;
-    if (!is(newValue, oldValue)) {
-      return true;
+    const selector = dependency.selector;
+    if (selector !== null) {
+      // TODO: Alternatively, we could store the selected value on the context.
+      // However, we expect selectors to do nothing except access a subfield,
+      // so this is probably fine, too.
+      if (!is(selector(newValue), selector(oldValue))) {
+        return true;
+      }
+    } else {
+      if (!is(newValue, oldValue)) {
+        return true;
+      }
     }
     dependency = dependency.next;
   }
@@ -603,7 +614,28 @@ export function prepareToReadContext(
   }
 }
 
-export function readContext<T>(context: ReactContext<T>): T {
+export function readContextWithSelector<C, S>(
+  context: ReactContext<C>,
+  selector: C => S,
+): C {
+  if (!enableLazyContextPropagation) {
+    return (null: any);
+  }
+  return readContextImpl(context, selector);
+}
+
+export function readContext<C>(context: ReactContext<C>): C {
+  const value = readContextImpl(context, null);
+  lastFullyObservedContext = context;
+  return value;
+}
+
+type ContextSelector<C, S> = C => S;
+
+function readContextImpl<C, S>(
+  context: ReactContext<C>,
+  selector: (C => S) | null,
+): C {
   if (__DEV__) {
     // This warning would fire if you read context inside a Hook like useMemo.
     // Unlike the class check below, it's not enforced in production for perf.
@@ -626,6 +658,8 @@ export function readContext<T>(context: ReactContext<T>): T {
   } else {
     const contextItem = {
       context: ((context: any): ReactContext<mixed>),
+      selector: ((selector: any): ContextSelector<mixed, mixed> | null),
+      // TODO: Store selected value so we can compare to that during propagation
       memoizedValue: value,
       next: null,
     };

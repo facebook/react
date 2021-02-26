@@ -71,6 +71,33 @@ export function useContext<T>(Context: ReactContext<T>): T {
   return dispatcher.useContext(Context);
 }
 
+export function useContextSelector<C, S>(
+  Context: ReactContext<C>,
+  selector: C => S,
+): C {
+  const dispatcher = resolveDispatcher();
+  if (__DEV__) {
+    // TODO: add a more generic warning for invalid values.
+    if ((Context: any)._context !== undefined) {
+      const realContext = (Context: any)._context;
+      // Don't deduplicate because this legitimately causes bugs
+      // and nobody should be using this in existing code.
+      if (realContext.Consumer === Context) {
+        console.error(
+          'Calling useContextSelector(Context.Consumer) is not supported, may cause bugs, and will be ' +
+            'removed in a future major release. Did you mean to call useContextSelector(Context) instead?',
+        );
+      } else if (realContext.Provider === Context) {
+        console.error(
+          'Calling useContextSelector(Context.Provider) is not supported. ' +
+            'Did you mean to call useContextSelector(Context) instead?',
+        );
+      }
+    }
+  }
+  return dispatcher.useContextSelector(Context, selector);
+}
+
 export function useState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {

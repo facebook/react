@@ -123,6 +123,18 @@ function useContext<T>(context: ReactContext<T>): T {
   return context._currentValue;
 }
 
+function useContextSelector<C, S>(
+  context: ReactContext<C>,
+  selector: C => S,
+): C {
+  hookLog.push({
+    primitive: 'ContextSelector',
+    stackError: new Error(),
+    value: context._currentValue,
+  });
+  return context._currentValue;
+}
+
 function useState<S>(
   initialState: (() => S) | S,
 ): [S, Dispatch<BasicStateAction<S>>] {
@@ -316,6 +328,7 @@ const Dispatcher: DispatcherType = {
   useCacheRefresh,
   useCallback,
   useContext,
+  useContextSelector,
   useEffect,
   useImperativeHandle,
   useDebugValue,

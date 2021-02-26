@@ -31,6 +31,7 @@ export function waitForSuspense<T>(fn: () => T): Promise<T> {
     },
     readContext: unsupported,
     useContext: unsupported,
+    useContextSelector: unsupported,
     useMemo: unsupported,
     useReducer: unsupported,
     useRef: unsupported,
