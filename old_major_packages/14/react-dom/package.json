@@ -1,0 +1,27 @@
+{
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {},
+  "deprecated": false,
+  "description": "React package for working with the DOM.",
+  "homepage": "https://facebook.github.io/react/",
+  "keywords": [
+    "react"
+  ],
+  "license": "BSD-3-Clause",
+  "main": "index.js",
+  "name": "react-dom",
+  "peerDependencies": {
+    "react": "^0.14.10"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "version": "0.14.10"
+}

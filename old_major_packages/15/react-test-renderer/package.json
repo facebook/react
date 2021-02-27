@@ -1,0 +1,36 @@
+{
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "fbjs": "^0.8.9",
+    "object-assign": "^4.1.0"
+  },
+  "deprecated": false,
+  "description": "React package for snapshot testing.",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js",
+    "shallow.js",
+    "lib/"
+  ],
+  "homepage": "https://facebook.github.io/react/",
+  "keywords": [
+    "react",
+    "react-native",
+    "react-testing"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "name": "react-test-renderer",
+  "peerDependencies": {
+    "react": "^15.7.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git"
+  },
+  "version": "15.7.0"
+}

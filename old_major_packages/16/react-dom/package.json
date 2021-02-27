@@ -1,0 +1,60 @@
+{
+  "browser": {
+    "./server.js": "./server.browser.js",
+    "./unstable-fizz.js": "./unstable-fizz.browser.js"
+  },
+  "browserify": {
+    "transform": [
+      "loose-envify"
+    ]
+  },
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "loose-envify": "^1.1.0",
+    "object-assign": "^4.1.1",
+    "prop-types": "^15.6.2",
+    "scheduler": "^0.19.1"
+  },
+  "deprecated": false,
+  "description": "React package for working with the DOM.",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "build-info.json",
+    "index.js",
+    "profiling.js",
+    "server.js",
+    "server.browser.js",
+    "server.node.js",
+    "test-utils.js",
+    "unstable-fire.js",
+    "unstable-fizz.js",
+    "unstable-fizz.browser.js",
+    "unstable-fizz.node.js",
+    "unstable-native-dependencies.js",
+    "cjs/",
+    "umd/"
+  ],
+  "homepage": "https://reactjs.org/",
+  "keywords": [
+    "react"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "name": "react-dom",
+  "peerDependencies": {
+    "react": "^16.14.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git",
+    "directory": "packages/react-dom"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "version": "16.14.0"
+}

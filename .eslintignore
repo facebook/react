@@ -9,6 +9,7 @@ build/
 coverage/
 fixtures/
 scripts/bench/benchmarks/**/*.js
+old_major_packages/
 
 # React repository clone
 scripts/bench/remote-repo/

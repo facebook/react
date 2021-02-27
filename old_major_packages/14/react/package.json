@@ -1,0 +1,44 @@
+{
+  "browserify": {
+    "transform": [
+      "envify"
+    ]
+  },
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "envify": "^3.0.0",
+    "fbjs": "^0.6.1"
+  },
+  "deprecated": false,
+  "description": "React is a JavaScript library for building user interfaces.",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "files": [
+    "LICENSE",
+    "PATENTS",
+    "addons.js",
+    "react.js",
+    "addons/",
+    "dist/",
+    "lib/",
+    "cjs/",
+    "jsx-runtime.js",
+    "jsx-dev-runtime.js"
+  ],
+  "homepage": "https://facebook.github.io/react/",
+  "keywords": [
+    "react"
+  ],
+  "license": "BSD-3-Clause",
+  "main": "react.js",
+  "name": "react",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git"
+  },
+  "version": "0.14.10"
+}

@@ -1,0 +1,46 @@
+{
+  "browserify": {
+    "transform": [
+      "loose-envify"
+    ]
+  },
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "fbjs": "^0.8.9",
+    "loose-envify": "^1.1.0",
+    "object-assign": "^4.1.0",
+    "prop-types": "^15.5.10"
+  },
+  "deprecated": false,
+  "description": "React package for working with the DOM.",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "dist/",
+    "lib/",
+    "index.js",
+    "server.js",
+    "test-utils.js"
+  ],
+  "homepage": "https://facebook.github.io/react/",
+  "keywords": [
+    "react"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "name": "react-dom",
+  "peerDependencies": {
+    "react": "^15.7.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git"
+  },
+  "scripts": {
+    "start": "node server.js"
+  },
+  "version": "15.7.0"
+}

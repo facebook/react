@@ -1,0 +1,41 @@
+{
+  "bugs": {
+    "url": "https://github.com/facebook/react/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "object-assign": "^4.1.1",
+    "prop-types": "^15.6.2",
+    "react-is": "^16.8.6",
+    "scheduler": "^0.19.1"
+  },
+  "deprecated": false,
+  "description": "React package for snapshot testing.",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "build-info.json",
+    "index.js",
+    "shallow.js",
+    "cjs/",
+    "umd/"
+  ],
+  "homepage": "https://reactjs.org/",
+  "keywords": [
+    "react",
+    "react-native",
+    "react-testing"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "name": "react-test-renderer",
+  "peerDependencies": {
+    "react": "^16.14.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/facebook/react.git",
+    "directory": "packages/react-test-renderer"
+  },
+  "version": "16.14.0"
+}
