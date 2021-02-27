@@ -482,7 +482,8 @@ export default {
                 `function "${context.getSource(codePathFunctionName)}" ` +
                 'that is neither a React function component nor a custom ' +
                 'React Hook function.' +
-                ' React component names must start with an uppercase letter.';
+                ' React component names must start with an uppercase letter.' +
+                ' React Hook names must start with the word "use".';
               context.report({node: hook, message});
             } else if (codePathNode.type === 'Program') {
               // These are dangerous if you have inline requires enabled.

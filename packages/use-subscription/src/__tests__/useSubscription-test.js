@@ -27,7 +27,7 @@ describe('useSubscription', () => {
     ReactTestRenderer = require('react-test-renderer');
     Scheduler = require('scheduler');
 
-    act = ReactTestRenderer.act;
+    act = ReactTestRenderer.unstable_concurrentAct;
 
     BehaviorSubject = require('rxjs').BehaviorSubject;
     ReplaySubject = require('rxjs').ReplaySubject;

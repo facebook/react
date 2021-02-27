@@ -7,22 +7,90 @@
  * @flow
  */
 
-export opaque type DOMTopLevelEventType = string;
-
-// Do not use the below two methods directly!
-// Instead use constants exported from DOMTopLevelEventTypes in ReactDOM.
-// (It is the only module that is allowed to access these methods.)
-
-export function unsafeCastStringToDOMTopLevelType(
-  topLevelType: string,
-): DOMTopLevelEventType {
-  return topLevelType;
-}
-
-export function unsafeCastDOMTopLevelTypeToString(
-  topLevelType: DOMTopLevelEventType,
-): string {
-  return topLevelType;
-}
-
-export type TopLevelType = DOMTopLevelEventType;
+export type TopLevelType =
+  | 'abort'
+  // Dynamic and vendor-prefixed at the usage site:
+  // 'animationiteration' |
+  // 'animationend |
+  // 'animationstart' |
+  | 'canplay'
+  | 'canplaythrough'
+  | 'cancel'
+  | 'change'
+  | 'click'
+  | 'close'
+  | 'compositionend'
+  | 'compositionstart'
+  | 'compositionupdate'
+  | 'contextmenu'
+  | 'copy'
+  | 'cut'
+  | 'dblclick'
+  | 'auxclick'
+  | 'drag'
+  | 'dragend'
+  | 'dragenter'
+  | 'dragexit'
+  | 'dragleave'
+  | 'dragover'
+  | 'dragstart'
+  | 'drop'
+  | 'durationchange'
+  | 'emptied'
+  | 'encrypted'
+  | 'ended'
+  | 'error'
+  | 'gotpointercapture'
+  | 'input'
+  | 'invalid'
+  | 'keydown'
+  | 'keypress'
+  | 'keyup'
+  | 'load'
+  | 'loadstart'
+  | 'loadeddata'
+  | 'loadedmetadata'
+  | 'lostpointercapture'
+  | 'mousedown'
+  | 'mousemove'
+  | 'mouseout'
+  | 'mouseover'
+  | 'mouseup'
+  | 'paste'
+  | 'pause'
+  | 'play'
+  | 'playing'
+  | 'pointercancel'
+  | 'pointerdown'
+  | 'pointerenter'
+  | 'pointerleave'
+  | 'pointermove'
+  | 'pointerout'
+  | 'pointerover'
+  | 'pointerup'
+  | 'progress'
+  | 'ratechange'
+  | 'reset'
+  | 'scroll'
+  | 'seeked'
+  | 'seeking'
+  | 'selectionchange'
+  | 'stalled'
+  | 'submit'
+  | 'suspend'
+  | 'textInput'
+  | 'timeupdate'
+  | 'toggle'
+  | 'touchcancel'
+  | 'touchend'
+  | 'touchmove'
+  | 'touchstart'
+  // Dynamic and vendor-prefixed at the usage site:
+  // 'transitionend' |
+  | 'volumechange'
+  | 'waiting'
+  | 'wheel'
+  | 'afterblur'
+  | 'beforeblur'
+  | 'focusin'
+  | 'focusout';

@@ -555,7 +555,7 @@ describe('create-react-class-integration', () => {
           '  componentWillReceiveProps\n' +
           '  componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://fb.me/react-unsafe-component-lifecycles',
+          'https://reactjs.org/link/unsafe-component-lifecycles',
       );
     }).toWarnDev(
       [
@@ -598,7 +598,7 @@ describe('create-react-class-integration', () => {
           '  componentWillReceiveProps\n' +
           '  componentWillUpdate\n\n' +
           'The above lifecycles should be removed. Learn more about this warning here:\n' +
-          'https://fb.me/react-unsafe-component-lifecycles',
+          'https://reactjs.org/link/unsafe-component-lifecycles',
       );
     }).toWarnDev(
       [

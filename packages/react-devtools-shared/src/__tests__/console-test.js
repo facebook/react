@@ -47,6 +47,7 @@ describe('console', () => {
     patchConsole({
       appendComponentStack: true,
       breakOnWarn: false,
+      showInlineWarningsAndErrors: false,
     });
 
     const inject = global.__REACT_DEVTOOLS_GLOBAL_HOOK__.inject;
@@ -79,12 +80,61 @@ describe('console', () => {
     expect(fakeConsole.warn).not.toBe(mockWarn);
   });
 
+  it('should patch the console when appendComponentStack is enabled', () => {
+    unpatchConsole();
+
+    expect(fakeConsole.error).toBe(mockError);
+    expect(fakeConsole.warn).toBe(mockWarn);
+
+    patchConsole({
+      appendComponentStack: true,
+      breakOnWarn: false,
+      showInlineWarningsAndErrors: false,
+    });
+
+    expect(fakeConsole.error).not.toBe(mockError);
+    expect(fakeConsole.warn).not.toBe(mockWarn);
+  });
+
+  it('should patch the console when breakOnWarn is enabled', () => {
+    unpatchConsole();
+
+    expect(fakeConsole.error).toBe(mockError);
+    expect(fakeConsole.warn).toBe(mockWarn);
+
+    patchConsole({
+      appendComponentStack: false,
+      breakOnWarn: true,
+      showInlineWarningsAndErrors: false,
+    });
+
+    expect(fakeConsole.error).not.toBe(mockError);
+    expect(fakeConsole.warn).not.toBe(mockWarn);
+  });
+
+  it('should patch the console when showInlineWarningsAndErrors is enabled', () => {
+    unpatchConsole();
+
+    expect(fakeConsole.error).toBe(mockError);
+    expect(fakeConsole.warn).toBe(mockWarn);
+
+    patchConsole({
+      appendComponentStack: false,
+      breakOnWarn: false,
+      showInlineWarningsAndErrors: true,
+    });
+
+    expect(fakeConsole.error).not.toBe(mockError);
+    expect(fakeConsole.warn).not.toBe(mockWarn);
+  });
+
   it('should only patch the console once', () => {
     const {error, warn} = fakeConsole;
 
     patchConsole({
       appendComponentStack: true,
       breakOnWarn: false,
+      showInlineWarningsAndErrors: false,
     });
 
     expect(fakeConsole.error).toBe(error);
@@ -339,6 +389,7 @@ describe('console', () => {
     patchConsole({
       appendComponentStack: true,
       breakOnWarn: false,
+      showInlineWarningsAndErrors: false,
     });
     act(() => ReactDOM.render(<Child />, document.createElement('div')));
 

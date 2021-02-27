@@ -42,8 +42,17 @@ const ReactNoopFlightServer = ReactFlightServer({
   formatChunk(type: string, props: Object): Uint8Array {
     return Buffer.from(JSON.stringify({type, props}), 'utf8');
   },
-  resolveModuleMetaData(config: void, renderFn: Function) {
-    return saveModule(renderFn);
+  isModuleReference(reference: Object): boolean {
+    return reference.$$typeof === Symbol.for('react.module.reference');
+  },
+  getModuleKey(reference: Object): Object {
+    return reference;
+  },
+  resolveModuleMetaData(
+    config: void,
+    reference: {$$typeof: Symbol, value: any},
+  ) {
+    return saveModule(reference.value);
   },
 });
 

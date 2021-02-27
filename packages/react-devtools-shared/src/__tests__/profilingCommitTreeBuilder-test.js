@@ -79,4 +79,193 @@ describe('commit tree', () => {
       expect(renderFinished).toBe(true);
     }
   });
+
+  describe('Lazy', () => {
+    async function fakeImport(result) {
+      return {default: result};
+    }
+
+    const LazyInnerComponent = () => null;
+
+    const App = ({renderChildren}) => {
+      if (renderChildren) {
+        return (
+          <React.Suspense fallback="Loading...">
+            <LazyComponent />
+          </React.Suspense>
+        );
+      } else {
+        return null;
+      }
+    };
+
+    let LazyComponent;
+    beforeEach(() => {
+      LazyComponent = React.lazy(() => fakeImport(LazyInnerComponent));
+    });
+
+    it('should support Lazy components (legacy render)', async done => {
+      const container = document.createElement('div');
+
+      utils.act(() => store.profilerStore.startProfiling());
+      utils.act(() =>
+        ReactDOM.render(<App renderChildren={true} />, container),
+      );
+      await Promise.resolve();
+      utils.act(() =>
+        ReactDOM.render(<App renderChildren={true} />, container),
+      );
+      utils.act(() =>
+        ReactDOM.render(<App renderChildren={false} />, container),
+      );
+      utils.act(() => store.profilerStore.stopProfiling());
+
+      let renderFinished = false;
+
+      function Validator({commitIndex, rootID}) {
+        const commitTree = store.profilerStore.profilingCache.getCommitTree({
+          commitIndex,
+          rootID,
+        });
+        expect(commitTree).toMatchSnapshot(`${commitIndex}: CommitTree`);
+        renderFinished = true;
+        return null;
+      }
+
+      const rootID = store.roots[0];
+
+      for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
+        renderFinished = false;
+
+        utils.act(() => {
+          TestRenderer.create(
+            <Validator commitIndex={commitIndex} rootID={rootID} />,
+          );
+        });
+
+        expect(renderFinished).toBe(true);
+      }
+
+      done();
+    });
+
+    it('should support Lazy components (createRoot)', async done => {
+      const container = document.createElement('div');
+      const root = ReactDOM.unstable_createRoot(container);
+
+      utils.act(() => store.profilerStore.startProfiling());
+      utils.act(() => root.render(<App renderChildren={true} />));
+      await Promise.resolve();
+      utils.act(() => root.render(<App renderChildren={true} />));
+      utils.act(() => root.render(<App renderChildren={false} />));
+      utils.act(() => store.profilerStore.stopProfiling());
+
+      let renderFinished = false;
+
+      function Validator({commitIndex, rootID}) {
+        const commitTree = store.profilerStore.profilingCache.getCommitTree({
+          commitIndex,
+          rootID,
+        });
+        expect(commitTree).toMatchSnapshot(`${commitIndex}: CommitTree`);
+        renderFinished = true;
+        return null;
+      }
+
+      const rootID = store.roots[0];
+
+      for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
+        renderFinished = false;
+
+        utils.act(() => {
+          TestRenderer.create(
+            <Validator commitIndex={commitIndex} rootID={rootID} />,
+          );
+        });
+
+        expect(renderFinished).toBe(true);
+      }
+
+      done();
+    });
+
+    it('should support Lazy components that are unmounted before resolving (legacy render)', async done => {
+      const container = document.createElement('div');
+
+      utils.act(() => store.profilerStore.startProfiling());
+      utils.act(() =>
+        ReactDOM.render(<App renderChildren={true} />, container),
+      );
+      utils.act(() =>
+        ReactDOM.render(<App renderChildren={false} />, container),
+      );
+      utils.act(() => store.profilerStore.stopProfiling());
+
+      let renderFinished = false;
+
+      function Validator({commitIndex, rootID}) {
+        const commitTree = store.profilerStore.profilingCache.getCommitTree({
+          commitIndex,
+          rootID,
+        });
+        expect(commitTree).toMatchSnapshot(`${commitIndex}: CommitTree`);
+        renderFinished = true;
+        return null;
+      }
+
+      const rootID = store.roots[0];
+
+      for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
+        renderFinished = false;
+
+        utils.act(() => {
+          TestRenderer.create(
+            <Validator commitIndex={commitIndex} rootID={rootID} />,
+          );
+        });
+
+        expect(renderFinished).toBe(true);
+      }
+
+      done();
+    });
+
+    it('should support Lazy components that are unmounted before resolving (createRoot)', async done => {
+      const container = document.createElement('div');
+      const root = ReactDOM.unstable_createRoot(container);
+
+      utils.act(() => store.profilerStore.startProfiling());
+      utils.act(() => root.render(<App renderChildren={true} />));
+      utils.act(() => root.render(<App renderChildren={false} />));
+      utils.act(() => store.profilerStore.stopProfiling());
+
+      let renderFinished = false;
+
+      function Validator({commitIndex, rootID}) {
+        const commitTree = store.profilerStore.profilingCache.getCommitTree({
+          commitIndex,
+          rootID,
+        });
+        expect(commitTree).toMatchSnapshot(`${commitIndex}: CommitTree`);
+        renderFinished = true;
+        return null;
+      }
+
+      const rootID = store.roots[0];
+
+      for (let commitIndex = 0; commitIndex < 2; commitIndex++) {
+        renderFinished = false;
+
+        utils.act(() => {
+          TestRenderer.create(
+            <Validator commitIndex={commitIndex} rootID={rootID} />,
+          );
+        });
+
+        expect(renderFinished).toBe(true);
+      }
+
+      done();
+    });
+  });
 });

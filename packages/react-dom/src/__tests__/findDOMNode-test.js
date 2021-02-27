@@ -122,7 +122,7 @@ describe('findDOMNode', () => {
         'findDOMNode was passed an instance of ContainsStrictModeChild which renders StrictMode children. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
-        'https://fb.me/react-strict-mode-find-node' +
+        'https://reactjs.org/link/strict-mode-find-node' +
         '\n    in div (at **)' +
         '\n    in ContainsStrictModeChild (at **)',
     ]);
@@ -151,7 +151,7 @@ describe('findDOMNode', () => {
         'findDOMNode was passed an instance of IsInStrictMode which is inside StrictMode. ' +
         'Instead, add a ref directly to the element you want to reference. ' +
         'Learn more about using refs safely here: ' +
-        'https://fb.me/react-strict-mode-find-node' +
+        'https://reactjs.org/link/strict-mode-find-node' +
         '\n    in div (at **)' +
         '\n    in IsInStrictMode (at **)',
     ]);

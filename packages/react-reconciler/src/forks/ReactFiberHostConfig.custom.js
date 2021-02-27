@@ -61,16 +61,6 @@ export const warnsIfNotActing = $$$hostConfig.warnsIfNotActing;
 export const supportsMutation = $$$hostConfig.supportsMutation;
 export const supportsPersistence = $$$hostConfig.supportsPersistence;
 export const supportsHydration = $$$hostConfig.supportsHydration;
-export const DEPRECATED_mountResponderInstance =
-  $$$hostConfig.DEPRECATED_mountResponderInstance;
-export const DEPRECATED_unmountResponderInstance =
-  $$$hostConfig.DEPRECATED_unmountResponderInstance;
-export const getFundamentalComponentInstance =
-  $$$hostConfig.getFundamentalComponentInstance;
-export const mountFundamentalComponent =
-  $$$hostConfig.mountFundamentalComponent;
-export const shouldUpdateFundamentalComponent =
-  $$$hostConfig.shouldUpdateFundamentalComponent;
 export const getInstanceFromNode = $$$hostConfig.getInstanceFromNode;
 export const isOpaqueHydratingObject = $$$hostConfig.isOpaqueHydratingObject;
 export const makeOpaqueHydratingObject =
@@ -82,6 +72,14 @@ export const afterActiveInstanceBlur = $$$hostConfig.afterActiveInstanceBlur;
 export const preparePortalMount = $$$hostConfig.preparePortalMount;
 export const prepareScopeUpdate = $$$hostConfig.preparePortalMount;
 export const getInstanceFromScope = $$$hostConfig.getInstanceFromScope;
+export const getCurrentEventPriority = $$$hostConfig.getCurrentEventPriority;
+
+// -------------------
+//      Microtasks
+//     (optional)
+// -------------------
+export const supportsMicrotasks = $$$hostConfig.supportsMicrotasks;
+export const scheduleMicrotask = $$$hostConfig.scheduleMicrotask;
 
 // -------------------
 //      Test selectors
@@ -115,10 +113,6 @@ export const hideInstance = $$$hostConfig.hideInstance;
 export const hideTextInstance = $$$hostConfig.hideTextInstance;
 export const unhideInstance = $$$hostConfig.unhideInstance;
 export const unhideTextInstance = $$$hostConfig.unhideTextInstance;
-export const updateFundamentalComponent =
-  $$$hostConfig.updateFundamentalComponent;
-export const unmountFundamentalComponent =
-  $$$hostConfig.unmountFundamentalComponent;
 export const clearContainer = $$$hostConfig.clearContainer;
 
 // -------------------
@@ -134,7 +128,6 @@ export const finalizeContainerChildren =
 export const replaceContainerChildren = $$$hostConfig.replaceContainerChildren;
 export const cloneHiddenInstance = $$$hostConfig.cloneHiddenInstance;
 export const cloneHiddenTextInstance = $$$hostConfig.cloneHiddenTextInstance;
-export const cloneFundamentalInstance = $$$hostConfig.cloneInstance;
 
 // -------------------
 //     Hydration

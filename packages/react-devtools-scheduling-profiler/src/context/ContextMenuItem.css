@@ -1,0 +1,20 @@
+.ContextMenuItem {
+  display: flex;
+  align-items: center;
+  color: #333;
+  padding: 0.5rem 0.75rem;
+  cursor: default;
+  border-top: 1px solid #ccc;
+}
+.ContextMenuItem:first-of-type {
+  border-top: none;
+}
+.ContextMenuItem:hover,
+.ContextMenuItem:focus {
+  outline: 0;
+  background-color: rgba(0, 136, 250, 0.1);
+}
+.ContextMenuItem:active {
+  background-color: #0088fa;
+  color: #fff;
+}

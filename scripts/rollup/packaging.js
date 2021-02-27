@@ -17,6 +17,7 @@ const {
 
 const {
   NODE_ES2015,
+  NODE_ESM,
   UMD_DEV,
   UMD_PROD,
   UMD_PROFILING,
@@ -45,6 +46,8 @@ function getBundleOutputPath(bundleType, filename, packageName) {
   switch (bundleType) {
     case NODE_ES2015:
       return `build/node_modules/${packageName}/cjs/${filename}`;
+    case NODE_ESM:
+      return `build/node_modules/${packageName}/esm/${filename}`;
     case NODE_DEV:
     case NODE_PROD:
     case NODE_PROFILING:
@@ -79,6 +82,8 @@ function getBundleOutputPath(bundleType, filename, packageName) {
             /\.js$/,
             '.fb.js'
           )}`;
+        case 'react-server-native-relay':
+          return `build/facebook-relay/flight/${filename}`;
         default:
           throw new Error('Unknown RN package.');
       }

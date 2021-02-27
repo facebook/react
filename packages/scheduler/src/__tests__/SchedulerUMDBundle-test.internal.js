@@ -8,6 +8,13 @@
  */
 'use strict';
 
+class MockMessageChannel {
+  constructor() {
+    this.port1 = jest.fn();
+    this.port2 = jest.fn();
+  }
+}
+
 describe('Scheduling UMD bundle', () => {
   beforeEach(() => {
     // Fool SECRET_INTERNALS object into including UMD forwarding methods.
@@ -16,11 +23,18 @@ describe('Scheduling UMD bundle', () => {
     jest.resetModules();
 
     jest.mock('scheduler', () => require.requireActual('scheduler'));
-    jest.mock('scheduler/src/SchedulerHostConfig', () =>
-      require.requireActual(
-        'scheduler/src/forks/SchedulerHostConfig.default.js',
-      ),
-    );
+
+    // Mock a browser environment since we're testing UMD modules.
+    global.window = {
+      requestAnimationFrame: jest.fn(),
+      cancelAnimationFrame: jest.fn(),
+    };
+    global.MessageChannel = MockMessageChannel;
+  });
+
+  afterEach(() => {
+    global.window = undefined;
+    global.MessageChannel = undefined;
   });
 
   function filterPrivateKeys(name) {

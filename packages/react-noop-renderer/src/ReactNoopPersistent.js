@@ -41,6 +41,7 @@ export const {
   deferredUpdates,
   unbatchedUpdates,
   discreteUpdates,
+  idleUpdates,
   flushDiscreteUpdates,
   flushSync,
   flushPassiveEffects,

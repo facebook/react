@@ -27,7 +27,8 @@ const run = async () => {
     reactVersion,
   } = await getBuildInfo();
 
-  const packages = getPublicPackages(join(cwd, 'packages'));
+  const isExperimental = process.env.RELEASE_CHANNEL === 'experimental';
+  const packages = getPublicPackages(isExperimental);
   const packagesDir = join(cwd, 'packages');
 
   const buildInfoJSON = {

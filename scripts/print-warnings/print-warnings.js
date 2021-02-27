@@ -90,6 +90,7 @@ gs([
   '!packages/react-devtools*/**/*.js',
   '!**/__tests__/**/*.js',
   '!**/__mocks__/**/*.js',
+  '!**/node_modules/**/*.js',
 ]).pipe(
   through.obj(transform, cb => {
     process.stdout.write(

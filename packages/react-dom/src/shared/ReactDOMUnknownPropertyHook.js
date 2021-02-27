@@ -256,7 +256,7 @@ const warnUnknownProperties = function(type, props, eventRegistry) {
       console.error(
         'Invalid value for prop %s on <%s> tag. Either remove it from the element, ' +
           'or pass a string or number value to keep it in the DOM. ' +
-          'For details, see https://fb.me/react-attribute-behavior',
+          'For details, see https://reactjs.org/link/attribute-behavior ',
         unknownPropString,
         type,
       );
@@ -264,7 +264,7 @@ const warnUnknownProperties = function(type, props, eventRegistry) {
       console.error(
         'Invalid values for props %s on <%s> tag. Either remove them from the element, ' +
           'or pass a string or number value to keep them in the DOM. ' +
-          'For details, see https://fb.me/react-attribute-behavior',
+          'For details, see https://reactjs.org/link/attribute-behavior ',
         unknownPropString,
         type,
       );

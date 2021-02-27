@@ -1,0 +1,19 @@
+.NewArrayValue {
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+.EditableName {
+  margin-left: 1rem;
+}
+
+.Invalid {
+  background-color: var(--color-background-invalid);
+  color: var(--color-text-invalid) !important;
+}
+
+.Input:focus,
+.Invalid:focus {
+  background-color: var(--color-button-background-focus);
+}

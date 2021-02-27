@@ -224,14 +224,16 @@ function renameStyle(
         customStyle[oldName] = undefined;
       }
 
-      agent.overrideProps({
+      agent.overrideValueAtPath({
+        type: 'props',
         id,
         rendererID,
         path: ['style', lastIndex],
         value: customStyle,
       });
     } else {
-      agent.overrideProps({
+      agent.overrideValueAtPath({
+        type: 'props',
         id,
         rendererID,
         path: ['style'],
@@ -247,14 +249,16 @@ function renameStyle(
       customStyle[oldName] = undefined;
     }
 
-    agent.overrideProps({
+    agent.overrideValueAtPath({
+      type: 'props',
       id,
       rendererID,
       path: ['style'],
       value: customStyle,
     });
   } else {
-    agent.overrideProps({
+    agent.overrideValueAtPath({
+      type: 'props',
       id,
       rendererID,
       path: ['style'],
@@ -298,14 +302,16 @@ function setStyle(
       typeof style[lastLength] === 'object' &&
       !Array.isArray(style[lastLength])
     ) {
-      agent.overrideProps({
+      agent.overrideValueAtPath({
+        type: 'props',
         id,
         rendererID,
         path: ['style', lastLength, name],
         value,
       });
     } else {
-      agent.overrideProps({
+      agent.overrideValueAtPath({
+        type: 'props',
         id,
         rendererID,
         path: ['style'],
@@ -313,7 +319,8 @@ function setStyle(
       });
     }
   } else {
-    agent.overrideProps({
+    agent.overrideValueAtPath({
+      type: 'props',
       id,
       rendererID,
       path: ['style'],

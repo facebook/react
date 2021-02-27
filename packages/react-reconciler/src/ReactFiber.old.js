@@ -8,28 +8,24 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {
-  ReactFragment,
-  ReactPortal,
-  ReactFundamentalComponent,
-  ReactScope,
-} from 'shared/ReactTypes';
+import type {ReactFragment, ReactPortal, ReactScope} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {RootTag} from './ReactRootTags';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
-import type {Lanes} from './ReactFiberLane';
+import type {Lanes} from './ReactFiberLane.old';
 import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {OffscreenProps} from './ReactFiberOffscreenComponent';
 
 import invariant from 'shared/invariant';
 import {
+  createRootStrictEffectsByDefault,
+  enableCache,
+  enableStrictEffects,
   enableProfilerTimer,
-  enableFundamentalAPI,
   enableScopeAPI,
-  enableBlocksAPI,
 } from 'shared/ReactFeatureFlags';
-import {NoEffect, Placement} from './ReactSideEffectTags';
+import {NoFlags, Placement, StaticMask} from './ReactFiberFlags';
 import {ConcurrentRoot, BlockingRoot} from './ReactRootTags';
 import {
   IndeterminateComponent,
@@ -51,11 +47,10 @@ import {
   MemoComponent,
   SimpleMemoComponent,
   LazyComponent,
-  FundamentalComponent,
   ScopeComponent,
-  Block,
   OffscreenComponent,
   LegacyHiddenComponent,
+  CacheComponent,
 } from './ReactWorkTags';
 import getComponentName from 'shared/getComponentName';
 
@@ -65,13 +60,14 @@ import {
   resolveFunctionForHotReloading,
   resolveForwardRefForHotReloading,
 } from './ReactFiberHotReloading.old';
-import {NoLanes} from './ReactFiberLane';
+import {NoLanes} from './ReactFiberLane.old';
 import {
   NoMode,
   ConcurrentMode,
   DebugTracingMode,
   ProfileMode,
-  StrictMode,
+  StrictLegacyMode,
+  StrictEffectsMode,
   BlockingMode,
 } from './ReactTypeOfMode';
 import {
@@ -86,11 +82,10 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
-  REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
-  REACT_BLOCK_TYPE,
   REACT_OFFSCREEN_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
+  REACT_CACHE_TYPE,
 } from 'shared/ReactSymbols';
 
 export type {Fiber};
@@ -143,11 +138,9 @@ function FiberNode(
   this.mode = mode;
 
   // Effects
-  this.effectTag = NoEffect;
-  this.nextEffect = null;
-
-  this.firstEffect = null;
-  this.lastEffect = null;
+  this.flags = NoFlags;
+  this.subtreeFlags = NoFlags;
+  this.deletions = null;
 
   this.lanes = NoLanes;
   this.childLanes = NoLanes;
@@ -241,11 +234,6 @@ export function resolveLazyComponentTag(Component: Function): WorkTag {
     if ($$typeof === REACT_MEMO_TYPE) {
       return MemoComponent;
     }
-    if (enableBlocksAPI) {
-      if ($$typeof === REACT_BLOCK_TYPE) {
-        return Block;
-      }
-    }
   }
   return IndeterminateComponent;
 }
@@ -286,12 +274,11 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
 
     // We already have an alternate.
     // Reset the effect tag.
-    workInProgress.effectTag = NoEffect;
+    workInProgress.flags = NoFlags;
 
-    // The effect list is no longer valid.
-    workInProgress.nextEffect = null;
-    workInProgress.firstEffect = null;
-    workInProgress.lastEffect = null;
+    // The effects are no longer valid.
+    workInProgress.subtreeFlags = NoFlags;
+    workInProgress.deletions = null;
 
     if (enableProfilerTimer) {
       // We intentionally reset, rather than copy, actualDuration & actualStartTime.
@@ -303,6 +290,9 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
     }
   }
 
+  // Reset all effects except static ones.
+  // Static effects are not specific to a render.
+  workInProgress.flags = current.flags & StaticMask;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
 
@@ -320,7 +310,6 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
       : {
           lanes: currentDependencies.lanes,
           firstContext: currentDependencies.firstContext,
-          responders: currentDependencies.responders,
         };
 
   // These will be overridden during the parent's reconciliation
@@ -365,14 +354,11 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
   // We assume pendingProps, index, key, ref, return are still untouched to
   // avoid doing another reconciliation.
 
-  // Reset the effect tag but keep any Placement tags, since that's something
+  // Reset the effect flags but keep any Placement tags, since that's something
   // that child fiber is setting, not the reconciliation.
-  workInProgress.effectTag &= Placement;
+  workInProgress.flags &= StaticMask | Placement;
 
-  // The effect list is no longer valid.
-  workInProgress.nextEffect = null;
-  workInProgress.firstEffect = null;
-  workInProgress.lastEffect = null;
+  // The effects are no longer valid.
 
   const current = workInProgress.alternate;
   if (current === null) {
@@ -381,6 +367,7 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
     workInProgress.lanes = renderLanes;
 
     workInProgress.child = null;
+    workInProgress.subtreeFlags = NoFlags;
     workInProgress.memoizedProps = null;
     workInProgress.memoizedState = null;
     workInProgress.updateQueue = null;
@@ -401,6 +388,11 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
     workInProgress.lanes = current.lanes;
 
     workInProgress.child = current.child;
+    // TODO: `subtreeFlags` should be reset to NoFlags, like we do in
+    // `createWorkInProgress`. Nothing reads this until the complete phase,
+    // currently, but it might in the future, and we should be consistent.
+    workInProgress.subtreeFlags = current.subtreeFlags;
+    workInProgress.deletions = null;
     workInProgress.memoizedProps = current.memoizedProps;
     workInProgress.memoizedState = current.memoizedState;
     workInProgress.updateQueue = current.updateQueue;
@@ -416,7 +408,6 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
         : {
             lanes: currentDependencies.lanes,
             firstContext: currentDependencies.firstContext,
-            responders: currentDependencies.responders,
           };
 
     if (enableProfilerTimer) {
@@ -430,12 +421,47 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
   return workInProgress;
 }
 
-export function createHostRootFiber(tag: RootTag): Fiber {
+export function createHostRootFiber(
+  tag: RootTag,
+  strictModeLevelOverride: null | number,
+): Fiber {
   let mode;
   if (tag === ConcurrentRoot) {
-    mode = ConcurrentMode | BlockingMode | StrictMode;
+    mode = ConcurrentMode | BlockingMode;
+    if (strictModeLevelOverride !== null) {
+      if (strictModeLevelOverride >= 1) {
+        mode |= StrictLegacyMode;
+      }
+      if (enableStrictEffects) {
+        if (strictModeLevelOverride >= 2) {
+          mode |= StrictEffectsMode;
+        }
+      }
+    } else {
+      if (enableStrictEffects && createRootStrictEffectsByDefault) {
+        mode |= StrictLegacyMode | StrictEffectsMode;
+      } else {
+        mode |= StrictLegacyMode;
+      }
+    }
   } else if (tag === BlockingRoot) {
-    mode = BlockingMode | StrictMode;
+    mode = BlockingMode;
+    if (strictModeLevelOverride !== null) {
+      if (strictModeLevelOverride >= 1) {
+        mode |= StrictLegacyMode;
+      }
+      if (enableStrictEffects) {
+        if (strictModeLevelOverride >= 2) {
+          mode |= StrictEffectsMode;
+        }
+      }
+    } else {
+      if (enableStrictEffects && createRootStrictEffectsByDefault) {
+        mode |= StrictLegacyMode | StrictEffectsMode;
+      } else {
+        mode |= StrictLegacyMode;
+      }
+    }
   } else {
     mode = NoMode;
   }
@@ -484,7 +510,21 @@ export function createFiberFromTypeAndProps(
         break;
       case REACT_STRICT_MODE_TYPE:
         fiberTag = Mode;
-        mode |= StrictMode;
+
+        // Legacy strict mode (<StrictMode> without any level prop) defaults to level 1.
+        const level =
+          pendingProps.unstable_level == null ? 1 : pendingProps.unstable_level;
+
+        // Levels cascade; higher levels inherit all lower level modes.
+        // It is explicitly not supported to lower a mode with nesting, only to increase it.
+        if (level >= 1) {
+          mode |= StrictLegacyMode;
+        }
+        if (enableStrictEffects) {
+          if (level >= 2) {
+            mode |= StrictEffectsMode;
+          }
+        }
         break;
       case REACT_PROFILER_TYPE:
         return createFiberFromProfiler(pendingProps, mode, lanes, key);
@@ -499,6 +539,11 @@ export function createFiberFromTypeAndProps(
       case REACT_SCOPE_TYPE:
         if (enableScopeAPI) {
           return createFiberFromScope(type, pendingProps, mode, lanes, key);
+        }
+      // eslint-disable-next-line no-fallthrough
+      case REACT_CACHE_TYPE:
+        if (enableCache) {
+          return createFiberFromCache(pendingProps, mode, lanes, key);
         }
       // eslint-disable-next-line no-fallthrough
       default: {
@@ -524,20 +569,6 @@ export function createFiberFromTypeAndProps(
               fiberTag = LazyComponent;
               resolvedType = null;
               break getTag;
-            case REACT_BLOCK_TYPE:
-              fiberTag = Block;
-              break getTag;
-            case REACT_FUNDAMENTAL_TYPE:
-              if (enableFundamentalAPI) {
-                return createFiberFromFundamental(
-                  type,
-                  pendingProps,
-                  mode,
-                  lanes,
-                  key,
-                );
-              }
-              break;
           }
         }
         let info = '';
@@ -574,6 +605,10 @@ export function createFiberFromTypeAndProps(
   fiber.elementType = type;
   fiber.type = resolvedType;
   fiber.lanes = lanes;
+
+  if (__DEV__) {
+    fiber._debugOwner = owner;
+  }
 
   return fiber;
 }
@@ -612,20 +647,6 @@ export function createFiberFromFragment(
   key: null | string,
 ): Fiber {
   const fiber = createFiber(Fragment, elements, key, mode);
-  fiber.lanes = lanes;
-  return fiber;
-}
-
-export function createFiberFromFundamental(
-  fundamentalComponent: ReactFundamentalComponent<any, any>,
-  pendingProps: any,
-  mode: TypeOfMode,
-  lanes: Lanes,
-  key: null | string,
-): Fiber {
-  const fiber = createFiber(FundamentalComponent, pendingProps, key, mode);
-  fiber.elementType = fundamentalComponent;
-  fiber.type = fundamentalComponent;
   fiber.lanes = lanes;
   return fiber;
 }
@@ -744,6 +765,24 @@ export function createFiberFromLegacyHidden(
   return fiber;
 }
 
+export function createFiberFromCache(
+  pendingProps: any,
+  mode: TypeOfMode,
+  lanes: Lanes,
+  key: null | string,
+) {
+  const fiber = createFiber(CacheComponent, pendingProps, key, mode);
+  // TODO: The Cache fiber shouldn't have a type. It has a tag.
+  // This needs to be fixed in getComponentName so that it relies on the tag
+  // instead.
+  if (__DEV__) {
+    fiber.type = REACT_CACHE_TYPE;
+  }
+  fiber.elementType = REACT_CACHE_TYPE;
+  fiber.lanes = lanes;
+  return fiber;
+}
+
 export function createFiberFromText(
   content: string,
   mode: TypeOfMode,
@@ -819,10 +858,9 @@ export function assignFiberPropertiesInDEV(
   target.memoizedState = source.memoizedState;
   target.dependencies = source.dependencies;
   target.mode = source.mode;
-  target.effectTag = source.effectTag;
-  target.nextEffect = source.nextEffect;
-  target.firstEffect = source.firstEffect;
-  target.lastEffect = source.lastEffect;
+  target.flags = source.flags;
+  target.subtreeFlags = source.subtreeFlags;
+  target.deletions = source.deletions;
   target.lanes = source.lanes;
   target.childLanes = source.childLanes;
   target.alternate = source.alternate;

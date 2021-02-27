@@ -1,0 +1,13 @@
+.NewKeyValue {
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+}
+
+.EditableName {
+  margin-left: 1rem;
+}
+
+.EditableValue {
+  min-width: 1rem;
+}

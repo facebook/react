@@ -22,7 +22,7 @@ describe('ReactTracing', () => {
     ReactFeatureFlags.enableSchedulerTracing = true;
 
     expect(() => require('react-dom')).toThrow(
-      'Learn more at http://fb.me/react-profiling',
+      'Learn more at https://reactjs.org/link/profiling',
     );
   });
 });

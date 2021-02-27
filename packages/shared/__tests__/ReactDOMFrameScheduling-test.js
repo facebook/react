@@ -15,11 +15,6 @@ describe('ReactDOMFrameScheduling', () => {
 
     // Un-mock scheduler
     jest.mock('scheduler', () => require.requireActual('scheduler'));
-    jest.mock('scheduler/src/SchedulerHostConfig', () =>
-      require.requireActual(
-        'scheduler/src/forks/SchedulerHostConfig.default.js',
-      ),
-    );
   });
 
   it('warns when requestAnimationFrame is not polyfilled in the browser', () => {
@@ -47,6 +42,7 @@ describe('ReactDOMFrameScheduling', () => {
 
   // We're just testing importing, not using it.
   // It is important because even isomorphic components may import it.
+  // @gate !source
   it('can import findDOMNode in Node environment', () => {
     const previousRAF = global.requestAnimationFrame;
     const previousRIC = global.requestIdleCallback;

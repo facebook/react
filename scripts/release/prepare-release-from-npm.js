@@ -20,18 +20,21 @@ const run = async () => {
   try {
     const params = parseParams();
     params.cwd = join(__dirname, '..', '..');
-    params.packages = await getPublicPackages();
+
+    const isExperimental = params.version.includes('experimental');
+
+    if (!params.version) {
+      params.version = await getLatestNextVersion();
+    }
+
+    params.packages = await getPublicPackages(isExperimental);
 
     // Map of package name to upcoming stable version.
     // This Map is initially populated with guesses based on local versions.
     // The developer running the release later confirms or overrides each version.
     const versionsMap = new Map();
 
-    if (!params.version) {
-      params.version = await getLatestNextVersion();
-    }
-
-    if (params.version.includes('experimental')) {
+    if (isExperimental) {
       console.error(
         theme.error`Cannot promote an experimental build to stable.`
       );

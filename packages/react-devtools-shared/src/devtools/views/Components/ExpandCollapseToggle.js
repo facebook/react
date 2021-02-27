@@ -14,17 +14,20 @@ import ButtonIcon from '../ButtonIcon';
 import styles from './ExpandCollapseToggle.css';
 
 type ExpandCollapseToggleProps = {|
+  disabled: boolean,
   isOpen: boolean,
   setIsOpen: Function,
 |};
 
 export default function ExpandCollapseToggle({
+  disabled,
   isOpen,
   setIsOpen,
 }: ExpandCollapseToggleProps) {
   return (
     <Button
       className={styles.ExpandCollapseToggle}
+      disabled={disabled}
       onClick={() => setIsOpen(prevIsOpen => !prevIsOpen)}
       title={`${isOpen ? 'Collapse' : 'Expand'} prop value`}>
       <ButtonIcon type={isOpen ? 'expanded' : 'collapsed'} />

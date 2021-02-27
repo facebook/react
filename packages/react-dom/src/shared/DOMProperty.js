@@ -7,10 +7,7 @@
  * @flow
  */
 
-import {
-  enableDeprecatedFlareAPI,
-  enableFilterEmptyStringAttributesDOM,
-} from 'shared/ReactFeatureFlags';
+import {enableFilterEmptyStringAttributesDOM} from 'shared/ReactFeatureFlags';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -252,9 +249,6 @@ const reservedProps = [
   'suppressHydrationWarning',
   'style',
 ];
-if (enableDeprecatedFlareAPI) {
-  reservedProps.push('DEPRECATED_flareListeners');
-}
 
 reservedProps.forEach(name => {
   properties[name] = new PropertyInfoRecord(

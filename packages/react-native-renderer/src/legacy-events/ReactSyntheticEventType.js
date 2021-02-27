@@ -9,7 +9,6 @@
  */
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
-import type {EventPriority} from 'shared/ReactTypes';
 import type {TopLevelType} from './TopLevelEventTypes';
 
 export type DispatchConfig = {|
@@ -19,7 +18,6 @@ export type DispatchConfig = {|
     captured: null | string,
   |},
   registrationName?: string,
-  eventPriority: EventPriority,
 |};
 
 export type CustomDispatchConfig = {|

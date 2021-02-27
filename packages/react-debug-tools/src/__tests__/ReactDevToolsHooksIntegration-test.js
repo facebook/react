@@ -133,7 +133,7 @@ describe('React hooks DevTools integration', () => {
   });
 
   // This test case is based on an open source bug report:
-  // facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
+  // https://github.com/facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
   it('should handle interleaved stateful hooks (e.g. useState) and non-stateful hooks (e.g. useContext)', () => {
     const MyContext = React.createContext(1);
 

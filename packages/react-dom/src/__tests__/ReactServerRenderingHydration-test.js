@@ -488,6 +488,7 @@ describe('ReactDOMServerHydration', () => {
     jest.runAllTimers();
     await Promise.resolve();
     Scheduler.unstable_flushAll();
+    await null;
     expect(element.textContent).toBe('Hello world');
   });
 

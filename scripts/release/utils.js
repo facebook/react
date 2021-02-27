@@ -3,7 +3,7 @@
 const {exec} = require('child-process-promise');
 const {createPatch} = require('diff');
 const {hashElement} = require('folder-hash');
-const {readdirSync, readFileSync, statSync, writeFileSync} = require('fs');
+const {existsSync, readFileSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
 const http = require('request-promise-json');
 const logUpdate = require('log-update');
@@ -12,18 +12,25 @@ const createLogger = require('progress-estimator');
 const prompt = require('prompt-promise');
 const theme = require('./theme');
 
-// The following packages are published to NPM but not by this script.
-// They are released through a separate process.
-const RELEASE_SCRIPT_PACKAGE_SKIPLIST = [
-  'react-devtools',
-  'react-devtools-core',
-  'react-devtools-inline',
-];
-
 // https://www.npmjs.com/package/progress-estimator#configuration
 const logger = createLogger({
   storagePath: join(__dirname, '.progress-estimator'),
 });
+
+const addDefaultParamValue = (optionalShortName, longName, defaultValue) => {
+  let found = false;
+  for (let i = 0; i < process.argv.length; i++) {
+    const current = process.argv[i];
+    if (current === optionalShortName || current.startsWith(`${longName}=`)) {
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) {
+    process.argv.push(`${longName}=${defaultValue}`);
+  }
+};
 
 const confirm = async message => {
   const confirmation = await prompt(theme`\n{caution ${message}} (y/N) `);
@@ -40,36 +47,19 @@ const execRead = async (command, options) => {
   return stdout.trim();
 };
 
+const extractCommitFromVersionNumber = version => {
+  // Support stable version format e.g. "0.0.0-0e526bcec"
+  // and experimental version format e.g. "0.0.0-experimental-0e526bcec"
+  const match = version.match(/0\.0\.0\-([a-z]+\-){0,1}(.+)/);
+  if (match === null) {
+    throw Error(`Could not extra commit from version "${version}"`);
+  }
+  return match[2];
+};
+
 const getArtifactsList = async buildID => {
-  const buildMetadataURL = `https://circleci.com/api/v1.1/project/github/facebook/react/${buildID}?circle-token=${process.env.CIRCLE_CI_API_TOKEN}`;
-  const buildMetadata = await http.get(buildMetadataURL, true);
-  if (!buildMetadata.workflows || !buildMetadata.workflows.workflow_id) {
-    console.log(
-      theme`{error Could not find workflow info for build ${buildID}.}`
-    );
-    process.exit(1);
-  }
-  const artifactsJobName = buildMetadata.workflows.job_name.endsWith(
-    '_experimental'
-  )
-    ? 'process_artifacts_experimental'
-    : 'process_artifacts';
-  const workflowID = buildMetadata.workflows.workflow_id;
-  const workflowMetadataURL = `https://circleci.com/api/v2/workflow/${workflowID}/job?circle-token=${process.env.CIRCLE_CI_API_TOKEN}`;
-  const workflowMetadata = await http.get(workflowMetadataURL, true);
-  const job = workflowMetadata.items.find(
-    ({name}) => name === artifactsJobName
-  );
-  if (!job || !job.job_number) {
-    console.log(
-      theme`{error Could not find "${artifactsJobName}" job for workflow ${workflowID}.}`
-    );
-    process.exit(1);
-  }
-
-  const jobArtifactsURL = `https://circleci.com/api/v1.1/project/github/facebook/react/${job.job_number}/artifacts?circle-token=${process.env.CIRCLE_CI_API_TOKEN}`;
+  const jobArtifactsURL = `https://circleci.com/api/v1.1/project/github/facebook/react/${buildID}/artifacts`;
   const jobArtifacts = await http.get(jobArtifactsURL, true);
-
   return jobArtifacts;
 };
 
@@ -112,31 +102,71 @@ const getChecksumForCurrentRevision = async cwd => {
   return hashedPackages.hash.slice(0, 7);
 };
 
-const getPublicPackages = () => {
-  const packagesRoot = join(__dirname, '..', '..', 'packages');
+const getCommitFromCurrentBuild = async () => {
+  const cwd = join(__dirname, '..', '..');
 
-  return readdirSync(packagesRoot).filter(dir => {
-    if (RELEASE_SCRIPT_PACKAGE_SKIPLIST.includes(dir)) {
-      return false;
-    }
+  // If this build includes a build-info.json file, extract the commit from it.
+  // Otherwise fall back to parsing from the package version number.
+  // This is important to make the build reproducible (e.g. by Mozilla reviewers).
+  const buildInfoJSON = join(
+    cwd,
+    'build2',
+    'oss-experimental',
+    'react',
+    'build-info.json'
+  );
+  if (existsSync(buildInfoJSON)) {
+    const buildInfo = await readJson(buildInfoJSON);
+    return buildInfo.commit;
+  } else {
+    const packageJSON = join(
+      cwd,
+      'build2',
+      'oss-experimental',
+      'react',
+      'package.json'
+    );
+    const {version} = await readJson(packageJSON);
+    return extractCommitFromVersionNumber(version);
+  }
+};
 
-    const packagePath = join(packagesRoot, dir, 'package.json');
-
-    if (dir.charAt(0) !== '.') {
-      let stat;
-      try {
-        stat = statSync(packagePath);
-      } catch (err) {
-        return false;
-      }
-      if (stat.isFile()) {
-        const packageJSON = JSON.parse(readFileSync(packagePath));
-        return packageJSON.private !== true;
-      }
-    }
-
-    return false;
-  });
+const getPublicPackages = isExperimental => {
+  if (isExperimental) {
+    return [
+      'create-subscription',
+      'eslint-plugin-react-hooks',
+      'jest-react',
+      'react',
+      'react-art',
+      'react-dom',
+      'react-is',
+      'react-reconciler',
+      'react-refresh',
+      'react-test-renderer',
+      'use-subscription',
+      'scheduler',
+      'react-fetch',
+      'react-fs',
+      'react-pg',
+      'react-server-dom-webpack',
+    ];
+  } else {
+    return [
+      'create-subscription',
+      'eslint-plugin-react-hooks',
+      'jest-react',
+      'react',
+      'react-art',
+      'react-dom',
+      'react-is',
+      'react-reconciler',
+      'react-refresh',
+      'react-test-renderer',
+      'use-subscription',
+      'scheduler',
+    ];
+  }
 };
 
 const handleError = error => {
@@ -199,7 +229,8 @@ const splitCommaParams = array => {
 // It is based on the version of React in the local package.json (e.g. 16.12.0-01974a867).
 // Both numbers will be replaced if the "next" release is promoted to a stable release.
 const updateVersionsForNext = async (cwd, reactVersion, version) => {
-  const packages = getPublicPackages(join(cwd, 'packages'));
+  const isExperimental = reactVersion.includes('experimental');
+  const packages = getPublicPackages(isExperimental);
   const packagesDir = join(cwd, 'packages');
 
   // Update the shared React version source file.
@@ -249,11 +280,13 @@ const updateVersionsForNext = async (cwd, reactVersion, version) => {
 };
 
 module.exports = {
+  addDefaultParamValue,
   confirm,
   execRead,
   getArtifactsList,
   getBuildInfo,
   getChecksumForCurrentRevision,
+  getCommitFromCurrentBuild,
   getPublicPackages,
   handleError,
   logPromise,

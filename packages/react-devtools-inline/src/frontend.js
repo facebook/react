@@ -9,6 +9,7 @@ import {
   getAppendComponentStack,
   getBreakOnConsoleErrors,
   getSavedComponentFilters,
+  getShowInlineWarningsAndErrors,
 } from 'react-devtools-shared/src/utils';
 import {
   MESSAGE_TYPE_GET_SAVED_PREFERENCES,
@@ -41,6 +42,7 @@ export function initialize(
             appendComponentStack: getAppendComponentStack(),
             breakOnConsoleErrors: getBreakOnConsoleErrors(),
             componentFilters: getSavedComponentFilters(),
+            showInlineWarningsAndErrors: getShowInlineWarningsAndErrors(),
           },
           '*',
         );

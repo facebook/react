@@ -24,11 +24,13 @@ function startActivation(contentWindow: window) {
           appendComponentStack,
           breakOnConsoleErrors,
           componentFilters,
+          showInlineWarningsAndErrors,
         } = data;
 
         contentWindow.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = appendComponentStack;
         contentWindow.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ = breakOnConsoleErrors;
         contentWindow.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = componentFilters;
+        contentWindow.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ = showInlineWarningsAndErrors;
 
         // TRICKY
         // The backend entry point may be required in the context of an iframe or the parent window.
@@ -40,6 +42,7 @@ function startActivation(contentWindow: window) {
           window.__REACT_DEVTOOLS_APPEND_COMPONENT_STACK__ = appendComponentStack;
           window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ = breakOnConsoleErrors;
           window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = componentFilters;
+          window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ = showInlineWarningsAndErrors;
         }
 
         finishActivation(contentWindow);

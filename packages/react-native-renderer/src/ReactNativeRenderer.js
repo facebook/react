@@ -9,6 +9,7 @@
 
 import type {HostComponent} from './ReactNativeTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ElementRef, Element, ElementType} from 'react';
 
 import './ReactNativeInjection';
 
@@ -32,8 +33,11 @@ import {
   batchedUpdates,
 } from './legacy-events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
-// Module provided by RN:
-import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
+// Modules provided by RN:
+import {
+  UIManager,
+  legacySendAccessibilityEvent,
+} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface';
 
 import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
 import {
@@ -168,21 +172,43 @@ function dispatchCommand(handle: any, command: string, args: Array<any>) {
   }
 }
 
+function sendAccessibilityEvent(handle: any, eventType: string) {
+  if (handle._nativeTag == null) {
+    if (__DEV__) {
+      console.error(
+        "sendAccessibilityEvent was called with a ref that isn't a " +
+          'native component. Use React.forwardRef to get access to the underlying native component',
+      );
+    }
+    return;
+  }
+
+  if (handle._internalInstanceHandle) {
+    nativeFabricUIManager.sendAccessibilityEvent(
+      handle._internalInstanceHandle.stateNode.node,
+      eventType,
+    );
+  } else {
+    legacySendAccessibilityEvent(handle._nativeTag, eventType);
+  }
+}
+
 function render(
-  element: React$Element<any>,
-  containerTag: any,
-  callback: ?Function,
-) {
+  element: Element<ElementType>,
+  containerTag: number,
+  callback: ?() => void,
+): ?ElementRef<ElementType> {
   let root = roots.get(containerTag);
 
   if (!root) {
     // TODO (bvaughn): If we decide to keep the wrapper component,
     // We could create a wrapper for containerTag as well to reduce special casing.
-    root = createContainer(containerTag, LegacyRoot, false, null);
+    root = createContainer(containerTag, LegacyRoot, false, null, null);
     roots.set(containerTag, root);
   }
   updateContainer(element, root, null, callback);
 
+  // $FlowIssue Flow has hardcoded values for React DOM that don't work with RN
   return getPublicRootInstance(root);
 }
 
@@ -238,6 +264,7 @@ export {
   findHostInstance_DEPRECATED,
   findNodeHandle,
   dispatchCommand,
+  sendAccessibilityEvent,
   render,
   unmountComponentAtNode,
   unmountComponentAtNodeAndRemoveContainer,

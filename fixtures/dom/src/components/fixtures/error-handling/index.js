@@ -241,6 +241,20 @@ class TrySilenceFatalError extends React.Component {
   }
 }
 
+function naiveMemoize(fn) {
+  let memoizedEntry;
+  return function() {
+    if (!memoizedEntry) {
+      memoizedEntry = {result: null};
+      memoizedEntry.result = fn();
+    }
+    return memoizedEntry.result;
+  };
+}
+let memoizedFunction = naiveMemoize(function() {
+  throw new Error('Passed');
+});
+
 export default class ErrorHandlingTestCases extends React.Component {
   render() {
     return (
@@ -285,6 +299,21 @@ export default class ErrorHandlingTestCases extends React.Component {
           <Example
             doThrow={() => {
               throw null; // eslint-disable-line no-throw-literal
+            }}
+          />
+        </TestCase>
+        <TestCase title="Throwing memoized result" description="">
+          <TestCase.Steps>
+            <li>Click the "Trigger error" button</li>
+            <li>Click the reset button</li>
+          </TestCase.Steps>
+          <TestCase.ExpectedResult>
+            The "Trigger error" button should be replaced with "Captured an
+            error: Passed". Clicking reset should reset the test case.
+          </TestCase.ExpectedResult>
+          <Example
+            doThrow={() => {
+              memoizedFunction().value;
             }}
           />
         </TestCase>

@@ -38,14 +38,25 @@ const InitialState: State = {
 export default class ErrorBoundary extends Component<Props, State> {
   state: State = InitialState;
 
-  componentDidCatch(error: any, {componentStack}: any) {
+  static getDerivedStateFromError(error: any) {
     const errorMessage =
-      typeof error === 'object' && error.hasOwnProperty('message')
+      typeof error === 'object' &&
+      error !== null &&
+      error.hasOwnProperty('message')
         ? error.message
         : error;
 
+    return {
+      errorMessage,
+      hasError: true,
+    };
+  }
+
+  componentDidCatch(error: any, {componentStack}: any) {
     const callStack =
-      typeof error === 'object' && error.hasOwnProperty('stack')
+      typeof error === 'object' &&
+      error !== null &&
+      error.hasOwnProperty('stack')
         ? error.stack
             .split('\n')
             .slice(1)
@@ -55,8 +66,6 @@ export default class ErrorBoundary extends Component<Props, State> {
     this.setState({
       callStack,
       componentStack,
-      errorMessage,
-      hasError: true,
     });
   }
 

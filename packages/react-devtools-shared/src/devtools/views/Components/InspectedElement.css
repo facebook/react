@@ -1,0 +1,68 @@
+.InspectedElement {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  border-left: 1px solid var(--color-border);
+  border-top: 1px solid var(--color-border);
+}
+
+.TitleRow {
+  flex: 0 0 42px;
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-monospace-large);
+  border-bottom: 1px solid var(--color-border);
+  padding: 0.5rem;
+}
+
+.Key {
+  flex: 0 1 auto;
+  padding-left: 0.25rem;
+  padding-right: 0.125rem;
+  line-height: 1rem;
+  border-top-left-radius: 0.125rem;
+  border-bottom-left-radius: 0.125rem;
+  display: inline-block;
+  background-color: var(--color-component-badge-background);
+  color: var(--color-text);
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-small);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.KeyArrow {
+  height: 1rem;
+  width: 1rem;
+  margin-right: -0.25rem;
+  border: 0.5rem solid transparent;
+  border-left: 0.5rem solid var(--color-component-badge-background);
+}
+
+.SelectedComponentName {
+  flex: 1 1 auto;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: normal;
+}
+
+.Component {
+  flex: 1 1 auto;
+  color: var(--color-component-name);
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.Loading {
+  padding: 0.25rem;
+  color: var(--color-dimmer);
+  font-style: italic;
+}
+

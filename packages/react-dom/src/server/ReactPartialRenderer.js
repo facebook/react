@@ -22,8 +22,6 @@ import {
   disableLegacyContext,
   disableModulePatternComponents,
   enableSuspenseServerRenderer,
-  enableFundamentalAPI,
-  enableDeprecatedFlareAPI,
   enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 
@@ -40,7 +38,6 @@ import {
   REACT_CONTEXT_TYPE,
   REACT_LAZY_TYPE,
   REACT_MEMO_TYPE,
-  REACT_FUNDAMENTAL_TYPE,
   REACT_SCOPE_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
 } from 'shared/ReactSymbols';
@@ -368,9 +365,6 @@ function createOpenTagMarkup(
     if (!hasOwnProperty.call(props, propKey)) {
       continue;
     }
-    if (enableDeprecatedFlareAPI && propKey === 'DEPRECATED_flareListeners') {
-      continue;
-    }
     let propValue = props[propKey];
     if (propValue == null) {
       continue;
@@ -595,7 +589,7 @@ function resolve(
               console.warn(
                 // keep this warning in sync with ReactStrictModeWarning.js
                 'componentWillMount has been renamed, and is not recommended for use. ' +
-                  'See https://fb.me/react-unsafe-component-lifecycles for details.\n\n' +
+                  'See https://reactjs.org/link/unsafe-component-lifecycles for details.\n\n' +
                   '* Move code from componentWillMount to componentDidMount (preferred in most cases) ' +
                   'or the constructor.\n' +
                   '\nPlease update the following components: %s',
@@ -1257,43 +1251,6 @@ class ReactDOMServerRenderer {
             return '';
           }
           // eslint-disable-next-line-no-fallthrough
-          case REACT_FUNDAMENTAL_TYPE: {
-            if (enableFundamentalAPI) {
-              const fundamentalImpl = elementType.impl;
-              const open = fundamentalImpl.getServerSideString(
-                null,
-                nextElement.props,
-              );
-              const getServerSideStringClose =
-                fundamentalImpl.getServerSideStringClose;
-              const close =
-                getServerSideStringClose !== undefined
-                  ? getServerSideStringClose(null, nextElement.props)
-                  : '';
-              const nextChildren =
-                fundamentalImpl.reconcileChildren !== false
-                  ? toArray(((nextChild: any): ReactElement).props.children)
-                  : [];
-              const frame: Frame = {
-                type: null,
-                domNamespace: parentNamespace,
-                children: nextChildren,
-                childIndex: 0,
-                context: context,
-                footer: close,
-              };
-              if (__DEV__) {
-                ((frame: any): FrameDev).debugElementStack = [];
-              }
-              this.stack.push(frame);
-              return open;
-            }
-            invariant(
-              false,
-              'ReactDOMServer does not yet support the fundamental API.',
-            );
-          }
-          // eslint-disable-next-line-no-fallthrough
           case REACT_LAZY_TYPE: {
             const element: ReactElement = (nextChild: any);
             const lazyComponent: LazyComponent<any, any> = (nextChild: any)
@@ -1402,7 +1359,7 @@ class ReactDOMServerRenderer {
               '(specify either the checked prop, or the defaultChecked prop, but not ' +
               'both). Decide between using a controlled or uncontrolled input ' +
               'element and remove one of these props. More info: ' +
-              'https://fb.me/react-controlled-components',
+              'https://reactjs.org/link/controlled-components',
             'A component',
             props.type,
           );
@@ -1419,7 +1376,7 @@ class ReactDOMServerRenderer {
               '(specify either the value prop, or the defaultValue prop, but not ' +
               'both). Decide between using a controlled or uncontrolled input ' +
               'element and remove one of these props. More info: ' +
-              'https://fb.me/react-controlled-components',
+              'https://reactjs.org/link/controlled-components',
             'A component',
             props.type,
           );
@@ -1452,7 +1409,7 @@ class ReactDOMServerRenderer {
               '(specify either the value prop, or the defaultValue prop, but not ' +
               'both). Decide between using a controlled or uncontrolled textarea ' +
               'and remove one of these props. More info: ' +
-              'https://fb.me/react-controlled-components',
+              'https://reactjs.org/link/controlled-components',
           );
           didWarnDefaultTextareaValue = true;
         }
@@ -1529,7 +1486,7 @@ class ReactDOMServerRenderer {
               '(specify either the value prop, or the defaultValue prop, but not ' +
               'both). Decide between using a controlled or uncontrolled select ' +
               'element and remove one of these props. More info: ' +
-              'https://fb.me/react-controlled-components',
+              'https://reactjs.org/link/controlled-components',
           );
           didWarnDefaultSelectValue = true;
         }

@@ -12,11 +12,24 @@ import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateI
 
 const ReactFabricGlobalResponderHandler = {
   onChange: function(from: any, to: any, blockNativeResponder: boolean) {
-    if (to !== null) {
-      const tag = to.stateNode.canonical._nativeTag;
-      UIManager.setJSResponder(tag, blockNativeResponder);
+    const fromOrTo = from || to;
+    const isFabric = !!fromOrTo.stateNode.canonical._internalInstanceHandle;
+
+    if (isFabric) {
+      if (from) {
+        nativeFabricUIManager.setIsJSResponder(from.stateNode.node, false);
+      }
+
+      if (to) {
+        nativeFabricUIManager.setIsJSResponder(to.stateNode.node, true);
+      }
     } else {
-      UIManager.clearJSResponder();
+      if (to !== null) {
+        const tag = to.stateNode.canonical._nativeTag;
+        UIManager.setJSResponder(tag, blockNativeResponder);
+      } else {
+        UIManager.clearJSResponder();
+      }
     }
   },
 };
