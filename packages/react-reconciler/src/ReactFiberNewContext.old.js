@@ -196,6 +196,32 @@ export function propagateContextChange<T>(
   changedBits: number,
   renderLanes: Lanes,
 ): void {
+  if (enableLazyContextPropagation) {
+    propagateContextChanges(
+      workInProgress,
+      [context, changedBits],
+      renderLanes,
+    );
+  } else {
+    propagateContextChange_eager(
+      workInProgress,
+      context,
+      changedBits,
+      renderLanes,
+    );
+  }
+}
+
+function propagateContextChange_eager<T>(
+  workInProgress: Fiber,
+  context: ReactContext<T>,
+  changedBits: number,
+  renderLanes: Lanes,
+): void {
+  // Only used by eager implemenation
+  if (enableLazyContextPropagation) {
+    return;
+  }
   let fiber = workInProgress.child;
   if (fiber !== null) {
     // Set the return pointer of the child to the work-in-progress fiber.
@@ -217,45 +243,32 @@ export function propagateContextChange<T>(
           (dependency.observedBits & changedBits) !== 0
         ) {
           // Match! Schedule an update on this fiber.
+          if (fiber.tag === ClassComponent) {
+            // Schedule a force update on the work-in-progress.
+            const lane = pickArbitraryLane(renderLanes);
+            const update = createUpdate(NoTimestamp, lane);
+            update.tag = ForceUpdate;
+            // TODO: Because we don't have a work-in-progress, this will add the
+            // update to the current fiber, too, which means it will persist even if
+            // this render is thrown away. Since it's a race condition, not sure it's
+            // worth fixing.
 
-          if (enableLazyContextPropagation) {
-            // In the lazy implemenation, don't mark a dirty flag on the
-            // dependency itself. Not all changes are propagated, so we can't
-            // rely on the propagation function alone to determine whether
-            // something has changed; the consumer will check. In the future,
-            // we could add back a dirty flag as an optimization to avoid
-            // double checking, but until we have selectors it's not really
-            // worth the trouble.
-          } else {
-            if (fiber.tag === ClassComponent) {
-              // Schedule a force update on the work-in-progress.
-              const lane = pickArbitraryLane(renderLanes);
-              const update = createUpdate(NoTimestamp, lane);
-              update.tag = ForceUpdate;
-              // TODO: Because we don't have a work-in-progress, this will add the
-              // update to the current fiber, too, which means it will persist even if
-              // this render is thrown away. Since it's a race condition, not sure it's
-              // worth fixing.
-
-              // Inlined `enqueueUpdate` to remove interleaved update check
-              const updateQueue = fiber.updateQueue;
-              if (updateQueue === null) {
-                // Only occurs if the fiber has been unmounted.
+            // Inlined `enqueueUpdate` to remove interleaved update check
+            const updateQueue = fiber.updateQueue;
+            if (updateQueue === null) {
+              // Only occurs if the fiber has been unmounted.
+            } else {
+              const sharedQueue: SharedQueue<any> = (updateQueue: any).shared;
+              const pending = sharedQueue.pending;
+              if (pending === null) {
+                // This is the first update. Create a circular list.
+                update.next = update;
               } else {
-                const sharedQueue: SharedQueue<any> = (updateQueue: any).shared;
-                const pending = sharedQueue.pending;
-                if (pending === null) {
-                  // This is the first update. Create a circular list.
-                  update.next = update;
-                } else {
-                  update.next = pending.next;
-                  pending.next = update;
-                }
-                sharedQueue.pending = update;
+                update.next = pending.next;
+                pending.next = update;
               }
+              sharedQueue.pending = update;
             }
-            // Mark the updated lanes on the list, too.
-            list.lanes = mergeLanes(list.lanes, renderLanes);
           }
 
           fiber.lanes = mergeLanes(fiber.lanes, renderLanes);
@@ -264,6 +277,9 @@ export function propagateContextChange<T>(
             alternate.lanes = mergeLanes(alternate.lanes, renderLanes);
           }
           scheduleWorkOnParentPath(fiber.return, renderLanes);
+
+          // Mark the updated lanes on the list, too.
+          list.lanes = mergeLanes(list.lanes, renderLanes);
 
           // Since we already found a match, we can stop traversing the
           // dependency list.
@@ -329,36 +345,136 @@ export function propagateContextChange<T>(
   }
 }
 
+function propagateContextChanges<T>(
+  workInProgress: Fiber,
+  contexts: Array<any>,
+  renderLanes: Lanes,
+): void {
+  // Only used by lazy implemenation
+  if (!enableLazyContextPropagation) {
+    return;
+  }
+  let fiber = workInProgress.child;
+  if (fiber !== null) {
+    // Set the return pointer of the child to the work-in-progress fiber.
+    fiber.return = workInProgress;
+  }
+  while (fiber !== null) {
+    let nextFiber;
+
+    // Visit this fiber.
+    const list = fiber.dependencies;
+    if (list !== null) {
+      nextFiber = fiber.child;
+
+      let dep = list.firstContext;
+      findChangedDep: while (dep !== null) {
+        // Assigning these to constants to help Flow
+        const dependency = dep;
+        const consumer = fiber;
+        findContext: for (let i = 0; i < contexts.length; i += 2) {
+          const context: ReactContext<T> = contexts[i];
+          const changedBits: number = contexts[i + 1];
+          // Check if the context matches.
+          // TODO: Compare selected values to bail out early.
+          if (
+            dependency.context === context &&
+            (dependency.observedBits & changedBits) !== 0
+          ) {
+            // Match! Schedule an update on this fiber.
+
+            // In the lazy implemenation, don't mark a dirty flag on the
+            // dependency itself. Not all changes are propagated, so we can't
+            // rely on the propagation function alone to determine whether
+            // something has changed; the consumer will check. In the future, we
+            // could add back a dirty flag as an optimization to avoid double
+            // checking, but until we have selectors it's not really worth
+            // the trouble.
+            consumer.lanes = mergeLanes(consumer.lanes, renderLanes);
+            const alternate = consumer.alternate;
+            if (alternate !== null) {
+              alternate.lanes = mergeLanes(alternate.lanes, renderLanes);
+            }
+            scheduleWorkOnParentPath(consumer.return, renderLanes);
+
+            // Since we already found a match, we can stop traversing the
+            // dependency list.
+            break findChangedDep;
+          }
+        }
+        dep = dependency.next;
+      }
+    } else if (
+      enableSuspenseServerRenderer &&
+      fiber.tag === DehydratedFragment
+    ) {
+      // If a dehydrated suspense boundary is in this subtree, we don't know
+      // if it will have any context consumers in it. The best we can do is
+      // mark it as having updates.
+      const parentSuspense = fiber.return;
+      invariant(
+        parentSuspense !== null,
+        'We just came from a parent so we must have had a parent. This is a bug in React.',
+      );
+      parentSuspense.lanes = mergeLanes(parentSuspense.lanes, renderLanes);
+      const alternate = parentSuspense.alternate;
+      if (alternate !== null) {
+        alternate.lanes = mergeLanes(alternate.lanes, renderLanes);
+      }
+      // This is intentionally passing this fiber as the parent
+      // because we want to schedule this fiber as having work
+      // on its children. We'll use the childLanes on
+      // this fiber to indicate that a context has changed.
+      scheduleWorkOnParentPath(parentSuspense, renderLanes);
+      nextFiber = fiber.sibling;
+    } else {
+      // Traverse down.
+      nextFiber = fiber.child;
+    }
+
+    if (nextFiber !== null) {
+      // Set the return pointer of the child to the work-in-progress fiber.
+      nextFiber.return = fiber;
+    } else {
+      // No child. Traverse to next sibling.
+      nextFiber = fiber;
+      while (nextFiber !== null) {
+        if (nextFiber === workInProgress) {
+          // We're back to the root of this subtree. Exit.
+          nextFiber = null;
+          break;
+        }
+        const sibling = nextFiber.sibling;
+        if (sibling !== null) {
+          // Set the return pointer of the sibling to the work-in-progress fiber.
+          sibling.return = nextFiber.return;
+          nextFiber = sibling;
+          break;
+        }
+        // No more siblings. Traverse up.
+        nextFiber = nextFiber.return;
+      }
+    }
+    fiber = nextFiber;
+  }
+}
+
+// Alias for propagating a deferred tree (Suspense, Offscreen). Currently it's
+// the same algorithm but there may be a way to optimize one or the other.
+export const propagateParentContextChangesToDeferredTree = lazilyPropagateParentContextChanges;
+
 export function lazilyPropagateParentContextChanges(
   current: Fiber,
   workInProgress: Fiber,
   renderLanes: Lanes,
 ) {
-  propagateParentContextChanges(current, workInProgress, renderLanes, false);
-}
-
-export function propagateParentContextChangesToDeferredTree(
-  current: Fiber,
-  workInProgress: Fiber,
-  renderLanes: Lanes,
-) {
-  propagateParentContextChanges(current, workInProgress, renderLanes, true);
-}
-
-function propagateParentContextChanges(
-  current: Fiber,
-  workInProgress: Fiber,
-  renderLanes: Lanes,
-  // TODO: This argument is currently unused. I think there's a way to optimize
-  // for the many providers case, where if the first propagation finds a match,
-  // the second one can avoid scanning down that same path. The trouble is that
-  // there could be a nested bailout below that.
-  forcePropagateEntireTree: boolean,
-) {
   if (!enableLazyContextPropagation) {
     return false;
   }
 
+  // Collect all the parent providers that changed. Since this is usually small
+  // number, we use an Array instead of Set.
+  let contexts = null;
   let parent = workInProgress;
   while (parent !== null && (parent.flags & DidPropagateContext) === NoFlags) {
     if (parent.tag === ContextProvider) {
@@ -376,14 +492,11 @@ function propagateParentContextChanges(
 
           const changedBits = calculateChangedBits(context, newValue, oldValue);
           if (changedBits !== 0) {
-            // The context value changed. Search for matching consumers and
-            // schedule them to update.
-            propagateContextChange(
-              workInProgress,
-              context,
-              changedBits,
-              renderLanes,
-            );
+            if (contexts !== null) {
+              contexts.push(context, changedBits);
+            } else {
+              contexts = [context, changedBits];
+            }
           }
         }
       }
@@ -391,12 +504,18 @@ function propagateParentContextChanges(
     parent = parent.return;
   }
 
-  // This is an optimization so that we only propagate each provider once per
-  // subtree. (We will propagate the same provider to different subtrees, though
-  // — that's why the flag is on the fiber that bailed out, not the provider.)
-  // If a deeply nested child bails out, and it calls this propagation function,
-  // it uses this flag to know that the remaining ancestor providers have
-  // already been propagated.
+  if (contexts !== null) {
+    // If there were any changed providers, search through the children and
+    // propagate their changes.
+    propagateContextChanges(workInProgress, contexts, renderLanes);
+  }
+
+  // This is an optimization so that we only propagate once per subtree. (We
+  // will propagate the same providers to different subtrees, though — that's
+  // why the flag is on the fiber that bailed out, not the provider.) If a
+  // deeply nested child bails out, and it calls this propagation function, it
+  // uses this flag to know that the remaining ancestor providers have already
+  // been propagated.
   workInProgress.flags |= DidPropagateContext;
 }
 
