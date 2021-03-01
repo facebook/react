@@ -197,10 +197,7 @@ import {
   invokePassiveEffectUnmountInDEV,
 } from './ReactFiberCommitWork.new';
 import {enqueueUpdate} from './ReactUpdateQueue.new';
-import {
-  resetContextDependencies,
-  resetDeferredContextPropagation,
-} from './ReactFiberNewContext.new';
+import {resetContextDependencies} from './ReactFiberNewContext.new';
 import {
   resetHooksAfterThrow,
   ContextOnlyDispatcher,
@@ -1372,8 +1369,6 @@ function prepareFreshStack(root: FiberRoot, lanes: Lanes) {
   workInProgressRootSkippedLanes = NoLanes;
   workInProgressRootUpdatedLanes = NoLanes;
   workInProgressRootPingedLanes = NoLanes;
-
-  resetDeferredContextPropagation();
 
   enqueueInterleavedUpdates();
 

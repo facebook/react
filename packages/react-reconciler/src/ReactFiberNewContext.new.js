@@ -33,7 +33,11 @@ import {
   mergeLanes,
   pickArbitraryLane,
 } from './ReactFiberLane.new';
-import {NoFlags, DidPropagateContext} from './ReactFiberFlags';
+import {
+  NoFlags,
+  DidPropagateContext,
+  NeedsPropagation,
+} from './ReactFiberFlags';
 
 import invariant from 'shared/invariant';
 import is from 'shared/objectIs';
@@ -409,14 +413,6 @@ function propagateContextChanges<T>(
               // visit them during render. We should continue propagating the
               // siblings, though
               nextFiber = null;
-
-              // Keep track of subtrees whose propagation we deferred
-              if (deferredPropagation === null) {
-                deferredPropagation = new Set([consumer]);
-              } else {
-                deferredPropagation.add(consumer);
-              }
-              nextFiber = null;
             }
 
             // Since we already found a match, we can stop traversing the
@@ -513,21 +509,6 @@ export function propagateParentContextChangesToDeferredTree(
   );
 }
 
-// Used by lazy context propagation algorithm. When we find a context dependency
-// match, we don't propagate the changes any further into that fiber's subtree.
-// We add the matched fibers to this set. Later, if something inside that
-// subtree bails out of rendering, the presence of a parent fiber in this Set
-// tells us that we need to continue propagating.
-//
-// This is a set of _current_ fibers, not work-in-progress fibers. That's why
-// it's a set instead of a flag on the fiber.
-let deferredPropagation: Set<Fiber> | null = null;
-
-export function resetDeferredContextPropagation() {
-  // This is called by prepareFreshStack
-  deferredPropagation = null;
-}
-
 function propagateParentContextChanges(
   current: Fiber,
   workInProgress: Fiber,
@@ -535,7 +516,7 @@ function propagateParentContextChanges(
   forcePropagateEntireTree: boolean,
 ) {
   if (!enableLazyContextPropagation) {
-    return false;
+    return;
   }
 
   // Collect all the parent providers that changed. Since this is usually small
@@ -544,58 +525,36 @@ function propagateParentContextChanges(
   let parent = workInProgress;
   let isInsidePropagationBailout = false;
   while (parent !== null) {
-    const currentParent = parent.alternate;
-    invariant(
-      currentParent !== null,
-      'Should have a current fiber. This is a bug in React.',
-    );
-
     if (!isInsidePropagationBailout) {
-      if (deferredPropagation === null) {
-        if ((parent.flags & DidPropagateContext) !== NoFlags) {
-          break;
-        }
-      } else {
-        if (currentParent !== null && deferredPropagation.has(currentParent)) {
-          // We're inside a subtree that previously bailed out of propagation.
-          // We must disregard the the DidPropagateContext flag as we continue
-          // searching for parent providers.
-          isInsidePropagationBailout = true;
-          // We know that none of the providers in between the propagation
-          // bailout and the nearest render bailout above that could have
-          // changed. So we can skip those.
-          do {
-            parent = parent.return;
-            invariant(
-              parent !== null,
-              'Expected to find a bailed out fiber. This is a bug in React.',
-            );
-          } while ((parent.flags & DidPropagateContext) === NoFlags);
-        } else if ((parent.flags & DidPropagateContext) !== NoFlags) {
-          break;
-        }
+      if ((parent.flags & NeedsPropagation) !== NoFlags) {
+        isInsidePropagationBailout = true;
+      } else if ((parent.flags & DidPropagateContext) !== NoFlags) {
+        break;
       }
     }
 
     if (parent.tag === ContextProvider) {
-      if (currentParent !== null) {
-        const oldProps = currentParent.memoizedProps;
-        if (oldProps !== null) {
-          const providerType: ReactProviderType<any> = parent.type;
-          const context: ReactContext<any> = providerType._context;
+      const currentParent = parent.alternate;
+      invariant(
+        currentParent !== null,
+        'Should have a current fiber. This is a bug in React.',
+      );
+      const oldProps = currentParent.memoizedProps;
+      if (oldProps !== null) {
+        const providerType: ReactProviderType<any> = parent.type;
+        const context: ReactContext<any> = providerType._context;
 
-          const newProps = parent.pendingProps;
-          const newValue = newProps.value;
+        const newProps = parent.pendingProps;
+        const newValue = newProps.value;
 
-          const oldValue = oldProps.value;
+        const oldValue = oldProps.value;
 
-          const changedBits = calculateChangedBits(context, newValue, oldValue);
-          if (changedBits !== 0) {
-            if (contexts !== null) {
-              contexts.push(context, changedBits);
-            } else {
-              contexts = [context, changedBits];
-            }
+        const changedBits = calculateChangedBits(context, newValue, oldValue);
+        if (changedBits !== 0) {
+          if (contexts !== null) {
+            contexts.push(context, changedBits);
+          } else {
+            contexts = [context, changedBits];
           }
         }
       }
@@ -628,10 +587,10 @@ function propagateParentContextChanges(
   //
   // Unfortunately, though, we need to ignore this flag when we're inside a
   // tree whose context propagation was deferred — that's what the
-  // `deferredPropagation` set is for.
+  // `NeedsPropagation` flag is for.
   //
-  // If we could instead bail out before entering the siblings' beging phase,
-  // then we could remove both `DidPropagateContext` and `deferredPropagation`.
+  // If we could instead bail out before entering the siblings' begin phase,
+  // then we could remove both `DidPropagateContext` and `NeedsPropagation`.
   // Consider this as part of the next refactor to the fiber tree structure.
   workInProgress.flags |= DidPropagateContext;
 }
@@ -750,6 +709,9 @@ export function readContext<T>(
         // TODO: This is an old field. Delete it.
         responders: null,
       };
+      if (enableLazyContextPropagation) {
+        currentlyRenderingFiber.flags |= NeedsPropagation;
+      }
     } else {
       // Append a new context item.
       lastContextDependency = lastContextDependency.next = contextItem;
