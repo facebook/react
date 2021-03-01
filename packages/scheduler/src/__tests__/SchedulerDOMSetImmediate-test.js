@@ -143,7 +143,6 @@ describe('SchedulerDOMSetImmediate', () => {
     };
   }
 
-  // @gate enableSchedulerSetImmediate
   it('task that finishes before deadline', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Task');
@@ -153,7 +152,6 @@ describe('SchedulerDOMSetImmediate', () => {
     runtime.assertLog(['setImmediate Callback', 'Task']);
   });
 
-  // @gate enableSchedulerSetImmediate
   it('task with continuation', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Task');
@@ -179,7 +177,6 @@ describe('SchedulerDOMSetImmediate', () => {
     runtime.assertLog(['setImmediate Callback', 'Continuation']);
   });
 
-  // @gate enableSchedulerSetImmediate
   it('multiple tasks', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('A');
@@ -192,7 +189,6 @@ describe('SchedulerDOMSetImmediate', () => {
     runtime.assertLog(['setImmediate Callback', 'A', 'B']);
   });
 
-  // @gate enableSchedulerSetImmediate
   it('multiple tasks with a yield in between', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('A');
@@ -213,7 +209,6 @@ describe('SchedulerDOMSetImmediate', () => {
     runtime.assertLog(['setImmediate Callback', 'B']);
   });
 
-  // @gate enableSchedulerSetImmediate
   it('cancels tasks', () => {
     const task = scheduleCallback(NormalPriority, () => {
       runtime.log('Task');
@@ -223,7 +218,6 @@ describe('SchedulerDOMSetImmediate', () => {
     runtime.assertLog([]);
   });
 
-  // @gate enableSchedulerSetImmediate
   it('throws when a task errors then continues in a new event', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('Oops!');
@@ -241,7 +235,6 @@ describe('SchedulerDOMSetImmediate', () => {
     runtime.assertLog(['setImmediate Callback', 'Yay']);
   });
 
-  // @gate enableSchedulerSetImmediate
   it('schedule new task after queue has emptied', () => {
     scheduleCallback(NormalPriority, () => {
       runtime.log('A');
@@ -259,7 +252,6 @@ describe('SchedulerDOMSetImmediate', () => {
     runtime.assertLog(['setImmediate Callback', 'B']);
   });
 
-  // @gate enableSchedulerSetImmediate
   it('schedule new task after a cancellation', () => {
     const handle = scheduleCallback(NormalPriority, () => {
       runtime.log('A');
