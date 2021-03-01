@@ -197,10 +197,15 @@ export function propagateContextChange<T>(
   renderLanes: Lanes,
 ): void {
   if (enableLazyContextPropagation) {
+    // TODO: This path is only used by Cache components. Update
+    // lazilyPropagateParentContextChanges to look for Cache components so they
+    // can take advantage of lazy propagation.
+    const forcePropagateEntireTree = true;
     propagateContextChanges(
       workInProgress,
       [context, changedBits],
       renderLanes,
+      forcePropagateEntireTree,
     );
   } else {
     propagateContextChange_eager(
@@ -349,6 +354,7 @@ function propagateContextChanges<T>(
   workInProgress: Fiber,
   contexts: Array<any>,
   renderLanes: Lanes,
+  forcePropagateEntireTree: boolean,
 ): void {
   // Only used by lazy implemenation
   if (!enableLazyContextPropagation) {
@@ -397,6 +403,22 @@ function propagateContextChanges<T>(
             }
             scheduleWorkOnParentPath(consumer.return, renderLanes);
 
+            if (!forcePropagateEntireTree) {
+              // During lazy propagation, when we find a match, we can defer
+              // propagating changes to the children, because we're going to
+              // visit them during render. We should continue propagating the
+              // siblings, though
+              nextFiber = null;
+
+              // Keep track of subtrees whose propagation we deferred
+              if (deferredPropagation === null) {
+                deferredPropagation = new Set([consumer]);
+              } else {
+                deferredPropagation.add(consumer);
+              }
+              nextFiber = null;
+            }
+
             // Since we already found a match, we can stop traversing the
             // dependency list.
             break findChangedDep;
@@ -426,7 +448,7 @@ function propagateContextChanges<T>(
       // on its children. We'll use the childLanes on
       // this fiber to indicate that a context has changed.
       scheduleWorkOnParentPath(parentSuspense, renderLanes);
-      nextFiber = fiber.sibling;
+      nextFiber = null;
     } else {
       // Traverse down.
       nextFiber = fiber.child;
@@ -459,14 +481,58 @@ function propagateContextChanges<T>(
   }
 }
 
-// Alias for propagating a deferred tree (Suspense, Offscreen). Currently it's
-// the same algorithm but there may be a way to optimize one or the other.
-export const propagateParentContextChangesToDeferredTree = lazilyPropagateParentContextChanges;
-
 export function lazilyPropagateParentContextChanges(
   current: Fiber,
   workInProgress: Fiber,
   renderLanes: Lanes,
+) {
+  const forcePropagateEntireTree = false;
+  propagateParentContextChanges(
+    current,
+    workInProgress,
+    renderLanes,
+    forcePropagateEntireTree,
+  );
+}
+
+// Used for propagating a deferred tree (Suspense, Offscreen). We must propagate
+// to the entire subtree, because we won't revisit it until after the current
+// render has completed, at which point we'll have lost track of which providers
+// have changed.
+export function propagateParentContextChangesToDeferredTree(
+  current: Fiber,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+) {
+  const forcePropagateEntireTree = true;
+  propagateParentContextChanges(
+    current,
+    workInProgress,
+    renderLanes,
+    forcePropagateEntireTree,
+  );
+}
+
+// Used by lazy context propagation algorithm. When we find a context dependency
+// match, we don't propagate the changes any further into that fiber's subtree.
+// We add the matched fibers to this set. Later, if something inside that
+// subtree bails out of rendering, the presence of a parent fiber in this Set
+// tells us that we need to continue propagating.
+//
+// This is a set of _current_ fibers, not work-in-progress fibers. That's why
+// it's a set instead of a flag on the fiber.
+let deferredPropagation: Set<Fiber> | null = null;
+
+export function resetDeferredContextPropagation() {
+  // This is called by prepareFreshStack
+  deferredPropagation = null;
+}
+
+function propagateParentContextChanges(
+  current: Fiber,
+  workInProgress: Fiber,
+  renderLanes: Lanes,
+  forcePropagateEntireTree: boolean,
 ) {
   if (!enableLazyContextPropagation) {
     return false;
@@ -476,9 +542,42 @@ export function lazilyPropagateParentContextChanges(
   // number, we use an Array instead of Set.
   let contexts = null;
   let parent = workInProgress;
-  while (parent !== null && (parent.flags & DidPropagateContext) === NoFlags) {
+  let isInsidePropagationBailout = false;
+  while (parent !== null) {
+    const currentParent = parent.alternate;
+    invariant(
+      currentParent !== null,
+      'Should have a current fiber. This is a bug in React.',
+    );
+
+    if (!isInsidePropagationBailout) {
+      if (deferredPropagation === null) {
+        if ((parent.flags & DidPropagateContext) !== NoFlags) {
+          break;
+        }
+      } else {
+        if (currentParent !== null && deferredPropagation.has(currentParent)) {
+          // We're inside a subtree that previously bailed out of propagation.
+          // We must disregard the the DidPropagateContext flag as we continue
+          // searching for parent providers.
+          isInsidePropagationBailout = true;
+          // We know that none of the providers in between the propagation
+          // bailout and the nearest render bailout above that could have
+          // changed. So we can skip those.
+          do {
+            parent = parent.return;
+            invariant(
+              parent !== null,
+              'Expected to find a bailed out fiber. This is a bug in React.',
+            );
+          } while ((parent.flags & DidPropagateContext) === NoFlags);
+        } else if ((parent.flags & DidPropagateContext) !== NoFlags) {
+          break;
+        }
+      }
+    }
+
     if (parent.tag === ContextProvider) {
-      const currentParent = parent.alternate;
       if (currentParent !== null) {
         const oldProps = currentParent.memoizedProps;
         if (oldProps !== null) {
@@ -507,15 +606,33 @@ export function lazilyPropagateParentContextChanges(
   if (contexts !== null) {
     // If there were any changed providers, search through the children and
     // propagate their changes.
-    propagateContextChanges(workInProgress, contexts, renderLanes);
+    propagateContextChanges(
+      workInProgress,
+      contexts,
+      renderLanes,
+      forcePropagateEntireTree,
+    );
   }
 
-  // This is an optimization so that we only propagate once per subtree. (We
-  // will propagate the same providers to different subtrees, though — that's
-  // why the flag is on the fiber that bailed out, not the provider.) If a
+  // This is an optimization so that we only propagate once per subtree. If a
   // deeply nested child bails out, and it calls this propagation function, it
   // uses this flag to know that the remaining ancestor providers have already
   // been propagated.
+  //
+  // NOTE: This optimization is only necessary because we sometimes enter the
+  // begin phase of nodes that don't have any work scheduled on them —
+  // specifically, the siblings of a node that _does_ have scheduled work. The
+  // siblings will bail out and call this function again, even though we already
+  // propagated content changes to it and its subtree. So we use this flag to
+  // mark that the parent providers already propagated.
+  //
+  // Unfortunately, though, we need to ignore this flag when we're inside a
+  // tree whose context propagation was deferred — that's what the
+  // `deferredPropagation` set is for.
+  //
+  // If we could instead bail out before entering the siblings' beging phase,
+  // then we could remove both `DidPropagateContext` and `deferredPropagation`.
+  // Consider this as part of the next refactor to the fiber tree structure.
   workInProgress.flags |= DidPropagateContext;
 }
 

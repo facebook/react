@@ -542,8 +542,8 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  // @gate enableCache
-  test('context is propagated across through offscreen trees', async () => {
+  // @gate experimental
+  test('context is propagated through offscreen trees', async () => {
     const LegacyHidden = React.unstable_LegacyHidden;
 
     const root = ReactNoop.createRoot();
@@ -588,7 +588,7 @@ describe('ReactLazyContextPropagation', () => {
     expect(root).toMatchRenderedOutput('BB');
   });
 
-  // @gate enableCache
+  // @gate experimental
   test('multiple contexts are propagated across through offscreen trees', async () => {
     // Same as previous test, but with multiple context providers
     const LegacyHidden = React.unstable_LegacyHidden;
@@ -672,6 +672,234 @@ describe('ReactLazyContextPropagation', () => {
       );
       return <Context.Provider value={value}>{children}</Context.Provider>;
     }
+
+    function Child() {
+      const value = useContext(Context);
+      return <Text text={value} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['A', 'A']);
+    expect(root).toMatchRenderedOutput('AA');
+
+    await ReactNoop.act(async () => {
+      setContext('B');
+    });
+    expect(Scheduler).toHaveYielded(['B', 'B']);
+    expect(root).toMatchRenderedOutput('BB');
+  });
+
+  test('nested bailouts', async () => {
+    // Lazy context propagation will stop propagating when it hits the first
+    // match. If we bail out again inside that tree, we must resume propagating.
+
+    const Context = React.createContext('A');
+
+    let setContext;
+    function App() {
+      const [value, setValue] = useState('A');
+      setContext = setValue;
+      return (
+        <Context.Provider value={value}>
+          <ChildIndirection />
+        </Context.Provider>
+      );
+    }
+
+    const ChildIndirection = React.memo(() => {
+      return <Child />;
+    });
+
+    function Child() {
+      const value = useContext(Context);
+      return (
+        <>
+          <Text text={value} />
+          <DeepChildIndirection />
+        </>
+      );
+    }
+
+    const DeepChildIndirection = React.memo(() => {
+      return <DeepChild />;
+    });
+
+    function DeepChild() {
+      const value = useContext(Context);
+      return <Text text={value} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['A', 'A']);
+    expect(root).toMatchRenderedOutput('AA');
+
+    await ReactNoop.act(async () => {
+      setContext('B');
+    });
+    expect(Scheduler).toHaveYielded(['B', 'B']);
+    expect(root).toMatchRenderedOutput('BB');
+  });
+
+  // @gate experimental
+  // @gate enableCache
+  test('nested bailouts across retries', async () => {
+    // Lazy context propagation will stop propagating when it hits the first
+    // match. If we bail out again inside that tree, we must resume propagating.
+
+    const Context = React.createContext('A');
+
+    let setContext;
+    function App() {
+      const [value, setValue] = useState('A');
+      setContext = setValue;
+      return (
+        <Context.Provider value={value}>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Async value={value} />
+          </Suspense>
+        </Context.Provider>
+      );
+    }
+
+    function Async({value}) {
+      // When this suspends, we won't be able to visit its children during the
+      // current render. So we must take extra care to propagate the context
+      // change in such a way that they're aren't lost when we retry in a
+      // later render.
+      readText(value);
+      return <Child value={value} />;
+    }
+
+    function Child() {
+      const value = useContext(Context);
+      return (
+        <>
+          <Text text={value} />
+          <DeepChildIndirection />
+        </>
+      );
+    }
+
+    const DeepChildIndirection = React.memo(() => {
+      return <DeepChild />;
+    });
+
+    function DeepChild() {
+      const value = useContext(Context);
+      return <Text text={value} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await seedNextTextCache('A');
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['A', 'A']);
+    expect(root).toMatchRenderedOutput('AA');
+
+    await ReactNoop.act(async () => {
+      setContext('B');
+    });
+    expect(Scheduler).toHaveYielded(['Suspend! [B]', 'Loading...']);
+    expect(root).toMatchRenderedOutput('Loading...');
+
+    await ReactNoop.act(async () => {
+      await resolveText('B');
+    });
+    expect(Scheduler).toHaveYielded(['B', 'B']);
+    expect(root).toMatchRenderedOutput('BB');
+  });
+
+  // @gate experimental
+  test('nested bailouts through offscreen trees', async () => {
+    // Lazy context propagation will stop propagating when it hits the first
+    // match. If we bail out again inside that tree, we must resume propagating.
+
+    const LegacyHidden = React.unstable_LegacyHidden;
+
+    const Context = React.createContext('A');
+
+    let setContext;
+    function App() {
+      const [value, setValue] = useState('A');
+      setContext = setValue;
+      return (
+        <Context.Provider value={value}>
+          <LegacyHidden mode="hidden">
+            <Child />
+          </LegacyHidden>
+        </Context.Provider>
+      );
+    }
+
+    function Child() {
+      const value = useContext(Context);
+      return (
+        <>
+          <Text text={value} />
+          <DeepChildIndirection />
+        </>
+      );
+    }
+
+    const DeepChildIndirection = React.memo(() => {
+      return <DeepChild />;
+    });
+
+    function DeepChild() {
+      const value = useContext(Context);
+      return <Text text={value} />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded(['A', 'A']);
+    expect(root).toMatchRenderedOutput('AA');
+
+    await ReactNoop.act(async () => {
+      setContext('B');
+    });
+    expect(Scheduler).toHaveYielded(['B', 'B']);
+    expect(root).toMatchRenderedOutput('BB');
+  });
+
+  test('finds context consumers in multiple sibling branches', async () => {
+    // This test confirms that when we find a matching context consumer during
+    // propagation, we continue propagating to its sibling branches.
+
+    const Context = React.createContext('A');
+
+    let setContext;
+    function App() {
+      const [value, setValue] = useState('A');
+      setContext = setValue;
+      return (
+        <Context.Provider value={value}>
+          <Blah />
+        </Context.Provider>
+      );
+    }
+
+    const Blah = React.memo(() => {
+      return (
+        <>
+          <Indirection />
+          <Indirection />
+        </>
+      );
+    });
+
+    const Indirection = React.memo(() => {
+      return <Child />;
+    });
 
     function Child() {
       const value = useContext(Context);
