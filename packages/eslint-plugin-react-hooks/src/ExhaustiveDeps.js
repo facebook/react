@@ -1232,14 +1232,112 @@ export default {
               break; // Unhandled
           }
           break; // Unhandled
-        default:
+        case 'CallExpression':
           // useEffect(generateEffectBody(), []);
-          reportProblem({
-            node: reactiveHook,
-            message:
-              `React Hook ${reactiveHookName} received a function whose dependencies ` +
-              `are unknown. Pass an inline function instead.`,
+          if (!declaredDependenciesNode) {
+            // No deps, no problems.
+            return; // Handled
+          }
+          const callee = callback.callee;
+
+          // Treat callee like Identifier
+          // The function being called is not written inline.
+          // But perhaps it's in the dependencies array?
+          // If it's already in the list of deps, we don't care about the function itself
+          if (
+            !declaredDependenciesNode.elements ||
+            !declaredDependenciesNode.elements.some(
+              el => el && el.type === 'Identifier' && el.name === callee.name,
+            )
+          ) {
+            // We need to check if it's declared outside the component scope
+            const calleeVariable = context.getScope().set.get(callee.name);
+            if (calleeVariable == null || calleeVariable.defs == null) {
+              // If it's not in scope, we don't care.
+            } else {
+              // Function is declared in the component scope and written inline - try to check its dependencies
+              const calleeDef = calleeVariable.defs[0];
+              if (!calleeDef || !calleeDef.node) {
+                break; // Unhandled
+              }
+              if (
+                calleeDef.type !== 'Variable' &&
+                calleeDef.type !== 'FunctionName'
+              ) {
+                // Parameter or an unusual pattern. Bail out.
+                break; // Unhandled
+              }
+              switch (calleeDef.node.type) {
+                case 'FunctionDeclaration':
+                  // function effectBody() {...};
+                  // useEffect(effectBody(), []);
+                  visitFunctionWithDependencies(
+                    calleeDef.node,
+                    declaredDependenciesNode,
+                    reactiveHook,
+                    reactiveHookName,
+                    isEffect,
+                  );
+                  break;
+                case 'VariableDeclarator':
+                  const init = calleeDef.node.init;
+                  if (!init) {
+                    break; // Unhandled
+                  }
+                  switch (init.type) {
+                    // const effectBody = () => () => {...};
+                    // useEffect(effectBody(), []);
+                    case 'ArrowFunctionExpression':
+                    case 'FunctionExpression':
+                      // We can inspect this function as if it were inline.
+                      visitFunctionWithDependencies(
+                        init,
+                        declaredDependenciesNode,
+                        reactiveHook,
+                        reactiveHookName,
+                        isEffect,
+                      );
+                  }
+                  break; // Unhandled
+              }
+            }
+          }
+
+          // Treat any Identifier args like Identifier above
+          callback.arguments.forEach(arg => {
+            switch (arg.type) {
+              // useCallback(debounceThing(a), [a])
+              case 'Identifier':
+                if (
+                  !declaredDependenciesNode.elements ||
+                  !declaredDependenciesNode.elements.some(
+                    el =>
+                      el && el.type === 'Identifier' && el.name === arg.name,
+                  )
+                ) {
+                  // Not in the dependencies -> error
+                  reportProblem({
+                    node: reactiveHook,
+                    message:
+                      `React Hook ${reactiveHookName} has a missing dependency: '${arg.name}'. ` +
+                      `Either include it or remove the dependency array.`,
+                  });
+                }
+                break;
+              // Treat any callback args like callbacks themselves
+              case 'ArrowFunctionExpression':
+              case 'FunctionExpression':
+                // useCallback(debounce(() => doSomething(a)), [doSomething, a])
+                visitFunctionWithDependencies(
+                  arg,
+                  declaredDependenciesNode,
+                  reactiveHook,
+                  reactiveHookName,
+                  isEffect,
+                );
+            }
           });
+
           return; // Handled
       }
 

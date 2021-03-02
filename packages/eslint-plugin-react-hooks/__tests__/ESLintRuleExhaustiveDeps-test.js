@@ -1436,6 +1436,40 @@ const tests = {
         }
       `,
     },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const delay = true ? 10 : 20;
+          const local = 'Hello';
+          useEffect(debounce(() => {
+            console.log(local);
+          }, delay), [local, delay]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const delay = true ? 10 : 20;
+          const local = 'Hello';
+          const callLater = useCallback((callback) => setTimeout(callback, delay), [delay]);
+          useEffect(callLater(() => {
+            console.log(local);
+          }), [callLater, local]);
+        }
+      `,
+    },
+    {
+      code: normalizeIndent`
+        import { debounce } from 'lodash';
+        function MyComponent() {
+          const local = 'Hello';
+          const callLater = useCallback(debounce(() => {
+            console.log(local)
+          }, 200), [local]);
+        }
+      `,
+    },
   ],
   invalid: [
     {
@@ -6996,9 +7030,54 @@ const tests = {
       errors: [
         {
           message:
-            'React Hook useEffect received a function whose dependencies ' +
-            'are unknown. Pass an inline function instead.',
-          suggestions: [],
+            `React Hook useEffect has a missing dependency: 'delay'. ` +
+            `Either include it or remove the dependency array.`,
+        },
+        {
+          message:
+            `React Hook useEffect has a missing dependency: 'local'. ` +
+            `Either include it or remove the dependency array.`,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const delay = true ? 1 : 2;
+          const local = {};
+          const callLater = (callback) => setTimeout(callback, delay)
+          useEffect(callLater(() => {
+            console.log(local);
+          }), []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            `React Hook useEffect has a missing dependency: 'delay'. ` +
+            `Either include it or remove the dependency array.`,
+        },
+        {
+          message:
+            `React Hook useEffect has a missing dependency: 'local'. ` +
+            `Either include it or remove the dependency array.`,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent() {
+          const local = true ? 'Hello' : 'World';
+          const myCallback = useCallback(debounce(() => {
+            console.log(local)
+          }, 200), []);
+        }
+      `,
+      errors: [
+        {
+          message:
+            `React Hook useCallback has a missing dependency: 'local'. ` +
+            `Either include it or remove the dependency array.`,
         },
       ],
     },
