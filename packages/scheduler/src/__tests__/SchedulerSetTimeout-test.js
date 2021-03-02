@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
+ * @jest-environment node
  */
 
 'use strict';
@@ -16,21 +17,19 @@ let UserBlockingPriority;
 let NormalPriority;
 
 describe('SchedulerNoDOM', () => {
-  // If Scheduler runs in a non-DOM environment, it falls back to a naive
-  // implementation using setTimeout. This only meant to be used for testing
-  // purposes, like with jest's fake timer API.
+  // Scheduler falls back to a naive implementation using setTimeout.
+  // This is only meant to be used for testing purposes, like with jest's fake timer API.
   beforeEach(() => {
     jest.resetModules();
     jest.useFakeTimers();
+    jest.unmock('scheduler');
 
-    // Un-mock scheduler
-    jest.mock('scheduler', () =>
-      require.requireActual('scheduler/unstable_no_dom'),
-    );
+    const window = {};
+    window.setTimeout = setTimeout;
+    global.window = window;
 
     Scheduler = require('scheduler');
     scheduleCallback = Scheduler.unstable_scheduleCallback;
-    ImmediatePriority = Scheduler.unstable_ImmediatePriority;
     UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
     NormalPriority = Scheduler.unstable_NormalPriority;
   });
