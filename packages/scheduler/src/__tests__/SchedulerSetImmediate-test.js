@@ -33,9 +33,9 @@ let UserBlockingPriority;
 describe('SchedulerDOMSetImmediate', () => {
   beforeEach(() => {
     jest.resetModules();
+    runtime = installMockBrowserRuntime();
     jest.unmock('scheduler');
 
-    runtime = installMockBrowserRuntime();
     performance = global.performance;
     Scheduler = require('scheduler');
     cancelCallback = Scheduler.unstable_cancelCallback;
@@ -66,16 +66,12 @@ describe('SchedulerDOMSetImmediate', () => {
       },
     };
 
-    const window = {};
-    global.window = window;
-
-    window.setTimeout = (cb, delay) => {
+    global.setTimeout = (cb, delay) => {
       const id = timerIDCounter++;
       log(`Set Timer`);
-      // TODO
       return id;
     };
-    window.clearTimeout = id => {
+    global.clearTimeout = id => {
       // TODO
     };
 
@@ -92,7 +88,7 @@ describe('SchedulerDOMSetImmediate', () => {
     };
 
     let pendingSetImmediateCallback = null;
-    window.setImmediate = function(cb) {
+    global.setImmediate = function(cb) {
       if (pendingSetImmediateCallback) {
         throw Error('Message event already scheduled');
       }
@@ -137,6 +133,19 @@ describe('SchedulerDOMSetImmediate', () => {
       assertLog,
     };
   }
+
+  it('does not use setImmediate override', () => {
+    global.setImmediate = () => {
+      throw new Error('Should not throw');
+    };
+
+    scheduleCallback(NormalPriority, () => {
+      runtime.log('Task');
+    });
+    runtime.assertLog(['Set Immediate']);
+    runtime.fireSetImmediate();
+    runtime.assertLog(['setImmediate Callback', 'Task']);
+  });
 
   it('task that finishes before deadline', () => {
     scheduleCallback(NormalPriority, () => {

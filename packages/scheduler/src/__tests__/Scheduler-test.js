@@ -32,9 +32,9 @@ let NormalPriority;
 describe('SchedulerBrowser', () => {
   beforeEach(() => {
     jest.resetModules();
+    runtime = installMockBrowserRuntime();
     jest.unmock('scheduler');
 
-    runtime = installMockBrowserRuntime();
     performance = global.performance;
     Scheduler = require('scheduler');
     cancelCallback = Scheduler.unstable_cancelCallback;
@@ -66,16 +66,16 @@ describe('SchedulerBrowser', () => {
       },
     };
 
-    const window = {};
-    global.window = window;
+    // Delete node provide setImmediate so we fall through to MessageChannel.
+    delete global.setImmediate;
 
-    window.setTimeout = (cb, delay) => {
+    global.setTimeout = (cb, delay) => {
       const id = timerIDCounter++;
       log(`Set Timer`);
       // TODO
       return id;
     };
-    window.clearTimeout = id => {
+    global.clearTimeout = id => {
       // TODO
     };
 
