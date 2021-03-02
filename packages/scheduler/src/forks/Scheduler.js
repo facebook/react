@@ -85,12 +85,10 @@ var isHostCallbackScheduled = false;
 var isHostTimeoutScheduled = false;
 
 // Capture local references to native APIs, in case a polyfill overrides them.
-const localSetTimeout =
-  typeof window !== 'undefined' ? window.setTimeout : setTimeout;
-const localClearTimeout =
-  typeof window !== 'undefined' ? window.clearTimeout : clearTimeout;
+const localSetTimeout = setTimeout;
+const localClearTimeout = clearTimeout;
 const localSetImmediate =
-  typeof window !== 'undefined' ? window.setImmediate : setImmediate; // IE and Node.js + jsdom
+  typeof setImmediate !== 'undefined' ? setImmediate : null; // IE and Node.js + jsdom
 
 function advanceTimers(currentTime) {
   // Check for tasks that are no longer delayed and add them to the queue.

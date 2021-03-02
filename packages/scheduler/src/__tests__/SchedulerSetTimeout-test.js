@@ -22,11 +22,8 @@ describe('SchedulerNoDOM', () => {
   beforeEach(() => {
     jest.resetModules();
     jest.useFakeTimers();
+    delete global.setImmediate;
     jest.unmock('scheduler');
-
-    const window = {};
-    window.setTimeout = setTimeout;
-    global.window = window;
 
     Scheduler = require('scheduler');
     scheduleCallback = Scheduler.unstable_scheduleCallback;
