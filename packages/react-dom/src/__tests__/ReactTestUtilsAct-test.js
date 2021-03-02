@@ -72,6 +72,33 @@ describe('ReactTestUtils.act()', () => {
 
   runActTests('legacy mode', renderLegacy, unmountLegacy, rerenderLegacy);
 
+  // and then in blocking mode
+  if (__EXPERIMENTAL__) {
+    let blockingRoot = null;
+    const renderBatched = (el, dom) => {
+      blockingRoot = ReactDOM.unstable_createBlockingRoot(dom);
+      blockingRoot.render(el);
+    };
+
+    const unmountBatched = dom => {
+      if (blockingRoot !== null) {
+        blockingRoot.unmount();
+        blockingRoot = null;
+      }
+    };
+
+    const rerenderBatched = el => {
+      blockingRoot.render(el);
+    };
+
+    runActTests(
+      'blocking mode',
+      renderBatched,
+      unmountBatched,
+      rerenderBatched,
+    );
+  }
+
   describe('unacted effects', () => {
     function App() {
       React.useEffect(() => {}, []);
@@ -92,6 +119,19 @@ describe('ReactTestUtils.act()', () => {
           </React.StrictMode>,
           document.createElement('div'),
         );
+      }).toErrorDev([
+        'An update to App ran an effect, but was not wrapped in act(...)',
+      ]);
+    });
+
+    // @gate experimental
+    it('warns in blocking mode', () => {
+      expect(() => {
+        const root = ReactDOM.unstable_createBlockingRoot(
+          document.createElement('div'),
+        );
+        root.render(<App />);
+        Scheduler.unstable_flushAll();
       }).toErrorDev([
         'An update to App ran an effect, but was not wrapped in act(...)',
       ]);
@@ -691,10 +731,14 @@ function runActTests(label, render, unmount, rerender) {
 
         it('triggers fallbacks if available', async () => {
           if (label !== 'legacy mode') {
-            // FIXME: Support for Concurrent Root intentionally removed
-            // from the public version of `act`. It will be added back in
-            // a future major version, Concurrent Root officially released.
-            // Consider skipping all non-Legacy tests in this suite until then.
+            // FIXME: Support for Blocking* and Concurrent Mode were
+            // intentionally removed from the public version of `act`. It will
+            // be added back in a future major version, before Blocking and and
+            // Concurrent Mode are officially released. Consider disabling all
+            // non-Legacy tests in this suite until then.
+            //
+            // *Blocking Mode actually does happen to work, though
+            // not "officially" since it's an unreleased feature.
             return;
           }
 
@@ -750,8 +794,10 @@ function runActTests(label, render, unmount, rerender) {
             // In Concurrent Mode, refresh transitions delay indefinitely.
             expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
           } else {
-            // In Legacy Mode, all fallbacks are forced to display,
-            // even during a refresh transition.
+            // In Legacy Mode and Blocking Mode, all fallbacks are forced to
+            // display, even during a refresh transition.
+            // TODO: Consider delaying indefinitely in Blocking Mode, to match
+            // Concurrent Mode semantics.
             expect(
               document.querySelector('[data-test-id=spinner]'),
             ).not.toBeNull();

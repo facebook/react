@@ -20,6 +20,7 @@ export {
   unmountComponentAtNode,
   // exposeConcurrentModeAPIs
   createRoot as unstable_createRoot,
+  createBlockingRoot as unstable_createBlockingRoot,
   unstable_flushControlled,
   unstable_scheduleHydration,
   // DO NOT USE: Temporarily exposing this to migrate off of Scheduler.runWithPriority.

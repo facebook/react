@@ -127,7 +127,7 @@ describe('ReactDOMServerSuspense', () => {
     expect(divB.textContent).toBe('B');
 
     act(() => {
-      const root = ReactDOM.createRoot(parent, {hydrate: true});
+      const root = ReactDOM.createBlockingRoot(parent, {hydrate: true});
       root.render(example);
     });
 

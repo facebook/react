@@ -123,4 +123,46 @@ describe('ReactOffscreen', () => {
       </>,
     );
   });
+
+  // @gate experimental
+  it('does not defer in blocking mode', async () => {
+    let setState;
+    function Foo() {
+      const [state, _setState] = useState('A');
+      setState = _setState;
+      return <Text text={state} />;
+    }
+
+    const root = ReactNoop.createBlockingRoot();
+    await ReactNoop.act(async () => {
+      root.render(
+        <>
+          <LegacyHidden mode="hidden">
+            <Foo />
+          </LegacyHidden>
+          <Text text="Outside" />
+        </>,
+      );
+      // Should not defer the hidden tree
+      expect(Scheduler).toFlushUntilNextPaint(['A', 'Outside']);
+    });
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="A" />
+        <span prop="Outside" />
+      </>,
+    );
+
+    // Test that the children can be updated
+    await ReactNoop.act(async () => {
+      setState('B');
+    });
+    expect(Scheduler).toHaveYielded(['B']);
+    expect(root).toMatchRenderedOutput(
+      <>
+        <span prop="B" />
+        <span prop="Outside" />
+      </>,
+    );
+  });
 });
