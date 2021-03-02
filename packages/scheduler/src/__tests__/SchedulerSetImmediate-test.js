@@ -287,3 +287,17 @@ describe('SchedulerDOMSetImmediate', () => {
     runtime.assertLog(['setImmediate Callback', 'B']);
   });
 });
+
+it('does not crash if setImmediate is undefined', () => {
+  jest.resetModules();
+  const originalSetImmediate = global.setImmediate;
+  try {
+    delete global.setImmediate;
+    jest.unmock('scheduler');
+    expect(() => {
+      require('scheduler');
+    }).not.toThrow();
+  } finally {
+    global.setImmediate = originalSetImmediate;
+  }
+});

@@ -95,3 +95,34 @@ describe('SchedulerNoDOM', () => {
     expect(log).toEqual(['B', 'C']);
   });
 });
+
+// See: https://github.com/facebook/react/pull/13088
+describe('does not crash non-node SSR environments', () => {
+  it('if setTimeout is undefined', () => {
+    jest.resetModules();
+    const originalSetTimeout = global.setTimeout;
+    try {
+      delete global.setTimeout;
+      jest.unmock('scheduler');
+      expect(() => {
+        require('scheduler');
+      }).not.toThrow();
+    } finally {
+      global.setTimeout = originalSetTimeout;
+    }
+  });
+
+  it('if clearTimeout is undefined', () => {
+    jest.resetModules();
+    const originalClearTimeout = global.clearTimeout;
+    try {
+      delete global.clearTimeout;
+      jest.unmock('scheduler');
+      expect(() => {
+        require('scheduler');
+      }).not.toThrow();
+    } finally {
+      global.clearTimeout = originalClearTimeout;
+    }
+  });
+});
