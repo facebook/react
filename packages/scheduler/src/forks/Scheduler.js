@@ -85,8 +85,9 @@ var isHostCallbackScheduled = false;
 var isHostTimeoutScheduled = false;
 
 // Capture local references to native APIs, in case a polyfill overrides them.
-const localSetTimeout = setTimeout;
-const localClearTimeout = clearTimeout;
+const localSetTimeout = typeof setTimeout === 'function' ? setTimeout : null;
+const localClearTimeout =
+  typeof clearTimeout === 'function' ? clearTimeout : null;
 const localSetImmediate =
   typeof setImmediate !== 'undefined' ? setImmediate : null; // IE and Node.js + jsdom
 
