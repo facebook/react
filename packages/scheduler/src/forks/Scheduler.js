@@ -85,11 +85,11 @@ var isHostCallbackScheduled = false;
 var isHostTimeoutScheduled = false;
 
 // Capture local references to native APIs, in case a polyfill overrides them.
-const setTimeout =
+const localSetTimeout =
   typeof window !== 'undefined' ? window.setTimeout : setTimeout;
-const clearTimeout =
+const localClearTimeout =
   typeof window !== 'undefined' ? window.clearTimeout : clearTimeout;
-const setImmediate =
+const localSetImmediate =
   typeof window !== 'undefined' ? window.setImmediate : setImmediate; // IE and Node.js + jsdom
 
 function advanceTimers(currentTime) {
@@ -530,7 +530,7 @@ const performWorkUntilDeadline = () => {
 };
 
 let schedulePerformWorkUntilDeadline;
-if (typeof setImmediate === 'function') {
+if (typeof localSetImmediate === 'function') {
   // Node.js and old IE.
   // There's a few reasons for why we prefer setImmediate.
   //
@@ -543,7 +543,7 @@ if (typeof setImmediate === 'function') {
   // If other browsers ever implement it, it's better to use it.
   // Although both of these would be inferior to native scheduling.
   schedulePerformWorkUntilDeadline = () => {
-    setImmediate(performWorkUntilDeadline);
+    localSetImmediate(performWorkUntilDeadline);
   };
 } else if (typeof MessageChannel !== 'undefined') {
   // DOM and Worker environments.
@@ -557,7 +557,7 @@ if (typeof setImmediate === 'function') {
 } else {
   // We should only fallback here in non-browser environments.
   schedulePerformWorkUntilDeadline = () => {
-    setTimeout(performWorkUntilDeadline, 0);
+    localSetTimeout(performWorkUntilDeadline, 0);
   };
 }
 
@@ -570,13 +570,13 @@ function requestHostCallback(callback) {
 }
 
 function requestHostTimeout(callback, ms) {
-  taskTimeoutID = setTimeout(() => {
+  taskTimeoutID = localSetTimeout(() => {
     callback(getCurrentTime());
   }, ms);
 }
 
 function cancelHostTimeout() {
-  clearTimeout(taskTimeoutID);
+  localClearTimeout(taskTimeoutID);
   taskTimeoutID = -1;
 }
 
