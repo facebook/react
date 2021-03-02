@@ -18,6 +18,7 @@ let performance;
 let cancelCallback;
 let scheduleCallback;
 let NormalPriority;
+let UserBlockingPriority;
 
 // The Scheduler implementation uses browser APIs like `MessageChannel` and
 // `setTimeout` to schedule work on the main thread. Most of our tests treat
@@ -32,9 +33,7 @@ let NormalPriority;
 describe('SchedulerDOMSetImmediate', () => {
   beforeEach(() => {
     jest.resetModules();
-
-    // Un-mock scheduler
-    jest.mock('scheduler', () => require.requireActual('scheduler'));
+    jest.unmock('scheduler');
 
     runtime = installMockBrowserRuntime();
     performance = global.performance;
@@ -42,6 +41,7 @@ describe('SchedulerDOMSetImmediate', () => {
     cancelCallback = Scheduler.unstable_cancelCallback;
     scheduleCallback = Scheduler.unstable_scheduleCallback;
     NormalPriority = Scheduler.unstable_NormalPriority;
+    UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
   });
 
   afterEach(() => {
@@ -68,11 +68,6 @@ describe('SchedulerDOMSetImmediate', () => {
 
     const window = {};
     global.window = window;
-
-    // TODO: Scheduler no longer requires these methods to be polyfilled. But
-    // maybe we want to continue warning if they don't exist, to preserve the
-    // option to rely on it in the future?
-    window.requestAnimationFrame = window.cancelAnimationFrame = () => {};
 
     window.setTimeout = (cb, delay) => {
       const id = timerIDCounter++;
@@ -187,6 +182,18 @@ describe('SchedulerDOMSetImmediate', () => {
     runtime.assertLog(['Set Immediate']);
     runtime.fireSetImmediate();
     runtime.assertLog(['setImmediate Callback', 'A', 'B']);
+  });
+
+  it('multiple tasks at different priority', () => {
+    scheduleCallback(NormalPriority, () => {
+      runtime.log('A');
+    });
+    scheduleCallback(UserBlockingPriority, () => {
+      runtime.log('B');
+    });
+    runtime.assertLog(['Set Immediate']);
+    runtime.fireSetImmediate();
+    runtime.assertLog(['setImmediate Callback', 'B', 'A']);
   });
 
   it('multiple tasks with a yield in between', () => {

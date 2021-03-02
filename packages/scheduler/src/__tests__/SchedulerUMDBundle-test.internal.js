@@ -21,8 +21,7 @@ describe('Scheduling UMD bundle', () => {
     global.__UMD__ = true;
 
     jest.resetModules();
-
-    jest.mock('scheduler', () => require.requireActual('scheduler'));
+    jest.unmock('scheduler');
 
     // Mock a browser environment since we're testing UMD modules.
     global.window = {
