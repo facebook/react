@@ -104,5 +104,6 @@ function getTestFlags() {
     }
   );
 }
+console.log('Test Sucessfully');
 
 exports.getTestFlags = getTestFlags;
