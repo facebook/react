@@ -1,0 +1,38 @@
+.Container {
+  width: 100%;
+  flex: 1;
+  padding: 0.5rem;
+}
+
+.SummaryGrid {
+  display: grid;
+  grid-template-columns: 1fr max-content;
+  row-gap: 0.25rem;
+  font-family: var(--font-family-sans);
+  font-size: var(--font-size-sans-normal);
+  line-height: 1.5;
+  padding-right: 1rem;
+}
+
+.ComponentNameCol {
+  font-family: var(--font-family-monospace);
+  font-size: var(--font-size-monospace-normal);
+  color: var(--color-component-name);
+  grid-column: 1;
+  pointer-events: none;
+  white-space: pre;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+  display: flex;
+  align-items: center;
+}
+
+.ElementCountCol {
+  grid-column: 2;
+  text-align: right;
+  pointer-events: none;
+  white-space: nowrap;
+  font-weight: 400;
+  padding-left: 0.5rem;
+  padding-right: 0.5rem;
+}
