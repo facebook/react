@@ -64,7 +64,19 @@ if (process.env.CIRCLE_NODE_TOTAL) {
   // will have already removed conflicting files.
   //
   // In CI, merging is handled automatically by CircleCI's workspace feature.
-  spawnSync('rsync', ['-ar', experimentalDir + '/', stableDir + '/']);
+  const {error} = spawnSync('rsync', [
+    '-ar',
+    experimentalDir + '/',
+    stableDir + '/',
+  ]);
+  if (error !== undefined) {
+    if (error.code === 'ENOENT') {
+      throw new Error(
+        `${process.argv[1]} needs the \`rsync\` CLI installed to work.`
+      );
+    }
+    throw error;
+  }
 
   // Now restore the combined directory back to its original name
   // TODO: Currently storing artifacts as `./build2` so that it doesn't conflict
