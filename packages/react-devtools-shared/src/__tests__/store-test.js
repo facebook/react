@@ -1075,10 +1075,7 @@ describe('Store', () => {
       `);
     });
 
-    // This is not great, but it seems safer than potentially flushing between commits.
-    // Our logic for determining how to handle e.g. suspended trees or error boundaries
-    // is built on the assumption that we're evaluating the results of a commit, not an in-progress render.
-    it('during passive get counted (but not until the next commit)', () => {
+    it('during passive get counted (after a delay)', () => {
       function Example() {
         React.useEffect(() => {
           console.error('test-only: passive error');
@@ -1089,18 +1086,20 @@ describe('Store', () => {
       const container = document.createElement('div');
 
       withErrorsOrWarningsIgnored(['test-only:'], () => {
-        act(() => ReactDOM.render(<Example />, container));
+        act(() => {
+          ReactDOM.render(<Example />, container);
+
+          // Flush commit
+          jest.advanceTimersByTime(1);
+
+          expect(store).toMatchInlineSnapshot(`
+            [root]
+                <Example>
+          `);
+        });
       });
 
-      expect(store).toMatchInlineSnapshot(`
-        [root]
-            <Example>
-      `);
-
-      withErrorsOrWarningsIgnored(['test-only:'], () => {
-        act(() => ReactDOM.render(<Example rerender={1} />, container));
-      });
-
+      // After a delay, passive effects should be committed as well
       expect(store).toMatchInlineSnapshot(`
         ✕ 1, ⚠ 1
         [root]

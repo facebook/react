@@ -626,6 +626,13 @@ export function attach(
 
     // If this Fiber is currently being inspected, mark it as needing an udpate as well.
     updateMostRecentlyInspectedElementIfNecessary(fiberID);
+
+    // Passive effects may trigger errors or warnings too;
+    // In this case, we should wait until the rest of the passive effects have run,
+    // but we shouldn't wait until the next commit because that might be a long time.
+    // This would also cause "tearing" between an inspected Component and the tree view.
+    // Then again we don't want to flush too soon because rendering might stil be going on.
+    flushPendingErrorsAndWarningsAfterDelay();
   }
 
   // Patching the console enables DevTools to do a few useful things:
@@ -1218,6 +1225,60 @@ export function attach(
     pendingOperations.push(op);
   }
 
+  let flushPendingErrorsAndWarningsAfterDelayTimeoutID = null;
+  function flushPendingErrorsAndWarningsAfterDelay() {
+    if (flushPendingErrorsAndWarningsAfterDelayTimeoutID !== null) {
+      clearTimeout(flushPendingErrorsAndWarningsAfterDelayTimeoutID);
+    }
+
+    flushPendingErrorsAndWarningsAfterDelayTimeoutID = setTimeout(() => {
+      flushPendingErrorsAndWarningsAfterDelayTimeoutID = null;
+
+      if (pendingOperations.length > 0) {
+        // On the off chance that somethign else has pushed pending operations,
+        // we should bail on warnings; it's probably not safe to push midway.
+        return;
+      }
+
+      recordPendingErrorsAndWarnings();
+
+      if (pendingOperations.length === 0) {
+        // No warnings or errors to flush.
+        return;
+      }
+
+      const operations = new Array(2 + 1 + pendingOperations.length);
+
+      // Identify which renderer this update is coming from.
+      // This enables roots to be mapped to renderers,
+      // Which in turn enables fiber props, states, and hooks to be inspected.
+      let i = 0;
+      operations[i++] = rendererID;
+      operations[i++] = currentRootID; // Use this ID in case the root was unmounted!
+      operations[i++] = 0; // String table size
+
+      // Fill in the rest of the operations.
+      for (let j = 0; j < pendingOperations.length; j++) {
+        operations[i + j] = pendingOperations[j];
+      }
+
+      // Let the frontend know about tree operations.
+      // The first value in this array will identify which root it corresponds to,
+      // so we do no longer need to dispatch a separate root-committed event.
+      if (pendingOperationsQueue !== null) {
+        // Until the frontend has been connected, store the tree operations.
+        // This will let us avoid walking the tree later when the frontend connects,
+        // and it enables the Profiler's reload-and-profile functionality to work as well.
+        pendingOperationsQueue.push(operations);
+      } else {
+        // If we've already connected to the frontend, just pass the operations through.
+        hook.emit('operations', operations);
+      }
+
+      pendingOperations.length = 0;
+    }, 1000);
+  }
+
   function reevaluateErrorsAndWarnings() {
     fibersWithChangedErrorOrWarningCounts.clear();
     fiberToErrorsMap.forEach((countMap, fiberID) => {
@@ -1230,6 +1291,11 @@ export function attach(
   }
 
   function recordPendingErrorsAndWarnings() {
+    if (flushPendingErrorsAndWarningsAfterDelayTimeoutID !== null) {
+      clearTimeout(flushPendingErrorsAndWarningsAfterDelayTimeoutID);
+      flushPendingErrorsAndWarningsAfterDelayTimeoutID = null;
+    }
+
     fibersWithChangedErrorOrWarningCounts.forEach(fiberID => {
       const fiber = idToFiberMap.get(fiberID);
       if (fiber != null) {
