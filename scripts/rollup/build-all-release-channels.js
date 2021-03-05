@@ -64,19 +64,7 @@ if (process.env.CIRCLE_NODE_TOTAL) {
   // will have already removed conflicting files.
   //
   // In CI, merging is handled automatically by CircleCI's workspace feature.
-  const {error} = spawnSync('rsync', [
-    '-ar',
-    experimentalDir + '/',
-    stableDir + '/',
-  ]);
-  if (error !== undefined) {
-    if (error.code === 'ENOENT') {
-      throw new Error(
-        `${process.argv[1]} needs the \`rsync\` CLI installed to work.`
-      );
-    }
-    throw error;
-  }
+  mergeDirsSync(experimentalDir + '/', stableDir + '/');
 
   // Now restore the combined directory back to its original name
   // TODO: Currently storing artifacts as `./build2` so that it doesn't conflict
@@ -197,4 +185,24 @@ function updateTheReactVersionThatDevToolsReads(version) {
     './packages/shared/ReactVersion.js',
     `export default '${version}';\n`
   );
+}
+
+/**
+ * cross-platform alternative to `rsync -ar`
+ * @param {string} source
+ * @param {string} destination
+ */
+function mergeDirsSync(source, destination) {
+  for (const sourceFileBaseName of fs.readdirSync(source)) {
+    const sourceFileName = path.join(source, sourceFileBaseName);
+    const targetFileName = path.join(destination, sourceFileBaseName);
+
+    const sourceFile = fs.statSync(sourceFileName);
+    if (sourceFile.isDirectory()) {
+      fse.ensureDirSync(targetFileName);
+      mergeDirsSync(sourceFileName, targetFileName);
+    } else {
+      fs.copyFileSync(sourceFileName, targetFileName);
+    }
+  }
 }
