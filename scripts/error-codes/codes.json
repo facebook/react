@@ -374,5 +374,7 @@
   "383": "This query has received fewer parameters than the last time the same query was used. Always pass the exact number of parameters that the query needs.",
   "384": "Refreshing the cache is not supported in Server Components.",
   "385": "A mutable source was mutated while the %s component was rendering. This is not supported. Move any mutations into event handlers or effects.",
-  "386": "The current renderer does not support microtasks. This error is likely caused by a bug in React. Please file an issue."
+  "386": "The current renderer does not support microtasks. This error is likely caused by a bug in React. Please file an issue.",
+  "387": "Warning: The object passed back from useOpaqueIdentifier and those made from it are meant to be passed through to attributes only. Do not read the value directly.",
+  "388": "The key was not found in the index map in makeNewFromKey. This is a bug in react."
 }

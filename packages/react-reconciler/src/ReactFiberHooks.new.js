@@ -135,8 +135,10 @@ export type UpdateQueue<S, A> = {|
 
 let didWarnAboutMismatchedHooksForComponent;
 let didWarnAboutUseOpaqueIdentifier;
+let didWarnAboutDuplicateOpaqueIdentifierKeys;
 if (__DEV__) {
   didWarnAboutUseOpaqueIdentifier = {};
+  didWarnAboutDuplicateOpaqueIdentifierKeys = {};
   didWarnAboutMismatchedHooksForComponent = new Set();
 }
 
@@ -1786,20 +1788,35 @@ function warnOnOpaqueIdentifierAccessInDEV(fiber) {
     const name = getComponentNameFromFiber(fiber) || 'Unknown';
     if (getIsRendering() && !didWarnAboutUseOpaqueIdentifier[name]) {
       console.error(
-        'The object passed back from useOpaqueIdentifier is meant to be ' +
-          'passed through to attributes only. Do not read the ' +
-          'value directly.',
+        'Warning: The object passed back from useOpaqueIdentifier and those made from it are meant to be passed through to attributes only. Do not read the value directly.',
       );
       didWarnAboutUseOpaqueIdentifier[name] = true;
     }
   }
 }
 
+function warnOnDuplicateOpaqueIdentifierKeyInDEV(fiber) {
+  if (__DEV__) {
+    const name = getComponentName(fiber.type) || 'Unknown';
+    if (getIsRendering() && !didWarnAboutDuplicateOpaqueIdentifierKeys[name]) {
+      console.error(
+        'Warning: Detected that two nested opaque identifiers with the same parent were created with identical keys. Keys must be unique.',
+      );
+    }
+    didWarnAboutDuplicateOpaqueIdentifierKeys[name] = true;
+  }
+}
+
 function mountOpaqueIdentifier(): OpaqueIDType | void {
+  const warnOnDuplicateKeys = warnOnDuplicateOpaqueIdentifierKeyInDEV.bind(
+    null,
+    currentlyRenderingFiber,
+  );
   const makeId = __DEV__
     ? makeClientIdInDEV.bind(
         null,
         warnOnOpaqueIdentifierAccessInDEV.bind(null, currentlyRenderingFiber),
+        warnOnDuplicateKeys,
       )
     : makeClientId;
 
@@ -1823,11 +1840,10 @@ function mountOpaqueIdentifier(): OpaqueIDType | void {
       }
       invariant(
         false,
-        'The object passed back from useOpaqueIdentifier is meant to be ' +
-          'passed through to attributes only. Do not read the value directly.',
+        'Warning: The object passed back from useOpaqueIdentifier and those made from it are meant to be passed through to attributes only. Do not read the value directly.',
       );
     };
-    const id = makeOpaqueHydratingObject(readValue);
+    const id = makeOpaqueHydratingObject(readValue, warnOnDuplicateKeys);
 
     const setId = mountState(id)[1];
 
