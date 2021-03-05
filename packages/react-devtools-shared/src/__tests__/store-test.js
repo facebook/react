@@ -1075,43 +1075,110 @@ describe('Store', () => {
       `);
     });
 
-    it('during passive get counted (after a delay)', () => {
-      function Example() {
-        React.useEffect(() => {
-          console.error('test-only: passive error');
-          console.warn('test-only: passive warning');
-        });
-        return null;
+    describe('during passive effects', () => {
+      function flushPendingBridgeOperations() {
+        jest.runOnlyPendingTimers();
       }
-      const container = document.createElement('div');
 
-      withErrorsOrWarningsIgnored(['test-only:'], () => {
-        act(() => {
-          ReactDOM.render(<Example />, container);
-          // flush bridge operations
-          jest.runOnlyPendingTimers();
-        }, false);
+      // Gross abstraction around pending passive warning/error delay.
+      function flushPendingPassiveErrorAndWarningCounts() {
+        jest.advanceTimersByTime(1000);
+      }
+
+      it('are counted (after a delay)', () => {
+        function Example() {
+          React.useEffect(() => {
+            console.error('test-only: passive error');
+            console.warn('test-only: passive warning');
+          });
+          return null;
+        }
+        const container = document.createElement('div');
+
+        withErrorsOrWarningsIgnored(['test-only:'], () => {
+          act(() => {
+            ReactDOM.render(<Example />, container);
+          }, false);
+        });
+        flushPendingBridgeOperations();
+        expect(store).toMatchInlineSnapshot(`
+          [root]
+              <Example>
+        `);
+
+        // After a delay, passive effects should be committed as well
+        act(flushPendingPassiveErrorAndWarningCounts, false);
+        expect(store).toMatchInlineSnapshot(`
+          ✕ 1, ⚠ 1
+          [root]
+              <Example> ✕⚠
+        `);
+
+        act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(store).toMatchInlineSnapshot(``);
       });
 
-      expect(store).toMatchInlineSnapshot(`
-        [root]
-            <Example>
-      `);
+      it('are flushed early when there is a new commit', () => {
+        function Example() {
+          React.useEffect(() => {
+            console.error('test-only: passive error');
+            console.warn('test-only: passive warning');
+          });
+          return null;
+        }
 
-      // flush count after delay
-      act(() => {
-        jest.advanceTimersByTime(1000);
-      }, false);
+        function Noop() {
+          return null;
+        }
 
-      // After a delay, passive effects should be committed as well
-      expect(store).toMatchInlineSnapshot(`
-        ✕ 1, ⚠ 1
-        [root]
-            <Example> ✕⚠
-      `);
+        const container = document.createElement('div');
 
-      act(() => ReactDOM.unmountComponentAtNode(container));
-      expect(store).toMatchInlineSnapshot(``);
+        withErrorsOrWarningsIgnored(['test-only:'], () => {
+          act(() => {
+            ReactDOM.render(
+              <>
+                <Example />
+              </>,
+              container,
+            );
+          }, false);
+          flushPendingBridgeOperations();
+          expect(store).toMatchInlineSnapshot(`
+            [root]
+                <Example>
+          `);
+
+          // Before warnings and errors have flushed, flush another commit.
+          act(() => {
+            ReactDOM.render(
+              <>
+                <Example />
+                <Noop />
+              </>,
+              container,
+            );
+          }, false);
+          flushPendingBridgeOperations();
+          expect(store).toMatchInlineSnapshot(`
+            ✕ 1, ⚠ 1
+            [root]
+                <Example> ✕⚠
+                <Noop>
+          `);
+        });
+
+        // After a delay, passive effects should be committed as well
+        act(flushPendingPassiveErrorAndWarningCounts, false);
+        expect(store).toMatchInlineSnapshot(`
+          ✕ 2, ⚠ 2
+          [root]
+              <Example> ✕⚠
+              <Noop>
+        `);
+
+        act(() => ReactDOM.unmountComponentAtNode(container));
+        expect(store).toMatchInlineSnapshot(``);
+      });
     });
 
     it('from react get counted', () => {

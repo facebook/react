@@ -631,7 +631,8 @@ export function attach(
     // In this case, we should wait until the rest of the passive effects have run,
     // but we shouldn't wait until the next commit because that might be a long time.
     // This would also cause "tearing" between an inspected Component and the tree view.
-    // Then again we don't want to flush too soon because rendering might stil be going on.
+    // Then again we don't want to flush too soon because this could be an error during async rendering.
+    // Use a debounce technique to ensure that we'll eventually flush.
     flushPendingErrorsAndWarningsAfterDelay();
   }
 
@@ -1205,10 +1206,12 @@ export function attach(
     }
   }
 
-  const pendingOperations: Array<number> = [];
+  type OperationsArray = Array<number>;
+
+  const pendingOperations: OperationsArray = [];
   const pendingRealUnmountedIDs: Array<number> = [];
   const pendingSimulatedUnmountedIDs: Array<number> = [];
-  let pendingOperationsQueue: Array<Array<number>> | null = [];
+  let pendingOperationsQueue: Array<OperationsArray> | null = [];
   const pendingStringTable: Map<string, number> = new Map();
   let pendingStringTableLength: number = 0;
   let pendingUnmountedRootID: number | null = null;
@@ -1225,17 +1228,31 @@ export function attach(
     pendingOperations.push(op);
   }
 
+  function flushOrQueueOperations(operations: OperationsArray): void {
+    if (pendingOperationsQueue !== null) {
+      pendingOperationsQueue.push(operations);
+    } else {
+      hook.emit('operations', operations);
+    }
+  }
+
   let flushPendingErrorsAndWarningsAfterDelayTimeoutID = null;
-  function flushPendingErrorsAndWarningsAfterDelay() {
+
+  function clearPendingErrorsAndWarningsAfterDelay() {
     if (flushPendingErrorsAndWarningsAfterDelayTimeoutID !== null) {
       clearTimeout(flushPendingErrorsAndWarningsAfterDelayTimeoutID);
+      flushPendingErrorsAndWarningsAfterDelayTimeoutID = null;
     }
+  }
+
+  function flushPendingErrorsAndWarningsAfterDelay() {
+    clearPendingErrorsAndWarningsAfterDelay();
 
     flushPendingErrorsAndWarningsAfterDelayTimeoutID = setTimeout(() => {
       flushPendingErrorsAndWarningsAfterDelayTimeoutID = null;
 
       if (pendingOperations.length > 0) {
-        // On the off chance that somethign else has pushed pending operations,
+        // On the off chance that something else has pushed pending operations,
         // we should bail on warnings; it's probably not safe to push midway.
         return;
       }
@@ -1243,37 +1260,24 @@ export function attach(
       recordPendingErrorsAndWarnings();
 
       if (pendingOperations.length === 0) {
-        // No warnings or errors to flush.
+        // No warnings or errors to flush; we can bail out early here too.
         return;
       }
 
-      const operations = new Array(2 + 1 + pendingOperations.length);
-
-      // Identify which renderer this update is coming from.
-      // This enables roots to be mapped to renderers,
-      // Which in turn enables fiber props, states, and hooks to be inspected.
-      let i = 0;
-      operations[i++] = rendererID;
-      operations[i++] = currentRootID; // Use this ID in case the root was unmounted!
-      operations[i++] = 0; // String table size
-
-      // Fill in the rest of the operations.
+      // We can create a smaller operations array than flushPendingEvents()
+      // because we only need to flush warning and error counts.
+      // Only a few pieces of fixed information are required up front.
+      const operations: OperationsArray = new Array(
+        3 + pendingOperations.length,
+      );
+      operations[0] = rendererID;
+      operations[1] = currentRootID;
+      operations[2] = 0; // String table size
       for (let j = 0; j < pendingOperations.length; j++) {
-        operations[i + j] = pendingOperations[j];
+        operations[3 + j] = pendingOperations[j];
       }
 
-      // Let the frontend know about tree operations.
-      // The first value in this array will identify which root it corresponds to,
-      // so we do no longer need to dispatch a separate root-committed event.
-      if (pendingOperationsQueue !== null) {
-        // Until the frontend has been connected, store the tree operations.
-        // This will let us avoid walking the tree later when the frontend connects,
-        // and it enables the Profiler's reload-and-profile functionality to work as well.
-        pendingOperationsQueue.push(operations);
-      } else {
-        // If we've already connected to the frontend, just pass the operations through.
-        hook.emit('operations', operations);
-      }
+      flushOrQueueOperations(operations);
 
       pendingOperations.length = 0;
     }, 1000);
@@ -1291,10 +1295,7 @@ export function attach(
   }
 
   function recordPendingErrorsAndWarnings() {
-    if (flushPendingErrorsAndWarningsAfterDelayTimeoutID !== null) {
-      clearTimeout(flushPendingErrorsAndWarningsAfterDelayTimeoutID);
-      flushPendingErrorsAndWarningsAfterDelayTimeoutID = null;
-    }
+    clearPendingErrorsAndWarningsAfterDelay();
 
     fibersWithChangedErrorOrWarningCounts.forEach(fiberID => {
       const fiber = idToFiberMap.get(fiberID);
@@ -1385,7 +1386,7 @@ export function attach(
     // Which in turn enables fiber props, states, and hooks to be inspected.
     let i = 0;
     operations[i++] = rendererID;
-    operations[i++] = currentRootID; // Use this ID in case the root was unmounted!
+    operations[i++] = currentRootID;
 
     // Now fill in the string table.
     // [stringTableLength, str1Length, ...str1, str2Length, ...str2, ...]
@@ -1432,18 +1433,9 @@ export function attach(
     i += pendingOperations.length;
 
     // Let the frontend know about tree operations.
-    // The first value in this array will identify which root it corresponds to,
-    // so we do no longer need to dispatch a separate root-committed event.
-    if (pendingOperationsQueue !== null) {
-      // Until the frontend has been connected, store the tree operations.
-      // This will let us avoid walking the tree later when the frontend connects,
-      // and it enables the Profiler's reload-and-profile functionality to work as well.
-      pendingOperationsQueue.push(operations);
-    } else {
-      // If we've already connected to the frontend, just pass the operations through.
-      hook.emit('operations', operations);
-    }
+    flushOrQueueOperations(operations);
 
+    // Reset all of the pending state now that we've told the frontend about it.
     pendingOperations.length = 0;
     pendingRealUnmountedIDs.length = 0;
     pendingSimulatedUnmountedIDs.length = 0;
