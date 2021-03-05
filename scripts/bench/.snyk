@@ -1,0 +1,10 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.19.0
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  'npm:debug:20170905':
+    - http-server > portfinder > debug:
+        patched: '2021-03-05T15:30:18.429Z'
+    - nodegit > node-pre-gyp > tar-pack > debug:
+        patched: '2021-03-05T15:30:18.429Z'
