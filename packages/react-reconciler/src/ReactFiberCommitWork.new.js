@@ -1964,6 +1964,10 @@ function commitMutationEffects_begin(
     if (deletions !== null) {
       for (let i = 0; i < deletions.length; i++) {
         const childToDelete = deletions[i];
+        // When deleting a host node, we follow the return path to find the
+        // neartest mounted host parent. Which means the return pointer of
+        // the deleted tree must be correct.
+        childToDelete.return = fiber;
         if (__DEV__) {
           invokeGuardedCallback(
             null,
