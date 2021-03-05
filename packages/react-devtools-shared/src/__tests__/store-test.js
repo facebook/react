@@ -1088,16 +1088,20 @@ describe('Store', () => {
       withErrorsOrWarningsIgnored(['test-only:'], () => {
         act(() => {
           ReactDOM.render(<Example />, container);
-
-          // Flush commit
-          jest.advanceTimersByTime(1);
-
-          expect(store).toMatchInlineSnapshot(`
-            [root]
-                <Example>
-          `);
-        });
+          // flush bridge operations
+          jest.runOnlyPendingTimers();
+        }, false);
       });
+
+      expect(store).toMatchInlineSnapshot(`
+        [root]
+            <Example>
+      `);
+
+      // flush count after delay
+      act(() => {
+        jest.advanceTimersByTime(1000);
+      }, false);
 
       // After a delay, passive effects should be committed as well
       expect(store).toMatchInlineSnapshot(`
