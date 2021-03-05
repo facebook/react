@@ -21,7 +21,11 @@ import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
-import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
+import {
+  ConcurrentRoot,
+  BlockingRoot,
+  LegacyRoot,
+} from 'react-reconciler/src/ReactRootTags';
 
 import {
   enableNativeEventPriorityInference,
@@ -734,6 +738,33 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
       const fiberRoot = NoopRenderer.createContainer(
         container,
         ConcurrentRoot,
+        false,
+        null,
+        null,
+      );
+      return {
+        _Scheduler: Scheduler,
+        render(children: ReactNodeList) {
+          NoopRenderer.updateContainer(children, fiberRoot, null, null);
+        },
+        getChildren() {
+          return getChildren(container);
+        },
+        getChildrenAsJSX() {
+          return getChildrenAsJSX(container);
+        },
+      };
+    },
+
+    createBlockingRoot() {
+      const container = {
+        rootID: '' + idCounter++,
+        pendingChildren: [],
+        children: [],
+      };
+      const fiberRoot = NoopRenderer.createContainer(
+        container,
+        BlockingRoot,
         false,
         null,
         null,
