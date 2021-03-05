@@ -14,7 +14,7 @@ import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 
 import * as React from 'react';
 import invariant from 'shared/invariant';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -259,7 +259,7 @@ function warnNoop(
   if (__DEV__) {
     const constructor = publicInstance.constructor;
     const componentName =
-      (constructor && getComponentName(constructor)) || 'ReactClass';
+      (constructor && getComponentNameFromType(constructor)) || 'ReactClass';
     const warningKey = componentName + '.' + callerName;
     if (didWarnAboutNoopUpdateForComponent[warningKey]) {
       return;
@@ -404,7 +404,7 @@ function validateRenderResult(child, type) {
       '%s(...): Nothing was returned from render. This usually means a ' +
         'return statement is missing. Or, to render nothing, ' +
         'return null.',
-      getComponentName(type) || 'Component',
+      getComponentNameFromType(type) || 'Component',
     );
   }
 }
@@ -467,7 +467,8 @@ function resolve(
       if (typeof Component.getDerivedStateFromProps === 'function') {
         if (__DEV__) {
           if (inst.state === null || inst.state === undefined) {
-            const componentName = getComponentName(Component) || 'Unknown';
+            const componentName =
+              getComponentNameFromType(Component) || 'Unknown';
             if (!didWarnAboutUninitializedState[componentName]) {
               console.error(
                 '`%s` uses `getDerivedStateFromProps` but its initial state is ' +
@@ -491,7 +492,8 @@ function resolve(
 
         if (__DEV__) {
           if (partialState === undefined) {
-            const componentName = getComponentName(Component) || 'Unknown';
+            const componentName =
+              getComponentNameFromType(Component) || 'Unknown';
             if (!didWarnAboutUndefinedDerivedState[componentName]) {
               console.error(
                 '%s.getDerivedStateFromProps(): A valid state object (or null) must be returned. ' +
@@ -513,7 +515,8 @@ function resolve(
           Component.prototype &&
           typeof Component.prototype.render === 'function'
         ) {
-          const componentName = getComponentName(Component) || 'Unknown';
+          const componentName =
+            getComponentNameFromType(Component) || 'Unknown';
 
           if (!didWarnAboutBadClass[componentName]) {
             console.error(
@@ -535,7 +538,8 @@ function resolve(
         // Support for module components is deprecated and is removed behind a flag.
         // Whether or not it would crash later, we want to show a good message in DEV first.
         if (inst != null && inst.render != null) {
-          const componentName = getComponentName(Component) || 'Unknown';
+          const componentName =
+            getComponentNameFromType(Component) || 'Unknown';
           if (!didWarnAboutModulePatternComponent[componentName]) {
             console.error(
               'The <%s /> component appears to be a function component that returns a class instance. ' +
@@ -583,7 +587,8 @@ function resolve(
             warnAboutDeprecatedLifecycles &&
             inst.componentWillMount.__suppressDeprecationWarning !== true
           ) {
-            const componentName = getComponentName(Component) || 'Unknown';
+            const componentName =
+              getComponentNameFromType(Component) || 'Unknown';
 
             if (!didWarnAboutDeprecatedWillMount[componentName]) {
               console.warn(
@@ -665,7 +670,7 @@ function resolve(
           console.error(
             '%s uses the legacy childContextTypes API which is no longer supported. ' +
               'Use React.createContext() instead.',
-            getComponentName(Component) || 'Unknown',
+            getComponentNameFromType(Component) || 'Unknown',
           );
         }
       }
@@ -678,7 +683,7 @@ function resolve(
             invariant(
               contextKey in childContextTypes,
               '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
-              getComponentName(Component) || 'Unknown',
+              getComponentNameFromType(Component) || 'Unknown',
               contextKey,
             );
           }
@@ -687,7 +692,7 @@ function resolve(
             console.error(
               '%s.getChildContext(): childContextTypes must be defined in order to ' +
                 'use getChildContext().',
-              getComponentName(Component) || 'Unknown',
+              getComponentNameFromType(Component) || 'Unknown',
             );
           }
         }
@@ -1298,7 +1303,7 @@ class ReactDOMServerRenderer {
             "it's defined in, or you might have mixed up default and " +
             'named imports.';
         }
-        const ownerName = owner ? getComponentName(owner) : null;
+        const ownerName = owner ? getComponentNameFromType(owner) : null;
         if (ownerName) {
           info += '\n\nCheck the render method of `' + ownerName + '`.';
         }

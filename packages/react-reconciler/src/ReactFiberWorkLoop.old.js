@@ -221,7 +221,7 @@ import {
 } from './ReactProfilerTimer.old';
 
 // DEV stuff
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
 import {
   isRendering as ReactCurrentDebugFiberIsRenderingInDEV,
@@ -2645,7 +2645,7 @@ function warnAboutUpdateOnNotYetMountedFiberInDEV(fiber) {
 
     // We show the whole stack but dedupe on the top component's name because
     // the problematic code almost always lies inside that component.
-    const componentName = getComponentName(fiber.type) || 'ReactComponent';
+    const componentName = getComponentNameFromFiber(fiber) || 'ReactComponent';
     if (didWarnStateUpdateForNotYetMountedComponent !== null) {
       if (didWarnStateUpdateForNotYetMountedComponent.has(componentName)) {
         return;
@@ -2711,7 +2711,7 @@ function warnAboutUpdateOnUnmountedFiberInDEV(fiber) {
     }
     // We show the whole stack but dedupe on the top component's name because
     // the problematic code almost always lies inside that component.
-    const componentName = getComponentName(fiber.type) || 'ReactComponent';
+    const componentName = getComponentNameFromFiber(fiber) || 'ReactComponent';
     if (didWarnStateUpdateForUnmountedComponent !== null) {
       if (didWarnStateUpdateForUnmountedComponent.has(componentName)) {
         return;
@@ -2853,14 +2853,14 @@ function warnAboutRenderPhaseUpdatesInDEV(fiber) {
         case ForwardRef:
         case SimpleMemoComponent: {
           const renderingComponentName =
-            (workInProgress && getComponentName(workInProgress.type)) ||
+            (workInProgress && getComponentNameFromFiber(workInProgress)) ||
             'Unknown';
           // Dedupe by the rendering component because it's the one that needs to be fixed.
           const dedupeKey = renderingComponentName;
           if (!didWarnAboutUpdateInRenderForAnotherComponent.has(dedupeKey)) {
             didWarnAboutUpdateInRenderForAnotherComponent.add(dedupeKey);
             const setStateComponentName =
-              getComponentName(fiber.type) || 'Unknown';
+              getComponentNameFromFiber(fiber) || 'Unknown';
             console.error(
               'Cannot update a component (`%s`) while rendering a ' +
                 'different component (`%s`). To locate the bad setState() call inside `%s`, ' +
@@ -2948,7 +2948,7 @@ export function warnIfNotCurrentlyActingEffectsInDEV(fiber: Fiber): void {
           "This ensures that you're testing the behavior the user would see " +
           'in the browser.' +
           ' Learn more at https://reactjs.org/link/wrap-tests-with-act',
-        getComponentName(fiber.type),
+        getComponentNameFromFiber(fiber),
       );
     }
   }
@@ -2976,7 +2976,7 @@ function warnIfNotCurrentlyActingUpdatesInDEV(fiber: Fiber): void {
             "This ensures that you're testing the behavior the user would see " +
             'in the browser.' +
             ' Learn more at https://reactjs.org/link/wrap-tests-with-act',
-          getComponentName(fiber.type),
+          getComponentNameFromFiber(fiber),
         );
       } finally {
         if (previousFiber) {

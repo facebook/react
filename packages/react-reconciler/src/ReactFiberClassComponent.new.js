@@ -25,7 +25,8 @@ import ReactStrictModeWarnings from './ReactStrictModeWarnings.new';
 import {isMounted} from './ReactFiberTreeReflection';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
 import shallowEqual from 'shared/shallowEqual';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import invariant from 'shared/invariant';
 import {REACT_CONTEXT_TYPE, REACT_PROVIDER_TYPE} from 'shared/ReactSymbols';
 
@@ -119,7 +120,7 @@ if (__DEV__) {
 
   warnOnUndefinedDerivedState = function(type, partialState) {
     if (partialState === undefined) {
-      const componentName = getComponentName(type) || 'Component';
+      const componentName = getComponentNameFromType(type) || 'Component';
       if (!didWarnAboutUndefinedDerivedState.has(componentName)) {
         didWarnAboutUndefinedDerivedState.add(componentName);
         console.error(
@@ -222,7 +223,7 @@ const classComponentUpdater = {
     if (__DEV__) {
       if (enableDebugTracing) {
         if (fiber.mode & DebugTracingMode) {
-          const name = getComponentName(fiber.type) || 'Unknown';
+          const name = getComponentNameFromFiber(fiber) || 'Unknown';
           logStateUpdateScheduled(name, lane, payload);
         }
       }
@@ -257,7 +258,7 @@ const classComponentUpdater = {
     if (__DEV__) {
       if (enableDebugTracing) {
         if (fiber.mode & DebugTracingMode) {
-          const name = getComponentName(fiber.type) || 'Unknown';
+          const name = getComponentNameFromFiber(fiber) || 'Unknown';
           logStateUpdateScheduled(name, lane, payload);
         }
       }
@@ -291,7 +292,7 @@ const classComponentUpdater = {
     if (__DEV__) {
       if (enableDebugTracing) {
         if (fiber.mode & DebugTracingMode) {
-          const name = getComponentName(fiber.type) || 'Unknown';
+          const name = getComponentNameFromFiber(fiber) || 'Unknown';
           logForceUpdateScheduled(name, lane);
         }
       }
@@ -339,7 +340,7 @@ function checkShouldComponentUpdate(
         console.error(
           '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
             'boolean value. Make sure to return true or false.',
-          getComponentName(ctor) || 'Component',
+          getComponentNameFromType(ctor) || 'Component',
         );
       }
     }
@@ -359,7 +360,7 @@ function checkShouldComponentUpdate(
 function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
   const instance = workInProgress.stateNode;
   if (__DEV__) {
-    const name = getComponentName(ctor) || 'Component';
+    const name = getComponentNameFromType(ctor) || 'Component';
     const renderPresent = instance.render;
 
     if (!renderPresent) {
@@ -472,7 +473,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
         '%s has a method called shouldComponentUpdate(). ' +
           'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
           'Please extend React.Component if shouldComponentUpdate is used.',
-        getComponentName(ctor) || 'A pure component',
+        getComponentNameFromType(ctor) || 'A pure component',
       );
     }
     if (typeof instance.componentDidUnmount === 'function') {
@@ -534,7 +535,7 @@ function checkClassInstance(workInProgress: Fiber, ctor: any, newProps: any) {
       console.error(
         '%s: getSnapshotBeforeUpdate() should be used with componentDidUpdate(). ' +
           'This component defines getSnapshotBeforeUpdate() only.',
-        getComponentName(ctor),
+        getComponentNameFromType(ctor),
       );
     }
 
@@ -631,7 +632,7 @@ function constructClassInstance(
         console.error(
           '%s defines an invalid contextType. ' +
             'contextType should point to the Context object returned by React.createContext().%s',
-          getComponentName(ctor) || 'Component',
+          getComponentNameFromType(ctor) || 'Component',
           addendum,
         );
       }
@@ -674,7 +675,7 @@ function constructClassInstance(
 
   if (__DEV__) {
     if (typeof ctor.getDerivedStateFromProps === 'function' && state === null) {
-      const componentName = getComponentName(ctor) || 'Component';
+      const componentName = getComponentNameFromType(ctor) || 'Component';
       if (!didWarnAboutUninitializedState.has(componentName)) {
         didWarnAboutUninitializedState.add(componentName);
         console.error(
@@ -730,7 +731,7 @@ function constructClassInstance(
         foundWillReceivePropsName !== null ||
         foundWillUpdateName !== null
       ) {
-        const componentName = getComponentName(ctor) || 'Component';
+        const componentName = getComponentNameFromType(ctor) || 'Component';
         const newApiName =
           typeof ctor.getDerivedStateFromProps === 'function'
             ? 'getDerivedStateFromProps()'
@@ -780,7 +781,7 @@ function callComponentWillMount(workInProgress, instance) {
         '%s.componentWillMount(): Assigning directly to this.state is ' +
           "deprecated (except inside a component's " +
           'constructor). Use setState instead.',
-        getComponentName(workInProgress.type) || 'Component',
+        getComponentNameFromFiber(workInProgress) || 'Component',
       );
     }
     classComponentUpdater.enqueueReplaceState(instance, instance.state, null);
@@ -804,7 +805,7 @@ function callComponentWillReceiveProps(
   if (instance.state !== oldState) {
     if (__DEV__) {
       const componentName =
-        getComponentName(workInProgress.type) || 'Component';
+        getComponentNameFromFiber(workInProgress) || 'Component';
       if (!didWarnAboutStateAssignmentForComponent.has(componentName)) {
         didWarnAboutStateAssignmentForComponent.add(componentName);
         console.error(
@@ -849,7 +850,7 @@ function mountClassInstance(
 
   if (__DEV__) {
     if (instance.state === newProps) {
-      const componentName = getComponentName(ctor) || 'Component';
+      const componentName = getComponentNameFromType(ctor) || 'Component';
       if (!didWarnAboutDirectlyAssigningPropsToState.has(componentName)) {
         didWarnAboutDirectlyAssigningPropsToState.add(componentName);
         console.error(

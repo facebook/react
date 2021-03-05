@@ -81,7 +81,7 @@ import {
 } from './ReactFiberWorkLoop.new';
 
 import invariant from 'shared/invariant';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import is from 'shared/objectIs';
 import {markWorkInProgressReceivedUpdate} from './ReactFiberBeginWork.new';
 import {
@@ -244,7 +244,7 @@ function checkDepsAreArrayDev(deps: mixed) {
 
 function warnOnHookMismatchInDev(currentHookName: HookType) {
   if (__DEV__) {
-    const componentName = getComponentName(currentlyRenderingFiber.type);
+    const componentName = getComponentNameFromFiber(currentlyRenderingFiber);
     if (!didWarnAboutMismatchedHooksForComponent.has(componentName)) {
       didWarnAboutMismatchedHooksForComponent.add(componentName);
 
@@ -1006,7 +1006,9 @@ function readFromUnsubcribedMutableSource<Source, Snapshot>(
         // begin phase without double rendering. We should consider suppressing
         // any error from a double render (with a warning) to more closely match
         // the production behavior.
-        const componentName = getComponentName(currentlyRenderingFiber.type);
+        const componentName = getComponentNameFromFiber(
+          currentlyRenderingFiber,
+        );
         invariant(
           false,
           'A mutable source was mutated while the %s component was rendering. ' +
@@ -1326,7 +1328,7 @@ function mountRef<T>(initialValue: T): {|current: T|} {
                   'Reading from a ref during render is only safe if:\n' +
                   '1. The ref value has not been updated, or\n' +
                   '2. The ref holds a lazily-initialized value that is only set once.\n',
-                getComponentName(currentlyRenderingFiber.type) || 'Unknown',
+                getComponentNameFromFiber(currentlyRenderingFiber) || 'Unknown',
               );
             }
           }
@@ -1343,7 +1345,7 @@ function mountRef<T>(initialValue: T): {|current: T|} {
                 '%s: Unsafe write of a mutable value during render.\n\n' +
                   'Writing to a ref during render is only safe if the ref holds ' +
                   'a lazily-initialized value that is only set once.\n',
-                getComponentName(currentlyRenderingFiber.type) || 'Unknown',
+                getComponentNameFromFiber(currentlyRenderingFiber) || 'Unknown',
               );
             }
           }
@@ -1781,7 +1783,7 @@ export function getIsUpdatingOpaqueValueInRenderPhaseInDEV(): boolean | void {
 function warnOnOpaqueIdentifierAccessInDEV(fiber) {
   if (__DEV__) {
     // TODO: Should warn in effects and callbacks, too
-    const name = getComponentName(fiber.type) || 'Unknown';
+    const name = getComponentNameFromFiber(fiber) || 'Unknown';
     if (getIsRendering() && !didWarnAboutUseOpaqueIdentifier[name]) {
       console.error(
         'The object passed back from useOpaqueIdentifier is meant to be ' +
@@ -2059,7 +2061,7 @@ function dispatchAction<S, A>(
   if (__DEV__) {
     if (enableDebugTracing) {
       if (fiber.mode & DebugTracingMode) {
-        const name = getComponentName(fiber.type) || 'Unknown';
+        const name = getComponentNameFromFiber(fiber) || 'Unknown';
         logStateUpdateScheduled(name, lane, action);
       }
     }

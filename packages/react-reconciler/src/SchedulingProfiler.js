@@ -16,7 +16,7 @@ import {
   enableSchedulingProfiler,
 } from 'shared/ReactFeatureFlags';
 import ReactVersion from 'shared/ReactVersion';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 
 import {getLabelsForLanes as getLabelsForLanes_old} from 'react-reconciler/src/ReactFiberLane.old';
 import {getLabelsForLanes as getLabelsForLanes_new} from 'react-reconciler/src/ReactFiberLane.new';
@@ -113,7 +113,7 @@ export function markComponentSuspended(fiber: Fiber, wakeable: Wakeable): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTimingV3) {
       const id = getWakeableID(wakeable);
-      const componentName = getComponentName(fiber.type) || 'Unknown';
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
       // TODO Add component stack id
       markAndClear(`--suspense-suspend-${id}-${componentName}`);
       wakeable.then(
@@ -191,7 +191,7 @@ export function markRenderScheduled(lane: Lane): void {
 export function markForceUpdateScheduled(fiber: Fiber, lane: Lane): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTimingV3) {
-      const componentName = getComponentName(fiber.type) || 'Unknown';
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
       // TODO Add component stack id
       markAndClear(
         `--schedule-forced-update-${formatLanes(lane)}-${componentName}`,
@@ -203,7 +203,7 @@ export function markForceUpdateScheduled(fiber: Fiber, lane: Lane): void {
 export function markStateUpdateScheduled(fiber: Fiber, lane: Lane): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTimingV3) {
-      const componentName = getComponentName(fiber.type) || 'Unknown';
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
       // TODO Add component stack id
       markAndClear(
         `--schedule-state-update-${formatLanes(lane)}-${componentName}`,

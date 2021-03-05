@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import invariant from 'shared/invariant';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
@@ -104,7 +104,9 @@ function warnIfStringRefCannotBeAutoConverted(config) {
       config.__self &&
       ReactCurrentOwner.current.stateNode !== config.__self
     ) {
-      const componentName = getComponentName(ReactCurrentOwner.current.type);
+      const componentName = getComponentNameFromType(
+        ReactCurrentOwner.current.type,
+      );
 
       if (!didWarnAboutStringRefs[componentName]) {
         console.error(

@@ -12,7 +12,7 @@ import type {Instance} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {
   findFiberRoot,
   getBoundingRect,
@@ -189,7 +189,7 @@ function matchSelector(fiber: Fiber, selector: Selector): boolean {
 function selectorToString(selector: Selector): string | null {
   switch (selector.$$typeof) {
     case COMPONENT_TYPE:
-      const displayName = getComponentName(selector.value) || 'Unknown';
+      const displayName = getComponentNameFromType(selector.value) || 'Unknown';
       return `<${displayName}>`;
     case HAS_PSEUDO_CLASS_TYPE:
       return `:has(${selectorToString(selector) || ''})`;

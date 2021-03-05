@@ -52,7 +52,7 @@ import {
   LegacyHiddenComponent,
   CacheComponent,
 } from './ReactWorkTags';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
 import {
@@ -584,7 +584,7 @@ export function createFiberFromTypeAndProps(
               "it's defined in, or you might have mixed up default and " +
               'named imports.';
           }
-          const ownerName = owner ? getComponentName(owner.type) : null;
+          const ownerName = owner ? getComponentNameFromFiber(owner) : null;
           if (ownerName) {
             info += '\n\nCheck the render method of `' + ownerName + '`.';
           }
@@ -678,9 +678,7 @@ function createFiberFromProfiler(
   }
 
   const fiber = createFiber(Profiler, pendingProps, key, mode | ProfileMode);
-  // TODO: The Profiler fiber shouldn't have a type. It has a tag.
   fiber.elementType = REACT_PROFILER_TYPE;
-  fiber.type = REACT_PROFILER_TYPE;
   fiber.lanes = lanes;
 
   if (enableProfilerTimer) {
@@ -700,13 +698,7 @@ export function createFiberFromSuspense(
   key: null | string,
 ) {
   const fiber = createFiber(SuspenseComponent, pendingProps, key, mode);
-
-  // TODO: The SuspenseComponent fiber shouldn't have a type. It has a tag.
-  // This needs to be fixed in getComponentName so that it relies on the tag
-  // instead.
-  fiber.type = REACT_SUSPENSE_TYPE;
   fiber.elementType = REACT_SUSPENSE_TYPE;
-
   fiber.lanes = lanes;
   return fiber;
 }
@@ -718,12 +710,6 @@ export function createFiberFromSuspenseList(
   key: null | string,
 ) {
   const fiber = createFiber(SuspenseListComponent, pendingProps, key, mode);
-  if (__DEV__) {
-    // TODO: The SuspenseListComponent fiber shouldn't have a type. It has a tag.
-    // This needs to be fixed in getComponentName so that it relies on the tag
-    // instead.
-    fiber.type = REACT_SUSPENSE_LIST_TYPE;
-  }
   fiber.elementType = REACT_SUSPENSE_LIST_TYPE;
   fiber.lanes = lanes;
   return fiber;
@@ -736,12 +722,6 @@ export function createFiberFromOffscreen(
   key: null | string,
 ) {
   const fiber = createFiber(OffscreenComponent, pendingProps, key, mode);
-  // TODO: The OffscreenComponent fiber shouldn't have a type. It has a tag.
-  // This needs to be fixed in getComponentName so that it relies on the tag
-  // instead.
-  if (__DEV__) {
-    fiber.type = REACT_OFFSCREEN_TYPE;
-  }
   fiber.elementType = REACT_OFFSCREEN_TYPE;
   fiber.lanes = lanes;
   return fiber;
@@ -754,12 +734,6 @@ export function createFiberFromLegacyHidden(
   key: null | string,
 ) {
   const fiber = createFiber(LegacyHiddenComponent, pendingProps, key, mode);
-  // TODO: The LegacyHidden fiber shouldn't have a type. It has a tag.
-  // This needs to be fixed in getComponentName so that it relies on the tag
-  // instead.
-  if (__DEV__) {
-    fiber.type = REACT_LEGACY_HIDDEN_TYPE;
-  }
   fiber.elementType = REACT_LEGACY_HIDDEN_TYPE;
   fiber.lanes = lanes;
   return fiber;
@@ -772,12 +746,6 @@ export function createFiberFromCache(
   key: null | string,
 ) {
   const fiber = createFiber(CacheComponent, pendingProps, key, mode);
-  // TODO: The Cache fiber shouldn't have a type. It has a tag.
-  // This needs to be fixed in getComponentName so that it relies on the tag
-  // instead.
-  if (__DEV__) {
-    fiber.type = REACT_CACHE_TYPE;
-  }
   fiber.elementType = REACT_CACHE_TYPE;
   fiber.lanes = lanes;
   return fiber;
@@ -795,9 +763,7 @@ export function createFiberFromText(
 
 export function createFiberFromHostInstanceForDeletion(): Fiber {
   const fiber = createFiber(HostComponent, null, null, NoMode);
-  // TODO: These should not need a type.
   fiber.elementType = 'DELETED';
-  fiber.type = 'DELETED';
   return fiber;
 }
 
