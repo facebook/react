@@ -8,7 +8,7 @@
  */
 
 import type {ReactContext} from 'shared/ReactTypes';
-import type {Fiber, ContextDependency} from './ReactInternalTypes';
+import type {Fiber, ContextDependency, Contexts} from './ReactInternalTypes';
 import type {StackCursor} from './ReactFiberStack.old';
 import type {Lanes} from './ReactFiberLane.old';
 import type {SharedQueue} from './ReactUpdateQueue.old';
@@ -70,6 +70,51 @@ export function enterDisallowedContextReadInDEV(): void {
 export function exitDisallowedContextReadInDEV(): void {
   if (__DEV__) {
     isDisallowedContextReadInDEV = false;
+  }
+}
+
+export function hasContext(
+  contexts: Contexts,
+  context: ReactContext<any>,
+): boolean {
+  if (context._rank >= contexts.length) {
+    return false;
+  }
+  return (contexts[context._rank] & context._id) !== 0;
+}
+
+export function addContext(
+  contexts: Contexts,
+  context: ReactContext<any>,
+): void {
+  while (context._rank >= contexts.length) {
+    contexts.push(0);
+  }
+  contexts[context._rank] |= context._id;
+}
+
+export function removeContext(
+  contexts: Contexts,
+  context: ReactContext<any>,
+): void {
+  if (context._rank >= contexts.length) {
+    return;
+  }
+  contexts[context._rank] ^= context._id;
+}
+
+export function mergeContexts(
+  contexts1: Contexts,
+  contexts2: Contexts,
+): void {
+  const length = Math.min(contexts1.length, contexts2.length);
+  for (let i = 0; i < length; i++) {
+    contexts1[i] |= contexts2[i];
+  }
+  if (contexts1.length < contexts2.length) {
+    for (let i = contexts1.length; i < contexts2.length; i++) {
+      contexts1.push(contexts2[i]);
+    }
   }
 }
 
@@ -198,7 +243,7 @@ export function propagateContextChange<T>(
 
     // Visit this fiber.
     const list = fiber.dependencies;
-    if (list !== null) {
+    if (hasContext(fiber.contexts, context) && list !== null) {
       nextFiber = fiber.child;
 
       let dependency = list.firstContext;
@@ -284,7 +329,7 @@ export function propagateContextChange<T>(
       nextFiber = fiber.child;
     }
 
-    if (nextFiber !== null) {
+    if (nextFiber !== null && hasContext(nextFiber.contexts, context)) {
       // Set the return pointer of the child to the work-in-progress fiber.
       nextFiber.return = fiber;
     } else {
@@ -394,5 +439,36 @@ export function readContext<T>(
       lastContextDependency = lastContextDependency.next = contextItem;
     }
   }
+
+  if (!hasContext(currentlyRenderingFiber, context)) {
+    let fiber = currentlyRenderingFiber;
+    while (fiber !== null) {
+      if (hasContext(fiber, context) || fiber.type === context.Provider) {
+        fiber = null;
+      } else {
+        addContext(fiber.contexts, context);
+        fiber = fiber.return;
+      }
+    }
+  }
+
   return isPrimaryRenderer ? context._currentValue : context._currentValue2;
+}
+
+export function markParentPathContexts(
+  workInProgress: Fiber,
+  contexts: Contexts,
+): void {
+  let fiber = workInProgress.return;
+  let remainingContexts = contexts.slice();
+  while (fiber !== null) {
+    if (fiber.tag === ContextProvider) {
+      removeContext(
+        remainingContexts,
+        fiber.type._context.id,
+      );
+    }
+    mergeContexts(fiber.contexts, contexts);
+    fiber = fiber.return;
+  }
 }

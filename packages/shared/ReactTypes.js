@@ -69,6 +69,8 @@ export type ReactContext<T> = {
   // This value may be added by application code
   // to improve DEV tooling display names
   displayName?: string,
+  _id: number;
+  _rank: number;
   ...
 };
 

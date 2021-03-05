@@ -60,6 +60,8 @@ export type Dependencies = {
   ...
 };
 
+export type Contexts = number[];
+
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
 export type Fiber = {|
@@ -125,6 +127,9 @@ export type Fiber = {|
 
   // Dependencies (contexts, events) for this fiber, if it has any
   dependencies: Dependencies | null,
+
+  // Context bitset
+  contexts: Contexts,
 
   // Bitfield that describes properties about the fiber and its subtree. E.g.
   // the ConcurrentMode flag indicates whether the subtree should be async-by-

@@ -147,6 +147,8 @@ function FiberNode(
 
   this.alternate = null;
 
+  this.contexts = [];
+
   if (enableProfilerTimer) {
     // Note: The following is done to avoid a v8 performance cliff.
     //
@@ -295,6 +297,8 @@ export function createWorkInProgress(current: Fiber, pendingProps: any): Fiber {
   workInProgress.flags = current.flags & StaticMask;
   workInProgress.childLanes = current.childLanes;
   workInProgress.lanes = current.lanes;
+
+  workInProgress.contexts = [];
 
   workInProgress.child = current.child;
   workInProgress.memoizedProps = current.memoizedProps;
@@ -829,6 +833,7 @@ export function assignFiberPropertiesInDEV(
   target.deletions = source.deletions;
   target.lanes = source.lanes;
   target.childLanes = source.childLanes;
+  target.contexts = source.contexts;
   target.alternate = source.alternate;
   if (enableProfilerTimer) {
     target.actualDuration = source.actualDuration;
