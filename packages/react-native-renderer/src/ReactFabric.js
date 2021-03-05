@@ -43,7 +43,7 @@ import {
 } from './ReactNativeFiberInspector';
 import {LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -60,7 +60,7 @@ function findHostInstance_DEPRECATED<TElementType: ElementType>(
             'never access something that requires stale data from the previous ' +
             'render, such as refs. Move this logic to componentDidMount and ' +
             'componentDidUpdate instead.',
-          getComponentName(owner.type) || 'A component',
+          getComponentNameFromType(owner.type) || 'A component',
         );
       }
 
@@ -111,7 +111,7 @@ function findNodeHandle(componentOrHandle: any): ?number {
             'never access something that requires stale data from the previous ' +
             'render, such as refs. Move this logic to componentDidMount and ' +
             'componentDidUpdate instead.',
-          getComponentName(owner.type) || 'A component',
+          getComponentNameFromType(owner.type) || 'A component',
         );
       }
 

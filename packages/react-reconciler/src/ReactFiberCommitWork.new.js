@@ -80,7 +80,7 @@ import {
   PassiveMask,
   PassiveUnmountPendingDev,
 } from './ReactFiberFlags';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import invariant from 'shared/invariant';
 import {
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
@@ -393,7 +393,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
                     'This might either be because of a bug in React, or because ' +
                     'a component reassigns its own `this.props`. ' +
                     'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
+                  getComponentNameFromFiber(finishedWork) || 'instance',
                 );
               }
               if (instance.state !== finishedWork.memoizedState) {
@@ -403,7 +403,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
                     'This might either be because of a bug in React, or because ' +
                     'a component reassigns its own `this.state`. ' +
                     'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
+                  getComponentNameFromFiber(finishedWork) || 'instance',
                 );
               }
             }
@@ -421,7 +421,7 @@ function commitBeforeMutationEffectsOnFiber(finishedWork: Fiber) {
               console.error(
                 '%s.getSnapshotBeforeUpdate(): A snapshot value (or null) ' +
                   'must be returned. You have returned undefined.',
-                getComponentName(finishedWork.type),
+                getComponentNameFromFiber(finishedWork),
               );
             }
           }
@@ -647,7 +647,7 @@ function commitLayoutEffectOnFiber(
                       'This might either be because of a bug in React, or because ' +
                       'a component reassigns its own `this.props`. ' +
                       'Please file an issue.',
-                    getComponentName(finishedWork.type) || 'instance',
+                    getComponentNameFromFiber(finishedWork) || 'instance',
                   );
                 }
                 if (instance.state !== finishedWork.memoizedState) {
@@ -657,7 +657,7 @@ function commitLayoutEffectOnFiber(
                       'This might either be because of a bug in React, or because ' +
                       'a component reassigns its own `this.state`. ' +
                       'Please file an issue.',
-                    getComponentName(finishedWork.type) || 'instance',
+                    getComponentNameFromFiber(finishedWork) || 'instance',
                   );
                 }
               }
@@ -697,7 +697,7 @@ function commitLayoutEffectOnFiber(
                       'This might either be because of a bug in React, or because ' +
                       'a component reassigns its own `this.props`. ' +
                       'Please file an issue.',
-                    getComponentName(finishedWork.type) || 'instance',
+                    getComponentNameFromFiber(finishedWork) || 'instance',
                   );
                 }
                 if (instance.state !== finishedWork.memoizedState) {
@@ -707,7 +707,7 @@ function commitLayoutEffectOnFiber(
                       'This might either be because of a bug in React, or because ' +
                       'a component reassigns its own `this.state`. ' +
                       'Please file an issue.',
-                    getComponentName(finishedWork.type) || 'instance',
+                    getComponentNameFromFiber(finishedWork) || 'instance',
                   );
                 }
               }
@@ -755,7 +755,7 @@ function commitLayoutEffectOnFiber(
                     'This might either be because of a bug in React, or because ' +
                     'a component reassigns its own `this.props`. ' +
                     'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
+                  getComponentNameFromFiber(finishedWork) || 'instance',
                 );
               }
               if (instance.state !== finishedWork.memoizedState) {
@@ -765,7 +765,7 @@ function commitLayoutEffectOnFiber(
                     'This might either be because of a bug in React, or because ' +
                     'a component reassigns its own `this.state`. ' +
                     'Please file an issue.',
-                  getComponentName(finishedWork.type) || 'instance',
+                  getComponentNameFromFiber(finishedWork) || 'instance',
                 );
               }
             }
@@ -1016,7 +1016,7 @@ function commitAttachRef(finishedWork: Fiber) {
           console.error(
             'Unexpected ref object provided for %s. ' +
               'Use either a ref-setter function or React.createRef().',
-            getComponentName(finishedWork.type),
+            getComponentNameFromFiber(finishedWork),
           );
         }
       }

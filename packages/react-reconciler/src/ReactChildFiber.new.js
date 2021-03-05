@@ -12,7 +12,7 @@ import type {ReactPortal} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.new';
 
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {Placement, ChildDeletion} from './ReactFiberFlags';
 import {
   getIteratorFn,
@@ -82,7 +82,7 @@ if (__DEV__) {
     );
     child._store.validated = true;
 
-    const componentName = getComponentName(returnFiber.type) || 'Component';
+    const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
     if (ownerHasKeyUseWarning[componentName]) {
       return;
@@ -124,7 +124,8 @@ function coerceRef(
           element._owner.stateNode !== element._self
         )
       ) {
-        const componentName = getComponentName(returnFiber.type) || 'Component';
+        const componentName =
+          getComponentNameFromFiber(returnFiber) || 'Component';
         if (!didWarnAboutStringRefs[componentName]) {
           if (warnAboutStringRefs) {
             console.error(
@@ -232,7 +233,7 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
 
 function warnOnFunctionType(returnFiber: Fiber) {
   if (__DEV__) {
-    const componentName = getComponentName(returnFiber.type) || 'Component';
+    const componentName = getComponentNameFromFiber(returnFiber) || 'Component';
 
     if (ownerHasFunctionTypeWarning[componentName]) {
       return;
@@ -1333,7 +1334,7 @@ function ChildReconciler(shouldTrackSideEffects) {
             '%s(...): Nothing was returned from render. This usually means a ' +
               'return statement is missing. Or, to render nothing, ' +
               'return null.',
-            getComponentName(returnFiber.type) || 'Component',
+            getComponentNameFromFiber(returnFiber) || 'Component',
           );
         }
       }

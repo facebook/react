@@ -84,7 +84,8 @@ import {
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactStrictModeWarnings from './ReactStrictModeWarnings.old';
 import {REACT_LAZY_TYPE, getIteratorFn} from 'shared/ReactSymbols';
 import {
@@ -332,7 +333,7 @@ function updateForwardRef(
           innerPropTypes,
           nextProps, // Resolved props
           'prop',
-          getComponentName(Component),
+          getComponentNameFromType(Component),
         );
       }
     }
@@ -442,7 +443,7 @@ function updateMemoComponent(
           innerPropTypes,
           nextProps, // Resolved props
           'prop',
-          getComponentName(type),
+          getComponentNameFromType(type),
         );
       }
     }
@@ -469,7 +470,7 @@ function updateMemoComponent(
         innerPropTypes,
         nextProps, // Resolved props
         'prop',
-        getComponentName(type),
+        getComponentNameFromType(type),
       );
     }
   }
@@ -530,7 +531,7 @@ function updateSimpleMemoComponent(
             outerPropTypes,
             nextProps, // Resolved (SimpleMemoComponent has no defaultProps)
             'prop',
-            getComponentName(outerMemoType),
+            getComponentNameFromType(outerMemoType),
           );
         }
       }
@@ -862,7 +863,7 @@ function updateFunctionComponent(
           innerPropTypes,
           nextProps, // Resolved props
           'prop',
-          getComponentName(Component),
+          getComponentNameFromType(Component),
         );
       }
     }
@@ -945,7 +946,7 @@ function updateClassComponent(
           innerPropTypes,
           nextProps, // Resolved props
           'prop',
-          getComponentName(Component),
+          getComponentNameFromType(Component),
         );
       }
     }
@@ -1012,7 +1013,7 @@ function updateClassComponent(
         console.error(
           'It looks like %s is reassigning its own `this.props` while rendering. ' +
             'This is not supported and can lead to confusing bugs.',
-          getComponentName(workInProgress.type) || 'a component',
+          getComponentNameFromFiber(workInProgress) || 'a component',
         );
       }
       didWarnAboutReassigningProps = true;
@@ -1343,7 +1344,7 @@ function mountLazyComponent(
               outerPropTypes,
               resolvedProps, // Resolved for outer only
               'prop',
-              getComponentName(Component),
+              getComponentNameFromType(Component),
             );
           }
         }
@@ -1465,7 +1466,7 @@ function mountIndeterminateComponent(
       Component.prototype &&
       typeof Component.prototype.render === 'function'
     ) {
-      const componentName = getComponentName(Component) || 'Unknown';
+      const componentName = getComponentNameFromType(Component) || 'Unknown';
 
       if (!didWarnAboutBadClass[componentName]) {
         console.error(
@@ -1515,7 +1516,7 @@ function mountIndeterminateComponent(
       typeof value.render === 'function' &&
       value.$$typeof === undefined
     ) {
-      const componentName = getComponentName(Component) || 'Unknown';
+      const componentName = getComponentNameFromType(Component) || 'Unknown';
       if (!didWarnAboutModulePatternComponent[componentName]) {
         console.error(
           'The <%s /> component appears to be a function component that returns a class instance. ' +
@@ -1542,7 +1543,7 @@ function mountIndeterminateComponent(
     value.$$typeof === undefined
   ) {
     if (__DEV__) {
-      const componentName = getComponentName(Component) || 'Unknown';
+      const componentName = getComponentNameFromType(Component) || 'Unknown';
       if (!didWarnAboutModulePatternComponent[componentName]) {
         console.error(
           'The <%s /> component appears to be a function component that returns a class instance. ' +
@@ -1609,7 +1610,7 @@ function mountIndeterminateComponent(
         console.error(
           '%s uses the legacy contextTypes API which is no longer supported. ' +
             'Use React.createContext() with React.useContext() instead.',
-          getComponentName(Component) || 'Unknown',
+          getComponentNameFromType(Component) || 'Unknown',
         );
       }
 
@@ -1677,7 +1678,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
       warnAboutDefaultPropsOnFunctionComponents &&
       Component.defaultProps !== undefined
     ) {
-      const componentName = getComponentName(Component) || 'Unknown';
+      const componentName = getComponentNameFromType(Component) || 'Unknown';
 
       if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
         console.error(
@@ -1690,7 +1691,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
     }
 
     if (typeof Component.getDerivedStateFromProps === 'function') {
-      const componentName = getComponentName(Component) || 'Unknown';
+      const componentName = getComponentNameFromType(Component) || 'Unknown';
 
       if (!didWarnAboutGetDerivedStateOnFunctionComponent[componentName]) {
         console.error(
@@ -1705,7 +1706,7 @@ function validateFunctionComponentInDev(workInProgress: Fiber, Component: any) {
       typeof Component.contextType === 'object' &&
       Component.contextType !== null
     ) {
-      const componentName = getComponentName(Component) || 'Unknown';
+      const componentName = getComponentNameFromType(Component) || 'Unknown';
 
       if (!didWarnAboutContextTypeOnFunctionComponent[componentName]) {
         console.error(
@@ -3514,7 +3515,7 @@ function beginWork(
               outerPropTypes,
               resolvedProps, // Resolved for outer only
               'prop',
-              getComponentName(type),
+              getComponentNameFromType(type),
             );
           }
         }

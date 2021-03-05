@@ -43,7 +43,7 @@ import {
   ScopeComponent,
 } from 'react-reconciler/src/ReactWorkTags';
 import invariant from 'shared/invariant';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactVersion from 'shared/ReactVersion';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
@@ -344,7 +344,7 @@ class ReactTestInstance {
   findByType(type: any): ReactTestInstance {
     return expectOne(
       this.findAllByType(type, {deep: false}),
-      `with node type: "${getComponentName(type) || 'Unknown'}"`,
+      `with node type: "${getComponentNameFromType(type) || 'Unknown'}"`,
     );
   }
 
