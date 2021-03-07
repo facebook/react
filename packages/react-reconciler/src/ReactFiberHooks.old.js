@@ -2238,11 +2238,8 @@ if (__DEV__) {
   };
 
   HooksDispatcherOnMountInDEV = {
-    readContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
-      return readContext(context, observedBits);
+    readContext<T>(context: ReactContext<T>): T {
+      return readContext(context);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
@@ -2250,13 +2247,10 @@ if (__DEV__) {
       checkDepsAreArrayDev(deps);
       return mountCallback(callback, deps);
     },
-    useContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
       mountHookTypesDev();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2373,24 +2367,18 @@ if (__DEV__) {
   }
 
   HooksDispatcherOnMountWithHookTypesInDEV = {
-    readContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
-      return readContext(context, observedBits);
+    readContext<T>(context: ReactContext<T>): T {
+      return readContext(context);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
       updateHookTypesDev();
       return mountCallback(callback, deps);
     },
-    useContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2503,24 +2491,18 @@ if (__DEV__) {
   }
 
   HooksDispatcherOnUpdateInDEV = {
-    readContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
-      return readContext(context, observedBits);
+    readContext<T>(context: ReactContext<T>): T {
+      return readContext(context);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2633,11 +2615,8 @@ if (__DEV__) {
   }
 
   HooksDispatcherOnRerenderInDEV = {
-    readContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
-      return readContext(context, observedBits);
+    readContext<T>(context: ReactContext<T>): T {
+      return readContext(context);
     },
 
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
@@ -2645,13 +2624,10 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
       updateHookTypesDev();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2764,12 +2740,9 @@ if (__DEV__) {
   }
 
   InvalidNestedHooksDispatcherOnMountInDEV = {
-    readContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    readContext<T>(context: ReactContext<T>): T {
       warnInvalidContextAccess();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
@@ -2777,14 +2750,11 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountCallback(callback, deps);
     },
-    useContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
       mountHookTypesDev();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -2909,12 +2879,9 @@ if (__DEV__) {
   }
 
   InvalidNestedHooksDispatcherOnUpdateInDEV = {
-    readContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    readContext<T>(context: ReactContext<T>): T {
       warnInvalidContextAccess();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
       currentHookNameInDev = 'useCallback';
@@ -2922,14 +2889,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useEffect(
       create: () => (() => void) | void,
@@ -3054,12 +3018,9 @@ if (__DEV__) {
   }
 
   InvalidNestedHooksDispatcherOnRerenderInDEV = {
-    readContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    readContext<T>(context: ReactContext<T>): T {
       warnInvalidContextAccess();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
 
     useCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
@@ -3068,14 +3029,11 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateCallback(callback, deps);
     },
-    useContext<T>(
-      context: ReactContext<T>,
-      observedBits: void | number | boolean,
-    ): T {
+    useContext<T>(context: ReactContext<T>): T {
       currentHookNameInDev = 'useContext';
       warnInvalidHookAccess();
       updateHookTypesDev();
-      return readContext(context, observedBits);
+      return readContext(context);
     },
     useEffect(
       create: () => (() => void) | void,

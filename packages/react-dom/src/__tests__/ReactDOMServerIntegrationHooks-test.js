@@ -736,17 +736,6 @@ describe('ReactDOMServerHooks', () => {
     },
   );
 
-  itRenders('warns when bitmask is passed to useContext', async render => {
-    const Context = React.createContext('Hi');
-
-    function Foo() {
-      return <span>{useContext(Context, 1)}</span>;
-    }
-
-    const domNode = await render(<Foo />, 1);
-    expect(domNode.textContent).toBe('Hi');
-  });
-
   describe('useDebugValue', () => {
     itRenders('is a noop', async render => {
       function Counter(props) {
@@ -760,11 +749,11 @@ describe('ReactDOMServerHooks', () => {
   });
 
   describe('readContext', () => {
-    function readContext(Context, observedBits) {
+    function readContext(Context) {
       const dispatcher =
         React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
           .ReactCurrentDispatcher.current;
-      return dispatcher.readContext(Context, observedBits);
+      return dispatcher.readContext(Context);
     }
 
     itRenders(

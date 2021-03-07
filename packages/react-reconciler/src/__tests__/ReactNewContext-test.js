@@ -35,11 +35,11 @@ describe('ReactNewContext', () => {
     return {type: 'span', children: [], prop, hidden: false};
   }
 
-  function readContext(Context, observedBits) {
+  function readContext(Context) {
     const dispatcher =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
         .ReactCurrentDispatcher.current;
-    return dispatcher.readContext(Context, observedBits);
+    return dispatcher.readContext(Context);
   }
 
   // Note: This is based on a similar component we use in www. We can delete
@@ -62,48 +62,21 @@ describe('ReactNewContext', () => {
     'useContext inside function component',
     Context =>
       function Consumer(props) {
-        const observedBits = props.unstable_observedBits;
-        let contextValue;
-        expect(() => {
-          contextValue = useContext(Context, observedBits);
-        }).toErrorDev(
-          observedBits !== undefined
-            ? 'useContext() second argument is reserved for future use in React. ' +
-                `Passing it is not supported. You passed: ${observedBits}.`
-            : [],
-        );
+        const contextValue = useContext(Context);
         const render = props.children;
         return render(contextValue);
       },
   );
   sharedContextTests('useContext inside forwardRef component', Context =>
     React.forwardRef(function Consumer(props, ref) {
-      const observedBits = props.unstable_observedBits;
-      let contextValue;
-      expect(() => {
-        contextValue = useContext(Context, observedBits);
-      }).toErrorDev(
-        observedBits !== undefined
-          ? 'useContext() second argument is reserved for future use in React. ' +
-              `Passing it is not supported. You passed: ${observedBits}.`
-          : [],
-      );
+      const contextValue = useContext(Context);
       const render = props.children;
       return render(contextValue);
     }),
   );
   sharedContextTests('useContext inside memoized function component', Context =>
     React.memo(function Consumer(props) {
-      const observedBits = props.unstable_observedBits;
-      let contextValue;
-      expect(() => {
-        contextValue = useContext(Context, observedBits);
-      }).toErrorDev(
-        observedBits !== undefined
-          ? 'useContext() second argument is reserved for future use in React. ' +
-              `Passing it is not supported. You passed: ${observedBits}.`
-          : [],
-      );
+      const contextValue = useContext(Context);
       const render = props.children;
       return render(contextValue);
     }),
@@ -113,8 +86,7 @@ describe('ReactNewContext', () => {
     Context =>
       class Consumer extends React.Component {
         render() {
-          const observedBits = this.props.unstable_observedBits;
-          const contextValue = readContext(Context, observedBits);
+          const contextValue = readContext(Context);
           const render = this.props.children;
           return render(contextValue);
         }
@@ -125,8 +97,7 @@ describe('ReactNewContext', () => {
     Context =>
       class Consumer extends React.PureComponent {
         render() {
-          const observedBits = this.props.unstable_observedBits;
-          const contextValue = readContext(Context, observedBits);
+          const contextValue = readContext(Context);
           const render = this.props.children;
           return render(contextValue);
         }
@@ -590,227 +561,6 @@ describe('ReactNewContext', () => {
         ]);
       });
 
-      it('can skip consumers with bitmask', () => {
-        const Context = React.createContext({foo: 0, bar: 0}, (a, b) => {
-          let result = 0;
-          if (a.foo !== b.foo) {
-            result |= 0b01;
-          }
-          if (a.bar !== b.bar) {
-            result |= 0b10;
-          }
-          return result;
-        });
-        const Consumer = getConsumer(Context);
-
-        function Provider(props) {
-          return (
-            <Context.Provider value={{foo: props.foo, bar: props.bar}}>
-              {props.children}
-            </Context.Provider>
-          );
-        }
-
-        function Foo() {
-          return (
-            <Consumer unstable_observedBits={0b01}>
-              {value => {
-                Scheduler.unstable_yieldValue('Foo');
-                return <span prop={'Foo: ' + value.foo} />;
-              }}
-            </Consumer>
-          );
-        }
-
-        function Bar() {
-          return (
-            <Consumer unstable_observedBits={0b10}>
-              {value => {
-                Scheduler.unstable_yieldValue('Bar');
-                return <span prop={'Bar: ' + value.bar} />;
-              }}
-            </Consumer>
-          );
-        }
-
-        class Indirection extends React.Component {
-          shouldComponentUpdate() {
-            return false;
-          }
-          render() {
-            return this.props.children;
-          }
-        }
-
-        function App(props) {
-          return (
-            <Provider foo={props.foo} bar={props.bar}>
-              <Indirection>
-                <Indirection>
-                  <Foo />
-                </Indirection>
-                <Indirection>
-                  <Bar />
-                </Indirection>
-              </Indirection>
-            </Provider>
-          );
-        }
-
-        ReactNoop.render(<App foo={1} bar={1} />);
-        expect(Scheduler).toFlushAndYield(['Foo', 'Bar']);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Foo: 1'),
-          span('Bar: 1'),
-        ]);
-
-        // Update only foo
-        ReactNoop.render(<App foo={2} bar={1} />);
-        expect(Scheduler).toFlushAndYield(['Foo']);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Foo: 2'),
-          span('Bar: 1'),
-        ]);
-
-        // Update only bar
-        ReactNoop.render(<App foo={2} bar={2} />);
-        expect(Scheduler).toFlushAndYield(['Bar']);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Foo: 2'),
-          span('Bar: 2'),
-        ]);
-
-        // Update both
-        ReactNoop.render(<App foo={3} bar={3} />);
-        expect(Scheduler).toFlushAndYield(['Foo', 'Bar']);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Foo: 3'),
-          span('Bar: 3'),
-        ]);
-      });
-
-      // @gate !enableLazyContextPropagation
-      it('can skip parents with bitmask bailout while updating their children', () => {
-        const Context = React.createContext({foo: 0, bar: 0}, (a, b) => {
-          let result = 0;
-          if (a.foo !== b.foo) {
-            result |= 0b01;
-          }
-          if (a.bar !== b.bar) {
-            result |= 0b10;
-          }
-          return result;
-        });
-        const Consumer = getConsumer(Context);
-
-        function Provider(props) {
-          return (
-            <Context.Provider value={{foo: props.foo, bar: props.bar}}>
-              {props.children}
-            </Context.Provider>
-          );
-        }
-
-        function Foo(props) {
-          return (
-            <Consumer unstable_observedBits={0b01}>
-              {value => {
-                Scheduler.unstable_yieldValue('Foo');
-                return (
-                  <>
-                    <span prop={'Foo: ' + value.foo} />
-                    {props.children && props.children()}
-                  </>
-                );
-              }}
-            </Consumer>
-          );
-        }
-
-        function Bar(props) {
-          return (
-            <Consumer unstable_observedBits={0b10}>
-              {value => {
-                Scheduler.unstable_yieldValue('Bar');
-                return (
-                  <>
-                    <span prop={'Bar: ' + value.bar} />
-                    {props.children && props.children()}
-                  </>
-                );
-              }}
-            </Consumer>
-          );
-        }
-
-        class Indirection extends React.Component {
-          shouldComponentUpdate() {
-            return false;
-          }
-          render() {
-            return this.props.children;
-          }
-        }
-
-        function App(props) {
-          return (
-            <Provider foo={props.foo} bar={props.bar}>
-              <Indirection>
-                <Foo>
-                  {/* Use a render prop so we don't test constant elements. */}
-                  {() => (
-                    <Indirection>
-                      <Bar>
-                        {() => (
-                          <Indirection>
-                            <Foo />
-                          </Indirection>
-                        )}
-                      </Bar>
-                    </Indirection>
-                  )}
-                </Foo>
-              </Indirection>
-            </Provider>
-          );
-        }
-
-        ReactNoop.render(<App foo={1} bar={1} />);
-        expect(Scheduler).toFlushAndYield(['Foo', 'Bar', 'Foo']);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Foo: 1'),
-          span('Bar: 1'),
-          span('Foo: 1'),
-        ]);
-
-        // Update only foo
-        ReactNoop.render(<App foo={2} bar={1} />);
-        expect(Scheduler).toFlushAndYield(['Foo', 'Foo']);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Foo: 2'),
-          span('Bar: 1'),
-          span('Foo: 2'),
-        ]);
-
-        // Update only bar
-        ReactNoop.render(<App foo={2} bar={2} />);
-        expect(Scheduler).toFlushAndYield(['Bar']);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Foo: 2'),
-          span('Bar: 2'),
-          span('Foo: 2'),
-        ]);
-
-        // Update both
-        ReactNoop.render(<App foo={3} bar={3} />);
-        expect(Scheduler).toFlushAndYield(['Foo', 'Bar', 'Foo']);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Foo: 3'),
-          span('Bar: 3'),
-          span('Foo: 3'),
-        ]);
-      });
-
       it("does not re-render if there's an update in a child", () => {
         const Context = React.createContext(0);
         const Consumer = getConsumer(Context);
@@ -1063,30 +813,6 @@ describe('ReactNewContext', () => {
   }
 
   describe('Context.Provider', () => {
-    it('warns if calculateChangedBits returns larger than a 31-bit integer', () => {
-      const Context = React.createContext(
-        0,
-        (a, b) => Math.pow(2, 32) - 1, // Return 32 bit int
-      );
-
-      function App(props) {
-        return <Context.Provider value={props.value} />;
-      }
-
-      ReactNoop.render(<App value={1} />);
-      expect(Scheduler).toFlushWithoutYielding();
-
-      // Update
-      ReactNoop.render(<App value={2} />);
-
-      if (gate(flags => !flags.enableLazyContextPropagation)) {
-        expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
-          'calculateChangedBits: Expected the return value to be a 31-bit ' +
-            'integer. Instead received: 4294967295',
-        );
-      }
-    });
-
     it('warns if no value prop provided', () => {
       const Context = React.createContext();
 
@@ -1355,6 +1081,9 @@ describe('ReactNewContext', () => {
   });
 
   describe('readContext', () => {
+    // Unstable changedBits API was removed. Port this test to context selectors
+    // once that exists.
+    // @gate FIXME
     it('can read the same context multiple times in the same function', () => {
       const Context = React.createContext({foo: 0, bar: 0, baz: 0}, (a, b) => {
         let result = 0;
@@ -1517,22 +1246,6 @@ describe('ReactNewContext', () => {
   });
 
   describe('useContext', () => {
-    it('warns on array.map(useContext)', () => {
-      const Context = React.createContext(0);
-      function Foo() {
-        return [Context].map(useContext);
-      }
-      ReactNoop.render(<Foo />);
-      expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
-        'useContext() second argument is reserved for future ' +
-          'use in React. Passing it is not supported. ' +
-          'You passed: 0.\n\n' +
-          'Did you call array.map(useContext)? ' +
-          'Calling Hooks inside a loop is not supported. ' +
-          'Learn more at https://reactjs.org/link/rules-of-hooks',
-      );
-    });
-
     it('throws when used in a class component', () => {
       const Context = React.createContext(0);
       class Foo extends React.Component {

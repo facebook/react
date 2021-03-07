@@ -49,7 +49,6 @@ export type ReactConsumer<T> = {
   ref: null,
   props: {
     children: (value: T) => ReactNodeList,
-    unstable_observedBits?: number,
     ...
   },
   ...
@@ -59,7 +58,6 @@ export type ReactContext<T> = {
   $$typeof: Symbol | number,
   Consumer: ReactContext<T>,
   Provider: ReactProviderType<T>,
-  _calculateChangedBits: ((a: T, b: T) => number) | null,
   _currentValue: T,
   _currentValue2: T,
   _threadCount: number,

@@ -19,7 +19,6 @@ import type {SharedQueue} from './ReactUpdateQueue.new';
 
 import {isPrimaryRenderer} from './ReactFiberHostConfig';
 import {createCursor, push, pop} from './ReactFiberStack.new';
-import {MAX_SIGNED_31_BIT_INT} from './MaxInts';
 import {
   ContextProvider,
   ClassComponent,
@@ -58,7 +57,7 @@ if (__DEV__) {
 
 let currentlyRenderingFiber: Fiber | null = null;
 let lastContextDependency: ContextDependency<mixed> | null = null;
-let lastContextWithAllBitsObserved: ReactContext<any> | null = null;
+let lastFullyObservedContext: ReactContext<any> | null = null;
 
 let isDisallowedContextReadInDEV: boolean = false;
 
@@ -67,7 +66,7 @@ export function resetContextDependencies(): void {
   // cannot be called outside the render phase.
   currentlyRenderingFiber = null;
   lastContextDependency = null;
-  lastContextWithAllBitsObserved = null;
+  lastFullyObservedContext = null;
   if (__DEV__) {
     isDisallowedContextReadInDEV = false;
   }
@@ -140,33 +139,6 @@ export function popProvider(
   }
 }
 
-export function calculateChangedBits<T>(
-  context: ReactContext<T>,
-  newValue: T,
-  oldValue: T,
-) {
-  if (is(oldValue, newValue)) {
-    // No change
-    return 0;
-  } else {
-    const changedBits =
-      typeof context._calculateChangedBits === 'function'
-        ? context._calculateChangedBits(oldValue, newValue)
-        : MAX_SIGNED_31_BIT_INT;
-
-    if (__DEV__) {
-      if ((changedBits & MAX_SIGNED_31_BIT_INT) !== changedBits) {
-        console.error(
-          'calculateChangedBits: Expected the return value to be a ' +
-            '31-bit integer. Instead received: %s',
-          changedBits,
-        );
-      }
-    }
-    return changedBits | 0;
-  }
-}
-
 export function scheduleWorkOnParentPath(
   parent: Fiber | null,
   renderLanes: Lanes,
@@ -197,7 +169,6 @@ export function scheduleWorkOnParentPath(
 export function propagateContextChange<T>(
   workInProgress: Fiber,
   context: ReactContext<T>,
-  changedBits: number,
   renderLanes: Lanes,
 ): void {
   if (enableLazyContextPropagation) {
@@ -207,24 +178,18 @@ export function propagateContextChange<T>(
     const forcePropagateEntireTree = true;
     propagateContextChanges(
       workInProgress,
-      [context, changedBits],
+      [context],
       renderLanes,
       forcePropagateEntireTree,
     );
   } else {
-    propagateContextChange_eager(
-      workInProgress,
-      context,
-      changedBits,
-      renderLanes,
-    );
+    propagateContextChange_eager(workInProgress, context, renderLanes);
   }
 }
 
 function propagateContextChange_eager<T>(
   workInProgress: Fiber,
   context: ReactContext<T>,
-  changedBits: number,
   renderLanes: Lanes,
 ): void {
   // Only used by eager implemenation
@@ -247,10 +212,7 @@ function propagateContextChange_eager<T>(
       let dependency = list.firstContext;
       while (dependency !== null) {
         // Check if the context matches.
-        if (
-          dependency.context === context &&
-          (dependency.observedBits & changedBits) !== 0
-        ) {
+        if (dependency.context === context) {
           // Match! Schedule an update on this fiber.
           if (fiber.tag === ClassComponent) {
             // Schedule a force update on the work-in-progress.
@@ -382,15 +344,11 @@ function propagateContextChanges<T>(
         // Assigning these to constants to help Flow
         const dependency = dep;
         const consumer = fiber;
-        findContext: for (let i = 0; i < contexts.length; i += 2) {
+        findContext: for (let i = 0; i < contexts.length; i++) {
           const context: ReactContext<T> = contexts[i];
-          const changedBits: number = contexts[i + 1];
           // Check if the context matches.
           // TODO: Compare selected values to bail out early.
-          if (
-            dependency.context === context &&
-            (dependency.observedBits & changedBits) !== 0
-          ) {
+          if (dependency.context === context) {
             // Match! Schedule an update on this fiber.
 
             // In the lazy implemenation, don't mark a dirty flag on the
@@ -549,12 +507,11 @@ function propagateParentContextChanges(
 
         const oldValue = oldProps.value;
 
-        const changedBits = calculateChangedBits(context, newValue, oldValue);
-        if (changedBits !== 0) {
+        if (!is(newValue, oldValue)) {
           if (contexts !== null) {
-            contexts.push(context, changedBits);
+            contexts.push(context);
           } else {
-            contexts = [context, changedBits];
+            contexts = [context];
           }
         }
       }
@@ -625,7 +582,7 @@ export function prepareToReadContext(
 ): void {
   currentlyRenderingFiber = workInProgress;
   lastContextDependency = null;
-  lastContextWithAllBitsObserved = null;
+  lastFullyObservedContext = null;
 
   const dependencies = workInProgress.dependencies;
   if (dependencies !== null) {
@@ -646,10 +603,7 @@ export function prepareToReadContext(
   }
 }
 
-export function readContext<T>(
-  context: ReactContext<T>,
-  observedBits: void | number | boolean,
-): T {
+export function readContext<T>(context: ReactContext<T>): T {
   if (__DEV__) {
     // This warning would fire if you read context inside a Hook like useMemo.
     // Unlike the class check below, it's not enforced in production for perf.
@@ -667,26 +621,11 @@ export function readContext<T>(
     ? context._currentValue
     : context._currentValue2;
 
-  if (lastContextWithAllBitsObserved === context) {
+  if (lastFullyObservedContext === context) {
     // Nothing to do. We already observe everything in this context.
-  } else if (observedBits === false || observedBits === 0) {
-    // Do not observe any updates.
   } else {
-    let resolvedObservedBits; // Avoid deopting on observable arguments or heterogeneous types.
-    if (
-      typeof observedBits !== 'number' ||
-      observedBits === MAX_SIGNED_31_BIT_INT
-    ) {
-      // Observe all updates.
-      lastContextWithAllBitsObserved = ((context: any): ReactContext<mixed>);
-      resolvedObservedBits = MAX_SIGNED_31_BIT_INT;
-    } else {
-      resolvedObservedBits = observedBits;
-    }
-
     const contextItem = {
       context: ((context: any): ReactContext<mixed>),
-      observedBits: resolvedObservedBits,
       memoizedValue: value,
       next: null,
     };
