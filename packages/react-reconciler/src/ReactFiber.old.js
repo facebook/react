@@ -388,10 +388,7 @@ export function resetWorkInProgress(workInProgress: Fiber, renderLanes: Lanes) {
     workInProgress.lanes = current.lanes;
 
     workInProgress.child = current.child;
-    // TODO: `subtreeFlags` should be reset to NoFlags, like we do in
-    // `createWorkInProgress`. Nothing reads this until the complete phase,
-    // currently, but it might in the future, and we should be consistent.
-    workInProgress.subtreeFlags = current.subtreeFlags;
+    workInProgress.subtreeFlags = NoFlags;
     workInProgress.deletions = null;
     workInProgress.memoizedProps = current.memoizedProps;
     workInProgress.memoizedState = current.memoizedState;
