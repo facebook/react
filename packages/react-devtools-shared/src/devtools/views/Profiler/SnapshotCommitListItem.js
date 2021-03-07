@@ -31,6 +31,7 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
     maxDuration,
     selectedCommitIndex,
     selectCommitIndex,
+    setHoveredCommitIndex,
     startCommitDrag,
   } = itemData;
 
@@ -41,7 +42,10 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
 
   // Guard against commits with duration 0
   const percentage =
-    Math.min(1, Math.max(0, commitDuration / maxDuration)) || 0;
+    Math.min(
+      1,
+      Math.max(0, Math.log(commitDuration) / Math.log(maxDuration)),
+    ) || 0;
   const isSelected = selectedCommitIndex === index;
 
   // Leave a 1px gap between snapshots
@@ -62,6 +66,7 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
     <div
       className={styles.Outer}
       onMouseDown={handleMouseDown}
+      onMouseEnter={() => setHoveredCommitIndex(index)}
       style={{
         ...style,
         width,
@@ -77,7 +82,7 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
         style={{
           height: `${Math.round(percentage * 100)}%`,
           backgroundColor:
-            percentage > 0 ? getGradientColor(percentage) : undefined,
+            commitDuration > 0 ? getGradientColor(percentage) : undefined,
         }}
       />
     </div>
