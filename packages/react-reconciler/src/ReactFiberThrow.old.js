@@ -38,6 +38,7 @@ import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   enableDebugTracing,
   enableSchedulingProfiler,
+  enableLazyContextPropagation,
 } from 'shared/ReactFeatureFlags';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -60,6 +61,7 @@ import {
   isAlreadyFailedLegacyErrorBoundary,
   pingSuspendedRoot,
 } from './ReactFiberWorkLoop.old';
+import {propagateParentContextChangesToDeferredTree} from './ReactFiberNewContext.old';
 import {logCapturedError} from './ReactFiberErrorLogger';
 import {logComponentSuspended} from './DebugTracing';
 import {markComponentSuspended} from './SchedulingProfiler';
@@ -194,6 +196,23 @@ function throwException(
     typeof value === 'object' &&
     typeof value.then === 'function'
   ) {
+    if (enableLazyContextPropagation) {
+      const currentSourceFiber = sourceFiber.alternate;
+      if (currentSourceFiber !== null) {
+        // Since we never visited the children of the suspended component, we
+        // need to propagate the context change now, to ensure that we visit
+        // them during the retry.
+        //
+        // We don't have to do this for errors because we retry errors without
+        // committing in between. So this is specific to Suspense.
+        propagateParentContextChangesToDeferredTree(
+          currentSourceFiber,
+          sourceFiber,
+          rootRenderLanes,
+        );
+      }
+    }
+
     // This is a wakeable.
     const wakeable: Wakeable = (value: any);
 

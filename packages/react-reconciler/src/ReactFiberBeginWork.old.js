@@ -81,6 +81,7 @@ import {
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
   enableCache,
+  enableLazyContextPropagation,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -154,6 +155,9 @@ import {findFirstSuspended} from './ReactFiberSuspenseComponent.old';
 import {
   pushProvider,
   propagateContextChange,
+  lazilyPropagateParentContextChanges,
+  propagateParentContextChangesToDeferredTree,
+  checkIfContextChanged,
   readContext,
   prepareToReadContext,
   calculateChangedBits,
@@ -646,6 +650,18 @@ function updateOffscreenComponent(
       // We're about to bail out, but we need to push this to the stack anyway
       // to avoid a push/pop misalignment.
       pushRenderLanes(workInProgress, nextBaseLanes);
+
+      if (enableLazyContextPropagation && current !== null) {
+        // Since this tree will resume rendering in a separate render, we need
+        // to propagate parent contexts now so we don't lose track of which
+        // ones changed.
+        propagateParentContextChangesToDeferredTree(
+          current,
+          workInProgress,
+          renderLanes,
+        );
+      }
+
       return null;
     } else {
       // This is the second render. The surrounding visible content has already
@@ -2445,6 +2461,19 @@ function updateDehydratedSuspenseComponent(
       renderLanes,
     );
   }
+
+  if (
+    enableLazyContextPropagation &&
+    // TODO: Factoring is a little weird, since we check this right below, too.
+    // But don't want to re-arrange the if-else chain until/unless this
+    // feature lands.
+    !didReceiveUpdate
+  ) {
+    // We need to check if any children have context before we decide to bail
+    // out, so propagate the changes now.
+    lazilyPropagateParentContextChanges(current, workInProgress, renderLanes);
+  }
+
   // We use lanes to indicate that a child might depend on context, so if
   // any context has changed, we need to treat is as if the input might have changed.
   const hasContextChanged = includesSomeLane(renderLanes, current.childLanes);
@@ -2970,25 +2999,37 @@ function updateContextProvider(
 
   pushProvider(workInProgress, context, newValue);
 
-  if (oldProps !== null) {
-    const oldValue = oldProps.value;
-    const changedBits = calculateChangedBits(context, newValue, oldValue);
-    if (changedBits === 0) {
-      // No change. Bailout early if children are the same.
-      if (
-        oldProps.children === newProps.children &&
-        !hasLegacyContextChanged()
-      ) {
-        return bailoutOnAlreadyFinishedWork(
-          current,
+  if (enableLazyContextPropagation) {
+    // In the lazy propagation implementation, we don't scan for matching
+    // consumers until something bails out, because until something bails out
+    // we're going to visit those nodes, anyway. The trade-off is that it shifts
+    // responsibility to the consumer to track whether something has changed.
+  } else {
+    if (oldProps !== null) {
+      const oldValue = oldProps.value;
+      const changedBits = calculateChangedBits(context, newValue, oldValue);
+      if (changedBits === 0) {
+        // No change. Bailout early if children are the same.
+        if (
+          oldProps.children === newProps.children &&
+          !hasLegacyContextChanged()
+        ) {
+          return bailoutOnAlreadyFinishedWork(
+            current,
+            workInProgress,
+            renderLanes,
+          );
+        }
+      } else {
+        // The context value changed. Search for matching consumers and schedule
+        // them to update.
+        propagateContextChange(
           workInProgress,
+          context,
+          changedBits,
           renderLanes,
         );
       }
-    } else {
-      // The context value changed. Search for matching consumers and schedule
-      // them to update.
-      propagateContextChange(workInProgress, context, changedBits, renderLanes);
     }
   }
 
@@ -3100,13 +3141,23 @@ function bailoutOnAlreadyFinishedWork(
     // The children don't have any work either. We can skip them.
     // TODO: Once we add back resuming, we should check if the children are
     // a work-in-progress set. If so, we need to transfer their effects.
-    return null;
-  } else {
-    // This fiber doesn't have work, but its subtree does. Clone the child
-    // fibers and continue.
-    cloneChildFibers(current, workInProgress);
-    return workInProgress.child;
+
+    if (enableLazyContextPropagation && current !== null) {
+      // Before bailing out, check if there are any context changes in
+      // the children.
+      lazilyPropagateParentContextChanges(current, workInProgress, renderLanes);
+      if (!includesSomeLane(renderLanes, workInProgress.childLanes)) {
+        return null;
+      }
+    } else {
+      return null;
+    }
   }
+
+  // This fiber doesn't have work, but its subtree does. Clone the child
+  // fibers and continue.
+  cloneChildFibers(current, workInProgress);
+  return workInProgress.child;
 }
 
 function remountFiber(
@@ -3175,7 +3226,7 @@ function beginWork(
   workInProgress: Fiber,
   renderLanes: Lanes,
 ): Fiber | null {
-  const updateLanes = workInProgress.lanes;
+  let updateLanes = workInProgress.lanes;
 
   if (__DEV__) {
     if (workInProgress._debugNeedsRemount && current !== null) {
@@ -3196,6 +3247,17 @@ function beginWork(
   }
 
   if (current !== null) {
+    // TODO: The factoring of this block is weird.
+    if (
+      enableLazyContextPropagation &&
+      !includesSomeLane(renderLanes, updateLanes)
+    ) {
+      const dependencies = current.dependencies;
+      if (dependencies !== null && checkIfContextChanged(dependencies)) {
+        updateLanes = mergeLanes(updateLanes, renderLanes);
+      }
+    }
+
     const oldProps = current.memoizedProps;
     const newProps = workInProgress.pendingProps;
 
@@ -3316,6 +3378,9 @@ function beginWork(
                 // primary children and work on the fallback.
                 return child.sibling;
               } else {
+                // Note: We can return `null` here because we already checked
+                // whether there were nested context consumers, via the call to
+                // `bailoutOnAlreadyFinishedWork` above.
                 return null;
               }
             }
@@ -3330,10 +3395,29 @@ function beginWork(
         case SuspenseListComponent: {
           const didSuspendBefore = (current.flags & DidCapture) !== NoFlags;
 
-          const hasChildWork = includesSomeLane(
+          let hasChildWork = includesSomeLane(
             renderLanes,
             workInProgress.childLanes,
           );
+
+          if (enableLazyContextPropagation && !hasChildWork) {
+            // Context changes may not have been propagated yet. We need to do
+            // that now, before we can decide whether to bail out.
+            // TODO: We use `childLanes` as a heuristic for whether there is
+            // remaining work in a few places, including
+            // `bailoutOnAlreadyFinishedWork` and
+            // `updateDehydratedSuspenseComponent`. We should maybe extract this
+            // into a dedicated function.
+            lazilyPropagateParentContextChanges(
+              current,
+              workInProgress,
+              renderLanes,
+            );
+            hasChildWork = includesSomeLane(
+              renderLanes,
+              workInProgress.childLanes,
+            );
+          }
 
           if (didSuspendBefore) {
             if (hasChildWork) {
