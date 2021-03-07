@@ -598,6 +598,27 @@ export function scheduleUpdateOnFiber(
         flushSyncCallbackQueue();
       }
     }
+  } else if (decoupleUpdatePriorityFromScheduler) {
+    const updateLanePriority = getCurrentUpdateLanePriority();
+
+    // Schedule a discrete update but only if it's not Sync.
+    if (
+      (executionContext & DiscreteEventContext) !== NoContext &&
+      // Only updates at user-blocking priority or greater are considered
+      // discrete, even inside a discrete event.
+      updateLanePriority === InputDiscreteLanePriority
+    ) {
+      // This is the result of a discrete event. Track the lowest priority
+      // discrete update per root so we can flush them early, if needed.
+      if (rootsWithPendingDiscreteUpdates === null) {
+        rootsWithPendingDiscreteUpdates = new Set([root]);
+      } else {
+        rootsWithPendingDiscreteUpdates.add(root);
+      }
+    }
+    // Schedule other updates after in case the callback is sync.
+    ensureRootIsScheduled(root, eventTime);
+    schedulePendingInteractions(root, lane);
   } else {
     // Schedule a discrete update but only if it's not Sync.
     if (
