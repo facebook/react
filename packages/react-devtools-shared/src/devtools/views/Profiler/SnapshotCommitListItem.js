@@ -40,18 +40,18 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
   const commitDuration = commitDurations[index];
   const commitTime = commitTimes[index];
 
-  // Use natural log for bar height.
+  // Use natural cbrt for bar height.
   // This prevents one (or a few) outliers from squishing the majority of other commits.
   // So rather than e.g. _█_ we get something more like e.g. ▄█_
   const heightScale =
     Math.min(
       1,
-      Math.max(0, Math.log(commitDuration) / Math.log(maxDuration)),
+      Math.max(0, Math.cbrt(commitDuration) / Math.cbrt(maxDuration)),
     ) || 0;
 
   // Use a linear scale for color.
   // This gives some visual contrast between cheaper and more expensive commits
-  // and somewhat compensates for the log scale height.
+  // and somewhat compensates for the cbrt scale height.
   const colorScale =
     Math.min(1, Math.max(0, commitDuration / maxDuration)) || 0;
 
