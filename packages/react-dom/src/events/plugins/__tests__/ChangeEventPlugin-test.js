@@ -728,17 +728,10 @@ describe('ChangeEventPlugin', () => {
       expect(Scheduler).toHaveYielded([]);
       expect(input.value).toBe('initial');
 
-      // Flush callbacks.
-      // Now the click update has flushed.
-      if (gate(flags => flags.enableDiscreteEventMicroTasks)) {
-        // Flush microtask queue.
-        await null;
-        expect(Scheduler).toHaveYielded(['render: ']);
-        expect(input.value).toBe('');
-      } else {
-        expect(Scheduler).toFlushAndYield(['render: ']);
-        expect(input.value).toBe('');
-      }
+      // Flush microtask queue.
+      await null;
+      expect(Scheduler).toHaveYielded(['render: ']);
+      expect(input.value).toBe('');
     });
 
     // @gate experimental

@@ -3518,56 +3518,6 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     );
   });
 
-  // @gate enableCache
-  // @gate !enableDiscreteEventMicroTasks
-  it('regression: empty render at high priority causes update to be dropped', async () => {
-    // Reproduces a bug where flushDiscreteUpdates starts a new (empty) render
-    // pass which cancels a scheduled timeout and causes the fallback never to
-    // be committed.
-    function App({text, shouldSuspend}) {
-      return (
-        <>
-          <Text text={text} />
-          <Suspense fallback={<Text text="Loading..." />}>
-            {shouldSuspend && <AsyncText text="B" />}
-          </Suspense>
-        </>
-      );
-    }
-
-    const root = ReactNoop.createRoot();
-    ReactNoop.discreteUpdates(() => {
-      // High pri
-      root.render(<App text="A" />);
-    });
-    // Low pri
-    root.render(<App text="A" shouldSuspend={true} />);
-
-    expect(Scheduler).toFlushAndYield([
-      // Render the high pri update
-      'A',
-      // Render the low pri update
-      'A',
-      'Suspend! [B]',
-      'Loading...',
-    ]);
-    expect(root).toMatchRenderedOutput(<span prop="A" />);
-
-    // Triggers erstwhile bug where flushDiscreteUpdates caused an empty render
-    // at a previously committed level
-    ReactNoop.flushDiscreteUpdates();
-
-    // Commit the placeholder
-    Scheduler.unstable_advanceTime(2000);
-    await advanceTimers(2000);
-    expect(root).toMatchRenderedOutput(
-      <>
-        <span prop="A" />
-        <span prop="Loading..." />
-      </>,
-    );
-  });
-
   // @gate experimental
   // @gate enableCache
   it('regression: ping at high priority causes update to be dropped', async () => {
