@@ -9,10 +9,16 @@
 
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
-import type {Fiber, FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {LanePriority} from './ReactFiberLane.new';
 
 import {DidCapture} from './ReactFiberFlags';
+import {
+  lanePriorityToSchedulerPriority,
+  NoLanePriority,
+} from './ReactFiberLane.new';
+import {NormalPriority} from './SchedulerWithReactIntegration.new';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
@@ -78,18 +84,19 @@ export function onScheduleRoot(root: FiberRoot, children: ReactNodeList) {
   }
 }
 
-export function onCommitRoot(
-  root: FiberRoot,
-  priorityLevel: ReactPriorityLevel,
-) {
+export function onCommitRoot(root: FiberRoot, priorityLevel: LanePriority) {
   if (injectedHook && typeof injectedHook.onCommitFiberRoot === 'function') {
     try {
       const didError = (root.current.flags & DidCapture) === DidCapture;
       if (enableProfilerTimer) {
+        const schedulerPriority =
+          priorityLevel === NoLanePriority
+            ? NormalPriority
+            : lanePriorityToSchedulerPriority(priorityLevel);
         injectedHook.onCommitFiberRoot(
           rendererID,
           root,
-          priorityLevel,
+          schedulerPriority,
           didError,
         );
       } else {

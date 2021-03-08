@@ -9,8 +9,7 @@
 
 import type {Thenable, Wakeable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Lanes, Lane} from './ReactFiberLane.old';
-import type {ReactPriorityLevel} from './ReactInternalTypes';
+import type {Lanes, Lane, LanePriority} from './ReactFiberLane.old';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {StackCursor} from './ReactFiberStack.old';
@@ -46,7 +45,6 @@ import {
   shouldYield,
   requestPaint,
   now,
-  NoPriority as NoSchedulerPriority,
   ImmediatePriority as ImmediateSchedulerPriority,
   UserBlockingPriority as UserBlockingSchedulerPriority,
   NormalPriority as NormalSchedulerPriority,
@@ -173,6 +171,7 @@ import {
   markRootFinished,
   schedulerPriorityToLanePriority,
   lanePriorityToSchedulerPriority,
+  higherLanePriority,
 } from './ReactFiberLane.old';
 import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork.old';
@@ -333,7 +332,7 @@ let rootCommittingMutationOrLayoutEffects: FiberRoot | null = null;
 
 let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
-let pendingPassiveEffectsRenderPriority: ReactPriorityLevel = NoSchedulerPriority;
+let pendingPassiveEffectsRenderPriority: LanePriority = NoLanePriority;
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
 let pendingPassiveProfilerEffects: Array<Fiber> = [];
 
@@ -394,7 +393,7 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   if ((mode & BlockingMode) === NoMode) {
     return (SyncLane: Lane);
   } else if ((mode & ConcurrentMode) === NoMode) {
-    return getCurrentPriorityLevel() === ImmediateSchedulerPriority
+    return getCurrentUpdateLanePriority() === SyncLanePriority
       ? (SyncLane: Lane)
       : (SyncBatchedLane: Lane);
   } else if (
@@ -482,7 +481,7 @@ function requestRetryLane(fiber: Fiber) {
   if ((mode & BlockingMode) === NoMode) {
     return (SyncLane: Lane);
   } else if ((mode & ConcurrentMode) === NoMode) {
-    return getCurrentPriorityLevel() === ImmediateSchedulerPriority
+    return getCurrentUpdateLanePriority() === SyncLanePriority
       ? (SyncLane: Lane)
       : (SyncBatchedLane: Lane);
   }
@@ -596,9 +595,9 @@ export function scheduleUpdateOnFiber(
     // Schedule a discrete update but only if it's not Sync.
     if (
       (executionContext & DiscreteEventContext) !== NoContext &&
-      // Only updates at user-blocking priority or greater are considered
-      // discrete, even inside a discrete event.
-      updateLanePriority === InputDiscreteLanePriority
+      // Only updates greater than default considered discrete, even inside a discrete event.
+      higherLanePriority(updateLanePriority, DefaultLanePriority) !==
+        DefaultLanePriority
     ) {
       // This is the result of a discrete event. Track the lowest priority
       // discrete update per root so we can flush them early, if needed.
@@ -1751,11 +1750,17 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
 }
 
 function commitRoot(root) {
-  const renderPriorityLevel = getCurrentPriorityLevel();
-  runWithPriority(
-    ImmediateSchedulerPriority,
-    commitRootImpl.bind(null, root, renderPriorityLevel),
-  );
+  const previousUpdateLanePriority = getCurrentUpdateLanePriority();
+  try {
+    setCurrentUpdateLanePriority(SyncLanePriority);
+    runWithPriority(
+      ImmediateSchedulerPriority,
+      commitRootImpl.bind(null, root, previousUpdateLanePriority),
+    );
+  } finally {
+    setCurrentUpdateLanePriority(previousUpdateLanePriority);
+  }
+
   return null;
 }
 
@@ -1983,7 +1988,10 @@ function commitRootImpl(root, renderPriorityLevel) {
     rootDoesHavePassiveEffects = false;
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsLanes = lanes;
-    pendingPassiveEffectsRenderPriority = renderPriorityLevel;
+    pendingPassiveEffectsRenderPriority =
+      renderPriorityLevel === NoLanePriority
+        ? DefaultLanePriority
+        : renderPriorityLevel;
   }
 
   // Read this again, since an effect might have updated it
@@ -2097,18 +2105,16 @@ function commitRootImpl(root, renderPriorityLevel) {
 
 export function flushPassiveEffects(): boolean {
   // Returns whether passive effects were flushed.
-  if (pendingPassiveEffectsRenderPriority !== NoSchedulerPriority) {
+  if (pendingPassiveEffectsRenderPriority !== NoLanePriority) {
     const priorityLevel =
-      pendingPassiveEffectsRenderPriority > NormalSchedulerPriority
-        ? NormalSchedulerPriority
+      pendingPassiveEffectsRenderPriority > DefaultLanePriority
+        ? DefaultLanePriority
         : pendingPassiveEffectsRenderPriority;
-    pendingPassiveEffectsRenderPriority = NoSchedulerPriority;
+    pendingPassiveEffectsRenderPriority = NoLanePriority;
     const previousLanePriority = getCurrentUpdateLanePriority();
     try {
-      setCurrentUpdateLanePriority(
-        schedulerPriorityToLanePriority(priorityLevel),
-      );
-      return runWithPriority(priorityLevel, flushPassiveEffectsImpl);
+      setCurrentUpdateLanePriority(priorityLevel);
+      return flushPassiveEffectsImpl();
     } finally {
       setCurrentUpdateLanePriority(previousLanePriority);
     }

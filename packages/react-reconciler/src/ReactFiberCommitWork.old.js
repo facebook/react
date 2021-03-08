@@ -17,12 +17,11 @@ import type {
 } from './ReactFiberHostConfig';
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {Lanes} from './ReactFiberLane.old';
+import type {LanePriority, Lanes} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
 import type {Wakeable} from 'shared/ReactTypes';
-import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {OffscreenState} from './ReactFiberOffscreenComponent';
 import type {HookFlags} from './ReactHookEffectTags';
 
@@ -1057,7 +1056,7 @@ function commitUnmount(
   finishedRoot: FiberRoot,
   current: Fiber,
   nearestMountedAncestor: Fiber,
-  renderPriorityLevel: ReactPriorityLevel,
+  renderPriorityLevel: LanePriority,
 ): void {
   onCommitUnmount(current);
 
@@ -1153,7 +1152,7 @@ function commitNestedUnmounts(
   finishedRoot: FiberRoot,
   root: Fiber,
   nearestMountedAncestor: Fiber,
-  renderPriorityLevel: ReactPriorityLevel,
+  renderPriorityLevel: LanePriority,
 ): void {
   // While we're inside a removed host node we don't want to call
   // removeChild on the inner nodes because they're removed by the top
@@ -1463,7 +1462,7 @@ function unmountHostComponents(
   finishedRoot: FiberRoot,
   current: Fiber,
   nearestMountedAncestor: Fiber,
-  renderPriorityLevel: ReactPriorityLevel,
+  renderPriorityLevel: LanePriority,
 ): void {
   // We only have the top Fiber that was deleted but we need to recurse down its
   // children to find all the terminal nodes.
@@ -1601,7 +1600,7 @@ function commitDeletion(
   finishedRoot: FiberRoot,
   current: Fiber,
   nearestMountedAncestor: Fiber,
-  renderPriorityLevel: ReactPriorityLevel,
+  renderPriorityLevel: LanePriority,
 ): void {
   if (supportsMutation) {
     // Recursively delete all host nodes from the parent.
@@ -1945,7 +1944,7 @@ function commitResetTextContent(current: Fiber) {
 
 export function commitMutationEffects(
   root: FiberRoot,
-  renderPriorityLevel: ReactPriorityLevel,
+  renderPriorityLevel: LanePriority,
   firstChild: Fiber,
 ) {
   nextEffect = firstChild;
@@ -1954,7 +1953,7 @@ export function commitMutationEffects(
 
 function commitMutationEffects_begin(
   root: FiberRoot,
-  renderPriorityLevel: ReactPriorityLevel,
+  renderPriorityLevel: LanePriority,
 ) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
@@ -2000,7 +1999,7 @@ function commitMutationEffects_begin(
 
 function commitMutationEffects_complete(
   root: FiberRoot,
-  renderPriorityLevel: ReactPriorityLevel,
+  renderPriorityLevel: LanePriority,
 ) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
@@ -2041,7 +2040,7 @@ function commitMutationEffects_complete(
 function commitMutationEffectsOnFiber(
   finishedWork: Fiber,
   root: FiberRoot,
-  renderPriorityLevel: ReactPriorityLevel,
+  renderPriorityLevel: LanePriority,
 ) {
   const flags = finishedWork.flags;
 
