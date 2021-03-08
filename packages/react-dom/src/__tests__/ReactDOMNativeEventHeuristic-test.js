@@ -43,7 +43,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
   }
 
   // @gate experimental
-  // @gate enableDiscreteEventMicroTasks && enableNativeEventPriorityInference
+  // @gate enableNativeEventPriorityInference
   it('ignores discrete events on a pending removed element', async () => {
     const disableButtonRef = React.createRef();
     const submitButtonRef = React.createRef();
@@ -95,7 +95,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
   });
 
   // @gate experimental
-  // @gate enableDiscreteEventMicroTasks && enableNativeEventPriorityInference
+  // @gate enableNativeEventPriorityInference
   it('ignores discrete events on a pending removed event listener', async () => {
     const disableButtonRef = React.createRef();
     const submitButtonRef = React.createRef();
@@ -165,7 +165,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
   });
 
   // @gate experimental
-  // @gate enableDiscreteEventMicroTasks && enableNativeEventPriorityInference
+  // @gate enableNativeEventPriorityInference
   it('uses the newest discrete events on a pending changed event listener', async () => {
     const enableButtonRef = React.createRef();
     const submitButtonRef = React.createRef();
@@ -229,7 +229,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
   });
 
   // @gate experimental
-  // @gate enableDiscreteEventMicroTasks && enableNativeEventPriorityInference
+  // @gate enableNativeEventPriorityInference
   it('mouse over should be user-blocking but not discrete', async () => {
     const root = ReactDOM.unstable_createRoot(container);
 
@@ -260,7 +260,7 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
   });
 
   // @gate experimental
-  // @gate enableDiscreteEventMicroTasks && enableNativeEventPriorityInference
+  // @gate enableNativeEventPriorityInference
   it('mouse enter should be user-blocking but not discrete', async () => {
     const root = ReactDOM.unstable_createRoot(container);
 

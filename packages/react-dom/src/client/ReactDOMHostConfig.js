@@ -67,7 +67,6 @@ import {
   enableCreateEventHandleAPI,
   enableScopeAPI,
   enableNewReconciler,
-  enableDiscreteEventMicroTasks,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
@@ -404,7 +403,7 @@ export const noTimeout = -1;
 // -------------------
 //     Microtasks
 // -------------------
-export const supportsMicrotasks = enableDiscreteEventMicroTasks;
+export const supportsMicrotasks = true;
 export const scheduleMicrotask: any =
   typeof queueMicrotask === 'function'
     ? queueMicrotask
