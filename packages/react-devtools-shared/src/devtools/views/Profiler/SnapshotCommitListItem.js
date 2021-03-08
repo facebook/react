@@ -31,6 +31,7 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
     maxDuration,
     selectedCommitIndex,
     selectCommitIndex,
+    setHoveredCommitIndex,
     startCommitDrag,
   } = itemData;
 
@@ -39,9 +40,21 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
   const commitDuration = commitDurations[index];
   const commitTime = commitTimes[index];
 
-  // Guard against commits with duration 0
-  const percentage =
+  // Use natural log for bar height.
+  // This prevents one (or a few) outliers from squishing the majority of other commits.
+  // So rather than e.g. _█_ we get something more like e.g. ▄█_
+  const heightScale =
+    Math.min(
+      1,
+      Math.max(0, Math.log(commitDuration) / Math.log(maxDuration)),
+    ) || 0;
+
+  // Use a linear scale for color.
+  // This gives some visual contrast between cheaper and more expensive commits
+  // and somewhat compensates for the log scale height.
+  const colorScale =
     Math.min(1, Math.max(0, commitDuration / maxDuration)) || 0;
+
   const isSelected = selectedCommitIndex === index;
 
   // Leave a 1px gap between snapshots
@@ -62,6 +75,7 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
     <div
       className={styles.Outer}
       onMouseDown={handleMouseDown}
+      onMouseEnter={() => setHoveredCommitIndex(index)}
       style={{
         ...style,
         width,
@@ -75,9 +89,9 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
       <div
         className={styles.Inner}
         style={{
-          height: `${Math.round(percentage * 100)}%`,
+          height: `${Math.round(heightScale * 100)}%`,
           backgroundColor:
-            percentage > 0 ? getGradientColor(percentage) : undefined,
+            commitDuration > 0 ? getGradientColor(colorScale) : undefined,
         }}
       />
     </div>

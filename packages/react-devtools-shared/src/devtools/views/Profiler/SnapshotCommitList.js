@@ -13,6 +13,8 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import {FixedSizeList} from 'react-window';
 import SnapshotCommitListItem from './SnapshotCommitListItem';
 import {minBarWidth} from './constants';
+import {formatDuration, formatTime} from './utils';
+import Tooltip from './Tooltip';
 
 import styles from './SnapshotCommitList.css';
 
@@ -24,6 +26,7 @@ export type ItemData = {|
   selectedCommitIndex: number | null,
   selectedFilteredCommitIndex: number | null,
   selectCommitIndex: (index: number) => void,
+  setHoveredCommitIndex: (index: number) => void,
   startCommitDrag: (newDragState: DragState) => void,
 |};
 
@@ -166,6 +169,10 @@ function List({
     }
   }, [dragState]);
 
+  const [hoveredCommitIndex, setHoveredCommitIndex] = useState<number | null>(
+    null,
+  );
+
   // Pass required contextual data down to the ListItem renderer.
   const itemData = useMemo<ItemData>(
     () => ({
@@ -176,6 +183,7 @@ function List({
       selectedCommitIndex,
       selectedFilteredCommitIndex,
       selectCommitIndex,
+      setHoveredCommitIndex,
       startCommitDrag: setDragState,
     }),
     [
@@ -186,22 +194,37 @@ function List({
       selectedCommitIndex,
       selectedFilteredCommitIndex,
       selectCommitIndex,
+      setHoveredCommitIndex,
     ],
   );
 
+  let tooltipLabel = null;
+  if (hoveredCommitIndex !== null) {
+    const commitDuration = commitDurations[hoveredCommitIndex];
+    const commitTime = commitTimes[hoveredCommitIndex];
+    tooltipLabel = `${formatDuration(commitDuration)}ms at ${formatTime(
+      commitTime,
+    )}s`;
+  }
+
   return (
-    <div ref={divRef} style={{height, width}}>
-      <FixedSizeList
-        className={styles.List}
-        layout="horizontal"
-        height={height}
-        itemCount={filteredCommitIndices.length}
-        itemData={itemData}
-        itemSize={itemSize}
-        ref={(listRef: any) /* Flow bug? */}
-        width={width}>
-        {SnapshotCommitListItem}
-      </FixedSizeList>
-    </div>
+    <Tooltip label={tooltipLabel}>
+      <div
+        ref={divRef}
+        style={{height, width}}
+        onMouseLeave={() => setHoveredCommitIndex(null)}>
+        <FixedSizeList
+          className={styles.List}
+          layout="horizontal"
+          height={height}
+          itemCount={filteredCommitIndices.length}
+          itemData={itemData}
+          itemSize={itemSize}
+          ref={(listRef: any) /* Flow bug? */}
+          width={width}>
+          {SnapshotCommitListItem}
+        </FixedSizeList>
+      </div>
+    </Tooltip>
   );
 }
