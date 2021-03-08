@@ -87,12 +87,6 @@ import {
   markWorkInProgressReceivedUpdate,
   checkIfWorkInProgressReceivedUpdate,
 } from './ReactFiberBeginWork.old';
-import {
-  UserBlockingPriority,
-  NormalPriority,
-  runWithPriority,
-  getCurrentPriorityLevel,
-} from './SchedulerWithReactIntegration.old';
 import {getIsHydrating} from './ReactFiberHydrationContext.old';
 import {
   makeClientId,
@@ -1711,38 +1705,27 @@ function rerenderDeferredValue<T>(value: T): T {
 }
 
 function startTransition(setPending, callback) {
-  const priorityLevel = getCurrentPriorityLevel();
   const previousLanePriority = getCurrentUpdateLanePriority();
   setCurrentUpdateLanePriority(
     higherLanePriority(previousLanePriority, InputContinuousLanePriority),
   );
 
-  runWithPriority(
-    priorityLevel < UserBlockingPriority ? UserBlockingPriority : priorityLevel,
-    () => {
-      setPending(true);
-    },
-  );
+  setPending(true);
 
   // TODO: Can remove this. Was only necessary because we used to give
   // different behavior to transitions without a config object. Now they are
   // all treated the same.
   setCurrentUpdateLanePriority(DefaultLanePriority);
 
-  runWithPriority(
-    priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
-    () => {
-      const prevTransition = ReactCurrentBatchConfig.transition;
-      ReactCurrentBatchConfig.transition = 1;
-      try {
-        setPending(false);
-        callback();
-      } finally {
-        setCurrentUpdateLanePriority(previousLanePriority);
-        ReactCurrentBatchConfig.transition = prevTransition;
-      }
-    },
-  );
+  const prevTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition = 1;
+  try {
+    setPending(false);
+    callback();
+  } finally {
+    setCurrentUpdateLanePriority(previousLanePriority);
+    ReactCurrentBatchConfig.transition = prevTransition;
+  }
 }
 
 function mountTransition(): [(() => void) => void, boolean] {

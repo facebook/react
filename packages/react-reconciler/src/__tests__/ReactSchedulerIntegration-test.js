@@ -68,17 +68,6 @@ describe('ReactSchedulerIntegration', () => {
     );
   }
 
-  it('flush sync has correct priority', () => {
-    function ReadPriority() {
-      Scheduler.unstable_yieldValue(
-        'Priority: ' + getCurrentPriorityAsString(),
-      );
-      return null;
-    }
-    ReactNoop.flushSync(() => ReactNoop.render(<ReadPriority />));
-    expect(Scheduler).toHaveYielded(['Priority: Immediate']);
-  });
-
   // TODO: Figure out what to do with these tests. I don't think most of them
   // make sense once we decouple Scheduler from React. Perhaps need similar
   // tests for React DOM.
@@ -136,27 +125,6 @@ describe('ReactSchedulerIntegration', () => {
     expect(Scheduler).toFlushAndYield([
       'Priority: UserBlocking',
       'Priority: UserBlocking',
-    ]);
-  });
-
-  it('layout effects have immediate priority', () => {
-    const {useLayoutEffect} = React;
-    function ReadPriority() {
-      Scheduler.unstable_yieldValue(
-        'Render priority: ' + getCurrentPriorityAsString(),
-      );
-      useLayoutEffect(() => {
-        Scheduler.unstable_yieldValue(
-          'Layout priority: ' + getCurrentPriorityAsString(),
-        );
-      });
-      return null;
-    }
-
-    ReactNoop.render(<ReadPriority />);
-    expect(Scheduler).toFlushAndYield([
-      'Render priority: Normal',
-      'Layout priority: Immediate',
     ]);
   });
 

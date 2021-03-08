@@ -26,7 +26,6 @@ import {
 import {scheduleMicrotask, supportsMicrotasks} from './ReactFiberHostConfig';
 
 const {
-  unstable_runWithPriority: Scheduler_runWithPriority,
   unstable_scheduleCallback: Scheduler_scheduleCallback,
   unstable_cancelCallback: Scheduler_cancelCallback,
   unstable_shouldYield: Scheduler_shouldYield,
@@ -123,14 +122,6 @@ function reactPriorityToSchedulerPriority(reactPriorityLevel) {
   }
 }
 
-export function runWithPriority<T>(
-  reactPriorityLevel: ReactPriorityLevel,
-  fn: () => T,
-): T {
-  const priorityLevel = reactPriorityToSchedulerPriority(reactPriorityLevel);
-  return Scheduler_runWithPriority(priorityLevel, fn);
-}
-
 export function scheduleCallback(
   reactPriorityLevel: ReactPriorityLevel,
   callback: SchedulerCallback,
@@ -188,14 +179,12 @@ function flushSyncCallbackQueueImpl() {
       const isSync = true;
       const queue = syncQueue;
       setCurrentUpdateLanePriority(SyncLanePriority);
-      runWithPriority(ImmediatePriority, () => {
-        for (; i < queue.length; i++) {
-          let callback = queue[i];
-          do {
-            callback = callback(isSync);
-          } while (callback !== null);
-        }
-      });
+      for (; i < queue.length; i++) {
+        let callback = queue[i];
+        do {
+          callback = callback(isSync);
+        } while (callback !== null);
+      }
       syncQueue = null;
     } catch (error) {
       // If something throws, leave the remaining callbacks on the queue.

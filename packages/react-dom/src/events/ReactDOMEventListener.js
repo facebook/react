@@ -12,10 +12,6 @@ import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
 
-// Intentionally not named imports because Rollup would use dynamic dispatch for
-// CommonJS interop named imports.
-import * as Scheduler from 'scheduler';
-
 import {
   isReplayableDiscreteEvent,
   queueDiscreteEvent,
@@ -88,11 +84,6 @@ const schedulerPriorityToLanePriority = enableNewReconciler
 const getCurrentPriorityLevel = enableNewReconciler
   ? getCurrentPriorityLevel_new
   : getCurrentPriorityLevel_old;
-
-const {
-  unstable_UserBlockingPriority: UserBlockingPriority,
-  unstable_runWithPriority: runWithPriority,
-} = Scheduler;
 
 // TODO: can we stop exporting these?
 export let _enabled = true;
@@ -178,18 +169,8 @@ function dispatchContinuousEvent(
 ) {
   const previousPriority = getCurrentUpdateLanePriority();
   try {
-    // TODO: Double wrapping is necessary while we decouple Scheduler priority.
     setCurrentUpdateLanePriority(InputContinuousLanePriority);
-    runWithPriority(
-      UserBlockingPriority,
-      dispatchEvent.bind(
-        null,
-        domEventName,
-        eventSystemFlags,
-        container,
-        nativeEvent,
-      ),
-    );
+    dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
     setCurrentUpdateLanePriority(previousPriority);
   }

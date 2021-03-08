@@ -41,7 +41,6 @@ import {
   scheduleCallback,
   cancelCallback,
   getCurrentPriorityLevel,
-  runWithPriority,
   shouldYield,
   requestPaint,
   now,
@@ -1124,7 +1123,7 @@ export function deferredUpdates<A>(fn: () => A): A {
   const previousLanePriority = getCurrentUpdateLanePriority();
   try {
     setCurrentUpdateLanePriority(DefaultLanePriority);
-    return runWithPriority(NormalSchedulerPriority, fn);
+    return fn();
   } finally {
     setCurrentUpdateLanePriority(previousLanePriority);
   }
@@ -1176,7 +1175,7 @@ export function batchedEventUpdates<A, R>(fn: A => R, a: A): R {
 }
 
 export function discreteUpdates<A, B, C, D, R>(
-  fn: (A, B, C) => R,
+  fn: (A, B, C, D) => R,
   a: A,
   b: B,
   c: C,
@@ -1188,10 +1187,7 @@ export function discreteUpdates<A, B, C, D, R>(
   const previousLanePriority = getCurrentUpdateLanePriority();
   try {
     setCurrentUpdateLanePriority(InputDiscreteLanePriority);
-    return runWithPriority(
-      UserBlockingSchedulerPriority,
-      fn.bind(null, a, b, c, d),
-    );
+    return fn(a, b, c, d);
   } finally {
     setCurrentUpdateLanePriority(previousLanePriority);
     executionContext = prevExecutionContext;
@@ -1237,7 +1233,7 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
   try {
     setCurrentUpdateLanePriority(SyncLanePriority);
     if (fn) {
-      return runWithPriority(ImmediateSchedulerPriority, fn.bind(null, a));
+      return fn(a);
     } else {
       return (undefined: $FlowFixMe);
     }
@@ -1257,7 +1253,7 @@ export function flushControlled(fn: () => mixed): void {
   const previousLanePriority = getCurrentUpdateLanePriority();
   try {
     setCurrentUpdateLanePriority(SyncLanePriority);
-    runWithPriority(ImmediateSchedulerPriority, fn);
+    fn();
   } finally {
     setCurrentUpdateLanePriority(previousLanePriority);
 
@@ -1753,10 +1749,7 @@ function commitRoot(root) {
   const previousUpdateLanePriority = getCurrentUpdateLanePriority();
   try {
     setCurrentUpdateLanePriority(SyncLanePriority);
-    runWithPriority(
-      ImmediateSchedulerPriority,
-      commitRootImpl.bind(null, root, previousUpdateLanePriority),
-    );
+    commitRootImpl(root, previousUpdateLanePriority);
   } finally {
     setCurrentUpdateLanePriority(previousUpdateLanePriority);
   }
