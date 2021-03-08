@@ -341,7 +341,6 @@ describe('useMutableSourceHydration', () => {
   });
 
   // @gate experimental
-  // @gate enableNativeEventPriorityInference
   it('should detect a tear during a higher priority interruption', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);

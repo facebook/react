@@ -13,10 +13,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
-let ImmediatePriority;
-let UserBlockingPriority;
 let NormalPriority;
-let LowPriority;
 let IdlePriority;
 let runWithPriority;
 let startTransition;
@@ -28,32 +25,11 @@ describe('ReactSchedulerIntegration', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
-    ImmediatePriority = Scheduler.unstable_ImmediatePriority;
-    UserBlockingPriority = Scheduler.unstable_UserBlockingPriority;
     NormalPriority = Scheduler.unstable_NormalPriority;
-    LowPriority = Scheduler.unstable_LowPriority;
     IdlePriority = Scheduler.unstable_IdlePriority;
     runWithPriority = Scheduler.unstable_runWithPriority;
     startTransition = React.unstable_startTransition;
   });
-
-  function getCurrentPriorityAsString() {
-    const priorityLevel = Scheduler.unstable_getCurrentPriorityLevel();
-    switch (priorityLevel) {
-      case ImmediatePriority:
-        return 'Immediate';
-      case UserBlockingPriority:
-        return 'UserBlocking';
-      case NormalPriority:
-        return 'Normal';
-      case LowPriority:
-        return 'Low';
-      case IdlePriority:
-        return 'Idle';
-      default:
-        throw Error('Unknown priority level: ' + priorityLevel);
-    }
-  }
 
   // Note: This is based on a similar component we use in www. We can delete
   // once the extra div wrapper is no longer necessary.
@@ -67,66 +43,6 @@ describe('ReactSchedulerIntegration', () => {
       </div>
     );
   }
-
-  // TODO: Figure out what to do with these tests. I don't think most of them
-  // make sense once we decouple Scheduler from React. Perhaps need similar
-  // tests for React DOM.
-  // @gate !enableNativeEventPriorityInference
-  it('has correct priority during rendering', () => {
-    function ReadPriority() {
-      Scheduler.unstable_yieldValue(
-        'Priority: ' + getCurrentPriorityAsString(),
-      );
-      return null;
-    }
-    ReactNoop.render(<ReadPriority />);
-    expect(Scheduler).toFlushAndYield(['Priority: Normal']);
-
-    runWithPriority(UserBlockingPriority, () => {
-      ReactNoop.render(<ReadPriority />);
-    });
-    expect(Scheduler).toFlushAndYield(['Priority: UserBlocking']);
-
-    runWithPriority(IdlePriority, () => {
-      ReactNoop.render(<ReadPriority />);
-    });
-    expect(Scheduler).toFlushAndYield(['Priority: Idle']);
-  });
-
-  // TODO: Figure out what to do with these tests. I don't think most of them
-  // make sense once we decouple Scheduler from React. Perhaps need similar
-  // tests for React DOM.
-  // @gate !enableNativeEventPriorityInference
-  it('has correct priority when continuing a render after yielding', () => {
-    function ReadPriority() {
-      Scheduler.unstable_yieldValue(
-        'Priority: ' + getCurrentPriorityAsString(),
-      );
-      return null;
-    }
-
-    runWithPriority(UserBlockingPriority, () => {
-      ReactNoop.render(
-        <>
-          <ReadPriority />
-          <ReadPriority />
-          <ReadPriority />
-        </>,
-      );
-    });
-
-    // Render part of the tree
-    expect(Scheduler).toFlushAndYieldThrough(['Priority: UserBlocking']);
-
-    // Priority is set back to normal when yielding
-    expect(getCurrentPriorityAsString()).toEqual('Normal');
-
-    // Priority is restored to user-blocking when continuing
-    expect(Scheduler).toFlushAndYield([
-      'Priority: UserBlocking',
-      'Priority: UserBlocking',
-    ]);
-  });
 
   it('passive effects are called before Normal-pri scheduled in layout effects', async () => {
     const {useEffect, useLayoutEffect} = React;
@@ -170,28 +86,6 @@ describe('ReactSchedulerIntegration', () => {
       'Scheduled Normal Callback from Cleanup Layout Effect',
       'Scheduled Normal Callback from Layout Effect',
     ]);
-  });
-
-  // TODO: Figure out what to do with these tests. I don't think most of them
-  // make sense once we decouple Scheduler from React. Perhaps need similar
-  // tests for React DOM.
-  // @gate !enableNativeEventPriorityInference
-  it('after completing a level of work, infers priority of the next batch based on its expiration time', () => {
-    function App({label}) {
-      Scheduler.unstable_yieldValue(
-        `${label} [${getCurrentPriorityAsString()}]`,
-      );
-      return label;
-    }
-
-    // Schedule two separate updates at different priorities
-    runWithPriority(UserBlockingPriority, () => {
-      ReactNoop.render(<App label="A" />);
-    });
-    ReactNoop.render(<App label="B" />);
-
-    // The second update should run at normal priority
-    expect(Scheduler).toFlushAndYield(['A [UserBlocking]', 'B [Normal]']);
   });
 
   it('requests a paint after committing', () => {

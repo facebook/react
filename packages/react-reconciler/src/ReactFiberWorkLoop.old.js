@@ -32,7 +32,6 @@ import {
   disableSchedulerTimeoutInWorkLoop,
   enableStrictEffects,
   skipUnmountedBoundaries,
-  enableNativeEventPriorityInference,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
@@ -168,7 +167,6 @@ import {
   markRootExpired,
   markDiscreteUpdatesExpired,
   markRootFinished,
-  schedulerPriorityToLanePriority,
   lanePriorityToSchedulerPriority,
   higherLanePriority,
 } from './ReactFiberLane.old';
@@ -456,15 +454,8 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     const currentLanePriority = getCurrentUpdateLanePriority();
     lane = findUpdateLane(currentLanePriority);
   } else {
-    if (enableNativeEventPriorityInference) {
-      const eventLanePriority = getCurrentEventPriority();
-      lane = findUpdateLane(eventLanePriority);
-    } else {
-      const schedulerLanePriority = schedulerPriorityToLanePriority(
-        schedulerPriority,
-      );
-      lane = findUpdateLane(schedulerLanePriority);
-    }
+    const eventLanePriority = getCurrentEventPriority();
+    lane = findUpdateLane(eventLanePriority);
   }
 
   return lane;

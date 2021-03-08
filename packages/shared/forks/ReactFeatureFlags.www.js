@@ -32,7 +32,6 @@ export const {
   disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop,
   enableSyncMicroTasks,
-  enableNativeEventPriorityInference,
   enableLazyContextPropagation,
 } = dynamicFeatureFlags;
 
