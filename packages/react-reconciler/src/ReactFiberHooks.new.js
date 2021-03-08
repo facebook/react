@@ -27,7 +27,6 @@ import {
   enableSchedulingProfiler,
   enableNewReconciler,
   enableCache,
-  decoupleUpdatePriorityFromScheduler,
   enableUseRefAccessWarning,
   enableStrictEffects,
   enableLazyContextPropagation,
@@ -1713,66 +1712,37 @@ function rerenderDeferredValue<T>(value: T): T {
 
 function startTransition(setPending, callback) {
   const priorityLevel = getCurrentPriorityLevel();
-  if (decoupleUpdatePriorityFromScheduler) {
-    const previousLanePriority = getCurrentUpdateLanePriority();
-    setCurrentUpdateLanePriority(
-      higherLanePriority(previousLanePriority, InputContinuousLanePriority),
-    );
+  const previousLanePriority = getCurrentUpdateLanePriority();
+  setCurrentUpdateLanePriority(
+    higherLanePriority(previousLanePriority, InputContinuousLanePriority),
+  );
 
-    runWithPriority(
-      priorityLevel < UserBlockingPriority
-        ? UserBlockingPriority
-        : priorityLevel,
-      () => {
-        setPending(true);
-      },
-    );
+  runWithPriority(
+    priorityLevel < UserBlockingPriority ? UserBlockingPriority : priorityLevel,
+    () => {
+      setPending(true);
+    },
+  );
 
-    // TODO: Can remove this. Was only necessary because we used to give
-    // different behavior to transitions without a config object. Now they are
-    // all treated the same.
-    setCurrentUpdateLanePriority(DefaultLanePriority);
+  // TODO: Can remove this. Was only necessary because we used to give
+  // different behavior to transitions without a config object. Now they are
+  // all treated the same.
+  setCurrentUpdateLanePriority(DefaultLanePriority);
 
-    runWithPriority(
-      priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
-      () => {
-        const prevTransition = ReactCurrentBatchConfig.transition;
-        ReactCurrentBatchConfig.transition = 1;
-        try {
-          setPending(false);
-          callback();
-        } finally {
-          if (decoupleUpdatePriorityFromScheduler) {
-            setCurrentUpdateLanePriority(previousLanePriority);
-          }
-          ReactCurrentBatchConfig.transition = prevTransition;
-        }
-      },
-    );
-  } else {
-    runWithPriority(
-      priorityLevel < UserBlockingPriority
-        ? UserBlockingPriority
-        : priorityLevel,
-      () => {
-        setPending(true);
-      },
-    );
-
-    runWithPriority(
-      priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
-      () => {
-        const prevTransition = ReactCurrentBatchConfig.transition;
-        ReactCurrentBatchConfig.transition = 1;
-        try {
-          setPending(false);
-          callback();
-        } finally {
-          ReactCurrentBatchConfig.transition = prevTransition;
-        }
-      },
-    );
-  }
+  runWithPriority(
+    priorityLevel > NormalPriority ? NormalPriority : priorityLevel,
+    () => {
+      const prevTransition = ReactCurrentBatchConfig.transition;
+      ReactCurrentBatchConfig.transition = 1;
+      try {
+        setPending(false);
+        callback();
+      } finally {
+        setCurrentUpdateLanePriority(previousLanePriority);
+        ReactCurrentBatchConfig.transition = prevTransition;
+      }
+    },
+  );
 }
 
 function mountTransition(): [(() => void) => void, boolean] {

@@ -48,7 +48,6 @@ export const skipUnmountedBoundaries = true;
 
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
-export const decoupleUpdatePriorityFromScheduler = false;
 export const enableDiscreteEventFlushingChange = true;
 
 export const enableStrictEffects = false;

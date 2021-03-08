@@ -24,7 +24,6 @@ export const {
   enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport,
   deferRenderPhaseUpdateToNextBatch,
-  decoupleUpdatePriorityFromScheduler,
   enableDebugTracing,
   skipUnmountedBoundaries,
   enableStrictEffects,

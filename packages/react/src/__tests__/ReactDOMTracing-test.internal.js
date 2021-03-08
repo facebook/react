@@ -428,7 +428,6 @@ describe('ReactDOMTracing', () => {
       });
 
       // @gate experimental
-      // @gate enableNativeEventPriorityInference
       it('should properly trace interactions when there is work of interleaved priorities', () => {
         const Child = () => {
           Scheduler.unstable_yieldValue('Child');
@@ -550,7 +549,6 @@ describe('ReactDOMTracing', () => {
       });
 
       // @gate experimental
-      // @gate enableNativeEventPriorityInference
       it('should properly trace interactions through a multi-pass SuspenseList render', () => {
         const SuspenseList = React.SuspenseList;
         const Suspense = React.Suspense;
