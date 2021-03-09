@@ -10,6 +10,7 @@
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
 import type {Destination} from './ReactServerStreamConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {SuspenseBoundaryID} from './ReactServerFormatConfig';
 
 import {
   scheduleWork,
@@ -19,19 +20,23 @@ import {
   flushBuffered,
   close,
 } from './ReactServerStreamConfig';
-import {formatChunk} from './ReactServerFormatConfig';
+import {
+  formatChunk,
+  writePlaceholder,
+  writeStartCompletedSuspenseBoundary,
+  writeStartPendingSuspenseBoundary,
+  writeStartClientRenderedSuspenseBoundary,
+  writeEndSuspenseBoundary,
+  writeStartSegment,
+  writeEndSegment,
+  createSuspenseBoundaryID,
+} from './ReactServerFormatConfig';
 import {REACT_ELEMENT_TYPE, REACT_SUSPENSE_TYPE} from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import invariant from 'shared/invariant';
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
-
-// This object is used to lazily reuse the ID of the first generated node, or assign one.
-// TODO: Make this hack more DOM host config specific. Other environments can directly ID their suspense boundary.
-type SuspenseBoundaryID = {
-  id: null | string,
-};
 
 type SuspenseBoundary = {
   +id: SuspenseBoundaryID,
@@ -132,7 +137,7 @@ function pingSuspendedWork(request: Request, work: SuspendedWork): void {
 
 function createSuspenseBoundary(): SuspenseBoundary {
   return {
-    id: {id: null},
+    id: createSuspenseBoundaryID(),
     rootSegmentID: -1,
     parentFlushed: false,
     pendingWork: 0,
@@ -439,10 +444,8 @@ function flushSubtree(
     case PENDING: {
       // We're emitting a placeholder for this segment to be filled in later.
       // Therefore we'll need to assign it an ID - to refer to it by.
-      segment.id = request.nextSegmentId++;
-      // TODO: Move this to host config and format a placeholder node.
-      const instruction = new Uint8Array(0);
-      return writeChunk(destination, instruction);
+      const segmentID = (segment.id = request.nextSegmentId++);
+      return writePlaceholder(destination, segmentID);
     }
     case COMPLETED: {
       segment.status = FLUSHED;
@@ -491,14 +494,12 @@ function flushSegment(
     // We never queue the inner boundary so we'll never emit its content or partial segments.
 
     // TODO: Move this to host config.
-    const boundaryStart = new Uint8Array(0);
-    writeChunk(destination, boundaryStart);
+    writeStartClientRenderedSuspenseBoundary(destination, boundary.id);
 
     // Flush the fallback.
     flushSubtree(request, destination, segment);
 
-    const boundaryEnd = new Uint8Array(0);
-    return writeChunk(destination, boundaryEnd);
+    return writeEndSuspenseBoundary(destination);
   } else if (boundary.pendingWork > 0) {
     // This boundary is still loading. Emit a pending suspense boundary wrapper.
 
@@ -509,15 +510,12 @@ function flushSegment(
       request.partialBoundaries.push(boundary);
     }
 
-    // TODO: Move this to host config.
-    const boundaryStart = new Uint8Array(0);
-    writeChunk(destination, boundaryStart);
+    writeStartPendingSuspenseBoundary(destination, boundary.id);
 
     // Flush the fallback.
     flushSubtree(request, destination, segment);
 
-    const boundaryEnd = new Uint8Array(0);
-    return writeChunk(destination, boundaryEnd);
+    return writeEndSuspenseBoundary(destination);
   } else if (boundary.byteSize > request.maxBoundarySize) {
     // This boundary is large and will be emitted separately so that we can progressively show
     // other content. We add it to the queue during the flush because we have to ensure that
@@ -530,21 +528,16 @@ function flushSegment(
 
     request.completedBoundaries.push(boundary);
     // Emit a pending rendered suspense boundary wrapper.
-    // TODO: Move this to host config.
-    const boundaryStart = new Uint8Array(0);
-    writeChunk(destination, boundaryStart);
+    writeStartPendingSuspenseBoundary(destination, boundary.id);
 
     // Flush the fallback.
     flushSubtree(request, destination, segment);
 
-    const boundaryEnd = new Uint8Array(0);
-    return writeChunk(destination, boundaryEnd);
+    return writeEndSuspenseBoundary(destination);
   } else {
     // We can inline this boundary's content as a complete boundary.
 
-    // TODO: Move this to host config.
-    const boundaryStart = new Uint8Array(0);
-    writeChunk(destination, boundaryStart);
+    writeStartCompletedSuspenseBoundary(destination, boundary.id);
 
     const completedSegments = boundary.completedSegments;
     invariant(
@@ -554,8 +547,7 @@ function flushSegment(
     const contentSegment = completedSegments[0];
     flushSegment(request, destination, contentSegment);
 
-    const boundaryEnd = new Uint8Array(0);
-    return writeChunk(destination, boundaryEnd);
+    return writeEndSuspenseBoundary(destination);
   }
 }
 
@@ -574,13 +566,9 @@ function flushSegmentContainer(
   destination: Destination,
   segment: Segment,
 ): boolean {
-  const startSegmentContainer = new Uint8Array(0);
-  writeChunk(destination, startSegmentContainer);
-
+  writeStartSegment(destination, segment.id);
   flushSegment(request, destination, segment);
-
-  const endSegmentContainer = new Uint8Array(0);
-  return writeChunk(destination, endSegmentContainer);
+  return writeEndSegment(destination);
 }
 
 function flushCompletedBoundary(
