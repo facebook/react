@@ -10,7 +10,10 @@
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
 import type {Destination} from './ReactServerStreamConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {SuspenseBoundaryID} from './ReactServerFormatConfig';
+import type {
+  SuspenseBoundaryID,
+  ResponseState,
+} from './ReactServerFormatConfig';
 
 import {
   scheduleWork,
@@ -21,7 +24,6 @@ import {
   close,
 } from './ReactServerStreamConfig';
 import {
-  formatChunk,
   writePlaceholder,
   writeStartCompletedSuspenseBoundary,
   writeStartPendingSuspenseBoundary,
@@ -29,7 +31,14 @@ import {
   writeEndSuspenseBoundary,
   writeStartSegment,
   writeEndSegment,
+  writeClientRenderBoundaryInstruction,
+  writeCompletedBoundaryInstruction,
+  writeCompletedSegmentInstruction,
+  pushTextInstance,
+  pushStartInstance,
+  pushEndInstance,
   createSuspenseBoundaryID,
+  createResponseState,
 } from './ReactServerFormatConfig';
 import {REACT_ELEMENT_TYPE, REACT_SUSPENSE_TYPE} from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -80,6 +89,7 @@ const CLOSED = 2;
 
 type Request = {
   +destination: Destination,
+  +responseState: ResponseState,
   +maxBoundarySize: number,
   status: 0 | 1 | 2,
   nextSegmentId: number,
@@ -100,10 +110,10 @@ export function createRequest(
   const pingedWork = [];
   const request = {
     destination,
+    responseState: createResponseState(),
     maxBoundarySize: 1024,
     status: BUFFERING,
     nextSegmentId: 0,
-    nextBoundaryId: 0,
     allPendingWork: 0,
     pendingRootWork: 0,
     completedRootSegment: null,
@@ -204,6 +214,10 @@ function renderNode(
   segment: Segment,
   node: ReactNodeList,
 ): void {
+  if (typeof node === 'string') {
+    pushTextInstance(segment.chunks, node);
+    return;
+  }
   if (
     typeof node !== 'object' ||
     !node ||
@@ -239,8 +253,9 @@ function renderNode(
       }
     }
   } else if (typeof type === 'string') {
-    // TODO: Split this to start/end and process children.
-    segment.chunks.push(formatChunk(type, props));
+    pushStartInstance(segment.chunks, type, props);
+    renderNode(request, parentBoundary, segment, props.children);
+    pushEndInstance(segment.chunks, type, props);
   } else if (type === REACT_SUSPENSE_TYPE) {
     // Each time we enter a suspense boundary, we split out into a new segment for
     // the fallback so that we can later replace that segment with the content.
@@ -493,7 +508,6 @@ function flushSegment(
     // Emit a client rendered suspense boundary wrapper.
     // We never queue the inner boundary so we'll never emit its content or partial segments.
 
-    // TODO: Move this to host config.
     writeStartClientRenderedSuspenseBoundary(destination, boundary.id);
 
     // Flush the fallback.
@@ -556,9 +570,11 @@ function flushClientRenderedBoundary(
   destination: Destination,
   boundary: SuspenseBoundary,
 ): boolean {
-  // TODO: Move this to host config and format an instruction to update the fallback boundary.
-  const instruction = new Uint8Array(0);
-  return writeChunk(destination, instruction);
+  return writeClientRenderBoundaryInstruction(
+    destination,
+    request.responseState,
+    boundary.id,
+  );
 }
 
 function flushSegmentContainer(
@@ -584,11 +600,12 @@ function flushCompletedBoundary(
   }
   completedSegments.length = 0;
 
-  // TODO: Move this to host config and format an instruction to update the fallback boundary.
-  // const rootSegmentID = boundary.rootSegmentID;
-  // const boundaryID = boundary.id;
-  const replaceFallbackInstruction = new Uint8Array(0);
-  return writeChunk(destination, replaceFallbackInstruction);
+  return writeCompletedBoundaryInstruction(
+    destination,
+    request.responseState,
+    boundary.id,
+    boundary.rootSegmentID,
+  );
 }
 
 function flushPartialBoundary(
@@ -634,15 +651,14 @@ function flushPartiallyCompletedSegment(
       rootSegmentID !== -1,
       'A root segment ID must have been assigned by now. This is a bug in React.',
     );
-
-    // TODO: Move this to host config and format an instruction to update the fallback boundary.
     return flushSegmentContainer(request, destination, segment);
   } else {
-    // TODO: Move this to host config and format an instruction to update the fallback boundary.
     flushSegmentContainer(request, destination, segment);
-
-    const replacePlaceholderInstruction = new Uint8Array(0);
-    return writeChunk(destination, replacePlaceholderInstruction);
+    return writeCompletedSegmentInstruction(
+      destination,
+      request.responseState,
+      segmentID,
+    );
   }
 }
 
