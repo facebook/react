@@ -1929,10 +1929,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     // TODO: assert toErrorDev() when the warning is implemented again.
     ReactNoop.act(() => {
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_UserBlockingPriority,
-        () => _setShow(true),
-      );
+      ReactNoop.flushSync(() => _setShow(true));
     });
   });
 
@@ -1959,10 +1956,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     // TODO: assert toErrorDev() when the warning is implemented again.
     ReactNoop.act(() => {
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_UserBlockingPriority,
-        () => show(),
-      );
+      ReactNoop.flushSync(() => show());
     });
   });
 
@@ -1991,10 +1985,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop).toMatchRenderedOutput('Loading...');
 
     ReactNoop.act(() => {
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_UserBlockingPriority,
-        () => showB(),
-      );
+      ReactNoop.flushSync(() => showB());
     });
 
     expect(Scheduler).toHaveYielded(['Suspend! [A]', 'Suspend! [B]']);
@@ -2025,10 +2016,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
       // TODO: assert toErrorDev() when the warning is implemented again.
       ReactNoop.act(() => {
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => _setShow(true),
-        );
+        ReactNoop.flushSync(() => _setShow(true));
       });
     },
   );

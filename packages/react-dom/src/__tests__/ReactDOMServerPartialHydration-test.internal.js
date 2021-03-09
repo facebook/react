@@ -18,6 +18,11 @@ let Suspense;
 let SuspenseList;
 let act;
 
+// Copied from ReactFiberLanes. Don't do this!
+// This is hard coded directly to avoid needing to import, and
+// we'll remove this as we replace runWithPriority with React APIs.
+export const IdleLanePriority = 2;
+
 function dispatchMouseEvent(to, from) {
   if (!to) {
     to = null;
@@ -623,7 +628,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.textContent).toBe('Hello');
 
     // Schedule an update at idle priority
-    Scheduler.unstable_runWithPriority(Scheduler.unstable_IdlePriority, () => {
+    ReactDOM.unstable_runWithPriority(IdleLanePriority, () => {
       root.render(<App text="Hi" className="hi" />);
     });
 

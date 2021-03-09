@@ -1476,13 +1476,10 @@ describe('useMutableSource', () => {
         // read during render will happen to match the latest value. But it should
         // still entangle the updates to prevent the previous update (a1) from
         // rendering by itself.
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_IdlePriority,
-          () => {
-            mutateA('a0');
-            mutateB('b0');
-          },
-        );
+        React.unstable_startTransition(() => {
+          mutateA('a0');
+          mutateB('b0');
+        });
         // Finish the current render
         expect(Scheduler).toFlushUntilNextPaint(['c']);
         // a0 will re-render because of the mutation update. But it should show
@@ -1601,12 +1598,9 @@ describe('useMutableSource', () => {
       // Mutate the config. This is at lower priority so that 1) to make sure
       // it doesn't happen to get batched with the in-progress render, and 2)
       // so it doesn't interrupt the in-progress render.
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_IdlePriority,
-        () => {
-          source.valueB = '3';
-        },
-      );
+      React.unstable_startTransition(() => {
+        source.valueB = '3';
+      });
 
       expect(Scheduler).toFlushAndYieldThrough([
         // The partial render completes
@@ -1698,12 +1692,9 @@ describe('useMutableSource', () => {
       expect(source.listenerCount).toBe(1);
 
       // Mutate -> schedule update for ComponentA
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_IdlePriority,
-        () => {
-          source.value = 'two';
-        },
-      );
+      React.unstable_startTransition(() => {
+        source.value = 'two';
+      });
 
       // Commit ComponentB -> notice the change and schedule an update for ComponentB
       expect(Scheduler).toFlushAndYield(['a:two', 'b:two']);

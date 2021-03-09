@@ -3166,10 +3166,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       await act(async () => {
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          transition,
-        );
+        transition();
 
         expect(Scheduler).toFlushAndYield([
           'Before... Pending: true',
