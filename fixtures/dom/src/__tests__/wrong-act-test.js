@@ -81,12 +81,12 @@ it("doesn't warn when you use the right act + renderer: test", () => {
   });
 });
 
-it('resets correctly across renderers', () => {
+it('resets correctly across renderers', async () => {
   function Effecty() {
     React.useEffect(() => {}, []);
     return null;
   }
-  TestUtils.act(() => {
+  await TestUtils.act(async () => {
     TestRenderer.act(() => {});
     expect(() => {
       TestRenderer.create(<Effecty />);
