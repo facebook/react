@@ -748,6 +748,7 @@ describe('Profiler', () => {
         expect(onRender.mock.calls[2][1]).toBe('update');
       });
 
+      // @gate experimental
       it('is properly distinguish updates and nested-updates when there is more than sync remaining work', () => {
         loadModules({
           enableSchedulerTracing,
