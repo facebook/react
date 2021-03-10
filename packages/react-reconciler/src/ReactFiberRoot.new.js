@@ -25,7 +25,7 @@ import {
 } from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
 import {initializeUpdateQueue} from './ReactUpdateQueue.new';
-import {LegacyRoot, BlockingRoot, ConcurrentRoot} from './ReactRootTags';
+import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
 
 function FiberRootNode(containerInfo, tag, hydrate) {
   this.tag = tag;
@@ -73,9 +73,6 @@ function FiberRootNode(containerInfo, tag, hydrate) {
 
   if (__DEV__) {
     switch (tag) {
-      case BlockingRoot:
-        this._debugRootType = 'createBlockingRoot()';
-        break;
       case ConcurrentRoot:
         this._debugRootType = 'createRoot()';
         break;

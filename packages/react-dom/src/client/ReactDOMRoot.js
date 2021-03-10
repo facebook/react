@@ -51,25 +51,17 @@ import {
   registerMutableSourceForHydration,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import invariant from 'shared/invariant';
-import {
-  BlockingRoot,
-  ConcurrentRoot,
-  LegacyRoot,
-} from 'react-reconciler/src/ReactRootTags';
+import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 
 function ReactDOMRoot(container: Container, options: void | RootOptions) {
   this._internalRoot = createRootImpl(container, ConcurrentRoot, options);
 }
 
-function ReactDOMBlockingRoot(
-  container: Container,
-  tag: RootTag,
-  options: void | RootOptions,
-) {
-  this._internalRoot = createRootImpl(container, tag, options);
+function ReactDOMLegacyRoot(container: Container, options: void | RootOptions) {
+  this._internalRoot = createRootImpl(container, LegacyRoot, options);
 }
 
-ReactDOMRoot.prototype.render = ReactDOMBlockingRoot.prototype.render = function(
+ReactDOMRoot.prototype.render = ReactDOMLegacyRoot.prototype.render = function(
   children: ReactNodeList,
 ): void {
   const root = this._internalRoot;
@@ -99,7 +91,7 @@ ReactDOMRoot.prototype.render = ReactDOMBlockingRoot.prototype.render = function
   updateContainer(children, root, null, null);
 };
 
-ReactDOMRoot.prototype.unmount = ReactDOMBlockingRoot.prototype.unmount = function(): void {
+ReactDOMRoot.prototype.unmount = ReactDOMLegacyRoot.prototype.unmount = function(): void {
   if (__DEV__) {
     if (typeof arguments[0] === 'function') {
       console.error(
@@ -169,23 +161,11 @@ export function createRoot(
   return new ReactDOMRoot(container, options);
 }
 
-export function createBlockingRoot(
-  container: Container,
-  options?: RootOptions,
-): RootType {
-  invariant(
-    isValidContainer(container),
-    'createRoot(...): Target container is not a DOM element.',
-  );
-  warnIfReactDOMContainerInDEV(container);
-  return new ReactDOMBlockingRoot(container, BlockingRoot, options);
-}
-
 export function createLegacyRoot(
   container: Container,
   options?: RootOptions,
 ): RootType {
-  return new ReactDOMBlockingRoot(container, LegacyRoot, options);
+  return new ReactDOMLegacyRoot(container, options);
 }
 
 export function isValidContainer(node: mixed): boolean {

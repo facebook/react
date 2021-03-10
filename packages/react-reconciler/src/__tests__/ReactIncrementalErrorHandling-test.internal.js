@@ -1870,10 +1870,6 @@ describe('ReactIncrementalErrorHandling', () => {
       const root = ReactNoop.createRoot();
       root.render('Error when completing root');
       expect(Scheduler).toFlushAndThrow('Error when completing root');
-
-      const blockingRoot = ReactNoop.createBlockingRoot();
-      blockingRoot.render('Error when completing root');
-      expect(Scheduler).toFlushAndThrow('Error when completing root');
     });
   }
 });
