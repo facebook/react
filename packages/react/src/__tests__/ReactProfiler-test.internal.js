@@ -748,6 +748,7 @@ describe('Profiler', () => {
         expect(onRender.mock.calls[2][1]).toBe('update');
       });
 
+      // @gate experimental
       it('is properly distinguish updates and nested-updates when there is more than sync remaining work', () => {
         loadModules({
           enableSchedulerTracing,
@@ -767,15 +768,12 @@ describe('Profiler', () => {
         const onRender = jest.fn();
 
         // Schedule low-priority work.
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_LowPriority,
-          () => {
-            ReactNoop.render(
-              <React.Profiler id="root" onRender={onRender}>
-                <Component />
-              </React.Profiler>,
-            );
-          },
+        React.unstable_startTransition(() =>
+          ReactNoop.render(
+            <React.Profiler id="root" onRender={onRender}>
+              <Component />
+            </React.Profiler>,
+          ),
         );
 
         // Flush sync work with a nested update

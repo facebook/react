@@ -550,11 +550,7 @@ describe('ReactExpiration', () => {
     function App() {
       const [highPri, setHighPri] = useState(0);
       const [normalPri, setNormalPri] = useState(0);
-      updateHighPri = () =>
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => setHighPri(n => n + 1),
-        );
+      updateHighPri = () => ReactNoop.flushSync(() => setHighPri(n => n + 1));
       updateNormalPri = () => setNormalPri(n => n + 1);
       return (
         <>

@@ -246,12 +246,8 @@ describe('ReactDOMTracing', () => {
               Scheduler.unstable_yieldValue('Child:update');
             } else {
               Scheduler.unstable_yieldValue('Child:mount');
-              // TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
               ReactDOM.unstable_runWithPriority(IdleLanePriority, () =>
-                Scheduler.unstable_runWithPriority(
-                  Scheduler.unstable_IdlePriority,
-                  () => setDidMount(true),
-                ),
+                setDidMount(true),
               );
             }
           }, [didMount]);
