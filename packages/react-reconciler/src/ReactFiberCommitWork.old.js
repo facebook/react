@@ -77,7 +77,6 @@ import {
   MutationMask,
   LayoutMask,
   PassiveMask,
-  PassiveUnmountPendingDev,
 } from './ReactFiberFlags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import invariant from 'shared/invariant';
@@ -2341,14 +2340,6 @@ function commitPassiveUnmountEffects_complete() {
 }
 
 function commitPassiveUnmountOnFiber(finishedWork: Fiber): void {
-  if (__DEV__) {
-    finishedWork.flags &= ~PassiveUnmountPendingDev;
-    const alternate = finishedWork.alternate;
-    if (alternate !== null) {
-      alternate.flags &= ~PassiveUnmountPendingDev;
-    }
-  }
-
   switch (finishedWork.tag) {
     case FunctionComponent:
     case ForwardRef:
