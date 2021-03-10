@@ -240,7 +240,7 @@ describe('SimpleEventPlugin', function() {
     });
 
     // @gate experimental
-    it('flushes pending interactive work before extracting event handler', () => {
+    it('flushes pending interactive work before exiting event handler', () => {
       container = document.createElement('div');
       const root = ReactDOM.unstable_createRoot(container);
       document.body.appendChild(container);
@@ -292,17 +292,14 @@ describe('SimpleEventPlugin', function() {
       expect(Scheduler).toHaveYielded([
         // The handler fired
         'Side-effect',
-        // but the component did not re-render yet, because it's async
+        // The component re-rendered synchronously, even in concurrent mode.
+        'render button: disabled',
       ]);
 
       // Click the button again
       click();
       expect(Scheduler).toHaveYielded([
-        // Before handling this second click event, the previous interactive
-        // update is flushed
-        'render button: disabled',
-        // The event handler was removed from the button, so there's no second
-        // side-effect
+        // The event handler was removed from the button, so there's no effect.
       ]);
 
       // The handler should not fire again no matter how many times we
@@ -359,8 +356,8 @@ describe('SimpleEventPlugin', function() {
 
       // Click the button a single time
       click();
-      // The counter should not have updated yet because it's async
-      expect(button.textContent).toEqual('Count: 0');
+      // The counter should update synchronously, even in concurrent mode.
+      expect(button.textContent).toEqual('Count: 1');
 
       // Click the button many more times
       await TestUtils.act(async () => {
@@ -442,15 +439,10 @@ describe('SimpleEventPlugin', function() {
         button.dispatchEvent(event);
       }
 
-      // Click the button a single time
-      click();
-      // Nothing should flush on the first click.
-      expect(Scheduler).toHaveYielded([]);
-      // Click again. This will force the previous discrete update to flush. But
-      // only the high-pri count will increase.
+      // Click the button a single time.
+      // This will flush at the end of the event, even in concurrent mode.
       click();
       expect(Scheduler).toHaveYielded(['High-pri count: 1, Low-pri count: 0']);
-      expect(button.textContent).toEqual('High-pri count: 1, Low-pri count: 0');
 
       // Click the button many more times
       click();
@@ -460,7 +452,7 @@ describe('SimpleEventPlugin', function() {
       click();
       click();
 
-      // Flush the remaining work.
+      // Each update should synchronously flush, even in concurrent mode.
       expect(Scheduler).toHaveYielded([
         'High-pri count: 2, Low-pri count: 0',
         'High-pri count: 3, Low-pri count: 0',
@@ -470,16 +462,13 @@ describe('SimpleEventPlugin', function() {
         'High-pri count: 7, Low-pri count: 0',
       ]);
 
-      // Flush the microtask queue
-      await null;
-
-      // At the end, both counters should equal the total number of clicks
-      expect(Scheduler).toHaveYielded(['High-pri count: 8, Low-pri count: 0']);
+      // Now flush the scheduler to apply the transition updates.
+      // At the end, both counters should equal the total number of clicks.
       expect(Scheduler).toFlushAndYield([
-        'High-pri count: 8, Low-pri count: 8',
+        'High-pri count: 7, Low-pri count: 7',
       ]);
 
-      expect(button.textContent).toEqual('High-pri count: 8, Low-pri count: 8');
+      expect(button.textContent).toEqual('High-pri count: 7, Low-pri count: 7');
     });
   });
 

@@ -67,9 +67,9 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     }
 
     const root = ReactDOM.unstable_createRoot(container);
-    root.render(<Form />);
-    // Flush
-    Scheduler.unstable_flushAll();
+    await act(() => {
+      root.render(<Form />);
+    });
 
     const disableButton = disableButtonRef.current;
     expect(disableButton.tagName).toBe('BUTTON');
@@ -80,11 +80,6 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     expect(() =>
       dispatchAndSetCurrentEvent(disableButton, firstEvent),
     ).toErrorDev(['An update to Form inside a test was not wrapped in act']);
-
-    // There should now be a pending update to disable the form.
-    // This should not have flushed yet since it's in concurrent mode.
-    const submitButton = submitButtonRef.current;
-    expect(submitButton.tagName).toBe('BUTTON');
 
     // Discrete events should be flushed in a microtask.
     // Verify that the second button was removed.

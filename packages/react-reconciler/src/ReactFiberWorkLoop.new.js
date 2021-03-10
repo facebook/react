@@ -727,7 +727,10 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   // Schedule a new callback.
   let newCallbackNode;
-  if (newCallbackPriority === SyncLanePriority) {
+  if (
+    newCallbackPriority === SyncLanePriority ||
+    newCallbackPriority === InputDiscreteLanePriority
+  ) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
@@ -737,12 +740,6 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       ImmediateSchedulerPriority,
       performSyncWorkOnRoot.bind(null, root),
     );
-  } else if (
-    supportsMicrotasks &&
-    newCallbackPriority === InputDiscreteLanePriority
-  ) {
-    scheduleMicrotask(performSyncWorkOnRoot.bind(null, root));
-    newCallbackNode = null;
   } else {
     const schedulerPriorityLevel = lanePriorityToSchedulerPriority(
       newCallbackPriority,
