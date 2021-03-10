@@ -145,9 +145,9 @@ function pingSuspendedWork(request: Request, work: SuspendedWork): void {
   }
 }
 
-function createSuspenseBoundary(): SuspenseBoundary {
+function createSuspenseBoundary(request: Request): SuspenseBoundary {
   return {
-    id: createSuspenseBoundaryID(),
+    id: createSuspenseBoundaryID(request.responseState),
     rootSegmentID: -1,
     parentFlushed: false,
     pendingWork: 0,
@@ -264,7 +264,7 @@ function renderNode(
     const fallback: ReactNodeList = props.fallback;
     const content: ReactNodeList = props.children;
 
-    const newBoundary = createSuspenseBoundary();
+    const newBoundary = createSuspenseBoundary(request);
 
     const insertionIndex = segment.chunks.length;
     // The children of the boundary segment is actually the fallback.

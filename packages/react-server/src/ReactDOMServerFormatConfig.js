@@ -38,7 +38,9 @@ export type SuspenseBoundaryID = {
   id: null | string,
 };
 
-export function createSuspenseBoundaryID(): SuspenseBoundaryID {
+export function createSuspenseBoundaryID(
+  responseState: ResponseState,
+): SuspenseBoundaryID {
   return {id: null};
 }
 
