@@ -566,7 +566,7 @@ export function findUpdateLane(lanePriority: LanePriority): Lane {
     case SyncBatchedLanePriority:
       return SyncBatchedLane;
     case InputDiscreteLanePriority:
-      return InputDiscreteLane;
+      return SyncLane;
     case InputContinuousLanePriority:
       return InputContinuousLane;
     case DefaultLanePriority:

@@ -726,10 +726,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   // Schedule a new callback.
   let newCallbackNode;
-  if (
-    newCallbackPriority === SyncLanePriority ||
-    newCallbackPriority === InputDiscreteLanePriority
-  ) {
+  if (newCallbackPriority === SyncLanePriority) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
