@@ -140,9 +140,7 @@ describe('SchedulingProfiler labels', () => {
       targetRef.current.click();
     });
     expect(clearedMarks).toContain(
-      `--schedule-state-update-${formatLanes(
-        ReactFiberLane.InputDiscreteLane,
-      )}-App`,
+      `--schedule-state-update-${formatLanes(ReactFiberLane.SyncLane)}-App`,
     );
   });
 

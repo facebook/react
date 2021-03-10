@@ -685,7 +685,7 @@ describe('ChangeEventPlugin', () => {
     });
 
     // @gate experimental
-    it('is async for non-input events', async () => {
+    it('is sync for non-input events', async () => {
       const root = ReactDOM.unstable_createRoot(container);
       let input;
 
@@ -724,9 +724,6 @@ describe('ChangeEventPlugin', () => {
       input.dispatchEvent(
         new Event('click', {bubbles: true, cancelable: true}),
       );
-      // Nothing should have changed
-      expect(Scheduler).toHaveYielded([]);
-      expect(input.value).toBe('initial');
 
       // Flush microtask queue.
       await null;
