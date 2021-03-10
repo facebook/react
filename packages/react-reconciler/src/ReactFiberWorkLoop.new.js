@@ -90,7 +90,6 @@ import {
   clearContainer,
   getCurrentEventPriority,
   supportsMicrotasks,
-  scheduleMicrotask,
 } from './ReactFiberHostConfig';
 
 import {
