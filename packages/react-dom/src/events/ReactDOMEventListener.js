@@ -8,7 +8,10 @@
  */
 
 import type {AnyNativeEvent} from '../events/PluginModuleType';
-import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {
+  FiberRoot,
+  ReactPriorityLevel,
+} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
 
@@ -50,7 +53,6 @@ import {
   DefaultLanePriority as DefaultLanePriority_old,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
   setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_old,
-  schedulerPriorityToLanePriority as schedulerPriorityToLanePriority_old,
 } from 'react-reconciler/src/ReactFiberLane.old';
 import {
   InputDiscreteLanePriority as InputDiscreteLanePriority_new,
@@ -58,10 +60,20 @@ import {
   DefaultLanePriority as DefaultLanePriority_new,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
   setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_new,
-  schedulerPriorityToLanePriority as schedulerPriorityToLanePriority_new,
+  SyncLanePriority,
+  IdleLanePriority,
+  NoLanePriority,
 } from 'react-reconciler/src/ReactFiberLane.new';
 import {getCurrentPriorityLevel as getCurrentPriorityLevel_old} from 'react-reconciler/src/SchedulerWithReactIntegration.old';
-import {getCurrentPriorityLevel as getCurrentPriorityLevel_new} from 'react-reconciler/src/SchedulerWithReactIntegration.new';
+import {
+  getCurrentPriorityLevel as getCurrentPriorityLevel_new,
+  IdlePriority as IdleSchedulerPriority,
+  ImmediatePriority as ImmediateSchedulerPriority,
+  LowPriority as LowSchedulerPriority,
+  NormalPriority as NormalSchedulerPriority,
+  UserBlockingPriority as UserBlockingSchedulerPriority,
+} from 'react-reconciler/src/SchedulerWithReactIntegration.new';
+import type {LanePriority} from 'react-reconciler/src/ReactFiberLane.new';
 
 const InputDiscreteLanePriority = enableNewReconciler
   ? InputDiscreteLanePriority_new
@@ -78,12 +90,28 @@ const getCurrentUpdateLanePriority = enableNewReconciler
 const setCurrentUpdateLanePriority = enableNewReconciler
   ? setCurrentUpdateLanePriority_new
   : setCurrentUpdateLanePriority_old;
-const schedulerPriorityToLanePriority = enableNewReconciler
-  ? schedulerPriorityToLanePriority_new
-  : schedulerPriorityToLanePriority_old;
 const getCurrentPriorityLevel = enableNewReconciler
   ? getCurrentPriorityLevel_new
   : getCurrentPriorityLevel_old;
+
+function schedulerPriorityToLanePriority(
+  schedulerPriorityLevel: ReactPriorityLevel,
+): LanePriority {
+  switch (schedulerPriorityLevel) {
+    case ImmediateSchedulerPriority:
+      return SyncLanePriority;
+    case UserBlockingSchedulerPriority:
+      return InputContinuousLanePriority;
+    case NormalSchedulerPriority:
+    case LowSchedulerPriority:
+      // TODO: Handle LowSchedulerPriority, somehow. Maybe the same lane as hydration.
+      return DefaultLanePriority;
+    case IdleSchedulerPriority:
+      return IdleLanePriority;
+    default:
+      return NoLanePriority;
+  }
+}
 
 // TODO: can we stop exporting these?
 export let _enabled = true;
@@ -410,8 +438,6 @@ export function getEventPriority(domEventName: DOMEventName): * {
       // Eventually this mechanism will be replaced by a check
       // of the current priority on the native scheduler.
       const schedulerPriority = getCurrentPriorityLevel();
-      // TODO: Inline schedulerPriorityToLanePriority into this file
-      // when we delete the enableNativeEventPriorityInference flag.
       return schedulerPriorityToLanePriority(schedulerPriority);
     }
     default:

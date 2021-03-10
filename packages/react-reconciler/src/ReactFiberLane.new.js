@@ -42,7 +42,6 @@ import {
   ImmediatePriority as ImmediateSchedulerPriority,
   UserBlockingPriority as UserBlockingSchedulerPriority,
   NormalPriority as NormalSchedulerPriority,
-  LowPriority as LowSchedulerPriority,
   IdlePriority as IdleSchedulerPriority,
   NoPriority as NoSchedulerPriority,
 } from './SchedulerWithReactIntegration.new';
@@ -272,25 +271,6 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
       // This shouldn't be reachable, but as a fallback, return the entire bitmask.
       return_highestLanePriority = DefaultLanePriority;
       return lanes;
-  }
-}
-
-export function schedulerPriorityToLanePriority(
-  schedulerPriorityLevel: ReactPriorityLevel,
-): LanePriority {
-  switch (schedulerPriorityLevel) {
-    case ImmediateSchedulerPriority:
-      return SyncLanePriority;
-    case UserBlockingSchedulerPriority:
-      return InputContinuousLanePriority;
-    case NormalSchedulerPriority:
-    case LowSchedulerPriority:
-      // TODO: Handle LowSchedulerPriority, somehow. Maybe the same lane as hydration.
-      return DefaultLanePriority;
-    case IdleSchedulerPriority:
-      return IdleLanePriority;
-    default:
-      return NoLanePriority;
   }
 }
 

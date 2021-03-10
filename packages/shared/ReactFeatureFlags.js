@@ -152,6 +152,4 @@ export const disableSchedulerTimeoutInWorkLoop = false;
 
 export const enableSyncMicroTasks = false;
 
-export const enableNativeEventPriorityInference = false;
-
 export const enableLazyContextPropagation = false;

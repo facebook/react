@@ -27,7 +27,6 @@ import {
   LegacyRoot,
 } from 'react-reconciler/src/ReactRootTags';
 
-import {enableNativeEventPriorityInference} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
 const {IsSomeRendererActing} = ReactSharedInternals;
@@ -934,19 +933,12 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
     discreteUpdates: NoopRenderer.discreteUpdates,
 
     idleUpdates<T>(fn: () => T): T {
-      if (enableNativeEventPriorityInference) {
-        const prevEventPriority = currentEventPriority;
-        currentEventPriority = NoopRenderer.IdleEventPriority;
-        try {
-          fn();
-        } finally {
-          currentEventPriority = prevEventPriority;
-        }
-      } else {
-        return Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_IdlePriority,
-          fn,
-        );
+      const prevEventPriority = currentEventPriority;
+      currentEventPriority = NoopRenderer.IdleEventPriority;
+      try {
+        fn();
+      } finally {
+        currentEventPriority = prevEventPriority;
       }
     },
 
