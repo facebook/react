@@ -10,10 +10,9 @@
 export type TypeOfMode = number;
 
 export const NoMode = /*            */ 0b000000;
-// TODO: Remove BlockingMode and ConcurrentMode by reading from the root tag instead
-export const BlockingMode = /*      */ 0b000001;
-export const ConcurrentMode = /*    */ 0b000010;
-export const ProfileMode = /*       */ 0b000100;
-export const DebugTracingMode = /*  */ 0b001000;
-export const StrictLegacyMode = /*  */ 0b010000;
-export const StrictEffectsMode = /* */ 0b100000;
+// TODO: Remove ConcurrentMode by reading from the root tag instead
+export const ConcurrentMode = /*    */ 0b000001;
+export const ProfileMode = /*       */ 0b000010;
+export const DebugTracingMode = /*  */ 0b000100;
+export const StrictLegacyMode = /*  */ 0b001000;
+export const StrictEffectsMode = /* */ 0b010000;

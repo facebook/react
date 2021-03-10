@@ -125,7 +125,7 @@ describe('ReactOffscreen', () => {
   });
 
   // @gate experimental
-  it('does not defer in blocking mode', async () => {
+  it('does defer in concurrent mode', async () => {
     let setState;
     function Foo() {
       const [state, _setState] = useState('A');
@@ -133,7 +133,7 @@ describe('ReactOffscreen', () => {
       return <Text text={state} />;
     }
 
-    const root = ReactNoop.createBlockingRoot();
+    const root = ReactNoop.createRoot();
     await ReactNoop.act(async () => {
       root.render(
         <>
@@ -143,9 +143,13 @@ describe('ReactOffscreen', () => {
           <Text text="Outside" />
         </>,
       );
-      // Should not defer the hidden tree
-      expect(Scheduler).toFlushUntilNextPaint(['A', 'Outside']);
+      // Should defer the hidden tree.
+      expect(Scheduler).toFlushUntilNextPaint(['Outside']);
     });
+
+    // The hidden tree was rendered at lower priority.
+    expect(Scheduler).toHaveYielded(['A']);
+
     expect(root).toMatchRenderedOutput(
       <>
         <span prop="A" />

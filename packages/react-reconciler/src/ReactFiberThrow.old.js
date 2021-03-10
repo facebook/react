@@ -34,7 +34,7 @@ import {
   ForceUpdateForLegacySuspense,
 } from './ReactFiberFlags';
 import {shouldCaptureSuspense} from './ReactFiberSuspenseComponent.old';
-import {NoMode, BlockingMode, DebugTracingMode} from './ReactTypeOfMode';
+import {NoMode, ConcurrentMode, DebugTracingMode} from './ReactTypeOfMode';
 import {
   enableDebugTracing,
   enableSchedulingProfiler,
@@ -233,7 +233,7 @@ function throwException(
     // A legacy mode Suspense quirk, only relevant to hook components.
     const tag = sourceFiber.tag;
     if (
-      (sourceFiber.mode & BlockingMode) === NoMode &&
+      (sourceFiber.mode & ConcurrentMode) === NoMode &&
       (tag === FunctionComponent ||
         tag === ForwardRef ||
         tag === SimpleMemoComponent)
@@ -274,13 +274,13 @@ function throwException(
           wakeables.add(wakeable);
         }
 
-        // If the boundary is outside of blocking mode, we should *not*
+        // If the boundary is in legacy mode, we should *not*
         // suspend the commit. Pretend as if the suspended component rendered
         // null and keep rendering. In the commit phase, we'll schedule a
         // subsequent synchronous update to re-render the Suspense.
         //
         // Note: It doesn't matter whether the component that suspended was
-        // inside a blocking mode tree. If the Suspense is outside of it, we
+        // inside a concurrent mode tree. If the Suspense is outside of it, we
         // should *not* suspend the commit.
         //
         // If the suspense boundary suspended itself suspended, we don't have to
@@ -288,7 +288,7 @@ function throwException(
         // directly do a second pass over the fallback in this render and
         // pretend we meant to render that directly.
         if (
-          (workInProgress.mode & BlockingMode) === NoMode &&
+          (workInProgress.mode & ConcurrentMode) === NoMode &&
           workInProgress !== returnFiber
         ) {
           workInProgress.flags |= DidCapture;

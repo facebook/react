@@ -574,31 +574,29 @@ describe('ReactDOMFiberAsync', () => {
     expect(containerC.textContent).toEqual('Finished');
   });
 
-  describe('createBlockingRoot', () => {
-    // @gate experimental
-    it('updates flush without yielding in the next event', () => {
-      const root = ReactDOM.unstable_createBlockingRoot(container);
+  // @gate experimental
+  it('updates flush without yielding in the next event', () => {
+    const root = ReactDOM.unstable_createRoot(container);
 
-      function Text(props) {
-        Scheduler.unstable_yieldValue(props.text);
-        return props.text;
-      }
+    function Text(props) {
+      Scheduler.unstable_yieldValue(props.text);
+      return props.text;
+    }
 
-      root.render(
-        <>
-          <Text text="A" />
-          <Text text="B" />
-          <Text text="C" />
-        </>,
-      );
+    root.render(
+      <>
+        <Text text="A" />
+        <Text text="B" />
+        <Text text="C" />
+      </>,
+    );
 
-      // Nothing should have rendered yet
-      expect(container.textContent).toEqual('');
+    // Nothing should have rendered yet
+    expect(container.textContent).toEqual('');
 
-      // Everything should render immediately in the next event
-      expect(Scheduler).toFlushExpired(['A', 'B', 'C']);
-      expect(container.textContent).toEqual('ABC');
-    });
+    // Everything should render immediately in the next event
+    expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
+    expect(container.textContent).toEqual('ABC');
   });
 
   // @gate experimental
