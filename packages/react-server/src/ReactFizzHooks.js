@@ -470,9 +470,9 @@ function unsupportedStartTransition() {
   invariant(false, 'startTransition cannot be called during server rendering.');
 }
 
-function useTransition(): [(callback: () => void) => void, boolean] {
+function useTransition(): [boolean, (callback: () => void) => void] {
   resolveCurrentlyRenderingComponent();
-  return [unsupportedStartTransition, false];
+  return [false, unsupportedStartTransition];
 }
 
 function useOpaqueIdentifier(): OpaqueIDType {

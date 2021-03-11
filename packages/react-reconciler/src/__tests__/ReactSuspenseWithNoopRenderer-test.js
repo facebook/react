@@ -3745,7 +3745,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     let startTransition;
     function B() {
       const [textB, _setTextB] = useState('B');
-      const [_startTransition] = useTransition({timeoutMs: 10000});
+      // eslint-disable-next-line no-unused-vars
+      const [_, _startTransition] = useTransition();
       startTransition = _startTransition;
       setTextB = _setTextB;
       return (
@@ -3843,12 +3844,8 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     let setTextWithLongTransition;
 
     function App() {
-      const [startShortTransition, isPending1] = React.unstable_useTransition({
-        timeoutMs: 5000,
-      });
-      const [startLongTransition, isPending2] = React.unstable_useTransition({
-        timeoutMs: 30000,
-      });
+      const [isPending1, startShortTransition] = React.unstable_useTransition();
+      const [isPending2, startLongTransition] = React.unstable_useTransition();
       const isPending = isPending1 || isPending2;
       const [text, setText] = React.useState('');
       const [mirror, setMirror] = React.useState('');

@@ -1723,27 +1723,27 @@ function startTransition(setPending, callback) {
   }
 }
 
-function mountTransition(): [(() => void) => void, boolean] {
+function mountTransition(): [boolean, (() => void) => void] {
   const [isPending, setPending] = mountState(false);
   // The `start` method never changes.
   const start = startTransition.bind(null, setPending);
   const hook = mountWorkInProgressHook();
   hook.memoizedState = start;
-  return [start, isPending];
+  return [isPending, start];
 }
 
-function updateTransition(): [(() => void) => void, boolean] {
+function updateTransition(): [boolean, (() => void) => void] {
   const [isPending] = updateState(false);
   const hook = updateWorkInProgressHook();
   const start = hook.memoizedState;
-  return [start, isPending];
+  return [isPending, start];
 }
 
-function rerenderTransition(): [(() => void) => void, boolean] {
+function rerenderTransition(): [boolean, (() => void) => void] {
   const [isPending] = rerenderState(false);
   const hook = updateWorkInProgressHook();
   const start = hook.memoizedState;
-  return [start, isPending];
+  return [isPending, start];
 }
 
 let isUpdatingOpaqueValueInRenderPhase = false;
@@ -2283,7 +2283,7 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDeferredValue(value);
     },
-    useTransition(): [(() => void) => void, boolean] {
+    useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
       mountHookTypesDev();
       return mountTransition();
@@ -2407,7 +2407,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return mountDeferredValue(value);
     },
-    useTransition(): [(() => void) => void, boolean] {
+    useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
       return mountTransition();
@@ -2531,7 +2531,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDeferredValue(value);
     },
-    useTransition(): [(() => void) => void, boolean] {
+    useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
       return updateTransition();
@@ -2656,7 +2656,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return rerenderDeferredValue(value);
     },
-    useTransition(): [(() => void) => void, boolean] {
+    useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
       updateHookTypesDev();
       return rerenderTransition();
@@ -2792,7 +2792,7 @@ if (__DEV__) {
       mountHookTypesDev();
       return mountDeferredValue(value);
     },
-    useTransition(): [(() => void) => void, boolean] {
+    useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
       warnInvalidHookAccess();
       mountHookTypesDev();
@@ -2931,7 +2931,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return updateDeferredValue(value);
     },
-    useTransition(): [(() => void) => void, boolean] {
+    useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
       warnInvalidHookAccess();
       updateHookTypesDev();
@@ -3071,7 +3071,7 @@ if (__DEV__) {
       updateHookTypesDev();
       return rerenderDeferredValue(value);
     },
-    useTransition(): [(() => void) => void, boolean] {
+    useTransition(): [boolean, (() => void) => void] {
       currentHookNameInDev = 'useTransition';
       warnInvalidHookAccess();
       updateHookTypesDev();
