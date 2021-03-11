@@ -737,16 +737,6 @@ export function markRootExpired(root: FiberRoot, expiredLanes: Lanes) {
   root.expiredLanes |= expiredLanes & root.pendingLanes;
 }
 
-export function markDiscreteUpdatesExpired(root: FiberRoot) {
-  if (root.pendingLanes & InputDiscreteLane) {
-    root.expiredLanes |= InputDiscreteLane;
-  }
-}
-
-export function hasDiscreteLanes(lanes: Lanes) {
-  return (lanes & InputDiscreteLane) !== NoLanes;
-}
-
 export function markRootMutableRead(root: FiberRoot, updateLane: Lane) {
   root.mutableReadLanes |= updateLane & root.pendingLanes;
 }

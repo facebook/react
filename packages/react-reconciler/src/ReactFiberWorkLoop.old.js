@@ -39,12 +39,10 @@ import invariant from 'shared/invariant';
 import {
   scheduleCallback,
   cancelCallback,
-  getCurrentPriorityLevel,
   shouldYield,
   requestPaint,
   now,
   ImmediatePriority as ImmediateSchedulerPriority,
-  UserBlockingPriority as UserBlockingSchedulerPriority,
   NormalPriority as NormalSchedulerPriority,
   flushSyncCallbackQueue,
   scheduleSyncCallback,
@@ -148,7 +146,6 @@ import {
   mergeLanes,
   removeLanes,
   pickArbitraryLane,
-  hasDiscreteLanes,
   includesNonIdleWork,
   includesOnlyRetries,
   includesOnlyTransitions,
@@ -163,10 +160,8 @@ import {
   markRootSuspended as markRootSuspended_dontCallThisOneDirectly,
   markRootPinged,
   markRootExpired,
-  markDiscreteUpdatesExpired,
   markRootFinished,
   lanePriorityToSchedulerPriority,
-  higherLanePriority,
 } from './ReactFiberLane.old';
 import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork.old';
@@ -243,14 +238,13 @@ const {
 
 type ExecutionContext = number;
 
-export const NoContext = /*             */ 0b0000000;
-const BatchedContext = /*               */ 0b0000001;
-const EventContext = /*                 */ 0b0000010;
-const DiscreteEventContext = /*         */ 0b0000100;
-const LegacyUnbatchedContext = /*       */ 0b0001000;
-const RenderContext = /*                */ 0b0010000;
-const CommitContext = /*                */ 0b0100000;
-export const RetryAfterError = /*       */ 0b1000000;
+export const NoContext = /*             */ 0b000000;
+const BatchedContext = /*               */ 0b000001;
+const EventContext = /*                 */ 0b000010;
+const LegacyUnbatchedContext = /*       */ 0b000100;
+const RenderContext = /*                */ 0b001000;
+const CommitContext = /*                */ 0b010000;
+export const RetryAfterError = /*       */ 0b100000;
 
 type RootExitStatus = 0 | 1 | 2 | 3 | 4 | 5;
 const RootIncomplete = 0;
@@ -330,8 +324,6 @@ let rootWithPendingPassiveEffects: FiberRoot | null = null;
 let pendingPassiveEffectsRenderPriority: LanePriority = NoLanePriority;
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
 let pendingPassiveProfilerEffects: Array<Fiber> = [];
-
-let rootsWithPendingDiscreteUpdates: Set<FiberRoot> | null = null;
 
 // Use these to prevent an infinite loop of nested updates
 const NESTED_UPDATE_LIMIT = 50;
@@ -434,29 +426,17 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     return currentEventTransitionLane;
   }
 
-  // TODO: Remove this dependency on the Scheduler priority.
-  // To do that, we're replacing it with an update lane priority.
-  const schedulerPriority = getCurrentPriorityLevel();
-
-  // Find the correct lane based on priorities. Ideally, this would just be
-  // the update lane priority, but for now we're also checking for discrete
-  // updates and falling back to the scheduler priority.
-  let lane;
-  if (
-    // TODO: Temporary. We're removing the concept of discrete updates.
-    (executionContext & DiscreteEventContext) !== NoContext &&
-    schedulerPriority === UserBlockingSchedulerPriority
-  ) {
-    lane = findUpdateLane(InputDiscreteLanePriority);
-  } else if (getCurrentUpdateLanePriority() !== NoLanePriority) {
-    const currentLanePriority = getCurrentUpdateLanePriority();
-    lane = findUpdateLane(currentLanePriority);
-  } else {
-    const eventLanePriority = getCurrentEventPriority();
-    lane = findUpdateLane(eventLanePriority);
+  // Updates originating inside certain React methods, like flushSync, have
+  // their priority set by tracking it with a context variable.
+  const updateLanePriority = getCurrentUpdateLanePriority();
+  if (updateLanePriority !== NoLanePriority) {
+    return findUpdateLane(updateLanePriority);
   }
 
-  return lane;
+  // This update originated outside React. Ask the host environement for an
+  // appropriate priority, based on the type of event.
+  const eventLanePriority = getCurrentEventPriority();
+  return findUpdateLane(eventLanePriority);
 }
 
 function requestRetryLane(fiber: Fiber) {
@@ -578,23 +558,6 @@ export function scheduleUpdateOnFiber(
       }
     }
   } else {
-    const updateLanePriority = getCurrentUpdateLanePriority();
-
-    // Schedule a discrete update but only if it's not Sync.
-    if (
-      (executionContext & DiscreteEventContext) !== NoContext &&
-      // Only updates greater than default considered discrete, even inside a discrete event.
-      higherLanePriority(updateLanePriority, DefaultLanePriority) !==
-        DefaultLanePriority
-    ) {
-      // This is the result of a discrete event. Track the lowest priority
-      // discrete update per root so we can flush them early, if needed.
-      if (rootsWithPendingDiscreteUpdates === null) {
-        rootsWithPendingDiscreteUpdates = new Set([root]);
-      } else {
-        rootsWithPendingDiscreteUpdates.add(root);
-      }
-    }
     // Schedule other updates after in case the callback is sync.
     ensureRootIsScheduled(root, eventTime);
     schedulePendingInteractions(root, lane);
@@ -1096,7 +1059,7 @@ export function flushDiscreteUpdates() {
     // like `el.focus()`. Exit.
     return;
   }
-  flushPendingDiscreteUpdates();
+  flushSyncCallbackQueue();
   // If the discrete updates scheduled passive effects, flush them now so that
   // they fire before the next serial event.
   flushPassiveEffects();
@@ -1110,21 +1073,6 @@ export function deferredUpdates<A>(fn: () => A): A {
   } finally {
     setCurrentUpdateLanePriority(previousLanePriority);
   }
-}
-
-function flushPendingDiscreteUpdates() {
-  if (rootsWithPendingDiscreteUpdates !== null) {
-    // For each root with pending discrete updates, schedule a callback to
-    // immediately flush them.
-    const roots = rootsWithPendingDiscreteUpdates;
-    rootsWithPendingDiscreteUpdates = null;
-    roots.forEach(root => {
-      markDiscreteUpdatesExpired(root);
-      ensureRootIsScheduled(root, now());
-    });
-  }
-  // Now flush the immediate queue.
-  flushSyncCallbackQueue();
 }
 
 export function batchedUpdates<A, R>(fn: A => R, a: A): R {
@@ -1164,16 +1112,12 @@ export function discreteUpdates<A, B, C, D, R>(
   c: C,
   d: D,
 ): R {
-  const prevExecutionContext = executionContext;
-  executionContext |= DiscreteEventContext;
-
   const previousLanePriority = getCurrentUpdateLanePriority();
   try {
     setCurrentUpdateLanePriority(InputDiscreteLanePriority);
     return fn(a, b, c, d);
   } finally {
     setCurrentUpdateLanePriority(previousLanePriority);
-    executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
       // Flush the immediate callbacks that were scheduled during this batch
       resetRenderTimer();
@@ -1801,18 +1745,6 @@ function commitRootImpl(root, renderPriorityLevel) {
   // pending time is whatever is left on the root fiber.
   let remainingLanes = mergeLanes(finishedWork.lanes, finishedWork.childLanes);
   markRootFinished(root, remainingLanes);
-
-  // Clear already finished discrete updates in case that a later call of
-  // `flushDiscreteUpdates` starts a useless render pass which may cancels
-  // a scheduled timeout.
-  if (rootsWithPendingDiscreteUpdates !== null) {
-    if (
-      !hasDiscreteLanes(remainingLanes) &&
-      rootsWithPendingDiscreteUpdates.has(root)
-    ) {
-      rootsWithPendingDiscreteUpdates.delete(root);
-    }
-  }
 
   if (root === workInProgressRoot) {
     // We can reset these now that they are finished.
