@@ -77,7 +77,6 @@ export default class Store extends EventEmitter<{|
   supportsProfiling: [],
   supportsReloadAndProfile: [],
   unsupportedRendererVersionDetected: [],
-  isSynchronousXHRSupported: [],
 |}> {
   _bridge: FrontendBridge;
 
