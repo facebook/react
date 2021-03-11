@@ -25,6 +25,27 @@
 
 declare var $$$hostConfig: any;
 export opaque type Destination = mixed; // eslint-disable-line no-undef
+export opaque type ResponseState = mixed;
+export opaque type SuspenseBoundaryID = mixed;
 
-export const formatChunkAsString = $$$hostConfig.formatChunkAsString;
-export const formatChunk = $$$hostConfig.formatChunk;
+export const createResponseState = $$$hostConfig.createResponseState;
+export const createSuspenseBoundaryID = $$$hostConfig.createSuspenseBoundaryID;
+export const pushTextInstance = $$$hostConfig.pushTextInstance;
+export const pushStartInstance = $$$hostConfig.pushStartInstance;
+export const pushEndInstance = $$$hostConfig.pushEndInstance;
+export const writePlaceholder = $$$hostConfig.writePlaceholder;
+export const writeStartCompletedSuspenseBoundary =
+  $$$hostConfig.writeStartCompletedSuspenseBoundary;
+export const writeStartPendingSuspenseBoundary =
+  $$$hostConfig.writeStartPendingSuspenseBoundary;
+export const writeStartClientRenderedSuspenseBoundary =
+  $$$hostConfig.writeStartClientRenderedSuspenseBoundary;
+export const writeEndSuspenseBoundary = $$$hostConfig.writeEndSuspenseBoundary;
+export const writeStartSegment = $$$hostConfig.writeStartSegment;
+export const writeEndSegment = $$$hostConfig.writeEndSegment;
+export const writeCompletedSegmentInstruction =
+  $$$hostConfig.writeCompletedSegmentInstruction;
+export const writeCompletedBoundaryInstruction =
+  $$$hostConfig.writeCompletedBoundaryInstruction;
+export const writeClientRenderBoundaryInstruction =
+  $$$hostConfig.writeClientRenderBoundaryInstruction;

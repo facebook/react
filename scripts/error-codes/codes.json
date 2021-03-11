@@ -376,5 +376,13 @@
   "385": "A mutable source was mutated while the %s component was rendering. This is not supported. Move any mutations into event handlers or effects.",
   "386": "The current renderer does not support microtasks. This error is likely caused by a bug in React. Please file an issue.",
   "387": "Should have a current fiber. This is a bug in React.",
-  "388": "Expected to find a bailed out fiber. This is a bug in React."
+  "388": "Expected to find a bailed out fiber. This is a bug in React.",
+  "389": "There can only be one root segment. This is a bug in React.",
+  "390": "Errored or already flushed boundaries should not be flushed again. This is a bug in React.",
+  "391": "A previously unvisited boundary must have exactly one root segment. This is a bug in React.",
+  "392": "A root segment ID must have been assigned by now. This is a bug in React.",
+  "393": "Cache cannot be refreshed during server rendering.",
+  "394": "startTransition cannot be called during server rendering.",
+  "395": "An ID must have been assigned before we can complete the boundary.",
+  "396": "More boundaries or placeholders than we expected to ever emit."
 }
