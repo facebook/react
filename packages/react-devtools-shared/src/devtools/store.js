@@ -1285,4 +1285,10 @@ export default class Store extends EventEmitter<{|
     // and for unit testing the Store itself.
     throw error;
   }
+  getAllElements = (): Array<{|id: number, displayName: null | string|}> => {
+    return Array.from(this._idToElement, ([, value]) => ({
+      id: value.id,
+      displayName: value.displayName,
+    })).filter(value => !!value.displayName);
+  };
 }

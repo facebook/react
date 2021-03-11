@@ -4,8 +4,7 @@ import AutoSizer from 'react-virtualized-auto-sizer';
 import Tooltip from '@reach/tooltip';
 import {StoreContext} from '../context';
 import {SettingsContext} from '../Settings/SettingsContext';
-import {TreeStateContext} from './TreeContext';
-
+import {useSubscription} from '../hooks';
 import styles from './ComponentSummary.css';
 
 type ListItem = {|
@@ -13,39 +12,51 @@ type ListItem = {|
   instanceCount: number,
 |};
 
-export default function Table(props: Props) {
+export default function ComponentSummary(props: Props) {
   const store = useContext(StoreContext);
-  const {numElements} = useContext(TreeStateContext);
 
-  const items = useMemo(() => {
-    const components = [];
-    for (let i = 0; i < numElements; i += 1) {
-      const element = store.getElementAtIndex(i);
-      const component = components.find(
-        ({componentName}) => componentName === element.displayName,
-      );
-      if (component) {
-        component.instanceCount += 1;
-      } else {
-        components.push({
-          componentName: element.displayName,
-          instanceCount: 1,
-        });
-      }
-    }
+  const allElementsSubscription = useMemo(
+    () => ({
+      getCurrentValue: () => {
+        const components = store
+          .getAllElements()
+          .reduce((allComponents, element) => {
+            const component = allComponents.find(
+              ({componentName}) => componentName === element.displayName,
+            );
+            if (component) {
+              component.instanceCount += 1;
+            } else {
+              allComponents.push({
+                componentName: element.displayName,
+                instanceCount: 1,
+              });
+            }
 
-    components.sort(
-      (
-        {instanceCount: count1, componentName: componentName1},
-        {instanceCount: count2, componentName: componentName2},
-      ) =>
-        count1 === count2
-          ? componentName1.localeCompare(componentName2)
-          : count2 - count1,
-    );
+            return allComponents;
+          }, []);
 
-    return components;
-  }, [numElements]);
+        components.sort(
+          (
+            {instanceCount: count1, componentName: componentName1},
+            {instanceCount: count2, componentName: componentName2},
+          ) =>
+            count1 === count2
+              ? componentName1.localeCompare(componentName2)
+              : count2 - count1,
+        );
+
+        return components;
+      },
+      subscribe: (callback: Function) => {
+        store.addListener('mutated', callback);
+        return () => store.removeListener('mutated', callback);
+      },
+    }),
+    [store],
+  );
+
+  const items = useSubscription(allElementsSubscription);
 
   return (
     <div className={styles.Container}>
