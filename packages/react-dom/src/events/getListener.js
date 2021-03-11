@@ -37,6 +37,7 @@ function shouldPreventMouseEvent(
     case 'onMouseMoveCapture':
     case 'onMouseUp':
     case 'onMouseUpCapture':
+    case 'onMouseLeave':
     case 'onMouseEnter':
       return !!(props.disabled && isInteractive(type));
     default:
