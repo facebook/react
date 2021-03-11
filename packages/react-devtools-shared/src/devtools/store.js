@@ -321,10 +321,6 @@ export default class Store extends EventEmitter<{|
     return this._hasOwnerMetadata;
   }
 
-  get isSynchronousXHRSupported(): boolean {
-    return this._isSynchronousXHRSupported;
-  }
-
   get nativeStyleEditorValidAttributes(): $ReadOnlyArray<string> | null {
     return this._nativeStyleEditorValidAttributes;
   }
