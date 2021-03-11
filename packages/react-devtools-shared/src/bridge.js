@@ -122,6 +122,7 @@ export type BackendEvents = {|
   extensionBackendInitialized: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
+  isSynchronousXHRSupported: [boolean],
   operations: [Array<number>],
   ownersList: [OwnersList],
   overrideComponentFilters: [Array<ComponentFilter>],
@@ -134,7 +135,6 @@ export type BackendEvents = {|
   syncSelectionFromNativeElementsPanel: [],
   syncSelectionToNativeElementsPanel: [],
   unsupportedRendererVersion: [RendererID],
-  isSynchronousXHRSupported: [boolean],
 
   // React Native style editor plug-in.
   isNativeStyleEditorSupported: [
