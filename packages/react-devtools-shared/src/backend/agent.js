@@ -38,8 +38,7 @@ import type {
   RendererInterface,
 } from './types';
 import type {ComponentFilter} from '../types';
-import {
-} from './utils';
+import {isSynchronousXHRSupported} from './utils';
 
 const debug = (methodName, ...args) => {
   if (__DEBUG__) {
@@ -217,7 +216,6 @@ export default class Agent extends EventEmitter<{|
 
     // Notify the frontend if the backend supports the Storage API (e.g. localStorage).
     // If not, features like reload-and-profile will not work correctly and must be disabled.
-    // The same goes for sync XHR requests; it's how DevTools injects before ReactDOM starts rendering.
     let isBackendStorageAPISupported = false;
     try {
       localStorage.getItem('test');
