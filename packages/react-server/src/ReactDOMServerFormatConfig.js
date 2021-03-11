@@ -33,7 +33,8 @@ export function createResponseState(): ResponseState {
 }
 
 // This object is used to lazily reuse the ID of the first generated node, or assign one.
-// This is very specific to DOM where we can't assign an ID to.
+// We can't assign an ID up front because the node we're attaching it to might already
+// have one. So we need to lazily use that if it's available.
 export type SuspenseBoundaryID = {
   id: null | string,
 };
