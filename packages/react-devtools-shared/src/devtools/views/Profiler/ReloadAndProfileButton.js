@@ -17,7 +17,6 @@ import {useSubscription} from '../hooks';
 type SubscriptionData = {|
   recordChangeDescriptions: boolean,
   supportsReloadAndProfile: boolean,
-  supportsSynchronousXHR: boolean,
 |};
 
 export default function ReloadAndProfileButton() {
@@ -29,16 +28,13 @@ export default function ReloadAndProfileButton() {
       getCurrentValue: () => ({
         recordChangeDescriptions: store.recordChangeDescriptions,
         supportsReloadAndProfile: store.supportsReloadAndProfile,
-        supportsSynchronousXHR: store.supportsSynchronousXHR,
       }),
       subscribe: (callback: Function) => {
         store.addListener('recordChangeDescriptions', callback);
         store.addListener('supportsReloadAndProfile', callback);
-        store.addListener('supportsSynchronousXHR', callback);
         return () => {
           store.removeListener('recordChangeDescriptions', callback);
           store.removeListener('supportsReloadAndProfile', callback);
-          store.removeListener('supportsSynchronousXHR', callback);
         };
       },
     }),
@@ -47,7 +43,6 @@ export default function ReloadAndProfileButton() {
   const {
     recordChangeDescriptions,
     supportsReloadAndProfile,
-    supportsSynchronousXHR,
   } = useSubscription<SubscriptionData>(subscription);
 
   const reloadAndProfile = useCallback(() => {
@@ -64,15 +59,11 @@ export default function ReloadAndProfileButton() {
     return null;
   }
 
-  const buttonTitle = supportsSynchronousXHR
-    ? 'Reload and start profiling'
-    : 'Reload and start profiling has been disabled because synchronous XHR is not supported on this site';
-
   return (
     <Button
-      disabled={!store.supportsProfiling || !supportsSynchronousXHR}
+      disabled={!store.supportsProfiling}
       onClick={reloadAndProfile}
-      title={buttonTitle}>
+      title="Reload and start profiling">
       <ButtonIcon type="reload" />
     </Button>
   );
