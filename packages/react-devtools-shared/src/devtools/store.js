@@ -111,6 +111,12 @@ export default class Store extends EventEmitter<{|
   // If not, features like reload-and-profile will not work correctly and must be disabled.
   _isBackendStorageAPISupported: boolean = false;
 
+  // Can DevTools use sync XHR requests?
+  // If not, features like reload-and-profile will not work correctly and must be disabled.
+  // This current limitation applies only to web extension builds
+  // and will need to be reconsidered in the future if we add support for reload to React Native.
+  _isSynchronousXHRSupported: boolean = false;
+
   _nativeStyleEditorValidAttributes: $ReadOnlyArray<string> | null = null;
 
   // Map of element (id) to the set of elements (ids) it owns.
@@ -195,11 +201,15 @@ export default class Store extends EventEmitter<{|
     bridge.addListener('shutdown', this.onBridgeShutdown);
     bridge.addListener(
       'isBackendStorageAPISupported',
-      this.onBridgeStorageSupported,
+      this.onBackendStorageAPISupported,
     );
     bridge.addListener(
       'isNativeStyleEditorSupported',
       this.onBridgeNativeStyleEditorSupported,
+    );
+    bridge.addListener(
+      'isSynchronousXHRSupported',
+      this.onBridgeSynchronousXHRSupported,
     );
     bridge.addListener(
       'unsupportedRendererVersion',
@@ -359,11 +369,16 @@ export default class Store extends EventEmitter<{|
   get supportsProfiling(): boolean {
     return this._supportsProfiling;
   }
+
   get supportsReloadAndProfile(): boolean {
     // Does the DevTools shell support reloading and eagerly injecting the renderer interface?
-    // And if so, can the backend use the localStorage API?
-    // Both of these are required for the reload-and-profile feature to work.
-    return this._supportsReloadAndProfile && this._isBackendStorageAPISupported;
+    // And if so, can the backend use the localStorage API and sync XHR?
+    // All of these are currently required for the reload-and-profile feature to work.
+    return (
+      this._supportsReloadAndProfile &&
+      this._isBackendStorageAPISupported &&
+      this._isSynchronousXHRSupported
+    );
   }
 
   get supportsTraceUpdates(): boolean {
@@ -1130,16 +1145,39 @@ export default class Store extends EventEmitter<{|
       debug('onBridgeShutdown', 'unsubscribing from Bridge');
     }
 
-    this._bridge.removeListener('operations', this.onBridgeOperations);
-    this._bridge.removeListener('shutdown', this.onBridgeShutdown);
-    this._bridge.removeListener(
+    const bridge = this._bridge;
+    bridge.removeListener('operations', this.onBridgeOperations);
+    bridge.removeListener(
+      'overrideComponentFilters',
+      this.onBridgeOverrideComponentFilters,
+    );
+    bridge.removeListener('shutdown', this.onBridgeShutdown);
+    bridge.removeListener(
       'isBackendStorageAPISupported',
-      this.onBridgeStorageSupported,
+      this.onBackendStorageAPISupported,
+    );
+    bridge.removeListener(
+      'isNativeStyleEditorSupported',
+      this.onBridgeNativeStyleEditorSupported,
+    );
+    bridge.removeListener(
+      'isSynchronousXHRSupported',
+      this.onBridgeSynchronousXHRSupported,
+    );
+    bridge.removeListener(
+      'unsupportedRendererVersion',
+      this.onBridgeUnsupportedRendererVersion,
     );
   };
 
-  onBridgeStorageSupported = (isBackendStorageAPISupported: boolean) => {
+  onBackendStorageAPISupported = (isBackendStorageAPISupported: boolean) => {
     this._isBackendStorageAPISupported = isBackendStorageAPISupported;
+
+    this.emit('supportsReloadAndProfile');
+  };
+
+  onBridgeSynchronousXHRSupported = (isSynchronousXHRSupported: boolean) => {
+    this._isSynchronousXHRSupported = isSynchronousXHRSupported;
 
     this.emit('supportsReloadAndProfile');
   };
