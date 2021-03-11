@@ -55,5 +55,4 @@ export const enableUseRefAccessWarning = __VARIANT__;
 
 export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
-export const enableSyncMicroTasks = __VARIANT__;
 export const enableLazyContextPropagation = __VARIANT__;

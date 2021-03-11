@@ -402,7 +402,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([]);
   });
 
-  it('retries one more time if an error occurs during a render that expires midway through the tree', () => {
+  it('retries one more time if an error occurs during a render that expires midway through the tree', async () => {
     function Oops({unused}) {
       Scheduler.unstable_yieldValue('Oops');
       throw new Error('Oops');
@@ -432,7 +432,11 @@ describe('ReactIncrementalErrorHandling', () => {
 
     // Expire the render midway through
     Scheduler.unstable_advanceTime(10000);
-    expect(() => Scheduler.unstable_flushExpired()).toThrow('Oops');
+
+    expect(() => {
+      Scheduler.unstable_flushExpired();
+      ReactNoop.flushSync();
+    }).toThrow('Oops');
 
     expect(Scheduler).toHaveYielded([
       // The render expired, but we shouldn't throw out the partial work.

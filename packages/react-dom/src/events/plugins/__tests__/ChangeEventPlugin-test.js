@@ -761,11 +761,12 @@ describe('ChangeEventPlugin', () => {
         mouseOverEvent.initEvent('mouseover', true, true);
         target.current.dispatchEvent(mouseOverEvent);
 
-        // 3s should be enough to expire the updates
-        Scheduler.unstable_advanceTime(3000);
-        expect(Scheduler).toFlushExpired([]);
-        expect(container.textContent).toEqual('hovered');
+        // Flush discrete updates
+        ReactDOM.flushSync();
+        // Since mouse enter/leave is not discrete, should not have updated yet
+        expect(container.textContent).toEqual('not hovered');
       });
+      expect(container.textContent).toEqual('hovered');
     });
   });
 });
