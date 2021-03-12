@@ -32,6 +32,7 @@ const ReactNoopFlightServer = ReactFlightServer({
   },
   completeWriting(destination: Destination): void {},
   close(destination: Destination): void {},
+  closeWithError(destination: Destination, error: mixed): void {},
   flushBuffered(destination: Destination): void {},
   convertStringToBuffer(content: string): Uint8Array {
     return Buffer.from(content, 'utf8');

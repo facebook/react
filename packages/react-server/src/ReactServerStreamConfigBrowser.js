@@ -39,3 +39,18 @@ const textEncoder = new TextEncoder();
 export function convertStringToBuffer(content: string): Uint8Array {
   return textEncoder.encode(content);
 }
+
+export function closeWithError(destination: Destination, error: mixed): void {
+  if (typeof destination.error === 'function') {
+    // $FlowFixMe: This is an Error object or the destination accepts other types.
+    destination.error(error);
+  } else {
+    // Earlier implementations doesn't support this method. In that environment you're
+    // supposed to throw from a promise returned but we don't return a promise in our
+    // approach. We could fork this implementation but this is environment is an edge
+    // case to begin with. It's even less common to run this in an older environment.
+    // Even then, this is not where errors are supposed to happen and they get reported
+    // to a global callback in addition to this anyway. So it's fine just to close this.
+    destination.close();
+  }
+}

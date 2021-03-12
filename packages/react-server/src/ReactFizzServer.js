@@ -22,6 +22,7 @@ import {
   completeWriting,
   flushBuffered,
   close,
+  closeWithError,
 } from './ReactServerStreamConfig';
 import {
   writePlaceholder,
@@ -205,7 +206,7 @@ function fatalError(request: Request, error: mixed): void {
   // a suspense boundary or if the root suspense boundary's fallback errors.
   // It's also called if React itself or its host configs errors.
   request.status = CLOSED;
-  // TODO: Destroy the stream with an error. We weren't able to complete the root.
+  closeWithError(request.destination, error);
 }
 
 function renderNode(
@@ -237,6 +238,7 @@ function renderNode(
         // Something suspended, we'll need to create a new segment and resolve it later.
         const insertionIndex = segment.chunks.length;
         const newSegment = createPendingSegment(request, insertionIndex, null);
+        segment.children.push(newSegment);
         const suspendedWork = createSuspendedWork(
           request,
           node,
@@ -273,6 +275,7 @@ function renderNode(
       insertionIndex,
       newBoundary,
     );
+    segment.children.push(boundarySegment);
     // We create suspended work for the fallback because we don't want to actually work
     // on it yet in case we finish the main content, so we queue for later.
     const suspendedFallbackWork = createSuspendedWork(
@@ -326,6 +329,7 @@ function errorWork(
     fatalError(request, error);
   } else if (!boundary.forceClientRender) {
     boundary.forceClientRender = true;
+
     // Regardless of what happens next, this boundary won't be displayed,
     // so we can flush it, if the parent already flushed.
     if (boundary.parentFlushed) {
