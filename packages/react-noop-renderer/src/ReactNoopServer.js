@@ -74,6 +74,7 @@ const ReactNoopServer = ReactFizzServer({
   },
   completeWriting(destination: Destination): void {},
   close(destination: Destination): void {},
+  closeWithError(destination: Destination, error: mixed): void {},
   flushBuffered(destination: Destination): void {},
 
   createResponseState(): null {

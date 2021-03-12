@@ -15,6 +15,7 @@ global.TextEncoder = require('util').TextEncoder;
 
 let React;
 let ReactDOMFizzServer;
+let Suspense;
 
 describe('ReactDOMFizzServer', () => {
   beforeEach(() => {
@@ -23,7 +24,17 @@ describe('ReactDOMFizzServer', () => {
     if (__EXPERIMENTAL__) {
       ReactDOMFizzServer = require('react-dom/unstable-fizz.browser');
     }
+    Suspense = React.Suspense;
   });
+
+  const theError = new Error('This is an error');
+  function Throw() {
+    throw theError;
+  }
+  const theInfinitePromise = new Promise(() => {});
+  function InfiniteSuspend() {
+    throw theInfinitePromise;
+  }
 
   async function readResult(stream) {
     const reader = stream.getReader();
@@ -44,5 +55,59 @@ describe('ReactDOMFizzServer', () => {
     );
     const result = await readResult(stream);
     expect(result).toBe('<div>hello world</div>');
+  });
+
+  // @gate experimental
+  it('should error the stream when an error is thrown at the root', async () => {
+    const stream = ReactDOMFizzServer.renderToReadableStream(
+      <div>
+        <Throw />
+      </div>,
+    );
+
+    let caughtError = null;
+    let result = '';
+    try {
+      result = await readResult(stream);
+    } catch (x) {
+      caughtError = x;
+    }
+    expect(caughtError).toBe(theError);
+    expect(result).toBe('');
+  });
+
+  // @gate experimental
+  it('should error the stream when an error is thrown inside a fallback', async () => {
+    const stream = ReactDOMFizzServer.renderToReadableStream(
+      <div>
+        <Suspense fallback={<Throw />}>
+          <InfiniteSuspend />
+        </Suspense>
+      </div>,
+    );
+
+    let caughtError = null;
+    let result = '';
+    try {
+      result = await readResult(stream);
+    } catch (x) {
+      caughtError = x;
+    }
+    expect(caughtError).toBe(theError);
+    expect(result).toBe('');
+  });
+
+  // @gate experimental
+  it('should not error the stream when an error is thrown inside suspense boundary', async () => {
+    const stream = ReactDOMFizzServer.renderToReadableStream(
+      <div>
+        <Suspense fallback={<div>Loading</div>}>
+          <Throw />
+        </Suspense>
+      </div>,
+    );
+
+    const result = await readResult(stream);
+    expect(result).toContain('Loading');
   });
 });
