@@ -1,0 +1,46 @@
+{
+  "name": "react-fixtures",
+  "version": "0.1.0",
+  "private": true,
+  "devDependencies": {
+    "@babel/core": "^7.13.10",
+    "@babel/plugin-transform-regenerator": "^7.12.13",
+    "@babel/preset-flow": "^7.12.13",
+    "@babel/preset-react": "^7.12.13",
+    "@babel/register": "^7.13.8"
+  },
+  "dependencies": {
+    "jest": "^26.6.3",
+    "node-14": "npm:node@14",
+    "node-15": "npm:node@15",
+    "react": "^17.0.0",
+    "react-dom": "^17.0.0",
+    "scheduler": "^0.20.1"
+  },
+  "scripts": {
+    "test-all": "jest all.js",
+    "node-14": "node_modules/node-14/bin/node node/test-node.js",
+    "node-14-jsdom": "node_modules/node-14/bin/node node/test-jsdom.js",
+    "node-14-jest-env-node": "node_modules/node-14/bin/node node_modules/jest-cli/bin/jest.js jest/test-jsdom.js",
+    "node-14-jest-env-node-jsdom": "node_modules/node-14/bin/node node_modules/jest-cli/bin/jest.js jest/test-node-jsdom.js",
+    "node-14-jest-env-jsdom": "node_modules/node-14/bin/node node_modules/jest-cli/bin/jest.js jest/test-jsdom.js",
+    "node-15": "node_modules/node-15/bin/node node/test-node.js",
+    "node-15-jsdom": "node_modules/node-15/bin/node node/test-jsdom.js",
+    "node-15-jest-env-node": "node_modules/node-15/bin/node node_modules/jest-cli/bin/jest.js jest/test-jsdom.js",
+    "node-15-jest-env-node-jsdom": "node_modules/node-15/bin/node node_modules/jest-cli/bin/jest.js jest/test-node-jsdom.js",
+    "node-15-jest-env-jsdom": "node_modules/node-15/bin/node node_modules/jest-cli/bin/jest.js jest/test-jsdom.js",
+    "main": "cp -a ./schedulers/main/. node_modules/scheduler",
+    "pr": "cp -a ./schedulers/pr/. node_modules/scheduler",
+    "stable": "cp -a ./schedulers/stable/. node_modules/"
+  },
+  "jest": {
+    "testTimeout": 20000,
+    "testMatch": [
+      "**/jest/*.js",
+      "**/__tests__/*.js"
+    ],
+    "modulePathIgnorePatterns": [
+      "<rootDir>[/\\\\](schedulers)[/\\\\]"
+    ]
+  }
+}
