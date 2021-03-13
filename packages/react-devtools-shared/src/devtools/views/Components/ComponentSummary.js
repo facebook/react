@@ -75,21 +75,13 @@ type ListProps = {|
   items: Array<ListItem>,
 |};
 
-function InnerElementType({children, ...props}) {
-  return (
-    <div className={styles.SummaryGrid} {...props}>
-      {children}
-    </div>
-  );
-}
-
 function ComponentInstanceList({height, width, items}: ListProps) {
   const {lineHeight} = useContext(SettingsContext);
   return (
     <FixedSizeList
-      className={styles.SummaryGrid}
+      className={styles.SummaryList}
       height={height}
-      innerElementType={InnerElementType}
+      innerElementType="div"
       itemCount={items.length}
       itemData={items}
       itemSize={lineHeight}
@@ -106,17 +98,18 @@ type ListItemProps = {
 };
 
 function ComponentInstanceListItem(props: ListItemProps) {
-  const {index, data} = props;
+  const {index, data, style} = props;
   const {componentName, instanceCount} = data[index];
   const title = `${componentName} has ${instanceCount} instance${
     instanceCount > 1 ? 's' : ''
   } mounted`;
+
   return (
-    <>
-      <div>{componentName}</div>
-      <Tooltip className={styles.ElementCountCol} label={title}>
-        <span>{instanceCount}</span>
+    <div className={styles.ComponentLine} style={style}>
+      <div className={styles.ComponentName}>{componentName}</div>
+      <Tooltip label={title}>
+        <span className={styles.InstanceCount}>{instanceCount}</span>
       </Tooltip>
-    </>
+    </div>
   );
 }
