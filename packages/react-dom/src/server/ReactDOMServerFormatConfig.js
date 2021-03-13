@@ -14,6 +14,7 @@ import {
   convertStringToBuffer,
 } from 'react-server/src/ReactServerStreamConfig';
 
+import escapeTextForBrowser from './escapeTextForBrowser';
 import invariant from 'shared/invariant';
 
 // Per response,
@@ -46,13 +47,11 @@ export function createSuspenseBoundaryID(
 }
 
 function encodeHTMLIDAttribute(value: string): string {
-  // TODO: This needs to be encoded for security purposes.
-  return value;
+  return escapeTextForBrowser(value);
 }
 
 function encodeHTMLTextNode(text: string): string {
-  // TOOD: This needs to be encoded for security purposes.
-  return text;
+  return escapeTextForBrowser(text);
 }
 
 export function pushTextInstance(
