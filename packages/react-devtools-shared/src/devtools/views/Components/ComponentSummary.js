@@ -6,6 +6,7 @@ import {StoreContext} from '../context';
 import {SettingsContext} from '../Settings/SettingsContext';
 import {useSubscription} from '../hooks';
 import styles from './ComponentSummary.css';
+import tooltipStyles from '../Tooltip.css';
 
 type ListItem = {|
   componentName: string,
@@ -107,7 +108,7 @@ function ComponentInstanceListItem(props: ListItemProps) {
   return (
     <div className={styles.ComponentLine} style={style}>
       <div className={styles.ComponentName}>{componentName}</div>
-      <Tooltip label={title}>
+      <Tooltip label={title} className={tooltipStyles.Tooltip}>
         <span className={styles.InstanceCount}>{instanceCount}</span>
       </Tooltip>
     </div>
