@@ -1,0 +1,16 @@
+/** @license React v0.20.1
+ * scheduler-tracing.profiling.min.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+'use strict';var g=0,l=0;exports.__interactionsRef=null;exports.__subscriberRef=null;exports.__interactionsRef={current:new Set};exports.__subscriberRef={current:null};var m=null;m=new Set;function n(e){var d=!1,a=null;m.forEach(function(c){try{c.onInteractionTraced(e)}catch(b){d||(d=!0,a=b)}});if(d)throw a;}function p(e){var d=!1,a=null;m.forEach(function(c){try{c.onInteractionScheduledWorkCompleted(e)}catch(b){d||(d=!0,a=b)}});if(d)throw a;}
+function q(e,d){var a=!1,c=null;m.forEach(function(b){try{b.onWorkScheduled(e,d)}catch(f){a||(a=!0,c=f)}});if(a)throw c;}function r(e,d){var a=!1,c=null;m.forEach(function(b){try{b.onWorkStarted(e,d)}catch(f){a||(a=!0,c=f)}});if(a)throw c;}function t(e,d){var a=!1,c=null;m.forEach(function(b){try{b.onWorkStopped(e,d)}catch(f){a||(a=!0,c=f)}});if(a)throw c;}function u(e,d){var a=!1,c=null;m.forEach(function(b){try{b.onWorkCanceled(e,d)}catch(f){a||(a=!0,c=f)}});if(a)throw c;}
+exports.unstable_clear=function(e){var d=exports.__interactionsRef.current;exports.__interactionsRef.current=new Set;try{return e()}finally{exports.__interactionsRef.current=d}};exports.unstable_getCurrent=function(){return exports.__interactionsRef.current};exports.unstable_getThreadID=function(){return++l};
+exports.unstable_subscribe=function(e){m.add(e);1===m.size&&(exports.__subscriberRef.current={onInteractionScheduledWorkCompleted:p,onInteractionTraced:n,onWorkCanceled:u,onWorkScheduled:q,onWorkStarted:r,onWorkStopped:t})};
+exports.unstable_trace=function(e,d,a){var c=3<arguments.length&&void 0!==arguments[3]?arguments[3]:0,b={__count:1,id:g++,name:e,timestamp:d},f=exports.__interactionsRef.current,k=new Set(f);k.add(b);exports.__interactionsRef.current=k;var h=exports.__subscriberRef.current;try{if(null!==h)h.onInteractionTraced(b)}finally{try{if(null!==h)h.onWorkStarted(k,c)}finally{try{var v=a()}finally{exports.__interactionsRef.current=f;try{if(null!==h)h.onWorkStopped(k,c)}finally{if(b.__count--,null!==h&&0===b.__count)h.onInteractionScheduledWorkCompleted(b)}}}}return v};
+exports.unstable_unsubscribe=function(e){m.delete(e);0===m.size&&(exports.__subscriberRef.current=null)};
+exports.unstable_wrap=function(e){function d(){var d=exports.__interactionsRef.current;exports.__interactionsRef.current=c;b=exports.__subscriberRef.current;try{try{if(null!==b)b.onWorkStarted(c,a)}finally{try{var h=e.apply(void 0,arguments)}finally{if(exports.__interactionsRef.current=d,null!==b)b.onWorkStopped(c,a)}}return h}finally{f||(f=!0,c.forEach(function(a){a.__count--;if(null!==b&&0===a.__count)b.onInteractionScheduledWorkCompleted(a)}))}}var a=1<arguments.length&&void 0!==arguments[1]?arguments[1]:
+0,c=exports.__interactionsRef.current,b=exports.__subscriberRef.current;if(null!==b)b.onWorkScheduled(c,a);c.forEach(function(a){a.__count++});var f=!1;d.cancel=function(){b=exports.__subscriberRef.current;try{if(null!==b)b.onWorkCanceled(c,a)}finally{c.forEach(function(a){a.__count--;if(b&&0===a.__count)b.onInteractionScheduledWorkCompleted(a)})}};return d};
