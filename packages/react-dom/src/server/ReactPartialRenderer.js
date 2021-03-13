@@ -52,7 +52,6 @@ import {allocThreadID, freeThreadID} from './ReactThreadIDAllocator';
 import {
   createMarkupForCustomAttribute,
   createMarkupForProperty,
-  createMarkupForRoot,
 } from './DOMMarkupOperations';
 import escapeTextForBrowser from './escapeTextForBrowser';
 import {
@@ -388,15 +387,6 @@ function createOpenTagMarkup(
     }
   }
 
-  // For static pages, no need to put React ID and checksum. Saves lots of
-  // bytes.
-  if (makeStaticMarkup) {
-    return ret;
-  }
-
-  if (isRootElement) {
-    ret += ' ' + createMarkupForRoot();
-  }
   return ret;
 }
 
