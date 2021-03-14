@@ -6,7 +6,7 @@
     "build": "cross-env NODE_ENV=production yarn run build:chrome && yarn run build:firefox && yarn run build:edge",
     "build:dev": "cross-env NODE_ENV=development yarn run build:chrome:dev && yarn run build:firefox:dev && yarn run build:edge:dev",
     "build:chrome": "cross-env NODE_ENV=production node ./chrome/build",
-    "build:chrome:crx": "cross-env NODE_ENV=production node ./chrome/build --crx",
+    "build:chrome:crx": "cross-env NODE_ENV=production FEATURE_FLAG_TARGET=extension-fb node ./chrome/build --crx",
     "build:chrome:dev": "cross-env NODE_ENV=development node ./chrome/build",
     "build:firefox": "cross-env NODE_ENV=production node ./firefox/build",
     "build:firefox:dev": "cross-env NODE_ENV=development node ./firefox/build",

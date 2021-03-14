@@ -13,7 +13,7 @@
  * It should always be imported from "react-devtools-feature-flags".
  ************************************************************************/
 
-// TODO Add feature flags here...
+export const enableProfilerChangedHookIndices = true;
 
 /************************************************************************
  * Do not edit the code below.
@@ -21,7 +21,7 @@
  ************************************************************************/
 
 import typeof * as FeatureFlagsType from './DevToolsFeatureFlags.default';
-import typeof * as ExportsType from './DevToolsFeatureFlags.extension';
+import typeof * as ExportsType from './DevToolsFeatureFlags.extension-fb';
 
 // eslint-disable-next-line no-unused-vars
 type Check<_X, Y: _X, X: Y = _X> = null;

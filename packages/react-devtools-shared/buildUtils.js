@@ -17,8 +17,11 @@ function resolveFeatureFlags(target) {
     case 'shell':
       flagsPath = 'DevToolsFeatureFlags.default';
       break;
-    case 'extension':
-      flagsPath = 'DevToolsFeatureFlags.extension';
+    case 'extension-oss':
+      flagsPath = 'DevToolsFeatureFlags.extension-oss';
+      break;
+    case 'extension-fb':
+      flagsPath = 'DevToolsFeatureFlags.extension-fb';
       break;
     default:
       console.error(`Invalid target "${target}"`);

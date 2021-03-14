@@ -9,10 +9,29 @@
 
 import * as React from 'react';
 import {useContext} from 'react';
+import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
 import {ProfilerContext} from '../Profiler/ProfilerContext';
 import {StoreContext} from '../context';
 
 import styles from './WhatChanged.css';
+
+function hookIndicesToString(indices: Array<number>): string {
+  // This is debatable but I think 1-based might ake for a nicer UX.
+  const numbers = indices.map(value => value + 1);
+
+  switch (numbers.length) {
+    case 0:
+      return 'No hooks changed';
+    case 1:
+      return `Hook ${numbers[0]} changed`;
+    case 2:
+      return `Hooks ${numbers[0]} and ${numbers[1]} changed`;
+    default:
+      return `Hooks ${numbers.slice(0, numbers.length - 1).join(', ')} and ${
+        numbers[numbers.length - 1]
+      } changed`;
+  }
+}
 
 type Props = {|
   fiberID: number,
@@ -81,11 +100,22 @@ export default function WhatChanged({fiberID}: Props) {
   }
 
   if (changeDescription.didHooksChange) {
-    changes.push(
-      <div key="hooks" className={styles.Item}>
-        • Hooks changed
-      </div>,
-    );
+    if (
+      enableProfilerChangedHookIndices &&
+      Array.isArray(changeDescription.hooks)
+    ) {
+      changes.push(
+        <div key="hooks" className={styles.Item}>
+          • {hookIndicesToString(changeDescription.hooks)}
+        </div>,
+      );
+    } else {
+      changes.push(
+        <div key="hooks" className={styles.Item}>
+          • Hooks changed
+        </div>,
+      );
+    }
   }
 
   if (

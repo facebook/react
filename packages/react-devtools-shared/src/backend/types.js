@@ -150,6 +150,7 @@ export type ChangeDescription = {|
   isFirstMount: boolean,
   props: Array<string> | null,
   state: Array<string> | null,
+  hooks?: Array<number> | null,
 |};
 
 export type CommitDataBackend = {|
