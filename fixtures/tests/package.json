@@ -18,7 +18,7 @@
     "scheduler": "^0.20.1"
   },
   "scripts": {
-    "test-all": "jest all.js",
+    "test": "jest all.js",
     "node-14": "node_modules/node-14/bin/node node/test-node.js",
     "node-14-jsdom": "node_modules/node-14/bin/node node/test-jsdom.js",
     "node-14-jest-env-node": "node_modules/node-14/bin/node node_modules/jest-cli/bin/jest.js jest/test-jsdom.js",
@@ -29,9 +29,10 @@
     "node-15-jest-env-node": "node_modules/node-15/bin/node node_modules/jest-cli/bin/jest.js jest/test-jsdom.js",
     "node-15-jest-env-node-jsdom": "node_modules/node-15/bin/node node_modules/jest-cli/bin/jest.js jest/test-node-jsdom.js",
     "node-15-jest-env-jsdom": "node_modules/node-15/bin/node node_modules/jest-cli/bin/jest.js jest/test-jsdom.js",
-    "main": "cp -a ./schedulers/main/. node_modules/scheduler",
-    "pr": "cp -a ./schedulers/pr/. node_modules/scheduler",
-    "stable": "cp -a ./schedulers/stable/. node_modules/"
+    "main": "cp -a ./schedulers/main/. node_modules/",
+    "pr": "cp -a ./schedulers/pr/. node_modules/",
+    "stable": "cp -a ./schedulers/stable/. node_modules/",
+    "suggested": "cp -a ./schedulers/suggested/. node_modules/"
   },
   "jest": {
     "testTimeout": 20000,

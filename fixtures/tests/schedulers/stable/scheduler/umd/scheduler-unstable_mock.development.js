@@ -6,11 +6,14 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-(function (global, factory) {
-  typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports) :
-  typeof define === 'function' && define.amd ? define(['exports'], factory) :
-  (global = global || self, factory(global.SchedulerMock = {}));
-}(this, (function (exports) { 'use strict';
+(function(global, factory) {
+  typeof exports === 'object' && typeof module !== 'undefined'
+    ? factory(exports)
+    : typeof define === 'function' && define.amd
+    ? define(['exports'], factory)
+    : ((global = global || self), factory((global.SchedulerMock = {})));
+})(this, function(exports) {
+  'use strict';
 
   var enableSchedulerDebugging = false;
   var enableProfiling = true;
@@ -37,7 +40,12 @@
     timeoutTime = -1;
   }
   function shouldYieldToHost() {
-    if (expectedNumberOfYields !== -1 && yieldedValues !== null && yieldedValues.length >= expectedNumberOfYields || shouldYieldForPaint && needsPaint) {
+    if (
+      (expectedNumberOfYields !== -1 &&
+        yieldedValues !== null &&
+        yieldedValues.length >= expectedNumberOfYields) ||
+      (shouldYieldForPaint && needsPaint)
+    ) {
       // We yielded at least as many values as expected. Stop flushing.
       didStop = true;
       return true;
@@ -48,7 +56,8 @@
   function getCurrentTime() {
     return currentTime;
   }
-  function forceFrameRate() {// No-op
+  function forceFrameRate() {
+    // No-op
   }
 
   function unstable_flushNumberOfYields(count) {
@@ -165,13 +174,20 @@
   }
   function unstable_flushAll() {
     if (yieldedValues !== null) {
-      throw new Error('Log is not empty. Assert on the log of yielded values before ' + 'flushing additional work.');
+      throw new Error(
+        'Log is not empty. Assert on the log of yielded values before ' +
+          'flushing additional work.'
+      );
     }
 
     unstable_flushAllWithoutAsserting();
 
     if (yieldedValues !== null) {
-      throw new Error('While flushing work, something yielded a value. Use an ' + 'assertion helper to assert on the log of yielded values, e.g. ' + 'expect(Scheduler).toFlushAndYield([...])');
+      throw new Error(
+        'While flushing work, something yielded a value. Use an ' +
+          'assertion helper to assert on the log of yielded values, e.g. ' +
+          'expect(Scheduler).toFlushAndYield([...])'
+      );
     }
   }
   function unstable_yieldValue(value) {
@@ -238,7 +254,7 @@
     var index = i;
 
     while (true) {
-      var parentIndex = index - 1 >>> 1;
+      var parentIndex = (index - 1) >>> 1;
       var parent = heap[parentIndex];
 
       if (parent !== undefined && compare(parent, node) > 0) {
@@ -301,11 +317,14 @@
   var runIdCounter = 0;
   var mainThreadIdCounter = 0;
   var profilingStateSize = 4;
-  var sharedProfilingBuffer =  // $FlowFixMe Flow doesn't know about SharedArrayBuffer
-  typeof SharedArrayBuffer === 'function' ? new SharedArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT) : // $FlowFixMe Flow doesn't know about ArrayBuffer
-  typeof ArrayBuffer === 'function' ? new ArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT) : null // Don't crash the init path on IE9
-  ;
-  var profilingState =  sharedProfilingBuffer !== null ? new Int32Array(sharedProfilingBuffer) : []; // We can't read this but it helps save bytes for null checks
+  var sharedProfilingBuffer = // $FlowFixMe Flow doesn't know about SharedArrayBuffer
+    typeof SharedArrayBuffer === 'function'
+      ? new SharedArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT) // $FlowFixMe Flow doesn't know about ArrayBuffer
+      : typeof ArrayBuffer === 'function'
+      ? new ArrayBuffer(profilingStateSize * Int32Array.BYTES_PER_ELEMENT)
+      : null; // Don't crash the init path on IE9
+  var profilingState =
+    sharedProfilingBuffer !== null ? new Int32Array(sharedProfilingBuffer) : []; // We can't read this but it helps save bytes for null checks
 
   var PRIORITY = 0;
   var CURRENT_TASK_ID = 1;
@@ -319,7 +338,6 @@
     profilingState[QUEUE_SIZE] = 0;
     profilingState[CURRENT_TASK_ID] = 0;
   } // Bytes per element is 4
-
 
   var INITIAL_EVENT_LOG_SIZE = 131072;
   var MAX_EVENT_LOG_SIZE = 524288; // Equivalent to 2 megabytes
@@ -347,7 +365,10 @@
 
         if (eventLogSize > MAX_EVENT_LOG_SIZE) {
           // Using console['error'] to evade Babel and ESLint
-          console['error']("Scheduler Profiling: Event log exceeded maximum size. Don't " + 'forget to call `stopLoggingProfilingEvents()`.');
+          console['error'](
+            "Scheduler Profiling: Event log exceeded maximum size. Don't " +
+              'forget to call `stopLoggingProfilingEvents()`.'
+          );
           stopLoggingProfilingEvents();
           return;
         }
@@ -534,7 +555,6 @@
       markSchedulerUnsuspended(initialTime);
     } // We'll need a host callback the next time work is scheduled.
 
-
     isHostCallbackScheduled = false;
 
     if (isHostTimeoutScheduled) {
@@ -581,8 +601,11 @@
     advanceTimers(currentTime);
     currentTask = peek(taskQueue);
 
-    while (currentTask !== null && !(enableSchedulerDebugging )) {
-      if (currentTask.expirationTime > currentTime && (!hasTimeRemaining || shouldYieldToHost())) {
+    while (currentTask !== null && !enableSchedulerDebugging) {
+      if (
+        currentTask.expirationTime > currentTime &&
+        (!hasTimeRemaining || shouldYieldToHost())
+      ) {
         // This currentTask hasn't expired, and we've reached the deadline.
         break;
       }
@@ -618,7 +641,6 @@
 
       currentTask = peek(taskQueue);
     } // Return whether there's additional work
-
 
     if (currentTask !== null) {
       return true;
@@ -685,7 +707,7 @@
 
   function unstable_wrapCallback(callback) {
     var parentPriorityLevel = currentPriorityLevel;
-    return function () {
+    return function() {
       // This is a fork of runWithPriority, inlined for performance.
       var previousPriorityLevel = currentPriorityLevel;
       currentPriorityLevel = parentPriorityLevel;
@@ -746,7 +768,7 @@
       priorityLevel: priorityLevel,
       startTime: startTime,
       expirationTime: expirationTime,
-      sortIndex: -1
+      sortIndex: -1,
     };
 
     {
@@ -767,7 +789,6 @@
           isHostTimeoutScheduled = true;
         } // Schedule a timeout.
 
-
         requestHostTimeout(handleTimeout, startTime - currentTime);
       }
     } else {
@@ -780,7 +801,6 @@
       } // Schedule a host callback, if needed. If we're already performing work,
       // wait until the next time we yield.
 
-
       if (!isHostCallbackScheduled && !isPerformingWork) {
         isHostCallbackScheduled = true;
         requestHostCallback(flushWork);
@@ -790,11 +810,9 @@
     return newTask;
   }
 
-  function unstable_pauseExecution() {
-  }
+  function unstable_pauseExecution() {}
 
   function unstable_continueExecution() {
-
     if (!isHostCallbackScheduled && !isPerformingWork) {
       isHostCallbackScheduled = true;
       requestHostCallback(flushWork);
@@ -816,7 +834,6 @@
     // remove from the queue because you can't remove arbitrary nodes from an
     // array based heap, only the first one.)
 
-
     task.callback = null;
   }
 
@@ -825,11 +842,11 @@
   }
 
   var unstable_requestPaint = requestPaint;
-  var unstable_Profiling =  {
+  var unstable_Profiling = {
     startLoggingProfilingEvents: startLoggingProfilingEvents,
     stopLoggingProfilingEvents: stopLoggingProfilingEvents,
-    sharedProfilingBuffer: sharedProfilingBuffer
-  } ;
+    sharedProfilingBuffer: sharedProfilingBuffer,
+  };
 
   exports.unstable_IdlePriority = IdlePriority;
   exports.unstable_ImmediatePriority = ImmediatePriority;
@@ -858,5 +875,4 @@
   exports.unstable_shouldYield = shouldYieldToHost;
   exports.unstable_wrapCallback = unstable_wrapCallback;
   exports.unstable_yieldValue = unstable_yieldValue;
-
-})));
+});
