@@ -24,6 +24,7 @@ chrome-user-data
 .vscode
 *.swp
 *.swo
+android/*.hprof
 
 packages/react-devtools-core/dist
 packages/react-devtools-extensions/chrome/build
