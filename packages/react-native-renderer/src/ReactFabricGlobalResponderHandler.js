@@ -16,13 +16,7 @@ const ReactFabricGlobalResponderHandler = {
     const isFabric = !!fromOrTo.stateNode.canonical._internalInstanceHandle;
 
     if (isFabric) {
-      if (from) {
-        nativeFabricUIManager.setIsJSResponder(from.stateNode.node, false);
-      }
-
-      if (to) {
-        nativeFabricUIManager.setIsJSResponder(to.stateNode.node, true);
-      }
+      // Noop for now until setJSResponder/clearJSResponder are supported in Fabric
     } else {
       if (to !== null) {
         const tag = to.stateNode.canonical._nativeTag;
