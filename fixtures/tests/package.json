@@ -24,7 +24,7 @@
     "// Node 14 tests": "",
     "node-14-node-node": "node_modules/node-14/bin/node node/test-node.js",
     "node-14-node-jsdom": "node_modules/node-14/bin/node node/test-jsdom.js",
-    "node-14-jest-env-node": "node_modules/node-14/bin/node node_modules/jest-cli/bin/jest.js jest/test-jsdom.js",
+    "node-14-jest-env-node": "node_modules/node-14/bin/node node_modules/jest-cli/bin/jest.js jest/test-node.js",
     "node-14-jest-env-node-jsdom": "node_modules/node-14/bin/node node_modules/jest-cli/bin/jest.js jest/test-node-jsdom.js",
     "node-14-jest-env-jsdom": "node_modules/node-14/bin/node node_modules/jest-cli/bin/jest.js jest/test-jsdom.js",
 
