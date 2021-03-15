@@ -177,8 +177,8 @@ function runActTests(label, render, unmount, rerender) {
           click();
           click();
         });
-        // it consolidates the 3 updates, then fires the effect
-        expect(Scheduler).toHaveYielded([3]);
+        // clicks are discrete events so their passive effects are flushed immediately
+        expect(Scheduler).toHaveYielded([1, 2, 3]);
         await act(async () => click());
         expect(Scheduler).toHaveYielded([4]);
         await act(async () => click());

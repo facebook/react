@@ -1034,14 +1034,7 @@ export function getExecutionContext(): ExecutionContext {
 }
 
 export function flushDiscreteUpdates() {
-  // TODO: Should be able to flush inside batchedUpdates, but not inside `act`.
-  // However, `act` uses `batchedUpdates`, so there's no way to distinguish
-  // those two cases. Need to fix this before exposing flushDiscreteUpdates
-  // as a public API.
-  if (
-    (executionContext & (BatchedContext | RenderContext | CommitContext)) !==
-    NoContext
-  ) {
+  if ((executionContext & (RenderContext | CommitContext)) !== NoContext) {
     if (__DEV__) {
       if ((executionContext & RenderContext) !== NoContext) {
         console.error(

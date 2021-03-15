@@ -91,8 +91,8 @@ it('flushes effects on every call', () => {
     click();
     click();
   });
-  // it consolidates the 3 updates, then fires the effect
-  expect(clearYields()).toEqual([3]);
+  // clicks are discrete events so their passive effects are flushed immediately
+  expect(clearYields()).toEqual([1, 2, 3]);
   act(click);
   expect(clearYields()).toEqual([4]);
   act(click);
