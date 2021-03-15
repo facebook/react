@@ -144,6 +144,13 @@ function crossDeviceRenameSync(source, destination) {
   return fse.moveSync(source, destination, {overwrite: true});
 }
 
+/*
+ * Grabs the built packages in ${tmp_build_dir}/node_modules and updates the
+ * `version` key in their package.json to 0.0.0-${commitHash} for the commit
+ * you're building. Also updates the dependencies and peerDependencies
+ * to match this version for all of the 'React' packages
+ * (packages available in this repo).
+ */
 function updatePackageVersions(modulesDir, version) {
   const allReactModuleNames = fs.readdirSync('packages');
   for (const moduleName of fs.readdirSync(modulesDir)) {
@@ -155,9 +162,10 @@ function updatePackageVersions(modulesDir, version) {
       // Update version
       packageInfo.version = version;
 
-      // Update dependency versions
       if (packageInfo.dependencies) {
         for (const dep of Object.keys(packageInfo.dependencies)) {
+          // if it's a react package (available in the current repo), update the version
+          // TODO: is this too broad? Assumes all of the packages were built.
           if (allReactModuleNames.includes(dep)) {
             packageInfo.dependencies[dep] = version;
           }
