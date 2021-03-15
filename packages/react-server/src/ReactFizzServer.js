@@ -8,7 +8,11 @@
  */
 
 import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
-import type {Destination} from './ReactServerStreamConfig';
+import type {
+  Destination,
+  Chunk,
+  PrecomputedChunk,
+} from './ReactServerStreamConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   SuspenseBoundaryID,
@@ -78,7 +82,7 @@ type Segment = {
   parentFlushed: boolean, // typically a segment will be flushed by its parent, except if its parent was already flushed
   id: number, // starts as 0 and is lazily assigned if the parent flushes early
   +index: number, // the index within the parent's chunks or 0 at the root
-  +chunks: Array<Uint8Array>,
+  +chunks: Array<Chunk | PrecomputedChunk>,
   +children: Array<Segment>,
   // If this segment represents a fallback, this is the content that will replace that fallback.
   +boundary: null | SuspenseBoundary,

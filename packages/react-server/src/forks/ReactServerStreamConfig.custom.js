@@ -26,6 +26,9 @@
 declare var $$$hostConfig: any;
 export opaque type Destination = mixed; // eslint-disable-line no-undef
 
+export opaque type PrecomputedChunk = mixed; // eslint-disable-line no-undef
+export opaque type Chunk = mixed; // eslint-disable-line no-undef
+
 export const scheduleWork = $$$hostConfig.scheduleWork;
 export const beginWriting = $$$hostConfig.beginWriting;
 export const writeChunk = $$$hostConfig.writeChunk;
@@ -33,4 +36,5 @@ export const completeWriting = $$$hostConfig.completeWriting;
 export const flushBuffered = $$$hostConfig.flushBuffered;
 export const close = $$$hostConfig.close;
 export const closeWithError = $$$hostConfig.closeWithError;
-export const convertStringToBuffer = $$$hostConfig.convertStringToBuffer;
+export const stringToChunk = $$$hostConfig.stringToChunk;
+export const stringToPrecomputedChunk = $$$hostConfig.stringToPrecomputedChunk;

@@ -7,11 +7,16 @@
  * @flow
  */
 
-import type {Destination} from 'react-server/src/ReactServerStreamConfig';
+import type {
+  Destination,
+  Chunk,
+  PrecomputedChunk,
+} from 'react-server/src/ReactServerStreamConfig';
 
 import {
   writeChunk,
-  convertStringToBuffer,
+  stringToChunk,
+  stringToPrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
 
 import escapeTextForBrowser from './escapeTextForBrowser';
@@ -55,43 +60,43 @@ function encodeHTMLTextNode(text: string): string {
 }
 
 export function pushTextInstance(
-  target: Array<Uint8Array>,
+  target: Array<Chunk | PrecomputedChunk>,
   text: string,
 ): void {
-  target.push(convertStringToBuffer(encodeHTMLTextNode(text)));
+  target.push(stringToChunk(encodeHTMLTextNode(text)));
 }
 
-const startTag1 = convertStringToBuffer('<');
-const startTag2 = convertStringToBuffer('>');
+const startTag1 = stringToPrecomputedChunk('<');
+const startTag2 = stringToPrecomputedChunk('>');
 
 export function pushStartInstance(
-  target: Array<Uint8Array>,
+  target: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
 ): void {
   // TODO: Figure out if it's self closing and everything else.
-  target.push(startTag1, convertStringToBuffer(type), startTag2);
+  target.push(startTag1, stringToChunk(type), startTag2);
 }
 
-const endTag1 = convertStringToBuffer('</');
-const endTag2 = convertStringToBuffer('>');
+const endTag1 = stringToPrecomputedChunk('</');
+const endTag2 = stringToPrecomputedChunk('>');
 
 export function pushEndInstance(
-  target: Array<Uint8Array>,
+  target: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
 ): void {
   // TODO: Figure out if it was self closing.
-  target.push(endTag1, convertStringToBuffer(type), endTag2);
+  target.push(endTag1, stringToChunk(type), endTag2);
 }
 
 // Structural Nodes
 
 // A placeholder is a node inside a hidden partial tree that can be filled in later, but before
 // display. It's never visible to users.
-const placeholder1 = convertStringToBuffer('<span id="');
-const placeholder2 = convertStringToBuffer('P:');
-const placeholder3 = convertStringToBuffer('"></span>');
+const placeholder1 = stringToPrecomputedChunk('<span id="');
+const placeholder2 = stringToPrecomputedChunk('P:');
+const placeholder3 = stringToPrecomputedChunk('"></span>');
 export function writePlaceholder(
   destination: Destination,
   id: number,
@@ -101,16 +106,18 @@ export function writePlaceholder(
   writeChunk(destination, placeholder1);
   // TODO: Use the identifierPrefix option to make the prefix configurable.
   writeChunk(destination, placeholder2);
-  const formattedID = convertStringToBuffer(id.toString(16));
+  const formattedID = stringToChunk(id.toString(16));
   writeChunk(destination, formattedID);
   return writeChunk(destination, placeholder3);
 }
 
 // Suspense boundaries are encoded as comments.
-const startCompletedSuspenseBoundary = convertStringToBuffer('<!--$-->');
-const startPendingSuspenseBoundary = convertStringToBuffer('<!--$?-->');
-const startClientRenderedSuspenseBoundary = convertStringToBuffer('<!--$!-->');
-const endSuspenseBoundary = convertStringToBuffer('<!--/$-->');
+const startCompletedSuspenseBoundary = stringToPrecomputedChunk('<!--$-->');
+const startPendingSuspenseBoundary = stringToPrecomputedChunk('<!--$?-->');
+const startClientRenderedSuspenseBoundary = stringToPrecomputedChunk(
+  '<!--$!-->',
+);
+const endSuspenseBoundary = stringToPrecomputedChunk('<!--/$-->');
 
 export function writeStartCompletedSuspenseBoundary(
   destination: Destination,
@@ -134,10 +141,10 @@ export function writeEndSuspenseBoundary(destination: Destination): boolean {
   return writeChunk(destination, endSuspenseBoundary);
 }
 
-const startSegment = convertStringToBuffer('<div hidden id="');
-const startSegment2 = convertStringToBuffer('S:');
-const startSegment3 = convertStringToBuffer('">');
-const endSegment = convertStringToBuffer('"></div>');
+const startSegment = stringToPrecomputedChunk('<div hidden id="');
+const startSegment2 = stringToPrecomputedChunk('S:');
+const startSegment3 = stringToPrecomputedChunk('">');
+const endSegment = stringToPrecomputedChunk('"></div>');
 export function writeStartSegment(
   destination: Destination,
   id: number,
@@ -146,7 +153,7 @@ export function writeStartSegment(
   writeChunk(destination, startSegment);
   // TODO: Use the identifierPrefix option to make the prefix configurable.
   writeChunk(destination, startSegment2);
-  const formattedID = convertStringToBuffer(id.toString(16));
+  const formattedID = stringToChunk(id.toString(16));
   writeChunk(destination, formattedID);
   return writeChunk(destination, startSegment3);
 }
@@ -276,12 +283,14 @@ const completeBoundaryFunction =
 const clientRenderFunction =
   'function $RX(b){if(b=document.getElementById(b)){do b=b.previousSibling;while(8!==b.nodeType||"$?"!==b.data);b.data="$!";b._reactRetry&&b._reactRetry()}}';
 
-const completeSegmentScript1Full = convertStringToBuffer(
+const completeSegmentScript1Full = stringToPrecomputedChunk(
   '<script>' + completeSegmentFunction + ';$RS("S:',
 );
-const completeSegmentScript1Partial = convertStringToBuffer('<script>$RS("S:');
-const completeSegmentScript2 = convertStringToBuffer('","P:');
-const completeSegmentScript3 = convertStringToBuffer('")</script>');
+const completeSegmentScript1Partial = stringToPrecomputedChunk(
+  '<script>$RS("S:',
+);
+const completeSegmentScript2 = stringToPrecomputedChunk('","P:');
+const completeSegmentScript3 = stringToPrecomputedChunk('")</script>');
 
 export function writeCompletedSegmentInstruction(
   destination: Destination,
@@ -297,19 +306,21 @@ export function writeCompletedSegmentInstruction(
     writeChunk(destination, completeSegmentScript1Partial);
   }
   // TODO: Use the identifierPrefix option to make the prefix configurable.
-  const formattedID = convertStringToBuffer(contentSegmentID.toString(16));
+  const formattedID = stringToChunk(contentSegmentID.toString(16));
   writeChunk(destination, formattedID);
   writeChunk(destination, completeSegmentScript2);
   writeChunk(destination, formattedID);
   return writeChunk(destination, completeSegmentScript3);
 }
 
-const completeBoundaryScript1Full = convertStringToBuffer(
+const completeBoundaryScript1Full = stringToPrecomputedChunk(
   '<script>' + completeBoundaryFunction + ';$RC("',
 );
-const completeBoundaryScript1Partial = convertStringToBuffer('<script>$RC("');
-const completeBoundaryScript2 = convertStringToBuffer('","S:');
-const completeBoundaryScript3 = convertStringToBuffer('")</script>');
+const completeBoundaryScript1Partial = stringToPrecomputedChunk(
+  '<script>$RC("',
+);
+const completeBoundaryScript2 = stringToPrecomputedChunk('","S:');
+const completeBoundaryScript3 = stringToPrecomputedChunk('")</script>');
 
 export function writeCompletedBoundaryInstruction(
   destination: Destination,
@@ -330,23 +341,21 @@ export function writeCompletedBoundaryInstruction(
     boundaryID.id !== null,
     'An ID must have been assigned before we can complete the boundary.',
   );
-  const formattedBoundaryID = convertStringToBuffer(
+  const formattedBoundaryID = stringToChunk(
     encodeHTMLIDAttribute(boundaryID.id),
   );
-  const formattedContentID = convertStringToBuffer(
-    contentSegmentID.toString(16),
-  );
+  const formattedContentID = stringToChunk(contentSegmentID.toString(16));
   writeChunk(destination, formattedBoundaryID);
   writeChunk(destination, completeBoundaryScript2);
   writeChunk(destination, formattedContentID);
   return writeChunk(destination, completeBoundaryScript3);
 }
 
-const clientRenderScript1Full = convertStringToBuffer(
+const clientRenderScript1Full = stringToPrecomputedChunk(
   '<script>' + clientRenderFunction + ';$RX("',
 );
-const clientRenderScript1Partial = convertStringToBuffer('<script>$RX("');
-const clientRenderScript2 = convertStringToBuffer('")</script>');
+const clientRenderScript1Partial = stringToPrecomputedChunk('<script>$RX("');
+const clientRenderScript2 = stringToPrecomputedChunk('")</script>');
 
 export function writeClientRenderBoundaryInstruction(
   destination: Destination,
@@ -365,7 +374,7 @@ export function writeClientRenderBoundaryInstruction(
     boundaryID.id !== null,
     'An ID must have been assigned before we can complete the boundary.',
   );
-  const formattedBoundaryID = convertStringToBuffer(
+  const formattedBoundaryID = stringToPrecomputedChunk(
     encodeHTMLIDAttribute(boundaryID.id),
   );
   writeChunk(destination, formattedBoundaryID);

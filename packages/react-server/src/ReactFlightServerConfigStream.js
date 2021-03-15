@@ -66,11 +66,11 @@ ByteSize
 
 import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
 
-import {convertStringToBuffer} from './ReactServerStreamConfig';
+import {stringToChunk} from './ReactServerStreamConfig';
 
-export type {Destination} from './ReactServerStreamConfig';
+import type {Chunk} from './ReactServerStreamConfig';
 
-export type Chunk = Uint8Array;
+export type {Destination, Chunk} from './ReactServerStreamConfig';
 
 const stringify = JSON.stringify;
 
@@ -86,7 +86,7 @@ export function processErrorChunk(
 ): Chunk {
   const errorInfo = {message, stack};
   const row = serializeRowHeader('E', id) + stringify(errorInfo) + '\n';
-  return convertStringToBuffer(row);
+  return stringToChunk(row);
 }
 
 export function processModelChunk(
@@ -96,7 +96,7 @@ export function processModelChunk(
 ): Chunk {
   const json = stringify(model, request.toJSON);
   const row = serializeRowHeader('J', id) + json + '\n';
-  return convertStringToBuffer(row);
+  return stringToChunk(row);
 }
 
 export function processModuleChunk(
@@ -106,7 +106,7 @@ export function processModuleChunk(
 ): Chunk {
   const json = stringify(moduleMetaData);
   const row = serializeRowHeader('M', id) + json + '\n';
-  return convertStringToBuffer(row);
+  return stringToChunk(row);
 }
 
 export function processSymbolChunk(
@@ -116,7 +116,7 @@ export function processSymbolChunk(
 ): Chunk {
   const json = stringify(name);
   const row = serializeRowHeader('S', id) + json + '\n';
-  return convertStringToBuffer(row);
+  return stringToChunk(row);
 }
 
 export {
