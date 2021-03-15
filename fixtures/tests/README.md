@@ -3,21 +3,7 @@
 ## Instructions
 
 ```bash
-# Test scheduler in 0.20.1
-yarn stable
-yarn test
-
-# Test scheduler on main
-yarn main
-yarn test
-
-# Test schedler on PR
-yarn pr
-yarn test
-
-# Test suggest window.MessageChannel fix
-yarn suggested
-yarn test
+yarn test # Runs all tests on all versions
 ```
 
 ## Results
