@@ -281,4 +281,44 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       expect(container.textContent).toEqual('hovered');
     });
   });
+
+  // @gate experimental
+  it('should batch inside native events', async () => {
+    const root = ReactDOM.unstable_createRoot(container);
+
+    const target = React.createRef(null);
+    function Foo() {
+      const [count, setCount] = React.useState(0);
+
+      React.useEffect(() => {
+        Scheduler.unstable_yieldValue(count);
+      }, [count]);
+
+      React.useLayoutEffect(() => {
+        target.current.onclick = () => {
+          setCount(c => c + 1);
+          // Now update again, this should be batched.
+          setCount(c => c + 1);
+        };
+      });
+      return <div ref={target}>Count: {count}</div>;
+    }
+
+    await act(async () => {
+      root.render(<Foo />);
+    });
+    expect(Scheduler).toHaveYielded([0]);
+    expect(container.textContent).toEqual('Count: 0');
+
+    // Ignore act warning. We can't use act because it forces batched updates.
+    spyOnDev(console, 'error');
+
+    const pressEvent = document.createEvent('Event');
+    pressEvent.initEvent('click', true, true);
+    dispatchAndSetCurrentEvent(target.current, pressEvent);
+
+    expect(Scheduler).toHaveYielded([]);
+    expect(container.textContent).toEqual('Count: 2');
+    expect(Scheduler).toFlushAndYield([2]);
+  });
 });
