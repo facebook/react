@@ -162,9 +162,7 @@ function updatePackageVersions(modulesDir, version) {
       // Update version
       packageInfo.version = version;
 
-      // Update dependency versions
       if (packageInfo.dependencies) {
-        // Check everything under dependencies
         for (const dep of Object.keys(packageInfo.dependencies)) {
           // if it's a react package (available in the current repo), update the version
           // TODO: is this too broad? Assumes all of the packages were built.
@@ -173,7 +171,6 @@ function updatePackageVersions(modulesDir, version) {
           }
         }
       }
-      // Do the same for peerDeps
       if (packageInfo.peerDependencies) {
         for (const dep of Object.keys(packageInfo.peerDependencies)) {
           if (allReactModuleNames.includes(dep)) {

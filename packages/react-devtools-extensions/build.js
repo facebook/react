@@ -107,10 +107,10 @@ const build = async (tempPath, manifestPath) => {
   // Pack the extension
   const archive = archiver('zip', {zlib: {level: 9}});
   const zipStream = createWriteStream(join(tempPath, 'ReactDevTools.zip'));
-  await new Promise((resolvePromise, reject) => {
+  await new Promise((resolvePromise, rejectPromise) => {
     archive
       .directory(zipPath, false)
-      .on('error', err => reject(err))
+      .on('error', err => rejectPromise(err))
       .pipe(zipStream);
     archive.finalize();
     zipStream.on('close', () => resolvePromise());
