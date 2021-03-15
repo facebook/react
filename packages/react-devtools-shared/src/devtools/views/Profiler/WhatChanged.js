@@ -63,7 +63,16 @@ export default function WhatChanged({fiberID}: Props) {
     return null;
   }
 
-  if (changeDescription.isFirstMount) {
+  const {
+    context,
+    didHooksChange,
+    hooks,
+    isFirstMount,
+    props,
+    state,
+  } = changeDescription;
+
+  if (isFirstMount) {
     return (
       <div className={styles.Component}>
         <label className={styles.Label}>Why did this render?</label>
@@ -76,21 +85,21 @@ export default function WhatChanged({fiberID}: Props) {
 
   const changes = [];
 
-  if (changeDescription.context === true) {
+  if (context === true) {
     changes.push(
       <div key="context" className={styles.Item}>
         • Context changed
       </div>,
     );
   } else if (
-    typeof changeDescription.context === 'object' &&
-    changeDescription.context !== null &&
-    changeDescription.context.length !== 0
+    typeof context === 'object' &&
+    context !== null &&
+    context.length !== 0
   ) {
     changes.push(
       <div key="context" className={styles.Item}>
         • Context changed:
-        {changeDescription.context.map(key => (
+        {context.map(key => (
           <span key={key} className={styles.Key}>
             {key}
           </span>
@@ -99,14 +108,11 @@ export default function WhatChanged({fiberID}: Props) {
     );
   }
 
-  if (changeDescription.didHooksChange) {
-    if (
-      enableProfilerChangedHookIndices &&
-      Array.isArray(changeDescription.hooks)
-    ) {
+  if (didHooksChange) {
+    if (enableProfilerChangedHookIndices && Array.isArray(hooks)) {
       changes.push(
         <div key="hooks" className={styles.Item}>
-          • {hookIndicesToString(changeDescription.hooks)}
+          • {hookIndicesToString(hooks)}
         </div>,
       );
     } else {
@@ -118,14 +124,11 @@ export default function WhatChanged({fiberID}: Props) {
     }
   }
 
-  if (
-    changeDescription.props !== null &&
-    changeDescription.props.length !== 0
-  ) {
+  if (props !== null && props.length !== 0) {
     changes.push(
       <div key="props" className={styles.Item}>
         • Props changed:
-        {changeDescription.props.map(key => (
+        {props.map(key => (
           <span key={key} className={styles.Key}>
             {key}
           </span>
@@ -134,14 +137,11 @@ export default function WhatChanged({fiberID}: Props) {
     );
   }
 
-  if (
-    changeDescription.state !== null &&
-    changeDescription.state.length !== 0
-  ) {
+  if (state !== null && state.length !== 0) {
     changes.push(
       <div key="state" className={styles.Item}>
         • State changed:
-        {changeDescription.state.map(key => (
+        {state.map(key => (
           <span key={key} className={styles.Key}>
             {key}
           </span>
