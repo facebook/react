@@ -1,104 +1,55 @@
 /** @jest-environment node */
 
-const {spawn, exec} = require('child_process');
+const {spawn, exec, execSync} = require('child_process');
+const chalk = require('chalk');
 
-const NODE_14_TEST_CASES = [
-  ['node-14'],
-  ['node-14-jsdom'],
-  ['node-14-jest-env-node'],
-  ['node-14-jest-env-node-jsdom'],
-  ['node-14-jest-env-jsdom'],
+const TIME_TO_WAIT_FOR_HANG = 5000; //5s
+
+const NODE_TEST_CASES = [
+  ['Node 14', 'node-14'],
+  ['Node 15', 'node-15'],
 ];
 
-const NODE_15_TEST_CASES = [
-  ['node-15'],
-  ['node-15-jsdom'],
-  ['node-15-jest-env-node'],
-  ['node-15-jest-env-node-jsdom'],
-  ['node-15-jest-env-jsdom'],
+const TEST_CASES = [
+  ['node-node'],
+  ['node-jsdom'],
+  ['jest-env-node'],
+  ['jest-env-jsdom'],
+  ['jest-env-node-jsdom'],
 ];
 
-describe.each([
-  ['Node <15', NODE_14_TEST_CASES],
-  ['Node 15', NODE_15_TEST_CASES],
-])('%s', (label, cases) => {
-  if (process.env.DEBUG) {
-    console.log('Running', label);
-  }
+const SCHEDULER_TEST_CASES = [
+  ['Scheduler in stable', 'stable'],
+  ['Scheduler on main', 'main'],
+  ['Scheduler in PR (recommended for React 18)', 'pr'],
+  ['Scheduler recommended for 17.1.0', '17'],
+];
 
-  it.each(cases)('%s', (command, done) => {
-    const test = spawn('yarn', [command], {detached: true});
-    let finished = false;
-    let timeout;
+describe.each(SCHEDULER_TEST_CASES)('%s', (label, copyCommand) => {
+  beforeEach(() => {
+    const result = execSync(`yarn ${copyCommand}`);
+  });
 
-    function debug(...args) {
-      if (!finished && process.env.DEBUG) {
-        console.log(command, ...args);
+  describe.each(NODE_TEST_CASES)('%s', (label, nodeVersion) => {
+    it.each(TEST_CASES)(`${nodeVersion}-%s`, command => {
+      function processResult(reason) {
+        expect(`${nodeVersion}-${command}`).toPass(reason);
       }
-    }
 
-    debug(`testing ${command}...`);
-
-    function processResult(reason) {
-      if (!finished) {
-        finished = true;
-        clearTimeout(timeout);
-        try {
-          expect(command).toPass(reason);
-        } finally {
-          done();
-        }
-      }
-    }
-
-    test.stderr.on('data', data => {
-      debug('err', data.toString());
-      if (data.toString().indexOf('STARTED') >= 0) {
-        if (!timeout) {
-          debug('schduling stderr timeout');
-          timeout = setTimeout(() => {
-            debug('timed out in stderr, killing');
-            test.kill('SIGKILL');
-            processResult('TIMEOUT');
-          }, 10000);
-        } else {
-          debug('timeout already set');
-        }
-      }
-    });
-    test.stdout.on('data', data => {
-      debug('out', data.toString());
-      if (data.toString().indexOf('STARTED') >= 0) {
-        if (!timeout) {
-          debug('schduling stdout timeout');
-          timeout = setTimeout(() => {
-            debug('timed out in out, killing');
-            process.kill(-test.pid);
-            processResult('TIMEOUT');
-          }, 10000);
-        } else {
-          debug('timeout already set');
-        }
-      }
-    });
-    test.on('close', code => {
-      debug('closed', code);
-
-      if (code !== 0) {
-        processResult('FAILED');
-      } else {
+      try {
+        const result = execSync(`yarn ${nodeVersion}-${command}`, {
+          detached: true,
+          timeout: TIME_TO_WAIT_FOR_HANG,
+        });
         processResult('SUCCESS');
+      } catch (e) {
+        if (e.message.indexOf('ETIMEDOUT') > -1) {
+          processResult('TIMEOUT');
+        } else {
+          console.error(e.message);
+          processResult('FAILED');
+        }
       }
-    });
-
-    test.on('error', err => {
-      debug('error', err);
-      processResult('ERROR');
-    });
-
-    test.on('SIGKILL', () => {
-      debug('killed');
-      processResult('KILLED');
     });
   });
 });
@@ -107,11 +58,11 @@ expect.extend({
   toPass(command, reason) {
     const pass = reason === 'SUCCESS';
     function getCommand() {
-      return `(yarn ${command})`;
+      return chalk.dim(`(run with: yarn ${command})`);
     }
     if (pass) {
       return {
-        message: () => `expected ${command} not to pass`,
+        message: () => `Expected ${command} not to pass`,
         pass: true,
       };
     } else {
@@ -119,13 +70,23 @@ expect.extend({
         message: () => {
           switch (reason) {
             case 'FAILED':
-              return `expected ${command} to pass but it failed ${getCommand()}`;
+              return `Expected ${chalk.red(command)} to pass but it ${chalk.red(
+                'failed'
+              )} ${getCommand()}`;
             case 'TIMEOUT':
-              return `expected ${command} to pass but it hung ${getCommand()}`;
+              return `Expected ${chalk.red(command)} to pass but it ${chalk.red(
+                'hung'
+              )} ${getCommand()}`;
             case 'ERROR':
-              return `expected ${command} to pass but it errored ${getCommand()}`;
+              return `Expected ${chalk.red(command)} to pass but it ${chalk.red(
+                'errored'
+              )} ${getCommand()}`;
             default:
-              return `expected ${command} to pass but it failed for an unknown reason ${reason}`;
+              return `Expected ${chalk.red(
+                command
+              )} to pass but it failed for an ${chalk.red(
+                'unknown reason'
+              )} ${reason}`;
           }
         },
         pass: false,
