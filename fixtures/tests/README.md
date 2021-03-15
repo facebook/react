@@ -70,7 +70,7 @@ Scheduler in PR (recommended for React 18)
     Node 14
       ✓ node-14-node-node (511 ms)
       ✓ node-14-node-jsdom (1138 ms)
-      ✕ node-14-jest-env-node (3239 ms)
+      ✓ node-14-jest-env-node (3239 ms)
       ✕ node-14-jest-env-jsdom (2927 ms)
       ✓ node-14-jest-env-node-jsdom (2319 ms)
     Node 15
