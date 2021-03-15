@@ -144,7 +144,7 @@ export function writeEndSuspenseBoundary(destination: Destination): boolean {
 const startSegment = stringToPrecomputedChunk('<div hidden id="');
 const startSegment2 = stringToPrecomputedChunk('S:');
 const startSegment3 = stringToPrecomputedChunk('">');
-const endSegment = stringToPrecomputedChunk('"></div>');
+const endSegment = stringToPrecomputedChunk('</div>');
 export function writeStartSegment(
   destination: Destination,
   id: number,
@@ -297,7 +297,7 @@ export function writeCompletedSegmentInstruction(
   responseState: ResponseState,
   contentSegmentID: number,
 ): boolean {
-  if (responseState.sentCompleteSegmentFunction) {
+  if (!responseState.sentCompleteSegmentFunction) {
     // The first time we write this, we'll need to include the full implementation.
     responseState.sentCompleteSegmentFunction = true;
     writeChunk(destination, completeSegmentScript1Full);
@@ -328,7 +328,7 @@ export function writeCompletedBoundaryInstruction(
   boundaryID: SuspenseBoundaryID,
   contentSegmentID: number,
 ): boolean {
-  if (responseState.sentCompleteBoundaryFunction) {
+  if (!responseState.sentCompleteBoundaryFunction) {
     // The first time we write this, we'll need to include the full implementation.
     responseState.sentCompleteBoundaryFunction = true;
     writeChunk(destination, completeBoundaryScript1Full);
@@ -362,7 +362,7 @@ export function writeClientRenderBoundaryInstruction(
   responseState: ResponseState,
   boundaryID: SuspenseBoundaryID,
 ): boolean {
-  if (responseState.sentClientRenderFunction) {
+  if (!responseState.sentClientRenderFunction) {
     // The first time we write this, we'll need to include the full implementation.
     responseState.sentClientRenderFunction = true;
     writeChunk(destination, clientRenderScript1Full);

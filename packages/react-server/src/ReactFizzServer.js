@@ -223,6 +223,14 @@ function renderNode(
     pushTextInstance(segment.chunks, node);
     return;
   }
+
+  if (Array.isArray(node)) {
+    for (let i = 0; i < node.length; i++) {
+      renderNode(request, parentBoundary, segment, node[i]);
+    }
+    return;
+  }
+
   if (
     typeof node !== 'object' ||
     !node ||
