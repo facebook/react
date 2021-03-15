@@ -18,6 +18,9 @@ type MightBeFlushable = {
 
 export type Destination = Writable & MightBeFlushable;
 
+export type PrecomputedChunk = Uint8Array;
+export type Chunk = string;
+
 export function scheduleWork(callback: () => void) {
   setImmediate(callback);
 }
@@ -44,9 +47,9 @@ export function beginWriting(destination: Destination) {
 
 export function writeChunk(
   destination: Destination,
-  buffer: Uint8Array,
+  chunk: Chunk | PrecomputedChunk,
 ): boolean {
-  const nodeBuffer = ((buffer: any): Buffer); // close enough
+  const nodeBuffer = ((chunk: any): Buffer | string); // close enough
   return destination.write(nodeBuffer);
 }
 
@@ -61,7 +64,11 @@ export function close(destination: Destination) {
   destination.end();
 }
 
-export function convertStringToBuffer(content: string): Uint8Array {
+export function stringToChunk(content: string): Chunk {
+  return content;
+}
+
+export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
   return Buffer.from(content, 'utf8');
 }
 

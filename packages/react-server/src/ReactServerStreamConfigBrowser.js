@@ -9,6 +9,9 @@
 
 export type Destination = ReadableStreamController;
 
+export type PrecomputedChunk = Uint8Array;
+export type Chunk = Uint8Array;
+
 export function scheduleWork(callback: () => void) {
   callback();
 }
@@ -22,9 +25,9 @@ export function beginWriting(destination: Destination) {}
 
 export function writeChunk(
   destination: Destination,
-  buffer: Uint8Array,
+  chunk: PrecomputedChunk | Chunk,
 ): boolean {
-  destination.enqueue(buffer);
+  destination.enqueue(chunk);
   return destination.desiredSize > 0;
 }
 
@@ -36,7 +39,11 @@ export function close(destination: Destination) {
 
 const textEncoder = new TextEncoder();
 
-export function convertStringToBuffer(content: string): Uint8Array {
+export function stringToChunk(content: string): Chunk {
+  return textEncoder.encode(content);
+}
+
+export function stringToPrecomputedChunk(content: string): PrecomputedChunk {
   return textEncoder.encode(content);
 }
 

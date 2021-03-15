@@ -7,11 +7,16 @@
  * @flow
  */
 
-import type {Destination} from 'react-server/src/ReactServerStreamConfig';
+import type {
+  Destination,
+  Chunk,
+  PrecomputedChunk,
+} from 'react-server/src/ReactServerStreamConfig';
 
 import {
   writeChunk,
-  convertStringToBuffer,
+  stringToChunk,
+  stringToPrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
 
 import invariant from 'shared/invariant';
@@ -71,10 +76,10 @@ export function createSuspenseBoundaryID(
   return responseState.nextSuspenseID++;
 }
 
-const RAW_TEXT = convertStringToBuffer('RCTRawText');
+const RAW_TEXT = stringToPrecomputedChunk('RCTRawText');
 
 export function pushTextInstance(
-  target: Array<Uint8Array>,
+  target: Array<Chunk | PrecomputedChunk>,
   text: string,
 ): void {
   target.push(
@@ -87,20 +92,20 @@ export function pushTextInstance(
 }
 
 export function pushStartInstance(
-  target: Array<Uint8Array>,
+  target: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
 ): void {
   target.push(
     INSTANCE,
-    convertStringToBuffer(type),
+    stringToChunk(type),
     END, // Null terminated type string
     // TODO: props
   );
 }
 
 export function pushEndInstance(
-  target: Array<Uint8Array>,
+  target: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
 ): void {
