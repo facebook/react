@@ -187,7 +187,7 @@ class ReactFabricHostComponent {
 }
 
 // eslint-disable-next-line no-unused-expressions
-(ReactFabricHostComponent.prototype: NativeMethods);
+(ReactFabricHostComponent.prototype: $ReadOnly<{...NativeMethods, ...}>);
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMutation';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
