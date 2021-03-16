@@ -1014,6 +1014,15 @@ export function didNotFindHydratableSuspenseInstance(
   }
 }
 
+export function errorHydratingContainer(parentContainer: Container): void {
+  if (__DEV__) {
+    console.error(
+      'An error occurred during hydration. The server HTML was replaced with client content in <%s>.',
+      parentContainer.nodeName.toLowerCase(),
+    );
+  }
+}
+
 export function getInstanceFromNode(node: HTMLElement): null | Object {
   return getClosestInstanceFromNode(node) || null;
 }

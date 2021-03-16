@@ -1654,9 +1654,13 @@ describe('ReactDOMServerHooks', () => {
       // This is the wrong HTML string
       container.innerHTML = '<span></span>';
       ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
-      expect(() => Scheduler.unstable_flushAll()).toErrorDev([
-        'Warning: Expected server HTML to contain a matching <div> in <div>.',
-      ]);
+      expect(() => Scheduler.unstable_flushAll()).toErrorDev(
+        [
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+          'Warning: Expected server HTML to contain a matching <div> in <div>.',
+        ],
+        {withoutStack: 1},
+      );
     });
 
     // @gate experimental
@@ -1740,31 +1744,10 @@ describe('ReactDOMServerHooks', () => {
       // This is the wrong HTML string
       container.innerHTML = '<span></span>';
       ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
-      expect(() => Scheduler.unstable_flushAll()).toErrorDev([
-        'Warning: Expected server HTML to contain a matching <div> in <div>.',
-      ]);
-    });
-
-    // @gate experimental
-    it('useOpaqueIdentifier warns when there is a hydration error and we are using ID as a string', async () => {
-      function Child({appId}) {
-        return <div aria-labelledby={appId + ''} />;
-      }
-      function App() {
-        const id = useOpaqueIdentifier();
-        return <Child appId={id} />;
-      }
-
-      const container = document.createElement('div');
-      document.body.appendChild(container);
-
-      // This is the wrong HTML string
-      container.innerHTML = '<span></span>';
-      ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         [
-          'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
-          'Warning: Did not expect server HTML to contain a <span> in <div>.',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+          'Warning: Expected server HTML to contain a matching <div> in <div>.',
         ],
         {withoutStack: 1},
       );
@@ -1789,7 +1772,32 @@ describe('ReactDOMServerHooks', () => {
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         [
           'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
-          'Warning: Did not expect server HTML to contain a <span> in <div>.',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
+        ],
+        {withoutStack: 1},
+      );
+    });
+
+    // @gate experimental
+    it('useOpaqueIdentifier warns when there is a hydration error and we are using ID as a string', async () => {
+      function Child({appId}) {
+        return <div aria-labelledby={appId + ''} />;
+      }
+      function App() {
+        const id = useOpaqueIdentifier();
+        return <Child appId={id} />;
+      }
+
+      const container = document.createElement('div');
+      document.body.appendChild(container);
+
+      // This is the wrong HTML string
+      container.innerHTML = '<span></span>';
+      ReactDOM.unstable_createRoot(container, {hydrate: true}).render(<App />);
+      expect(() => Scheduler.unstable_flushAll()).toErrorDev(
+        [
+          'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
         ],
         {withoutStack: 1},
       );
@@ -1813,7 +1821,7 @@ describe('ReactDOMServerHooks', () => {
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         [
           'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
-          'Warning: Did not expect server HTML to contain a <div> in <div>.',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
         ],
         {withoutStack: 1},
       );
@@ -1834,7 +1842,7 @@ describe('ReactDOMServerHooks', () => {
       expect(() => Scheduler.unstable_flushAll()).toErrorDev(
         [
           'Warning: The object passed back from useOpaqueIdentifier is meant to be passed through to attributes only. Do not read the value directly.',
-          'Warning: Did not expect server HTML to contain a <div> in <div>.',
+          'Warning: An error occurred during hydration. The server HTML was replaced with client content in <div>.',
         ],
         {withoutStack: 1},
       );

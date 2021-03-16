@@ -214,7 +214,8 @@ describe('useMutableSourceHydration', () => {
         source.value = 'two';
       });
     }).toErrorDev(
-      'Warning: Did not expect server HTML to contain a <div> in <div>.',
+      'Warning: An error occurred during hydration. ' +
+        'The server HTML was replaced with client content in <div>.',
       {withoutStack: true},
     );
     expect(Scheduler).toHaveYielded(['only:two']);
@@ -266,7 +267,8 @@ describe('useMutableSourceHydration', () => {
         source.value = 'two';
       });
     }).toErrorDev(
-      'Warning: Did not expect server HTML to contain a <div> in <div>.',
+      'Warning: An error occurred during hydration. ' +
+        'The server HTML was replaced with client content in <div>.',
       {withoutStack: true},
     );
     expect(Scheduler).toHaveYielded(['a:two', 'b:two']);
@@ -334,7 +336,8 @@ describe('useMutableSourceHydration', () => {
         source.valueB = 'b:two';
       });
     }).toErrorDev(
-      'Warning: Did not expect server HTML to contain a <div> in <div>.',
+      'Warning: An error occurred during hydration. ' +
+        'The server HTML was replaced with client content in <div>.',
       {withoutStack: true},
     );
     expect(Scheduler).toHaveYielded(['0:a:one', '1:b:two']);
@@ -401,7 +404,13 @@ describe('useMutableSourceHydration', () => {
         source.value = 'two';
       });
     }).toErrorDev(
-      'Warning: Text content did not match. Server: "1" Client: "2"',
+      [
+        'Warning: An error occurred during hydration. ' +
+          'The server HTML was replaced with client content in <div>.',
+
+        'Warning: Text content did not match. Server: "1" Client: "2"',
+      ],
+      {withoutStack: 1},
     );
     expect(Scheduler).toHaveYielded([2, 'a:two']);
     expect(source.listenerCount).toBe(1);
