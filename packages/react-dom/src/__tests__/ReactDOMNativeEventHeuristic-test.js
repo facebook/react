@@ -281,4 +281,52 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
       expect(container.textContent).toEqual('hovered');
     });
   });
+
+  // @gate experimental
+  it('should batch inside native events', async () => {
+    const root = ReactDOM.unstable_createRoot(container);
+
+    const target = React.createRef(null);
+    function Foo() {
+      const [count, setCount] = React.useState(0);
+      const countRef = React.useRef(-1);
+
+      React.useLayoutEffect(() => {
+        countRef.current = count;
+        target.current.onclick = () => {
+          setCount(countRef.current + 1);
+          // Now update again. If these updates are batched, then this should be
+          // a no-op, because we didn't re-render yet and `countRef` hasn't
+          // been mutated.
+          setCount(countRef.current + 1);
+        };
+      });
+      return <div ref={target}>Count: {count}</div>;
+    }
+
+    await act(async () => {
+      root.render(<Foo />);
+    });
+    expect(container.textContent).toEqual('Count: 0');
+
+    // Ignore act warning. We can't use act because it forces batched updates.
+    spyOnDev(console, 'error');
+
+    const pressEvent = document.createEvent('Event');
+    pressEvent.initEvent('click', true, true);
+    dispatchAndSetCurrentEvent(target.current, pressEvent);
+    // If this is 2, that means the `setCount` calls were not batched.
+    expect(container.textContent).toEqual('Count: 1');
+
+    // Assert that the `act` warnings were the only ones that fired.
+    if (__DEV__) {
+      expect(console.error).toHaveBeenCalledTimes(2);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'was not wrapped in act',
+      );
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'was not wrapped in act',
+      );
+    }
+  });
 });

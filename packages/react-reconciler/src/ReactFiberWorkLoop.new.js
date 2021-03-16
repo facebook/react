@@ -547,7 +547,10 @@ export function scheduleUpdateOnFiber(
     } else {
       ensureRootIsScheduled(root, eventTime);
       schedulePendingInteractions(root, lane);
-      if (executionContext === NoContext) {
+      if (
+        executionContext === NoContext &&
+        (fiber.mode & ConcurrentMode) === NoMode
+      ) {
         // Flush the synchronous work now, unless we're already working or inside
         // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
         // scheduleCallbackForFiber to preserve the ability to schedule a callback
