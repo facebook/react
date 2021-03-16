@@ -312,11 +312,11 @@ This method should make the `instance` invisible without removing it from the tr
 
 Same as `hideInstance`, but for nodes created by `createTextInstance`.
 
-#### `unhideInstance(instance)`
+#### `unhideInstance(instance, props)`
 
 This method should make the `instance` visible, undoing what `hideInstance` did.
 
-#### `unhideTextInstance(textInstance)`
+#### `unhideTextInstance(textInstance, text)`
 
 Same as `unhideInstance`, but for nodes created by `createTextInstance`.
 
