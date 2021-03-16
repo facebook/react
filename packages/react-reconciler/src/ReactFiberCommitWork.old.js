@@ -578,11 +578,16 @@ export function commitPassiveEffectDurations(
           // Bubble times to the next nearest ancestor Profiler.
           // After we process that Profiler, we'll bubble further up.
           let parentFiber = finishedWork.return;
-          while (parentFiber !== null) {
-            if (parentFiber.tag === Profiler) {
-              const parentStateNode = parentFiber.stateNode;
-              parentStateNode.passiveEffectDuration += passiveEffectDuration;
-              break;
+          outer: while (parentFiber !== null) {
+            switch (parentFiber.tag) {
+              case HostRoot:
+                const root = parentFiber.stateNode;
+                root.passiveEffectDuration += passiveEffectDuration;
+                break outer;
+              case Profiler:
+                const parentStateNode = parentFiber.stateNode;
+                parentStateNode.passiveEffectDuration += passiveEffectDuration;
+                break outer;
             }
             parentFiber = parentFiber.return;
           }
@@ -885,11 +890,16 @@ function commitLayoutEffectOnFiber(
             // Propagate layout effect durations to the next nearest Profiler ancestor.
             // Do not reset these values until the next render so DevTools has a chance to read them first.
             let parentFiber = finishedWork.return;
-            while (parentFiber !== null) {
-              if (parentFiber.tag === Profiler) {
-                const parentStateNode = parentFiber.stateNode;
-                parentStateNode.effectDuration += effectDuration;
-                break;
+            outer: while (parentFiber !== null) {
+              switch (parentFiber.tag) {
+                case HostRoot:
+                  const root = parentFiber.stateNode;
+                  root.effectDuration += effectDuration;
+                  break outer;
+                case Profiler:
+                  const parentStateNode = parentFiber.stateNode;
+                  parentStateNode.effectDuration += effectDuration;
+                  break outer;
               }
               parentFiber = parentFiber.return;
             }

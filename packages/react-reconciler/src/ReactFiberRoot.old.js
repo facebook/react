@@ -22,6 +22,8 @@ import {
   enableSchedulerTracing,
   enableSuspenseCallback,
   enableCache,
+  enableProfilerCommitHooks,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
 import {initializeUpdateQueue} from './ReactUpdateQueue.old';
@@ -69,6 +71,11 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   }
   if (enableSuspenseCallback) {
     this.hydrationCallbacks = null;
+  }
+
+  if (enableProfilerTimer && enableProfilerCommitHooks) {
+    this.effectDuration = 0;
+    this.passiveEffectDuration = 0;
   }
 
   if (__DEV__) {
