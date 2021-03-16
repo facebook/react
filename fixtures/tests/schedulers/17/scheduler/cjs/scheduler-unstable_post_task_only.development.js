@@ -1,5 +1,5 @@
 /** @license React vundefined
- * scheduler.development.js
+ * scheduler-unstable_post_task_only.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -109,22 +109,10 @@ function markTaskErrored(task, ms) {
 }
 
 /* eslint-disable no-var */
+var perf = window.performance;
 
-var hasPerformanceNow = typeof performance === 'object' && typeof performance.now === 'function';
-
-if (hasPerformanceNow) {
-  var localPerformance = performance;
-
-  exports.unstable_now = function () {
-    return localPerformance.now();
-  };
-} else {
-  var localDate = Date;
-  var initialTime = localDate.now();
-
-  exports.unstable_now = function () {
-    return localDate.now() - initialTime;
-  };
+function getCurrentTime() {
+  return perf.now();
 } // Max 31 bit integer. The max integer size in V8 for 32-bit systems.
 // Math.pow(2, 30) - 1
 // 0b111111111111111111111111111111
@@ -153,7 +141,6 @@ var isHostTimeoutScheduled = false; // Capture local references to native APIs, 
 
 var setTimeout = window.setTimeout;
 var clearTimeout = window.clearTimeout;
-var setImmediate = window.setImmediate; // IE and Node.js + jsdom
 
 if (typeof console !== 'undefined') {
   // TODO: Scheduler no longer requires these methods to be polyfilled. But
@@ -233,7 +220,7 @@ function flushWork(hasTimeRemaining, initialTime) {
         return workLoop(hasTimeRemaining, initialTime);
       } catch (error) {
         if (currentTask !== null) {
-          var currentTime = exports.unstable_now();
+          var currentTime = getCurrentTime();
           markTaskErrored(currentTask, currentTime);
           currentTask.isQueued = false;
         }
@@ -270,7 +257,7 @@ function workLoop(hasTimeRemaining, initialTime) {
       var didUserCallbackTimeout = currentTask.expirationTime <= currentTime;
 
       var continuationCallback = callback(didUserCallbackTimeout);
-      currentTime = exports.unstable_now();
+      currentTime = getCurrentTime();
 
       if (typeof continuationCallback === 'function') {
         currentTask.callback = continuationCallback;
@@ -369,7 +356,7 @@ function unstable_wrapCallback(callback) {
 }
 
 function unstable_scheduleCallback(priorityLevel, callback, options) {
-  var currentTime = exports.unstable_now();
+  var currentTime = getCurrentTime();
   var startTime;
 
   if (typeof options === 'object' && options !== null) {
@@ -478,7 +465,7 @@ function unstable_getCurrentPriorityLevel() {
   return currentPriorityLevel;
 }
 
-var isMessageLoopRunning = false;
+var isTaskLoopRunning = false;
 var scheduledHostCallback = null;
 var taskTimeoutID = -1; // Scheduler periodically yields in case there is other work on the main
 // thread, like user events. By default, it yields multiple times per frame.
@@ -492,7 +479,7 @@ function shouldYieldToHost() {
   {
     // `isInputPending` is not available. Since we have no way of knowing if
     // there's pending input, always yield at the end of the frame.
-    return exports.unstable_now() >= deadline;
+    return getCurrentTime() >= deadline;
   }
 }
 
@@ -517,7 +504,7 @@ function forceFrameRate(fps) {
 
 var performWorkUntilDeadline = function () {
   if (scheduledHostCallback !== null) {
-    var currentTime = exports.unstable_now(); // Yield after `yieldInterval` ms, regardless of where we are in the vsync
+    var currentTime = getCurrentTime(); // Yield after `yieldInterval` ms, regardless of where we are in the vsync
     // cycle. This means there's always time remaining at the beginning of
     // the message event.
 
@@ -535,58 +522,36 @@ var performWorkUntilDeadline = function () {
       hasMoreWork = scheduledHostCallback(hasTimeRemaining, currentTime);
     } finally {
       if (hasMoreWork) {
-        // If there's more work, schedule the next message event at the end
-        // of the preceding one.
-        schedulePerformWorkUntilDeadline();
+        // If there's more work, schedule the next browser task at the end of
+        // the preceding one.
+        postTask(performWorkUntilDeadline);
       } else {
-        isMessageLoopRunning = false;
+        isTaskLoopRunning = false;
         scheduledHostCallback = null;
       }
     }
   } else {
-    isMessageLoopRunning = false;
+    isTaskLoopRunning = false;
   } // Yielding to the browser will give it a chance to paint, so we can
 };
 
-var schedulePerformWorkUntilDeadline;
-
-if (typeof setImmediate === 'function') {
-  // Node.js and old IE.
-  // There's a few reasons for why we prefer setImmediate.
-  //
-  // Unlike MessageChannel, it doesn't prevent a Node.js process from exiting.
-  // (Even though this is a DOM fork of the Scheduler, you could get here
-  // with a mix of Node.js 15+, which has a MessageChannel, and jsdom.)
-  // https://github.com/facebook/react/issues/20756
-  //
-  // But also, it runs earlier which is the semantic we want.
-  // If other browsers ever implement it, it's better to use it.
-  // Although both of these would be inferior to native scheduling.
-  schedulePerformWorkUntilDeadline = function () {
-    setImmediate(performWorkUntilDeadline);
-  };
-} else {
-  var channel = new MessageChannel();
-  var port = channel.port2;
-  channel.port1.onmessage = performWorkUntilDeadline;
-
-  schedulePerformWorkUntilDeadline = function () {
-    port.postMessage(null);
-  };
+function postTask(callback) {
+  // Use experimental Chrome Scheduler postTask API.
+  global.scheduler.postTask(callback);
 }
 
 function requestHostCallback(callback) {
   scheduledHostCallback = callback;
 
-  if (!isMessageLoopRunning) {
-    isMessageLoopRunning = true;
-    schedulePerformWorkUntilDeadline();
+  if (!isTaskLoopRunning) {
+    isTaskLoopRunning = true;
+    postTask(performWorkUntilDeadline);
   }
 }
 
 function requestHostTimeout(callback, ms) {
   taskTimeoutID = setTimeout(function () {
-    callback(exports.unstable_now());
+    callback(getCurrentTime());
   }, ms);
 }
 
@@ -610,6 +575,7 @@ exports.unstable_forceFrameRate = forceFrameRate;
 exports.unstable_getCurrentPriorityLevel = unstable_getCurrentPriorityLevel;
 exports.unstable_getFirstCallbackNode = unstable_getFirstCallbackNode;
 exports.unstable_next = unstable_next;
+exports.unstable_now = getCurrentTime;
 exports.unstable_pauseExecution = unstable_pauseExecution;
 exports.unstable_requestPaint = unstable_requestPaint;
 exports.unstable_runWithPriority = unstable_runWithPriority;

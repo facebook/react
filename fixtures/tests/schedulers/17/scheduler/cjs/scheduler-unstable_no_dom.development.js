@@ -1,5 +1,5 @@
 /** @license React vundefined
- * scheduler.development.js
+ * scheduler-unstable_no_dom.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
  *
@@ -109,26 +109,8 @@ function markTaskErrored(task, ms) {
 }
 
 /* eslint-disable no-var */
-
-var hasPerformanceNow = typeof performance === 'object' && typeof performance.now === 'function';
-
-if (hasPerformanceNow) {
-  var localPerformance = performance;
-
-  exports.unstable_now = function () {
-    return localPerformance.now();
-  };
-} else {
-  var localDate = Date;
-  var initialTime = localDate.now();
-
-  exports.unstable_now = function () {
-    return localDate.now() - initialTime;
-  };
-} // Max 31 bit integer. The max integer size in V8 for 32-bit systems.
 // Math.pow(2, 30) - 1
 // 0b111111111111111111111111111111
-
 
 var maxSigned31BitInt = 1073741823; // Times out immediately
 
@@ -149,28 +131,23 @@ var currentPriorityLevel = NormalPriority; // This is set while performing work,
 
 var isPerformingWork = false;
 var isHostCallbackScheduled = false;
-var isHostTimeoutScheduled = false; // Capture local references to native APIs, in case a polyfill overrides them.
+var isHostTimeoutScheduled = false;
 
-var setTimeout = window.setTimeout;
-var clearTimeout = window.clearTimeout;
-var setImmediate = window.setImmediate; // IE and Node.js + jsdom
+var hasPerformanceNow = typeof performance === 'object' && typeof performance.now === 'function';
 
-if (typeof console !== 'undefined') {
-  // TODO: Scheduler no longer requires these methods to be polyfilled. But
-  // maybe we want to continue warning if they don't exist, to preserve the
-  // option to rely on it in the future?
-  var requestAnimationFrame = window.requestAnimationFrame;
-  var cancelAnimationFrame = window.cancelAnimationFrame;
+if (hasPerformanceNow) {
+  var localPerformance = performance;
 
-  if (typeof requestAnimationFrame !== 'function') {
-    // Using console['error'] to evade Babel and ESLint
-    console['error']("This browser doesn't support requestAnimationFrame. " + 'Make sure that you load a ' + 'polyfill in older browsers. https://reactjs.org/link/react-polyfills');
-  }
+  exports.unstable_now = function () {
+    return localPerformance.now();
+  };
+} else {
+  var localDate = Date;
+  var initialTime = localDate.now();
 
-  if (typeof cancelAnimationFrame !== 'function') {
-    // Using console['error'] to evade Babel and ESLint
-    console['error']("This browser doesn't support cancelAnimationFrame. " + 'Make sure that you load a ' + 'polyfill in older browsers. https://reactjs.org/link/react-polyfills');
-  }
+  exports.unstable_now = function () {
+    return localDate.now() - initialTime;
+  };
 }
 
 function advanceTimers(currentTime) {
@@ -476,126 +453,54 @@ function unstable_cancelCallback(task) {
 
 function unstable_getCurrentPriorityLevel() {
   return currentPriorityLevel;
-}
+} // If this accidentally gets imported in a non-browser environment, e.g. JavaScriptCore,
+// fallback to a naive implementation.
 
-var isMessageLoopRunning = false;
-var scheduledHostCallback = null;
-var taskTimeoutID = -1; // Scheduler periodically yields in case there is other work on the main
-// thread, like user events. By default, it yields multiple times per frame.
-// It does not attempt to align with frame boundaries, since most tasks don't
-// need to be frame aligned; for those that do, use requestAnimationFrame.
 
-var yieldInterval = 5;
-var deadline = 0; // TODO: Make this configurable
+var _callback = null;
+var _timeoutID = null;
 
-function shouldYieldToHost() {
-  {
-    // `isInputPending` is not available. Since we have no way of knowing if
-    // there's pending input, always yield at the end of the frame.
-    return exports.unstable_now() >= deadline;
-  }
-}
-
-function requestPaint() {
-
-}
-
-function forceFrameRate(fps) {
-  if (fps < 0 || fps > 125) {
-    // Using console['error'] to evade Babel and ESLint
-    console['error']('forceFrameRate takes a positive int between 0 and 125, ' + 'forcing frame rates higher than 125 fps is not supported');
-    return;
-  }
-
-  if (fps > 0) {
-    yieldInterval = Math.floor(1000 / fps);
-  } else {
-    // reset the framerate
-    yieldInterval = 5;
-  }
-}
-
-var performWorkUntilDeadline = function () {
-  if (scheduledHostCallback !== null) {
-    var currentTime = exports.unstable_now(); // Yield after `yieldInterval` ms, regardless of where we are in the vsync
-    // cycle. This means there's always time remaining at the beginning of
-    // the message event.
-
-    deadline = currentTime + yieldInterval;
-    var hasTimeRemaining = true; // If a scheduler task throws, exit the current browser task so the
-    // error can be observed.
-    //
-    // Intentionally not using a try-catch, since that makes some debugging
-    // techniques harder. Instead, if `scheduledHostCallback` errors, then
-    // `hasMoreWork` will remain true, and we'll continue the work loop.
-
-    var hasMoreWork = true;
-
+var _flushCallback = function () {
+  if (_callback !== null) {
     try {
-      hasMoreWork = scheduledHostCallback(hasTimeRemaining, currentTime);
-    } finally {
-      if (hasMoreWork) {
-        // If there's more work, schedule the next message event at the end
-        // of the preceding one.
-        schedulePerformWorkUntilDeadline();
-      } else {
-        isMessageLoopRunning = false;
-        scheduledHostCallback = null;
-      }
+      var currentTime = exports.unstable_now();
+      var hasRemainingTime = true;
+
+      _callback(hasRemainingTime, currentTime);
+
+      _callback = null;
+    } catch (e) {
+      setTimeout(_flushCallback, 0);
+      throw e;
     }
-  } else {
-    isMessageLoopRunning = false;
-  } // Yielding to the browser will give it a chance to paint, so we can
+  }
 };
 
-var schedulePerformWorkUntilDeadline;
-
-if (typeof setImmediate === 'function') {
-  // Node.js and old IE.
-  // There's a few reasons for why we prefer setImmediate.
-  //
-  // Unlike MessageChannel, it doesn't prevent a Node.js process from exiting.
-  // (Even though this is a DOM fork of the Scheduler, you could get here
-  // with a mix of Node.js 15+, which has a MessageChannel, and jsdom.)
-  // https://github.com/facebook/react/issues/20756
-  //
-  // But also, it runs earlier which is the semantic we want.
-  // If other browsers ever implement it, it's better to use it.
-  // Although both of these would be inferior to native scheduling.
-  schedulePerformWorkUntilDeadline = function () {
-    setImmediate(performWorkUntilDeadline);
-  };
-} else {
-  var channel = new MessageChannel();
-  var port = channel.port2;
-  channel.port1.onmessage = performWorkUntilDeadline;
-
-  schedulePerformWorkUntilDeadline = function () {
-    port.postMessage(null);
-  };
-}
-
-function requestHostCallback(callback) {
-  scheduledHostCallback = callback;
-
-  if (!isMessageLoopRunning) {
-    isMessageLoopRunning = true;
-    schedulePerformWorkUntilDeadline();
+function requestHostCallback(cb) {
+  if (_callback !== null) {
+    // Protect against re-entrancy.
+    setTimeout(requestHostCallback, 0, cb);
+  } else {
+    _callback = cb;
+    setTimeout(_flushCallback, 0);
   }
 }
 
-function requestHostTimeout(callback, ms) {
-  taskTimeoutID = setTimeout(function () {
-    callback(exports.unstable_now());
-  }, ms);
+function requestHostTimeout(cb, ms) {
+  _timeoutID = setTimeout(cb, ms);
 }
 
 function cancelHostTimeout() {
-  clearTimeout(taskTimeoutID);
-  taskTimeoutID = -1;
+  clearTimeout(_timeoutID);
 }
 
-var unstable_requestPaint = requestPaint;
+function shouldYieldToHost() {
+  return false;
+}
+
+function forceFrameRate() {}
+
+function requestPaint() {}
 var unstable_Profiling =  null;
 
 exports.unstable_IdlePriority = IdlePriority;
@@ -611,7 +516,7 @@ exports.unstable_getCurrentPriorityLevel = unstable_getCurrentPriorityLevel;
 exports.unstable_getFirstCallbackNode = unstable_getFirstCallbackNode;
 exports.unstable_next = unstable_next;
 exports.unstable_pauseExecution = unstable_pauseExecution;
-exports.unstable_requestPaint = unstable_requestPaint;
+exports.unstable_requestPaint = requestPaint;
 exports.unstable_runWithPriority = unstable_runWithPriority;
 exports.unstable_scheduleCallback = unstable_scheduleCallback;
 exports.unstable_shouldYield = shouldYieldToHost;
