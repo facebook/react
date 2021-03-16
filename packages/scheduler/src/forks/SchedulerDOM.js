@@ -568,7 +568,7 @@ if (typeof setImmediate === 'function') {
     setImmediate(performWorkUntilDeadline);
   };
 } else {
-  const channel = new MessageChannel();
+  const channel = new window.MessageChannel();
   const port = channel.port2;
   channel.port1.onmessage = performWorkUntilDeadline;
   schedulePerformWorkUntilDeadline = () => {

@@ -96,7 +96,7 @@ describe('SchedulerBrowser', () => {
         hasPendingMessageEvent = true;
       },
     };
-    global.MessageChannel = function MessageChannel() {
+    window.MessageChannel = function MessageChannel() {
       this.port1 = port1;
       this.port2 = port2;
     };
