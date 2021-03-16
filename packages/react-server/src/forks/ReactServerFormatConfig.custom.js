@@ -30,6 +30,7 @@ export opaque type SuspenseBoundaryID = mixed;
 
 export const createResponseState = $$$hostConfig.createResponseState;
 export const createSuspenseBoundaryID = $$$hostConfig.createSuspenseBoundaryID;
+export const pushEmpty = $$$hostConfig.pushEmpty;
 export const pushTextInstance = $$$hostConfig.pushTextInstance;
 export const pushStartInstance = $$$hostConfig.pushStartInstance;
 export const pushEndInstance = $$$hostConfig.pushEndInstance;
