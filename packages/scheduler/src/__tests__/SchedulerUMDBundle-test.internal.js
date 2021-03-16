@@ -28,8 +28,8 @@ describe('Scheduling UMD bundle', () => {
     global.window = {
       requestAnimationFrame: jest.fn(),
       cancelAnimationFrame: jest.fn(),
+      MessageChannel: MockMessageChannel,
     };
-    global.MessageChannel = MockMessageChannel;
   });
 
   afterEach(() => {
