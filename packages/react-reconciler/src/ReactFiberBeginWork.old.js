@@ -75,6 +75,7 @@ import {
   debugRenderPhaseSideEffectsForStrictMode,
   disableLegacyContext,
   disableModulePatternComponents,
+  enableProfilerCommitHooks,
   enableProfilerTimer,
   enableSchedulerTracing,
   enableSuspenseServerRenderer,
@@ -837,11 +838,13 @@ function updateProfiler(
   if (enableProfilerTimer) {
     workInProgress.flags |= Update;
 
-    // Reset effect durations for the next eventual effect phase.
-    // These are reset during render to allow the DevTools commit hook a chance to read them,
-    const stateNode = workInProgress.stateNode;
-    stateNode.effectDuration = 0;
-    stateNode.passiveEffectDuration = 0;
+    if (enableProfilerCommitHooks) {
+      // Reset effect durations for the next eventual effect phase.
+      // These are reset during render to allow the DevTools commit hook a chance to read them,
+      const stateNode = workInProgress.stateNode;
+      stateNode.effectDuration = 0;
+      stateNode.passiveEffectDuration = 0;
+    }
   }
   const nextProps = workInProgress.pendingProps;
   const nextChildren = nextProps.children;
@@ -3320,11 +3323,13 @@ function beginWork(
               workInProgress.flags |= Update;
             }
 
-            // Reset effect durations for the next eventual effect phase.
-            // These are reset during render to allow the DevTools commit hook a chance to read them,
-            const stateNode = workInProgress.stateNode;
-            stateNode.effectDuration = 0;
-            stateNode.passiveEffectDuration = 0;
+            if (enableProfilerCommitHooks) {
+              // Reset effect durations for the next eventual effect phase.
+              // These are reset during render to allow the DevTools commit hook a chance to read them,
+              const stateNode = workInProgress.stateNode;
+              stateNode.effectDuration = 0;
+              stateNode.passiveEffectDuration = 0;
+            }
           }
           break;
         case SuspenseComponent: {
