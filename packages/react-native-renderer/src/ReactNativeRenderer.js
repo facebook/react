@@ -96,6 +96,7 @@ function findHostInstance_DEPRECATED(
     // Fabric
     return (hostInstance: any).canonical;
   }
+  // $FlowFixMe inexact ReactNativeFiberHostComponent is incompatible with exact $ReadOnly
   return hostInstance;
 }
 

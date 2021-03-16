@@ -13,7 +13,6 @@ import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
-  NativeMethods,
   ViewConfig,
 } from './ReactNativeTypes';
 import type {Instance} from './ReactNativeHostConfig';
@@ -125,8 +124,5 @@ class ReactNativeFiberHostComponent {
     }
   }
 }
-
-// eslint-disable-next-line no-unused-expressions
-(ReactNativeFiberHostComponent.prototype: NativeMethods);
 
 export default ReactNativeFiberHostComponent;

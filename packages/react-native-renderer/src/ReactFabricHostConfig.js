@@ -13,7 +13,6 @@ import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
-  NativeMethods,
   ViewConfig,
   TouchedViewDataAtPoint,
 } from './ReactNativeTypes';
@@ -185,9 +184,6 @@ class ReactFabricHostComponent {
     return;
   }
 }
-
-// eslint-disable-next-line no-unused-expressions
-(ReactFabricHostComponent.prototype: NativeMethods);
 
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMutation';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
