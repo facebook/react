@@ -317,8 +317,15 @@ describe('ReactDOMNativeEventHeuristic-test', () => {
     pressEvent.initEvent('click', true, true);
     dispatchAndSetCurrentEvent(target.current, pressEvent);
 
-    expect(Scheduler).toHaveYielded([]);
     expect(container.textContent).toEqual('Count: 2');
-    expect(Scheduler).toFlushAndYield([2]);
+    if (gate(flags => flags.enableDiscreteEventFlushingChange)) {
+      // When enableDiscreteEventFlushingChange is enabled, we don't flush
+      // discrete callbacks synchronously at the end of the event.
+      // TODO: I believe this flag is no longer relevant, because we flush the
+      // updates in a microtask, anyway.
+      expect(Scheduler).toFlushAndYield([2]);
+    } else {
+      expect(Scheduler).toHaveYielded([2]);
+    }
   });
 });
