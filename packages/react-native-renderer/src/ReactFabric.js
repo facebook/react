@@ -97,6 +97,7 @@ function findHostInstance_DEPRECATED<TElementType: ElementType>(
     // Fabric
     return (hostInstance: any).canonical;
   }
+  // $FlowFixMe[incompatible-return]
   return hostInstance;
 }
 
