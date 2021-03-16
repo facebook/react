@@ -73,14 +73,25 @@ export type SuspenseBoundaryID = number;
 export function createSuspenseBoundaryID(
   responseState: ResponseState,
 ): SuspenseBoundaryID {
+  // TODO: This is not deterministic since it's created during render.
   return responseState.nextSuspenseID++;
 }
 
 const RAW_TEXT = stringToPrecomputedChunk('RCTRawText');
 
+export function pushEmpty(
+  target: Array<Chunk | PrecomputedChunk>,
+  responseState: ResponseState,
+  assignID: null | SuspenseBoundaryID,
+): void {
+  // This is not used since we don't need to assign any IDs.
+}
+
 export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
+  responseState: ResponseState,
+  assignID: null | SuspenseBoundaryID,
 ): void {
   target.push(
     INSTANCE,
@@ -95,6 +106,8 @@ export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
+  responseState: ResponseState,
+  assignID: null | SuspenseBoundaryID,
 ): void {
   target.push(
     INSTANCE,

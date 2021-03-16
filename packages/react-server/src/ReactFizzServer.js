@@ -39,6 +39,7 @@ import {
   writeClientRenderBoundaryInstruction,
   writeCompletedBoundaryInstruction,
   writeCompletedSegmentInstruction,
+  pushEmpty,
   pushTextInstance,
   pushStartInstance,
   pushEndInstance,
@@ -218,11 +219,26 @@ function renderNode(
   parentBoundary: Root | SuspenseBoundary,
   segment: Segment,
   node: ReactNodeList,
+  assignID: null | SuspenseBoundaryID,
 ): void {
   if (typeof node === 'string') {
-    pushTextInstance(segment.chunks, node);
+    pushTextInstance(segment.chunks, node, request.responseState, assignID);
     return;
   }
+
+  if (Array.isArray(node)) {
+    if (node.length > 0) {
+      // Only the first node gets assigned an ID.
+      renderNode(request, parentBoundary, segment, node[0], assignID);
+      for (let i = 1; i < node.length; i++) {
+        renderNode(request, parentBoundary, segment, node[i], null);
+      }
+    } else {
+      pushEmpty(segment.chunks, request.responseState, assignID);
+    }
+    return;
+  }
+
   if (
     typeof node !== 'object' ||
     !node ||
@@ -236,7 +252,7 @@ function renderNode(
   if (typeof type === 'function') {
     try {
       const result = type(props);
-      renderNode(request, parentBoundary, segment, result);
+      renderNode(request, parentBoundary, segment, result, assignID);
     } catch (x) {
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Something suspended, we'll need to create a new segment and resolve it later.
@@ -248,7 +264,7 @@ function renderNode(
           node,
           parentBoundary,
           newSegment,
-          null,
+          assignID,
         );
         const ping = suspendedWork.ping;
         x.then(ping, ping);
@@ -259,10 +275,18 @@ function renderNode(
       }
     }
   } else if (typeof type === 'string') {
-    pushStartInstance(segment.chunks, type, props);
-    renderNode(request, parentBoundary, segment, props.children);
+    pushStartInstance(
+      segment.chunks,
+      type,
+      props,
+      request.responseState,
+      assignID,
+    );
+    renderNode(request, parentBoundary, segment, props.children, null);
     pushEndInstance(segment.chunks, type, props);
   } else if (type === REACT_SUSPENSE_TYPE) {
+    // We need to push an "empty" thing here to identify the parent suspense boundary.
+    pushEmpty(segment.chunks, request.responseState, assignID);
     // Each time we enter a suspense boundary, we split out into a new segment for
     // the fallback so that we can later replace that segment with the content.
     // This also lets us split out the main content even if it doesn't suspend,
@@ -418,7 +442,7 @@ function retryWork(request: Request, work: SuspendedWork): void {
       node = element.type(element.props);
     }
 
-    renderNode(request, boundary, segment, node);
+    renderNode(request, boundary, segment, node, work.assignID);
 
     completeWork(request, boundary, segment);
   } catch (x) {
