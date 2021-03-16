@@ -238,7 +238,7 @@ describe('ReactDOMFizzServer', () => {
 
     // Attempt to hydrate the content.
     const container = document.body.firstChild;
-    const root = ReactDOM.createRoot(container, {hydrate: true});
+    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();
 
