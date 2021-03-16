@@ -43,6 +43,7 @@ import {
   hydrateTextInstance,
   hydrateSuspenseInstance,
   getNextHydratableInstanceAfterSuspenseInstance,
+  shouldDeleteUnhydratedTailInstances,
   didNotMatchHydratedContainerTextInstance,
   didNotMatchHydratedTextInstance,
   didNotHydrateContainerInstance,
@@ -438,18 +439,15 @@ function popHydrationState(fiber: Fiber): boolean {
     return false;
   }
 
-  const type = fiber.type;
-
   // If we have any remaining hydratable nodes, we need to delete them now.
   // We only do this deeper than head and body since they tend to have random
   // other nodes in them. We also ignore components with pure text content in
-  // side of them.
-  // TODO: Better heuristic.
+  // side of them. We also don't delete anything inside the root container.
   if (
-    fiber.tag !== HostComponent ||
-    (type !== 'head' &&
-      type !== 'body' &&
-      !shouldSetTextContent(type, fiber.memoizedProps))
+    fiber.tag !== HostRoot &&
+    (fiber.tag !== HostComponent ||
+      (shouldDeleteUnhydratedTailInstances(fiber.type) &&
+        !shouldSetTextContent(fiber.type, fiber.memoizedProps)))
   ) {
     let nextInstance = nextHydratableInstance;
     while (nextInstance) {

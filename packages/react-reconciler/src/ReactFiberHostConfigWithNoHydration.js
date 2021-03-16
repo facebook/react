@@ -40,6 +40,7 @@ export const commitHydratedContainer = shim;
 export const commitHydratedSuspenseInstance = shim;
 export const clearSuspenseBoundary = shim;
 export const clearSuspenseBoundaryFromContainer = shim;
+export const shouldDeleteUnhydratedTailInstances = shim;
 export const didNotMatchHydratedContainerTextInstance = shim;
 export const didNotMatchHydratedTextInstance = shim;
 export const didNotHydrateContainerInstance = shim;

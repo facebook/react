@@ -156,6 +156,8 @@ export const commitHydratedSuspenseInstance =
 export const clearSuspenseBoundary = $$$hostConfig.clearSuspenseBoundary;
 export const clearSuspenseBoundaryFromContainer =
   $$$hostConfig.clearSuspenseBoundaryFromContainer;
+export const shouldDeleteUnhydratedTailInstances =
+  $$$hostConfig.shouldDeleteUnhydratedTailInstances;
 export const didNotMatchHydratedContainerTextInstance =
   $$$hostConfig.didNotMatchHydratedContainerTextInstance;
 export const didNotMatchHydratedTextInstance =
