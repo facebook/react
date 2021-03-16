@@ -548,8 +548,8 @@ export function scheduleUpdateOnFiber(
       ensureRootIsScheduled(root, eventTime);
       schedulePendingInteractions(root, lane);
       if (
-        (fiber.mode & ConcurrentMode) === NoMode &&
-        executionContext === NoContext
+        executionContext === NoContext &&
+        (fiber.mode & ConcurrentMode) === NoMode
       ) {
         // Flush the synchronous work now, unless we're already working or inside
         // a batch. This is intentionally inside scheduleUpdateOnFiber instead of
