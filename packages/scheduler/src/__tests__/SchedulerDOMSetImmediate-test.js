@@ -85,7 +85,7 @@ describe('SchedulerDOMSetImmediate', () => {
     };
 
     // Unused: we expect setImmediate to be preferred.
-    global.MessageChannel = function() {
+    window.MessageChannel = function() {
       return {
         port1: {},
         port2: {
