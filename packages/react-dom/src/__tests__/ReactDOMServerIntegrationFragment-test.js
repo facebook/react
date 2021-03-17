@@ -103,7 +103,15 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('an empty fragment', async render => {
-      expect(await render(<React.Fragment />)).toBe(null);
+      expect(
+        (
+          await render(
+            <div>
+              <React.Fragment />
+            </div>,
+          )
+        ).firstChild,
+      ).toBe(null);
     });
   });
 });
