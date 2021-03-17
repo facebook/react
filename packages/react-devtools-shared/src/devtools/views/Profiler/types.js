@@ -52,8 +52,12 @@ export type CommitDataFrontend = {|
   // Map of Fiber (ID) to a description of what changed in this commit.
   changeDescriptions: Map<number, ChangeDescription> | null,
 
-  // How long was this commit?
+  // How long was the render phase?
   duration: number,
+
+  // How long was the layout commit phase?
+  // Note that not all builds of React expose this property.
+  effectDuration: number | null,
 
   // Map of Fiber (ID) to actual duration for this commit;
   // Fibers that did not render will not have entries in this Map.
@@ -65,6 +69,10 @@ export type CommitDataFrontend = {|
 
   // Which interactions (IDs) were associated with this commit.
   interactionIDs: Array<number>,
+
+  // How long was the passive commit phase?
+  // Note that not all builds of React expose this property.
+  passiveEffectDuration: number | null,
 
   // Priority level of the commit (if React provided this info)
   priorityLevel: string | null,
@@ -113,11 +121,13 @@ export type ProfilingDataFrontend = {|
 export type CommitDataExport = {|
   changeDescriptions: Array<[number, ChangeDescription]> | null,
   duration: number,
+  effectDuration: number | null,
   // Tuple of fiber ID and actual duration
   fiberActualDurations: Array<[number, number]>,
   // Tuple of fiber ID and computed "self" duration
   fiberSelfDurations: Array<[number, number]>,
   interactionIDs: Array<number>,
+  passiveEffectDuration: number | null,
   priorityLevel: string | null,
   timestamp: number,
 |};

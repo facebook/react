@@ -8,7 +8,13 @@
  */
 
 import * as React from 'react';
-import {Fragment, useCallback, useEffect, useState} from 'react';
+import {
+  Fragment,
+  useCallback,
+  useLayoutEffect,
+  useEffect,
+  useState,
+} from 'react';
 import {unstable_batchedUpdates as batchedUpdates} from 'react-dom';
 import {
   unstable_trace as trace,
@@ -67,6 +73,10 @@ export default function InteractionTracing() {
       );
     }
   }, [count, shouldCascade]);
+
+  useLayoutEffect(() => {
+    Math.sqrt(100 * 100 * 100 * 100 * 100);
+  });
 
   return (
     <Fragment>

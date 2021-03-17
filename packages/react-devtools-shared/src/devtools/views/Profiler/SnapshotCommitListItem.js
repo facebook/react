@@ -10,7 +10,7 @@
 import * as React from 'react';
 import {memo} from 'react';
 import {areEqual} from 'react-window';
-import {getGradientColor, formatDuration, formatTime} from './utils';
+import {getGradientColor} from './utils';
 
 import styles from './SnapshotCommitListItem.css';
 
@@ -25,20 +25,18 @@ type Props = {
 
 function SnapshotCommitListItem({data: itemData, index, style}: Props) {
   const {
-    commitDurations,
-    commitTimes,
     filteredCommitIndices,
     maxDuration,
     selectedCommitIndex,
     selectCommitIndex,
     setHoveredCommitIndex,
     startCommitDrag,
+    totalDurations,
   } = itemData;
 
   index = filteredCommitIndices[index];
 
-  const commitDuration = commitDurations[index];
-  const commitTime = commitTimes[index];
+  const totalDuration = totalDurations[index];
 
   // Use natural cbrt for bar height.
   // This prevents one (or a few) outliers from squishing the majority of other commits.
@@ -46,14 +44,13 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
   const heightScale =
     Math.min(
       1,
-      Math.max(0, Math.cbrt(commitDuration) / Math.cbrt(maxDuration)),
+      Math.max(0, Math.cbrt(totalDuration) / Math.cbrt(maxDuration)),
     ) || 0;
 
   // Use a linear scale for color.
   // This gives some visual contrast between cheaper and more expensive commits
   // and somewhat compensates for the cbrt scale height.
-  const colorScale =
-    Math.min(1, Math.max(0, commitDuration / maxDuration)) || 0;
+  const colorScale = Math.min(1, Math.max(0, totalDuration / maxDuration)) || 0;
 
   const isSelected = selectedCommitIndex === index;
 
@@ -71,6 +68,11 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
     }
   };
 
+  let backgroundColor;
+  if (!isSelected && totalDuration > 0) {
+    backgroundColor = getGradientColor(colorScale);
+  }
+
   return (
     <div
       className={styles.Outer}
@@ -82,16 +84,12 @@ function SnapshotCommitListItem({data: itemData, index, style}: Props) {
         borderBottom: isSelected
           ? '3px solid var(--color-tab-selected-border)'
           : undefined,
-      }}
-      title={`Duration ${formatDuration(commitDuration)}ms at ${formatTime(
-        commitTime,
-      )}s`}>
+      }}>
       <div
-        className={styles.Inner}
+        className={isSelected ? styles.InnerSelected : styles.Inner}
         style={{
           height: `${Math.round(heightScale * 100)}%`,
-          backgroundColor:
-            commitDuration > 0 ? getGradientColor(colorScale) : undefined,
+          backgroundColor,
         }}
       />
     </div>

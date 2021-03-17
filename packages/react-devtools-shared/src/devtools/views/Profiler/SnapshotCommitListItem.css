@@ -11,9 +11,14 @@
   background-color: var(--color-background);
 }
 
-.Inner {
+.Inner,
+.InnerSelected {
   width: 100%;
   min-height: 2px;
   background-color: var(--color-commit-did-not-render-fill);
   color: var(--color-commit-did-not-render-fill-text);
+}
+
+.InnerSelected {
+  background-color: var(--color-button-active);
 }
