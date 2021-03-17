@@ -368,7 +368,7 @@ describe('rendering React components at document', () => {
       expect(testDocument.body.innerHTML).toBe('Hello world');
     });
 
-    it('cannot renders over an existing text child at the root', () => {
+    it('cannot render over an existing text child at the root', () => {
       const container = document.createElement('div');
       container.textContent = 'potato';
       expect(() => ReactDOM.hydrate(<div>parsnip</div>, container)).toErrorDev(
