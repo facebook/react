@@ -13,4 +13,4 @@
  * It should always be imported from "react-devtools-feature-flags".
  ************************************************************************/
 
-// TODO Add feature flags here...
+export const enableProfilerChangedHookIndices = false;
