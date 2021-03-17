@@ -2097,6 +2097,25 @@ export function attach(
         // Checking root.memoizedInteractions handles multi-renderer edge-case-
         // where some v16 renderers support profiling and others don't.
         if (isProfiling && root.memoizedInteractions != null) {
+          // Profiling durations are only available for certain builds.
+          // If available, they'll be stored on the HostRoot.
+          let effectDuration = null;
+          let passiveEffectDuration = null;
+          const hostRoot = root.current;
+          if (hostRoot != null) {
+            const stateNode = hostRoot.stateNode;
+            if (stateNode != null) {
+              effectDuration =
+                stateNode.effectDuration != null
+                  ? stateNode.effectDuration
+                  : null;
+              passiveEffectDuration =
+                stateNode.passiveEffectDuration != null
+                  ? stateNode.passiveEffectDuration
+                  : null;
+            }
+          }
+
           // If profiling is active, store commit time and duration, and the current interactions.
           // The frontend may request this information after profiling has stopped.
           currentCommitProfilingMetadata = {
@@ -2111,6 +2130,8 @@ export function attach(
             ),
             maxActualDuration: 0,
             priorityLevel: null,
+            effectDuration,
+            passiveEffectDuration,
           };
         }
 
@@ -2149,6 +2170,23 @@ export function attach(
     const isProfilingSupported = root.memoizedInteractions != null;
 
     if (isProfiling && isProfilingSupported) {
+      // Profiling durations are only available for certain builds.
+      // If available, they'll be stored on the HostRoot.
+      let effectDuration = null;
+      let passiveEffectDuration = null;
+      const hostRoot = root.current;
+      if (hostRoot != null) {
+        const stateNode = hostRoot.stateNode;
+        if (stateNode != null) {
+          effectDuration =
+            stateNode.effectDuration != null ? stateNode.effectDuration : null;
+          passiveEffectDuration =
+            stateNode.passiveEffectDuration != null
+              ? stateNode.passiveEffectDuration
+              : null;
+        }
+      }
+
       // If profiling is active, store commit time and duration, and the current interactions.
       // The frontend may request this information after profiling has stopped.
       currentCommitProfilingMetadata = {
@@ -2164,6 +2202,8 @@ export function attach(
         maxActualDuration: 0,
         priorityLevel:
           priorityLevel == null ? null : formatPriorityLevel(priorityLevel),
+        effectDuration,
+        passiveEffectDuration,
       };
     }
 
@@ -3294,8 +3334,10 @@ export function attach(
     changeDescriptions: Map<number, ChangeDescription> | null,
     commitTime: number,
     durations: Array<number>,
+    effectDuration: number | null,
     interactions: Array<Interaction>,
     maxActualDuration: number,
+    passiveEffectDuration: number | null,
     priorityLevel: string | null,
   |};
 
@@ -3349,8 +3391,10 @@ export function attach(
           const {
             changeDescriptions,
             durations,
+            effectDuration,
             interactions,
             maxActualDuration,
+            passiveEffectDuration,
             priorityLevel,
             commitTime,
           } = commitProfilingData;
@@ -3386,9 +3430,11 @@ export function attach(
                 ? Array.from(changeDescriptions.entries())
                 : null,
             duration: maxActualDuration,
+            effectDuration,
             fiberActualDurations,
             fiberSelfDurations,
             interactionIDs,
+            passiveEffectDuration,
             priorityLevel,
             timestamp: commitTime,
           });

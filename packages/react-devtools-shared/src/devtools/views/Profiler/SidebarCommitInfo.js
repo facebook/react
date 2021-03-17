@@ -34,7 +34,9 @@ export default function SidebarCommitInfo(_: Props) {
   const {interactions} = profilerStore.getDataForRoot(rootID);
   const {
     duration,
+    effectDuration,
     interactionIDs,
+    passiveEffectDuration,
     priorityLevel,
     timestamp,
   } = profilerStore.getCommitData(rootID, selectedCommitIndex);
@@ -43,6 +45,9 @@ export default function SidebarCommitInfo(_: Props) {
     selectTab('interactions');
     selectInteraction(interactionID);
   };
+
+  const hasCommitPhaseDurations =
+    effectDuration !== null || passiveEffectDuration !== null;
 
   return (
     <Fragment>
@@ -59,10 +64,44 @@ export default function SidebarCommitInfo(_: Props) {
             <label className={styles.Label}>Committed at</label>:{' '}
             <span className={styles.Value}>{formatTime(timestamp)}s</span>
           </li>
-          <li className={styles.ListItem}>
-            <label className={styles.Label}>Render duration</label>:{' '}
-            <span className={styles.Value}>{formatDuration(duration)}ms</span>
-          </li>
+
+          {!hasCommitPhaseDurations && (
+            <li className={styles.ListItem}>
+              <label className={styles.Label}>Render duration</label>:{' '}
+              <span className={styles.Value}>{formatDuration(duration)}ms</span>
+            </li>
+          )}
+
+          {hasCommitPhaseDurations && (
+            <li className={styles.ListItem}>
+              <label className={styles.Label}>Durations</label>
+              <ul className={styles.DurationsList}>
+                <li className={styles.DurationsListItem}>
+                  <label className={styles.Label}>Render</label>:{' '}
+                  <span className={styles.Value}>
+                    {formatDuration(duration)}ms
+                  </span>
+                </li>
+                {effectDuration !== null && (
+                  <li className={styles.DurationsListItem}>
+                    <label className={styles.Label}>Layout effects</label>:{' '}
+                    <span className={styles.Value}>
+                      {formatDuration(effectDuration)}ms
+                    </span>
+                  </li>
+                )}
+                {passiveEffectDuration !== null && (
+                  <li className={styles.DurationsListItem}>
+                    <label className={styles.Label}>Passive effects</label>:{' '}
+                    <span className={styles.Value}>
+                      {formatDuration(passiveEffectDuration)}ms
+                    </span>
+                  </li>
+                )}
+              </ul>
+            </li>
+          )}
+
           <li className={styles.Interactions}>
             <label className={styles.Label}>Interactions</label>:
             <div className={styles.InteractionList}>
