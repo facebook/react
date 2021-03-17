@@ -19,6 +19,7 @@ let Suspense;
 let textCache;
 let document;
 let writable;
+let container;
 let buffer = '';
 let hasErrored = false;
 let fatalError = undefined;
@@ -38,10 +39,14 @@ describe('ReactDOMFizzServer', () => {
     textCache = new Map();
 
     // Test Environment
-    const jsdom = new JSDOM('<!DOCTYPE html><html><head></head><body>', {
-      runScripts: 'dangerously',
-    });
+    const jsdom = new JSDOM(
+      '<!DOCTYPE html><html><head></head><body><div id="container">',
+      {
+        runScripts: 'dangerously',
+      },
+    );
     document = jsdom.window.document;
+    container = document.getElementById('container');
 
     buffer = '';
     hasErrored = false;
@@ -80,9 +85,9 @@ describe('ReactDOMFizzServer', () => {
         const script = document.createElement('script');
         script.textContent = node.textContent;
         fakeBody.removeChild(node);
-        document.body.appendChild(script);
+        container.appendChild(script);
       } else {
-        document.body.appendChild(node);
+        container.appendChild(node);
       }
     }
   }
@@ -200,11 +205,11 @@ describe('ReactDOMFizzServer', () => {
         writable,
       );
     });
-    expect(getVisibleChildren(document.body)).toEqual(<div>Loading...</div>);
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
     await act(async () => {
       resolveText('Hello World');
     });
-    expect(getVisibleChildren(document.body)).toEqual(<div>Hello World</div>);
+    expect(getVisibleChildren(container)).toEqual(<div>Hello World</div>);
   });
 
   // @gate experimental
@@ -224,20 +229,12 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      ReactDOMFizzServer.pipeToNodeWritable(
-        // We currently have to wrap the server node in a container because
-        // otherwise the Fizz nodes get deleted during hydration.
-        <div id="container">
-          <App />
-        </div>,
-        writable,
-      );
+      ReactDOMFizzServer.pipeToNodeWritable(<App />, writable);
     });
 
     // We're still showing a fallback.
 
     // Attempt to hydrate the content.
-    const container = document.body.firstChild;
     const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
     root.render(<App />);
     Scheduler.unstable_flushAll();

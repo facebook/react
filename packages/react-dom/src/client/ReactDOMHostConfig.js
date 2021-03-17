@@ -894,6 +894,12 @@ export function commitHydratedSuspenseInstance(
   retryIfBlockedOn(suspenseInstance);
 }
 
+export function shouldDeleteUnhydratedTailInstances(
+  parentType: string,
+): boolean {
+  return parentType !== 'head' || parentType !== 'body';
+}
+
 export function didNotMatchHydratedContainerTextInstance(
   parentContainer: Container,
   textInstance: TextInstance,
@@ -1005,6 +1011,15 @@ export function didNotFindHydratableSuspenseInstance(
 ) {
   if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
     // TODO: warnForInsertedHydratedSuspense(parentInstance);
+  }
+}
+
+export function errorHydratingContainer(parentContainer: Container): void {
+  if (__DEV__) {
+    console.error(
+      'An error occurred during hydration. The server HTML was replaced with client content in <%s>.',
+      parentContainer.nodeName.toLowerCase(),
+    );
   }
 }
 

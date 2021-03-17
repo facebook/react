@@ -88,6 +88,7 @@ import {
   clearContainer,
   getCurrentEventPriority,
   supportsMicrotasks,
+  errorHydratingContainer,
 } from './ReactFiberHostConfig';
 
 import {
@@ -782,6 +783,9 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
       // discard server response and fall back to client side render.
       if (root.hydrate) {
         root.hydrate = false;
+        if (__DEV__) {
+          errorHydratingContainer(root.containerInfo);
+        }
         clearContainer(root.containerInfo);
       }
 
@@ -992,6 +996,9 @@ function performSyncWorkOnRoot(root) {
     // discard server response and fall back to client side render.
     if (root.hydrate) {
       root.hydrate = false;
+      if (__DEV__) {
+        errorHydratingContainer(root.containerInfo);
+      }
       clearContainer(root.containerInfo);
     }
 
