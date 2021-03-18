@@ -26,7 +26,12 @@ function renderToReadableStream(
 ): ReadableStream {
   let request;
   if (options && options.signal) {
-    options.signal.addEventListener('abort', () => abort(request));
+    const signal = options.signal;
+    const listener = () => {
+      abort(request);
+      signal.removeEventListener('abort', listener);
+    };
+    signal.addEventListener('abort', listener);
   }
   return new ReadableStream({
     start(controller) {
