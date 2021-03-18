@@ -894,8 +894,6 @@ function flushCompletedQueues(request: Request): void {
 // This would put all waiting boundaries into client-only mode.
 
 export function startWork(request: Request): void {
-  // TODO: Don't automatically start flowing. Expose an explicit signal. Auto-start once everything is done.
-  request.status = FLOWING;
   scheduleWork(() => performWork(request));
 }
 

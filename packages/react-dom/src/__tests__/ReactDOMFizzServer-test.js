@@ -196,7 +196,7 @@ describe('ReactDOMFizzServer', () => {
   // @gate experimental
   it('should asynchronously load the suspense boundary', async () => {
     await act(async () => {
-      ReactDOMFizzServer.pipeToNodeWritable(
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
         <div>
           <Suspense fallback={<Text text="Loading..." />}>
             <AsyncText text="Hello World" />
@@ -204,6 +204,7 @@ describe('ReactDOMFizzServer', () => {
         </div>,
         writable,
       );
+      startWriting();
     });
     expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
     await act(async () => {
@@ -229,7 +230,11 @@ describe('ReactDOMFizzServer', () => {
     }
 
     await act(async () => {
-      ReactDOMFizzServer.pipeToNodeWritable(<App />, writable);
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        <App />,
+        writable,
+      );
+      startWriting();
     });
 
     // We're still showing a fallback.
@@ -281,6 +286,7 @@ describe('ReactDOMFizzServer', () => {
     let controls;
     await act(async () => {
       controls = ReactDOMFizzServer.pipeToNodeWritable(<App />, writable);
+      controls.startWriting();
     });
 
     // We're still showing a fallback.

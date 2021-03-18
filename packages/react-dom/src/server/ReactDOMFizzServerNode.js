@@ -32,9 +32,17 @@ function pipeToNodeWritable(
   destination: Writable,
 ): Controls {
   const request = createRequest(children, destination);
-  destination.on('drain', createDrainHandler(destination, request));
+  let hasStartedFlowing = false;
   startWork(request);
   return {
+    startWriting() {
+      if (hasStartedFlowing) {
+        return;
+      }
+      hasStartedFlowing = true;
+      startFlowing(request);
+      destination.on('drain', createDrainHandler(destination, request));
+    },
     abort() {
       abort(request);
     },
