@@ -69,6 +69,24 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate experimental
+  it('should start writing after startWriting', () => {
+    const {writable, output} = getTestWritable();
+    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      <div>hello world</div>,
+      writable,
+    );
+    jest.runAllTimers();
+    // First we write our header.
+    output.result +=
+      '<!doctype html><html><head><title>test</title><head><body>';
+    // Then React starts writing.
+    startWriting();
+    expect(output.result).toBe(
+      '<!doctype html><html><head><title>test</title><head><body><div>hello world</div>',
+    );
+  });
+
+  // @gate experimental
   it('should error the stream when an error is thrown at the root', async () => {
     const {writable, output, completed} = getTestWritable();
     ReactDOMFizzServer.pipeToNodeWritable(
