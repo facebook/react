@@ -13,11 +13,17 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  abort,
 } from 'react-server/src/ReactFizzServer';
 
-function renderToReadableStream(children: ReactNodeList): ReadableStream {
+type Controls = {
+  stream: ReadableStream,
+  abort(): void,
+};
+
+function renderToReadableStream(children: ReactNodeList): Controls {
   let request;
-  return new ReadableStream({
+  const stream = new ReadableStream({
     start(controller) {
       request = createRequest(children, controller);
       startWork(request);
@@ -27,6 +33,12 @@ function renderToReadableStream(children: ReactNodeList): ReadableStream {
     },
     cancel(reason) {},
   });
+  return {
+    stream,
+    abort() {
+      abort(request);
+    },
+  };
 }
 
 export {renderToReadableStream};
