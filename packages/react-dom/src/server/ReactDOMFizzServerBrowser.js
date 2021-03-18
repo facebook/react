@@ -16,14 +16,19 @@ import {
   abort,
 } from 'react-server/src/ReactFizzServer';
 
-type Controls = {
-  stream: ReadableStream,
-  abort(): void,
+type Options = {
+  signal?: AbortSignal,
 };
 
-function renderToReadableStream(children: ReactNodeList): Controls {
+function renderToReadableStream(
+  children: ReactNodeList,
+  options?: Options,
+): ReadableStream {
   let request;
-  const stream = new ReadableStream({
+  if (options && options.signal) {
+    options.signal.addEventListener('abort', () => abort(request));
+  }
+  return new ReadableStream({
     start(controller) {
       request = createRequest(children, controller);
       startWork(request);
@@ -33,12 +38,6 @@ function renderToReadableStream(children: ReactNodeList): Controls {
     },
     cancel(reason) {},
   });
-  return {
-    stream,
-    abort() {
-      abort(request);
-    },
-  };
 }
 
 export {renderToReadableStream};

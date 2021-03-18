@@ -12,6 +12,7 @@
 // Polyfills for test environment
 global.ReadableStream = require('@mattiasbuelens/web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
+global.AbortController = require('abort-controller');
 
 let React;
 let ReactDOMFizzServer;
@@ -50,7 +51,7 @@ describe('ReactDOMFizzServer', () => {
 
   // @gate experimental
   it('should call renderToReadableStream', async () => {
-    const {stream} = ReactDOMFizzServer.renderToReadableStream(
+    const stream = ReactDOMFizzServer.renderToReadableStream(
       <div>hello world</div>,
     );
     const result = await readResult(stream);
@@ -59,7 +60,7 @@ describe('ReactDOMFizzServer', () => {
 
   // @gate experimental
   it('should error the stream when an error is thrown at the root', async () => {
-    const {stream} = ReactDOMFizzServer.renderToReadableStream(
+    const stream = ReactDOMFizzServer.renderToReadableStream(
       <div>
         <Throw />
       </div>,
@@ -78,7 +79,7 @@ describe('ReactDOMFizzServer', () => {
 
   // @gate experimental
   it('should error the stream when an error is thrown inside a fallback', async () => {
-    const {stream} = ReactDOMFizzServer.renderToReadableStream(
+    const stream = ReactDOMFizzServer.renderToReadableStream(
       <div>
         <Suspense fallback={<Throw />}>
           <InfiniteSuspend />
@@ -99,7 +100,7 @@ describe('ReactDOMFizzServer', () => {
 
   // @gate experimental
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
-    const {stream} = ReactDOMFizzServer.renderToReadableStream(
+    const stream = ReactDOMFizzServer.renderToReadableStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <Throw />
@@ -113,15 +114,17 @@ describe('ReactDOMFizzServer', () => {
 
   // @gate experimental
   it('should be able to complete by aborting even if the promise never resolves', async () => {
-    const {abort, stream} = ReactDOMFizzServer.renderToReadableStream(
+    const controller = new AbortController();
+    const stream = ReactDOMFizzServer.renderToReadableStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <InfiniteSuspend />
         </Suspense>
       </div>,
+      {signal: controller.signal},
     );
 
-    abort();
+    controller.abort();
 
     const result = await readResult(stream);
     expect(result).toContain('Loading');
