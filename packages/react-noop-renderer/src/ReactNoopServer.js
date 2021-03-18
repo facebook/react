@@ -222,6 +222,7 @@ function render(children: React$Element<any>): Destination {
   };
   const request = ReactNoopServer.createRequest(children, destination);
   ReactNoopServer.startWork(request);
+  ReactNoopServer.startFlowing(request);
   return destination;
 }
 
