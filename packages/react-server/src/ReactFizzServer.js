@@ -116,13 +116,14 @@ type Request = {
 export function createRequest(
   children: ReactNodeList,
   destination: Destination,
+  maxBoundarySize: number = 1024,
 ): Request {
   const pingedWork = [];
   const abortSet: Set<SuspendedWork> = new Set();
   const request = {
     destination,
     responseState: createResponseState(),
-    maxBoundarySize: 1024,
+    maxBoundarySize,
     status: BUFFERING,
     nextSegmentId: 0,
     allPendingWork: 0,

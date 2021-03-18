@@ -18,6 +18,7 @@ import {
 
 type Options = {
   signal?: AbortSignal,
+  maxBoundarySize?: number,
 };
 
 function renderToReadableStream(
@@ -35,7 +36,11 @@ function renderToReadableStream(
   }
   return new ReadableStream({
     start(controller) {
-      request = createRequest(children, controller);
+      request = createRequest(
+        children,
+        controller,
+        options ? options.maxBoundarySize : undefined,
+      );
       startWork(request);
     },
     pull(controller) {

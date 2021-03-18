@@ -21,6 +21,10 @@ function createDrainHandler(destination, request) {
   return () => startFlowing(request);
 }
 
+type Options = {
+  maxBoundarySize?: number,
+};
+
 type Controls = {
   // Cancel any pending I/O and put anything remaining into
   // client rendered mode.
@@ -30,8 +34,13 @@ type Controls = {
 function pipeToNodeWritable(
   children: ReactNodeList,
   destination: Writable,
+  options?: Options,
 ): Controls {
-  const request = createRequest(children, destination);
+  const request = createRequest(
+    children,
+    destination,
+    options ? options.maxBoundarySize : undefined,
+  );
   let hasStartedFlowing = false;
   startWork(request);
   return {
