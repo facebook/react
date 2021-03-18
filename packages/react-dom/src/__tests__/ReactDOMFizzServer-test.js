@@ -263,4 +263,55 @@ describe('ReactDOMFizzServer', () => {
     // Now it's hydrated.
     expect(ref.current).toBe(h1);
   });
+
+  // @gate experimental
+  it('client renders a boundary if it does not resolve before aborting', async () => {
+    function App() {
+      return (
+        <div>
+          <Suspense fallback="Loading...">
+            <h1>
+              <AsyncText text="Hello" />
+            </h1>
+          </Suspense>
+        </div>
+      );
+    }
+
+    let controls;
+    await act(async () => {
+      controls = ReactDOMFizzServer.pipeToNodeWritable(<App />, writable);
+    });
+
+    // We're still showing a fallback.
+
+    // Attempt to hydrate the content.
+    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App />);
+    Scheduler.unstable_flushAll();
+
+    // We're still loading because we're waiting for the server to stream more content.
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    // We abort the server response.
+    await act(async () => {
+      controls.abort();
+    });
+
+    // We still can't render it on the client.
+    Scheduler.unstable_flushAll();
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    // We now resolve it on the client.
+    resolveText('Hello');
+
+    Scheduler.unstable_flushAll();
+
+    // The client rendered HTML is now in place.
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <h1>Hello</h1>
+      </div>,
+    );
+  });
 });
