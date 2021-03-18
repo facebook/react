@@ -12,6 +12,7 @@
 // Polyfills for test environment
 global.ReadableStream = require('@mattiasbuelens/web-streams-polyfill/ponyfill/es6').ReadableStream;
 global.TextEncoder = require('util').TextEncoder;
+global.AbortController = require('abort-controller');
 
 let React;
 let ReactDOMFizzServer;
@@ -106,6 +107,24 @@ describe('ReactDOMFizzServer', () => {
         </Suspense>
       </div>,
     );
+
+    const result = await readResult(stream);
+    expect(result).toContain('Loading');
+  });
+
+  // @gate experimental
+  it('should be able to complete by aborting even if the promise never resolves', async () => {
+    const controller = new AbortController();
+    const stream = ReactDOMFizzServer.renderToReadableStream(
+      <div>
+        <Suspense fallback={<div>Loading</div>}>
+          <InfiniteSuspend />
+        </Suspense>
+      </div>,
+      {signal: controller.signal},
+    );
+
+    controller.abort();
 
     const result = await readResult(stream);
     expect(result).toContain('Loading');

@@ -13,10 +13,26 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  abort,
 } from 'react-server/src/ReactFizzServer';
 
-function renderToReadableStream(children: ReactNodeList): ReadableStream {
+type Options = {
+  signal?: AbortSignal,
+};
+
+function renderToReadableStream(
+  children: ReactNodeList,
+  options?: Options,
+): ReadableStream {
   let request;
+  if (options && options.signal) {
+    const signal = options.signal;
+    const listener = () => {
+      abort(request);
+      signal.removeEventListener('abort', listener);
+    };
+    signal.addEventListener('abort', listener);
+  }
   return new ReadableStream({
     start(controller) {
       request = createRequest(children, controller);

@@ -216,6 +216,9 @@ function render(children: React$Element<any>): Destination {
     placeholders: new Map(),
     segments: new Map(),
     stack: [],
+    abort() {
+      ReactNoopServer.abort(request);
+    },
   };
   const request = ReactNoopServer.createRequest(children, destination);
   ReactNoopServer.startWork(request);

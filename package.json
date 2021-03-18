@@ -36,6 +36,7 @@
     "@babel/preset-react": "^7.10.4",
     "@babel/traverse": "^7.11.0",
     "@mattiasbuelens/web-streams-polyfill": "^0.3.2",
+    "abort-controller": "^3.0.0",
     "art": "0.10.1",
     "babel-eslint": "^10.0.3",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
