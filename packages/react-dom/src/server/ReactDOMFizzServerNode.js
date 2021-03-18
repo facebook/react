@@ -14,19 +14,31 @@ import {
   createRequest,
   startWork,
   startFlowing,
+  abort,
 } from 'react-server/src/ReactFizzServer';
 
 function createDrainHandler(destination, request) {
   return () => startFlowing(request);
 }
 
+type Controls = {
+  // Cancel any pending I/O and put anything remaining into
+  // client rendered mode.
+  abort(): void,
+};
+
 function pipeToNodeWritable(
   children: ReactNodeList,
   destination: Writable,
-): void {
+): Controls {
   const request = createRequest(children, destination);
   destination.on('drain', createDrainHandler(destination, request));
   startWork(request);
+  return {
+    abort() {
+      abort(request);
+    },
+  };
 }
 
 export {pipeToNodeWritable};

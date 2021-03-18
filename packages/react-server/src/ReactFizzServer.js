@@ -61,6 +61,7 @@ type SuspenseBoundary = {
   pendingWork: number, // when it reaches zero we can show this boundary's content
   completedSegments: Array<Segment>, // completed but not yet flushed segments.
   byteSize: number, // used to determine whether to inline children boundaries.
+  fallbackAbortableWork: Set<SuspendedWork>, // used to cancel work on the fallback if the boundary completes or gets canceled.
 };
 
 type SuspendedWork = {
@@ -68,18 +69,20 @@ type SuspendedWork = {
   ping: () => void,
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment, // the segment we'll write to
+  abortSet: Set<SuspendedWork>, // the abortable set that this work belongs to
   assignID: null | SuspenseBoundaryID, // id to assign to the content
 };
 
 const PENDING = 0;
 const COMPLETED = 1;
 const FLUSHED = 2;
-const ERRORED = 3;
+const ABORTED = 3;
+const ERRORED = 4;
 
 type Root = null;
 
 type Segment = {
-  status: 0 | 1 | 2 | 3,
+  status: 0 | 1 | 2 | 3 | 4,
   parentFlushed: boolean, // typically a segment will be flushed by its parent, except if its parent was already flushed
   id: number, // starts as 0 and is lazily assigned if the parent flushes early
   +index: number, // the index within the parent's chunks or 0 at the root
@@ -102,6 +105,7 @@ type Request = {
   allPendingWork: number, // when it reaches zero, we can close the connection.
   pendingRootWork: number, // when this reaches zero, we've finished at least the root boundary.
   completedRootSegment: null | Segment, // Completed but not yet flushed root segments.
+  abortableWork: Set<SuspendedWork>,
   pingedWork: Array<SuspendedWork>,
   // Queues to flush in order of priority
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
@@ -114,6 +118,7 @@ export function createRequest(
   destination: Destination,
 ): Request {
   const pingedWork = [];
+  const abortSet: Set<SuspendedWork> = new Set();
   const request = {
     destination,
     responseState: createResponseState(),
@@ -123,6 +128,7 @@ export function createRequest(
     allPendingWork: 0,
     pendingRootWork: 0,
     completedRootSegment: null,
+    abortableWork: abortSet,
     pingedWork: pingedWork,
     clientRenderedBoundaries: [],
     completedBoundaries: [],
@@ -137,6 +143,7 @@ export function createRequest(
     children,
     null,
     rootSegment,
+    abortSet,
     null,
   );
   pingedWork.push(rootWork);
@@ -151,7 +158,10 @@ function pingSuspendedWork(request: Request, work: SuspendedWork): void {
   }
 }
 
-function createSuspenseBoundary(request: Request): SuspenseBoundary {
+function createSuspenseBoundary(
+  request: Request,
+  fallbackAbortableWork: Set<SuspendedWork>,
+): SuspenseBoundary {
   return {
     id: createSuspenseBoundaryID(request.responseState),
     rootSegmentID: -1,
@@ -160,6 +170,7 @@ function createSuspenseBoundary(request: Request): SuspenseBoundary {
     forceClientRender: false,
     completedSegments: [],
     byteSize: 0,
+    fallbackAbortableWork,
   };
 }
 
@@ -168,6 +179,7 @@ function createSuspendedWork(
   node: ReactNodeList,
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment,
+  abortSet: Set<SuspendedWork>,
   assignID: null | SuspenseBoundaryID,
 ): SuspendedWork {
   request.allPendingWork++;
@@ -181,8 +193,10 @@ function createSuspendedWork(
     ping: () => pingSuspendedWork(request, work),
     blockedBoundary,
     blockedSegment,
+    abortSet,
     assignID,
   };
+  abortSet.add(work);
   return work;
 }
 
@@ -219,6 +233,7 @@ function renderNode(
   parentBoundary: Root | SuspenseBoundary,
   segment: Segment,
   node: ReactNodeList,
+  abortSet: Set<SuspendedWork>,
   assignID: null | SuspenseBoundaryID,
 ): void {
   if (typeof node === 'string') {
@@ -229,9 +244,9 @@ function renderNode(
   if (Array.isArray(node)) {
     if (node.length > 0) {
       // Only the first node gets assigned an ID.
-      renderNode(request, parentBoundary, segment, node[0], assignID);
+      renderNode(request, parentBoundary, segment, node[0], abortSet, assignID);
       for (let i = 1; i < node.length; i++) {
-        renderNode(request, parentBoundary, segment, node[i], null);
+        renderNode(request, parentBoundary, segment, node[i], abortSet, null);
       }
     } else {
       pushEmpty(segment.chunks, request.responseState, assignID);
@@ -252,7 +267,7 @@ function renderNode(
   if (typeof type === 'function') {
     try {
       const result = type(props);
-      renderNode(request, parentBoundary, segment, result, assignID);
+      renderNode(request, parentBoundary, segment, result, abortSet, assignID);
     } catch (x) {
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Something suspended, we'll need to create a new segment and resolve it later.
@@ -264,6 +279,7 @@ function renderNode(
           node,
           parentBoundary,
           newSegment,
+          abortSet,
           assignID,
         );
         const ping = suspendedWork.ping;
@@ -282,7 +298,14 @@ function renderNode(
       request.responseState,
       assignID,
     );
-    renderNode(request, parentBoundary, segment, props.children, null);
+    renderNode(
+      request,
+      parentBoundary,
+      segment,
+      props.children,
+      abortSet,
+      null,
+    );
     pushEndInstance(segment.chunks, type, props);
   } else if (type === REACT_SUSPENSE_TYPE) {
     // We need to push an "empty" thing here to identify the parent suspense boundary.
@@ -294,7 +317,8 @@ function renderNode(
     const fallback: ReactNodeList = props.fallback;
     const content: ReactNodeList = props.children;
 
-    const newBoundary = createSuspenseBoundary(request);
+    const fallbackAbortSet: Set<SuspendedWork> = new Set();
+    const newBoundary = createSuspenseBoundary(request, fallbackAbortSet);
 
     const insertionIndex = segment.chunks.length;
     // The children of the boundary segment is actually the fallback.
@@ -304,6 +328,7 @@ function renderNode(
       newBoundary,
     );
     segment.children.push(boundarySegment);
+
     // We create suspended work for the fallback because we don't want to actually work
     // on it yet in case we finish the main content, so we queue for later.
     const suspendedFallbackWork = createSuspendedWork(
@@ -311,6 +336,7 @@ function renderNode(
       fallback,
       parentBoundary,
       boundarySegment,
+      fallbackAbortSet,
       newBoundary.id, // This is the ID we want to give this fallback so we can replace it later.
     );
     // TODO: This should be queued at a separate lower priority queue so that we only work
@@ -330,6 +356,7 @@ function renderNode(
       content,
       newBoundary,
       contentRootSegment,
+      abortSet,
       null,
     );
     retryWork(request, contentWork);
@@ -338,14 +365,12 @@ function renderNode(
   }
 }
 
-function errorWork(
+function erroredWork(
   request: Request,
   boundary: Root | SuspenseBoundary,
   segment: Segment,
   error: mixed,
 ) {
-  segment.status = ERRORED;
-
   request.allPendingWork--;
   if (boundary !== null) {
     boundary.pendingWork--;
@@ -370,12 +395,55 @@ function errorWork(
   }
 }
 
-function completeWork(
+function abortWorkSoft(suspendedWork: SuspendedWork): void {
+  // This aborts work without aborting the parent boundary that it blocks.
+  // It's used for when we didn't need this work to complete the tree.
+  // If work was needed, then it should use abortWork instead.
+  const request: Request = this;
+  const boundary = suspendedWork.blockedBoundary;
+  const segment = suspendedWork.blockedSegment;
+  segment.status = ABORTED;
+  finishedWork(request, boundary, segment);
+}
+
+function abortWork(suspendedWork: SuspendedWork): void {
+  // This aborts the work and aborts the parent that it blocks, putting it into
+  // client rendered mode.
+  const request: Request = this;
+  const boundary = suspendedWork.blockedBoundary;
+  const segment = suspendedWork.blockedSegment;
+  segment.status = ABORTED;
+
+  request.allPendingWork--;
+  if (boundary === null) {
+    // We didn't complete the root so we have nothing to show. We can close
+    // the request;
+    if (request.status !== CLOSED) {
+      request.status = CLOSED;
+      close(request.destination);
+    }
+  } else {
+    boundary.pendingWork--;
+
+    // If this boundary was still pending then we haven't already cancelled its fallbacks.
+    // We'll need to abort the fallbacks, which will also error that parent boundary.
+    boundary.fallbackAbortableWork.forEach(abortWork, request);
+    boundary.fallbackAbortableWork.clear();
+
+    if (!boundary.forceClientRender) {
+      boundary.forceClientRender = true;
+      if (boundary.parentFlushed) {
+        request.clientRenderedBoundaries.push(boundary);
+      }
+    }
+  }
+}
+
+function finishedWork(
   request: Request,
   boundary: Root | SuspenseBoundary,
   segment: Segment,
 ) {
-  segment.status = COMPLETED;
   request.allPendingWork--;
 
   if (boundary === null) {
@@ -397,6 +465,9 @@ function completeWork(
   }
   if (boundary.pendingWork === 0) {
     // This must have been the last segment we were waiting on. This boundary is now complete.
+    // We can now cancel any pending work on the fallback since we won't need to show it anymore.
+    boundary.fallbackAbortableWork.forEach(abortWorkSoft, request);
+    boundary.fallbackAbortableWork.clear();
     if (segment.parentFlushed) {
       // Our parent segment already flushed, so we need to schedule this segment to be emitted.
       boundary.completedSegments.push(segment);
@@ -425,7 +496,12 @@ function completeWork(
 
 function retryWork(request: Request, work: SuspendedWork): void {
   const segment = work.blockedSegment;
+  if (segment.status !== PENDING) {
+    // We completed this by other means before we had a chance to retry it.
+    return;
+  }
   const boundary = work.blockedBoundary;
+  const abortSet = work.abortSet;
   try {
     let node = work.node;
     while (
@@ -442,16 +518,20 @@ function retryWork(request: Request, work: SuspendedWork): void {
       node = element.type(element.props);
     }
 
-    renderNode(request, boundary, segment, node, work.assignID);
+    renderNode(request, boundary, segment, node, abortSet, work.assignID);
 
-    completeWork(request, boundary, segment);
+    abortSet.delete(work);
+    segment.status = COMPLETED;
+    finishedWork(request, boundary, segment);
   } catch (x) {
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
       // Something suspended again, let's pick it back up later.
       const ping = work.ping;
       x.then(ping, ping);
     } else {
-      errorWork(request, boundary, segment, x);
+      abortSet.delete(work);
+      segment.status = ERRORED;
+      erroredWork(request, boundary, segment, x);
     }
   }
 }
@@ -797,6 +877,13 @@ function flushCompletedQueues(request: Request): void {
       // We don't need to check any partially completed segments because
       // either they have pending work or they're complete.
     ) {
+      if (__DEV__) {
+        if (request.abortableWork.size !== 0) {
+          console.error(
+            'There was still abortable work at the root when we closed. This is a bug in React.',
+          );
+        }
+      }
       // We're done.
       close(destination);
     }
@@ -819,6 +906,20 @@ export function startFlowing(request: Request): void {
   request.status = FLOWING;
   try {
     flushCompletedQueues(request);
+  } catch (error) {
+    fatalError(request, error);
+  }
+}
+
+// This is called to early terminate a request. It puts all pending boundaries in client rendered state.
+export function abort(request: Request): void {
+  try {
+    const abortableWork = request.abortableWork;
+    abortableWork.forEach(abortWork, request);
+    abortableWork.clear();
+    if (request.status === FLOWING) {
+      flushCompletedQueues(request);
+    }
   } catch (error) {
     fatalError(request, error);
   }

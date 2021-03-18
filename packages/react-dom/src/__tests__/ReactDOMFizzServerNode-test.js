@@ -115,4 +115,54 @@ describe('ReactDOMFizzServer', () => {
     expect(output.error).toBe(undefined);
     expect(output.result).toContain('Loading');
   });
+
+  // @gate experimental
+  it('should not attempt to render the fallback if the main content completes first', async () => {
+    const {writable, output, completed} = getTestWritable();
+
+    let renderedFallback = false;
+    function Fallback() {
+      renderedFallback = true;
+      return 'Loading...';
+    }
+    function Content() {
+      return 'Hi';
+    }
+    ReactDOMFizzServer.pipeToNodeWritable(
+      <Suspense fallback={<Fallback />}>
+        <Content />
+      </Suspense>,
+      writable,
+    );
+
+    await completed;
+
+    expect(output.result).toContain('Hi');
+    expect(output.result).not.toContain('Loading');
+    expect(renderedFallback).toBe(false);
+  });
+
+  // @gate experimental
+  it('should be able to complete by aborting even if the promise never resolves', async () => {
+    const {writable, output, completed} = getTestWritable();
+    const {abort} = ReactDOMFizzServer.pipeToNodeWritable(
+      <div>
+        <Suspense fallback={<div>Loading</div>}>
+          <InfiniteSuspend />
+        </Suspense>
+      </div>,
+      writable,
+    );
+
+    jest.runAllTimers();
+
+    expect(output.result).toContain('Loading');
+
+    abort();
+
+    await completed;
+
+    expect(output.error).toBe(undefined);
+    expect(output.result).toContain('Loading');
+  });
 });
