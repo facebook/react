@@ -211,7 +211,7 @@ const ReactNoopServer = ReactFizzServer({
 });
 
 type Options = {
-  maxBoundarySize?: number,
+  progressiveChunkSize?: number,
 };
 
 function render(children: React$Element<any>, options?: Options): Destination {
@@ -227,7 +227,7 @@ function render(children: React$Element<any>, options?: Options): Destination {
   const request = ReactNoopServer.createRequest(
     children,
     destination,
-    options ? options.maxBoundarySize : undefined,
+    options ? options.progressiveChunkSize : undefined,
   );
   ReactNoopServer.startWork(request);
   ReactNoopServer.startFlowing(request);

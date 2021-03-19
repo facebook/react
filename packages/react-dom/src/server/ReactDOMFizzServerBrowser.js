@@ -18,7 +18,7 @@ import {
 
 type Options = {
   signal?: AbortSignal,
-  maxBoundarySize?: number,
+  progressiveChunkSize?: number,
 };
 
 function renderToReadableStream(
@@ -39,7 +39,7 @@ function renderToReadableStream(
       request = createRequest(
         children,
         controller,
-        options ? options.maxBoundarySize : undefined,
+        options ? options.progressiveChunkSize : undefined,
       );
       startWork(request);
     },

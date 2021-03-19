@@ -99,7 +99,7 @@ const CLOSED = 2;
 type Request = {
   +destination: Destination,
   +responseState: ResponseState,
-  +maxBoundarySize: number,
+  +progressiveChunkSize: number,
   status: 0 | 1 | 2,
   nextSegmentId: number,
   allPendingWork: number, // when it reaches zero, we can close the connection.
@@ -128,19 +128,19 @@ type Request = {
 // about 12.5kb of content per 500ms. Not counting starting latency for the first
 // paint.
 // 500 * 1024 / 8 * .8 * 0.5 / 2
-const DEFAULT_MAX_BOUNDARY_SIZE = 12800;
+const DEFAULT_PROGRESSIVE_CHUNK_SIZE = 12800;
 
 export function createRequest(
   children: ReactNodeList,
   destination: Destination,
-  maxBoundarySize: number = DEFAULT_MAX_BOUNDARY_SIZE,
+  progressiveChunkSize: number = DEFAULT_PROGRESSIVE_CHUNK_SIZE,
 ): Request {
   const pingedWork = [];
   const abortSet: Set<SuspendedWork> = new Set();
   const request = {
     destination,
     responseState: createResponseState(),
-    maxBoundarySize,
+    progressiveChunkSize,
     status: BUFFERING,
     nextSegmentId: 0,
     allPendingWork: 0,
@@ -660,7 +660,7 @@ function flushSegment(
     flushSubtree(request, destination, segment);
 
     return writeEndSuspenseBoundary(destination);
-  } else if (boundary.byteSize > request.maxBoundarySize) {
+  } else if (boundary.byteSize > request.progressiveChunkSize) {
     // This boundary is large and will be emitted separately so that we can progressively show
     // other content. We add it to the queue during the flush because we have to ensure that
     // the parent flushes first so that there's something to inject it into.

@@ -22,7 +22,7 @@ function createDrainHandler(destination, request) {
 }
 
 type Options = {
-  maxBoundarySize?: number,
+  progressiveChunkSize?: number,
 };
 
 type Controls = {
@@ -39,7 +39,7 @@ function pipeToNodeWritable(
   const request = createRequest(
     children,
     destination,
-    options ? options.maxBoundarySize : undefined,
+    options ? options.progressiveChunkSize : undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);
