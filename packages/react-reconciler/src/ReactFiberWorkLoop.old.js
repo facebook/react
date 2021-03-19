@@ -89,6 +89,7 @@ import {
   getCurrentEventPriority,
   supportsMicrotasks,
   errorHydratingContainer,
+  scheduleMicrotask,
 } from './ReactFiberHostConfig';
 
 import {
@@ -696,6 +697,13 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
+    if (supportsMicrotasks) {
+      // Flush the queue in a microtask.
+      scheduleMicrotask(flushSyncCallbackQueue);
+    } else {
+      // Flush the queue in an Immediate task.
+      scheduleCallback(ImmediateSchedulerPriority, flushSyncCallbackQueue);
+    }
     newCallbackNode = null;
   } else if (newCallbackPriority === SyncBatchedLanePriority) {
     newCallbackNode = scheduleCallback(
