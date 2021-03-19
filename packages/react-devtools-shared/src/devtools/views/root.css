@@ -69,6 +69,8 @@
   --light-color-expand-collapse-toggle: #777d88;
   --light-color-link: #0000ff;
   --light-color-modal-background: rgba(255, 255, 255, 0.75);
+  --light-color-primitive-hook-badge-background: #e5e5e5;
+  --light-color-primitive-hook-badge-text: #5f6673;
   --light-color-record-active: #fc3a4b;
   --light-color-record-hover: #3578e5;
   --light-color-record-inactive: #0088fa;
@@ -156,6 +158,8 @@
   --dark-color-expand-collapse-toggle: #8f949d;
   --dark-color-link: #61dafb;
   --dark-color-modal-background: rgba(0, 0, 0, 0.75);
+  --dark-color-primitive-hook-badge-background: rgba(0, 0, 0, 0.25);
+  --dark-color-primitive-hook-badge-text: rgba(255, 255, 255, 0.7);
   --dark-color-record-active: #fc3a4b;
   --dark-color-record-hover: #a2e9fc;
   --dark-color-record-inactive: #61dafb;
