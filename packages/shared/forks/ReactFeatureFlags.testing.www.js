@@ -56,7 +56,6 @@ export const enableUseRefAccessWarning = false;
 
 export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
-export const enableSyncMicroTasks = false;
 export const enableLazyContextPropagation = false;
 
 // Flow magic to verify the exports of this file match the original version.

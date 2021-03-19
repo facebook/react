@@ -13,10 +13,7 @@ import type {ReactPriorityLevel} from './ReactInternalTypes';
 // CommonJS interop named imports.
 import * as Scheduler from 'scheduler';
 import {__interactionsRef} from 'scheduler/tracing';
-import {
-  enableSchedulerTracing,
-  enableSyncMicroTasks,
-} from 'shared/ReactFeatureFlags';
+import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import {
   SyncLanePriority,
@@ -139,7 +136,7 @@ export function scheduleSyncCallback(callback: SchedulerCallback) {
 
     // TODO: Figure out how to remove this It's only here as a last resort if we
     // forget to explicitly flush.
-    if (enableSyncMicroTasks && supportsMicrotasks) {
+    if (supportsMicrotasks) {
       // Flush the queue in a microtask.
       scheduleMicrotask(flushSyncCallbackQueueImpl);
     } else {

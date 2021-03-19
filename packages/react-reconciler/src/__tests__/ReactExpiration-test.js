@@ -103,23 +103,32 @@ describe('ReactExpiration', () => {
     return {type: 'span', children: [], prop, hidden: false};
   }
 
+  function flushNextRenderIfExpired() {
+    // This will start rendering the next level of work. If the work hasn't
+    // expired yet, React will exit without doing anything. If it has expired,
+    // it will schedule a sync task.
+    Scheduler.unstable_flushExpired();
+    // Flush the sync task.
+    ReactNoop.flushSync();
+  }
+
   it('increases priority of updates as time progresses', () => {
     ReactNoop.render(<span prop="done" />);
 
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Nothing has expired yet because time hasn't advanced.
-    ReactNoop.flushExpired();
+    flushNextRenderIfExpired();
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Advance time a bit, but not enough to expire the low pri update.
     ReactNoop.expire(4500);
-    ReactNoop.flushExpired();
+    flushNextRenderIfExpired();
     expect(ReactNoop.getChildren()).toEqual([]);
 
     // Advance by another second. Now the update should expire and flush.
-    ReactNoop.expire(1000);
-    ReactNoop.flushExpired();
+    ReactNoop.expire(500);
+    flushNextRenderIfExpired();
     expect(ReactNoop.getChildren()).toEqual([span('done')]);
   });
 
@@ -323,7 +332,8 @@ describe('ReactExpiration', () => {
 
     Scheduler.unstable_advanceTime(10000);
 
-    expect(Scheduler).toFlushExpired(['D', 'E']);
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded(['D', 'E']);
     expect(root).toMatchRenderedOutput('ABCDE');
   });
 
@@ -351,7 +361,8 @@ describe('ReactExpiration', () => {
 
     Scheduler.unstable_advanceTime(10000);
 
-    expect(Scheduler).toFlushExpired(['D', 'E']);
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded(['D', 'E']);
     expect(root).toMatchRenderedOutput('ABCDE');
   });
 
@@ -373,12 +384,14 @@ describe('ReactExpiration', () => {
     ReactNoop.render('Hi');
 
     // The update should not have expired yet.
-    expect(Scheduler).toFlushExpired([]);
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded([]);
     expect(ReactNoop).toMatchRenderedOutput(null);
 
     // Advance the time some more to expire the update.
     Scheduler.unstable_advanceTime(10000);
-    expect(Scheduler).toFlushExpired([]);
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded([]);
     expect(ReactNoop).toMatchRenderedOutput('Hi');
   });
 
@@ -391,7 +404,8 @@ describe('ReactExpiration', () => {
     Scheduler.unstable_advanceTime(10000);
 
     ReactNoop.render('Hi');
-    expect(Scheduler).toFlushExpired([]);
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded([]);
     expect(ReactNoop).toMatchRenderedOutput(null);
 
     // Advancing by ~5 seconds should be sufficient to expire the update. (I
@@ -399,7 +413,8 @@ describe('ReactExpiration', () => {
     Scheduler.unstable_advanceTime(6000);
 
     ReactNoop.render('Hi');
-    expect(Scheduler).toFlushExpired([]);
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded([]);
     expect(ReactNoop).toMatchRenderedOutput('Hi');
   });
 
