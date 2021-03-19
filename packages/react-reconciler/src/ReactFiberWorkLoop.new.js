@@ -133,7 +133,6 @@ import {
   NoLanePriority,
   SyncLanePriority,
   SyncBatchedLanePriority,
-  InputDiscreteLanePriority,
   DefaultLanePriority,
   NoLanes,
   NoLane,
@@ -674,7 +673,6 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       // TODO: Temporary until we confirm this warning is not fired.
       if (
         existingCallbackNode == null &&
-        existingCallbackPriority !== InputDiscreteLanePriority &&
         existingCallbackPriority !== SyncLanePriority
       ) {
         console.error(
@@ -980,20 +978,6 @@ function performSyncWorkOnRoot(root) {
     exitStatus = renderRootSync(root, lanes);
   } else {
     lanes = getNextLanes(root, NoLanes);
-    // Because we don't cancel synchronous tasks, sometimes more than one
-    // synchronous task ends up being scheduled. This is an artifact of the fact
-    // that we have two different lanes that schedule sync tasks: discrete and
-    // sync. If we had only one, then (I believe) this extra check wouldn't be
-    // necessary, because there's nothing higher priority than sync that would
-    // cause us to cancel it.
-    // TODO: Merge InputDiscreteLanePriority with SyncLanePriority, then delete
-    // this bailout.
-    if (supportsMicrotasks) {
-      const nextLanesPriority = returnNextLanesPriority();
-      if (nextLanesPriority < InputDiscreteLanePriority) {
-        return null;
-      }
-    }
     exitStatus = renderRootSync(root, lanes);
   }
 
@@ -1132,7 +1116,7 @@ export function discreteUpdates<A, B, C, D, R>(
 ): R {
   const previousLanePriority = getCurrentUpdateLanePriority();
   try {
-    setCurrentUpdateLanePriority(InputDiscreteLanePriority);
+    setCurrentUpdateLanePriority(SyncLanePriority);
     return fn(a, b, c, d);
   } finally {
     setCurrentUpdateLanePriority(previousLanePriority);

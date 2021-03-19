@@ -48,14 +48,12 @@ import {
 } from './ReactDOMUpdateBatching';
 
 import {
-  InputDiscreteLanePriority as InputDiscreteLanePriority_old,
   InputContinuousLanePriority as InputContinuousLanePriority_old,
   DefaultLanePriority as DefaultLanePriority_old,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
   setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_old,
 } from 'react-reconciler/src/ReactFiberLane.old';
 import {
-  InputDiscreteLanePriority as InputDiscreteLanePriority_new,
   InputContinuousLanePriority as InputContinuousLanePriority_new,
   DefaultLanePriority as DefaultLanePriority_new,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
@@ -75,9 +73,6 @@ import {
 } from 'react-reconciler/src/SchedulerWithReactIntegration.new';
 import type {LanePriority} from 'react-reconciler/src/ReactFiberLane.new';
 
-const InputDiscreteLanePriority = enableNewReconciler
-  ? InputDiscreteLanePriority_new
-  : InputDiscreteLanePriority_old;
 const InputContinuousLanePriority = enableNewReconciler
   ? InputContinuousLanePriority_new
   : InputContinuousLanePriority_old;
@@ -147,7 +142,7 @@ export function createEventListenerWrapperWithPriority(
   const eventPriority = getEventPriority(domEventName);
   let listenerWrapper;
   switch (eventPriority) {
-    case InputDiscreteLanePriority:
+    case SyncLanePriority:
       listenerWrapper = dispatchDiscreteEvent;
       break;
     case InputContinuousLanePriority:
@@ -412,7 +407,7 @@ export function getEventPriority(domEventName: DOMEventName): * {
     case 'popstate':
     case 'select':
     case 'selectstart':
-      return InputDiscreteLanePriority;
+      return SyncLanePriority;
     case 'drag':
     case 'dragenter':
     case 'dragexit':

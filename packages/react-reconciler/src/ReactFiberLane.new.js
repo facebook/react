@@ -46,11 +46,8 @@ import {
   NoPriority as NoSchedulerPriority,
 } from './SchedulerWithReactIntegration.new';
 
-export const SyncLanePriority: LanePriority = 15;
-export const SyncBatchedLanePriority: LanePriority = 14;
-
-const InputDiscreteHydrationLanePriority: LanePriority = 13;
-export const InputDiscreteLanePriority: LanePriority = 12;
+export const SyncLanePriority: LanePriority = 13;
+export const SyncBatchedLanePriority: LanePriority = 12;
 
 const InputContinuousHydrationLanePriority: LanePriority = 11;
 export const InputContinuousLanePriority: LanePriority = 10;
@@ -83,31 +80,30 @@ export const NoLane: Lane = /*                          */ 0b0000000000000000000
 export const SyncLane: Lane = /*                        */ 0b0000000000000000000000000000001;
 export const SyncBatchedLane: Lane = /*                 */ 0b0000000000000000000000000000010;
 
-export const InputDiscreteHydrationLane: Lane = /*      */ 0b0000000000000000000000000000100;
-export const InputDiscreteLane: Lanes = /*              */ 0b0000000000000000000000000001000;
+const InputContinuousHydrationLane: Lane = /*           */ 0b0000000000000000000000000000100;
+export const InputContinuousLane: Lanes = /*            */ 0b0000000000000000000000000001000;
 
-const InputContinuousHydrationLane: Lane = /*           */ 0b0000000000000000000000000010000;
-export const InputContinuousLane: Lanes = /*            */ 0b0000000000000000000000000100000;
+export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000000010000;
+export const DefaultLane: Lanes = /*                    */ 0b0000000000000000000000000100000;
 
-export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000001000000;
-export const DefaultLane: Lanes = /*                    */ 0b0000000000000000000000010000000;
-
-const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000000000100000000;
-const TransitionLanes: Lanes = /*                       */ 0b0000000011111111111111000000000;
-const TransitionLane1: Lane = /*                        */ 0b0000000000000000000001000000000;
-const TransitionLane2: Lane = /*                        */ 0b0000000000000000000010000000000;
-const TransitionLane3: Lane = /*                        */ 0b0000000000000000000100000000000;
-const TransitionLane4: Lane = /*                        */ 0b0000000000000000001000000000000;
-const TransitionLane5: Lane = /*                        */ 0b0000000000000000010000000000000;
-const TransitionLane6: Lane = /*                        */ 0b0000000000000000100000000000000;
-const TransitionLane7: Lane = /*                        */ 0b0000000000000001000000000000000;
-const TransitionLane8: Lane = /*                        */ 0b0000000000000010000000000000000;
-const TransitionLane9: Lane = /*                        */ 0b0000000000000100000000000000000;
-const TransitionLane10: Lane = /*                       */ 0b0000000000001000000000000000000;
-const TransitionLane11: Lane = /*                       */ 0b0000000000010000000000000000000;
-const TransitionLane12: Lane = /*                       */ 0b0000000000100000000000000000000;
-const TransitionLane13: Lane = /*                       */ 0b0000000001000000000000000000000;
-const TransitionLane14: Lane = /*                       */ 0b0000000010000000000000000000000;
+const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000000000001000000;
+const TransitionLanes: Lanes = /*                       */ 0b0000000011111111111111110000000;
+const TransitionLane1: Lane = /*                        */ 0b0000000000000000000000010000000;
+const TransitionLane2: Lane = /*                        */ 0b0000000000000000000000100000000;
+const TransitionLane3: Lane = /*                        */ 0b0000000000000000000001000000000;
+const TransitionLane4: Lane = /*                        */ 0b0000000000000000000010000000000;
+const TransitionLane5: Lane = /*                        */ 0b0000000000000000000100000000000;
+const TransitionLane6: Lane = /*                        */ 0b0000000000000000001000000000000;
+const TransitionLane7: Lane = /*                        */ 0b0000000000000000010000000000000;
+const TransitionLane8: Lane = /*                        */ 0b0000000000000000100000000000000;
+const TransitionLane9: Lane = /*                        */ 0b0000000000000001000000000000000;
+const TransitionLane10: Lane = /*                       */ 0b0000000000000010000000000000000;
+const TransitionLane11: Lane = /*                       */ 0b0000000000000100000000000000000;
+const TransitionLane12: Lane = /*                       */ 0b0000000000001000000000000000000;
+const TransitionLane13: Lane = /*                       */ 0b0000000000010000000000000000000;
+const TransitionLane14: Lane = /*                       */ 0b0000000000100000000000000000000;
+const TransitionLane15: Lane = /*                       */ 0b0000000001000000000000000000000;
+const TransitionLane16: Lane = /*                       */ 0b0000000010000000000000000000000;
 
 const RetryLanes: Lanes = /*                            */ 0b0000111100000000000000000000000;
 const RetryLane1: Lane = /*                             */ 0b0000000100000000000000000000000;
@@ -136,12 +132,6 @@ export function getLabelsForLanes(lanes: Lanes): Array<string> | void {
     }
     if (lanes & SyncBatchedLane) {
       labels.push('SyncBatched');
-    }
-    if (lanes & InputDiscreteHydrationLane) {
-      labels.push('InputDiscreteHydration');
-    }
-    if (lanes & InputDiscreteLane) {
-      labels.push('InputDiscrete');
     }
     if (lanes & InputContinuousHydrationLane) {
       labels.push('InputContinuousHydration');
@@ -207,12 +197,6 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
     case SyncBatchedLane:
       return_highestLanePriority = SyncBatchedLanePriority;
       return SyncBatchedLane;
-    case InputDiscreteHydrationLane:
-      return_highestLanePriority = InputDiscreteHydrationLanePriority;
-      return InputDiscreteHydrationLane;
-    case InputDiscreteLane:
-      return_highestLanePriority = InputDiscreteLanePriority;
-      return InputDiscreteLane;
     case InputContinuousHydrationLane:
       return_highestLanePriority = InputContinuousHydrationLanePriority;
       return InputContinuousHydrationLane;
@@ -242,6 +226,8 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
     case TransitionLane12:
     case TransitionLane13:
     case TransitionLane14:
+    case TransitionLane15:
+    case TransitionLane16:
       return_highestLanePriority = TransitionPriority;
       return lanes & TransitionLanes;
     case RetryLane1:
@@ -281,8 +267,6 @@ export function lanePriorityToSchedulerPriority(
     case SyncLanePriority:
     case SyncBatchedLanePriority:
       return ImmediateSchedulerPriority;
-    case InputDiscreteHydrationLanePriority:
-    case InputDiscreteLanePriority:
     case InputContinuousHydrationLanePriority:
     case InputContinuousLanePriority:
       return UserBlockingSchedulerPriority;
@@ -565,8 +549,6 @@ export function findUpdateLane(lanePriority: LanePriority): Lane {
       return SyncLane;
     case SyncBatchedLanePriority:
       return SyncBatchedLane;
-    case InputDiscreteLanePriority:
-      return SyncLane;
     case InputContinuousLanePriority:
       return InputContinuousLane;
     case DefaultLanePriority:
@@ -826,11 +808,6 @@ export function getBumpedLaneForHydration(
     case SyncBatchedLanePriority:
       lane = NoLane;
       break;
-    case InputDiscreteHydrationLanePriority:
-    case InputDiscreteLanePriority:
-      lane = InputDiscreteHydrationLane;
-      break;
-    case InputContinuousHydrationLanePriority:
     case InputContinuousLanePriority:
       lane = InputContinuousHydrationLane;
       break;
