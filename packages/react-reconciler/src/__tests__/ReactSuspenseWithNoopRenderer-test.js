@@ -984,6 +984,10 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('C')]);
   });
 
+  // TODO: This test was written against the old Expiration Times
+  // implementation. It doesn't really test what it was intended to test
+  // anymore, because all updates to the same queue get entangled together.
+  // Even if they haven't expired. Consider either deleting or rewriting.
   // @gate enableCache
   it('flushes all expired updates in a single batch', async () => {
     class Foo extends React.Component {
@@ -1013,10 +1017,7 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     jest.advanceTimersByTime(1000);
     ReactNoop.render(<Foo text="goodbye" />);
 
-    Scheduler.unstable_advanceTime(10000);
-    jest.advanceTimersByTime(10000);
-
-    expect(Scheduler).toFlushExpired([
+    expect(Scheduler).toFlushAndYield([
       'Suspend! [goodbye]',
       'Loading...',
       'Commit: goodbye',
@@ -1797,12 +1798,32 @@ describe('ReactSuspenseWithNoopRenderer', () => {
     await advanceTimers(5000);
 
     // Retry with the new content.
-    expect(Scheduler).toFlushAndYield([
-      'A',
-      // B still suspends
-      'Suspend! [B]',
-      'Loading more...',
-    ]);
+    if (gate(flags => flags.disableSchedulerTimeoutInWorkLoop)) {
+      expect(Scheduler).toFlushAndYield([
+        'A',
+        // B still suspends
+        'Suspend! [B]',
+        'Loading more...',
+      ]);
+    } else {
+      // In this branch, right as we start rendering, we detect that the work
+      // has expired (via Scheduler's didTimeout argument) and re-schedule the
+      // work as synchronous. Since sync work does not flow through Scheduler,
+      // we need to use `flushSync`.
+      //
+      // Usually we would use `act`, which fluses both sync work and Scheduler
+      // work, but that would also force the fallback to display, and this test
+      // is specifically about whether we delay or show the fallback.
+      expect(Scheduler).toFlushAndYield([]);
+      // This will flush the synchronous callback we just scheduled.
+      ReactNoop.flushSync();
+      expect(Scheduler).toHaveYielded([
+        'A',
+        // B still suspends
+        'Suspend! [B]',
+        'Loading more...',
+      ]);
+    }
     // Because we've already been waiting for so long we've exceeded
     // our threshold and we show the next level immediately.
     expect(ReactNoop.getChildren()).toEqual([

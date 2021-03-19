@@ -150,6 +150,4 @@ export const enableRecursiveCommitTraversal = false;
 
 export const disableSchedulerTimeoutInWorkLoop = false;
 
-export const enableSyncMicroTasks = false;
-
 export const enableLazyContextPropagation = false;
