@@ -160,7 +160,6 @@ import {
   checkIfContextChanged,
   readContext,
   prepareToReadContext,
-  calculateChangedBits,
   scheduleWorkOnParentPath,
 } from './ReactFiberNewContext.old';
 import {renderWithHooks, bailoutHooks} from './ReactFiberHooks.old';
@@ -221,7 +220,7 @@ import {
   restoreSpawnedCachePool,
   getOffscreenDeferredCachePool,
 } from './ReactFiberCacheComponent.old';
-import {MAX_SIGNED_31_BIT_INT} from './MaxInts';
+import is from 'shared/objectIs';
 
 import {disableLogs, reenableLogs} from 'shared/ConsolePatchingDev';
 
@@ -795,12 +794,7 @@ function updateCacheComponent(
       pushCacheProvider(workInProgress, nextCache);
       if (nextCache !== prevState.cache) {
         // This cache refreshed. Propagate a context change.
-        propagateContextChange(
-          workInProgress,
-          CacheContext,
-          MAX_SIGNED_31_BIT_INT,
-          renderLanes,
-        );
+        propagateContextChange(workInProgress, CacheContext, renderLanes);
       }
     }
   }
@@ -1169,12 +1163,7 @@ function updateHostRoot(current, workInProgress, renderLanes) {
     pushCacheProvider(workInProgress, nextCache);
     if (nextCache !== prevState.cache) {
       // The root cache refreshed.
-      propagateContextChange(
-        workInProgress,
-        CacheContext,
-        MAX_SIGNED_31_BIT_INT,
-        renderLanes,
-      );
+      propagateContextChange(workInProgress, CacheContext, renderLanes);
     }
   }
 
@@ -3011,8 +3000,7 @@ function updateContextProvider(
   } else {
     if (oldProps !== null) {
       const oldValue = oldProps.value;
-      const changedBits = calculateChangedBits(context, newValue, oldValue);
-      if (changedBits === 0) {
+      if (is(oldValue, newValue)) {
         // No change. Bailout early if children are the same.
         if (
           oldProps.children === newProps.children &&
@@ -3027,12 +3015,7 @@ function updateContextProvider(
       } else {
         // The context value changed. Search for matching consumers and schedule
         // them to update.
-        propagateContextChange(
-          workInProgress,
-          context,
-          changedBits,
-          renderLanes,
-        );
+        propagateContextChange(workInProgress, context, renderLanes);
       }
     }
   }
@@ -3090,7 +3073,7 @@ function updateContextConsumer(
   }
 
   prepareToReadContext(workInProgress, renderLanes);
-  const newValue = readContext(context, newProps.unstable_observedBits);
+  const newValue = readContext(context);
   let newChildren;
   if (__DEV__) {
     ReactCurrentOwner.current = workInProgress;
