@@ -20,7 +20,6 @@ import {
   getCurrentUpdateLanePriority,
   setCurrentUpdateLanePriority,
 } from './ReactFiberLane.new';
-import {scheduleMicrotask, supportsMicrotasks} from './ReactFiberHostConfig';
 
 const {
   unstable_scheduleCallback: Scheduler_scheduleCallback,
@@ -71,7 +70,6 @@ export const requestPaint =
   Scheduler_requestPaint !== undefined ? Scheduler_requestPaint : () => {};
 
 let syncQueue: Array<SchedulerCallback> | null = null;
-let immediateQueueCallbackNode: mixed | null = null;
 let isFlushingSyncQueue: boolean = false;
 const initialTimeMs: number = Scheduler_now();
 
@@ -133,19 +131,6 @@ export function scheduleSyncCallback(callback: SchedulerCallback) {
   // the next tick, or earlier if something calls `flushSyncCallbackQueue`.
   if (syncQueue === null) {
     syncQueue = [callback];
-
-    // TODO: Figure out how to remove this It's only here as a last resort if we
-    // forget to explicitly flush.
-    if (supportsMicrotasks) {
-      // Flush the queue in a microtask.
-      scheduleMicrotask(flushSyncCallbackQueueImpl);
-    } else {
-      // Flush the queue in the next tick.
-      immediateQueueCallbackNode = Scheduler_scheduleCallback(
-        Scheduler_ImmediatePriority,
-        flushSyncCallbackQueueImpl,
-      );
-    }
   } else {
     // Push onto existing queue. Don't need to schedule a callback because
     // we already scheduled one when we created the queue.
@@ -158,15 +143,6 @@ export function cancelCallback(callbackNode: mixed) {
 }
 
 export function flushSyncCallbackQueue() {
-  if (immediateQueueCallbackNode !== null) {
-    const node = immediateQueueCallbackNode;
-    immediateQueueCallbackNode = null;
-    Scheduler_cancelCallback(node);
-  }
-  flushSyncCallbackQueueImpl();
-}
-
-function flushSyncCallbackQueueImpl() {
   if (!isFlushingSyncQueue && syncQueue !== null) {
     // Prevent re-entrancy.
     isFlushingSyncQueue = true;
@@ -199,4 +175,5 @@ function flushSyncCallbackQueueImpl() {
       isFlushingSyncQueue = false;
     }
   }
+  return null;
 }
