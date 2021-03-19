@@ -71,8 +71,8 @@
 }
 
 .PrimitiveHookNumber {
-  color: var(--color-component-badge-count-inverted);
-  background-color: var(--color-component-badge-background-inverted);
+  background-color: var(--color-primitive-hook-badge-background);
+  color: var(--color-primitive-hook-badge-text);
   font-size: var(--font-size-monospace-small);
   margin-right: 0.25rem;
   border-radius: 0.125rem;
