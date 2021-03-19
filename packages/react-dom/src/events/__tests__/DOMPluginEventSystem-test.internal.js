@@ -67,6 +67,7 @@ describe('DOMPluginEventSystem', () => {
           ReactDOM = require('react-dom');
           Scheduler = require('scheduler');
           ReactDOMServer = require('react-dom/server');
+          act = require('react-dom/test-utils').unstable_concurrentAct;
           container = document.createElement('div');
           document.body.appendChild(container);
           startNativeEventListenerClearDown();
@@ -636,16 +637,17 @@ describe('DOMPluginEventSystem', () => {
           Scheduler.unstable_flushAll();
 
           // The Suspense boundary is not yet hydrated.
-          a.click();
+          await act(async () => {
+            a.click();
+          });
           expect(clicks).toBe(0);
 
           // Resolving the promise so that rendering can complete.
-          suspend = false;
-          resolve();
-          await promise;
-
-          Scheduler.unstable_flushAll();
-          jest.runAllTimers();
+          await act(async () => {
+            suspend = false;
+            resolve();
+            await promise;
+          });
 
           // We're now full hydrated.
 
