@@ -47,26 +47,9 @@ export function getCacheForType<T>(resourceType: () => T): T {
   return dispatcher.getCacheForType(resourceType);
 }
 
-export function useContext<T>(
-  Context: ReactContext<T>,
-  unstable_observedBits: number | boolean | void,
-): T {
+export function useContext<T>(Context: ReactContext<T>): T {
   const dispatcher = resolveDispatcher();
   if (__DEV__) {
-    if (unstable_observedBits !== undefined) {
-      console.error(
-        'useContext() second argument is reserved for future ' +
-          'use in React. Passing it is not supported. ' +
-          'You passed: %s.%s',
-        unstable_observedBits,
-        typeof unstable_observedBits === 'number' && Array.isArray(arguments[2])
-          ? '\n\nDid you call array.map(useContext)? ' +
-              'Calling Hooks inside a loop is not supported. ' +
-              'Learn more at https://reactjs.org/link/rules-of-hooks'
-          : '',
-      );
-    }
-
     // TODO: add a more generic warning for invalid values.
     if ((Context: any)._context !== undefined) {
       const realContext = (Context: any)._context;
@@ -85,7 +68,7 @@ export function useContext<T>(
       }
     }
   }
-  return dispatcher.useContext(Context, unstable_observedBits);
+  return dispatcher.useContext(Context);
 }
 
 export function useState<S>(
