@@ -210,7 +210,11 @@ const ReactNoopServer = ReactFizzServer({
   },
 });
 
-function render(children: React$Element<any>): Destination {
+type Options = {
+  progressiveChunkSize?: number,
+};
+
+function render(children: React$Element<any>, options?: Options): Destination {
   const destination: Destination = {
     root: null,
     placeholders: new Map(),
@@ -220,7 +224,11 @@ function render(children: React$Element<any>): Destination {
       ReactNoopServer.abort(request);
     },
   };
-  const request = ReactNoopServer.createRequest(children, destination);
+  const request = ReactNoopServer.createRequest(
+    children,
+    destination,
+    options ? options.progressiveChunkSize : undefined,
+  );
   ReactNoopServer.startWork(request);
   ReactNoopServer.startFlowing(request);
   return destination;
