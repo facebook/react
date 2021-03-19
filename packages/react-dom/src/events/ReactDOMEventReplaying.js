@@ -16,10 +16,8 @@ import type {LanePriority} from 'react-reconciler/src/ReactFiberLane.old';
 
 import {enableSelectiveHydration} from 'shared/ReactFeatureFlags';
 import {
-  unstable_runWithPriority as runWithPriority,
   unstable_scheduleCallback as scheduleCallback,
   unstable_NormalPriority as NormalPriority,
-  unstable_getCurrentPriorityLevel as getCurrentPriorityLevel,
 } from 'scheduler';
 import {
   getNearestMountedFiber,
@@ -39,10 +37,10 @@ export function setAttemptSynchronousHydration(fn: (fiber: Object) => void) {
   attemptSynchronousHydration = fn;
 }
 
-let attemptUserBlockingHydration: (fiber: Object) => void;
+let attemptDiscreteHydration: (fiber: Object) => void;
 
-export function setAttemptUserBlockingHydration(fn: (fiber: Object) => void) {
-  attemptUserBlockingHydration = fn;
+export function setAttemptDiscreteHydration(fn: (fiber: Object) => void) {
+  attemptDiscreteHydration = fn;
 }
 
 let attemptContinuousHydration: (fiber: Object) => void;
@@ -111,7 +109,6 @@ const queuedPointerCaptures: Map<number, QueuedReplayableEvent> = new Map();
 type QueuedHydrationTarget = {|
   blockedOn: null | Container | SuspenseInstance,
   target: Node,
-  priority: number,
   lanePriority: LanePriority,
 |};
 const queuedExplicitHydrationTargets: Array<QueuedHydrationTarget> = [];
@@ -394,9 +391,7 @@ function attemptExplicitHydrationTarget(
           // Increase its priority.
           queuedTarget.blockedOn = instance;
           attemptHydrationAtPriority(queuedTarget.lanePriority, () => {
-            runWithPriority(queuedTarget.priority, () => {
-              attemptHydrationAtCurrentPriority(nearestMounted);
-            });
+            attemptHydrationAtCurrentPriority(nearestMounted);
           });
 
           return;
@@ -417,17 +412,17 @@ function attemptExplicitHydrationTarget(
 
 export function queueExplicitHydrationTarget(target: Node): void {
   if (enableSelectiveHydration) {
-    const schedulerPriority = getCurrentPriorityLevel();
     const updateLanePriority = getCurrentUpdatePriority();
     const queuedTarget: QueuedHydrationTarget = {
       blockedOn: null,
       target: target,
-      priority: schedulerPriority,
       lanePriority: updateLanePriority,
     };
     let i = 0;
     for (; i < queuedExplicitHydrationTargets.length; i++) {
-      if (schedulerPriority <= queuedExplicitHydrationTargets[i].priority) {
+      if (
+        updateLanePriority <= queuedExplicitHydrationTargets[i].lanePriority
+      ) {
         break;
       }
     }
@@ -489,7 +484,7 @@ function replayUnblockedEvents() {
       // the next discrete event.
       const fiber = getInstanceFromNode(nextDiscreteEvent.blockedOn);
       if (fiber !== null) {
-        attemptUserBlockingHydration(fiber);
+        attemptDiscreteHydration(fiber);
       }
       break;
     }

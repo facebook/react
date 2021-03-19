@@ -691,8 +691,9 @@ export function attach(
   }
 
   function inspectElement(
+    requestID: number,
     id: number,
-    path?: Array<string | number>,
+    path: Array<string | number> | null,
   ): InspectedElementPayload {
     if (currentlyInspectedElementID !== id) {
       currentlyInspectedElementID = id;
@@ -703,11 +704,12 @@ export function attach(
     if (inspectedElement === null) {
       return {
         id,
+        responseID: requestID,
         type: 'not-found',
       };
     }
 
-    if (path != null) {
+    if (path !== null) {
       mergeInspectedPaths(path);
     }
 
@@ -731,6 +733,7 @@ export function attach(
 
     return {
       id,
+      responseID: requestID,
       type: 'full-data',
       value: inspectedElement,
     };

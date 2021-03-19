@@ -56,6 +56,12 @@ export type OwnersList = {|
   owners: Array<Owner> | null,
 |};
 
+export type InspectedElementResponseType =
+  | 'full-data'
+  | 'hydrated-path'
+  | 'no-change'
+  | 'not-found';
+
 export type InspectedElement = {|
   id: number,
 

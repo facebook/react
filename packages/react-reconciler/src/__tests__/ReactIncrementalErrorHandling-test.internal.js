@@ -232,7 +232,8 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: oops!')]);
   });
 
-  it("retries at a lower priority if there's additional pending work", () => {
+  // @gate experimental
+  it("retries at a lower priority if there's additional pending work", async () => {
     function App(props) {
       if (props.isBroken) {
         Scheduler.unstable_yieldValue('error');
@@ -252,14 +253,14 @@ describe('ReactIncrementalErrorHandling', () => {
       });
     }
 
-    ReactNoop.discreteUpdates(() => {
-      ReactNoop.render(<App isBroken={true} />, onCommit);
-    });
+    ReactNoop.render(<App isBroken={true} />, onCommit);
     expect(Scheduler).toFlushAndYieldThrough(['error']);
     interrupt();
 
-    // This update is in a separate batch
-    ReactNoop.render(<App isBroken={false} />, onCommit);
+    React.unstable_startTransition(() => {
+      // This update is in a separate batch
+      ReactNoop.render(<App isBroken={false} />, onCommit);
+    });
 
     expect(Scheduler).toFlushAndYieldThrough([
       // The first render fails. But because there's a lower priority pending
@@ -311,16 +312,16 @@ describe('ReactIncrementalErrorHandling', () => {
       });
     }
 
-    ReactNoop.discreteUpdates(() => {
-      ReactNoop.render(<App isBroken={true} />, onCommit);
-    });
+    ReactNoop.render(<App isBroken={true} />, onCommit);
     expect(Scheduler).toFlushAndYieldThrough(['error']);
     interrupt();
 
     expect(ReactNoop).toMatchRenderedOutput(null);
 
-    // This update is in a separate batch
-    ReactNoop.render(<App isBroken={false} />, onCommit);
+    React.unstable_startTransition(() => {
+      // This update is in a separate batch
+      ReactNoop.render(<App isBroken={false} />, onCommit);
+    });
 
     expect(Scheduler).toFlushAndYieldThrough([
       // The first render fails. But because there's a lower priority pending
@@ -961,6 +962,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(Scheduler).toFlushAndYield(['Foo']);
   });
 
+  // @gate skipUnmountedBoundaries
   it('should not attempt to recover an unmounting error boundary', () => {
     class Parent extends React.Component {
       componentWillUnmount() {
@@ -992,12 +994,17 @@ describe('ReactIncrementalErrorHandling', () => {
 
     ReactNoop.render(<Parent />);
     expect(Scheduler).toFlushWithoutYielding();
-    ReactNoop.render(null);
-    expect(Scheduler).toFlushAndYield([
-      // Parent unmounts before the error is thrown.
-      'Parent componentWillUnmount',
-      'ThrowsOnUnmount componentWillUnmount',
-    ]);
+
+    // Because the error boundary is also unmounting,
+    // an error in ThrowsOnUnmount should be rethrown.
+    expect(() => {
+      ReactNoop.render(null);
+      expect(Scheduler).toFlushAndYield([
+        'Parent componentWillUnmount',
+        'ThrowsOnUnmount componentWillUnmount',
+      ]);
+    }).toThrow('unmount error');
+
     ReactNoop.render(<Parent />);
   });
 
@@ -1393,6 +1400,10 @@ describe('ReactIncrementalErrorHandling', () => {
       'BrokenRenderAndUnmount componentWillUnmount',
     ]);
     expect(ReactNoop.getChildren()).toEqual([]);
+
+    expect(() => {
+      ReactNoop.flushSync();
+    }).toThrow('One does not simply unmount me.');
   });
 
   it('does not interrupt unmounting if detaching a ref throws', () => {
@@ -1780,6 +1791,7 @@ describe('ReactIncrementalErrorHandling', () => {
     });
   }
 
+  // @gate experimental
   it('uncaught errors should be discarded if the render is aborted', async () => {
     const root = ReactNoop.createRoot();
 
@@ -1789,22 +1801,24 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     await ReactNoop.act(async () => {
-      ReactNoop.discreteUpdates(() => {
-        root.render(<Oops />);
-      });
+      root.render(<Oops />);
+
       // Render past the component that throws, then yield.
       expect(Scheduler).toFlushAndYieldThrough(['Oops']);
       expect(root).toMatchRenderedOutput(null);
       // Interleaved update. When the root completes, instead of throwing the
       // error, it should try rendering again. This update will cause it to
       // recover gracefully.
-      root.render('Everything is fine.');
+      React.unstable_startTransition(() => {
+        root.render('Everything is fine.');
+      });
     });
 
     // Should finish without throwing.
     expect(root).toMatchRenderedOutput('Everything is fine.');
   });
 
+  // @gate experimental
   it('uncaught errors are discarded if the render is aborted, case 2', async () => {
     const {useState} = React;
     const root = ReactNoop.createRoot();
@@ -1829,16 +1843,17 @@ describe('ReactIncrementalErrorHandling', () => {
     });
 
     await ReactNoop.act(async () => {
-      // Schedule a high pri and a low pri update on the root.
-      ReactNoop.discreteUpdates(() => {
-        root.render(<Oops />);
+      // Schedule a default pri and a low pri update on the root.
+      root.render(<Oops />);
+      React.unstable_startTransition(() => {
+        root.render(<AllGood />);
       });
-      root.render(<AllGood />);
-      // Render through just the high pri update. The low pri update remains on
+
+      // Render through just the default pri update. The low pri update remains on
       // the queue.
       expect(Scheduler).toFlushAndYieldThrough(['Everything is fine.']);
 
-      // Schedule a high pri update on a child that triggers an error.
+      // Schedule a discrete update on a child that triggers an error.
       // The root should capture this error. But since there's still a pending
       // update on the root, the error should be suppressed.
       ReactNoop.discreteUpdates(() => {
@@ -1854,10 +1869,6 @@ describe('ReactIncrementalErrorHandling', () => {
     it('regression test: should fatal if error is thrown at the root', () => {
       const root = ReactNoop.createRoot();
       root.render('Error when completing root');
-      expect(Scheduler).toFlushAndThrow('Error when completing root');
-
-      const blockingRoot = ReactNoop.createBlockingRoot();
-      blockingRoot.render('Error when completing root');
       expect(Scheduler).toFlushAndThrow('Error when completing root');
     });
   }

@@ -89,7 +89,8 @@ type ViewAttributeSourceParams = {|
 
 type InspectElementParams = {|
   ...ElementAndRendererID,
-  path?: Array<string | number>,
+  path: Array<number | string> | null,
+  requestID: number,
 |};
 
 type StoreAsGlobalParams = {|
@@ -117,10 +118,11 @@ type UpdateConsolePatchSettingsParams = {|
   showInlineWarningsAndErrors: boolean,
 |};
 
-type BackendEvents = {|
+export type BackendEvents = {|
   extensionBackendInitialized: [],
   inspectedElement: [InspectedElementPayload],
   isBackendStorageAPISupported: [boolean],
+  isSynchronousXHRSupported: [boolean],
   operations: [Array<number>],
   ownersList: [OwnersList],
   overrideComponentFilters: [Array<ComponentFilter>],

@@ -8,6 +8,7 @@
  */
 
 import type {LazyComponent} from 'react/src/ReactLazy';
+import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
 
 import {
   REACT_CONTEXT_TYPE,
@@ -23,8 +24,8 @@ import {
   REACT_LAZY_TYPE,
   REACT_CACHE_TYPE,
 } from 'shared/ReactSymbols';
-import type {ReactContext, ReactProviderType} from 'shared/ReactTypes';
 
+// Keep in sync with react-reconciler/getComponentNameFromFiber
 function getWrappedName(
   outerType: mixed,
   innerType: any,
@@ -37,11 +38,13 @@ function getWrappedName(
   );
 }
 
+// Keep in sync with react-reconciler/getComponentNameFromFiber
 function getContextName(type: ReactContext<any>) {
   return type.displayName || 'Context';
 }
 
-function getComponentName(type: mixed): string | null {
+// Note that the reconciler package should generally prefer to use getComponentNameFromFiber() instead.
+export default function getComponentNameFromType(type: mixed): string | null {
   if (type == null) {
     // Host root, text node or just invalid type.
     return null;
@@ -87,13 +90,13 @@ function getComponentName(type: mixed): string | null {
       case REACT_FORWARD_REF_TYPE:
         return getWrappedName(type, type.render, 'ForwardRef');
       case REACT_MEMO_TYPE:
-        return getComponentName(type.type);
+        return getComponentNameFromType(type.type);
       case REACT_LAZY_TYPE: {
         const lazyComponent: LazyComponent<any, any> = (type: any);
         const payload = lazyComponent._payload;
         const init = lazyComponent._init;
         try {
-          return getComponentName(init(payload));
+          return getComponentNameFromType(init(payload));
         } catch (x) {
           return null;
         }
@@ -102,5 +105,3 @@ function getComponentName(type: mixed): string | null {
   }
   return null;
 }
-
-export default getComponentName;

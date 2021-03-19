@@ -17,7 +17,6 @@ import type {
   PublicInstance,
 } from './ReactFiberHostConfig';
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
-import {FundamentalComponent} from './ReactWorkTags';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Lane, LanePriority} from './ReactFiberLane.new';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
@@ -33,7 +32,7 @@ import {
   HostRoot,
   SuspenseComponent,
 } from './ReactWorkTags';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import invariant from 'shared/invariant';
 import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -65,14 +64,18 @@ import {
   IsThisRendererActing,
   act,
 } from './ReactFiberWorkLoop.new';
-import {createUpdate, enqueueUpdate} from './ReactUpdateQueue.new';
+import {
+  createUpdate,
+  enqueueUpdate,
+  entangleTransitions,
+} from './ReactUpdateQueue.new';
 import {
   isRendering as ReactCurrentFiberIsRendering,
   current as ReactCurrentFiberCurrent,
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
-import {StrictMode} from './ReactTypeOfMode';
+import {StrictLegacyMode} from './ReactTypeOfMode';
 import {
   SyncLane,
   InputDiscreteHydrationLane,
@@ -91,11 +94,21 @@ import {
 } from './ReactFiberHotReloading.new';
 import {markRenderScheduled} from './SchedulingProfiler';
 
+// Ideally host configs would import these constants from the reconciler
+// entry point, but we can't do this because of a circular dependency.
+// They are used by third-party renderers so they need to stay up to date.
+export {
+  InputDiscreteLanePriority as DiscreteEventPriority,
+  InputContinuousLanePriority as ContinuousEventPriority,
+  DefaultLanePriority as DefaultEventPriority,
+  IdleLanePriority as IdleEventPriority,
+} from './ReactFiberLane.new';
+
 export {registerMutableSourceForHydration} from './ReactMutableSource.new';
 export {createPortal} from './ReactPortal';
 export {
   createComponentSelector,
-  createHasPsuedoClassSelector,
+  createHasPseudoClassSelector,
   createRoleSelector,
   createTestNameSelector,
   createTextSelector,
@@ -191,15 +204,15 @@ function findHostInstanceWithWarning(
     if (hostFiber === null) {
       return null;
     }
-    if (hostFiber.mode & StrictMode) {
-      const componentName = getComponentName(fiber.type) || 'Component';
+    if (hostFiber.mode & StrictLegacyMode) {
+      const componentName = getComponentNameFromFiber(fiber) || 'Component';
       if (!didWarnAboutFindNodeInStrictMode[componentName]) {
         didWarnAboutFindNodeInStrictMode[componentName] = true;
 
         const previousFiber = ReactCurrentFiberCurrent;
         try {
           setCurrentDebugFiberInDEV(hostFiber);
-          if (fiber.mode & StrictMode) {
+          if (fiber.mode & StrictLegacyMode) {
             console.error(
               '%s is deprecated in StrictMode. ' +
                 '%s was passed an instance of %s which is inside StrictMode. ' +
@@ -243,8 +256,15 @@ export function createContainer(
   tag: RootTag,
   hydrate: boolean,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
+  strictModeLevelOverride: null | number,
 ): OpaqueRoot {
-  return createFiberRoot(containerInfo, tag, hydrate, hydrationCallbacks);
+  return createFiberRoot(
+    containerInfo,
+    tag,
+    hydrate,
+    hydrationCallbacks,
+    strictModeLevelOverride,
+  );
 }
 
 export function updateContainer(
@@ -290,7 +310,7 @@ export function updateContainer(
           'triggering nested component updates from render is not allowed. ' +
           'If necessary, trigger nested updates in componentDidUpdate.\n\n' +
           'Check the render method of %s.',
-        getComponentName(ReactCurrentFiberCurrent.type) || 'Unknown',
+        getComponentNameFromFiber(ReactCurrentFiberCurrent) || 'Unknown',
       );
     }
   }
@@ -314,8 +334,11 @@ export function updateContainer(
     update.callback = callback;
   }
 
-  enqueueUpdate(current, update);
-  scheduleUpdateOnFiber(current, lane, eventTime);
+  enqueueUpdate(current, update, lane);
+  const root = scheduleUpdateOnFiber(current, lane, eventTime);
+  if (root !== null) {
+    entangleTransitions(root, current, lane);
+  }
 
   return lane;
 }
@@ -390,7 +413,7 @@ function markRetryLaneIfNotHydrated(fiber: Fiber, retryLane: Lane) {
   }
 }
 
-export function attemptUserBlockingHydration(fiber: Fiber): void {
+export function attemptDiscreteHydration(fiber: Fiber): void {
   if (fiber.tag !== SuspenseComponent) {
     // We ignore HostRoots here because we can't increase
     // their priority and they should not suspend on I/O,
@@ -452,9 +475,6 @@ export function findHostInstanceWithNoPortals(
   const hostFiber = findCurrentHostFiberWithNoPortals(fiber);
   if (hostFiber === null) {
     return null;
-  }
-  if (hostFiber.tag === FundamentalComponent) {
-    return hostFiber.stateNode.instance;
   }
   return hostFiber.stateNode;
 }

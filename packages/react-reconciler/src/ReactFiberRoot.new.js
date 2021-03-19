@@ -22,10 +22,12 @@ import {
   enableSchedulerTracing,
   enableSuspenseCallback,
   enableCache,
+  enableProfilerCommitHooks,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
 import {initializeUpdateQueue} from './ReactUpdateQueue.new';
-import {LegacyRoot, BlockingRoot, ConcurrentRoot} from './ReactRootTags';
+import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
 
 function FiberRootNode(containerInfo, tag, hydrate) {
   this.tag = tag;
@@ -71,11 +73,13 @@ function FiberRootNode(containerInfo, tag, hydrate) {
     this.hydrationCallbacks = null;
   }
 
+  if (enableProfilerTimer && enableProfilerCommitHooks) {
+    this.effectDuration = 0;
+    this.passiveEffectDuration = 0;
+  }
+
   if (__DEV__) {
     switch (tag) {
-      case BlockingRoot:
-        this._debugRootType = 'createBlockingRoot()';
-        break;
       case ConcurrentRoot:
         this._debugRootType = 'createRoot()';
         break;
@@ -91,6 +95,7 @@ export function createFiberRoot(
   tag: RootTag,
   hydrate: boolean,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
+  strictModeLevelOverride: null | number,
 ): FiberRoot {
   const root: FiberRoot = (new FiberRootNode(containerInfo, tag, hydrate): any);
   if (enableSuspenseCallback) {
@@ -99,7 +104,7 @@ export function createFiberRoot(
 
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
-  const uninitializedFiber = createHostRootFiber(tag);
+  const uninitializedFiber = createHostRootFiber(tag, strictModeLevelOverride);
   root.current = uninitializedFiber;
   uninitializedFiber.stateNode = root;
 

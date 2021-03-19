@@ -24,12 +24,15 @@ export const {
   enableFilterEmptyStringAttributesDOM,
   enableLegacyFBSupport,
   deferRenderPhaseUpdateToNextBatch,
-  decoupleUpdatePriorityFromScheduler,
   enableDebugTracing,
-  enableDoubleInvokingEffects,
+  skipUnmountedBoundaries,
+  enableStrictEffects,
+  createRootStrictEffectsByDefault,
   enableUseRefAccessWarning,
   disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop,
+  enableSyncMicroTasks,
+  enableLazyContextPropagation,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -67,8 +70,6 @@ export const disableJavaScriptURLs = true;
 export const disableModulePatternComponents = true;
 
 export const enableCreateEventHandleAPI = true;
-
-export const enableFundamentalAPI = false;
 
 export const enableScopeAPI = true;
 

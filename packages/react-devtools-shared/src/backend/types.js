@@ -150,17 +150,22 @@ export type ChangeDescription = {|
   isFirstMount: boolean,
   props: Array<string> | null,
   state: Array<string> | null,
+  hooks?: Array<number> | null,
 |};
 
 export type CommitDataBackend = {|
   // Tuple of fiber ID and change description
   changeDescriptions: Array<[number, ChangeDescription]> | null,
   duration: number,
+  // Only available in certain (newer) React builds,
+  effectDuration: number | null,
   // Tuple of fiber ID and actual duration
   fiberActualDurations: Array<[number, number]>,
   // Tuple of fiber ID and computed "self" duration
   fiberSelfDurations: Array<[number, number]>,
   interactionIDs: Array<number>,
+  // Only available in certain (newer) React builds,
+  passiveEffectDuration: number | null,
   priorityLevel: string | null,
   timestamp: number,
 |};
@@ -257,28 +262,31 @@ export type InspectedElement = {|
 export const InspectElementFullDataType = 'full-data';
 export const InspectElementNoChangeType = 'no-change';
 export const InspectElementNotFoundType = 'not-found';
-export const InspectElementHydratedPathType = 'hydrated-path';
 
-type InspectElementFullData = {|
+export type InspectElementFullData = {|
   id: number,
+  responseID: number,
   type: 'full-data',
   value: InspectedElement,
 |};
 
-type InspectElementHydratedPath = {|
+export type InspectElementHydratedPath = {|
   id: number,
+  responseID: number,
   type: 'hydrated-path',
   path: Array<string | number>,
   value: any,
 |};
 
-type InspectElementNoChange = {|
+export type InspectElementNoChange = {|
   id: number,
+  responseID: number,
   type: 'no-change',
 |};
 
-type InspectElementNotFound = {|
+export type InspectElementNotFound = {|
   id: number,
+  responseID: number,
   type: 'not-found',
 |};
 
@@ -319,8 +327,9 @@ export type RendererInterface = {
   handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
   inspectElement: (
+    requestID: number,
     id: number,
-    path?: Array<string | number>,
+    inspectedPaths: Object,
   ) => InspectedElementPayload,
   logElementToConsole: (id: number) => void,
   overrideSuspense: (id: number, forceFallback: boolean) => void,

@@ -1,6 +1,7 @@
 [ignore]
 .*/scripts/bench/.*
 .*/build/.*
+.*/build2/.*
 .*/fixtures/.*
 .*/.tempUserDataDir/.*
 

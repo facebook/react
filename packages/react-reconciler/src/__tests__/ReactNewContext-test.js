@@ -689,6 +689,7 @@ describe('ReactNewContext', () => {
         ]);
       });
 
+      // @gate !enableLazyContextPropagation
       it('can skip parents with bitmask bailout while updating their children', () => {
         const Context = React.createContext({foo: 0, bar: 0}, (a, b) => {
           let result = 0;
@@ -1077,10 +1078,13 @@ describe('ReactNewContext', () => {
 
       // Update
       ReactNoop.render(<App value={2} />);
-      expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
-        'calculateChangedBits: Expected the return value to be a 31-bit ' +
-          'integer. Instead received: 4294967295',
-      );
+
+      if (gate(flags => !flags.enableLazyContextPropagation)) {
+        expect(() => expect(Scheduler).toFlushWithoutYielding()).toErrorDev(
+          'calculateChangedBits: Expected the return value to be a 31-bit ' +
+            'integer. Instead received: 4294967295',
+        );
+      }
     });
 
     it('warns if no value prop provided', () => {

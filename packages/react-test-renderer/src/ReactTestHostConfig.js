@@ -7,9 +7,15 @@
  * @flow
  */
 
-import type {ReactFundamentalComponentInstance} from 'shared/ReactTypes';
-
 import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
+import {enableNewReconciler} from 'shared/ReactFeatureFlags';
+
+import {DefaultLanePriority as DefaultLanePriority_old} from 'react-reconciler/src/ReactFiberLane.old';
+import {DefaultLanePriority as DefaultLanePriority_new} from 'react-reconciler/src/ReactFiberLane.new';
+
+const DefaultLanePriority = enableNewReconciler
+  ? DefaultLanePriority_new
+  : DefaultLanePriority_old;
 
 export type Type = string;
 export type Props = Object;
@@ -52,6 +58,7 @@ export type RendererInspectionConfig = $ReadOnly<{||}>;
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
 
 const NO_CONTEXT = {};
 const UPDATE_SIGNAL = {};
@@ -215,11 +222,16 @@ export function createTextInstance(
   };
 }
 
+export function getCurrentEventPriority(): * {
+  return DefaultLanePriority;
+}
+
 export const isPrimaryRenderer = false;
 export const warnsIfNotActing = true;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
+
 export const noTimeout = -1;
 
 // -------------------
@@ -282,54 +294,6 @@ export function unhideTextInstance(
   text: string,
 ): void {
   textInstance.isHidden = false;
-}
-
-export function getFundamentalComponentInstance(
-  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
-): Instance {
-  const {impl, props, state} = fundamentalInstance;
-  return impl.getInstance(null, props, state);
-}
-
-export function mountFundamentalComponent(
-  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
-): void {
-  const {impl, instance, props, state} = fundamentalInstance;
-  const onMount = impl.onMount;
-  if (onMount !== undefined) {
-    onMount(null, instance, props, state);
-  }
-}
-
-export function shouldUpdateFundamentalComponent(
-  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
-): boolean {
-  const {impl, prevProps, props, state} = fundamentalInstance;
-  const shouldUpdate = impl.shouldUpdate;
-  if (shouldUpdate !== undefined) {
-    return shouldUpdate(null, prevProps, props, state);
-  }
-  return true;
-}
-
-export function updateFundamentalComponent(
-  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
-): void {
-  const {impl, instance, prevProps, props, state} = fundamentalInstance;
-  const onUpdate = impl.onUpdate;
-  if (onUpdate !== undefined) {
-    onUpdate(null, instance, prevProps, props, state);
-  }
-}
-
-export function unmountFundamentalComponent(
-  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
-): void {
-  const {impl, instance, props, state} = fundamentalInstance;
-  const onUnmount = impl.onUnmount;
-  if (onUnmount !== undefined) {
-    onUnmount(null, instance, props, state);
-  }
 }
 
 export function getInstanceFromNode(mockNode: Object) {

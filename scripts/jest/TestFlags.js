@@ -45,9 +45,10 @@ const environmentFlags = {
   // Use this for tests that are known to be broken.
   FIXME: false,
 
-  // Turn this flag back on (or delete) once the effect list is removed in favor
-  // of a depth-first traversal using `subtreeTags`.
-  dfsEffectsRefactor: false,
+  // Turn these flags back on (or delete) once the effect list is removed in
+  // favor of a depth-first traversal using `subtreeTags`.
+  dfsEffectsRefactor: true,
+  enableUseJSStackToTrackPassiveDurations: false,
 };
 
 function getTestFlags() {
@@ -83,6 +84,11 @@ function getTestFlags() {
 
       ...featureFlags,
       ...environmentFlags,
+
+      // FIXME: www-classic has enableCache on, but when running the source
+      // tests, Jest doesn't expose the API correctly. Fix then remove
+      // this override.
+      enableCache: __EXPERIMENTAL__,
     },
     {
       get(flags, flagName) {

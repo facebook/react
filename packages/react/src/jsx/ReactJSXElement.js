@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
@@ -61,7 +61,9 @@ function warnIfStringRefCannotBeAutoConverted(config, self) {
       self &&
       ReactCurrentOwner.current.stateNode !== self
     ) {
-      const componentName = getComponentName(ReactCurrentOwner.current.type);
+      const componentName = getComponentNameFromType(
+        ReactCurrentOwner.current.type,
+      );
 
       if (!didWarnAboutStringRefs[componentName]) {
         console.error(
@@ -71,7 +73,7 @@ function warnIfStringRefCannotBeAutoConverted(config, self) {
             'We ask you to manually fix this case by using useRef() or createRef() instead. ' +
             'Learn more about using refs safely here: ' +
             'https://reactjs.org/link/strict-mode-string-ref',
-          getComponentName(ReactCurrentOwner.current.type),
+          getComponentNameFromType(ReactCurrentOwner.current.type),
           config.ref,
         );
         didWarnAboutStringRefs[componentName] = true;

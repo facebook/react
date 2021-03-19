@@ -12,7 +12,7 @@ import type {Instance} from './ReactFiberHostConfig';
 
 import invariant from 'shared/invariant';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {
   findFiberRoot,
   getBoundingRect,
@@ -47,7 +47,7 @@ type ComponentSelector = {|
   value: React$AbstractComponent<empty, mixed>,
 |};
 
-type HasPsuedoClassSelector = {|
+type HasPseudoClassSelector = {|
   $$typeof: Type,
   value: Array<Selector>,
 |};
@@ -69,7 +69,7 @@ type TestNameSelector = {|
 
 type Selector =
   | ComponentSelector
-  | HasPsuedoClassSelector
+  | HasPseudoClassSelector
   | RoleSelector
   | TextSelector
   | TestNameSelector;
@@ -83,9 +83,9 @@ export function createComponentSelector(
   };
 }
 
-export function createHasPsuedoClassSelector(
+export function createHasPseudoClassSelector(
   selectors: Array<Selector>,
-): HasPsuedoClassSelector {
+): HasPseudoClassSelector {
   return {
     $$typeof: HAS_PSEUDO_CLASS_TYPE,
     value: selectors,
@@ -143,7 +143,7 @@ function matchSelector(fiber: Fiber, selector: Selector): boolean {
     case HAS_PSEUDO_CLASS_TYPE:
       return hasMatchingPaths(
         fiber,
-        ((selector: any): HasPsuedoClassSelector).value,
+        ((selector: any): HasPseudoClassSelector).value,
       );
     case ROLE_TYPE:
       if (fiber.tag === HostComponent) {
@@ -189,7 +189,7 @@ function matchSelector(fiber: Fiber, selector: Selector): boolean {
 function selectorToString(selector: Selector): string | null {
   switch (selector.$$typeof) {
     case COMPONENT_TYPE:
-      const displayName = getComponentName(selector.value) || 'Unknown';
+      const displayName = getComponentNameFromType(selector.value) || 'Unknown';
       return `<${displayName}>`;
     case HAS_PSEUDO_CLASS_TYPE:
       return `:has(${selectorToString(selector) || ''})`;

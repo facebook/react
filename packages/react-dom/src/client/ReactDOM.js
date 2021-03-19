@@ -18,7 +18,7 @@ import {
   unstable_renderSubtreeIntoContainer,
   unmountComponentAtNode,
 } from './ReactDOMLegacy';
-import {createRoot, createBlockingRoot, isValidContainer} from './ReactDOMRoot';
+import {createRoot, isValidContainer} from './ReactDOMRoot';
 import {createEventHandle} from './ReactDOMEventHandle';
 
 import {
@@ -32,7 +32,7 @@ import {
   flushPassiveEffects,
   IsThisRendererActing,
   attemptSynchronousHydration,
-  attemptUserBlockingHydration,
+  attemptDiscreteHydration,
   attemptContinuousHydration,
   attemptHydrationAtCurrentPriority,
   runWithPriority,
@@ -56,7 +56,7 @@ import {
 import {restoreControlledState} from './ReactDOMComponent';
 import {
   setAttemptSynchronousHydration,
-  setAttemptUserBlockingHydration,
+  setAttemptDiscreteHydration,
   setAttemptContinuousHydration,
   setAttemptHydrationAtCurrentPriority,
   queueExplicitHydrationTarget,
@@ -71,7 +71,7 @@ import {
 } from '../events/ReactDOMControlledComponent';
 
 setAttemptSynchronousHydration(attemptSynchronousHydration);
-setAttemptUserBlockingHydration(attemptUserBlockingHydration);
+setAttemptDiscreteHydration(attemptDiscreteHydration);
 setAttemptContinuousHydration(attemptContinuousHydration);
 setAttemptHydrationAtCurrentPriority(attemptHydrationAtCurrentPriority);
 setGetCurrentUpdatePriority(getCurrentUpdateLanePriority);
@@ -201,7 +201,6 @@ export {
   unmountComponentAtNode,
   // exposeConcurrentModeAPIs
   createRoot,
-  createBlockingRoot,
   flushControlled as unstable_flushControlled,
   scheduleHydration as unstable_scheduleHydration,
   // Disabled behind disableUnstableRenderSubtreeIntoContainer

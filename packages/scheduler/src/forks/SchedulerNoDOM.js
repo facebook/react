@@ -23,7 +23,6 @@ import {
   IdlePriority,
 } from '../SchedulerPriorities';
 import {
-  sharedProfilingBuffer,
   markTaskRun,
   markTaskYield,
   markTaskCompleted,
@@ -185,12 +184,16 @@ function workLoop(hasTimeRemaining, initialTime) {
       currentTask.callback = null;
       currentPriorityLevel = currentTask.priorityLevel;
       const didUserCallbackTimeout = currentTask.expirationTime <= currentTime;
-      markTaskRun(currentTask, currentTime);
+      if (enableProfiling) {
+        markTaskRun(currentTask, currentTime);
+      }
       const continuationCallback = callback(didUserCallbackTimeout);
       currentTime = getCurrentTime();
       if (typeof continuationCallback === 'function') {
         currentTask.callback = continuationCallback;
-        markTaskYield(currentTask, currentTime);
+        if (enableProfiling) {
+          markTaskYield(currentTask, currentTime);
+        }
       } else {
         if (enableProfiling) {
           markTaskCompleted(currentTask, currentTime);
@@ -466,6 +469,5 @@ export const unstable_Profiling = enableProfiling
   ? {
       startLoggingProfilingEvents,
       stopLoggingProfilingEvents,
-      sharedProfilingBuffer,
     }
   : null;

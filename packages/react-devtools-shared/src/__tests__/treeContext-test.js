@@ -1441,20 +1441,28 @@ describe('TreeListContext', () => {
   });
 
   describe('inline errors/warnings state', () => {
+    const {
+      clearErrorsAndWarnings: clearErrorsAndWarningsAPI,
+      clearErrorsForElement: clearErrorsForElementAPI,
+      clearWarningsForElement: clearWarningsForElementAPI,
+    } = require('react-devtools-shared/src/backendAPI');
+
     function clearAllErrors() {
-      utils.act(() => store.clearErrorsAndWarnings());
+      utils.act(() => clearErrorsAndWarningsAPI({bridge, store}));
       // flush events to the renderer
       jest.runAllTimers();
     }
 
     function clearErrorsForElement(id) {
-      utils.act(() => store.clearErrorsForElement(id));
+      const rendererID = store.getRendererIDForElement(id);
+      utils.act(() => clearErrorsForElementAPI({bridge, id, rendererID}));
       // flush events to the renderer
       jest.runAllTimers();
     }
 
     function clearWarningsForElement(id) {
-      utils.act(() => store.clearWarningsForElement(id));
+      const rendererID = store.getRendererIDForElement(id);
+      utils.act(() => clearWarningsForElementAPI({bridge, id, rendererID}));
       // flush events to the renderer
       jest.runAllTimers();
     }

@@ -2,6 +2,10 @@
   display: flex;
 }
 
+.DisabledItem {
+  opacity: 0.5;
+}
+
 .Name {
   color: var(--color-attribute-name-not-editable);
   flex: 0 0 auto;

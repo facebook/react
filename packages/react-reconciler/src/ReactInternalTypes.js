@@ -51,6 +51,7 @@ export type ContextDependency<T> = {
   context: ReactContext<T>,
   observedBits: number,
   next: ContextDependency<mixed> | null,
+  memoizedValue: T,
   ...
 };
 

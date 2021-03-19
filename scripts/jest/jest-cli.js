@@ -212,10 +212,10 @@ function validateOptions() {
 
   if (argv.build) {
     // TODO: We could build this if it hasn't been built yet.
-    const buildDir = path.resolve('./build');
+    const buildDir = path.resolve('./build2');
     if (!fs.existsSync(buildDir)) {
       logError(
-        'Build directory does not exist, please run `yarn build` or remove the --build option.'
+        'Build directory does not exist, please run `yarn build-combined` or remove the --build option.'
       );
       success = false;
     } else if (Date.now() - fs.statSync(buildDir).mtimeMs > 1000 * 60 * 15) {

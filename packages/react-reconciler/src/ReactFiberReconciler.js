@@ -29,7 +29,7 @@ import {
   IsThisRendererActing as IsThisRendererActing_old,
   getPublicRootInstance as getPublicRootInstance_old,
   attemptSynchronousHydration as attemptSynchronousHydration_old,
-  attemptUserBlockingHydration as attemptUserBlockingHydration_old,
+  attemptDiscreteHydration as attemptDiscreteHydration_old,
   attemptContinuousHydration as attemptContinuousHydration_old,
   attemptHydrationAtCurrentPriority as attemptHydrationAtCurrentPriority_old,
   findHostInstance as findHostInstance_old,
@@ -40,7 +40,7 @@ import {
   act as act_old,
   createPortal as createPortal_old,
   createComponentSelector as createComponentSelector_old,
-  createHasPsuedoClassSelector as createHasPsuedoClassSelector_old,
+  createHasPseudoClassSelector as createHasPseudoClassSelector_old,
   createRoleSelector as createRoleSelector_old,
   createTestNameSelector as createTestNameSelector_old,
   createTextSelector as createTextSelector_old,
@@ -52,6 +52,10 @@ import {
   registerMutableSourceForHydration as registerMutableSourceForHydration_old,
   runWithPriority as runWithPriority_old,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
+  DefaultEventPriority as DefaultEventPriority_old,
+  DiscreteEventPriority as DiscreteEventPriority_old,
+  ContinuousEventPriority as ContinuousEventPriority_old,
+  IdleEventPriority as IdleEventPriority_old,
 } from './ReactFiberReconciler.old';
 
 import {
@@ -69,7 +73,7 @@ import {
   IsThisRendererActing as IsThisRendererActing_new,
   getPublicRootInstance as getPublicRootInstance_new,
   attemptSynchronousHydration as attemptSynchronousHydration_new,
-  attemptUserBlockingHydration as attemptUserBlockingHydration_new,
+  attemptDiscreteHydration as attemptDiscreteHydration_new,
   attemptContinuousHydration as attemptContinuousHydration_new,
   attemptHydrationAtCurrentPriority as attemptHydrationAtCurrentPriority_new,
   findHostInstance as findHostInstance_new,
@@ -80,7 +84,7 @@ import {
   act as act_new,
   createPortal as createPortal_new,
   createComponentSelector as createComponentSelector_new,
-  createHasPsuedoClassSelector as createHasPsuedoClassSelector_new,
+  createHasPseudoClassSelector as createHasPseudoClassSelector_new,
   createRoleSelector as createRoleSelector_new,
   createTestNameSelector as createTestNameSelector_new,
   createTextSelector as createTextSelector_new,
@@ -92,6 +96,10 @@ import {
   registerMutableSourceForHydration as registerMutableSourceForHydration_new,
   runWithPriority as runWithPriority_new,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
+  DefaultEventPriority as DefaultEventPriority_new,
+  DiscreteEventPriority as DiscreteEventPriority_new,
+  ContinuousEventPriority as ContinuousEventPriority_new,
+  IdleEventPriority as IdleEventPriority_new,
 } from './ReactFiberReconciler.new';
 
 export const createContainer = enableNewReconciler
@@ -134,9 +142,9 @@ export const getPublicRootInstance = enableNewReconciler
 export const attemptSynchronousHydration = enableNewReconciler
   ? attemptSynchronousHydration_new
   : attemptSynchronousHydration_old;
-export const attemptUserBlockingHydration = enableNewReconciler
-  ? attemptUserBlockingHydration_new
-  : attemptUserBlockingHydration_old;
+export const attemptDiscreteHydration = enableNewReconciler
+  ? attemptDiscreteHydration_new
+  : attemptDiscreteHydration_old;
 export const attemptContinuousHydration = enableNewReconciler
   ? attemptContinuousHydration_new
   : attemptContinuousHydration_old;
@@ -168,11 +176,23 @@ export const createPortal = enableNewReconciler
 export const createComponentSelector = enableNewReconciler
   ? createComponentSelector_new
   : createComponentSelector_old;
+export const DefaultEventPriority = enableNewReconciler
+  ? DefaultEventPriority_new
+  : DefaultEventPriority_old;
+export const DiscreteEventPriority = enableNewReconciler
+  ? DiscreteEventPriority_new
+  : DiscreteEventPriority_old;
+export const ContinuousEventPriority = enableNewReconciler
+  ? ContinuousEventPriority_new
+  : ContinuousEventPriority_old;
+export const IdleEventPriority = enableNewReconciler
+  ? IdleEventPriority_new
+  : IdleEventPriority_old;
 
 //TODO: "psuedo" is spelled "pseudo"
-export const createHasPsuedoClassSelector = enableNewReconciler
-  ? createHasPsuedoClassSelector_new
-  : createHasPsuedoClassSelector_old;
+export const createHasPseudoClassSelector = enableNewReconciler
+  ? createHasPseudoClassSelector_new
+  : createHasPseudoClassSelector_old;
 export const createRoleSelector = enableNewReconciler
   ? createRoleSelector_new
   : createRoleSelector_old;

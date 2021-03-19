@@ -53,7 +53,7 @@ describe('ReactBlockingMode', () => {
   }
 
   it('updates flush without yielding in the next event', () => {
-    const root = ReactNoop.createBlockingRoot();
+    const root = ReactNoop.createRoot();
 
     root.render(
       <>
@@ -67,7 +67,7 @@ describe('ReactBlockingMode', () => {
     expect(root).toMatchRenderedOutput(null);
 
     // Everything should render immediately in the next event
-    expect(Scheduler).toFlushExpired(['A', 'B', 'C']);
+    expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
     expect(root).toMatchRenderedOutput('ABC');
   });
 
@@ -81,16 +81,17 @@ describe('ReactBlockingMode', () => {
       return <Text text="Hi" />;
     }
 
-    const root = ReactNoop.createBlockingRoot();
+    const root = ReactNoop.createRoot();
     root.render(<App />);
     expect(root).toMatchRenderedOutput(null);
+    expect(Scheduler).toHaveYielded([]);
 
-    expect(Scheduler).toFlushExpired(['Hi', 'Layout effect']);
+    expect(Scheduler).toFlushAndYield(['Hi', 'Layout effect']);
     expect(root).toMatchRenderedOutput('Hi');
   });
 
   it('uses proper Suspense semantics, not legacy ones', async () => {
-    const root = ReactNoop.createBlockingRoot();
+    const root = ReactNoop.createRoot();
     root.render(
       <Suspense fallback={<Text text="Loading..." />}>
         <span>
@@ -105,15 +106,15 @@ describe('ReactBlockingMode', () => {
       </Suspense>,
     );
 
-    expect(Scheduler).toFlushExpired(['A', 'Suspend! [B]', 'C', 'Loading...']);
-    // In Legacy Mode, A and B would mount in a hidden primary tree. In Batched
-    // and Concurrent Mode, nothing in the primary tree should mount. But the
+    expect(Scheduler).toFlushAndYield(['A', 'Suspend! [B]', 'C', 'Loading...']);
+    // In Legacy Mode, A and B would mount in a hidden primary tree. In
+    // Concurrent Mode, nothing in the primary tree should mount. But the
     // fallback should mount immediately.
     expect(root).toMatchRenderedOutput('Loading...');
 
     await jest.advanceTimersByTime(1000);
     expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
-    expect(Scheduler).toFlushExpired(['A', 'B', 'C']);
+    expect(Scheduler).toFlushAndYield(['A', 'B', 'C']);
     expect(root).toMatchRenderedOutput(
       <>
         <span>A</span>
@@ -125,7 +126,7 @@ describe('ReactBlockingMode', () => {
 
   it('flushSync does not flush batched work', () => {
     const {useState, forwardRef, useImperativeHandle} = React;
-    const root = ReactNoop.createBlockingRoot();
+    const root = ReactNoop.createRoot();
 
     const Foo = forwardRef(({label}, ref) => {
       const [step, setStep] = useState(0);
@@ -143,7 +144,7 @@ describe('ReactBlockingMode', () => {
     );
 
     // Mount
-    expect(Scheduler).toFlushExpired(['A0', 'B0']);
+    expect(Scheduler).toFlushAndYield(['A0', 'B0']);
     expect(root).toMatchRenderedOutput('A0B0');
 
     // Schedule a batched update to the first sibling
@@ -161,7 +162,7 @@ describe('ReactBlockingMode', () => {
     expect(root).toMatchRenderedOutput('A0B1');
 
     // Now flush the first update
-    expect(Scheduler).toFlushExpired(['A1']);
+    expect(Scheduler).toFlushAndYield(['A1']);
     expect(root).toMatchRenderedOutput('A1B1');
   });
 });

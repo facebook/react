@@ -368,7 +368,7 @@ describe('Profiler', () => {
 
         renderer.update(<App />);
 
-        if (gate(flags => flags.dfsEffectsRefactor)) {
+        if (gate(flags => flags.enableUseJSStackToTrackPassiveDurations)) {
           // None of the Profiler's subtree was rendered because App bailed out before the Profiler.
           // So we expect onRender not to be called.
           expect(callback).not.toHaveBeenCalled();
@@ -748,6 +748,7 @@ describe('Profiler', () => {
         expect(onRender.mock.calls[2][1]).toBe('update');
       });
 
+      // @gate experimental
       it('is properly distinguish updates and nested-updates when there is more than sync remaining work', () => {
         loadModules({
           enableSchedulerTracing,
@@ -767,18 +768,15 @@ describe('Profiler', () => {
         const onRender = jest.fn();
 
         // Schedule low-priority work.
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_LowPriority,
-          () => {
-            ReactNoop.render(
-              <React.Profiler id="root" onRender={onRender}>
-                <Component />
-              </React.Profiler>,
-            );
-          },
+        React.unstable_startTransition(() =>
+          ReactNoop.render(
+            <React.Profiler id="root" onRender={onRender}>
+              <Component />
+            </React.Profiler>,
+          ),
         );
 
-        // Flush sync work with a nested upate
+        // Flush sync work with a nested update
         ReactNoop.flushSync(() => {
           ReactNoop.render(
             <React.Profiler id="root" onRender={onRender}>
@@ -4383,7 +4381,7 @@ describe('Profiler', () => {
         // because the resolved suspended subtree doesn't contain any passive effects.
         // If <AsyncComponentWithCascadingWork> or its decendents had a passive effect,
         // onPostCommit would be called again.
-        if (gate(flags => flags.dfsEffectsRefactor)) {
+        if (gate(flags => flags.enableUseJSStackToTrackPassiveDurations)) {
           expect(Scheduler).toFlushAndYield([]);
         } else {
           expect(Scheduler).toFlushAndYield(['onPostCommit']);
@@ -4874,10 +4872,9 @@ describe('Profiler', () => {
       });
 
       if (__DEV__) {
-        // @gate dfsEffectsRefactor
-        // @gate enableDoubleInvokingEffects
         it('double invoking does not disconnect wrapped async work', () => {
-          ReactFeatureFlags.enableDoubleInvokingEffects = true;
+          ReactFeatureFlags.enableStrictEffects = true;
+          ReactFeatureFlags.createRootStrictEffectsByDefault = true;
 
           const callback = jest.fn(() => {
             const wrappedInteractions = SchedulerTracing.unstable_getCurrent();

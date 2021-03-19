@@ -7,16 +7,8 @@
  * @flow
  */
 
-import type {
-  ReactFundamentalComponentInstance,
-  ReactScopeInstance,
-} from 'shared/ReactTypes';
+import type {ReactScopeInstance} from 'shared/ReactTypes';
 import type {DOMEventName} from '../events/DOMEventNames';
-
-export type ReactDOMFundamentalComponentInstance = ReactFundamentalComponentInstance<
-  any,
-  any,
->;
 
 export type ReactDOMEventHandle = (
   target: EventTarget | ReactScopeInstance,

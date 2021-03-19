@@ -8,8 +8,8 @@ let useCacheRefresh;
 let startTransition;
 let useState;
 
-let textService;
-let textServiceVersion;
+let caches;
+let seededCache;
 
 describe('ReactCache', () => {
   beforeEach(() => {
@@ -25,20 +25,57 @@ describe('ReactCache', () => {
     startTransition = React.unstable_startTransition;
     useState = React.useState;
 
-    // Represents some data service that returns text. It likely has additional
-    // caching layers, like a CDN or the local browser cache. It can be mutated
-    // or emptied independently of the React cache.
-    textService = new Map();
-    textServiceVersion = 1;
+    caches = [];
+    seededCache = null;
   });
 
   function createTextCache() {
-    return new Map();
+    if (seededCache !== null) {
+      // Trick to seed a cache before it exists.
+      // TODO: Need a built-in API to seed data before the initial render (i.e.
+      // not a refresh because nothing has mounted yet).
+      const cache = seededCache;
+      seededCache = null;
+      return cache;
+    }
+
+    const data = new Map();
+    const version = caches.length + 1;
+    const cache = {
+      version,
+      data,
+      resolve(text) {
+        const record = data.get(text);
+        if (record === undefined) {
+          const newRecord = {
+            status: 'resolved',
+            value: text,
+          };
+          data.set(text, newRecord);
+        } else if (record.status === 'pending') {
+          record.value.resolve();
+        }
+      },
+      reject(text, error) {
+        const record = data.get(text);
+        if (record === undefined) {
+          const newRecord = {
+            status: 'rejected',
+            value: error,
+          };
+          data.set(text, newRecord);
+        } else if (record.status === 'pending') {
+          record.value.reject();
+        }
+      },
+    };
+    caches.push(cache);
+    return cache;
   }
 
   function readText(text) {
     const textCache = getCacheForType(createTextCache);
-    const record = textCache.get(text);
+    const record = textCache.data.get(text);
     if (record !== undefined) {
       switch (record.status) {
         case 'pending':
@@ -46,28 +83,17 @@ describe('ReactCache', () => {
         case 'rejected':
           throw record.value;
         case 'resolved':
-          return record.value;
+          return textCache.version;
       }
     } else {
       Scheduler.unstable_yieldValue(`Cache miss! [${text}]`);
 
-      let request = textService.get(text);
-      if (request === undefined) {
-        let resolve;
-        let reject;
-        request = new Promise((res, rej) => {
-          resolve = res;
-          reject = rej;
-        });
-        request.resolve = resolve;
-        request.reject = reject;
-
-        // Add the request to a backing cache. This may outlive the lifetime
-        // of the component that is currently reading the data.
-        textService.set(text, request);
-      }
-
-      const thenable = request.then(
+      let resolve;
+      let reject;
+      const thenable = new Promise((res, rej) => {
+        resolve = res;
+        reject = rej;
+      }).then(
         value => {
           if (newRecord.status === 'pending') {
             newRecord.status = 'resolved';
@@ -81,33 +107,16 @@ describe('ReactCache', () => {
           }
         },
       );
+      thenable.resolve = resolve;
+      thenable.reject = reject;
 
       const newRecord = {
-        ping: null,
         status: 'pending',
         value: thenable,
       };
-      textCache.set(text, newRecord);
+      textCache.data.set(text, newRecord);
 
       throw thenable;
-    }
-  }
-
-  function mutateRemoteTextService() {
-    textService = new Map();
-    textServiceVersion++;
-  }
-
-  function resolveText(text) {
-    const request = textService.get(text);
-    if (request !== undefined) {
-      request.resolve(textServiceVersion);
-      return request;
-    } else {
-      const newRequest = Promise.resolve(textServiceVersion);
-      newRequest.resolve = newRequest.reject = () => {};
-      textService.set(text, newRequest);
-      return newRequest;
     }
   }
 
@@ -121,6 +130,23 @@ describe('ReactCache', () => {
     const fullText = showVersion ? `${text} [v${version}]` : text;
     Scheduler.unstable_yieldValue(fullText);
     return fullText;
+  }
+
+  function seedNextTextCache(text) {
+    if (seededCache === null) {
+      seededCache = createTextCache();
+    }
+    seededCache.resolve(text);
+  }
+
+  function resolveMostRecentTextCache(text) {
+    if (caches.length === 0) {
+      throw Error('Cache does not exist.');
+    } else {
+      // Resolve the most recently created cache. An older cache can by
+      // resolved with `caches[index].resolve(text)`.
+      caches[caches.length - 1].resolve(text);
+    }
   }
 
   // @gate experimental
@@ -148,7 +174,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Loading...');
 
     await ReactNoop.act(async () => {
-      await resolveText('A');
+      resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A']);
     expect(root).toMatchRenderedOutput('A');
@@ -168,7 +194,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Loading...');
 
     await ReactNoop.act(async () => {
-      await resolveText('A');
+      resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A']);
     expect(root).toMatchRenderedOutput('A');
@@ -207,7 +233,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Loading...Loading...');
 
     await ReactNoop.act(async () => {
-      await resolveText('A');
+      resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A', 'A']);
     expect(root).toMatchRenderedOutput('AA');
@@ -239,7 +265,7 @@ describe('ReactCache', () => {
       expect(root).toMatchRenderedOutput('Loading...');
 
       await ReactNoop.act(async () => {
-        await resolveText('A');
+        resolveMostRecentTextCache('A');
       });
       expect(Scheduler).toHaveYielded(['A', 'A']);
       expect(root).toMatchRenderedOutput('AA');
@@ -265,22 +291,14 @@ describe('ReactCache', () => {
 
     const root = ReactNoop.createRoot();
     await ReactNoop.act(async () => {
-      await resolveText('A');
+      seedNextTextCache('A');
       root.render(<App showMore={false} />);
     });
-    expect(Scheduler).toHaveYielded([
-      'Cache miss! [A]',
-      'Loading...',
-      'A [v1]',
-    ]);
+    expect(Scheduler).toHaveYielded(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
-
-    // Simulate a server mutation.
-    mutateRemoteTextService();
 
     // Add a new cache boundary
     await ReactNoop.act(async () => {
-      await resolveText('A');
       root.render(<App showMore={true} />);
     });
     expect(Scheduler).toHaveYielded([
@@ -314,22 +332,14 @@ describe('ReactCache', () => {
 
     const root = ReactNoop.createRoot();
     await ReactNoop.act(async () => {
-      await resolveText('A');
+      seedNextTextCache('A');
       root.render(<App showMore={false} />);
     });
-    expect(Scheduler).toHaveYielded([
-      'Cache miss! [A]',
-      'Loading...',
-      'A [v1]',
-    ]);
+    expect(Scheduler).toHaveYielded(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
-
-    // Simulate a server mutation.
-    mutateRemoteTextService();
 
     // Add a new cache boundary
     await ReactNoop.act(async () => {
-      await resolveText('A');
       root.render(<App showMore={true} />);
     });
     expect(Scheduler).toHaveYielded([
@@ -337,8 +347,12 @@ describe('ReactCache', () => {
       // New tree should load fresh data.
       'Cache miss! [A]',
       'Loading...',
-      'A [v2]',
     ]);
+    expect(root).toMatchRenderedOutput('A [v1]Loading...');
+    await ReactNoop.act(async () => {
+      resolveMostRecentTextCache('A');
+    });
+    expect(Scheduler).toHaveYielded(['A [v2]']);
     expect(root).toMatchRenderedOutput('A [v1]A [v2]');
   });
 
@@ -389,7 +403,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Loading shell...');
 
     await ReactNoop.act(async () => {
-      await resolveText('A');
+      resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded([
       'Shell',
@@ -406,7 +420,7 @@ describe('ReactCache', () => {
     );
 
     await ReactNoop.act(async () => {
-      await resolveText('B');
+      resolveMostRecentTextCache('B');
     });
     expect(Scheduler).toHaveYielded(['Content']);
     expect(root).toMatchRenderedOutput(
@@ -440,13 +454,12 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Loading...');
 
     await ReactNoop.act(async () => {
-      await resolveText('A');
+      resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
-    // Mutate the text service, then refresh for new data.
-    mutateRemoteTextService();
+    // Fefresh for new data.
     await ReactNoop.act(async () => {
       startTransition(() => refresh());
     });
@@ -454,7 +467,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]');
 
     await ReactNoop.act(async () => {
-      await resolveText('A');
+      resolveMostRecentTextCache('A');
     });
     // Note that the version has updated
     expect(Scheduler).toHaveYielded(['A [v2]']);
@@ -482,13 +495,12 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Loading...');
 
     await ReactNoop.act(async () => {
-      await resolveText('A');
+      resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
-    // Mutate the text service, then refresh for new data.
-    mutateRemoteTextService();
+    // Refresh for new data.
     await ReactNoop.act(async () => {
       startTransition(() => refresh());
     });
@@ -496,7 +508,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]');
 
     await ReactNoop.act(async () => {
-      await resolveText('A');
+      resolveMostRecentTextCache('A');
     });
     // Note that the version has updated
     expect(Scheduler).toHaveYielded(['A [v2]']);
@@ -526,25 +538,20 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('Loading...');
 
     await ReactNoop.act(async () => {
-      await resolveText('A');
+      resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
 
-    // Mutate the text service, then refresh for new data.
-    mutateRemoteTextService();
+    // Refresh for new data.
     await ReactNoop.act(async () => {
       // Refresh the cache with seeded data, like you would receive from a
       // server mutation.
       // TODO: Seeding multiple typed caches. Should work by calling `refresh`
       // multiple times with different key/value pairs
-      const seededCache = new Map();
-      seededCache.set('A', {
-        ping: null,
-        status: 'resolved',
-        value: textServiceVersion,
-      });
-      startTransition(() => refresh(createTextCache, seededCache));
+      const cache = createTextCache();
+      cache.resolve('A');
+      startTransition(() => refresh(createTextCache, cache));
     });
     // The root should re-render without a cache miss.
     expect(Scheduler).toHaveYielded(['A [v2]']);
@@ -579,36 +586,26 @@ describe('ReactCache', () => {
 
     const root = ReactNoop.createRoot();
     await ReactNoop.act(async () => {
-      await resolveText('A');
+      seedNextTextCache('A');
       root.render(<App showMore={false} />);
     });
-    expect(Scheduler).toHaveYielded([
-      'Cache miss! [A]',
-      'Loading...',
-      'A [v1]',
-    ]);
+    expect(Scheduler).toHaveYielded(['A [v1]']);
     expect(root).toMatchRenderedOutput('A [v1]');
-
-    // Simulate a server mutation.
-    mutateRemoteTextService();
 
     // Add a new cache boundary
     await ReactNoop.act(async () => {
-      await resolveText('A');
+      seedNextTextCache('A');
       root.render(<App showMore={true} />);
     });
     expect(Scheduler).toHaveYielded([
       'A [v1]',
       // New tree should load fresh data.
-      'Cache miss! [A]',
-      'Loading...',
       'A [v2]',
     ]);
     expect(root).toMatchRenderedOutput('A [v1]A [v2]');
 
     // Now refresh the shell. This should also cause the "Show More" contents to
     // refresh, since its cache is nested inside the outer one.
-    mutateRemoteTextService();
     await ReactNoop.act(async () => {
       startTransition(() => refreshShell());
     });
@@ -620,7 +617,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('A [v1]A [v2]');
 
     await ReactNoop.act(async () => {
-      await resolveText('A');
+      resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A [v3]', 'A [v3]']);
     expect(root).toMatchRenderedOutput('A [v3]A [v3]');
@@ -679,21 +676,20 @@ describe('ReactCache', () => {
       expect(root).toMatchRenderedOutput('Loading...Loading...');
 
       await ReactNoop.act(async () => {
-        await resolveText('A');
+        resolveMostRecentTextCache('A');
       });
       expect(Scheduler).toHaveYielded(['A [v1]', 'A [v1]']);
       expect(root).toMatchRenderedOutput('A [v1]A [v1]');
 
       // Refresh the first boundary. It should not refresh the second boundary,
       // even though they previously shared the same underlying cache.
-      mutateRemoteTextService();
       await ReactNoop.act(async () => {
         await refreshFirstBoundary();
       });
       expect(Scheduler).toHaveYielded(['Cache miss! [A]', 'Loading...']);
 
       await ReactNoop.act(async () => {
-        await resolveText('A');
+        resolveMostRecentTextCache('A');
       });
       expect(Scheduler).toHaveYielded(['A [v2]']);
       expect(root).toMatchRenderedOutput('A [v2]A [v1]');
@@ -738,10 +734,8 @@ describe('ReactCache', () => {
 
       await ReactNoop.act(async () => {
         // This will resolve the content in the first cache
-        resolveText('A');
-        resolveText('B');
-        // Now let's simulate a mutation
-        mutateRemoteTextService();
+        resolveMostRecentTextCache('A');
+        resolveMostRecentTextCache('B');
         // And mount the second tree, which includes new content
         root.render(<App showMore={true} />);
       });
@@ -757,7 +751,7 @@ describe('ReactCache', () => {
 
       // Now resolve the second tree
       await ReactNoop.act(async () => {
-        resolveText('A');
+        resolveMostRecentTextCache('A');
       });
       expect(Scheduler).toHaveYielded(['A [v2]']);
       expect(root).toMatchRenderedOutput('A [v2] A [v1] B [v1]');
@@ -769,7 +763,7 @@ describe('ReactCache', () => {
     function Child({text}) {
       return (
         <Cache>
-          <AsyncText text={text} />
+          <AsyncText showVersion={true} text={text} />
         </Cache>
       );
     }
@@ -813,10 +807,10 @@ describe('ReactCache', () => {
 
     // Resolve the request
     await ReactNoop.act(async () => {
-      await resolveText('A');
+      resolveMostRecentTextCache('A');
     });
-    expect(Scheduler).toHaveYielded(['A', 'A']);
-    expect(root).toMatchRenderedOutput('AA');
+    expect(Scheduler).toHaveYielded(['A [v1]', 'A [v1]']);
+    expect(root).toMatchRenderedOutput('A [v1]A [v1]');
 
     // Now do another transition
     await ReactNoop.act(async () => {
@@ -832,16 +826,19 @@ describe('ReactCache', () => {
     });
     expect(Scheduler).toHaveYielded([
       // First two children use the old cache because they already finished
-      'A',
-      'A',
+      'A [v1]',
+      'A [v1]',
       // The new child uses a fresh cache
       'Cache miss! [A]',
       'Loading...',
-      'A',
-      'A',
-      'A',
     ]);
-    expect(root).toMatchRenderedOutput('AAA');
+    expect(root).toMatchRenderedOutput('A [v1]A [v1]');
+
+    await ReactNoop.act(async () => {
+      resolveMostRecentTextCache('A');
+    });
+    expect(Scheduler).toHaveYielded(['A [v1]', 'A [v1]', 'A [v2]']);
+    expect(root).toMatchRenderedOutput('A [v1]A [v1]A [v2]');
   });
 
   // @gate experimental
@@ -907,8 +904,7 @@ describe('ReactCache', () => {
     expect(root).toMatchRenderedOutput('1');
 
     await ReactNoop.act(async () => {
-      resolveText('A');
-      mutateRemoteTextService();
+      resolveMostRecentTextCache('A');
     });
     expect(Scheduler).toHaveYielded(['A']);
     expect(root).toMatchRenderedOutput('A1');

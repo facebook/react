@@ -19,6 +19,11 @@ let Scheduler;
 let Suspense;
 let act;
 
+// Copied from ReactFiberLanes. Don't do this!
+// This is hard coded directly to avoid needing to import, and
+// we'll remove this as we replace runWithPriority with React APIs.
+export const IdleLanePriority = 2;
+
 function dispatchMouseHoverEvent(to, from) {
   if (!to) {
     to = null;
@@ -90,6 +95,21 @@ function dispatchClickEvent(target) {
     target,
   );
   return target.dispatchEvent(mouseOutEvent);
+}
+
+// TODO: There's currently no React DOM API to opt into Idle priority updates,
+// and there's no native DOM event that maps to idle priority, so this is a
+// temporary workaround. Need something like ReactDOM.unstable_IdleUpdates.
+function TODO_scheduleIdleDOMSchedulerTask(fn) {
+  ReactDOM.unstable_runWithPriority(IdleLanePriority, () => {
+    const prevEvent = window.event;
+    window.event = {type: 'message'};
+    try {
+      fn();
+    } finally {
+      window.event = prevEvent;
+    }
+  });
 }
 
 describe('ReactDOMServerSelectiveHydration', () => {
@@ -889,12 +909,10 @@ describe('ReactDOMServerSelectiveHydration', () => {
       expect(Scheduler).toFlushAndYieldThrough(['App', 'Commit']);
 
       // Render an update at Idle priority that needs to update A.
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_IdlePriority,
-        () => {
-          root.render(<App a="AA" />);
-        },
-      );
+
+      TODO_scheduleIdleDOMSchedulerTask(() => {
+        root.render(<App a="AA" />);
+      });
 
       // Start rendering. This will force the first boundary to hydrate
       // by scheduling it at one higher pri than Idle.

@@ -17,7 +17,7 @@ export const warnAboutSpreadingKeyToJSX = __VARIANT__;
 export const disableInputAttributeSyncing = __VARIANT__;
 export const enableFilterEmptyStringAttributesDOM = __VARIANT__;
 export const enableLegacyFBSupport = __VARIANT__;
-export const decoupleUpdatePriorityFromScheduler = __VARIANT__;
+export const skipUnmountedBoundaries = __VARIANT__;
 
 // Enable this flag to help with concurrent mode debugging.
 // It logs information to the console about React scheduling, rendering, and commit phases.
@@ -49,8 +49,11 @@ export const enableTrustedTypesIntegration = false;
 export const disableSchedulerTimeoutBasedOnReactExpirationTime = false;
 export const disableNativeComponentFrames = false;
 
-export const enableDoubleInvokingEffects = false;
+export const createRootStrictEffectsByDefault = false;
+export const enableStrictEffects = false;
 export const enableUseRefAccessWarning = __VARIANT__;
 
 export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
+export const enableSyncMicroTasks = __VARIANT__;
+export const enableLazyContextPropagation = __VARIANT__;

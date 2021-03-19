@@ -28,6 +28,7 @@ let onWorkStopped;
 // This is hard coded directly to avoid needing to import, and
 // we'll remove this as we replace runWithPriority with React APIs.
 const IdleLanePriority = 2;
+const InputContinuousPriority = 10;
 
 function loadModules() {
   ReactFeatureFlags = require('shared/ReactFeatureFlags');
@@ -152,7 +153,7 @@ describe('ReactDOMTracing', () => {
           onInteractionScheduledWorkCompleted,
         ).toHaveBeenLastNotifiedOfInteraction(interaction);
 
-        if (gate(flags => flags.dfsEffectsRefactor)) {
+        if (gate(flags => flags.enableUseJSStackToTrackPassiveDurations)) {
           expect(onRender).toHaveBeenCalledTimes(3);
         } else {
           // TODO: This is 4 instead of 3 because this update was scheduled at
@@ -245,12 +246,8 @@ describe('ReactDOMTracing', () => {
               Scheduler.unstable_yieldValue('Child:update');
             } else {
               Scheduler.unstable_yieldValue('Child:mount');
-              // TODO: Double wrapping is temporary while we remove Scheduler runWithPriority.
               ReactDOM.unstable_runWithPriority(IdleLanePriority, () =>
-                Scheduler.unstable_runWithPriority(
-                  Scheduler.unstable_IdlePriority,
-                  () => setDidMount(true),
-                ),
+                setDidMount(true),
               );
             }
           }, [didMount]);
@@ -310,7 +307,7 @@ describe('ReactDOMTracing', () => {
         expect(
           onInteractionScheduledWorkCompleted,
         ).toHaveBeenLastNotifiedOfInteraction(interaction);
-        if (gate(flags => flags.dfsEffectsRefactor)) {
+        if (gate(flags => flags.enableUseJSStackToTrackPassiveDurations)) {
           expect(onRender).toHaveBeenCalledTimes(3);
         } else {
           // TODO: This is 4 instead of 3 because this update was scheduled at
@@ -502,9 +499,8 @@ describe('ReactDOMTracing', () => {
           let interaction = null;
           SchedulerTracing.unstable_trace('update', 0, () => {
             interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
-            Scheduler.unstable_runWithPriority(
-              Scheduler.unstable_UserBlockingPriority,
-              () => scheduleUpdateWithHidden(),
+            ReactDOM.unstable_runWithPriority(InputContinuousPriority, () =>
+              scheduleUpdateWithHidden(),
             );
           });
           scheduleUpdate();
@@ -610,10 +606,9 @@ describe('ReactDOMTracing', () => {
           // Schedule an unrelated low priority update that shouldn't be included
           // in the previous interaction. This is meant to ensure that we don't
           // rely on the whole tree completing to cover up bugs.
-          Scheduler.unstable_runWithPriority(
-            Scheduler.unstable_IdlePriority,
-            () => root.render(<App />),
-          );
+          ReactDOM.unstable_runWithPriority(IdleLanePriority, () => {
+            root.render(<App />);
+          });
 
           expect(onInteractionTraced).toHaveBeenCalledTimes(1);
           expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(

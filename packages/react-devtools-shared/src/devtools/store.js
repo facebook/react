@@ -101,7 +101,7 @@ export default class Store extends EventEmitter<{|
 
   // Map of ID to (mutable) Element.
   // Elements are mutated to avoid excessive cloning during tree updates.
-  // The InspectedElementContext also relies on this mutability for its WeakMap usage.
+  // The InspectedElement Suspense cache also relies on this mutability for its WeakMap usage.
   _idToElement: Map<number, Element> = new Map();
 
   // Should the React Native style editor panel be shown?
@@ -110,6 +110,12 @@ export default class Store extends EventEmitter<{|
   // Can the backend use the Storage API (e.g. localStorage)?
   // If not, features like reload-and-profile will not work correctly and must be disabled.
   _isBackendStorageAPISupported: boolean = false;
+
+  // Can DevTools use sync XHR requests?
+  // If not, features like reload-and-profile will not work correctly and must be disabled.
+  // This current limitation applies only to web extension builds
+  // and will need to be reconsidered in the future if we add support for reload to React Native.
+  _isSynchronousXHRSupported: boolean = false;
 
   _nativeStyleEditorValidAttributes: $ReadOnlyArray<string> | null = null;
 
@@ -195,11 +201,15 @@ export default class Store extends EventEmitter<{|
     bridge.addListener('shutdown', this.onBridgeShutdown);
     bridge.addListener(
       'isBackendStorageAPISupported',
-      this.onBridgeStorageSupported,
+      this.onBackendStorageAPISupported,
     );
     bridge.addListener(
       'isNativeStyleEditorSupported',
       this.onBridgeNativeStyleEditorSupported,
+    );
+    bridge.addListener(
+      'isSynchronousXHRSupported',
+      this.onBridgeSynchronousXHRSupported,
     );
     bridge.addListener(
       'unsupportedRendererVersion',
@@ -359,11 +369,16 @@ export default class Store extends EventEmitter<{|
   get supportsProfiling(): boolean {
     return this._supportsProfiling;
   }
+
   get supportsReloadAndProfile(): boolean {
     // Does the DevTools shell support reloading and eagerly injecting the renderer interface?
-    // And if so, can the backend use the localStorage API?
-    // Both of these are required for the reload-and-profile feature to work.
-    return this._supportsReloadAndProfile && this._isBackendStorageAPISupported;
+    // And if so, can the backend use the localStorage API and sync XHR?
+    // All of these are currently required for the reload-and-profile feature to work.
+    return (
+      this._supportsReloadAndProfile &&
+      this._isBackendStorageAPISupported &&
+      this._isSynchronousXHRSupported
+    );
   }
 
   get supportsTraceUpdates(): boolean {
@@ -376,42 +391,6 @@ export default class Store extends EventEmitter<{|
 
   get warningCount(): number {
     return this._cachedWarningCount;
-  }
-
-  clearErrorsAndWarnings(): void {
-    this._rootIDToRendererID.forEach(rendererID => {
-      this._bridge.send('clearErrorsAndWarnings', {
-        rendererID,
-      });
-    });
-  }
-
-  clearErrorsForElement(id: number): void {
-    const rendererID = this.getRendererIDForElement(id);
-    if (rendererID === null) {
-      console.warn(
-        `Unable to find rendererID for element ${id} when clearing errors.`,
-      );
-    } else {
-      this._bridge.send('clearErrorsForFiberID', {
-        rendererID,
-        id,
-      });
-    }
-  }
-
-  clearWarningsForElement(id: number): void {
-    const rendererID = this.getRendererIDForElement(id);
-    if (rendererID === null) {
-      console.warn(
-        `Unable to find rendererID for element ${id} when clearing warnings.`,
-      );
-    } else {
-      this._bridge.send('clearWarningsForFiberID', {
-        rendererID,
-        id,
-      });
-    }
   }
 
   containsElement(id: number): boolean {
@@ -1166,16 +1145,39 @@ export default class Store extends EventEmitter<{|
       debug('onBridgeShutdown', 'unsubscribing from Bridge');
     }
 
-    this._bridge.removeListener('operations', this.onBridgeOperations);
-    this._bridge.removeListener('shutdown', this.onBridgeShutdown);
-    this._bridge.removeListener(
+    const bridge = this._bridge;
+    bridge.removeListener('operations', this.onBridgeOperations);
+    bridge.removeListener(
+      'overrideComponentFilters',
+      this.onBridgeOverrideComponentFilters,
+    );
+    bridge.removeListener('shutdown', this.onBridgeShutdown);
+    bridge.removeListener(
       'isBackendStorageAPISupported',
-      this.onBridgeStorageSupported,
+      this.onBackendStorageAPISupported,
+    );
+    bridge.removeListener(
+      'isNativeStyleEditorSupported',
+      this.onBridgeNativeStyleEditorSupported,
+    );
+    bridge.removeListener(
+      'isSynchronousXHRSupported',
+      this.onBridgeSynchronousXHRSupported,
+    );
+    bridge.removeListener(
+      'unsupportedRendererVersion',
+      this.onBridgeUnsupportedRendererVersion,
     );
   };
 
-  onBridgeStorageSupported = (isBackendStorageAPISupported: boolean) => {
+  onBackendStorageAPISupported = (isBackendStorageAPISupported: boolean) => {
     this._isBackendStorageAPISupported = isBackendStorageAPISupported;
+
+    this.emit('supportsReloadAndProfile');
+  };
+
+  onBridgeSynchronousXHRSupported = (isSynchronousXHRSupported: boolean) => {
+    this._isSynchronousXHRSupported = isSynchronousXHRSupported;
 
     this.emit('supportsReloadAndProfile');
   };

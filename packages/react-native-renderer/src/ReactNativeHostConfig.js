@@ -10,6 +10,7 @@
 import type {TouchedViewDataAtPoint} from './ReactNativeTypes';
 
 import invariant from 'shared/invariant';
+import {enableNewReconciler} from 'shared/ReactFeatureFlags';
 
 // Modules provided by RN:
 import {
@@ -25,6 +26,13 @@ import {
   updateFiberProps,
 } from './ReactNativeComponentTree';
 import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
+
+import {DefaultLanePriority as DefaultLanePriority_old} from 'react-reconciler/src/ReactFiberLane.old';
+import {DefaultLanePriority as DefaultLanePriority_new} from 'react-reconciler/src/ReactFiberLane.new';
+
+const DefaultLanePriority = enableNewReconciler
+  ? DefaultLanePriority_new
+  : DefaultLanePriority_old;
 
 const {get: getViewConfigForType} = ReactNativeViewConfigRegistry;
 
@@ -89,6 +97,7 @@ export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoScopes';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
 
 export function appendInitialChild(
   parentInstance: Instance,
@@ -256,6 +265,10 @@ export function shouldSetTextContent(type: string, props: Props): boolean {
   // It's not clear to me which is better so I'm deferring for now.
   // More context @ github.com/facebook/react/pull/8560#discussion_r92111303
   return false;
+}
+
+export function getCurrentEventPriority(): * {
+  return DefaultLanePriority;
 }
 
 // -------------------
@@ -489,26 +502,6 @@ export function unhideTextInstance(
   textInstance: TextInstance,
   text: string,
 ): void {
-  throw new Error('Not yet implemented.');
-}
-
-export function getFundamentalComponentInstance(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function mountFundamentalComponent(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function shouldUpdateFundamentalComponent(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function updateFundamentalComponent(fundamentalInstance: any) {
-  throw new Error('Not yet implemented.');
-}
-
-export function unmountFundamentalComponent(fundamentalInstance: any) {
   throw new Error('Not yet implemented.');
 }
 

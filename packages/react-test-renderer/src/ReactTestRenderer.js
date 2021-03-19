@@ -43,7 +43,7 @@ import {
   ScopeComponent,
 } from 'react-reconciler/src/ReactWorkTags';
 import invariant from 'shared/invariant';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactVersion from 'shared/ReactVersion';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
@@ -56,6 +56,7 @@ const {IsSomeRendererActing} = ReactSharedInternals;
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
   unstable_isConcurrent: boolean,
+  unstable_strictModeLevel: number,
   ...
 };
 
@@ -343,7 +344,7 @@ class ReactTestInstance {
   findByType(type: any): ReactTestInstance {
     return expectOne(
       this.findAllByType(type, {deep: false}),
-      `with node type: "${getComponentName(type) || 'Unknown'}"`,
+      `with node type: "${getComponentNameFromType(type) || 'Unknown'}"`,
     );
   }
 
@@ -433,12 +434,16 @@ function propsMatch(props: Object, filter: Object): boolean {
 function create(element: React$Element<any>, options: TestRendererOptions) {
   let createNodeMock = defaultTestOptions.createNodeMock;
   let isConcurrent = false;
+  let strictModeLevel = null;
   if (typeof options === 'object' && options !== null) {
     if (typeof options.createNodeMock === 'function') {
       createNodeMock = options.createNodeMock;
     }
     if (options.unstable_isConcurrent === true) {
       isConcurrent = true;
+    }
+    if (options.unstable_strictModeLevel !== undefined) {
+      strictModeLevel = options.unstable_strictModeLevel;
     }
   }
   let container = {
@@ -451,6 +456,7 @@ function create(element: React$Element<any>, options: TestRendererOptions) {
     isConcurrent ? ConcurrentRoot : LegacyRoot,
     false,
     null,
+    strictModeLevel,
   );
   invariant(root != null, 'something went wrong');
   updateContainer(element, root, null, null);

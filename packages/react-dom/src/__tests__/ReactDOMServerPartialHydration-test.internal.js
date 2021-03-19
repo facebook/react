@@ -18,6 +18,11 @@ let Suspense;
 let SuspenseList;
 let act;
 
+// Copied from ReactFiberLanes. Don't do this!
+// This is hard coded directly to avoid needing to import, and
+// we'll remove this as we replace runWithPriority with React APIs.
+export const IdleLanePriority = 2;
+
 function dispatchMouseEvent(to, from) {
   if (!to) {
     to = null;
@@ -352,7 +357,7 @@ describe('ReactDOMServerPartialHydration', () => {
     }).toErrorDev(
       'Warning: Cannot hydrate Suspense in legacy mode. Switch from ' +
         'ReactDOM.hydrate(element, container) to ' +
-        'ReactDOM.createBlockingRoot(container, { hydrate: true })' +
+        'ReactDOM.createRoot(container, { hydrate: true })' +
         '.render(element) or remove the Suspense components from the server ' +
         'rendered components.' +
         '\n    in Suspense (at **)' +
@@ -380,6 +385,7 @@ describe('ReactDOMServerPartialHydration', () => {
     resolve();
     await promise;
     Scheduler.unstable_flushAll();
+    await null;
     jest.runAllTimers();
 
     // We should now have hydrated with a ref on the existing span.
@@ -622,7 +628,7 @@ describe('ReactDOMServerPartialHydration', () => {
     expect(span.textContent).toBe('Hello');
 
     // Schedule an update at idle priority
-    Scheduler.unstable_runWithPriority(Scheduler.unstable_IdlePriority, () => {
+    ReactDOM.unstable_runWithPriority(IdleLanePriority, () => {
       root.render(<App text="Hi" className="hi" />);
     });
 

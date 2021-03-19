@@ -14,7 +14,7 @@ describe('ReactDOMTestSelectors', () => {
 
   let act;
   let createComponentSelector;
-  let createHasPsuedoClassSelector;
+  let createHasPseudoClassSelector;
   let createRoleSelector;
   let createTextSelector;
   let createTestNameSelector;
@@ -35,7 +35,7 @@ describe('ReactDOMTestSelectors', () => {
     const ReactDOM = require('react-dom/testing');
     act = ReactDOM.act;
     createComponentSelector = ReactDOM.createComponentSelector;
-    createHasPsuedoClassSelector = ReactDOM.createHasPsuedoClassSelector;
+    createHasPseudoClassSelector = ReactDOM.createHasPseudoClassSelector;
     createRoleSelector = ReactDOM.createRoleSelector;
     createTextSelector = ReactDOM.createTextSelector;
     createTestNameSelector = ReactDOM.createTestNameSelector;
@@ -454,7 +454,7 @@ describe('ReactDOMTestSelectors', () => {
       const matches = findAllNodes(document.body, [
         createComponentSelector(Example),
         createRoleSelector('article'),
-        createHasPsuedoClassSelector([
+        createHasPseudoClassSelector([
           createRoleSelector('heading'),
           createTextSelector('Should match'),
         ]),

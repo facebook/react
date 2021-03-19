@@ -75,11 +75,13 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
                 ? new Map(commitDataBackend.changeDescriptions)
                 : null,
             duration: commitDataBackend.duration,
+            effectDuration: commitDataBackend.effectDuration,
             fiberActualDurations: new Map(
               commitDataBackend.fiberActualDurations,
             ),
             fiberSelfDurations: new Map(commitDataBackend.fiberSelfDurations),
             interactionIDs: commitDataBackend.interactionIDs,
+            passiveEffectDuration: commitDataBackend.passiveEffectDuration,
             priorityLevel: commitDataBackend.priorityLevel,
             timestamp: commitDataBackend.timestamp,
           }),
@@ -129,18 +131,22 @@ export function prepareProfilingDataFrontendFromExport(
           ({
             changeDescriptions,
             duration,
+            effectDuration,
             fiberActualDurations,
             fiberSelfDurations,
             interactionIDs,
+            passiveEffectDuration,
             priorityLevel,
             timestamp,
           }) => ({
             changeDescriptions:
               changeDescriptions != null ? new Map(changeDescriptions) : null,
             duration,
+            effectDuration,
             fiberActualDurations: new Map(fiberActualDurations),
             fiberSelfDurations: new Map(fiberSelfDurations),
             interactionIDs,
+            passiveEffectDuration,
             priorityLevel,
             timestamp,
           }),
@@ -180,9 +186,11 @@ export function prepareProfilingDataExport(
           ({
             changeDescriptions,
             duration,
+            effectDuration,
             fiberActualDurations,
             fiberSelfDurations,
             interactionIDs,
+            passiveEffectDuration,
             priorityLevel,
             timestamp,
           }) => ({
@@ -191,9 +199,11 @@ export function prepareProfilingDataExport(
                 ? Array.from(changeDescriptions.entries())
                 : null,
             duration,
+            effectDuration,
             fiberActualDurations: Array.from(fiberActualDurations.entries()),
             fiberSelfDurations: Array.from(fiberSelfDurations.entries()),
             interactionIDs,
+            passiveEffectDuration,
             priorityLevel,
             timestamp,
           }),

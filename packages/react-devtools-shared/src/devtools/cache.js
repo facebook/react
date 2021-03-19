@@ -12,6 +12,8 @@ import type {Thenable} from 'shared/ReactTypes';
 import * as React from 'react';
 import {createContext} from 'react';
 
+// TODO (cache) Remove this cache; it is outdated and will not work with newer APIs like startTransition.
+
 // Cache implementation was forked from the React repo:
 // https://github.com/facebook/react/blob/master/packages/react-cache/src/ReactCache.js
 //

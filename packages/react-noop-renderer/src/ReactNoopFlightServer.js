@@ -27,20 +27,18 @@ const ReactNoopFlightServer = ReactFlightServer({
     callback();
   },
   beginWriting(destination: Destination): void {},
-  writeChunk(destination: Destination, buffer: Uint8Array): void {
-    destination.push(Buffer.from((buffer: any)).toString('utf8'));
+  writeChunk(destination: Destination, chunk: string): void {
+    destination.push(chunk);
   },
   completeWriting(destination: Destination): void {},
   close(destination: Destination): void {},
+  closeWithError(destination: Destination, error: mixed): void {},
   flushBuffered(destination: Destination): void {},
-  convertStringToBuffer(content: string): Uint8Array {
-    return Buffer.from(content, 'utf8');
+  stringToChunk(content: string): string {
+    return content;
   },
-  formatChunkAsString(type: string, props: Object): string {
-    return JSON.stringify({type, props});
-  },
-  formatChunk(type: string, props: Object): Uint8Array {
-    return Buffer.from(JSON.stringify({type, props}), 'utf8');
+  stringToPrecomputedChunk(content: string): string {
+    return content;
   },
   isModuleReference(reference: Object): boolean {
     return reference.$$typeof === Symbol.for('react.module.reference');

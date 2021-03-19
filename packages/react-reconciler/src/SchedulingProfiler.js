@@ -11,9 +11,19 @@ import type {Lane, Lanes} from './ReactFiberLane.old';
 import type {Fiber} from './ReactInternalTypes';
 import type {Wakeable} from 'shared/ReactTypes';
 
-import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
+import {
+  enableNewReconciler,
+  enableSchedulingProfiler,
+} from 'shared/ReactFeatureFlags';
 import ReactVersion from 'shared/ReactVersion';
-import getComponentName from 'shared/getComponentName';
+import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
+
+import {getLabelsForLanes as getLabelsForLanes_old} from 'react-reconciler/src/ReactFiberLane.old';
+import {getLabelsForLanes as getLabelsForLanes_new} from 'react-reconciler/src/ReactFiberLane.new';
+
+const getLabelsForLanes = enableNewReconciler
+  ? getLabelsForLanes_new
+  : getLabelsForLanes_old;
 
 /**
  * If performance exists and supports the subset of the User Timing API that we
@@ -49,8 +59,14 @@ if (enableSchedulingProfiler) {
   }
 }
 
-function formatLanes(laneOrLanes: Lane | Lanes): string {
-  return ((laneOrLanes: any): number).toString();
+export function formatLanes(laneOrLanes: Lane | Lanes): string {
+  let labels = getLabelsForLanes(laneOrLanes);
+  if (labels != null) {
+    labels = labels.sort().join(',');
+  } else {
+    labels = '';
+  }
+  return `${laneOrLanes}-${labels}`;
 }
 
 function markAndClear(name) {
@@ -97,7 +113,7 @@ export function markComponentSuspended(fiber: Fiber, wakeable: Wakeable): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTimingV3) {
       const id = getWakeableID(wakeable);
-      const componentName = getComponentName(fiber.type) || 'Unknown';
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
       // TODO Add component stack id
       markAndClear(`--suspense-suspend-${id}-${componentName}`);
       wakeable.then(
@@ -175,7 +191,7 @@ export function markRenderScheduled(lane: Lane): void {
 export function markForceUpdateScheduled(fiber: Fiber, lane: Lane): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTimingV3) {
-      const componentName = getComponentName(fiber.type) || 'Unknown';
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
       // TODO Add component stack id
       markAndClear(
         `--schedule-forced-update-${formatLanes(lane)}-${componentName}`,
@@ -187,7 +203,7 @@ export function markForceUpdateScheduled(fiber: Fiber, lane: Lane): void {
 export function markStateUpdateScheduled(fiber: Fiber, lane: Lane): void {
   if (enableSchedulingProfiler) {
     if (supportsUserTimingV3) {
-      const componentName = getComponentName(fiber.type) || 'Unknown';
+      const componentName = getComponentNameFromFiber(fiber) || 'Unknown';
       // TODO Add component stack id
       markAndClear(
         `--schedule-state-update-${formatLanes(lane)}-${componentName}`,

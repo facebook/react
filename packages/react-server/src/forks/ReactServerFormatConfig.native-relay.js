@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from '../ReactNativeServerFormatConfig';
+export * from 'react-native-renderer/src/server/ReactNativeServerFormatConfig';

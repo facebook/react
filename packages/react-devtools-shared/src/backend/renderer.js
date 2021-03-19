@@ -79,6 +79,7 @@ import {
   MEMO_SYMBOL_STRING,
 } from './ReactSymbols';
 import {format} from './utils';
+import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -103,6 +104,7 @@ import type {
   ComponentFilter,
   ElementType,
 } from 'react-devtools-shared/src/types';
+import is from 'shared/objectIs';
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
 type getTypeSymbolType = (type: any) => Symbol | number;
@@ -625,6 +627,14 @@ export function attach(
 
     // If this Fiber is currently being inspected, mark it as needing an udpate as well.
     updateMostRecentlyInspectedElementIfNecessary(fiberID);
+
+    // Passive effects may trigger errors or warnings too;
+    // In this case, we should wait until the rest of the passive effects have run,
+    // but we shouldn't wait until the next commit because that might be a long time.
+    // This would also cause "tearing" between an inspected Component and the tree view.
+    // Then again we don't want to flush too soon because this could be an error during async rendering.
+    // Use a debounce technique to ensure that we'll eventually flush.
+    flushPendingErrorsAndWarningsAfterDelay();
   }
 
   // Patching the console enables DevTools to do a few useful things:
@@ -644,7 +654,11 @@ export function attach(
       window.__REACT_DEVTOOLS_BREAK_ON_CONSOLE_ERRORS__ === true;
     const showInlineWarningsAndErrors =
       window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ !== false;
-    if (appendComponentStack || breakOnConsoleErrors) {
+    if (
+      appendComponentStack ||
+      breakOnConsoleErrors ||
+      showInlineWarningsAndErrors
+    ) {
       patchConsole({
         appendComponentStack,
         breakOnConsoleErrors,
@@ -965,12 +979,9 @@ export function attach(
             state: null,
           };
         } else {
-          return {
+          const data: ChangeDescription = {
             context: getContextChangedKeys(nextFiber),
-            didHooksChange: didHooksChange(
-              prevFiber.memoizedState,
-              nextFiber.memoizedState,
-            ),
+            didHooksChange: false,
             isFirstMount: false,
             props: getChangedKeys(
               prevFiber.memoizedProps,
@@ -981,6 +992,23 @@ export function attach(
               nextFiber.memoizedState,
             ),
           };
+
+          // Only traverse the hooks list once, depending on what info we're returning.
+          if (enableProfilerChangedHookIndices) {
+            const indices = getChangedHooksIndices(
+              prevFiber.memoizedState,
+              nextFiber.memoizedState,
+            );
+            data.hooks = indices;
+            data.didHooksChange = indices !== null && indices.length > 0;
+          } else {
+            data.didHooksChange = didHooksChange(
+              prevFiber.memoizedState,
+              nextFiber.memoizedState,
+            );
+          }
+
+          return data;
         }
       default:
         return null;
@@ -1073,6 +1101,49 @@ export function attach(
     return null;
   }
 
+  function areHookInputsEqual(
+    nextDeps: Array<mixed>,
+    prevDeps: Array<mixed> | null,
+  ) {
+    if (prevDeps === null) {
+      return false;
+    }
+
+    for (let i = 0; i < prevDeps.length && i < nextDeps.length; i++) {
+      if (is(nextDeps[i], prevDeps[i])) {
+        continue;
+      }
+      return false;
+    }
+    return true;
+  }
+
+  function isEffect(memoizedState) {
+    return (
+      memoizedState !== null &&
+      typeof memoizedState === 'object' &&
+      memoizedState.hasOwnProperty('tag') &&
+      memoizedState.hasOwnProperty('create') &&
+      memoizedState.hasOwnProperty('destroy') &&
+      memoizedState.hasOwnProperty('deps') &&
+      (memoizedState.deps === null || Array.isArray(memoizedState.deps)) &&
+      memoizedState.hasOwnProperty('next')
+    );
+  }
+
+  function didHookChange(prev: any, next: any): boolean {
+    const prevMemoizedState = prev.memoizedState;
+    const nextMemoizedState = next.memoizedState;
+
+    if (isEffect(prevMemoizedState) && isEffect(nextMemoizedState)) {
+      return (
+        prevMemoizedState !== nextMemoizedState &&
+        !areHookInputsEqual(nextMemoizedState.deps, prevMemoizedState.deps)
+      );
+    }
+    return nextMemoizedState !== prevMemoizedState;
+  }
+
   function didHooksChange(prev: any, next: any): boolean {
     if (prev == null || next == null) {
       return false;
@@ -1086,7 +1157,7 @@ export function attach(
       next.hasOwnProperty('queue')
     ) {
       while (next !== null) {
-        if (next.memoizedState !== prev.memoizedState) {
+        if (didHookChange(prev, next)) {
           return true;
         } else {
           next = next.next;
@@ -1096,6 +1167,36 @@ export function attach(
     }
 
     return false;
+  }
+
+  function getChangedHooksIndices(prev: any, next: any): null | Array<number> {
+    if (enableProfilerChangedHookIndices) {
+      if (prev == null || next == null) {
+        return null;
+      }
+
+      const indices = [];
+      let index = 0;
+      if (
+        next.hasOwnProperty('baseState') &&
+        next.hasOwnProperty('memoizedState') &&
+        next.hasOwnProperty('next') &&
+        next.hasOwnProperty('queue')
+      ) {
+        while (next !== null) {
+          if (didHookChange(prev, next)) {
+            indices.push(index);
+          }
+          next = next.next;
+          prev = prev.next;
+          index++;
+        }
+      }
+
+      return indices;
+    }
+
+    return null;
   }
 
   function getChangedKeys(prev: any, next: any): null | Array<string> {
@@ -1150,10 +1251,12 @@ export function attach(
     }
   }
 
-  const pendingOperations: Array<number> = [];
+  type OperationsArray = Array<number>;
+
+  const pendingOperations: OperationsArray = [];
   const pendingRealUnmountedIDs: Array<number> = [];
   const pendingSimulatedUnmountedIDs: Array<number> = [];
-  let pendingOperationsQueue: Array<Array<number>> | null = [];
+  let pendingOperationsQueue: Array<OperationsArray> | null = [];
   const pendingStringTable: Map<string, number> = new Map();
   let pendingStringTableLength: number = 0;
   let pendingUnmountedRootID: number | null = null;
@@ -1170,6 +1273,61 @@ export function attach(
     pendingOperations.push(op);
   }
 
+  function flushOrQueueOperations(operations: OperationsArray): void {
+    if (pendingOperationsQueue !== null) {
+      pendingOperationsQueue.push(operations);
+    } else {
+      hook.emit('operations', operations);
+    }
+  }
+
+  let flushPendingErrorsAndWarningsAfterDelayTimeoutID = null;
+
+  function clearPendingErrorsAndWarningsAfterDelay() {
+    if (flushPendingErrorsAndWarningsAfterDelayTimeoutID !== null) {
+      clearTimeout(flushPendingErrorsAndWarningsAfterDelayTimeoutID);
+      flushPendingErrorsAndWarningsAfterDelayTimeoutID = null;
+    }
+  }
+
+  function flushPendingErrorsAndWarningsAfterDelay() {
+    clearPendingErrorsAndWarningsAfterDelay();
+
+    flushPendingErrorsAndWarningsAfterDelayTimeoutID = setTimeout(() => {
+      flushPendingErrorsAndWarningsAfterDelayTimeoutID = null;
+
+      if (pendingOperations.length > 0) {
+        // On the off chance that something else has pushed pending operations,
+        // we should bail on warnings; it's probably not safe to push midway.
+        return;
+      }
+
+      recordPendingErrorsAndWarnings();
+
+      if (pendingOperations.length === 0) {
+        // No warnings or errors to flush; we can bail out early here too.
+        return;
+      }
+
+      // We can create a smaller operations array than flushPendingEvents()
+      // because we only need to flush warning and error counts.
+      // Only a few pieces of fixed information are required up front.
+      const operations: OperationsArray = new Array(
+        3 + pendingOperations.length,
+      );
+      operations[0] = rendererID;
+      operations[1] = currentRootID;
+      operations[2] = 0; // String table size
+      for (let j = 0; j < pendingOperations.length; j++) {
+        operations[3 + j] = pendingOperations[j];
+      }
+
+      flushOrQueueOperations(operations);
+
+      pendingOperations.length = 0;
+    }, 1000);
+  }
+
   function reevaluateErrorsAndWarnings() {
     fibersWithChangedErrorOrWarningCounts.clear();
     fiberToErrorsMap.forEach((countMap, fiberID) => {
@@ -1182,6 +1340,8 @@ export function attach(
   }
 
   function recordPendingErrorsAndWarnings() {
+    clearPendingErrorsAndWarningsAfterDelay();
+
     fibersWithChangedErrorOrWarningCounts.forEach(fiberID => {
       const fiber = idToFiberMap.get(fiberID);
       if (fiber != null) {
@@ -1271,7 +1431,7 @@ export function attach(
     // Which in turn enables fiber props, states, and hooks to be inspected.
     let i = 0;
     operations[i++] = rendererID;
-    operations[i++] = currentRootID; // Use this ID in case the root was unmounted!
+    operations[i++] = currentRootID;
 
     // Now fill in the string table.
     // [stringTableLength, str1Length, ...str1, str2Length, ...str2, ...]
@@ -1318,18 +1478,9 @@ export function attach(
     i += pendingOperations.length;
 
     // Let the frontend know about tree operations.
-    // The first value in this array will identify which root it corresponds to,
-    // so we do no longer need to dispatch a separate root-committed event.
-    if (pendingOperationsQueue !== null) {
-      // Until the frontend has been connected, store the tree operations.
-      // This will let us avoid walking the tree later when the frontend connects,
-      // and it enables the Profiler's reload-and-profile functionality to work as well.
-      pendingOperationsQueue.push(operations);
-    } else {
-      // If we've already connected to the frontend, just pass the operations through.
-      hook.emit('operations', operations);
-    }
+    flushOrQueueOperations(operations);
 
+    // Reset all of the pending state now that we've told the frontend about it.
     pendingOperations.length = 0;
     pendingRealUnmountedIDs.length = 0;
     pendingSimulatedUnmountedIDs.length = 0;
@@ -1991,6 +2142,25 @@ export function attach(
         // Checking root.memoizedInteractions handles multi-renderer edge-case-
         // where some v16 renderers support profiling and others don't.
         if (isProfiling && root.memoizedInteractions != null) {
+          // Profiling durations are only available for certain builds.
+          // If available, they'll be stored on the HostRoot.
+          let effectDuration = null;
+          let passiveEffectDuration = null;
+          const hostRoot = root.current;
+          if (hostRoot != null) {
+            const stateNode = hostRoot.stateNode;
+            if (stateNode != null) {
+              effectDuration =
+                stateNode.effectDuration != null
+                  ? stateNode.effectDuration
+                  : null;
+              passiveEffectDuration =
+                stateNode.passiveEffectDuration != null
+                  ? stateNode.passiveEffectDuration
+                  : null;
+            }
+          }
+
           // If profiling is active, store commit time and duration, and the current interactions.
           // The frontend may request this information after profiling has stopped.
           currentCommitProfilingMetadata = {
@@ -2005,6 +2175,8 @@ export function attach(
             ),
             maxActualDuration: 0,
             priorityLevel: null,
+            effectDuration,
+            passiveEffectDuration,
           };
         }
 
@@ -2043,6 +2215,23 @@ export function attach(
     const isProfilingSupported = root.memoizedInteractions != null;
 
     if (isProfiling && isProfilingSupported) {
+      // Profiling durations are only available for certain builds.
+      // If available, they'll be stored on the HostRoot.
+      let effectDuration = null;
+      let passiveEffectDuration = null;
+      const hostRoot = root.current;
+      if (hostRoot != null) {
+        const stateNode = hostRoot.stateNode;
+        if (stateNode != null) {
+          effectDuration =
+            stateNode.effectDuration != null ? stateNode.effectDuration : null;
+          passiveEffectDuration =
+            stateNode.passiveEffectDuration != null
+              ? stateNode.passiveEffectDuration
+              : null;
+        }
+      }
+
       // If profiling is active, store commit time and duration, and the current interactions.
       // The frontend may request this information after profiling has stopped.
       currentCommitProfilingMetadata = {
@@ -2058,6 +2247,8 @@ export function attach(
         maxActualDuration: 0,
         priorityLevel:
           priorityLevel == null ? null : formatPriorityLevel(priorityLevel),
+        effectDuration,
+        passiveEffectDuration,
       };
     }
 
@@ -2410,8 +2601,7 @@ export function attach(
     id: number,
     path: Array<string | number>,
   ): void {
-    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
-    if (isCurrent) {
+    if (isMostRecentlyInspectedElement(id)) {
       window.$attribute = getInObject(
         ((mostRecentlyInspectedElement: any): InspectedElement),
         path,
@@ -2720,11 +2910,16 @@ export function attach(
   let hasElementUpdatedSinceLastInspected: boolean = false;
   let currentlyInspectedPaths: Object = {};
 
-  function isMostRecentlyInspectedElementCurrent(id: number): boolean {
+  function isMostRecentlyInspectedElement(id: number): boolean {
     return (
       mostRecentlyInspectedElement !== null &&
-      mostRecentlyInspectedElement.id === id &&
-      !hasElementUpdatedSinceLastInspected
+      mostRecentlyInspectedElement.id === id
+    );
+  }
+
+  function isMostRecentlyInspectedElementCurrent(id: number): boolean {
+    return (
+      isMostRecentlyInspectedElement(id) && !hasElementUpdatedSinceLastInspected
     );
   }
 
@@ -2808,6 +3003,7 @@ export function attach(
         break;
       case ForwardRef:
         global.$r = {
+          hooks,
           props,
           type: type.render,
         };
@@ -2815,6 +3011,7 @@ export function attach(
       case MemoComponent:
       case SimpleMemoComponent:
         global.$r = {
+          hooks,
           props,
           type:
             elementType != null && elementType.type != null
@@ -2833,9 +3030,7 @@ export function attach(
     path: Array<string | number>,
     count: number,
   ): void {
-    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
-
-    if (isCurrent) {
+    if (isMostRecentlyInspectedElement(id)) {
       const value = getInObject(
         ((mostRecentlyInspectedElement: any): InspectedElement),
         path,
@@ -2850,9 +3045,7 @@ export function attach(
   }
 
   function copyElementPath(id: number, path: Array<string | number>): void {
-    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
-
-    if (isCurrent) {
+    if (isMostRecentlyInspectedElement(id)) {
       copyToClipboard(
         getInObject(
           ((mostRecentlyInspectedElement: any): InspectedElement),
@@ -2863,97 +3056,95 @@ export function attach(
   }
 
   function inspectElement(
+    requestID: number,
     id: number,
-    path?: Array<string | number>,
+    path: Array<string | number> | null,
   ): InspectedElementPayload {
-    const isCurrent = isMostRecentlyInspectedElementCurrent(id);
+    if (path !== null) {
+      mergeInspectedPaths(path);
+    }
 
-    if (isCurrent) {
-      if (path != null) {
-        mergeInspectedPaths(path);
+    if (isMostRecentlyInspectedElement(id)) {
+      if (!hasElementUpdatedSinceLastInspected) {
+        if (path !== null) {
+          let secondaryCategory = null;
+          if (path[0] === 'hooks') {
+            secondaryCategory = 'hooks';
+          }
 
-        let secondaryCategory = null;
-        if (path[0] === 'hooks') {
-          secondaryCategory = 'hooks';
-        }
-
-        // If this element has not been updated since it was last inspected,
-        // we can just return the subset of data in the newly-inspected path.
-        return {
-          id,
-          type: 'hydrated-path',
-          path,
-          value: cleanForBridge(
-            getInObject(
-              ((mostRecentlyInspectedElement: any): InspectedElement),
+          // If this element has not been updated since it was last inspected,
+          // we can just return the subset of data in the newly-inspected path.
+          return {
+            id,
+            responseID: requestID,
+            type: 'hydrated-path',
+            path,
+            value: cleanForBridge(
+              getInObject(
+                ((mostRecentlyInspectedElement: any): InspectedElement),
+                path,
+              ),
+              createIsPathAllowed(null, secondaryCategory),
               path,
             ),
-            createIsPathAllowed(null, secondaryCategory),
-            path,
-          ),
-        };
-      } else {
-        // If this element has not been updated since it was last inspected, we don't need to re-run it.
-        // Instead we can just return the ID to indicate that it has not changed.
-        return {
-          id,
-          type: 'no-change',
-        };
+          };
+        } else {
+          // If this element has not been updated since it was last inspected, we don't need to return it.
+          // Instead we can just return the ID to indicate that it has not changed.
+          return {
+            id,
+            responseID: requestID,
+            type: 'no-change',
+          };
+        }
       }
     } else {
-      hasElementUpdatedSinceLastInspected = false;
+      currentlyInspectedPaths = {};
+    }
 
-      if (
-        mostRecentlyInspectedElement === null ||
-        mostRecentlyInspectedElement.id !== id
-      ) {
-        currentlyInspectedPaths = {};
-      }
+    hasElementUpdatedSinceLastInspected = false;
 
-      mostRecentlyInspectedElement = inspectElementRaw(id);
-      if (mostRecentlyInspectedElement === null) {
-        return {
-          id,
-          type: 'not-found',
-        };
-      }
-
-      if (path != null) {
-        mergeInspectedPaths(path);
-      }
-
-      // Any time an inspected element has an update,
-      // we should update the selected $r value as wel.
-      // Do this before dehydration (cleanForBridge).
-      updateSelectedElement(mostRecentlyInspectedElement);
-
-      // Clone before cleaning so that we preserve the full data.
-      // This will enable us to send patches without re-inspecting if hydrated paths are requested.
-      // (Reducing how often we shallow-render is a better DX for function components that use hooks.)
-      const cleanedInspectedElement = {...mostRecentlyInspectedElement};
-      cleanedInspectedElement.context = cleanForBridge(
-        cleanedInspectedElement.context,
-        createIsPathAllowed('context', null),
-      );
-      cleanedInspectedElement.hooks = cleanForBridge(
-        cleanedInspectedElement.hooks,
-        createIsPathAllowed('hooks', 'hooks'),
-      );
-      cleanedInspectedElement.props = cleanForBridge(
-        cleanedInspectedElement.props,
-        createIsPathAllowed('props', null),
-      );
-      cleanedInspectedElement.state = cleanForBridge(
-        cleanedInspectedElement.state,
-        createIsPathAllowed('state', null),
-      );
-
+    mostRecentlyInspectedElement = inspectElementRaw(id);
+    if (mostRecentlyInspectedElement === null) {
       return {
         id,
-        type: 'full-data',
-        value: cleanedInspectedElement,
+        responseID: requestID,
+        type: 'not-found',
       };
     }
+
+    // Any time an inspected element has an update,
+    // we should update the selected $r value as wel.
+    // Do this before dehydration (cleanForBridge).
+    updateSelectedElement(mostRecentlyInspectedElement);
+
+    // Clone before cleaning so that we preserve the full data.
+    // This will enable us to send patches without re-inspecting if hydrated paths are requested.
+    // (Reducing how often we shallow-render is a better DX for function components that use hooks.)
+    const cleanedInspectedElement = {...mostRecentlyInspectedElement};
+    cleanedInspectedElement.context = cleanForBridge(
+      cleanedInspectedElement.context,
+      createIsPathAllowed('context', null),
+    );
+    cleanedInspectedElement.hooks = cleanForBridge(
+      cleanedInspectedElement.hooks,
+      createIsPathAllowed('hooks', 'hooks'),
+    );
+    cleanedInspectedElement.props = cleanForBridge(
+      cleanedInspectedElement.props,
+      createIsPathAllowed('props', null),
+    );
+    cleanedInspectedElement.state = cleanForBridge(
+      cleanedInspectedElement.state,
+      createIsPathAllowed('state', null),
+    );
+
+    return {
+      id,
+      responseID: requestID,
+      type: 'full-data',
+      value: cleanedInspectedElement,
+    };
   }
 
   function logElementToConsole(id) {
@@ -3188,8 +3379,10 @@ export function attach(
     changeDescriptions: Map<number, ChangeDescription> | null,
     commitTime: number,
     durations: Array<number>,
+    effectDuration: number | null,
     interactions: Array<Interaction>,
     maxActualDuration: number,
+    passiveEffectDuration: number | null,
     priorityLevel: string | null,
   |};
 
@@ -3243,8 +3436,10 @@ export function attach(
           const {
             changeDescriptions,
             durations,
+            effectDuration,
             interactions,
             maxActualDuration,
+            passiveEffectDuration,
             priorityLevel,
             commitTime,
           } = commitProfilingData;
@@ -3280,9 +3475,11 @@ export function attach(
                 ? Array.from(changeDescriptions.entries())
                 : null,
             duration: maxActualDuration,
+            effectDuration,
             fiberActualDurations,
             fiberSelfDurations,
             interactionIDs,
+            passiveEffectDuration,
             priorityLevel,
             timestamp: commitTime,
           });
