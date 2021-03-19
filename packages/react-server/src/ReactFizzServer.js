@@ -113,10 +113,27 @@ type Request = {
   partialBoundaries: Array<SuspenseBoundary>, // Partially completed boundaries that can flush its segments early.
 };
 
+// This is a default heuristic for how to split up the HTML content into progressive
+// loading. Our goal is to be able to display additional new content about every 500ms.
+// Faster than that is unnecessary and should be throttled on the client. It also
+// adds unnecessary overhead to do more splits. We don't know if it's a higher or lower
+// end device but higher end suffer less from the overhead than lower end does from
+// not getting small enough pieces. We error on the side of low end.
+// We base this on low end 3G speeds which is about 500kbits per second. We assume
+// that there can be a reasonable drop off from max bandwidth which leaves you with
+// as little as 80%. We can receive half of that each 500ms - at best. In practice,
+// a little bandwidth is lost to processing and contention - e.g. CSS and images that
+// are downloaded along with the main content. So we estimate about half of that to be
+// the lower end throughput. In other words, we expect that you can at least show
+// about 12.5kb of content per 500ms. Not counting starting latency for the first
+// paint.
+// 500 * 1024 / 8 * .8 * 0.5 / 2
+const DEFAULT_MAX_BOUNDARY_SIZE = 12800;
+
 export function createRequest(
   children: ReactNodeList,
   destination: Destination,
-  maxBoundarySize: number = 1024,
+  maxBoundarySize: number = DEFAULT_MAX_BOUNDARY_SIZE,
 ): Request {
   const pingedWork = [];
   const abortSet: Set<SuspendedWork> = new Set();
