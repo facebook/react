@@ -28,7 +28,6 @@ export opaque type Destination = mixed; // eslint-disable-line no-undef
 export opaque type ResponseState = mixed;
 export opaque type SuspenseBoundaryID = mixed;
 
-export const createResponseState = $$$hostConfig.createResponseState;
 export const createSuspenseBoundaryID = $$$hostConfig.createSuspenseBoundaryID;
 export const pushEmpty = $$$hostConfig.pushEmpty;
 export const pushTextInstance = $$$hostConfig.pushTextInstance;

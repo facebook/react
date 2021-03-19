@@ -77,9 +77,6 @@ const ReactNoopServer = ReactFizzServer({
   closeWithError(destination: Destination, error: mixed): void {},
   flushBuffered(destination: Destination): void {},
 
-  createResponseState(): null {
-    return null;
-  },
   createSuspenseBoundaryID(): SuspenseInstance {
     // The ID is a pointer to the boundary itself.
     return {state: 'pending', children: []};
@@ -114,7 +111,11 @@ const ReactNoopServer = ReactFizzServer({
     target.push(POP);
   },
 
-  writePlaceholder(destination: Destination, id: number): boolean {
+  writePlaceholder(
+    destination: Destination,
+    responseState: ResponseState,
+    id: number,
+  ): boolean {
     const parent = destination.stack[destination.stack.length - 1];
     destination.placeholders.set(id, {
       parent: parent,
@@ -153,7 +154,11 @@ const ReactNoopServer = ReactFizzServer({
     destination.stack.pop();
   },
 
-  writeStartSegment(destination: Destination, id: number): boolean {
+  writeStartSegment(
+    destination: Destination,
+    responseState: ResponseState,
+    id: number,
+  ): boolean {
     const segment = {
       children: [],
     };
@@ -227,6 +232,7 @@ function render(children: React$Element<any>, options?: Options): Destination {
   const request = ReactNoopServer.createRequest(
     children,
     destination,
+    null,
     options ? options.progressiveChunkSize : undefined,
   );
   ReactNoopServer.startWork(request);

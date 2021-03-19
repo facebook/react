@@ -24,6 +24,10 @@ import invariant from 'shared/invariant';
 
 // Per response,
 export type ResponseState = {
+  placeholderPrefix: PrecomputedChunk,
+  segmentPrefix: PrecomputedChunk,
+  boundaryPrefix: string,
+  opaqueIdentifierPrefix: PrecomputedChunk,
   nextSuspenseID: number,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
@@ -31,8 +35,14 @@ export type ResponseState = {
 };
 
 // Allows us to keep track of what we've already written so we can refer back to it.
-export function createResponseState(): ResponseState {
+export function createResponseState(
+  identifierPrefix: string = '',
+): ResponseState {
   return {
+    placeholderPrefix: stringToPrecomputedChunk(identifierPrefix + 'P:'),
+    segmentPrefix: stringToPrecomputedChunk(identifierPrefix + 'S:'),
+    boundaryPrefix: identifierPrefix + 'B:',
+    opaqueIdentifierPrefix: stringToPrecomputedChunk(identifierPrefix + 'R:'),
     nextSuspenseID: 0,
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
@@ -68,7 +78,7 @@ function assignAnID(
   // TODO: This approach doesn't yield deterministic results since this is assigned during render.
   const generatedID = responseState.nextSuspenseID++;
   return (id.formattedID = stringToPrecomputedChunk(
-    'B:' + generatedID.toString(16),
+    responseState.boundaryPrefix + generatedID.toString(16),
   ));
 }
 
@@ -160,20 +170,19 @@ export function pushEndInstance(
 // A placeholder is a node inside a hidden partial tree that can be filled in later, but before
 // display. It's never visible to users.
 const placeholder1 = stringToPrecomputedChunk('<span id="');
-const placeholder2 = stringToPrecomputedChunk('P:');
-const placeholder3 = stringToPrecomputedChunk('"></span>');
+const placeholder2 = stringToPrecomputedChunk('"></span>');
 export function writePlaceholder(
   destination: Destination,
+  responseState: ResponseState,
   id: number,
 ): boolean {
   // TODO: This needs to be contextually aware and switch tag since not all parents allow for spans like
   // <select> or <tbody>. E.g. suspending a component that renders a table row.
   writeChunk(destination, placeholder1);
-  // TODO: Use the identifierPrefix option to make the prefix configurable.
-  writeChunk(destination, placeholder2);
+  writeChunk(destination, responseState.placeholderPrefix);
   const formattedID = stringToChunk(id.toString(16));
   writeChunk(destination, formattedID);
-  return writeChunk(destination, placeholder3);
+  return writeChunk(destination, placeholder2);
 }
 
 // Suspense boundaries are encoded as comments.
@@ -207,20 +216,19 @@ export function writeEndSuspenseBoundary(destination: Destination): boolean {
 }
 
 const startSegment = stringToPrecomputedChunk('<div hidden id="');
-const startSegment2 = stringToPrecomputedChunk('S:');
-const startSegment3 = stringToPrecomputedChunk('">');
+const startSegment2 = stringToPrecomputedChunk('">');
 const endSegment = stringToPrecomputedChunk('</div>');
 export function writeStartSegment(
   destination: Destination,
+  responseState: ResponseState,
   id: number,
 ): boolean {
   // TODO: What happens with special children like <tr> if they're inserted in a div? Maybe needs contextually aware containers.
   writeChunk(destination, startSegment);
-  // TODO: Use the identifierPrefix option to make the prefix configurable.
-  writeChunk(destination, startSegment2);
+  writeChunk(destination, responseState.segmentPrefix);
   const formattedID = stringToChunk(id.toString(16));
   writeChunk(destination, formattedID);
-  return writeChunk(destination, startSegment3);
+  return writeChunk(destination, startSegment2);
 }
 export function writeEndSegment(destination: Destination): boolean {
   return writeChunk(destination, endSegment);
@@ -349,12 +357,10 @@ const clientRenderFunction =
   'function $RX(b){if(b=document.getElementById(b)){do b=b.previousSibling;while(8!==b.nodeType||"$?"!==b.data);b.data="$!";b._reactRetry&&b._reactRetry()}}';
 
 const completeSegmentScript1Full = stringToPrecomputedChunk(
-  '<script>' + completeSegmentFunction + ';$RS("S:',
+  '<script>' + completeSegmentFunction + ';$RS("',
 );
-const completeSegmentScript1Partial = stringToPrecomputedChunk(
-  '<script>$RS("S:',
-);
-const completeSegmentScript2 = stringToPrecomputedChunk('","P:');
+const completeSegmentScript1Partial = stringToPrecomputedChunk('<script>$RS("');
+const completeSegmentScript2 = stringToPrecomputedChunk('","');
 const completeSegmentScript3 = stringToPrecomputedChunk('")</script>');
 
 export function writeCompletedSegmentInstruction(
@@ -370,10 +376,11 @@ export function writeCompletedSegmentInstruction(
     // Future calls can just reuse the same function.
     writeChunk(destination, completeSegmentScript1Partial);
   }
-  // TODO: Use the identifierPrefix option to make the prefix configurable.
+  writeChunk(destination, responseState.segmentPrefix);
   const formattedID = stringToChunk(contentSegmentID.toString(16));
   writeChunk(destination, formattedID);
   writeChunk(destination, completeSegmentScript2);
+  writeChunk(destination, responseState.placeholderPrefix);
   writeChunk(destination, formattedID);
   return writeChunk(destination, completeSegmentScript3);
 }
@@ -384,7 +391,7 @@ const completeBoundaryScript1Full = stringToPrecomputedChunk(
 const completeBoundaryScript1Partial = stringToPrecomputedChunk(
   '<script>$RC("',
 );
-const completeBoundaryScript2 = stringToPrecomputedChunk('","S:');
+const completeBoundaryScript2 = stringToPrecomputedChunk('","');
 const completeBoundaryScript3 = stringToPrecomputedChunk('")</script>');
 
 export function writeCompletedBoundaryInstruction(
@@ -401,7 +408,6 @@ export function writeCompletedBoundaryInstruction(
     // Future calls can just reuse the same function.
     writeChunk(destination, completeBoundaryScript1Partial);
   }
-  // TODO: Use the identifierPrefix option to make the prefix configurable.
   const formattedBoundaryID = boundaryID.formattedID;
   invariant(
     formattedBoundaryID !== null,
@@ -410,6 +416,7 @@ export function writeCompletedBoundaryInstruction(
   const formattedContentID = stringToChunk(contentSegmentID.toString(16));
   writeChunk(destination, formattedBoundaryID);
   writeChunk(destination, completeBoundaryScript2);
+  writeChunk(destination, responseState.segmentPrefix);
   writeChunk(destination, formattedContentID);
   return writeChunk(destination, completeBoundaryScript3);
 }

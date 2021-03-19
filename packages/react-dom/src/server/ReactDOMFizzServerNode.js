@@ -17,11 +17,14 @@ import {
   abort,
 } from 'react-server/src/ReactFizzServer';
 
+import {createResponseState} from './ReactDOMServerFormatConfig';
+
 function createDrainHandler(destination, request) {
   return () => startFlowing(request);
 }
 
 type Options = {
+  identifierPrefix?: string,
   progressiveChunkSize?: number,
 };
 
@@ -39,6 +42,7 @@ function pipeToNodeWritable(
   const request = createRequest(
     children,
     destination,
+    createResponseState(options ? options.identifierPrefix : undefined),
     options ? options.progressiveChunkSize : undefined,
   );
   let hasStartedFlowing = false;

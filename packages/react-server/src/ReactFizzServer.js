@@ -44,7 +44,6 @@ import {
   pushStartInstance,
   pushEndInstance,
   createSuspenseBoundaryID,
-  createResponseState,
 } from './ReactServerFormatConfig';
 import {REACT_ELEMENT_TYPE, REACT_SUSPENSE_TYPE} from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -133,13 +132,14 @@ const DEFAULT_PROGRESSIVE_CHUNK_SIZE = 12800;
 export function createRequest(
   children: ReactNodeList,
   destination: Destination,
+  responseState: ResponseState,
   progressiveChunkSize: number = DEFAULT_PROGRESSIVE_CHUNK_SIZE,
 ): Request {
   const pingedWork = [];
   const abortSet: Set<SuspendedWork> = new Set();
   const request = {
     destination,
-    responseState: createResponseState(),
+    responseState,
     progressiveChunkSize,
     status: BUFFERING,
     nextSegmentId: 0,
@@ -590,7 +590,7 @@ function flushSubtree(
       // We're emitting a placeholder for this segment to be filled in later.
       // Therefore we'll need to assign it an ID - to refer to it by.
       const segmentID = (segment.id = request.nextSegmentId++);
-      return writePlaceholder(destination, segmentID);
+      return writePlaceholder(destination, request.responseState, segmentID);
     }
     case COMPLETED: {
       segment.status = FLUSHED;
@@ -712,7 +712,7 @@ function flushSegmentContainer(
   destination: Destination,
   segment: Segment,
 ): boolean {
-  writeStartSegment(destination, segment.id);
+  writeStartSegment(destination, request.responseState, segment.id);
   flushSegment(request, destination, segment);
   return writeEndSegment(destination);
 }

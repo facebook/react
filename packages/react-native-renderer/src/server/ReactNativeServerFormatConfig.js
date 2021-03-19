@@ -145,6 +145,7 @@ function formatID(id: number): Uint8Array {
 // display. It's never visible to users.
 export function writePlaceholder(
   destination: Destination,
+  responseState: ResponseState,
   id: number,
 ): boolean {
   writeChunk(destination, PLACEHOLDER);
@@ -179,6 +180,7 @@ export function writeEndSuspenseBoundary(destination: Destination): boolean {
 
 export function writeStartSegment(
   destination: Destination,
+  responseState: ResponseState,
   id: number,
 ): boolean {
   writeChunk(destination, SEGMENT);
