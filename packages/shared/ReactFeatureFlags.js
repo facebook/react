@@ -112,6 +112,8 @@ export const disableNativeComponentFrames = false;
 // If there are no still-mounted boundaries, the errors should be rethrown.
 export const skipUnmountedBoundaries = false;
 
+export const enableDetachOldChildList = false;
+
 // --------------------------
 // Future APIs to be deprecated
 // --------------------------

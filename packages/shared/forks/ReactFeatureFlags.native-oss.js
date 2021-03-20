@@ -45,6 +45,7 @@ export const enableLegacyFBSupport = false;
 export const enableFilterEmptyStringAttributesDOM = false;
 export const disableNativeComponentFrames = false;
 export const skipUnmountedBoundaries = false;
+export const enableDetachOldChildList = false;
 
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
