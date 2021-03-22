@@ -16,9 +16,12 @@ import {
   abort,
 } from 'react-server/src/ReactFizzServer';
 
+import {createResponseState} from './ReactDOMServerFormatConfig';
+
 type Options = {
-  signal?: AbortSignal,
+  identifierPrefix?: string,
   progressiveChunkSize?: number,
+  signal?: AbortSignal,
 };
 
 function renderToReadableStream(
@@ -39,6 +42,7 @@ function renderToReadableStream(
       request = createRequest(
         children,
         controller,
+        createResponseState(options ? options.identifierPrefix : undefined),
         options ? options.progressiveChunkSize : undefined,
       );
       startWork(request);

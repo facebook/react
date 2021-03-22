@@ -320,4 +320,84 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     );
   });
+
+  // @gate experimental
+  it('should allow for two containers to be written to the same document', async () => {
+    // We create two passthrough streams for each container to write into.
+    // Notably we don't implement a end() call for these. Because we don't want to
+    // close the underlying stream just because one of the streams is done. Instead
+    // we manually close when both are done.
+    const writableA = new Stream.Writable();
+    writableA._write = (chunk, encoding, next) => {
+      writable.write(chunk, encoding, next);
+    };
+    const writableB = new Stream.Writable();
+    writableB._write = (chunk, encoding, next) => {
+      writable.write(chunk, encoding, next);
+    };
+
+    writable.write('<div id="container-A">');
+    await act(async () => {
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        <Suspense fallback={<Text text="Loading A..." />}>
+          <Text text="This will show A: " />
+          <div>
+            <AsyncText text="A" />
+          </div>
+        </Suspense>,
+        writableA,
+        {identifierPrefix: 'A_'},
+      );
+      startWriting();
+    });
+    writable.write('</div>');
+
+    writable.write('<div id="container-B">');
+    await act(async () => {
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        <Suspense fallback={<Text text="Loading B..." />}>
+          <Text text="This will show B: " />
+          <div>
+            <AsyncText text="B" />
+          </div>
+        </Suspense>,
+        writableB,
+        {identifierPrefix: 'B_'},
+      );
+      startWriting();
+    });
+    writable.write('</div>');
+
+    expect(getVisibleChildren(container)).toEqual([
+      <div id="container-A">Loading A...</div>,
+      <div id="container-B">Loading B...</div>,
+    ]);
+
+    await act(async () => {
+      resolveText('B');
+    });
+
+    expect(getVisibleChildren(container)).toEqual([
+      <div id="container-A">Loading A...</div>,
+      <div id="container-B">
+        This will show B: <div>B</div>
+      </div>,
+    ]);
+
+    await act(async () => {
+      resolveText('A');
+    });
+
+    // We're done writing both streams now.
+    writable.end();
+
+    expect(getVisibleChildren(container)).toEqual([
+      <div id="container-A">
+        This will show A: <div>A</div>
+      </div>,
+      <div id="container-B">
+        This will show B: <div>B</div>
+      </div>,
+    ]);
+  });
 });
