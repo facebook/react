@@ -78,7 +78,6 @@ import {
 import {StrictLegacyMode} from './ReactTypeOfMode';
 import {
   SyncLane,
-  InputDiscreteHydrationLane,
   SelectiveHydrationLane,
   NoTimestamp,
   getHighestPriorityPendingLanes,
@@ -388,7 +387,7 @@ export function attemptSynchronousHydration(fiber: Fiber): void {
       // If we're still blocked after this, we need to increase
       // the priority of any promises resolving within this
       // boundary so that they next attempt also has higher pri.
-      const retryLane = InputDiscreteHydrationLane;
+      const retryLane = SyncLane;
       markRetryLaneIfNotHydrated(fiber, retryLane);
       break;
   }
@@ -422,7 +421,7 @@ export function attemptDiscreteHydration(fiber: Fiber): void {
     return;
   }
   const eventTime = requestEventTime();
-  const lane = InputDiscreteHydrationLane;
+  const lane = SyncLane;
   scheduleUpdateOnFiber(fiber, lane, eventTime);
   markRetryLaneIfNotHydrated(fiber, lane);
 }
