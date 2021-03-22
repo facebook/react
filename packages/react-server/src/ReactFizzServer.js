@@ -110,6 +110,7 @@ type Request = {
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
   partialBoundaries: Array<SuspenseBoundary>, // Partially completed boundaries that can flush its segments early.
+  onError: (error: mixed) => void,
 };
 
 // This is a default heuristic for how to split up the HTML content into progressive
@@ -134,6 +135,7 @@ export function createRequest(
   destination: Destination,
   responseState: ResponseState,
   progressiveChunkSize: number = DEFAULT_PROGRESSIVE_CHUNK_SIZE,
+  onError: (error: mixed) => void = noop,
 ): Request {
   const pingedWork = [];
   const abortSet: Set<SuspendedWork> = new Set();
@@ -151,6 +153,7 @@ export function createRequest(
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
+    onError,
   };
   // This segment represents the root fallback.
   const rootSegment = createPendingSegment(request, 0, null);
@@ -235,7 +238,9 @@ function createPendingSegment(
 }
 
 function reportError(request: Request, error: mixed): void {
-  // TODO: Report errors on the server.
+  // If this callback errors, we intentionally let that error bubble up to become a fatal error
+  // so that someone fixes the error reporting instead of hiding it.
+  request.onError(error);
 }
 
 function fatalError(request: Request, error: mixed): void {
@@ -573,6 +578,7 @@ function performWork(request: Request): void {
       flushCompletedQueues(request);
     }
   } catch (error) {
+    reportError(request, error);
     fatalError(request, error);
   } finally {
     ReactCurrentDispatcher.current = prevDispatcher;
@@ -920,6 +926,7 @@ export function startFlowing(request: Request): void {
   try {
     flushCompletedQueues(request);
   } catch (error) {
+    reportError(request, error);
     fatalError(request, error);
   }
 }
@@ -934,6 +941,7 @@ export function abort(request: Request): void {
       flushCompletedQueues(request);
     }
   } catch (error) {
+    reportError(request, error);
     fatalError(request, error);
   }
 }

@@ -22,6 +22,7 @@ type Options = {
   identifierPrefix?: string,
   progressiveChunkSize?: number,
   signal?: AbortSignal,
+  onError?: (error: mixed) => void,
 };
 
 function renderToReadableStream(
@@ -44,6 +45,7 @@ function renderToReadableStream(
         controller,
         createResponseState(options ? options.identifierPrefix : undefined),
         options ? options.progressiveChunkSize : undefined,
+        options ? options.onError : undefined,
       );
       startWork(request);
     },

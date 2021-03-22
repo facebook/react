@@ -60,10 +60,16 @@ describe('ReactDOMFizzServer', () => {
 
   // @gate experimental
   it('should error the stream when an error is thrown at the root', async () => {
+    const reportedErrors = [];
     const stream = ReactDOMFizzServer.renderToReadableStream(
       <div>
         <Throw />
       </div>,
+      {
+        onError(x) {
+          reportedErrors.push(x);
+        },
+      },
     );
 
     let caughtError = null;
@@ -75,16 +81,23 @@ describe('ReactDOMFizzServer', () => {
     }
     expect(caughtError).toBe(theError);
     expect(result).toBe('');
+    expect(reportedErrors).toEqual([theError]);
   });
 
   // @gate experimental
   it('should error the stream when an error is thrown inside a fallback', async () => {
+    const reportedErrors = [];
     const stream = ReactDOMFizzServer.renderToReadableStream(
       <div>
         <Suspense fallback={<Throw />}>
           <InfiniteSuspend />
         </Suspense>
       </div>,
+      {
+        onError(x) {
+          reportedErrors.push(x);
+        },
+      },
     );
 
     let caughtError = null;
@@ -96,20 +109,28 @@ describe('ReactDOMFizzServer', () => {
     }
     expect(caughtError).toBe(theError);
     expect(result).toBe('');
+    expect(reportedErrors).toEqual([theError]);
   });
 
   // @gate experimental
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
+    const reportedErrors = [];
     const stream = ReactDOMFizzServer.renderToReadableStream(
       <div>
         <Suspense fallback={<div>Loading</div>}>
           <Throw />
         </Suspense>
       </div>,
+      {
+        onError(x) {
+          reportedErrors.push(x);
+        },
+      },
     );
 
     const result = await readResult(stream);
     expect(result).toContain('Loading');
+    expect(reportedErrors).toEqual([theError]);
   });
 
   // @gate experimental
