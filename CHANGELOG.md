@@ -1,3 +1,9 @@
+## 17.0.2 (March 22, 2020)
+
+### React DOM
+
+* Remove an unused dependency to address the [`SharedArrayBuffer` cross-origin isolation warning](https://developer.chrome.com/blog/enabling-shared-array-buffer/). ([@koba04](https://github.com/koba04) and [@bvaughn](https://github.com/bvaughn) in [#20831](https://github.com/facebook/react/pull/20831), [#20832](https://github.com/facebook/react/pull/20832), and [#20840](https://github.com/facebook/react/pull/20840))
+
 ## 17.0.1 (October 22, 2020)
 
 ### React DOM
