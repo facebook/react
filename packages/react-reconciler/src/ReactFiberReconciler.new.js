@@ -97,7 +97,7 @@ import {markRenderScheduled} from './SchedulingProfiler';
 // entry point, but we can't do this because of a circular dependency.
 // They are used by third-party renderers so they need to stay up to date.
 export {
-  InputDiscreteLanePriority as DiscreteEventPriority,
+  SyncLanePriority as DiscreteEventPriority,
   InputContinuousLanePriority as ContinuousEventPriority,
   DefaultLanePriority as DefaultEventPriority,
   IdleLanePriority as IdleEventPriority,
