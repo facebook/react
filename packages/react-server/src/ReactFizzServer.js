@@ -110,7 +110,11 @@ type Request = {
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
   partialBoundaries: Array<SuspenseBoundary>, // Partially completed boundaries that can flush its segments early.
+  // onError is called when an error happens anywhere in the tree. It might recover.
   onError: (error: mixed) => void,
+  // onComplete is called when all pending work is done but it may not have flushed yet.
+  // This is a good time to start writing if you want only HTML and no intermediate steps.
+  onComplete: () => void,
 };
 
 // This is a default heuristic for how to split up the HTML content into progressive
@@ -136,6 +140,7 @@ export function createRequest(
   responseState: ResponseState,
   progressiveChunkSize: number = DEFAULT_PROGRESSIVE_CHUNK_SIZE,
   onError: (error: mixed) => void = noop,
+  onComplete: () => void = noop,
 ): Request {
   const pingedWork = [];
   const abortSet: Set<SuspendedWork> = new Set();
@@ -154,6 +159,7 @@ export function createRequest(
     completedBoundaries: [],
     partialBoundaries: [],
     onError,
+    onComplete,
   };
   // This segment represents the root fallback.
   const rootSegment = createPendingSegment(request, 0, null);
@@ -394,27 +400,30 @@ function erroredWork(
   segment: Segment,
   error: mixed,
 ) {
-  request.allPendingWork--;
-  if (boundary !== null) {
-    boundary.pendingWork--;
-  }
-
   // Report the error to a global handler.
   reportError(request, error);
   if (boundary === null) {
     fatalError(request, error);
-  } else if (!boundary.forceClientRender) {
-    boundary.forceClientRender = true;
+  } else {
+    boundary.pendingWork--;
+    if (!boundary.forceClientRender) {
+      boundary.forceClientRender = true;
 
-    // Regardless of what happens next, this boundary won't be displayed,
-    // so we can flush it, if the parent already flushed.
-    if (boundary.parentFlushed) {
-      // We don't have a preference where in the queue this goes since it's likely
-      // to error on the client anyway. However, intentionally client-rendered
-      // boundaries should be flushed earlier so that they can start on the client.
-      // We reuse the same queue for errors.
-      request.clientRenderedBoundaries.push(boundary);
+      // Regardless of what happens next, this boundary won't be displayed,
+      // so we can flush it, if the parent already flushed.
+      if (boundary.parentFlushed) {
+        // We don't have a preference where in the queue this goes since it's likely
+        // to error on the client anyway. However, intentionally client-rendered
+        // boundaries should be flushed earlier so that they can start on the client.
+        // We reuse the same queue for errors.
+        request.clientRenderedBoundaries.push(boundary);
+      }
     }
+  }
+
+  request.allPendingWork--;
+  if (request.allPendingWork === 0) {
+    request.onComplete();
   }
 }
 
@@ -459,6 +468,10 @@ function abortWork(suspendedWork: SuspendedWork): void {
         request.clientRenderedBoundaries.push(boundary);
       }
     }
+
+    if (request.allPendingWork === 0) {
+      request.onComplete();
+    }
   }
 }
 
@@ -467,8 +480,6 @@ function finishedWork(
   boundary: Root | SuspenseBoundary,
   segment: Segment,
 ) {
-  request.allPendingWork--;
-
   if (boundary === null) {
     request.pendingRootWork--;
     if (segment.parentFlushed) {
@@ -478,42 +489,46 @@ function finishedWork(
       );
       request.completedRootSegment = segment;
     }
-    return;
-  }
-
-  boundary.pendingWork--;
-  if (boundary.forceClientRender) {
-    // This already errored.
-    return;
-  }
-  if (boundary.pendingWork === 0) {
-    // This must have been the last segment we were waiting on. This boundary is now complete.
-    // We can now cancel any pending work on the fallback since we won't need to show it anymore.
-    boundary.fallbackAbortableWork.forEach(abortWorkSoft, request);
-    boundary.fallbackAbortableWork.clear();
-    if (segment.parentFlushed) {
-      // Our parent segment already flushed, so we need to schedule this segment to be emitted.
-      boundary.completedSegments.push(segment);
-    }
-    if (boundary.parentFlushed) {
-      // The segment might be part of a segment that didn't flush yet, but if the boundary's
-      // parent flushed, we need to schedule the boundary to be emitted.
-      request.completedBoundaries.push(boundary);
-    }
   } else {
-    if (segment.parentFlushed) {
-      // Our parent already flushed, so we need to schedule this segment to be emitted.
-      const completedSegments = boundary.completedSegments;
-      completedSegments.push(segment);
-      if (completedSegments.length === 1) {
-        // This is the first time since we last flushed that we completed anything.
-        // We can schedule this boundary to emit its partially completed segments early
-        // in case the parent has already been flushed.
-        if (boundary.parentFlushed) {
-          request.partialBoundaries.push(boundary);
+    boundary.pendingWork--;
+    if (boundary.forceClientRender) {
+      // This already errored.
+    } else if (boundary.pendingWork === 0) {
+      // This must have been the last segment we were waiting on. This boundary is now complete.
+      // We can now cancel any pending work on the fallback since we won't need to show it anymore.
+      boundary.fallbackAbortableWork.forEach(abortWorkSoft, request);
+      boundary.fallbackAbortableWork.clear();
+      if (segment.parentFlushed) {
+        // Our parent segment already flushed, so we need to schedule this segment to be emitted.
+        boundary.completedSegments.push(segment);
+      }
+      if (boundary.parentFlushed) {
+        // The segment might be part of a segment that didn't flush yet, but if the boundary's
+        // parent flushed, we need to schedule the boundary to be emitted.
+        request.completedBoundaries.push(boundary);
+      }
+    } else {
+      if (segment.parentFlushed) {
+        // Our parent already flushed, so we need to schedule this segment to be emitted.
+        const completedSegments = boundary.completedSegments;
+        completedSegments.push(segment);
+        if (completedSegments.length === 1) {
+          // This is the first time since we last flushed that we completed anything.
+          // We can schedule this boundary to emit its partially completed segments early
+          // in case the parent has already been flushed.
+          if (boundary.parentFlushed) {
+            request.partialBoundaries.push(boundary);
+          }
         }
       }
     }
+  }
+
+  request.allPendingWork--;
+  if (request.allPendingWork === 0) {
+    // This needs to be called at the very end so that we can synchronously write the result
+    // in the callback if needed.
+    request.onComplete();
   }
 }
 

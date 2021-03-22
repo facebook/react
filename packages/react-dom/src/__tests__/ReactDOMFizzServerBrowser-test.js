@@ -59,6 +59,44 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate experimental
+  it('emits all HTML as one unit if we wait until the end to start', async () => {
+    let hasLoaded = false;
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+    function Wait() {
+      if (!hasLoaded) {
+        throw promise;
+      }
+      return 'Done';
+    }
+    let isComplete = false;
+    const stream = ReactDOMFizzServer.renderToReadableStream(
+      <div>
+        <Suspense fallback="Loading">
+          <Wait />
+        </Suspense>
+      </div>,
+      {
+        onComplete() {
+          isComplete = true;
+        },
+      },
+    );
+    await jest.runAllTimers();
+    expect(isComplete).toBe(false);
+    // Resolve the loading.
+    hasLoaded = true;
+    await resolve();
+
+    await jest.runAllTimers();
+
+    expect(isComplete).toBe(true);
+
+    const result = await readResult(stream);
+    expect(result).toBe('<div><!--$-->Done<!--/$--></div>');
+  });
+
+  // @gate experimental
   it('should error the stream when an error is thrown at the root', async () => {
     const reportedErrors = [];
     const stream = ReactDOMFizzServer.renderToReadableStream(
