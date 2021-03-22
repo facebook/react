@@ -908,9 +908,6 @@ function flushCompletedQueues(request: Request): void {
   }
 }
 
-// TODO: Expose a way to abort further processing, without closing the connection from the outside.
-// This would put all waiting boundaries into client-only mode.
-
 export function startWork(request: Request): void {
   scheduleWork(() => performWork(request));
 }
