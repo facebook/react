@@ -370,7 +370,7 @@ describe('ReactSuspense', () => {
 
     await LazyClass;
 
-    expect(Scheduler).toFlushExpired(['Hi', 'Did mount: Hi']);
+    expect(Scheduler).toFlushUntilNextPaint(['Hi', 'Did mount: Hi']);
     expect(root).toMatchRenderedOutput('Hi');
   });
 
@@ -729,7 +729,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(100);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [B:1]']);
-      expect(Scheduler).toFlushExpired([
+      expect(Scheduler).toFlushUntilNextPaint([
         'B:1',
         'Unmount [Loading...]',
         // Should be a mount, not an update
@@ -748,7 +748,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(100);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [B:2]']);
-      expect(Scheduler).toFlushExpired([
+      expect(Scheduler).toFlushUntilNextPaint([
         'B:2',
         'Unmount [Loading...]',
         'Update [B:2]',
@@ -786,7 +786,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
-      expect(Scheduler).toFlushExpired(['A']);
+      expect(Scheduler).toFlushUntilNextPaint(['A']);
       expect(root).toMatchRenderedOutput('Stateful: 1A');
 
       root.update(<App text="B" />);
@@ -804,7 +804,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
-      expect(Scheduler).toFlushExpired(['B']);
+      expect(Scheduler).toFlushUntilNextPaint(['B']);
       expect(root).toMatchRenderedOutput('Stateful: 2B');
     });
 
@@ -846,7 +846,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
-      expect(Scheduler).toFlushExpired(['A']);
+      expect(Scheduler).toFlushUntilNextPaint(['A']);
       expect(root).toMatchRenderedOutput('Stateful: 1A');
 
       root.update(<App text="B" />);
@@ -871,7 +871,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
-      expect(Scheduler).toFlushExpired(['B']);
+      expect(Scheduler).toFlushUntilNextPaint(['B']);
       expect(root).toMatchRenderedOutput('Stateful: 2B');
     });
 
@@ -951,7 +951,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(500);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
-      expect(Scheduler).toFlushExpired(['A', 'Did commit: A']);
+      expect(Scheduler).toFlushUntilNextPaint(['A', 'Did commit: A']);
     });
 
     it('retries when an update is scheduled on a timed out tree', () => {
@@ -1038,7 +1038,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [Child 1]']);
-      expect(Scheduler).toFlushExpired([
+      expect(Scheduler).toFlushUntilNextPaint([
         'Child 1',
         'Suspend! [Child 2]',
         'Suspend! [Child 3]',
@@ -1047,12 +1047,15 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [Child 2]']);
-      expect(Scheduler).toFlushExpired(['Child 2', 'Suspend! [Child 3]']);
+      expect(Scheduler).toFlushUntilNextPaint([
+        'Child 2',
+        'Suspend! [Child 3]',
+      ]);
 
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [Child 3]']);
-      expect(Scheduler).toFlushExpired(['Child 3']);
+      expect(Scheduler).toFlushUntilNextPaint(['Child 3']);
       expect(root).toMatchRenderedOutput(
         ['Child 1', 'Child 2', 'Child 3'].join(''),
       );
@@ -1113,7 +1116,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [Tab: 0]']);
-      expect(Scheduler).toFlushExpired(['Tab: 0']);
+      expect(Scheduler).toFlushUntilNextPaint(['Tab: 0']);
       expect(root).toMatchRenderedOutput('Tab: 0 + sibling');
 
       act(() => setTab(1));
@@ -1126,7 +1129,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [Tab: 1]']);
-      expect(Scheduler).toFlushExpired(['Tab: 1']);
+      expect(Scheduler).toFlushUntilNextPaint(['Tab: 1']);
       expect(root).toMatchRenderedOutput('Tab: 1 + sibling');
 
       act(() => setTab(2));
@@ -1139,7 +1142,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [Tab: 2]']);
-      expect(Scheduler).toFlushExpired(['Tab: 2']);
+      expect(Scheduler).toFlushUntilNextPaint(['Tab: 2']);
       expect(root).toMatchRenderedOutput('Tab: 2 + sibling');
     });
 
@@ -1177,7 +1180,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [A:0]']);
-      expect(Scheduler).toFlushExpired(['A:0']);
+      expect(Scheduler).toFlushUntilNextPaint(['A:0']);
       expect(root).toMatchRenderedOutput('A:0');
 
       act(() => setStep(1));
@@ -1215,7 +1218,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
-      expect(Scheduler).toFlushExpired([
+      expect(Scheduler).toFlushUntilNextPaint([
         'A',
         // The promises for B and C have now been thrown twice
         'Suspend! [B]',
@@ -1226,7 +1229,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
-      expect(Scheduler).toFlushExpired([
+      expect(Scheduler).toFlushUntilNextPaint([
         // Even though the promise for B was thrown twice, we should only
         // re-render once.
         'B',
@@ -1238,7 +1241,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [C]']);
-      expect(Scheduler).toFlushExpired([
+      expect(Scheduler).toFlushUntilNextPaint([
         // Even though the promise for C was thrown three times, we should only
         // re-render once.
         'C',
@@ -1280,7 +1283,7 @@ describe('ReactSuspense', () => {
         jest.advanceTimersByTime(1000);
 
         expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
-        expect(Scheduler).toFlushExpired([
+        expect(Scheduler).toFlushUntilNextPaint([
           'A',
           // The promises for B and C have now been thrown twice
           'Suspend! [B]',
@@ -1291,7 +1294,7 @@ describe('ReactSuspense', () => {
         jest.advanceTimersByTime(1000);
 
         expect(Scheduler).toHaveYielded(['Promise resolved [B]']);
-        expect(Scheduler).toFlushExpired([
+        expect(Scheduler).toFlushUntilNextPaint([
           // Even though the promise for B was thrown twice, we should only
           // re-render once.
           'B',
@@ -1393,7 +1396,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
-      expect(Scheduler).toFlushExpired(['default']);
+      expect(Scheduler).toFlushUntilNextPaint(['default']);
       expect(root).toMatchRenderedOutput('default');
 
       act(() => setValue('new value'));
@@ -1401,7 +1404,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
-      expect(Scheduler).toFlushExpired(['new value']);
+      expect(Scheduler).toFlushUntilNextPaint(['new value']);
       expect(root).toMatchRenderedOutput('new value');
     });
 
@@ -1450,7 +1453,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
-      expect(Scheduler).toFlushExpired(['default']);
+      expect(Scheduler).toFlushUntilNextPaint(['default']);
       expect(root).toMatchRenderedOutput('default');
 
       act(() => setValue('new value'));
@@ -1458,7 +1461,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
-      expect(Scheduler).toFlushExpired(['new value']);
+      expect(Scheduler).toFlushUntilNextPaint(['new value']);
       expect(root).toMatchRenderedOutput('new value');
     });
 
@@ -1506,7 +1509,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
-      expect(Scheduler).toFlushExpired(['default']);
+      expect(Scheduler).toFlushUntilNextPaint(['default']);
       expect(root).toMatchRenderedOutput('default');
 
       act(() => setValue('new value'));
@@ -1514,7 +1517,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
-      expect(Scheduler).toFlushExpired(['new value']);
+      expect(Scheduler).toFlushUntilNextPaint(['new value']);
       expect(root).toMatchRenderedOutput('new value');
     });
 
@@ -1558,7 +1561,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [default]']);
-      expect(Scheduler).toFlushExpired(['default']);
+      expect(Scheduler).toFlushUntilNextPaint(['default']);
       expect(root).toMatchRenderedOutput('default');
 
       act(() => setValue('new value'));
@@ -1566,7 +1569,7 @@ describe('ReactSuspense', () => {
       jest.advanceTimersByTime(1000);
 
       expect(Scheduler).toHaveYielded(['Promise resolved [new value]']);
-      expect(Scheduler).toFlushExpired(['new value']);
+      expect(Scheduler).toFlushUntilNextPaint(['new value']);
       expect(root).toMatchRenderedOutput('new value');
     });
   });
