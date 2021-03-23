@@ -61,7 +61,7 @@ import {
   hasCaughtError,
   clearCaughtError,
 } from 'shared/ReactErrorUtils';
-import {unmountNode} from './ReactFiberHostConfig';
+import {detachDeletedInstance} from './ReactFiberHostConfig';
 import {
   NoFlags,
   ContentReset,
@@ -1285,7 +1285,7 @@ function detachFiberAfterEffects(fiber: Fiber) {
       if (fiber.tag === HostComponent) {
         const hostInstance: Instance = fiber.stateNode;
         if (hostInstance !== null) {
-          unmountNode(hostInstance);
+          detachDeletedInstance(hostInstance);
         }
       }
 

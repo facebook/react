@@ -361,6 +361,6 @@ export function getInstanceFromScope(scopeInstance: Object): null | Object {
   return nodeToInstanceMap.get(scopeInstance) || null;
 }
 
-export function unmountNode(node: any): void {
+export function detachDeletedInstance(node: Instance): void {
   // noop
 }

@@ -482,6 +482,6 @@ export function preparePortalMount(portalInstance: Instance): void {
   // noop
 }
 
-export function unmountNode(node: any): void {
+export function detachDeletedInstance(node: Instance): void {
   // noop
 }
