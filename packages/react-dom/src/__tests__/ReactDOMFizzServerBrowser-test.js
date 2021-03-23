@@ -77,7 +77,7 @@ describe('ReactDOMFizzServer', () => {
         </Suspense>
       </div>,
       {
-        onComplete() {
+        onCompleteAll() {
           isComplete = true;
         },
       },

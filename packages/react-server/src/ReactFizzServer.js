@@ -112,9 +112,9 @@ type Request = {
   partialBoundaries: Array<SuspenseBoundary>, // Partially completed boundaries that can flush its segments early.
   // onError is called when an error happens anywhere in the tree. It might recover.
   onError: (error: mixed) => void,
-  // onComplete is called when all pending work is done but it may not have flushed yet.
+  // onCompleteAll is called when all pending work is done but it may not have flushed yet.
   // This is a good time to start writing if you want only HTML and no intermediate steps.
-  onComplete: () => void,
+  onCompleteAll: () => void,
   // onReadyToStream is called when there is at least a root fallback ready to show.
   // Typically you don't need this callback because it's best practice to always have a
   // root fallback ready so there's no need to wait.
@@ -144,7 +144,7 @@ export function createRequest(
   responseState: ResponseState,
   progressiveChunkSize: number = DEFAULT_PROGRESSIVE_CHUNK_SIZE,
   onError: (error: mixed) => void = noop,
-  onComplete: () => void = noop,
+  onCompleteAll: () => void = noop,
   onReadyToStream: () => void = noop,
 ): Request {
   const pingedWork = [];
@@ -164,7 +164,7 @@ export function createRequest(
     completedBoundaries: [],
     partialBoundaries: [],
     onError,
-    onComplete,
+    onCompleteAll,
     onReadyToStream,
   };
   // This segment represents the root fallback.
@@ -429,7 +429,7 @@ function erroredWork(
 
   request.allPendingWork--;
   if (request.allPendingWork === 0) {
-    request.onComplete();
+    request.onCompleteAll();
   }
 }
 
@@ -476,7 +476,7 @@ function abortWork(suspendedWork: SuspendedWork): void {
     }
 
     if (request.allPendingWork === 0) {
-      request.onComplete();
+      request.onCompleteAll();
     }
   }
 }
@@ -537,7 +537,7 @@ function finishedWork(
   if (request.allPendingWork === 0) {
     // This needs to be called at the very end so that we can synchronously write the result
     // in the callback if needed.
-    request.onComplete();
+    request.onCompleteAll();
   }
 }
 

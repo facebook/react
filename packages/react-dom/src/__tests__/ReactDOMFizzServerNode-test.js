@@ -107,7 +107,7 @@ describe('ReactDOMFizzServer', () => {
       </div>,
       writable,
       {
-        onComplete() {
+        onCompleteAll() {
           isComplete = true;
         },
       },

@@ -27,7 +27,7 @@ type Options = {
   identifierPrefix?: string,
   progressiveChunkSize?: number,
   onReadyToStream?: () => void,
-  onComplete?: () => void,
+  onCompleteAll?: () => void,
   onError?: (error: mixed) => void,
 };
 
@@ -48,7 +48,7 @@ function pipeToNodeWritable(
     createResponseState(options ? options.identifierPrefix : undefined),
     options ? options.progressiveChunkSize : undefined,
     options ? options.onError : undefined,
-    options ? options.onComplete : undefined,
+    options ? options.onCompleteAll : undefined,
     options ? options.onReadyToStream : undefined,
   );
   let hasStartedFlowing = false;
