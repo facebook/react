@@ -14,6 +14,7 @@ import type {
 } from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
+import type {LanePriority} from 'react-reconciler/src/ReactFiberLane.new';
 
 import {
   isReplayableDiscreteEvent,
@@ -49,18 +50,13 @@ import {
 
 import {
   InputContinuousLanePriority as InputContinuousLanePriority_old,
-  DefaultLanePriority as DefaultLanePriority_old,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
   setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_old,
 } from 'react-reconciler/src/ReactFiberLane.old';
 import {
   InputContinuousLanePriority as InputContinuousLanePriority_new,
-  DefaultLanePriority as DefaultLanePriority_new,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
   setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_new,
-  SyncLanePriority,
-  IdleLanePriority,
-  NoLanePriority,
 } from 'react-reconciler/src/ReactFiberLane.new';
 import {getCurrentPriorityLevel as getCurrentPriorityLevel_old} from 'react-reconciler/src/SchedulerWithReactIntegration.old';
 import {
@@ -71,14 +67,16 @@ import {
   NormalPriority as NormalSchedulerPriority,
   UserBlockingPriority as UserBlockingSchedulerPriority,
 } from 'react-reconciler/src/SchedulerWithReactIntegration.new';
-import type {LanePriority} from 'react-reconciler/src/ReactFiberLane.new';
+import {
+  DiscreteEventPriority,
+  ContinuousEventPriority,
+  DefaultEventPriority,
+  IdleEventPriority,
+} from 'react-reconciler/src/ReactEventPriorities';
 
 const InputContinuousLanePriority = enableNewReconciler
   ? InputContinuousLanePriority_new
   : InputContinuousLanePriority_old;
-const DefaultLanePriority = enableNewReconciler
-  ? DefaultLanePriority_new
-  : DefaultLanePriority_old;
 const getCurrentUpdateLanePriority = enableNewReconciler
   ? getCurrentUpdateLanePriority_new
   : getCurrentUpdateLanePriority_old;
@@ -94,17 +92,17 @@ function schedulerPriorityToLanePriority(
 ): LanePriority {
   switch (schedulerPriorityLevel) {
     case ImmediateSchedulerPriority:
-      return SyncLanePriority;
+      return DiscreteEventPriority;
     case UserBlockingSchedulerPriority:
-      return InputContinuousLanePriority;
+      return ContinuousEventPriority;
     case NormalSchedulerPriority:
     case LowSchedulerPriority:
       // TODO: Handle LowSchedulerPriority, somehow. Maybe the same lane as hydration.
-      return DefaultLanePriority;
+      return DefaultEventPriority;
     case IdleSchedulerPriority:
-      return IdleLanePriority;
+      return IdleEventPriority;
     default:
-      return NoLanePriority;
+      return DefaultEventPriority;
   }
 }
 
@@ -142,13 +140,13 @@ export function createEventListenerWrapperWithPriority(
   const eventPriority = getEventPriority(domEventName);
   let listenerWrapper;
   switch (eventPriority) {
-    case SyncLanePriority:
+    case DiscreteEventPriority:
       listenerWrapper = dispatchDiscreteEvent;
       break;
-    case InputContinuousLanePriority:
+    case ContinuousEventPriority:
       listenerWrapper = dispatchContinuousEvent;
       break;
-    case DefaultLanePriority:
+    case DefaultEventPriority:
     default:
       listenerWrapper = dispatchEvent;
       break;
@@ -407,7 +405,7 @@ export function getEventPriority(domEventName: DOMEventName): * {
     case 'popstate':
     case 'select':
     case 'selectstart':
-      return SyncLanePriority;
+      return DiscreteEventPriority;
     case 'drag':
     case 'dragenter':
     case 'dragexit':
@@ -427,7 +425,7 @@ export function getEventPriority(domEventName: DOMEventName): * {
     // eslint-disable-next-line no-fallthrough
     case 'mouseenter':
     case 'mouseleave':
-      return InputContinuousLanePriority;
+      return ContinuousEventPriority;
     case 'message': {
       // We might be in the Scheduler callback.
       // Eventually this mechanism will be replaced by a check
@@ -436,6 +434,6 @@ export function getEventPriority(domEventName: DOMEventName): * {
       return schedulerPriorityToLanePriority(schedulerPriority);
     }
     default:
-      return DefaultLanePriority;
+      return DefaultEventPriority;
   }
 }

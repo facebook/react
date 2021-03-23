@@ -52,10 +52,6 @@ import {
   registerMutableSourceForHydration as registerMutableSourceForHydration_old,
   runWithPriority as runWithPriority_old,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
-  DefaultEventPriority as DefaultEventPriority_old,
-  DiscreteEventPriority as DiscreteEventPriority_old,
-  ContinuousEventPriority as ContinuousEventPriority_old,
-  IdleEventPriority as IdleEventPriority_old,
 } from './ReactFiberReconciler.old';
 
 import {
@@ -96,10 +92,6 @@ import {
   registerMutableSourceForHydration as registerMutableSourceForHydration_new,
   runWithPriority as runWithPriority_new,
   getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
-  DefaultEventPriority as DefaultEventPriority_new,
-  DiscreteEventPriority as DiscreteEventPriority_new,
-  ContinuousEventPriority as ContinuousEventPriority_new,
-  IdleEventPriority as IdleEventPriority_new,
 } from './ReactFiberReconciler.new';
 
 export const createContainer = enableNewReconciler
@@ -176,18 +168,6 @@ export const createPortal = enableNewReconciler
 export const createComponentSelector = enableNewReconciler
   ? createComponentSelector_new
   : createComponentSelector_old;
-export const DefaultEventPriority = enableNewReconciler
-  ? DefaultEventPriority_new
-  : DefaultEventPriority_old;
-export const DiscreteEventPriority = enableNewReconciler
-  ? DiscreteEventPriority_new
-  : DiscreteEventPriority_old;
-export const ContinuousEventPriority = enableNewReconciler
-  ? ContinuousEventPriority_new
-  : ContinuousEventPriority_old;
-export const IdleEventPriority = enableNewReconciler
-  ? IdleEventPriority_new
-  : IdleEventPriority_old;
 
 //TODO: "psuedo" is spelled "pseudo"
 export const createHasPseudoClassSelector = enableNewReconciler

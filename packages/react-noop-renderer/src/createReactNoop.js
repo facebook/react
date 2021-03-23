@@ -27,6 +27,9 @@ import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
 const {IsSomeRendererActing} = ReactSharedInternals;
 
+// TODO: Publish public entry point that exports the event priority constants
+const DefaultEventPriority = 8;
+
 type Container = {
   rootID: string,
   children: Array<Instance | TextInstance>,
@@ -587,7 +590,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
   const roots = new Map();
   const DEFAULT_ROOT_ID = '<default>';
 
-  let currentEventPriority = NoopRenderer.DefaultEventPriority;
+  let currentEventPriority = DefaultEventPriority;
 
   function childToJSX(child, text) {
     if (text !== null) {
