@@ -35,8 +35,7 @@ import {
   enableSuspenseCallback,
   enableScopeAPI,
   enableStrictEffects,
-  enableStrongMemoryCleanup,
-  enableDetachOldChildList,
+  deletedTreeCleanUpLevel,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -1212,40 +1211,93 @@ function detachFiberMutation(fiber: Fiber) {
   // Don't reset the alternate yet, either. We need that so we can detach the
   // alternate's fields in the passive phase. Clearing the return pointer is
   // sufficient for findDOMNode semantics.
+  const alternate = fiber.alternate;
+  if (alternate !== null) {
+    alternate.return = null;
+  }
   fiber.return = null;
 }
 
-export function detachFiberAfterEffects(
-  fiber: Fiber,
-  recurseIntoSibbling: ?boolean,
-): void {
-  // Null out fields to improve GC for references that may be lingering (e.g. DevTools).
-  // Note that we already cleared the return pointer in detachFiberMutation().
-  if (enableStrongMemoryCleanup) {
-    if (fiber.child) {
-      detachFiberAfterEffects(fiber.child, true);
-    }
-    if (fiber.sibling && recurseIntoSibbling === true) {
-      detachFiberAfterEffects(fiber.sibling, true);
-    }
-    if (fiber.stateNode) {
-      unmountNode(fiber.stateNode);
-    }
-    fiber.return = null;
+function detachFiberAfterEffects(fiber: Fiber) {
+  const alternate = fiber.alternate;
+  if (alternate !== null) {
+    fiber.alternate = null;
+    detachFiberAfterEffects(alternate);
   }
-  fiber.alternate = null;
-  fiber.child = null;
-  fiber.deletions = null;
-  fiber.dependencies = null;
-  fiber.memoizedProps = null;
-  fiber.memoizedState = null;
-  fiber.pendingProps = null;
-  fiber.sibling = null;
-  fiber.stateNode = null;
-  fiber.updateQueue = null;
 
-  if (__DEV__) {
-    fiber._debugOwner = null;
+  // Note: Defensively using negation instead of < in case
+  // `deletedTreeCleanUpLevel` is undefined.
+  if (!(deletedTreeCleanUpLevel >= 2)) {
+    // This is the default branch (level 0). We do not recursively clear all the
+    // fiber fields. Only the root of the deleted subtree.
+    fiber.child = null;
+    fiber.deletions = null;
+    fiber.dependencies = null;
+    fiber.memoizedProps = null;
+    fiber.memoizedState = null;
+    fiber.pendingProps = null;
+    fiber.sibling = null;
+    fiber.stateNode = null;
+    fiber.updateQueue = null;
+
+    if (__DEV__) {
+      fiber._debugOwner = null;
+    }
+  } else {
+    // Recursively traverse the entire deleted tree and clean up fiber fields.
+    // This is more aggressive than ideal, and the long term goal is to only
+    // have to detach the deleted tree at the root.
+    let child = fiber.child;
+    while (child !== null) {
+      detachFiberAfterEffects(child);
+      child = child.sibling;
+    }
+    // Clear cyclical Fiber fields. This level alone is designed to roughly
+    // approximate the planned Fiber refactor. In that world, `setState` will be
+    // bound to a special "instance" object instead of a Fiber. The Instance
+    // object will not have any of these fields. It will only be connected to
+    // the fiber tree via a single link at the root. So if this level alone is
+    // sufficient to fix memory issues, that bodes well for our plans.
+    fiber.child = null;
+    fiber.deletions = null;
+    fiber.sibling = null;
+
+    // I'm intentionally not clearing the `return` field in this level. We
+    // already disconnect the `return` pointer at the root of the deleted
+    // subtree (in `detachFiberMutation`). Besides, `return` by itself is not
+    // cyclical — it's only cyclical when combined with `child`, `sibling`, and
+    // `alternate`. But we'll clear it in the next level anyway, just in case.
+
+    if (__DEV__) {
+      fiber._debugOwner = null;
+    }
+
+    if (deletedTreeCleanUpLevel >= 3) {
+      // Theoretically, nothing in here should be necessary, because we already
+      // disconnected the fiber from the tree. So even if something leaks this
+      // particular fiber, it won't leak anything else
+      //
+      // The purpose of this branch is to be super aggressive so we can measure
+      // if there's any difference in memory impact. If there is, that could
+      // indicate a React leak we don't know about.
+
+      // For host components, disconnect host instance -> fiber pointer.
+      if (fiber.tag === HostComponent) {
+        const hostInstance: Instance = fiber.stateNode;
+        if (hostInstance !== null) {
+          unmountNode(hostInstance);
+        }
+      }
+
+      fiber.return = null;
+      fiber.dependencies = null;
+      fiber.memoizedProps = null;
+      fiber.memoizedState = null;
+      fiber.pendingProps = null;
+      fiber.stateNode = null;
+      // TODO: Move to `commitPassiveUnmountInsideDeletedTreeOnFiber` instead.
+      fiber.updateQueue = null;
+    }
   }
 }
 
@@ -1637,11 +1689,8 @@ function commitDeletion(
       renderPriorityLevel,
     );
   }
-  const alternate = current.alternate;
+
   detachFiberMutation(current);
-  if (alternate !== null) {
-    detachFiberMutation(alternate);
-  }
 }
 
 function commitWork(current: Fiber | null, finishedWork: Fiber): void {
@@ -2318,14 +2367,10 @@ function commitPassiveUnmountEffects_begin() {
           );
 
           // Now that passive effects have been processed, it's safe to detach lingering pointers.
-          const alternate = fiberToDelete.alternate;
           detachFiberAfterEffects(fiberToDelete);
-          if (alternate !== null) {
-            detachFiberAfterEffects(alternate);
-          }
         }
 
-        if (enableDetachOldChildList) {
+        if (deletedTreeCleanUpLevel >= 1) {
           // A fiber was deleted from this parent fiber, but it's still part of
           // the previous (alternate) parent fiber's list of children. Because
           // children are a linked list, an earlier sibling that's still alive

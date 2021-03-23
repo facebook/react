@@ -33,8 +33,7 @@ export const {
   disableSchedulerTimeoutInWorkLoop,
   enableSyncMicroTasks,
   enableLazyContextPropagation,
-  enableStrongMemoryCleanup,
-  enableDetachOldChildList,
+  deletedTreeCleanUpLevel,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.

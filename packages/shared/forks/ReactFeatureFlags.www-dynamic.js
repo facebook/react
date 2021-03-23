@@ -52,8 +52,7 @@ export const disableNativeComponentFrames = false;
 export const createRootStrictEffectsByDefault = false;
 export const enableStrictEffects = false;
 export const enableUseRefAccessWarning = __VARIANT__;
-export const enableStrongMemoryCleanup = __VARIANT__;
-export const enableDetachOldChildList = __VARIANT__;
+export const deletedTreeCleanUpLevel = __VARIANT__ ? 3 : 1;
 
 export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
