@@ -336,7 +336,6 @@ describe('ReactDOMFizzServer', () => {
       writable.write(chunk, encoding, next);
     };
 
-    writable.write('<div id="container-A">');
     await act(async () => {
       const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
         <Suspense fallback={<Text text="Loading A..." />}>
@@ -346,13 +345,17 @@ describe('ReactDOMFizzServer', () => {
           </div>
         </Suspense>,
         writableA,
-        {identifierPrefix: 'A_'},
+        {
+          identifierPrefix: 'A_',
+          onReadyToStream() {
+            writableA.write('<div id="container-A">');
+            startWriting();
+            writableA.write('</div>');
+          },
+        },
       );
-      startWriting();
     });
-    writable.write('</div>');
 
-    writable.write('<div id="container-B">');
     await act(async () => {
       const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
         <Suspense fallback={<Text text="Loading B..." />}>
@@ -362,11 +365,16 @@ describe('ReactDOMFizzServer', () => {
           </div>
         </Suspense>,
         writableB,
-        {identifierPrefix: 'B_'},
+        {
+          identifierPrefix: 'B_',
+          onReadyToStream() {
+            writableB.write('<div id="container-B">');
+            startWriting();
+            writableB.write('</div>');
+          },
+        },
       );
-      startWriting();
     });
-    writable.write('</div>');
 
     expect(getVisibleChildren(container)).toEqual([
       <div id="container-A">Loading A...</div>,

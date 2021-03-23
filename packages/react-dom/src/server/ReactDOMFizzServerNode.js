@@ -26,6 +26,7 @@ function createDrainHandler(destination, request) {
 type Options = {
   identifierPrefix?: string,
   progressiveChunkSize?: number,
+  onReadyToStream?: () => void,
   onComplete?: () => void,
   onError?: (error: mixed) => void,
 };
@@ -48,6 +49,7 @@ function pipeToNodeWritable(
     options ? options.progressiveChunkSize : undefined,
     options ? options.onError : undefined,
     options ? options.onComplete : undefined,
+    options ? options.onReadyToStream : undefined,
   );
   let hasStartedFlowing = false;
   startWork(request);
