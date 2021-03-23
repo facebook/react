@@ -1228,8 +1228,7 @@ function detachFiberAfterEffects(fiber: Fiber) {
   // Note: Defensively using negation instead of < in case
   // `deletedTreeCleanUpLevel` is undefined.
   if (!(deletedTreeCleanUpLevel >= 2)) {
-    // This is the default branch (level 0). We do not recursively clear all the
-    // fiber fields. Only the root of the deleted subtree.
+    // This is the default branch (level 0).
     fiber.child = null;
     fiber.deletions = null;
     fiber.dependencies = null;
@@ -1244,14 +1243,6 @@ function detachFiberAfterEffects(fiber: Fiber) {
       fiber._debugOwner = null;
     }
   } else {
-    // Recursively traverse the entire deleted tree and clean up fiber fields.
-    // This is more aggressive than ideal, and the long term goal is to only
-    // have to detach the deleted tree at the root.
-    let child = fiber.child;
-    while (child !== null) {
-      detachFiberAfterEffects(child);
-      child = child.sibling;
-    }
     // Clear cyclical Fiber fields. This level alone is designed to roughly
     // approximate the planned Fiber refactor. In that world, `setState` will be
     // bound to a special "instance" object instead of a Fiber. The Instance
@@ -2365,9 +2356,6 @@ function commitPassiveUnmountEffects_begin() {
             fiberToDelete,
             fiber,
           );
-
-          // Now that passive effects have been processed, it's safe to detach lingering pointers.
-          detachFiberAfterEffects(fiberToDelete);
         }
 
         if (deletedTreeCleanUpLevel >= 1) {
@@ -2472,7 +2460,8 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_begin(
     resetCurrentDebugFiberInDEV();
 
     const child = fiber.child;
-    // TODO: Only traverse subtree if it has a PassiveStatic flag
+    // TODO: Only traverse subtree if it has a PassiveStatic flag. (But, if we
+    // do this, still need to handle `deletedTreeCleanUpLevel` correctly.)
     if (child !== null) {
       ensureCorrectReturnPointer(child, fiber);
       nextEffect = child;
@@ -2489,19 +2478,35 @@ function commitPassiveUnmountEffectsInsideOfDeletedTree_complete(
 ) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
-    if (fiber === deletedSubtreeRoot) {
-      nextEffect = null;
-      return;
+    const sibling = fiber.sibling;
+    const returnFiber = fiber.return;
+
+    if (deletedTreeCleanUpLevel >= 2) {
+      // Recursively traverse the entire deleted tree and clean up fiber fields.
+      // This is more aggressive than ideal, and the long term goal is to only
+      // have to detach the deleted tree at the root.
+      detachFiberAfterEffects(fiber);
+      if (fiber === deletedSubtreeRoot) {
+        nextEffect = null;
+        return;
+      }
+    } else {
+      // This is the default branch (level 0). We do not recursively clear all
+      // the fiber fields. Only the root of the deleted subtree.
+      if (fiber === deletedSubtreeRoot) {
+        detachFiberAfterEffects(fiber);
+        nextEffect = null;
+        return;
+      }
     }
 
-    const sibling = fiber.sibling;
     if (sibling !== null) {
-      ensureCorrectReturnPointer(sibling, fiber.return);
+      ensureCorrectReturnPointer(sibling, returnFiber);
       nextEffect = sibling;
       return;
     }
 
-    nextEffect = fiber.return;
+    nextEffect = returnFiber;
   }
 }
 
