@@ -36,6 +36,7 @@ import {
   enableScopeAPI,
   enableStrictEffects,
   enableStrongMemoryCleanup,
+  enableDetachOldChildList,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -2323,6 +2324,33 @@ function commitPassiveUnmountEffects_begin() {
             detachFiberAfterEffects(alternate);
           }
         }
+
+        if (enableDetachOldChildList) {
+          // A fiber was deleted from this parent fiber, but it's still part of
+          // the previous (alternate) parent fiber's list of children. Because
+          // children are a linked list, an earlier sibling that's still alive
+          // will be connected to the deleted fiber via its `alternate`:
+          //
+          //   live fiber
+          //   --alternate--> previous live fiber
+          //   --sibling--> deleted fiber
+          //
+          // We can't disconnect `alternate` on nodes that haven't been deleted
+          // yet, but we can disconnect the `sibling` and `child` pointers.
+          const previousFiber = fiber.alternate;
+          if (previousFiber !== null) {
+            let detachedChild = previousFiber.child;
+            if (detachedChild !== null) {
+              previousFiber.child = null;
+              do {
+                const detachedSibling = detachedChild.sibling;
+                detachedChild.sibling = null;
+                detachedChild = detachedSibling;
+              } while (detachedChild !== null);
+            }
+          }
+        }
+
         nextEffect = fiber;
       }
     }

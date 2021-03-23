@@ -34,6 +34,7 @@ export const {
   enableSyncMicroTasks,
   enableLazyContextPropagation,
   enableStrongMemoryCleanup,
+  enableDetachOldChildList,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.

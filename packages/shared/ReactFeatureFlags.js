@@ -114,6 +114,7 @@ export const skipUnmountedBoundaries = false;
 
 // When a node is unmounted, recurse into the Fiber subtree and clean out references.
 export const enableStrongMemoryCleanup = false;
+export const enableDetachOldChildList = false;
 
 // --------------------------
 // Future APIs to be deprecated
