@@ -67,17 +67,11 @@ import {
   enableSuspenseServerRenderer,
   enableCreateEventHandleAPI,
   enableScopeAPI,
-  enableNewReconciler,
 } from 'shared/ReactFeatureFlags';
 import {HostComponent, HostText} from 'react-reconciler/src/ReactWorkTags';
 import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 
-import {DefaultLanePriority as DefaultLanePriority_old} from 'react-reconciler/src/ReactFiberLane.old';
-import {DefaultLanePriority as DefaultLanePriority_new} from 'react-reconciler/src/ReactFiberLane.new';
-
-const DefaultLanePriority = enableNewReconciler
-  ? DefaultLanePriority_new
-  : DefaultLanePriority_old;
+import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 export type Type = string;
 export type Props = {
@@ -385,7 +379,7 @@ export function createTextInstance(
 export function getCurrentEventPriority(): * {
   const currentEvent = window.event;
   if (currentEvent === undefined) {
-    return DefaultLanePriority;
+    return DefaultEventPriority;
   }
   return getEventPriority(currentEvent.type);
 }

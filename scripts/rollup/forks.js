@@ -279,6 +279,26 @@ const forks = Object.freeze({
     return 'react-reconciler/src/ReactFiberReconciler.old.js';
   },
 
+  'react-reconciler/src/ReactEventPriorities': (
+    bundleType,
+    entry,
+    dependencies,
+    moduleType,
+    bundle
+  ) => {
+    if (bundle.enableNewReconciler) {
+      switch (bundleType) {
+        case FB_WWW_DEV:
+        case FB_WWW_PROD:
+        case FB_WWW_PROFILING:
+          // Use the forked version of the reconciler
+          return 'react-reconciler/src/ReactEventPriorities.new.js';
+      }
+    }
+    // Otherwise, use the non-forked version.
+    return 'react-reconciler/src/ReactEventPriorities.old.js';
+  },
+
   'react-reconciler/src/ReactFiberHotReloading': (
     bundleType,
     entry,
