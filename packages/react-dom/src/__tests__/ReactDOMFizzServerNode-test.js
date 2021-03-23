@@ -87,13 +87,67 @@ describe('ReactDOMFizzServer', () => {
   });
 
   // @gate experimental
+  it('emits all HTML as one unit if we wait until the end to start', async () => {
+    let hasLoaded = false;
+    let resolve;
+    const promise = new Promise(r => (resolve = r));
+    function Wait() {
+      if (!hasLoaded) {
+        throw promise;
+      }
+      return 'Done';
+    }
+    let isComplete = false;
+    const {writable, output} = getTestWritable();
+    const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+      <div>
+        <Suspense fallback="Loading">
+          <Wait />
+        </Suspense>
+      </div>,
+      writable,
+      {
+        onCompleteAll() {
+          isComplete = true;
+        },
+      },
+    );
+    await jest.runAllTimers();
+    expect(output.result).toBe('');
+    expect(isComplete).toBe(false);
+    // Resolve the loading.
+    hasLoaded = true;
+    await resolve();
+
+    await jest.runAllTimers();
+
+    expect(output.result).toBe('');
+    expect(isComplete).toBe(true);
+
+    // First we write our header.
+    output.result +=
+      '<!doctype html><html><head><title>test</title><head><body>';
+    // Then React starts writing.
+    startWriting();
+    expect(output.result).toBe(
+      '<!doctype html><html><head><title>test</title><head><body><div><!--$-->Done<!--/$--></div>',
+    );
+  });
+
+  // @gate experimental
   it('should error the stream when an error is thrown at the root', async () => {
+    const reportedErrors = [];
     const {writable, output, completed} = getTestWritable();
     ReactDOMFizzServer.pipeToNodeWritable(
       <div>
         <Throw />
       </div>,
       writable,
+      {
+        onError(x) {
+          reportedErrors.push(x);
+        },
+      },
     );
 
     // The stream is errored even if we haven't started writing.
@@ -102,10 +156,13 @@ describe('ReactDOMFizzServer', () => {
 
     expect(output.error).toBe(theError);
     expect(output.result).toBe('');
+    // This type of error is reported to the error callback too.
+    expect(reportedErrors).toEqual([theError]);
   });
 
   // @gate experimental
   it('should error the stream when an error is thrown inside a fallback', async () => {
+    const reportedErrors = [];
     const {writable, output, completed} = getTestWritable();
     const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
       <div>
@@ -114,6 +171,11 @@ describe('ReactDOMFizzServer', () => {
         </Suspense>
       </div>,
       writable,
+      {
+        onError(x) {
+          reportedErrors.push(x);
+        },
+      },
     );
     startWriting();
 
@@ -121,10 +183,12 @@ describe('ReactDOMFizzServer', () => {
 
     expect(output.error).toBe(theError);
     expect(output.result).toBe('');
+    expect(reportedErrors).toEqual([theError]);
   });
 
   // @gate experimental
   it('should not error the stream when an error is thrown inside suspense boundary', async () => {
+    const reportedErrors = [];
     const {writable, output, completed} = getTestWritable();
     const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
       <div>
@@ -133,6 +197,11 @@ describe('ReactDOMFizzServer', () => {
         </Suspense>
       </div>,
       writable,
+      {
+        onError(x) {
+          reportedErrors.push(x);
+        },
+      },
     );
     startWriting();
 
@@ -140,6 +209,8 @@ describe('ReactDOMFizzServer', () => {
 
     expect(output.error).toBe(undefined);
     expect(output.result).toContain('Loading');
+    // While no error is reported to the stream, the error is reported to the callback.
+    expect(reportedErrors).toEqual([theError]);
   });
 
   // @gate experimental

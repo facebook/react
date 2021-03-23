@@ -217,6 +217,9 @@ const ReactNoopServer = ReactFizzServer({
 
 type Options = {
   progressiveChunkSize?: number,
+  onReadyToStream?: () => void,
+  onCompleteAll?: () => void,
+  onError?: (error: mixed) => void,
 };
 
 function render(children: React$Element<any>, options?: Options): Destination {
@@ -234,6 +237,9 @@ function render(children: React$Element<any>, options?: Options): Destination {
     destination,
     null,
     options ? options.progressiveChunkSize : undefined,
+    options ? options.onError : undefined,
+    options ? options.onCompleteAll : undefined,
+    options ? options.onReadyToStream : undefined,
   );
   ReactNoopServer.startWork(request);
   ReactNoopServer.startFlowing(request);

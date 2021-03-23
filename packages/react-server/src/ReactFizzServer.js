@@ -110,6 +110,15 @@ type Request = {
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
   partialBoundaries: Array<SuspenseBoundary>, // Partially completed boundaries that can flush its segments early.
+  // onError is called when an error happens anywhere in the tree. It might recover.
+  onError: (error: mixed) => void,
+  // onCompleteAll is called when all pending work is done but it may not have flushed yet.
+  // This is a good time to start writing if you want only HTML and no intermediate steps.
+  onCompleteAll: () => void,
+  // onReadyToStream is called when there is at least a root fallback ready to show.
+  // Typically you don't need this callback because it's best practice to always have a
+  // root fallback ready so there's no need to wait.
+  onReadyToStream: () => void,
 };
 
 // This is a default heuristic for how to split up the HTML content into progressive
@@ -134,6 +143,9 @@ export function createRequest(
   destination: Destination,
   responseState: ResponseState,
   progressiveChunkSize: number = DEFAULT_PROGRESSIVE_CHUNK_SIZE,
+  onError: (error: mixed) => void = noop,
+  onCompleteAll: () => void = noop,
+  onReadyToStream: () => void = noop,
 ): Request {
   const pingedWork = [];
   const abortSet: Set<SuspendedWork> = new Set();
@@ -151,6 +163,9 @@ export function createRequest(
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
+    onError,
+    onCompleteAll,
+    onReadyToStream,
   };
   // This segment represents the root fallback.
   const rootSegment = createPendingSegment(request, 0, null);
@@ -235,7 +250,9 @@ function createPendingSegment(
 }
 
 function reportError(request: Request, error: mixed): void {
-  // TODO: Report errors on the server.
+  // If this callback errors, we intentionally let that error bubble up to become a fatal error
+  // so that someone fixes the error reporting instead of hiding it.
+  request.onError(error);
 }
 
 function fatalError(request: Request, error: mixed): void {
@@ -389,27 +406,30 @@ function erroredWork(
   segment: Segment,
   error: mixed,
 ) {
-  request.allPendingWork--;
-  if (boundary !== null) {
-    boundary.pendingWork--;
-  }
-
   // Report the error to a global handler.
   reportError(request, error);
   if (boundary === null) {
     fatalError(request, error);
-  } else if (!boundary.forceClientRender) {
-    boundary.forceClientRender = true;
+  } else {
+    boundary.pendingWork--;
+    if (!boundary.forceClientRender) {
+      boundary.forceClientRender = true;
 
-    // Regardless of what happens next, this boundary won't be displayed,
-    // so we can flush it, if the parent already flushed.
-    if (boundary.parentFlushed) {
-      // We don't have a preference where in the queue this goes since it's likely
-      // to error on the client anyway. However, intentionally client-rendered
-      // boundaries should be flushed earlier so that they can start on the client.
-      // We reuse the same queue for errors.
-      request.clientRenderedBoundaries.push(boundary);
+      // Regardless of what happens next, this boundary won't be displayed,
+      // so we can flush it, if the parent already flushed.
+      if (boundary.parentFlushed) {
+        // We don't have a preference where in the queue this goes since it's likely
+        // to error on the client anyway. However, intentionally client-rendered
+        // boundaries should be flushed earlier so that they can start on the client.
+        // We reuse the same queue for errors.
+        request.clientRenderedBoundaries.push(boundary);
+      }
     }
+  }
+
+  request.allPendingWork--;
+  if (request.allPendingWork === 0) {
+    request.onCompleteAll();
   }
 }
 
@@ -454,6 +474,10 @@ function abortWork(suspendedWork: SuspendedWork): void {
         request.clientRenderedBoundaries.push(boundary);
       }
     }
+
+    if (request.allPendingWork === 0) {
+      request.onCompleteAll();
+    }
   }
 }
 
@@ -462,10 +486,7 @@ function finishedWork(
   boundary: Root | SuspenseBoundary,
   segment: Segment,
 ) {
-  request.allPendingWork--;
-
   if (boundary === null) {
-    request.pendingRootWork--;
     if (segment.parentFlushed) {
       invariant(
         request.completedRootSegment === null,
@@ -473,42 +494,50 @@ function finishedWork(
       );
       request.completedRootSegment = segment;
     }
-    return;
-  }
-
-  boundary.pendingWork--;
-  if (boundary.forceClientRender) {
-    // This already errored.
-    return;
-  }
-  if (boundary.pendingWork === 0) {
-    // This must have been the last segment we were waiting on. This boundary is now complete.
-    // We can now cancel any pending work on the fallback since we won't need to show it anymore.
-    boundary.fallbackAbortableWork.forEach(abortWorkSoft, request);
-    boundary.fallbackAbortableWork.clear();
-    if (segment.parentFlushed) {
-      // Our parent segment already flushed, so we need to schedule this segment to be emitted.
-      boundary.completedSegments.push(segment);
-    }
-    if (boundary.parentFlushed) {
-      // The segment might be part of a segment that didn't flush yet, but if the boundary's
-      // parent flushed, we need to schedule the boundary to be emitted.
-      request.completedBoundaries.push(boundary);
+    request.pendingRootWork--;
+    if (request.pendingRootWork === 0) {
+      request.onReadyToStream();
     }
   } else {
-    if (segment.parentFlushed) {
-      // Our parent already flushed, so we need to schedule this segment to be emitted.
-      const completedSegments = boundary.completedSegments;
-      completedSegments.push(segment);
-      if (completedSegments.length === 1) {
-        // This is the first time since we last flushed that we completed anything.
-        // We can schedule this boundary to emit its partially completed segments early
-        // in case the parent has already been flushed.
-        if (boundary.parentFlushed) {
-          request.partialBoundaries.push(boundary);
+    boundary.pendingWork--;
+    if (boundary.forceClientRender) {
+      // This already errored.
+    } else if (boundary.pendingWork === 0) {
+      // This must have been the last segment we were waiting on. This boundary is now complete.
+      // We can now cancel any pending work on the fallback since we won't need to show it anymore.
+      boundary.fallbackAbortableWork.forEach(abortWorkSoft, request);
+      boundary.fallbackAbortableWork.clear();
+      if (segment.parentFlushed) {
+        // Our parent segment already flushed, so we need to schedule this segment to be emitted.
+        boundary.completedSegments.push(segment);
+      }
+      if (boundary.parentFlushed) {
+        // The segment might be part of a segment that didn't flush yet, but if the boundary's
+        // parent flushed, we need to schedule the boundary to be emitted.
+        request.completedBoundaries.push(boundary);
+      }
+    } else {
+      if (segment.parentFlushed) {
+        // Our parent already flushed, so we need to schedule this segment to be emitted.
+        const completedSegments = boundary.completedSegments;
+        completedSegments.push(segment);
+        if (completedSegments.length === 1) {
+          // This is the first time since we last flushed that we completed anything.
+          // We can schedule this boundary to emit its partially completed segments early
+          // in case the parent has already been flushed.
+          if (boundary.parentFlushed) {
+            request.partialBoundaries.push(boundary);
+          }
         }
       }
     }
+  }
+
+  request.allPendingWork--;
+  if (request.allPendingWork === 0) {
+    // This needs to be called at the very end so that we can synchronously write the result
+    // in the callback if needed.
+    request.onCompleteAll();
   }
 }
 
@@ -573,6 +602,7 @@ function performWork(request: Request): void {
       flushCompletedQueues(request);
     }
   } catch (error) {
+    reportError(request, error);
     fatalError(request, error);
   } finally {
     ReactCurrentDispatcher.current = prevDispatcher;
@@ -920,6 +950,7 @@ export function startFlowing(request: Request): void {
   try {
     flushCompletedQueues(request);
   } catch (error) {
+    reportError(request, error);
     fatalError(request, error);
   }
 }
@@ -934,6 +965,7 @@ export function abort(request: Request): void {
       flushCompletedQueues(request);
     }
   } catch (error) {
+    reportError(request, error);
     fatalError(request, error);
   }
 }
