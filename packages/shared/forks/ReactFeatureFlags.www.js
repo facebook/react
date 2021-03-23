@@ -32,6 +32,7 @@ export const {
   disableNativeComponentFrames,
   disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation,
+  deletedTreeCleanUpLevel,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.

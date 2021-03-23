@@ -25,6 +25,7 @@ import {
   getInstanceFromNode as getInstanceFromNodeDOMTree,
   isContainerMarkedAsRoot,
 } from './ReactDOMComponentTree';
+export {detachDeletedInstance} from './ReactDOMComponentTree';
 import {hasRole} from './DOMAccessibilityRoles';
 import {
   createElement,
