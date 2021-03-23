@@ -35,6 +35,7 @@ import {
   enableSuspenseCallback,
   enableScopeAPI,
   enableStrictEffects,
+  enableStrongMemoryCleanup,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -60,6 +61,7 @@ import {
   hasCaughtError,
   clearCaughtError,
 } from 'shared/ReactErrorUtils';
+import {unmountNode} from './ReactFiberHostConfig';
 import {
   NoFlags,
   ContentReset,
@@ -1212,9 +1214,24 @@ function detachFiberMutation(fiber: Fiber) {
   fiber.return = null;
 }
 
-export function detachFiberAfterEffects(fiber: Fiber): void {
+export function detachFiberAfterEffects(
+  fiber: Fiber,
+  recurseIntoSibbling: ?boolean,
+): void {
   // Null out fields to improve GC for references that may be lingering (e.g. DevTools).
   // Note that we already cleared the return pointer in detachFiberMutation().
+  if (enableStrongMemoryCleanup) {
+    if (fiber.child) {
+      detachFiberAfterEffects(fiber.child, true);
+    }
+    if (fiber.sibling && recurseIntoSibbling === true) {
+      detachFiberAfterEffects(fiber.sibling, true);
+    }
+    if (fiber.stateNode) {
+      unmountNode(fiber.stateNode);
+    }
+    fiber.return = null;
+  }
   fiber.alternate = null;
   fiber.child = null;
   fiber.deletions = null;

@@ -471,3 +471,7 @@ export function afterActiveInstanceBlur() {
 export function preparePortalMount(portalInstance: any): void {
   // noop
 }
+
+export function unmountNode(node: any): void {
+  // noop
+}

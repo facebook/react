@@ -43,6 +43,17 @@ const internalEventHandlersKey = '__reactEvents$' + randomKey;
 const internalEventHandlerListenersKey = '__reactListeners$' + randomKey;
 const internalEventHandlesSetKey = '__reactHandles$' + randomKey;
 
+export function unmountNode(
+  node: Instance | TextInstance | SuspenseInstance | ReactScopeInstance,
+): void {
+  delete (node: any)[internalInstanceKey];
+  delete (node: any)[internalPropsKey];
+  delete (node: any)[internalContainerInstanceKey];
+  delete (node: any)[internalEventHandlersKey];
+  delete (node: any)[internalEventHandlerListenersKey];
+  delete (node: any)[internalEventHandlesSetKey];
+}
+
 export function precacheFiberNode(
   hostInst: Fiber,
   node: Instance | TextInstance | SuspenseInstance | ReactScopeInstance,

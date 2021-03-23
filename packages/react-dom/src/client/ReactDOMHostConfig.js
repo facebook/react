@@ -24,6 +24,7 @@ import {
   getFiberFromScopeInstance,
   getInstanceFromNode as getInstanceFromNodeDOMTree,
   isContainerMarkedAsRoot,
+  unmountNode as unmountNodeFromDOMTree,
 } from './ReactDOMComponentTree';
 import {hasRole} from './DOMAccessibilityRoles';
 import {
@@ -1208,4 +1209,8 @@ export function setupIntersectionObserver(
       observer.unobserve((target: any));
     },
   };
+}
+
+export function unmountNode(node: any): void {
+  unmountNodeFromDOMTree(node);
 }

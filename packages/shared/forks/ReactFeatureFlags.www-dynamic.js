@@ -52,6 +52,7 @@ export const disableNativeComponentFrames = false;
 export const createRootStrictEffectsByDefault = false;
 export const enableStrictEffects = false;
 export const enableUseRefAccessWarning = __VARIANT__;
+export const enableStrongMemoryCleanup = __VARIANT__;
 
 export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;

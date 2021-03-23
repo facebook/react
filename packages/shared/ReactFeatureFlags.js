@@ -112,6 +112,9 @@ export const disableNativeComponentFrames = false;
 // If there are no still-mounted boundaries, the errors should be rethrown.
 export const skipUnmountedBoundaries = false;
 
+// When a node is unmounted, recurse into the Fiber subtree and clean out references.
+export const enableStrongMemoryCleanup = false;
+
 // --------------------------
 // Future APIs to be deprecated
 // --------------------------
