@@ -795,35 +795,25 @@ describe('ReactDOMServer', () => {
     }
   });
 
-  it('warns about lowercase html but not in svg tags', () => {
+  it('does not warn about lowercase html especially not in svg tags', () => {
     function CompositeG(props) {
       // Make sure namespace passes through composites
       return <g>{props.children}</g>;
     }
-    expect(() =>
-      ReactDOMServer.renderToStaticMarkup(
-        <div>
-          <inPUT />
-          <svg>
-            <CompositeG>
-              <linearGradient />
-              <foreignObject>
-                {/* back to HTML */}
-                <iFrame />
-              </foreignObject>
-            </CompositeG>
-          </svg>
-        </div>,
-      ),
-    ).toErrorDev([
-      'Warning: <inPUT /> is using incorrect casing. ' +
-        'Use PascalCase for React components, ' +
-        'or lowercase for HTML elements.',
-      // linearGradient doesn't warn
-      'Warning: <iFrame /> is using incorrect casing. ' +
-        'Use PascalCase for React components, ' +
-        'or lowercase for HTML elements.',
-    ]);
+    ReactDOMServer.renderToStaticMarkup(
+      <div>
+        <inPUT />
+        <svg>
+          <CompositeG>
+            <linearGradient />
+            <foreignObject>
+              {/* back to HTML */}
+              <iFrame />
+            </foreignObject>
+          </CompositeG>
+        </svg>
+      </div>,
+    );
   });
 
   it('should warn about contentEditable and children', () => {

@@ -62,11 +62,6 @@ import {
   currentPartialRenderer,
   setCurrentPartialRenderer,
 } from './ReactPartialRendererHooks';
-import {
-  HTML_NAMESPACE,
-  getIntrinsicNamespace,
-  getChildNamespace,
-} from '../shared/DOMNamespaces';
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import assertValidProps from '../shared/assertValidProps';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
@@ -353,7 +348,6 @@ function createOpenTagMarkup(
   tagVerbatim: string,
   tagLowercase: string,
   props: Object,
-  namespace: string,
   makeStaticMarkup: boolean,
   isRootElement: boolean,
 ): string {
@@ -707,7 +701,6 @@ function resolve(
 
 type Frame = {
   type: mixed,
-  domNamespace: string,
   children: FlatReactChildren,
   fallbackFrame?: Frame,
   childIndex: number,
@@ -745,9 +738,6 @@ class ReactDOMServerRenderer {
 
     const topFrame: Frame = {
       type: null,
-      // Assume all trees start in the HTML namespace (not totally true, but
-      // this is what we did historically)
-      domNamespace: HTML_NAMESPACE,
       children: flatChildren,
       childIndex: 0,
       context: emptyObject,
@@ -922,7 +912,7 @@ class ReactDOMServerRenderer {
           ((frame: any): FrameDev).debugElementStack.length = 0;
         }
         try {
-          outBuffer += this.render(child, frame.context, frame.domNamespace);
+          outBuffer += this.render(child, frame.context);
         } catch (err) {
           if (err != null && typeof err.then === 'function') {
             if (enableSuspenseServerRenderer) {
@@ -959,11 +949,7 @@ class ReactDOMServerRenderer {
     }
   }
 
-  render(
-    child: ReactNode | null,
-    context: Object,
-    parentNamespace: string,
-  ): string {
+  render(child: ReactNode | null, context: Object): string {
     if (typeof child === 'string' || typeof child === 'number') {
       const text = '' + child;
       if (text === '') {
@@ -1002,7 +988,6 @@ class ReactDOMServerRenderer {
         const nextChildren = toArray(nextChild);
         const frame: Frame = {
           type: null,
-          domNamespace: parentNamespace,
           children: nextChildren,
           childIndex: 0,
           context: context,
@@ -1019,7 +1004,7 @@ class ReactDOMServerRenderer {
       const elementType = nextElement.type;
 
       if (typeof elementType === 'string') {
-        return this.renderDOM(nextElement, context, parentNamespace);
+        return this.renderDOM(nextElement, context);
       }
 
       switch (elementType) {
@@ -1041,7 +1026,6 @@ class ReactDOMServerRenderer {
           );
           const frame: Frame = {
             type: null,
-            domNamespace: parentNamespace,
             children: nextChildren,
             childIndex: 0,
             context: context,
@@ -1063,7 +1047,6 @@ class ReactDOMServerRenderer {
               );
               const frame: Frame = {
                 type: null,
-                domNamespace: parentNamespace,
                 children: nextChildren,
                 childIndex: 0,
                 context: context,
@@ -1081,7 +1064,6 @@ class ReactDOMServerRenderer {
             );
             const fallbackFrame: Frame = {
               type: null,
-              domNamespace: parentNamespace,
               children: fallbackChildren,
               childIndex: 0,
               context: context,
@@ -1090,7 +1072,6 @@ class ReactDOMServerRenderer {
             const frame: Frame = {
               fallbackFrame,
               type: REACT_SUSPENSE_TYPE,
-              domNamespace: parentNamespace,
               children: nextChildren,
               childIndex: 0,
               context: context,
@@ -1115,7 +1096,6 @@ class ReactDOMServerRenderer {
             );
             const frame: Frame = {
               type: null,
-              domNamespace: parentNamespace,
               children: nextChildren,
               childIndex: 0,
               context: context,
@@ -1153,7 +1133,6 @@ class ReactDOMServerRenderer {
             nextChildren = toArray(nextChildren);
             const frame: Frame = {
               type: null,
-              domNamespace: parentNamespace,
               children: nextChildren,
               childIndex: 0,
               context: context,
@@ -1175,7 +1154,6 @@ class ReactDOMServerRenderer {
             ];
             const frame: Frame = {
               type: null,
-              domNamespace: parentNamespace,
               children: nextChildren,
               childIndex: 0,
               context: context,
@@ -1193,7 +1171,6 @@ class ReactDOMServerRenderer {
             const nextChildren = toArray(nextProps.children);
             const frame: Frame = {
               type: provider,
-              domNamespace: parentNamespace,
               children: nextChildren,
               childIndex: 0,
               context: context,
@@ -1243,7 +1220,6 @@ class ReactDOMServerRenderer {
             const nextChildren = toArray(nextProps.children(nextValue));
             const frame: Frame = {
               type: nextChild,
-              domNamespace: parentNamespace,
               children: nextChildren,
               childIndex: 0,
               context: context,
@@ -1274,7 +1250,6 @@ class ReactDOMServerRenderer {
             ];
             const frame: Frame = {
               type: null,
-              domNamespace: parentNamespace,
               children: nextChildren,
               childIndex: 0,
               context: context,
@@ -1319,32 +1294,8 @@ class ReactDOMServerRenderer {
     }
   }
 
-  renderDOM(
-    element: ReactElement,
-    context: Object,
-    parentNamespace: string,
-  ): string {
+  renderDOM(element: ReactElement, context: Object): string {
     const tag = element.type.toLowerCase();
-
-    let namespace = parentNamespace;
-    if (parentNamespace === HTML_NAMESPACE) {
-      namespace = getIntrinsicNamespace(tag);
-    }
-
-    if (__DEV__) {
-      if (namespace === HTML_NAMESPACE) {
-        // Should this check be gated by parent namespace? Not sure we want to
-        // allow <SVG> or <mATH>.
-        if (tag !== element.type) {
-          console.error(
-            '<%s /> is using incorrect casing. ' +
-              'Use PascalCase for React components, ' +
-              'or lowercase for HTML elements.',
-            element.type,
-          );
-        }
-      }
-    }
 
     validateDangerousTag(tag);
 
@@ -1549,7 +1500,6 @@ class ReactDOMServerRenderer {
       element.type,
       tag,
       props,
-      namespace,
       this.makeStaticMarkup,
       this.stack.length === 1,
     );
@@ -1585,7 +1535,6 @@ class ReactDOMServerRenderer {
       children = toArray(props.children);
     }
     const frame = {
-      domNamespace: getChildNamespace(parentNamespace, element.type),
       type: tag,
       children,
       childIndex: 0,

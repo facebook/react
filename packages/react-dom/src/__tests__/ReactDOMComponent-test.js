@@ -1228,15 +1228,7 @@ describe('ReactDOMComponent', () => {
         }
       }
 
-      let returnedValue;
-
-      expect(() => {
-        returnedValue = ReactDOMServer.renderToString(<Container />);
-      }).toErrorDev(
-        '<BR /> is using incorrect casing. ' +
-          'Use PascalCase for React components, ' +
-          'or lowercase for HTML elements.',
-      );
+      const returnedValue = ReactDOMServer.renderToString(<Container />);
       expect(returnedValue).not.toContain('</BR>');
     });
 
