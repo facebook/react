@@ -63,7 +63,7 @@ import {
   setCurrentPartialRenderer,
 } from './ReactPartialRendererHooks';
 import {
-  Namespaces,
+  HTML_NAMESPACE,
   getIntrinsicNamespace,
   getChildNamespace,
 } from '../shared/DOMNamespaces';
@@ -747,7 +747,7 @@ class ReactDOMServerRenderer {
       type: null,
       // Assume all trees start in the HTML namespace (not totally true, but
       // this is what we did historically)
-      domNamespace: Namespaces.html,
+      domNamespace: HTML_NAMESPACE,
       children: flatChildren,
       childIndex: 0,
       context: emptyObject,
@@ -1327,12 +1327,12 @@ class ReactDOMServerRenderer {
     const tag = element.type.toLowerCase();
 
     let namespace = parentNamespace;
-    if (parentNamespace === Namespaces.html) {
+    if (parentNamespace === HTML_NAMESPACE) {
       namespace = getIntrinsicNamespace(tag);
     }
 
     if (__DEV__) {
-      if (namespace === Namespaces.html) {
+      if (namespace === HTML_NAMESPACE) {
         // Should this check be gated by parent namespace? Not sure we want to
         // allow <SVG> or <mATH>.
         if (tag !== element.type) {

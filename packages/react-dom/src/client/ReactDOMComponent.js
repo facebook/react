@@ -54,7 +54,7 @@ import {
   setValueForStyles,
   validateShorthandPropertyCollisionInDev,
 } from '../shared/CSSPropertyOperations';
-import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces';
+import {HTML_NAMESPACE, getIntrinsicNamespace} from '../shared/DOMNamespaces';
 import {
   getPropertyInfo,
   shouldIgnoreAttribute,
@@ -85,8 +85,6 @@ const AUTOFOCUS = 'autoFocus';
 const CHILDREN = 'children';
 const STYLE = 'style';
 const HTML = '__html';
-
-const {html: HTML_NAMESPACE} = Namespaces;
 
 let warnedUnknownTags;
 let suppressHydrationWarning;
