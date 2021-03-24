@@ -7,10 +7,7 @@
  * @flow
  */
 
-import {
-  enableDeprecatedFlareAPI,
-  enableFilterEmptyStringAttributesDOM,
-} from 'shared/ReactFeatureFlags';
+import {enableFilterEmptyStringAttributesDOM} from 'shared/ReactFeatureFlags';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -65,7 +62,6 @@ export const ATTRIBUTE_NAME_START_CHAR =
 export const ATTRIBUTE_NAME_CHAR =
   ATTRIBUTE_NAME_START_CHAR + '\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040';
 
-export const ID_ATTRIBUTE_NAME = 'data-reactid';
 export const ROOT_ATTRIBUTE_NAME = 'data-reactroot';
 export const VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
   '^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$',
@@ -252,9 +248,6 @@ const reservedProps = [
   'suppressHydrationWarning',
   'style',
 ];
-if (enableDeprecatedFlareAPI) {
-  reservedProps.push('DEPRECATED_flareListeners');
-}
 
 reservedProps.forEach(name => {
   properties[name] = new PropertyInfoRecord(

@@ -198,7 +198,7 @@ describe('ReactProfiler DevTools integration', () => {
     root.update(<Text text="B" />);
 
     // Update B should not instantly expire.
-    expect(Scheduler).toFlushExpired([]);
+    expect(Scheduler).toFlushAndYieldThrough([]);
 
     expect(Scheduler).toFlushAndYield(['B']);
     expect(root).toMatchRenderedOutput('B');

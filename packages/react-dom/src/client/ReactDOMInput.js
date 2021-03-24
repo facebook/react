@@ -16,6 +16,7 @@ import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import {getToStringValue, toString} from './ToStringValue';
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {updateValueIfChanged} from './inputValueTracking';
+import getActiveElement from './getActiveElement';
 import {disableInputAttributeSyncing} from 'shared/ReactFeatureFlags';
 
 import type {ToStringValue} from './ToStringValue';
@@ -86,7 +87,7 @@ export function initWrapperState(element: Element, props: Object) {
           '(specify either the checked prop, or the defaultChecked prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
+          'https://reactjs.org/link/controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
@@ -103,7 +104,7 @@ export function initWrapperState(element: Element, props: Object) {
           '(specify either the value prop, or the defaultValue prop, but not ' +
           'both). Decide between using a controlled or uncontrolled input ' +
           'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
+          'https://reactjs.org/link/controlled-components',
         getCurrentFiberOwnerNameInDevOrNull() || 'A component',
         props.type,
       );
@@ -147,7 +148,7 @@ export function updateWrapper(element: Element, props: Object) {
           'This is likely caused by the value changing from undefined to ' +
           'a defined value, which should not happen. ' +
           'Decide between using a controlled or uncontrolled input ' +
-          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+          'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
       );
       didWarnUncontrolledToControlled = true;
     }
@@ -161,7 +162,7 @@ export function updateWrapper(element: Element, props: Object) {
           'This is likely caused by the value changing from a defined to ' +
           'undefined, which should not happen. ' +
           'Decide between using a controlled or uncontrolled input ' +
-          'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
+          'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components',
       );
       didWarnControlledToUncontrolled = true;
     }
@@ -412,7 +413,7 @@ export function setDefaultValue(
   if (
     // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
     type !== 'number' ||
-    node.ownerDocument.activeElement !== node
+    getActiveElement(node.ownerDocument) !== node
   ) {
     if (value == null) {
       node.defaultValue = toString(node._wrapperState.initialValue);

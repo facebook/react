@@ -259,13 +259,6 @@ addEventPoolingTo(SyntheticEvent);
  * @return {object} defineProperty object
  */
 function getPooledWarningPropertyDefinition(propName, getVal) {
-  const isFunction = typeof getVal === 'function';
-  return {
-    configurable: true,
-    set: set,
-    get: get,
-  };
-
   function set(val) {
     const action = isFunction ? 'setting the method' : 'setting the property';
     warn(action, 'This is effectively a no-op');
@@ -289,13 +282,19 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
         "This synthetic event is reused for performance reasons. If you're seeing this, " +
           "you're %s `%s` on a released/nullified synthetic event. %s. " +
           'If you must keep the original synthetic event around, use event.persist(). ' +
-          'See https://fb.me/react-event-pooling for more information.',
+          'See https://reactjs.org/link/event-pooling for more information.',
         action,
         propName,
         result,
       );
     }
   }
+  const isFunction = typeof getVal === 'function';
+  return {
+    configurable: true,
+    set: set,
+    get: get,
+  };
 }
 
 function createOrGetPooledEvent(

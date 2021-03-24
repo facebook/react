@@ -49,26 +49,28 @@ Later operations will reference strings by a one-based index. For example, `1` w
 
 #### Adding a root node
 
-Adding a root to the tree requires sending 4 numbers:
+Adding a root to the tree requires sending 5 numbers:
 
 1. add operation constant (`1`)
 1. fiber id
-1. element type constant (`8 === ElementTypeRoot`)
+1. element type constant (`11 === ElementTypeRoot`)
 1. profiling supported flag
+1. owner metadata flag
 
 For example, adding a root fiber with an id of 1:
 ```js
 [
   1, // add operation
   1, // fiber id
-  8, // ElementTypeRoot
+  11, // ElementTypeRoot
   1, // this root's renderer supports profiling
+  1, // this root has owner metadata
 ]
 ```
 
 #### Adding a leaf node
 
-Adding a leaf node takes a variable number of numbers since we need to decode the name (and potentially the key):
+Adding a leaf node to the tree requires sending 7 numbers:
 
 1. add operation constant (`1`)
 1. fiber id
@@ -86,7 +88,6 @@ For example, adding a function component `<Foo>` with an id 2:
   1,   // ElementTypeClass
   1,   // parent id
   0,   // owner id
-  3,   // encoded display name size
   1,   // id of "Foo" displayName in the string table
   0,   // id of null key in the string table (always zero for null)
 ]
@@ -140,11 +141,40 @@ While profiling is in progress, we send an extra operation any time a fiber is a
 For example, updating the base duration for a fiber with an id of 1:
 ```js
 [
+  4,  // update tree base duration operation
   4,  // tree base duration operation
   1,  // fiber id
   32, // new tree base duration value
 ]
 ```
+
+#### Updating errors and warnings on a Fiber
+
+We record calls to `console.warn` and `console.error` in the backend.
+Periodically we notify the frontend that the number of recorded calls got updated.
+We only send the serialized messages as part of the `inspectElement` event.
+
+
+```js
+[
+  5, // update error/warning counts operation
+  4, // fiber id
+  0, // number of calls to console.error from that fiber
+  3, // number of calls to console.warn from that fiber
+]
+```
+
+#### Removing a root
+
+Special case of unmounting an entire root (include its decsendants). This specialized message replaces what would otherwise be a series of remove-node operations. It is currently only used in one case: updating component filters. The primary motivation for this is actually to preserve fiber ids for components that are re-added to the tree after the updated filters have been applied. This preserves mappings between the Fiber (id) and things like error and warning logs.
+
+```js
+[
+  6, // remove root operation
+]
+```
+
+This operation has no additional payload because renderer and root ids are already sent at the beginning of every operations payload.
 
 ## Reconstructing the tree
 

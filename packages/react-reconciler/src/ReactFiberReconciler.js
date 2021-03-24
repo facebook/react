@@ -29,7 +29,7 @@ import {
   IsThisRendererActing as IsThisRendererActing_old,
   getPublicRootInstance as getPublicRootInstance_old,
   attemptSynchronousHydration as attemptSynchronousHydration_old,
-  attemptUserBlockingHydration as attemptUserBlockingHydration_old,
+  attemptDiscreteHydration as attemptDiscreteHydration_old,
   attemptContinuousHydration as attemptContinuousHydration_old,
   attemptHydrationAtCurrentPriority as attemptHydrationAtCurrentPriority_old,
   findHostInstance as findHostInstance_old,
@@ -40,7 +40,7 @@ import {
   act as act_old,
   createPortal as createPortal_old,
   createComponentSelector as createComponentSelector_old,
-  createHasPsuedoClassSelector as createHasPsuedoClassSelector_old,
+  createHasPseudoClassSelector as createHasPseudoClassSelector_old,
   createRoleSelector as createRoleSelector_old,
   createTestNameSelector as createTestNameSelector_old,
   createTextSelector as createTextSelector_old,
@@ -69,7 +69,7 @@ import {
   IsThisRendererActing as IsThisRendererActing_new,
   getPublicRootInstance as getPublicRootInstance_new,
   attemptSynchronousHydration as attemptSynchronousHydration_new,
-  attemptUserBlockingHydration as attemptUserBlockingHydration_new,
+  attemptDiscreteHydration as attemptDiscreteHydration_new,
   attemptContinuousHydration as attemptContinuousHydration_new,
   attemptHydrationAtCurrentPriority as attemptHydrationAtCurrentPriority_new,
   findHostInstance as findHostInstance_new,
@@ -80,7 +80,7 @@ import {
   act as act_new,
   createPortal as createPortal_new,
   createComponentSelector as createComponentSelector_new,
-  createHasPsuedoClassSelector as createHasPsuedoClassSelector_new,
+  createHasPseudoClassSelector as createHasPseudoClassSelector_new,
   createRoleSelector as createRoleSelector_new,
   createTestNameSelector as createTestNameSelector_new,
   createTextSelector as createTextSelector_new,
@@ -134,9 +134,9 @@ export const getPublicRootInstance = enableNewReconciler
 export const attemptSynchronousHydration = enableNewReconciler
   ? attemptSynchronousHydration_new
   : attemptSynchronousHydration_old;
-export const attemptUserBlockingHydration = enableNewReconciler
-  ? attemptUserBlockingHydration_new
-  : attemptUserBlockingHydration_old;
+export const attemptDiscreteHydration = enableNewReconciler
+  ? attemptDiscreteHydration_new
+  : attemptDiscreteHydration_old;
 export const attemptContinuousHydration = enableNewReconciler
   ? attemptContinuousHydration_new
   : attemptContinuousHydration_old;
@@ -170,9 +170,9 @@ export const createComponentSelector = enableNewReconciler
   : createComponentSelector_old;
 
 //TODO: "psuedo" is spelled "pseudo"
-export const createHasPsuedoClassSelector = enableNewReconciler
-  ? createHasPsuedoClassSelector_new
-  : createHasPsuedoClassSelector_old;
+export const createHasPseudoClassSelector = enableNewReconciler
+  ? createHasPseudoClassSelector_new
+  : createHasPseudoClassSelector_old;
 export const createRoleSelector = enableNewReconciler
   ? createRoleSelector_new
   : createRoleSelector_old;

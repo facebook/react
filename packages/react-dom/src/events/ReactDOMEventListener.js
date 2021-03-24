@@ -8,16 +8,14 @@
  */
 
 import type {AnyNativeEvent} from '../events/PluginModuleType';
-import type {EventPriority} from 'shared/ReactTypes';
-import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
+import type {
+  FiberRoot,
+  ReactPriorityLevel,
+} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
-import type {DOMTopLevelEventType} from '../events/TopLevelEventTypes';
+import type {DOMEventName} from '../events/DOMEventNames';
+import type {LanePriority} from 'react-reconciler/src/ReactFiberLane.new';
 
-// Intentionally not named imports because Rollup would use dynamic dispatch for
-// CommonJS interop named imports.
-import * as Scheduler from 'scheduler';
-
-import {DEPRECATED_dispatchEventForResponderEventSystem} from './DeprecatedDOMEventResponderSystem';
 import {
   isReplayableDiscreteEvent,
   queueDiscreteEvent,
@@ -33,39 +31,80 @@ import {
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
 import {
   type EventSystemFlags,
+  IS_CAPTURE_PHASE,
   IS_LEGACY_FB_SUPPORT_MODE,
-  PLUGIN_EVENT_SYSTEM,
-  RESPONDER_EVENT_SYSTEM,
 } from './EventSystemFlags';
 
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
 import {
-  enableDeprecatedFlareAPI,
   enableLegacyFBSupport,
+  enableNewReconciler,
 } from 'shared/ReactFeatureFlags';
-import {
-  UserBlockingEvent,
-  ContinuousEvent,
-  DiscreteEvent,
-} from 'shared/ReactTypes';
-import {getEventPriorityForPluginSystem} from './DOMEventProperties';
-import {dispatchEventForPluginEventSystem} from './DOMModernPluginEventSystem';
+import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 import {
   flushDiscreteUpdatesIfNeeded,
   discreteUpdates,
 } from './ReactDOMUpdateBatching';
-import {
-  InputContinuousLanePriority,
-  getCurrentUpdateLanePriority,
-  setCurrentUpdateLanePriority,
-} from 'react-reconciler/src/ReactFiberLane';
 
-const {
-  unstable_UserBlockingPriority: UserBlockingPriority,
-  unstable_runWithPriority: runWithPriority,
-} = Scheduler;
+import {
+  InputContinuousLanePriority as InputContinuousLanePriority_old,
+  getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
+  setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_old,
+} from 'react-reconciler/src/ReactFiberLane.old';
+import {
+  InputContinuousLanePriority as InputContinuousLanePriority_new,
+  getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
+  setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_new,
+} from 'react-reconciler/src/ReactFiberLane.new';
+import {getCurrentPriorityLevel as getCurrentPriorityLevel_old} from 'react-reconciler/src/SchedulerWithReactIntegration.old';
+import {
+  getCurrentPriorityLevel as getCurrentPriorityLevel_new,
+  IdlePriority as IdleSchedulerPriority,
+  ImmediatePriority as ImmediateSchedulerPriority,
+  LowPriority as LowSchedulerPriority,
+  NormalPriority as NormalSchedulerPriority,
+  UserBlockingPriority as UserBlockingSchedulerPriority,
+} from 'react-reconciler/src/SchedulerWithReactIntegration.new';
+import {
+  DiscreteEventPriority,
+  ContinuousEventPriority,
+  DefaultEventPriority,
+  IdleEventPriority,
+} from 'react-reconciler/src/ReactEventPriorities';
+
+const InputContinuousLanePriority = enableNewReconciler
+  ? InputContinuousLanePriority_new
+  : InputContinuousLanePriority_old;
+const getCurrentUpdateLanePriority = enableNewReconciler
+  ? getCurrentUpdateLanePriority_new
+  : getCurrentUpdateLanePriority_old;
+const setCurrentUpdateLanePriority = enableNewReconciler
+  ? setCurrentUpdateLanePriority_new
+  : setCurrentUpdateLanePriority_old;
+const getCurrentPriorityLevel = enableNewReconciler
+  ? getCurrentPriorityLevel_new
+  : getCurrentPriorityLevel_old;
+
+function schedulerPriorityToLanePriority(
+  schedulerPriorityLevel: ReactPriorityLevel,
+): LanePriority {
+  switch (schedulerPriorityLevel) {
+    case ImmediateSchedulerPriority:
+      return DiscreteEventPriority;
+    case UserBlockingSchedulerPriority:
+      return ContinuousEventPriority;
+    case NormalSchedulerPriority:
+    case LowSchedulerPriority:
+      // TODO: Handle LowSchedulerPriority, somehow. Maybe the same lane as hydration.
+      return DefaultEventPriority;
+    case IdleSchedulerPriority:
+      return IdleEventPriority;
+    default:
+      return DefaultEventPriority;
+  }
+}
 
 // TODO: can we stop exporting these?
 export let _enabled = true;
@@ -82,12 +121,12 @@ export function isEnabled() {
 
 export function createEventListenerWrapper(
   targetContainer: EventTarget,
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
 ): Function {
   return dispatchEvent.bind(
     null,
-    topLevelType,
+    domEventName,
     eventSystemFlags,
     targetContainer,
   );
@@ -95,37 +134,33 @@ export function createEventListenerWrapper(
 
 export function createEventListenerWrapperWithPriority(
   targetContainer: EventTarget,
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
-  priority?: EventPriority,
 ): Function {
-  const eventPriority =
-    priority === undefined
-      ? getEventPriorityForPluginSystem(topLevelType)
-      : priority;
+  const eventPriority = getEventPriority(domEventName);
   let listenerWrapper;
   switch (eventPriority) {
-    case DiscreteEvent:
+    case DiscreteEventPriority:
       listenerWrapper = dispatchDiscreteEvent;
       break;
-    case UserBlockingEvent:
-      listenerWrapper = dispatchUserBlockingUpdate;
+    case ContinuousEventPriority:
+      listenerWrapper = dispatchContinuousEvent;
       break;
-    case ContinuousEvent:
+    case DefaultEventPriority:
     default:
       listenerWrapper = dispatchEvent;
       break;
   }
   return listenerWrapper.bind(
     null,
-    topLevelType,
+    domEventName,
     eventSystemFlags,
     targetContainer,
   );
 }
 
 function dispatchDiscreteEvent(
-  topLevelType,
+  domEventName,
   eventSystemFlags,
   container,
   nativeEvent,
@@ -140,40 +175,30 @@ function dispatchDiscreteEvent(
   }
   discreteUpdates(
     dispatchEvent,
-    topLevelType,
+    domEventName,
     eventSystemFlags,
     container,
     nativeEvent,
   );
 }
 
-function dispatchUserBlockingUpdate(
-  topLevelType,
+function dispatchContinuousEvent(
+  domEventName,
   eventSystemFlags,
   container,
   nativeEvent,
 ) {
-  // TODO: Double wrapping is necessary while we decouple Scheduler priority.
   const previousPriority = getCurrentUpdateLanePriority();
   try {
     setCurrentUpdateLanePriority(InputContinuousLanePriority);
-    runWithPriority(
-      UserBlockingPriority,
-      dispatchEvent.bind(
-        null,
-        topLevelType,
-        eventSystemFlags,
-        container,
-        nativeEvent,
-      ),
-    );
+    dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
     setCurrentUpdateLanePriority(previousPriority);
   }
 }
 
 export function dispatchEvent(
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
@@ -181,13 +206,25 @@ export function dispatchEvent(
   if (!_enabled) {
     return;
   }
-  if (hasQueuedDiscreteEvents() && isReplayableDiscreteEvent(topLevelType)) {
+
+  // TODO: replaying capture phase events is currently broken
+  // because we used to do it during top-level native bubble handlers
+  // but now we use different bubble and capture handlers.
+  // In eager mode, we attach capture listeners early, so we need
+  // to filter them out until we fix the logic to handle them correctly.
+  const allowReplay = (eventSystemFlags & IS_CAPTURE_PHASE) === 0;
+
+  if (
+    allowReplay &&
+    hasQueuedDiscreteEvents() &&
+    isReplayableDiscreteEvent(domEventName)
+  ) {
     // If we already have a queue of discrete events, and this is another discrete
     // event, then we can't dispatch it regardless of its target, since they
     // need to dispatch in order.
     queueDiscreteEvent(
       null, // Flags that we're not actually blocked on anything as far as we know.
-      topLevelType,
+      domEventName,
       eventSystemFlags,
       targetContainer,
       nativeEvent,
@@ -196,7 +233,7 @@ export function dispatchEvent(
   }
 
   const blockedOn = attemptToDispatchEvent(
-    topLevelType,
+    domEventName,
     eventSystemFlags,
     targetContainer,
     nativeEvent,
@@ -204,74 +241,54 @@ export function dispatchEvent(
 
   if (blockedOn === null) {
     // We successfully dispatched this event.
-    clearIfContinuousEvent(topLevelType, nativeEvent);
+    if (allowReplay) {
+      clearIfContinuousEvent(domEventName, nativeEvent);
+    }
     return;
   }
 
-  if (isReplayableDiscreteEvent(topLevelType)) {
-    // This this to be replayed later once the target is available.
-    queueDiscreteEvent(
-      blockedOn,
-      topLevelType,
-      eventSystemFlags,
-      targetContainer,
-      nativeEvent,
-    );
-    return;
+  if (allowReplay) {
+    if (isReplayableDiscreteEvent(domEventName)) {
+      // This this to be replayed later once the target is available.
+      queueDiscreteEvent(
+        blockedOn,
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        nativeEvent,
+      );
+      return;
+    }
+    if (
+      queueIfContinuousEvent(
+        blockedOn,
+        domEventName,
+        eventSystemFlags,
+        targetContainer,
+        nativeEvent,
+      )
+    ) {
+      return;
+    }
+    // We need to clear only if we didn't queue because
+    // queueing is accumulative.
+    clearIfContinuousEvent(domEventName, nativeEvent);
   }
-
-  if (
-    queueIfContinuousEvent(
-      blockedOn,
-      topLevelType,
-      eventSystemFlags,
-      targetContainer,
-      nativeEvent,
-    )
-  ) {
-    return;
-  }
-
-  // We need to clear only if we didn't queue because
-  // queueing is accummulative.
-  clearIfContinuousEvent(topLevelType, nativeEvent);
 
   // This is not replayable so we'll invoke it but without a target,
   // in case the event system needs to trace it.
-  if (enableDeprecatedFlareAPI) {
-    if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
-      dispatchEventForPluginEventSystem(
-        topLevelType,
-        eventSystemFlags,
-        nativeEvent,
-        null,
-        targetContainer,
-      );
-    }
-    if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
-      // React Flare event system
-      DEPRECATED_dispatchEventForResponderEventSystem(
-        (topLevelType: any),
-        null,
-        nativeEvent,
-        getEventTarget(nativeEvent),
-        eventSystemFlags,
-      );
-    }
-  } else {
-    dispatchEventForPluginEventSystem(
-      topLevelType,
-      eventSystemFlags,
-      nativeEvent,
-      null,
-      targetContainer,
-    );
-  }
+  dispatchEventForPluginEventSystem(
+    domEventName,
+    eventSystemFlags,
+    nativeEvent,
+    null,
+    targetContainer,
+  );
 }
 
 // Attempt dispatching an event. Returns a SuspenseInstance or Container if it's blocked.
 export function attemptToDispatchEvent(
-  topLevelType: DOMTopLevelEventType,
+  domEventName: DOMEventName,
   eventSystemFlags: EventSystemFlags,
   targetContainer: EventTarget,
   nativeEvent: AnyNativeEvent,
@@ -318,36 +335,105 @@ export function attemptToDispatchEvent(
       }
     }
   }
-
-  if (enableDeprecatedFlareAPI) {
-    if (eventSystemFlags & PLUGIN_EVENT_SYSTEM) {
-      dispatchEventForPluginEventSystem(
-        topLevelType,
-        eventSystemFlags,
-        nativeEvent,
-        targetInst,
-        targetContainer,
-      );
-    }
-    if (eventSystemFlags & RESPONDER_EVENT_SYSTEM) {
-      // React Flare event system
-      DEPRECATED_dispatchEventForResponderEventSystem(
-        (topLevelType: any),
-        targetInst,
-        nativeEvent,
-        nativeEventTarget,
-        eventSystemFlags,
-      );
-    }
-  } else {
-    dispatchEventForPluginEventSystem(
-      topLevelType,
-      eventSystemFlags,
-      nativeEvent,
-      targetInst,
-      targetContainer,
-    );
-  }
+  dispatchEventForPluginEventSystem(
+    domEventName,
+    eventSystemFlags,
+    nativeEvent,
+    targetInst,
+    targetContainer,
+  );
   // We're not blocked on anything.
   return null;
+}
+
+export function getEventPriority(domEventName: DOMEventName): * {
+  switch (domEventName) {
+    // Used by SimpleEventPlugin:
+    case 'cancel':
+    case 'click':
+    case 'close':
+    case 'contextmenu':
+    case 'copy':
+    case 'cut':
+    case 'auxclick':
+    case 'dblclick':
+    case 'dragend':
+    case 'dragstart':
+    case 'drop':
+    case 'focusin':
+    case 'focusout':
+    case 'input':
+    case 'invalid':
+    case 'keydown':
+    case 'keypress':
+    case 'keyup':
+    case 'mousedown':
+    case 'mouseup':
+    case 'paste':
+    case 'pause':
+    case 'play':
+    case 'pointercancel':
+    case 'pointerdown':
+    case 'pointerup':
+    case 'ratechange':
+    case 'reset':
+    case 'seeked':
+    case 'submit':
+    case 'touchcancel':
+    case 'touchend':
+    case 'touchstart':
+    case 'volumechange':
+    // Used by polyfills:
+    // eslint-disable-next-line no-fallthrough
+    case 'change':
+    case 'selectionchange':
+    case 'textInput':
+    case 'compositionstart':
+    case 'compositionend':
+    case 'compositionupdate':
+    // Only enableCreateEventHandleAPI:
+    // eslint-disable-next-line no-fallthrough
+    case 'beforeblur':
+    case 'afterblur':
+    // Not used by React but could be by user code:
+    // eslint-disable-next-line no-fallthrough
+    case 'beforeinput':
+    case 'blur':
+    case 'fullscreenchange':
+    case 'focus':
+    case 'hashchange':
+    case 'popstate':
+    case 'select':
+    case 'selectstart':
+      return DiscreteEventPriority;
+    case 'drag':
+    case 'dragenter':
+    case 'dragexit':
+    case 'dragleave':
+    case 'dragover':
+    case 'mousemove':
+    case 'mouseout':
+    case 'mouseover':
+    case 'pointermove':
+    case 'pointerout':
+    case 'pointerover':
+    case 'scroll':
+    case 'toggle':
+    case 'touchmove':
+    case 'wheel':
+    // Not used by React but could be by user code:
+    // eslint-disable-next-line no-fallthrough
+    case 'mouseenter':
+    case 'mouseleave':
+      return ContinuousEventPriority;
+    case 'message': {
+      // We might be in the Scheduler callback.
+      // Eventually this mechanism will be replaced by a check
+      // of the current priority on the native scheduler.
+      const schedulerPriority = getCurrentPriorityLevel();
+      return schedulerPriorityToLanePriority(schedulerPriority);
+    }
+    default:
+      return DefaultEventPriority;
+  }
 }

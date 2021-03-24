@@ -9,10 +9,16 @@
 
 import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
-import type {Fiber, FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
+import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {LanePriority} from './ReactFiberLane.old';
 
-import {DidCapture} from './ReactSideEffectTags';
+import {DidCapture} from './ReactFiberFlags';
+import {
+  lanePriorityToSchedulerPriority,
+  NoLanePriority,
+} from './ReactFiberLane.old';
+import {NormalPriority} from './SchedulerWithReactIntegration.old';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
@@ -40,7 +46,7 @@ export function injectInternals(internals: Object): boolean {
       console.error(
         'The installed version of React DevTools is too old and will not work ' +
           'with the current version of React. Please update React DevTools. ' +
-          'https://fb.me/react-devtools',
+          'https://reactjs.org/link/react-devtools',
       );
     }
     // DevTools exists, even though it doesn't support Fiber.
@@ -78,18 +84,19 @@ export function onScheduleRoot(root: FiberRoot, children: ReactNodeList) {
   }
 }
 
-export function onCommitRoot(
-  root: FiberRoot,
-  priorityLevel: ReactPriorityLevel,
-) {
+export function onCommitRoot(root: FiberRoot, priorityLevel: LanePriority) {
   if (injectedHook && typeof injectedHook.onCommitFiberRoot === 'function') {
     try {
-      const didError = (root.current.effectTag & DidCapture) === DidCapture;
+      const didError = (root.current.flags & DidCapture) === DidCapture;
       if (enableProfilerTimer) {
+        const schedulerPriority =
+          priorityLevel === NoLanePriority
+            ? NormalPriority
+            : lanePriorityToSchedulerPriority(priorityLevel);
         injectedHook.onCommitFiberRoot(
           rendererID,
           root,
-          priorityLevel,
+          schedulerPriority,
           didError,
         );
       } else {

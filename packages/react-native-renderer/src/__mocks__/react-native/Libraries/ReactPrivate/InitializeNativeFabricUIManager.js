@@ -122,6 +122,8 @@ const RCTFabricUIManager = {
 
   dispatchCommand: jest.fn(),
 
+  sendAccessibilityEvent: jest.fn(),
+
   registerEventHandler: jest.fn(function registerEventHandler(callback) {}),
 
   measure: jest.fn(function measure(node, callback) {

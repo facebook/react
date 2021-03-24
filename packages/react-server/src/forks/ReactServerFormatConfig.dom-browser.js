@@ -7,4 +7,4 @@
  * @flow
  */
 
-export * from '../ReactDOMServerFormatConfig';
+export * from 'react-dom/src/server/ReactDOMServerFormatConfig';

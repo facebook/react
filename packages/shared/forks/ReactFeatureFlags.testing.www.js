@@ -13,21 +13,20 @@ import typeof * as ExportsType from './ReactFeatureFlags.testing.www';
 export const debugRenderPhaseSideEffectsForStrictMode = false;
 export const enableDebugTracing = false;
 export const enableSchedulingProfiler = false;
-export const enableSchedulingProfilerComponentStacks = false;
 export const warnAboutDeprecatedLifecycles = true;
 export const replayFailedUnitOfWorkWithInvokeGuardedCallback = false;
 export const enableProfilerTimer = false;
 export const enableProfilerCommitHooks = false;
+export const enableProfilerNestedUpdatePhase = false;
+export const enableProfilerNestedUpdateScheduledHook = false;
 export const enableSchedulerTracing = false;
 export const enableSuspenseServerRenderer = true;
 export const enableSelectiveHydration = true;
-export const enableBlocksAPI = true;
 export const enableLazyElements = false;
+export const enableCache = false;
 export const disableJavaScriptURLs = true;
 export const disableInputAttributeSyncing = false;
 export const enableSchedulerDebugging = false;
-export const enableDeprecatedFlareAPI = true;
-export const enableFundamentalAPI = false;
 export const enableScopeAPI = true;
 export const enableCreateEventHandleAPI = true;
 export const warnAboutUnmockedScheduler = true;
@@ -44,10 +43,21 @@ export const warnAboutSpreadingKeyToJSX = false;
 export const enableComponentStackLocations = true;
 export const enableLegacyFBSupport = !__EXPERIMENTAL__;
 export const enableFilterEmptyStringAttributesDOM = false;
+export const disableNativeComponentFrames = false;
+export const skipUnmountedBoundaries = true;
+export const deletedTreeCleanUpLevel = 1;
 
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
-export const decoupleUpdatePriorityFromScheduler = false;
+export const enableDiscreteEventFlushingChange = true;
+
+export const enableStrictEffects = false;
+export const createRootStrictEffectsByDefault = false;
+export const enableUseRefAccessWarning = false;
+
+export const enableRecursiveCommitTraversal = false;
+export const disableSchedulerTimeoutInWorkLoop = false;
+export const enableLazyContextPropagation = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars

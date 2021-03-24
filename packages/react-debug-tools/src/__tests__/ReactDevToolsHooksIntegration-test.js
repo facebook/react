@@ -133,7 +133,7 @@ describe('React hooks DevTools integration', () => {
   });
 
   // This test case is based on an open source bug report:
-  // facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
+  // https://github.com/facebookincubator/redux-react-hook/issues/34#issuecomment-466693787
   it('should handle interleaved stateful hooks (e.g. useState) and non-stateful hooks (e.g. useContext)', () => {
     const MyContext = React.createContext(1);
 
@@ -201,32 +201,32 @@ describe('React hooks DevTools integration', () => {
     if (__DEV__) {
       // First render was locked
       expect(renderer.toJSON().children).toEqual(['Loading']);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
 
       // Release the lock
       setSuspenseHandler(() => false);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
 
       // Lock again
       setSuspenseHandler(() => true);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
 
       // Release the lock again
       setSuspenseHandler(() => false);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
 
       // Ensure it checks specific fibers.
       setSuspenseHandler(f => f === fiber || f === fiber.alternate);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
       setSuspenseHandler(f => f !== fiber && f !== fiber.alternate);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
     } else {
       expect(renderer.toJSON().children).toEqual(['Done']);
@@ -259,33 +259,33 @@ describe('React hooks DevTools integration', () => {
     if (__DEV__) {
       // First render was locked
       expect(renderer.toJSON().children).toEqual(['Loading']);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
 
       // Release the lock
       setSuspenseHandler(() => false);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       Scheduler.unstable_flushAll();
       expect(renderer.toJSON().children).toEqual(['Done']);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
 
       // Lock again
       setSuspenseHandler(() => true);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
 
       // Release the lock again
       setSuspenseHandler(() => false);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
 
       // Ensure it checks specific fibers.
       setSuspenseHandler(f => f === fiber || f === fiber.alternate);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Loading']);
       setSuspenseHandler(f => f !== fiber && f !== fiber.alternate);
-      scheduleUpdate(fiber); // Re-render
+      act(() => scheduleUpdate(fiber)); // Re-render
       expect(renderer.toJSON().children).toEqual(['Done']);
     } else {
       expect(renderer.toJSON().children).toEqual(['Done']);

@@ -1228,7 +1228,7 @@ describe('ReactDOMInput', () => {
         '(specify either the checked prop, or the defaultChecked prop, but not ' +
         'both). Decide between using a controlled or uncontrolled input ' +
         'element and remove one of these props. More info: ' +
-        'https://fb.me/react-controlled-components',
+        'https://reactjs.org/link/controlled-components',
     );
     ReactDOM.unmountComponentAtNode(container);
 
@@ -1255,7 +1255,7 @@ describe('ReactDOMInput', () => {
         '(specify either the value prop, or the defaultValue prop, but not ' +
         'both). Decide between using a controlled or uncontrolled input ' +
         'element and remove one of these props. More info: ' +
-        'https://fb.me/react-controlled-components',
+        'https://reactjs.org/link/controlled-components',
     );
     ReactDOM.unmountComponentAtNode(container);
 
@@ -1275,7 +1275,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -1294,7 +1294,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
         '    in input (at **)',
     ]);
   });
@@ -1314,7 +1314,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -1329,7 +1329,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -1347,7 +1347,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -1364,7 +1364,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -1381,7 +1381,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -1401,7 +1401,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -1416,7 +1416,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -1431,7 +1431,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -1444,7 +1444,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -1459,7 +1459,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -1474,7 +1474,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -1489,7 +1489,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -1504,7 +1504,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from undefined to ' +
         'a defined value, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
         '    in input (at **)',
     );
   });
@@ -1557,7 +1557,7 @@ describe('ReactDOMInput', () => {
         'This is likely caused by the value changing from a defined to ' +
         'undefined, which should not happen. ' +
         'Decide between using a controlled or uncontrolled input ' +
-        'element for the lifetime of the component. More info: https://fb.me/react-controlled-components\n' +
+        'element for the lifetime of the component. More info: https://reactjs.org/link/controlled-components\n' +
         '    in input (at **)',
     );
   });

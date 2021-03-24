@@ -10,14 +10,16 @@
 import type {Source} from 'shared/ReactElementType';
 import type {LazyComponent} from 'react/src/ReactLazy';
 
-import {enableComponentStackLocations} from 'shared/ReactFeatureFlags';
+import {
+  enableComponentStackLocations,
+  disableNativeComponentFrames,
+} from 'shared/ReactFeatureFlags';
 
 import {
   REACT_SUSPENSE_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_FORWARD_REF_TYPE,
   REACT_MEMO_TYPE,
-  REACT_BLOCK_TYPE,
   REACT_LAZY_TYPE,
 } from 'shared/ReactSymbols';
 
@@ -66,7 +68,7 @@ export function describeNativeComponentFrame(
   construct: boolean,
 ): string {
   // If something asked for a stack inside a fake render, it should get ignored.
-  if (!fn || reentry) {
+  if (disableNativeComponentFrames || !fn || reentry) {
     return '';
   }
 
@@ -301,8 +303,6 @@ export function describeUnknownElementTypeFrameInDEV(
       case REACT_MEMO_TYPE:
         // Memo may contain any component type so we recursively resolve it.
         return describeUnknownElementTypeFrameInDEV(type.type, source, ownerFn);
-      case REACT_BLOCK_TYPE:
-        return describeFunctionComponentFrame(type._render, source, ownerFn);
       case REACT_LAZY_TYPE: {
         const lazyComponent: LazyComponent<any, any> = (type: any);
         const payload = lazyComponent._payload;

@@ -7,14 +7,8 @@
  * @flow
  */
 
-import type {
-  ReactEventResponder,
-  ReactEventResponderInstance,
-  ReactFundamentalComponentInstance,
-} from 'shared/ReactTypes';
-
-import {enableDeprecatedFlareAPI} from 'shared/ReactFeatureFlags';
 import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
+import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 export type Type = string;
 export type Props = Object;
@@ -57,8 +51,8 @@ export type RendererInspectionConfig = $ReadOnly<{||}>;
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoPersistence';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoHydration';
 export * from 'react-reconciler/src/ReactFiberHostConfigWithNoTestSelectors';
+export * from 'react-reconciler/src/ReactFiberHostConfigWithNoMicrotasks';
 
-const EVENT_COMPONENT_CONTEXT = {};
 const NO_CONTEXT = {};
 const UPDATE_SIGNAL = {};
 const nodeToInstanceMap = new WeakMap();
@@ -161,19 +155,9 @@ export function createInstance(
   hostContext: Object,
   internalInstanceHandle: Object,
 ): Instance {
-  let propsToUse = props;
-  if (enableDeprecatedFlareAPI) {
-    if (props.DEPRECATED_flareListeners != null) {
-      // We want to remove the "DEPRECATED_flareListeners" prop
-      // as we don't want it in the test renderer's
-      // instance props.
-      const {DEPRECATED_flareListeners, ...otherProps} = props; // eslint-disable-line
-      propsToUse = otherProps;
-    }
-  }
   return {
     type,
-    props: propsToUse,
+    props,
     isHidden: false,
     children: [],
     internalInstanceHandle,
@@ -224,17 +208,6 @@ export function createTextInstance(
   hostContext: Object,
   internalInstanceHandle: Object,
 ): TextInstance {
-  if (__DEV__) {
-    if (enableDeprecatedFlareAPI) {
-      if (hostContext === EVENT_COMPONENT_CONTEXT) {
-        console.error(
-          'validateDOMNesting: React event components cannot have text DOM nodes as children. ' +
-            'Wrap the child text "%s" in an element.',
-          text,
-        );
-      }
-    }
-  }
   return {
     text,
     isHidden: false,
@@ -242,11 +215,16 @@ export function createTextInstance(
   };
 }
 
+export function getCurrentEventPriority(): * {
+  return DefaultEventPriority;
+}
+
 export const isPrimaryRenderer = false;
 export const warnsIfNotActing = true;
 
 export const scheduleTimeout = setTimeout;
 export const cancelTimeout = clearTimeout;
+
 export const noTimeout = -1;
 
 // -------------------
@@ -311,70 +289,6 @@ export function unhideTextInstance(
   textInstance.isHidden = false;
 }
 
-export function DEPRECATED_mountResponderInstance(
-  responder: ReactEventResponder<any, any>,
-  responderInstance: ReactEventResponderInstance<any, any>,
-  props: Object,
-  state: Object,
-  instance: Instance,
-) {
-  // noop
-}
-
-export function DEPRECATED_unmountResponderInstance(
-  responderInstance: ReactEventResponderInstance<any, any>,
-): void {
-  // noop
-}
-
-export function getFundamentalComponentInstance(
-  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
-): Instance {
-  const {impl, props, state} = fundamentalInstance;
-  return impl.getInstance(null, props, state);
-}
-
-export function mountFundamentalComponent(
-  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
-): void {
-  const {impl, instance, props, state} = fundamentalInstance;
-  const onMount = impl.onMount;
-  if (onMount !== undefined) {
-    onMount(null, instance, props, state);
-  }
-}
-
-export function shouldUpdateFundamentalComponent(
-  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
-): boolean {
-  const {impl, prevProps, props, state} = fundamentalInstance;
-  const shouldUpdate = impl.shouldUpdate;
-  if (shouldUpdate !== undefined) {
-    return shouldUpdate(null, prevProps, props, state);
-  }
-  return true;
-}
-
-export function updateFundamentalComponent(
-  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
-): void {
-  const {impl, instance, prevProps, props, state} = fundamentalInstance;
-  const onUpdate = impl.onUpdate;
-  if (onUpdate !== undefined) {
-    onUpdate(null, instance, prevProps, props, state);
-  }
-}
-
-export function unmountFundamentalComponent(
-  fundamentalInstance: ReactFundamentalComponentInstance<any, any>,
-): void {
-  const {impl, instance, props, state} = fundamentalInstance;
-  const onUnmount = impl.onUnmount;
-  if (onUnmount !== undefined) {
-    onUnmount(null, instance, props, state);
-  }
-}
-
 export function getInstanceFromNode(mockNode: Object) {
   const instance = nodeToInstanceMap.get(mockNode);
   if (instance !== undefined) {
@@ -420,7 +334,7 @@ export function makeOpaqueHydratingObject(
   };
 }
 
-export function beforeActiveInstanceBlur() {
+export function beforeActiveInstanceBlur(internalInstanceHandle: Object) {
   // noop
 }
 
@@ -438,4 +352,8 @@ export function prepareScopeUpdate(scopeInstance: Object, inst: Object): void {
 
 export function getInstanceFromScope(scopeInstance: Object): null | Object {
   return nodeToInstanceMap.get(scopeInstance) || null;
+}
+
+export function detachDeletedInstance(node: Instance): void {
+  // noop
 }

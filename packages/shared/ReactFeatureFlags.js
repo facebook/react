@@ -18,11 +18,18 @@ export const enableDebugTracing = false;
 // Adds user timing marks for e.g. state updates, suspense, and work loop stuff,
 // for an experimental scheduling profiler tool.
 export const enableSchedulingProfiler = __PROFILE__ && __EXPERIMENTAL__;
-export const enableSchedulingProfilerComponentStacks = false;
 
 // Helps identify side effects in render-phase lifecycle hooks and setState
-// reducers by double invoking them in Strict Mode.
+// reducers by double invoking them in StrictLegacyMode.
 export const debugRenderPhaseSideEffectsForStrictMode = __DEV__;
+
+// Helps identify code that is not safe for planned Offscreen API and Suspense semantics;
+// this feature flag only impacts StrictEffectsMode.
+export const enableStrictEffects = false;
+
+// If TRUE, trees rendered with createRoot will be StrictEffectsMode.
+// If FALSE, these trees will be StrictLegacyMode.
+export const createRootStrictEffectsByDefault = false;
 
 // To preserve the "Pause on caught exceptions" behavior of the debugger, we
 // replay the begin phase of a failed component inside invokeGuardedCallback.
@@ -37,6 +44,13 @@ export const enableProfilerTimer = __PROFILE__;
 // Record durations for commit and passive effects phases.
 export const enableProfilerCommitHooks = false;
 
+// Phase param passed to onRender callback differentiates between an "update" and a "cascading-update".
+export const enableProfilerNestedUpdatePhase = false;
+
+// Profiler API accepts a function to be called when a nested update is scheduled.
+// This callback accepts the component type (class instance or function) the update is scheduled for.
+export const enableProfilerNestedUpdateScheduledHook = false;
+
 // Trace which interactions trigger each commit.
 export const enableSchedulerTracing = __PROFILE__;
 
@@ -45,20 +59,14 @@ export const enableSuspenseServerRenderer = __EXPERIMENTAL__;
 export const enableSelectiveHydration = __EXPERIMENTAL__;
 
 // Flight experiments
-export const enableBlocksAPI = __EXPERIMENTAL__;
 export const enableLazyElements = __EXPERIMENTAL__;
+export const enableCache = __EXPERIMENTAL__;
 
 // Only used in www builds.
 export const enableSchedulerDebugging = false;
 
 // Disable javascript: URL strings in href for XSS protection.
 export const disableJavaScriptURLs = false;
-
-// Experimental React Flare event system and event components support.
-export const enableDeprecatedFlareAPI = false;
-
-// Experimental Host Component support.
-export const enableFundamentalAPI = false;
 
 // Experimental Scope support.
 export const enableScopeAPI = false;
@@ -96,6 +104,27 @@ export const enableComponentStackLocations = true;
 
 export const enableNewReconciler = false;
 
+export const disableNativeComponentFrames = false;
+
+// Errors that are thrown while unmounting (or after in the case of passive effects)
+// should bypass any error boundaries that are also unmounting (or have unmounted)
+// and be handled by the nearest still-mounted boundary.
+// If there are no still-mounted boundaries, the errors should be rethrown.
+export const skipUnmountedBoundaries = false;
+
+// When a node is unmounted, recurse into the Fiber subtree and clean out
+// references. Each level cleans up more fiber fields than the previous level.
+// As far as we know, React itself doesn't leak, but because the Fiber contains
+// cycles, even a single leak in product code can cause us to retain large
+// amounts of memory.
+//
+// The long term plan is to remove the cycles, but in the meantime, we clear
+// additional fields to mitigate.
+//
+// It's an enum so that we can experiment with different levels of
+// aggressiveness.
+export const deletedTreeCleanUpLevel = 1;
+
 // --------------------------
 // Future APIs to be deprecated
 // --------------------------
@@ -126,5 +155,12 @@ export const enableLegacyFBSupport = false;
 // new behavior.
 export const deferRenderPhaseUpdateToNextBatch = true;
 
-// Replacement for runWithPriority in React internals.
-export const decoupleUpdatePriorityFromScheduler = false;
+export const enableDiscreteEventFlushingChange = false;
+
+export const enableUseRefAccessWarning = false;
+
+export const enableRecursiveCommitTraversal = false;
+
+export const disableSchedulerTimeoutInWorkLoop = false;
+
+export const enableLazyContextPropagation = false;
