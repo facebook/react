@@ -17,6 +17,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   SuspenseBoundaryID,
   ResponseState,
+  FormatContext,
 } from './ReactServerFormatConfig';
 
 import {
@@ -44,6 +45,7 @@ import {
   pushStartInstance,
   pushEndInstance,
   createSuspenseBoundaryID,
+  getChildFormatContext,
 } from './ReactServerFormatConfig';
 import {REACT_ELEMENT_TYPE, REACT_SUSPENSE_TYPE} from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -69,6 +71,7 @@ type SuspendedWork = {
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment, // the segment we'll write to
   abortSet: Set<SuspendedWork>, // the abortable set that this work belongs to
+  formatContext: FormatContext,
   assignID: null | SuspenseBoundaryID, // id to assign to the content
 };
 
@@ -142,6 +145,7 @@ export function createRequest(
   children: ReactNodeList,
   destination: Destination,
   responseState: ResponseState,
+  rootContext: FormatContext,
   progressiveChunkSize: number = DEFAULT_PROGRESSIVE_CHUNK_SIZE,
   onError: (error: mixed) => void = noop,
   onCompleteAll: () => void = noop,
@@ -177,6 +181,7 @@ export function createRequest(
     null,
     rootSegment,
     abortSet,
+    rootContext,
     null,
   );
   pingedWork.push(rootWork);
@@ -213,6 +218,7 @@ function createSuspendedWork(
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment,
   abortSet: Set<SuspendedWork>,
+  formatContext: FormatContext,
   assignID: null | SuspenseBoundaryID,
 ): SuspendedWork {
   request.allPendingWork++;
@@ -227,6 +233,7 @@ function createSuspendedWork(
     blockedBoundary,
     blockedSegment,
     abortSet,
+    formatContext,
     assignID,
   };
   abortSet.add(work);
@@ -261,6 +268,20 @@ function fatalError(request: Request, error: mixed): void {
   // It's also called if React itself or its host configs errors.
   request.status = CLOSED;
   closeWithError(request.destination, error);
+}
+
+// TODO: Add legacy and regular contexts here too
+let currentFormatContext: FormatContext;
+function restoreContext(work: SuspendedWork): void {
+  currentFormatContext = work.formatContext;
+}
+
+function saveContext(workToSaveTo: SuspendedWork): void {
+  workToSaveTo.formatContext = currentFormatContext;
+}
+
+function resetContext(): void {
+  currentFormatContext = (undefined: any);
 }
 
 function renderNode(
@@ -315,11 +336,11 @@ function renderNode(
           parentBoundary,
           newSegment,
           abortSet,
+          currentFormatContext,
           assignID,
         );
         const ping = suspendedWork.ping;
         x.then(ping, ping);
-        // TODO: Emit place holder
       } else {
         // We can rethrow to terminate the rest of this tree.
         throw x;
@@ -333,6 +354,8 @@ function renderNode(
       request.responseState,
       assignID,
     );
+    const prevContext = currentFormatContext;
+    currentFormatContext = getChildFormatContext(prevContext, type, props);
     renderNode(
       request,
       parentBoundary,
@@ -341,6 +364,7 @@ function renderNode(
       abortSet,
       null,
     );
+    currentFormatContext = prevContext;
     pushEndInstance(segment.chunks, type, props);
   } else if (type === REACT_SUSPENSE_TYPE) {
     // We need to push an "empty" thing here to identify the parent suspense boundary.
@@ -372,6 +396,7 @@ function renderNode(
       parentBoundary,
       boundarySegment,
       fallbackAbortSet,
+      currentFormatContext,
       newBoundary.id, // This is the ID we want to give this fallback so we can replace it later.
     );
     // TODO: This should be queued at a separate lower priority queue so that we only work
@@ -383,15 +408,17 @@ function renderNode(
     // We mark the root segment as having its parent flushed. It's not really flushed but there is
     // no parent segment so there's nothing to wait on.
     contentRootSegment.parentFlushed = true;
-    // TODO: Currently this is running synchronously. We could instead schedule this to pingedWork.
+    // Currently this is running synchronously. We could instead schedule this to pingedWork.
     // I suspect that there might be some efficiency benefits from not creating the suspended work
-    // and instead just using the stack if possible. Particularly when we add contexts.
+    // and instead just using the stack if possible.
+    // TODO: Call this directly instead of messing with saving and restoring contexts.
     const contentWork = createSuspendedWork(
       request,
       content,
       newBoundary,
       contentRootSegment,
       abortSet,
+      currentFormatContext,
       null,
     );
     retryWork(request, contentWork);
@@ -542,6 +569,7 @@ function finishedWork(
 }
 
 function retryWork(request: Request, work: SuspendedWork): void {
+  restoreContext(work);
   const segment = work.blockedSegment;
   if (segment.status !== PENDING) {
     // We completed this by other means before we had a chance to retry it.
@@ -572,6 +600,7 @@ function retryWork(request: Request, work: SuspendedWork): void {
     finishedWork(request, boundary, segment);
   } catch (x) {
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
+      saveContext(work);
       // Something suspended again, let's pick it back up later.
       const ping = work.ping;
       x.then(ping, ping);
@@ -580,6 +609,8 @@ function retryWork(request: Request, work: SuspendedWork): void {
       segment.status = ERRORED;
       erroredWork(request, boundary, segment, x);
     }
+  } finally {
+    resetContext();
   }
 }
 

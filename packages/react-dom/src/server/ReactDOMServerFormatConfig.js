@@ -22,7 +22,7 @@ import {
 import escapeTextForBrowser from './escapeTextForBrowser';
 import invariant from 'shared/invariant';
 
-// Per response,
+// Per response, global state that is not contextual to the rendering subtree.
 export type ResponseState = {
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
@@ -48,6 +48,56 @@ export function createResponseState(
     sentCompleteBoundaryFunction: false,
     sentClientRenderFunction: false,
   };
+}
+
+// Constants for the namespace we use. We don't actually provide the namespace but conditionally
+// use different segment parents based on namespace. Therefore we use constants instead of the string.
+const ROOT_NAMESPACE = 0; // At the root we don't need to know which namespace it is. We just need to know that it's already the right one.
+const HTML_NAMESPACE = 1;
+const SVG_NAMESPACE = 2;
+const MATHML_NAMESPACE = 3;
+
+type NamespaceFlag = 0 | 1 | 2 | 3;
+
+// Lets us keep track of contextual state and pick it back up after suspending.
+export type FormatContext = {
+  namespace: NamespaceFlag, // root/svg/html/mathml
+  selectedValue: null | string, // the selected value(s) inside a <select>, or null outside <select>
+};
+
+function createFormatContext(
+  namespace: NamespaceFlag,
+  selectedValue: null | string,
+): FormatContext {
+  return {
+    namespace,
+    selectedValue,
+  };
+}
+
+export function createRootFormatContext(): FormatContext {
+  return createFormatContext(ROOT_NAMESPACE, null);
+}
+
+export function getChildFormatContext(
+  parentContext: FormatContext,
+  type: string,
+  props: Object,
+): FormatContext {
+  switch (type) {
+    case 'select':
+      return createFormatContext(
+        parentContext.namespace,
+        props.value != null ? props.value : props.defaultValue,
+      );
+    case 'svg':
+      return createFormatContext(SVG_NAMESPACE, null);
+    case 'math':
+      return createFormatContext(MATHML_NAMESPACE, null);
+    case 'foreignObject':
+      return createFormatContext(HTML_NAMESPACE, null);
+  }
+  return parentContext;
 }
 
 // This object is used to lazily reuse the ID of the first generated node, or assign one.

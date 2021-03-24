@@ -82,6 +82,10 @@ const ReactNoopServer = ReactFizzServer({
     return {state: 'pending', children: []};
   },
 
+  getChildFormatContext(): null {
+    return null;
+  },
+
   pushTextInstance(target: Array<Uint8Array>, text: string): void {
     const textInstance: TextInstance = {
       text,
@@ -235,6 +239,7 @@ function render(children: React$Element<any>, options?: Options): Destination {
   const request = ReactNoopServer.createRequest(
     children,
     destination,
+    null,
     null,
     options ? options.progressiveChunkSize : undefined,
     options ? options.onError : undefined,
