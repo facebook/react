@@ -132,12 +132,10 @@ import {
 import {
   NoLanePriority,
   SyncLanePriority,
-  SyncBatchedLanePriority,
   DefaultLanePriority,
   NoLanes,
   NoLane,
   SyncLane,
-  SyncBatchedLane,
   NoTimestamp,
   findUpdateLane,
   claimNextTransitionLane,
@@ -380,10 +378,6 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   const mode = fiber.mode;
   if ((mode & ConcurrentMode) === NoMode) {
     return (SyncLane: Lane);
-  } else if ((mode & ConcurrentMode) === NoMode) {
-    return getCurrentUpdateLanePriority() === SyncLanePriority
-      ? (SyncLane: Lane)
-      : (SyncBatchedLane: Lane);
   } else if (
     !deferRenderPhaseUpdateToNextBatch &&
     (executionContext & RenderContext) !== NoContext &&
@@ -452,10 +446,6 @@ function requestRetryLane(fiber: Fiber) {
   const mode = fiber.mode;
   if ((mode & ConcurrentMode) === NoMode) {
     return (SyncLane: Lane);
-  } else if ((mode & ConcurrentMode) === NoMode) {
-    return getCurrentUpdateLanePriority() === SyncLanePriority
-      ? (SyncLane: Lane)
-      : (SyncBatchedLane: Lane);
   }
 
   // See `requestUpdateLane` for explanation of `currentEventWipLanes`
@@ -706,11 +696,6 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       scheduleCallback(ImmediateSchedulerPriority, flushSyncCallbackQueue);
     }
     newCallbackNode = null;
-  } else if (newCallbackPriority === SyncBatchedLanePriority) {
-    newCallbackNode = scheduleCallback(
-      ImmediateSchedulerPriority,
-      performSyncWorkOnRoot.bind(null, root),
-    );
   } else {
     const schedulerPriorityLevel = lanePriorityToSchedulerPriority(
       newCallbackPriority,
