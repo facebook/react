@@ -3631,6 +3631,36 @@ const tests = {
     },
     {
       code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {}, [props?.attribute.method()]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            'React Hook useEffect has a complex expression in the dependency array. ' +
+            'Extract it to a separate variable so it can be statically checked.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
+        function MyComponent(props) {
+          useEffect(() => {}, [props.method()]);
+        }
+      `,
+      errors: [
+        {
+          message:
+            'React Hook useEffect has a complex expression in the dependency array. ' +
+            'Extract it to a separate variable so it can be statically checked.',
+          suggestions: undefined,
+        },
+      ],
+    },
+    {
+      code: normalizeIndent`
         function MyComponent() {
           const ref = useRef();
           const [state, setState] = useState();

@@ -1656,6 +1656,11 @@ function analyzePropertyChain(node, optionalChains) {
     return result;
   } else if (node.type === 'ChainExpression' && !node.computed) {
     const expression = node.expression;
+
+    if (expression.type === 'CallExpression') {
+      throw new Error(`Unsupported node type: ${expression.type}`);
+    }
+
     const object = analyzePropertyChain(expression.object, optionalChains);
     const property = analyzePropertyChain(expression.property, null);
     const result = `${object}.${property}`;
