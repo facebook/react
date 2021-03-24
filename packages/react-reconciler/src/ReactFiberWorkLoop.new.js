@@ -436,8 +436,11 @@ export function requestUpdateLane(fiber: Fiber): Lane {
 
   // This update originated outside React. Ask the host environement for an
   // appropriate priority, based on the type of event.
-  const eventLanePriority = getCurrentEventPriority();
-  return findUpdateLane(eventLanePriority);
+  //
+  // The opaque type returned by the host config is internally a lane, so we can
+  // use that directly.
+  const eventLane = getCurrentEventPriority();
+  return eventLane;
 }
 
 function requestRetryLane(fiber: Fiber) {

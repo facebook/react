@@ -8,13 +8,9 @@
  */
 
 import type {AnyNativeEvent} from '../events/PluginModuleType';
-import type {
-  FiberRoot,
-  ReactPriorityLevel,
-} from 'react-reconciler/src/ReactInternalTypes';
+import type {FiberRoot} from 'react-reconciler/src/ReactInternalTypes';
 import type {Container, SuspenseInstance} from '../client/ReactDOMHostConfig';
 import type {DOMEventName} from '../events/DOMEventNames';
-import type {LanePriority} from 'react-reconciler/src/ReactFiberLane.new';
 
 import {
   isReplayableDiscreteEvent,
@@ -74,6 +70,8 @@ import {
   IdleEventPriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 
+// TODO: These should use the opaque EventPriority type instead of LanePriority.
+// Then internally we can use a Lane.
 const InputContinuousLanePriority = enableNewReconciler
   ? InputContinuousLanePriority_new
   : InputContinuousLanePriority_old;
@@ -86,25 +84,6 @@ const setCurrentUpdateLanePriority = enableNewReconciler
 const getCurrentPriorityLevel = enableNewReconciler
   ? getCurrentPriorityLevel_new
   : getCurrentPriorityLevel_old;
-
-function schedulerPriorityToLanePriority(
-  schedulerPriorityLevel: ReactPriorityLevel,
-): LanePriority {
-  switch (schedulerPriorityLevel) {
-    case ImmediateSchedulerPriority:
-      return DiscreteEventPriority;
-    case UserBlockingSchedulerPriority:
-      return ContinuousEventPriority;
-    case NormalSchedulerPriority:
-    case LowSchedulerPriority:
-      // TODO: Handle LowSchedulerPriority, somehow. Maybe the same lane as hydration.
-      return DefaultEventPriority;
-    case IdleSchedulerPriority:
-      return IdleEventPriority;
-    default:
-      return DefaultEventPriority;
-  }
-}
 
 // TODO: can we stop exporting these?
 export let _enabled = true;
@@ -431,7 +410,20 @@ export function getEventPriority(domEventName: DOMEventName): * {
       // Eventually this mechanism will be replaced by a check
       // of the current priority on the native scheduler.
       const schedulerPriority = getCurrentPriorityLevel();
-      return schedulerPriorityToLanePriority(schedulerPriority);
+      switch (schedulerPriority) {
+        case ImmediateSchedulerPriority:
+          return DiscreteEventPriority;
+        case UserBlockingSchedulerPriority:
+          return ContinuousEventPriority;
+        case NormalSchedulerPriority:
+        case LowSchedulerPriority:
+          // TODO: Handle LowSchedulerPriority, somehow. Maybe the same lane as hydration.
+          return DefaultEventPriority;
+        case IdleSchedulerPriority:
+          return IdleEventPriority;
+        default:
+          return DefaultEventPriority;
+      }
     }
     default:
       return DefaultEventPriority;
