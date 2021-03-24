@@ -12,6 +12,7 @@
     "LICENSE",
     "README.md",
     "build-info.json",
+    "constants.js",
     "index.js",
     "reflection.js",
     "cjs/"

@@ -216,14 +216,14 @@ This is a property (not a function) that should be set to `true` if your rendere
 
 #### `getCurrentEventPriority`
 
-To implement this method, you'll need some constants available on the _returned_ `Renderer` object:
+To implement this method, you'll need some constants available on the special `react-reconciler/constants` entry point:
 
 ```js
 import {
   DiscreteEventPriority,
   ContinuousEventPriority,
   DefaultEventPriority,
-} from './ReactFiberReconciler/src/ReactEventPriorities';
+} from 'react-reconciler/constants';
 
 const HostConfig = {
   // ...

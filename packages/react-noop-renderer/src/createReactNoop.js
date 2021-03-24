@@ -21,14 +21,15 @@ import type {RootTag} from 'react-reconciler/src/ReactRootTags';
 
 import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
-import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
+import {
+  DefaultEventPriority,
+  ConcurrentRoot,
+  LegacyRoot,
+} from 'react-reconciler/constants';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import enqueueTask from 'shared/enqueueTask';
 const {IsSomeRendererActing} = ReactSharedInternals;
-
-// TODO: Publish public entry point that exports the event priority constants
-const DefaultEventPriority = 8;
 
 type Container = {
   rootID: string,
