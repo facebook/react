@@ -42,7 +42,7 @@ describe(getLanesFromTransportDecimalBitmask, () => {
   it('should ignore lanes outside REACT_TOTAL_NUM_LANES', () => {
     // Sanity check; this test may need to be updated when the no. of fiber
     // lanes are changed.
-    expect(REACT_TOTAL_NUM_LANES).toBe(30);
+    expect(REACT_TOTAL_NUM_LANES).toBe(31);
 
     expect(
       getLanesFromTransportDecimalBitmask(
