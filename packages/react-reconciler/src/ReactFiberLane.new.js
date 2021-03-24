@@ -786,6 +786,12 @@ export function markRootEntangled(root: FiberRoot, entangledLanes: Lanes) {
   }
 }
 
+/**
+ * This function gets inlined in a way that breaks `lane`;
+ * it gets combined with another variable (`nextFallbackChildren`) in `updateSuspenseComponent`.
+ * Longer term, this should be fixed on the Closure side.
+ * @noinline
+ */
 export function getBumpedLaneForHydration(
   root: FiberRoot,
   renderLanes: Lanes,
