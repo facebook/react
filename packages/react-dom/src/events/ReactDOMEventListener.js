@@ -404,6 +404,8 @@ export function getEventPriority(domEventName: DOMEventName): * {
     // eslint-disable-next-line no-fallthrough
     case 'mouseenter':
     case 'mouseleave':
+    case 'pointerenter':
+    case 'pointerleave':
       return ContinuousEventPriority;
     case 'message': {
       // We might be in the Scheduler callback.
