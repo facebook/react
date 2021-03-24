@@ -13,11 +13,7 @@
 let React;
 let ReactNoop;
 let Scheduler;
-
-// Copied from ReactFiberLanes. Don't do this!
-// This is hard coded directly to avoid needing to import, and
-// we'll remove this as we replace runWithPriority with React APIs.
-const InputContinuousLanePriority = 10;
+let ContinuousEventPriority;
 
 describe('ReactIncrementalUpdates', () => {
   beforeEach(() => {
@@ -26,6 +22,8 @@ describe('ReactIncrementalUpdates', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
+    ContinuousEventPriority = require('react-reconciler/constants')
+      .ContinuousEventPriority;
   });
 
   function span(prop) {
@@ -544,7 +542,7 @@ describe('ReactIncrementalUpdates', () => {
         Scheduler.unstable_yieldValue('Committed: ' + log);
         if (log === 'B') {
           // Right after B commits, schedule additional updates.
-          ReactNoop.unstable_runWithPriority(InputContinuousLanePriority, () =>
+          ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () =>
             pushToLog('C'),
           );
           setLog(prevLog => prevLog + 'D');
@@ -564,7 +562,7 @@ describe('ReactIncrementalUpdates', () => {
     await ReactNoop.act(async () => {
       pushToLog('A');
 
-      ReactNoop.unstable_runWithPriority(InputContinuousLanePriority, () =>
+      ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () =>
         pushToLog('B'),
       );
     });
@@ -597,7 +595,7 @@ describe('ReactIncrementalUpdates', () => {
         Scheduler.unstable_yieldValue('Committed: ' + this.state.log);
         if (this.state.log === 'B') {
           // Right after B commits, schedule additional updates.
-          ReactNoop.unstable_runWithPriority(InputContinuousLanePriority, () =>
+          ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () =>
             this.pushToLog('C'),
           );
           this.pushToLog('D');
@@ -618,7 +616,7 @@ describe('ReactIncrementalUpdates', () => {
 
     await ReactNoop.act(async () => {
       pushToLog('A');
-      ReactNoop.unstable_runWithPriority(InputContinuousLanePriority, () =>
+      ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () =>
         pushToLog('B'),
       );
     });

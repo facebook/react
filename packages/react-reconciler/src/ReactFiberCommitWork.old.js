@@ -17,7 +17,7 @@ import type {
 } from './ReactFiberHostConfig';
 import type {Fiber} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
-import type {LanePriority, Lanes} from './ReactFiberLane.old';
+import type {Lanes} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 import type {UpdateQueue} from './ReactUpdateQueue.old';
 import type {FunctionComponentUpdateQueue} from './ReactFiberHooks.old';
@@ -1067,7 +1067,6 @@ function commitUnmount(
   finishedRoot: FiberRoot,
   current: Fiber,
   nearestMountedAncestor: Fiber,
-  renderPriorityLevel: LanePriority,
 ): void {
   onCommitUnmount(current);
 
@@ -1127,12 +1126,7 @@ function commitUnmount(
       // We are also not using this parent because
       // the portal will get pushed immediately.
       if (supportsMutation) {
-        unmountHostComponents(
-          finishedRoot,
-          current,
-          nearestMountedAncestor,
-          renderPriorityLevel,
-        );
+        unmountHostComponents(finishedRoot, current, nearestMountedAncestor);
       } else if (supportsPersistence) {
         emptyPortalContainer(current);
       }
@@ -1163,7 +1157,6 @@ function commitNestedUnmounts(
   finishedRoot: FiberRoot,
   root: Fiber,
   nearestMountedAncestor: Fiber,
-  renderPriorityLevel: LanePriority,
 ): void {
   // While we're inside a removed host node we don't want to call
   // removeChild on the inner nodes because they're removed by the top
@@ -1172,12 +1165,7 @@ function commitNestedUnmounts(
   // we do an inner loop while we're still inside the host node.
   let node: Fiber = root;
   while (true) {
-    commitUnmount(
-      finishedRoot,
-      node,
-      nearestMountedAncestor,
-      renderPriorityLevel,
-    );
+    commitUnmount(finishedRoot, node, nearestMountedAncestor);
     // Visit children because they may contain more composite or host nodes.
     // Skip portals because commitUnmount() currently visits them recursively.
     if (
@@ -1532,7 +1520,6 @@ function unmountHostComponents(
   finishedRoot: FiberRoot,
   current: Fiber,
   nearestMountedAncestor: Fiber,
-  renderPriorityLevel: LanePriority,
 ): void {
   // We only have the top Fiber that was deleted but we need to recurse down its
   // children to find all the terminal nodes.
@@ -1576,12 +1563,7 @@ function unmountHostComponents(
     }
 
     if (node.tag === HostComponent || node.tag === HostText) {
-      commitNestedUnmounts(
-        finishedRoot,
-        node,
-        nearestMountedAncestor,
-        renderPriorityLevel,
-      );
+      commitNestedUnmounts(finishedRoot, node, nearestMountedAncestor);
       // After all the children have unmounted, it is now safe to remove the
       // node from the tree.
       if (currentParentIsContainer) {
@@ -1634,12 +1616,7 @@ function unmountHostComponents(
         continue;
       }
     } else {
-      commitUnmount(
-        finishedRoot,
-        node,
-        nearestMountedAncestor,
-        renderPriorityLevel,
-      );
+      commitUnmount(finishedRoot, node, nearestMountedAncestor);
       // Visit children because we may find more host components below.
       if (node.child !== null) {
         node.child.return = node;
@@ -1670,25 +1647,14 @@ function commitDeletion(
   finishedRoot: FiberRoot,
   current: Fiber,
   nearestMountedAncestor: Fiber,
-  renderPriorityLevel: LanePriority,
 ): void {
   if (supportsMutation) {
     // Recursively delete all host nodes from the parent.
     // Detach refs and call componentWillUnmount() on the whole subtree.
-    unmountHostComponents(
-      finishedRoot,
-      current,
-      nearestMountedAncestor,
-      renderPriorityLevel,
-    );
+    unmountHostComponents(finishedRoot, current, nearestMountedAncestor);
   } else {
     // Detach refs and call componentWillUnmount() on the whole subtree.
-    commitNestedUnmounts(
-      finishedRoot,
-      current,
-      nearestMountedAncestor,
-      renderPriorityLevel,
-    );
+    commitNestedUnmounts(finishedRoot, current, nearestMountedAncestor);
   }
 
   detachFiberMutation(current);
@@ -2009,19 +1975,12 @@ function commitResetTextContent(current: Fiber) {
   resetTextContent(current.stateNode);
 }
 
-export function commitMutationEffects(
-  root: FiberRoot,
-  renderPriorityLevel: LanePriority,
-  firstChild: Fiber,
-) {
+export function commitMutationEffects(root: FiberRoot, firstChild: Fiber) {
   nextEffect = firstChild;
-  commitMutationEffects_begin(root, renderPriorityLevel);
+  commitMutationEffects_begin(root);
 }
 
-function commitMutationEffects_begin(
-  root: FiberRoot,
-  renderPriorityLevel: LanePriority,
-) {
+function commitMutationEffects_begin(root: FiberRoot) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
 
@@ -2038,7 +1997,6 @@ function commitMutationEffects_begin(
             root,
             childToDelete,
             fiber,
-            renderPriorityLevel,
           );
           if (hasCaughtError()) {
             const error = clearCaughtError();
@@ -2046,7 +2004,7 @@ function commitMutationEffects_begin(
           }
         } else {
           try {
-            commitDeletion(root, childToDelete, fiber, renderPriorityLevel);
+            commitDeletion(root, childToDelete, fiber);
           } catch (error) {
             captureCommitPhaseError(childToDelete, fiber, error);
           }
@@ -2059,15 +2017,12 @@ function commitMutationEffects_begin(
       ensureCorrectReturnPointer(child, fiber);
       nextEffect = child;
     } else {
-      commitMutationEffects_complete(root, renderPriorityLevel);
+      commitMutationEffects_complete(root);
     }
   }
 }
 
-function commitMutationEffects_complete(
-  root: FiberRoot,
-  renderPriorityLevel: LanePriority,
-) {
+function commitMutationEffects_complete(root: FiberRoot) {
   while (nextEffect !== null) {
     const fiber = nextEffect;
     if (__DEV__) {
@@ -2078,7 +2033,6 @@ function commitMutationEffects_complete(
         null,
         fiber,
         root,
-        renderPriorityLevel,
       );
       if (hasCaughtError()) {
         const error = clearCaughtError();
@@ -2087,7 +2041,7 @@ function commitMutationEffects_complete(
       resetCurrentDebugFiberInDEV();
     } else {
       try {
-        commitMutationEffectsOnFiber(fiber, root, renderPriorityLevel);
+        commitMutationEffectsOnFiber(fiber, root);
       } catch (error) {
         captureCommitPhaseError(fiber, fiber.return, error);
       }
@@ -2104,11 +2058,7 @@ function commitMutationEffects_complete(
   }
 }
 
-function commitMutationEffectsOnFiber(
-  finishedWork: Fiber,
-  root: FiberRoot,
-  renderPriorityLevel: LanePriority,
-) {
+function commitMutationEffectsOnFiber(finishedWork: Fiber, root: FiberRoot) {
   const flags = finishedWork.flags;
 
   if (flags & ContentReset) {

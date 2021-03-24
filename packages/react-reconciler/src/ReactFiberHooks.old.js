@@ -41,7 +41,6 @@ import {
 import {
   NoLane,
   NoLanes,
-  InputContinuousLanePriority,
   isSubsetOfLanes,
   mergeLanes,
   removeLanes,
@@ -49,11 +48,14 @@ import {
   isTransitionLane,
   markRootEntangled,
   markRootMutableRead,
-  getCurrentUpdateLanePriority,
-  setCurrentUpdateLanePriority,
-  higherLanePriority,
-  DefaultLanePriority,
 } from './ReactFiberLane.old';
+import {
+  DefaultEventPriority,
+  ContinuousEventPriority,
+  getCurrentUpdatePriority,
+  setCurrentUpdatePriority,
+  higherEventPriority,
+} from './ReactEventPriorities.old';
 import {readContext, checkIfContextChanged} from './ReactFiberNewContext.old';
 import {HostRoot, CacheComponent} from './ReactWorkTags';
 import {
@@ -1705,9 +1707,9 @@ function rerenderDeferredValue<T>(value: T): T {
 }
 
 function startTransition(setPending, callback) {
-  const previousLanePriority = getCurrentUpdateLanePriority();
-  setCurrentUpdateLanePriority(
-    higherLanePriority(previousLanePriority, InputContinuousLanePriority),
+  const previousPriority = getCurrentUpdatePriority();
+  setCurrentUpdatePriority(
+    higherEventPriority(previousPriority, ContinuousEventPriority),
   );
 
   setPending(true);
@@ -1715,7 +1717,7 @@ function startTransition(setPending, callback) {
   // TODO: Can remove this. Was only necessary because we used to give
   // different behavior to transitions without a config object. Now they are
   // all treated the same.
-  setCurrentUpdateLanePriority(DefaultLanePriority);
+  setCurrentUpdatePriority(DefaultEventPriority);
 
   const prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = 1;
@@ -1723,7 +1725,7 @@ function startTransition(setPending, callback) {
     setPending(false);
     callback();
   } finally {
-    setCurrentUpdateLanePriority(previousLanePriority);
+    setCurrentUpdatePriority(previousPriority);
     ReactCurrentBatchConfig.transition = prevTransition;
   }
 }

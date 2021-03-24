@@ -19,10 +19,7 @@ let Scheduler;
 let Suspense;
 let act;
 
-// Copied from ReactFiberLanes. Don't do this!
-// This is hard coded directly to avoid needing to import, and
-// we'll remove this as we replace runWithPriority with React APIs.
-export const IdleLanePriority = 2;
+let IdleEventPriority;
 
 function dispatchMouseHoverEvent(to, from) {
   if (!to) {
@@ -101,7 +98,7 @@ function dispatchClickEvent(target) {
 // and there's no native DOM event that maps to idle priority, so this is a
 // temporary workaround. Need something like ReactDOM.unstable_IdleUpdates.
 function TODO_scheduleIdleDOMSchedulerTask(fn) {
-  ReactDOM.unstable_runWithPriority(IdleLanePriority, () => {
+  ReactDOM.unstable_runWithPriority(IdleEventPriority, () => {
     const prevEvent = window.event;
     window.event = {type: 'message'};
     try {
@@ -125,6 +122,8 @@ describe('ReactDOMServerSelectiveHydration', () => {
     act = ReactTestUtils.unstable_concurrentAct;
     Scheduler = require('scheduler');
     Suspense = React.Suspense;
+
+    IdleEventPriority = require('react-reconciler/constants').IdleEventPriority;
   });
 
   // @gate experimental

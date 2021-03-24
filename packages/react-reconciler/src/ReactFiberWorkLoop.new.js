@@ -9,7 +9,7 @@
 
 import type {Thenable, Wakeable} from 'shared/ReactTypes';
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
-import type {Lanes, Lane, LanePriority} from './ReactFiberLane.new';
+import type {Lanes, Lane} from './ReactFiberLane.new';
 import type {Interaction} from 'scheduler/src/Tracing';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.new';
 import type {StackCursor} from './ReactFiberStack.new';
@@ -132,12 +132,10 @@ import {
 import {
   NoLanePriority,
   SyncLanePriority,
-  DefaultLanePriority,
   NoLanes,
   NoLane,
   SyncLane,
   NoTimestamp,
-  findUpdateLane,
   claimNextTransitionLane,
   claimNextRetryLane,
   includesSomeLane,
@@ -150,8 +148,6 @@ import {
   includesOnlyTransitions,
   getNextLanes,
   returnNextLanesPriority,
-  setCurrentUpdateLanePriority,
-  getCurrentUpdateLanePriority,
   markStarvedLanesAsExpired,
   getLanesToRetrySynchronouslyOnError,
   getMostRecentEventTime,
@@ -162,6 +158,14 @@ import {
   markRootFinished,
   lanePriorityToSchedulerPriority,
 } from './ReactFiberLane.new';
+import {
+  DiscreteEventPriority,
+  DefaultEventPriority,
+  getCurrentUpdatePriority,
+  setCurrentUpdatePriority,
+  higherEventPriority,
+  lanesToEventPriority,
+} from './ReactEventPriorities.new';
 import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork.new';
 import {completeWork} from './ReactFiberCompleteWork.new';
@@ -320,7 +324,6 @@ let rootCommittingMutationOrLayoutEffects: FiberRoot | null = null;
 
 let rootDoesHavePassiveEffects: boolean = false;
 let rootWithPendingPassiveEffects: FiberRoot | null = null;
-let pendingPassiveEffectsRenderPriority: LanePriority = NoLanePriority;
 let pendingPassiveEffectsLanes: Lanes = NoLanes;
 let pendingPassiveProfilerEffects: Array<Fiber> = [];
 
@@ -423,9 +426,13 @@ export function requestUpdateLane(fiber: Fiber): Lane {
 
   // Updates originating inside certain React methods, like flushSync, have
   // their priority set by tracking it with a context variable.
-  const updateLanePriority = getCurrentUpdateLanePriority();
-  if (updateLanePriority !== NoLanePriority) {
-    return findUpdateLane(updateLanePriority);
+  //
+  // The opaque type returned by the host config is internally a lane, so we can
+  // use that directly.
+  // TODO: Move this type conversion to the event priority module.
+  const updateLane: Lane = (getCurrentUpdatePriority(): any);
+  if (updateLane !== NoLane) {
+    return updateLane;
   }
 
   // This update originated outside React. Ask the host environement for an
@@ -433,7 +440,8 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   //
   // The opaque type returned by the host config is internally a lane, so we can
   // use that directly.
-  const eventLane = getCurrentEventPriority();
+  // TODO: Move this type conversion to the event priority module.
+  const eventLane: Lane = (getCurrentEventPriority(): any);
   return eventLane;
 }
 
@@ -1056,12 +1064,12 @@ export function flushDiscreteUpdates() {
 }
 
 export function deferredUpdates<A>(fn: () => A): A {
-  const previousLanePriority = getCurrentUpdateLanePriority();
+  const previousPriority = getCurrentUpdatePriority();
   try {
-    setCurrentUpdateLanePriority(DefaultLanePriority);
+    setCurrentUpdatePriority(DefaultEventPriority);
     return fn();
   } finally {
-    setCurrentUpdateLanePriority(previousLanePriority);
+    setCurrentUpdatePriority(previousPriority);
   }
 }
 
@@ -1102,12 +1110,12 @@ export function discreteUpdates<A, B, C, D, R>(
   c: C,
   d: D,
 ): R {
-  const previousLanePriority = getCurrentUpdateLanePriority();
+  const previousPriority = getCurrentUpdatePriority();
   try {
-    setCurrentUpdateLanePriority(SyncLanePriority);
+    setCurrentUpdatePriority(DiscreteEventPriority);
     return fn(a, b, c, d);
   } finally {
-    setCurrentUpdateLanePriority(previousLanePriority);
+    setCurrentUpdatePriority(previousPriority);
     if (executionContext === NoContext) {
       // Flush the immediate callbacks that were scheduled during this batch
       resetRenderTimer();
@@ -1146,16 +1154,16 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
   }
   executionContext |= BatchedContext;
 
-  const previousLanePriority = getCurrentUpdateLanePriority();
+  const previousPriority = getCurrentUpdatePriority();
   try {
-    setCurrentUpdateLanePriority(SyncLanePriority);
+    setCurrentUpdatePriority(DiscreteEventPriority);
     if (fn) {
       return fn(a);
     } else {
       return (undefined: $FlowFixMe);
     }
   } finally {
-    setCurrentUpdateLanePriority(previousLanePriority);
+    setCurrentUpdatePriority(previousPriority);
     executionContext = prevExecutionContext;
     // Flush the immediate callbacks that were scheduled during this batch.
     // Note that this will happen even if batchedUpdates is higher up
@@ -1167,12 +1175,12 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
 export function flushControlled(fn: () => mixed): void {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
-  const previousLanePriority = getCurrentUpdateLanePriority();
+  const previousPriority = getCurrentUpdatePriority();
   try {
-    setCurrentUpdateLanePriority(SyncLanePriority);
+    setCurrentUpdatePriority(DiscreteEventPriority);
     fn();
   } finally {
-    setCurrentUpdateLanePriority(previousLanePriority);
+    setCurrentUpdatePriority(previousPriority);
 
     executionContext = prevExecutionContext;
     if (executionContext === NoContext) {
@@ -1663,12 +1671,14 @@ function completeUnitOfWork(unitOfWork: Fiber): void {
 }
 
 function commitRoot(root) {
-  const previousUpdateLanePriority = getCurrentUpdateLanePriority();
+  // TODO: This no longer makes any sense. We already wrap the mutation and
+  // layout phases. Should be able to remove.
+  const previousUpdateLanePriority = getCurrentUpdatePriority();
   try {
-    setCurrentUpdateLanePriority(SyncLanePriority);
+    setCurrentUpdatePriority(DiscreteEventPriority);
     commitRootImpl(root, previousUpdateLanePriority);
   } finally {
-    setCurrentUpdateLanePriority(previousUpdateLanePriority);
+    setCurrentUpdatePriority(previousUpdateLanePriority);
   }
 
   return null;
@@ -1780,8 +1790,8 @@ function commitRootImpl(root, renderPriorityLevel) {
     NoFlags;
 
   if (subtreeHasEffects || rootHasEffect) {
-    const previousLanePriority = getCurrentUpdateLanePriority();
-    setCurrentUpdateLanePriority(SyncLanePriority);
+    const previousPriority = getCurrentUpdatePriority();
+    setCurrentUpdatePriority(DiscreteEventPriority);
 
     const prevExecutionContext = executionContext;
     executionContext |= CommitContext;
@@ -1815,7 +1825,7 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
 
     // The next phase is the mutation phase, where we mutate the host tree.
-    commitMutationEffects(root, renderPriorityLevel, finishedWork);
+    commitMutationEffects(root, finishedWork);
 
     if (shouldFireAfterActiveInstanceBlur) {
       afterActiveInstanceBlur();
@@ -1863,10 +1873,8 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
     executionContext = prevExecutionContext;
 
-    if (previousLanePriority != null) {
-      // Reset the priority to the previous non-sync value.
-      setCurrentUpdateLanePriority(previousLanePriority);
-    }
+    // Reset the priority to the previous non-sync value.
+    setCurrentUpdatePriority(previousPriority);
   } else {
     // No effects.
     root.current = finishedWork;
@@ -1886,10 +1894,6 @@ function commitRootImpl(root, renderPriorityLevel) {
     rootDoesHavePassiveEffects = false;
     rootWithPendingPassiveEffects = root;
     pendingPassiveEffectsLanes = lanes;
-    pendingPassiveEffectsRenderPriority =
-      renderPriorityLevel === NoLanePriority
-        ? DefaultLanePriority
-        : renderPriorityLevel;
   }
 
   // Read this again, since an effect might have updated it
@@ -2003,18 +2007,17 @@ function commitRootImpl(root, renderPriorityLevel) {
 
 export function flushPassiveEffects(): boolean {
   // Returns whether passive effects were flushed.
-  if (pendingPassiveEffectsRenderPriority !== NoLanePriority) {
-    const priorityLevel =
-      pendingPassiveEffectsRenderPriority > DefaultLanePriority
-        ? DefaultLanePriority
-        : pendingPassiveEffectsRenderPriority;
-    pendingPassiveEffectsRenderPriority = NoLanePriority;
-    const previousLanePriority = getCurrentUpdateLanePriority();
+  if (pendingPassiveEffectsLanes !== NoLanes) {
+    const priority = higherEventPriority(
+      DefaultEventPriority,
+      lanesToEventPriority(pendingPassiveEffectsLanes),
+    );
+    const previousPriority = getCurrentUpdatePriority();
     try {
-      setCurrentUpdateLanePriority(priorityLevel);
+      setCurrentUpdatePriority(priority);
       return flushPassiveEffectsImpl();
     } finally {
-      setCurrentUpdateLanePriority(previousLanePriority);
+      setCurrentUpdatePriority(previousPriority);
     }
   }
   return false;
