@@ -23,6 +23,7 @@ import * as Scheduler from 'scheduler/unstable_mock';
 import {REACT_FRAGMENT_TYPE, REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 import {
   DefaultEventPriority,
+  IdleEventPriority,
   ConcurrentRoot,
   LegacyRoot,
 } from 'react-reconciler/constants';
@@ -909,7 +910,7 @@ function createReactNoop(reconciler: Function, useMutation: boolean) {
 
     idleUpdates<T>(fn: () => T): T {
       const prevEventPriority = currentEventPriority;
-      currentEventPriority = NoopRenderer.IdleEventPriority;
+      currentEventPriority = IdleEventPriority;
       try {
         fn();
       } finally {

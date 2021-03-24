@@ -14,5 +14,6 @@ export {
   DiscreteEventPriority,
   ContinuousEventPriority,
   DefaultEventPriority,
+  IdleEventPriority,
 } from './ReactEventPriorities';
 export {ConcurrentRoot, LegacyRoot} from './ReactRootTags';

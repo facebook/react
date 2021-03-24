@@ -93,16 +93,6 @@ import {
 } from './ReactFiberHotReloading.old';
 import {markRenderScheduled} from './SchedulingProfiler';
 
-// Ideally host configs would import these constants from the reconciler
-// entry point, but we can't do this because of a circular dependency.
-// They are used by third-party renderers so they need to stay up to date.
-export {
-  SyncLanePriority as DiscreteEventPriority,
-  InputContinuousLanePriority as ContinuousEventPriority,
-  DefaultLanePriority as DefaultEventPriority,
-  IdleLanePriority as IdleEventPriority,
-} from './ReactFiberLane.old';
-
 export {registerMutableSourceForHydration} from './ReactMutableSource.old';
 export {createPortal} from './ReactPortal';
 export {

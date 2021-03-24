@@ -8,8 +8,8 @@
  */
 
 export {
-  SyncLanePriority as DiscreteEventPriority,
-  InputContinuousLanePriority as ContinuousEventPriority,
-  DefaultLanePriority as DefaultEventPriority,
-  IdleLanePriority as IdleEventPriority,
+  SyncLane as DiscreteEventPriority,
+  InputContinuousLane as ContinuousEventPriority,
+  DefaultLane as DefaultEventPriority,
+  IdleLane as IdleEventPriority,
 } from './ReactFiberLane.old';
