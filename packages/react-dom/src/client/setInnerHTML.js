@@ -7,7 +7,7 @@
  * @flow
  */
 
-import {Namespaces} from '../shared/DOMNamespaces';
+import {SVG_NAMESPACE} from '../shared/DOMNamespaces';
 import createMicrosoftUnsafeLocalFunction from '../shared/createMicrosoftUnsafeLocalFunction';
 import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 
@@ -25,7 +25,7 @@ const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
   node: Element,
   html: {valueOf(): {toString(): string, ...}, ...},
 ): void {
-  if (node.namespaceURI === Namespaces.svg) {
+  if (node.namespaceURI === SVG_NAMESPACE) {
     if (__DEV__) {
       if (enableTrustedTypesIntegration) {
         // TODO: reconsider the text of this warning and when it should show
