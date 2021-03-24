@@ -128,7 +128,7 @@ function haveEqualSignatures(prevType, nextType) {
   const nextSignature = allSignaturesByType.get(nextType);
 
   if (prevSignature === undefined && nextSignature === undefined) {
-    return true;
+    return false;
   }
   if (prevSignature === undefined || nextSignature === undefined) {
     return false;
