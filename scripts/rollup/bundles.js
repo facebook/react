@@ -604,12 +604,21 @@ const bundles = [
     externals: ['react'],
   },
 
-  /******* Reflection *******/
+  /******* Reconciler Reflection *******/
   {
     moduleType: RENDERER_UTILS,
     bundleTypes: [NODE_DEV, NODE_PROD],
     entry: 'react-reconciler/reflection',
     global: 'ReactFiberTreeReflection',
+    externals: [],
+  },
+
+  /******* Reconciler Constants *******/
+  {
+    moduleType: RENDERER_UTILS,
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    entry: 'react-reconciler/constants',
+    global: 'ReactReconcilerConstants',
     externals: [],
   },
 
