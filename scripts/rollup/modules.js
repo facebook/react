@@ -16,6 +16,7 @@ const importSideEffects = Object.freeze({
   'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   scheduler: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'scheduler/tracing': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  react: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-dom/server': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react/jsx-dev-runtime': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
   'react-fetch/node': HAS_NO_SIDE_EFFECTS_ON_IMPORT,

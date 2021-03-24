@@ -9,4 +9,4 @@
 
 'use strict';
 
-export * from './src/ReactEventPriorities';
+export * from './src/ReactReconcilerConstants';
