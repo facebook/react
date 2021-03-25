@@ -17,6 +17,8 @@ const moduleTypes = {
   ISOMORPHIC: 'ISOMORPHIC',
   // Individual renderers. They bundle the reconciler. (e.g. ReactDOM)
   RENDERER: 'RENDERER',
+  // Helper packages that access specific renderer's internals. (e.g. TestUtils)
+  RENDERER_UTILS: 'RENDERER_UTILS',
   // Non-Fiber implementations like SSR and Shallow renderers.
   NON_FIBER_RENDERER: 'NON_FIBER_RENDERER',
 };
@@ -24,6 +26,7 @@ const moduleTypes = {
 const {
   ISOMORPHIC,
   RENDERER,
+  RENDERER_UTILS,
   NON_FIBER_RENDERER
 } = moduleTypes;
 
@@ -94,6 +97,40 @@ const bundles = [
     entry: 'react/jsx-dev-runtime',
     global: 'JSXDEVRuntime',
     externals: ['react'],
+  },
+
+  /******* React DOM - www - Testing *******/
+  {
+    moduleType: RENDERER,
+    bundleTypes: [AMD_DEV],
+    entry: 'react-dom/testing',
+    global: 'ReactDOMTesting',
+    externals: ['react'],
+  },
+
+  /******* Test Utils *******/
+  {
+    moduleType: RENDERER_UTILS,
+    bundleTypes: [AMD_DEV],
+    entry: 'react-dom/test-utils',
+    global: 'ReactTestUtils',
+    externals: ['react', 'react-dom'],
+  },
+
+  {
+    bundleTypes: [
+      AMD_DEV
+    ],
+    moduleType: RENDERER,
+    entry: 'react-test-renderer',
+    global: 'ReactTestRenderer',
+    externals: ['react'],
+    babel: opts =>
+      Object.assign({}, opts, {
+        plugins: opts.plugins.concat([
+          [require.resolve('@babel/plugin-transform-classes'), {loose: true}],
+        ]),
+      }),
   },
 
 ];
