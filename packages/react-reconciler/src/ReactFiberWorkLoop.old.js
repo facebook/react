@@ -161,6 +161,7 @@ import {
   markRootExpired,
   markRootFinished,
   lanePriorityToSchedulerPriority,
+  areLanesExpired,
 } from './ReactFiberLane.old';
 import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork.old';
@@ -958,7 +959,7 @@ function performSyncWorkOnRoot(root) {
   let exitStatus;
   if (
     root === workInProgressRoot &&
-    includesSomeLane(root.expiredLanes, workInProgressRootRenderLanes)
+    areLanesExpired(root, workInProgressRootRenderLanes)
   ) {
     // There's a partial tree, and at least one of its lanes has expired. Finish
     // rendering it before rendering the rest of the expired work.
@@ -1014,12 +1015,16 @@ function performSyncWorkOnRoot(root) {
   return null;
 }
 
+// TODO: Do we still need this API? I think we can delete it. Was only used
+// internally.
 export function flushRoot(root: FiberRoot, lanes: Lanes) {
-  markRootExpired(root, lanes);
-  ensureRootIsScheduled(root, now());
-  if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
-    resetRenderTimer();
-    flushSyncCallbackQueue();
+  if (lanes !== NoLanes) {
+    markRootExpired(root, lanes);
+    ensureRootIsScheduled(root, now());
+    if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
+      resetRenderTimer();
+      flushSyncCallbackQueue();
+    }
   }
 }
 

@@ -682,28 +682,14 @@ describe('ReactExpiration', () => {
       updateHighPri();
 
       // Both normal pri updates should have expired.
-      if (gate(flags => flags.FIXME)) {
-        // The sync update and the expired normal pri updates render in a
-        // single batch.
-        expect(Scheduler).toHaveYielded([
-          'Sibling',
-          'High pri: 1',
-          'Normal pri: 2',
-          'Sibling',
-        ]);
-      } else {
-        expect(Scheduler).toHaveYielded([
-          'Sibling',
-          'High pri: 0',
-          'Normal pri: 2',
-          'Sibling',
-          // TODO: This is the sync update. We should have rendered it in the same
-          // batch as the expired update.
-          'High pri: 1',
-          'Normal pri: 2',
-          'Sibling',
-        ]);
-      }
+      // The sync update and the expired normal pri updates render in a
+      // single batch.
+      expect(Scheduler).toHaveYielded([
+        'Sibling',
+        'High pri: 1',
+        'Normal pri: 2',
+        'Sibling',
+      ]);
     });
   });
 
