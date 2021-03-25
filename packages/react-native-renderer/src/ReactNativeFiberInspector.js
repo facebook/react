@@ -198,7 +198,7 @@ if (__DEV__) {
             internalInstanceHandle.stateNode.node,
             (x, y, width, height, pageX, pageY) => {
               const inspectorData = getInspectorDataForInstance(
-                getClosestInstanceFromNode(closestInstance),
+                closestInstance,
               );
               callback({
                 ...inspectorData,
