@@ -190,13 +190,22 @@ if (__DEV__) {
 
           closestInstance =
             internalInstanceHandle.stateNode.canonical._internalInstanceHandle;
+
+          // Note: this is deprecated and we want to remove it ASAP. Keeping it here for React DevTools compatibility for now.
+          const nativeViewTag =
+            internalInstanceHandle.stateNode.canonical._nativeTag;
+
           nativeFabricUIManager.measure(
             internalInstanceHandle.stateNode.node,
             (x, y, width, height, pageX, pageY) => {
+              const inspectorData = getInspectorDataForInstance(
+                closestInstance,
+              );
               callback({
+                ...inspectorData,
                 pointerY: locationY,
                 frame: {left: pageX, top: pageY, width, height},
-                ...getInspectorDataForInstance(closestInstance),
+                touchedViewTag: nativeViewTag,
               });
             },
           );
