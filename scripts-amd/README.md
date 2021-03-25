@@ -18,6 +18,9 @@
 3) ReactDOMServer
 4) JSX-Runtime
 5) JSX-Dev-Runtime
+6) react-dom/test-utils
+7) react-test-renderer 
+8) react-dom/testing
 - Удалены все обработки сборки под форматы CJS и UMD
 - Добавлена поля в конфигурацию Rollup для AMD сборок
 
