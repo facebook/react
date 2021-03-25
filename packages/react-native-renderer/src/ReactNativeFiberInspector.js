@@ -192,7 +192,8 @@ if (__DEV__) {
             internalInstanceHandle.stateNode.canonical._internalInstanceHandle;
 
           // Note: this is deprecated and we want to remove it ASAP. Keeping it here for React DevTools compatibility for now.
-          const nativeViewTag = internalInstanceHandle.stateNode.canonical._nativeTag;
+          const nativeViewTag =
+            internalInstanceHandle.stateNode.canonical._nativeTag;
 
           nativeFabricUIManager.measure(
             internalInstanceHandle.stateNode.node,
