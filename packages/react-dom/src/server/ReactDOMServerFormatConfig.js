@@ -154,8 +154,8 @@ function assignAnID(
   ));
 }
 
-const dummyNode1 = stringToPrecomputedChunk('<span hidden id="');
-const dummyNode2 = stringToPrecomputedChunk('"></span>');
+const dummyNode1 = stringToPrecomputedChunk('<template id="');
+const dummyNode2 = stringToPrecomputedChunk('"></template>');
 
 function pushDummyNodeWithID(
   target: Array<Chunk | PrecomputedChunk>,
@@ -247,16 +247,15 @@ export function pushEndInstance(
 // Structural Nodes
 
 // A placeholder is a node inside a hidden partial tree that can be filled in later, but before
-// display. It's never visible to users.
-const placeholder1 = stringToPrecomputedChunk('<span id="');
-const placeholder2 = stringToPrecomputedChunk('"></span>');
+// display. It's never visible to users. We use the template tag because it can be used in every
+// type of parent. <script> tags also work in every other tag except <colgroup>.
+const placeholder1 = stringToPrecomputedChunk('<template id="');
+const placeholder2 = stringToPrecomputedChunk('"></template>');
 export function writePlaceholder(
   destination: Destination,
   responseState: ResponseState,
   id: number,
 ): boolean {
-  // TODO: This needs to be contextually aware and switch tag since not all parents allow for spans like
-  // <select> or <tbody>. E.g. suspending a component that renders a table row.
   writeChunk(destination, placeholder1);
   writeChunk(destination, responseState.placeholderPrefix);
   const formattedID = stringToChunk(id.toString(16));

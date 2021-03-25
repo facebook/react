@@ -97,7 +97,11 @@ describe('ReactDOMFizzServer', () => {
     let node = element.firstChild;
     while (node) {
       if (node.nodeType === 1) {
-        if (node.tagName !== 'SCRIPT' && !node.hasAttribute('hidden')) {
+        if (
+          node.tagName !== 'SCRIPT' &&
+          node.tagName !== 'TEMPLATE' &&
+          !node.hasAttribute('hidden')
+        ) {
           const props = {};
           const attributes = node.attributes;
           for (let i = 0; i < attributes.length; i++) {
@@ -407,5 +411,70 @@ describe('ReactDOMFizzServer', () => {
         This will show B: <div>B</div>
       </div>,
     ]);
+  });
+
+  // @gate experimental
+  it('can resolve async content in esoteric parents', async () => {
+    function AsyncOption({text}) {
+      return <option>{readText(text)}</option>;
+    }
+
+    function AsyncCol({className}) {
+      return <col className={readText(className)}>{[]}</col>;
+    }
+
+    function App() {
+      return (
+        <div>
+          <select>
+            <Suspense fallback="Loading...">
+              <AsyncOption text="Hello" />
+            </Suspense>
+          </select>
+          <Suspense fallback="Loading...">
+            <table>
+              <colgroup>
+                <AsyncCol className="World" />
+              </colgroup>
+            </table>
+          </Suspense>
+        </div>
+      );
+    }
+
+    await act(async () => {
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        <App />,
+        writable,
+      );
+      startWriting();
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <select>Loading...</select>Loading...
+      </div>,
+    );
+
+    await act(async () => {
+      resolveText('Hello');
+    });
+
+    await act(async () => {
+      resolveText('World');
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <select>
+          <option>Hello</option>
+        </select>
+        <table>
+          <colgroup>
+            <col className="World" />
+          </colgroup>
+        </table>
+      </div>,
+    );
   });
 });
