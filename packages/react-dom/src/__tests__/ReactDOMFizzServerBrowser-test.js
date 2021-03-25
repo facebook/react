@@ -55,7 +55,7 @@ describe('ReactDOMFizzServer', () => {
       <div>hello world</div>,
     );
     const result = await readResult(stream);
-    expect(result).toBe('<div>hello world</div>');
+    expect(result).toMatchInlineSnapshot(`"<div>hello world<!-- --></div>"`);
   });
 
   // @gate experimental
@@ -93,7 +93,9 @@ describe('ReactDOMFizzServer', () => {
     expect(isComplete).toBe(true);
 
     const result = await readResult(stream);
-    expect(result).toBe('<div><!--$-->Done<!--/$--></div>');
+    expect(result).toMatchInlineSnapshot(
+      `"<div><!--$-->Done<!-- --><!--/$--></div>"`,
+    );
   });
 
   // @gate experimental

@@ -104,6 +104,8 @@ export function pushEmpty(
   }
 }
 
+const textSeparator = stringToPrecomputedChunk('<!-- -->');
+
 export function pushTextInstance(
   target: Array<Chunk | PrecomputedChunk>,
   text: string,
@@ -113,7 +115,12 @@ export function pushTextInstance(
   if (assignID !== null) {
     pushDummyNodeWithID(target, responseState, assignID);
   }
-  target.push(stringToChunk(encodeHTMLTextNode(text)));
+  if (text === '') {
+    // Empty text doesn't have a DOM node representation and the hydration is aware of this.
+    return;
+  }
+  // TODO: Avoid adding a text separator in common cases.
+  target.push(stringToChunk(encodeHTMLTextNode(text)), textSeparator);
 }
 
 const startTag1 = stringToPrecomputedChunk('<');
