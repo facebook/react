@@ -270,20 +270,6 @@ function fatalError(request: Request, error: mixed): void {
   closeWithError(request.destination, error);
 }
 
-// TODO: Add legacy and regular contexts here too
-let currentFormatContext: FormatContext;
-function restoreContext(work: SuspendedWork): void {
-  currentFormatContext = work.formatContext;
-}
-
-function saveContext(workToSaveTo: SuspendedWork): void {
-  workToSaveTo.formatContext = currentFormatContext;
-}
-
-function resetContext(): void {
-  currentFormatContext = (undefined: any);
-}
-
 function renderNode(
   request: Request,
   work: SuspendedWork,
@@ -345,7 +331,7 @@ function renderNode(
           work.blockedBoundary,
           newSegment,
           work.abortSet,
-          currentFormatContext,
+          work.formatContext,
           work.assignID,
         );
         const ping = suspendedWork.ping;
@@ -365,10 +351,12 @@ function renderNode(
     );
     // We must have assigned it already above so we don't need this anymore.
     work.assignID = null;
-    const prevContext = currentFormatContext;
-    currentFormatContext = getChildFormatContext(prevContext, type, props);
+    const prevContext = work.formatContext;
+    work.formatContext = getChildFormatContext(prevContext, type, props);
     renderNode(request, work, props.children);
-    currentFormatContext = prevContext;
+    // We expect that errors will fatal the whole work and that we don't need
+    // the correct context. Therefore this is not in a finally.
+    work.formatContext = prevContext;
     pushEndInstance(work.blockedSegment.chunks, type, props);
   } else if (type === REACT_SUSPENSE_TYPE) {
     const segment = work.blockedSegment;
@@ -401,7 +389,7 @@ function renderNode(
       work.blockedBoundary,
       boundarySegment,
       fallbackAbortSet,
-      currentFormatContext,
+      work.formatContext,
       newBoundary.id, // This is the ID we want to give this fallback so we can replace it later.
     );
     // TODO: This should be queued at a separate lower priority queue so that we only work
@@ -423,7 +411,7 @@ function renderNode(
       newBoundary,
       contentRootSegment,
       work.abortSet,
-      currentFormatContext,
+      work.formatContext,
       null,
     );
     retryWork(request, contentWork);
@@ -574,7 +562,6 @@ function finishedWork(
 }
 
 function retryWork(request: Request, work: SuspendedWork): void {
-  restoreContext(work);
   const segment = work.blockedSegment;
   if (segment.status !== PENDING) {
     // We completed this by other means before we had a chance to retry it.
@@ -603,7 +590,6 @@ function retryWork(request: Request, work: SuspendedWork): void {
     finishedWork(request, work.blockedBoundary, segment);
   } catch (x) {
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
-      saveContext(work);
       // Something suspended again, let's pick it back up later.
       const ping = work.ping;
       x.then(ping, ping);
@@ -612,8 +598,6 @@ function retryWork(request: Request, work: SuspendedWork): void {
       segment.status = ERRORED;
       erroredWork(request, work.blockedBoundary, segment, x);
     }
-  } finally {
-    resetContext();
   }
 }
 
