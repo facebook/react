@@ -410,31 +410,58 @@ export function getMostRecentEventTime(root: FiberRoot, lanes: Lanes): number {
 }
 
 function computeExpirationTime(lane: Lane, currentTime: number) {
-  // TODO: Expiration heuristic is constant per lane, so could use a map.
-  getHighestPriorityLanes(lane);
-  const priority = return_highestLanePriority;
-  if (priority >= InputContinuousLanePriority) {
-    // User interactions should expire slightly more quickly.
-    //
-    // NOTE: This is set to the corresponding constant as in Scheduler.js. When
-    // we made it larger, a product metric in www regressed, suggesting there's
-    // a user interaction that's being starved by a series of synchronous
-    // updates. If that theory is correct, the proper solution is to fix the
-    // starvation. However, this scenario supports the idea that expiration
-    // times are an important safeguard when starvation does happen.
-    //
-    // Also note that, in the case of user input specifically, this will soon no
-    // longer be an issue because we plan to make user input synchronous by
-    // default (until you enter `startTransition`, of course.)
-    //
-    // If weren't planning to make these updates synchronous soon anyway, I
-    // would probably make this number a configurable parameter.
-    return currentTime + 250;
-  } else if (priority >= TransitionPriority) {
-    return currentTime + 5000;
-  } else {
-    // Anything idle priority or lower should never expire.
-    return NoTimestamp;
+  switch (lane) {
+    case SyncLane:
+    case InputContinuousHydrationLane:
+    case InputContinuousLane:
+      // User interactions should expire slightly more quickly.
+      //
+      // NOTE: This is set to the corresponding constant as in Scheduler.js.
+      // When we made it larger, a product metric in www regressed, suggesting
+      // there's a user interaction that's being starved by a series of
+      // synchronous updates. If that theory is correct, the proper solution is
+      // to fix the starvation. However, this scenario supports the idea that
+      // expiration times are an important safeguard when starvation
+      // does happen.
+      return currentTime + 250;
+    case DefaultHydrationLane:
+    case DefaultLane:
+    case TransitionHydrationLane:
+    case TransitionLane1:
+    case TransitionLane2:
+    case TransitionLane3:
+    case TransitionLane4:
+    case TransitionLane5:
+    case TransitionLane6:
+    case TransitionLane7:
+    case TransitionLane8:
+    case TransitionLane9:
+    case TransitionLane10:
+    case TransitionLane11:
+    case TransitionLane12:
+    case TransitionLane13:
+    case TransitionLane14:
+    case TransitionLane15:
+    case TransitionLane16:
+    case RetryLane1:
+    case RetryLane2:
+    case RetryLane3:
+    case RetryLane4:
+    case RetryLane5:
+      return currentTime + 5000;
+    case SelectiveHydrationLane:
+    case IdleHydrationLane:
+    case IdleLane:
+    case OffscreenLane:
+      // Anything idle priority or lower should never expire.
+      return NoTimestamp;
+    default:
+      if (__DEV__) {
+        console.error(
+          'Should have found matching lanes. This is a bug in React.',
+        );
+      }
+      return NoTimestamp;
   }
 }
 
