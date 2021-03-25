@@ -757,43 +757,47 @@ export function getBumpedLaneForHydration(
   root: FiberRoot,
   renderLanes: Lanes,
 ): Lane {
-  getHighestPriorityLanes(renderLanes);
-  const highestLanePriority = return_highestLanePriority;
+  const renderLane = getHighestPriorityLane(renderLanes);
 
   let lane;
-  switch (highestLanePriority) {
-    case SyncLanePriority:
-      lane = NoLane;
-      break;
-    case InputContinuousLanePriority:
+  switch (renderLane) {
+    case InputContinuousLane:
       lane = InputContinuousHydrationLane;
       break;
-    case DefaultHydrationLanePriority:
-    case DefaultLanePriority:
+    case DefaultLane:
       lane = DefaultHydrationLane;
       break;
-    case TransitionHydrationPriority:
-    case TransitionPriority:
+    case TransitionLane1:
+    case TransitionLane2:
+    case TransitionLane3:
+    case TransitionLane4:
+    case TransitionLane5:
+    case TransitionLane6:
+    case TransitionLane7:
+    case TransitionLane8:
+    case TransitionLane9:
+    case TransitionLane10:
+    case TransitionLane11:
+    case TransitionLane12:
+    case TransitionLane13:
+    case TransitionLane14:
+    case TransitionLane15:
+    case TransitionLane16:
+    case RetryLane1:
+    case RetryLane2:
+    case RetryLane3:
+    case RetryLane4:
+    case RetryLane5:
       lane = TransitionHydrationLane;
       break;
-    case RetryLanePriority:
-      // Shouldn't be reachable under normal circumstances, so there's no
-      // dedicated lane for retry priority. Use the one for long transitions.
-      lane = TransitionHydrationLane;
-      break;
-    case SelectiveHydrationLanePriority:
-      lane = SelectiveHydrationLane;
-      break;
-    case IdleHydrationLanePriority:
-    case IdleLanePriority:
+    case IdleLane:
       lane = IdleHydrationLane;
       break;
-    case OffscreenLanePriority:
-    case NoLanePriority:
+    default:
+      // Everything else is already either a hydration lane, or shouldn't
+      // be retried at a hydration lane.
       lane = NoLane;
       break;
-    default:
-      invariant(false, 'Invalid lane: %s. This is a bug in React.', lane);
   }
 
   // Check if the lane we chose is suspended. If so, that indicates that we
