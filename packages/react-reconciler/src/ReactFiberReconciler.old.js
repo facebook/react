@@ -18,7 +18,7 @@ import type {
 } from './ReactFiberHostConfig';
 import type {RendererInspectionConfig} from './ReactFiberHostConfig';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {Lane, LanePriority} from './ReactFiberLane.old';
+import type {Lane} from './ReactFiberLane.old';
 import type {SuspenseState} from './ReactFiberSuspenseComponent.old';
 
 import {
@@ -82,9 +82,11 @@ import {
   NoTimestamp,
   getHighestPriorityPendingLanes,
   higherPriorityLane,
-  getCurrentUpdateLanePriority,
-  setCurrentUpdateLanePriority,
 } from './ReactFiberLane.old';
+import {
+  getCurrentUpdatePriority,
+  runWithPriority,
+} from './ReactEventPriorities.old';
 import {
   scheduleRefresh,
   scheduleRoot,
@@ -442,17 +444,7 @@ export function attemptHydrationAtCurrentPriority(fiber: Fiber): void {
   markRetryLaneIfNotHydrated(fiber, lane);
 }
 
-export function runWithPriority<T>(priority: LanePriority, fn: () => T) {
-  const previousPriority = getCurrentUpdateLanePriority();
-  try {
-    setCurrentUpdateLanePriority(priority);
-    return fn();
-  } finally {
-    setCurrentUpdateLanePriority(previousPriority);
-  }
-}
-
-export {getCurrentUpdateLanePriority};
+export {getCurrentUpdatePriority, runWithPriority};
 
 export {findHostInstance};
 

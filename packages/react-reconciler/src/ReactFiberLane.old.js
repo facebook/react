@@ -73,8 +73,8 @@ export const NoLanePriority: LanePriority = 0;
 
 export const TotalLanes = 31;
 
-export const NoLanes: Lanes = /*                        */ 0b000000000000000000000000000000;
-export const NoLane: Lane = /*                          */ 0b000000000000000000000000000000;
+export const NoLanes: Lanes = /*                        */ 0b0000000000000000000000000000000;
+export const NoLane: Lane = /*                          */ 0b0000000000000000000000000000000;
 
 export const SyncLane: Lane = /*                        */ 0b0000000000000000000000000000001;
 
@@ -168,18 +168,8 @@ export function getLabelsForLanes(lanes: Lanes): Array<string> | void {
 
 export const NoTimestamp = -1;
 
-let currentUpdateLanePriority: LanePriority = NoLanePriority;
-
 let nextTransitionLane: Lane = TransitionLane1;
 let nextRetryLane: Lane = RetryLane1;
-
-export function getCurrentUpdateLanePriority(): LanePriority {
-  return currentUpdateLanePriority;
-}
-
-export function setCurrentUpdateLanePriority(newLanePriority: LanePriority) {
-  currentUpdateLanePriority = newLanePriority;
-}
 
 // "Registers" used to "return" multiple values
 // Used by getHighestPriorityLanes and getNextLanes:
@@ -532,35 +522,6 @@ export function isTransitionLane(lane: Lane) {
   return (lane & TransitionLanes) !== 0;
 }
 
-// To ensure consistency across multiple updates in the same event, this should
-// be a pure function, so that it always returns the same lane for given inputs.
-export function findUpdateLane(lanePriority: LanePriority): Lane {
-  switch (lanePriority) {
-    case NoLanePriority:
-      break;
-    case SyncLanePriority:
-      return SyncLane;
-    case InputContinuousLanePriority:
-      return InputContinuousLane;
-    case DefaultLanePriority:
-      return DefaultLane;
-    case TransitionPriority: // Should be handled by findTransitionLane instead
-    case RetryLanePriority: // Should be handled by findRetryLane instead
-      break;
-    case IdleLanePriority:
-      return IdleLane;
-    default:
-      // The remaining priorities are not valid for updates
-      break;
-  }
-
-  invariant(
-    false,
-    'Invalid update priority: %s. This is a bug in React.',
-    lanePriority,
-  );
-}
-
 export function claimNextTransitionLane(): Lane {
   // Cycle through the lanes, assigning each new transition to the next lane.
   // In most cases, this means every transition gets its own lane, until we
@@ -582,7 +543,7 @@ export function claimNextRetryLane(): Lane {
   return lane;
 }
 
-function getHighestPriorityLane(lanes: Lanes) {
+export function getHighestPriorityLane(lanes: Lanes): Lane {
   return lanes & -lanes;
 }
 

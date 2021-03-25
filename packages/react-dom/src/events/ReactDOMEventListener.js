@@ -44,16 +44,6 @@ import {
   discreteUpdates,
 } from './ReactDOMUpdateBatching';
 
-import {
-  InputContinuousLanePriority as InputContinuousLanePriority_old,
-  getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_old,
-  setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_old,
-} from 'react-reconciler/src/ReactFiberLane.old';
-import {
-  InputContinuousLanePriority as InputContinuousLanePriority_new,
-  getCurrentUpdateLanePriority as getCurrentUpdateLanePriority_new,
-  setCurrentUpdateLanePriority as setCurrentUpdateLanePriority_new,
-} from 'react-reconciler/src/ReactFiberLane.new';
 import {getCurrentPriorityLevel as getCurrentPriorityLevel_old} from 'react-reconciler/src/SchedulerWithReactIntegration.old';
 import {
   getCurrentPriorityLevel as getCurrentPriorityLevel_new,
@@ -68,19 +58,10 @@ import {
   ContinuousEventPriority,
   DefaultEventPriority,
   IdleEventPriority,
+  getCurrentUpdatePriority,
+  setCurrentUpdatePriority,
 } from 'react-reconciler/src/ReactEventPriorities';
 
-// TODO: These should use the opaque EventPriority type instead of LanePriority.
-// Then internally we can use a Lane.
-const InputContinuousLanePriority = enableNewReconciler
-  ? InputContinuousLanePriority_new
-  : InputContinuousLanePriority_old;
-const getCurrentUpdateLanePriority = enableNewReconciler
-  ? getCurrentUpdateLanePriority_new
-  : getCurrentUpdateLanePriority_old;
-const setCurrentUpdateLanePriority = enableNewReconciler
-  ? setCurrentUpdateLanePriority_new
-  : setCurrentUpdateLanePriority_old;
 const getCurrentPriorityLevel = enableNewReconciler
   ? getCurrentPriorityLevel_new
   : getCurrentPriorityLevel_old;
@@ -167,12 +148,12 @@ function dispatchContinuousEvent(
   container,
   nativeEvent,
 ) {
-  const previousPriority = getCurrentUpdateLanePriority();
+  const previousPriority = getCurrentUpdatePriority();
   try {
-    setCurrentUpdateLanePriority(InputContinuousLanePriority);
+    setCurrentUpdatePriority(ContinuousEventPriority);
     dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
-    setCurrentUpdateLanePriority(previousPriority);
+    setCurrentUpdatePriority(previousPriority);
   }
 }
 

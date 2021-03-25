@@ -16,10 +16,10 @@ import {__interactionsRef} from 'scheduler/tracing';
 import {enableSchedulerTracing} from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import {
-  SyncLanePriority,
-  getCurrentUpdateLanePriority,
-  setCurrentUpdateLanePriority,
-} from './ReactFiberLane.old';
+  DiscreteEventPriority,
+  getCurrentUpdatePriority,
+  setCurrentUpdatePriority,
+} from './ReactEventPriorities.old';
 
 const {
   unstable_scheduleCallback: Scheduler_scheduleCallback,
@@ -147,11 +147,13 @@ export function flushSyncCallbackQueue() {
     // Prevent re-entrancy.
     isFlushingSyncQueue = true;
     let i = 0;
-    const previousLanePriority = getCurrentUpdateLanePriority();
+    const previousUpdatePriority = getCurrentUpdatePriority();
     try {
       const isSync = true;
       const queue = syncQueue;
-      setCurrentUpdateLanePriority(SyncLanePriority);
+      // TODO: Is this necessary anymore? The only user code that runs in this
+      // queue is in the render or commit phases.
+      setCurrentUpdatePriority(DiscreteEventPriority);
       for (; i < queue.length; i++) {
         let callback = queue[i];
         do {
@@ -171,7 +173,7 @@ export function flushSyncCallbackQueue() {
       );
       throw error;
     } finally {
-      setCurrentUpdateLanePriority(previousLanePriority);
+      setCurrentUpdatePriority(previousUpdatePriority);
       isFlushingSyncQueue = false;
     }
   }

@@ -11,14 +11,21 @@ import {enableProfilerTimer} from 'shared/ReactFeatureFlags';
 
 import type {Fiber, FiberRoot} from './ReactInternalTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {LanePriority} from './ReactFiberLane.old';
+import type {EventPriority} from './ReactEventPriorities.old';
 
 import {DidCapture} from './ReactFiberFlags';
 import {
-  lanePriorityToSchedulerPriority,
-  NoLanePriority,
-} from './ReactFiberLane.old';
-import {NormalPriority} from './SchedulerWithReactIntegration.old';
+  DiscreteEventPriority,
+  ContinuousEventPriority,
+  DefaultEventPriority,
+  IdleEventPriority,
+} from './ReactEventPriorities.old';
+import {
+  ImmediatePriority as ImmediateSchedulerPriority,
+  UserBlockingPriority as UserBlockingSchedulerPriority,
+  NormalPriority as NormalSchedulerPriority,
+  IdlePriority as IdleSchedulerPriority,
+} from './SchedulerWithReactIntegration.old';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
@@ -84,15 +91,29 @@ export function onScheduleRoot(root: FiberRoot, children: ReactNodeList) {
   }
 }
 
-export function onCommitRoot(root: FiberRoot, priorityLevel: LanePriority) {
+export function onCommitRoot(root: FiberRoot, eventPriority: EventPriority) {
   if (injectedHook && typeof injectedHook.onCommitFiberRoot === 'function') {
     try {
       const didError = (root.current.flags & DidCapture) === DidCapture;
       if (enableProfilerTimer) {
-        const schedulerPriority =
-          priorityLevel === NoLanePriority
-            ? NormalPriority
-            : lanePriorityToSchedulerPriority(priorityLevel);
+        let schedulerPriority;
+        switch (eventPriority) {
+          case DiscreteEventPriority:
+            schedulerPriority = ImmediateSchedulerPriority;
+            break;
+          case ContinuousEventPriority:
+            schedulerPriority = UserBlockingSchedulerPriority;
+            break;
+          case DefaultEventPriority:
+            schedulerPriority = NormalSchedulerPriority;
+            break;
+          case IdleEventPriority:
+            schedulerPriority = IdleSchedulerPriority;
+            break;
+          default:
+            schedulerPriority = NormalSchedulerPriority;
+            break;
+        }
         injectedHook.onCommitFiberRoot(
           rendererID,
           root,
