@@ -286,42 +286,34 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   let nextLanes = NoLanes;
   let nextLanePriority = NoLanePriority;
 
-  const expiredLanes = root.expiredLanes;
   const suspendedLanes = root.suspendedLanes;
   const pingedLanes = root.pingedLanes;
 
-  // Check if any work has expired.
-  if (expiredLanes !== NoLanes) {
-    // TODO: Should entangle with SyncLane
-    nextLanes = expiredLanes;
-    nextLanePriority = return_highestLanePriority = SyncLanePriority;
-  } else {
-    // Do not work on any idle work until all the non-idle work has finished,
-    // even if the work is suspended.
-    const nonIdlePendingLanes = pendingLanes & NonIdleLanes;
-    if (nonIdlePendingLanes !== NoLanes) {
-      const nonIdleUnblockedLanes = nonIdlePendingLanes & ~suspendedLanes;
-      if (nonIdleUnblockedLanes !== NoLanes) {
-        nextLanes = getHighestPriorityLanes(nonIdleUnblockedLanes);
-        nextLanePriority = return_highestLanePriority;
-      } else {
-        const nonIdlePingedLanes = nonIdlePendingLanes & pingedLanes;
-        if (nonIdlePingedLanes !== NoLanes) {
-          nextLanes = getHighestPriorityLanes(nonIdlePingedLanes);
-          nextLanePriority = return_highestLanePriority;
-        }
-      }
+  // Do not work on any idle work until all the non-idle work has finished,
+  // even if the work is suspended.
+  const nonIdlePendingLanes = pendingLanes & NonIdleLanes;
+  if (nonIdlePendingLanes !== NoLanes) {
+    const nonIdleUnblockedLanes = nonIdlePendingLanes & ~suspendedLanes;
+    if (nonIdleUnblockedLanes !== NoLanes) {
+      nextLanes = getHighestPriorityLanes(nonIdleUnblockedLanes);
+      nextLanePriority = return_highestLanePriority;
     } else {
-      // The only remaining work is Idle.
-      const unblockedLanes = pendingLanes & ~suspendedLanes;
-      if (unblockedLanes !== NoLanes) {
-        nextLanes = getHighestPriorityLanes(unblockedLanes);
+      const nonIdlePingedLanes = nonIdlePendingLanes & pingedLanes;
+      if (nonIdlePingedLanes !== NoLanes) {
+        nextLanes = getHighestPriorityLanes(nonIdlePingedLanes);
         nextLanePriority = return_highestLanePriority;
-      } else {
-        if (pingedLanes !== NoLanes) {
-          nextLanes = getHighestPriorityLanes(pingedLanes);
-          nextLanePriority = return_highestLanePriority;
-        }
+      }
+    }
+  } else {
+    // The only remaining work is Idle.
+    const unblockedLanes = pendingLanes & ~suspendedLanes;
+    if (unblockedLanes !== NoLanes) {
+      nextLanes = getHighestPriorityLanes(unblockedLanes);
+      nextLanePriority = return_highestLanePriority;
+    } else {
+      if (pingedLanes !== NoLanes) {
+        nextLanes = getHighestPriorityLanes(pingedLanes);
+        nextLanePriority = return_highestLanePriority;
       }
     }
   }
@@ -463,6 +455,7 @@ export function markStarvedLanesAsExpired(
   // expiration time. If so, we'll assume the update is being starved and mark
   // it as expired to force it to finish.
   let lanes = pendingLanes;
+  let expiredLanes = 0;
   while (lanes > 0) {
     const index = pickArbitraryLaneIndex(lanes);
     const lane = 1 << index;
@@ -481,10 +474,14 @@ export function markStarvedLanesAsExpired(
       }
     } else if (expirationTime <= currentTime) {
       // This lane expired
-      root.expiredLanes |= lane;
+      expiredLanes |= lane;
     }
 
     lanes &= ~lane;
+  }
+
+  if (expiredLanes !== 0) {
+    markRootExpired(root, expiredLanes);
   }
 }
 
@@ -668,7 +665,17 @@ export function markRootPinged(
 }
 
 export function markRootExpired(root: FiberRoot, expiredLanes: Lanes) {
-  root.expiredLanes |= expiredLanes & root.pendingLanes;
+  const entanglements = root.entanglements;
+  const SyncLaneIndex = 0;
+  entanglements[SyncLaneIndex] |= expiredLanes;
+  root.entangledLanes |= SyncLane;
+  root.pendingLanes |= SyncLane;
+}
+
+export function areLanesExpired(root: FiberRoot, lanes: Lanes) {
+  const SyncLaneIndex = 0;
+  const entanglements = root.entanglements;
+  return (entanglements[SyncLaneIndex] & lanes) !== NoLanes;
 }
 
 export function markRootMutableRead(root: FiberRoot, updateLane: Lane) {
@@ -684,7 +691,6 @@ export function markRootFinished(root: FiberRoot, remainingLanes: Lanes) {
   root.suspendedLanes = 0;
   root.pingedLanes = 0;
 
-  root.expiredLanes &= remainingLanes;
   root.mutableReadLanes &= remainingLanes;
 
   root.entangledLanes &= remainingLanes;
