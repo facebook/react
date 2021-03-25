@@ -286,26 +286,34 @@ function resetContext(): void {
 
 function renderNode(
   request: Request,
-  parentBoundary: Root | SuspenseBoundary,
-  segment: Segment,
+  work: SuspendedWork,
   node: ReactNodeList,
-  abortSet: Set<SuspendedWork>,
-  assignID: null | SuspenseBoundaryID,
 ): void {
   if (typeof node === 'string') {
-    pushTextInstance(segment.chunks, node, request.responseState, assignID);
+    pushTextInstance(
+      work.blockedSegment.chunks,
+      node,
+      request.responseState,
+      work.assignID,
+    );
     return;
   }
 
   if (Array.isArray(node)) {
     if (node.length > 0) {
-      // Only the first node gets assigned an ID.
-      renderNode(request, parentBoundary, segment, node[0], abortSet, assignID);
+      renderNode(request, work, node[0]);
+      // Only the first node gets assigned an ID. We've either handed it off to other work
+      // or assigned it already.
+      work.assignID = null;
       for (let i = 1; i < node.length; i++) {
-        renderNode(request, parentBoundary, segment, node[i], abortSet, null);
+        renderNode(request, work, node[i]);
       }
     } else {
-      pushEmpty(segment.chunks, request.responseState, assignID);
+      pushEmpty(
+        work.blockedSegment.chunks,
+        request.responseState,
+        work.assignID,
+      );
     }
     return;
   }
@@ -323,21 +331,22 @@ function renderNode(
   if (typeof type === 'function') {
     try {
       const result = type(props);
-      renderNode(request, parentBoundary, segment, result, abortSet, assignID);
+      renderNode(request, work, result);
     } catch (x) {
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Something suspended, we'll need to create a new segment and resolve it later.
+        const segment = work.blockedSegment;
         const insertionIndex = segment.chunks.length;
         const newSegment = createPendingSegment(request, insertionIndex, null);
         segment.children.push(newSegment);
         const suspendedWork = createSuspendedWork(
           request,
           node,
-          parentBoundary,
+          work.blockedBoundary,
           newSegment,
-          abortSet,
+          work.abortSet,
           currentFormatContext,
-          assignID,
+          work.assignID,
         );
         const ping = suspendedWork.ping;
         x.then(ping, ping);
@@ -348,27 +357,23 @@ function renderNode(
     }
   } else if (typeof type === 'string') {
     pushStartInstance(
-      segment.chunks,
+      work.blockedSegment.chunks,
       type,
       props,
       request.responseState,
-      assignID,
+      work.assignID,
     );
+    // We must have assigned it already above so we don't need this anymore.
+    work.assignID = null;
     const prevContext = currentFormatContext;
     currentFormatContext = getChildFormatContext(prevContext, type, props);
-    renderNode(
-      request,
-      parentBoundary,
-      segment,
-      props.children,
-      abortSet,
-      null,
-    );
+    renderNode(request, work, props.children);
     currentFormatContext = prevContext;
-    pushEndInstance(segment.chunks, type, props);
+    pushEndInstance(work.blockedSegment.chunks, type, props);
   } else if (type === REACT_SUSPENSE_TYPE) {
+    const segment = work.blockedSegment;
     // We need to push an "empty" thing here to identify the parent suspense boundary.
-    pushEmpty(segment.chunks, request.responseState, assignID);
+    pushEmpty(segment.chunks, request.responseState, work.assignID);
     // Each time we enter a suspense boundary, we split out into a new segment for
     // the fallback so that we can later replace that segment with the content.
     // This also lets us split out the main content even if it doesn't suspend,
@@ -393,7 +398,7 @@ function renderNode(
     const suspendedFallbackWork = createSuspendedWork(
       request,
       fallback,
-      parentBoundary,
+      work.blockedBoundary,
       boundarySegment,
       fallbackAbortSet,
       currentFormatContext,
@@ -417,7 +422,7 @@ function renderNode(
       content,
       newBoundary,
       contentRootSegment,
-      abortSet,
+      work.abortSet,
       currentFormatContext,
       null,
     );
@@ -575,8 +580,6 @@ function retryWork(request: Request, work: SuspendedWork): void {
     // We completed this by other means before we had a chance to retry it.
     return;
   }
-  const boundary = work.blockedBoundary;
-  const abortSet = work.abortSet;
   try {
     let node = work.node;
     while (
@@ -593,11 +596,11 @@ function retryWork(request: Request, work: SuspendedWork): void {
       node = element.type(element.props);
     }
 
-    renderNode(request, boundary, segment, node, abortSet, work.assignID);
+    renderNode(request, work, node);
 
-    abortSet.delete(work);
+    work.abortSet.delete(work);
     segment.status = COMPLETED;
-    finishedWork(request, boundary, segment);
+    finishedWork(request, work.blockedBoundary, segment);
   } catch (x) {
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
       saveContext(work);
@@ -605,9 +608,9 @@ function retryWork(request: Request, work: SuspendedWork): void {
       const ping = work.ping;
       x.then(ping, ping);
     } else {
-      abortSet.delete(work);
+      work.abortSet.delete(work);
       segment.status = ERRORED;
-      erroredWork(request, boundary, segment, x);
+      erroredWork(request, work.blockedBoundary, segment, x);
     }
   } finally {
     resetContext();
