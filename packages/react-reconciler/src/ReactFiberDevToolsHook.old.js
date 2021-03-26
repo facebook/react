@@ -25,7 +25,7 @@ import {
   UserBlockingPriority as UserBlockingSchedulerPriority,
   NormalPriority as NormalSchedulerPriority,
   IdlePriority as IdleSchedulerPriority,
-} from './SchedulerWithReactIntegration.old';
+} from './Scheduler';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 

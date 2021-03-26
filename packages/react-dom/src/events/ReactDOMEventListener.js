@@ -34,25 +34,21 @@ import {
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
-import {
-  enableLegacyFBSupport,
-  enableNewReconciler,
-} from 'shared/ReactFeatureFlags';
+import {enableLegacyFBSupport} from 'shared/ReactFeatureFlags';
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
 import {
   flushDiscreteUpdatesIfNeeded,
   discreteUpdates,
 } from './ReactDOMUpdateBatching';
 
-import {getCurrentPriorityLevel as getCurrentPriorityLevel_old} from 'react-reconciler/src/SchedulerWithReactIntegration.old';
 import {
-  getCurrentPriorityLevel as getCurrentPriorityLevel_new,
+  getCurrentPriorityLevel as getCurrentSchedulerPriorityLevel,
   IdlePriority as IdleSchedulerPriority,
   ImmediatePriority as ImmediateSchedulerPriority,
   LowPriority as LowSchedulerPriority,
   NormalPriority as NormalSchedulerPriority,
   UserBlockingPriority as UserBlockingSchedulerPriority,
-} from 'react-reconciler/src/SchedulerWithReactIntegration.new';
+} from 'react-reconciler/src/Scheduler';
 import {
   DiscreteEventPriority,
   ContinuousEventPriority,
@@ -61,10 +57,6 @@ import {
   getCurrentUpdatePriority,
   setCurrentUpdatePriority,
 } from 'react-reconciler/src/ReactEventPriorities';
-
-const getCurrentPriorityLevel = enableNewReconciler
-  ? getCurrentPriorityLevel_new
-  : getCurrentPriorityLevel_old;
 
 // TODO: can we stop exporting these?
 export let _enabled = true;
@@ -392,7 +384,7 @@ export function getEventPriority(domEventName: DOMEventName): * {
       // We might be in the Scheduler callback.
       // Eventually this mechanism will be replaced by a check
       // of the current priority on the native scheduler.
-      const schedulerPriority = getCurrentPriorityLevel();
+      const schedulerPriority = getCurrentSchedulerPriorityLevel();
       switch (schedulerPriority) {
         case ImmediateSchedulerPriority:
           return DiscreteEventPriority;

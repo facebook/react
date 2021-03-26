@@ -46,9 +46,11 @@ import {
   UserBlockingPriority as UserBlockingSchedulerPriority,
   NormalPriority as NormalSchedulerPriority,
   IdlePriority as IdleSchedulerPriority,
+} from './Scheduler';
+import {
   flushSyncCallbackQueue,
   scheduleSyncCallback,
-} from './SchedulerWithReactIntegration.old';
+} from './ReactFiberSyncTaskQueue.old';
 import {
   NoFlags as NoHookEffect,
   Passive as HookPassive,
