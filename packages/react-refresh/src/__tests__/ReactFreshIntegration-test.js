@@ -571,6 +571,88 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
+    it('does not crash when changing Hook order inside a memo-ed HOC with direct call', () => {
+      if (__DEV__) {
+        render(`
+          const {useEffect, memo} = React;
+
+          function hocWithDirectCall(Wrapped) {
+            return memo(function Generated() {
+              return Wrapped();
+            });
+          }
+
+          export default hocWithDirectCall(() => {
+            useEffect(() => {}, []);
+            return <h1>A</h1>;
+          });
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('A');
+
+        patch(`
+          const {useEffect, memo} = React;
+
+          function hocWithDirectCall(Wrapped) {
+            return memo(function Generated() {
+              return Wrapped();
+            });
+          }
+
+          export default hocWithDirectCall(() => {
+            useEffect(() => {}, []);
+            useEffect(() => {}, []);
+            return <h1>B</h1>;
+          });
+        `);
+        // Hook order changed, so we remount.
+        expect(container.firstChild).not.toBe(el);
+        const newEl = container.firstChild;
+        expect(newEl.textContent).toBe('B');
+      }
+    });
+
+    it('does not crash when changing Hook order inside a memo+forwardRef-ed HOC with direct call', () => {
+      if (__DEV__) {
+        render(`
+          const {useEffect, memo, forwardRef} = React;
+
+          function hocWithDirectCall(Wrapped) {
+            return memo(forwardRef(function Generated() {
+              return Wrapped();
+            }));
+          }
+
+          export default hocWithDirectCall(() => {
+            useEffect(() => {}, []);
+            return <h1>A</h1>;
+          });
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('A');
+
+        patch(`
+          const {useEffect, memo, forwardRef} = React;
+
+          function hocWithDirectCall(Wrapped) {
+            return memo(forwardRef(function Generated() {
+              return Wrapped();
+            }));
+          }
+
+          export default hocWithDirectCall(() => {
+            useEffect(() => {}, []);
+            useEffect(() => {}, []);
+            return <h1>B</h1>;
+          });
+        `);
+        // Hook order changed, so we remount.
+        expect(container.firstChild).not.toBe(el);
+        const newEl = container.firstChild;
+        expect(newEl.textContent).toBe('B');
+      }
+    });
+
     it('does not crash when changing Hook order inside a HOC returning an object', () => {
       if (__DEV__) {
         render(`

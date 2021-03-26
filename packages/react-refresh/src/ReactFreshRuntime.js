@@ -355,15 +355,25 @@ export function setSignature(
   getCustomHooks?: () => Array<Function>,
 ): void {
   if (__DEV__) {
-    if (allSignaturesByType.has(type)) {
-      return;
+    if (!allSignaturesByType.has(type)) {
+      allSignaturesByType.set(type, {
+        forceReset,
+        ownKey: key,
+        fullKey: null,
+        getCustomHooks: getCustomHooks || (() => []),
+      });
     }
-    allSignaturesByType.set(type, {
-      forceReset,
-      ownKey: key,
-      fullKey: null,
-      getCustomHooks: getCustomHooks || (() => []),
-    });
+    // Visit inner types because we might not have signed them.
+    if (typeof type === 'object' && type !== null) {
+      switch (getProperty(type, '$$typeof')) {
+        case REACT_FORWARD_REF_TYPE:
+          setSignature(type.render, key, forceReset, getCustomHooks);
+          break;
+        case REACT_MEMO_TYPE:
+          setSignature(type.type, key, forceReset, getCustomHooks);
+          break;
+      }
+    }
   } else {
     throw new Error(
       'Unexpected call to React Refresh in a production environment.',
