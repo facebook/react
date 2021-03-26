@@ -155,8 +155,6 @@ export const enableLegacyFBSupport = false;
 // new behavior.
 export const deferRenderPhaseUpdateToNextBatch = true;
 
-export const enableDiscreteEventFlushingChange = false;
-
 export const enableUseRefAccessWarning = false;
 
 export const enableRecursiveCommitTraversal = false;
