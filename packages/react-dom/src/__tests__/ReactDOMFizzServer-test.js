@@ -100,7 +100,8 @@ describe('ReactDOMFizzServer', () => {
         if (
           node.tagName !== 'SCRIPT' &&
           node.tagName !== 'TEMPLATE' &&
-          !node.hasAttribute('hidden')
+          !node.hasAttribute('hidden') &&
+          !node.hasAttribute('aria-hidden')
         ) {
           const props = {};
           const attributes = node.attributes;
@@ -594,6 +595,62 @@ describe('ReactDOMFizzServer', () => {
           </tr>
         </tbody>
       </table>,
+    );
+  });
+
+  // @gate experimental
+  it('can stream into an SVG container', async () => {
+    function AsyncPath({id}) {
+      return <path id={readText(id)}>{[]}</path>;
+    }
+
+    function App() {
+      return (
+        <g>
+          <Suspense fallback={<text>Loading...</text>}>
+            <AsyncPath id="my-path" />
+          </Suspense>
+        </g>
+      );
+    }
+
+    await act(async () => {
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        <App />,
+        writable,
+        {
+          namespaceURI: 'http://www.w3.org/2000/svg',
+          onReadyToStream() {
+            writable.write('<svg>');
+            startWriting();
+            writable.write('</svg>');
+          },
+        },
+      );
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <svg>
+        <g>
+          <text>Loading...</text>
+        </g>
+      </svg>,
+    );
+
+    await act(async () => {
+      resolveText('my-path');
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <svg>
+        <g>
+          <path id="my-path" />
+        </g>
+      </svg>,
+    );
+
+    expect(container.querySelector('#my-path').namespaceURI).toBe(
+      'http://www.w3.org/2000/svg',
     );
   });
 });

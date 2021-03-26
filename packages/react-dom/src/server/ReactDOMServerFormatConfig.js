@@ -53,10 +53,9 @@ export function createResponseState(
 // Constants for the insertion mode we're currently writing in. We don't encode all HTML5 insertion
 // modes. We only include the variants as they matter for the sake of our purposes.
 // We don't actually provide the namespace therefore we use constants instead of the string.
-const ROOT_MODE = 0; // At the root we don't need to know which mode it is. We just need to know that it's already the right one.
+const HTML_MODE = 0;
 const SVG_MODE = 1;
 const MATHML_MODE = 2;
-const HTML_MODE = 3; // If we reenter HTML from SVG we know for sure it's HTML.
 const HTML_TABLE_MODE = 4;
 const HTML_TABLE_BODY_MODE = 5;
 const HTML_TABLE_ROW_MODE = 6;
@@ -80,8 +79,14 @@ function createFormatContext(
   };
 }
 
-export function createRootFormatContext(): FormatContext {
-  return createFormatContext(ROOT_MODE, null);
+export function createRootFormatContext(namespaceURI?: string): FormatContext {
+  const insertionMode =
+    namespaceURI === 'http://www.w3.org/2000/svg'
+      ? SVG_MODE
+      : namespaceURI === 'http://www.w3.org/1998/Math/MathML'
+      ? MATHML_MODE
+      : HTML_MODE;
+  return createFormatContext(insertionMode, null);
 }
 
 export function getChildFormatContext(
@@ -306,10 +311,9 @@ export function writeEndSuspenseBoundary(destination: Destination): boolean {
   return writeChunk(destination, endSuspenseBoundary);
 }
 
-// TODO: div won't work if the Root is SVG or MathML.
-const startSegmentRoot = stringToPrecomputedChunk('<div hidden id="');
-const startSegmentRoot2 = stringToPrecomputedChunk('">');
-const endSegmentRoot = stringToPrecomputedChunk('</div>');
+const startSegmentHTML = stringToPrecomputedChunk('<div hidden id="');
+const startSegmentHTML2 = stringToPrecomputedChunk('">');
+const endSegmentHTML = stringToPrecomputedChunk('</div>');
 
 const startSegmentSVG = stringToPrecomputedChunk(
   '<svg aria-hidden="true" style="display:none" id="',
@@ -350,12 +354,11 @@ export function writeStartSegment(
   id: number,
 ): boolean {
   switch (formatContext.insertionMode) {
-    case ROOT_MODE:
     case HTML_MODE: {
-      writeChunk(destination, startSegmentRoot);
+      writeChunk(destination, startSegmentHTML);
       writeChunk(destination, responseState.segmentPrefix);
       writeChunk(destination, stringToChunk(id.toString(16)));
-      return writeChunk(destination, startSegmentRoot2);
+      return writeChunk(destination, startSegmentHTML2);
     }
     case SVG_MODE: {
       writeChunk(destination, startSegmentSVG);
@@ -407,9 +410,8 @@ export function writeEndSegment(
   formatContext: FormatContext,
 ): boolean {
   switch (formatContext.insertionMode) {
-    case ROOT_MODE:
     case HTML_MODE: {
-      return writeChunk(destination, endSegmentRoot);
+      return writeChunk(destination, endSegmentHTML);
     }
     case SVG_MODE: {
       return writeChunk(destination, endSegmentSVG);

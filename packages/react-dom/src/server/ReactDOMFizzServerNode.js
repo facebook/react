@@ -28,6 +28,7 @@ function createDrainHandler(destination, request) {
 
 type Options = {
   identifierPrefix?: string,
+  namespaceURI?: string,
   progressiveChunkSize?: number,
   onReadyToStream?: () => void,
   onCompleteAll?: () => void,
@@ -49,7 +50,7 @@ function pipeToNodeWritable(
     children,
     destination,
     createResponseState(options ? options.identifierPrefix : undefined),
-    createRootFormatContext(), // We call this here in case we need options to initialize it.
+    createRootFormatContext(options ? options.namespaceURI : undefined),
     options ? options.progressiveChunkSize : undefined,
     options ? options.onError : undefined,
     options ? options.onCompleteAll : undefined,
