@@ -50,33 +50,38 @@ export function createResponseState(
   };
 }
 
-// Constants for the namespace we use. We don't actually provide the namespace but conditionally
-// use different segment parents based on namespace. Therefore we use constants instead of the string.
-const ROOT_NAMESPACE = 0; // At the root we don't need to know which namespace it is. We just need to know that it's already the right one.
-const HTML_NAMESPACE = 1;
-const SVG_NAMESPACE = 2;
-const MATHML_NAMESPACE = 3;
+// Constants for the insertion mode we're currently writing in. We don't encode all HTML5 insertion
+// modes. We only include the variants as they matter for the sake of our purposes.
+// We don't actually provide the namespace therefore we use constants instead of the string.
+const ROOT_MODE = 0; // At the root we don't need to know which mode it is. We just need to know that it's already the right one.
+const SVG_MODE = 1;
+const MATHML_MODE = 2;
+const HTML_MODE = 3; // If we reenter HTML from SVG we know for sure it's HTML.
+const HTML_TABLE_MODE = 4;
+const HTML_TABLE_BODY_MODE = 5;
+const HTML_TABLE_ROW_MODE = 6;
+const HTML_COLGROUP_MODE = 7;
 
-type NamespaceFlag = 0 | 1 | 2 | 3;
+type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 // Lets us keep track of contextual state and pick it back up after suspending.
 export type FormatContext = {
-  namespace: NamespaceFlag, // root/svg/html/mathml
+  insertionMode: InsertionMode, // root/svg/html/mathml/table
   selectedValue: null | string, // the selected value(s) inside a <select>, or null outside <select>
 };
 
 function createFormatContext(
-  namespace: NamespaceFlag,
+  insertionMode: InsertionMode,
   selectedValue: null | string,
 ): FormatContext {
   return {
-    namespace,
+    insertionMode,
     selectedValue,
   };
 }
 
 export function createRootFormatContext(): FormatContext {
-  return createFormatContext(ROOT_NAMESPACE, null);
+  return createFormatContext(ROOT_MODE, null);
 }
 
 export function getChildFormatContext(
@@ -87,15 +92,32 @@ export function getChildFormatContext(
   switch (type) {
     case 'select':
       return createFormatContext(
-        parentContext.namespace,
+        HTML_MODE,
         props.value != null ? props.value : props.defaultValue,
       );
     case 'svg':
-      return createFormatContext(SVG_NAMESPACE, null);
+      return createFormatContext(SVG_MODE, null);
     case 'math':
-      return createFormatContext(MATHML_NAMESPACE, null);
+      return createFormatContext(MATHML_MODE, null);
     case 'foreignObject':
-      return createFormatContext(HTML_NAMESPACE, null);
+      return createFormatContext(HTML_MODE, null);
+    // Table parents are special in that their children can only be created at all if they're
+    // wrapped in a table parent. So we need to encode that we're entering this mode.
+    case 'table':
+      return createFormatContext(HTML_TABLE_MODE, null);
+    case 'thead':
+    case 'tbody':
+    case 'tfoot':
+      return createFormatContext(HTML_TABLE_BODY_MODE, null);
+    case 'colgroup':
+      return createFormatContext(HTML_COLGROUP_MODE, null);
+    case 'tr':
+      return createFormatContext(HTML_TABLE_ROW_MODE, null);
+  }
+  if (parentContext.insertionMode >= HTML_TABLE_MODE) {
+    // Whatever tag this was, it wasn't a table parent or other special parent, so we must have
+    // entered plain HTML again.
+    return createFormatContext(HTML_MODE, null);
   }
   return parentContext;
 }
