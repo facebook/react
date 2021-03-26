@@ -208,12 +208,16 @@ export function writeEndSuspenseBoundary(destination: Destination): boolean {
 export function writeStartSegment(
   destination: Destination,
   responseState: ResponseState,
+  formatContext: FormatContext,
   id: number,
 ): boolean {
   writeChunk(destination, SEGMENT);
   return writeChunk(destination, formatID(id));
 }
-export function writeEndSegment(destination: Destination): boolean {
+export function writeEndSegment(
+  destination: Destination,
+  formatContext: FormatContext,
+): boolean {
   return writeChunk(destination, END);
 }
 

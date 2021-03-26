@@ -786,9 +786,14 @@ function flushSegmentContainer(
   destination: Destination,
   segment: Segment,
 ): boolean {
-  writeStartSegment(destination, request.responseState, segment.id);
+  writeStartSegment(
+    destination,
+    request.responseState,
+    segment.formatContext,
+    segment.id,
+  );
   flushSegment(request, destination, segment);
-  return writeEndSegment(destination);
+  return writeEndSegment(destination, segment.formatContext);
 }
 
 function flushCompletedBoundary(

@@ -228,7 +228,20 @@ export function pushStartInstance(
       startTag2,
     );
   } else {
-    target.push(startTag1, stringToChunk(type), startTag2);
+    target.push(startTag1, stringToChunk(type));
+    if (props.className) {
+      target.push(
+        stringToChunk(
+          ' class="' + encodeHTMLIDAttribute(props.className) + '"',
+        ),
+      );
+    }
+    if (props.id) {
+      target.push(
+        stringToChunk(' id="' + encodeHTMLIDAttribute(props.id) + '"'),
+      );
+    }
+    target.push(startTag2);
   }
 }
 
@@ -293,23 +306,133 @@ export function writeEndSuspenseBoundary(destination: Destination): boolean {
   return writeChunk(destination, endSuspenseBoundary);
 }
 
-const startSegment = stringToPrecomputedChunk('<div hidden id="');
-const startSegment2 = stringToPrecomputedChunk('">');
-const endSegment = stringToPrecomputedChunk('</div>');
+// TODO: div won't work if the Root is SVG or MathML.
+const startSegmentRoot = stringToPrecomputedChunk('<div hidden id="');
+const startSegmentRoot2 = stringToPrecomputedChunk('">');
+const endSegmentRoot = stringToPrecomputedChunk('</div>');
+
+const startSegmentSVG = stringToPrecomputedChunk(
+  '<svg aria-hidden="true" style="display:none" id="',
+);
+const startSegmentSVG2 = stringToPrecomputedChunk('">');
+const endSegmentSVG = stringToPrecomputedChunk('</svg>');
+
+const startSegmentMathML = stringToPrecomputedChunk(
+  '<math aria-hidden="true" style="display:none" id="',
+);
+const startSegmentMathML2 = stringToPrecomputedChunk('">');
+const endSegmentMathML = stringToPrecomputedChunk('</math>');
+
+const startSegmentTable = stringToPrecomputedChunk('<table hidden id="');
+const startSegmentTable2 = stringToPrecomputedChunk('">');
+const endSegmentTable = stringToPrecomputedChunk('</table>');
+
+const startSegmentTableBody = stringToPrecomputedChunk(
+  '<table hidden><tbody id="',
+);
+const startSegmentTableBody2 = stringToPrecomputedChunk('">');
+const endSegmentTableBody = stringToPrecomputedChunk('</tbody></table>');
+
+const startSegmentTableRow = stringToPrecomputedChunk('<table hidden><tr id="');
+const startSegmentTableRow2 = stringToPrecomputedChunk('">');
+const endSegmentTableRow = stringToPrecomputedChunk('</tr></table>');
+
+const startSegmentColGroup = stringToPrecomputedChunk(
+  '<table hidden><colgroup id="',
+);
+const startSegmentColGroup2 = stringToPrecomputedChunk('">');
+const endSegmentColGroup = stringToPrecomputedChunk('</colgroup></table>');
+
 export function writeStartSegment(
   destination: Destination,
   responseState: ResponseState,
+  formatContext: FormatContext,
   id: number,
 ): boolean {
-  // TODO: What happens with special children like <tr> if they're inserted in a div? Maybe needs contextually aware containers.
-  writeChunk(destination, startSegment);
-  writeChunk(destination, responseState.segmentPrefix);
-  const formattedID = stringToChunk(id.toString(16));
-  writeChunk(destination, formattedID);
-  return writeChunk(destination, startSegment2);
+  switch (formatContext.insertionMode) {
+    case ROOT_MODE:
+    case HTML_MODE: {
+      writeChunk(destination, startSegmentRoot);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, stringToChunk(id.toString(16)));
+      return writeChunk(destination, startSegmentRoot2);
+    }
+    case SVG_MODE: {
+      writeChunk(destination, startSegmentSVG);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, stringToChunk(id.toString(16)));
+      return writeChunk(destination, startSegmentSVG2);
+    }
+    case MATHML_MODE: {
+      writeChunk(destination, startSegmentMathML);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, stringToChunk(id.toString(16)));
+      return writeChunk(destination, startSegmentMathML2);
+    }
+    case HTML_TABLE_MODE: {
+      writeChunk(destination, startSegmentTable);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, stringToChunk(id.toString(16)));
+      return writeChunk(destination, startSegmentTable2);
+    }
+    // TODO: For the rest of these, there will be extra wrapper nodes that never
+    // get deleted from the document. We need to delete the table too as part
+    // of the injected scripts. They are invisible though so it's not too terrible
+    // and it's kind of an edge case to suspend in a table. Totally supported though.
+    case HTML_TABLE_BODY_MODE: {
+      writeChunk(destination, startSegmentTableBody);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, stringToChunk(id.toString(16)));
+      return writeChunk(destination, startSegmentTableBody2);
+    }
+    case HTML_TABLE_ROW_MODE: {
+      writeChunk(destination, startSegmentTableRow);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, stringToChunk(id.toString(16)));
+      return writeChunk(destination, startSegmentTableRow2);
+    }
+    case HTML_COLGROUP_MODE: {
+      writeChunk(destination, startSegmentColGroup);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, stringToChunk(id.toString(16)));
+      return writeChunk(destination, startSegmentColGroup2);
+    }
+    default: {
+      invariant(false, 'Unknown insertion mode. This is a bug in React.');
+    }
+  }
 }
-export function writeEndSegment(destination: Destination): boolean {
-  return writeChunk(destination, endSegment);
+export function writeEndSegment(
+  destination: Destination,
+  formatContext: FormatContext,
+): boolean {
+  switch (formatContext.insertionMode) {
+    case ROOT_MODE:
+    case HTML_MODE: {
+      return writeChunk(destination, endSegmentRoot);
+    }
+    case SVG_MODE: {
+      return writeChunk(destination, endSegmentSVG);
+    }
+    case MATHML_MODE: {
+      return writeChunk(destination, endSegmentMathML);
+    }
+    case HTML_TABLE_MODE: {
+      return writeChunk(destination, endSegmentTable);
+    }
+    case HTML_TABLE_BODY_MODE: {
+      return writeChunk(destination, endSegmentTableBody);
+    }
+    case HTML_TABLE_ROW_MODE: {
+      return writeChunk(destination, endSegmentTableRow);
+    }
+    case HTML_COLGROUP_MODE: {
+      return writeChunk(destination, endSegmentColGroup);
+    }
+    default: {
+      invariant(false, 'Unknown insertion mode. This is a bug in React.');
+    }
+  }
 }
 
 // Instruction Set
