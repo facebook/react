@@ -571,6 +571,43 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
+    it('does not crash when changing Hook order inside a HOC returning an object', () => {
+      if (__DEV__) {
+        render(`
+          const {useEffect} = React;
+
+          function hocWithDirectCall(Wrapped) {
+            return {Wrapped: Wrapped};
+          }
+
+          export default hocWithDirectCall(() => {
+            useEffect(() => {}, []);
+            return <h1>A</h1>;
+          }).Wrapped;
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('A');
+
+        patch(`
+          const {useEffect} = React;
+
+          function hocWithDirectCall(Wrapped) {
+            return {Wrapped: Wrapped};
+          }
+
+          export default hocWithDirectCall(() => {
+            useEffect(() => {}, []);
+            useEffect(() => {}, []);
+            return <h1>B</h1>;
+          }).Wrapped;
+        `);
+        // Hook order changed, so we remount.
+        expect(container.firstChild).not.toBe(el);
+        const newEl = container.firstChild;
+        expect(newEl.textContent).toBe('B');
+      }
+    });
+
     it('resets effects while preserving state', () => {
       if (__DEV__) {
         render(`
