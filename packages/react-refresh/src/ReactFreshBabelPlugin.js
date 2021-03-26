@@ -333,12 +333,11 @@ export default function(babel, opts = {}) {
     return args;
   }
 
-  // Traverse HOC calls upwards to the rootmost one.
-  function findOuterCallPath(path) {
-    let outerCallPath = null;
+  function findHOCCallPathsAbove(path) {
+    const calls = [];
     while (true) {
       if (!path) {
-        return outerCallPath;
+        return calls;
       }
       if (path.node.type === 'AssignmentExpression') {
         // Ignore registrations.
@@ -346,11 +345,11 @@ export default function(babel, opts = {}) {
         continue;
       }
       if (path.node.type === 'CallExpression') {
-        outerCallPath = path;
+        calls.push(path);
         path = path.parentPath;
         continue;
       }
-      return outerCallPath; // Stop at other types.
+      return calls; // Stop at other types.
     }
   }
 
@@ -651,17 +650,16 @@ export default function(babel, opts = {}) {
             // Result: let Foo = () => {}; __signature(Foo, ...);
           } else {
             // let Foo = hoc(() => {})
-            const outerCallPath = findOuterCallPath(path.parentPath);
-            if (outerCallPath) {
-              path = outerCallPath;
-            }
-            path.replaceWith(
-              t.callExpression(
-                sigCallID,
-                createArgumentsForSignature(path.node, signature, path.scope),
-              ),
-            );
-            // Result: let Foo = __signature(hoc(() => {}), ...)
+            const paths = [path, ...findHOCCallPathsAbove(path.parentPath)];
+            paths.forEach(p => {
+              p.replaceWith(
+                t.callExpression(
+                  sigCallID,
+                  createArgumentsForSignature(p.node, signature, p.scope),
+                ),
+              );
+            });
+            // Result: let Foo = __signature(hoc(__signature(() => {}, ...)), ...)
           }
         },
       },
