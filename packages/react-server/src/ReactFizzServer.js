@@ -383,21 +383,6 @@ function renderNode(
     );
     parentSegment.children.push(boundarySegment);
 
-    // We create suspended work for the fallback because we don't want to actually work
-    // on it yet in case we finish the main content, so we queue for later.
-    const suspendedFallbackWork = createSuspendedWork(
-      request,
-      fallback,
-      parentBoundary,
-      boundarySegment,
-      fallbackAbortSet,
-      work.formatContext,
-      newBoundary.id, // This is the ID we want to give this fallback so we can replace it later.
-    );
-    // TODO: This should be queued at a separate lower priority queue so that we only work
-    // on preparing fallbacks if we don't have any more main content to work on.
-    request.pingedWork.push(suspendedFallbackWork);
-
     // This segment is the actual child content. We can start rendering that immediately.
     const contentRootSegment = createPendingSegment(request, 0, null);
     // We mark the root segment as having its parent flushed. It's not really flushed but there is
@@ -420,9 +405,9 @@ function renderNode(
       newBoundary.completedSegments.push(contentRootSegment);
       if (newBoundary.pendingWork === 0) {
         // This must have been the last segment we were waiting on. This boundary is now complete.
-        // We can now cancel any pending work on the fallback since we won't need to show it anymore.
-        newBoundary.fallbackAbortableWork.forEach(abortWorkSoft, request);
-        newBoundary.fallbackAbortableWork.clear();
+        // Therefore we won't need the fallback. We early return so that we don't have to create
+        // the fallback.
+        return;
       }
     } catch (error) {
       contentRootSegment.status = ERRORED;
@@ -430,10 +415,26 @@ function renderNode(
       newBoundary.forceClientRender = true;
       // We don't need to decrement any work numbers because we didn't spawn any new work.
       // We don't need to schedule any work because we know the parent has written yet.
+      // We do need to fallthrough to create the fallback though.
     } finally {
       work.blockedBoundary = parentBoundary;
       work.blockedSegment = parentSegment;
     }
+
+    // We create suspended work for the fallback because we don't want to actually work
+    // on it yet in case we finish the main content, so we queue for later.
+    const suspendedFallbackWork = createSuspendedWork(
+      request,
+      fallback,
+      parentBoundary,
+      boundarySegment,
+      fallbackAbortSet,
+      work.formatContext,
+      newBoundary.id, // This is the ID we want to give this fallback so we can replace it later.
+    );
+    // TODO: This should be queued at a separate lower priority queue so that we only work
+    // on preparing fallbacks if we don't have any more main content to work on.
+    request.pingedWork.push(suspendedFallbackWork);
   } else {
     throw new Error('Not yet implemented element type.');
   }
