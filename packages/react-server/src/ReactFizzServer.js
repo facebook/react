@@ -62,7 +62,7 @@ type SuspenseBoundary = {
   pendingTasks: number, // when it reaches zero we can show this boundary's content
   completedSegments: Array<Segment>, // completed but not yet flushed segments.
   byteSize: number, // used to determine whether to inline children boundaries.
-  fallbackAbortableTask: Set<Task>, // used to cancel task on the fallback if the boundary completes or gets canceled.
+  fallbackAbortableTasks: Set<Task>, // used to cancel task on the fallback if the boundary completes or gets canceled.
 };
 
 type Task = {
@@ -107,8 +107,8 @@ type Request = {
   allPendingTasks: number, // when it reaches zero, we can close the connection.
   pendingRootTasks: number, // when this reaches zero, we've finished at least the root boundary.
   completedRootSegment: null | Segment, // Completed but not yet flushed root segments.
-  abortableTask: Set<Task>,
-  pingedTask: Array<Task>,
+  abortableTasks: Set<Task>,
+  pingedTasks: Array<Task>,
   // Queues to flush in order of priority
   clientRenderedBoundaries: Array<SuspenseBoundary>, // Errored or client rendered but not yet flushed.
   completedBoundaries: Array<SuspenseBoundary>, // Completed but not yet fully flushed boundaries to show.
@@ -151,7 +151,7 @@ export function createRequest(
   onCompleteAll: () => void = noop,
   onReadyToStream: () => void = noop,
 ): Request {
-  const pingedTask = [];
+  const pingedTasks = [];
   const abortSet: Set<Task> = new Set();
   const request = {
     destination,
@@ -162,8 +162,8 @@ export function createRequest(
     allPendingTasks: 0,
     pendingRootTasks: 0,
     completedRootSegment: null,
-    abortableTask: abortSet,
-    pingedTask: pingedTask,
+    abortableTasks: abortSet,
+    pingedTasks: pingedTasks,
     clientRenderedBoundaries: [],
     completedBoundaries: [],
     partialBoundaries: [],
@@ -184,21 +184,21 @@ export function createRequest(
     rootContext,
     null,
   );
-  pingedTask.push(rootTask);
+  pingedTasks.push(rootTask);
   return request;
 }
 
 function pingTask(request: Request, task: Task): void {
-  const pingedTask = request.pingedTask;
-  pingedTask.push(task);
-  if (pingedTask.length === 1) {
+  const pingedTasks = request.pingedTasks;
+  pingedTasks.push(task);
+  if (pingedTasks.length === 1) {
     scheduleWork(() => performWork(request));
   }
 }
 
 function createSuspenseBoundary(
   request: Request,
-  fallbackAbortableTask: Set<Task>,
+  fallbackAbortableTasks: Set<Task>,
 ): SuspenseBoundary {
   return {
     id: createSuspenseBoundaryID(request.responseState),
@@ -208,7 +208,7 @@ function createSuspenseBoundary(
     forceClientRender: false,
     completedSegments: [],
     byteSize: 0,
-    fallbackAbortableTask,
+    fallbackAbortableTasks,
   };
 }
 
@@ -385,7 +385,7 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
     // no parent segment so there's nothing to wait on.
     contentRootSegment.parentFlushed = true;
 
-    // Currently this is running synchronously. We could instead schedule this to pingedTask.
+    // Currently this is running synchronously. We could instead schedule this to pingedTasks.
     // I suspect that there might be some efficiency benefits from not creating the suspended task
     // and instead just using the stack if possible.
     // TODO: Call this directly instead of messing with saving and restoring contexts.
@@ -430,7 +430,7 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
     );
     // TODO: This should be queued at a separate lower priority queue so that we only task
     // on preparing fallbacks if we don't have any more main content to task on.
-    request.pingedTask.push(suspendedFallbackTask);
+    request.pingedTasks.push(suspendedFallbackTask);
   } else {
     throw new Error('Not yet implemented element type.');
   }
@@ -501,8 +501,8 @@ function abortTask(task: Task): void {
 
     // If this boundary was still pending then we haven't already cancelled its fallbacks.
     // We'll need to abort the fallbacks, which will also error that parent boundary.
-    boundary.fallbackAbortableTask.forEach(abortTask, request);
-    boundary.fallbackAbortableTask.clear();
+    boundary.fallbackAbortableTasks.forEach(abortTask, request);
+    boundary.fallbackAbortableTasks.clear();
 
     if (!boundary.forceClientRender) {
       boundary.forceClientRender = true;
@@ -541,8 +541,8 @@ function finishedTask(
     } else if (boundary.pendingTasks === 0) {
       // This must have been the last segment we were waiting on. This boundary is now complete.
       // We can now cancel any pending task on the fallback since we won't need to show it anymore.
-      boundary.fallbackAbortableTask.forEach(abortTaskSoft, request);
-      boundary.fallbackAbortableTask.clear();
+      boundary.fallbackAbortableTasks.forEach(abortTaskSoft, request);
+      boundary.fallbackAbortableTasks.clear();
       if (segment.parentFlushed) {
         // Our parent segment already flushed, so we need to schedule this segment to be emitted.
         boundary.completedSegments.push(segment);
@@ -625,13 +625,13 @@ function performWork(request: Request): void {
   ReactCurrentDispatcher.current = Dispatcher;
 
   try {
-    const pingedTask = request.pingedTask;
+    const pingedTasks = request.pingedTasks;
     let i;
-    for (i = 0; i < pingedTask.length; i++) {
-      const task = pingedTask[i];
+    for (i = 0; i < pingedTasks.length; i++) {
+      const task = pingedTasks[i];
       retryTask(request, task);
     }
-    pingedTask.splice(0, i);
+    pingedTasks.splice(0, i);
     if (request.status === FLOWING) {
       flushCompletedQueues(request);
     }
@@ -953,14 +953,14 @@ function flushCompletedQueues(request: Request): void {
     flushBuffered(destination);
     if (
       request.allPendingTasks === 0 &&
-      request.pingedTask.length === 0 &&
+      request.pingedTasks.length === 0 &&
       request.clientRenderedBoundaries.length === 0 &&
       request.completedBoundaries.length === 0
       // We don't need to check any partially completed segments because
       // either they have pending task or they're complete.
     ) {
       if (__DEV__) {
-        if (request.abortableTask.size !== 0) {
+        if (request.abortableTasks.size !== 0) {
           console.error(
             'There was still abortable task at the root when we closed. This is a bug in React.',
           );
@@ -992,9 +992,9 @@ export function startFlowing(request: Request): void {
 // This is called to early terminate a request. It puts all pending boundaries in client rendered state.
 export function abort(request: Request): void {
   try {
-    const abortableTask = request.abortableTask;
-    abortableTask.forEach(abortTask, request);
-    abortableTask.clear();
+    const abortableTasks = request.abortableTasks;
+    abortableTasks.forEach(abortTask, request);
+    abortableTasks.clear();
     if (request.status === FLOWING) {
       flushCompletedQueues(request);
     }
