@@ -355,6 +355,9 @@ export function setSignature(
   getCustomHooks?: () => Array<Function>,
 ): void {
   if (__DEV__) {
+    if (allSignaturesByType.has(type)) {
+      return;
+    }
     allSignaturesByType.set(type, {
       forceReset,
       ownKey: key,

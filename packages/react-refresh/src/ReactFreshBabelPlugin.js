@@ -333,6 +333,27 @@ export default function(babel, opts = {}) {
     return args;
   }
 
+  // Traverse HOC calls upwards to the rootmost one.
+  function findOuterCallPath(path) {
+    let outerCallPath = null;
+    while (true) {
+      if (!path) {
+        return outerCallPath;
+      }
+      if (path.node.type === 'AssignmentExpression') {
+        // Ignore registrations.
+        path = path.parentPath;
+        continue;
+      }
+      if (path.node.type === 'CallExpression') {
+        outerCallPath = path;
+        path = path.parentPath;
+        continue;
+      }
+      return outerCallPath; // Stop at other types.
+    }
+  }
+
   const seenForRegistration = new WeakSet();
   const seenForSignature = new WeakSet();
   const seenForOutro = new WeakSet();
@@ -630,13 +651,17 @@ export default function(babel, opts = {}) {
             // Result: let Foo = () => {}; __signature(Foo, ...);
           } else {
             // let Foo = hoc(() => {})
+            const outerCallPath = findOuterCallPath(path.parentPath);
+            if (outerCallPath) {
+              path = outerCallPath;
+            }
             path.replaceWith(
               t.callExpression(
                 sigCallID,
-                createArgumentsForSignature(node, signature, path.scope),
+                createArgumentsForSignature(path.node, signature, path.scope),
               ),
             );
-            // Result: let Foo = hoc(__signature(() => {}, ...))
+            // Result: let Foo = __signature(hoc(() => {}), ...)
           }
         },
       },

@@ -469,6 +469,108 @@ describe('ReactFreshIntegration', () => {
       }
     });
 
+    it('resets state when renaming a state variable inside a HOC with direct call', () => {
+      if (__DEV__) {
+        render(`
+          const {useState} = React;
+          const S = 1;
+
+          function hocWithDirectCall(Wrapped) {
+            return function Generated() {
+              return Wrapped();
+            };
+          }
+
+          export default hocWithDirectCall(() => {
+            const [foo, setFoo] = useState(S);
+            return <h1>A{foo}</h1>;
+          });
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('A1');
+
+        patch(`
+          const {useState} = React;
+          const S = 2;
+
+          function hocWithDirectCall(Wrapped) {
+            return function Generated() {
+              return Wrapped();
+            };
+          }
+
+          export default hocWithDirectCall(() => {
+            const [foo, setFoo] = useState(S);
+            return <h1>B{foo}</h1>;
+          });
+        `);
+        // Same state variable name, so state is preserved.
+        expect(container.firstChild).toBe(el);
+        expect(el.textContent).toBe('B1');
+
+        patch(`
+          const {useState} = React;
+          const S = 3;
+
+          function hocWithDirectCall(Wrapped) {
+            return function Generated() {
+              return Wrapped();
+            };
+          }
+
+          export default hocWithDirectCall(() => {
+            const [bar, setBar] = useState(S);
+            return <h1>C{bar}</h1>;
+          });
+        `);
+        // Different state variable name, so state is reset.
+        expect(container.firstChild).not.toBe(el);
+        const newEl = container.firstChild;
+        expect(newEl.textContent).toBe('C3');
+      }
+    });
+
+    it('does not crash when changing Hook order inside a HOC with direct call', () => {
+      if (__DEV__) {
+        render(`
+          const {useEffect} = React;
+
+          function hocWithDirectCall(Wrapped) {
+            return function Generated() {
+              return Wrapped();
+            };
+          }
+
+          export default hocWithDirectCall(() => {
+            useEffect(() => {}, []);
+            return <h1>A</h1>;
+          });
+        `);
+        const el = container.firstChild;
+        expect(el.textContent).toBe('A');
+
+        patch(`
+          const {useEffect} = React;
+
+          function hocWithDirectCall(Wrapped) {
+            return function Generated() {
+              return Wrapped();
+            };
+          }
+
+          export default hocWithDirectCall(() => {
+            useEffect(() => {}, []);
+            useEffect(() => {}, []);
+            return <h1>B</h1>;
+          });
+        `);
+        // Hook order changed, so we remount.
+        expect(container.firstChild).not.toBe(el);
+        const newEl = container.firstChild;
+        expect(newEl.textContent).toBe('B');
+      }
+    });
+
     it('resets effects while preserving state', () => {
       if (__DEV__) {
         render(`

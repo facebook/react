@@ -37,11 +37,13 @@ const Bar = () => {
 _s4(Bar, "useContext{}");
 
 _c2 = Bar;
-const Baz = memo(_c3 = _s5(() => {
+
+const Baz = _s5(memo(_c3 = () => {
   _s5();
 
   return useContext(X);
-}, "useContext{}"));
+}), "useContext{}");
+
 _c4 = Baz;
 
 const Qux = () => {
@@ -108,21 +110,21 @@ exports[`ReactFreshBabelPlugin generates signatures for function expressions cal
 var _s = $RefreshSig$(),
     _s2 = $RefreshSig$();
 
-export const A = React.memo(_c2 = React.forwardRef(_c = _s((props, ref) => {
+export const A = _s(React.memo(_c2 = React.forwardRef(_c = (props, ref) => {
   _s();
 
   const [foo, setFoo] = useState(0);
   React.useEffect(() => {});
   return <h1 ref={ref}>{foo}</h1>;
-}, "useState{[foo, setFoo](0)}\\nuseEffect{}")));
+})), "useState{[foo, setFoo](0)}\\nuseEffect{}");
 _c3 = A;
-export const B = React.memo(_c5 = React.forwardRef(_c4 = _s2(function (props, ref) {
+export const B = _s2(React.memo(_c5 = React.forwardRef(_c4 = function (props, ref) {
   _s2();
 
   const [foo, setFoo] = useState(0);
   React.useEffect(() => {});
   return <h1 ref={ref}>{foo}</h1>;
-}, "useState{[foo, setFoo](0)}\\nuseEffect{}")));
+})), "useState{[foo, setFoo](0)}\\nuseEffect{}");
 _c6 = B;
 
 function hoc() {
