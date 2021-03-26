@@ -60,6 +60,8 @@ const HTML_TABLE_MODE = 4;
 const HTML_TABLE_BODY_MODE = 5;
 const HTML_TABLE_ROW_MODE = 6;
 const HTML_COLGROUP_MODE = 7;
+// We have a greater than HTML_TABLE_MODE check elsewhere. If you add more cases here, make sure it
+// still makes sense
 
 type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
