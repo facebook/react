@@ -49,7 +49,6 @@ export const deletedTreeCleanUpLevel = 1;
 
 export const enableNewReconciler = false;
 export const deferRenderPhaseUpdateToNextBatch = true;
-export const enableDiscreteEventFlushingChange = false;
 
 export const enableStrictEffects = true;
 export const createRootStrictEffectsByDefault = false;

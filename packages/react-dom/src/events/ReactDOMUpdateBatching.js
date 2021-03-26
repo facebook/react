@@ -9,7 +9,6 @@ import {
   needsStateRestore,
   restoreStateIfNeeded,
 } from './ReactDOMControlledComponent';
-import {enableDiscreteEventFlushingChange} from 'shared/ReactFeatureFlags';
 
 // Used as a way to call batchedUpdates when we don't have a reference to
 // the renderer. Such as when we're dispatching events or if third party
@@ -75,6 +74,7 @@ export function batchedEventUpdates(fn, a, b) {
   }
 }
 
+// TODO: Replace with flushSync
 export function discreteUpdates(fn, a, b, c, d) {
   const prevIsInsideEventHandler = isInsideEventHandler;
   isInsideEventHandler = true;
@@ -88,32 +88,10 @@ export function discreteUpdates(fn, a, b, c, d) {
   }
 }
 
-let lastFlushedEventTimeStamp = 0;
+// TODO: Replace with flushSync
 export function flushDiscreteUpdatesIfNeeded(timeStamp: number) {
-  if (enableDiscreteEventFlushingChange) {
-    // event.timeStamp isn't overly reliable due to inconsistencies in
-    // how different browsers have historically provided the time stamp.
-    // Some browsers provide high-resolution time stamps for all events,
-    // some provide low-resolution time stamps for all events. FF < 52
-    // even mixes both time stamps together. Some browsers even report
-    // negative time stamps or time stamps that are 0 (iOS9) in some cases.
-    // Given we are only comparing two time stamps with equality (!==),
-    // we are safe from the resolution differences. If the time stamp is 0
-    // we bail-out of preventing the flush, which can affect semantics,
-    // such as if an earlier flush removes or adds event listeners that
-    // are fired in the subsequent flush. However, this is the same
-    // behaviour as we had before this change, so the risks are low.
-    if (
-      !isInsideEventHandler &&
-      (timeStamp === 0 || lastFlushedEventTimeStamp !== timeStamp)
-    ) {
-      lastFlushedEventTimeStamp = timeStamp;
-      flushDiscreteUpdatesImpl();
-    }
-  } else {
-    if (!isInsideEventHandler) {
-      flushDiscreteUpdatesImpl();
-    }
+  if (!isInsideEventHandler) {
+    flushDiscreteUpdatesImpl();
   }
 }
 
