@@ -432,7 +432,9 @@ describe('ReactIncrementalTriangle', () => {
         assertConsistentTree(activeLeafIndices);
       }
       // Flush remaining work
-      Scheduler.unstable_flushAllWithoutAsserting();
+      ReactNoop.act(() => {
+        Scheduler.unstable_flushAllWithoutAsserting();
+      });
       assertConsistentTree(activeLeafIndices, expectedCounterAtEnd);
     }
 
@@ -561,6 +563,12 @@ ${formatActions(actions)}
         ['c', step(1)],
         ['b', flush(7)],
         ['c', toggle(0)],
+      );
+
+      simulateMultipleRoots(
+        ['c', step(1)],
+        ['c', expire(5000)],
+        ['b', toggle(1)],
       );
     });
 
