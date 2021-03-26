@@ -17,7 +17,10 @@ import {
   abort,
 } from 'react-server/src/ReactFizzServer';
 
-import {createResponseState} from './ReactDOMServerFormatConfig';
+import {
+  createResponseState,
+  createRootFormatContext,
+} from './ReactDOMServerFormatConfig';
 
 function createDrainHandler(destination, request) {
   return () => startFlowing(request);
@@ -46,6 +49,7 @@ function pipeToNodeWritable(
     children,
     destination,
     createResponseState(options ? options.identifierPrefix : undefined),
+    createRootFormatContext(), // We call this here in case we need options to initialize it.
     options ? options.progressiveChunkSize : undefined,
     options ? options.onError : undefined,
     options ? options.onCompleteAll : undefined,

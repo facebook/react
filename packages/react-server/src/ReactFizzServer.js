@@ -17,6 +17,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import type {
   SuspenseBoundaryID,
   ResponseState,
+  FormatContext,
 } from './ReactServerFormatConfig';
 
 import {
@@ -44,6 +45,7 @@ import {
   pushStartInstance,
   pushEndInstance,
   createSuspenseBoundaryID,
+  getChildFormatContext,
 } from './ReactServerFormatConfig';
 import {REACT_ELEMENT_TYPE, REACT_SUSPENSE_TYPE} from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -69,6 +71,7 @@ type SuspendedWork = {
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment, // the segment we'll write to
   abortSet: Set<SuspendedWork>, // the abortable set that this work belongs to
+  formatContext: FormatContext,
   assignID: null | SuspenseBoundaryID, // id to assign to the content
 };
 
@@ -142,6 +145,7 @@ export function createRequest(
   children: ReactNodeList,
   destination: Destination,
   responseState: ResponseState,
+  rootContext: FormatContext,
   progressiveChunkSize: number = DEFAULT_PROGRESSIVE_CHUNK_SIZE,
   onError: (error: mixed) => void = noop,
   onCompleteAll: () => void = noop,
@@ -177,6 +181,7 @@ export function createRequest(
     null,
     rootSegment,
     abortSet,
+    rootContext,
     null,
   );
   pingedWork.push(rootWork);
@@ -213,6 +218,7 @@ function createSuspendedWork(
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment,
   abortSet: Set<SuspendedWork>,
+  formatContext: FormatContext,
   assignID: null | SuspenseBoundaryID,
 ): SuspendedWork {
   request.allPendingWork++;
@@ -227,6 +233,7 @@ function createSuspendedWork(
     blockedBoundary,
     blockedSegment,
     abortSet,
+    formatContext,
     assignID,
   };
   abortSet.add(work);
@@ -265,26 +272,32 @@ function fatalError(request: Request, error: mixed): void {
 
 function renderNode(
   request: Request,
-  parentBoundary: Root | SuspenseBoundary,
-  segment: Segment,
+  work: SuspendedWork,
   node: ReactNodeList,
-  abortSet: Set<SuspendedWork>,
-  assignID: null | SuspenseBoundaryID,
 ): void {
   if (typeof node === 'string') {
-    pushTextInstance(segment.chunks, node, request.responseState, assignID);
+    pushTextInstance(
+      work.blockedSegment.chunks,
+      node,
+      request.responseState,
+      work.assignID,
+    );
+    work.assignID = null;
     return;
   }
 
   if (Array.isArray(node)) {
     if (node.length > 0) {
-      // Only the first node gets assigned an ID.
-      renderNode(request, parentBoundary, segment, node[0], abortSet, assignID);
-      for (let i = 1; i < node.length; i++) {
-        renderNode(request, parentBoundary, segment, node[i], abortSet, null);
+      for (let i = 0; i < node.length; i++) {
+        renderNode(request, work, node[i]);
       }
     } else {
-      pushEmpty(segment.chunks, request.responseState, assignID);
+      pushEmpty(
+        work.blockedSegment.chunks,
+        request.responseState,
+        work.assignID,
+      );
+      work.assignID = null;
     }
     return;
   }
@@ -302,24 +315,27 @@ function renderNode(
   if (typeof type === 'function') {
     try {
       const result = type(props);
-      renderNode(request, parentBoundary, segment, result, abortSet, assignID);
+      renderNode(request, work, result);
     } catch (x) {
       if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
         // Something suspended, we'll need to create a new segment and resolve it later.
+        const segment = work.blockedSegment;
         const insertionIndex = segment.chunks.length;
         const newSegment = createPendingSegment(request, insertionIndex, null);
         segment.children.push(newSegment);
         const suspendedWork = createSuspendedWork(
           request,
           node,
-          parentBoundary,
+          work.blockedBoundary,
           newSegment,
-          abortSet,
-          assignID,
+          work.abortSet,
+          work.formatContext,
+          work.assignID,
         );
+        // We've delegated the assignment.
+        work.assignID = null;
         const ping = suspendedWork.ping;
         x.then(ping, ping);
-        // TODO: Emit place holder
       } else {
         // We can rethrow to terminate the rest of this tree.
         throw x;
@@ -327,24 +343,28 @@ function renderNode(
     }
   } else if (typeof type === 'string') {
     pushStartInstance(
-      segment.chunks,
+      work.blockedSegment.chunks,
       type,
       props,
       request.responseState,
-      assignID,
+      work.assignID,
     );
-    renderNode(
-      request,
-      parentBoundary,
-      segment,
-      props.children,
-      abortSet,
-      null,
-    );
-    pushEndInstance(segment.chunks, type, props);
+    // We must have assigned it already above so we don't need this anymore.
+    work.assignID = null;
+    const prevContext = work.formatContext;
+    work.formatContext = getChildFormatContext(prevContext, type, props);
+    renderNode(request, work, props.children);
+    // We expect that errors will fatal the whole work and that we don't need
+    // the correct context. Therefore this is not in a finally.
+    work.formatContext = prevContext;
+    pushEndInstance(work.blockedSegment.chunks, type, props);
   } else if (type === REACT_SUSPENSE_TYPE) {
+    const parentBoundary = work.blockedBoundary;
+    const parentSegment = work.blockedSegment;
+
     // We need to push an "empty" thing here to identify the parent suspense boundary.
-    pushEmpty(segment.chunks, request.responseState, assignID);
+    pushEmpty(parentSegment.chunks, request.responseState, work.assignID);
+    work.assignID = null;
     // Each time we enter a suspense boundary, we split out into a new segment for
     // the fallback so that we can later replace that segment with the content.
     // This also lets us split out the main content even if it doesn't suspend,
@@ -354,15 +374,52 @@ function renderNode(
 
     const fallbackAbortSet: Set<SuspendedWork> = new Set();
     const newBoundary = createSuspenseBoundary(request, fallbackAbortSet);
-
-    const insertionIndex = segment.chunks.length;
+    const insertionIndex = parentSegment.chunks.length;
     // The children of the boundary segment is actually the fallback.
     const boundarySegment = createPendingSegment(
       request,
       insertionIndex,
       newBoundary,
     );
-    segment.children.push(boundarySegment);
+    parentSegment.children.push(boundarySegment);
+
+    // This segment is the actual child content. We can start rendering that immediately.
+    const contentRootSegment = createPendingSegment(request, 0, null);
+    // We mark the root segment as having its parent flushed. It's not really flushed but there is
+    // no parent segment so there's nothing to wait on.
+    contentRootSegment.parentFlushed = true;
+
+    // Currently this is running synchronously. We could instead schedule this to pingedWork.
+    // I suspect that there might be some efficiency benefits from not creating the suspended work
+    // and instead just using the stack if possible.
+    // TODO: Call this directly instead of messing with saving and restoring contexts.
+
+    // We can reuse the current context and work to render the content immediately without
+    // context switching. We just need to temporarily switch which boundary and which segment
+    // we're writing to. If something suspends, it'll spawn new suspended work with that context.
+    work.blockedBoundary = newBoundary;
+    work.blockedSegment = contentRootSegment;
+    try {
+      renderNode(request, work, content);
+      contentRootSegment.status = COMPLETED;
+      newBoundary.completedSegments.push(contentRootSegment);
+      if (newBoundary.pendingWork === 0) {
+        // This must have been the last segment we were waiting on. This boundary is now complete.
+        // Therefore we won't need the fallback. We early return so that we don't have to create
+        // the fallback.
+        return;
+      }
+    } catch (error) {
+      contentRootSegment.status = ERRORED;
+      reportError(request, error);
+      newBoundary.forceClientRender = true;
+      // We don't need to decrement any work numbers because we didn't spawn any new work.
+      // We don't need to schedule any work because we know the parent has written yet.
+      // We do need to fallthrough to create the fallback though.
+    } finally {
+      work.blockedBoundary = parentBoundary;
+      work.blockedSegment = parentSegment;
+    }
 
     // We create suspended work for the fallback because we don't want to actually work
     // on it yet in case we finish the main content, so we queue for later.
@@ -372,29 +429,12 @@ function renderNode(
       parentBoundary,
       boundarySegment,
       fallbackAbortSet,
+      work.formatContext,
       newBoundary.id, // This is the ID we want to give this fallback so we can replace it later.
     );
     // TODO: This should be queued at a separate lower priority queue so that we only work
     // on preparing fallbacks if we don't have any more main content to work on.
     request.pingedWork.push(suspendedFallbackWork);
-
-    // This segment is the actual child content. We can start rendering that immediately.
-    const contentRootSegment = createPendingSegment(request, 0, null);
-    // We mark the root segment as having its parent flushed. It's not really flushed but there is
-    // no parent segment so there's nothing to wait on.
-    contentRootSegment.parentFlushed = true;
-    // TODO: Currently this is running synchronously. We could instead schedule this to pingedWork.
-    // I suspect that there might be some efficiency benefits from not creating the suspended work
-    // and instead just using the stack if possible. Particularly when we add contexts.
-    const contentWork = createSuspendedWork(
-      request,
-      content,
-      newBoundary,
-      contentRootSegment,
-      abortSet,
-      null,
-    );
-    retryWork(request, contentWork);
   } else {
     throw new Error('Not yet implemented element type.');
   }
@@ -547,8 +587,6 @@ function retryWork(request: Request, work: SuspendedWork): void {
     // We completed this by other means before we had a chance to retry it.
     return;
   }
-  const boundary = work.blockedBoundary;
-  const abortSet = work.abortSet;
   try {
     let node = work.node;
     while (
@@ -565,20 +603,20 @@ function retryWork(request: Request, work: SuspendedWork): void {
       node = element.type(element.props);
     }
 
-    renderNode(request, boundary, segment, node, abortSet, work.assignID);
+    renderNode(request, work, node);
 
-    abortSet.delete(work);
+    work.abortSet.delete(work);
     segment.status = COMPLETED;
-    finishedWork(request, boundary, segment);
+    finishedWork(request, work.blockedBoundary, segment);
   } catch (x) {
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
       // Something suspended again, let's pick it back up later.
       const ping = work.ping;
       x.then(ping, ping);
     } else {
-      abortSet.delete(work);
+      work.abortSet.delete(work);
       segment.status = ERRORED;
-      erroredWork(request, boundary, segment, x);
+      erroredWork(request, work.blockedBoundary, segment, x);
     }
   }
 }

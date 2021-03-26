@@ -66,6 +66,33 @@ export function createResponseState(): ResponseState {
   };
 }
 
+// isInAParentText
+export type FormatContext = boolean;
+
+export function createRootFormatContext(): FormatContext {
+  return false;
+}
+
+export function getChildFormatContext(
+  parentContext: FormatContext,
+  type: string,
+  props: Object,
+): FormatContext {
+  const prevIsInAParentText = parentContext;
+  const isInAParentText =
+    type === 'AndroidTextInput' || // Android
+    type === 'RCTMultilineTextInputView' || // iOS
+    type === 'RCTSinglelineTextInputView' || // iOS
+    type === 'RCTText' ||
+    type === 'RCTVirtualText';
+
+  if (prevIsInAParentText !== isInAParentText) {
+    return isInAParentText;
+  } else {
+    return parentContext;
+  }
+}
+
 // This object is used to lazily reuse the ID of the first generated node, or assign one.
 // This is very specific to DOM where we can't assign an ID to.
 export type SuspenseBoundaryID = number;

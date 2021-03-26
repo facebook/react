@@ -26,8 +26,10 @@
 declare var $$$hostConfig: any;
 export opaque type Destination = mixed; // eslint-disable-line no-undef
 export opaque type ResponseState = mixed;
+export opaque type FormatContext = mixed;
 export opaque type SuspenseBoundaryID = mixed;
 
+export const getChildFormatContext = $$$hostConfig.getChildFormatContext;
 export const createSuspenseBoundaryID = $$$hostConfig.createSuspenseBoundaryID;
 export const pushEmpty = $$$hostConfig.pushEmpty;
 export const pushTextInstance = $$$hostConfig.pushTextInstance;
