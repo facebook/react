@@ -161,6 +161,7 @@ const ReactNoopServer = ReactFizzServer({
   writeStartSegment(
     destination: Destination,
     responseState: ResponseState,
+    formatContext: null,
     id: number,
   ): boolean {
     const segment = {
@@ -172,7 +173,7 @@ const ReactNoopServer = ReactFizzServer({
     }
     destination.stack.push(segment);
   },
-  writeEndSegment(destination: Destination): boolean {
+  writeEndSegment(destination: Destination, formatContext: null): boolean {
     destination.stack.pop();
   },
 

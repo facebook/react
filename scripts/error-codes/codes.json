@@ -384,5 +384,6 @@
   "393": "Cache cannot be refreshed during server rendering.",
   "394": "startTransition cannot be called during server rendering.",
   "395": "An ID must have been assigned before we can complete the boundary.",
-  "396": "More boundaries or placeholders than we expected to ever emit."
+  "396": "More boundaries or placeholders than we expected to ever emit.",
+  "397": "Unknown insertion mode. This is a bug in React."
 }

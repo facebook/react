@@ -97,10 +97,22 @@ describe('ReactDOMFizzServer', () => {
     let node = element.firstChild;
     while (node) {
       if (node.nodeType === 1) {
-        if (node.tagName !== 'SCRIPT' && !node.hasAttribute('hidden')) {
+        if (
+          node.tagName !== 'SCRIPT' &&
+          node.tagName !== 'TEMPLATE' &&
+          !node.hasAttribute('hidden') &&
+          !node.hasAttribute('aria-hidden')
+        ) {
           const props = {};
           const attributes = node.attributes;
           for (let i = 0; i < attributes.length; i++) {
+            if (
+              attributes[i].name === 'id' &&
+              attributes[i].value.includes(':')
+            ) {
+              // We assume this is a React added ID that's a non-visual implementation detail.
+              continue;
+            }
             props[attributes[i].name] = attributes[i].value;
           }
           props.children = getVisibleChildren(node);
@@ -112,7 +124,7 @@ describe('ReactDOMFizzServer', () => {
       node = node.nextSibling;
     }
     return children.length === 0
-      ? null
+      ? undefined
       : children.length === 1
       ? children[0]
       : children;
@@ -407,5 +419,238 @@ describe('ReactDOMFizzServer', () => {
         This will show B: <div>B</div>
       </div>,
     ]);
+  });
+
+  // @gate experimental
+  it('can resolve async content in esoteric parents', async () => {
+    function AsyncOption({text}) {
+      return <option>{readText(text)}</option>;
+    }
+
+    function AsyncCol({className}) {
+      return <col className={readText(className)}>{[]}</col>;
+    }
+
+    function AsyncPath({id}) {
+      return <path id={readText(id)}>{[]}</path>;
+    }
+
+    function AsyncMi({id}) {
+      return <mi id={readText(id)}>{[]}</mi>;
+    }
+
+    function App() {
+      return (
+        <div>
+          <select>
+            <Suspense fallback="Loading...">
+              <AsyncOption text="Hello" />
+            </Suspense>
+          </select>
+          <Suspense fallback="Loading...">
+            <table>
+              <colgroup>
+                <AsyncCol className="World" />
+              </colgroup>
+            </table>
+            <svg>
+              <g>
+                <AsyncPath id="my-path" />
+              </g>
+            </svg>
+            <math>
+              <AsyncMi id="my-mi" />
+            </math>
+          </Suspense>
+        </div>
+      );
+    }
+
+    await act(async () => {
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        <App />,
+        writable,
+      );
+      startWriting();
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <select>Loading...</select>Loading...
+      </div>,
+    );
+
+    await act(async () => {
+      resolveText('Hello');
+    });
+
+    await act(async () => {
+      resolveText('World');
+    });
+
+    await act(async () => {
+      resolveText('my-path');
+      resolveText('my-mi');
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <select>
+          <option>Hello</option>
+        </select>
+        <table>
+          <colgroup>
+            <col class="World" />
+          </colgroup>
+        </table>
+        <svg>
+          <g>
+            <path id="my-path" />
+          </g>
+        </svg>
+        <math>
+          <mi id="my-mi" />
+        </math>
+      </div>,
+    );
+
+    expect(container.querySelector('#my-path').namespaceURI).toBe(
+      'http://www.w3.org/2000/svg',
+    );
+    expect(container.querySelector('#my-mi').namespaceURI).toBe(
+      'http://www.w3.org/1998/Math/MathML',
+    );
+  });
+
+  // @gate experimental
+  it('can resolve async content in table parents', async () => {
+    function AsyncTableBody({className, children}) {
+      return <tbody className={readText(className)}>{children}</tbody>;
+    }
+
+    function AsyncTableRow({className, children}) {
+      return <tr className={readText(className)}>{children}</tr>;
+    }
+
+    function AsyncTableCell({text}) {
+      return <td>{readText(text)}</td>;
+    }
+
+    function App() {
+      return (
+        <table>
+          <Suspense
+            fallback={
+              <tbody>
+                <tr>
+                  <td>Loading...</td>
+                </tr>
+              </tbody>
+            }>
+            <AsyncTableBody className="A">
+              <AsyncTableRow className="B">
+                <AsyncTableCell text="C" />
+              </AsyncTableRow>
+            </AsyncTableBody>
+          </Suspense>
+        </table>
+      );
+    }
+
+    await act(async () => {
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        <App />,
+        writable,
+      );
+      startWriting();
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <table>
+        <tbody>
+          <tr>
+            <td>Loading...</td>
+          </tr>
+        </tbody>
+      </table>,
+    );
+
+    await act(async () => {
+      resolveText('A');
+    });
+
+    await act(async () => {
+      resolveText('B');
+    });
+
+    await act(async () => {
+      resolveText('C');
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <table>
+        <tbody class="A">
+          <tr class="B">
+            <td>C</td>
+          </tr>
+        </tbody>
+      </table>,
+    );
+  });
+
+  // @gate experimental
+  it('can stream into an SVG container', async () => {
+    function AsyncPath({id}) {
+      return <path id={readText(id)}>{[]}</path>;
+    }
+
+    function App() {
+      return (
+        <g>
+          <Suspense fallback={<text>Loading...</text>}>
+            <AsyncPath id="my-path" />
+          </Suspense>
+        </g>
+      );
+    }
+
+    await act(async () => {
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        <App />,
+        writable,
+        {
+          namespaceURI: 'http://www.w3.org/2000/svg',
+          onReadyToStream() {
+            writable.write('<svg>');
+            startWriting();
+            writable.write('</svg>');
+          },
+        },
+      );
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <svg>
+        <g>
+          <text>Loading...</text>
+        </g>
+      </svg>,
+    );
+
+    await act(async () => {
+      resolveText('my-path');
+    });
+
+    expect(getVisibleChildren(container)).toEqual(
+      <svg>
+        <g>
+          <path id="my-path" />
+        </g>
+      </svg>,
+    );
+
+    expect(container.querySelector('#my-path').namespaceURI).toBe(
+      'http://www.w3.org/2000/svg',
+    );
   });
 });

@@ -50,33 +50,45 @@ export function createResponseState(
   };
 }
 
-// Constants for the namespace we use. We don't actually provide the namespace but conditionally
-// use different segment parents based on namespace. Therefore we use constants instead of the string.
-const ROOT_NAMESPACE = 0; // At the root we don't need to know which namespace it is. We just need to know that it's already the right one.
-const HTML_NAMESPACE = 1;
-const SVG_NAMESPACE = 2;
-const MATHML_NAMESPACE = 3;
+// Constants for the insertion mode we're currently writing in. We don't encode all HTML5 insertion
+// modes. We only include the variants as they matter for the sake of our purposes.
+// We don't actually provide the namespace therefore we use constants instead of the string.
+const HTML_MODE = 0;
+const SVG_MODE = 1;
+const MATHML_MODE = 2;
+const HTML_TABLE_MODE = 4;
+const HTML_TABLE_BODY_MODE = 5;
+const HTML_TABLE_ROW_MODE = 6;
+const HTML_COLGROUP_MODE = 7;
+// We have a greater than HTML_TABLE_MODE check elsewhere. If you add more cases here, make sure it
+// still makes sense
 
-type NamespaceFlag = 0 | 1 | 2 | 3;
+type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 // Lets us keep track of contextual state and pick it back up after suspending.
 export type FormatContext = {
-  namespace: NamespaceFlag, // root/svg/html/mathml
+  insertionMode: InsertionMode, // root/svg/html/mathml/table
   selectedValue: null | string, // the selected value(s) inside a <select>, or null outside <select>
 };
 
 function createFormatContext(
-  namespace: NamespaceFlag,
+  insertionMode: InsertionMode,
   selectedValue: null | string,
 ): FormatContext {
   return {
-    namespace,
+    insertionMode,
     selectedValue,
   };
 }
 
-export function createRootFormatContext(): FormatContext {
-  return createFormatContext(ROOT_NAMESPACE, null);
+export function createRootFormatContext(namespaceURI?: string): FormatContext {
+  const insertionMode =
+    namespaceURI === 'http://www.w3.org/2000/svg'
+      ? SVG_MODE
+      : namespaceURI === 'http://www.w3.org/1998/Math/MathML'
+      ? MATHML_MODE
+      : HTML_MODE;
+  return createFormatContext(insertionMode, null);
 }
 
 export function getChildFormatContext(
@@ -87,15 +99,32 @@ export function getChildFormatContext(
   switch (type) {
     case 'select':
       return createFormatContext(
-        parentContext.namespace,
+        HTML_MODE,
         props.value != null ? props.value : props.defaultValue,
       );
     case 'svg':
-      return createFormatContext(SVG_NAMESPACE, null);
+      return createFormatContext(SVG_MODE, null);
     case 'math':
-      return createFormatContext(MATHML_NAMESPACE, null);
+      return createFormatContext(MATHML_MODE, null);
     case 'foreignObject':
-      return createFormatContext(HTML_NAMESPACE, null);
+      return createFormatContext(HTML_MODE, null);
+    // Table parents are special in that their children can only be created at all if they're
+    // wrapped in a table parent. So we need to encode that we're entering this mode.
+    case 'table':
+      return createFormatContext(HTML_TABLE_MODE, null);
+    case 'thead':
+    case 'tbody':
+    case 'tfoot':
+      return createFormatContext(HTML_TABLE_BODY_MODE, null);
+    case 'colgroup':
+      return createFormatContext(HTML_COLGROUP_MODE, null);
+    case 'tr':
+      return createFormatContext(HTML_TABLE_ROW_MODE, null);
+  }
+  if (parentContext.insertionMode >= HTML_TABLE_MODE) {
+    // Whatever tag this was, it wasn't a table parent or other special parent, so we must have
+    // entered plain HTML again.
+    return createFormatContext(HTML_MODE, null);
   }
   return parentContext;
 }
@@ -132,8 +161,8 @@ function assignAnID(
   ));
 }
 
-const dummyNode1 = stringToPrecomputedChunk('<span hidden id="');
-const dummyNode2 = stringToPrecomputedChunk('"></span>');
+const dummyNode1 = stringToPrecomputedChunk('<template id="');
+const dummyNode2 = stringToPrecomputedChunk('"></template>');
 
 function pushDummyNodeWithID(
   target: Array<Chunk | PrecomputedChunk>,
@@ -206,7 +235,20 @@ export function pushStartInstance(
       startTag2,
     );
   } else {
-    target.push(startTag1, stringToChunk(type), startTag2);
+    target.push(startTag1, stringToChunk(type));
+    if (props.className) {
+      target.push(
+        stringToChunk(
+          ' class="' + encodeHTMLIDAttribute(props.className) + '"',
+        ),
+      );
+    }
+    if (props.id) {
+      target.push(
+        stringToChunk(' id="' + encodeHTMLIDAttribute(props.id) + '"'),
+      );
+    }
+    target.push(startTag2);
   }
 }
 
@@ -225,16 +267,15 @@ export function pushEndInstance(
 // Structural Nodes
 
 // A placeholder is a node inside a hidden partial tree that can be filled in later, but before
-// display. It's never visible to users.
-const placeholder1 = stringToPrecomputedChunk('<span id="');
-const placeholder2 = stringToPrecomputedChunk('"></span>');
+// display. It's never visible to users. We use the template tag because it can be used in every
+// type of parent. <script> tags also work in every other tag except <colgroup>.
+const placeholder1 = stringToPrecomputedChunk('<template id="');
+const placeholder2 = stringToPrecomputedChunk('"></template>');
 export function writePlaceholder(
   destination: Destination,
   responseState: ResponseState,
   id: number,
 ): boolean {
-  // TODO: This needs to be contextually aware and switch tag since not all parents allow for spans like
-  // <select> or <tbody>. E.g. suspending a component that renders a table row.
   writeChunk(destination, placeholder1);
   writeChunk(destination, responseState.placeholderPrefix);
   const formattedID = stringToChunk(id.toString(16));
@@ -272,23 +313,130 @@ export function writeEndSuspenseBoundary(destination: Destination): boolean {
   return writeChunk(destination, endSuspenseBoundary);
 }
 
-const startSegment = stringToPrecomputedChunk('<div hidden id="');
-const startSegment2 = stringToPrecomputedChunk('">');
-const endSegment = stringToPrecomputedChunk('</div>');
+const startSegmentHTML = stringToPrecomputedChunk('<div hidden id="');
+const startSegmentHTML2 = stringToPrecomputedChunk('">');
+const endSegmentHTML = stringToPrecomputedChunk('</div>');
+
+const startSegmentSVG = stringToPrecomputedChunk(
+  '<svg aria-hidden="true" style="display:none" id="',
+);
+const startSegmentSVG2 = stringToPrecomputedChunk('">');
+const endSegmentSVG = stringToPrecomputedChunk('</svg>');
+
+const startSegmentMathML = stringToPrecomputedChunk(
+  '<math aria-hidden="true" style="display:none" id="',
+);
+const startSegmentMathML2 = stringToPrecomputedChunk('">');
+const endSegmentMathML = stringToPrecomputedChunk('</math>');
+
+const startSegmentTable = stringToPrecomputedChunk('<table hidden id="');
+const startSegmentTable2 = stringToPrecomputedChunk('">');
+const endSegmentTable = stringToPrecomputedChunk('</table>');
+
+const startSegmentTableBody = stringToPrecomputedChunk(
+  '<table hidden><tbody id="',
+);
+const startSegmentTableBody2 = stringToPrecomputedChunk('">');
+const endSegmentTableBody = stringToPrecomputedChunk('</tbody></table>');
+
+const startSegmentTableRow = stringToPrecomputedChunk('<table hidden><tr id="');
+const startSegmentTableRow2 = stringToPrecomputedChunk('">');
+const endSegmentTableRow = stringToPrecomputedChunk('</tr></table>');
+
+const startSegmentColGroup = stringToPrecomputedChunk(
+  '<table hidden><colgroup id="',
+);
+const startSegmentColGroup2 = stringToPrecomputedChunk('">');
+const endSegmentColGroup = stringToPrecomputedChunk('</colgroup></table>');
+
 export function writeStartSegment(
   destination: Destination,
   responseState: ResponseState,
+  formatContext: FormatContext,
   id: number,
 ): boolean {
-  // TODO: What happens with special children like <tr> if they're inserted in a div? Maybe needs contextually aware containers.
-  writeChunk(destination, startSegment);
-  writeChunk(destination, responseState.segmentPrefix);
-  const formattedID = stringToChunk(id.toString(16));
-  writeChunk(destination, formattedID);
-  return writeChunk(destination, startSegment2);
+  switch (formatContext.insertionMode) {
+    case HTML_MODE: {
+      writeChunk(destination, startSegmentHTML);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, stringToChunk(id.toString(16)));
+      return writeChunk(destination, startSegmentHTML2);
+    }
+    case SVG_MODE: {
+      writeChunk(destination, startSegmentSVG);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, stringToChunk(id.toString(16)));
+      return writeChunk(destination, startSegmentSVG2);
+    }
+    case MATHML_MODE: {
+      writeChunk(destination, startSegmentMathML);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, stringToChunk(id.toString(16)));
+      return writeChunk(destination, startSegmentMathML2);
+    }
+    case HTML_TABLE_MODE: {
+      writeChunk(destination, startSegmentTable);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, stringToChunk(id.toString(16)));
+      return writeChunk(destination, startSegmentTable2);
+    }
+    // TODO: For the rest of these, there will be extra wrapper nodes that never
+    // get deleted from the document. We need to delete the table too as part
+    // of the injected scripts. They are invisible though so it's not too terrible
+    // and it's kind of an edge case to suspend in a table. Totally supported though.
+    case HTML_TABLE_BODY_MODE: {
+      writeChunk(destination, startSegmentTableBody);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, stringToChunk(id.toString(16)));
+      return writeChunk(destination, startSegmentTableBody2);
+    }
+    case HTML_TABLE_ROW_MODE: {
+      writeChunk(destination, startSegmentTableRow);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, stringToChunk(id.toString(16)));
+      return writeChunk(destination, startSegmentTableRow2);
+    }
+    case HTML_COLGROUP_MODE: {
+      writeChunk(destination, startSegmentColGroup);
+      writeChunk(destination, responseState.segmentPrefix);
+      writeChunk(destination, stringToChunk(id.toString(16)));
+      return writeChunk(destination, startSegmentColGroup2);
+    }
+    default: {
+      invariant(false, 'Unknown insertion mode. This is a bug in React.');
+    }
+  }
 }
-export function writeEndSegment(destination: Destination): boolean {
-  return writeChunk(destination, endSegment);
+export function writeEndSegment(
+  destination: Destination,
+  formatContext: FormatContext,
+): boolean {
+  switch (formatContext.insertionMode) {
+    case HTML_MODE: {
+      return writeChunk(destination, endSegmentHTML);
+    }
+    case SVG_MODE: {
+      return writeChunk(destination, endSegmentSVG);
+    }
+    case MATHML_MODE: {
+      return writeChunk(destination, endSegmentMathML);
+    }
+    case HTML_TABLE_MODE: {
+      return writeChunk(destination, endSegmentTable);
+    }
+    case HTML_TABLE_BODY_MODE: {
+      return writeChunk(destination, endSegmentTableBody);
+    }
+    case HTML_TABLE_ROW_MODE: {
+      return writeChunk(destination, endSegmentTableRow);
+    }
+    case HTML_COLGROUP_MODE: {
+      return writeChunk(destination, endSegmentColGroup);
+    }
+    default: {
+      invariant(false, 'Unknown insertion mode. This is a bug in React.');
+    }
+  }
 }
 
 // Instruction Set

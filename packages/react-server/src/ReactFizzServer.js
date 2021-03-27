@@ -71,7 +71,6 @@ type Task = {
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment, // the segment we'll write to
   abortSet: Set<Task>, // the abortable set that this task belongs to
-  formatContext: FormatContext,
   assignID: null | SuspenseBoundaryID, // id to assign to the content
 };
 
@@ -90,6 +89,8 @@ type Segment = {
   +index: number, // the index within the parent's chunks or 0 at the root
   +chunks: Array<Chunk | PrecomputedChunk>,
   +children: Array<Segment>,
+  // The context that this segment was created in.
+  formatContext: FormatContext,
   // If this segment represents a fallback, this is the content that will replace that fallback.
   +boundary: null | SuspenseBoundary,
 };
@@ -172,7 +173,7 @@ export function createRequest(
     onReadyToStream,
   };
   // This segment represents the root fallback.
-  const rootSegment = createPendingSegment(request, 0, null);
+  const rootSegment = createPendingSegment(request, 0, null, rootContext);
   // There is no parent so conceptually, we're unblocked to flush this segment.
   rootSegment.parentFlushed = true;
   const rootTask = createTask(
@@ -181,7 +182,6 @@ export function createRequest(
     null,
     rootSegment,
     abortSet,
-    rootContext,
     null,
   );
   pingedTasks.push(rootTask);
@@ -218,7 +218,6 @@ function createTask(
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment,
   abortSet: Set<Task>,
-  formatContext: FormatContext,
   assignID: null | SuspenseBoundaryID,
 ): Task {
   request.allPendingTasks++;
@@ -233,7 +232,6 @@ function createTask(
     blockedBoundary,
     blockedSegment,
     abortSet,
-    formatContext,
     assignID,
   };
   abortSet.add(task);
@@ -244,6 +242,7 @@ function createPendingSegment(
   request: Request,
   index: number,
   boundary: null | SuspenseBoundary,
+  formatContext: FormatContext,
 ): Segment {
   return {
     status: PENDING,
@@ -252,6 +251,7 @@ function createPendingSegment(
     parentFlushed: false,
     chunks: [],
     children: [],
+    formatContext,
     boundary,
   };
 }
@@ -317,7 +317,12 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
         // Something suspended, we'll need to create a new segment and resolve it later.
         const segment = task.blockedSegment;
         const insertionIndex = segment.chunks.length;
-        const newSegment = createPendingSegment(request, insertionIndex, null);
+        const newSegment = createPendingSegment(
+          request,
+          insertionIndex,
+          null,
+          segment.formatContext,
+        );
         segment.children.push(newSegment);
         const newTask = createTask(
           request,
@@ -325,7 +330,6 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
           task.blockedBoundary,
           newSegment,
           task.abortSet,
-          task.formatContext,
           task.assignID,
         );
         // We've delegated the assignment.
@@ -338,8 +342,9 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
       }
     }
   } else if (typeof type === 'string') {
+    const segment = task.blockedSegment;
     pushStartInstance(
-      task.blockedSegment.chunks,
+      segment.chunks,
       type,
       props,
       request.responseState,
@@ -347,13 +352,13 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
     );
     // We must have assigned it already above so we don't need this anymore.
     task.assignID = null;
-    const prevContext = task.formatContext;
-    task.formatContext = getChildFormatContext(prevContext, type, props);
+    const prevContext = segment.formatContext;
+    segment.formatContext = getChildFormatContext(prevContext, type, props);
     renderNode(request, task, props.children);
     // We expect that errors will fatal the whole task and that we don't need
     // the correct context. Therefore this is not in a finally.
-    task.formatContext = prevContext;
-    pushEndInstance(task.blockedSegment.chunks, type, props);
+    segment.formatContext = prevContext;
+    pushEndInstance(segment.chunks, type, props);
   } else if (type === REACT_SUSPENSE_TYPE) {
     const parentBoundary = task.blockedBoundary;
     const parentSegment = task.blockedSegment;
@@ -376,11 +381,17 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
       request,
       insertionIndex,
       newBoundary,
+      parentSegment.formatContext,
     );
     parentSegment.children.push(boundarySegment);
 
     // This segment is the actual child content. We can start rendering that immediately.
-    const contentRootSegment = createPendingSegment(request, 0, null);
+    const contentRootSegment = createPendingSegment(
+      request,
+      0,
+      null,
+      parentSegment.formatContext,
+    );
     // We mark the root segment as having its parent flushed. It's not really flushed but there is
     // no parent segment so there's nothing to wait on.
     contentRootSegment.parentFlushed = true;
@@ -425,7 +436,6 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
       parentBoundary,
       boundarySegment,
       fallbackAbortSet,
-      task.formatContext,
       newBoundary.id, // This is the ID we want to give this fallback so we can replace it later.
     );
     // TODO: This should be queued at a separate lower priority queue so that we only task
@@ -776,9 +786,14 @@ function flushSegmentContainer(
   destination: Destination,
   segment: Segment,
 ): boolean {
-  writeStartSegment(destination, request.responseState, segment.id);
+  writeStartSegment(
+    destination,
+    request.responseState,
+    segment.formatContext,
+    segment.id,
+  );
   flushSegment(request, destination, segment);
-  return writeEndSegment(destination);
+  return writeEndSegment(destination, segment.formatContext);
 }
 
 function flushCompletedBoundary(
