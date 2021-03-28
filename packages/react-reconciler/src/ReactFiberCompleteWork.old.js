@@ -28,7 +28,7 @@ import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.old';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';
 
-import {now} from './SchedulerWithReactIntegration.old';
+import {now} from './Scheduler';
 
 import {
   IndeterminateComponent,
