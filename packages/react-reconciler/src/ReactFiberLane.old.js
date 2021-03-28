@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {FiberRoot, ReactPriorityLevel} from './ReactInternalTypes';
+import type {FiberRoot} from './ReactInternalTypes';
 
 // TODO: Ideally these types would be opaque but that doesn't work well with
 // our reconciler fork infra, since these leak into non-reconciler packages.
@@ -35,16 +35,7 @@ export type Lanes = number;
 export type Lane = number;
 export type LaneMap<T> = Array<T>;
 
-import invariant from 'shared/invariant';
 import {enableCache, enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
-
-import {
-  ImmediatePriority as ImmediateSchedulerPriority,
-  UserBlockingPriority as UserBlockingSchedulerPriority,
-  NormalPriority as NormalSchedulerPriority,
-  IdlePriority as IdleSchedulerPriority,
-  NoPriority as NoSchedulerPriority,
-} from './SchedulerWithReactIntegration.old';
 
 export const SyncLanePriority: LanePriority = 12;
 
@@ -241,37 +232,6 @@ function getHighestPriorityLanes(lanes: Lanes | Lane): Lanes {
       // This shouldn't be reachable, but as a fallback, return the entire bitmask.
       return_highestLanePriority = DefaultLanePriority;
       return lanes;
-  }
-}
-
-export function lanePriorityToSchedulerPriority(
-  lanePriority: LanePriority,
-): ReactPriorityLevel {
-  switch (lanePriority) {
-    case SyncLanePriority:
-      return ImmediateSchedulerPriority;
-    case InputContinuousHydrationLanePriority:
-    case InputContinuousLanePriority:
-      return UserBlockingSchedulerPriority;
-    case DefaultHydrationLanePriority:
-    case DefaultLanePriority:
-    case TransitionHydrationPriority:
-    case TransitionPriority:
-    case SelectiveHydrationLanePriority:
-    case RetryLanePriority:
-      return NormalSchedulerPriority;
-    case IdleHydrationLanePriority:
-    case IdleLanePriority:
-    case OffscreenLanePriority:
-      return IdleSchedulerPriority;
-    case NoLanePriority:
-      return NoSchedulerPriority;
-    default:
-      invariant(
-        false,
-        'Invalid update priority: %s. This is a bug in React.',
-        lanePriority,
-      );
   }
 }
 

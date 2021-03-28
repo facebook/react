@@ -13,8 +13,8 @@ import type {RootTag} from './ReactRootTags';
 import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.new';
 import {
+  NoLane,
   NoLanes,
-  NoLanePriority,
   NoTimestamp,
   createLaneMap,
 } from './ReactFiberLane.new';
@@ -41,7 +41,7 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.pendingContext = null;
   this.hydrate = hydrate;
   this.callbackNode = null;
-  this.callbackPriority = NoLanePriority;
+  this.callbackPriority = NoLane;
   this.eventTimes = createLaneMap(NoLanes);
   this.expirationTimes = createLaneMap(NoTimestamp);
 

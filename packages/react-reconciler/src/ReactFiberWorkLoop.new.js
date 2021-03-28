@@ -43,7 +43,9 @@ import {
   requestPaint,
   now,
   ImmediatePriority as ImmediateSchedulerPriority,
+  UserBlockingPriority as UserBlockingSchedulerPriority,
   NormalPriority as NormalSchedulerPriority,
+  IdlePriority as IdleSchedulerPriority,
   flushSyncCallbackQueue,
   scheduleSyncCallback,
 } from './SchedulerWithReactIntegration.new';
@@ -130,8 +132,6 @@ import {
   MountLayoutDev,
 } from './ReactFiberFlags';
 import {
-  NoLanePriority,
-  SyncLanePriority,
   NoLanes,
   NoLane,
   SyncLane,
@@ -147,7 +147,6 @@ import {
   includesOnlyRetries,
   includesOnlyTransitions,
   getNextLanes,
-  returnNextLanesPriority,
   markStarvedLanesAsExpired,
   getLanesToRetrySynchronouslyOnError,
   getMostRecentEventTime,
@@ -156,12 +155,14 @@ import {
   markRootPinged,
   markRootExpired,
   markRootFinished,
-  lanePriorityToSchedulerPriority,
   areLanesExpired,
+  getHighestPriorityLane,
 } from './ReactFiberLane.new';
 import {
   DiscreteEventPriority,
+  ContinuousEventPriority,
   DefaultEventPriority,
+  IdleEventPriority,
   getCurrentUpdatePriority,
   setCurrentUpdatePriority,
   higherEventPriority,
@@ -653,8 +654,6 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     root,
     root === workInProgressRoot ? workInProgressRootRenderLanes : NoLanes,
   );
-  // This returns the priority level computed during the `getNextLanes` call.
-  const newCallbackPriority = returnNextLanesPriority();
 
   if (nextLanes === NoLanes) {
     // Special case: There's nothing to work on.
@@ -662,9 +661,12 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       cancelCallback(existingCallbackNode);
     }
     root.callbackNode = null;
-    root.callbackPriority = NoLanePriority;
+    root.callbackPriority = NoLane;
     return;
   }
+
+  // We use the highest priority lane to represent the priority of the callback.
+  const newCallbackPriority = getHighestPriorityLane(nextLanes);
 
   // Check if there's an existing task. We may be able to reuse it.
   const existingCallbackPriority = root.callbackPriority;
@@ -675,7 +677,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
       // TODO: Temporary until we confirm this warning is not fired.
       if (
         existingCallbackNode == null &&
-        existingCallbackPriority !== SyncLanePriority
+        existingCallbackPriority !== SyncLane
       ) {
         console.error(
           'Expected scheduled callback to exist. This error is likely caused by a bug in React. Please file an issue.',
@@ -693,7 +695,7 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   // Schedule a new callback.
   let newCallbackNode;
-  if (newCallbackPriority === SyncLanePriority) {
+  if (newCallbackPriority === SyncLane) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
@@ -706,9 +708,24 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
     }
     newCallbackNode = null;
   } else {
-    const schedulerPriorityLevel = lanePriorityToSchedulerPriority(
-      newCallbackPriority,
-    );
+    let schedulerPriorityLevel;
+    switch (lanesToEventPriority(nextLanes)) {
+      case DiscreteEventPriority:
+        schedulerPriorityLevel = ImmediateSchedulerPriority;
+        break;
+      case ContinuousEventPriority:
+        schedulerPriorityLevel = UserBlockingSchedulerPriority;
+        break;
+      case DefaultEventPriority:
+        schedulerPriorityLevel = NormalSchedulerPriority;
+        break;
+      case IdleEventPriority:
+        schedulerPriorityLevel = IdleSchedulerPriority;
+        break;
+      default:
+        schedulerPriorityLevel = NormalSchedulerPriority;
+        break;
+    }
     newCallbackNode = scheduleCallback(
       schedulerPriorityLevel,
       performConcurrentWorkOnRoot.bind(null, root),
@@ -1744,7 +1761,7 @@ function commitRootImpl(root, renderPriorityLevel) {
   // commitRoot never returns a continuation; it always finishes synchronously.
   // So we can clear these now to allow a new callback to be scheduled.
   root.callbackNode = null;
-  root.callbackPriority = NoLanePriority;
+  root.callbackPriority = NoLane;
 
   // Update the first and last pending times on this root. The new first
   // pending time is whatever is left on the root fiber.

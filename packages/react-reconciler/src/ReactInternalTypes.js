@@ -20,7 +20,7 @@ import type {SuspenseInstance} from './ReactFiberHostConfig';
 import type {WorkTag} from './ReactWorkTags';
 import type {TypeOfMode} from './ReactTypeOfMode';
 import type {Flags} from './ReactFiberFlags';
-import type {Lane, LanePriority, Lanes, LaneMap} from './ReactFiberLane.old';
+import type {Lane, Lanes, LaneMap} from './ReactFiberLane.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
@@ -223,7 +223,7 @@ type BaseFiberRootProperties = {|
   // Node returned by Scheduler.scheduleCallback. Represents the next rendering
   // task that the root will work on.
   callbackNode: *,
-  callbackPriority: LanePriority,
+  callbackPriority: Lane,
   eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,
 
