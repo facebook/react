@@ -517,7 +517,7 @@ describe(preprocessData, () => {
           timestamp: 0.003,
         },
         {
-          name: '--react-init-17.0.2',
+          name: '--react-init-17.0.3',
           timestamp: 0.004,
         },
       ],

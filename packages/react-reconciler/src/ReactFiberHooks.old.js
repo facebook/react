@@ -16,7 +16,6 @@ import type {
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.old';
 import type {HookFlags} from './ReactHookEffectTags';
-import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent.old';
@@ -120,7 +119,6 @@ type Update<S, A> = {|
   eagerReducer: ((S, A) => S) | null,
   eagerState: S | null,
   next: Update<S, A>,
-  priority?: ReactPriorityLevel,
 |};
 
 export type UpdateQueue<S, A> = {|

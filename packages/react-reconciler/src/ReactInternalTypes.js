@@ -45,8 +45,6 @@ export type HookType =
   | 'useOpaqueIdentifier'
   | 'useCacheRefresh';
 
-export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
-
 export type ContextDependency<T> = {
   context: ReactContext<T>,
   next: ContextDependency<mixed> | null,
