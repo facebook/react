@@ -350,7 +350,6 @@ let spawnedWorkDuringRender: null | Array<Lane | Lanes> = null;
 // event times as simultaneous, even if the actual clock time has advanced
 // between the first and second call.
 let currentEventTime: number = NoTimestamp;
-let currentEventWipLanes: Lanes = NoLanes;
 let currentEventTransitionLane: Lanes = NoLanes;
 
 // Dev only flag that tracks if passive effects are currently being flushed.
@@ -402,27 +401,17 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     return pickArbitraryLane(workInProgressRootRenderLanes);
   }
 
-  // The algorithm for assigning an update to a lane should be stable for all
-  // updates at the same priority within the same event. To do this, the inputs
-  // to the algorithm must be the same. For example, we use the `renderLanes`
-  // to avoid choosing a lane that is already in the middle of rendering.
-  //
-  // However, the "included" lanes could be mutated in between updates in the
-  // same event, like if you perform an update inside `flushSync`. Or any other
-  // code path that might call `prepareFreshStack`.
-  //
-  // The trick we use is to cache the first of each of these inputs within an
-  // event. Then reset the cached values once we can be sure the event is over.
-  // Our heuristic for that is whenever we enter a concurrent work loop.
-  //
-  // We'll do the same for `currentEventTransitionLane` below.
-  if (currentEventWipLanes === NoLanes) {
-    currentEventWipLanes = workInProgressRootIncludedLanes;
-  }
-
   const isTransition = requestCurrentTransition() !== NoTransition;
   if (isTransition) {
+    // The algorithm for assigning an update to a lane should be stable for all
+    // updates at the same priority within the same event. To do this, the
+    // inputs to the algorithm must be the same.
+    //
+    // The trick we use is to cache the first of each of these inputs within an
+    // event. Then reset the cached values once we can be sure the event is
+    // over. Our heuristic for that is whenever we enter a concurrent work loop.
     if (currentEventTransitionLane === NoLane) {
+      // All transitions within the same event are assigned the same lane.
       currentEventTransitionLane = claimNextTransitionLane();
     }
     return currentEventTransitionLane;
@@ -458,11 +447,6 @@ function requestRetryLane(fiber: Fiber) {
   const mode = fiber.mode;
   if ((mode & ConcurrentMode) === NoMode) {
     return (SyncLane: Lane);
-  }
-
-  // See `requestUpdateLane` for explanation of `currentEventWipLanes`
-  if (currentEventWipLanes === NoLanes) {
-    currentEventWipLanes = workInProgressRootIncludedLanes;
   }
 
   return claimNextRetryLane();
@@ -748,7 +732,6 @@ function performConcurrentWorkOnRoot(root, didTimeout) {
   // Since we know we're in a React event, we can clear the current
   // event time. The next update will compute a new event time.
   currentEventTime = NoTimestamp;
-  currentEventWipLanes = NoLanes;
   currentEventTransitionLane = NoLanes;
 
   invariant(
