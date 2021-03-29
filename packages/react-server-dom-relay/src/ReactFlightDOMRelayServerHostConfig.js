@@ -26,6 +26,7 @@ import {resolveModelToJSON} from 'react-server/src/ReactFlightServer';
 import {
   emitRow,
   resolveModuleMetaData as resolveModuleMetaDataImpl,
+  close,
 } from 'ReactFlightDOMRelayServerIntegration';
 
 export type {
@@ -146,4 +147,8 @@ export function writeChunk(destination: Destination, chunk: Chunk): boolean {
 
 export function completeWriting(destination: Destination) {}
 
-export {close} from 'ReactFlightDOMRelayServerIntegration';
+export {close};
+
+export function closeWithError(destination: Destination, error: mixed): void {
+  close(destination);
+}

@@ -24,6 +24,7 @@ import {
   completeWriting,
   flushBuffered,
   close,
+  closeWithError,
   processModelChunk,
   processModuleChunk,
   processSymbolChunk,
@@ -599,6 +600,11 @@ function reportError(request: Request, error: mixed): void {
   request.onError(error);
 }
 
+function fatalError(request: Request, error: mixed): void {
+  // This is called outside error handling code such as if an error happens in React internals.
+  closeWithError(request.destination, error);
+}
+
 function emitErrorChunk(request: Request, id: number, error: mixed): void {
   // TODO: We should not leak error messages to the client in prod.
   // Give this an error code instead and log on the server.
@@ -677,18 +683,23 @@ function performWork(request: Request): void {
   ReactCurrentDispatcher.current = Dispatcher;
   currentCache = request.cache;
 
-  const pingedSegments = request.pingedSegments;
-  request.pingedSegments = [];
-  for (let i = 0; i < pingedSegments.length; i++) {
-    const segment = pingedSegments[i];
-    retrySegment(request, segment);
+  try {
+    const pingedSegments = request.pingedSegments;
+    request.pingedSegments = [];
+    for (let i = 0; i < pingedSegments.length; i++) {
+      const segment = pingedSegments[i];
+      retrySegment(request, segment);
+    }
+    if (request.flowing) {
+      flushCompletedChunks(request);
+    }
+  } catch (error) {
+    reportError(request, error);
+    fatalError(request, error);
+  } finally {
+    ReactCurrentDispatcher.current = prevDispatcher;
+    currentCache = prevCache;
   }
-  if (request.flowing) {
-    flushCompletedChunks(request);
-  }
-
-  ReactCurrentDispatcher.current = prevDispatcher;
-  currentCache = prevCache;
 }
 
 let reentrant = false;
@@ -760,7 +771,12 @@ export function startWork(request: Request): void {
 
 export function startFlowing(request: Request): void {
   request.flowing = true;
-  flushCompletedChunks(request);
+  try {
+    flushCompletedChunks(request);
+  } catch (error) {
+    reportError(request, error);
+    fatalError(request, error);
+  }
 }
 
 function unsupportedHook(): void {
