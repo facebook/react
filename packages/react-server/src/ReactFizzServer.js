@@ -142,13 +142,17 @@ type Request = {
 // 500 * 1024 / 8 * .8 * 0.5 / 2
 const DEFAULT_PROGRESSIVE_CHUNK_SIZE = 12800;
 
+function defaultErrorHandler(error: mixed) {
+  console['error'](error); // Don't transform to our wrapper
+}
+
 export function createRequest(
   children: ReactNodeList,
   destination: Destination,
   responseState: ResponseState,
   rootContext: FormatContext,
   progressiveChunkSize: number = DEFAULT_PROGRESSIVE_CHUNK_SIZE,
-  onError: (error: mixed) => void = noop,
+  onError: (error: mixed) => void = defaultErrorHandler,
   onCompleteAll: () => void = noop,
   onReadyToStream: () => void = noop,
 ): Request {

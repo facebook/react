@@ -91,7 +91,9 @@ export type Request = {
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
-function defaultErrorHandler() {}
+function defaultErrorHandler(error: mixed) {
+  console['error'](error); // Don't transform to our wrapper
+}
 
 export function createRequest(
   model: ReactModel,
