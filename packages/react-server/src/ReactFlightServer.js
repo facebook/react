@@ -83,16 +83,20 @@ export type Request = {
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<Symbol, number>,
   writtenModules: Map<ModuleKey, number>,
+  onError: (error: mixed) => void,
   flowing: boolean,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
 };
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
+function defaultErrorHandler() {}
+
 export function createRequest(
   model: ReactModel,
   destination: Destination,
   bundlerConfig: BundlerConfig,
+  onError: (error: mixed) => void = defaultErrorHandler,
 ): Request {
   const pingedSegments = [];
   const request = {
@@ -107,6 +111,7 @@ export function createRequest(
     completedErrorChunks: [],
     writtenSymbols: new Map(),
     writtenModules: new Map(),
+    onError,
     flowing: false,
     toJSON: function(key: string, value: ReactModel): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
@@ -413,6 +418,7 @@ export function resolveModelToJSON(
         x.then(ping, ping);
         return serializeByRefID(newSegment.id);
       } else {
+        reportError(request, x);
         // Something errored. We'll still send everything we have up until this point.
         // We'll replace this element with a lazy reference that throws on the client
         // once it gets rendered.
@@ -589,6 +595,10 @@ export function resolveModelToJSON(
   );
 }
 
+function reportError(request: Request, error: mixed): void {
+  request.onError(error);
+}
+
 function emitErrorChunk(request: Request, id: number, error: mixed): void {
   // TODO: We should not leak error messages to the client in prod.
   // Give this an error code instead and log on the server.
@@ -654,6 +664,7 @@ function retrySegment(request: Request, segment: Segment): void {
       x.then(ping, ping);
       return;
     } else {
+      reportError(request, x);
       // This errored, we need to serialize this error to the
       emitErrorChunk(request, segment.id, x);
     }

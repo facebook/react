@@ -54,13 +54,18 @@ const ReactNoopFlightServer = ReactFlightServer({
   },
 });
 
-function render(model: ReactModel): Destination {
+type Options = {
+  onError?: (error: mixed) => void,
+};
+
+function render(model: ReactModel, options?: Options): Destination {
   const destination: Destination = [];
   const bundlerConfig = undefined;
   const request = ReactNoopFlightServer.createRequest(
     model,
     destination,
     bundlerConfig,
+    options ? options.onError : undefined,
   );
   ReactNoopFlightServer.startWork(request);
   return destination;

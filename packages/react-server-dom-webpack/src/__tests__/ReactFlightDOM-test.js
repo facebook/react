@@ -256,6 +256,7 @@ describe('ReactFlightDOM', () => {
 
   // @gate experimental
   it('should progressively reveal server components', async () => {
+    let reportedErrors = [];
     const {Suspense} = React;
 
     // Client Components
@@ -374,7 +375,11 @@ describe('ReactFlightDOM', () => {
     }
 
     const {writable, readable} = getTestStream();
-    ReactServerDOMWriter.pipeToNodeWritable(model, writable, webpackMap);
+    ReactServerDOMWriter.pipeToNodeWritable(model, writable, webpackMap, {
+      onError(x) {
+        reportedErrors.push(x);
+      },
+    });
     const response = ReactServerDOMReader.createFromReadableStream(readable);
 
     const container = document.createElement('div');
@@ -407,9 +412,12 @@ describe('ReactFlightDOM', () => {
         '<p>(loading games)</p>',
     );
 
+    expect(reportedErrors).toEqual([]);
+
+    const theError = new Error('Game over');
     // Let's *fail* loading games.
     await act(async () => {
-      rejectGames(new Error('Game over'));
+      rejectGames(theError);
     });
     expect(container.innerHTML).toBe(
       '<div>:name::avatar:</div>' +
@@ -417,6 +425,9 @@ describe('ReactFlightDOM', () => {
         '<p>(loading posts)</p>' +
         '<p>Game over</p>', // TODO: should not have message in prod.
     );
+
+    expect(reportedErrors).toEqual([theError]);
+    reportedErrors = [];
 
     // We can now show the sidebar.
     await act(async () => {
@@ -439,6 +450,8 @@ describe('ReactFlightDOM', () => {
         '<div>:posts:</div>' +
         '<p>Game over</p>', // TODO: should not have message in prod.
     );
+
+    expect(reportedErrors).toEqual([]);
   });
 
   // @gate experimental
