@@ -49,7 +49,6 @@ import {
   markRootMutableRead,
 } from './ReactFiberLane.new';
 import {
-  DefaultEventPriority,
   ContinuousEventPriority,
   getCurrentUpdatePriority,
   setCurrentUpdatePriority,
@@ -1711,11 +1710,6 @@ function startTransition(setPending, callback) {
   );
 
   setPending(true);
-
-  // TODO: Can remove this. Was only necessary because we used to give
-  // different behavior to transitions without a config object. Now they are
-  // all treated the same.
-  setCurrentUpdatePriority(DefaultEventPriority);
 
   const prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = 1;
