@@ -10,7 +10,6 @@
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {Container} from './ReactDOMHostConfig';
 
-import '../shared/checkReact';
 import {
   findDOMNode,
   render,
