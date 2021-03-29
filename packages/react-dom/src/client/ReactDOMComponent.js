@@ -53,7 +53,7 @@ import {
   createDangerousStringForStyles,
   setValueForStyles,
   validateShorthandPropertyCollisionInDev,
-} from '../shared/CSSPropertyOperations';
+} from './CSSPropertyOperations';
 import {HTML_NAMESPACE, getIntrinsicNamespace} from '../shared/DOMNamespaces';
 import {
   getPropertyInfo,
