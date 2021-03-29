@@ -33,6 +33,7 @@ import {
 } from './ReactElement';
 import {setExtraStackFrame} from './ReactDebugCurrentFrame';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 function setCurrentlyValidatingElement(element) {
   if (__DEV__) {
@@ -55,8 +56,6 @@ let propTypesMisspellWarningShown;
 if (__DEV__) {
   propTypesMisspellWarningShown = false;
 }
-
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {

@@ -7,12 +7,10 @@
 
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
-
+import hasOwnProperty from 'shared/hasOwnProperty';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
-
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 const RESERVED_PROPS = {
   key: true,
