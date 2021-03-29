@@ -54,4 +54,55 @@ describe('ReactFlushSync', () => {
     });
     expect(root).toMatchRenderedOutput('1, 1');
   });
+
+  test('flushes pending passive effects if they were the result of a sync render', async () => {
+    function App() {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Effect');
+      }, []);
+      return <Text text="Child" />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      ReactNoop.flushSync(() => {
+        root.render(<App />);
+      });
+      expect(Scheduler).toHaveYielded([
+        'Child',
+        // Passive effect hasn't fired yet
+      ]);
+      expect(root).toMatchRenderedOutput('Child');
+
+      // Because the pending effect was the result of a sync update, calling
+      // flushSync should flush it.
+      ReactNoop.flushSync();
+      expect(Scheduler).toHaveYielded(['Effect']);
+    });
+  });
+
+  test("does not flush pending passive effects if they weren't the result of a sync render", async () => {
+    function App() {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Effect');
+      }, []);
+      return <Text text="Child" />;
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+      expect(Scheduler).toFlushUntilNextPaint([
+        'Child',
+        // Passive effect hasn't fired yet
+      ]);
+      expect(root).toMatchRenderedOutput('Child');
+
+      // Because the pending effect was not the result of a sync update, calling
+      // flushSync should not flush it.
+      ReactNoop.flushSync();
+      expect(Scheduler).toHaveYielded([]);
+    });
+    expect(Scheduler).toHaveYielded(['Effect']);
+  });
 });

@@ -1148,6 +1148,14 @@ export function unbatchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
 }
 
 export function flushSync<A, R>(fn: A => R, a: A): R {
+  if (includesSomeLane(pendingPassiveEffectsLanes, SyncLane)) {
+    // If there are pending passive effects with sync priority, flush them now,
+    // so the callback can observe the result.
+    if ((executionContext & (RenderContext | CommitContext)) === NoContext) {
+      flushPassiveEffects();
+    }
+  }
+
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
 
