@@ -339,7 +339,7 @@ export default function(babel, opts = {}) {
       if (!path) {
         return calls;
       }
-      let parentPath = path.parentPath;
+      const parentPath = path.parentPath;
       if (!parentPath) {
         return calls;
       }
