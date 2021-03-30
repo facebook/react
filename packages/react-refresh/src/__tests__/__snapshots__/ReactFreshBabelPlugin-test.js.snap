@@ -90,11 +90,11 @@ exports[`ReactFreshBabelPlugin does not get tripped by IIFEs 1`] = `
 while (item) {
   var _s = $RefreshSig$();
 
-  _s(_s(item => {
+  _s(item => {
     _s();
 
     useFoo();
-  }, "useFoo{}", true)(item), "useFoo{}", true);
+  }, "useFoo{}", true)(item);
 }
 `;
 

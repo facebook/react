@@ -339,14 +339,26 @@ export default function(babel, opts = {}) {
       if (!path) {
         return calls;
       }
-      if (path.node.type === 'AssignmentExpression') {
+      let parentPath = path.parentPath;
+      if (!parentPath) {
+        return calls;
+      }
+      if (
+        // hoc(_c = function() { })
+        parentPath.node.type === 'AssignmentExpression' &&
+        path.node === parentPath.node.right
+      ) {
         // Ignore registrations.
-        path = path.parentPath;
+        path = parentPath;
         continue;
       }
-      if (path.node.type === 'CallExpression') {
-        calls.push(path);
-        path = path.parentPath;
+      if (
+        // hoc1(hoc2(...))
+        parentPath.node.type === 'CallExpression' &&
+        path.node !== parentPath.node.callee
+      ) {
+        calls.push(parentPath);
+        path = parentPath;
         continue;
       }
       return calls; // Stop at other types.
@@ -650,7 +662,7 @@ export default function(babel, opts = {}) {
             // Result: let Foo = () => {}; __signature(Foo, ...);
           } else {
             // let Foo = hoc(() => {})
-            const paths = [path, ...findHOCCallPathsAbove(path.parentPath)];
+            const paths = [path, ...findHOCCallPathsAbove(path)];
             paths.forEach(p => {
               p.replaceWith(
                 t.callExpression(
