@@ -658,7 +658,12 @@ export function createSignatureFunctionForTransform() {
         // Set the signature for all types (even wrappers!) in case
         // they have no signatures of their own. This is to prevent
         // problems like https://github.com/facebook/react/issues/20417.
-        setSignature(type, key, forceReset, getCustomHooks);
+        if (
+          type != null &&
+          (typeof type === 'function' || typeof type === 'object')
+        ) {
+          setSignature(type, key, forceReset, getCustomHooks);
+        }
         return type;
       } else {
         // We're in the _s() call without arguments, which means
