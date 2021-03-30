@@ -7,10 +7,11 @@
  * @flow
  */
 
-import type {Lane, Lanes} from './ReactFiberLane.new';
+import type {Lanes} from './ReactFiberLane.new';
+
+import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import {
-  NoLane,
   SyncLane,
   InputContinuousLane,
   DefaultLane,
@@ -19,30 +20,41 @@ import {
   includesNonIdleWork,
 } from './ReactFiberLane.new';
 
-export opaque type EventPriority = Lane;
+const {ReactCurrentBatchConfig} = ReactSharedInternals;
+
+export opaque type EventPriority = number;
 
 export const DiscreteEventPriority: EventPriority = SyncLane;
 export const ContinuousEventPriority: EventPriority = InputContinuousLane;
 export const DefaultEventPriority: EventPriority = DefaultLane;
 export const IdleEventPriority: EventPriority = IdleLane;
 
-let currentUpdatePriority: EventPriority = NoLane;
+// This should stay in sync with the isomorphic package (ReactStartTransition).
+// Intentionally not using a shared module, because this crosses a package
+// boundary: importing from a shared module would give a false sense of
+// DRYness, because it's theoretically possible for for the renderer and
+// the isomorphic package to be out of sync. We don't fully support that, but we
+// should try (within reason) to be resilient.
+//
+// The value is an arbitrary transition lane. I picked a lane in the middle of
+// the bitmask because it's unlikely to change meaning.
+export const TransitionEventPriority = 0b0000000000000001000000000000000;
 
 export function getCurrentUpdatePriority(): EventPriority {
-  return currentUpdatePriority;
+  return ReactCurrentBatchConfig.transition;
 }
 
 export function setCurrentUpdatePriority(newPriority: EventPriority) {
-  currentUpdatePriority = newPriority;
+  ReactCurrentBatchConfig.transition = newPriority;
 }
 
 export function runWithPriority<T>(priority: EventPriority, fn: () => T): T {
-  const previousPriority = currentUpdatePriority;
+  const previousPriority = ReactCurrentBatchConfig.transition;
   try {
-    currentUpdatePriority = priority;
+    ReactCurrentBatchConfig.transition = priority;
     return fn();
   } finally {
-    currentUpdatePriority = previousPriority;
+    ReactCurrentBatchConfig.transition = previousPriority;
   }
 }
 

@@ -50,6 +50,7 @@ import {
 } from './ReactFiberLane.new';
 import {
   ContinuousEventPriority,
+  TransitionEventPriority,
   getCurrentUpdatePriority,
   setCurrentUpdatePriority,
   higherEventPriority,
@@ -1664,8 +1665,9 @@ function updateMemo<T>(
 function mountDeferredValue<T>(value: T): T {
   const [prevValue, setValue] = mountState(value);
   mountEffect(() => {
+    // TODO: Replace with setCurrentUpdatePriority
     const prevTransition = ReactCurrentBatchConfig.transition;
-    ReactCurrentBatchConfig.transition = 1;
+    ReactCurrentBatchConfig.transition = TransitionEventPriority;
     try {
       setValue(value);
     } finally {
@@ -1678,8 +1680,9 @@ function mountDeferredValue<T>(value: T): T {
 function updateDeferredValue<T>(value: T): T {
   const [prevValue, setValue] = updateState(value);
   updateEffect(() => {
+    // TODO: Replace with setCurrentUpdatePriority
     const prevTransition = ReactCurrentBatchConfig.transition;
-    ReactCurrentBatchConfig.transition = 1;
+    ReactCurrentBatchConfig.transition = TransitionEventPriority;
     try {
       setValue(value);
     } finally {
@@ -1693,7 +1696,7 @@ function rerenderDeferredValue<T>(value: T): T {
   const [prevValue, setValue] = rerenderState(value);
   updateEffect(() => {
     const prevTransition = ReactCurrentBatchConfig.transition;
-    ReactCurrentBatchConfig.transition = 1;
+    ReactCurrentBatchConfig.transition = TransitionEventPriority;
     try {
       setValue(value);
     } finally {
@@ -1711,8 +1714,9 @@ function startTransition(setPending, callback) {
 
   setPending(true);
 
+  // TODO: Replace with setCurrentUpdatePriority
   const prevTransition = ReactCurrentBatchConfig.transition;
-  ReactCurrentBatchConfig.transition = 1;
+  ReactCurrentBatchConfig.transition = TransitionEventPriority;
   try {
     setPending(false);
     callback();

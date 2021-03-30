@@ -148,6 +148,7 @@ import {
   includesNonIdleWork,
   includesOnlyRetries,
   includesOnlyTransitions,
+  isTransitionLane,
   getNextLanes,
   markStarvedLanesAsExpired,
   getLanesToRetrySynchronouslyOnError,
@@ -170,7 +171,6 @@ import {
   higherEventPriority,
   lanesToEventPriority,
 } from './ReactEventPriorities.new';
-import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
 import {beginWork as originalBeginWork} from './ReactFiberBeginWork.new';
 import {completeWork} from './ReactFiberCompleteWork.new';
 import {unwindWork, unwindInterruptedWork} from './ReactFiberUnwindWork.new';
@@ -401,8 +401,14 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     return pickArbitraryLane(workInProgressRootRenderLanes);
   }
 
-  const isTransition = requestCurrentTransition() !== NoTransition;
-  if (isTransition) {
+  // The opaque type returned by the host config is internally a lane.
+  // TODO: Move this type conversion to the event priority module.
+  const eventPriority: Lane = (getCurrentUpdatePriority(): any);
+
+  // Check if this is a transition. These are special because unlike other
+  // priorities, we don't assign the same lane to all transitions. We assign
+  // one of multiple possible lanes, so that transitions can run in parallel.
+  if (isTransitionLane(eventPriority)) {
     // The algorithm for assigning an update to a lane should be stable for all
     // updates at the same priority within the same event. To do this, the
     // inputs to the algorithm must be the same.
@@ -417,25 +423,21 @@ export function requestUpdateLane(fiber: Fiber): Lane {
     return currentEventTransitionLane;
   }
 
-  // Updates originating inside certain React methods, like flushSync, have
-  // their priority set by tracking it with a context variable.
-  //
-  // The opaque type returned by the host config is internally a lane, so we can
-  // use that directly.
-  // TODO: Move this type conversion to the event priority module.
-  const updateLane: Lane = (getCurrentUpdatePriority(): any);
-  if (updateLane !== NoLane) {
-    return updateLane;
+  if (eventPriority !== NoLane) {
+    // If this isn't a transition, and an event priority is set, we can use the
+    // event priority as a lane directly. (Again, the EventPriority type is
+    // opaque to avoid leaking the Lane type, but *pssst* it's really a Lane.)
+    return eventPriority;
   }
 
-  // This update originated outside React. Ask the host environement for an
-  // appropriate priority, based on the type of event.
+  // This update originated outside React, so no priority was set. Ask the host
+  // environement for an appropriate priority, based on the type of event.
   //
   // The opaque type returned by the host config is internally a lane, so we can
   // use that directly.
   // TODO: Move this type conversion to the event priority module.
-  const eventLane: Lane = (getCurrentEventPriority(): any);
-  return eventLane;
+  const hostEventPriority: Lane = (getCurrentEventPriority(): any);
+  return hostEventPriority;
 }
 
 function requestRetryLane(fiber: Fiber) {

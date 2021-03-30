@@ -12,6 +12,8 @@
  * should suspend for if it needs to.
  */
 const ReactCurrentBatchConfig = {
+  // TODO: This now is used to track other types of event priorities, too, not
+  // just transitions. Consider renaming.
   transition: (0: number),
 };
 
