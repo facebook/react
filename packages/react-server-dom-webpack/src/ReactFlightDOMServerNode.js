@@ -21,12 +21,22 @@ function createDrainHandler(destination, request) {
   return () => startFlowing(request);
 }
 
+type Options = {
+  onError?: (error: mixed) => void,
+};
+
 function pipeToNodeWritable(
   model: ReactModel,
   destination: Writable,
   webpackMap: BundlerConfig,
+  options?: Options,
 ): void {
-  const request = createRequest(model, destination, webpackMap);
+  const request = createRequest(
+    model,
+    destination,
+    webpackMap,
+    options ? options.onError : undefined,
+  );
   destination.on('drain', createDrainHandler(destination, request));
   startWork(request);
 }

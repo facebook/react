@@ -24,6 +24,7 @@ import {
   completeWriting,
   flushBuffered,
   close,
+  closeWithError,
   processModelChunk,
   processModuleChunk,
   processSymbolChunk,
@@ -83,16 +84,20 @@ export type Request = {
   completedErrorChunks: Array<Chunk>,
   writtenSymbols: Map<Symbol, number>,
   writtenModules: Map<ModuleKey, number>,
+  onError: (error: mixed) => void,
   flowing: boolean,
   toJSON: (key: string, value: ReactModel) => ReactJSONValue,
 };
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
+function defaultErrorHandler() {}
+
 export function createRequest(
   model: ReactModel,
   destination: Destination,
   bundlerConfig: BundlerConfig,
+  onError: (error: mixed) => void = defaultErrorHandler,
 ): Request {
   const pingedSegments = [];
   const request = {
@@ -107,6 +112,7 @@ export function createRequest(
     completedErrorChunks: [],
     writtenSymbols: new Map(),
     writtenModules: new Map(),
+    onError,
     flowing: false,
     toJSON: function(key: string, value: ReactModel): ReactJSONValue {
       return resolveModelToJSON(request, this, key, value);
@@ -413,6 +419,7 @@ export function resolveModelToJSON(
         x.then(ping, ping);
         return serializeByRefID(newSegment.id);
       } else {
+        reportError(request, x);
         // Something errored. We'll still send everything we have up until this point.
         // We'll replace this element with a lazy reference that throws on the client
         // once it gets rendered.
@@ -589,6 +596,15 @@ export function resolveModelToJSON(
   );
 }
 
+function reportError(request: Request, error: mixed): void {
+  request.onError(error);
+}
+
+function fatalError(request: Request, error: mixed): void {
+  // This is called outside error handling code such as if an error happens in React internals.
+  closeWithError(request.destination, error);
+}
+
 function emitErrorChunk(request: Request, id: number, error: mixed): void {
   // TODO: We should not leak error messages to the client in prod.
   // Give this an error code instead and log on the server.
@@ -654,6 +670,7 @@ function retrySegment(request: Request, segment: Segment): void {
       x.then(ping, ping);
       return;
     } else {
+      reportError(request, x);
       // This errored, we need to serialize this error to the
       emitErrorChunk(request, segment.id, x);
     }
@@ -666,18 +683,23 @@ function performWork(request: Request): void {
   ReactCurrentDispatcher.current = Dispatcher;
   currentCache = request.cache;
 
-  const pingedSegments = request.pingedSegments;
-  request.pingedSegments = [];
-  for (let i = 0; i < pingedSegments.length; i++) {
-    const segment = pingedSegments[i];
-    retrySegment(request, segment);
+  try {
+    const pingedSegments = request.pingedSegments;
+    request.pingedSegments = [];
+    for (let i = 0; i < pingedSegments.length; i++) {
+      const segment = pingedSegments[i];
+      retrySegment(request, segment);
+    }
+    if (request.flowing) {
+      flushCompletedChunks(request);
+    }
+  } catch (error) {
+    reportError(request, error);
+    fatalError(request, error);
+  } finally {
+    ReactCurrentDispatcher.current = prevDispatcher;
+    currentCache = prevCache;
   }
-  if (request.flowing) {
-    flushCompletedChunks(request);
-  }
-
-  ReactCurrentDispatcher.current = prevDispatcher;
-  currentCache = prevCache;
 }
 
 let reentrant = false;
@@ -749,7 +771,12 @@ export function startWork(request: Request): void {
 
 export function startFlowing(request: Request): void {
   request.flowing = true;
-  flushCompletedChunks(request);
+  try {
+    flushCompletedChunks(request);
+  } catch (error) {
+    reportError(request, error);
+    fatalError(request, error);
+  }
 }
 
 function unsupportedHook(): void {

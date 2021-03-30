@@ -126,4 +126,5 @@ export {
   writeChunk,
   completeWriting,
   close,
+  closeWithError,
 } from './ReactServerStreamConfig';
