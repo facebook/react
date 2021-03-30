@@ -8,7 +8,7 @@
  */
 
 import {SVG_NAMESPACE} from '../shared/DOMNamespaces';
-import createMicrosoftUnsafeLocalFunction from '../shared/createMicrosoftUnsafeLocalFunction';
+import createMicrosoftUnsafeLocalFunction from './createMicrosoftUnsafeLocalFunction';
 import {enableTrustedTypesIntegration} from 'shared/ReactFeatureFlags';
 
 // SVG temp container for IE lacking innerHTML
