@@ -524,4 +524,16 @@ describe('ReactFreshBabelPlugin', () => {
         '". If you want to override this check, pass {skipEnvCheck: true} as plugin options.',
     );
   });
+
+  it('does not get tripped by IIFEs', () => {
+    expect(
+      transform(`
+        while (item) {
+          (item => {
+            useFoo();
+          })(item);
+        }
+      `),
+    ).toMatchSnapshot();
+  });
 });

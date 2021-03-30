@@ -86,6 +86,18 @@ var _c;
 $RefreshReg$(_c, "App");
 `;
 
+exports[`ReactFreshBabelPlugin does not get tripped by IIFEs 1`] = `
+while (item) {
+  var _s = $RefreshSig$();
+
+  _s(_s(item => {
+    _s();
+
+    useFoo();
+  }, "useFoo{}", true)(item), "useFoo{}", true);
+}
+`;
+
 exports[`ReactFreshBabelPlugin generates signatures for function declarations calling hooks 1`] = `
 var _s = $RefreshSig$();
 
