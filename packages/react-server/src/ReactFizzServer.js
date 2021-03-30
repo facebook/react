@@ -302,6 +302,11 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
     return;
   }
 
+  if (node === null) {
+    pushEmpty(task.blockedSegment.chunks, request.responseState, task.assignID);
+    return;
+  }
+
   if (
     typeof node !== 'object' ||
     !node ||
@@ -347,7 +352,7 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
     }
   } else if (typeof type === 'string') {
     const segment = task.blockedSegment;
-    pushStartInstance(
+    const children = pushStartInstance(
       segment.chunks,
       type,
       props,
@@ -358,7 +363,7 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
     task.assignID = null;
     const prevContext = segment.formatContext;
     segment.formatContext = getChildFormatContext(prevContext, type, props);
-    renderNode(request, task, props.children);
+    renderNode(request, task, children);
     // We expect that errors will fatal the whole task and that we don't need
     // the correct context. Therefore this is not in a finally.
     segment.formatContext = prevContext;

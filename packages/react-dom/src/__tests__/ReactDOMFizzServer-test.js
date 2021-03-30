@@ -428,7 +428,7 @@ describe('ReactDOMFizzServer', () => {
     }
 
     function AsyncCol({className}) {
-      return <col className={readText(className)}>{[]}</col>;
+      return <col className={readText(className)} />;
     }
 
     function AsyncPath({id}) {
