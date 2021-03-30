@@ -240,6 +240,7 @@ const ceil = Math.ceil;
 const {
   ReactCurrentDispatcher,
   ReactCurrentOwner,
+  ReactCurrentBatchConfig,
   IsSomeRendererActing,
 } = ReactSharedInternals;
 
@@ -1151,8 +1152,10 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
   const prevExecutionContext = executionContext;
   executionContext |= BatchedContext;
 
+  const prevTransition = ReactCurrentBatchConfig.transition;
   const previousPriority = getCurrentUpdatePriority();
   try {
+    ReactCurrentBatchConfig.transition = 0;
     setCurrentUpdatePriority(DiscreteEventPriority);
     if (fn) {
       return fn(a);
@@ -1161,6 +1164,7 @@ export function flushSync<A, R>(fn: A => R, a: A): R {
     }
   } finally {
     setCurrentUpdatePriority(previousPriority);
+    ReactCurrentBatchConfig.transition = prevTransition;
     executionContext = prevExecutionContext;
     // Flush the immediate callbacks that were scheduled during this batch.
     // Note that this will happen even if batchedUpdates is higher up
