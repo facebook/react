@@ -3764,13 +3764,10 @@ describe('Profiler', () => {
               );
             });
 
-            // Profiler tag causes passive effects to be scheduled,
-            // so the interactions are still not completed.
-            expect(Scheduler).toHaveYielded(['SecondComponent']);
-            expect(onInteractionTraced).toHaveBeenCalledTimes(2);
-            expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-            expect(Scheduler).toFlushAndYieldThrough(['onPostCommit']);
-
+            expect(Scheduler).toHaveYielded([
+              'SecondComponent',
+              'onPostCommit',
+            ]);
             expect(onInteractionTraced).toHaveBeenCalledTimes(2);
             expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(
               1,

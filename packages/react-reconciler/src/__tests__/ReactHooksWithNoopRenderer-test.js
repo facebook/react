@@ -33,6 +33,7 @@ let useDeferredValue;
 let forwardRef;
 let memo;
 let act;
+let ContinuousEventPriority;
 
 describe('ReactHooksWithNoopRenderer', () => {
   beforeEach(() => {
@@ -57,6 +58,8 @@ describe('ReactHooksWithNoopRenderer', () => {
     useDeferredValue = React.unstable_useDeferredValue;
     Suspense = React.Suspense;
     act = ReactNoop.act;
+    ContinuousEventPriority = require('react-reconciler/constants')
+      .ContinuousEventPriority;
 
     textCache = new Map();
 
@@ -1351,10 +1354,10 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(Scheduler).toFlushAndYieldThrough(['Child one render']);
 
         // Schedule unmount for the parent that unmounts children with pending update.
-        ReactNoop.flushSync(() => {
+        ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () => {
           setParentState(false);
         });
-        expect(Scheduler).toHaveYielded([
+        expect(Scheduler).toFlushUntilNextPaint([
           'Parent false render',
           'Parent false commit',
         ]);
