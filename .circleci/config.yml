@@ -524,6 +524,10 @@ workflows:
       - yarn_build_test_devtools:
         requires:
           - yarn_build_test_devtools
+        matrix:
+          parameters:
+            args:
+              - "--project=devtools -r=experimental"
       - get_base_build:
           filters:
             branches:
