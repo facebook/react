@@ -357,6 +357,7 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
       type,
       props,
       request.responseState,
+      segment.formatContext,
       task.assignID,
     );
     // We must have assigned it already above so we don't need this anymore.

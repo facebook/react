@@ -136,6 +136,7 @@ export function pushStartInstance(
   type: string,
   props: Object,
   responseState: ResponseState,
+  formatContext: FormatContext,
   assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   target.push(

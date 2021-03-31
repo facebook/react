@@ -9,6 +9,8 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 
+import {Children} from 'react';
+
 import {enableFilterEmptyStringAttributesDOM} from 'shared/ReactFeatureFlags';
 
 import type {
@@ -45,6 +47,7 @@ import invariant from 'shared/invariant';
 import sanitizeURL from '../shared/sanitizeURL';
 
 const hasOwnProperty = Object.prototype.hasOwnProperty;
+const isArray = Array.isArray;
 
 // Per response, global state that is not contextual to the rendering subtree.
 export type ResponseState = {
@@ -92,7 +95,7 @@ type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 // Lets us keep track of contextual state and pick it back up after suspending.
 export type FormatContext = {
   insertionMode: InsertionMode, // root/svg/html/mathml/table
-  selectedValue: null | string, // the selected value(s) inside a <select>, or null outside <select>
+  selectedValue: null | string | Array<string>, // the selected value(s) inside a <select>, or null outside <select>
 };
 
 function createFormatContext(
@@ -534,17 +537,18 @@ let didWarnDefaultChecked = false;
 let didWarnDefaultSelectValue = false;
 let didWarnDefaultTextareaValue = false;
 let didWarnInvalidOptionChildren = false;
+let didWarnSelectedSetOnOption = false;
 
 function checkSelectProp(props, propName) {
   if (__DEV__) {
-    const isArray = Array.isArray(props[propName]);
-    if (props.multiple && !isArray) {
+    const array = isArray(props[propName]);
+    if (props.multiple && !array) {
       console.error(
         'The `%s` prop supplied to <select> must be an array if ' +
           '`multiple` is true.',
         propName,
       );
-    } else if (!props.multiple && isArray) {
+    } else if (!props.multiple && array) {
       console.error(
         'The `%s` prop supplied to <select> must be a scalar ' +
           'value if `multiple` is false.',
@@ -620,15 +624,47 @@ function pushStartSelect(
   return children;
 }
 
+function flattenOptionChildren(children: mixed): string {
+  let content = '';
+  // Flatten children and warn if they aren't strings or numbers;
+  // invalid types are ignored.
+  Children.forEach((children: any), function(child) {
+    if (child == null) {
+      return;
+    }
+    content += (child: any);
+    if (__DEV__) {
+      if (
+        !didWarnInvalidOptionChildren &&
+        typeof child !== 'string' &&
+        typeof child !== 'number'
+      ) {
+        didWarnInvalidOptionChildren = true;
+        console.error(
+          'Only strings and numbers are supported as <option> children.',
+        );
+      }
+    }
+  });
+  return content;
+}
+
+const selectedMarkerAttribute = stringToPrecomputedChunk(' selected=""');
+
 function pushStartOption(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
+  formatContext: FormatContext,
   assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
+  const selectedValue = formatContext.selectedValue;
+
   target.push(startChunkForTag('option'));
 
   let children = null;
+  let value = null;
+  let selected = null;
   for (const propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
       const propValue = props[propKey];
@@ -638,6 +674,23 @@ function pushStartOption(
       switch (propKey) {
         case 'children':
           children = propValue;
+          break;
+        case 'selected':
+          // ignore
+          selected = propValue;
+          if (__DEV__) {
+            // TODO: Remove support for `selected` in <option>.
+            if (!didWarnSelectedSetOnOption) {
+              console.error(
+                'Use the `defaultValue` or `value` props on <select> instead of ' +
+                  'setting `selected` on <option>.',
+              );
+              didWarnSelectedSetOnOption = true;
+            }
+          }
+          break;
+        case 'value':
+          value = propValue;
           break;
         case 'dangerouslySetInnerHTML':
           invariant(
@@ -651,6 +704,30 @@ function pushStartOption(
       }
     }
   }
+
+  if (selectedValue !== null) {
+    let stringValue;
+    if (value !== null) {
+      stringValue = '' + value;
+    } else {
+      stringValue = children = flattenOptionChildren(children);
+    }
+    if (isArray(selectedValue)) {
+      // multiple
+      for (let i = 0; i < selectedValue.length; i++) {
+        const v = '' + selectedValue[i];
+        if (v === stringValue) {
+          target.push(selectedMarkerAttribute);
+          break;
+        }
+      }
+    } else if (selectedValue === stringValue) {
+      target.push(selectedMarkerAttribute);
+    }
+  } else if (selected) {
+    target.push(selectedMarkerAttribute);
+  }
+
   if (assignID !== null) {
     pushID(target, responseState, assignID, props.id);
   }
@@ -820,7 +897,7 @@ function pushStartTextArea(
       value == null,
       'If you supply `defaultValue` on a <textarea>, do not pass children.',
     );
-    if (Array.isArray(children)) {
+    if (isArray(children)) {
       invariant(
         children.length <= 1,
         '<textarea> can only have at most one child.',
@@ -1071,6 +1148,7 @@ export function pushStartInstance(
   type: string,
   props: Object,
   responseState: ResponseState,
+  formatContext: FormatContext,
   assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
   if (__DEV__) {
@@ -1097,7 +1175,13 @@ export function pushStartInstance(
     case 'select':
       return pushStartSelect(target, props, responseState, assignID);
     case 'option':
-      return pushStartOption(target, props, responseState, assignID);
+      return pushStartOption(
+        target,
+        props,
+        responseState,
+        formatContext,
+        assignID,
+      );
     case 'textarea':
       return pushStartTextArea(target, props, responseState, assignID);
     case 'input':
