@@ -57,6 +57,9 @@ import {
   getCurrentUpdatePriority,
   setCurrentUpdatePriority,
 } from 'react-reconciler/src/ReactEventPriorities';
+import ReactSharedInternals from 'shared/ReactSharedInternals';
+
+const {ReactCurrentBatchConfig} = ReactSharedInternals;
 
 // TODO: can we stop exporting these?
 export let _enabled = true;
@@ -141,11 +144,14 @@ function dispatchContinuousEvent(
   nativeEvent,
 ) {
   const previousPriority = getCurrentUpdatePriority();
+  const prevTransition = ReactCurrentBatchConfig.transition;
+  ReactCurrentBatchConfig.transition = 0;
   try {
     setCurrentUpdatePriority(ContinuousEventPriority);
     dispatchEvent(domEventName, eventSystemFlags, container, nativeEvent);
   } finally {
     setCurrentUpdatePriority(previousPriority);
+    ReactCurrentBatchConfig.transition = prevTransition;
   }
 }
 
