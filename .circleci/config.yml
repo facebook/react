@@ -318,7 +318,7 @@ jobs:
       - checkout
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
-      - run: yarn test-build-devtools
+      - run: yarn test-build-devtools <<parameters.args>> --ci
 
   yarn_test_build:
     docker: *docker
@@ -523,6 +523,10 @@ workflows:
       - yarn_test_build_devtools:
           requires:
             - yarn_build_combined
+          matrix:
+            parameters:
+              args:
+                - "--project=devtools -r=experimental"
       - get_base_build:
           filters:
             branches:
