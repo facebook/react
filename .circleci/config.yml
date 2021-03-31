@@ -523,7 +523,7 @@ workflows:
                 # TODO: Test more persistent configurations?
       - yarn_build_test_devtools:
         requires:
-          - yarn_build_test_devtools
+          - setup
         matrix:
           parameters:
             args:
