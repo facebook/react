@@ -307,7 +307,7 @@ jobs:
       - *restore_node_modules
       - run: yarn test <<parameters.args>> --ci
 
-  yarn_build_test_devtools:
+  yarn_test_build_devtools:
     docker: *docker
     environment: *environment
     parallelism: *TEST_PARALLELISM
@@ -318,7 +318,6 @@ jobs:
       - checkout
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
-      - run: yarn build-combined
       - run: yarn test-build-devtools <<parameters.args>> --ci
 
   yarn_test_build:
@@ -521,13 +520,9 @@ workflows:
                 # - "-r=www-modern --env=production --variant"
 
                 # TODO: Test more persistent configurations?
-      - yarn_build_test_devtools:
+      - yarn_test_build_devtools:
         requires:
-          - setup
-        matrix:
-          parameters:
-            args:
-              - "--project=devtools -r=experimental"
+          - yarn_build_combined
       - get_base_build:
           filters:
             branches:
