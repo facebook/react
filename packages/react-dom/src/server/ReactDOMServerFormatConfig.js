@@ -33,6 +33,7 @@ import {
 } from '../shared/DOMProperty';
 import {isUnitlessNumber} from '../shared/CSSProperty';
 
+import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
@@ -250,8 +251,6 @@ function pushStyle(
       'using JSX.',
   );
 
-  target.push(styleAttributeStart);
-
   let isFirst = true;
   for (const styleName in style) {
     if (!hasOwnProperty.call(style, styleName)) {
@@ -304,13 +303,14 @@ function pushStyle(
     if (isFirst) {
       isFirst = false;
       // If it's first, we don't need any separators prefixed.
-      target.push(nameChunk, styleAssign, valueChunk);
+      target.push(styleAttributeStart, nameChunk, styleAssign, valueChunk);
     } else {
       target.push(styleSeparator, nameChunk, styleAssign, valueChunk);
     }
   }
-
-  target.push(attributeEnd);
+  if (!isFirst) {
+    target.push(attributeEnd);
+  }
 }
 
 const attributeSeparator = stringToPrecomputedChunk(' ');
@@ -527,6 +527,14 @@ function pushInnerHTML(
   }
 }
 
+// TODO: Move these to ResponseState so that we warn for every request.
+// It would help debugging in stateful servers (e.g. service worker).
+let didWarnDefaultInputValue = false;
+let didWarnDefaultChecked = false;
+let didWarnDefaultSelectValue = false;
+let didWarnDefaultTextareaValue = false;
+let didWarnInvalidOptionChildren = false;
+
 function pushStartSelect(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
@@ -612,6 +620,45 @@ function pushInput(
   responseState: ResponseState,
   assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
+  if (__DEV__) {
+    checkControlledValueProps('input', props);
+
+    if (
+      props.checked !== undefined &&
+      props.defaultChecked !== undefined &&
+      !didWarnDefaultChecked
+    ) {
+      console.error(
+        '%s contains an input of type %s with both checked and defaultChecked props. ' +
+          'Input elements must be either controlled or uncontrolled ' +
+          '(specify either the checked prop, or the defaultChecked prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled input ' +
+          'element and remove one of these props. More info: ' +
+          'https://reactjs.org/link/controlled-components',
+        'A component',
+        props.type,
+      );
+      didWarnDefaultChecked = true;
+    }
+    if (
+      props.value !== undefined &&
+      props.defaultValue !== undefined &&
+      !didWarnDefaultInputValue
+    ) {
+      console.error(
+        '%s contains an input of type %s with both value and defaultValue props. ' +
+          'Input elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled input ' +
+          'element and remove one of these props. More info: ' +
+          'https://reactjs.org/link/controlled-components',
+        'A component',
+        props.type,
+      );
+      didWarnDefaultInputValue = true;
+    }
+  }
+
   target.push(startChunkForTag('input'));
 
   for (const propKey in props) {
@@ -631,9 +678,13 @@ function pushInput(
           );
         // eslint-disable-next-line-no-fallthrough
         case 'defaultChecked':
+          // Previously "checked" would win but now it's enumeration order dependent.
+          // There's a warning in either case.
           pushAttribute(target, responseState, 'checked', propValue);
           break;
         case 'defaultValue':
+          // Previously "value" would win but now it's enumeration order dependent.
+          // There's a warning in either case.
           pushAttribute(target, responseState, 'value', propValue);
           break;
         default:
