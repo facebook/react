@@ -31,12 +31,15 @@ import {
   NUMERIC,
   POSITIVE_NUMERIC,
 } from '../shared/DOMProperty';
+import {isUnitlessNumber} from '../shared/CSSProperty';
 
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+import warnValidStyle from '../shared/warnValidStyle';
 
 import escapeTextForBrowser from './escapeTextForBrowser';
+import hyphenateStyleName from '../shared/hyphenateStyleName';
 import invariant from 'shared/invariant';
 import sanitizeURL from '../shared/sanitizeURL';
 
@@ -218,10 +221,27 @@ export function pushTextInstance(
   target.push(stringToChunk(encodeHTMLTextNode(text)), textSeparator);
 }
 
+const styleNameCache: Map<string, PrecomputedChunk> = new Map();
+function processStyleName(styleName: string): PrecomputedChunk {
+  const chunk = styleNameCache.get(styleName);
+  if (chunk !== undefined) {
+    return chunk;
+  }
+  const result = stringToPrecomputedChunk(
+    escapeTextForBrowser(hyphenateStyleName(styleName)),
+  );
+  styleNameCache.set(styleName, result);
+  return result;
+}
+
+const styleAttributeStart = stringToPrecomputedChunk(' style="');
+const styleAssign = stringToPrecomputedChunk(':');
+const styleSeparator = stringToPrecomputedChunk(';');
+
 function pushStyle(
   target: Array<Chunk | PrecomputedChunk>,
   responseState: ResponseState,
-  style: mixed,
+  style: Object,
 ): void {
   invariant(
     typeof style === 'object',
@@ -229,7 +249,68 @@ function pushStyle(
       "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
       'using JSX.',
   );
-  // TODO
+
+  target.push(styleAttributeStart);
+
+  let isFirst = true;
+  for (const styleName in style) {
+    if (!hasOwnProperty.call(style, styleName)) {
+      continue;
+    }
+    // If you provide unsafe user data here they can inject arbitrary CSS
+    // which may be problematic (I couldn't repro this):
+    // https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet
+    // http://www.thespanner.co.uk/2007/11/26/ultimate-xss-css-injection/
+    // This is not an XSS hole but instead a potential CSS injection issue
+    // which has lead to a greater discussion about how we're going to
+    // trust URLs moving forward. See #2115901
+    const styleValue = style[styleName];
+    if (
+      styleValue == null ||
+      typeof styleValue === 'boolean' ||
+      styleValue === ''
+    ) {
+      // TODO: We used to set empty string as a style with an empty value. Does that ever make sense?
+      continue;
+    }
+
+    let nameChunk;
+    let valueChunk;
+    const isCustomProperty = styleName.indexOf('--') === 0;
+    if (isCustomProperty) {
+      nameChunk = stringToChunk(escapeTextForBrowser(styleName));
+      valueChunk = stringToChunk(
+        escapeTextForBrowser(('' + styleValue).trim()),
+      );
+    } else {
+      if (__DEV__) {
+        warnValidStyle(styleName, styleValue);
+      }
+
+      nameChunk = processStyleName(styleName);
+      if (typeof styleValue === 'number') {
+        if (
+          styleValue !== 0 &&
+          !hasOwnProperty.call(isUnitlessNumber, styleName)
+        ) {
+          valueChunk = stringToChunk(styleValue + 'px'); // Presumes implicit 'px' suffix for unitless numbers
+        } else {
+          valueChunk = stringToChunk('' + styleValue);
+        }
+      } else {
+        valueChunk = stringToChunk(('' + styleValue).trim());
+      }
+    }
+    if (isFirst) {
+      isFirst = false;
+      // If it's first, we don't need any separators prefixed.
+      target.push(nameChunk, styleAssign, valueChunk);
+    } else {
+      target.push(styleSeparator, nameChunk, styleAssign, valueChunk);
+    }
+  }
+
+  target.push(attributeEnd);
 }
 
 const attributeSeparator = stringToPrecomputedChunk(' ');
