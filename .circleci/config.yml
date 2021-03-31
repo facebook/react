@@ -307,6 +307,20 @@ jobs:
       - *restore_node_modules
       - run: yarn test <<parameters.args>> --ci
 
+  yarn_build_test_devtools:
+    docker: *docker
+    environment: *environment
+    parallelism: *TEST_PARALLELISM
+    parameters:
+      args:
+        type: string
+    steps:
+      - checkout
+      - run: yarn workspaces info | head -n -1 > workspace_info.txt
+      - *restore_node_modules
+      - run: yarn build-combined
+      - run: yarn test-build-devtools <<parameters.args>> --ci
+
   yarn_test_build:
     docker: *docker
     environment: *environment
@@ -593,4 +607,3 @@ workflows:
           commit_sha: << pipeline.git.revision >>
           release_channel: experimental
           dist_tag: experimental
-
