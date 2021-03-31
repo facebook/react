@@ -522,6 +522,8 @@ workflows:
 
                 # TODO: Test more persistent configurations?
       - yarn_build_test_devtools:
+        requires:
+          - yarn_build_test_devtools
       - get_base_build:
           filters:
             branches:
