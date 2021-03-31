@@ -1271,6 +1271,9 @@ describe('ReactLazy', () => {
   // @gate enableLazyElements
   it('mount and reorder lazy types', async () => {
     class Child extends React.Component {
+      componentWillUnmount() {
+        Scheduler.unstable_yieldValue('Did unmount: ' + this.props.label);
+      }
       componentDidMount() {
         Scheduler.unstable_yieldValue('Did mount: ' + this.props.label);
       }
@@ -1348,6 +1351,12 @@ describe('ReactLazy', () => {
     expect(Scheduler).toFlushAndYield(['Init B2', 'Loading...']);
     jest.runAllTimers();
 
+    gate(flags => {
+      if (flags.enableSuspenseLayoutEffectSemantics) {
+        expect(Scheduler).toHaveYielded(['Did unmount: A', 'Did unmount: B']);
+      }
+    });
+
     // The suspense boundary should've triggered now.
     expect(root).toMatchRenderedOutput('Loading...');
     await resolveB2({default: ChildB});
@@ -1356,12 +1365,23 @@ describe('ReactLazy', () => {
     expect(Scheduler).toFlushAndYield(['Init A2']);
     await LazyChildA2;
 
-    expect(Scheduler).toFlushAndYield([
-      'b',
-      'a',
-      'Did update: b',
-      'Did update: a',
-    ]);
+    gate(flags => {
+      if (flags.enableSuspenseLayoutEffectSemantics) {
+        expect(Scheduler).toFlushAndYield([
+          'b',
+          'a',
+          'Did mount: b',
+          'Did mount: a',
+        ]);
+      } else {
+        expect(Scheduler).toFlushAndYield([
+          'b',
+          'a',
+          'Did update: b',
+          'Did update: a',
+        ]);
+      }
+    });
     expect(root).toMatchRenderedOutput('ba');
   });
 
