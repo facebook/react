@@ -318,7 +318,7 @@ jobs:
       - checkout
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
-      - run: yarn test-build-devtools <<parameters.args>> --ci
+      - run: yarn test-build-devtools
 
   yarn_test_build:
     docker: *docker
