@@ -385,5 +385,8 @@
   "394": "startTransition cannot be called during server rendering.",
   "395": "An ID must have been assigned before we can complete the boundary.",
   "396": "More boundaries or placeholders than we expected to ever emit.",
-  "397": "Unknown insertion mode. This is a bug in React."
+  "397": "Unknown insertion mode. This is a bug in React.",
+  "398": "`dangerouslySetInnerHTML` does not work on <option>.",
+  "399": "%s is a self-closing tag and must neither have `children` nor use `dangerouslySetInnerHTML`.",
+  "400": "menuitems cannot have `children` nor `dangerouslySetInnerHTML`."
 }
