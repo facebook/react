@@ -1101,30 +1101,68 @@ function pushStartPreformattedElement(
   responseState: ResponseState,
   assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
-  const children = pushStartGenericElement(
-    target,
-    props,
-    tag,
-    responseState,
-    assignID,
-  );
+  target.push(startChunkForTag(tag));
 
-  if (typeof children === 'string' && children[0] === '\n') {
-    // text/html ignores the first character in these tags if it's a newline
-    // Prefer to break application/xml over text/html (for now) by adding
-    // a newline specifically to get eaten by the parser. (Alternately for
-    // textareas, replacing "^\n" with "\r\n" doesn't get eaten, and the first
-    // \r is normalized out by HTMLTextAreaElement#value.)
-    // See: <http://www.w3.org/TR/html-polyglot/#newlines-in-textarea-and-pre>
-    // See: <http://www.w3.org/TR/html5/syntax.html#element-restrictions>
-    // See: <http://www.w3.org/TR/html5/syntax.html#newlines>
-    // See: Parsing of "textarea" "listing" and "pre" elements
-    //  from <http://www.w3.org/TR/html5/syntax.html#parsing-main-inbody>
-    // TODO: This doesn't deal with the case where the child is an array
-    // or component that returns a string.
-    target.push(leadingNewline);
+  let children = null;
+  let innerHTML = null;
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+          children = propValue;
+          break;
+        case 'dangerouslySetInnerHTML':
+          innerHTML = propValue;
+          break;
+        default:
+          pushAttribute(target, responseState, propKey, propValue);
+          break;
+      }
+    }
+  }
+  if (assignID !== null) {
+    pushID(target, responseState, assignID, props.id);
   }
 
+  target.push(endOfStartTag);
+
+  // text/html ignores the first character in these tags if it's a newline
+  // Prefer to break application/xml over text/html (for now) by adding
+  // a newline specifically to get eaten by the parser. (Alternately for
+  // textareas, replacing "^\n" with "\r\n" doesn't get eaten, and the first
+  // \r is normalized out by HTMLTextAreaElement#value.)
+  // See: <http://www.w3.org/TR/html-polyglot/#newlines-in-textarea-and-pre>
+  // See: <http://www.w3.org/TR/html5/syntax.html#element-restrictions>
+  // See: <http://www.w3.org/TR/html5/syntax.html#newlines>
+  // See: Parsing of "textarea" "listing" and "pre" elements
+  //  from <http://www.w3.org/TR/html5/syntax.html#parsing-main-inbody>
+  // TODO: This doesn't deal with the case where the child is an array
+  // or component that returns a string.
+  if (innerHTML != null) {
+    invariant(
+      children == null,
+      'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+    );
+
+    invariant(
+      typeof innerHTML === 'object' && '__html' in innerHTML,
+      '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+        'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+        'for more information.',
+    );
+    const html = innerHTML.__html;
+    if (typeof html === 'string' && html[0] === '\n') {
+      target.push(leadingNewline);
+    }
+    target.push(stringToChunk(html));
+  }
+  if (typeof children === 'string' && children[0] === '\n') {
+    target.push(leadingNewline);
+  }
   return children;
 }
 
