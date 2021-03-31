@@ -707,8 +707,27 @@ function pushStartTextArea(
   responseState: ResponseState,
   assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
+  if (__DEV__) {
+    checkControlledValueProps('textarea', props);
+    if (
+      props.value !== undefined &&
+      props.defaultValue !== undefined &&
+      !didWarnDefaultTextareaValue
+    ) {
+      console.error(
+        'Textarea elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled textarea ' +
+          'and remove one of these props. More info: ' +
+          'https://reactjs.org/link/controlled-components',
+      );
+      didWarnDefaultTextareaValue = true;
+    }
+  }
+
   target.push(startChunkForTag('textarea'));
 
+  let value = null;
   let children = null;
   for (const propKey in props) {
     if (hasOwnProperty.call(props, propKey)) {
@@ -719,6 +738,12 @@ function pushStartTextArea(
       switch (propKey) {
         case 'children':
           children = propValue;
+          break;
+        case 'value':
+        case 'defaultValue':
+          // Previously "checked" would win but now it's enumeration order dependent.
+          // There's a warning in either case.
+          value = propValue;
           break;
         case 'dangerouslySetInnerHTML':
           invariant(
@@ -737,7 +762,44 @@ function pushStartTextArea(
   }
 
   target.push(endOfStartTag);
-  return children;
+
+  // TODO (yungsters): Remove support for children content in <textarea>.
+  if (children != null) {
+    if (__DEV__) {
+      console.error(
+        'Use the `defaultValue` or `value` props instead of setting ' +
+          'children on <textarea>.',
+      );
+    }
+    invariant(
+      value == null,
+      'If you supply `defaultValue` on a <textarea>, do not pass children.',
+    );
+    if (Array.isArray(children)) {
+      invariant(
+        children.length <= 1,
+        '<textarea> can only have at most one child.',
+      );
+      value = '' + children[0];
+    }
+    value = '' + children;
+  }
+
+  if (typeof value === 'string' && value[0] === '\n') {
+    // text/html ignores the first character in these tags if it's a newline
+    // Prefer to break application/xml over text/html (for now) by adding
+    // a newline specifically to get eaten by the parser. (Alternately for
+    // textareas, replacing "^\n" with "\r\n" doesn't get eaten, and the first
+    // \r is normalized out by HTMLTextAreaElement#value.)
+    // See: <http://www.w3.org/TR/html-polyglot/#newlines-in-textarea-and-pre>
+    // See: <http://www.w3.org/TR/html5/syntax.html#element-restrictions>
+    // See: <http://www.w3.org/TR/html5/syntax.html#newlines>
+    // See: Parsing of "textarea" "listing" and "pre" elements
+    //  from <http://www.w3.org/TR/html5/syntax.html#parsing-main-inbody>
+    target.push(leadingNewline);
+  }
+
+  return value;
 }
 
 function pushSelfClosing(
