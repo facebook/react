@@ -535,12 +535,53 @@ let didWarnDefaultSelectValue = false;
 let didWarnDefaultTextareaValue = false;
 let didWarnInvalidOptionChildren = false;
 
+function checkSelectProp(props, propName) {
+  if (__DEV__) {
+    const isArray = Array.isArray(props[propName]);
+    if (props.multiple && !isArray) {
+      console.error(
+        'The `%s` prop supplied to <select> must be an array if ' +
+          '`multiple` is true.',
+        propName,
+      );
+    } else if (!props.multiple && isArray) {
+      console.error(
+        'The `%s` prop supplied to <select> must be a scalar ' +
+          'value if `multiple` is false.',
+        propName,
+      );
+    }
+  }
+}
+
 function pushStartSelect(
   target: Array<Chunk | PrecomputedChunk>,
   props: Object,
   responseState: ResponseState,
   assignID: null | SuspenseBoundaryID,
 ): ReactNodeList {
+  if (__DEV__) {
+    checkControlledValueProps('select', props);
+
+    checkSelectProp(props, 'value');
+    checkSelectProp(props, 'defaultValue');
+
+    if (
+      props.value !== undefined &&
+      props.defaultValue !== undefined &&
+      !didWarnDefaultSelectValue
+    ) {
+      console.error(
+        'Select elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled select ' +
+          'element and remove one of these props. More info: ' +
+          'https://reactjs.org/link/controlled-components',
+      );
+      didWarnDefaultSelectValue = true;
+    }
+  }
+
   target.push(startChunkForTag('select'));
 
   let children = null;
@@ -559,6 +600,10 @@ function pushStartSelect(
           // TODO: This doesn't really make sense for select since it can't use the controlled
           // value in the innerHTML.
           innerHTML = propValue;
+          break;
+        case 'defaultValue':
+        case 'value':
+          // These are set on the Context instead and applied to the nested options.
           break;
         default:
           pushAttribute(target, responseState, propKey, propValue);
