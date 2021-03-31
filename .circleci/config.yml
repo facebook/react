@@ -319,8 +319,7 @@ jobs:
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
       - run: yarn build-combined
-      - run: yarn test-build-devtools
-      # - run: yarn test-build-devtools <<parameters.args>> --ci
+      - run: yarn test-build-devtools <<parameters.args>> --ci
 
   yarn_test_build:
     docker: *docker
@@ -522,6 +521,7 @@ workflows:
                 # - "-r=www-modern --env=production --variant"
 
                 # TODO: Test more persistent configurations?
+      - yarn_build_test_devtools:
       - get_base_build:
           filters:
             branches:
