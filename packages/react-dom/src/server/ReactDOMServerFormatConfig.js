@@ -1168,6 +1168,20 @@ export function pushStartInstance(
           'probably not intentional.',
       );
     }
+
+    if (
+      formatContext.insertionMode !== SVG_MODE &&
+      formatContext.insertionMode !== MATHML_MODE
+    ) {
+      if (type.toLowerCase() !== type) {
+        console.error(
+          '<%s /> is using incorrect casing. ' +
+            'Use PascalCase for React components, ' +
+            'or lowercase for HTML elements.',
+          type,
+        );
+      }
+    }
   }
 
   switch (type) {
