@@ -44,9 +44,9 @@ import warnValidStyle from '../shared/warnValidStyle';
 import escapeTextForBrowser from './escapeTextForBrowser';
 import hyphenateStyleName from '../shared/hyphenateStyleName';
 import invariant from 'shared/invariant';
+import hasOwnProperty from 'shared/hasOwnProperty';
 import sanitizeURL from '../shared/sanitizeURL';
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 const isArray = Array.isArray;
 
 // Per response, global state that is not contextual to the rendering subtree.
