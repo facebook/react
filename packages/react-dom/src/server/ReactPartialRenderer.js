@@ -1324,7 +1324,7 @@ class ReactDOMServerRenderer {
     context: Object,
     parentNamespace: string,
   ): string {
-    const tag = element.type.toLowerCase();
+    const tag = element.type;
 
     let namespace = parentNamespace;
     if (parentNamespace === HTML_NAMESPACE) {
@@ -1335,7 +1335,7 @@ class ReactDOMServerRenderer {
       if (namespace === HTML_NAMESPACE) {
         // Should this check be gated by parent namespace? Not sure we want to
         // allow <SVG> or <mATH>.
-        if (tag !== element.type) {
+        if (tag.toLowerCase() !== element.type) {
           console.error(
             '<%s /> is using incorrect casing. ' +
               'Use PascalCase for React components, ' +
