@@ -7,6 +7,8 @@
  * @flow
  */
 
+import type {ReactNodeList} from 'shared/ReactTypes';
+
 import type {
   Destination,
   Chunk,
@@ -134,14 +136,16 @@ export function pushStartInstance(
   type: string,
   props: Object,
   responseState: ResponseState,
+  formatContext: FormatContext,
   assignID: null | SuspenseBoundaryID,
-): void {
+): ReactNodeList {
   target.push(
     INSTANCE,
     stringToChunk(type),
     END, // Null terminated type string
     // TODO: props
   );
+  return props.children;
 }
 
 export function pushEndInstance(
