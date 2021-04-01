@@ -263,7 +263,8 @@ function createPendingSegment(
 function reportError(request: Request, error: mixed): void {
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
-  request.onError(error);
+  const onError = request.onError;
+  onError(error);
 }
 
 function fatalError(request: Request, error: mixed): void {
@@ -485,7 +486,8 @@ function erroredTask(
 
   request.allPendingTasks--;
   if (request.allPendingTasks === 0) {
-    request.onCompleteAll();
+    const onCompleteAll = request.onCompleteAll;
+    onCompleteAll();
   }
 }
 
@@ -532,7 +534,8 @@ function abortTask(task: Task): void {
     }
 
     if (request.allPendingTasks === 0) {
-      request.onCompleteAll();
+      const onCompleteAll = request.onCompleteAll;
+      onCompleteAll();
     }
   }
 }
@@ -552,7 +555,8 @@ function finishedTask(
     }
     request.pendingRootTasks--;
     if (request.pendingRootTasks === 0) {
-      request.onReadyToStream();
+      const onReadyToStream = request.onReadyToStream;
+      onReadyToStream();
     }
   } else {
     boundary.pendingTasks--;
@@ -593,7 +597,8 @@ function finishedTask(
   if (request.allPendingTasks === 0) {
     // This needs to be called at the very end so that we can synchronously write the result
     // in the callback if needed.
-    request.onCompleteAll();
+    const onCompleteAll = request.onCompleteAll;
+    onCompleteAll();
   }
 }
 
