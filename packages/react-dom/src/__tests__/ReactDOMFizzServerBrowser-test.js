@@ -55,7 +55,9 @@ describe('ReactDOMFizzServer', () => {
       <div>hello world</div>,
     );
     const result = await readResult(stream);
-    expect(result).toMatchInlineSnapshot(`"<div>hello world<!-- --></div>"`);
+    expect(result).toMatchInlineSnapshot(
+      `"<div data-reactroot=\\"\\">hello world<!-- --></div>"`,
+    );
   });
 
   // @gate experimental
@@ -94,7 +96,7 @@ describe('ReactDOMFizzServer', () => {
 
     const result = await readResult(stream);
     expect(result).toMatchInlineSnapshot(
-      `"<div><!--$-->Done<!-- --><!--/$--></div>"`,
+      `"<div data-reactroot=\\"\\"><!--$-->Done<!-- --><!--/$--></div>"`,
     );
   });
 
