@@ -314,10 +314,13 @@ jobs:
     parameters:
       args:
         type: string
+      react-version:
+        type: string
     steps:
       - checkout
       - run: yarn workspaces info | head -n -1 > workspace_info.txt
       - *restore_node_modules
+      - run: git checkout v<<parameters.react-version>>
       - run: yarn test-build-devtools <<parameters.args>> --ci
 
   yarn_test_build:
