@@ -14,7 +14,7 @@ import {
 } from './DOMProperty';
 import isCustomComponent from './isCustomComponent';
 import possibleStandardNames from './possibleStandardNames';
-import hasOwnProperty from '../../../shared/hasOwnProperty';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 let validateProperty = () => {};
 

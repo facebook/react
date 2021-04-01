@@ -8,7 +8,7 @@
 import {ATTRIBUTE_NAME_CHAR} from './DOMProperty';
 import isCustomComponent from './isCustomComponent';
 import validAriaProperties from './validAriaProperties';
-import hasOwnProperty from '../../../shared/hasOwnProperty';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 const warnedProperties = {};
 const rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');

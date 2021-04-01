@@ -13,7 +13,7 @@ import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
 
 import JSResourceReference from 'JSResourceReference';
 
-import hasOwnProperty from '../../shared/hasOwnProperty';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 export type ModuleReference<T> = JSResourceReference<T>;
 
