@@ -1070,7 +1070,11 @@ function pushStartCustomElement(
           // Ignored. These are built-in to React on the client.
           break;
         default:
-          if (isAttributeNameSafe(propKey)) {
+          if (
+            isAttributeNameSafe(propKey) &&
+            typeof propValue !== 'function' &&
+            typeof propValue !== 'symbol'
+          ) {
             target.push(
               attributeSeparator,
               stringToChunk(propKey),
