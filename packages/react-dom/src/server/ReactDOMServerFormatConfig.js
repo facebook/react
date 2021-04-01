@@ -1211,7 +1211,11 @@ export function pushStartInstance(
       formatContext.insertionMode !== SVG_MODE &&
       formatContext.insertionMode !== MATHML_MODE
     ) {
-      if (type.toLowerCase() !== type) {
+      if (
+        type.indexOf('-') === -1 &&
+        typeof props.is !== 'string' &&
+        type.toLowerCase() !== type
+      ) {
         console.error(
           '<%s /> is using incorrect casing. ' +
             'Use PascalCase for React components, ' +
