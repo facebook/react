@@ -255,10 +255,7 @@ export default {
             }
           }
         } else if (name === 'useTransition') {
-          if (
-            id.type === 'ArrayPattern' &&
-            isArray(resolved.identifiers)
-          ) {
+          if (id.type === 'ArrayPattern' && isArray(resolved.identifiers)) {
             // Is first tuple value the same reference we're checking?
             if (id.elements[0] === resolved.identifiers[0]) {
               // Setter is stable.
