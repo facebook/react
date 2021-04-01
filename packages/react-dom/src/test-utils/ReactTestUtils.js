@@ -24,6 +24,7 @@ import {
   rethrowCaughtError,
   invokeGuardedCallbackAndCatchFirstError,
 } from 'shared/ReactErrorUtils';
+import isArray from 'shared/isArray';
 
 // Keep in sync with ReactDOM.js, and ReactTestUtilsAct.js:
 const EventInternals =
@@ -97,7 +98,7 @@ function validateClassInstance(inst, methodName) {
   }
   let received;
   const stringified = '' + inst;
-  if (Array.isArray(inst)) {
+  if (isArray(inst)) {
     received = 'an array';
   } else if (inst && inst.nodeType === ELEMENT_NODE && inst.tagName) {
     received = 'a DOM node';
@@ -197,7 +198,7 @@ function scryRenderedDOMComponentsWithClass(root, classNames) {
       }
       const classList = className.split(/\s+/);
 
-      if (!Array.isArray(classNames)) {
+      if (!isArray(classNames)) {
         invariant(
           classNames !== undefined,
           'TestUtils.scryRenderedDOMComponentsWithClass expects a ' +
@@ -365,7 +366,7 @@ function executeDispatch(event, listener, inst) {
 function executeDispatchesInOrder(event) {
   const dispatchListeners = event._dispatchListeners;
   const dispatchInstances = event._dispatchInstances;
-  if (Array.isArray(dispatchListeners)) {
+  if (isArray(dispatchListeners)) {
     for (let i = 0; i < dispatchListeners.length; i++) {
       if (event.isPropagationStopped()) {
         break;

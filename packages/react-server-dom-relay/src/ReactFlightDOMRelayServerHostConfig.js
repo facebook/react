@@ -14,6 +14,7 @@ import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
 import JSResourceReference from 'JSResourceReference';
 
 import hasOwnProperty from 'shared/hasOwnProperty';
+import isArray from 'shared/isArray';
 
 export type ModuleReference<T> = JSResourceReference<T>;
 
@@ -82,7 +83,7 @@ function convertModelToJSON(
 ): JSONValue {
   const json = resolveModelToJSON(request, parent, key, model);
   if (typeof json === 'object' && json !== null) {
-    if (Array.isArray(json)) {
+    if (isArray(json)) {
       const jsonArray: Array<JSONValue> = [];
       for (let i = 0; i < json.length; i++) {
         jsonArray[i] = convertModelToJSON(request, json, '' + i, json[i]);
