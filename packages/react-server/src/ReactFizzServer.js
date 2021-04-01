@@ -328,6 +328,7 @@ function renderSuspenseBoundary(
   task.blockedBoundary = newBoundary;
   task.blockedSegment = contentRootSegment;
   try {
+    // We use the safe form because we don't handle suspending here. Only error handling.
     renderNode(request, task, content);
     contentRootSegment.status = COMPLETED;
     newBoundary.completedSegments.push(contentRootSegment);
@@ -383,11 +384,25 @@ function renderHostElement(
   task.assignID = null;
   const prevContext = segment.formatContext;
   segment.formatContext = getChildFormatContext(prevContext, type, props);
+  // We use the non-destructive form because if something suspends, we still
+  // need to pop back up and finish this subtree of HTML.
   renderNode(request, task, children);
   // We expect that errors will fatal the whole task and that we don't need
   // the correct context. Therefore this is not in a finally.
   segment.formatContext = prevContext;
   pushEndInstance(segment.chunks, type, props);
+}
+
+function renderFunctionComponent(
+  request: Request,
+  task: Task,
+  type: (props: any) => ReactNodeList,
+  props: any,
+): void {
+  const result = type(props);
+  // We're now successfully past this task, and we don't have to pop back to
+  // the previous task every again, so we can use the destructive recursive form.
+  renderNodeDestructive(request, task, result);
 }
 
 function renderElement(
@@ -398,38 +413,7 @@ function renderElement(
   node: ReactNodeList,
 ): void {
   if (typeof type === 'function') {
-    try {
-      const result = type(props);
-      renderNode(request, task, result);
-    } catch (x) {
-      if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
-        // Something suspended, we'll need to create a new segment and resolve it later.
-        const segment = task.blockedSegment;
-        const insertionIndex = segment.chunks.length;
-        const newSegment = createPendingSegment(
-          request,
-          insertionIndex,
-          null,
-          segment.formatContext,
-        );
-        segment.children.push(newSegment);
-        const newTask = createTask(
-          request,
-          node,
-          task.blockedBoundary,
-          newSegment,
-          task.abortSet,
-          task.assignID,
-        );
-        // We've delegated the assignment.
-        task.assignID = null;
-        const ping = newTask.ping;
-        x.then(ping, ping);
-      } else {
-        // We can rethrow to terminate the rest of this tree.
-        throw x;
-      }
-    }
+    renderFunctionComponent(request, task, type, props);
   } else if (typeof type === 'string') {
     renderHostElement(request, task, type, props);
   } else if (type === REACT_SUSPENSE_TYPE) {
@@ -439,7 +423,17 @@ function renderElement(
   }
 }
 
-function renderNode(request: Request, task: Task, node: ReactNodeList): void {
+// This function by it self renders a node and consumes the task by mutating it
+// to update the current execution state.
+function renderNodeDestructive(
+  request: Request,
+  task: Task,
+  node: ReactNodeList,
+): void {
+  // Stash the node we're working on. We'll pick up from this task in case
+  // something suspends.
+  task.node = node;
+
   if (typeof node === 'string') {
     pushTextInstance(
       task.blockedSegment.chunks,
@@ -454,6 +448,9 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
   if (isArray(node)) {
     if (node.length > 0) {
       for (let i = 0; i < node.length; i++) {
+        // Recursively render the rest. We need to use the non-destructive form
+        // so that we can safely pop back up and render the sibling if something
+        // suspends.
         renderNode(request, task, node[i]);
       }
     } else {
@@ -485,6 +482,60 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
   }
 
   throw new Error('Not yet implemented node type.');
+}
+
+function spawnNewSuspendedTask(
+  request: Request,
+  task: Task,
+  x: Promise<any>,
+): void {
+  // Something suspended, we'll need to create a new segment and resolve it later.
+  const segment = task.blockedSegment;
+  const insertionIndex = segment.chunks.length;
+  const newSegment = createPendingSegment(
+    request,
+    insertionIndex,
+    null,
+    segment.formatContext,
+  );
+  segment.children.push(newSegment);
+  const newTask = createTask(
+    request,
+    task.node,
+    task.blockedBoundary,
+    newSegment,
+    task.abortSet,
+    task.assignID,
+  );
+  // We've delegated the assignment.
+  task.assignID = null;
+  const ping = newTask.ping;
+  x.then(ping, ping);
+}
+
+// This is a non-destructive form of rendering a node. If it suspends it spawns
+// a new task and restores the context of this task to what it was before.
+function renderNode(request: Request, task: Task, node: ReactNodeList): void {
+  // TODO: Store segment.children.length here and reset it in case something
+  // suspended partially through writing something.
+
+  // Snapshot the current context in case something throws to interrupt the
+  // process.
+  const previousContext = task.blockedSegment.formatContext;
+  try {
+    return renderNodeDestructive(request, task, node);
+  } catch (x) {
+    if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
+      spawnNewSuspendedTask(request, task, x);
+      // Restore the context. We assume that this will be restored by the inner
+      // functions in case nothing throws so we don't use "finally" here.
+      task.blockedSegment.formatContext = previousContext;
+    } else {
+      // We assume that we don't need the correct context.
+      // Let's terminate the rest of the tree and don't render any siblings.
+      throw x;
+    }
+  }
 }
 
 function erroredTask(
@@ -639,22 +690,9 @@ function retryTask(request: Request, task: Task): void {
     return;
   }
   try {
-    let node = task.node;
-    while (
-      typeof node === 'object' &&
-      node !== null &&
-      (node: any).$$typeof === REACT_ELEMENT_TYPE &&
-      typeof node.type === 'function'
-    ) {
-      // Doing this here lets us reuse this same Segment if the next component
-      // also suspends.
-      const element: React$Element<any> = (node: any);
-      task.node = node;
-      // TODO: Classes and legacy context etc.
-      node = element.type(element.props);
-    }
-
-    renderNode(request, task, node);
+    // We call the destructive form that mutates this task. That way if something
+    // suspends again, we can reuse the same task instead of spawning a new one.
+    renderNodeDestructive(request, task, task.node);
 
     task.abortSet.delete(task);
     segment.status = COMPLETED;
