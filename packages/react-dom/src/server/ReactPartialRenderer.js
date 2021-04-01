@@ -77,6 +77,7 @@ import warnValidStyle from '../shared/warnValidStyle';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 export type ServerOptions = {
   identifierPrefix?: string,
@@ -340,7 +341,6 @@ function flattenOptionChildren(children: mixed): ?string {
   return content;
 }
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 const STYLE = 'style';
 const RESERVED_PROPS = {
   children: null,
@@ -1324,18 +1324,21 @@ class ReactDOMServerRenderer {
     context: Object,
     parentNamespace: string,
   ): string {
-    const tag = element.type.toLowerCase();
+    const tag = element.type;
 
     let namespace = parentNamespace;
     if (parentNamespace === HTML_NAMESPACE) {
       namespace = getIntrinsicNamespace(tag);
     }
 
+    let props = element.props;
+
     if (__DEV__) {
       if (namespace === HTML_NAMESPACE) {
+        const isCustomComponent = isCustomComponentFn(tag, props);
         // Should this check be gated by parent namespace? Not sure we want to
         // allow <SVG> or <mATH>.
-        if (tag !== element.type) {
+        if (!isCustomComponent && tag.toLowerCase() !== element.type) {
           console.error(
             '<%s /> is using incorrect casing. ' +
               'Use PascalCase for React components, ' +
@@ -1348,7 +1351,6 @@ class ReactDOMServerRenderer {
 
     validateDangerousTag(tag);
 
-    let props = element.props;
     if (tag === 'input') {
       if (__DEV__) {
         checkControlledValueProps('input', props);

@@ -13,6 +13,8 @@ import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
 
 import JSResourceReference from 'JSResourceReference';
 
+import hasOwnProperty from 'shared/hasOwnProperty';
+
 export type ModuleReference<T> = JSResourceReference<T>;
 
 import type {
@@ -71,8 +73,6 @@ export function processErrorChunk(
     },
   ];
 }
-
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function convertModelToJSON(
   request: Request,

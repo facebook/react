@@ -22,7 +22,7 @@ import {
   REACT_ELEMENT_TYPE,
 } from 'shared/ReactSymbols';
 import {warnAboutSpreadingKeyToJSX} from 'shared/ReactFeatureFlags';
-
+import hasOwnProperty from 'shared/hasOwnProperty';
 import {jsxDEV} from './ReactJSXElement';
 
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
@@ -53,8 +53,6 @@ let propTypesMisspellWarningShown;
 if (__DEV__) {
   propTypesMisspellWarningShown = false;
 }
-
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 /**
  * Verifies the object is a ReactElement.

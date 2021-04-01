@@ -263,7 +263,8 @@ function createPendingSegment(
 function reportError(request: Request, error: mixed): void {
   // If this callback errors, we intentionally let that error bubble up to become a fatal error
   // so that someone fixes the error reporting instead of hiding it.
-  request.onError(error);
+  const onError = request.onError;
+  onError(error);
 }
 
 function fatalError(request: Request, error: mixed): void {
@@ -299,6 +300,11 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
       );
       task.assignID = null;
     }
+    return;
+  }
+
+  if (node === null) {
+    pushEmpty(task.blockedSegment.chunks, request.responseState, task.assignID);
     return;
   }
 
@@ -347,18 +353,19 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
     }
   } else if (typeof type === 'string') {
     const segment = task.blockedSegment;
-    pushStartInstance(
+    const children = pushStartInstance(
       segment.chunks,
       type,
       props,
       request.responseState,
+      segment.formatContext,
       task.assignID,
     );
     // We must have assigned it already above so we don't need this anymore.
     task.assignID = null;
     const prevContext = segment.formatContext;
     segment.formatContext = getChildFormatContext(prevContext, type, props);
-    renderNode(request, task, props.children);
+    renderNode(request, task, children);
     // We expect that errors will fatal the whole task and that we don't need
     // the correct context. Therefore this is not in a finally.
     segment.formatContext = prevContext;
@@ -479,7 +486,8 @@ function erroredTask(
 
   request.allPendingTasks--;
   if (request.allPendingTasks === 0) {
-    request.onCompleteAll();
+    const onCompleteAll = request.onCompleteAll;
+    onCompleteAll();
   }
 }
 
@@ -526,7 +534,8 @@ function abortTask(task: Task): void {
     }
 
     if (request.allPendingTasks === 0) {
-      request.onCompleteAll();
+      const onCompleteAll = request.onCompleteAll;
+      onCompleteAll();
     }
   }
 }
@@ -546,7 +555,8 @@ function finishedTask(
     }
     request.pendingRootTasks--;
     if (request.pendingRootTasks === 0) {
-      request.onReadyToStream();
+      const onReadyToStream = request.onReadyToStream;
+      onReadyToStream();
     }
   } else {
     boundary.pendingTasks--;
@@ -587,7 +597,8 @@ function finishedTask(
   if (request.allPendingTasks === 0) {
     // This needs to be called at the very end so that we can synchronously write the result
     // in the callback if needed.
-    request.onCompleteAll();
+    const onCompleteAll = request.onCompleteAll;
+    onCompleteAll();
   }
 }
 

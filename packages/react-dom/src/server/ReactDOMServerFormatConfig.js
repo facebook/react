@@ -7,6 +7,12 @@
  * @flow
  */
 
+import type {ReactNodeList} from 'shared/ReactTypes';
+
+import {Children} from 'react';
+
+import {enableFilterEmptyStringAttributesDOM} from 'shared/ReactFeatureFlags';
+
 import type {
   Destination,
   Chunk,
@@ -19,8 +25,29 @@ import {
   stringToPrecomputedChunk,
 } from 'react-server/src/ReactServerStreamConfig';
 
+import {
+  getPropertyInfo,
+  isAttributeNameSafe,
+  BOOLEAN,
+  OVERLOADED_BOOLEAN,
+  NUMERIC,
+  POSITIVE_NUMERIC,
+} from '../shared/DOMProperty';
+import {isUnitlessNumber} from '../shared/CSSProperty';
+
+import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
+import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
+import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
+import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+import warnValidStyle from '../shared/warnValidStyle';
+
 import escapeTextForBrowser from './escapeTextForBrowser';
+import hyphenateStyleName from '../shared/hyphenateStyleName';
 import invariant from 'shared/invariant';
+import hasOwnProperty from 'shared/hasOwnProperty';
+import sanitizeURL from '../shared/sanitizeURL';
+
+const isArray = Array.isArray;
 
 // Per response, global state that is not contextual to the rendering subtree.
 export type ResponseState = {
@@ -68,7 +95,7 @@ type InsertionMode = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 // Lets us keep track of contextual state and pick it back up after suspending.
 export type FormatContext = {
   insertionMode: InsertionMode, // root/svg/html/mathml/table
-  selectedValue: null | string, // the selected value(s) inside a <select>, or null outside <select>
+  selectedValue: null | string | Array<string>, // the selected value(s) inside a <select>, or null outside <select>
 };
 
 function createFormatContext(
@@ -142,10 +169,6 @@ export function createSuspenseBoundaryID(
   return {formattedID: null};
 }
 
-function encodeHTMLIDAttribute(value: string): string {
-  return escapeTextForBrowser(value);
-}
-
 function encodeHTMLTextNode(text: string): string {
   return escapeTextForBrowser(text);
 }
@@ -202,53 +225,1096 @@ export function pushTextInstance(
   target.push(stringToChunk(encodeHTMLTextNode(text)), textSeparator);
 }
 
-const startTag1 = stringToPrecomputedChunk('<');
-const startTag2 = stringToPrecomputedChunk('>');
+const styleNameCache: Map<string, PrecomputedChunk> = new Map();
+function processStyleName(styleName: string): PrecomputedChunk {
+  const chunk = styleNameCache.get(styleName);
+  if (chunk !== undefined) {
+    return chunk;
+  }
+  const result = stringToPrecomputedChunk(
+    escapeTextForBrowser(hyphenateStyleName(styleName)),
+  );
+  styleNameCache.set(styleName, result);
+  return result;
+}
+
+const styleAttributeStart = stringToPrecomputedChunk(' style="');
+const styleAssign = stringToPrecomputedChunk(':');
+const styleSeparator = stringToPrecomputedChunk(';');
+
+function pushStyle(
+  target: Array<Chunk | PrecomputedChunk>,
+  responseState: ResponseState,
+  style: Object,
+): void {
+  invariant(
+    typeof style === 'object',
+    'The `style` prop expects a mapping from style properties to values, ' +
+      "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
+      'using JSX.',
+  );
+
+  let isFirst = true;
+  for (const styleName in style) {
+    if (!hasOwnProperty.call(style, styleName)) {
+      continue;
+    }
+    // If you provide unsafe user data here they can inject arbitrary CSS
+    // which may be problematic (I couldn't repro this):
+    // https://www.owasp.org/index.php/XSS_Filter_Evasion_Cheat_Sheet
+    // http://www.thespanner.co.uk/2007/11/26/ultimate-xss-css-injection/
+    // This is not an XSS hole but instead a potential CSS injection issue
+    // which has lead to a greater discussion about how we're going to
+    // trust URLs moving forward. See #2115901
+    const styleValue = style[styleName];
+    if (
+      styleValue == null ||
+      typeof styleValue === 'boolean' ||
+      styleValue === ''
+    ) {
+      // TODO: We used to set empty string as a style with an empty value. Does that ever make sense?
+      continue;
+    }
+
+    let nameChunk;
+    let valueChunk;
+    const isCustomProperty = styleName.indexOf('--') === 0;
+    if (isCustomProperty) {
+      nameChunk = stringToChunk(escapeTextForBrowser(styleName));
+      valueChunk = stringToChunk(
+        escapeTextForBrowser(('' + styleValue).trim()),
+      );
+    } else {
+      if (__DEV__) {
+        warnValidStyle(styleName, styleValue);
+      }
+
+      nameChunk = processStyleName(styleName);
+      if (typeof styleValue === 'number') {
+        if (
+          styleValue !== 0 &&
+          !hasOwnProperty.call(isUnitlessNumber, styleName)
+        ) {
+          valueChunk = stringToChunk(styleValue + 'px'); // Presumes implicit 'px' suffix for unitless numbers
+        } else {
+          valueChunk = stringToChunk('' + styleValue);
+        }
+      } else {
+        valueChunk = stringToChunk(('' + styleValue).trim());
+      }
+    }
+    if (isFirst) {
+      isFirst = false;
+      // If it's first, we don't need any separators prefixed.
+      target.push(styleAttributeStart, nameChunk, styleAssign, valueChunk);
+    } else {
+      target.push(styleSeparator, nameChunk, styleAssign, valueChunk);
+    }
+  }
+  if (!isFirst) {
+    target.push(attributeEnd);
+  }
+}
+
+const attributeSeparator = stringToPrecomputedChunk(' ');
+const attributeAssign = stringToPrecomputedChunk('="');
+const attributeEnd = stringToPrecomputedChunk('"');
+const attributeEmptyString = stringToPrecomputedChunk('=""');
+
+function pushAttribute(
+  target: Array<Chunk | PrecomputedChunk>,
+  responseState: ResponseState,
+  name: string,
+  value: string | boolean | number | Function | Object, // not null or undefined
+): void {
+  switch (name) {
+    case 'style': {
+      pushStyle(target, responseState, value);
+      return;
+    }
+    case 'defaultValue':
+    case 'defaultChecked': // These shouldn't be set as attributes on generic HTML elements.
+    case 'innerHTML': // Must use dangerouslySetInnerHTML instead.
+    case 'suppressContentEditableWarning':
+    case 'suppressHydrationWarning':
+      // Ignored. These are built-in to React on the client.
+      return;
+  }
+  if (
+    // shouldIgnoreAttribute
+    // We have already filtered out null/undefined and reserved words.
+    name.length > 2 &&
+    (name[0] === 'o' || name[0] === 'O') &&
+    (name[1] === 'n' || name[1] === 'N')
+  ) {
+    return;
+  }
+
+  const propertyInfo = getPropertyInfo(name);
+  if (propertyInfo !== null) {
+    // shouldRemoveAttribute
+    switch (typeof value) {
+      case 'function':
+      // $FlowIssue symbol is perfectly valid here
+      case 'symbol': // eslint-disable-line
+        return;
+      case 'boolean': {
+        if (!propertyInfo.acceptsBooleans) {
+          return;
+        }
+      }
+    }
+    if (enableFilterEmptyStringAttributesDOM) {
+      if (propertyInfo.removeEmptyString && value === '') {
+        if (__DEV__) {
+          if (name === 'src') {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'This may cause the browser to download the whole page again over the network. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              name,
+              name,
+            );
+          } else {
+            console.error(
+              'An empty string ("") was passed to the %s attribute. ' +
+                'To fix this, either do not render the element at all ' +
+                'or pass null to %s instead of an empty string.',
+              name,
+              name,
+            );
+          }
+        }
+        return;
+      }
+    }
+
+    const attributeName = propertyInfo.attributeName;
+    const attributeNameChunk = stringToChunk(attributeName); // TODO: If it's known we can cache the chunk.
+
+    switch (propertyInfo.type) {
+      case BOOLEAN:
+        if (value) {
+          target.push(
+            attributeSeparator,
+            attributeNameChunk,
+            attributeEmptyString,
+          );
+        }
+        return;
+      case OVERLOADED_BOOLEAN:
+        if (value === true) {
+          target.push(
+            attributeSeparator,
+            attributeNameChunk,
+            attributeEmptyString,
+          );
+        } else if (value === false) {
+          // Ignored
+        } else {
+          target.push(
+            attributeSeparator,
+            attributeNameChunk,
+            attributeAssign,
+            escapeTextForBrowser(value),
+            attributeEnd,
+          );
+        }
+        return;
+      case NUMERIC:
+        if (!isNaN(value)) {
+          target.push(
+            attributeSeparator,
+            attributeNameChunk,
+            attributeAssign,
+            escapeTextForBrowser(value),
+            attributeEnd,
+          );
+        }
+        break;
+      case POSITIVE_NUMERIC:
+        if (!isNaN(value) && (value: any) >= 1) {
+          target.push(
+            attributeSeparator,
+            attributeNameChunk,
+            attributeAssign,
+            escapeTextForBrowser(value),
+            attributeEnd,
+          );
+        }
+        break;
+      default:
+        if (propertyInfo.sanitizeURL) {
+          value = '' + (value: any);
+          sanitizeURL(value);
+        }
+        target.push(
+          attributeSeparator,
+          attributeNameChunk,
+          attributeAssign,
+          escapeTextForBrowser(value),
+          attributeEnd,
+        );
+    }
+  } else if (isAttributeNameSafe(name)) {
+    // shouldRemoveAttribute
+    switch (typeof value) {
+      case 'function':
+      // $FlowIssue symbol is perfectly valid here
+      case 'symbol': // eslint-disable-line
+        return;
+      case 'boolean': {
+        const prefix = name.toLowerCase().slice(0, 5);
+        if (prefix !== 'data-' && prefix !== 'aria-') {
+          return;
+        }
+      }
+    }
+    target.push(
+      attributeSeparator,
+      stringToChunk(name),
+      attributeAssign,
+      escapeTextForBrowser(value),
+      attributeEnd,
+    );
+  }
+}
+
+const endOfStartTag = stringToPrecomputedChunk('>');
+const endOfStartTagSelfClosing = stringToPrecomputedChunk('/>');
 
 const idAttr = stringToPrecomputedChunk(' id="');
 const attrEnd = stringToPrecomputedChunk('"');
+
+function pushID(
+  target: Array<Chunk | PrecomputedChunk>,
+  responseState: ResponseState,
+  assignID: SuspenseBoundaryID,
+  existingID: mixed,
+): void {
+  if (
+    existingID !== null &&
+    existingID !== undefined &&
+    (typeof existingID === 'string' || typeof existingID === 'object')
+  ) {
+    // We can reuse the existing ID for our purposes.
+    assignID.formattedID = stringToPrecomputedChunk(
+      escapeTextForBrowser(existingID),
+    );
+  } else {
+    const encodedID = assignAnID(responseState, assignID);
+    target.push(idAttr, encodedID, attrEnd);
+  }
+}
+
+function pushInnerHTML(
+  target: Array<Chunk | PrecomputedChunk>,
+  innerHTML,
+  children,
+) {
+  if (innerHTML != null) {
+    invariant(
+      children == null,
+      'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+    );
+
+    invariant(
+      typeof innerHTML === 'object' && '__html' in innerHTML,
+      '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+        'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+        'for more information.',
+    );
+    const html = innerHTML.__html;
+    target.push(stringToChunk(html));
+  }
+}
+
+// TODO: Move these to ResponseState so that we warn for every request.
+// It would help debugging in stateful servers (e.g. service worker).
+let didWarnDefaultInputValue = false;
+let didWarnDefaultChecked = false;
+let didWarnDefaultSelectValue = false;
+let didWarnDefaultTextareaValue = false;
+let didWarnInvalidOptionChildren = false;
+let didWarnSelectedSetOnOption = false;
+
+function checkSelectProp(props, propName) {
+  if (__DEV__) {
+    const array = isArray(props[propName]);
+    if (props.multiple && !array) {
+      console.error(
+        'The `%s` prop supplied to <select> must be an array if ' +
+          '`multiple` is true.',
+        propName,
+      );
+    } else if (!props.multiple && array) {
+      console.error(
+        'The `%s` prop supplied to <select> must be a scalar ' +
+          'value if `multiple` is false.',
+        propName,
+      );
+    }
+  }
+}
+
+function pushStartSelect(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+  assignID: null | SuspenseBoundaryID,
+): ReactNodeList {
+  if (__DEV__) {
+    checkControlledValueProps('select', props);
+
+    checkSelectProp(props, 'value');
+    checkSelectProp(props, 'defaultValue');
+
+    if (
+      props.value !== undefined &&
+      props.defaultValue !== undefined &&
+      !didWarnDefaultSelectValue
+    ) {
+      console.error(
+        'Select elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled select ' +
+          'element and remove one of these props. More info: ' +
+          'https://reactjs.org/link/controlled-components',
+      );
+      didWarnDefaultSelectValue = true;
+    }
+  }
+
+  target.push(startChunkForTag('select'));
+
+  let children = null;
+  let innerHTML = null;
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+          children = propValue;
+          break;
+        case 'dangerouslySetInnerHTML':
+          // TODO: This doesn't really make sense for select since it can't use the controlled
+          // value in the innerHTML.
+          innerHTML = propValue;
+          break;
+        case 'defaultValue':
+        case 'value':
+          // These are set on the Context instead and applied to the nested options.
+          break;
+        default:
+          pushAttribute(target, responseState, propKey, propValue);
+          break;
+      }
+    }
+  }
+  if (assignID !== null) {
+    pushID(target, responseState, assignID, props.id);
+  }
+
+  target.push(endOfStartTag);
+  pushInnerHTML(target, innerHTML, children);
+  return children;
+}
+
+function flattenOptionChildren(children: mixed): string {
+  let content = '';
+  // Flatten children and warn if they aren't strings or numbers;
+  // invalid types are ignored.
+  Children.forEach((children: any), function(child) {
+    if (child == null) {
+      return;
+    }
+    content += (child: any);
+    if (__DEV__) {
+      if (
+        !didWarnInvalidOptionChildren &&
+        typeof child !== 'string' &&
+        typeof child !== 'number'
+      ) {
+        didWarnInvalidOptionChildren = true;
+        console.error(
+          'Only strings and numbers are supported as <option> children.',
+        );
+      }
+    }
+  });
+  return content;
+}
+
+const selectedMarkerAttribute = stringToPrecomputedChunk(' selected=""');
+
+function pushStartOption(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+  formatContext: FormatContext,
+  assignID: null | SuspenseBoundaryID,
+): ReactNodeList {
+  const selectedValue = formatContext.selectedValue;
+
+  target.push(startChunkForTag('option'));
+
+  let children = null;
+  let value = null;
+  let selected = null;
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+          children = propValue;
+          break;
+        case 'selected':
+          // ignore
+          selected = propValue;
+          if (__DEV__) {
+            // TODO: Remove support for `selected` in <option>.
+            if (!didWarnSelectedSetOnOption) {
+              console.error(
+                'Use the `defaultValue` or `value` props on <select> instead of ' +
+                  'setting `selected` on <option>.',
+              );
+              didWarnSelectedSetOnOption = true;
+            }
+          }
+          break;
+        case 'value':
+          value = propValue;
+          break;
+        case 'dangerouslySetInnerHTML':
+          invariant(
+            false,
+            '`dangerouslySetInnerHTML` does not work on <option>.',
+          );
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          pushAttribute(target, responseState, propKey, propValue);
+          break;
+      }
+    }
+  }
+
+  if (selectedValue !== null) {
+    let stringValue;
+    if (value !== null) {
+      stringValue = '' + value;
+    } else {
+      stringValue = children = flattenOptionChildren(children);
+    }
+    if (isArray(selectedValue)) {
+      // multiple
+      for (let i = 0; i < selectedValue.length; i++) {
+        const v = '' + selectedValue[i];
+        if (v === stringValue) {
+          target.push(selectedMarkerAttribute);
+          break;
+        }
+      }
+    } else if (selectedValue === stringValue) {
+      target.push(selectedMarkerAttribute);
+    }
+  } else if (selected) {
+    target.push(selectedMarkerAttribute);
+  }
+
+  if (assignID !== null) {
+    pushID(target, responseState, assignID, props.id);
+  }
+
+  target.push(endOfStartTag);
+  return children;
+}
+
+function pushInput(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+  assignID: null | SuspenseBoundaryID,
+): ReactNodeList {
+  if (__DEV__) {
+    checkControlledValueProps('input', props);
+
+    if (
+      props.checked !== undefined &&
+      props.defaultChecked !== undefined &&
+      !didWarnDefaultChecked
+    ) {
+      console.error(
+        '%s contains an input of type %s with both checked and defaultChecked props. ' +
+          'Input elements must be either controlled or uncontrolled ' +
+          '(specify either the checked prop, or the defaultChecked prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled input ' +
+          'element and remove one of these props. More info: ' +
+          'https://reactjs.org/link/controlled-components',
+        'A component',
+        props.type,
+      );
+      didWarnDefaultChecked = true;
+    }
+    if (
+      props.value !== undefined &&
+      props.defaultValue !== undefined &&
+      !didWarnDefaultInputValue
+    ) {
+      console.error(
+        '%s contains an input of type %s with both value and defaultValue props. ' +
+          'Input elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled input ' +
+          'element and remove one of these props. More info: ' +
+          'https://reactjs.org/link/controlled-components',
+        'A component',
+        props.type,
+      );
+      didWarnDefaultInputValue = true;
+    }
+  }
+
+  target.push(startChunkForTag('input'));
+
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+        case 'dangerouslySetInnerHTML':
+          invariant(
+            false,
+            '%s is a self-closing tag and must neither have `children` nor ' +
+              'use `dangerouslySetInnerHTML`.',
+            'input',
+          );
+        // eslint-disable-next-line-no-fallthrough
+        case 'defaultChecked':
+          // Previously "checked" would win but now it's enumeration order dependent.
+          // There's a warning in either case.
+          pushAttribute(target, responseState, 'checked', propValue);
+          break;
+        case 'defaultValue':
+          // Previously "value" would win but now it's enumeration order dependent.
+          // There's a warning in either case.
+          pushAttribute(target, responseState, 'value', propValue);
+          break;
+        default:
+          pushAttribute(target, responseState, propKey, propValue);
+          break;
+      }
+    }
+  }
+  if (assignID !== null) {
+    pushID(target, responseState, assignID, props.id);
+  }
+
+  target.push(endOfStartTagSelfClosing);
+  return null;
+}
+
+function pushStartTextArea(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+  assignID: null | SuspenseBoundaryID,
+): ReactNodeList {
+  if (__DEV__) {
+    checkControlledValueProps('textarea', props);
+    if (
+      props.value !== undefined &&
+      props.defaultValue !== undefined &&
+      !didWarnDefaultTextareaValue
+    ) {
+      console.error(
+        'Textarea elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled textarea ' +
+          'and remove one of these props. More info: ' +
+          'https://reactjs.org/link/controlled-components',
+      );
+      didWarnDefaultTextareaValue = true;
+    }
+  }
+
+  target.push(startChunkForTag('textarea'));
+
+  let value = null;
+  let children = null;
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+          children = propValue;
+          break;
+        case 'value':
+        case 'defaultValue':
+          // Previously "checked" would win but now it's enumeration order dependent.
+          // There's a warning in either case.
+          value = propValue;
+          break;
+        case 'dangerouslySetInnerHTML':
+          invariant(
+            false,
+            '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
+          );
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          pushAttribute(target, responseState, propKey, propValue);
+          break;
+      }
+    }
+  }
+  if (assignID !== null) {
+    pushID(target, responseState, assignID, props.id);
+  }
+
+  target.push(endOfStartTag);
+
+  // TODO (yungsters): Remove support for children content in <textarea>.
+  if (children != null) {
+    if (__DEV__) {
+      console.error(
+        'Use the `defaultValue` or `value` props instead of setting ' +
+          'children on <textarea>.',
+      );
+    }
+    invariant(
+      value == null,
+      'If you supply `defaultValue` on a <textarea>, do not pass children.',
+    );
+    if (isArray(children)) {
+      invariant(
+        children.length <= 1,
+        '<textarea> can only have at most one child.',
+      );
+      value = '' + children[0];
+    }
+    value = '' + children;
+  }
+
+  if (typeof value === 'string' && value[0] === '\n') {
+    // text/html ignores the first character in these tags if it's a newline
+    // Prefer to break application/xml over text/html (for now) by adding
+    // a newline specifically to get eaten by the parser. (Alternately for
+    // textareas, replacing "^\n" with "\r\n" doesn't get eaten, and the first
+    // \r is normalized out by HTMLTextAreaElement#value.)
+    // See: <http://www.w3.org/TR/html-polyglot/#newlines-in-textarea-and-pre>
+    // See: <http://www.w3.org/TR/html5/syntax.html#element-restrictions>
+    // See: <http://www.w3.org/TR/html5/syntax.html#newlines>
+    // See: Parsing of "textarea" "listing" and "pre" elements
+    //  from <http://www.w3.org/TR/html5/syntax.html#parsing-main-inbody>
+    target.push(leadingNewline);
+  }
+
+  return value;
+}
+
+function pushSelfClosing(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  tag: string,
+  responseState: ResponseState,
+  assignID: null | SuspenseBoundaryID,
+): ReactNodeList {
+  target.push(startChunkForTag(tag));
+
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+        case 'dangerouslySetInnerHTML':
+          invariant(
+            false,
+            '%s is a self-closing tag and must neither have `children` nor ' +
+              'use `dangerouslySetInnerHTML`.',
+            tag,
+          );
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          pushAttribute(target, responseState, propKey, propValue);
+          break;
+      }
+    }
+  }
+  if (assignID !== null) {
+    pushID(target, responseState, assignID, props.id);
+  }
+
+  target.push(endOfStartTagSelfClosing);
+  return null;
+}
+
+function pushStartMenuItem(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  responseState: ResponseState,
+  assignID: null | SuspenseBoundaryID,
+): ReactNodeList {
+  target.push(startChunkForTag('menuitem'));
+
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+        case 'dangerouslySetInnerHTML':
+          invariant(
+            false,
+            'menuitems cannot have `children` nor `dangerouslySetInnerHTML`.',
+          );
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          pushAttribute(target, responseState, propKey, propValue);
+          break;
+      }
+    }
+  }
+  if (assignID !== null) {
+    pushID(target, responseState, assignID, props.id);
+  }
+
+  target.push(endOfStartTag);
+  return null;
+}
+
+function pushStartGenericElement(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  tag: string,
+  responseState: ResponseState,
+  assignID: null | SuspenseBoundaryID,
+): ReactNodeList {
+  target.push(startChunkForTag(tag));
+
+  let children = null;
+  let innerHTML = null;
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+          children = propValue;
+          break;
+        case 'dangerouslySetInnerHTML':
+          innerHTML = propValue;
+          break;
+        default:
+          pushAttribute(target, responseState, propKey, propValue);
+          break;
+      }
+    }
+  }
+  if (assignID !== null) {
+    pushID(target, responseState, assignID, props.id);
+  }
+
+  target.push(endOfStartTag);
+  pushInnerHTML(target, innerHTML, children);
+  return children;
+}
+
+function pushStartCustomElement(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  tag: string,
+  responseState: ResponseState,
+  assignID: null | SuspenseBoundaryID,
+): ReactNodeList {
+  target.push(startChunkForTag(tag));
+
+  let children = null;
+  let innerHTML = null;
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+          children = propValue;
+          break;
+        case 'dangerouslySetInnerHTML':
+          innerHTML = propValue;
+          break;
+        case 'style':
+          pushStyle(target, responseState, propValue);
+          break;
+        case 'suppressContentEditableWarning':
+        case 'suppressHydrationWarning':
+          // Ignored. These are built-in to React on the client.
+          break;
+        default:
+          if (
+            isAttributeNameSafe(propKey) &&
+            typeof propValue !== 'function' &&
+            typeof propValue !== 'symbol'
+          ) {
+            target.push(
+              attributeSeparator,
+              stringToChunk(propKey),
+              attributeAssign,
+              escapeTextForBrowser(propValue),
+              attributeEnd,
+            );
+          }
+          break;
+      }
+    }
+  }
+  if (assignID !== null) {
+    pushID(target, responseState, assignID, props.id);
+  }
+
+  target.push(endOfStartTag);
+  pushInnerHTML(target, innerHTML, children);
+  return children;
+}
+
+const leadingNewline = stringToPrecomputedChunk('\n');
+
+function pushStartPreformattedElement(
+  target: Array<Chunk | PrecomputedChunk>,
+  props: Object,
+  tag: string,
+  responseState: ResponseState,
+  assignID: null | SuspenseBoundaryID,
+): ReactNodeList {
+  target.push(startChunkForTag(tag));
+
+  let children = null;
+  let innerHTML = null;
+  for (const propKey in props) {
+    if (hasOwnProperty.call(props, propKey)) {
+      const propValue = props[propKey];
+      if (propValue == null) {
+        continue;
+      }
+      switch (propKey) {
+        case 'children':
+          children = propValue;
+          break;
+        case 'dangerouslySetInnerHTML':
+          innerHTML = propValue;
+          break;
+        default:
+          pushAttribute(target, responseState, propKey, propValue);
+          break;
+      }
+    }
+  }
+  if (assignID !== null) {
+    pushID(target, responseState, assignID, props.id);
+  }
+
+  target.push(endOfStartTag);
+
+  // text/html ignores the first character in these tags if it's a newline
+  // Prefer to break application/xml over text/html (for now) by adding
+  // a newline specifically to get eaten by the parser. (Alternately for
+  // textareas, replacing "^\n" with "\r\n" doesn't get eaten, and the first
+  // \r is normalized out by HTMLTextAreaElement#value.)
+  // See: <http://www.w3.org/TR/html-polyglot/#newlines-in-textarea-and-pre>
+  // See: <http://www.w3.org/TR/html5/syntax.html#element-restrictions>
+  // See: <http://www.w3.org/TR/html5/syntax.html#newlines>
+  // See: Parsing of "textarea" "listing" and "pre" elements
+  //  from <http://www.w3.org/TR/html5/syntax.html#parsing-main-inbody>
+  // TODO: This doesn't deal with the case where the child is an array
+  // or component that returns a string.
+  if (innerHTML != null) {
+    invariant(
+      children == null,
+      'Can only set one of `children` or `props.dangerouslySetInnerHTML`.',
+    );
+
+    invariant(
+      typeof innerHTML === 'object' && '__html' in innerHTML,
+      '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
+        'Please visit https://reactjs.org/link/dangerously-set-inner-html ' +
+        'for more information.',
+    );
+    const html = innerHTML.__html;
+    if (typeof html === 'string' && html[0] === '\n') {
+      target.push(leadingNewline);
+    }
+    target.push(stringToChunk(html));
+  }
+  if (typeof children === 'string' && children[0] === '\n') {
+    target.push(leadingNewline);
+  }
+  return children;
+}
+
+// We accept any tag to be rendered but since this gets injected into arbitrary
+// HTML, we want to make sure that it's a safe tag.
+// http://www.w3.org/TR/REC-xml/#NT-Name
+const VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
+const validatedTagCache = new Map();
+function startChunkForTag(tag: string): PrecomputedChunk {
+  let tagStartChunk = validatedTagCache.get(tag);
+  if (tagStartChunk === undefined) {
+    invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
+    tagStartChunk = stringToPrecomputedChunk('<' + tag);
+    validatedTagCache.set(tag, tagStartChunk);
+  }
+  return tagStartChunk;
+}
 
 export function pushStartInstance(
   target: Array<Chunk | PrecomputedChunk>,
   type: string,
   props: Object,
   responseState: ResponseState,
+  formatContext: FormatContext,
   assignID: null | SuspenseBoundaryID,
-): void {
-  // TODO: Figure out if it's self closing and everything else.
-  if (assignID !== null) {
-    let encodedID;
-    if (typeof props.id === 'string') {
-      // We can reuse the existing ID for our purposes.
-      encodedID = assignID.formattedID = stringToPrecomputedChunk(
-        encodeHTMLIDAttribute(props.id),
-      );
-    } else {
-      encodedID = assignAnID(responseState, assignID);
-    }
-    target.push(
-      startTag1,
-      stringToChunk(type),
-      idAttr,
-      encodedID,
-      attrEnd,
-      startTag2,
-    );
-  } else {
-    target.push(startTag1, stringToChunk(type));
-    if (props.className) {
-      target.push(
-        stringToChunk(
-          ' class="' + encodeHTMLIDAttribute(props.className) + '"',
-        ),
+): ReactNodeList {
+  if (__DEV__) {
+    validateARIAProperties(type, props);
+    validateInputProperties(type, props);
+    validateUnknownProperties(type, props, null);
+
+    if (
+      !props.suppressContentEditableWarning &&
+      props.contentEditable &&
+      props.children != null
+    ) {
+      console.error(
+        'A component is `contentEditable` and contains `children` managed by ' +
+          'React. It is now your responsibility to guarantee that none of ' +
+          'those nodes are unexpectedly modified or duplicated. This is ' +
+          'probably not intentional.',
       );
     }
-    if (props.id) {
-      target.push(
-        stringToChunk(' id="' + encodeHTMLIDAttribute(props.id) + '"'),
+
+    if (
+      formatContext.insertionMode !== SVG_MODE &&
+      formatContext.insertionMode !== MATHML_MODE
+    ) {
+      if (
+        type.indexOf('-') === -1 &&
+        typeof props.is !== 'string' &&
+        type.toLowerCase() !== type
+      ) {
+        console.error(
+          '<%s /> is using incorrect casing. ' +
+            'Use PascalCase for React components, ' +
+            'or lowercase for HTML elements.',
+          type,
+        );
+      }
+    }
+  }
+
+  switch (type) {
+    // Special tags
+    case 'select':
+      return pushStartSelect(target, props, responseState, assignID);
+    case 'option':
+      return pushStartOption(
+        target,
+        props,
+        responseState,
+        formatContext,
+        assignID,
+      );
+    case 'textarea':
+      return pushStartTextArea(target, props, responseState, assignID);
+    case 'input':
+      return pushInput(target, props, responseState, assignID);
+    case 'menuitem':
+      return pushStartMenuItem(target, props, responseState, assignID);
+    // Newline eating tags
+    case 'listing':
+    case 'pre': {
+      return pushStartPreformattedElement(
+        target,
+        props,
+        type,
+        responseState,
+        assignID,
       );
     }
-    target.push(startTag2);
+    // Omitted close tags
+    case 'area':
+    case 'base':
+    case 'br':
+    case 'col':
+    case 'embed':
+    case 'hr':
+    case 'img':
+    case 'keygen':
+    case 'link':
+    case 'meta':
+    case 'param':
+    case 'source':
+    case 'track':
+    case 'wbr': {
+      return pushSelfClosing(target, props, type, responseState, assignID);
+    }
+    // These are reserved SVG and MathML elements, that are never custom elements.
+    // https://w3c.github.io/webcomponents/spec/custom/#custom-elements-core-concepts
+    case 'annotation-xml':
+    case 'color-profile':
+    case 'font-face':
+    case 'font-face-src':
+    case 'font-face-uri':
+    case 'font-face-format':
+    case 'font-face-name':
+    case 'missing-glyph': {
+      return pushStartGenericElement(
+        target,
+        props,
+        type,
+        responseState,
+        assignID,
+      );
+    }
+    default: {
+      if (type.indexOf('-') === -1 && typeof props.is !== 'string') {
+        // Generic element
+        return pushStartGenericElement(
+          target,
+          props,
+          type,
+          responseState,
+          assignID,
+        );
+      } else {
+        // Custom element
+        return pushStartCustomElement(
+          target,
+          props,
+          type,
+          responseState,
+          assignID,
+        );
+      }
+    }
   }
 }
 
@@ -260,8 +1326,32 @@ export function pushEndInstance(
   type: string,
   props: Object,
 ): void {
-  // TODO: Figure out if it was self closing.
-  target.push(endTag1, stringToChunk(type), endTag2);
+  switch (type) {
+    // Omitted close tags
+    // TODO: Instead of repeating this switch we could try to pass a flag from above.
+    // That would require returning a tuple. Which might be ok if it gets inlined.
+    case 'area':
+    case 'base':
+    case 'br':
+    case 'col':
+    case 'embed':
+    case 'hr':
+    case 'img':
+    case 'input':
+    case 'keygen':
+    case 'link':
+    case 'meta':
+    case 'param':
+    case 'source':
+    case 'track':
+    case 'wbr': {
+      // No close tag needed.
+      break;
+    }
+    default: {
+      target.push(endTag1, stringToChunk(type), endTag2);
+    }
+  }
 }
 
 // Structural Nodes

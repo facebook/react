@@ -10,7 +10,7 @@
 import type {RowEncoding, JSONValue} from './ReactFlightNativeRelayProtocol';
 
 import type {Request, ReactModel} from 'react-server/src/ReactFlightServer';
-
+import hasOwnProperty from 'shared/hasOwnProperty';
 import JSResourceReferenceImpl from 'JSResourceReferenceImpl';
 
 export type ModuleReference<T> = JSResourceReferenceImpl<T>;
@@ -71,8 +71,6 @@ export function processErrorChunk(
     },
   ];
 }
-
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 
 function convertModelToJSON(
   request: Request,

@@ -14,6 +14,8 @@
  * environment.
  */
 
+import type {ReactNodeList} from 'shared/ReactTypes';
+
 import ReactFizzServer from 'react-server';
 
 type Instance = {|
@@ -97,7 +99,7 @@ const ReactNoopServer = ReactFizzServer({
     target: Array<Uint8Array>,
     type: string,
     props: Object,
-  ): void {
+  ): ReactNodeList {
     const instance: Instance = {
       type: type,
       children: [],
@@ -105,6 +107,7 @@ const ReactNoopServer = ReactFizzServer({
       hidden: false,
     };
     target.push(Buffer.from(JSON.stringify(instance), 'utf8'));
+    return props.children;
   },
 
   pushEndInstance(
