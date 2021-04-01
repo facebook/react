@@ -46,7 +46,8 @@ import hyphenateStyleName from '../shared/hyphenateStyleName';
 import invariant from 'shared/invariant';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import sanitizeURL from '../shared/sanitizeURL';
-import isArray from 'shared/isArray';
+
+const isArray = Array.isArray;
 
 // Per response, global state that is not contextual to the rendering subtree.
 export type ResponseState = {

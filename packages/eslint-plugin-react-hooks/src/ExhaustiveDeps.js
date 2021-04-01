@@ -145,8 +145,6 @@ export default {
         componentScope = currentScope;
       }
 
-      const isArray = Array.isArray;
-
       // Next we'll define a few helpers that helps us
       // tell if some values don't have to be declared as deps.
 
@@ -159,7 +157,7 @@ export default {
       //       ^^^ true for this reference
       // False for everything else.
       function isStableKnownHookValue(resolved) {
-        if (!isArray(resolved.defs)) {
+        if (!Array.isArray(resolved.defs)) {
           return false;
         }
         const def = resolved.defs[0];
@@ -228,7 +226,7 @@ export default {
           if (
             id.type === 'ArrayPattern' &&
             id.elements.length === 2 &&
-            isArray(resolved.identifiers)
+            Array.isArray(resolved.identifiers)
           ) {
             // Is second tuple value the same reference we're checking?
             if (id.elements[1] === resolved.identifiers[0]) {
@@ -257,7 +255,7 @@ export default {
         } else if (name === 'useTransition') {
           if (
             id.type === 'ArrayPattern' &&
-            isArray(resolved.identifiers)
+            Array.isArray(resolved.identifiers)
           ) {
             // Is first tuple value the same reference we're checking?
             if (id.elements[0] === resolved.identifiers[0]) {
@@ -272,7 +270,7 @@ export default {
 
       // Some are just functions that don't reference anything dynamic.
       function isFunctionWithoutCapturedValues(resolved) {
-        if (!isArray(resolved.defs)) {
+        if (!Array.isArray(resolved.defs)) {
           return false;
         }
         const def = resolved.defs[0];

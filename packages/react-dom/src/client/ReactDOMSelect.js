@@ -12,7 +12,6 @@ import {getCurrentFiberOwnerNameInDevOrNull} from 'react-reconciler/src/ReactCur
 
 import {checkControlledValueProps} from '../shared/ReactControlledValuePropTypes';
 import {getToStringValue, toString} from './ToStringValue';
-import isArray from 'shared/isArray';
 
 let didWarnValueDefaultValue;
 
@@ -46,15 +45,15 @@ function checkSelectPropTypes(props) {
       if (props[propName] == null) {
         continue;
       }
-      const propNameIsArray = isArray(props[propName]);
-      if (props.multiple && !propNameIsArray) {
+      const isArray = Array.isArray(props[propName]);
+      if (props.multiple && !isArray) {
         console.error(
           'The `%s` prop supplied to <select> must be an array if ' +
             '`multiple` is true.%s',
           propName,
           getDeclarationErrorAddendum(),
         );
-      } else if (!props.multiple && propNameIsArray) {
+      } else if (!props.multiple && isArray) {
         console.error(
           'The `%s` prop supplied to <select> must be a scalar ' +
             'value if `multiple` is false.%s',

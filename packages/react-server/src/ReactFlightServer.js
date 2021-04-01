@@ -44,7 +44,8 @@ import {
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import invariant from 'shared/invariant';
-import isArray from 'shared/isArray';
+
+const isArray = Array.isArray;
 
 type ReactJSONValue =
   | string

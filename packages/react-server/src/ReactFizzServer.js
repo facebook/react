@@ -51,7 +51,6 @@ import {REACT_ELEMENT_TYPE, REACT_SUSPENSE_TYPE} from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 
 import invariant from 'shared/invariant';
-import isArray from 'shared/isArray';
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
@@ -288,7 +287,7 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
     return;
   }
 
-  if (isArray(node)) {
+  if (Array.isArray(node)) {
     if (node.length > 0) {
       for (let i = 0; i < node.length; i++) {
         renderNode(request, task, node[i]);

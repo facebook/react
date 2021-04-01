@@ -8,7 +8,6 @@
  */
 
 import invariant from 'shared/invariant';
-import isArray from 'shared/isArray';
 
 /**
  * Accumulates items that must not be null or undefined.
@@ -32,11 +31,11 @@ function accumulate<T>(
 
   // Both are not empty. Warning: Never call x.concat(y) when you are not
   // certain that x is an Array (x could be a string with concat method).
-  if (isArray(current)) {
+  if (Array.isArray(current)) {
     return current.concat(next);
   }
 
-  if (isArray(next)) {
+  if (Array.isArray(next)) {
     return [current].concat(next);
   }
 

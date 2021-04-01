@@ -14,7 +14,6 @@ import type {ReactProvider, ReactContext} from 'shared/ReactTypes';
 
 import * as React from 'react';
 import invariant from 'shared/invariant';
-import isArray from 'shared/isArray';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -1439,7 +1438,7 @@ class ReactDOMServerRenderer {
             defaultValue == null,
             'If you supply `defaultValue` on a <textarea>, do not pass children.',
           );
-          if (isArray(textareaChildren)) {
+          if (Array.isArray(textareaChildren)) {
             invariant(
               textareaChildren.length <= 1,
               '<textarea> can only have at most one child.',
@@ -1468,14 +1467,14 @@ class ReactDOMServerRenderer {
           if (props[propName] == null) {
             continue;
           }
-          const propNameIsArray = isArray(props[propName]);
-          if (props.multiple && !propNameIsArray) {
+          const isArray = Array.isArray(props[propName]);
+          if (props.multiple && !isArray) {
             console.error(
               'The `%s` prop supplied to <select> must be an array if ' +
                 '`multiple` is true.',
               propName,
             );
-          } else if (!props.multiple && propNameIsArray) {
+          } else if (!props.multiple && isArray) {
             console.error(
               'The `%s` prop supplied to <select> must be a scalar ' +
                 'value if `multiple` is false.',
@@ -1516,7 +1515,7 @@ class ReactDOMServerRenderer {
           value = optionChildren;
         }
         selected = false;
-        if (isArray(selectValue)) {
+        if (Array.isArray(selectValue)) {
           // multiple
           for (let j = 0; j < selectValue.length; j++) {
             if ('' + selectValue[j] === value) {

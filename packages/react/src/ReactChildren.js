@@ -10,7 +10,6 @@
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import invariant from 'shared/invariant';
-import isArray from 'shared/isArray';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -111,7 +110,7 @@ function mapIntoArray(
     // so that it's consistent if the number of children grows:
     const childKey =
       nameSoFar === '' ? SEPARATOR + getElementKey(child, 0) : nameSoFar;
-    if (isArray(mappedChild)) {
+    if (Array.isArray(mappedChild)) {
       let escapedChildKey = '';
       if (childKey != null) {
         escapedChildKey = escapeUserProvidedKey(childKey) + '/';
@@ -143,7 +142,7 @@ function mapIntoArray(
   const nextNamePrefix =
     nameSoFar === '' ? SEPARATOR : nameSoFar + SUBSEPARATOR;
 
-  if (isArray(children)) {
+  if (Array.isArray(children)) {
     for (let i = 0; i < children.length; i++) {
       child = children[i];
       nextName = nextNamePrefix + getElementKey(child, i);
