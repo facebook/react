@@ -71,7 +71,12 @@ export function createMarkupForCustomAttribute(
   name: string,
   value: mixed,
 ): string {
-  if (!isAttributeNameSafe(name) || value == null) {
+  if (
+    !isAttributeNameSafe(name) ||
+    value == null ||
+    typeof value === 'function' ||
+    typeof value === 'symbol'
+  ) {
     return '';
   }
   return name + '=' + quoteAttributeValueForBrowser(value);
