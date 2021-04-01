@@ -8,6 +8,7 @@
  */
 
 import {enableFilterEmptyStringAttributesDOM} from 'shared/ReactFeatureFlags';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
@@ -67,7 +68,6 @@ export const VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
   '^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$',
 );
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 const illegalAttributeNameCache = {};
 const validatedAttributeNameCache = {};
 

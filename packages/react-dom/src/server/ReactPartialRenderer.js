@@ -77,6 +77,7 @@ import warnValidStyle from '../shared/warnValidStyle';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+import hasOwnProperty from 'shared/hasOwnProperty';
 
 export type ServerOptions = {
   identifierPrefix?: string,
@@ -340,7 +341,6 @@ function flattenOptionChildren(children: mixed): ?string {
   return content;
 }
 
-const hasOwnProperty = Object.prototype.hasOwnProperty;
 const STYLE = 'style';
 const RESERVED_PROPS = {
   children: null,
