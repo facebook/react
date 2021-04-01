@@ -599,7 +599,8 @@ export function resolveModelToJSON(
 }
 
 function reportError(request: Request, error: mixed): void {
-  request.onError(error);
+  const onError = request.onError;
+  onError(error);
 }
 
 function fatalError(request: Request, error: mixed): void {
