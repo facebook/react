@@ -23,6 +23,7 @@ import {
 } from 'shared/ReactSymbols';
 import {warnAboutSpreadingKeyToJSX} from 'shared/ReactFeatureFlags';
 import hasOwnProperty from 'shared/hasOwnProperty';
+import isArray from 'shared/isArray';
 import {jsxDEV} from './ReactJSXElement';
 
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
@@ -182,7 +183,7 @@ function validateChildKeys(node, parentType) {
     if (typeof node !== 'object') {
       return;
     }
-    if (Array.isArray(node)) {
+    if (isArray(node)) {
       for (let i = 0; i < node.length; i++) {
         const child = node[i];
         if (isValidElement(child)) {
@@ -329,7 +330,7 @@ export function jsxWithValidation(
       let typeString;
       if (type === null) {
         typeString = 'null';
-      } else if (Array.isArray(type)) {
+      } else if (isArray(type)) {
         typeString = 'array';
       } else if (type !== undefined && type.$$typeof === REACT_ELEMENT_TYPE) {
         typeString = `<${getComponentNameFromType(type.type) || 'Unknown'} />`;
@@ -366,7 +367,7 @@ export function jsxWithValidation(
       const children = props.children;
       if (children !== undefined) {
         if (isStaticChildren) {
-          if (Array.isArray(children)) {
+          if (isArray(children)) {
             for (let i = 0; i < children.length; i++) {
               validateChildKeys(children[i], type);
             }

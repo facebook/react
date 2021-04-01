@@ -11,6 +11,7 @@ import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.old';
+import isArray from 'shared/isArray';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {Placement, ChildDeletion} from './ReactFiberFlags';
@@ -96,8 +97,6 @@ if (__DEV__) {
     );
   };
 }
-
-const isArray = Array.isArray;
 
 function coerceRef(
   returnFiber: Fiber,
