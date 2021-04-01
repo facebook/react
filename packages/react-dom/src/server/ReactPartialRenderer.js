@@ -1331,11 +1331,14 @@ class ReactDOMServerRenderer {
       namespace = getIntrinsicNamespace(tag);
     }
 
+    let props = element.props;
+
     if (__DEV__) {
       if (namespace === HTML_NAMESPACE) {
+        const isCustomComponent = isCustomComponentFn(tag, props);
         // Should this check be gated by parent namespace? Not sure we want to
         // allow <SVG> or <mATH>.
-        if (tag.toLowerCase() !== element.type) {
+        if (!isCustomComponent && tag.toLowerCase() !== element.type) {
           console.error(
             '<%s /> is using incorrect casing. ' +
               'Use PascalCase for React components, ' +
@@ -1348,7 +1351,6 @@ class ReactDOMServerRenderer {
 
     validateDangerousTag(tag);
 
-    let props = element.props;
     if (tag === 'input') {
       if (__DEV__) {
         checkControlledValueProps('input', props);
