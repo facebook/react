@@ -276,49 +276,127 @@ function fatalError(request: Request, error: mixed): void {
   closeWithError(request.destination, error);
 }
 
-function renderNode(request: Request, task: Task, node: ReactNodeList): void {
-  if (typeof node === 'string') {
-    pushTextInstance(
-      task.blockedSegment.chunks,
-      node,
-      request.responseState,
-      task.assignID,
-    );
-    task.assignID = null;
-    return;
-  }
+function renderSuspenseBoundary(
+  request: Request,
+  task: Task,
+  props: Object,
+): void {
+  const parentBoundary = task.blockedBoundary;
+  const parentSegment = task.blockedSegment;
 
-  if (isArray(node)) {
-    if (node.length > 0) {
-      for (let i = 0; i < node.length; i++) {
-        renderNode(request, task, node[i]);
-      }
-    } else {
-      pushEmpty(
-        task.blockedSegment.chunks,
-        request.responseState,
-        task.assignID,
-      );
-      task.assignID = null;
+  // We need to push an "empty" thing here to identify the parent suspense boundary.
+  pushEmpty(parentSegment.chunks, request.responseState, task.assignID);
+  task.assignID = null;
+  // Each time we enter a suspense boundary, we split out into a new segment for
+  // the fallback so that we can later replace that segment with the content.
+  // This also lets us split out the main content even if it doesn't suspend,
+  // in case it ends up generating a large subtree of content.
+  const fallback: ReactNodeList = props.fallback;
+  const content: ReactNodeList = props.children;
+
+  const fallbackAbortSet: Set<Task> = new Set();
+  const newBoundary = createSuspenseBoundary(request, fallbackAbortSet);
+  const insertionIndex = parentSegment.chunks.length;
+  // The children of the boundary segment is actually the fallback.
+  const boundarySegment = createPendingSegment(
+    request,
+    insertionIndex,
+    newBoundary,
+    parentSegment.formatContext,
+  );
+  parentSegment.children.push(boundarySegment);
+
+  // This segment is the actual child content. We can start rendering that immediately.
+  const contentRootSegment = createPendingSegment(
+    request,
+    0,
+    null,
+    parentSegment.formatContext,
+  );
+  // We mark the root segment as having its parent flushed. It's not really flushed but there is
+  // no parent segment so there's nothing to wait on.
+  contentRootSegment.parentFlushed = true;
+
+  // Currently this is running synchronously. We could instead schedule this to pingedTasks.
+  // I suspect that there might be some efficiency benefits from not creating the suspended task
+  // and instead just using the stack if possible.
+  // TODO: Call this directly instead of messing with saving and restoring contexts.
+
+  // We can reuse the current context and task to render the content immediately without
+  // context switching. We just need to temporarily switch which boundary and which segment
+  // we're writing to. If something suspends, it'll spawn new suspended task with that context.
+  task.blockedBoundary = newBoundary;
+  task.blockedSegment = contentRootSegment;
+  try {
+    renderNode(request, task, content);
+    contentRootSegment.status = COMPLETED;
+    newBoundary.completedSegments.push(contentRootSegment);
+    if (newBoundary.pendingTasks === 0) {
+      // This must have been the last segment we were waiting on. This boundary is now complete.
+      // Therefore we won't need the fallback. We early return so that we don't have to create
+      // the fallback.
+      return;
     }
-    return;
+  } catch (error) {
+    contentRootSegment.status = ERRORED;
+    reportError(request, error);
+    newBoundary.forceClientRender = true;
+    // We don't need to decrement any task numbers because we didn't spawn any new task.
+    // We don't need to schedule any task because we know the parent has written yet.
+    // We do need to fallthrough to create the fallback though.
+  } finally {
+    task.blockedBoundary = parentBoundary;
+    task.blockedSegment = parentSegment;
   }
 
-  if (node === null) {
-    pushEmpty(task.blockedSegment.chunks, request.responseState, task.assignID);
-    return;
-  }
+  // We create suspended task for the fallback because we don't want to actually task
+  // on it yet in case we finish the main content, so we queue for later.
+  const suspendedFallbackTask = createTask(
+    request,
+    fallback,
+    parentBoundary,
+    boundarySegment,
+    fallbackAbortSet,
+    newBoundary.id, // This is the ID we want to give this fallback so we can replace it later.
+  );
+  // TODO: This should be queued at a separate lower priority queue so that we only task
+  // on preparing fallbacks if we don't have any more main content to task on.
+  request.pingedTasks.push(suspendedFallbackTask);
+}
 
-  if (
-    typeof node !== 'object' ||
-    !node ||
-    (node: any).$$typeof !== REACT_ELEMENT_TYPE
-  ) {
-    throw new Error('Not yet implemented node type.');
-  }
-  const element: React$Element<any> = (node: any);
-  const type = element.type;
-  const props = element.props;
+function renderHostElement(
+  request: Request,
+  task: Task,
+  type: string,
+  props: Object,
+): void {
+  const segment = task.blockedSegment;
+  const children = pushStartInstance(
+    segment.chunks,
+    type,
+    props,
+    request.responseState,
+    segment.formatContext,
+    task.assignID,
+  );
+  // We must have assigned it already above so we don't need this anymore.
+  task.assignID = null;
+  const prevContext = segment.formatContext;
+  segment.formatContext = getChildFormatContext(prevContext, type, props);
+  renderNode(request, task, children);
+  // We expect that errors will fatal the whole task and that we don't need
+  // the correct context. Therefore this is not in a finally.
+  segment.formatContext = prevContext;
+  pushEndInstance(segment.chunks, type, props);
+}
+
+function renderElement(
+  request: Request,
+  task: Task,
+  type: any,
+  props: Object,
+  node: ReactNodeList,
+): void {
   if (typeof type === 'function') {
     try {
       const result = type(props);
@@ -353,109 +431,60 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
       }
     }
   } else if (typeof type === 'string') {
-    const segment = task.blockedSegment;
-    const children = pushStartInstance(
-      segment.chunks,
-      type,
-      props,
-      request.responseState,
-      segment.formatContext,
-      task.assignID,
-    );
-    // We must have assigned it already above so we don't need this anymore.
-    task.assignID = null;
-    const prevContext = segment.formatContext;
-    segment.formatContext = getChildFormatContext(prevContext, type, props);
-    renderNode(request, task, children);
-    // We expect that errors will fatal the whole task and that we don't need
-    // the correct context. Therefore this is not in a finally.
-    segment.formatContext = prevContext;
-    pushEndInstance(segment.chunks, type, props);
+    renderHostElement(request, task, type, props);
   } else if (type === REACT_SUSPENSE_TYPE) {
-    const parentBoundary = task.blockedBoundary;
-    const parentSegment = task.blockedSegment;
-
-    // We need to push an "empty" thing here to identify the parent suspense boundary.
-    pushEmpty(parentSegment.chunks, request.responseState, task.assignID);
-    task.assignID = null;
-    // Each time we enter a suspense boundary, we split out into a new segment for
-    // the fallback so that we can later replace that segment with the content.
-    // This also lets us split out the main content even if it doesn't suspend,
-    // in case it ends up generating a large subtree of content.
-    const fallback: ReactNodeList = props.fallback;
-    const content: ReactNodeList = props.children;
-
-    const fallbackAbortSet: Set<Task> = new Set();
-    const newBoundary = createSuspenseBoundary(request, fallbackAbortSet);
-    const insertionIndex = parentSegment.chunks.length;
-    // The children of the boundary segment is actually the fallback.
-    const boundarySegment = createPendingSegment(
-      request,
-      insertionIndex,
-      newBoundary,
-      parentSegment.formatContext,
-    );
-    parentSegment.children.push(boundarySegment);
-
-    // This segment is the actual child content. We can start rendering that immediately.
-    const contentRootSegment = createPendingSegment(
-      request,
-      0,
-      null,
-      parentSegment.formatContext,
-    );
-    // We mark the root segment as having its parent flushed. It's not really flushed but there is
-    // no parent segment so there's nothing to wait on.
-    contentRootSegment.parentFlushed = true;
-
-    // Currently this is running synchronously. We could instead schedule this to pingedTasks.
-    // I suspect that there might be some efficiency benefits from not creating the suspended task
-    // and instead just using the stack if possible.
-    // TODO: Call this directly instead of messing with saving and restoring contexts.
-
-    // We can reuse the current context and task to render the content immediately without
-    // context switching. We just need to temporarily switch which boundary and which segment
-    // we're writing to. If something suspends, it'll spawn new suspended task with that context.
-    task.blockedBoundary = newBoundary;
-    task.blockedSegment = contentRootSegment;
-    try {
-      renderNode(request, task, content);
-      contentRootSegment.status = COMPLETED;
-      newBoundary.completedSegments.push(contentRootSegment);
-      if (newBoundary.pendingTasks === 0) {
-        // This must have been the last segment we were waiting on. This boundary is now complete.
-        // Therefore we won't need the fallback. We early return so that we don't have to create
-        // the fallback.
-        return;
-      }
-    } catch (error) {
-      contentRootSegment.status = ERRORED;
-      reportError(request, error);
-      newBoundary.forceClientRender = true;
-      // We don't need to decrement any task numbers because we didn't spawn any new task.
-      // We don't need to schedule any task because we know the parent has written yet.
-      // We do need to fallthrough to create the fallback though.
-    } finally {
-      task.blockedBoundary = parentBoundary;
-      task.blockedSegment = parentSegment;
-    }
-
-    // We create suspended task for the fallback because we don't want to actually task
-    // on it yet in case we finish the main content, so we queue for later.
-    const suspendedFallbackTask = createTask(
-      request,
-      fallback,
-      parentBoundary,
-      boundarySegment,
-      fallbackAbortSet,
-      newBoundary.id, // This is the ID we want to give this fallback so we can replace it later.
-    );
-    // TODO: This should be queued at a separate lower priority queue so that we only task
-    // on preparing fallbacks if we don't have any more main content to task on.
-    request.pingedTasks.push(suspendedFallbackTask);
+    renderSuspenseBoundary(request, task, props);
   } else {
     throw new Error('Not yet implemented element type.');
   }
+}
+
+function renderNode(request: Request, task: Task, node: ReactNodeList): void {
+  if (typeof node === 'string') {
+    pushTextInstance(
+      task.blockedSegment.chunks,
+      node,
+      request.responseState,
+      task.assignID,
+    );
+    task.assignID = null;
+    return;
+  }
+
+  if (isArray(node)) {
+    if (node.length > 0) {
+      for (let i = 0; i < node.length; i++) {
+        renderNode(request, task, node[i]);
+      }
+    } else {
+      pushEmpty(
+        task.blockedSegment.chunks,
+        request.responseState,
+        task.assignID,
+      );
+      task.assignID = null;
+    }
+    return;
+  }
+
+  if (node === null) {
+    pushEmpty(task.blockedSegment.chunks, request.responseState, task.assignID);
+    return;
+  }
+
+  if (
+    typeof node === 'object' &&
+    node &&
+    (node: any).$$typeof === REACT_ELEMENT_TYPE
+  ) {
+    const element: React$Element<any> = (node: any);
+    const type = element.type;
+    const props = element.props;
+    renderElement(request, task, type, props, node);
+    return;
+  }
+
+  throw new Error('Not yet implemented node type.');
 }
 
 function erroredTask(
