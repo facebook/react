@@ -9,6 +9,7 @@ import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import hasOwnProperty from 'shared/hasOwnProperty';
 import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
+import callOnce from 'shared/callOnce';
 
 const ReactCurrentOwner = ReactSharedInternals.ReactCurrentOwner;
 
@@ -19,13 +20,9 @@ const RESERVED_PROPS = {
   __source: true,
 };
 
-let specialPropKeyWarningShown;
-let specialPropRefWarningShown;
-let didWarnAboutStringRefs;
-
-if (__DEV__) {
-  didWarnAboutStringRefs = {};
-}
+const needWarnAboutSpecialPropKey = callOnce();
+const needWarnAboutSpecialPropRef = callOnce();
+const needWarnAboutStringRefs = callOnce(true);
 
 function hasValidRef(config) {
   if (__DEV__) {
@@ -63,7 +60,7 @@ function warnIfStringRefCannotBeAutoConverted(config, self) {
         ReactCurrentOwner.current.type,
       );
 
-      if (!didWarnAboutStringRefs[componentName]) {
+      needWarnAboutStringRefs(componentName) &&
         console.error(
           'Component "%s" contains the string ref "%s". ' +
             'Support for string refs will be removed in a future major release. ' +
@@ -74,8 +71,6 @@ function warnIfStringRefCannotBeAutoConverted(config, self) {
           getComponentNameFromType(ReactCurrentOwner.current.type),
           config.ref,
         );
-        didWarnAboutStringRefs[componentName] = true;
-      }
     }
   }
 }
@@ -83,8 +78,7 @@ function warnIfStringRefCannotBeAutoConverted(config, self) {
 function defineKeyPropWarningGetter(props, displayName) {
   if (__DEV__) {
     const warnAboutAccessingKey = function() {
-      if (!specialPropKeyWarningShown) {
-        specialPropKeyWarningShown = true;
+      needWarnAboutSpecialPropKey() &&
         console.error(
           '%s: `key` is not a prop. Trying to access it will result ' +
             'in `undefined` being returned. If you need to access the same ' +
@@ -92,7 +86,6 @@ function defineKeyPropWarningGetter(props, displayName) {
             'prop. (https://reactjs.org/link/special-props)',
           displayName,
         );
-      }
     };
     warnAboutAccessingKey.isReactWarning = true;
     Object.defineProperty(props, 'key', {
@@ -105,8 +98,7 @@ function defineKeyPropWarningGetter(props, displayName) {
 function defineRefPropWarningGetter(props, displayName) {
   if (__DEV__) {
     const warnAboutAccessingRef = function() {
-      if (!specialPropRefWarningShown) {
-        specialPropRefWarningShown = true;
+      needWarnAboutSpecialPropRef() &&
         console.error(
           '%s: `ref` is not a prop. Trying to access it will result ' +
             'in `undefined` being returned. If you need to access the same ' +
@@ -114,7 +106,6 @@ function defineRefPropWarningGetter(props, displayName) {
             'prop. (https://reactjs.org/link/special-props)',
           displayName,
         );
-      }
     };
     warnAboutAccessingRef.isReactWarning = true;
     Object.defineProperty(props, 'ref', {

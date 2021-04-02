@@ -34,6 +34,7 @@ import {
 import {setExtraStackFrame} from './ReactDebugCurrentFrame';
 import {describeUnknownElementTypeFrameInDEV} from 'shared/ReactComponentStackFrame';
 import hasOwnProperty from 'shared/hasOwnProperty';
+import callOnce from 'shared/callOnce';
 
 function setCurrentlyValidatingElement(element) {
   if (__DEV__) {
@@ -486,20 +487,18 @@ export function createElementWithValidation(type, props, children) {
   return element;
 }
 
-let didWarnAboutDeprecatedCreateFactory = false;
+const needWarnAboutDeprecatedCreateFactory = callOnce();
 
 export function createFactoryWithValidation(type) {
   const validatedFactory = createElementWithValidation.bind(null, type);
   validatedFactory.type = type;
   if (__DEV__) {
-    if (!didWarnAboutDeprecatedCreateFactory) {
-      didWarnAboutDeprecatedCreateFactory = true;
+    needWarnAboutDeprecatedCreateFactory() &&
       console.warn(
         'React.createFactory() is deprecated and will be removed in ' +
           'a future major release. Consider using JSX ' +
           'or use React.createElement() directly instead.',
       );
-    }
     // Legacy hook: remove it
     Object.defineProperty(validatedFactory, 'type', {
       enumerable: false,
