@@ -52,7 +52,7 @@ export const NoLane: Lane = /*                          */ 0b0000000000000000000
 
 export const SyncLane: Lane = /*                        */ 0b0000000000000000000000000000001;
 
-const InputContinuousHydrationLane: Lane = /*           */ 0b0000000000000000000000000000010;
+export const InputContinuousHydrationLane: Lane = /*    */ 0b0000000000000000000000000000010;
 export const InputContinuousLane: Lanes = /*            */ 0b0000000000000000000000000000100;
 
 export const DefaultHydrationLane: Lane = /*            */ 0b0000000000000000000000000001000;
@@ -60,7 +60,7 @@ export const DefaultLane: Lanes = /*                    */ 0b0000000000000000000
 
 const TransitionHydrationLane: Lane = /*                */ 0b0000000000000000000000000100000;
 const TransitionLanes: Lanes = /*                       */ 0b0000000001111111111111111000000;
-const TransitionLane1: Lane = /*                        */ 0b0000000000000000000000001000000;
+export const TransitionLane1: Lane = /*                 */ 0b0000000000000000000000001000000;
 const TransitionLane2: Lane = /*                        */ 0b0000000000000000000000010000000;
 const TransitionLane3: Lane = /*                        */ 0b0000000000000000000000100000000;
 const TransitionLane4: Lane = /*                        */ 0b0000000000000000000001000000000;
