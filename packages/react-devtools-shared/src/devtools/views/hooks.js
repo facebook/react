@@ -207,13 +207,25 @@ export function useModalDismissSignal(
       return () => {};
     }
 
-    const handleDocumentKeyDown = ({key}: any) => {
-      if (key === 'Escape') {
+    const timeOfEffect = performance.now();
+
+    const handleDocumentKeyDown = (event: any) => {
+      if (timeOfEffect > event.timeStamp) {
+        // Don't let the same event that showed the dialog also hide it.
+        return;
+      }
+
+      if (event.key === 'Escape') {
         dismissCallback();
       }
     };
 
     const handleDocumentClick = (event: any) => {
+      if (timeOfEffect > event.timeStamp) {
+        // Don't let the same event that showed the dialog also hide it.
+        return;
+      }
+
       // $FlowFixMe
       if (
         modalRef.current !== null &&
@@ -229,7 +241,8 @@ export function useModalDismissSignal(
     // It's important to listen to the ownerDocument to support the browser extension.
     // Here we use portals to render individual tabs (e.g. Profiler),
     // and the root document might belong to a different window.
-    const ownerDocument = modalRef.current.ownerDocument;
+    const ownerDocument = ((modalRef.current: any): HTMLDivElement)
+      .ownerDocument;
     ownerDocument.addEventListener('keydown', handleDocumentKeyDown);
     if (dismissOnClickOutside) {
       ownerDocument.addEventListener('click', handleDocumentClick);
