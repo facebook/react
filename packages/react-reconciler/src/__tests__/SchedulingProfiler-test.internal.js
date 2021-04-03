@@ -147,6 +147,7 @@ describe('SchedulingProfiler', () => {
   });
 
   // @gate enableSchedulingProfiler
+  // @gate experimental || !enableSyncDefaultUpdates
   it('should mark render yields', async () => {
     function Bar() {
       Scheduler.unstable_yieldValue('Bar');
@@ -158,16 +159,33 @@ describe('SchedulingProfiler', () => {
       return <Bar />;
     }
 
-    ReactNoop.render(<Foo />);
-    // Do one step of work.
-    expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        ReactNoop.render(<Foo />);
+      });
 
-    expectMarksToEqual([
-      `--react-init-${ReactVersion}`,
-      `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
-      '--render-yield',
-    ]);
+      // Do one step of work.
+      expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
+
+      expectMarksToEqual([
+        `--react-init-${ReactVersion}`,
+        `--schedule-render-${formatLanes(ReactFiberLane.TransitionLane1)}`,
+        `--render-start-${formatLanes(ReactFiberLane.TransitionLane1)}`,
+        '--render-yield',
+      ]);
+    } else {
+      ReactNoop.render(<Foo />);
+
+      // Do one step of work.
+      expect(ReactNoop.flushNextYield()).toEqual(['Foo']);
+
+      expectMarksToEqual([
+        `--react-init-${ReactVersion}`,
+        `--schedule-render-${formatLanes(ReactFiberLane.DefaultLane)}`,
+        `--render-start-${formatLanes(ReactFiberLane.DefaultLane)}`,
+        '--render-yield',
+      ]);
+    }
   });
 
   // @gate enableSchedulingProfiler

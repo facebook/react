@@ -1934,7 +1934,13 @@ describe('DOMPluginEventSystem', () => {
             log.length = 0;
 
             // Increase counter
-            root.render(<Test counter={1} />);
+            if (gate(flags => flags.enableSyncDefaultUpdates)) {
+              React.unstable_startTransition(() => {
+                root.render(<Test counter={1} />);
+              });
+            } else {
+              root.render(<Test counter={1} />);
+            }
             // Yield before committing
             expect(Scheduler).toFlushAndYieldThrough(['Test']);
 

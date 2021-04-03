@@ -268,6 +268,7 @@ describe('createSubscription', () => {
     expect(Scheduler).toFlushAndYield(['b-1']);
   });
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('should ignore values emitted by a new subscribable until the commit phase', () => {
     const log = [];
 
@@ -325,7 +326,13 @@ describe('createSubscription', () => {
     expect(log).toEqual(['Parent.componentDidMount']);
 
     // Start React update, but don't finish
-    ReactNoop.render(<Parent observed={observableB} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        ReactNoop.render(<Parent observed={observableB} />);
+      });
+    } else {
+      ReactNoop.render(<Parent observed={observableB} />);
+    }
     expect(Scheduler).toFlushAndYieldThrough(['Subscriber: b-0']);
     expect(log).toEqual(['Parent.componentDidMount']);
 
@@ -355,6 +362,7 @@ describe('createSubscription', () => {
     ]);
   });
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('should not drop values emitted between updates', () => {
     const log = [];
 
@@ -412,7 +420,13 @@ describe('createSubscription', () => {
     expect(log).toEqual(['Parent.componentDidMount']);
 
     // Start React update, but don't finish
-    ReactNoop.render(<Parent observed={observableB} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        ReactNoop.render(<Parent observed={observableB} />);
+      });
+    } else {
+      ReactNoop.render(<Parent observed={observableB} />);
+    }
     expect(Scheduler).toFlushAndYieldThrough(['Subscriber: b-0']);
     expect(log).toEqual(['Parent.componentDidMount']);
 

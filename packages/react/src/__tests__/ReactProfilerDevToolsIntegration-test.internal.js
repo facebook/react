@@ -178,6 +178,7 @@ describe('ReactProfiler DevTools integration', () => {
     ]);
   });
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('regression test: #17159', () => {
     function Text({text}) {
       Scheduler.unstable_yieldValue(text);
@@ -195,7 +196,13 @@ describe('ReactProfiler DevTools integration', () => {
     // for updates.
     Scheduler.unstable_advanceTime(10000);
     // Schedule an update.
-    root.update(<Text text="B" />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        root.update(<Text text="B" />);
+      });
+    } else {
+      root.update(<Text text="B" />);
+    }
 
     // Update B should not instantly expire.
     expect(Scheduler).toFlushAndYieldThrough([]);

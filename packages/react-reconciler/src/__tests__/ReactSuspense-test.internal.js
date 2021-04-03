@@ -99,6 +99,7 @@ describe('ReactSuspense', () => {
     }
   }
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('suspends rendering and continues later', () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -129,7 +130,13 @@ describe('ReactSuspense', () => {
 
     // Navigate the shell to now render the child content.
     // This should suspend.
-    root.update(<Foo renderBar={true} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        root.update(<Foo renderBar={true} />);
+      });
+    } else {
+      root.update(<Foo renderBar={true} />);
+    }
 
     expect(Scheduler).toFlushAndYield([
       'Foo',
@@ -197,6 +204,7 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('AB');
   });
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('interrupts current render if promise resolves before current render phase', () => {
     let didResolve = false;
     const listeners = [];
@@ -238,15 +246,29 @@ describe('ReactSuspense', () => {
     expect(root).toMatchRenderedOutput('Initial');
 
     // The update will suspend.
-    root.update(
-      <>
-        <Suspense fallback={<Text text="Loading..." />}>
-          <Async />
-        </Suspense>
-        <Text text="After Suspense" />
-        <Text text="Sibling" />
-      </>,
-    );
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        root.update(
+          <>
+            <Suspense fallback={<Text text="Loading..." />}>
+              <Async />
+            </Suspense>
+            <Text text="After Suspense" />
+            <Text text="Sibling" />
+          </>,
+        );
+      });
+    } else {
+      root.update(
+        <>
+          <Suspense fallback={<Text text="Loading..." />}>
+            <Async />
+          </Suspense>
+          <Text text="After Suspense" />
+          <Text text="Sibling" />
+        </>,
+      );
+    }
 
     // Yield past the Suspense boundary but don't complete the last sibling.
     expect(Scheduler).toFlushAndYieldThrough([
@@ -271,6 +293,7 @@ describe('ReactSuspense', () => {
   });
 
   // @gate experimental
+  // @gate !enableSyncDefaultUpdates
   it(
     'interrupts current render when something suspends with a ' +
       "delay and we've already skipped over a lower priority update in " +

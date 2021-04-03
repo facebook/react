@@ -1475,6 +1475,7 @@ describe('ReactLazy', () => {
   });
 
   // @gate enableLazyElements
+  // @gate experimental || !enableSyncDefaultUpdates
   it('mount and reorder lazy elements', async () => {
     class Child extends React.Component {
       componentDidMount() {
@@ -1534,7 +1535,13 @@ describe('ReactLazy', () => {
     expect(root).toMatchRenderedOutput('AB');
 
     // Swap the position of A and B
-    root.update(<Parent swap={true} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        root.update(<Parent swap={true} />);
+      });
+    } else {
+      root.update(<Parent swap={true} />);
+    }
     expect(Scheduler).toFlushAndYield(['Init B2', 'Loading...']);
     await lazyChildB2;
     // We need to flush to trigger the second one to load.

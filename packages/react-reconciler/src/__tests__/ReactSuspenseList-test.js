@@ -1274,7 +1274,13 @@ describe('ReactSuspenseList', () => {
     }
 
     // This render is only CPU bound. Nothing suspends.
-    ReactNoop.render(<Foo />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        ReactNoop.render(<Foo />);
+      });
+    } else {
+      ReactNoop.render(<Foo />);
+    }
 
     expect(Scheduler).toFlushAndYieldThrough(['A']);
 
@@ -1452,7 +1458,13 @@ describe('ReactSuspenseList', () => {
     }
 
     // This render is only CPU bound. Nothing suspends.
-    ReactNoop.render(<Foo />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        ReactNoop.render(<Foo />);
+      });
+    } else {
+      ReactNoop.render(<Foo />);
+    }
 
     expect(Scheduler).toFlushAndYieldThrough(['A']);
 
@@ -2449,7 +2461,13 @@ describe('ReactSuspenseList', () => {
 
     await ReactNoop.act(async () => {
       // Add a few items at the end.
-      updateLowPri(true);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.unstable_startTransition(() => {
+          updateLowPri(true);
+        });
+      } else {
+        updateLowPri(true);
+      }
 
       // Flush partially through.
       expect(Scheduler).toFlushAndYieldThrough(['B', 'C']);
@@ -2586,7 +2604,13 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    ReactNoop.render(<App />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        ReactNoop.render(<App />);
+      });
+    } else {
+      ReactNoop.render(<App />);
+    }
 
     expect(Scheduler).toFlushAndYieldThrough([
       'App',
@@ -2653,7 +2677,13 @@ describe('ReactSuspenseList', () => {
       );
     }
 
-    ReactNoop.render(<App />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        ReactNoop.render(<App />);
+      });
+    } else {
+      ReactNoop.render(<App />);
+    }
 
     expect(Scheduler).toFlushAndYieldThrough([
       'App',

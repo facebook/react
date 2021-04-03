@@ -34,6 +34,7 @@ describe('ReactIncrementalReflection', () => {
     return {type: 'span', children: [], prop, hidden: false};
   }
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('handles isMounted even when the initial render is deferred', () => {
     const instances = [];
 
@@ -63,7 +64,13 @@ describe('ReactIncrementalReflection', () => {
       return <Component />;
     }
 
-    ReactNoop.render(<Foo />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        ReactNoop.render(<Foo />);
+      });
+    } else {
+      ReactNoop.render(<Foo />);
+    }
 
     // Render part way through but don't yet commit the updates.
     expect(Scheduler).toFlushAndYieldThrough(['componentWillMount: false']);
@@ -81,6 +88,7 @@ describe('ReactIncrementalReflection', () => {
     expect(instances[0]._isMounted()).toBe(true);
   });
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('handles isMounted when an unmount is deferred', () => {
     const instances = [];
 
@@ -121,7 +129,13 @@ describe('ReactIncrementalReflection', () => {
 
     expect(instances[0]._isMounted()).toBe(true);
 
-    ReactNoop.render(<Foo mount={false} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        ReactNoop.render(<Foo mount={false} />);
+      });
+    } else {
+      ReactNoop.render(<Foo mount={false} />);
+    }
     // Render part way through but don't yet commit the updates so it is not
     // fully unmounted yet.
     expect(Scheduler).toFlushAndYieldThrough(['Other']);
@@ -134,6 +148,7 @@ describe('ReactIncrementalReflection', () => {
     expect(instances[0]._isMounted()).toBe(false);
   });
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('finds no node before insertion and correct node before deletion', () => {
     let classInstance = null;
 
@@ -204,7 +219,13 @@ describe('ReactIncrementalReflection', () => {
       return [<Component key="a" step={props.step} />, <Sibling key="b" />];
     }
 
-    ReactNoop.render(<Foo step={0} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        ReactNoop.render(<Foo step={0} />);
+      });
+    } else {
+      ReactNoop.render(<Foo step={0} />);
+    }
     // Flush past Component but don't complete rendering everything yet.
     expect(Scheduler).toFlushAndYieldThrough([
       ['componentWillMount', null],
@@ -246,7 +267,13 @@ describe('ReactIncrementalReflection', () => {
 
     // The next step will render a new host node but won't get committed yet.
     // We expect this to mutate the original Fiber.
-    ReactNoop.render(<Foo step={2} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        ReactNoop.render(<Foo step={2} />);
+      });
+    } else {
+      ReactNoop.render(<Foo step={2} />);
+    }
     expect(Scheduler).toFlushAndYieldThrough([
       ['componentWillUpdate', hostSpan],
       'render',
@@ -267,7 +294,13 @@ describe('ReactIncrementalReflection', () => {
     expect(ReactNoop.findInstance(classInstance)).toBe(hostDiv);
 
     // Render to null but don't commit it yet.
-    ReactNoop.render(<Foo step={3} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        ReactNoop.render(<Foo step={3} />);
+      });
+    } else {
+      ReactNoop.render(<Foo step={3} />);
+    }
     expect(Scheduler).toFlushAndYieldThrough([
       ['componentWillUpdate', hostDiv],
       'render',

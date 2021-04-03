@@ -828,6 +828,7 @@ describe('ReactNewContext', () => {
       );
     });
 
+    // @gate experimental || !enableSyncDefaultUpdates
     it('warns if multiple renderers concurrently render the same context', () => {
       spyOnDev(console, 'error');
       const Context = React.createContext(0);
@@ -846,7 +847,13 @@ describe('ReactNewContext', () => {
         );
       }
 
-      ReactNoop.render(<App value={1} />);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.unstable_startTransition(() => {
+          ReactNoop.render(<App value={1} />);
+        });
+      } else {
+        ReactNoop.render(<App value={1} />);
+      }
       // Render past the Provider, but don't commit yet
       expect(Scheduler).toFlushAndYieldThrough(['Foo']);
 

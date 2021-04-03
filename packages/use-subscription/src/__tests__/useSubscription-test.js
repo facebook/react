@@ -262,6 +262,7 @@ describe('useSubscription', () => {
     expect(subscriptions).toHaveLength(2);
   });
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('should ignore values emitted by a new subscribable until the commit phase', () => {
     const log = [];
 
@@ -331,7 +332,14 @@ describe('useSubscription', () => {
 
     // Start React update, but don't finish
     act(() => {
-      renderer.update(<Parent observed={observableB} />);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.unstable_startTransition(() => {
+          renderer.update(<Parent observed={observableB} />);
+        });
+      } else {
+        renderer.update(<Parent observed={observableB} />);
+      }
+
       expect(Scheduler).toFlushAndYieldThrough(['Child: b-0']);
       expect(log).toEqual(['Parent.componentDidMount']);
 
@@ -362,6 +370,7 @@ describe('useSubscription', () => {
     ]);
   });
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('should not drop values emitted between updates', () => {
     const log = [];
 
@@ -432,7 +441,13 @@ describe('useSubscription', () => {
 
     // Start React update, but don't finish
     act(() => {
-      renderer.update(<Parent observed={observableB} />);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.unstable_startTransition(() => {
+          renderer.update(<Parent observed={observableB} />);
+        });
+      } else {
+        renderer.update(<Parent observed={observableB} />);
+      }
       expect(Scheduler).toFlushAndYieldThrough(['Child: b-0']);
       expect(log).toEqual([]);
 
@@ -561,6 +576,7 @@ describe('useSubscription', () => {
     Scheduler.unstable_flushAll();
   });
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('should not tear if a mutation occurs during a concurrent update', () => {
     const input = document.createElement('input');
 
@@ -608,9 +624,21 @@ describe('useSubscription', () => {
       // Interrupt with a second mutation "C" -> "D".
       // This update will not be eagerly evaluated,
       // but useSubscription() should eagerly close over the updated value to avoid tearing.
-      mutate('C');
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.unstable_startTransition(() => {
+          mutate('C');
+        });
+      } else {
+        mutate('C');
+      }
       expect(Scheduler).toFlushAndYieldThrough(['render:first:C']);
-      mutate('D');
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.unstable_startTransition(() => {
+          mutate('D');
+        });
+      } else {
+        mutate('D');
+      }
       expect(Scheduler).toFlushAndYield([
         'render:second:C',
         'render:first:D',
