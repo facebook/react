@@ -345,6 +345,14 @@ describe('ReactFreshBabelPlugin', () => {
     `),
     ).toMatchSnapshot();
   });
+  
+  it('registers composed HOCs', () => {
+    expect(
+      transform(`
+        export const A = compose(hoc1, hoc2, hoc3)(() => (<h1>Hi</h1>));
+    `),
+    ).toMatchSnapshot();
+  });
 
   it('generates signatures for function declarations calling hooks', () => {
     expect(
