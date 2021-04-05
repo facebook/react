@@ -103,6 +103,21 @@ export default function(babel, opts = {}) {
             callback(inferredName, node, path);
             return true;
           }
+          case 'CallExpression': {
+            const firstArgPath = argsPath[0];
+            const innerName = inferredName + '$compose';
+            const foundInside = findInnerComponents(
+              innerName,
+              firstArgPath,
+              callback,
+            );
+            if (!foundInside) {
+              return false;
+            }
+            // const Foo = compose(hoc1, hoc2)(() => {})
+            callback(inferredName, node, path);
+            return true;
+          }
           default: {
             return false;
           }
