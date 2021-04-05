@@ -345,7 +345,7 @@ describe('ReactFreshBabelPlugin', () => {
     `),
     ).toMatchSnapshot();
   });
-  
+
   it('registers composed HOCs', () => {
     expect(
       transform(`
