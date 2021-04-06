@@ -7,7 +7,7 @@
   "applications": {
     "gecko": {
       "id": "@react-devtools",
-      "strict_min_version": "54.0"
+      "strict_min_version": "55.0"
     }
   },
 
