@@ -5,7 +5,7 @@
   "version": "4.10.1",
   "version_name": "4.10.1",
 
-  "minimum_chrome_version": "49",
+  "minimum_chrome_version": "60",
 
   "icons": {
     "16": "icons/16-production.png",
