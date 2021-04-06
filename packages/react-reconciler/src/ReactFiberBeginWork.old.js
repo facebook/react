@@ -66,6 +66,7 @@ import {
   DidCapture,
   Update,
   Ref,
+  RefStatic,
   ChildDeletion,
   ForceUpdateForLegacySuspense,
   StaticMask,
@@ -83,6 +84,7 @@ import {
   enableScopeAPI,
   enableCache,
   enableLazyContextPropagation,
+  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
 import shallowEqual from 'shared/shallowEqual';
@@ -854,6 +856,9 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
   ) {
     // Schedule a Ref effect
     workInProgress.flags |= Ref;
+    if (enableSuspenseLayoutEffectSemantics) {
+      workInProgress.flags |= RefStatic;
+    }
   }
 }
 

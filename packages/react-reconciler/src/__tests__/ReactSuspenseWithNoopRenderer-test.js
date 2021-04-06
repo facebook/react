@@ -468,19 +468,30 @@ describe('ReactSuspenseWithNoopRenderer', () => {
 
     await rejectText('Result', new Error('Failed to load: Result'));
 
-    expect(Scheduler).toFlushAndYield([
-      'Error! [Result]',
+    gate(flags => {
+      if (flags.enableSuspenseLayoutEffectSemantics) {
+        expect(Scheduler).toFlushAndYield([
+          'Error! [Result]',
 
-      // React retries one more time
-      'Error! [Result]',
+          // React retries one more time
+          'Error! [Result]',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([]);
+      } else {
+        expect(Scheduler).toFlushAndYield([
+          'Error! [Result]',
 
-      // Errored again on retry. Now handle it.
+          // React retries one more time
+          'Error! [Result]',
 
-      'Caught error: Failed to load: Result',
-    ]);
-    expect(ReactNoop.getChildren()).toEqual([
-      span('Caught error: Failed to load: Result'),
-    ]);
+          // Errored again on retry. Now handle it.
+          'Caught error: Failed to load: Result',
+        ]);
+        expect(ReactNoop.getChildren()).toEqual([
+          span('Caught error: Failed to load: Result'),
+        ]);
+      }
+    });
   });
 
   // @gate enableCache

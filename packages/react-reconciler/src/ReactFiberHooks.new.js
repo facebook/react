@@ -19,6 +19,7 @@ import type {HookFlags} from './ReactHookEffectTags';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent.new';
+import type {Flags} from './ReactFiberFlags';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -29,6 +30,7 @@ import {
   enableUseRefAccessWarning,
   enableStrictEffects,
   enableLazyContextPropagation,
+  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -57,11 +59,13 @@ import {
 import {readContext, checkIfContextChanged} from './ReactFiberNewContext.new';
 import {HostRoot, CacheComponent} from './ReactWorkTags';
 import {
-  Update as UpdateEffect,
-  Passive as PassiveEffect,
-  PassiveStatic as PassiveStaticEffect,
+  LayoutStatic as LayoutStaticEffect,
   MountLayoutDev as MountLayoutDevEffect,
   MountPassiveDev as MountPassiveDevEffect,
+  Passive as PassiveEffect,
+  PassiveStatic as PassiveStaticEffect,
+  StaticMask as StaticMaskEffect,
+  Update as UpdateEffect,
 } from './ReactFiberFlags';
 import {
   HasEffect as HookHasEffect,
@@ -474,8 +478,8 @@ export function renderWithHooks<Props, SecondArg>(
     // example, in the SuspenseList implementation.
     if (
       current !== null &&
-      (current.flags & PassiveStaticEffect) !==
-        (workInProgress.flags & PassiveStaticEffect)
+      (current.flags & StaticMaskEffect) !==
+        (workInProgress.flags & StaticMaskEffect)
     ) {
       console.error(
         'Internal React error: Expected static flag was missing. Please ' +
@@ -1478,20 +1482,18 @@ function mountLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
+  let fiberFlags: Flags = UpdateEffect;
+  if (enableSuspenseLayoutEffectSemantics) {
+    fiberFlags |= LayoutStaticEffect;
+  }
   if (
     __DEV__ &&
     enableStrictEffects &&
     (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
-    return mountEffectImpl(
-      MountLayoutDevEffect | UpdateEffect,
-      HookLayout,
-      create,
-      deps,
-    );
-  } else {
-    return mountEffectImpl(UpdateEffect, HookLayout, create, deps);
+    fiberFlags |= MountLayoutDevEffect;
   }
+  return mountEffectImpl(fiberFlags, HookLayout, create, deps);
 }
 
 function updateLayoutEffect(
@@ -1550,25 +1552,23 @@ function mountImperativeHandle<T>(
   const effectDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : null;
 
+  let fiberFlags: Flags = UpdateEffect;
+  if (enableSuspenseLayoutEffectSemantics) {
+    fiberFlags |= LayoutStaticEffect;
+  }
   if (
     __DEV__ &&
     enableStrictEffects &&
     (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
-    return mountEffectImpl(
-      MountLayoutDevEffect | UpdateEffect,
-      HookLayout,
-      imperativeHandleEffect.bind(null, create, ref),
-      effectDeps,
-    );
-  } else {
-    return mountEffectImpl(
-      UpdateEffect,
-      HookLayout,
-      imperativeHandleEffect.bind(null, create, ref),
-      effectDeps,
-    );
+    fiberFlags |= MountLayoutDevEffect;
   }
+  return mountEffectImpl(
+    fiberFlags,
+    HookLayout,
+    imperativeHandleEffect.bind(null, create, ref),
+    effectDeps,
+  );
 }
 
 function updateImperativeHandle<T>(
