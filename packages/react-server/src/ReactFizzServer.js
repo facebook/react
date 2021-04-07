@@ -47,9 +47,24 @@ import {
   createSuspenseBoundaryID,
   getChildFormatContext,
 } from './ReactServerFormatConfig';
+import {
+  constructClassInstance,
+  mountClassInstance,
+} from './ReactFizzClassComponent';
+import {
+  getMaskedContext,
+  processChildContext,
+  emptyContextObject,
+} from './ReactFizzContext';
 import {REACT_ELEMENT_TYPE, REACT_SUSPENSE_TYPE} from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
+import {
+  disableLegacyContext,
+  disableModulePatternComponents,
+  warnAboutDefaultPropsOnFunctionComponents,
+} from 'shared/ReactFeatureFlags';
 
+import getComponentNameFromType from 'shared/getComponentNameFromType';
 import invariant from 'shared/invariant';
 import isArray from 'shared/isArray';
 
@@ -182,7 +197,6 @@ export function createRequest(
     onCompleteAll,
     onReadyToStream,
   };
-  const rootLegacyContext: LegacyContext = {};
   // This segment represents the root fallback.
   const rootSegment = createPendingSegment(request, 0, null, rootFormatContext);
   // There is no parent so conceptually, we're unblocked to flush this segment.
@@ -193,7 +207,7 @@ export function createRequest(
     null,
     rootSegment,
     abortSet,
-    rootLegacyContext,
+    emptyContextObject,
     null,
   );
   pingedTasks.push(rootTask);
@@ -403,16 +417,247 @@ function renderHostElement(
   pushEndInstance(segment.chunks, type, props);
 }
 
-function renderFunctionComponent(
+function shouldConstruct(Component) {
+  return Component.prototype && Component.prototype.isReactComponent;
+}
+
+function renderWithHooks<Props, SecondArg>(
   request: Request,
   task: Task,
-  type: (props: any) => ReactNodeList,
+  Component: (p: Props, arg: SecondArg) => any,
+  props: Props,
+  secondArg: SecondArg,
+): any {
+  // TODO: Set up Hooks etc.
+  const children = Component(props, secondArg);
+  return children;
+}
+
+function finishClassComponent(
+  request: Request,
+  task: Task,
+  instance: Object,
+  Component: any,
+  props: any,
+): ReactNodeList {
+  const nextChildren = instance.render();
+
+  if (__DEV__) {
+    if (instance.props !== props) {
+      if (!didWarnAboutReassigningProps) {
+        console.error(
+          'It looks like %s is reassigning its own `this.props` while rendering. ' +
+            'This is not supported and can lead to confusing bugs.',
+          getComponentNameFromType(Component) || 'a component',
+        );
+      }
+      didWarnAboutReassigningProps = true;
+    }
+  }
+
+  if (!disableLegacyContext) {
+    const childContextTypes = Component.childContextTypes;
+    if (childContextTypes !== null && childContextTypes !== undefined) {
+      const previousContext = task.legacyContext;
+      const mergedContext = processChildContext(
+        instance,
+        Component,
+        previousContext,
+        childContextTypes,
+      );
+      task.legacyContext = mergedContext;
+      renderNodeDestructive(request, task, nextChildren);
+      task.legacyContext = previousContext;
+      return;
+    }
+  }
+
+  renderNodeDestructive(request, task, nextChildren);
+}
+
+function renderClassComponent(
+  request: Request,
+  task: Task,
+  Component: any,
   props: any,
 ): void {
-  const result = type(props);
-  // We're now successfully past this task, and we don't have to pop back to
-  // the previous task every again, so we can use the destructive recursive form.
-  renderNodeDestructive(request, task, result);
+  const unmaskedContext = !disableLegacyContext
+    ? task.legacyContext
+    : undefined;
+  const instance = constructClassInstance(Component, props, unmaskedContext);
+  mountClassInstance(instance, Component, props, unmaskedContext);
+  finishClassComponent(request, task, Component);
+}
+
+const didWarnAboutBadClass = {};
+const didWarnAboutModulePatternComponent = {};
+const didWarnAboutContextTypeOnFunctionComponent = {};
+const didWarnAboutGetDerivedStateOnFunctionComponent = {};
+let didWarnAboutReassigningProps = false;
+const didWarnAboutDefaultPropsOnFunctionComponent = {};
+
+// This would typically be a function component but we still support module pattern
+// components for some reason.
+function renderIndeterminateComponent(
+  request: Request,
+  task: Task,
+  Component: any,
+  props: any,
+): void {
+  let legacyContext;
+  if (!disableLegacyContext) {
+    legacyContext = getMaskedContext(Component, task.legacyContext);
+  }
+
+  if (__DEV__) {
+    if (
+      Component.prototype &&
+      typeof Component.prototype.render === 'function'
+    ) {
+      const componentName = getComponentNameFromType(Component) || 'Unknown';
+
+      if (!didWarnAboutBadClass[componentName]) {
+        console.error(
+          "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
+            'This is likely to cause errors. Change %s to extend React.Component instead.',
+          componentName,
+          componentName,
+        );
+        didWarnAboutBadClass[componentName] = true;
+      }
+    }
+  }
+
+  const value = renderWithHooks(request, task, Component, props, legacyContext);
+
+  if (__DEV__) {
+    // Support for module components is deprecated and is removed behind a flag.
+    // Whether or not it would crash later, we want to show a good message in DEV first.
+    if (
+      typeof value === 'object' &&
+      value !== null &&
+      typeof value.render === 'function' &&
+      value.$$typeof === undefined
+    ) {
+      const componentName = getComponentNameFromType(Component) || 'Unknown';
+      if (!didWarnAboutModulePatternComponent[componentName]) {
+        console.error(
+          'The <%s /> component appears to be a function component that returns a class instance. ' +
+            'Change %s to a class that extends React.Component instead. ' +
+            "If you can't use a class try assigning the prototype on the function as a workaround. " +
+            "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
+            'cannot be called with `new` by React.',
+          componentName,
+          componentName,
+          componentName,
+        );
+        didWarnAboutModulePatternComponent[componentName] = true;
+      }
+    }
+  }
+
+  if (
+    // Run these checks in production only if the flag is off.
+    // Eventually we'll delete this branch altogether.
+    !disableModulePatternComponents &&
+    typeof value === 'object' &&
+    value !== null &&
+    typeof value.render === 'function' &&
+    value.$$typeof === undefined
+  ) {
+    if (__DEV__) {
+      const componentName = getComponentNameFromType(Component) || 'Unknown';
+      if (!didWarnAboutModulePatternComponent[componentName]) {
+        console.error(
+          'The <%s /> component appears to be a function component that returns a class instance. ' +
+            'Change %s to a class that extends React.Component instead. ' +
+            "If you can't use a class try assigning the prototype on the function as a workaround. " +
+            "`%s.prototype = React.Component.prototype`. Don't use an arrow function since it " +
+            'cannot be called with `new` by React.',
+          componentName,
+          componentName,
+          componentName,
+        );
+        didWarnAboutModulePatternComponent[componentName] = true;
+      }
+    }
+
+    mountClassInstance(value, Component, props, legacyContext);
+    finishClassComponent(request, task, value, Component);
+  } else {
+    // Proceed under the assumption that this is a function component
+    if (__DEV__) {
+      if (disableLegacyContext && Component.contextTypes) {
+        console.error(
+          '%s uses the legacy contextTypes API which is no longer supported. ' +
+            'Use React.createContext() with React.useContext() instead.',
+          getComponentNameFromType(Component) || 'Unknown',
+        );
+      }
+    }
+    if (__DEV__) {
+      validateFunctionComponentInDev(Component);
+    }
+    // We're now successfully past this task, and we don't have to pop back to
+    // the previous task every again, so we can use the destructive recursive form.
+    renderNodeDestructive(request, task, value);
+  }
+}
+
+function validateFunctionComponentInDev(Component: any): void {
+  if (__DEV__) {
+    if (Component) {
+      if (Component.childContextTypes) {
+        console.error(
+          '%s(...): childContextTypes cannot be defined on a function component.',
+          Component.displayName || Component.name || 'Component',
+        );
+      }
+    }
+
+    if (
+      warnAboutDefaultPropsOnFunctionComponents &&
+      Component.defaultProps !== undefined
+    ) {
+      const componentName = getComponentNameFromType(Component) || 'Unknown';
+
+      if (!didWarnAboutDefaultPropsOnFunctionComponent[componentName]) {
+        console.error(
+          '%s: Support for defaultProps will be removed from function components ' +
+            'in a future major release. Use JavaScript default parameters instead.',
+          componentName,
+        );
+        didWarnAboutDefaultPropsOnFunctionComponent[componentName] = true;
+      }
+    }
+
+    if (typeof Component.getDerivedStateFromProps === 'function') {
+      const componentName = getComponentNameFromType(Component) || 'Unknown';
+
+      if (!didWarnAboutGetDerivedStateOnFunctionComponent[componentName]) {
+        console.error(
+          '%s: Function components do not support getDerivedStateFromProps.',
+          componentName,
+        );
+        didWarnAboutGetDerivedStateOnFunctionComponent[componentName] = true;
+      }
+    }
+
+    if (
+      typeof Component.contextType === 'object' &&
+      Component.contextType !== null
+    ) {
+      const componentName = getComponentNameFromType(Component) || 'Unknown';
+
+      if (!didWarnAboutContextTypeOnFunctionComponent[componentName]) {
+        console.error(
+          '%s: Function components do not support contextType.',
+          componentName,
+        );
+        didWarnAboutContextTypeOnFunctionComponent[componentName] = true;
+      }
+    }
+  }
 }
 
 function renderElement(
@@ -423,7 +668,11 @@ function renderElement(
   node: ReactNodeList,
 ): void {
   if (typeof type === 'function') {
-    renderFunctionComponent(request, task, type, props);
+    if (shouldConstruct(type)) {
+      renderClassComponent(request, task, type, props);
+    } else {
+      renderIndeterminateComponent(request, task, type, props);
+    }
   } else if (typeof type === 'string') {
     renderHostElement(request, task, type, props);
   } else if (type === REACT_SUSPENSE_TYPE) {
