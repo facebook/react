@@ -105,6 +105,7 @@ import type {
   ElementType,
 } from 'react-devtools-shared/src/types';
 import is from 'shared/objectIs';
+import isArray from 'shared/isArray';
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
 type getTypeSymbolType = (type: any) => Symbol | number;
@@ -1137,7 +1138,7 @@ export function attach(
       memoizedState.hasOwnProperty('create') &&
       memoizedState.hasOwnProperty('destroy') &&
       memoizedState.hasOwnProperty('deps') &&
-      (memoizedState.deps === null || Array.isArray(memoizedState.deps)) &&
+      (memoizedState.deps === null || isArray(memoizedState.deps)) &&
       memoizedState.hasOwnProperty('next')
     );
   }

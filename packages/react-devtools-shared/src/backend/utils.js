@@ -9,6 +9,7 @@
 
 import {copy} from 'clipboard-js';
 import {dehydrate} from '../hydration';
+import isArray from 'shared/isArray';
 
 import type {DehydratedData} from 'react-devtools-shared/src/devtools/views/Components/types';
 
@@ -61,9 +62,9 @@ export function copyWithDelete(
   index: number = 0,
 ): Object | Array<any> {
   const key = path[index];
-  const updated = Array.isArray(obj) ? obj.slice() : {...obj};
+  const updated = isArray(obj) ? obj.slice() : {...obj};
   if (index + 1 === path.length) {
-    if (Array.isArray(updated)) {
+    if (isArray(updated)) {
       updated.splice(((key: any): number), 1);
     } else {
       delete updated[key];
@@ -84,12 +85,12 @@ export function copyWithRename(
   index: number = 0,
 ): Object | Array<any> {
   const oldKey = oldPath[index];
-  const updated = Array.isArray(obj) ? obj.slice() : {...obj};
+  const updated = isArray(obj) ? obj.slice() : {...obj};
   if (index + 1 === oldPath.length) {
     const newKey = newPath[index];
     // $FlowFixMe number or string is fine here
     updated[newKey] = updated[oldKey];
-    if (Array.isArray(updated)) {
+    if (isArray(updated)) {
       updated.splice(((oldKey: any): number), 1);
     } else {
       delete updated[oldKey];
@@ -111,7 +112,7 @@ export function copyWithSet(
     return value;
   }
   const key = path[index];
-  const updated = Array.isArray(obj) ? obj.slice() : {...obj};
+  const updated = isArray(obj) ? obj.slice() : {...obj};
   // $FlowFixMe number or string is fine here
   updated[key] = copyWithSet(obj[key], path, value, index + 1);
   return updated;
