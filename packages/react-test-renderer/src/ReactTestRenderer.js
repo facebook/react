@@ -43,6 +43,7 @@ import {
   ScopeComponent,
 } from 'react-reconciler/src/ReactWorkTags';
 import invariant from 'shared/invariant';
+import isArray from 'shared/isArray';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
 import ReactVersion from 'shared/ReactVersion';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -158,7 +159,7 @@ function flatten(arr) {
     while (n.i < n.array.length) {
       const el = n.array[n.i];
       n.i += 1;
-      if (Array.isArray(el)) {
+      if (isArray(el)) {
         stack.push(n);
         stack.push({i: 0, array: el});
         break;

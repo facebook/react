@@ -8,6 +8,7 @@
  */
 
 import {REACT_OPAQUE_ID_TYPE} from 'shared/ReactSymbols';
+import isArray from 'shared/isArray';
 import {DefaultEventPriority} from 'react-reconciler/src/ReactEventPriorities';
 
 export type Type = string;
@@ -84,7 +85,7 @@ export function appendChild(
   child: Instance | TextInstance,
 ): void {
   if (__DEV__) {
-    if (!Array.isArray(parentInstance.children)) {
+    if (!isArray(parentInstance.children)) {
       console.error(
         'An invalid container has been provided. ' +
           'This may indicate that another renderer is being used in addition to the test renderer. ' +

@@ -11,7 +11,6 @@ import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactPortal} from 'shared/ReactTypes';
 import type {Fiber} from './ReactInternalTypes';
 import type {Lanes} from './ReactFiberLane.old';
-import isArray from 'shared/isArray';
 
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import {Placement, ChildDeletion} from './ReactFiberFlags';
@@ -32,6 +31,7 @@ import {
   SimpleMemoComponent,
 } from './ReactWorkTags';
 import invariant from 'shared/invariant';
+import isArray from 'shared/isArray';
 import {
   warnAboutStringRefs,
   enableLazyElements,
