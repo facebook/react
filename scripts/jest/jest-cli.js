@@ -93,6 +93,11 @@ const argv = yargs
       type: 'boolean',
       default: false,
     },
+    deprecated: {
+      describe: 'Print deprecation message for command.',
+      requiresArg: true,
+      type: 'string',
+    },
   }).argv;
 
 function logError(message) {
@@ -207,10 +212,10 @@ function validateOptions() {
 
   if (argv.build) {
     // TODO: We could build this if it hasn't been built yet.
-    const buildDir = path.resolve('./build');
+    const buildDir = path.resolve('./build2');
     if (!fs.existsSync(buildDir)) {
       logError(
-        'Build directory does not exist, please run `yarn build` or remove the --build option.'
+        'Build directory does not exist, please run `yarn build-combined` or remove the --build option.'
       );
       success = false;
     } else if (Date.now() - fs.statSync(buildDir).mtimeMs > 1000 * 60 * 15) {
@@ -229,12 +234,12 @@ function validateOptions() {
 function getCommandArgs() {
   // Add the correct Jest config.
   const args = ['./scripts/jest/jest.js', '--config'];
-  if (argv.build) {
+  if (argv.project === 'devtools') {
+    args.push(devToolsConfig);
+  } else if (argv.build) {
     args.push(buildConfig);
   } else if (argv.persistent) {
     args.push(persistentConfig);
-  } else if (argv.project === 'devtools') {
-    args.push(devToolsConfig);
   } else if (isWWWConfig()) {
     args.push(wwwConfig);
   } else if (isOSSConfig()) {
@@ -287,6 +292,10 @@ function getEnvars() {
 }
 
 function main() {
+  if (argv.deprecated) {
+    console.log(chalk.red(`\nPlease run: \`${argv.deprecated}\` instead.\n`));
+    return;
+  }
   validateOptions();
   const args = getCommandArgs();
   const envars = getEnvars();
@@ -317,7 +326,17 @@ function main() {
   }
 
   // Run Jest.
-  spawn('node', args, {stdio: 'inherit', env: {...envars, ...process.env}});
+  const jest = spawn('node', args, {
+    stdio: 'inherit',
+    env: {...envars, ...process.env},
+  });
+  // Ensure we close our process when we get a failure case.
+  jest.on('close', code => {
+    // Forward the exit code from the Jest process.
+    if (code === 1) {
+      process.exit(1);
+    }
+  });
 }
 
 main();

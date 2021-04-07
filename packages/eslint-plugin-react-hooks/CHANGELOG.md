@@ -1,3 +1,34 @@
+## 4.2.0
+
+* No changes, this was an automated release together with React 17.
+
+## 4.1.2
+* Fix a crash with the TypeScript 4.x parser. ([@eps1lon](https://github.com/eps1lon) in [#19815](https://github.com/facebook/react/pull/19815))
+
+## 4.1.1
+* Improve support for optional chaining. ([@pfongkye](https://github.com/pfongkye) in [#19680](https://github.com/facebook/react/pull/19680))
+* Fix a false positive warning for TypeScript parameters. ([@NeoRaider](https://github.com/NeoRaider) in [#19751](https://github.com/facebook/react/pull/19751))
+
+## 4.1.0
+* **New Violations:** Warn when dependencies change on every render. ([@captbaritone](https://github.com/captbaritone) in [#19590](https://github.com/facebook/react/pull/19590))
+
+## 4.0.8
+* Fixes TypeScript `typeof` annotation to not be considered a dependency. ([@delca85](https://github.com/delca85) in [#19316](https://github.com/facebook/react/pull/19316))
+
+## 4.0.7
+* Fixes an overly coarse dependency suggestion. ([@gaearon](https://github.com/gaearon) in [#19313](https://github.com/facebook/react/pull/19313))
+
+## 4.0.6
+* Fix crashes and other bugs related to optional chaining. ([@gaearon](https://github.com/gaearon) in [#19273](https://github.com/facebook/react/pull/19273) and [#19275](https://github.com/facebook/react/pull/19275))
+
+## 4.0.5
+* Fix a crash when the dependency array has an empty element. ([@yeonjuan](https://github.com/yeonjuan) in [#19145](https://github.com/facebook/react/pull/19145))
+* Fix a false positive warning that occurs with optional chaining. ([@fredvollmer](https://github.com/fredvollmer) in [#19061](https://github.com/facebook/react/pull/19061))
+
+## 4.0.4
+* Fix a false positive warning that occurs with optional chaining. ([@fredvollmer](https://github.com/fredvollmer) in [#19061](https://github.com/facebook/react/pull/19061))
+* Support nullish coalescing and optional chaining. ([@yanneves](https://github.com/yanneves) in [#19008](https://github.com/facebook/react/pull/19008))
+
 ## 4.0.3
 * Remove the heuristic that checks all Hooks ending with `Effect` due to too many false positives. ([@gaearon](https://github.com/gaearon) in [#19004](https://github.com/facebook/react/pull/19004))
 

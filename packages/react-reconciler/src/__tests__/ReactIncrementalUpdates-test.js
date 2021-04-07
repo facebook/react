@@ -14,6 +14,11 @@ let React;
 let ReactNoop;
 let Scheduler;
 
+// Copied from ReactFiberLanes. Don't do this!
+// This is hard coded directly to avoid needing to import, and
+// we'll remove this as we replace runWithPriority with React APIs.
+const InputContinuousLanePriority = 10;
+
 describe('ReactIncrementalUpdates', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
@@ -25,6 +30,15 @@ describe('ReactIncrementalUpdates', () => {
 
   function span(prop) {
     return {type: 'span', children: [], prop, hidden: false};
+  }
+
+  function flushNextRenderIfExpired() {
+    // This will start rendering the next level of work. If the work hasn't
+    // expired yet, React will exit without doing anything. If it has expired,
+    // it will schedule a sync task.
+    Scheduler.unstable_flushExpired();
+    // Flush the sync task.
+    ReactNoop.flushSync();
   }
 
   it('applies updates in order of priority', () => {
@@ -315,7 +329,16 @@ describe('ReactIncrementalUpdates', () => {
     });
 
     expect(instance.state).toEqual({a: 'a', b: 'b'});
-    expect(Scheduler).toHaveYielded(['componentWillReceiveProps', 'render']);
+
+    if (gate(flags => flags.deferRenderPhaseUpdateToNextBatch)) {
+      expect(Scheduler).toHaveYielded([
+        'componentWillReceiveProps',
+        'render',
+        'render',
+      ]);
+    } else {
+      expect(Scheduler).toHaveYielded(['componentWillReceiveProps', 'render']);
+    }
   });
 
   it('updates triggered from inside a class setState updater', () => {
@@ -455,7 +478,8 @@ describe('ReactIncrementalUpdates', () => {
 
     ReactNoop.act(() => {
       ReactNoop.render(<App />);
-      expect(Scheduler).toFlushExpired([]);
+      flushNextRenderIfExpired();
+      expect(Scheduler).toHaveYielded([]);
       expect(Scheduler).toFlushAndYield([
         'Render: 0',
         'Commit: 0',
@@ -465,7 +489,8 @@ describe('ReactIncrementalUpdates', () => {
       Scheduler.unstable_advanceTime(10000);
 
       setCount(2);
-      expect(Scheduler).toFlushExpired([]);
+      flushNextRenderIfExpired();
+      expect(Scheduler).toHaveYielded([]);
     });
   });
 
@@ -483,7 +508,8 @@ describe('ReactIncrementalUpdates', () => {
     Scheduler.unstable_advanceTime(10000);
 
     ReactNoop.render(<Text text="B" />);
-    expect(Scheduler).toFlushExpired([]);
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded([]);
   });
 
   it('regression: does not expire soon due to previous expired work', () => {
@@ -494,12 +520,14 @@ describe('ReactIncrementalUpdates', () => {
 
     ReactNoop.render(<Text text="A" />);
     Scheduler.unstable_advanceTime(10000);
-    expect(Scheduler).toFlushExpired(['A']);
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded(['A']);
 
     Scheduler.unstable_advanceTime(10000);
 
     ReactNoop.render(<Text text="B" />);
-    expect(Scheduler).toFlushExpired([]);
+    flushNextRenderIfExpired();
+    expect(Scheduler).toHaveYielded([]);
   });
 
   it('when rebasing, does not exclude updates that were already committed, regardless of priority', async () => {
@@ -516,11 +544,8 @@ describe('ReactIncrementalUpdates', () => {
         Scheduler.unstable_yieldValue('Committed: ' + log);
         if (log === 'B') {
           // Right after B commits, schedule additional updates.
-          Scheduler.unstable_runWithPriority(
-            Scheduler.unstable_UserBlockingPriority,
-            () => {
-              pushToLog('C');
-            },
+          ReactNoop.unstable_runWithPriority(InputContinuousLanePriority, () =>
+            pushToLog('C'),
           );
           setLog(prevLog => prevLog + 'D');
         }
@@ -538,11 +563,9 @@ describe('ReactIncrementalUpdates', () => {
 
     await ReactNoop.act(async () => {
       pushToLog('A');
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_UserBlockingPriority,
-        () => {
-          pushToLog('B');
-        },
+
+      ReactNoop.unstable_runWithPriority(InputContinuousLanePriority, () =>
+        pushToLog('B'),
       );
     });
     expect(Scheduler).toHaveYielded([
@@ -574,11 +597,8 @@ describe('ReactIncrementalUpdates', () => {
         Scheduler.unstable_yieldValue('Committed: ' + this.state.log);
         if (this.state.log === 'B') {
           // Right after B commits, schedule additional updates.
-          Scheduler.unstable_runWithPriority(
-            Scheduler.unstable_UserBlockingPriority,
-            () => {
-              this.pushToLog('C');
-            },
+          ReactNoop.unstable_runWithPriority(InputContinuousLanePriority, () =>
+            this.pushToLog('C'),
           );
           this.pushToLog('D');
         }
@@ -598,11 +618,8 @@ describe('ReactIncrementalUpdates', () => {
 
     await ReactNoop.act(async () => {
       pushToLog('A');
-      Scheduler.unstable_runWithPriority(
-        Scheduler.unstable_UserBlockingPriority,
-        () => {
-          pushToLog('B');
-        },
+      ReactNoop.unstable_runWithPriority(InputContinuousLanePriority, () =>
+        pushToLog('B'),
       );
     });
     expect(Scheduler).toHaveYielded([

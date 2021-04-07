@@ -27,7 +27,9 @@ export {
   useRef,
   useState,
   useMutableSource,
+  useMutableSource as unstable_useMutableSource,
   createMutableSource,
+  createMutableSource as unstable_createMutableSource,
   Fragment,
   Profiler,
   StrictMode,
@@ -44,17 +46,15 @@ export {
   useTransition as unstable_useTransition,
   useDeferredValue,
   useDeferredValue as unstable_useDeferredValue,
+  startTransition,
+  startTransition as unstable_startTransition,
   SuspenseList,
   SuspenseList as unstable_SuspenseList,
-  unstable_withSuspenseConfig,
-  // enableBlocksAPI
-  block,
-  block as unstable_block,
-  // enableDeprecatedFlareAPI
-  DEPRECATED_useResponder,
-  DEPRECATED_createResponder,
+  unstable_getCacheForType,
+  unstable_Cache,
+  unstable_useCacheRefresh,
   // enableScopeAPI
-  unstable_createScope,
+  unstable_Scope,
   unstable_useOpaqueIdentifier,
   // enableDebugTracing
   unstable_DebugTracingMode,

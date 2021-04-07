@@ -2,8 +2,8 @@
 
 const {resolve} = require('path');
 const {DefinePlugin} = require('webpack');
-const TerserPlugin = require('terser-webpack-plugin');
 const {GITHUB_URL, getVersionString} = require('./utils');
+const {resolveFeatureFlags} = require('react-devtools-shared/buildUtils');
 
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
@@ -16,6 +16,8 @@ const builtModulesDir = resolve(__dirname, '..', '..', 'build', 'node_modules');
 const __DEV__ = NODE_ENV === 'development';
 
 const DEVTOOLS_VERSION = getVersionString();
+
+const featureFlagTarget = process.env.FEATURE_FLAG_TARGET || 'extension-oss';
 
 module.exports = {
   mode: __DEV__ ? 'development' : 'production',
@@ -35,20 +37,14 @@ module.exports = {
     alias: {
       react: resolve(builtModulesDir, 'react'),
       'react-debug-tools': resolve(builtModulesDir, 'react-debug-tools'),
+      'react-devtools-feature-flags': resolveFeatureFlags(featureFlagTarget),
       'react-dom': resolve(builtModulesDir, 'react-dom'),
       'react-is': resolve(builtModulesDir, 'react-is'),
       scheduler: resolve(builtModulesDir, 'scheduler'),
     },
   },
   optimization: {
-    minimizer: [
-      new TerserPlugin({
-        terserOptions: {
-          compress: {drop_debugger: false},
-          output: {comments: true},
-        },
-      }),
-    ],
+    minimize: false,
   },
   plugins: [
     new DefinePlugin({

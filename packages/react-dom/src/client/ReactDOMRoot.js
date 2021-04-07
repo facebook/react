@@ -27,6 +27,7 @@ export type RootOptions = {
     mutableSources?: Array<MutableSource<any>>,
     ...
   },
+  unstable_strictModeLevel?: number,
   ...
 };
 
@@ -35,14 +36,13 @@ import {
   markContainerAsRoot,
   unmarkContainerAsRoot,
 } from './ReactDOMComponentTree';
-import {eagerlyTrapReplayableEvents} from '../events/ReactDOMEventReplaying';
+import {listenToAllSupportedEvents} from '../events/DOMPluginEventSystem';
 import {
   ELEMENT_NODE,
   COMMENT_NODE,
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
-import {ensureListeningTo} from './ReactDOMComponent';
 
 import {
   createContainer,
@@ -51,27 +51,17 @@ import {
   registerMutableSourceForHydration,
 } from 'react-reconciler/src/ReactFiberReconciler';
 import invariant from 'shared/invariant';
-import {
-  BlockingRoot,
-  ConcurrentRoot,
-  LegacyRoot,
-} from 'react-reconciler/src/ReactRootTags';
-
-import {enableModernEventSystem} from 'shared/ReactFeatureFlags';
+import {ConcurrentRoot, LegacyRoot} from 'react-reconciler/src/ReactRootTags';
 
 function ReactDOMRoot(container: Container, options: void | RootOptions) {
   this._internalRoot = createRootImpl(container, ConcurrentRoot, options);
 }
 
-function ReactDOMBlockingRoot(
-  container: Container,
-  tag: RootTag,
-  options: void | RootOptions,
-) {
-  this._internalRoot = createRootImpl(container, tag, options);
+function ReactDOMLegacyRoot(container: Container, options: void | RootOptions) {
+  this._internalRoot = createRootImpl(container, LegacyRoot, options);
 }
 
-ReactDOMRoot.prototype.render = ReactDOMBlockingRoot.prototype.render = function(
+ReactDOMRoot.prototype.render = ReactDOMLegacyRoot.prototype.render = function(
   children: ReactNodeList,
 ): void {
   const root = this._internalRoot;
@@ -101,7 +91,7 @@ ReactDOMRoot.prototype.render = ReactDOMBlockingRoot.prototype.render = function
   updateContainer(children, root, null, null);
 };
 
-ReactDOMRoot.prototype.unmount = ReactDOMBlockingRoot.prototype.unmount = function(): void {
+ReactDOMRoot.prototype.unmount = ReactDOMLegacyRoot.prototype.unmount = function(): void {
   if (__DEV__) {
     if (typeof arguments[0] === 'function') {
       console.error(
@@ -131,25 +121,23 @@ function createRootImpl(
       options.hydrationOptions != null &&
       options.hydrationOptions.mutableSources) ||
     null;
-  const root = createContainer(container, tag, hydrate, hydrationCallbacks);
-  markContainerAsRoot(root.current, container);
-  const containerNodeType = container.nodeType;
+  const strictModeLevelOverride =
+    options != null && options.unstable_strictModeLevel != null
+      ? options.unstable_strictModeLevel
+      : null;
 
-  if (hydrate && tag !== LegacyRoot) {
-    const doc =
-      containerNodeType === DOCUMENT_NODE ? container : container.ownerDocument;
-    // We need to cast this because Flow doesn't work
-    // with the hoisted containerNodeType. If we inline
-    // it, then Flow doesn't complain. We intentionally
-    // hoist it to reduce code-size.
-    eagerlyTrapReplayableEvents(container, ((doc: any): Document));
-  } else if (
-    enableModernEventSystem &&
-    containerNodeType !== DOCUMENT_FRAGMENT_NODE &&
-    containerNodeType !== DOCUMENT_NODE
-  ) {
-    ensureListeningTo(container, 'onMouseEnter');
-  }
+  const root = createContainer(
+    container,
+    tag,
+    hydrate,
+    hydrationCallbacks,
+    strictModeLevelOverride,
+  );
+  markContainerAsRoot(root.current, container);
+
+  const rootContainerElement =
+    container.nodeType === COMMENT_NODE ? container.parentNode : container;
+  listenToAllSupportedEvents(rootContainerElement);
 
   if (mutableSources) {
     for (let i = 0; i < mutableSources.length; i++) {
@@ -173,23 +161,11 @@ export function createRoot(
   return new ReactDOMRoot(container, options);
 }
 
-export function createBlockingRoot(
-  container: Container,
-  options?: RootOptions,
-): RootType {
-  invariant(
-    isValidContainer(container),
-    'createRoot(...): Target container is not a DOM element.',
-  );
-  warnIfReactDOMContainerInDEV(container);
-  return new ReactDOMBlockingRoot(container, BlockingRoot, options);
-}
-
 export function createLegacyRoot(
   container: Container,
   options?: RootOptions,
 ): RootType {
-  return new ReactDOMBlockingRoot(container, LegacyRoot, options);
+  return new ReactDOMLegacyRoot(container, options);
 }
 
 export function isValidContainer(node: mixed): boolean {

@@ -5,9 +5,85 @@
     Changes that have landed in master but are not yet released.
     Click to see more.
   </summary>
-  
+
   <!-- Upcoming changes go here -->
 </details>
+
+## 4.10.1 (November 12, 2020)
+#### Bugfix
+* Fixed invalid internal work tag mappings ([bvaughn](https://github.com/bvaughn) in [#20362](https://github.com/facebook/react/pull/20362))
+
+## 4.10.0 (November 12, 2020)
+#### Features
+* Make DevTools Websocket retry delay configurable ([bvaughn](https://github.com/bvaughn) in [#20107](https://github.com/facebook/react/pull/20107))
+#### Bugfix
+* Fix error loading source maps for devtools extension ([sytranvn](https://github.com/sytranvn) in [#20079](https://github.com/facebook/react/pull/20079))
+* Remove css-sourcemap for `react-devtools-inline` ([sean9keenan](https://github.com/sean9keenan) in [#20170](https://github.com/facebook/react/pull/20170))
+* Decrease NPM update notification/prompt for standalone DevTools ([recurx](https://github.com/recurx) in [#20078](https://github.com/facebook/react/pull/20078))
+
+## 4.9.0 (October 19, 2020)
+#### Features
+* [Improved DevTools editing interface](#improved-devtools-editing-interface) ([bvaughn](https://github.com/bvaughn) in [#19774](https://github.com/facebook/react/pull/19774))
+* Add ⎇ + arrow key navigation ([bvaughn](https://github.com/bvaughn) in [#19741](https://github.com/facebook/react/pull/19741))
+* Add checkbox toggle for boolean values ([mdaj06](https://github.com/mdaj06) in [#19714](https://github.com/facebook/react/pull/19714))
+* Show symbols used as keys in state ([omarsy](https://github.com/omarsy) in [#19786](https://github.com/facebook/react/pull/19786))
+* Add new (unstable) `SuspenseList` component type ([bpernick](https://github.com/bpernick) in [#19684](https://github.com/facebook/react/pull/19684))
+
+#### Bugfix
+* Show proper icon/tooltip for restricted browser pages ([sktguha](https://github.com/sktguha) in [#20023](https://github.com/facebook/react/pull/20023))
+* Fix emoji character shown in Chrome developer tools panel ([bvaughn](https://github.com/bvaughn) in [#19603](https://github.com/facebook/react/pull/19603))
+* Don't open two tabs in Firefox when clicking on troubleshooting instructions ([unbyte](https://github.com/unbyte) in [#19632](https://github.com/facebook/react/pull/19632))
+* Support inner component `_debugOwner` in memo ([bvaughn](https://github.com/bvaughn) in [#19556](https://github.com/facebook/react/pull/19556))
+* Proxied methods should be safely dehydrated for display ([@pfongkye](https://github.com/pfongkye) in [b6e1d08](https://github.com/facebook/react/commit/b6e1d08)
+* Property list values should show whitespace ([sammarks](https://github.com/sammarks) in [#19640](https://github.com/facebook/react/pull/19640))
+* Fix crash when inspecting document.all ([omarsy](https://github.com/omarsy) in [#19619](https://github.com/facebook/react/pull/19619))
+* Don't call generators during inspection since they may be stateful ([todortotev](https://github.com/todortotev) in [#19831](https://github.com/facebook/react/pull/19831))
+* Fix bad null check in DevTools highlight code ([bvaughn](https://github.com/bvaughn) in [#20010](https://github.com/facebook/react/pull/20010))
+* Handled a missing suspense fiber when suspense is filtered on the profiler ([IDrissAitHafid](https://github.com/IDrissAitHafid) in [#ISSUE](https://github.com/facebook/react/pull/ISSUE))
+* Fixed unfound node error when Suspense is filtered ([IDrissAitHafid](https://github.com/IDrissAitHafid) in [#20019](https://github.com/facebook/react/pull/20019))
+* Always overrides the dispatcher when shallow rendering ([bvaughn](https://github.com/bvaughn) in [#20011](https://github.com/facebook/react/pull/20011))
+* Frevent phishing attacks ([iamwilson](https://github.com/iamwilson) in [#19934](https://github.com/facebook/react/pull/19934))
+
+### Other
+* Enable source maps for DevTools production builds ([jpribyl ](https://github.com/jpribyl ) in [#19773](https://github.com/facebook/react/pull/19773))
+* Drop support for IE 11 ([bvaughn](https://github.com/bvaughn) in [#19875](https://github.com/facebook/react/pull/19875))
+* Remove ReactJS.org version check "cheat" ([sktguha](https://github.com/sktguha) in [#19939](https://github.com/facebook/react/pull/19939))
+* Update outdated links and fix two broken links ([sktguha](https://github.com/sktguha) in [#19985](https://github.com/facebook/react/pull/19985))
+* Remove support for deprecated/unreleased React Flare event system ([trueadm](https://github.com/trueadm) in [#19520](https://github.com/facebook/react/pull/19520))
+
+###### Improved DevTools editing interface
+
+**Improved parsing**
+Value parsing logic has been relaxed so as to no longer require quotes around strings or double quotes:
+![looser parsing logic](https://user-images.githubusercontent.com/29597/93407442-36504300-f860-11ea-90e8-5ad54c9b8b34.gif)
+
+**Modifying arrays**
+New values can be added to array props/state/hooks now. Existing values can also be deleted:
+![adding and removing values from an array](https://user-images.githubusercontent.com/29597/93407457-3ea87e00-f860-11ea-8b85-a41904e6c25f.gif)
+
+**Modifying objects**
+New keys can be added to object props/state/hooks now. Existing keys can be renamed or deleted entirely:
+![adding/renaming/removing object properties](https://user-images.githubusercontent.com/29597/93407464-449e5f00-f860-11ea-909b-49dafb56f6c5.gif)
+
+## 4.8.2 (July 15, 2020)
+#### Bugfix
+* Fix broken `Suspense` heuristic ([bvaughn](https://github.com/bvaughn) in [#19373](https://github.com/facebook/react/pull/19373))
+* Fixed error with standalone in HTTPS mode ([b-ponomarenko](https://github.com/b-ponomarenko) in [#19336](https://github.com/facebook/react/pull/19336))
+* Disable DevTools minification ([bvaughn](https://github.com/bvaughn) in [#19369](https://github.com/facebook/react/pull/19369))
+
+## 4.8.1 (July 10, 2020)
+#### Bugfix
+* Fix break-on-warning to truly be off by default. ([gaearon](https://github.com/gaearon) in [#19309](https://github.com/facebook/react/pull/19309))
+
+## 4.8.0 (July 9, 2020)
+#### Features
+* Add SSL support to React devtools standalone ([ittaibaratz](https://github.com/ittaibaratz) in [#19191](https://github.com/facebook/react/pull/19191))
+* New break-on-warning feature (off by default) ([bvaughn](https://github.com/bvaughn) in [#19048](https://github.com/facebook/react/pull/19048))
+
+#### Bugfix
+* Updates Electron version for react-devtools to pull in several security fixes ([gsimone](https://github.com/gsimone) in [#19280](https://github.com/facebook/react/pull/19280))
+* Remove unnecessary tag end from CommitRanked view ([finico](https://github.com/finico) in [#19195](https://github.com/facebook/react/pull/19195))
+* Shutdown DevTools Bridge synchronously when unmounting ([bvaughn](https://github.com/bvaughn) in [#19180](https://github.com/facebook/react/pull/19180))
 
 ## 4.7.0 (May 18, 2020)
 

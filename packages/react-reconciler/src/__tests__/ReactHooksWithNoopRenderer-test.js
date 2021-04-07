@@ -13,8 +13,9 @@
 'use strict';
 
 let React;
-let ReactCache;
-let TextResource;
+let textCache;
+let readText;
+let resolveText;
 let ReactNoop;
 let Scheduler;
 let SchedulerTracing;
@@ -42,7 +43,6 @@ describe('ReactHooksWithNoopRenderer', () => {
     ReactNoop = require('react-noop-renderer');
     Scheduler = require('scheduler');
     SchedulerTracing = require('scheduler/tracing');
-    ReactCache = require('react-cache');
     useState = React.useState;
     useReducer = React.useReducer;
     useEffect = React.useEffect;
@@ -58,25 +58,56 @@ describe('ReactHooksWithNoopRenderer', () => {
     Suspense = React.Suspense;
     act = ReactNoop.act;
 
-    TextResource = ReactCache.unstable_createResource(
-      ([text, ms = 0]) => {
-        return new Promise((resolve, reject) =>
-          setTimeout(() => {
-            Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
-            resolve(text);
-          }, ms),
-        );
-      },
-      ([text, ms]) => text,
-    );
+    textCache = new Map();
+
+    readText = text => {
+      const record = textCache.get(text);
+      if (record !== undefined) {
+        switch (record.status) {
+          case 'pending':
+            throw record.promise;
+          case 'rejected':
+            throw Error('Failed to load: ' + text);
+          case 'resolved':
+            return text;
+        }
+      } else {
+        let ping;
+        const promise = new Promise(resolve => (ping = resolve));
+        const newRecord = {
+          status: 'pending',
+          ping: ping,
+          promise,
+        };
+        textCache.set(text, newRecord);
+        throw promise;
+      }
+    };
+
+    resolveText = text => {
+      const record = textCache.get(text);
+      if (record !== undefined) {
+        if (record.status === 'pending') {
+          Scheduler.unstable_yieldValue(`Promise resolved [${text}]`);
+          record.ping();
+          record.ping = null;
+          record.status = 'resolved';
+          clearTimeout(record.promise._timer);
+          record.promise = null;
+        }
+      } else {
+        const newRecord = {
+          ping: null,
+          status: 'resolved',
+          promise: null,
+        };
+        textCache.set(text, newRecord);
+      }
+    };
   });
 
   function span(prop) {
     return {type: 'span', hidden: false, children: [], prop};
-  }
-
-  function hiddenSpan(prop) {
-    return {type: 'span', children: [], prop, hidden: true};
   }
 
   function Text(props) {
@@ -87,12 +118,17 @@ describe('ReactHooksWithNoopRenderer', () => {
   function AsyncText(props) {
     const text = props.text;
     try {
-      TextResource.read([props.text, props.ms]);
+      readText(text);
       Scheduler.unstable_yieldValue(text);
       return <span prop={text} />;
     } catch (promise) {
       if (typeof promise.then === 'function') {
         Scheduler.unstable_yieldValue(`Suspend! [${text}]`);
+        if (typeof props.ms === 'number' && promise._timer === undefined) {
+          promise._timer = setTimeout(() => {
+            resolveText(text);
+          }, props.ms);
+        }
       } else {
         Scheduler.unstable_yieldValue(`Error! [${text}]`);
       }
@@ -162,7 +198,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
     );
 
     // Confirm that a subsequent hook works properly.
@@ -192,7 +228,7 @@ describe('ReactHooksWithNoopRenderer', () => {
             '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
             '2. You might be breaking the Rules of Hooks\n' +
             '3. You might have more than one copy of React in the same app\n' +
-            'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+            'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
         ),
       ).toErrorDev(
         'Warning: The <Counter /> component appears to be a function component that returns a class instance. ' +
@@ -213,13 +249,18 @@ describe('ReactHooksWithNoopRenderer', () => {
   }
 
   it('throws when called outside the render phase', () => {
-    expect(() => useState(0)).toThrow(
+    expect(() => {
+      expect(() => useState(0)).toThrow(
+        "Cannot read property 'useState' of null",
+      );
+    }).toErrorDev(
       'Invalid hook call. Hooks can only be called inside of the body of a function component. This could happen for' +
         ' one of the following reasons:\n' +
         '1. You might have mismatching versions of React and the renderer (such as React DOM)\n' +
         '2. You might be breaking the Rules of Hooks\n' +
         '3. You might have more than one copy of React in the same app\n' +
-        'See https://fb.me/react-invalid-hook-call for tips about how to debug and fix this problem.',
+        'See https://reactjs.org/link/invalid-hook-call for tips about how to debug and fix this problem.',
+      {withoutStack: true},
     );
   });
 
@@ -1310,11 +1351,10 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(Scheduler).toFlushAndYieldThrough(['Child one render']);
 
         // Schedule unmount for the parent that unmounts children with pending update.
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          () => setParentState(false),
-        );
-        expect(Scheduler).toFlushAndYieldThrough([
+        ReactNoop.flushSync(() => {
+          setParentState(false);
+        });
+        expect(Scheduler).toHaveYielded([
           'Parent false render',
           'Parent false commit',
         ]);
@@ -1500,7 +1540,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     it('does not show a warning when a component updates a childs state from within passive unmount function', () => {
       function Parent() {
         Scheduler.unstable_yieldValue('Parent');
-        const updaterRef = React.useRef(null);
+        const updaterRef = useRef(null);
         React.useEffect(() => {
           Scheduler.unstable_yieldValue('Parent passive create');
           return () => {
@@ -1752,7 +1792,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     it(
       'in legacy mode, useEffect is deferred and updates finish synchronously ' +
         '(in a single batch)',
-      () => {
+      async () => {
         function Counter(props) {
           const [count, updateCount] = useState('(empty)');
           useEffect(() => {
@@ -1767,10 +1807,12 @@ describe('ReactHooksWithNoopRenderer', () => {
           }, [props.count]);
           return <Text text={'Count: ' + count} />;
         }
-        act(() => {
+        await act(async () => {
           ReactNoop.renderLegacySyncRoot(<Counter count={0} />);
+
           // Even in legacy mode, effects are deferred until after paint
-          expect(Scheduler).toFlushAndYieldThrough(['Count: (empty)']);
+          ReactNoop.flushSync();
+          expect(Scheduler).toHaveYielded(['Count: (empty)']);
           expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
         });
 
@@ -2316,6 +2358,348 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toFlushAndYieldThrough(['Unmount: 1']);
       expect(ReactNoop.getChildren()).toEqual([]);
     });
+
+    describe('errors thrown in passive destroy function within unmounted trees', () => {
+      let BrokenUseEffectCleanup;
+      let ErrorBoundary;
+      let LogOnlyErrorBoundary;
+
+      beforeEach(() => {
+        BrokenUseEffectCleanup = function() {
+          useEffect(() => {
+            Scheduler.unstable_yieldValue('BrokenUseEffectCleanup useEffect');
+            return () => {
+              Scheduler.unstable_yieldValue(
+                'BrokenUseEffectCleanup useEffect destroy',
+              );
+              throw new Error('Expected error');
+            };
+          }, []);
+
+          return 'inner child';
+        };
+
+        ErrorBoundary = class extends React.Component {
+          state = {error: null};
+          static getDerivedStateFromError(error) {
+            Scheduler.unstable_yieldValue(
+              `ErrorBoundary static getDerivedStateFromError`,
+            );
+            return {error};
+          }
+          componentDidCatch(error, info) {
+            Scheduler.unstable_yieldValue(`ErrorBoundary componentDidCatch`);
+          }
+          render() {
+            if (this.state.error) {
+              Scheduler.unstable_yieldValue('ErrorBoundary render error');
+              return <span prop="ErrorBoundary fallback" />;
+            }
+            Scheduler.unstable_yieldValue('ErrorBoundary render success');
+            return this.props.children || null;
+          }
+        };
+
+        LogOnlyErrorBoundary = class extends React.Component {
+          componentDidCatch(error, info) {
+            Scheduler.unstable_yieldValue(
+              `LogOnlyErrorBoundary componentDidCatch`,
+            );
+          }
+          render() {
+            Scheduler.unstable_yieldValue(`LogOnlyErrorBoundary render`);
+            return this.props.children || null;
+          }
+        };
+      });
+
+      // @gate skipUnmountedBoundaries
+      it('should use the nearest still-mounted boundary if there are no unmounted boundaries', () => {
+        act(() => {
+          ReactNoop.render(
+            <LogOnlyErrorBoundary>
+              <BrokenUseEffectCleanup />
+            </LogOnlyErrorBoundary>,
+          );
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'LogOnlyErrorBoundary render',
+          'BrokenUseEffectCleanup useEffect',
+        ]);
+
+        act(() => {
+          ReactNoop.render(<LogOnlyErrorBoundary />);
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'LogOnlyErrorBoundary render',
+          'BrokenUseEffectCleanup useEffect destroy',
+          'LogOnlyErrorBoundary componentDidCatch',
+        ]);
+      });
+
+      // @gate skipUnmountedBoundaries
+      it('should skip unmounted boundaries and use the nearest still-mounted boundary', () => {
+        function Conditional({showChildren}) {
+          if (showChildren) {
+            return (
+              <ErrorBoundary>
+                <BrokenUseEffectCleanup />
+              </ErrorBoundary>
+            );
+          } else {
+            return null;
+          }
+        }
+
+        act(() => {
+          ReactNoop.render(
+            <LogOnlyErrorBoundary>
+              <Conditional showChildren={true} />
+            </LogOnlyErrorBoundary>,
+          );
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'LogOnlyErrorBoundary render',
+          'ErrorBoundary render success',
+          'BrokenUseEffectCleanup useEffect',
+        ]);
+
+        act(() => {
+          ReactNoop.render(
+            <LogOnlyErrorBoundary>
+              <Conditional showChildren={false} />
+            </LogOnlyErrorBoundary>,
+          );
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'LogOnlyErrorBoundary render',
+          'BrokenUseEffectCleanup useEffect destroy',
+          'LogOnlyErrorBoundary componentDidCatch',
+        ]);
+      });
+
+      // @gate skipUnmountedBoundaries
+      it('should call getDerivedStateFromError in the nearest still-mounted boundary', () => {
+        function Conditional({showChildren}) {
+          if (showChildren) {
+            return <BrokenUseEffectCleanup />;
+          } else {
+            return null;
+          }
+        }
+
+        act(() => {
+          ReactNoop.render(
+            <ErrorBoundary>
+              <Conditional showChildren={true} />
+            </ErrorBoundary>,
+          );
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'ErrorBoundary render success',
+          'BrokenUseEffectCleanup useEffect',
+        ]);
+
+        act(() => {
+          ReactNoop.render(
+            <ErrorBoundary>
+              <Conditional showChildren={false} />
+            </ErrorBoundary>,
+          );
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'ErrorBoundary render success',
+          'BrokenUseEffectCleanup useEffect destroy',
+          'ErrorBoundary static getDerivedStateFromError',
+          'ErrorBoundary render error',
+          'ErrorBoundary componentDidCatch',
+        ]);
+
+        expect(ReactNoop.getChildren()).toEqual([
+          span('ErrorBoundary fallback'),
+        ]);
+      });
+
+      // @gate skipUnmountedBoundaries
+      it('should rethrow error if there are no still-mounted boundaries', () => {
+        function Conditional({showChildren}) {
+          if (showChildren) {
+            return (
+              <ErrorBoundary>
+                <BrokenUseEffectCleanup />
+              </ErrorBoundary>
+            );
+          } else {
+            return null;
+          }
+        }
+
+        act(() => {
+          ReactNoop.render(<Conditional showChildren={true} />);
+        });
+
+        expect(Scheduler).toHaveYielded([
+          'ErrorBoundary render success',
+          'BrokenUseEffectCleanup useEffect',
+        ]);
+
+        expect(() => {
+          act(() => {
+            ReactNoop.render(<Conditional showChildren={false} />);
+          });
+        }).toThrow('Expected error');
+
+        expect(Scheduler).toHaveYielded([
+          'BrokenUseEffectCleanup useEffect destroy',
+        ]);
+
+        expect(ReactNoop.getChildren()).toEqual([]);
+      });
+    });
+
+    it('calls passive effect destroy functions for memoized components', () => {
+      const Wrapper = ({children}) => children;
+      function Child() {
+        React.useEffect(() => {
+          Scheduler.unstable_yieldValue('passive create');
+          return () => {
+            Scheduler.unstable_yieldValue('passive destroy');
+          };
+        }, []);
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('layout create');
+          return () => {
+            Scheduler.unstable_yieldValue('layout destroy');
+          };
+        }, []);
+        Scheduler.unstable_yieldValue('render');
+        return null;
+      }
+
+      const isEqual = (prevProps, nextProps) =>
+        prevProps.prop === nextProps.prop;
+      const MemoizedChild = React.memo(Child, isEqual);
+
+      act(() => {
+        ReactNoop.render(
+          <Wrapper>
+            <MemoizedChild key={1} />
+          </Wrapper>,
+        );
+      });
+      expect(Scheduler).toHaveYielded([
+        'render',
+        'layout create',
+        'passive create',
+      ]);
+
+      // Include at least one no-op (memoized) update to trigger original bug.
+      act(() => {
+        ReactNoop.render(
+          <Wrapper>
+            <MemoizedChild key={1} />
+          </Wrapper>,
+        );
+      });
+      expect(Scheduler).toHaveYielded([]);
+
+      act(() => {
+        ReactNoop.render(
+          <Wrapper>
+            <MemoizedChild key={2} />
+          </Wrapper>,
+        );
+      });
+      expect(Scheduler).toHaveYielded([
+        'render',
+        'layout destroy',
+        'layout create',
+        'passive destroy',
+        'passive create',
+      ]);
+
+      act(() => {
+        ReactNoop.render(null);
+      });
+      expect(Scheduler).toHaveYielded(['layout destroy', 'passive destroy']);
+    });
+
+    it('calls passive effect destroy functions for descendants of memoized components', () => {
+      const Wrapper = ({children}) => children;
+      function Child() {
+        return <Grandchild />;
+      }
+
+      function Grandchild() {
+        React.useEffect(() => {
+          Scheduler.unstable_yieldValue('passive create');
+          return () => {
+            Scheduler.unstable_yieldValue('passive destroy');
+          };
+        }, []);
+        React.useLayoutEffect(() => {
+          Scheduler.unstable_yieldValue('layout create');
+          return () => {
+            Scheduler.unstable_yieldValue('layout destroy');
+          };
+        }, []);
+        Scheduler.unstable_yieldValue('render');
+        return null;
+      }
+
+      const isEqual = (prevProps, nextProps) =>
+        prevProps.prop === nextProps.prop;
+      const MemoizedChild = React.memo(Child, isEqual);
+
+      act(() => {
+        ReactNoop.render(
+          <Wrapper>
+            <MemoizedChild key={1} />
+          </Wrapper>,
+        );
+      });
+      expect(Scheduler).toHaveYielded([
+        'render',
+        'layout create',
+        'passive create',
+      ]);
+
+      // Include at least one no-op (memoized) update to trigger original bug.
+      act(() => {
+        ReactNoop.render(
+          <Wrapper>
+            <MemoizedChild key={1} />
+          </Wrapper>,
+        );
+      });
+      expect(Scheduler).toHaveYielded([]);
+
+      act(() => {
+        ReactNoop.render(
+          <Wrapper>
+            <MemoizedChild key={2} />
+          </Wrapper>,
+        );
+      });
+      expect(Scheduler).toHaveYielded([
+        'render',
+        'layout destroy',
+        'layout create',
+        'passive destroy',
+        'passive create',
+      ]);
+
+      act(() => {
+        ReactNoop.render(null);
+      });
+      expect(Scheduler).toHaveYielded(['layout destroy', 'passive destroy']);
+    });
   });
 
   describe('useLayoutEffect', () => {
@@ -2414,6 +2798,85 @@ describe('ReactHooksWithNoopRenderer', () => {
         'Unmount normal [current: 1]',
         'Mount normal [current: 1]',
       ]);
+    });
+
+    // @gate skipUnmountedBoundaries
+    it('catches errors thrown in useLayoutEffect', () => {
+      class ErrorBoundary extends React.Component {
+        state = {error: null};
+        static getDerivedStateFromError(error) {
+          Scheduler.unstable_yieldValue(
+            `ErrorBoundary static getDerivedStateFromError`,
+          );
+          return {error};
+        }
+        render() {
+          const {children, id, fallbackID} = this.props;
+          const {error} = this.state;
+          if (error) {
+            Scheduler.unstable_yieldValue(`${id} render error`);
+            return <Component id={fallbackID} />;
+          }
+          Scheduler.unstable_yieldValue(`${id} render success`);
+          return children || null;
+        }
+      }
+
+      function Component({id}) {
+        Scheduler.unstable_yieldValue('Component render ' + id);
+        return <span prop={id} />;
+      }
+
+      function BrokenLayoutEffectDestroy() {
+        useLayoutEffect(() => {
+          return () => {
+            Scheduler.unstable_yieldValue(
+              'BrokenLayoutEffectDestroy useLayoutEffect destroy',
+            );
+            throw Error('Expected');
+          };
+        }, []);
+
+        Scheduler.unstable_yieldValue('BrokenLayoutEffectDestroy render');
+        return <span prop="broken" />;
+      }
+
+      ReactNoop.render(
+        <ErrorBoundary id="OuterBoundary" fallbackID="OuterFallback">
+          <Component id="sibling" />
+          <ErrorBoundary id="InnerBoundary" fallbackID="InnerFallback">
+            <BrokenLayoutEffectDestroy />
+          </ErrorBoundary>
+        </ErrorBoundary>,
+      );
+
+      expect(Scheduler).toFlushAndYield([
+        'OuterBoundary render success',
+        'Component render sibling',
+        'InnerBoundary render success',
+        'BrokenLayoutEffectDestroy render',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([
+        span('sibling'),
+        span('broken'),
+      ]);
+
+      ReactNoop.render(
+        <ErrorBoundary id="OuterBoundary" fallbackID="OuterFallback">
+          <Component id="sibling" />
+        </ErrorBoundary>,
+      );
+
+      // React should skip over the unmounting boundary and find the nearest still-mounted boundary.
+      expect(Scheduler).toFlushAndYield([
+        'OuterBoundary render success',
+        'Component render sibling',
+        'BrokenLayoutEffectDestroy useLayoutEffect destroy',
+        'ErrorBoundary static getDerivedStateFromError',
+        'OuterBoundary render error',
+        'Component render OuterFallback',
+      ]);
+      expect(ReactNoop.getChildren()).toEqual([span('OuterFallback')]);
     });
   });
 
@@ -2567,91 +3030,6 @@ describe('ReactHooksWithNoopRenderer', () => {
     });
   });
 
-  describe('useRef', () => {
-    it('creates a ref object initialized with the provided value', () => {
-      jest.useFakeTimers();
-
-      function useDebouncedCallback(callback, ms, inputs) {
-        const timeoutID = useRef(-1);
-        useEffect(() => {
-          return function unmount() {
-            clearTimeout(timeoutID.current);
-          };
-        }, []);
-        const debouncedCallback = useCallback(
-          (...args) => {
-            clearTimeout(timeoutID.current);
-            timeoutID.current = setTimeout(callback, ms, ...args);
-          },
-          [callback, ms],
-        );
-        return useCallback(debouncedCallback, inputs);
-      }
-
-      let ping;
-      function App() {
-        ping = useDebouncedCallback(
-          value => {
-            Scheduler.unstable_yieldValue('ping: ' + value);
-          },
-          100,
-          [],
-        );
-        return null;
-      }
-
-      act(() => {
-        ReactNoop.render(<App />);
-      });
-      expect(Scheduler).toHaveYielded([]);
-
-      ping(1);
-      ping(2);
-      ping(3);
-
-      expect(Scheduler).toHaveYielded([]);
-
-      jest.advanceTimersByTime(100);
-
-      expect(Scheduler).toHaveYielded(['ping: 3']);
-
-      ping(4);
-      jest.advanceTimersByTime(20);
-      ping(5);
-      ping(6);
-      jest.advanceTimersByTime(80);
-
-      expect(Scheduler).toHaveYielded([]);
-
-      jest.advanceTimersByTime(20);
-      expect(Scheduler).toHaveYielded(['ping: 6']);
-    });
-
-    it('should return the same ref during re-renders', () => {
-      function Counter() {
-        const ref = useRef('val');
-        const [count, setCount] = useState(0);
-        const [firstRef] = useState(ref);
-
-        if (firstRef !== ref) {
-          throw new Error('should never change');
-        }
-
-        if (count < 3) {
-          setCount(count + 1);
-        }
-
-        return <Text text={ref.current} />;
-      }
-
-      ReactNoop.render(<Counter />);
-      expect(Scheduler).toFlushAndYield(['val']);
-
-      ReactNoop.render(<Counter />);
-      expect(Scheduler).toFlushAndYield(['val']);
-    });
-  });
-
   describe('useImperativeHandle', () => {
     it('does not update when deps are the same', () => {
       const INCREMENT = 'INCREMENT';
@@ -2774,7 +3152,7 @@ describe('ReactHooksWithNoopRenderer', () => {
           <Suspense
             fallback={<Text text={`Loading... Pending: ${isPending}`} />}>
             {show ? (
-              <AsyncText ms={2000} text={`After... Pending: ${isPending}`} />
+              <AsyncText text={`After... Pending: ${isPending}`} />
             ) : (
               <Text text={`Before... Pending: ${isPending}`} />
             )}
@@ -2788,10 +3166,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       ]);
 
       await act(async () => {
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          transition,
-        );
+        transition();
 
         expect(Scheduler).toFlushAndYield([
           'Before... Pending: true',
@@ -2804,96 +3179,18 @@ describe('ReactHooksWithNoopRenderer', () => {
         Scheduler.unstable_advanceTime(500);
         await advanceTimers(500);
 
-        Scheduler.unstable_advanceTime(1000);
-        await advanceTimers(1000);
+        // Even after a long amount of time, we still don't show a placeholder.
+        Scheduler.unstable_advanceTime(100000);
+        await advanceTimers(100000);
         expect(ReactNoop.getChildren()).toEqual([
-          hiddenSpan('Before... Pending: true'),
-          span('Loading... Pending: false'),
+          span('Before... Pending: true'),
         ]);
 
-        Scheduler.unstable_advanceTime(500);
-        await advanceTimers(500);
+        await resolveText('After... Pending: false');
         expect(Scheduler).toHaveYielded([
           'Promise resolved [After... Pending: false]',
         ]);
         expect(Scheduler).toFlushAndYield(['After... Pending: false']);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('After... Pending: false'),
-        ]);
-      });
-    });
-    // @gate experimental
-    it('delays showing loading state until after busyDelayMs + busyMinDurationMs', async () => {
-      let transition;
-      function App() {
-        const [show, setShow] = useState(false);
-        const [startTransition, isPending] = useTransition({
-          busyDelayMs: 1000,
-          busyMinDurationMs: 2000,
-        });
-        transition = () => {
-          startTransition(() => {
-            setShow(true);
-          });
-        };
-        return (
-          <Suspense
-            fallback={<Text text={`Loading... Pending: ${isPending}`} />}>
-            {show ? (
-              <AsyncText ms={2000} text={`After... Pending: ${isPending}`} />
-            ) : (
-              <Text text={`Before... Pending: ${isPending}`} />
-            )}
-          </Suspense>
-        );
-      }
-      ReactNoop.render(<App />);
-      expect(Scheduler).toFlushAndYield(['Before... Pending: false']);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('Before... Pending: false'),
-      ]);
-
-      await act(async () => {
-        Scheduler.unstable_runWithPriority(
-          Scheduler.unstable_UserBlockingPriority,
-          transition,
-        );
-
-        expect(Scheduler).toFlushAndYield([
-          'Before... Pending: true',
-          'Suspend! [After... Pending: false]',
-          'Loading... Pending: false',
-        ]);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before... Pending: true'),
-        ]);
-
-        Scheduler.unstable_advanceTime(1000);
-        await advanceTimers(1000);
-
-        // Resolve the promise. The whole tree has now completed. However,
-        // because we exceeded the busy threshold, we won't commit the
-        // result yet.
-        Scheduler.unstable_advanceTime(1000);
-        await advanceTimers(1000);
-        expect(Scheduler).toHaveYielded([
-          'Promise resolved [After... Pending: false]',
-        ]);
-        expect(Scheduler).toFlushAndYield(['After... Pending: false']);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before... Pending: true'),
-        ]);
-
-        // Advance time until just before the `busyMinDuration` threshold.
-        Scheduler.unstable_advanceTime(999);
-        await advanceTimers(999);
-        expect(ReactNoop.getChildren()).toEqual([
-          span('Before... Pending: true'),
-        ]);
-
-        // Advance time just a bit more. Now we complete the transition.
-        Scheduler.unstable_advanceTime(300);
-        await advanceTimers(300);
         expect(ReactNoop.getChildren()).toEqual([
           span('After... Pending: false'),
         ]);
@@ -2903,9 +3200,9 @@ describe('ReactHooksWithNoopRenderer', () => {
 
   describe('useDeferredValue', () => {
     // @gate experimental
-    it('defers text value until specified timeout', async () => {
+    it('defers text value', async () => {
       function TextBox({text}) {
-        return <AsyncText ms={1000} text={text} />;
+        return <AsyncText text={text} />;
       }
 
       let _setText;
@@ -2932,8 +3229,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toHaveYielded(['A', 'Suspend! [A]', 'Loading']);
       expect(ReactNoop.getChildren()).toEqual([span('A'), span('Loading')]);
 
-      Scheduler.unstable_advanceTime(1000);
-      await advanceTimers(1000);
+      await resolveText('A');
       expect(Scheduler).toHaveYielded(['Promise resolved [A]']);
       expect(Scheduler).toFlushAndYield(['A']);
       expect(ReactNoop.getChildren()).toEqual([span('A'), span('A')]);
@@ -2958,22 +3254,16 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toHaveYielded([]);
       expect(ReactNoop.getChildren()).toEqual([span('B'), span('A')]);
 
-      await act(async () => {
-        Scheduler.unstable_advanceTime(500);
-        await advanceTimers(500);
-      });
-      expect(Scheduler).toHaveYielded([]);
-      expect(ReactNoop.getChildren()).toEqual([
-        span('B'),
-        hiddenSpan('A'),
-        span('Loading'),
-      ]);
+      // Even after a long amount of time, we don't show a fallback
+      Scheduler.unstable_advanceTime(100000);
+      await advanceTimers(100000);
+      expect(Scheduler).toFlushAndYield([]);
+      expect(ReactNoop.getChildren()).toEqual([span('B'), span('A')]);
 
       await act(async () => {
-        Scheduler.unstable_advanceTime(250);
-        await advanceTimers(250);
+        await resolveText('B');
       });
-      expect(Scheduler).toHaveYielded(['Promise resolved [B]', 'B']);
+      expect(Scheduler).toHaveYielded(['Promise resolved [B]', 'B', 'B']);
       expect(ReactNoop.getChildren()).toEqual([span('B'), span('B')]);
     });
   });
@@ -3024,7 +3314,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       }).toErrorDev([
         'Warning: React has detected a change in the order of Hooks called by App. ' +
           'This will lead to bugs and errors if not fixed. For more information, ' +
-          'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+          'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
           '   Previous render            Next render\n' +
           '   ------------------------------------------------------\n' +
           '1. useState                   useState\n' +
@@ -3120,7 +3410,7 @@ describe('ReactHooksWithNoopRenderer', () => {
         }).toErrorDev([
           'Warning: React has detected a change in the order of Hooks called by App. ' +
             'This will lead to bugs and errors if not fixed. For more information, ' +
-            'read the Rules of Hooks: https://fb.me/rules-of-hooks\n\n' +
+            'read the Rules of Hooks: https://reactjs.org/link/rules-of-hooks\n\n' +
             '   Previous render            Next render\n' +
             '   ------------------------------------------------------\n' +
             '1. useEffect                  useEffect\n' +
@@ -3313,5 +3603,202 @@ describe('ReactHooksWithNoopRenderer', () => {
       updateC(true);
     });
     expect(ReactNoop).toMatchRenderedOutput('ABC');
+  });
+
+  it("regression test: don't unmount effects on siblings of deleted nodes", async () => {
+    const root = ReactNoop.createRoot();
+
+    function Child({label}) {
+      useLayoutEffect(() => {
+        Scheduler.unstable_yieldValue('Mount layout ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount layout ' + label);
+        };
+      }, [label]);
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount passive ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount passive ' + label);
+        };
+      }, [label]);
+      return label;
+    }
+
+    await act(async () => {
+      root.render(
+        <>
+          <Child key="A" label="A" />
+          <Child key="B" label="B" />
+        </>,
+      );
+    });
+    expect(Scheduler).toHaveYielded([
+      'Mount layout A',
+      'Mount layout B',
+      'Mount passive A',
+      'Mount passive B',
+    ]);
+
+    // Delete A. This should only unmount the effect on A. In the regression,
+    // B's effect would also unmount.
+    await act(async () => {
+      root.render(
+        <>
+          <Child key="B" label="B" />
+        </>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Unmount layout A', 'Unmount passive A']);
+
+    // Now delete and unmount B.
+    await act(async () => {
+      root.render(null);
+    });
+    expect(Scheduler).toHaveYielded(['Unmount layout B', 'Unmount passive B']);
+  });
+
+  it('regression: deleting a tree and unmounting its effects after a reorder', async () => {
+    const root = ReactNoop.createRoot();
+
+    function Child({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return label;
+    }
+
+    await act(async () => {
+      root.render(
+        <>
+          <Child key="A" label="A" />
+          <Child key="B" label="B" />
+        </>,
+      );
+    });
+    expect(Scheduler).toHaveYielded(['Mount A', 'Mount B']);
+
+    await act(async () => {
+      root.render(
+        <>
+          <Child key="B" label="B" />
+          <Child key="A" label="A" />
+        </>,
+      );
+    });
+    expect(Scheduler).toHaveYielded([]);
+
+    await act(async () => {
+      root.render(null);
+    });
+
+    expect(Scheduler).toHaveYielded([
+      'Unmount B',
+      // In the regression, the reorder would cause Child A to "forget" that it
+      // contains passive effects. Then when we deleted the tree, A's unmount
+      // effect would not fire.
+      'Unmount A',
+    ]);
+  });
+
+  // @gate experimental
+  it('regression: SuspenseList causes unmounts to be dropped on deletion', async () => {
+    const SuspenseList = React.unstable_SuspenseList;
+
+    function Row({label}) {
+      useEffect(() => {
+        Scheduler.unstable_yieldValue('Mount ' + label);
+        return () => {
+          Scheduler.unstable_yieldValue('Unmount ' + label);
+        };
+      }, [label]);
+      return (
+        <Suspense fallback="Loading...">
+          <AsyncText text={label} />
+        </Suspense>
+      );
+    }
+
+    function App() {
+      return (
+        <SuspenseList revealOrder="together">
+          <Row label="A" />
+          <Row label="B" />
+        </SuspenseList>
+      );
+    }
+
+    const root = ReactNoop.createRoot();
+    await ReactNoop.act(async () => {
+      root.render(<App />);
+    });
+    expect(Scheduler).toHaveYielded([
+      'Suspend! [A]',
+      'Suspend! [B]',
+      'Mount A',
+      'Mount B',
+    ]);
+
+    await ReactNoop.act(async () => {
+      await resolveText('A');
+    });
+    expect(Scheduler).toHaveYielded([
+      'Promise resolved [A]',
+      'A',
+      'Suspend! [B]',
+    ]);
+
+    await ReactNoop.act(async () => {
+      root.render(null);
+    });
+    // In the regression, SuspenseList would cause the children to "forget" that
+    // it contains passive effects. Then when we deleted the tree, these unmount
+    // effects would not fire.
+    expect(Scheduler).toHaveYielded(['Unmount A', 'Unmount B']);
+  });
+
+  it('effect dependencies are persisted after a render phase update', () => {
+    let handleClick;
+    function Test() {
+      const [count, setCount] = useState(0);
+
+      useEffect(() => {
+        Scheduler.unstable_yieldValue(`Effect: ${count}`);
+      }, [count]);
+
+      if (count > 0) {
+        setCount(0);
+      }
+
+      handleClick = () => setCount(2);
+
+      return <Text text={`Render: ${count}`} />;
+    }
+
+    ReactNoop.act(() => {
+      ReactNoop.render(<Test />);
+    });
+
+    expect(Scheduler).toHaveYielded(['Render: 0', 'Effect: 0']);
+
+    ReactNoop.act(() => {
+      handleClick();
+    });
+
+    expect(Scheduler).toHaveYielded(['Render: 0']);
+
+    ReactNoop.act(() => {
+      handleClick();
+    });
+
+    expect(Scheduler).toHaveYielded(['Render: 0']);
+
+    ReactNoop.act(() => {
+      handleClick();
+    });
+
+    expect(Scheduler).toHaveYielded(['Render: 0']);
   });
 });

@@ -10,8 +10,8 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 
-const {useEffect, useRef} = React;
-const {unstable_createEventHandle: createEventHandle} = ReactDOM;
+const {useLayoutEffect, useRef} = React;
+const {unstable_createEventHandle} = ReactDOM;
 
 type UseEventHandle = {|
   setListener: (
@@ -25,25 +25,48 @@ export default function useEvent(
   event: string,
   options?: {|
     capture?: boolean,
-    passive?: boolean,
-    priority?: 0 | 1 | 2,
   |},
 ): UseEventHandle {
-  const handleRef = useRef(null);
+  const handleRef = useRef<UseEventHandle | null>(null);
+  let useEventHandle = handleRef.current;
 
-  if (handleRef.current == null) {
-    handleRef.current = createEventHandle(event, options);
+  if (useEventHandle === null) {
+    const setEventHandle = unstable_createEventHandle(event, options);
+    const clears = new Map();
+    useEventHandle = {
+      setListener(
+        target: EventTarget,
+        callback: null | ((SyntheticEvent<EventTarget>) => void),
+      ): void {
+        let clear = clears.get(target);
+        if (clear !== undefined) {
+          clear();
+        }
+        if (callback === null) {
+          clears.delete(target);
+          return;
+        }
+        clear = setEventHandle(target, callback);
+        clears.set(target, clear);
+      },
+      clear(): void {
+        clears.forEach(c => {
+          c();
+        });
+        clears.clear();
+      },
+    };
+    handleRef.current = useEventHandle;
   }
 
-  useEffect(() => {
-    const handle = handleRef.current;
+  useLayoutEffect(() => {
     return () => {
-      if (handle !== null) {
-        handle.clear();
+      if (useEventHandle !== null) {
+        useEventHandle.clear();
       }
       handleRef.current = null;
     };
-  }, []);
+  }, [useEventHandle]);
 
-  return ((handleRef.current: any): UseEventHandle);
+  return useEventHandle;
 }

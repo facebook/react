@@ -16,7 +16,7 @@ import type {
   ReactNativeBaseComponentViewConfig,
   ViewConfigGetter,
 } from 'react-native-renderer/src/ReactNativeTypes';
-import type {RNTopLevelEventType} from 'legacy-events/TopLevelEventTypes';
+import type {RNTopLevelEventType} from 'react-native-renderer/src/legacy-events/TopLevelEventTypes';
 import type {CapturedError} from 'react-reconciler/src/ReactCapturedValue';
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 
@@ -110,6 +110,10 @@ declare module 'react-native/Libraries/ReactPrivate/ReactNativePrivateInterface'
     ) => void,
     ...
   };
+  declare export var legacySendAccessibilityEvent: (
+    reactTag: number,
+    eventTypeName: string,
+  ) => void;
   declare export var BatchedBridge: {
     registerCallableModule: (name: string, module: Object) => void,
     ...
@@ -156,6 +160,7 @@ declare var nativeFabricUIManager: {
   ) => void,
 
   dispatchCommand: (node: Object, command: string, args: Array<any>) => void,
+  sendAccessibilityEvent: (node: Object, eventTypeName: string) => void,
 
   measure: (node: Node, callback: MeasureOnSuccessCallback) => void,
   measureInWindow: (

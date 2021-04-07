@@ -22,10 +22,13 @@ import {
   StrictMode,
   Suspense,
 } from 'react-is';
+import {REACT_SUSPENSE_LIST_TYPE as SuspenseList} from 'shared/ReactSymbols';
 import {
   TREE_OPERATION_ADD,
   TREE_OPERATION_REMOVE,
+  TREE_OPERATION_REMOVE_ROOT,
   TREE_OPERATION_REORDER_CHILDREN,
+  TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS,
   TREE_OPERATION_UPDATE_TREE_BASE_DURATION,
 } from './constants';
 import {ElementTypeRoot} from 'react-devtools-shared/src/types';
@@ -33,6 +36,7 @@ import {
   LOCAL_STORAGE_FILTER_PREFERENCES_KEY,
   LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
   LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY,
+  LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
 } from './constants';
 import {ComponentFilterElementType, ElementTypeHostComponent} from './types';
 import {
@@ -43,7 +47,6 @@ import {
 } from 'react-devtools-shared/src/types';
 import {localStorageGetItem, localStorageSetItem} from './storage';
 import {meta} from './hydration';
-
 import type {ComponentFilter, ElementType} from './types';
 
 const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
@@ -52,14 +55,39 @@ const cachedDisplayNames: WeakMap<Function, string> = new WeakMap();
 // Try to reuse the already encoded strings.
 const encodedStringCache = new LRU({max: 1000});
 
-export function alphaSortKeys(a: string, b: string): number {
-  if (a > b) {
+export function alphaSortKeys(
+  a: string | number | Symbol,
+  b: string | number | Symbol,
+): number {
+  if (a.toString() > b.toString()) {
     return 1;
-  } else if (b > a) {
+  } else if (b.toString() > a.toString()) {
     return -1;
   } else {
     return 0;
   }
+}
+
+export function getAllEnumerableKeys(
+  obj: Object,
+): Set<string | number | Symbol> {
+  const keys = new Set();
+  let current = obj;
+  while (current != null) {
+    const currentKeys = [
+      ...Object.keys(current),
+      ...Object.getOwnPropertySymbols(current),
+    ];
+    const descriptors = Object.getOwnPropertyDescriptors(current);
+    currentKeys.forEach(key => {
+      // $FlowFixMe: key can be a Symbol https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/getOwnPropertyDescriptor
+      if (descriptors[key].enumerable) {
+        keys.add(key);
+      }
+    });
+    current = Object.getPrototypeOf(current);
+  }
+  return keys;
 }
 
 export function getDisplayName(
@@ -179,6 +207,12 @@ export function printOperationsArray(operations: Array<number>) {
         }
         break;
       }
+      case TREE_OPERATION_REMOVE_ROOT: {
+        i += 1;
+
+        logs.push(`Remove root ${rootID}`);
+        break;
+      }
       case TREE_OPERATION_REORDER_CHILDREN: {
         const id = ((operations[i + 1]: any): number);
         const numChildren = ((operations[i + 2]: any): number);
@@ -194,6 +228,17 @@ export function printOperationsArray(operations: Array<number>) {
         // We can ignore them at this point.
         // The profiler UI uses them lazily in order to generate the tree.
         i += 3;
+        break;
+      case TREE_OPERATION_UPDATE_ERRORS_OR_WARNINGS:
+        const id = operations[i + 1];
+        const numErrors = operations[i + 2];
+        const numWarnings = operations[i + 3];
+
+        i += 4;
+
+        logs.push(
+          `Node ${id} has ${numErrors} errors and ${numWarnings} warnings`,
+        );
         break;
       default:
         throw Error(`Unsupported Bridge operation ${operation}`);
@@ -258,12 +303,31 @@ export function getBreakOnConsoleErrors(): boolean {
       return JSON.parse(raw);
     }
   } catch (error) {}
-  return true;
+  return false;
 }
 
 export function setBreakOnConsoleErrors(value: boolean): void {
   localStorageSetItem(
     LOCAL_STORAGE_SHOULD_BREAK_ON_CONSOLE_ERRORS,
+    JSON.stringify(value),
+  );
+}
+
+export function getShowInlineWarningsAndErrors(): boolean {
+  try {
+    const raw = localStorageGetItem(
+      LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
+    );
+    if (raw != null) {
+      return JSON.parse(raw);
+    }
+  } catch (error) {}
+  return true;
+}
+
+export function setShowInlineWarningsAndErrors(value: boolean): void {
+  localStorageSetItem(
+    LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY,
     JSON.stringify(value),
   );
 }
@@ -349,6 +413,45 @@ export function getInObject(object: Object, path: Array<string | number>): any {
   }, object);
 }
 
+export function deletePathInObject(
+  object: Object,
+  path: Array<string | number>,
+) {
+  const length = path.length;
+  const last = path[length - 1];
+  if (object != null) {
+    const parent = getInObject(object, path.slice(0, length - 1));
+    if (parent) {
+      if (Array.isArray(parent)) {
+        parent.splice(((last: any): number), 1);
+      } else {
+        delete parent[last];
+      }
+    }
+  }
+}
+
+export function renamePathInObject(
+  object: Object,
+  oldPath: Array<string | number>,
+  newPath: Array<string | number>,
+) {
+  const length = oldPath.length;
+  if (object != null) {
+    const parent = getInObject(object, oldPath.slice(0, length - 1));
+    if (parent) {
+      const lastOld = oldPath[length - 1];
+      const lastNew = newPath[length - 1];
+      parent[lastNew] = parent[lastOld];
+      if (Array.isArray(parent)) {
+        parent.splice(((lastOld: any): number), 1);
+      } else {
+        delete parent[lastOld];
+      }
+    }
+  }
+}
+
 export function setInObject(
   object: Object,
   path: Array<string | number>,
@@ -372,9 +475,11 @@ export type DataType =
   | 'data_view'
   | 'date'
   | 'function'
+  | 'html_all_collection'
   | 'html_element'
   | 'infinity'
   | 'iterator'
+  | 'opaque_iterator'
   | 'nan'
   | 'null'
   | 'number'
@@ -435,17 +540,31 @@ export function getDataType(data: Object): DataType {
         // but this seems kind of awkward and expensive.
         return 'array_buffer';
       } else if (typeof data[Symbol.iterator] === 'function') {
-        return 'iterator';
+        return data[Symbol.iterator]() === data
+          ? 'opaque_iterator'
+          : 'iterator';
       } else if (data.constructor && data.constructor.name === 'RegExp') {
         return 'regexp';
-      } else if (Object.prototype.toString.call(data) === '[object Date]') {
-        return 'date';
+      } else {
+        const toStringValue = Object.prototype.toString.call(data);
+        if (toStringValue === '[object Date]') {
+          return 'date';
+        } else if (toStringValue === '[object HTMLAllCollection]') {
+          return 'html_all_collection';
+        }
       }
       return 'object';
     case 'string':
       return 'string';
     case 'symbol':
       return 'symbol';
+    case 'undefined':
+      if (
+        Object.prototype.toString.call(data) === '[object HTMLAllCollection]'
+      ) {
+        return 'html_all_collection';
+      }
+      return 'undefined';
     default:
       return 'unknown';
   }
@@ -476,12 +595,16 @@ export function getDisplayNameForReactElement(
       return 'StrictMode';
     case Suspense:
       return 'Suspense';
+    case SuspenseList:
+      return 'SuspenseList';
     default:
       const {type} = element;
       if (typeof type === 'string') {
         return type;
-      } else if (type != null) {
+      } else if (typeof type === 'function') {
         return getDisplayName(type, 'Anonymous');
+      } else if (type != null) {
+        return 'NotImplementedInDevtools';
       } else {
         return 'Element';
       }
@@ -539,7 +662,9 @@ export function formatDataForPreview(
     case 'html_element':
       return `<${truncateForDisplay(data.tagName.toLowerCase())} />`;
     case 'function':
-      return truncateForDisplay(`ƒ ${data.name}() {}`);
+      return truncateForDisplay(
+        `ƒ ${typeof data.name === 'function' ? '' : data.name}() {}`,
+      );
     case 'string':
       return `"${data}"`;
     case 'bigint':
@@ -596,6 +721,7 @@ export function formatDataForPreview(
       }
     case 'iterator':
       const name = data.constructor.name;
+
       if (showFormattedValue) {
         // TRICKY
         // Don't use [...spread] syntax for this purpose.
@@ -634,11 +760,14 @@ export function formatDataForPreview(
       } else {
         return `${name}(${data.size})`;
       }
+    case 'opaque_iterator': {
+      return data[Symbol.toStringTag];
+    }
     case 'date':
       return data.toString();
     case 'object':
       if (showFormattedValue) {
-        const keys = Object.keys(data).sort(alphaSortKeys);
+        const keys = Array.from(getAllEnumerableKeys(data)).sort(alphaSortKeys);
 
         let formatted = '';
         for (let i = 0; i < keys.length; i++) {
@@ -646,7 +775,10 @@ export function formatDataForPreview(
           if (i > 0) {
             formatted += ', ';
           }
-          formatted += `${key}: ${formatDataForPreview(data[key], false)}`;
+          formatted += `${key.toString()}: ${formatDataForPreview(
+            data[key],
+            false,
+          )}`;
           if (formatted.length > MAX_PREVIEW_STRING_LENGTH) {
             // Prevent doing a lot of unnecessary iteration...
             break;

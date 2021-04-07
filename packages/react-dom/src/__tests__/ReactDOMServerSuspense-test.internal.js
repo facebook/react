@@ -15,6 +15,7 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
+let act;
 
 function initModules() {
   // Reset warning cache.
@@ -24,6 +25,7 @@ function initModules() {
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');
   ReactTestUtils = require('react-dom/test-utils');
+  act = ReactTestUtils.unstable_concurrentAct;
 
   // Make them available to the helpers.
   return {
@@ -124,8 +126,8 @@ describe('ReactDOMServerSuspense', () => {
     expect(divB.tagName).toBe('DIV');
     expect(divB.textContent).toBe('B');
 
-    ReactTestUtils.act(() => {
-      const root = ReactDOM.createBlockingRoot(parent, {hydrate: true});
+    act(() => {
+      const root = ReactDOM.createRoot(parent, {hydrate: true});
       root.render(example);
     });
 

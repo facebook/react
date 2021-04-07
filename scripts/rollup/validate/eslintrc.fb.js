@@ -31,9 +31,14 @@ module.exports = {
     Int32Array: true,
     ArrayBuffer: true,
 
+    TaskController: true,
+
     // Flight
     Uint8Array: true,
     Promise: true,
+
+    // jest
+    jest: true,
   },
   parserOptions: {
     ecmaVersion: 5,

@@ -8,9 +8,9 @@
 'use strict';
 
 export default function(babel, opts = {}) {
-  if (typeof babel.getEnv === 'function') {
+  if (typeof babel.env === 'function') {
     // Only available in Babel 7.
-    const env = babel.getEnv();
+    const env = babel.env();
     if (env !== 'development' && !opts.skipEnvCheck) {
       throw new Error(
         'React Refresh Babel transform should only be enabled in development environment. ' +
@@ -140,9 +140,6 @@ export default function(babel, opts = {}) {
             } else if (calleeType === 'MemberExpression') {
               // Could be something like React.forwardRef(...)
               // Pass through.
-            } else {
-              // More complicated call.
-              return false;
             }
             break;
           }
@@ -229,8 +226,8 @@ export default function(babel, opts = {}) {
       case 'React.useRef':
       case 'useContext':
       case 'React.useContext':
-      case 'useImperativeMethods':
-      case 'React.useImperativeMethods':
+      case 'useImperativeHandle':
+      case 'React.useImperativeHandle':
       case 'useDebugValue':
       case 'React.useDebugValue':
         return true;

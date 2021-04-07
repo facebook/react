@@ -17,14 +17,17 @@ import {
   NoLanePriority,
   NoTimestamp,
   createLaneMap,
-} from './ReactFiberLane';
+} from './ReactFiberLane.old';
 import {
   enableSchedulerTracing,
   enableSuspenseCallback,
+  enableCache,
+  enableProfilerCommitHooks,
+  enableProfilerTimer,
 } from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
 import {initializeUpdateQueue} from './ReactUpdateQueue.old';
-import {LegacyRoot, BlockingRoot, ConcurrentRoot} from './ReactRootTags';
+import {LegacyRoot, ConcurrentRoot} from './ReactRootTags';
 
 function FiberRootNode(containerInfo, tag, hydrate) {
   this.tag = tag;
@@ -38,8 +41,8 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.pendingContext = null;
   this.hydrate = hydrate;
   this.callbackNode = null;
-  this.callbackId = NoLanes;
   this.callbackPriority = NoLanePriority;
+  this.eventTimes = createLaneMap(NoLanes);
   this.expirationTimes = createLaneMap(NoTimestamp);
 
   this.pendingLanes = NoLanes;
@@ -51,6 +54,11 @@ function FiberRootNode(containerInfo, tag, hydrate) {
 
   this.entangledLanes = NoLanes;
   this.entanglements = createLaneMap(NoLanes);
+
+  if (enableCache) {
+    this.pooledCache = null;
+    this.pooledCacheLanes = NoLanes;
+  }
 
   if (supportsHydration) {
     this.mutableSourceEagerHydrationData = null;
@@ -65,11 +73,13 @@ function FiberRootNode(containerInfo, tag, hydrate) {
     this.hydrationCallbacks = null;
   }
 
+  if (enableProfilerTimer && enableProfilerCommitHooks) {
+    this.effectDuration = 0;
+    this.passiveEffectDuration = 0;
+  }
+
   if (__DEV__) {
     switch (tag) {
-      case BlockingRoot:
-        this._debugRootType = 'createBlockingRoot()';
-        break;
       case ConcurrentRoot:
         this._debugRootType = 'createRoot()';
         break;
@@ -85,6 +95,7 @@ export function createFiberRoot(
   tag: RootTag,
   hydrate: boolean,
   hydrationCallbacks: null | SuspenseHydrationCallbacks,
+  strictModeLevelOverride: null | number,
 ): FiberRoot {
   const root: FiberRoot = (new FiberRootNode(containerInfo, tag, hydrate): any);
   if (enableSuspenseCallback) {
@@ -93,9 +104,24 @@ export function createFiberRoot(
 
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
-  const uninitializedFiber = createHostRootFiber(tag);
+  const uninitializedFiber = createHostRootFiber(tag, strictModeLevelOverride);
   root.current = uninitializedFiber;
   uninitializedFiber.stateNode = root;
+
+  if (enableCache) {
+    const initialCache = new Map();
+    root.pooledCache = initialCache;
+    const initialState = {
+      element: null,
+      cache: initialCache,
+    };
+    uninitializedFiber.memoizedState = initialState;
+  } else {
+    const initialState = {
+      element: null,
+    };
+    uninitializedFiber.memoizedState = initialState;
+  }
 
   initializeUpdateQueue(uninitializedFiber);
 

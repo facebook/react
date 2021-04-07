@@ -19,19 +19,24 @@ import {
   REACT_SUSPENSE_LIST_TYPE,
   REACT_MEMO_TYPE,
   REACT_LAZY_TYPE,
-  REACT_FUNDAMENTAL_TYPE,
-  REACT_RESPONDER_TYPE,
   REACT_SCOPE_TYPE,
-  REACT_BLOCK_TYPE,
-  REACT_SERVER_BLOCK_TYPE,
   REACT_LEGACY_HIDDEN_TYPE,
+  REACT_CACHE_TYPE,
 } from 'shared/ReactSymbols';
+import {enableScopeAPI, enableCache} from './ReactFeatureFlags';
+
+let REACT_MODULE_REFERENCE: number | Symbol = 0;
+if (typeof Symbol === 'function') {
+  REACT_MODULE_REFERENCE = Symbol.for('react.module.reference');
+}
 
 export default function isValidElementType(type: mixed) {
-  return (
-    typeof type === 'string' ||
-    typeof type === 'function' ||
-    // Note: its typeof might be other than 'symbol' or 'number' if it's a polyfill.
+  if (typeof type === 'string' || typeof type === 'function') {
+    return true;
+  }
+
+  // Note: typeof might be other than 'symbol' or 'number' (e.g. if it's a polyfill).
+  if (
     type === REACT_FRAGMENT_TYPE ||
     type === REACT_PROFILER_TYPE ||
     type === REACT_DEBUG_TRACING_MODE_TYPE ||
@@ -39,17 +44,29 @@ export default function isValidElementType(type: mixed) {
     type === REACT_SUSPENSE_TYPE ||
     type === REACT_SUSPENSE_LIST_TYPE ||
     type === REACT_LEGACY_HIDDEN_TYPE ||
-    (typeof type === 'object' &&
-      type !== null &&
-      (type.$$typeof === REACT_LAZY_TYPE ||
-        type.$$typeof === REACT_MEMO_TYPE ||
-        type.$$typeof === REACT_PROVIDER_TYPE ||
-        type.$$typeof === REACT_CONTEXT_TYPE ||
-        type.$$typeof === REACT_FORWARD_REF_TYPE ||
-        type.$$typeof === REACT_FUNDAMENTAL_TYPE ||
-        type.$$typeof === REACT_RESPONDER_TYPE ||
-        type.$$typeof === REACT_SCOPE_TYPE ||
-        type.$$typeof === REACT_BLOCK_TYPE ||
-        type[(0: any)] === REACT_SERVER_BLOCK_TYPE))
-  );
+    (enableScopeAPI && type === REACT_SCOPE_TYPE) ||
+    (enableCache && type === REACT_CACHE_TYPE)
+  ) {
+    return true;
+  }
+
+  if (typeof type === 'object' && type !== null) {
+    if (
+      type.$$typeof === REACT_LAZY_TYPE ||
+      type.$$typeof === REACT_MEMO_TYPE ||
+      type.$$typeof === REACT_PROVIDER_TYPE ||
+      type.$$typeof === REACT_CONTEXT_TYPE ||
+      type.$$typeof === REACT_FORWARD_REF_TYPE ||
+      // This needs to include all possible module reference object
+      // types supported by any Flight configuration anywhere since
+      // we don't know which Flight build this will end up being used
+      // with.
+      type.$$typeof === REACT_MODULE_REFERENCE ||
+      type.getModuleId !== undefined
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }

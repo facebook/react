@@ -72,33 +72,6 @@ describe('ReactTestUtils.act()', () => {
 
   runActTests('legacy mode', renderLegacy, unmountLegacy, rerenderLegacy);
 
-  // and then in blocking mode
-  if (__EXPERIMENTAL__) {
-    let blockingRoot = null;
-    const renderBatched = (el, dom) => {
-      blockingRoot = ReactDOM.unstable_createBlockingRoot(dom);
-      blockingRoot.render(el);
-    };
-
-    const unmountBatched = dom => {
-      if (blockingRoot !== null) {
-        blockingRoot.unmount();
-        blockingRoot = null;
-      }
-    };
-
-    const rerenderBatched = el => {
-      blockingRoot.render(el);
-    };
-
-    runActTests(
-      'blocking mode',
-      renderBatched,
-      unmountBatched,
-      rerenderBatched,
-    );
-  }
-
   describe('unacted effects', () => {
     function App() {
       React.useEffect(() => {}, []);
@@ -119,19 +92,6 @@ describe('ReactTestUtils.act()', () => {
           </React.StrictMode>,
           document.createElement('div'),
         );
-      }).toErrorDev([
-        'An update to App ran an effect, but was not wrapped in act(...)',
-      ]);
-    });
-
-    // @gate experimental
-    it('warns in blocking mode', () => {
-      expect(() => {
-        const root = ReactDOM.unstable_createBlockingRoot(
-          document.createElement('div'),
-        );
-        root.render(<App />);
-        Scheduler.unstable_flushAll();
       }).toErrorDev([
         'An update to App ran an effect, but was not wrapped in act(...)',
       ]);
@@ -187,7 +147,7 @@ function runActTests(label, render, unmount, rerender) {
         expect(Scheduler).toHaveYielded([100]);
       });
 
-      it('flushes effects on every call', () => {
+      it('flushes effects on every call', async () => {
         function App() {
           const [ctr, setCtr] = React.useState(0);
           React.useEffect(() => {
@@ -209,16 +169,16 @@ function runActTests(label, render, unmount, rerender) {
           button.dispatchEvent(new MouseEvent('click', {bubbles: true}));
         }
 
-        act(() => {
+        await act(async () => {
           click();
           click();
           click();
         });
         // it consolidates the 3 updates, then fires the effect
         expect(Scheduler).toHaveYielded([3]);
-        act(click);
+        await act(async () => click());
         expect(Scheduler).toHaveYielded([4]);
-        act(click);
+        await act(async () => click());
         expect(Scheduler).toHaveYielded([5]);
         expect(button.innerHTML).toBe('5');
       });
@@ -728,7 +688,16 @@ function runActTests(label, render, unmount, rerender) {
     describe('suspense', () => {
       if (__DEV__ && __EXPERIMENTAL__) {
         // todo - remove __DEV__ check once we start using testing builds
+
         it('triggers fallbacks if available', async () => {
+          if (label !== 'legacy mode') {
+            // FIXME: Support for Concurrent Root intentionally removed
+            // from the public version of `act`. It will be added back in
+            // a future major version, before the Concurrent Root is released.
+            // Consider skipping all non-Legacy tests in this suite until then.
+            return;
+          }
+
           let resolved = false;
           let resolve;
           const promise = new Promise(_resolve => {
@@ -771,18 +740,22 @@ function runActTests(label, render, unmount, rerender) {
           expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
 
           // trigger a suspendy update with a delay
-          React.unstable_withSuspenseConfig(
-            () => {
-              act(() => {
-                rerender(<App suspend={true} />);
-              });
-            },
-            {timeout: 5000},
-          );
-          // the spinner shows up regardless
-          expect(
-            document.querySelector('[data-test-id=spinner]'),
-          ).not.toBeNull();
+          React.unstable_startTransition(() => {
+            act(() => {
+              rerender(<App suspend={true} />);
+            });
+          });
+
+          if (label === 'concurrent mode') {
+            // In Concurrent Mode, refresh transitions delay indefinitely.
+            expect(document.querySelector('[data-test-id=spinner]')).toBeNull();
+          } else {
+            // In Legacy Mode, all fallbacks are forced to display,
+            // even during a refresh transition.
+            expect(
+              document.querySelector('[data-test-id=spinner]'),
+            ).not.toBeNull();
+          }
 
           // resolve the promise
           await act(async () => {

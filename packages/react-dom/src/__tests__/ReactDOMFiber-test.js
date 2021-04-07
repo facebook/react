@@ -989,6 +989,75 @@ describe('ReactDOMFiber', () => {
     }
   });
 
+  // Regression test for https://github.com/facebook/react/issues/19562
+  it('does not fire mouseEnter twice when relatedTarget is the root node', () => {
+    let ops = [];
+    let target = null;
+
+    function simulateMouseMove(from, to) {
+      if (from) {
+        from.dispatchEvent(
+          new MouseEvent('mouseout', {
+            bubbles: true,
+            cancelable: true,
+            relatedTarget: to,
+          }),
+        );
+      }
+      if (to) {
+        to.dispatchEvent(
+          new MouseEvent('mouseover', {
+            bubbles: true,
+            cancelable: true,
+            relatedTarget: from,
+          }),
+        );
+      }
+    }
+
+    ReactDOM.render(
+      <div
+        ref={n => (target = n)}
+        onMouseEnter={() => ops.push('enter')}
+        onMouseLeave={() => ops.push('leave')}
+      />,
+      container,
+    );
+
+    simulateMouseMove(null, container);
+    expect(ops).toEqual([]);
+
+    ops = [];
+    simulateMouseMove(container, target);
+    expect(ops).toEqual(['enter']);
+
+    ops = [];
+    simulateMouseMove(target, container);
+    expect(ops).toEqual(['leave']);
+
+    ops = [];
+    simulateMouseMove(container, null);
+    expect(ops).toEqual([]);
+  });
+
+  it('listens to events that do not exist in the Portal subtree', () => {
+    const onClick = jest.fn();
+
+    const ref = React.createRef();
+    ReactDOM.render(
+      <div onClick={onClick}>
+        {ReactDOM.createPortal(<button ref={ref}>click</button>, document.body)}
+      </div>,
+      container,
+    );
+    const event = new MouseEvent('click', {
+      bubbles: true,
+    });
+    ref.current.dispatchEvent(event);
+
+    expect(onClick).toHaveBeenCalledTimes(1);
+  });
+
   it('should throw on bad createPortal argument', () => {
     expect(() => {
       ReactDOM.createPortal(<div>portal</div>, null);
@@ -1027,9 +1096,22 @@ describe('ReactDOMFiber', () => {
   });
 
   it('should not update event handlers until commit', () => {
+    spyOnDev(console, 'error');
+
     let ops = [];
     const handlerA = () => ops.push('A');
     const handlerB = () => ops.push('B');
+
+    function click() {
+      const event = new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      });
+      Object.defineProperty(event, 'timeStamp', {
+        value: 0,
+      });
+      node.dispatchEvent(event);
+    }
 
     class Example extends React.Component {
       state = {flip: false, count: 0};
@@ -1048,11 +1130,7 @@ describe('ReactDOMFiber', () => {
     class Click extends React.Component {
       constructor() {
         super();
-        expect(() => {
-          node.click();
-        }).toErrorDev(
-          'Warning: unstable_flushDiscreteUpdates: Cannot flush updates when React is already rendering.',
-        );
+        node.click();
       }
       render() {
         return null;
@@ -1064,7 +1142,7 @@ describe('ReactDOMFiber', () => {
     const node = container.firstChild;
     expect(node.tagName).toEqual('DIV');
 
-    node.click();
+    click();
 
     expect(ops).toEqual(['A']);
     ops = [];
@@ -1072,7 +1150,7 @@ describe('ReactDOMFiber', () => {
     // Render with the other event handler.
     inst.flip();
 
-    node.click();
+    click();
 
     expect(ops).toEqual(['B']);
     ops = [];
@@ -1080,7 +1158,7 @@ describe('ReactDOMFiber', () => {
     // Rerender without changing any props.
     inst.tick();
 
-    node.click();
+    click();
 
     expect(ops).toEqual(['B']);
     ops = [];
@@ -1100,8 +1178,18 @@ describe('ReactDOMFiber', () => {
     ops = [];
 
     // Any click that happens after commit, should invoke A.
-    node.click();
+    click();
     expect(ops).toEqual(['A']);
+
+    if (__DEV__) {
+      // TODO: this warning shouldn't be firing in the first place if user didn't call it.
+      const errorCalls = console.error.calls.count();
+      for (let i = 0; i < errorCalls; i++) {
+        expect(console.error.calls.argsFor(i)[0]).toMatch(
+          'unstable_flushDiscreteUpdates: Cannot flush updates when React is already rendering.',
+        );
+      }
+    }
   });
 
   it('should not crash encountering low-priority tree', () => {

@@ -20,6 +20,7 @@ import {
   getAppendComponentStack,
   getBreakOnConsoleErrors,
   getSavedComponentFilters,
+  getShowInlineWarningsAndErrors,
 } from 'react-devtools-shared/src/utils';
 import {Server} from 'ws';
 import {join} from 'path';
@@ -242,8 +243,20 @@ function connectToSocket(socket: WebSocket) {
   };
 }
 
-function startServer(port?: number = 8097) {
-  const httpServer = require('http').createServer();
+type ServerOptions = {
+  key?: string,
+  cert?: string,
+};
+
+function startServer(
+  port?: number = 8097,
+  host?: string = 'localhost',
+  httpsOptions?: ServerOptions,
+) {
+  const useHttps = !!httpsOptions;
+  const httpServer = useHttps
+    ? require('https').createServer(httpsOptions)
+    : require('http').createServer();
   const server = new Server({server: httpServer});
   let connected: WebSocket | null = null;
   server.on('connection', (socket: WebSocket) => {
@@ -291,6 +304,9 @@ function startServer(port?: number = 8097) {
       )};
       window.__REACT_DEVTOOLS_COMPONENT_FILTERS__ = ${JSON.stringify(
         getSavedComponentFilters(),
+      )};
+      window.__REACT_DEVTOOLS_SHOW_INLINE_WARNINGS_AND_ERRORS__ = ${JSON.stringify(
+        getShowInlineWarningsAndErrors(),
       )};`;
 
     response.end(
@@ -298,7 +314,9 @@ function startServer(port?: number = 8097) {
         '\n;' +
         backendFile.toString() +
         '\n;' +
-        'ReactDevToolsBackend.connectToDevTools();',
+        `ReactDevToolsBackend.connectToDevTools({port: ${port}, host: '${host}', useHttps: ${
+          useHttps ? 'true' : 'false'
+        }});`,
     );
   });
 
