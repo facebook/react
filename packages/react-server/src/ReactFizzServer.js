@@ -55,6 +55,10 @@ import isArray from 'shared/isArray';
 
 const ReactCurrentDispatcher = ReactSharedInternals.ReactCurrentDispatcher;
 
+type LegacyContext = {
+  [key: string]: any,
+};
+
 type SuspenseBoundary = {
   +id: SuspenseBoundaryID,
   rootSegmentID: number,
@@ -72,6 +76,7 @@ type Task = {
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment, // the segment we'll write to
   abortSet: Set<Task>, // the abortable set that this task belongs to
+  legacyContext: LegacyContext, // the current legacy context that this task is executing in
   assignID: null | SuspenseBoundaryID, // id to assign to the content
 };
 
@@ -151,7 +156,7 @@ export function createRequest(
   children: ReactNodeList,
   destination: Destination,
   responseState: ResponseState,
-  rootContext: FormatContext,
+  rootFormatContext: FormatContext,
   progressiveChunkSize: number = DEFAULT_PROGRESSIVE_CHUNK_SIZE,
   onError: (error: mixed) => void = defaultErrorHandler,
   onCompleteAll: () => void = noop,
@@ -177,8 +182,9 @@ export function createRequest(
     onCompleteAll,
     onReadyToStream,
   };
+  const rootLegacyContext: LegacyContext = {};
   // This segment represents the root fallback.
-  const rootSegment = createPendingSegment(request, 0, null, rootContext);
+  const rootSegment = createPendingSegment(request, 0, null, rootFormatContext);
   // There is no parent so conceptually, we're unblocked to flush this segment.
   rootSegment.parentFlushed = true;
   const rootTask = createTask(
@@ -187,6 +193,7 @@ export function createRequest(
     null,
     rootSegment,
     abortSet,
+    rootLegacyContext,
     null,
   );
   pingedTasks.push(rootTask);
@@ -223,6 +230,7 @@ function createTask(
   blockedBoundary: Root | SuspenseBoundary,
   blockedSegment: Segment,
   abortSet: Set<Task>,
+  legacyContext: LegacyContext,
   assignID: null | SuspenseBoundaryID,
 ): Task {
   request.allPendingTasks++;
@@ -237,6 +245,7 @@ function createTask(
     blockedBoundary,
     blockedSegment,
     abortSet,
+    legacyContext,
     assignID,
   };
   abortSet.add(task);
@@ -350,7 +359,7 @@ function renderSuspenseBoundary(
     task.blockedSegment = parentSegment;
   }
 
-  // We create suspended task for the fallback because we don't want to actually task
+  // We create suspended task for the fallback because we don't want to actually work
   // on it yet in case we finish the main content, so we queue for later.
   const suspendedFallbackTask = createTask(
     request,
@@ -358,9 +367,10 @@ function renderSuspenseBoundary(
     parentBoundary,
     boundarySegment,
     fallbackAbortSet,
+    task.legacyContext,
     newBoundary.id, // This is the ID we want to give this fallback so we can replace it later.
   );
-  // TODO: This should be queued at a separate lower priority queue so that we only task
+  // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
   request.pingedTasks.push(suspendedFallbackTask);
 }
@@ -505,6 +515,7 @@ function spawnNewSuspendedTask(
     task.blockedBoundary,
     newSegment,
     task.abortSet,
+    task.legacyContext,
     task.assignID,
   );
   // We've delegated the assignment.
@@ -521,7 +532,8 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
 
   // Snapshot the current context in case something throws to interrupt the
   // process.
-  const previousContext = task.blockedSegment.formatContext;
+  const previousFormatContext = task.blockedSegment.formatContext;
+  const previousLegacyContext = task.legacyContext;
   try {
     return renderNodeDestructive(request, task, node);
   } catch (x) {
@@ -529,7 +541,8 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
       spawnNewSuspendedTask(request, task, x);
       // Restore the context. We assume that this will be restored by the inner
       // functions in case nothing throws so we don't use "finally" here.
-      task.blockedSegment.formatContext = previousContext;
+      task.blockedSegment.formatContext = previousFormatContext;
+      task.legacyContext = previousLegacyContext;
     } else {
       // We assume that we don't need the correct context.
       // Let's terminate the rest of the tree and don't render any siblings.
