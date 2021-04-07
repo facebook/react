@@ -1138,6 +1138,41 @@ describe('ReactHooks', () => {
     );
   });
 
+  if (__DEV__) {
+    it('warns when a function whose name starts with a capital letter is passed to useState', () => {
+      const {useState} = React;
+      function StartsWithCapitalLetter() {}
+      function App() {
+        useState(StartsWithCapitalLetter);
+        return null;
+      }
+      expect(() => ReactTestRenderer.create(<App />)).toWarnDev(
+        'You passed a function whose name starts with a capital letter. If you are trying to put a class into state, keep in mind that it can throw at runtime. As a workaround, you can use functional updates (e.g. useState(() => InitialClass), setState(() => AnotherClass)).',
+      );
+    });
+  }
+
+  if (__DEV__) {
+    it('warns when a function whose name starts with a capital letter is passed to setState', () => {
+      const {useEffect, useState} = React;
+      function StartsWithCapitalLetter() {}
+      function App() {
+        // eslint-disable-next-line no-unused-vars
+        const [_, setState] = useState();
+        useEffect(() => {
+          setState(StartsWithCapitalLetter);
+        }, []);
+        return null;
+      }
+      expect(() => {
+        const root = ReactTestRenderer.create(<App />);
+        root.update(<App />);
+      }).toWarnDev(
+        'You passed a function whose name starts with a capital letter. If you are trying to put a class into state, keep in mind that it can throw at runtime. As a workaround, you can use functional updates (e.g. useState(() => InitialClass), setState(() => AnotherClass)).',
+      );
+    });
+  }
+
   it('resets warning internal state when interrupted by an error', () => {
     const ReactCurrentDispatcher =
       React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED

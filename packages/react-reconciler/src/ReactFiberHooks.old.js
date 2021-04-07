@@ -677,8 +677,25 @@ function createFunctionComponentUpdateQueue(): FunctionComponentUpdateQueue {
 }
 
 function basicStateReducer<S>(state: S, action: BasicStateAction<S>): S {
-  // $FlowFixMe: Flow doesn't like mixed types
-  return typeof action === 'function' ? action(state) : action;
+  if (typeof action === 'function') {
+    if (__DEV__) {
+      // $FlowFixMe: Flow doesn't like mixed types
+      const name = action.displayName || action.name || '';
+      // $FlowFixMe: Flow doesn't like mixed types
+      if (name.charAt(0) !== name.charAt(0).toLowerCase()) {
+        console.warn(
+          'You passed a function whose name starts with a capital letter. ' +
+            'If you are trying to put a class into state, keep in mind that ' +
+            'it can throw at runtime. As a workaround, you can use ' +
+            'functional updates (e.g. useState(() => InitialClass), ' +
+            'setState(() => AnotherClass)).',
+        );
+      }
+    }
+    // $FlowFixMe: Flow doesn't like mixed types
+    return action(state);
+  }
+  return action;
 }
 
 function mountReducer<S, I, A>(
@@ -1240,6 +1257,20 @@ function mountState<S>(
 ): [S, Dispatch<BasicStateAction<S>>] {
   const hook = mountWorkInProgressHook();
   if (typeof initialState === 'function') {
+    if (__DEV__) {
+      // $FlowFixMe: Flow doesn't like mixed types
+      const name = initialState.displayName || initialState.name || '';
+      // $FlowFixMe: Flow doesn't like mixed types
+      if (name.charAt(0) !== name.charAt(0).toLowerCase()) {
+        console.warn(
+          'You passed a function whose name starts with a capital letter. ' +
+            'If you are trying to put a class into state, keep in mind that ' +
+            'it can throw at runtime. As a workaround, you can use ' +
+            'functional updates (e.g. useState(() => InitialClass), ' +
+            'setState(() => AnotherClass)).',
+        );
+      }
+    }
     // $FlowFixMe: Flow doesn't like mixed types
     initialState = initialState();
   }
