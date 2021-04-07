@@ -185,7 +185,6 @@ import {
 } from './ReactFiberHydrationContext.new';
 import {
   adoptClassInstance,
-  applyDerivedStateFromProps,
   constructClassInstance,
   mountClassInstance,
   resumeMountClassInstance,
@@ -1593,16 +1592,6 @@ function mountIndeterminateComponent(
       value.state !== null && value.state !== undefined ? value.state : null;
 
     initializeUpdateQueue(workInProgress);
-
-    const getDerivedStateFromProps = Component.getDerivedStateFromProps;
-    if (typeof getDerivedStateFromProps === 'function') {
-      applyDerivedStateFromProps(
-        workInProgress,
-        Component,
-        getDerivedStateFromProps,
-        props,
-      );
-    }
 
     adoptClassInstance(workInProgress, value);
     mountClassInstance(workInProgress, Component, props, renderLanes);
