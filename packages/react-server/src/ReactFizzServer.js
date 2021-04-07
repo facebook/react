@@ -276,7 +276,164 @@ function fatalError(request: Request, error: mixed): void {
   closeWithError(request.destination, error);
 }
 
-function renderNode(request: Request, task: Task, node: ReactNodeList): void {
+function renderSuspenseBoundary(
+  request: Request,
+  task: Task,
+  props: Object,
+): void {
+  const parentBoundary = task.blockedBoundary;
+  const parentSegment = task.blockedSegment;
+
+  // We need to push an "empty" thing here to identify the parent suspense boundary.
+  pushEmpty(parentSegment.chunks, request.responseState, task.assignID);
+  task.assignID = null;
+  // Each time we enter a suspense boundary, we split out into a new segment for
+  // the fallback so that we can later replace that segment with the content.
+  // This also lets us split out the main content even if it doesn't suspend,
+  // in case it ends up generating a large subtree of content.
+  const fallback: ReactNodeList = props.fallback;
+  const content: ReactNodeList = props.children;
+
+  const fallbackAbortSet: Set<Task> = new Set();
+  const newBoundary = createSuspenseBoundary(request, fallbackAbortSet);
+  const insertionIndex = parentSegment.chunks.length;
+  // The children of the boundary segment is actually the fallback.
+  const boundarySegment = createPendingSegment(
+    request,
+    insertionIndex,
+    newBoundary,
+    parentSegment.formatContext,
+  );
+  parentSegment.children.push(boundarySegment);
+
+  // This segment is the actual child content. We can start rendering that immediately.
+  const contentRootSegment = createPendingSegment(
+    request,
+    0,
+    null,
+    parentSegment.formatContext,
+  );
+  // We mark the root segment as having its parent flushed. It's not really flushed but there is
+  // no parent segment so there's nothing to wait on.
+  contentRootSegment.parentFlushed = true;
+
+  // Currently this is running synchronously. We could instead schedule this to pingedTasks.
+  // I suspect that there might be some efficiency benefits from not creating the suspended task
+  // and instead just using the stack if possible.
+  // TODO: Call this directly instead of messing with saving and restoring contexts.
+
+  // We can reuse the current context and task to render the content immediately without
+  // context switching. We just need to temporarily switch which boundary and which segment
+  // we're writing to. If something suspends, it'll spawn new suspended task with that context.
+  task.blockedBoundary = newBoundary;
+  task.blockedSegment = contentRootSegment;
+  try {
+    // We use the safe form because we don't handle suspending here. Only error handling.
+    renderNode(request, task, content);
+    contentRootSegment.status = COMPLETED;
+    newBoundary.completedSegments.push(contentRootSegment);
+    if (newBoundary.pendingTasks === 0) {
+      // This must have been the last segment we were waiting on. This boundary is now complete.
+      // Therefore we won't need the fallback. We early return so that we don't have to create
+      // the fallback.
+      return;
+    }
+  } catch (error) {
+    contentRootSegment.status = ERRORED;
+    reportError(request, error);
+    newBoundary.forceClientRender = true;
+    // We don't need to decrement any task numbers because we didn't spawn any new task.
+    // We don't need to schedule any task because we know the parent has written yet.
+    // We do need to fallthrough to create the fallback though.
+  } finally {
+    task.blockedBoundary = parentBoundary;
+    task.blockedSegment = parentSegment;
+  }
+
+  // We create suspended task for the fallback because we don't want to actually task
+  // on it yet in case we finish the main content, so we queue for later.
+  const suspendedFallbackTask = createTask(
+    request,
+    fallback,
+    parentBoundary,
+    boundarySegment,
+    fallbackAbortSet,
+    newBoundary.id, // This is the ID we want to give this fallback so we can replace it later.
+  );
+  // TODO: This should be queued at a separate lower priority queue so that we only task
+  // on preparing fallbacks if we don't have any more main content to task on.
+  request.pingedTasks.push(suspendedFallbackTask);
+}
+
+function renderHostElement(
+  request: Request,
+  task: Task,
+  type: string,
+  props: Object,
+): void {
+  const segment = task.blockedSegment;
+  const children = pushStartInstance(
+    segment.chunks,
+    type,
+    props,
+    request.responseState,
+    segment.formatContext,
+    task.assignID,
+  );
+  // We must have assigned it already above so we don't need this anymore.
+  task.assignID = null;
+  const prevContext = segment.formatContext;
+  segment.formatContext = getChildFormatContext(prevContext, type, props);
+  // We use the non-destructive form because if something suspends, we still
+  // need to pop back up and finish this subtree of HTML.
+  renderNode(request, task, children);
+  // We expect that errors will fatal the whole task and that we don't need
+  // the correct context. Therefore this is not in a finally.
+  segment.formatContext = prevContext;
+  pushEndInstance(segment.chunks, type, props);
+}
+
+function renderFunctionComponent(
+  request: Request,
+  task: Task,
+  type: (props: any) => ReactNodeList,
+  props: any,
+): void {
+  const result = type(props);
+  // We're now successfully past this task, and we don't have to pop back to
+  // the previous task every again, so we can use the destructive recursive form.
+  renderNodeDestructive(request, task, result);
+}
+
+function renderElement(
+  request: Request,
+  task: Task,
+  type: any,
+  props: Object,
+  node: ReactNodeList,
+): void {
+  if (typeof type === 'function') {
+    renderFunctionComponent(request, task, type, props);
+  } else if (typeof type === 'string') {
+    renderHostElement(request, task, type, props);
+  } else if (type === REACT_SUSPENSE_TYPE) {
+    renderSuspenseBoundary(request, task, props);
+  } else {
+    throw new Error('Not yet implemented element type.');
+  }
+}
+
+// This function by it self renders a node and consumes the task by mutating it
+// to update the current execution state.
+function renderNodeDestructive(
+  request: Request,
+  task: Task,
+  node: ReactNodeList,
+): void {
+  // Stash the node we're working on. We'll pick up from this task in case
+  // something suspends.
+  task.node = node;
+
   if (typeof node === 'string') {
     pushTextInstance(
       task.blockedSegment.chunks,
@@ -291,6 +448,9 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
   if (isArray(node)) {
     if (node.length > 0) {
       for (let i = 0; i < node.length; i++) {
+        // Recursively render the rest. We need to use the non-destructive form
+        // so that we can safely pop back up and render the sibling if something
+        // suspends.
         renderNode(request, task, node[i]);
       }
     } else {
@@ -310,151 +470,71 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
   }
 
   if (
-    typeof node !== 'object' ||
-    !node ||
-    (node: any).$$typeof !== REACT_ELEMENT_TYPE
+    typeof node === 'object' &&
+    node &&
+    (node: any).$$typeof === REACT_ELEMENT_TYPE
   ) {
-    throw new Error('Not yet implemented node type.');
+    const element: React$Element<any> = (node: any);
+    const type = element.type;
+    const props = element.props;
+    renderElement(request, task, type, props, node);
+    return;
   }
-  const element: React$Element<any> = (node: any);
-  const type = element.type;
-  const props = element.props;
-  if (typeof type === 'function') {
-    try {
-      const result = type(props);
-      renderNode(request, task, result);
-    } catch (x) {
-      if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
-        // Something suspended, we'll need to create a new segment and resolve it later.
-        const segment = task.blockedSegment;
-        const insertionIndex = segment.chunks.length;
-        const newSegment = createPendingSegment(
-          request,
-          insertionIndex,
-          null,
-          segment.formatContext,
-        );
-        segment.children.push(newSegment);
-        const newTask = createTask(
-          request,
-          node,
-          task.blockedBoundary,
-          newSegment,
-          task.abortSet,
-          task.assignID,
-        );
-        // We've delegated the assignment.
-        task.assignID = null;
-        const ping = newTask.ping;
-        x.then(ping, ping);
-      } else {
-        // We can rethrow to terminate the rest of this tree.
-        throw x;
-      }
+
+  throw new Error('Not yet implemented node type.');
+}
+
+function spawnNewSuspendedTask(
+  request: Request,
+  task: Task,
+  x: Promise<any>,
+): void {
+  // Something suspended, we'll need to create a new segment and resolve it later.
+  const segment = task.blockedSegment;
+  const insertionIndex = segment.chunks.length;
+  const newSegment = createPendingSegment(
+    request,
+    insertionIndex,
+    null,
+    segment.formatContext,
+  );
+  segment.children.push(newSegment);
+  const newTask = createTask(
+    request,
+    task.node,
+    task.blockedBoundary,
+    newSegment,
+    task.abortSet,
+    task.assignID,
+  );
+  // We've delegated the assignment.
+  task.assignID = null;
+  const ping = newTask.ping;
+  x.then(ping, ping);
+}
+
+// This is a non-destructive form of rendering a node. If it suspends it spawns
+// a new task and restores the context of this task to what it was before.
+function renderNode(request: Request, task: Task, node: ReactNodeList): void {
+  // TODO: Store segment.children.length here and reset it in case something
+  // suspended partially through writing something.
+
+  // Snapshot the current context in case something throws to interrupt the
+  // process.
+  const previousContext = task.blockedSegment.formatContext;
+  try {
+    return renderNodeDestructive(request, task, node);
+  } catch (x) {
+    if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
+      spawnNewSuspendedTask(request, task, x);
+      // Restore the context. We assume that this will be restored by the inner
+      // functions in case nothing throws so we don't use "finally" here.
+      task.blockedSegment.formatContext = previousContext;
+    } else {
+      // We assume that we don't need the correct context.
+      // Let's terminate the rest of the tree and don't render any siblings.
+      throw x;
     }
-  } else if (typeof type === 'string') {
-    const segment = task.blockedSegment;
-    const children = pushStartInstance(
-      segment.chunks,
-      type,
-      props,
-      request.responseState,
-      segment.formatContext,
-      task.assignID,
-    );
-    // We must have assigned it already above so we don't need this anymore.
-    task.assignID = null;
-    const prevContext = segment.formatContext;
-    segment.formatContext = getChildFormatContext(prevContext, type, props);
-    renderNode(request, task, children);
-    // We expect that errors will fatal the whole task and that we don't need
-    // the correct context. Therefore this is not in a finally.
-    segment.formatContext = prevContext;
-    pushEndInstance(segment.chunks, type, props);
-  } else if (type === REACT_SUSPENSE_TYPE) {
-    const parentBoundary = task.blockedBoundary;
-    const parentSegment = task.blockedSegment;
-
-    // We need to push an "empty" thing here to identify the parent suspense boundary.
-    pushEmpty(parentSegment.chunks, request.responseState, task.assignID);
-    task.assignID = null;
-    // Each time we enter a suspense boundary, we split out into a new segment for
-    // the fallback so that we can later replace that segment with the content.
-    // This also lets us split out the main content even if it doesn't suspend,
-    // in case it ends up generating a large subtree of content.
-    const fallback: ReactNodeList = props.fallback;
-    const content: ReactNodeList = props.children;
-
-    const fallbackAbortSet: Set<Task> = new Set();
-    const newBoundary = createSuspenseBoundary(request, fallbackAbortSet);
-    const insertionIndex = parentSegment.chunks.length;
-    // The children of the boundary segment is actually the fallback.
-    const boundarySegment = createPendingSegment(
-      request,
-      insertionIndex,
-      newBoundary,
-      parentSegment.formatContext,
-    );
-    parentSegment.children.push(boundarySegment);
-
-    // This segment is the actual child content. We can start rendering that immediately.
-    const contentRootSegment = createPendingSegment(
-      request,
-      0,
-      null,
-      parentSegment.formatContext,
-    );
-    // We mark the root segment as having its parent flushed. It's not really flushed but there is
-    // no parent segment so there's nothing to wait on.
-    contentRootSegment.parentFlushed = true;
-
-    // Currently this is running synchronously. We could instead schedule this to pingedTasks.
-    // I suspect that there might be some efficiency benefits from not creating the suspended task
-    // and instead just using the stack if possible.
-    // TODO: Call this directly instead of messing with saving and restoring contexts.
-
-    // We can reuse the current context and task to render the content immediately without
-    // context switching. We just need to temporarily switch which boundary and which segment
-    // we're writing to. If something suspends, it'll spawn new suspended task with that context.
-    task.blockedBoundary = newBoundary;
-    task.blockedSegment = contentRootSegment;
-    try {
-      renderNode(request, task, content);
-      contentRootSegment.status = COMPLETED;
-      newBoundary.completedSegments.push(contentRootSegment);
-      if (newBoundary.pendingTasks === 0) {
-        // This must have been the last segment we were waiting on. This boundary is now complete.
-        // Therefore we won't need the fallback. We early return so that we don't have to create
-        // the fallback.
-        return;
-      }
-    } catch (error) {
-      contentRootSegment.status = ERRORED;
-      reportError(request, error);
-      newBoundary.forceClientRender = true;
-      // We don't need to decrement any task numbers because we didn't spawn any new task.
-      // We don't need to schedule any task because we know the parent has written yet.
-      // We do need to fallthrough to create the fallback though.
-    } finally {
-      task.blockedBoundary = parentBoundary;
-      task.blockedSegment = parentSegment;
-    }
-
-    // We create suspended task for the fallback because we don't want to actually task
-    // on it yet in case we finish the main content, so we queue for later.
-    const suspendedFallbackTask = createTask(
-      request,
-      fallback,
-      parentBoundary,
-      boundarySegment,
-      fallbackAbortSet,
-      newBoundary.id, // This is the ID we want to give this fallback so we can replace it later.
-    );
-    // TODO: This should be queued at a separate lower priority queue so that we only task
-    // on preparing fallbacks if we don't have any more main content to task on.
-    request.pingedTasks.push(suspendedFallbackTask);
-  } else {
-    throw new Error('Not yet implemented element type.');
   }
 }
 
@@ -610,22 +690,9 @@ function retryTask(request: Request, task: Task): void {
     return;
   }
   try {
-    let node = task.node;
-    while (
-      typeof node === 'object' &&
-      node !== null &&
-      (node: any).$$typeof === REACT_ELEMENT_TYPE &&
-      typeof node.type === 'function'
-    ) {
-      // Doing this here lets us reuse this same Segment if the next component
-      // also suspends.
-      const element: React$Element<any> = (node: any);
-      task.node = node;
-      // TODO: Classes and legacy context etc.
-      node = element.type(element.props);
-    }
-
-    renderNode(request, task, node);
+    // We call the destructive form that mutates this task. That way if something
+    // suspends again, we can reuse the same task instead of spawning a new one.
+    renderNodeDestructive(request, task, task.node);
 
     task.abortSet.delete(task);
     segment.status = COMPLETED;
