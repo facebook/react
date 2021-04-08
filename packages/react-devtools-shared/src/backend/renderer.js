@@ -42,6 +42,7 @@ import {
   copyWithDelete,
   copyWithRename,
   copyWithSet,
+  getEffectDurations,
 } from './utils';
 import {
   __DEBUG__,
@@ -369,6 +370,7 @@ export function getInternalReactConstants(
     LegacyHiddenComponent,
     MemoComponent,
     OffscreenComponent,
+    Profiler,
     ScopeComponent,
     SimpleMemoComponent,
     SuspenseComponent,
@@ -442,6 +444,8 @@ export function getInternalReactConstants(
         return 'Scope';
       case SuspenseListComponent:
         return 'SuspenseList';
+      case Profiler:
+        return 'Profiler';
       default:
         const typeSymbol = getTypeSymbol(type);
 
@@ -2154,25 +2158,6 @@ export function attach(
         // Checking root.memoizedInteractions handles multi-renderer edge-case-
         // where some v16 renderers support profiling and others don't.
         if (isProfiling && root.memoizedInteractions != null) {
-          // Profiling durations are only available for certain builds.
-          // If available, they'll be stored on the HostRoot.
-          let effectDuration = null;
-          let passiveEffectDuration = null;
-          const hostRoot = root.current;
-          if (hostRoot != null) {
-            const stateNode = hostRoot.stateNode;
-            if (stateNode != null) {
-              effectDuration =
-                stateNode.effectDuration != null
-                  ? stateNode.effectDuration
-                  : null;
-              passiveEffectDuration =
-                stateNode.passiveEffectDuration != null
-                  ? stateNode.passiveEffectDuration
-                  : null;
-            }
-          }
-
           // If profiling is active, store commit time and duration, and the current interactions.
           // The frontend may request this information after profiling has stopped.
           currentCommitProfilingMetadata = {
@@ -2187,8 +2172,8 @@ export function attach(
             ),
             maxActualDuration: 0,
             priorityLevel: null,
-            effectDuration,
-            passiveEffectDuration,
+            effectDuration: null,
+            passiveEffectDuration: null,
           };
         }
 
@@ -2204,6 +2189,19 @@ export function attach(
     // We can't traverse fibers after unmounting so instead
     // we rely on React telling us about each unmount.
     recordUnmount(fiber, false);
+  }
+
+  function handlePostCommitFiberRoot(root) {
+    const isProfilingSupported = root.memoizedInteractions != null;
+    if (isProfiling && isProfilingSupported) {
+      if (currentCommitProfilingMetadata !== null) {
+        const {effectDuration, passiveEffectDuration} = getEffectDurations(
+          root,
+        );
+        currentCommitProfilingMetadata.effectDuration = effectDuration;
+        currentCommitProfilingMetadata.passiveEffectDuration = passiveEffectDuration;
+      }
+    }
   }
 
   function handleCommitFiberRoot(root, priorityLevel) {
@@ -2227,23 +2225,6 @@ export function attach(
     const isProfilingSupported = root.memoizedInteractions != null;
 
     if (isProfiling && isProfilingSupported) {
-      // Profiling durations are only available for certain builds.
-      // If available, they'll be stored on the HostRoot.
-      let effectDuration = null;
-      let passiveEffectDuration = null;
-      const hostRoot = root.current;
-      if (hostRoot != null) {
-        const stateNode = hostRoot.stateNode;
-        if (stateNode != null) {
-          effectDuration =
-            stateNode.effectDuration != null ? stateNode.effectDuration : null;
-          passiveEffectDuration =
-            stateNode.passiveEffectDuration != null
-              ? stateNode.passiveEffectDuration
-              : null;
-        }
-      }
-
       // If profiling is active, store commit time and duration, and the current interactions.
       // The frontend may request this information after profiling has stopped.
       currentCommitProfilingMetadata = {
@@ -2259,8 +2240,11 @@ export function attach(
         maxActualDuration: 0,
         priorityLevel:
           priorityLevel == null ? null : formatPriorityLevel(priorityLevel),
-        effectDuration,
-        passiveEffectDuration,
+
+        // Initialize to null; if new enough React version is running,
+        // these values will be read during separate handlePostCommitFiberRoot() call.
+        effectDuration: null,
+        passiveEffectDuration: null,
       };
     }
 
@@ -3856,6 +3840,7 @@ export function attach(
     getProfilingData,
     handleCommitFiberRoot,
     handleCommitFiberUnmount,
+    handlePostCommitFiberRoot,
     inspectElement,
     logElementToConsole,
     prepareViewAttributeSource,

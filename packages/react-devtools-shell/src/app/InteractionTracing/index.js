@@ -21,6 +21,14 @@ import {
   unstable_wrap as wrap,
 } from 'scheduler/tracing';
 
+function sleep(ms) {
+  const start = performance.now();
+  let now;
+  do {
+    now = performance.now();
+  } while (now - ms < start);
+}
+
 export default function InteractionTracing() {
   const [count, setCount] = useState(0);
   const [shouldCascade, setShouldCascade] = useState(false);
@@ -75,7 +83,11 @@ export default function InteractionTracing() {
   }, [count, shouldCascade]);
 
   useLayoutEffect(() => {
-    Math.sqrt(100 * 100 * 100 * 100 * 100);
+    sleep(150);
+  });
+
+  useEffect(() => {
+    sleep(300);
   });
 
   return (
