@@ -16,6 +16,7 @@ let React;
 let ReactDOM;
 let ReactDOMFizzServer;
 let Suspense;
+let PropTypes;
 let textCache;
 let document;
 let writable;
@@ -36,6 +37,8 @@ describe('ReactDOMFizzServer', () => {
     }
     Stream = require('stream');
     Suspense = React.Suspense;
+    PropTypes = require('prop-types');
+
     textCache = new Map();
 
     // Test Environment
@@ -653,6 +656,75 @@ describe('ReactDOMFizzServer', () => {
 
     expect(container.querySelector('#my-path').namespaceURI).toBe(
       'http://www.w3.org/2000/svg',
+    );
+  });
+
+  // @gate experimental
+  it('should can suspend in a class component with legacy context', async () => {
+    class TestProvider extends React.Component {
+      static childContextTypes = {
+        test: PropTypes.string,
+      };
+      state = {ctxToSet: null};
+      static getDerivedStateFromProps(props, state) {
+        return {ctxToSet: props.ctx};
+      }
+      getChildContext() {
+        return {
+          test: this.state.ctxToSet,
+        };
+      }
+      render() {
+        return this.props.children;
+      }
+    }
+
+    class TestConsumer extends React.Component {
+      static contextTypes = {
+        test: PropTypes.string,
+      };
+      render() {
+        const child = (
+          <b>
+            <Text text={this.context.test} />
+          </b>
+        );
+        if (this.props.prefix) {
+          return [readText(this.props.prefix), child];
+        }
+        return child;
+      }
+    }
+
+    await act(async () => {
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        <TestProvider ctx="A">
+          <div>
+            <Suspense fallback={[<Text text="Loading: " />, <TestConsumer />]}>
+              <TestProvider ctx="B">
+                <TestConsumer prefix="Hello: " />
+              </TestProvider>
+              <TestConsumer />
+            </Suspense>
+          </div>
+        </TestProvider>,
+        writable,
+      );
+      startWriting();
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        Loading: <b>A</b>
+      </div>,
+    );
+    await act(async () => {
+      resolveText('Hello: ');
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        Hello: <b>B</b>
+        <b>A</b>
+      </div>,
     );
   });
 });
