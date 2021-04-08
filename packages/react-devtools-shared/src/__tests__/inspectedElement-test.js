@@ -1184,7 +1184,7 @@ describe('InspectedElement', () => {
             "preview_long": Set(3) {1, 2, 3},
           },
           "1": Dehydrated {
-            "preview_short": et(3),
+            "preview_short": Set(3),
             "preview_long": Set(3) {"a", "b", "c"},
           },
         },
@@ -2025,16 +2025,16 @@ describe('InspectedElement', () => {
       await inspectElementAtIndex(0);
 
       expect(global.$r.props).toMatchInlineSnapshot(`
-      Object {
-        "a": 1,
-        "b": "abc",
-      }
-      `);
+              Object {
+                "a": 1,
+                "b": "abc",
+              }
+            `);
       expect(global.$r.state).toMatchInlineSnapshot(`
-      Object {
-        "count": 0,
-      }
-      `);
+              Object {
+                "count": 0,
+              }
+            `);
 
       done();
     });
