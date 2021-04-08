@@ -1144,7 +1144,7 @@ describe('InspectedElement', () => {
     done();
   });
 
-  it('should dehydrate complex nested values when requested', async done => {
+  it('should dehydrate complex nested values when requested', async () => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -1208,8 +1208,6 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
   it('should include updates for nested values that were previously hydrated', async done => {
