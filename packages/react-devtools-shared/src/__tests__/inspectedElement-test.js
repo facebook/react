@@ -1184,7 +1184,7 @@ describe('InspectedElement', () => {
             "preview_long": Set(3) {1, 2, 3},
           },
           "1": Dehydrated {
-            "preview_short": Set(3),
+            "preview_short": et(3),
             "preview_long": Set(3) {"a", "b", "c"},
           },
         },
