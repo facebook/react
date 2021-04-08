@@ -568,8 +568,8 @@ describe('InspectedElement', () => {
           "preview_long": DataView(3),
         },
         "date": Dehydrated {
-          "preview_short": 2019-12-31T23:42:42.000Z,
-          "preview_long": 2019-12-31T23:42:42.000Z,
+          "preview_short": Tue Dec 31 2019 23:42:42 GMT+0000 (Coordinated Universal Time),
+          "preview_long": Tue Dec 31 2019 23:42:42 GMT+0000 (Coordinated Universal Time),
         },
         "fn": Dehydrated {
           "preview_short": ƒ exampleFunction() {},
