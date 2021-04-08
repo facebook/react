@@ -60,7 +60,7 @@ describe('OwnersListContext', () => {
     </BridgeContext.Provider>
   );
 
-  it('should fetch the owners list for the selected element', async done => {
+  it('should fetch the owners list for the selected element', async () => {
     const Grandparent = () => <Parent />;
     const Parent = () => {
       return (
@@ -115,11 +115,9 @@ describe('OwnersListContext', () => {
       ),
     );
     expect(didFinish).toBe(true);
-
-    done();
   });
 
-  it('should fetch the owners list for the selected element that includes filtered components', async done => {
+  it('should fetch the owners list for the selected element that includes filtered components', async () => {
     store.componentFilters = [utils.createDisplayNameFilter('^Parent$')];
 
     const Grandparent = () => <Parent />;
@@ -163,11 +161,9 @@ describe('OwnersListContext', () => {
       ),
     );
     expect(didFinish).toBe(true);
-
-    done();
   });
 
-  it('should include the current element even if there are no other owners', async done => {
+  it('should include the current element even if there are no other owners', async () => {
     store.componentFilters = [utils.createDisplayNameFilter('^Parent$')];
 
     const Grandparent = () => <Parent />;
@@ -203,11 +199,9 @@ describe('OwnersListContext', () => {
       ),
     );
     expect(didFinish).toBe(true);
-
-    done();
   });
 
-  it('should include all owners for a component wrapped in react memo', async done => {
+  it('should include all owners for a component wrapped in react memo', async () => {
     const InnerComponent = (props, ref) => <div ref={ref} />;
     const ForwardRef = React.forwardRef(InnerComponent);
     const Memo = React.memo(ForwardRef);
@@ -243,6 +237,5 @@ describe('OwnersListContext', () => {
       ),
     );
     expect(didFinish).toBe(true);
-    done();
   });
 });

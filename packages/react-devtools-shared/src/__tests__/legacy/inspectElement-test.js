@@ -62,7 +62,7 @@ describe('InspectedElementContext', () => {
     ReactDOM = require('react-dom');
   });
 
-  it('should inspect the currently selected element', async done => {
+  it('should inspect the currently selected element', async () => {
     const Example = () => null;
 
     act(() =>
@@ -86,11 +86,9 @@ describe('InspectedElementContext', () => {
         "state": null,
       }
     `);
-
-    done();
   });
 
-  it('should support simple data types', async done => {
+  it('should support simple data types', async () => {
     const Example = () => null;
 
     act(() =>
@@ -138,11 +136,9 @@ describe('InspectedElementContext', () => {
         "state": null,
       }
     `);
-
-    done();
   });
 
-  it('should support complex data types', async done => {
+  it('should support complex data types', async () => {
     const Immutable = require('immutable');
 
     const Example = () => null;
@@ -338,11 +334,9 @@ describe('InspectedElementContext', () => {
     expect(typed_array[0]).toBe(100);
     expect(typed_array[1]).toBe(-100);
     expect(typed_array[2]).toBe(0);
-
-    done();
   });
 
-  it('should support objects with no prototype', async done => {
+  it('should support objects with no prototype', async () => {
     const Example = () => null;
 
     const object = Object.create(null);
@@ -369,11 +363,9 @@ describe('InspectedElementContext', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should support objects with overridden hasOwnProperty', async done => {
+  it('should support objects with overridden hasOwnProperty', async () => {
     const Example = () => null;
 
     const object = {
@@ -395,11 +387,9 @@ describe('InspectedElementContext', () => {
     // Our snapshot serializer relies on hasOwnProperty() for feature detection.
     expect(inspectedElement.props.object.name).toBe('blah');
     expect(inspectedElement.props.object.hasOwnProperty).toBe(true);
-
-    done();
   });
 
-  it('should not consume iterables while inspecting', async done => {
+  it('should not consume iterables while inspecting', async () => {
     const Example = () => null;
 
     function* generator() {
@@ -440,11 +430,9 @@ describe('InspectedElementContext', () => {
     expect(iteratable.next().value).toEqual(1);
     expect(iteratable.next().value).toEqual(2);
     expect(iteratable.next().value).toBeUndefined();
-
-    done();
   });
 
-  it('should support custom objects with enumerable properties and getters', async done => {
+  it('should support custom objects with enumerable properties and getters', async () => {
     class CustomData {
       _number = 42;
       get number() {
@@ -490,11 +478,9 @@ describe('InspectedElementContext', () => {
         "state": null,
       }
     `);
-
-    done();
   });
 
-  it('should support objects with with inherited keys', async done => {
+  it('should support objects with with inherited keys', async () => {
     const Example = () => null;
 
     const base = Object.create(Object.prototype, {
@@ -583,11 +569,9 @@ describe('InspectedElementContext', () => {
         "state": null,
       }
     `);
-
-    done();
   });
 
-  it('should allow component prop value and value`s prototype has same name params.', async done => {
+  it('should allow component prop value and value`s prototype has same name params.', async () => {
     const testData = Object.create(
       {
         a: undefined,
@@ -644,10 +628,9 @@ describe('InspectedElementContext', () => {
         },
       }
     `);
-    done();
   });
 
-  it('should not dehydrate nested values until explicitly requested', async done => {
+  it('should not dehydrate nested values until explicitly requested', async () => {
     const Example = () => null;
 
     act(() =>
@@ -747,8 +730,6 @@ describe('InspectedElementContext', () => {
         },
       }
     `);
-
-    done();
   });
 
   it('should enable inspected values to be stored as global variables', () => {
