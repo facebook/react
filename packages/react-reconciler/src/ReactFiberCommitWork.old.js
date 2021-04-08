@@ -156,9 +156,7 @@ if (__DEV__) {
 // Allows us to avoid traversing the return path to find the nearest Offscreen ancestor.
 // Only used when enableSuspenseLayoutEffectSemantics is enabled.
 let offscreenSubtreeIsHidden: boolean = false;
-const offscreenSubtreeIsHiddenStack: Array<boolean> = [];
 let offscreenSubtreeWasHidden: boolean = false;
-const offscreenSubtreeWasHiddenStack: Array<boolean> = [];
 
 const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
 
@@ -2305,11 +2303,35 @@ function commitLayoutEffects_begin(
         const wasHidden = current !== null && current.memoizedState !== null;
         const isHidden = fiber.memoizedState !== null;
 
-        offscreenSubtreeWasHidden = wasHidden || offscreenSubtreeWasHidden;
-        offscreenSubtreeIsHidden = isHidden || offscreenSubtreeIsHidden;
+        const newOffscreenSubtreeIsHidden =
+          isHidden || offscreenSubtreeIsHidden;
+        const newOffscreenSubtreeWasHidden =
+          wasHidden || offscreenSubtreeWasHidden;
 
-        offscreenSubtreeWasHiddenStack.push(wasHidden);
-        offscreenSubtreeIsHiddenStack.push(isHidden);
+        if (
+          newOffscreenSubtreeIsHidden !== offscreenSubtreeIsHidden ||
+          newOffscreenSubtreeWasHidden !== offscreenSubtreeWasHidden
+        ) {
+          const prevOffscreenSubtreeIsHidden = offscreenSubtreeIsHidden;
+          const prevOffscreenSubtreeWasHidden = offscreenSubtreeWasHidden;
+
+          // Traverse the Offscreen subtree with the current Offscreen as the root.
+          offscreenSubtreeIsHidden = newOffscreenSubtreeIsHidden;
+          offscreenSubtreeWasHidden = newOffscreenSubtreeWasHidden;
+          commitLayoutEffects_begin(
+            fiber, // New root; bubble back up to here and stop.
+            root,
+            committedLanes,
+          );
+
+          // Restore Offscreen state and resume in our-progress traversal.
+          nextEffect = fiber;
+          offscreenSubtreeIsHidden = prevOffscreenSubtreeIsHidden;
+          offscreenSubtreeWasHidden = prevOffscreenSubtreeWasHidden;
+          commitLayoutMountEffects_complete(subtreeRoot, root, committedLanes);
+
+          continue;
+        }
       }
     }
 
@@ -2349,23 +2371,6 @@ function commitLayoutMountEffects_complete(
 
   while (nextEffect !== null) {
     const fiber = nextEffect;
-
-    if (enableSuspenseLayoutEffectSemantics && isModernRoot) {
-      if (fiber.tag === OffscreenComponent) {
-        offscreenSubtreeWasHiddenStack.pop();
-        offscreenSubtreeIsHiddenStack.pop();
-        offscreenSubtreeWasHidden =
-          offscreenSubtreeWasHiddenStack.length > 0 &&
-          offscreenSubtreeWasHiddenStack[
-            offscreenSubtreeWasHiddenStack.length - 1
-          ];
-        offscreenSubtreeIsHidden =
-          offscreenSubtreeIsHiddenStack.length > 0 &&
-          offscreenSubtreeIsHiddenStack[
-            offscreenSubtreeIsHiddenStack.length - 1
-          ];
-      }
-    }
 
     if (
       enableSuspenseLayoutEffectSemantics &&
