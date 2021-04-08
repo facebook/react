@@ -885,7 +885,6 @@ function mountClassInstance(
     }
   }
 
-  processUpdateQueue(workInProgress, newProps, instance, renderLanes);
   instance.state = workInProgress.memoizedState;
 
   const getDerivedStateFromProps = ctor.getDerivedStateFromProps;
