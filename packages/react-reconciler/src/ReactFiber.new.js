@@ -651,7 +651,10 @@ function createFiberFromProfiler(
 ): Fiber {
   if (__DEV__) {
     if (typeof pendingProps.id !== 'string') {
-      console.error('Profiler must specify an "id" as a prop');
+      console.error(
+        'Profiler must specify an "id" of type `string` as a prop. Received the type `%s` instead.',
+        typeof pendingProps.id,
+      );
     }
   }
 

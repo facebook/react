@@ -136,9 +136,12 @@ describe('Profiler', () => {
             it('should warn if required params are missing', () => {
               expect(() => {
                 ReactTestRenderer.create(<React.Profiler />);
-              }).toErrorDev('Profiler must specify an "id" as a prop', {
-                withoutStack: true,
-              });
+              }).toErrorDev(
+                'Profiler must specify an "id" of type `string` as a prop. Received the type `undefined` instead.',
+                {
+                  withoutStack: true,
+                },
+              );
             });
           }
 
