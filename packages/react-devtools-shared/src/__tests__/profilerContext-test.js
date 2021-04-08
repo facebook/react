@@ -74,7 +74,7 @@ describe('ProfilerContext', () => {
     </BridgeContext.Provider>
   );
 
-  it('updates updates profiling support based on the attached roots', async done => {
+  it('updates updates profiling support based on the attached roots', async () => {
     const Component = () => null;
 
     let context: Context = ((null: any): Context);
@@ -105,11 +105,9 @@ describe('ProfilerContext', () => {
 
     await utils.actAsync(() => ReactDOM.unmountComponentAtNode(containerB));
     expect(context.supportsProfiling).toBe(false);
-
-    done();
   });
 
-  it('should gracefully handle an empty profiling session (with no recorded commits)', async done => {
+  it('should gracefully handle an empty profiling session (with no recorded commits)', async () => {
     const Example = () => null;
 
     utils.act(() =>
@@ -144,11 +142,9 @@ describe('ProfilerContext', () => {
     expect(context.isProcessingData).toBe(false);
     expect(context.isProfiling).toBe(false);
     expect(context.profilingData).toBe(null);
-
-    done();
   });
 
-  it('should auto-select the root ID matching the Components tab selection if it has profiling data', async done => {
+  it('should auto-select the root ID matching the Components tab selection if it has profiling data', async () => {
     const Parent = () => <Child />;
     const Child = () => null;
 
@@ -185,11 +181,9 @@ describe('ProfilerContext', () => {
     expect(context.rootID).toBe(
       store.getRootIDForElement(((store.getElementIDAtIndex(3): any): number)),
     );
-
-    done();
   });
 
-  it('should not select the root ID matching the Components tab selection if it has no profiling data', async done => {
+  it('should not select the root ID matching the Components tab selection if it has no profiling data', async () => {
     const Parent = () => <Child />;
     const Child = () => null;
 
@@ -226,11 +220,9 @@ describe('ProfilerContext', () => {
     expect(context.rootID).toBe(
       store.getRootIDForElement(((store.getElementIDAtIndex(0): any): number)),
     );
-
-    done();
   });
 
-  it('should maintain root selection between profiling sessions so long as there is data for that root', async done => {
+  it('should maintain root selection between profiling sessions so long as there is data for that root', async () => {
     const Parent = () => <Child />;
     const Child = () => null;
 
@@ -284,11 +276,9 @@ describe('ProfilerContext', () => {
     expect(selectedElementID).toBe(otherID);
     expect(context).not.toBeNull();
     expect(context.rootID).toBe(store.getRootIDForElement(id));
-
-    done();
   });
 
-  it('should sync selected element in the Components tab too, provided the element is a match', async done => {
+  it('should sync selected element in the Components tab too, provided the element is a match', async () => {
     const GrandParent = ({includeChild}) => (
       <Parent includeChild={includeChild} />
     );
@@ -340,7 +330,5 @@ describe('ProfilerContext', () => {
     // Select an unmounted element and verify no Components tab selection doesn't change.
     await utils.actAsync(() => context.selectFiber(childID, 'Child'));
     expect(selectedElementID).toBe(parentID);
-
-    done();
   });
 });

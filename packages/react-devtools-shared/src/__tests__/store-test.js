@@ -853,7 +853,7 @@ describe('Store', () => {
     expect(store).toMatchSnapshot('1: mount');
   });
 
-  it('should show the right display names for special component types', async done => {
+  it('should show the right display names for special component types', async () => {
     const MyComponent = (props, ref) => null;
     const ForwardRefComponent = React.forwardRef(MyComponent);
     const MyComponent2 = (props, ref) => null;
@@ -905,8 +905,6 @@ describe('Store', () => {
     act(() => ReactDOM.render(<App />, container));
 
     expect(store).toMatchSnapshot();
-
-    done();
   });
 
   describe('Lazy', () => {
@@ -933,7 +931,7 @@ describe('Store', () => {
       LazyComponent = React.lazy(() => fakeImport(LazyInnerComponent));
     });
 
-    it('should support Lazy components (legacy render)', async done => {
+    it('should support Lazy components (legacy render)', async () => {
       const container = document.createElement('div');
 
       // Render once to start fetching the lazy component
@@ -952,11 +950,9 @@ describe('Store', () => {
       act(() => ReactDOM.render(<App renderChildren={false} />, container));
 
       expect(store).toMatchSnapshot('3: unmounted');
-
-      done();
     });
 
-    it('should support Lazy components in (createRoot)', async done => {
+    it('should support Lazy components in (createRoot)', async () => {
       const container = document.createElement('div');
       const root = ReactDOM.unstable_createRoot(container);
 
@@ -976,11 +972,9 @@ describe('Store', () => {
       act(() => root.render(<App renderChildren={false} />));
 
       expect(store).toMatchSnapshot('3: unmounted');
-
-      done();
     });
 
-    it('should support Lazy components that are unmounted before they finish loading (legacy render)', async done => {
+    it('should support Lazy components that are unmounted before they finish loading (legacy render)', async () => {
       const container = document.createElement('div');
 
       // Render once to start fetching the lazy component
@@ -992,11 +986,9 @@ describe('Store', () => {
       act(() => ReactDOM.render(<App renderChildren={false} />, container));
 
       expect(store).toMatchSnapshot('2: unmounted');
-
-      done();
     });
 
-    it('should support Lazy components that are unmounted before they finish loading in (createRoot)', async done => {
+    it('should support Lazy components that are unmounted before they finish loading in (createRoot)', async () => {
       const container = document.createElement('div');
       const root = ReactDOM.unstable_createRoot(container);
 
@@ -1009,8 +1001,6 @@ describe('Store', () => {
       act(() => root.render(<App renderChildren={false} />));
 
       expect(store).toMatchSnapshot('2: unmounted');
-
-      done();
     });
   });
 

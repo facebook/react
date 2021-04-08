@@ -136,7 +136,7 @@ describe('InspectedElement', () => {
     return inspectedElement;
   }
 
-  it('should inspect the currently selected element', async done => {
+  it('should inspect the currently selected element', async () => {
     const Example = () => {
       const [count] = React.useState(1);
       return count;
@@ -170,11 +170,9 @@ describe('InspectedElement', () => {
         "state": null,
       }
     `);
-
-    done();
   });
 
-  it('should have hasLegacyContext flag set to either "true" or "false" depending on which context API is used.', async done => {
+  it('should have hasLegacyContext flag set to either "true" or "false" depending on which context API is used.', async () => {
     const contextData = {
       bool: true,
     };
@@ -270,10 +268,9 @@ describe('InspectedElement', () => {
       expect(inspectedElement.context).not.toBe(null);
       expect(inspectedElement.hasLegacyContext).toBe(shouldHaveLegacyContext);
     }
-    done();
   });
 
-  it('should poll for updates for the currently selected element', async done => {
+  it('should poll for updates for the currently selected element', async () => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -312,11 +309,9 @@ describe('InspectedElement', () => {
         "b": "def",
       }
     `);
-
-    done();
   });
 
-  it('should not re-render a function with hooks if it did not update since it was last inspected', async done => {
+  it('should not re-render a function with hooks if it did not update since it was last inspected', async () => {
     let targetRenderCount = 0;
 
     const Wrapper = ({children}) => children;
@@ -377,11 +372,9 @@ describe('InspectedElement', () => {
         "b": "def",
       }
     `);
-
-    done();
   });
 
-  it('should temporarily disable console logging when re-running a component to inspect its hooks', async done => {
+  it('should temporarily disable console logging when re-running a component to inspect its hooks', async () => {
     let targetRenderCount = 0;
 
     jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -422,11 +415,9 @@ describe('InspectedElement', () => {
     expect(console.info).toHaveBeenCalledTimes(1);
     expect(console.log).toHaveBeenCalledTimes(1);
     expect(console.warn).toHaveBeenCalledTimes(1);
-
-    done();
   });
 
-  it('should support simple data types', async done => {
+  it('should support simple data types', async () => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -463,11 +454,9 @@ describe('InspectedElement', () => {
     expect(props.nan).toBeNaN();
     expect(props.value_null).toBeNull();
     expect(props.value_undefined).toBeUndefined();
-
-    done();
   });
 
-  it('should support complex data types', async done => {
+  it('should support complex data types', async () => {
     const Immutable = require('immutable');
 
     const Example = () => null;
@@ -719,11 +708,9 @@ describe('InspectedElement', () => {
     expect(typed_array[2]).toBe(0);
     expect(typed_array[meta.preview_long]).toBe('Int8Array(3) [100, -100, 0]');
     expect(typed_array[meta.preview_short]).toBe('Int8Array(3)');
-
-    done();
   });
 
-  it('should not consume iterables while inspecting', async done => {
+  it('should not consume iterables while inspecting', async () => {
     const Example = () => null;
 
     function* generator() {
@@ -745,11 +732,9 @@ describe('InspectedElement', () => {
     expect(prop[meta.type]).toBe('opaque_iterator');
     expect(prop[meta.preview_long]).toBe('Generator');
     expect(prop[meta.preview_short]).toBe('Generator');
-
-    done();
   });
 
-  it('should support objects with no prototype', async done => {
+  it('should support objects with no prototype', async () => {
     const Example = () => null;
 
     const object = Object.create(null);
@@ -772,11 +757,9 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should support objects with overridden hasOwnProperty', async done => {
+  it('should support objects with overridden hasOwnProperty', async () => {
     const Example = () => null;
 
     const object = {
@@ -795,11 +778,9 @@ describe('InspectedElement', () => {
     // Our snapshot serializer relies on hasOwnProperty() for feature detection.
     expect(inspectedElement.props.object.name).toBe('blah');
     expect(inspectedElement.props.object.hasOwnProperty).toBe(true);
-
-    done();
   });
 
-  it('should support custom objects with enumerable properties and getters', async done => {
+  it('should support custom objects with enumerable properties and getters', async () => {
     class CustomData {
       _number = 42;
       get number() {
@@ -833,11 +814,9 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should support objects with with inherited keys', async done => {
+  it('should support objects with with inherited keys', async () => {
     const Example = () => null;
 
     const base = Object.create(Object.prototype, {
@@ -917,11 +896,9 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should allow component prop value and value`s prototype has same name params.', async done => {
+  it('should allow component prop value and value`s prototype has same name params.', async () => {
     const testData = Object.create(
       {
         a: undefined,
@@ -973,11 +950,9 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should not dehydrate nested values until explicitly requested', async done => {
+  it('should not dehydrate nested values until explicitly requested', async () => {
     const Example = () => {
       const [state] = React.useState({
         foo: {
@@ -1140,11 +1115,9 @@ describe('InspectedElement', () => {
         },
       ]
     `);
-
-    done();
   });
 
-  it('should dehydrate complex nested values when requested', async done => {
+  it('should dehydrate complex nested values when requested', async () => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -1208,11 +1181,9 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should include updates for nested values that were previously hydrated', async done => {
+  it('should include updates for nested values that were previously hydrated', async () => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -1373,11 +1344,9 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should return a full update if a path is inspected for an object that has other pending changes', async done => {
+  it('should return a full update if a path is inspected for an object that has other pending changes', async () => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -1510,11 +1479,9 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should not tear if hydration is requested after an update', async done => {
+  it('should not tear if hydration is requested after an update', async () => {
     const Example = () => null;
 
     const container = document.createElement('div');
@@ -1598,11 +1565,9 @@ describe('InspectedElement', () => {
         },
       }
     `);
-
-    done();
   });
 
-  it('should inspect hooks for components that only use context', async done => {
+  it('should inspect hooks for components that only use context', async () => {
     const Context = React.createContext(true);
     const Example = () => {
       const value = React.useContext(Context);
@@ -1637,11 +1602,9 @@ describe('InspectedElement', () => {
         "state": null,
       }
     `);
-
-    done();
   });
 
-  it('should enable inspected values to be stored as global variables', async done => {
+  it('should enable inspected values to be stored as global variables', async () => {
     const Example = () => null;
 
     const nestedObject = {
@@ -1698,11 +1661,9 @@ describe('InspectedElement', () => {
     jest.runOnlyPendingTimers();
     expect(console.log).toHaveBeenCalledWith('$reactTemp1');
     expect(global.$reactTemp1).toBe(nestedObject.a.b);
-
-    done();
   });
 
-  it('should enable inspected values to be copied to the clipboard', async done => {
+  it('should enable inspected values to be copied to the clipboard', async () => {
     const Example = () => null;
 
     const nestedObject = {
@@ -1761,11 +1722,9 @@ describe('InspectedElement', () => {
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
       JSON.stringify(nestedObject.a.b),
     );
-
-    done();
   });
 
-  it('should enable complex values to be copied to the clipboard', async done => {
+  it('should enable complex values to be copied to the clipboard', async () => {
     const Immutable = require('immutable');
 
     const Example = () => null;
@@ -1856,11 +1815,9 @@ describe('InspectedElement', () => {
     expect(global.mockClipboardCopy).toHaveBeenCalledWith(
       JSON.stringify({0: 100, 1: -100, 2: 0}),
     );
-
-    done();
   });
 
-  it('should display complex values of useDebugValue', async done => {
+  it('should display complex values of useDebugValue', async () => {
     const container = document.createElement('div');
 
     function useDebuggableHook() {
@@ -1899,12 +1856,10 @@ describe('InspectedElement', () => {
         },
       ]
     `);
-
-    done();
   });
 
   describe('$r', () => {
-    it('should support function components', async done => {
+    it('should support function components', async () => {
       const Example = () => {
         const [count] = React.useState(1);
         return count;
@@ -1935,11 +1890,9 @@ describe('InspectedElement', () => {
           "type": [Function],
         }
       `);
-
-      done();
     });
 
-    it('should support memoized function components', async done => {
+    it('should support memoized function components', async () => {
       const Example = React.memo(function Example(props) {
         const [count] = React.useState(1);
         return count;
@@ -1970,11 +1923,9 @@ describe('InspectedElement', () => {
           "type": [Function],
         }
       `);
-
-      done();
     });
 
-    it('should support forward refs', async done => {
+    it('should support forward refs', async () => {
       const Example = React.forwardRef(function Example(props, ref) {
         const [count] = React.useState(1);
         return count;
@@ -2005,11 +1956,9 @@ describe('InspectedElement', () => {
           "type": [Function],
         }
       `);
-
-      done();
     });
 
-    it('should support class components', async done => {
+    it('should support class components', async () => {
       class Example extends React.Component {
         state = {
           count: 0,
@@ -2027,18 +1976,16 @@ describe('InspectedElement', () => {
       await inspectElementAtIndex(0);
 
       expect(global.$r.props).toMatchInlineSnapshot(`
-      Object {
-        "a": 1,
-        "b": "abc",
-      }
-      `);
+              Object {
+                "a": 1,
+                "b": "abc",
+              }
+            `);
       expect(global.$r.state).toMatchInlineSnapshot(`
-      Object {
-        "count": 0,
-      }
-      `);
-
-      done();
+              Object {
+                "count": 0,
+              }
+            `);
     });
   });
 
