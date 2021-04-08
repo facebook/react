@@ -1613,7 +1613,7 @@ function insertOrAppendPlacementNodeIntoContainer(
   const {tag} = node;
   const isHost = tag === HostComponent || tag === HostText;
   if (isHost) {
-    const stateNode = isHost ? node.stateNode : node.stateNode.instance;
+    const stateNode = node.stateNode;
     if (before) {
       insertInContainerBefore(parent, stateNode, before);
     } else {
@@ -1644,7 +1644,7 @@ function insertOrAppendPlacementNode(
   const {tag} = node;
   const isHost = tag === HostComponent || tag === HostText;
   if (isHost) {
-    const stateNode = isHost ? node.stateNode : node.stateNode.instance;
+    const stateNode = node.stateNode;
     if (before) {
       insertBefore(parent, stateNode, before);
     } else {
