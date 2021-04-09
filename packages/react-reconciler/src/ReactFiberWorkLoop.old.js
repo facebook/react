@@ -167,7 +167,7 @@ import {
   IdleEventPriority,
   getCurrentUpdatePriority,
   setCurrentUpdatePriority,
-  higherEventPriority,
+  lowerEventPriority,
   lanesToEventPriority,
 } from './ReactEventPriorities.old';
 import {requestCurrentTransition, NoTransition} from './ReactFiberTransition';
@@ -2049,10 +2049,8 @@ function commitRootImpl(root, renderPriorityLevel) {
 export function flushPassiveEffects(): boolean {
   // Returns whether passive effects were flushed.
   if (pendingPassiveEffectsLanes !== NoLanes) {
-    const priority = higherEventPriority(
-      DefaultEventPriority,
-      lanesToEventPriority(pendingPassiveEffectsLanes),
-    );
+    const renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
+    const priority = lowerEventPriority(DefaultEventPriority, renderPriority);
     const prevTransition = ReactCurrentBatchConfig.transition;
     const previousPriority = getCurrentUpdatePriority();
     try {
