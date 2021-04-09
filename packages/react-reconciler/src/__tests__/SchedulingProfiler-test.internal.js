@@ -13,12 +13,19 @@
 // This test is *.internal so that it can import this shared file.
 import ReactVersion from 'shared/ReactVersion';
 
+// Hard-coding because importing will not work with bundle tests and to
+// avoid leaking exports for lanes that are only imported in this test.
+const ReactFiberLane = {
+  SyncLane: /*        */ 0b0000000000000000000000000000001,
+  DefaultLane: /*     */ 0b0000000000000000000000000010000,
+  TransitionLane1: /* */ 0b0000000000000000000000001000000,
+};
+
 describe('SchedulingProfiler', () => {
   let React;
   let ReactTestRenderer;
   let ReactNoop;
   let Scheduler;
-  let ReactFiberLane;
 
   let clearedMarks;
   let featureDetectionMarkName = null;
@@ -82,11 +89,6 @@ describe('SchedulingProfiler', () => {
 
     const SchedulingProfiler = require('react-reconciler/src/SchedulingProfiler');
     formatLanes = SchedulingProfiler.formatLanes;
-
-    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFiberLane = ReactFeatureFlags.enableNewReconciler
-      ? require('react-reconciler/src/ReactFiberLane.new')
-      : require('react-reconciler/src/ReactFiberLane.old');
   });
 
   afterEach(() => {
