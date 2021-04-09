@@ -53,6 +53,13 @@ export function higherEventPriority(
   return a !== 0 && a < b ? a : b;
 }
 
+export function lowerEventPriority(
+  a: EventPriority,
+  b: EventPriority,
+): EventPriority {
+  return a === 0 || a > b ? a : b;
+}
+
 export function isHigherEventPriority(
   a: EventPriority,
   b: EventPriority,
