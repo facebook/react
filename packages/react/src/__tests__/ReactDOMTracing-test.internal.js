@@ -150,12 +150,8 @@ describe('ReactDOMTracing', () => {
             );
             expect(Scheduler).toFlushAndYieldThrough(['Child', 'Child:mount']);
             expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
-            if (gate(flags => flags.enableSyncDefaultUpdates)) {
-              // TODO: why is this 3?
-              expect(onRender).toHaveBeenCalledTimes(3);
-            } else {
-              expect(onRender).toHaveBeenCalledTimes(2);
-            }
+
+            expect(onRender).toHaveBeenCalledTimes(2);
             expect(onRender).toHaveLastRenderedWithInteractions(
               new Set([interaction]),
             );
