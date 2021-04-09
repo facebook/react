@@ -16,6 +16,7 @@ import {
   NoLane,
   NoLanes,
   NoTimestamp,
+  TotalLanes,
   createLaneMap,
 } from './ReactFiberLane.new';
 import {
@@ -24,6 +25,7 @@ import {
   enableCache,
   enableProfilerCommitHooks,
   enableProfilerTimer,
+  enableUpdaterTracking,
 } from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
 import {initializeUpdateQueue} from './ReactUpdateQueue.new';
@@ -75,6 +77,14 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   if (enableProfilerTimer && enableProfilerCommitHooks) {
     this.effectDuration = 0;
     this.passiveEffectDuration = 0;
+  }
+
+  if (enableUpdaterTracking) {
+    this.memoizedUpdaters = new Set();
+    const pendingUpdatersLaneMap = (this.pendingUpdatersLaneMap = []);
+    for (let i = 0; i < TotalLanes; i++) {
+      pendingUpdatersLaneMap.push(new Set());
+    }
   }
 
   if (__DEV__) {

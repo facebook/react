@@ -54,6 +54,9 @@ export const enableProfilerNestedUpdateScheduledHook = false;
 // Trace which interactions trigger each commit.
 export const enableSchedulerTracing = __PROFILE__;
 
+// Track which Fiber(s) schedule render work.
+export const enableUpdaterTracking = __PROFILE__;
+
 // SSR experiments
 export const enableSuspenseServerRenderer = __EXPERIMENTAL__;
 export const enableSelectiveHydration = __EXPERIMENTAL__;
