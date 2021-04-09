@@ -34,6 +34,7 @@ export const {
   disableSchedulerTimeoutInWorkLoop,
   enableLazyContextPropagation,
   deletedTreeCleanUpLevel,
+  enableSyncDefaultUpdates,
 } = dynamicFeatureFlags;
 
 // On WWW, __EXPERIMENTAL__ is used for a new modern build.
@@ -92,9 +93,6 @@ export const warnUnstableRenderSubtreeIntoContainer = false;
 export const enableNewReconciler = __VARIANT__;
 
 export const enableRecursiveCommitTraversal = false;
-
-// WWW is on the new sync behavior by default unless overridden by roots.
-export const enableSyncDefaultUpdates = __VARIANT__;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
