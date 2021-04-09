@@ -168,6 +168,7 @@ export type CommitDataBackend = {|
   passiveEffectDuration: number | null,
   priorityLevel: string | null,
   timestamp: number,
+  updaters: Array<SerializedElement> | null,
 |};
 
 export type ProfilingDataForRootBackend = {|
@@ -199,15 +200,16 @@ export type PathMatch = {|
   isFullMatch: boolean,
 |};
 
-export type Owner = {|
+export type SerializedElement = {|
   displayName: string | null,
   id: number,
+  key: number | string | null,
   type: ElementType,
 |};
 
 export type OwnersList = {|
   id: number,
-  owners: Array<Owner> | null,
+  owners: Array<SerializedElement> | null,
 |};
 
 export type InspectedElement = {|
@@ -244,7 +246,7 @@ export type InspectedElement = {|
   warnings: Array<[string, number]>,
 
   // List of owners
-  owners: Array<Owner> | null,
+  owners: Array<SerializedElement> | null,
 
   // Location of component in source code.
   source: Source | null,
@@ -322,7 +324,7 @@ export type RendererInterface = {
   getDisplayNameForFiberID: GetDisplayNameForFiberID,
   getInstanceAndStyle(id: number): InstanceAndStyle,
   getProfilingData(): ProfilingDataBackend,
-  getOwnersList: (id: number) => Array<Owner> | null,
+  getOwnersList: (id: number) => Array<SerializedElement> | null,
   getPathForElement: (id: number) => Array<PathFrame> | null,
   handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,

@@ -8,6 +8,7 @@
  */
 
 import type {ElementType} from 'react-devtools-shared/src/types';
+import type {SerializedElement} from '../Components/types';
 
 export type CommitTreeNode = {|
   id: number,
@@ -80,6 +81,9 @@ export type CommitDataFrontend = {|
 
   // When did this commit occur (relative to the start of profiling)
   timestamp: number,
+
+  // Fiber(s) responsible for scheduling this update.
+  updaters: Array<SerializedElement> | null,
 |};
 
 export type ProfilingDataForRootFrontend = {|
@@ -131,6 +135,7 @@ export type CommitDataExport = {|
   passiveEffectDuration: number | null,
   priorityLevel: string | null,
   timestamp: number,
+  updaters: Array<SerializedElement> | null,
 |};
 
 export type ProfilingDataForRootExport = {|
@@ -148,6 +153,6 @@ export type ProfilingDataForRootExport = {|
 
 // Serializable version of ProfilingDataFrontend data.
 export type ProfilingDataExport = {|
-  version: 4,
+  version: 5,
   dataForRoots: Array<ProfilingDataForRootExport>,
 |};

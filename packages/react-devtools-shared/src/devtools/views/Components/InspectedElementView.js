@@ -35,7 +35,7 @@ import {
 import styles from './InspectedElementView.css';
 
 import type {ContextMenuContextType} from '../context';
-import type {Element, InspectedElement, Owner} from './types';
+import type {Element, InspectedElement, SerializedElement} from './types';
 import type {ElementType} from 'react-devtools-shared/src/types';
 
 export type CopyPath = (path: Array<string | number>) => void;
@@ -127,7 +127,7 @@ export default function InspectedElementView({
           <div className={styles.Owners}>
             <div className={styles.OwnersHeader}>rendered by</div>
             {showOwnersList &&
-              ((owners: any): Array<Owner>).map(owner => (
+              ((owners: any): Array<SerializedElement>).map(owner => (
                 <OwnerView
                   key={owner.id}
                   displayName={owner.displayName || 'Anonymous'}

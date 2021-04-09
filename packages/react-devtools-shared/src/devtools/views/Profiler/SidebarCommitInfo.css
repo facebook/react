@@ -30,6 +30,7 @@
 .Interactions {
   margin: 0 0 0.5rem;
 }
+.NoInteractions,
 .Interaction {
   display: block;
   width: 100%;
@@ -43,6 +44,10 @@
 .Interaction:hover {
   outline: none;
   background-color: var(--color-background-hover);
+}
+
+.NoInteractions {
+  color: var(--color-dim);
 }
 
 .Label {
