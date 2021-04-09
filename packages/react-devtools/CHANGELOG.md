@@ -9,6 +9,36 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.11.0 (April 9, 2021)
+#### Bugfix
+* `$r` should contain hooks property when it is `forwardRef` or `memo` component  ([meowtec](https://github.com/meowtec) in [#20626](https://github.com/facebook/react/pull/20626))
+* Ensure `sync-xhr` is allowed before reload and profile ([ChrisDobby](https://github.com/ChrisDobby) in [#20879](https://github.com/facebook/react/pull/20879))
+* Bump electron version from 9.1.0 to 11.1.0 for darwin-arm64 builds ([jaiwanth-v](https://github.com/jaiwanth-v) in [#20496](https://github.com/facebook/react/pull/20496))
+* Fixed primitive hook badge colors for light theme ([bvaughn](https://github.com/bvaughn) in [#21034](https://github.com/facebook/react/pull/21034))
+* Increased minimum Chrome/Firefox versions from 51/54 to 60/55 to reduce polyfill code. ([bvaughn](https://github.com/bvaughn) in [#21185](https://github.com/facebook/react/pull/21185))
+* Fix can't expand prop value in some scenario ([iChenLei](https://github.com/iChenLei) in [#20534](https://github.com/facebook/react/pull/20534))
+* Flush updated passive warning/error info after delay ([bvaughn](https://github.com/bvaughn) in [#20931](https://github.com/facebook/react/pull/20931))
+* Patch console methods even when only show-inline-warnings/errors enabled ([bvaughn](https://github.com/bvaughn) in [#20688](https://github.com/facebook/react/pull/20688))
+* React Native fixes for new inline errors feature ([bvaughn](https://github.com/bvaughn) in [#20502](https://github.com/facebook/react/pull/20502))
+* Fixed invalid work tag constants that affected a certain range of React versions ([bvaughn](https://github.com/bvaughn) in [#20362](https://github.com/facebook/react/pull/20362))
+
+#### Features
+* Improve Profiler commit-selector UX ([bvaughn](https://github.com/bvaughn) in [#20943](https://github.com/facebook/react/pull/20943))
+![Video demonstrating tooltip with commit duration and time](https://user-images.githubusercontent.com/29597/110225725-30a1f480-7eb6-11eb-9825-4c762ffde0bb.gif)
+* Swap `log` with `cbrt` for commit bar height ([bvaughn](https://github.com/bvaughn) in [#20952](https://github.com/facebook/react/pull/20952))
+* Integrate with new experimental React Suspense features to improve props loading and inspection UX ([bvaughn](https://github.com/bvaughn) in [#20548](https://github.com/facebook/react/pull/20548), [#20789](https://github.com/facebook/react/pull/20789), [#20458](https://github.com/facebook/react/pull/20458))
+* Expose DEV-mode warnings in devtools UI ([eps1lon](https://github.com/eps1lon) in [#20463](https://github.com/facebook/react/pull/20463))
+![inline-errors-mvp](https://user-images.githubusercontent.com/12292047/102142226-5775ff00-3e62-11eb-99c1-7022169c7240.gif)
+* Display shortcuts for prev/next search result ([eps1lon](https://github.com/eps1lon) in [#20470](https://github.com/facebook/react/pull/20470))
+![devtools-searchinput-kbd](https://user-images.githubusercontent.com/12292047/102255393-55677b00-3f0a-11eb-8aa1-9d1d87008770.gif)
+* Increase the clickable area of the prop value ([TryingToImprove](https://github.com/TryingToImprove) in [#20428](https://github.com/facebook/react/pull/20428))
+
+#### Experimental features
+The following features are only enabled when used with (experimental) builds of React:
+* Shows which fibers scheduled the current update ([bvaughn](https://github.com/bvaughn) in [#21171](https://github.com/facebook/react/pull/21171))
+* Add commit and post-commit durations to Profiler UI ([bvaughn](https://github.com/bvaughn) in [#20984](https://github.com/facebook/react/pull/20984), [#21183](https://github.com/facebook/react/pull/21183))
+* Show which hooks (indices) changed when profiling ([bvaughn](https://github.com/bvaughn) in [#20998](https://github.com/facebook/react/pull/20998))
+
 ## 4.10.1 (November 12, 2020)
 #### Bugfix
 * Fixed invalid internal work tag mappings ([bvaughn](https://github.com/bvaughn) in [#20362](https://github.com/facebook/react/pull/20362))
