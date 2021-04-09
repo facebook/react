@@ -216,18 +216,16 @@ function coerceRef(
 }
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
-  if (returnFiber.type !== 'textarea') {
-    const childString = Object.prototype.toString.call(newChild);
-    invariant(
-      false,
-      'Objects are not valid as a React child (found: %s). ' +
-        'If you meant to render a collection of children, use an array ' +
-        'instead.',
-      childString === '[object Object]'
-        ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
-        : childString,
-    );
-  }
+  const childString = Object.prototype.toString.call(newChild);
+  invariant(
+    false,
+    'Objects are not valid as a React child (found: %s). ' +
+      'If you meant to render a collection of children, use an array ' +
+      'instead.',
+    childString === '[object Object]'
+      ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
+      : childString,
+  );
 }
 
 function warnOnFunctionType(returnFiber: Fiber) {
