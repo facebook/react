@@ -19,7 +19,6 @@ import {
   batchedUpdates as batchedUpdatesImpl,
   batchedEventUpdates,
   discreteUpdates,
-  flushDiscreteUpdates,
   createContainer,
   updateContainer,
   injectIntoDevTools,
@@ -241,7 +240,6 @@ function createPortal(
 setBatchingImplementation(
   batchedUpdatesImpl,
   discreteUpdates,
-  flushDiscreteUpdates,
   batchedEventUpdates,
 );
 

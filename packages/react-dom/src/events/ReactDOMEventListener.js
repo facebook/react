@@ -25,21 +25,13 @@ import {
   getSuspenseInstanceFromFiber,
 } from 'react-reconciler/src/ReactFiberTreeReflection';
 import {HostRoot, SuspenseComponent} from 'react-reconciler/src/ReactWorkTags';
-import {
-  type EventSystemFlags,
-  IS_CAPTURE_PHASE,
-  IS_LEGACY_FB_SUPPORT_MODE,
-} from './EventSystemFlags';
+import {type EventSystemFlags, IS_CAPTURE_PHASE} from './EventSystemFlags';
 
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
-import {enableLegacyFBSupport} from 'shared/ReactFeatureFlags';
 import {dispatchEventForPluginEventSystem} from './DOMPluginEventSystem';
-import {
-  flushDiscreteUpdatesIfNeeded,
-  discreteUpdates,
-} from './ReactDOMUpdateBatching';
+import {discreteUpdates} from './ReactDOMUpdateBatching';
 
 import {
   getCurrentPriorityLevel as getCurrentSchedulerPriorityLevel,
@@ -120,14 +112,6 @@ function dispatchDiscreteEvent(
   container,
   nativeEvent,
 ) {
-  if (
-    !enableLegacyFBSupport ||
-    // If we are in Legacy FB support mode, it means we've already
-    // flushed for this event and we don't need to do it again.
-    (eventSystemFlags & IS_LEGACY_FB_SUPPORT_MODE) === 0
-  ) {
-    flushDiscreteUpdatesIfNeeded(nativeEvent.timeStamp);
-  }
   discreteUpdates(
     dispatchEvent,
     domEventName,

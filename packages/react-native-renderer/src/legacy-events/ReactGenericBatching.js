@@ -18,7 +18,6 @@ let batchedUpdatesImpl = function(fn, bookkeeping) {
 let discreteUpdatesImpl = function(fn, a, b, c, d) {
   return fn(a, b, c, d);
 };
-let flushDiscreteUpdatesImpl = function() {};
 let batchedEventUpdatesImpl = batchedUpdatesImpl;
 
 let isInsideEventHandler = false;
@@ -59,25 +58,15 @@ export function discreteUpdates(fn, a, b, c, d) {
     return discreteUpdatesImpl(fn, a, b, c, d);
   } finally {
     isInsideEventHandler = prevIsInsideEventHandler;
-    if (!isInsideEventHandler) {
-    }
-  }
-}
-
-export function flushDiscreteUpdatesIfNeeded() {
-  if (!isInsideEventHandler) {
-    flushDiscreteUpdatesImpl();
   }
 }
 
 export function setBatchingImplementation(
   _batchedUpdatesImpl,
   _discreteUpdatesImpl,
-  _flushDiscreteUpdatesImpl,
   _batchedEventUpdatesImpl,
 ) {
   batchedUpdatesImpl = _batchedUpdatesImpl;
   discreteUpdatesImpl = _discreteUpdatesImpl;
-  flushDiscreteUpdatesImpl = _flushDiscreteUpdatesImpl;
   batchedEventUpdatesImpl = _batchedEventUpdatesImpl;
 }
