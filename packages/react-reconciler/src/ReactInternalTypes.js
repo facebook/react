@@ -249,6 +249,13 @@ type ProfilingOnlyFiberRootProperties = {|
   pendingInteractionMap: Map<Lane | Lanes, Set<Interaction>>,
 |};
 
+// The following attributes are only used by DevTools and are only present in DEV builds.
+// They enable DevTools Profiler UI to show which Fiber(s) scheduled a given commit.
+type UpdaterTrackingOnlyFiberRootProperties = {|
+  memoizedUpdaters: Set<Fiber>,
+  pendingUpdatersLaneMap: LaneMap<Set<Fiber>>,
+|};
+
 export type SuspenseHydrationCallbacks = {
   onHydrated?: (suspenseInstance: SuspenseInstance) => void,
   onDeleted?: (suspenseInstance: SuspenseInstance) => void,
@@ -269,6 +276,7 @@ export type FiberRoot = {
   ...BaseFiberRootProperties,
   ...ProfilingOnlyFiberRootProperties,
   ...SuspenseCallbackOnlyFiberRootProperties,
+  ...UpdaterTrackingOnlyFiberRootProperties,
   ...
 };
 

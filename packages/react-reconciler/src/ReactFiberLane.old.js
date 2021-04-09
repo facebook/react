@@ -35,7 +35,12 @@ export type Lanes = number;
 export type Lane = number;
 export type LaneMap<T> = Array<T>;
 
-import {enableCache, enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
+import {
+  enableCache,
+  enableSchedulingProfiler,
+  enableUpdaterTracking,
+} from 'shared/ReactFeatureFlags';
+import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
 
 // Lane values below should be kept in sync with getLabelsForLanes(), used by react-devtools-scheduling-profiler.
 // If those values are changed that package should be rebuilt and redeployed.
@@ -740,6 +745,57 @@ export function getBumpedLaneForHydration(
   }
 
   return lane;
+}
+
+export function addFiberToLanesMap(
+  root: FiberRoot,
+  fiber: Fiber,
+  lanes: Lanes | Lane,
+) {
+  if (!enableUpdaterTracking) {
+    return;
+  }
+  if (!isDevToolsPresent) {
+    return;
+  }
+  const pendingUpdatersLaneMap = root.pendingUpdatersLaneMap;
+  while (lanes > 0) {
+    const index = laneToIndex(lanes);
+    const lane = 1 << index;
+
+    const updaters = pendingUpdatersLaneMap[index];
+    updaters.add(fiber);
+
+    lanes &= ~lane;
+  }
+}
+
+export function movePendingFibersToMemoized(root: FiberRoot, lanes: Lanes) {
+  if (!enableUpdaterTracking) {
+    return;
+  }
+  if (!isDevToolsPresent) {
+    return;
+  }
+  const pendingUpdatersLaneMap = root.pendingUpdatersLaneMap;
+  const memoizedUpdaters = root.memoizedUpdaters;
+  while (lanes > 0) {
+    const index = laneToIndex(lanes);
+    const lane = 1 << index;
+
+    const updaters = pendingUpdatersLaneMap[index];
+    if (updaters.size > 0) {
+      updaters.forEach(fiber => {
+        const alternate = fiber.alternate;
+        if (alternate === null || !memoizedUpdaters.has(alternate)) {
+          memoizedUpdaters.add(fiber);
+        }
+      });
+      updaters.clear();
+    }
+
+    lanes &= ~lane;
+  }
 }
 
 const clz32 = Math.clz32 ? Math.clz32 : clz32Fallback;

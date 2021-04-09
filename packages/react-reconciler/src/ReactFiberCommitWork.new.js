@@ -37,6 +37,7 @@ import {
   enableStrictEffects,
   deletedTreeCleanUpLevel,
   enableSuspenseLayoutEffectSemantics,
+  enableUpdaterTracking,
 } from 'shared/ReactFeatureFlags';
 import {
   FunctionComponent,
@@ -89,7 +90,7 @@ import {
   resetCurrentFiber as resetCurrentDebugFiberInDEV,
   setCurrentFiber as setCurrentDebugFiberInDEV,
 } from './ReactCurrentFiber';
-
+import {isDevToolsPresent} from './ReactFiberDevToolsHook.new';
 import {onCommitUnmount} from './ReactFiberDevToolsHook.new';
 import {resolveDefaultProps} from './ReactFiberLazyComponent.new';
 import {
@@ -137,6 +138,7 @@ import {
   resolveRetryWakeable,
   markCommitTimeOfFallback,
   enqueuePendingPassiveProfilerEffect,
+  restorePendingUpdaters,
 } from './ReactFiberWorkLoop.new';
 import {
   NoFlags as NoHookEffect,
@@ -161,6 +163,10 @@ let offscreenSubtreeWasHidden: boolean = false;
 const PossiblyWeakSet = typeof WeakSet === 'function' ? WeakSet : Set;
 
 let nextEffect: Fiber | null = null;
+
+// Used for Profiling builds to track updaters.
+let inProgressLanes: Lanes | null = null;
+let inProgressRoot: FiberRoot | null = null;
 
 const callComponentWillUnmountWithTimer = function(current, instance) {
   instance.props = current.memoizedProps;
@@ -2094,6 +2100,20 @@ function attachSuspenseRetryListeners(finishedWork: Fiber) {
           }
         }
         retryCache.add(wakeable);
+
+        if (enableUpdaterTracking) {
+          if (isDevToolsPresent) {
+            if (inProgressLanes !== null && inProgressRoot !== null) {
+              // If we have pending work still, associate the original updaters with it.
+              restorePendingUpdaters(inProgressRoot, inProgressLanes);
+            } else {
+              throw Error(
+                'Expected finished root and lanes to be set. This is a bug in React.',
+              );
+            }
+          }
+        }
+
         wakeable.then(retry, retry);
       }
     });
@@ -2124,9 +2144,19 @@ function commitResetTextContent(current: Fiber) {
   resetTextContent(current.stateNode);
 }
 
-export function commitMutationEffects(root: FiberRoot, firstChild: Fiber) {
+export function commitMutationEffects(
+  root: FiberRoot,
+  firstChild: Fiber,
+  committedLanes: Lanes,
+) {
+  inProgressLanes = committedLanes;
+  inProgressRoot = root;
   nextEffect = firstChild;
+
   commitMutationEffects_begin(root);
+
+  inProgressLanes = null;
+  inProgressRoot = null;
 }
 
 function commitMutationEffects_begin(root: FiberRoot) {
@@ -2280,8 +2310,14 @@ export function commitLayoutEffects(
   root: FiberRoot,
   committedLanes: Lanes,
 ): void {
+  inProgressLanes = committedLanes;
+  inProgressRoot = root;
   nextEffect = finishedWork;
+
   commitLayoutEffects_begin(finishedWork, root, committedLanes);
+
+  inProgressLanes = null;
+  inProgressRoot = null;
 }
 
 function commitLayoutEffects_begin(
