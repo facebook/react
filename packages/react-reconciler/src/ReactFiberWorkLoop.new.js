@@ -32,6 +32,7 @@ import {
   disableSchedulerTimeoutInWorkLoop,
   enableStrictEffects,
   skipUnmountedBoundaries,
+  enableSyncDefaultUpdates,
   enableUpdaterTracking,
 } from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
@@ -138,6 +139,10 @@ import {
   NoLanes,
   NoLane,
   SyncLane,
+  DefaultLane,
+  DefaultHydrationLane,
+  InputContinuousLane,
+  InputContinuousHydrationLane,
   NoTimestamp,
   claimNextTransitionLane,
   claimNextRetryLane,
@@ -433,6 +438,13 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   // TODO: Move this type conversion to the event priority module.
   const updateLane: Lane = (getCurrentUpdatePriority(): any);
   if (updateLane !== NoLane) {
+    if (
+      enableSyncDefaultUpdates &&
+      (updateLane === InputContinuousLane ||
+        updateLane === InputContinuousHydrationLane)
+    ) {
+      return DefaultLane;
+    }
     return updateLane;
   }
 
@@ -443,6 +455,13 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   // use that directly.
   // TODO: Move this type conversion to the event priority module.
   const eventLane: Lane = (getCurrentEventPriority(): any);
+  if (
+    enableSyncDefaultUpdates &&
+    (eventLane === InputContinuousLane ||
+      eventLane === InputContinuousHydrationLane)
+  ) {
+    return DefaultLane;
+  }
   return eventLane;
 }
 
@@ -695,7 +714,16 @@ function ensureRootIsScheduled(root: FiberRoot, currentTime: number) {
 
   // Schedule a new callback.
   let newCallbackNode;
-  if (newCallbackPriority === SyncLane) {
+  if (
+    enableSyncDefaultUpdates &&
+    (newCallbackPriority === DefaultLane ||
+      newCallbackPriority === DefaultHydrationLane)
+  ) {
+    newCallbackNode = scheduleCallback(
+      ImmediateSchedulerPriority,
+      performSyncWorkOnRoot.bind(null, root),
+    );
+  } else if (newCallbackPriority === SyncLane) {
     // Special case: Sync React callbacks are scheduled on a special
     // internal queue
     scheduleSyncCallback(performSyncWorkOnRoot.bind(null, root));
@@ -1030,7 +1058,11 @@ function performSyncWorkOnRoot(root) {
   const finishedWork: Fiber = (root.current.alternate: any);
   root.finishedWork = finishedWork;
   root.finishedLanes = lanes;
-  commitRoot(root);
+  if (enableSyncDefaultUpdates && !includesSomeLane(lanes, SyncLane)) {
+    finishConcurrentRender(root, exitStatus, lanes);
+  } else {
+    commitRoot(root);
+  }
 
   // Before exiting, make sure there's a callback scheduled for the next
   // pending level.

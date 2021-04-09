@@ -59,3 +59,4 @@ export const deletedTreeCleanUpLevel = __VARIANT__ ? 3 : 1;
 export const enableProfilerNestedUpdateScheduledHook = __VARIANT__;
 export const disableSchedulerTimeoutInWorkLoop = __VARIANT__;
 export const enableLazyContextPropagation = __VARIANT__;
+export const enableSyncDefaultUpdates = __VARIANT__;

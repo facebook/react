@@ -168,10 +168,18 @@ describe('SchedulingProfiler labels', () => {
       event.initEvent('mouseover', true, true);
       dispatchAndSetCurrentEvent(targetRef.current, event);
     });
-    expect(clearedMarks).toContain(
-      `--schedule-state-update-${formatLanes(
-        ReactFiberLane.InputContinuousLane,
-      )}-App`,
-    );
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      expect(clearedMarks).toContain(
+        `--schedule-state-update-${formatLanes(
+          ReactFiberLane.DefaultLane,
+        )}-App`,
+      );
+    } else {
+      expect(clearedMarks).toContain(
+        `--schedule-state-update-${formatLanes(
+          ReactFiberLane.InputContinuousLane,
+        )}-App`,
+      );
+    }
   });
 });

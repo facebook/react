@@ -384,6 +384,7 @@ describe('ReactIncrementalSideEffects', () => {
     expect(ReactNoop.getChildren('portalContainer')).toEqual([]);
   });
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('does not update child nodes if a flush is aborted', () => {
     function Bar(props) {
       Scheduler.unstable_yieldValue('Bar');
@@ -409,7 +410,13 @@ describe('ReactIncrementalSideEffects', () => {
       div(div(span('Hello'), span('Hello')), span('Yo')),
     ]);
 
-    ReactNoop.render(<Foo text="World" />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        ReactNoop.render(<Foo text="World" />);
+      });
+    } else {
+      ReactNoop.render(<Foo text="World" />);
+    }
 
     // Flush some of the work without committing
     expect(Scheduler).toFlushAndYieldThrough(['Foo', 'Bar']);
@@ -633,12 +640,19 @@ describe('ReactIncrementalSideEffects', () => {
     );
   });
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('can update a completed tree before it has a chance to commit', () => {
     function Foo(props) {
       Scheduler.unstable_yieldValue('Foo');
       return <span prop={props.step} />;
     }
-    ReactNoop.render(<Foo step={1} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        ReactNoop.render(<Foo step={1} />);
+      });
+    } else {
+      ReactNoop.render(<Foo step={1} />);
+    }
     // This should be just enough to complete the tree without committing it
     expect(Scheduler).toFlushAndYieldThrough(['Foo']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(null);
@@ -647,13 +661,26 @@ describe('ReactIncrementalSideEffects', () => {
     ReactNoop.flushNextYield();
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
 
-    ReactNoop.render(<Foo step={2} />);
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        ReactNoop.render(<Foo step={2} />);
+      });
+    } else {
+      ReactNoop.render(<Foo step={2} />);
+    }
     // This should be just enough to complete the tree without committing it
     expect(Scheduler).toFlushAndYieldThrough(['Foo']);
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
     // This time, before we commit the tree, we update the root component with
     // new props
-    ReactNoop.render(<Foo step={3} />);
+
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        ReactNoop.render(<Foo step={3} />);
+      });
+    } else {
+      ReactNoop.render(<Foo step={3} />);
+    }
     expect(ReactNoop.getChildrenAsJSX()).toEqual(<span prop={1} />);
     // Now let's commit. We already had a commit that was pending, which will
     // render 2.

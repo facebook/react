@@ -262,7 +262,13 @@ describe('useMutableSourceHydration', () => {
     });
     expect(() => {
       act(() => {
-        root.render(<TestComponent />);
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.unstable_startTransition(() => {
+            root.render(<TestComponent />);
+          });
+        } else {
+          root.render(<TestComponent />);
+        }
         expect(Scheduler).toFlushAndYieldThrough(['a:one']);
         source.value = 'two';
       });
@@ -316,22 +322,43 @@ describe('useMutableSourceHydration', () => {
     });
     expect(() => {
       act(() => {
-        root.render(
-          <>
-            <Component
-              label="0"
-              getSnapshot={getSnapshotA}
-              mutableSource={mutableSource}
-              subscribe={subscribeA}
-            />
-            <Component
-              label="1"
-              getSnapshot={getSnapshotB}
-              mutableSource={mutableSource}
-              subscribe={subscribeB}
-            />
-          </>,
-        );
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.unstable_startTransition(() => {
+            root.render(
+              <>
+                <Component
+                  label="0"
+                  getSnapshot={getSnapshotA}
+                  mutableSource={mutableSource}
+                  subscribe={subscribeA}
+                />
+                <Component
+                  label="1"
+                  getSnapshot={getSnapshotB}
+                  mutableSource={mutableSource}
+                  subscribe={subscribeB}
+                />
+              </>,
+            );
+          });
+        } else {
+          root.render(
+            <>
+              <Component
+                label="0"
+                getSnapshot={getSnapshotA}
+                mutableSource={mutableSource}
+                subscribe={subscribeA}
+              />
+              <Component
+                label="1"
+                getSnapshot={getSnapshotB}
+                mutableSource={mutableSource}
+                subscribe={subscribeB}
+              />
+            </>,
+          );
+        }
         expect(Scheduler).toFlushAndYieldThrough(['0:a:one']);
         source.valueB = 'b:two';
       });
@@ -344,6 +371,7 @@ describe('useMutableSourceHydration', () => {
   });
 
   // @gate experimental
+  // @gate !enableSyncDefaultUpdates
   it('should detect a tear during a higher priority interruption', () => {
     const source = createSource('one');
     const mutableSource = createMutableSource(source, param => param.version);
@@ -386,7 +414,13 @@ describe('useMutableSourceHydration', () => {
 
     expect(() => {
       act(() => {
-        root.render(<TestComponent flag={1} />);
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.unstable_startTransition(() => {
+            root.render(<TestComponent flag={1} />);
+          });
+        } else {
+          root.render(<TestComponent flag={1} />);
+        }
         expect(Scheduler).toFlushAndYieldThrough([1]);
 
         // Render an update which will be higher priority than the hydration.

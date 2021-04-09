@@ -1865,11 +1865,21 @@ describe('ReactDOMServerPartialHydration', () => {
     suspend = true;
 
     await act(async () => {
-      root.render(<App />);
-      expect(Scheduler).toFlushAndYieldThrough(['Before']);
-      // This took a long time to render.
-      Scheduler.unstable_advanceTime(1000);
-      expect(Scheduler).toFlushAndYield(['After']);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.unstable_startTransition(() => {
+          root.render(<App />);
+        });
+
+        expect(Scheduler).toFlushAndYieldThrough(['Before', 'After']);
+      } else {
+        root.render(<App />);
+
+        expect(Scheduler).toFlushAndYieldThrough(['Before']);
+        // This took a long time to render.
+        Scheduler.unstable_advanceTime(1000);
+        expect(Scheduler).toFlushAndYield(['After']);
+      }
+
       // This will cause us to skip the second row completely.
     });
 

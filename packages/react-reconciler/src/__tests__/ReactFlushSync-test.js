@@ -22,6 +22,7 @@ describe('ReactFlushSync', () => {
     return text;
   }
 
+  // @gate experimental || !enableSyncDefaultUpdates
   test('changes priority of updates in useEffect', async () => {
     function App() {
       const [syncState, setSyncState] = useState(0);
@@ -37,22 +38,37 @@ describe('ReactFlushSync', () => {
 
     const root = ReactNoop.createRoot();
     await ReactNoop.act(async () => {
-      root.render(<App />);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.unstable_startTransition(() => {
+          root.render(<App />);
+        });
+      } else {
+        root.render(<App />);
+      }
       // This will yield right before the passive effect fires
       expect(Scheduler).toFlushUntilNextPaint(['0, 0']);
 
       // The passive effect will schedule a sync update and a normal update.
       // They should commit in two separate batches. First the sync one.
-      expect(() =>
-        expect(Scheduler).toFlushUntilNextPaint(['1, 0']),
-      ).toErrorDev('flushSync was called from inside a lifecycle method');
+      expect(() => {
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          expect(Scheduler).toFlushUntilNextPaint(['1, 0', '1, 1']);
+        } else {
+          expect(Scheduler).toFlushUntilNextPaint(['1, 0']);
+        }
+      }).toErrorDev('flushSync was called from inside a lifecycle method');
 
       // The remaining update is not sync
       ReactNoop.flushSync();
       expect(Scheduler).toHaveYielded([]);
 
       // Now flush it.
-      expect(Scheduler).toFlushUntilNextPaint(['1, 1']);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        // With sync default updates, passive effects are synchronously flushed.
+        expect(Scheduler).toHaveYielded([]);
+      } else {
+        expect(Scheduler).toFlushUntilNextPaint(['1, 1']);
+      }
     });
     expect(root).toMatchRenderedOutput('1, 1');
   });

@@ -170,3 +170,5 @@ export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 
 export const enableLazyContextPropagation = false;
+
+export const enableSyncDefaultUpdates = true;

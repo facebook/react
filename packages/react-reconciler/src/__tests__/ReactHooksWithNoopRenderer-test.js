@@ -151,6 +151,7 @@ describe('ReactHooksWithNoopRenderer', () => {
     return Promise.resolve().then(() => {});
   }
 
+  // @gate experimental || !enableSyncDefaultUpdates
   it('resumes after an interruption', () => {
     function Counter(props, ref) {
       const [count, updateCount] = useState(0);
@@ -166,10 +167,20 @@ describe('ReactHooksWithNoopRenderer', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
 
     // Schedule some updates
-    ReactNoop.batchedUpdates(() => {
-      counter.current.updateCount(1);
-      counter.current.updateCount(count => count + 10);
-    });
+    if (gate(flags => flags.enableSyncDefaultUpdates)) {
+      React.unstable_startTransition(() => {
+        // TODO: Batched updates need to be inside startTransition?
+        ReactNoop.batchedUpdates(() => {
+          counter.current.updateCount(1);
+          counter.current.updateCount(count => count + 10);
+        });
+      });
+    } else {
+      ReactNoop.batchedUpdates(() => {
+        counter.current.updateCount(1);
+        counter.current.updateCount(count => count + 10);
+      });
+    }
 
     // Partially flush without committing
     expect(Scheduler).toFlushAndYieldThrough(['Count: 11']);
@@ -690,6 +701,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(ReactNoop.getChildren()).toEqual([span(22)]);
     });
 
+    // @gate experimental || !enableSyncDefaultUpdates
     it('discards render phase updates if something suspends', async () => {
       const thenable = {then() {}};
       function Foo({signal}) {
@@ -725,15 +737,28 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(Scheduler).toFlushAndYield([0]);
       expect(root).toMatchRenderedOutput(<span prop={0} />);
 
-      root.render(<Foo signal={false} />);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.unstable_startTransition(() => {
+          root.render(<Foo signal={false} />);
+        });
+      } else {
+        root.render(<Foo signal={false} />);
+      }
       expect(Scheduler).toFlushAndYield(['Suspend!']);
       expect(root).toMatchRenderedOutput(<span prop={0} />);
 
       // Rendering again should suspend again.
-      root.render(<Foo signal={false} />);
+      if (gate(flags => flags.enableSyncDefaultUpdates)) {
+        React.unstable_startTransition(() => {
+          root.render(<Foo signal={false} />);
+        });
+      } else {
+        root.render(<Foo signal={false} />);
+      }
       expect(Scheduler).toFlushAndYield(['Suspend!']);
     });
 
+    // @gate experimental || !enableSyncDefaultUpdates
     it('discards render phase updates if something suspends, but not other updates in the same component', async () => {
       const thenable = {then() {}};
       function Foo({signal}) {
@@ -776,19 +801,38 @@ describe('ReactHooksWithNoopRenderer', () => {
       expect(root).toMatchRenderedOutput(<span prop="A:0" />);
 
       await ReactNoop.act(async () => {
-        root.render(<Foo signal={false} />);
-        setLabel('B');
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.unstable_startTransition(() => {
+            root.render(<Foo signal={false} />);
+            setLabel('B');
+          });
+        } else {
+          root.render(<Foo signal={false} />);
+          setLabel('B');
+        }
 
         expect(Scheduler).toFlushAndYield(['Suspend!']);
         expect(root).toMatchRenderedOutput(<span prop="A:0" />);
 
         // Rendering again should suspend again.
-        root.render(<Foo signal={false} />);
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.unstable_startTransition(() => {
+            root.render(<Foo signal={false} />);
+          });
+        } else {
+          root.render(<Foo signal={false} />);
+        }
         expect(Scheduler).toFlushAndYield(['Suspend!']);
 
         // Flip the signal back to "cancel" the update. However, the update to
         // label should still proceed. It shouldn't have been dropped.
-        root.render(<Foo signal={true} />);
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.unstable_startTransition(() => {
+            root.render(<Foo signal={true} />);
+          });
+        } else {
+          root.render(<Foo signal={true} />);
+        }
         expect(Scheduler).toFlushAndYield(['B:0']);
         expect(root).toMatchRenderedOutput(<span prop="B:0" />);
       });
@@ -1284,6 +1328,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
+    // @gate experimental || !enableSyncDefaultUpdates
     it('does not warn about state updates for unmounted components with pending passive unmounts for alternates', () => {
       let setParentState = null;
       const setChildStates = [];
@@ -1350,17 +1395,34 @@ describe('ReactHooksWithNoopRenderer', () => {
         ]);
 
         // Schedule another update for children, and partially process it.
-        setChildStates.forEach(setChildState => setChildState(2));
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.unstable_startTransition(() => {
+            setChildStates.forEach(setChildState => setChildState(2));
+          });
+        } else {
+          setChildStates.forEach(setChildState => setChildState(2));
+        }
         expect(Scheduler).toFlushAndYieldThrough(['Child one render']);
 
         // Schedule unmount for the parent that unmounts children with pending update.
         ReactNoop.unstable_runWithPriority(ContinuousEventPriority, () => {
           setParentState(false);
         });
-        expect(Scheduler).toFlushUntilNextPaint([
-          'Parent false render',
-          'Parent false commit',
-        ]);
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          expect(Scheduler).toFlushUntilNextPaint([
+            // TODO: why do the children render and fire effects?
+            'Child two render',
+            'Child one commit',
+            'Child two commit',
+            'Parent false render',
+            'Parent false commit',
+          ]);
+        } else {
+          expect(Scheduler).toFlushUntilNextPaint([
+            'Parent false render',
+            'Parent false commit',
+          ]);
+        }
 
         // Schedule updates for children too (which should be ignored)
         setChildStates.forEach(setChildState => setChildState(2));
@@ -1647,6 +1709,7 @@ describe('ReactHooksWithNoopRenderer', () => {
       });
     });
 
+    // @gate experimental || !enableSyncDefaultUpdates
     it('updates have async priority even if effects are flushed early', () => {
       function Counter(props) {
         const [count, updateCount] = useState('(empty)');
@@ -1667,20 +1730,41 @@ describe('ReactHooksWithNoopRenderer', () => {
         expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
 
         // Rendering again should flush the previous commit's effects
-        ReactNoop.render(<Counter count={1} />, () =>
-          Scheduler.unstable_yieldValue('Sync effect'),
-        );
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.unstable_startTransition(() => {
+            ReactNoop.render(<Counter count={1} />, () =>
+              Scheduler.unstable_yieldValue('Sync effect'),
+            );
+          });
+        } else {
+          ReactNoop.render(<Counter count={1} />, () =>
+            Scheduler.unstable_yieldValue('Sync effect'),
+          );
+        }
+
         expect(Scheduler).toFlushAndYieldThrough([
           'Schedule update [0]',
           'Count: 0',
         ]);
-        expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
 
-        expect(Scheduler).toFlushAndYieldThrough(['Sync effect']);
-        expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
-        ReactNoop.flushPassiveEffects();
-        expect(Scheduler).toHaveYielded(['Schedule update [1]']);
-        expect(Scheduler).toFlushAndYield(['Count: 1']);
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+          expect(Scheduler).toFlushAndYieldThrough([
+            'Count: 0',
+            'Sync effect',
+            'Schedule update [1]',
+            'Count: 1',
+          ]);
+        } else {
+          expect(ReactNoop.getChildren()).toEqual([span('Count: (empty)')]);
+          expect(Scheduler).toFlushAndYieldThrough(['Sync effect']);
+          expect(ReactNoop.getChildren()).toEqual([span('Count: 0')]);
+
+          ReactNoop.flushPassiveEffects();
+          expect(Scheduler).toHaveYielded(['Schedule update [1]']);
+          expect(Scheduler).toFlushAndYield(['Count: 1']);
+        }
+
         expect(ReactNoop.getChildren()).toEqual([span('Count: 1')]);
       });
     });

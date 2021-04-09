@@ -246,6 +246,7 @@ describe('Profiler', () => {
         expect(callback).toHaveBeenCalledTimes(2);
       });
 
+      // @gate experimental || !enableSyncDefaultUpdates
       it('is not invoked until the commit phase', () => {
         const callback = jest.fn();
 
@@ -254,15 +255,29 @@ describe('Profiler', () => {
           return null;
         };
 
-        ReactTestRenderer.create(
-          <React.Profiler id="test" onRender={callback}>
-            <Yield value="first" />
-            <Yield value="last" />
-          </React.Profiler>,
-          {
-            unstable_isConcurrent: true,
-          },
-        );
+        if (gate(flags => flags.enableSyncDefaultUpdates)) {
+          React.unstable_startTransition(() => {
+            ReactTestRenderer.create(
+              <React.Profiler id="test" onRender={callback}>
+                <Yield value="first" />
+                <Yield value="last" />
+              </React.Profiler>,
+              {
+                unstable_isConcurrent: true,
+              },
+            );
+          });
+        } else {
+          ReactTestRenderer.create(
+            <React.Profiler id="test" onRender={callback}>
+              <Yield value="first" />
+              <Yield value="last" />
+            </React.Profiler>,
+            {
+              unstable_isConcurrent: true,
+            },
+          );
+        }
 
         // Times are logged until a render is committed.
         expect(Scheduler).toFlushAndYieldThrough(['first']);
@@ -796,6 +811,7 @@ describe('Profiler', () => {
       });
 
       describe('with regard to interruptions', () => {
+        // @gate experimental || !enableSyncDefaultUpdates
         it('should accumulate actual time after a scheduling interruptions', () => {
           const callback = jest.fn();
 
@@ -808,13 +824,25 @@ describe('Profiler', () => {
           Scheduler.unstable_advanceTime(5); // 0 -> 5
 
           // Render partially, but run out of time before completing.
-          ReactTestRenderer.create(
-            <React.Profiler id="test" onRender={callback}>
-              <Yield renderTime={2} />
-              <Yield renderTime={3} />
-            </React.Profiler>,
-            {unstable_isConcurrent: true},
-          );
+          if (gate(flags => flags.enableSyncDefaultUpdates)) {
+            React.unstable_startTransition(() => {
+              ReactTestRenderer.create(
+                <React.Profiler id="test" onRender={callback}>
+                  <Yield renderTime={2} />
+                  <Yield renderTime={3} />
+                </React.Profiler>,
+                {unstable_isConcurrent: true},
+              );
+            });
+          } else {
+            ReactTestRenderer.create(
+              <React.Profiler id="test" onRender={callback}>
+                <Yield renderTime={2} />
+                <Yield renderTime={3} />
+              </React.Profiler>,
+              {unstable_isConcurrent: true},
+            );
+          }
           expect(Scheduler).toFlushAndYieldThrough(['Yield:2']);
           expect(callback).toHaveBeenCalledTimes(0);
 
@@ -830,6 +858,7 @@ describe('Profiler', () => {
           expect(call[5]).toBe(10); // commit time
         });
 
+        // @gate experimental || !enableSyncDefaultUpdates
         it('should not include time between frames', () => {
           const callback = jest.fn();
 
@@ -843,16 +872,31 @@ describe('Profiler', () => {
 
           // Render partially, but don't finish.
           // This partial render should take 5ms of simulated time.
-          ReactTestRenderer.create(
-            <React.Profiler id="outer" onRender={callback}>
-              <Yield renderTime={5} />
-              <Yield renderTime={10} />
-              <React.Profiler id="inner" onRender={callback}>
-                <Yield renderTime={17} />
-              </React.Profiler>
-            </React.Profiler>,
-            {unstable_isConcurrent: true},
-          );
+          if (gate(flags => flags.enableSyncDefaultUpdates)) {
+            React.unstable_startTransition(() => {
+              ReactTestRenderer.create(
+                <React.Profiler id="outer" onRender={callback}>
+                  <Yield renderTime={5} />
+                  <Yield renderTime={10} />
+                  <React.Profiler id="inner" onRender={callback}>
+                    <Yield renderTime={17} />
+                  </React.Profiler>
+                </React.Profiler>,
+                {unstable_isConcurrent: true},
+              );
+            });
+          } else {
+            ReactTestRenderer.create(
+              <React.Profiler id="outer" onRender={callback}>
+                <Yield renderTime={5} />
+                <Yield renderTime={10} />
+                <React.Profiler id="inner" onRender={callback}>
+                  <Yield renderTime={17} />
+                </React.Profiler>
+              </React.Profiler>,
+              {unstable_isConcurrent: true},
+            );
+          }
           expect(Scheduler).toFlushAndYieldThrough(['Yield:5']);
           expect(callback).toHaveBeenCalledTimes(0);
 
@@ -880,6 +924,7 @@ describe('Profiler', () => {
           expect(outerCall[5]).toBe(87); // commit time
         });
 
+        // @gate experimental || !enableSyncDefaultUpdates
         it('should report the expected times when a high-pri update replaces a mount in-progress', () => {
           const callback = jest.fn();
 
@@ -893,13 +938,26 @@ describe('Profiler', () => {
 
           // Render a partially update, but don't finish.
           // This partial render should take 10ms of simulated time.
-          const renderer = ReactTestRenderer.create(
-            <React.Profiler id="test" onRender={callback}>
-              <Yield renderTime={10} />
-              <Yield renderTime={20} />
-            </React.Profiler>,
-            {unstable_isConcurrent: true},
-          );
+          let renderer;
+          if (gate(flags => flags.enableSyncDefaultUpdates)) {
+            React.unstable_startTransition(() => {
+              renderer = ReactTestRenderer.create(
+                <React.Profiler id="test" onRender={callback}>
+                  <Yield renderTime={10} />
+                  <Yield renderTime={20} />
+                </React.Profiler>,
+                {unstable_isConcurrent: true},
+              );
+            });
+          } else {
+            renderer = ReactTestRenderer.create(
+              <React.Profiler id="test" onRender={callback}>
+                <Yield renderTime={10} />
+                <Yield renderTime={20} />
+              </React.Profiler>,
+              {unstable_isConcurrent: true},
+            );
+          }
           expect(Scheduler).toFlushAndYieldThrough(['Yield:10']);
           expect(callback).toHaveBeenCalledTimes(0);
 
@@ -933,6 +991,7 @@ describe('Profiler', () => {
           expect(callback).toHaveBeenCalledTimes(0);
         });
 
+        // @gate experimental || !enableSyncDefaultUpdates
         it('should report the expected times when a high-priority update replaces a low-priority update', () => {
           const callback = jest.fn();
 
@@ -968,13 +1027,25 @@ describe('Profiler', () => {
 
           // Render a partially update, but don't finish.
           // This partial render should take 3ms of simulated time.
-          renderer.update(
-            <React.Profiler id="test" onRender={callback}>
-              <Yield renderTime={3} />
-              <Yield renderTime={5} />
-              <Yield renderTime={9} />
-            </React.Profiler>,
-          );
+          if (gate(flags => flags.enableSyncDefaultUpdates)) {
+            React.unstable_startTransition(() => {
+              renderer.update(
+                <React.Profiler id="test" onRender={callback}>
+                  <Yield renderTime={3} />
+                  <Yield renderTime={5} />
+                  <Yield renderTime={9} />
+                </React.Profiler>,
+              );
+            });
+          } else {
+            renderer.update(
+              <React.Profiler id="test" onRender={callback}>
+                <Yield renderTime={3} />
+                <Yield renderTime={5} />
+                <Yield renderTime={9} />
+              </React.Profiler>,
+            );
+          }
           expect(Scheduler).toFlushAndYieldThrough(['Yield:3']);
           expect(callback).toHaveBeenCalledTimes(0);
 
@@ -1014,6 +1085,7 @@ describe('Profiler', () => {
           expect(callback).toHaveBeenCalledTimes(1);
         });
 
+        // @gate experimental || !enableSyncDefaultUpdates
         it('should report the expected times when a high-priority update interrupts a low-priority update', () => {
           const callback = jest.fn();
 
@@ -1080,7 +1152,13 @@ describe('Profiler', () => {
 
           // Render a partially update, but don't finish.
           // This partial render will take 10ms of actual render time.
-          first.setState({renderTime: 10});
+          if (gate(flags => flags.enableSyncDefaultUpdates)) {
+            React.unstable_startTransition(() => {
+              first.setState({renderTime: 10});
+            });
+          } else {
+            first.setState({renderTime: 10});
+          }
           expect(Scheduler).toFlushAndYieldThrough(['FirstComponent:10']);
           expect(callback).toHaveBeenCalledTimes(0);
 
@@ -3343,6 +3421,7 @@ describe('Profiler', () => {
       ).toHaveBeenLastNotifiedOfInteraction(interaction);
     });
 
+    // @gate experimental || !enableSyncDefaultUpdates
     it('should associate traced events with their subsequent commits', () => {
       let instance = null;
 
@@ -3459,10 +3538,19 @@ describe('Profiler', () => {
           interactionOne.name,
           Scheduler.unstable_now(),
           () => {
-            instance.setState({count: 1});
+            if (gate(flags => flags.enableSyncDefaultUpdates)) {
+              React.unstable_startTransition(() => {
+                instance.setState({count: 1});
 
-            // Update state again to verify our traced interaction isn't registered twice
-            instance.setState({count: 2});
+                // Update state again to verify our traced interaction isn't registered twice
+                instance.setState({count: 2});
+              });
+            } else {
+              instance.setState({count: 1});
+
+              // Update state again to verify our traced interaction isn't registered twice
+              instance.setState({count: 2});
+            }
 
             // The scheduler/tracing package will notify of work started for the default thread,
             // But React shouldn't notify until it's been flushed.
@@ -3655,6 +3743,7 @@ describe('Profiler', () => {
       expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(1);
     });
 
+    // @gate experimental || !enableSyncDefaultUpdates
     it('should report the expected times when a high-priority update interrupts a low-priority update', () => {
       const onPostCommit = jest.fn(() => {
         Scheduler.unstable_yieldValue('onPostCommit');
@@ -3715,7 +3804,13 @@ describe('Profiler', () => {
           Scheduler.unstable_now(),
           () => {
             // Render a partially update, but don't finish.
-            first.setState({count: 1});
+            if (gate(flags => flags.enableSyncDefaultUpdates)) {
+              React.unstable_startTransition(() => {
+                first.setState({count: 1});
+              });
+            } else {
+              first.setState({count: 1});
+            }
 
             expect(onWorkScheduled).toHaveBeenCalled();
             expect(onWorkScheduled.mock.calls[0][0]).toMatchInteractions([
@@ -4590,6 +4685,7 @@ describe('Profiler', () => {
         ).toMatchInteraction(initialRenderInteraction);
       });
 
+      // @gate experimental || !enableSyncDefaultUpdates
       it('handles high-pri renderers between suspended and resolved (async) trees', async () => {
         // Set up an initial shell. We need to set this up before the test sceanrio
         // because we want initial render to suspend on navigation to the initial state.
@@ -4614,14 +4710,27 @@ describe('Profiler', () => {
           initialRenderInteraction.name,
           initialRenderInteraction.timestamp,
           () => {
-            renderer.update(
-              <React.Profiler id="app" onCommit={onCommit}>
-                <React.Suspense fallback={<Text text="loading" />}>
-                  <AsyncText text="loaded" ms={100} />
-                </React.Suspense>
-                <Text text="initial" />
-              </React.Profiler>,
-            );
+            if (gate(flags => flags.enableSyncDefaultUpdates)) {
+              React.unstable_startTransition(() => {
+                renderer.update(
+                  <React.Profiler id="app" onCommit={onCommit}>
+                    <React.Suspense fallback={<Text text="loading" />}>
+                      <AsyncText text="loaded" ms={100} />
+                    </React.Suspense>
+                    <Text text="initial" />
+                  </React.Profiler>,
+                );
+              });
+            } else {
+              renderer.update(
+                <React.Profiler id="app" onCommit={onCommit}>
+                  <React.Suspense fallback={<Text text="loading" />}>
+                    <AsyncText text="loaded" ms={100} />
+                  </React.Suspense>
+                  <Text text="initial" />
+                </React.Profiler>,
+              );
+            }
           },
         );
         expect(Scheduler).toFlushAndYield([

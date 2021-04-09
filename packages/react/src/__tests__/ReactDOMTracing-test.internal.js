@@ -123,11 +123,21 @@ describe('ReactDOMTracing', () => {
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
           act(() => {
-            root.render(
-              <React.Profiler id="test" onRender={onRender}>
-                <App />
-              </React.Profiler>,
-            );
+            if (gate(flags => flags.enableSyncDefaultUpdates)) {
+              React.unstable_startTransition(() => {
+                root.render(
+                  <React.Profiler id="test" onRender={onRender}>
+                    <App />
+                  </React.Profiler>,
+                );
+              });
+            } else {
+              root.render(
+                <React.Profiler id="test" onRender={onRender}>
+                  <App />
+                </React.Profiler>,
+              );
+            }
             expect(onInteractionTraced).toHaveBeenCalledTimes(1);
             expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
               interaction,
@@ -140,6 +150,7 @@ describe('ReactDOMTracing', () => {
             );
             expect(Scheduler).toFlushAndYieldThrough(['Child', 'Child:mount']);
             expect(onInteractionScheduledWorkCompleted).not.toHaveBeenCalled();
+
             expect(onRender).toHaveBeenCalledTimes(2);
             expect(onRender).toHaveLastRenderedWithInteractions(
               new Set([interaction]),
@@ -275,11 +286,21 @@ describe('ReactDOMTracing', () => {
         SchedulerTracing.unstable_trace('initialization', 0, () => {
           interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
           act(() => {
-            root.render(
-              <React.Profiler id="test" onRender={onRender}>
-                <App />
-              </React.Profiler>,
-            );
+            if (gate(flags => flags.enableSyncDefaultUpdates)) {
+              React.unstable_startTransition(() => {
+                root.render(
+                  <React.Profiler id="test" onRender={onRender}>
+                    <App />
+                  </React.Profiler>,
+                );
+              });
+            } else {
+              root.render(
+                <React.Profiler id="test" onRender={onRender}>
+                  <App />
+                </React.Profiler>,
+              );
+            }
             expect(onInteractionTraced).toHaveBeenCalledTimes(1);
             expect(onInteractionTraced).toHaveBeenLastNotifiedOfInteraction(
               interaction,
@@ -307,16 +328,13 @@ describe('ReactDOMTracing', () => {
         expect(
           onInteractionScheduledWorkCompleted,
         ).toHaveBeenLastNotifiedOfInteraction(interaction);
-        if (gate(flags => flags.enableUseJSStackToTrackPassiveDurations)) {
-          expect(onRender).toHaveBeenCalledTimes(3);
-        } else {
-          // TODO: This is 4 instead of 3 because this update was scheduled at
-          // idle priority, and idle updates are slightly higher priority than
-          // offscreen work. So it takes two render passes to finish it. Profiler
-          // calls `onRender` for the first render even though everything
-          // bails out.
-          expect(onRender).toHaveBeenCalledTimes(4);
-        }
+
+        // TODO: This is 4 instead of 3 because this update was scheduled at
+        // idle priority, and idle updates are slightly higher priority than
+        // offscreen work. So it takes two render passes to finish it. Profiler
+        // calls `onRender` for the first render even though everything
+        // bails out.
+        expect(onRender).toHaveBeenCalledTimes(4);
         expect(onRender).toHaveLastRenderedWithInteractions(
           new Set([interaction]),
         );
@@ -503,7 +521,13 @@ describe('ReactDOMTracing', () => {
               scheduleUpdateWithHidden(),
             );
           });
-          scheduleUpdate();
+          if (gate(flags => flags.enableSyncDefaultUpdates)) {
+            React.unstable_startTransition(() => {
+              scheduleUpdate();
+            });
+          } else {
+            scheduleUpdate();
+          }
           expect(interaction).not.toBeNull();
           expect(onRender).toHaveBeenCalledTimes(1);
           expect(onInteractionTraced).toHaveBeenCalledTimes(1);
@@ -580,7 +604,13 @@ describe('ReactDOMTracing', () => {
           SchedulerTracing.unstable_trace('initialization', 0, () => {
             interaction = Array.from(SchedulerTracing.unstable_getCurrent())[0];
             // This render is only CPU bound. Nothing suspends.
-            root.render(<App />);
+            if (gate(flags => flags.enableSyncDefaultUpdates)) {
+              React.unstable_startTransition(() => {
+                root.render(<App />);
+              });
+            } else {
+              root.render(<App />);
+            }
           });
 
           expect(Scheduler).toFlushAndYieldThrough(['A']);

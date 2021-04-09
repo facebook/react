@@ -452,7 +452,11 @@ describe('updaters', () => {
     };
     const LowPriorityUpdater = () => {
       const [count, setCount] = React.useState(0);
-      triggerLowPriorityUpdate = () => setCount(prevCount => prevCount + 1);
+      triggerLowPriorityUpdate = () => {
+        React.unstable_startTransition(() => {
+          setCount(prevCount => prevCount + 1);
+        });
+      };
       Scheduler.unstable_yieldValue(`LowPriorityUpdater ${count}`);
       return <Yield value={`LowPriority ${count}`} />;
     };
