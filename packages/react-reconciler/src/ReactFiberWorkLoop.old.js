@@ -229,7 +229,10 @@ import {
   hasCaughtError,
   clearCaughtError,
 } from 'shared/ReactErrorUtils';
-import {onCommitRoot as onCommitRootDevTools} from './ReactFiberDevToolsHook.old';
+import {
+  onCommitRoot as onCommitRootDevTools,
+  onPostCommitRoot as onPostCommitRootDevTools,
+} from './ReactFiberDevToolsHook.old';
 import {onCommitRoot as onCommitRootTestSelector} from './ReactTestSelectors';
 
 // Used by `act`
@@ -2155,6 +2158,14 @@ function flushPassiveEffectsImpl() {
   // exceeds the limit, we'll fire a warning.
   nestedPassiveUpdateCount =
     rootWithPendingPassiveEffects === null ? 0 : nestedPassiveUpdateCount + 1;
+
+  // TODO: Move to commitPassiveMountEffects
+  onPostCommitRootDevTools(root);
+  if (enableProfilerTimer && enableProfilerCommitHooks) {
+    const stateNode = root.current.stateNode;
+    stateNode.effectDuration = 0;
+    stateNode.passiveEffectDuration = 0;
+  }
 
   return true;
 }

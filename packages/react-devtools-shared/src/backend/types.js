@@ -326,6 +326,7 @@ export type RendererInterface = {
   getPathForElement: (id: number) => Array<PathFrame> | null,
   handleCommitFiberRoot: (fiber: Object, commitPriority?: number) => void,
   handleCommitFiberUnmount: (fiber: Object) => void,
+  handlePostCommitFiberRoot: (fiber: Object) => void,
   inspectElement: (
     requestID: number,
     id: number,
