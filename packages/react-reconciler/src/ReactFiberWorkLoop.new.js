@@ -455,6 +455,13 @@ export function requestUpdateLane(fiber: Fiber): Lane {
   // use that directly.
   // TODO: Move this type conversion to the event priority module.
   const eventLane: Lane = (getCurrentEventPriority(): any);
+  if (
+    enableSyncDefaultUpdates &&
+    (eventLane === InputContinuousLane ||
+      eventLane === InputContinuousHydrationLane)
+  ) {
+    return DefaultLane;
+  }
   return eventLane;
 }
 
