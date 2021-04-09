@@ -41,7 +41,7 @@ export const LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY =
 export const LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY =
   'React::DevTools::traceUpdatesEnabled';
 
-export const PROFILER_EXPORT_VERSION = 4;
+export const PROFILER_EXPORT_VERSION = 5;
 
 export const CHANGE_LOG_URL =
   'https://github.com/facebook/react/blob/master/packages/react-devtools/CHANGELOG.md';

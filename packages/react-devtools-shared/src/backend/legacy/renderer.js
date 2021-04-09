@@ -51,7 +51,7 @@ import type {
   ComponentFilter,
   ElementType,
 } from 'react-devtools-shared/src/types';
-import type {Owner, InspectedElement} from '../types';
+import type {InspectedElement, SerializedElement} from '../types';
 
 export type InternalInstance = Object;
 type LegacyRenderer = Object;
@@ -767,6 +767,7 @@ export function attach(
           owners.push({
             displayName: getData(owner).displayName || 'Unknown',
             id: getID(owner),
+            key: element.key,
             type: getElementType(owner),
           });
           if (owner._currentElement) {
@@ -1047,7 +1048,7 @@ export function attach(
     // Not implemented.
   }
 
-  function getOwnersList(id: number): Array<Owner> | null {
+  function getOwnersList(id: number): Array<SerializedElement> | null {
     // Not implemented.
     return null;
   }

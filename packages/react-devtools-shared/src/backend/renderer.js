@@ -81,6 +81,8 @@ import {
 } from './ReactSymbols';
 import {format} from './utils';
 import {enableProfilerChangedHookIndices} from 'react-devtools-feature-flags';
+import is from 'shared/objectIs';
+import isArray from 'shared/isArray';
 
 import type {Fiber} from 'react-reconciler/src/ReactInternalTypes';
 import type {
@@ -91,13 +93,13 @@ import type {
   InspectedElementPayload,
   InstanceAndStyle,
   NativeType,
-  Owner,
   PathFrame,
   PathMatch,
   ProfilingDataBackend,
   ProfilingDataForRootBackend,
   ReactRenderer,
   RendererInterface,
+  SerializedElement,
   WorkTagMap,
 } from './types';
 import type {Interaction} from 'react-devtools-shared/src/devtools/views/Profiler/types';
@@ -105,8 +107,6 @@ import type {
   ComponentFilter,
   ElementType,
 } from 'react-devtools-shared/src/types';
-import is from 'shared/objectIs';
-import isArray from 'shared/isArray';
 
 type getDisplayNameForFiberType = (fiber: Fiber) => string | null;
 type getTypeSymbolType = (type: any) => Symbol | number;
@@ -2172,6 +2172,7 @@ export function attach(
             ),
             maxActualDuration: 0,
             priorityLevel: null,
+            updaters: getUpdatersList(root),
             effectDuration: null,
             passiveEffectDuration: null,
           };
@@ -2182,6 +2183,12 @@ export function attach(
         currentRootID = -1;
       });
     }
+  }
+
+  function getUpdatersList(root): Array<SerializedElement> | null {
+    return root.memoizedUpdaters != null
+      ? Array.from(root.memoizedUpdaters).map(fiberToSerializedElement)
+      : null;
   }
 
   function handleCommitFiberUnmount(fiber) {
@@ -2240,6 +2247,8 @@ export function attach(
         maxActualDuration: 0,
         priorityLevel:
           priorityLevel == null ? null : formatPriorityLevel(priorityLevel),
+
+        updaters: getUpdatersList(root),
 
         // Initialize to null; if new enough React version is running,
         // these values will be read during separate handlePostCommitFiberRoot() call.
@@ -2637,7 +2646,16 @@ export function attach(
     }
   }
 
-  function getOwnersList(id: number): Array<Owner> | null {
+  function fiberToSerializedElement(fiber: Fiber): SerializedElement {
+    return {
+      displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
+      id: getFiberID(getPrimaryFiber(fiber)),
+      key: fiber.key,
+      type: getElementTypeForFiber(fiber),
+    };
+  }
+
+  function getOwnersList(id: number): Array<SerializedElement> | null {
     const fiber = findCurrentFiberUsingSlowPathById(id);
     if (fiber == null) {
       return null;
@@ -2645,22 +2663,12 @@ export function attach(
 
     const {_debugOwner} = fiber;
 
-    const owners = [
-      {
-        displayName: getDisplayNameForFiber(fiber) || 'Anonymous',
-        id,
-        type: getElementTypeForFiber(fiber),
-      },
-    ];
+    const owners: Array<SerializedElement> = [fiberToSerializedElement(fiber)];
 
     if (_debugOwner) {
       let owner = _debugOwner;
       while (owner !== null) {
-        owners.unshift({
-          displayName: getDisplayNameForFiber(owner) || 'Anonymous',
-          id: getFiberID(getPrimaryFiber(owner)),
-          type: getElementTypeForFiber(owner),
-        });
+        owners.unshift(fiberToSerializedElement(owner));
         owner = owner._debugOwner || null;
       }
     }
@@ -2791,11 +2799,7 @@ export function attach(
       owners = [];
       let owner = _debugOwner;
       while (owner !== null) {
-        owners.push({
-          displayName: getDisplayNameForFiber(owner) || 'Anonymous',
-          id: getFiberID(getPrimaryFiber(owner)),
-          type: getElementTypeForFiber(owner),
-        });
+        owners.push(fiberToSerializedElement(owner));
         owner = owner._debugOwner || null;
       }
     }
@@ -3380,6 +3384,7 @@ export function attach(
     maxActualDuration: number,
     passiveEffectDuration: number | null,
     priorityLevel: string | null,
+    updaters: Array<SerializedElement> | null,
   |};
 
   type CommitProfilingMetadataMap = Map<number, Array<CommitProfilingData>>;
@@ -3438,6 +3443,7 @@ export function attach(
             passiveEffectDuration,
             priorityLevel,
             commitTime,
+            updaters,
           } = commitProfilingData;
 
           const interactionIDs: Array<number> = [];
@@ -3478,6 +3484,7 @@ export function attach(
             passiveEffectDuration,
             priorityLevel,
             timestamp: commitTime,
+            updaters,
           });
         });
 

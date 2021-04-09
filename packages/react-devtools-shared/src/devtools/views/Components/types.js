@@ -44,16 +44,17 @@ export type Element = {|
   weight: number,
 |};
 
-export type Owner = {|
+export type SerializedElement = {|
   displayName: string | null,
   id: number,
+  key: number | string | null,
   hocDisplayNames: Array<string> | null,
   type: ElementType,
 |};
 
 export type OwnersList = {|
   id: number,
-  owners: Array<Owner> | null,
+  owners: Array<SerializedElement> | null,
 |};
 
 export type InspectedElementResponseType =
@@ -94,7 +95,7 @@ export type InspectedElement = {|
   warnings: Array<[string, number]>,
 
   // List of owners
-  owners: Array<Owner> | null,
+  owners: Array<SerializedElement> | null,
 
   // Location of component in source code.
   source: Source | null,
