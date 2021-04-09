@@ -56,7 +56,13 @@ import {
   processChildContext,
   emptyContextObject,
 } from './ReactFizzContext';
-import {REACT_ELEMENT_TYPE, REACT_SUSPENSE_TYPE} from 'shared/ReactSymbols';
+import {
+  getIteratorFn,
+  REACT_ELEMENT_TYPE,
+  REACT_PORTAL_TYPE,
+  REACT_LAZY_TYPE,
+  REACT_SUSPENSE_TYPE,
+} from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   disableLegacyContext,
@@ -421,6 +427,16 @@ function shouldConstruct(Component) {
   return Component.prototype && Component.prototype.isReactComponent;
 }
 
+function invalidRenderResult(type: any): void {
+  invariant(
+    false,
+    '%s(...): Nothing was returned from render. This usually means a ' +
+      'return statement is missing. Or, to render nothing, ' +
+      'return null.',
+    getComponentNameFromType(type) || 'Component',
+  );
+}
+
 function renderWithHooks<Props, SecondArg>(
   request: Request,
   task: Task,
@@ -430,6 +446,9 @@ function renderWithHooks<Props, SecondArg>(
 ): any {
   // TODO: Set up Hooks etc.
   const children = Component(props, secondArg);
+  if (children === undefined) {
+    invalidRenderResult(Component);
+  }
   return children;
 }
 
@@ -441,6 +460,13 @@ function finishClassComponent(
   props: any,
 ): ReactNodeList {
   const nextChildren = instance.render();
+  if (nextChildren === undefined) {
+    if (__DEV__ && instance.render._isMockFunction) {
+      // We allow auto-mocks to proceed as if they're returning null.
+    } else {
+      invalidRenderResult(Component);
+    }
+  }
 
   if (__DEV__) {
     if (instance.props !== props) {
@@ -693,6 +719,58 @@ function renderNodeDestructive(
   // something suspends.
   task.node = node;
 
+  // Handle object types
+  if (typeof node === 'object' && node !== null) {
+    switch ((node: any).$$typeof) {
+      case REACT_ELEMENT_TYPE: {
+        const element: React$Element<any> = (node: any);
+        const type = element.type;
+        const props = element.props;
+        renderElement(request, task, type, props, node);
+        return;
+      }
+      case REACT_PORTAL_TYPE:
+        throw new Error('Not yet implemented node type.');
+      case REACT_LAZY_TYPE:
+        throw new Error('Not yet implemented node type.');
+    }
+
+    if (isArray(node)) {
+      if (node.length > 0) {
+        for (let i = 0; i < node.length; i++) {
+          // Recursively render the rest. We need to use the non-destructive form
+          // so that we can safely pop back up and render the sibling if something
+          // suspends.
+          renderNode(request, task, node[i]);
+        }
+      } else {
+        pushEmpty(
+          task.blockedSegment.chunks,
+          request.responseState,
+          task.assignID,
+        );
+        task.assignID = null;
+      }
+      return;
+    }
+
+    const iteratorFn = getIteratorFn(node);
+    if (iteratorFn) {
+      throw new Error('Not yet implemented node type.');
+    }
+
+    const childString = Object.prototype.toString.call(node);
+    invariant(
+      false,
+      'Objects are not valid as a React child (found: %s). ' +
+        'If you meant to render a collection of children, use an array ' +
+        'instead.',
+      childString === '[object Object]'
+        ? 'object with keys {' + Object.keys(node).join(', ') + '}'
+        : childString,
+    );
+  }
+
   if (typeof node === 'string') {
     pushTextInstance(
       task.blockedSegment.chunks,
@@ -704,43 +782,29 @@ function renderNodeDestructive(
     return;
   }
 
-  if (isArray(node)) {
-    if (node.length > 0) {
-      for (let i = 0; i < node.length; i++) {
-        // Recursively render the rest. We need to use the non-destructive form
-        // so that we can safely pop back up and render the sibling if something
-        // suspends.
-        renderNode(request, task, node[i]);
-      }
-    } else {
-      pushEmpty(
-        task.blockedSegment.chunks,
-        request.responseState,
-        task.assignID,
+  if (typeof node === 'number') {
+    pushTextInstance(
+      task.blockedSegment.chunks,
+      '' + node,
+      request.responseState,
+      task.assignID,
+    );
+    task.assignID = null;
+    return;
+  }
+
+  if (__DEV__) {
+    if (typeof node === 'function') {
+      console.error(
+        'Functions are not valid as a React child. This may happen if ' +
+          'you return a Component instead of <Component /> from render. ' +
+          'Or maybe you meant to call this function rather than return it.',
       );
-      task.assignID = null;
     }
-    return;
   }
 
-  if (node === null) {
-    pushEmpty(task.blockedSegment.chunks, request.responseState, task.assignID);
-    return;
-  }
-
-  if (
-    typeof node === 'object' &&
-    node &&
-    (node: any).$$typeof === REACT_ELEMENT_TYPE
-  ) {
-    const element: React$Element<any> = (node: any);
-    const type = element.type;
-    const props = element.props;
-    renderElement(request, task, type, props, node);
-    return;
-  }
-
-  throw new Error('Not yet implemented node type.');
+  // Any other type is assumed to be empty.
+  pushEmpty(task.blockedSegment.chunks, request.responseState, task.assignID);
 }
 
 function spawnNewSuspendedTask(
