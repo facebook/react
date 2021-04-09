@@ -1051,7 +1051,7 @@ function performSyncWorkOnRoot(root) {
   const finishedWork: Fiber = (root.current.alternate: any);
   root.finishedWork = finishedWork;
   root.finishedLanes = lanes;
-  if (enableSyncDefaultUpdates && includesSomeLane(lanes, DefaultLane)) {
+  if (enableSyncDefaultUpdates && !includesSomeLane(lanes, SyncLane)) {
     finishConcurrentRender(root, exitStatus, lanes);
   } else {
     commitRoot(root);
