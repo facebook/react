@@ -62,6 +62,12 @@ import {
   REACT_PORTAL_TYPE,
   REACT_LAZY_TYPE,
   REACT_SUSPENSE_TYPE,
+  REACT_LEGACY_HIDDEN_TYPE,
+  REACT_DEBUG_TRACING_MODE_TYPE,
+  REACT_STRICT_MODE_TYPE,
+  REACT_PROFILER_TYPE,
+  REACT_SUSPENSE_LIST_TYPE,
+  REACT_FRAGMENT_TYPE,
 } from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -703,10 +709,32 @@ function renderElement(
     }
   } else if (typeof type === 'string') {
     renderHostElement(request, task, type, props);
-  } else if (type === REACT_SUSPENSE_TYPE) {
-    renderSuspenseBoundary(request, task, props);
   } else {
-    throw new Error('Not yet implemented element type.');
+    switch (type) {
+      // TODO: LegacyHidden acts the same as a fragment. This only works
+      // because we currently assume that every instance of LegacyHidden is
+      // accompanied by a host component wrapper. In the hidden mode, the host
+      // component is given a `hidden` attribute, which ensures that the
+      // initial HTML is not visible. To support the use of LegacyHidden as a
+      // true fragment, without an extra DOM node, we would have to hide the
+      // initial HTML in some other way.
+      case REACT_LEGACY_HIDDEN_TYPE:
+      case REACT_DEBUG_TRACING_MODE_TYPE:
+      case REACT_STRICT_MODE_TYPE:
+      case REACT_PROFILER_TYPE:
+      case REACT_SUSPENSE_LIST_TYPE: // TODO: SuspenseList should control the boundaries.
+      case REACT_FRAGMENT_TYPE: {
+        renderNodeDestructive(request, task, props.children);
+        break;
+      }
+      case REACT_SUSPENSE_TYPE: {
+        renderSuspenseBoundary(request, task, props);
+        break;
+      }
+      default: {
+        throw new Error('Not yet implemented element type.');
+      }
+    }
   }
 }
 
