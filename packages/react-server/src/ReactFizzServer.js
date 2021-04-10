@@ -521,6 +521,8 @@ const didWarnAboutContextTypeOnFunctionComponent = {};
 const didWarnAboutGetDerivedStateOnFunctionComponent = {};
 let didWarnAboutReassigningProps = false;
 const didWarnAboutDefaultPropsOnFunctionComponent = {};
+let didWarnAboutGenerators = false;
+let didWarnAboutMaps = false;
 
 // This would typically be a function component but we still support module pattern
 // components for some reason.
@@ -708,6 +710,40 @@ function renderElement(
   }
 }
 
+function validateIterable(iterable, iteratorFn: Function): void {
+  if (__DEV__) {
+    // We don't support rendering Generators because it's a mutation.
+    // See https://github.com/facebook/react/issues/12995
+    if (
+      typeof Symbol === 'function' &&
+      // $FlowFixMe Flow doesn't know about toStringTag
+      iterable[Symbol.toStringTag] === 'Generator'
+    ) {
+      if (!didWarnAboutGenerators) {
+        console.error(
+          'Using Generators as children is unsupported and will likely yield ' +
+            'unexpected results because enumerating a generator mutates it. ' +
+            'You may convert it to an array with `Array.from()` or the ' +
+            '`[...spread]` operator before rendering. Keep in mind ' +
+            'you might need to polyfill these features for older browsers.',
+        );
+      }
+      didWarnAboutGenerators = true;
+    }
+
+    // Warn about using Maps as children
+    if ((iterable: any).entries === iteratorFn) {
+      if (!didWarnAboutMaps) {
+        console.error(
+          'Using Maps as children is not supported. ' +
+            'Use an array of keyed ReactElements instead.',
+        );
+      }
+      didWarnAboutMaps = true;
+    }
+  }
+}
+
 // This function by it self renders a node and consumes the task by mutating it
 // to update the current execution state.
 function renderNodeDestructive(
@@ -756,7 +792,30 @@ function renderNodeDestructive(
 
     const iteratorFn = getIteratorFn(node);
     if (iteratorFn) {
-      throw new Error('Not yet implemented node type.');
+      if (__DEV__) {
+        validateIterable(node, iteratorFn());
+      }
+      const iterator = iteratorFn.call(node);
+      if (iterator) {
+        let step = iterator.next();
+        // If there are not entries, we need to push an empty so we start by checking that.
+        if (!step.done) {
+          do {
+            // Recursively render the rest. We need to use the non-destructive form
+            // so that we can safely pop back up and render the sibling if something
+            // suspends.
+            renderNode(request, task, step.value);
+            step = iterator.next();
+          } while (!step.done);
+          return;
+        }
+      }
+      pushEmpty(
+        task.blockedSegment.chunks,
+        request.responseState,
+        task.assignID,
+      );
+      task.assignID = null;
     }
 
     const childString = Object.prototype.toString.call(node);
@@ -805,6 +864,7 @@ function renderNodeDestructive(
 
   // Any other type is assumed to be empty.
   pushEmpty(task.blockedSegment.chunks, request.responseState, task.assignID);
+  task.assignID = null;
 }
 
 function spawnNewSuspendedTask(
