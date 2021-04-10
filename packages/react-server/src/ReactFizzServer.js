@@ -718,6 +718,7 @@ function renderElement(
       // initial HTML is not visible. To support the use of LegacyHidden as a
       // true fragment, without an extra DOM node, we would have to hide the
       // initial HTML in some other way.
+      // TODO: Add REACT_OFFSCREEN_TYPE here too with the same capability.
       case REACT_LEGACY_HIDDEN_TYPE:
       case REACT_DEBUG_TRACING_MODE_TYPE:
       case REACT_STRICT_MODE_TYPE:
