@@ -351,10 +351,12 @@ describe('ReactDOMFizzServer', () => {
     await act(async () => {
       const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
         <Suspense fallback={<Text text="Loading A..." />}>
-          <Text text="This will show A: " />
-          <div>
-            <AsyncText text="A" />
-          </div>
+          <>
+            <Text text="This will show A: " />
+            <div>
+              <AsyncText text="A" />
+            </div>
+          </>
         </Suspense>,
         writableA,
         {
@@ -432,11 +434,11 @@ describe('ReactDOMFizzServer', () => {
     }
 
     function AsyncPath({id}) {
-      return <path id={readText(id)}>{[]}</path>;
+      return <path id={readText(id)} />;
     }
 
     function AsyncMi({id}) {
-      return <mi id={readText(id)}>{[]}</mi>;
+      return <mi id={readText(id)} />;
     }
 
     function App() {
@@ -601,7 +603,7 @@ describe('ReactDOMFizzServer', () => {
   // @gate experimental
   it('can stream into an SVG container', async () => {
     function AsyncPath({id}) {
-      return <path id={readText(id)}>{[]}</path>;
+      return <path id={readText(id)} />;
     }
 
     function App() {
