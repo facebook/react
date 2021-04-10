@@ -39,9 +39,10 @@ import {
   enableCache,
   enableSchedulingProfiler,
   enableUpdaterTracking,
-  enableSyncDefaultUpdates,
+  allowConcurrentByDefault,
 } from 'shared/ReactFeatureFlags';
 import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
+import {ConcurrentUpdatesByDefaultMode, NoMode} from './ReactTypeOfMode';
 
 export const SyncLanePriority: LanePriority = 12;
 
@@ -318,11 +319,12 @@ export function getNextLanes(root: FiberRoot, wipLanes: Lanes): Lanes {
   }
 
   if (
-    // TODO: Check for root override, once that lands
-    enableSyncDefaultUpdates &&
-    (nextLanes & InputContinuousLane) !== NoLanes
+    allowConcurrentByDefault &&
+    (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
   ) {
-    // When updates are sync by default, we entangle continous priority updates
+    // Do nothing, use the lanes as they were assigned.
+  } else if ((nextLanes & InputContinuousLane) !== NoLanes) {
+    // When updates are sync by default, we entangle continuous priority updates
     // and default updates, so they render in the same batch. The only reason
     // they use separate lanes is because continuous updates should interrupt
     // transitions, but default updates should not.
@@ -527,17 +529,21 @@ export function shouldTimeSlice(root: FiberRoot, lanes: Lanes) {
     // finish rendering without yielding execution.
     return false;
   }
-  if (enableSyncDefaultUpdates) {
-    const SyncDefaultLanes =
-      InputContinuousHydrationLane |
-      InputContinuousLane |
-      DefaultHydrationLane |
-      DefaultLane;
-    // TODO: Check for root override, once that lands
-    return (lanes & SyncDefaultLanes) === NoLanes;
-  } else {
+
+  if (
+    allowConcurrentByDefault &&
+    (root.current.mode & ConcurrentUpdatesByDefaultMode) !== NoMode
+  ) {
+    // Concurrent updates by default always use time slicing.
     return true;
   }
+
+  const SyncDefaultLanes =
+    InputContinuousHydrationLane |
+    InputContinuousLane |
+    DefaultHydrationLane |
+    DefaultLane;
+  return (lanes & SyncDefaultLanes) === NoLanes;
 }
 
 export function isTransitionLane(lane: Lane) {
