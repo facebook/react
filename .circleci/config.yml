@@ -462,14 +462,14 @@ workflows:
                 - "-r=stable --env=production"
                 - "-r=experimental --env=development"
                 - "-r=experimental --env=production"
-                - "-r=www-classic --env=development"
-                - "-r=www-classic --env=production"
-                - "-r=www-classic --env=development --variant"
-                - "-r=www-classic --env=production --variant"
-                - "-r=www-modern --env=development"
-                - "-r=www-modern --env=production"
-                - "-r=www-modern --env=development --variant"
-                - "-r=www-modern --env=production --variant"
+                - "-r=www-classic --env=development --variant=false"
+                - "-r=www-classic --env=production --variant=false"
+                - "-r=www-classic --env=development --variant=true"
+                - "-r=www-classic --env=production --variant=true"
+                - "-r=www-modern --env=development --variant=false"
+                - "-r=www-modern --env=production --variant=false"
+                - "-r=www-modern --env=development --variant=true"
+                - "-r=www-modern --env=production --variant=true"
 
                 # TODO: Test more persistent configurations?
                 - '-r=stable --env=development --persistent'
@@ -497,14 +497,14 @@ workflows:
                 - "--project=devtools -r=experimental"
 
                 # TODO: Update test config to support www build tests
-                # - "-r=www-classic --env=development"
-                # - "-r=www-classic --env=production"
-                # - "-r=www-classic --env=development --variant"
-                # - "-r=www-classic --env=production --variant"
-                # - "-r=www-modern --env=development"
-                # - "-r=www-modern --env=production"
-                # - "-r=www-modern --env=development --variant"
-                # - "-r=www-modern --env=production --variant"
+                # - "-r=www-classic --env=development --variant=false"
+                # - "-r=www-classic --env=production --variant=false"
+                # - "-r=www-classic --env=development --variant=true"
+                # - "-r=www-classic --env=production --variant=true"
+                # - "-r=www-modern --env=development --variant=false"
+                # - "-r=www-modern --env=production --variant=false"
+                # - "-r=www-modern --env=development --variant=true"
+                # - "-r=www-modern --env=production --variant=true"
 
                 # TODO: Test more persistent configurations?
       - get_base_build:
