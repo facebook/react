@@ -9,6 +9,10 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.11.1 (April 11, 2021)
+#### Bugfix
+* Fixed broken import in `react-devtools-inline` for feature flags file ([bvaughn](https://github.com/bvaughn) in [#21235](https://github.com/facebook/react/issues/21235))
+
 ## 4.11.0 (April 9, 2021)
 #### Bugfix
 * `$r` should contain hooks property when it is `forwardRef` or `memo` component  ([meowtec](https://github.com/meowtec) in [#20626](https://github.com/facebook/react/pull/20626))
