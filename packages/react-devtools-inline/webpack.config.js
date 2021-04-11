@@ -33,10 +33,14 @@ module.exports = {
     react: 'react',
     // TODO: Once this package is published, remove the external
     // 'react-debug-tools': 'react-debug-tools',
-    'react-devtools-feature-flags': resolveFeatureFlags('inline'),
     'react-dom': 'react-dom',
     'react-is': 'react-is',
     scheduler: 'scheduler',
+  },
+  resolve: {
+    alias: {
+      'react-devtools-feature-flags': resolveFeatureFlags('inline'),
+    },
   },
   optimization: {
     minimize: false,
