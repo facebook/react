@@ -2131,7 +2131,12 @@ function commitRootImpl(root, renderPriorityLevel) {
 
 export function flushPassiveEffects(): boolean {
   // Returns whether passive effects were flushed.
-  if (pendingPassiveEffectsLanes !== NoLanes) {
+  // TODO: Combine this check with the one in flushPassiveEFfectsImpl. We should
+  // probably just combine the two functions. I believe they were only separate
+  // in the first place because we used to wrap it with
+  // `Scheduler.runWithPriority`, which accepts a function. But now we track the
+  // priority within React itself, so we can mutate the variable directly.
+  if (rootWithPendingPassiveEffects !== null) {
     const renderPriority = lanesToEventPriority(pendingPassiveEffectsLanes);
     const priority = lowerEventPriority(DefaultEventPriority, renderPriority);
     const prevTransition = ReactCurrentBatchConfig.transition;
@@ -2169,6 +2174,9 @@ function flushPassiveEffectsImpl() {
   const root = rootWithPendingPassiveEffects;
   const lanes = pendingPassiveEffectsLanes;
   rootWithPendingPassiveEffects = null;
+  // TODO: This is sometimes out of sync with rootWithPendingPassiveEffects.
+  // Figure out why and fix it. It's not causing any known issues (probably
+  // because it's only used for profiling), but it's a refactor hazard.
   pendingPassiveEffectsLanes = NoLanes;
 
   invariant(
