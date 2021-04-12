@@ -13,7 +13,10 @@ import {UIManager} from 'react-native/Libraries/ReactPrivate/ReactNativePrivateI
 const ReactFabricGlobalResponderHandler = {
   onChange: function(from: any, to: any, blockNativeResponder: boolean) {
     const fromOrTo = from || to;
-    const isFabric = !!fromOrTo.stateNode.canonical._internalInstanceHandle;
+    const fromOrToStateNode = fromOrTo && fromOrTo.stateNode;
+    const isFabric = !!(
+      fromOrToStateNode && fromOrToStateNode.canonical._internalInstanceHandle
+    );
 
     if (isFabric) {
       // Noop for now until setJSResponder/clearJSResponder are supported in Fabric
