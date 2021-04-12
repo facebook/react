@@ -9,9 +9,14 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.12.0 (April 12, 2021)
+Although this release is being made for all NPM packages, only the `react-devtools-inline` package contains changes.
+#### Feature
+* Added `createBridge` and `createStore` exports to the `react-devtools-inline/frontend` entrypoint to support advanced use cases ([bvaughn](https://github.com/bvaughn) in [#21032](https://github.com/facebook/react/pull/21032))
+
 ## 4.11.1 (April 11, 2021)
 #### Bugfix
-* Fixed broken import in `react-devtools-inline` for feature flags file ([bvaughn](https://github.com/bvaughn) in [#21235](https://github.com/facebook/react/issues/21235))
+* Fixed broken import in `react-devtools-inline` for feature flags file ([bvaughn](https://github.com/bvaughn) in [#21237](https://github.com/facebook/react/pull/21237))
 
 ## 4.11.0 (April 9, 2021)
 #### Bugfix
