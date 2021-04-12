@@ -16,11 +16,47 @@ import {
   MESSAGE_TYPE_SAVED_PREFERENCES,
 } from './constants';
 
+import type {Wall} from 'react-devtools-shared/src/types';
 import type {FrontendBridge} from 'react-devtools-shared/src/bridge';
 import type {Props} from 'react-devtools-shared/src/devtools/views/DevTools';
 
+export function createStore(bridge: FrontendBridge): Store {
+  return new Store(bridge, {supportsTraceUpdates: true});
+}
+
+export function createBridge(
+  contentWindow: window,
+  wall?: Wall,
+): FrontendBridge {
+  if (wall == null) {
+    wall = {
+      listen(fn) {
+        const onMessage = ({data}) => {
+          fn(data);
+        };
+        window.addEventListener('message', onMessage);
+        return () => {
+          window.removeEventListener('message', onMessage);
+        };
+      },
+      send(event: string, payload: any, transferable?: Array<any>) {
+        contentWindow.postMessage({event, payload}, '*', transferable);
+      },
+    };
+  }
+
+  return (new Bridge(wall): FrontendBridge);
+}
+
 export function initialize(
   contentWindow: window,
+  {
+    bridge,
+    store,
+  }: {|
+    bridge?: FrontendBridge,
+    store?: Store,
+  |} = {},
 ): React.AbstractComponent<Props, mixed> {
   const onGetSavedPreferencesMessage = ({data, source}) => {
     if (source === 'react-devtools-content-script') {
@@ -54,22 +90,13 @@ export function initialize(
 
   window.addEventListener('message', onGetSavedPreferencesMessage);
 
-  const bridge: FrontendBridge = new Bridge({
-    listen(fn) {
-      const onMessage = ({data}) => {
-        fn(data);
-      };
-      window.addEventListener('message', onMessage);
-      return () => {
-        window.removeEventListener('message', onMessage);
-      };
-    },
-    send(event: string, payload: any, transferable?: Array<any>) {
-      contentWindow.postMessage({event, payload}, '*', transferable);
-    },
-  });
+  if (bridge == null) {
+    bridge = createBridge();
+  }
 
-  const store: Store = new Store(bridge, {supportsTraceUpdates: true});
+  if (store == null) {
+    store = createStore(bridge);
+  }
 
   const ForwardRef = forwardRef<Props, mixed>((props, ref) => (
     <DevTools ref={ref} bridge={bridge} store={store} {...props} />
