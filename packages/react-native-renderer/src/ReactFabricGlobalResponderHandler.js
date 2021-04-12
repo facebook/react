@@ -14,7 +14,9 @@ const ReactFabricGlobalResponderHandler = {
   onChange: function(from: any, to: any, blockNativeResponder: boolean) {
     const fromOrTo = from || to;
     const fromOrToStateNode = fromOrTo && fromOrTo.stateNode;
-    const isFabric = !!(fromOrToStateNode && fromOrToStateNode.canonical._internalInstanceHandle);
+    const isFabric = !!(
+      fromOrToStateNode && fromOrToStateNode.canonical._internalInstanceHandle
+    );
 
     if (isFabric) {
       // Noop for now until setJSResponder/clearJSResponder are supported in Fabric
