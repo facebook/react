@@ -19,6 +19,7 @@ import type {
   ResponseState,
   FormatContext,
 } from './ReactServerFormatConfig';
+import type {ContextSnapshot} from './ReactFizzNewContext';
 
 import {
   scheduleWork,
@@ -56,6 +57,12 @@ import {
   processChildContext,
   emptyContextObject,
 } from './ReactFizzContext';
+import {
+  rootContextSnapshot,
+  switchContext,
+  getActiveContext,
+} from './ReactFizzNewContext';
+
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
@@ -104,6 +111,7 @@ type Task = {
   blockedSegment: Segment, // the segment we'll write to
   abortSet: Set<Task>, // the abortable set that this task belongs to
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
+  context: ContextSnapshot, // the current new context that this task is executing in
   assignID: null | SuspenseBoundaryID, // id to assign to the content
 };
 
@@ -220,6 +228,7 @@ export function createRequest(
     rootSegment,
     abortSet,
     emptyContextObject,
+    rootContextSnapshot,
     null,
   );
   pingedTasks.push(rootTask);
@@ -257,6 +266,7 @@ function createTask(
   blockedSegment: Segment,
   abortSet: Set<Task>,
   legacyContext: LegacyContext,
+  context: ContextSnapshot,
   assignID: null | SuspenseBoundaryID,
 ): Task {
   request.allPendingTasks++;
@@ -272,6 +282,7 @@ function createTask(
     blockedSegment,
     abortSet,
     legacyContext,
+    context,
     assignID,
   };
   abortSet.add(task);
@@ -394,6 +405,7 @@ function renderSuspenseBoundary(
     boundarySegment,
     fallbackAbortSet,
     task.legacyContext,
+    task.context,
     newBoundary.id, // This is the ID we want to give this fallback so we can replace it later.
   );
   // TODO: This should be queued at a separate lower priority queue so that we only work
@@ -918,6 +930,7 @@ function spawnNewSuspendedTask(
     newSegment,
     task.abortSet,
     task.legacyContext,
+    task.context,
     task.assignID,
   );
   // We've delegated the assignment.
@@ -936,6 +949,7 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
   // process.
   const previousFormatContext = task.blockedSegment.formatContext;
   const previousLegacyContext = task.legacyContext;
+  const previousContext = task.context;
   try {
     return renderNodeDestructive(request, task, node);
   } catch (x) {
@@ -945,6 +959,9 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
       // functions in case nothing throws so we don't use "finally" here.
       task.blockedSegment.formatContext = previousFormatContext;
       task.legacyContext = previousLegacyContext;
+      task.context = previousContext;
+      // Restore all active ReactContexts to what they were before.
+      switchContext(previousContext);
     } else {
       // We assume that we don't need the correct context.
       // Let's terminate the rest of the tree and don't render any siblings.
@@ -1104,6 +1121,10 @@ function retryTask(request: Request, task: Task): void {
     // We completed this by other means before we had a chance to retry it.
     return;
   }
+  // We restore the context to what it was when we suspended.
+  // We don't restore it after we leave because it's likely that we'll end up
+  // needing a very similar context soon again.
+  switchContext(task.context);
   try {
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
@@ -1129,6 +1150,7 @@ function performWork(request: Request): void {
   if (request.status === CLOSED) {
     return;
   }
+  const prevContext = getActiveContext();
   const prevDispatcher = ReactCurrentDispatcher.current;
   ReactCurrentDispatcher.current = Dispatcher;
 
@@ -1148,6 +1170,16 @@ function performWork(request: Request): void {
     fatalError(request, error);
   } finally {
     ReactCurrentDispatcher.current = prevDispatcher;
+    if (prevDispatcher === Dispatcher) {
+      // This means that we were in a reentrant work loop. This could happen
+      // in a renderer that supports synchronous work like renderToString,
+      // when it's called from within another renderer.
+      // Normally we don't bother switching the contexts to their root/default
+      // values when leaving because we'll likely need the same or similar
+      // context again. However, when we're inside a synchronous loop like this
+      // we'll to restore the context to what it was before returning.
+      switchContext(prevContext);
+    }
   }
 }
 
