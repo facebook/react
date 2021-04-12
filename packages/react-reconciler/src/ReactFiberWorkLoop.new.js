@@ -1826,6 +1826,15 @@ function commitRootImpl(root, renderPriorityLevel) {
     }
 
     return null;
+  } else {
+    if (__DEV__) {
+      if (lanes === NoLanes) {
+        console.error(
+          'root.finishedLanes should not be empty during a commit. This is a ' +
+            'bug in React.',
+        );
+      }
+    }
   }
   root.finishedWork = null;
   root.finishedLanes = NoLanes;
