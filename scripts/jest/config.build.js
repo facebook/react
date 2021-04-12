@@ -31,7 +31,11 @@ moduleNameMapper[
 ] = `<rootDir>/packages/shared/forks/ReactFeatureFlags.readonly`;
 
 // Map packages to bundles
-packages.forEach(name => {
+[
+  'react',
+  'react-dom',
+  'scheduler'
+].forEach(name => {
   // Root entry point
   moduleNameMapper[`^${name}$`] = `<rootDir>/build/node_modules/${name}`;
   // Named entry points
