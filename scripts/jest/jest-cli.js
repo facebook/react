@@ -44,7 +44,7 @@ const argv = yargs
       describe: 'Run with the given release channel.',
       requiresArg: true,
       type: 'string',
-      default: 'experimental',
+      default: 'www-modern',
       choices: ['experimental', 'stable', 'www-classic', 'www-modern'],
     },
     env: {
@@ -71,7 +71,6 @@ const argv = yargs
       describe: 'Run with www variant set to true.',
       requiresArg: false,
       type: 'boolean',
-      default: false,
     },
     build: {
       alias: 'b',
@@ -161,11 +160,18 @@ function validateOptions() {
     }
   }
 
-  if (argv.variant && !isWWWConfig()) {
-    logError(
-      'Variant is only supported for the www release channels. Update these options to continue.'
-    );
-    success = false;
+  if (isWWWConfig()) {
+    if (argv.variant === undefined) {
+      // Turn internal experiments on by default
+      argv.variant = true;
+    }
+  } else {
+    if (argv.variant) {
+      logError(
+        'Variant is only supported for the www release channels. Update these options to continue.'
+      );
+      success = false;
+    }
   }
 
   if (argv.build && argv.persistent) {
