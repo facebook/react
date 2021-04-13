@@ -41,9 +41,133 @@ export const rootContextSnapshot: ContextSnapshot = null;
 // fields are currently in.
 let currentActiveSnapshot: ContextSnapshot = null;
 
+function popNode(prev: ContextNode<any>): void {
+  if (isPrimaryRenderer) {
+    prev.context._currentValue = prev.parentValue;
+  } else {
+    prev.context._currentValue2 = prev.parentValue;
+  }
+}
+
+function pushNode(next: ContextNode<any>): void {
+  if (isPrimaryRenderer) {
+    next.context._currentValue = next.value;
+  } else {
+    next.context._currentValue2 = next.value;
+  }
+}
+
+function popToNearestCommonAncestor(
+  prev: ContextNode<any>,
+  next: ContextNode<any>,
+): void {
+  if (prev === next) {
+    // We've found a shared ancestor. We don't need to pop nor reapply this one or anything above.
+  } else {
+    popNode(prev);
+    const parentPrev = prev.parent;
+    const parentNext = next.parent;
+    if (parentPrev === null) {
+      invariant(
+        parentNext === null,
+        'The stacks must reach the root at the same time. This is a bug in React.',
+      );
+    } else {
+      invariant(
+        parentNext !== null,
+        'The stacks must reach the root at the same time. This is a bug in React.',
+      );
+      popToNearestCommonAncestor(parentPrev, parentNext);
+      // On the way back, we push the new ones that weren't common.
+      pushNode(next);
+    }
+  }
+}
+
+function popAllPrevious(prev: ContextNode<any>): void {
+  popNode(prev);
+  const parentPrev = prev.parent;
+  if (parentPrev !== null) {
+    popAllPrevious(parentPrev);
+  }
+}
+
+function pushAllNext(next: ContextNode<any>): void {
+  const parentNext = next.parent;
+  if (parentNext !== null) {
+    pushAllNext(parentNext);
+  }
+  pushNode(next);
+}
+
+function popPreviousToCommonLevel(
+  prev: ContextNode<any>,
+  next: ContextNode<any>,
+): void {
+  popNode(prev);
+  const parentPrev = prev.parent;
+  invariant(
+    parentPrev !== null,
+    'The depth must equal at least at zero before reaching the root. This is a bug in React.',
+  );
+  if (parentPrev.depth === next.depth) {
+    // We found the same level. Now we just need to find a shared ancestor.
+    popToNearestCommonAncestor(parentPrev, next);
+  } else {
+    // We must still be deeper.
+    popPreviousToCommonLevel(parentPrev, next);
+  }
+}
+
+function popNextToCommonLevel(
+  prev: ContextNode<any>,
+  next: ContextNode<any>,
+): void {
+  const parentNext = next.parent;
+  invariant(
+    parentNext !== null,
+    'The depth must equal at least at zero before reaching the root. This is a bug in React.',
+  );
+  if (prev.depth === parentNext.depth) {
+    // We found the same level. Now we just need to find a shared ancestor.
+    popToNearestCommonAncestor(prev, parentNext);
+  } else {
+    // We must still be deeper.
+    popNextToCommonLevel(prev, parentNext);
+  }
+  pushNode(next);
+}
+
 // Perform context switching to the new snapshot.
+// To make it cheap to read many contexts, while not suspending, we make the switch eagerly by
+// updating all the context's current values. That way reads, always just read the current value.
+// At the cost of updating contexts even if they're never read by this subtree.
 export function switchContext(newSnapshot: ContextSnapshot): void {
-  // TODO: Switch the context.
+  // The basic algorithm we need to do is to pop back any contexts that are no longer on the stack.
+  // We also need to update any new contexts that are now on the stack with the deepest value.
+  // The easiest way to update new contexts is to just reapply them in reverse order from the
+  // perspective of the backpointers. To avoid allocating a lot when switching, we use the stack
+  // for that. Therefore this algorithm is recursive.
+  // 1) First we pop which ever snapshot tree was deepest. Popping old contexts as we go.
+  // 2) Then we find the nearest common ancestor from there. Popping old contexts as we go.
+  // 3) Then we reapply new contexts on the way back up the stack.
+  const prev = currentActiveSnapshot;
+  const next = newSnapshot;
+  if (prev !== next) {
+    if (prev === null) {
+      // $FlowFixMe: This has to be non-null since it's not equal to prev.
+      pushAllNext(next);
+    } else if (next === null) {
+      popAllPrevious(prev);
+    } else if (prev.depth === next.depth) {
+      popToNearestCommonAncestor(prev, next);
+    } else if (prev.depth > next.depth) {
+      popPreviousToCommonLevel(prev, next);
+    } else {
+      popNextToCommonLevel(prev, next);
+    }
+    currentActiveSnapshot = next;
+  }
 }
 
 export function pushProvider<T>(
