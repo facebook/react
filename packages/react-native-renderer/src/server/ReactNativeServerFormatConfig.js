@@ -23,6 +23,8 @@ import {
 
 import invariant from 'shared/invariant';
 
+export const isPrimaryRenderer = true;
+
 // Every list of children or string is null terminated.
 const END_TAG = 0;
 // Tree node tags.

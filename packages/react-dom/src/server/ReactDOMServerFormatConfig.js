@@ -48,6 +48,10 @@ import hasOwnProperty from 'shared/hasOwnProperty';
 import sanitizeURL from '../shared/sanitizeURL';
 import isArray from 'shared/isArray';
 
+// Used to distinguish these contexts from ones used in other renderers.
+// E.g. this can be used to distinguish legacy renderers from this modern one.
+export const isPrimaryRenderer = true;
+
 // Per response, global state that is not contextual to the rendering subtree.
 export type ResponseState = {
   placeholderPrefix: PrecomputedChunk,

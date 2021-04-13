@@ -9,10 +9,9 @@
 
 import type {ReactContext} from 'shared/ReactTypes';
 
-import invariant from 'shared/invariant';
+import {isPrimaryRenderer} from './ReactServerFormatConfig';
 
-// TODO: Move to format config.
-const isPrimaryRenderer = true;
+import invariant from 'shared/invariant';
 
 let rendererSigil;
 if (__DEV__) {

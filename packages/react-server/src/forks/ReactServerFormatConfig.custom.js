@@ -29,6 +29,8 @@ export opaque type ResponseState = mixed;
 export opaque type FormatContext = mixed;
 export opaque type SuspenseBoundaryID = mixed;
 
+export const isPrimaryRenderer = false;
+
 export const getChildFormatContext = $$$hostConfig.getChildFormatContext;
 export const createSuspenseBoundaryID = $$$hostConfig.createSuspenseBoundaryID;
 export const pushEmpty = $$$hostConfig.pushEmpty;
