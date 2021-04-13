@@ -388,5 +388,8 @@
   "397": "Unknown insertion mode. This is a bug in React.",
   "398": "`dangerouslySetInnerHTML` does not work on <option>.",
   "399": "%s is a self-closing tag and must neither have `children` nor use `dangerouslySetInnerHTML`.",
-  "400": "menuitems cannot have `children` nor `dangerouslySetInnerHTML`."
+  "400": "menuitems cannot have `children` nor `dangerouslySetInnerHTML`.",
+  "401": "The stacks must reach the root at the same time. This is a bug in React.",
+  "402": "The depth must equal at least at zero before reaching the root. This is a bug in React.",
+  "403": "Tried to pop a Context at the root of the app. This is a bug in React."
 }
