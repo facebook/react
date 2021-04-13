@@ -8,6 +8,7 @@
  */
 
 import {emptyContextObject} from './ReactFizzContext';
+import {readContext} from './ReactFizzNewContext';
 
 import {disableLegacyContext} from 'shared/ReactFeatureFlags';
 import {get as getInstance, set as setInstance} from 'shared/ReactInstanceMap';
@@ -211,9 +212,7 @@ export function constructClassInstance(
   }
 
   if (typeof contextType === 'object' && contextType !== null) {
-    // TODO: Implement Context.
-    // context = readContext((contextType: any));
-    throw new Error('Context is not yet implemented.');
+    context = readContext((contextType: any));
   } else if (!disableLegacyContext) {
     context = maskedLegacyContext;
   }
@@ -617,9 +616,7 @@ export function mountClassInstance(
 
   const contextType = ctor.contextType;
   if (typeof contextType === 'object' && contextType !== null) {
-    // TODO: Implement Context.
-    // instance.context = readContext(contextType);
-    throw new Error('Context is not yet implemented.');
+    instance.context = readContext(contextType);
   } else if (disableLegacyContext) {
     instance.context = emptyContextObject;
   } else {
