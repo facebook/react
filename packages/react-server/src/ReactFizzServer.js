@@ -66,6 +66,8 @@ import {
   rootContextSnapshot,
   switchContext,
   getActiveContext,
+  pushProvider,
+  popProvider,
 } from './ReactFizzNewContext';
 
 import {
@@ -748,7 +750,23 @@ function renderContextProvider(
   type: ReactProviderType<any>,
   props: Object,
 ): void {
-  throw new Error('Not yet implemented element type.');
+  const context = type._context;
+  const value = props.value;
+  const children = props.children;
+  let prevSnapshot;
+  if (__DEV__) {
+    prevSnapshot = task.context;
+  }
+  task.context = pushProvider(context, value);
+  renderNodeDestructive(request, task, children);
+  task.context = popProvider(context);
+  if (__DEV__) {
+    if (prevSnapshot !== task.context) {
+      console.error(
+        'Popping the context provider did not return back to the original snapshot. This is a bug in React.',
+      );
+    }
+  }
 }
 
 function renderLazyComponent(

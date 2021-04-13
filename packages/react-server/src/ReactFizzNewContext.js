@@ -219,7 +219,7 @@ export function pushProvider<T>(
   return newNode;
 }
 
-export function popProvider<T>(context: ReactContext<T>): void {
+export function popProvider<T>(context: ReactContext<T>): ContextSnapshot {
   const prevSnapshot = currentActiveSnapshot;
   invariant(
     prevSnapshot !== null,
@@ -263,7 +263,7 @@ export function popProvider<T>(context: ReactContext<T>): void {
       context._currentRenderer2 = rendererSigil;
     }
   }
-  currentActiveSnapshot = prevSnapshot.parent;
+  return (currentActiveSnapshot = prevSnapshot.parent);
 }
 
 export function getActiveContext(): ContextSnapshot {
