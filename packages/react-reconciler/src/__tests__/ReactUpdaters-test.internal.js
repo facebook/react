@@ -68,6 +68,7 @@ describe('updaters', () => {
     Scheduler = require('scheduler');
   });
 
+  // @gate enableProfilerUpdaters
   it('should report the (host) root as the scheduler for root-level render', async () => {
     const {HostRoot} = require('react-reconciler/src/ReactWorkTags');
 
@@ -86,6 +87,7 @@ describe('updaters', () => {
     expect(allSchedulerTags).toEqual([[HostRoot], [HostRoot]]);
   });
 
+  // @gate enableProfilerUpdaters
   it('should report a function component as the scheduler for a hooks update', async () => {
     let scheduleForA = null;
     let scheduleForB = null;
@@ -130,6 +132,7 @@ describe('updaters', () => {
     ]);
   });
 
+  // @gate enableProfilerUpdaters
   it('should report a class component as the scheduler for a setState update', async () => {
     const Parent = () => <SchedulingComponent />;
     class SchedulingComponent extends React.Component {
@@ -154,6 +157,7 @@ describe('updaters', () => {
   });
 
   // @gate experimental
+  // @gate enableProfilerUpdaters
   it('should cover cascading updates', async () => {
     let triggerActiveCascade = null;
     let triggerPassiveCascade = null;
@@ -231,7 +235,8 @@ describe('updaters', () => {
     Scheduler.unstable_flushAll();
   });
 
-  it('should cover suspense pings', async done => {
+  // @gate enableProfilerUpdaters
+  it('should cover suspense pings', async () => {
     let data = null;
     let resolver = null;
     let promise = null;
@@ -288,11 +293,10 @@ describe('updaters', () => {
 
     // Verify no outstanding flushes
     Scheduler.unstable_flushAll();
-
-    done();
   });
 
   // @gate experimental
+  // @gate enableProfilerUpdaters
   it('traces interaction through hidden subtree', async () => {
     const {
       FunctionComponent,
@@ -378,6 +382,7 @@ describe('updaters', () => {
   });
 
   // @gate experimental
+  // @gate enableProfilerUpdaters
   it('should cover error handling', async () => {
     let triggerError = null;
 
@@ -435,6 +440,7 @@ describe('updaters', () => {
   });
 
   // @gate experimental
+  // @gate enableProfilerUpdaters
   it('should distinguish between updaters in the case of interleaved work', async () => {
     const {
       FunctionComponent,

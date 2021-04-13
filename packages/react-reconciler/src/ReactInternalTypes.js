@@ -45,6 +45,8 @@ export type HookType =
   | 'useOpaqueIdentifier'
   | 'useCacheRefresh';
 
+export type ReactPriorityLevel = 99 | 98 | 97 | 96 | 95 | 90;
+
 export type ContextDependency<T> = {
   context: ReactContext<T>,
   next: ContextDependency<mixed> | null,
@@ -221,13 +223,14 @@ type BaseFiberRootProperties = {|
   // Node returned by Scheduler.scheduleCallback. Represents the next rendering
   // task that the root will work on.
   callbackNode: *,
-  callbackPriority: Lane,
+  callbackPriority: *,
   eventTimes: LaneMap<number>,
   expirationTimes: LaneMap<number>,
 
   pendingLanes: Lanes,
   suspendedLanes: Lanes,
   pingedLanes: Lanes,
+  expiredLanes: Lanes,
   mutableReadLanes: Lanes,
 
   finishedLanes: Lanes,

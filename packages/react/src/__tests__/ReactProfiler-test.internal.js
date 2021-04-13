@@ -3862,10 +3862,22 @@ describe('Profiler', () => {
               );
             });
 
-            expect(Scheduler).toHaveYielded([
-              'SecondComponent',
-              'onPostCommit',
-            ]);
+            if (gate(flags => flags.discretePassiveEffectsFlushSynchronously)) {
+              expect(Scheduler).toHaveYielded([
+                'SecondComponent',
+                'onPostCommit',
+              ]);
+            } else {
+              // Profiler tag causes passive effects to be scheduled,
+              // so the interactions are still not completed.
+              expect(Scheduler).toHaveYielded(['SecondComponent']);
+              expect(onInteractionTraced).toHaveBeenCalledTimes(2);
+              expect(
+                onInteractionScheduledWorkCompleted,
+              ).not.toHaveBeenCalled();
+              expect(Scheduler).toFlushAndYieldThrough(['onPostCommit']);
+            }
+
             expect(onInteractionTraced).toHaveBeenCalledTimes(2);
             expect(onInteractionScheduledWorkCompleted).toHaveBeenCalledTimes(
               1,

@@ -39,7 +39,6 @@ import {
   enableDebugTracing,
   enableSchedulingProfiler,
   enableLazyContextPropagation,
-  enableUpdaterTracking,
 } from 'shared/ReactFeatureFlags';
 import {createCapturedValue} from './ReactCapturedValue';
 import {
@@ -61,13 +60,12 @@ import {
   markLegacyErrorBoundaryAsFailed,
   isAlreadyFailedLegacyErrorBoundary,
   pingSuspendedRoot,
-  restorePendingUpdaters,
 } from './ReactFiberWorkLoop.old';
 import {propagateParentContextChangesToDeferredTree} from './ReactFiberNewContext.old';
 import {logCapturedError} from './ReactFiberErrorLogger';
 import {logComponentSuspended} from './DebugTracing';
 import {markComponentSuspended} from './SchedulingProfiler';
-import {isDevToolsPresent} from './ReactFiberDevToolsHook.old';
+
 import {
   SyncLane,
   NoTimestamp,
@@ -179,12 +177,6 @@ function attachPingListener(root: FiberRoot, wakeable: Wakeable, lanes: Lanes) {
     // Memoize using the thread ID to prevent redundant listeners.
     threadIDs.add(lanes);
     const ping = pingSuspendedRoot.bind(null, root, wakeable, lanes);
-    if (enableUpdaterTracking) {
-      if (isDevToolsPresent) {
-        // If we have pending work still, restore the original updaters
-        restorePendingUpdaters(root, lanes);
-      }
-    }
     wakeable.then(ping, ping);
   }
 }
@@ -198,13 +190,6 @@ function throwException(
 ) {
   // The source fiber did not complete.
   sourceFiber.flags |= Incomplete;
-
-  if (enableUpdaterTracking) {
-    if (isDevToolsPresent) {
-      // If we have pending work still, restore the original updaters
-      restorePendingUpdaters(root, rootRenderLanes);
-    }
-  }
 
   if (
     value !== null &&

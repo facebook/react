@@ -31,7 +31,6 @@ import {
   SimpleMemoComponent,
 } from './ReactWorkTags';
 import invariant from 'shared/invariant';
-import isArray from 'shared/isArray';
 import {
   warnAboutStringRefs,
   enableLazyElements,
@@ -97,6 +96,8 @@ if (__DEV__) {
     );
   };
 }
+
+const isArray = Array.isArray;
 
 function coerceRef(
   returnFiber: Fiber,
@@ -216,16 +217,18 @@ function coerceRef(
 }
 
 function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
-  const childString = Object.prototype.toString.call(newChild);
-  invariant(
-    false,
-    'Objects are not valid as a React child (found: %s). ' +
-      'If you meant to render a collection of children, use an array ' +
-      'instead.',
-    childString === '[object Object]'
-      ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
-      : childString,
-  );
+  if (returnFiber.type !== 'textarea') {
+    const childString = Object.prototype.toString.call(newChild);
+    invariant(
+      false,
+      'Objects are not valid as a React child (found: %s). ' +
+        'If you meant to render a collection of children, use an array ' +
+        'instead.',
+      childString === '[object Object]'
+        ? 'object with keys {' + Object.keys(newChild).join(', ') + '}'
+        : childString,
+    );
+  }
 }
 
 function warnOnFunctionType(returnFiber: Fiber) {
@@ -1231,7 +1234,9 @@ function ChildReconciler(shouldTrackSideEffects) {
     }
 
     // Handle object types
-    if (typeof newChild === 'object' && newChild !== null) {
+    const isObject = typeof newChild === 'object' && newChild !== null;
+
+    if (isObject) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE:
           return placeSingleChild(
@@ -1264,26 +1269,6 @@ function ChildReconciler(shouldTrackSideEffects) {
             );
           }
       }
-
-      if (isArray(newChild)) {
-        return reconcileChildrenArray(
-          returnFiber,
-          currentFirstChild,
-          newChild,
-          lanes,
-        );
-      }
-
-      if (getIteratorFn(newChild)) {
-        return reconcileChildrenIterator(
-          returnFiber,
-          currentFirstChild,
-          newChild,
-          lanes,
-        );
-      }
-
-      throwOnInvalidObjectType(returnFiber, newChild);
     }
 
     if (typeof newChild === 'string' || typeof newChild === 'number') {
@@ -1295,6 +1280,28 @@ function ChildReconciler(shouldTrackSideEffects) {
           lanes,
         ),
       );
+    }
+
+    if (isArray(newChild)) {
+      return reconcileChildrenArray(
+        returnFiber,
+        currentFirstChild,
+        newChild,
+        lanes,
+      );
+    }
+
+    if (getIteratorFn(newChild)) {
+      return reconcileChildrenIterator(
+        returnFiber,
+        currentFirstChild,
+        newChild,
+        lanes,
+      );
+    }
+
+    if (isObject) {
+      throwOnInvalidObjectType(returnFiber, newChild);
     }
 
     if (__DEV__) {

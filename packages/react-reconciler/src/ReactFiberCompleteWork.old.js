@@ -28,7 +28,7 @@ import type {Cache, SpawnedCachePool} from './ReactFiberCacheComponent.old';
 
 import {resetWorkInProgressVersions as resetMutableSourceWorkInProgressVersions} from './ReactMutableSource.old';
 
-import {now} from './Scheduler';
+import {now} from './SchedulerWithReactIntegration.old';
 
 import {
   IndeterminateComponent,
@@ -58,7 +58,6 @@ import {
 import {NoMode, ConcurrentMode, ProfileMode} from './ReactTypeOfMode';
 import {
   Ref,
-  RefStatic,
   Update,
   NoFlags,
   DidCapture,
@@ -124,7 +123,6 @@ import {
   enableScopeAPI,
   enableProfilerTimer,
   enableCache,
-  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 import {
   markSpawnedWork,
@@ -159,9 +157,6 @@ function markUpdate(workInProgress: Fiber) {
 
 function markRef(workInProgress: Fiber) {
   workInProgress.flags |= Ref;
-  if (enableSuspenseLayoutEffectSemantics) {
-    workInProgress.flags |= RefStatic;
-  }
 }
 
 function hadNoMutationsEffects(current: null | Fiber, completedWork: Fiber) {
@@ -992,7 +987,7 @@ function completeWork(
                   // Don't count time spent in a timed out Suspense subtree as part of the base duration.
                   const primaryChildFragment = workInProgress.child;
                   if (primaryChildFragment !== null) {
-                    // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
+                    // $FlowFixMe Flow doens't support type casting in combiation with the -= operator
                     workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
                   }
                 }
@@ -1022,7 +1017,7 @@ function completeWork(
                   // Don't count time spent in a timed out Suspense subtree as part of the base duration.
                   const primaryChildFragment = workInProgress.child;
                   if (primaryChildFragment !== null) {
-                    // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
+                    // $FlowFixMe Flow doens't support type casting in combiation with the -= operator
                     workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
                   }
                 }
@@ -1126,7 +1121,7 @@ function completeWork(
             // Don't count time spent in a timed out Suspense subtree as part of the base duration.
             const primaryChildFragment = workInProgress.child;
             if (primaryChildFragment !== null) {
-              // $FlowFixMe Flow doesn't support type casting in combination with the -= operator
+              // $FlowFixMe Flow doens't support type casting in combiation with the -= operator
               workInProgress.treeBaseDuration -= ((primaryChildFragment.treeBaseDuration: any): number);
             }
           }

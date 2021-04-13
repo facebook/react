@@ -23,6 +23,7 @@ describe('ReactFlushSync', () => {
   }
 
   // @gate experimental || !enableSyncDefaultUpdates
+  // @gate flushSyncOverridesStartTransition
   test('changes priority of updates in useEffect', async () => {
     function App() {
       const [syncState, setSyncState] = useState(0);
@@ -74,6 +75,7 @@ describe('ReactFlushSync', () => {
   });
 
   // @gate experimental
+  // @gate flushSyncOverridesStartTransition
   test('nested with startTransition', async () => {
     let setSyncState;
     let setState;
@@ -114,6 +116,7 @@ describe('ReactFlushSync', () => {
     expect(root).toMatchRenderedOutput('1, 1');
   });
 
+  // @gate discretePassiveEffectsFlushSynchronously
   test('flushes passive effects synchronously when they are the result of a sync render', async () => {
     function App() {
       useEffect(() => {

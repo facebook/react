@@ -85,6 +85,20 @@ function getTestFlags() {
       ...featureFlags,
       ...environmentFlags,
 
+      // These features only exist in the new fork
+      enableProfilerUpdaters: featureFlags.enableNewReconciler === true,
+      expiredUpdatesEntangledWithSync:
+        featureFlags.enableNewReconciler === true,
+      flushSyncOverridesStartTransition:
+        featureFlags.enableNewReconciler === true,
+      discretePassiveEffectsFlushSynchronously:
+        featureFlags.enableNewReconciler === true,
+
+      // This flag is currently only implemented in the new fork
+      enableSyncDefaultUpdates:
+        featureFlags.enableSyncDefaultUpdates &&
+        featureFlags.enableNewReconciler === true,
+
       // FIXME: www-classic has enableCache on, but when running the source
       // tests, Jest doesn't expose the API correctly. Fix then remove
       // this override.
