@@ -1027,6 +1027,9 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
   const current = finishedWork.alternate;
   const wasHidden = current !== null && current.memoizedState !== null;
 
+  // Only hide the top-most host nodes.
+  let hiddenHostSubtreeRoot = null;
+
   if (supportsMutation) {
     // We only have the top Fiber that was inserted but we need to recurse down its
     // children to find all the terminal nodes.
@@ -1034,7 +1037,8 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
     while (true) {
       if (node.tag === HostComponent) {
         const instance = node.stateNode;
-        if (isHidden) {
+        if (isHidden && hiddenHostSubtreeRoot === null) {
+          hiddenHostSubtreeRoot = node;
           hideInstance(instance);
         } else {
           unhideInstance(node.stateNode, node.memoizedProps);
@@ -1060,7 +1064,7 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
         }
       } else if (node.tag === HostText) {
         const instance = node.stateNode;
-        if (isHidden) {
+        if (isHidden && hiddenHostSubtreeRoot === null) {
           hideTextInstance(instance);
         } else {
           unhideTextInstance(instance, node.memoizedProps);
@@ -1133,8 +1137,18 @@ function hideOrUnhideAllChildren(finishedWork, isHidden) {
         if (node.return === null || node.return === finishedWork) {
           return;
         }
+
+        if (hiddenHostSubtreeRoot === node) {
+          hiddenHostSubtreeRoot = null;
+        }
+
         node = node.return;
       }
+
+      if (hiddenHostSubtreeRoot === node) {
+        hiddenHostSubtreeRoot = null;
+      }
+
       node.sibling.return = node.return;
       node = node.sibling;
     }
