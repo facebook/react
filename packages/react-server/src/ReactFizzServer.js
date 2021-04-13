@@ -461,7 +461,7 @@ function renderWithHooks<Props, SecondArg>(
 function finishClassComponent(
   request: Request,
   task: Task,
-  instance: Object,
+  instance: any,
   Component: any,
   props: any,
 ): ReactNodeList {
@@ -518,7 +518,7 @@ function renderClassComponent(
     : undefined;
   const instance = constructClassInstance(Component, props, unmaskedContext);
   mountClassInstance(instance, Component, props, unmaskedContext);
-  finishClassComponent(request, task, Component);
+  finishClassComponent(request, task, instance, Component, props);
 }
 
 const didWarnAboutBadClass = {};
@@ -617,7 +617,7 @@ function renderIndeterminateComponent(
     }
 
     mountClassInstance(value, Component, props, legacyContext);
-    finishClassComponent(request, task, value, Component);
+    finishClassComponent(request, task, value, Component, props);
   } else {
     // Proceed under the assumption that this is a function component
     if (__DEV__) {

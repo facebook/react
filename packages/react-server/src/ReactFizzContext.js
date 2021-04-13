@@ -47,8 +47,8 @@ export function getMaskedContext(type: any, unmaskedContext: Object): Object {
 }
 
 export function processChildContext(
-  type: any,
   instance: any,
+  type: any,
   parentContext: Object,
   childContextTypes: Object,
 ): Object {
