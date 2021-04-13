@@ -727,4 +727,70 @@ describe('ReactDOMFizzServer', () => {
       </div>,
     );
   });
+
+  // @gate experimental
+  it('should resume the context from where it left off', async () => {
+    const ContextA = React.createContext('A0');
+    const ContextB = React.createContext('B0');
+
+    function PrintA() {
+      return (
+        <ContextA.Consumer>{value => <Text text={value} />}</ContextA.Consumer>
+      );
+    }
+
+    class PrintB extends React.Component {
+      static contextType = ContextB;
+      render() {
+        return <Text text={this.context} />;
+      }
+    }
+
+    function AsyncParent({text, children}) {
+      return (
+        <>
+          <AsyncText text={text} />
+          <b>{children}</b>
+        </>
+      );
+    }
+
+    await act(async () => {
+      const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
+        <div>
+          <PrintA />
+          <div>
+            <ContextA.Provider value="A0.1">
+              <Suspense fallback={<Text text="Loading..." />}>
+                <AsyncParent text="Child:">
+                  <PrintA />
+                </AsyncParent>
+                <PrintB />
+              </Suspense>
+            </ContextA.Provider>
+          </div>
+          <PrintA />
+        </div>,
+        writable,
+      );
+      startWriting();
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        A0<div>Loading...</div>A0
+      </div>,
+    );
+    await act(async () => {
+      resolveText('Child:');
+    });
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        A0
+        <div>
+          Child:<b>A0.1</b>B0
+        </div>
+        A0
+      </div>,
+    );
+  });
 });
