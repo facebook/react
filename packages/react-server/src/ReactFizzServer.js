@@ -63,6 +63,7 @@ import {
   emptyContextObject,
 } from './ReactFizzContext';
 import {
+  readContext,
   rootContextSnapshot,
   switchContext,
   getActiveContext,
@@ -552,6 +553,7 @@ let didWarnAboutReassigningProps = false;
 const didWarnAboutDefaultPropsOnFunctionComponent = {};
 let didWarnAboutGenerators = false;
 let didWarnAboutMaps = false;
+let hasWarnedAboutUsingContextAsConsumer = false;
 
 // This would typically be a function component but we still support module pattern
 // components for some reason.
@@ -738,10 +740,51 @@ function renderMemo(
 function renderContextConsumer(
   request: Request,
   task: Task,
-  type: ReactContext<any>,
+  context: ReactContext<any>,
   props: Object,
 ): void {
-  throw new Error('Not yet implemented element type.');
+  // The logic below for Context differs depending on PROD or DEV mode. In
+  // DEV mode, we create a separate object for Context.Consumer that acts
+  // like a proxy to Context. This proxy object adds unnecessary code in PROD
+  // so we use the old behaviour (Context.Consumer references Context) to
+  // reduce size and overhead. The separate object references context via
+  // a property called "_context", which also gives us the ability to check
+  // in DEV mode if this property exists or not and warn if it does not.
+  if (__DEV__) {
+    if ((context: any)._context === undefined) {
+      // This may be because it's a Context (rather than a Consumer).
+      // Or it may be because it's older React where they're the same thing.
+      // We only want to warn if we're sure it's a new React.
+      if (context !== context.Consumer) {
+        if (!hasWarnedAboutUsingContextAsConsumer) {
+          hasWarnedAboutUsingContextAsConsumer = true;
+          console.error(
+            'Rendering <Context> directly is not supported and will be removed in ' +
+              'a future major release. Did you mean to render <Context.Consumer> instead?',
+          );
+        }
+      }
+    } else {
+      context = (context: any)._context;
+    }
+  }
+  const render = props.children;
+
+  if (__DEV__) {
+    if (typeof render !== 'function') {
+      console.error(
+        'A context consumer was rendered with multiple children, or a child ' +
+          "that isn't a function. A context consumer expects a single child " +
+          'that is a function. If you did pass a function, make sure there ' +
+          'is no trailing or leading whitespace around it.',
+      );
+    }
+  }
+
+  const newValue = readContext(context);
+  const newChildren = render(newValue);
+
+  renderNodeDestructive(request, task, newChildren);
 }
 
 function renderContextProvider(

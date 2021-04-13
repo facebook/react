@@ -269,3 +269,10 @@ export function popProvider<T>(context: ReactContext<T>): ContextSnapshot {
 export function getActiveContext(): ContextSnapshot {
   return currentActiveSnapshot;
 }
+
+export function readContext<T>(context: ReactContext<T>): T {
+  const value = isPrimaryRenderer
+    ? context._currentValue
+    : context._currentValue2;
+  return value;
+}
