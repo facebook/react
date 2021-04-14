@@ -137,6 +137,8 @@ export type ReactRenderer = {
   // Only injected by React v16.9+ in DEV mode.
   // Enables DevTools to append owners-only component stack to error messages.
   getCurrentFiber?: () => Fiber | null,
+  // 17.0.2+
+  reconcilerVersion?: string,
   // Uniquely identifies React DOM v15.
   ComponentTree?: any,
   // Present for React DOM v12 (possibly earlier) through v15.
