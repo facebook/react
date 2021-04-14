@@ -103,6 +103,7 @@ describe('ReactDOMFizzServer', () => {
         if (
           node.tagName !== 'SCRIPT' &&
           node.tagName !== 'TEMPLATE' &&
+          node.tagName !== 'template' &&
           !node.hasAttribute('hidden') &&
           !node.hasAttribute('aria-hidden')
         ) {
@@ -153,7 +154,6 @@ describe('ReactDOMFizzServer', () => {
     }
   }
 
-  /*
   function rejectText(text, error) {
     const record = textCache.get(text);
     if (record === undefined) {
@@ -169,7 +169,6 @@ describe('ReactDOMFizzServer', () => {
       thenable.pings.forEach(t => t());
     }
   }
-  */
 
   function readText(text) {
     const record = textCache.get(text);
@@ -799,5 +798,80 @@ describe('ReactDOMFizzServer', () => {
         A0
       </div>,
     );
+  });
+
+  it('client renders a boundary if it errors before finishing the fallback', async () => {
+    function App({isClient}) {
+      return (
+        <Suspense fallback="Loading root...">
+          <div>
+            <Suspense fallback={<AsyncText text="Loading..." />}>
+              <h1>
+                {isClient ? <Text text="Hello" /> : <AsyncText text="Hello" />}
+              </h1>
+            </Suspense>
+          </div>
+        </Suspense>
+      );
+    }
+
+    const loggedErrors = [];
+    let controls;
+    await act(async () => {
+      controls = ReactDOMFizzServer.pipeToNodeWritable(
+        <App isClient={false} />,
+        writable,
+        {
+          onError(x) {
+            loggedErrors.push(x);
+          },
+        },
+      );
+      controls.startWriting();
+    });
+
+    // We're still showing a fallback.
+
+    // Attempt to hydrate the content.
+    const root = ReactDOM.unstable_createRoot(container, {hydrate: true});
+    root.render(<App isClient={true} />);
+    Scheduler.unstable_flushAll();
+
+    // We're still loading because we're waiting for the server to stream more content.
+    expect(getVisibleChildren(container)).toEqual('Loading root...');
+
+    expect(loggedErrors).toEqual([]);
+
+    const theError = new Error('Test');
+    // Error the content, but we don't have a fallback yet.
+    await act(async () => {
+      rejectText('Hello', theError);
+    });
+
+    expect(loggedErrors).toEqual([theError]);
+
+    // We still can't render it on the client because we haven't unblocked the parent.
+    Scheduler.unstable_flushAll();
+    expect(getVisibleChildren(container)).toEqual('Loading root...');
+
+    // Unblock the loading state
+    await act(async () => {
+      resolveText('Loading...');
+    });
+
+    // Now we're able to show the inner boundary.
+    expect(getVisibleChildren(container)).toEqual(<div>Loading...</div>);
+
+    // That will let us client render it instead.
+    Scheduler.unstable_flushAll();
+
+    // The client rendered HTML is now in place.
+    expect(getVisibleChildren(container)).toEqual(
+      <div>
+        <h1>Hello</h1>
+      </div>,
+    );
+
+    expect(loggedErrors).toEqual([theError]);
   });
 });
