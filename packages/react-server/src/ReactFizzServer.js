@@ -728,13 +728,29 @@ function validateFunctionComponentInDev(Component: any): void {
   }
 }
 
+function resolveDefaultProps(Component: any, baseProps: Object): Object {
+  if (Component && Component.defaultProps) {
+    // Resolve default props. Taken from ReactElement
+    const props = Object.assign({}, baseProps);
+    const defaultProps = Component.defaultProps;
+    for (const propName in defaultProps) {
+      if (props[propName] === undefined) {
+        props[propName] = defaultProps[propName];
+      }
+    }
+    return props;
+  }
+  return baseProps;
+}
+
 function renderForwardRef(
   request: Request,
   task: Task,
   type: any,
   props: Object,
+  ref: any,
 ): void {
-  throw new Error('Not yet implemented element type.');
+  renderWithHooks(request, task, type, props, ref);
 }
 
 function renderMemo(
@@ -742,8 +758,11 @@ function renderMemo(
   task: Task,
   type: any,
   props: Object,
+  ref: any,
 ): void {
-  throw new Error('Not yet implemented element type.');
+  const innerType = type.type;
+  const resolvedProps = resolveDefaultProps(innerType, props);
+  renderElement(request, task, innerType, resolvedProps, ref);
 }
 
 function renderContextConsumer(
@@ -835,6 +854,7 @@ function renderElement(
   task: Task,
   type: any,
   props: Object,
+  ref: any,
 ): void {
   if (typeof type === 'function') {
     if (shouldConstruct(type)) {
@@ -877,11 +897,11 @@ function renderElement(
   if (typeof type === 'object' && type !== null) {
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE: {
-        renderForwardRef(request, task, type, props);
+        renderForwardRef(request, task, type, props, ref);
         return;
       }
       case REACT_MEMO_TYPE: {
-        renderMemo(request, task, type, props);
+        renderMemo(request, task, type, props, ref);
         return;
       }
       case REACT_PROVIDER_TYPE: {
@@ -961,7 +981,8 @@ function renderNodeDestructive(
         const element: React$Element<any> = (node: any);
         const type = element.type;
         const props = element.props;
-        renderElement(request, task, type, props);
+        const ref = element.ref;
+        renderElement(request, task, type, props, ref);
         return;
       }
       case REACT_PORTAL_TYPE:
