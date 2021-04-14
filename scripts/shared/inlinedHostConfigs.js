@@ -20,6 +20,7 @@ module.exports = [
       'react-dom',
       'react-dom/unstable-fizz',
       'react-dom/unstable-fizz.node',
+      'react-dom/server.node.stable',
       'react-dom/src/server/ReactDOMFizzServerNode.js', // react-dom/unstable-fizz.node
       'react-server-dom-webpack',
       'react-server-dom-webpack/writer',
@@ -44,10 +45,27 @@ module.exports = [
       'react-dom',
       'react-dom/testing',
       'react-dom/unstable-fizz.browser',
+      'react-dom/server.browser.stable',
       'react-dom/src/server/ReactDOMFizzServerBrowser.js', // react-dom/unstable-fizz.browser
       'react-server-dom-webpack',
       'react-server-dom-webpack/writer.browser.server',
       'react-server-dom-webpack/src/ReactFlightDOMServerBrowser.js', // react-server-dom-webpack/writer.browser.server
+      'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
+    ],
+    isFlowTyped: true,
+    isServerSupported: true,
+  },
+  {
+    shortName: 'dom-legacy',
+    entryPoints: ['react-dom/server.browser', 'react-dom/server.node'],
+    paths: [
+      'react-dom',
+      'react-dom/server',
+      'react-dom/server.browser',
+      'react-dom/server.node',
+      'react-server-dom-webpack',
+      'react-dom/src/server/ReactDOMLegacyServerBrowser.js', // react-dom/server.browser
+      'react-dom/src/server/ReactDOMLegacyServerNode.js', // react-dom/server.node
       'react-client/src/ReactFlightClientStream.js', // We can only type check this in streaming configurations.
     ],
     isFlowTyped: true,

@@ -241,7 +241,7 @@ const bundles = [
     bundleTypes: __EXPERIMENTAL__
       ? [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD]
       : [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_WWW_DEV, FB_WWW_PROD],
-    moduleType: NON_FIBER_RENDERER,
+    moduleType: __EXPERIMENTAL__ ? RENDERER : NON_FIBER_RENDERER,
     entry: 'react-dom/server.browser',
     global: 'ReactDOMServer',
     externals: ['react'],
@@ -254,7 +254,7 @@ const bundles = [
   },
   {
     bundleTypes: [NODE_DEV, NODE_PROD],
-    moduleType: NON_FIBER_RENDERER,
+    moduleType: __EXPERIMENTAL__ ? RENDERER : NON_FIBER_RENDERER,
     entry: 'react-dom/server.node',
     externals: ['react', 'stream'],
     babel: opts =>
