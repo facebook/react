@@ -986,7 +986,11 @@ function renderNodeDestructive(
         return;
       }
       case REACT_PORTAL_TYPE:
-        throw new Error('Not yet implemented node type.');
+        invariant(
+          false,
+          'Portals are not currently supported by the server renderer. ' +
+            'Render them conditionally so that they only appear on the client render.',
+        );
       case REACT_LAZY_TYPE:
         throw new Error('Not yet implemented node type.');
     }
