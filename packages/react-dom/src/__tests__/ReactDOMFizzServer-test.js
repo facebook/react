@@ -353,13 +353,16 @@ describe('ReactDOMFizzServer', () => {
 
     await act(async () => {
       const {startWriting} = ReactDOMFizzServer.pipeToNodeWritable(
-        <Suspense fallback={<Text text="Loading A..." />}>
-          <>
-            <Text text="This will show A: " />
-            <div>
-              <AsyncText text="A" />
-            </div>
-          </>
+        // We use two nested boundaries to flush out coverage of an old reentrancy bug.
+        <Suspense fallback="Loading...">
+          <Suspense fallback={<Text text="Loading A..." />}>
+            <>
+              <Text text="This will show A: " />
+              <div>
+                <AsyncText text="A" />
+              </div>
+            </>
+          </Suspense>
         </Suspense>,
         writableA,
         {
