@@ -419,17 +419,30 @@ function renderSuspenseBoundary(
     task.blockedSegment = parentSegment;
   }
 
+  // This injects an extra segment just to contain an empty tag with an ID.
+  // This means that we're not actually using the assignID anywhere.
+  // TODO: Rethink the assignID approach.
+  pushEmpty(boundarySegment.chunks, request.responseState, newBoundary.id);
+  const innerSegment = createPendingSegment(
+    request,
+    boundarySegment.chunks.length,
+    null,
+    boundarySegment.formatContext,
+  );
+  boundarySegment.status = COMPLETED;
+  boundarySegment.children.push(innerSegment);
+
   // We create suspended task for the fallback because we don't want to actually work
   // on it yet in case we finish the main content, so we queue for later.
   const suspendedFallbackTask = createTask(
     request,
     fallback,
     parentBoundary,
-    boundarySegment,
+    innerSegment,
     fallbackAbortSet,
     task.legacyContext,
     task.context,
-    newBoundary.id, // This is the ID we want to give this fallback so we can replace it later.
+    null,
   );
   // TODO: This should be queued at a separate lower priority queue so that we only work
   // on preparing fallbacks if we don't have any more main content to task on.
