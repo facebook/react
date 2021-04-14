@@ -116,6 +116,10 @@ describe('ReactDOMFizzServer', () => {
               // We assume this is a React added ID that's a non-visual implementation detail.
               continue;
             }
+            if (attributes[i].name === 'data-reactroot') {
+              // We ignore React injected attributes.
+              continue;
+            }
             props[attributes[i].name] = attributes[i].value;
           }
           props.children = getVisibleChildren(node);
