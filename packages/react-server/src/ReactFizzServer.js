@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {Dispatcher as DispatcherType} from 'react-reconciler/src/ReactInternalTypes';
 import type {
   Destination,
   Chunk,
@@ -70,6 +69,12 @@ import {
   pushProvider,
   popProvider,
 } from './ReactFizzNewContext';
+import {
+  prepareToUseHooks,
+  finishHooks,
+  resetHooksState,
+  Dispatcher,
+} from './ReactFizzHooks';
 
 import {
   getIteratorFn,
@@ -198,6 +203,8 @@ const DEFAULT_PROGRESSIVE_CHUNK_SIZE = 12800;
 function defaultErrorHandler(error: mixed) {
   console['error'](error); // Don't transform to our wrapper
 }
+
+function noop(): void {}
 
 export function createRequest(
   children: ReactNodeList,
@@ -474,8 +481,10 @@ function renderWithHooks<Props, SecondArg>(
   props: Props,
   secondArg: SecondArg,
 ): any {
-  // TODO: Set up Hooks etc.
-  const children = Component(props, secondArg);
+  const componentIdentity = {};
+  prepareToUseHooks(componentIdentity);
+  const result = Component(props, secondArg);
+  const children = finishHooks(Component, props, result, secondArg);
   if (children === undefined) {
     invalidRenderResult(Component);
   }
@@ -719,13 +728,29 @@ function validateFunctionComponentInDev(Component: any): void {
   }
 }
 
+function resolveDefaultProps(Component: any, baseProps: Object): Object {
+  if (Component && Component.defaultProps) {
+    // Resolve default props. Taken from ReactElement
+    const props = Object.assign({}, baseProps);
+    const defaultProps = Component.defaultProps;
+    for (const propName in defaultProps) {
+      if (props[propName] === undefined) {
+        props[propName] = defaultProps[propName];
+      }
+    }
+    return props;
+  }
+  return baseProps;
+}
+
 function renderForwardRef(
   request: Request,
   task: Task,
   type: any,
   props: Object,
+  ref: any,
 ): void {
-  throw new Error('Not yet implemented element type.');
+  renderWithHooks(request, task, type, props, ref);
 }
 
 function renderMemo(
@@ -733,8 +758,11 @@ function renderMemo(
   task: Task,
   type: any,
   props: Object,
+  ref: any,
 ): void {
-  throw new Error('Not yet implemented element type.');
+  const innerType = type.type;
+  const resolvedProps = resolveDefaultProps(innerType, props);
+  renderElement(request, task, innerType, resolvedProps, ref);
 }
 
 function renderContextConsumer(
@@ -826,6 +854,7 @@ function renderElement(
   task: Task,
   type: any,
   props: Object,
+  ref: any,
 ): void {
   if (typeof type === 'function') {
     if (shouldConstruct(type)) {
@@ -868,11 +897,11 @@ function renderElement(
   if (typeof type === 'object' && type !== null) {
     switch (type.$$typeof) {
       case REACT_FORWARD_REF_TYPE: {
-        renderForwardRef(request, task, type, props);
+        renderForwardRef(request, task, type, props, ref);
         return;
       }
       case REACT_MEMO_TYPE: {
-        renderMemo(request, task, type, props);
+        renderMemo(request, task, type, props, ref);
         return;
       }
       case REACT_PROVIDER_TYPE: {
@@ -952,7 +981,8 @@ function renderNodeDestructive(
         const element: React$Element<any> = (node: any);
         const type = element.type;
         const props = element.props;
-        renderElement(request, task, type, props);
+        const ref = element.ref;
+        renderElement(request, task, type, props, ref);
         return;
       }
       case REACT_PORTAL_TYPE:
@@ -1102,6 +1132,7 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
   try {
     return renderNodeDestructive(request, task, node);
   } catch (x) {
+    resetHooksState();
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
       spawnNewSuspendedTask(request, task, x);
       // Restore the context. We assume that this will be restored by the inner
@@ -1290,6 +1321,7 @@ function retryTask(request: Request, task: Task): void {
     segment.status = COMPLETED;
     finishedTask(request, task.blockedBoundary, segment);
   } catch (x) {
+    resetHooksState();
     if (typeof x === 'object' && x !== null && typeof x.then === 'function') {
       // Something suspended again, let's pick it back up later.
       const ping = task.ping;
@@ -1704,51 +1736,3 @@ export function abort(request: Request): void {
     fatalError(request, error);
   }
 }
-
-function notYetImplemented(): void {
-  throw new Error('Not yet implemented.');
-}
-
-function unsupportedRefresh() {
-  invariant(false, 'Cache cannot be refreshed during server rendering.');
-}
-
-function unsupportedStartTransition() {
-  invariant(false, 'startTransition cannot be called during server rendering.');
-}
-
-function noop(): void {}
-
-const Dispatcher: DispatcherType = {
-  useMemo<T>(nextCreate: () => T): T {
-    return nextCreate();
-  },
-  useCallback<T>(callback: T): T {
-    return callback;
-  },
-  useDebugValue(): void {},
-  useDeferredValue<T>(value: T): T {
-    return value;
-  },
-  useTransition(): [(callback: () => void) => void, boolean] {
-    return [unsupportedStartTransition, false];
-  },
-  getCacheForType<T>(resourceType: () => T): T {
-    throw new Error('Not yet implemented. Should mark as client rendered.');
-  },
-  readContext: (notYetImplemented: any),
-  useContext: (notYetImplemented: any),
-  useReducer: (notYetImplemented: any),
-  useRef: (notYetImplemented: any),
-  useState: (notYetImplemented: any),
-  useLayoutEffect: noop,
-  // useImperativeHandle is not run in the server environment
-  useImperativeHandle: noop,
-  // Effects are not run in the server environment.
-  useEffect: noop,
-  useOpaqueIdentifier: (notYetImplemented: any),
-  useMutableSource: (notYetImplemented: any),
-  useCacheRefresh(): <T>(?() => T, ?T) => void {
-    return unsupportedRefresh;
-  },
-};
