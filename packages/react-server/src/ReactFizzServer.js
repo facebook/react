@@ -1006,8 +1006,8 @@ function abortTask(task: Task): void {
   const segment = task.blockedSegment;
   segment.status = ABORTED;
 
-  request.allPendingTasks--;
   if (boundary === null) {
+    request.allPendingTasks--;
     // We didn't complete the root so we have nothing to show. We can close
     // the request;
     if (request.status !== CLOSED) {
@@ -1017,18 +1017,23 @@ function abortTask(task: Task): void {
   } else {
     boundary.pendingTasks--;
 
-    // If this boundary was still pending then we haven't already cancelled its fallbacks.
-    // We'll need to abort the fallbacks, which will also error that parent boundary.
-    boundary.fallbackAbortableTasks.forEach(abortTask, request);
-    boundary.fallbackAbortableTasks.clear();
-
-    if (!boundary.forceClientRender) {
-      boundary.forceClientRender = true;
-      if (boundary.parentFlushed) {
-        request.clientRenderedBoundaries.push(boundary);
+    if (boundary.fallbackAbortableTasks.size > 0) {
+      // If this boundary was still pending then we haven't already cancelled its fallbacks.
+      // We'll need to abort the fallbacks, which will also error that parent boundary.
+      // This means that we don't have to client render this boundary because its parent
+      // will be client rendered anyway.
+      boundary.fallbackAbortableTasks.forEach(abortTask, request);
+      boundary.fallbackAbortableTasks.clear();
+    } else {
+      if (!boundary.forceClientRender) {
+        boundary.forceClientRender = true;
+        if (boundary.parentFlushed) {
+          request.clientRenderedBoundaries.push(boundary);
+        }
       }
     }
 
+    request.allPendingTasks--;
     if (request.allPendingTasks === 0) {
       const onCompleteAll = request.onCompleteAll;
       onCompleteAll();
