@@ -13,12 +13,18 @@ import type {
   Chunk,
   PrecomputedChunk,
 } from './ReactServerStreamConfig';
-import type {ReactNodeList} from 'shared/ReactTypes';
+import type {
+  ReactNodeList,
+  ReactContext,
+  ReactProviderType,
+} from 'shared/ReactTypes';
+import type {LazyComponent as LazyComponentType} from 'react/src/ReactLazy';
 import type {
   SuspenseBoundaryID,
   ResponseState,
   FormatContext,
 } from './ReactServerFormatConfig';
+import type {ContextSnapshot} from './ReactFizzNewContext';
 
 import {
   scheduleWork,
@@ -57,6 +63,15 @@ import {
   emptyContextObject,
 } from './ReactFizzContext';
 import {
+  readContext,
+  rootContextSnapshot,
+  switchContext,
+  getActiveContext,
+  pushProvider,
+  popProvider,
+} from './ReactFizzNewContext';
+
+import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
   REACT_PORTAL_TYPE,
@@ -68,6 +83,10 @@ import {
   REACT_PROFILER_TYPE,
   REACT_SUSPENSE_LIST_TYPE,
   REACT_FRAGMENT_TYPE,
+  REACT_FORWARD_REF_TYPE,
+  REACT_MEMO_TYPE,
+  REACT_PROVIDER_TYPE,
+  REACT_CONTEXT_TYPE,
 } from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -104,6 +123,7 @@ type Task = {
   blockedSegment: Segment, // the segment we'll write to
   abortSet: Set<Task>, // the abortable set that this task belongs to
   legacyContext: LegacyContext, // the current legacy context that this task is executing in
+  context: ContextSnapshot, // the current new context that this task is executing in
   assignID: null | SuspenseBoundaryID, // id to assign to the content
 };
 
@@ -220,6 +240,7 @@ export function createRequest(
     rootSegment,
     abortSet,
     emptyContextObject,
+    rootContextSnapshot,
     null,
   );
   pingedTasks.push(rootTask);
@@ -257,6 +278,7 @@ function createTask(
   blockedSegment: Segment,
   abortSet: Set<Task>,
   legacyContext: LegacyContext,
+  context: ContextSnapshot,
   assignID: null | SuspenseBoundaryID,
 ): Task {
   request.allPendingTasks++;
@@ -272,6 +294,7 @@ function createTask(
     blockedSegment,
     abortSet,
     legacyContext,
+    context,
     assignID,
   };
   abortSet.add(task);
@@ -394,6 +417,7 @@ function renderSuspenseBoundary(
     boundarySegment,
     fallbackAbortSet,
     task.legacyContext,
+    task.context,
     newBoundary.id, // This is the ID we want to give this fallback so we can replace it later.
   );
   // TODO: This should be queued at a separate lower priority queue so that we only work
@@ -529,6 +553,7 @@ let didWarnAboutReassigningProps = false;
 const didWarnAboutDefaultPropsOnFunctionComponent = {};
 let didWarnAboutGenerators = false;
 let didWarnAboutMaps = false;
+let hasWarnedAboutUsingContextAsConsumer = false;
 
 // This would typically be a function component but we still support module pattern
 // components for some reason.
@@ -694,49 +719,185 @@ function validateFunctionComponentInDev(Component: any): void {
   }
 }
 
+function renderForwardRef(
+  request: Request,
+  task: Task,
+  type: any,
+  props: Object,
+): void {
+  throw new Error('Not yet implemented element type.');
+}
+
+function renderMemo(
+  request: Request,
+  task: Task,
+  type: any,
+  props: Object,
+): void {
+  throw new Error('Not yet implemented element type.');
+}
+
+function renderContextConsumer(
+  request: Request,
+  task: Task,
+  context: ReactContext<any>,
+  props: Object,
+): void {
+  // The logic below for Context differs depending on PROD or DEV mode. In
+  // DEV mode, we create a separate object for Context.Consumer that acts
+  // like a proxy to Context. This proxy object adds unnecessary code in PROD
+  // so we use the old behaviour (Context.Consumer references Context) to
+  // reduce size and overhead. The separate object references context via
+  // a property called "_context", which also gives us the ability to check
+  // in DEV mode if this property exists or not and warn if it does not.
+  if (__DEV__) {
+    if ((context: any)._context === undefined) {
+      // This may be because it's a Context (rather than a Consumer).
+      // Or it may be because it's older React where they're the same thing.
+      // We only want to warn if we're sure it's a new React.
+      if (context !== context.Consumer) {
+        if (!hasWarnedAboutUsingContextAsConsumer) {
+          hasWarnedAboutUsingContextAsConsumer = true;
+          console.error(
+            'Rendering <Context> directly is not supported and will be removed in ' +
+              'a future major release. Did you mean to render <Context.Consumer> instead?',
+          );
+        }
+      }
+    } else {
+      context = (context: any)._context;
+    }
+  }
+  const render = props.children;
+
+  if (__DEV__) {
+    if (typeof render !== 'function') {
+      console.error(
+        'A context consumer was rendered with multiple children, or a child ' +
+          "that isn't a function. A context consumer expects a single child " +
+          'that is a function. If you did pass a function, make sure there ' +
+          'is no trailing or leading whitespace around it.',
+      );
+    }
+  }
+
+  const newValue = readContext(context);
+  const newChildren = render(newValue);
+
+  renderNodeDestructive(request, task, newChildren);
+}
+
+function renderContextProvider(
+  request: Request,
+  task: Task,
+  type: ReactProviderType<any>,
+  props: Object,
+): void {
+  const context = type._context;
+  const value = props.value;
+  const children = props.children;
+  let prevSnapshot;
+  if (__DEV__) {
+    prevSnapshot = task.context;
+  }
+  task.context = pushProvider(context, value);
+  renderNodeDestructive(request, task, children);
+  task.context = popProvider(context);
+  if (__DEV__) {
+    if (prevSnapshot !== task.context) {
+      console.error(
+        'Popping the context provider did not return back to the original snapshot. This is a bug in React.',
+      );
+    }
+  }
+}
+
+function renderLazyComponent(
+  request: Request,
+  task: Task,
+  type: LazyComponentType<any, any>,
+  props: Object,
+): void {
+  throw new Error('Not yet implemented element type.');
+}
+
 function renderElement(
   request: Request,
   task: Task,
   type: any,
   props: Object,
-  node: ReactNodeList,
 ): void {
   if (typeof type === 'function') {
     if (shouldConstruct(type)) {
       renderClassComponent(request, task, type, props);
+      return;
     } else {
       renderIndeterminateComponent(request, task, type, props);
+      return;
     }
-  } else if (typeof type === 'string') {
+  }
+  if (typeof type === 'string') {
     renderHostElement(request, task, type, props);
-  } else {
-    switch (type) {
-      // TODO: LegacyHidden acts the same as a fragment. This only works
-      // because we currently assume that every instance of LegacyHidden is
-      // accompanied by a host component wrapper. In the hidden mode, the host
-      // component is given a `hidden` attribute, which ensures that the
-      // initial HTML is not visible. To support the use of LegacyHidden as a
-      // true fragment, without an extra DOM node, we would have to hide the
-      // initial HTML in some other way.
-      // TODO: Add REACT_OFFSCREEN_TYPE here too with the same capability.
-      case REACT_LEGACY_HIDDEN_TYPE:
-      case REACT_DEBUG_TRACING_MODE_TYPE:
-      case REACT_STRICT_MODE_TYPE:
-      case REACT_PROFILER_TYPE:
-      case REACT_SUSPENSE_LIST_TYPE: // TODO: SuspenseList should control the boundaries.
-      case REACT_FRAGMENT_TYPE: {
-        renderNodeDestructive(request, task, props.children);
-        break;
+    return;
+  }
+
+  switch (type) {
+    // TODO: LegacyHidden acts the same as a fragment. This only works
+    // because we currently assume that every instance of LegacyHidden is
+    // accompanied by a host component wrapper. In the hidden mode, the host
+    // component is given a `hidden` attribute, which ensures that the
+    // initial HTML is not visible. To support the use of LegacyHidden as a
+    // true fragment, without an extra DOM node, we would have to hide the
+    // initial HTML in some other way.
+    // TODO: Add REACT_OFFSCREEN_TYPE here too with the same capability.
+    case REACT_LEGACY_HIDDEN_TYPE:
+    case REACT_DEBUG_TRACING_MODE_TYPE:
+    case REACT_STRICT_MODE_TYPE:
+    case REACT_PROFILER_TYPE:
+    case REACT_SUSPENSE_LIST_TYPE: // TODO: SuspenseList should control the boundaries.
+    case REACT_FRAGMENT_TYPE: {
+      renderNodeDestructive(request, task, props.children);
+      return;
+    }
+    case REACT_SUSPENSE_TYPE: {
+      renderSuspenseBoundary(request, task, props);
+      return;
+    }
+  }
+
+  if (typeof type === 'object' && type !== null) {
+    switch (type.$$typeof) {
+      case REACT_FORWARD_REF_TYPE: {
+        renderForwardRef(request, task, type, props);
+        return;
       }
-      case REACT_SUSPENSE_TYPE: {
-        renderSuspenseBoundary(request, task, props);
-        break;
+      case REACT_MEMO_TYPE: {
+        renderMemo(request, task, type, props);
+        return;
       }
-      default: {
-        throw new Error('Not yet implemented element type.');
+      case REACT_PROVIDER_TYPE: {
+        renderContextProvider(request, task, type, props);
+        return;
+      }
+      case REACT_CONTEXT_TYPE: {
+        renderContextConsumer(request, task, type, props);
+        return;
+      }
+      case REACT_LAZY_TYPE: {
+        renderLazyComponent(request, task, type, props);
+        return;
       }
     }
   }
+
+  invariant(
+    false,
+    'Element type is invalid: expected a string (for built-in ' +
+      'components) or a class/function (for composite components) ' +
+      'but got: %s.%s',
+    type == null ? type : typeof type,
+    '',
+  );
 }
 
 function validateIterable(iterable, iteratorFn: Function): void {
@@ -791,7 +952,7 @@ function renderNodeDestructive(
         const element: React$Element<any> = (node: any);
         const type = element.type;
         const props = element.props;
-        renderElement(request, task, type, props, node);
+        renderElement(request, task, type, props);
         return;
       }
       case REACT_PORTAL_TYPE:
@@ -918,6 +1079,7 @@ function spawnNewSuspendedTask(
     newSegment,
     task.abortSet,
     task.legacyContext,
+    task.context,
     task.assignID,
   );
   // We've delegated the assignment.
@@ -936,6 +1098,7 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
   // process.
   const previousFormatContext = task.blockedSegment.formatContext;
   const previousLegacyContext = task.legacyContext;
+  const previousContext = task.context;
   try {
     return renderNodeDestructive(request, task, node);
   } catch (x) {
@@ -945,6 +1108,9 @@ function renderNode(request: Request, task: Task, node: ReactNodeList): void {
       // functions in case nothing throws so we don't use "finally" here.
       task.blockedSegment.formatContext = previousFormatContext;
       task.legacyContext = previousLegacyContext;
+      task.context = previousContext;
+      // Restore all active ReactContexts to what they were before.
+      switchContext(previousContext);
     } else {
       // We assume that we don't need the correct context.
       // Let's terminate the rest of the tree and don't render any siblings.
@@ -1104,6 +1270,10 @@ function retryTask(request: Request, task: Task): void {
     // We completed this by other means before we had a chance to retry it.
     return;
   }
+  // We restore the context to what it was when we suspended.
+  // We don't restore it after we leave because it's likely that we'll end up
+  // needing a very similar context soon again.
+  switchContext(task.context);
   try {
     // We call the destructive form that mutates this task. That way if something
     // suspends again, we can reuse the same task instead of spawning a new one.
@@ -1129,6 +1299,7 @@ function performWork(request: Request): void {
   if (request.status === CLOSED) {
     return;
   }
+  const prevContext = getActiveContext();
   const prevDispatcher = ReactCurrentDispatcher.current;
   ReactCurrentDispatcher.current = Dispatcher;
 
@@ -1148,6 +1319,16 @@ function performWork(request: Request): void {
     fatalError(request, error);
   } finally {
     ReactCurrentDispatcher.current = prevDispatcher;
+    if (prevDispatcher === Dispatcher) {
+      // This means that we were in a reentrant work loop. This could happen
+      // in a renderer that supports synchronous work like renderToString,
+      // when it's called from within another renderer.
+      // Normally we don't bother switching the contexts to their root/default
+      // values when leaving because we'll likely need the same or similar
+      // context again. However, when we're inside a synchronous loop like this
+      // we'll to restore the context to what it was before returning.
+      switchContext(prevContext);
+    }
   }
 }
 
