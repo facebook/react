@@ -94,12 +94,14 @@ import {
   REACT_MEMO_TYPE,
   REACT_PROVIDER_TYPE,
   REACT_CONTEXT_TYPE,
+  REACT_SCOPE_TYPE,
 } from 'shared/ReactSymbols';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
   disableLegacyContext,
   disableModulePatternComponents,
   warnAboutDefaultPropsOnFunctionComponents,
+  enableScopeAPI,
 } from 'shared/ReactFeatureFlags';
 
 import getComponentNameFromType from 'shared/getComponentNameFromType';
@@ -890,6 +892,14 @@ function renderElement(
       renderNodeDestructive(request, task, props.children);
       return;
     }
+    case REACT_SCOPE_TYPE: {
+      if (enableScopeAPI) {
+        renderNodeDestructive(request, task, props.children);
+        return;
+      }
+      invariant(false, 'ReactDOMServer does not yet support scope components.');
+    }
+    // eslint-disable-next-line-no-fallthrough
     case REACT_SUSPENSE_TYPE: {
       renderSuspenseBoundary(request, task, props);
       return;
@@ -988,7 +998,12 @@ function renderNodeDestructive(
         return;
       }
       case REACT_PORTAL_TYPE:
-        throw new Error('Not yet implemented node type.');
+        invariant(
+          false,
+          'Portals are not currently supported by the server renderer. ' +
+            'Render them conditionally so that they only appear on the client render.',
+        );
+      // eslint-disable-next-line-no-fallthrough
       case REACT_LAZY_TYPE:
         throw new Error('Not yet implemented node type.');
     }
