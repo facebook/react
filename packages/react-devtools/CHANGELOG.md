@@ -9,6 +9,11 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.12.1 (April 14, 2021)
+Although this release is being made for all NPM packages, only the `react-devtools-inline` package contains changes.
+#### Bugfix
+* Fixed `react-devtools-inline` bug in frontend `initialize` method ([bvaughn](https://github.com/bvaughn).
+
 ## 4.12.0 (April 12, 2021)
 Although this release is being made for all NPM packages, only the `react-devtools-inline` package contains changes.
 #### Feature
