@@ -800,6 +800,7 @@ describe('ReactDOMFizzServer', () => {
     );
   });
 
+  // @gate experimental
   it('client renders a boundary if it errors before finishing the fallback', async () => {
     function App({isClient}) {
       return (
