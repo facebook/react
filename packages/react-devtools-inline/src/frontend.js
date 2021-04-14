@@ -91,7 +91,7 @@ export function initialize(
   window.addEventListener('message', onGetSavedPreferencesMessage);
 
   if (bridge == null) {
-    bridge = createBridge();
+    bridge = createBridge(contentWindow);
   }
 
   if (store == null) {
