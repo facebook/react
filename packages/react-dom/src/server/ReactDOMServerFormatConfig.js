@@ -1079,6 +1079,12 @@ function pushStartGenericElement(
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
+  if (typeof children === 'string') {
+    // Special case children as a string to avoid the unnecessary comment.
+    // TODO: Remove this special case after the general optimization is in place.
+    target.push(stringToChunk(encodeHTMLTextNode(children)));
+    return null;
+  }
   return children;
 }
 

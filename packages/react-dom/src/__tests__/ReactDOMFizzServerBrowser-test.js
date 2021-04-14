@@ -56,7 +56,7 @@ describe('ReactDOMFizzServer', () => {
     );
     const result = await readResult(stream);
     expect(result).toMatchInlineSnapshot(
-      `"<div data-reactroot=\\"\\">hello world<!-- --></div>"`,
+      `"<div data-reactroot=\\"\\">hello world</div>"`,
     );
   });
 
