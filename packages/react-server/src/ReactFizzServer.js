@@ -74,6 +74,8 @@ import {
   finishHooks,
   resetHooksState,
   Dispatcher,
+  currentResponseState,
+  setCurrentResponseState,
 } from './ReactFizzHooks';
 
 import {
@@ -1341,7 +1343,8 @@ function performWork(request: Request): void {
   const prevContext = getActiveContext();
   const prevDispatcher = ReactCurrentDispatcher.current;
   ReactCurrentDispatcher.current = Dispatcher;
-
+  const prevResponseState = currentResponseState;
+  setCurrentResponseState(request.responseState);
   try {
     const pingedTasks = request.pingedTasks;
     let i;
@@ -1357,6 +1360,7 @@ function performWork(request: Request): void {
     reportError(request, error);
     fatalError(request, error);
   } finally {
+    setCurrentResponseState(prevResponseState);
     ReactCurrentDispatcher.current = prevDispatcher;
     if (prevDispatcher === Dispatcher) {
       // This means that we were in a reentrant work loop. This could happen

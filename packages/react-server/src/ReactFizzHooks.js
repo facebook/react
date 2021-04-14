@@ -16,7 +16,11 @@ import type {
   ReactContext,
 } from 'shared/ReactTypes';
 
+import type {ResponseState, OpaqueIDType} from './ReactServerFormatConfig';
+
 import {readContext as readContextImpl} from './ReactFizzNewContext';
+
+import {makeServerID} from './ReactServerFormatConfig';
 
 import invariant from 'shared/invariant';
 import {enableCache} from 'shared/ReactFeatureFlags';
@@ -40,8 +44,6 @@ type Hook = {|
   queue: UpdateQueue<any> | null,
   next: Hook | null,
 |};
-
-type OpaqueIDType = string;
 
 let currentlyRenderingComponent: Object | null = null;
 let firstWorkInProgressHook: Hook | null = null;
@@ -474,7 +476,7 @@ function useTransition(): [(callback: () => void) => void, boolean] {
 }
 
 function useOpaqueIdentifier(): OpaqueIDType {
-  throw new Error('Not yet implemented.');
+  return makeServerID(currentResponseState);
 }
 
 function unsupportedRefresh() {
@@ -512,4 +514,11 @@ export const Dispatcher: DispatcherType = {
 if (enableCache) {
   Dispatcher.getCacheForType = getCacheForType;
   Dispatcher.useCacheRefresh = useCacheRefresh;
+}
+
+export let currentResponseState: null | ResponseState = (null: any);
+export function setCurrentResponseState(
+  responseState: null | ResponseState,
+): void {
+  currentResponseState = responseState;
 }

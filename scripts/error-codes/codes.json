@@ -391,5 +391,6 @@
   "400": "menuitems cannot have `children` nor `dangerouslySetInnerHTML`.",
   "401": "The stacks must reach the root at the same time. This is a bug in React.",
   "402": "The depth must equal at least at zero before reaching the root. This is a bug in React.",
-  "403": "Tried to pop a Context at the root of the app. This is a bug in React."
+  "403": "Tried to pop a Context at the root of the app. This is a bug in React.",
+  "404": "Invalid hook call. Hooks can only be called inside of the body of a function component."
 }

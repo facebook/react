@@ -53,6 +53,8 @@ type Destination = {
 
 const POP = Buffer.from('/', 'utf8');
 
+let opaqueID = 0;
+
 const ReactNoopServer = ReactFizzServer({
   scheduleWork(callback: () => void) {
     callback();
@@ -82,6 +84,10 @@ const ReactNoopServer = ReactFizzServer({
   createSuspenseBoundaryID(): SuspenseInstance {
     // The ID is a pointer to the boundary itself.
     return {state: 'pending', children: []};
+  },
+
+  makeServerID(): number {
+    return opaqueID++;
   },
 
   getChildFormatContext(): null {

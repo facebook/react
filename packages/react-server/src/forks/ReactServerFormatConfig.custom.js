@@ -28,11 +28,13 @@ export opaque type Destination = mixed; // eslint-disable-line no-undef
 export opaque type ResponseState = mixed;
 export opaque type FormatContext = mixed;
 export opaque type SuspenseBoundaryID = mixed;
+export opaque type OpaqueIDType = mixed;
 
 export const isPrimaryRenderer = false;
 
 export const getChildFormatContext = $$$hostConfig.getChildFormatContext;
 export const createSuspenseBoundaryID = $$$hostConfig.createSuspenseBoundaryID;
+export const makeServerID = $$$hostConfig.makeServerID;
 export const pushEmpty = $$$hostConfig.pushEmpty;
 export const pushTextInstance = $$$hostConfig.pushTextInstance;
 export const pushStartInstance = $$$hostConfig.pushStartInstance;
