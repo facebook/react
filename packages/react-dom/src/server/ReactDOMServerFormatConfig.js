@@ -57,8 +57,9 @@ export type ResponseState = {
   placeholderPrefix: PrecomputedChunk,
   segmentPrefix: PrecomputedChunk,
   boundaryPrefix: string,
-  opaqueIdentifierPrefix: PrecomputedChunk,
+  opaqueIdentifierPrefix: string,
   nextSuspenseID: number,
+  nextOpaqueID: number,
   sentCompleteSegmentFunction: boolean,
   sentCompleteBoundaryFunction: boolean,
   sentClientRenderFunction: boolean,
@@ -72,8 +73,9 @@ export function createResponseState(
     placeholderPrefix: stringToPrecomputedChunk(identifierPrefix + 'P:'),
     segmentPrefix: stringToPrecomputedChunk(identifierPrefix + 'S:'),
     boundaryPrefix: identifierPrefix + 'B:',
-    opaqueIdentifierPrefix: stringToPrecomputedChunk(identifierPrefix + 'R:'),
+    opaqueIdentifierPrefix: identifierPrefix + 'R:',
     nextSuspenseID: 0,
+    nextOpaqueID: 0,
     sentCompleteSegmentFunction: false,
     sentCompleteBoundaryFunction: false,
     sentClientRenderFunction: false,
@@ -170,6 +172,22 @@ export function createSuspenseBoundaryID(
   responseState: ResponseState,
 ): SuspenseBoundaryID {
   return {formattedID: null};
+}
+
+export type OpaqueIDType = string;
+
+export function makeServerID(
+  responseState: null | ResponseState,
+): OpaqueIDType {
+  invariant(
+    responseState !== null,
+    'Invalid hook call. Hooks can only be called inside of the body of a function component.',
+  );
+  // TODO: This is not deterministic since it's created during render.
+  return (
+    responseState.opaqueIdentifierPrefix +
+    (responseState.nextOpaqueID++).toString(36)
+  );
 }
 
 function encodeHTMLTextNode(text: string): string {
