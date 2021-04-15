@@ -563,7 +563,9 @@ function pushInnerHTML(
         'for more information.',
     );
     const html = innerHTML.__html;
-    target.push(stringToChunk(html));
+    if (html !== null && html !== undefined) {
+      target.push(stringToChunk('' + html));
+    }
   }
 }
 
@@ -1211,10 +1213,13 @@ function pushStartPreformattedElement(
         'for more information.',
     );
     const html = innerHTML.__html;
-    if (typeof html === 'string' && html[0] === '\n') {
-      target.push(leadingNewline);
+    if (html !== null && html !== undefined) {
+      if (typeof html === 'string' && html.length > 0 && html[0] === '\n') {
+        target.push(leadingNewline, stringToChunk(html));
+      } else {
+        target.push(stringToChunk('' + html));
+      }
     }
-    target.push(stringToChunk(html));
   }
   if (typeof children === 'string' && children[0] === '\n') {
     target.push(leadingNewline);
