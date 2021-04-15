@@ -1245,21 +1245,17 @@ function abortTask(task: Task): void {
   } else {
     boundary.pendingTasks--;
 
-    if (boundary.fallbackAbortableTasks.size > 0) {
-      // If this boundary was still pending then we haven't already cancelled its fallbacks.
-      // We'll need to abort the fallbacks, which will also error that parent boundary.
-      // This means that we don't have to client render this boundary because its parent
-      // will be client rendered anyway.
-      boundary.fallbackAbortableTasks.forEach(abortTask, request);
-      boundary.fallbackAbortableTasks.clear();
-    } else {
-      if (!boundary.forceClientRender) {
-        boundary.forceClientRender = true;
-        if (boundary.parentFlushed) {
-          request.clientRenderedBoundaries.push(boundary);
-        }
+    if (!boundary.forceClientRender) {
+      boundary.forceClientRender = true;
+      if (boundary.parentFlushed) {
+        request.clientRenderedBoundaries.push(boundary);
       }
     }
+
+    // If this boundary was still pending then we haven't already cancelled its fallbacks.
+    // We'll need to abort the fallbacks, which will also error that parent boundary.
+    boundary.fallbackAbortableTasks.forEach(abortTask, request);
+    boundary.fallbackAbortableTasks.clear();
 
     request.allPendingTasks--;
     if (request.allPendingTasks === 0) {
