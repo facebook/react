@@ -767,7 +767,8 @@ function renderForwardRef(
   props: Object,
   ref: any,
 ): void {
-  renderWithHooks(request, task, type, props, ref);
+  const children = renderWithHooks(request, task, type.render, props, ref);
+  renderNodeDestructive(request, task, children);
 }
 
 function renderMemo(
