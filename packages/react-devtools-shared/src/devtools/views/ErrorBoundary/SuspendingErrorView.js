@@ -11,6 +11,7 @@ import * as React from 'react';
 import {findGitHubIssue} from './cache';
 import UpdateExistingIssue from './UpdateExistingIssue';
 import ReportNewIssue from './ReportNewIssue';
+import WorkplaceGroup from './WorkplaceGroup';
 
 type Props = {|
   callStack: string | null,
@@ -25,10 +26,12 @@ export default function SuspendingErrorView({
 }: Props) {
   const maybeItem =
     errorMessage !== null ? findGitHubIssue(errorMessage) : null;
+
+  let GitHubUI;
   if (maybeItem != null) {
-    return <UpdateExistingIssue gitHubIssue={maybeItem} />;
+    GitHubUI = <UpdateExistingIssue gitHubIssue={maybeItem} />;
   } else {
-    return (
+    GitHubUI = (
       <ReportNewIssue
         callStack={callStack}
         componentStack={componentStack}
@@ -36,4 +39,11 @@ export default function SuspendingErrorView({
       />
     );
   }
+
+  return (
+    <>
+      {GitHubUI}
+      <WorkplaceGroup />
+    </>
+  );
 }

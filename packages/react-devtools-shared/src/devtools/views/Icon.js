@@ -17,6 +17,7 @@ export type IconType =
   | 'components'
   | 'copy'
   | 'error'
+  | 'facebook'
   | 'flame-chart'
   | 'interactions'
   | 'profiler'
@@ -51,6 +52,9 @@ export default function Icon({className = '', type}: Props) {
       break;
     case 'error':
       pathData = PATH_ERROR;
+      break;
+    case 'facebook':
+      pathData = PATH_FACEBOOK;
       break;
     case 'flame-chart':
       pathData = PATH_FLAME_CHART;
@@ -116,6 +120,10 @@ const PATH_COPY = `
 `;
 
 const PATH_ERROR = `M16.971 0h-9.942l-7.029 7.029v9.941l7.029 7.03h9.941l7.03-7.029v-9.942l-7.029-7.029zm-1.402 16.945l-3.554-3.521-3.518 3.568-1.418-1.418 3.507-3.566-3.586-3.472 1.418-1.417 3.581 3.458 3.539-3.583 1.431 1.431-3.535 3.568 3.566 3.522-1.431 1.43z`;
+
+const PATH_FACEBOOK = `
+  M22,12c0-5.52-4.48-10-10-10S2,6.48,2,12c0,4.84,3.44,8.87,8,9.8V15H8v-3h2V9.5C10,7.57,11.57,6,13.5,6H16v3h-2 c-0.55,0-1,0.45-1,1v2h3v3h-3v6.95C18.05,21.45,22,17.19,22,12z
+`;
 
 const PATH_FLAME_CHART = `
   M10.0650893,21.5040462 C7.14020814,20.6850349 5,18.0558698 5,14.9390244 C5,14.017627
