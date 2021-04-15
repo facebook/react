@@ -18,7 +18,7 @@ class EmailAttributesTestCase extends React.Component {
             <input
               type="email"
               pattern=".+@fb.com"
-              maxlength={17}
+              maxLength={17}
               multiple={true}
               value={this.state.value}
               onChange={this.onChange}
@@ -35,7 +35,7 @@ class EmailAttributesTestCase extends React.Component {
               type="email"
               defaultValue=""
               pattern=".+@fb.com"
-              maxlength={17}
+              maxLength={17}
               multiple={true}
             />
           </fieldset>
