@@ -609,7 +609,7 @@ export function mountClassInstance(
 
   // The internal instance will be used to manage updates that happen during this mount.
   const internalInstance: InternalInstance = {
-    queue: null,
+    queue: [],
     replace: false,
   };
   setInstance(instance, internalInstance);
