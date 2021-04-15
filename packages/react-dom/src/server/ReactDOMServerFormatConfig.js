@@ -563,7 +563,9 @@ function pushInnerHTML(
         'for more information.',
     );
     const html = innerHTML.__html;
-    target.push(stringToChunk(html));
+    if (html !== null && html !== undefined) {
+      target.push(stringToChunk('' + html));
+    }
   }
 }
 
@@ -1079,6 +1081,12 @@ function pushStartGenericElement(
 
   target.push(endOfStartTag);
   pushInnerHTML(target, innerHTML, children);
+  if (typeof children === 'string') {
+    // Special case children as a string to avoid the unnecessary comment.
+    // TODO: Remove this special case after the general optimization is in place.
+    target.push(stringToChunk(encodeHTMLTextNode(children)));
+    return null;
+  }
   return children;
 }
 
@@ -1205,10 +1213,13 @@ function pushStartPreformattedElement(
         'for more information.',
     );
     const html = innerHTML.__html;
-    if (typeof html === 'string' && html[0] === '\n') {
-      target.push(leadingNewline);
+    if (html !== null && html !== undefined) {
+      if (typeof html === 'string' && html.length > 0 && html[0] === '\n') {
+        target.push(leadingNewline, stringToChunk(html));
+      } else {
+        target.push(stringToChunk('' + html));
+      }
     }
-    target.push(stringToChunk(html));
   }
   if (typeof children === 'string' && children[0] === '\n') {
     target.push(leadingNewline);
