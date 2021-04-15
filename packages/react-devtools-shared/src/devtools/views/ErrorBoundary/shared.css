@@ -1,7 +1,25 @@
+.GitHubLinkRow {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: auto;
+  padding: 0.25rem 0.5rem;
+  background: var(--color-console-warning-background);
+  border-bottom: 1px solid var(--color-console-warning-border);
+  border-top: 1px solid var(--color-console-warning-border);
+}
+
 .ErrorBoundary {
   height: 100%;
   width: 100%;
   background-color: var(--color-background);
+  display: flex;
+  flex-direction: column;
+}
+
+.ErrorInfo {
   padding: 0.5rem;
   overflow: auto;
 }
@@ -25,24 +43,8 @@
   padding: 0.5rem;
 }
 
-.IconAndLinkRow {
-  display: flex;
-  align-items: center;
-  margin-top: 0.5rem;
-  color: var(--color-text);
-}
-
-.RetryIcon {
+.LoadingIcon {
   margin-right: 0.25rem;
-  color: var(--color-button-active);
-}
-
-.RetryButton {
-  margin-right: 0.25rem;
-  color: var(--color-text);
-}
-.RetryButton:hover {
-  color: var(--color-button-hover);
 }
 
 .ReportIcon {
@@ -51,4 +53,14 @@
 
 .ReportLink {
   color: var(--color-link);
+}
+
+.ReproSteps {
+  margin-left: 0.25rem;
+  color: var(--color-console-warning-text);
+}
+
+.UpdateExistingIssuePrompt {
+  margin-right: 0.25rem;
+  color: var(--color-console-warning-text);
 }
