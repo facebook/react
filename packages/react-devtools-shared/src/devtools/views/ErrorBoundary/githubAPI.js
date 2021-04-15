@@ -21,13 +21,12 @@ export async function searchGitHubIssues(
   message = message.replace(/"[0-9]+"/, '');
 
   const filters = [
-    // Unfortunately "repo" and "org" filters don't work
-    // Hopefully the label filter will be sufficient.
     'in:title',
     'is:issue',
     'is:open',
     'is:public',
     'label:"Component: Developer Tools"',
+    'repo:facebook/react',
   ];
 
   const octokit = new Octokit();
@@ -35,14 +34,11 @@ export async function searchGitHubIssues(
     q: message + ' ' + filters.join(' '),
   });
 
-  const maybeItem = data.items.find(item =>
-    item.html_url.startsWith('https://github.com/facebook/react/'),
-  );
-
-  if (maybeItem) {
+  if (data.items.length > 0) {
+    const item = data.items[0];
     return {
-      title: maybeItem.title,
-      url: maybeItem.html_url,
+      title: item.title,
+      url: item.html_url,
     };
   } else {
     return null;
