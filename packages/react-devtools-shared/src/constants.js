@@ -49,6 +49,9 @@ export const CHANGE_LOG_URL =
 export const UNSUPPORTED_VERSION_URL =
   'https://reactjs.org/blog/2019/08/15/new-react-devtools.html#how-do-i-get-the-old-version-back';
 
+export const REACT_DEVTOOLS_WORKPLACE_URL =
+  'https://fburl.com/react-devtools-workplace-group';
+
 // HACK
 //
 // Extracting during build time avoids a temporarily invalid state for the inline target.
