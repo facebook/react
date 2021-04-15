@@ -12,6 +12,7 @@ import * as React from 'react';
 import {Fragment, useCallback, useContext} from 'react';
 import {TreeDispatcherContext} from './TreeContext';
 import {BridgeContext, ContextMenuContext, StoreContext} from '../context';
+import {SettingsContext} from '../Settings/SettingsContext';
 import ContextMenu from '../../ContextMenu/ContextMenu';
 import ContextMenuItem from '../../ContextMenu/ContextMenuItem';
 import Button from '../Button';
@@ -241,13 +242,28 @@ type SourceProps = {|
 |};
 
 function Source({fileName, lineNumber}: SourceProps) {
+  const bridge = useContext(BridgeContext);
+  const {launchEditorEndpoint} = useContext(SettingsContext);
+
   const handleCopy = () => copy(`${fileName}:${lineNumber}`);
+  const handleLaunchEditor = () => {
+    bridge.send('launchEditor', {
+      launchEditorEndpoint,
+      fileName,
+      lineNumber,
+    });
+  };
   return (
     <div className={styles.Source}>
       <div className={styles.SourceHeaderRow}>
         <div className={styles.SourceHeader}>source</div>
         <Button onClick={handleCopy} title="Copy to clipboard">
           <ButtonIcon type="copy" />
+        </Button>
+        <Button
+          onClick={handleLaunchEditor}
+          title="open react component source file in your editor">
+          <ButtonIcon type="search" />
         </Button>
       </div>
       <div className={styles.SourceOneLiner}>

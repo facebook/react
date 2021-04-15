@@ -38,6 +38,9 @@ export const LOCAL_STORAGE_SHOULD_PATCH_CONSOLE_KEY =
 export const LOCAL_STORAGE_SHOW_INLINE_WARNINGS_AND_ERRORS_KEY =
   'React::DevTools::showInlineWarningsAndErrors';
 
+export const LOCAL_STORAGE_OPEN_EDITOR_ENDPOINT_KEY =
+  'React::DevTools::launchEditorEndpoint';
+
 export const LOCAL_STORAGE_TRACE_UPDATES_ENABLED_KEY =
   'React::DevTools::traceUpdatesEnabled';
 
@@ -48,6 +51,8 @@ export const CHANGE_LOG_URL =
 
 export const UNSUPPORTED_VERSION_URL =
   'https://reactjs.org/blog/2019/08/15/new-react-devtools.html#how-do-i-get-the-old-version-back';
+
+export const DEFAULT_OPEN_EDITOR_ENDPOINT = '__open-stack-frame-in-editor';
 
 // HACK
 //

@@ -76,6 +76,12 @@ type InspectElementParams = {|
   requestID: number,
 |};
 
+type LaunchEditorParams = {|
+  launchEditorEndpoint: string,
+  fileName: string,
+  lineNumber: string,
+|};
+
 type OverrideHookParams = {|
   id: number,
   hookID: number,
@@ -180,6 +186,7 @@ export default class Agent extends EventEmitter<{|
     bridge.addListener('getProfilingStatus', this.getProfilingStatus);
     bridge.addListener('getOwnersList', this.getOwnersList);
     bridge.addListener('inspectElement', this.inspectElement);
+    bridge.addListener('launchEditor', this.launchEditor);
     bridge.addListener('logElementToConsole', this.logElementToConsole);
     bridge.addListener('overrideSuspense', this.overrideSuspense);
     bridge.addListener('overrideValueAtPath', this.overrideValueAtPath);
@@ -364,6 +371,31 @@ export default class Agent extends EventEmitter<{|
       // https://github.com/bvaughn/react-devtools-experimental/issues/102
       // (Setting $0 doesn't work, and calling inspect() switches the tab.)
     }
+  };
+
+  launchEditor = ({
+    launchEditorEndpoint,
+    fileName,
+    lineNumber,
+  }: LaunchEditorParams) => {
+    fetch(
+      `/${launchEditorEndpoint}?fileName=${fileName}&lineNumber=${lineNumber}`,
+    )
+      .then(res => {
+        if (res.ok) {
+          console.log(`open ${fileName} in editor success`);
+        } else {
+          console.warn(`open ${fileName} in editor failed`);
+          console.warn(
+            'Please make sure the open editor server middleware(e.g. react-dev-utils) is installed correctly!',
+          );
+        }
+      })
+      .catch(_ => {
+        console.error(
+          'make sure the open editor server middleware(e.g. react-dev-utils) installed correctly!',
+        );
+      });
   };
 
   logElementToConsole = ({id, rendererID}: ElementAndRendererID) => {

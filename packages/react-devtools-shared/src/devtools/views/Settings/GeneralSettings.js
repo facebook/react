@@ -18,8 +18,10 @@ import styles from './SettingsShared.css';
 export default function GeneralSettings(_: {||}) {
   const {
     displayDensity,
+    launchEditorEndpoint,
     setDisplayDensity,
     setTheme,
+    setLaunchEditorEndpoint,
     setTraceUpdatesEnabled,
     theme,
     traceUpdatesEnabled,
@@ -52,6 +54,18 @@ export default function GeneralSettings(_: {||}) {
           <option value="compact">Compact</option>
           <option value="comfortable">Comfortable</option>
         </select>
+      </div>
+
+      <div className={styles.Setting}>
+        <div className={styles.RadioLabel}>Launch Editor Endpoint</div>
+        <input
+          className={styles.Input}
+          onChange={({currentTarget}) =>
+            setLaunchEditorEndpoint(currentTarget.value)
+          }
+          type="txt"
+          placeholder={launchEditorEndpoint}
+        />
       </div>
 
       {supportsTraceUpdates && (
