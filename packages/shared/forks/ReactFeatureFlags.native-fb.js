@@ -9,11 +9,6 @@
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as ExportsType from './ReactFeatureFlags.native-fb';
-import * as DynamicFeatureFlags from './ReactFeatureFlags.www-dynamic';
-
-// Re-export dynamic flags.
-const dynamicFeatureFlags: DynamicFeatureFlags = require('ReactFeatureFlags');
-export const {enableSyncDefaultUpdates} = dynamicFeatureFlags;
 
 // The rest of the flags are static for better dead code elimination.
 export const enableDebugTracing = false;
@@ -65,6 +60,7 @@ export const enableUseRefAccessWarning = false;
 export const enableRecursiveCommitTraversal = false;
 export const disableSchedulerTimeoutInWorkLoop = false;
 export const enableLazyContextPropagation = false;
+export const enableSyncDefaultUpdates = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
