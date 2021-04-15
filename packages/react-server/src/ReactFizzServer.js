@@ -563,11 +563,11 @@ function renderClassComponent(
   Component: any,
   props: any,
 ): void {
-  const unmaskedContext = !disableLegacyContext
-    ? task.legacyContext
+  const maskedContext = !disableLegacyContext
+    ? getMaskedContext(Component, task.legacyContext)
     : undefined;
-  const instance = constructClassInstance(Component, props, unmaskedContext);
-  mountClassInstance(instance, Component, props, unmaskedContext);
+  const instance = constructClassInstance(Component, props, maskedContext);
+  mountClassInstance(instance, Component, props, maskedContext);
   finishClassComponent(request, task, instance, Component, props);
 }
 

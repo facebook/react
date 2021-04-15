@@ -729,14 +729,15 @@ function pushStartOption(
             }
           }
           break;
-        case 'value':
-          value = propValue;
-          break;
         case 'dangerouslySetInnerHTML':
           invariant(
             false,
             '`dangerouslySetInnerHTML` does not work on <option>.',
           );
+        // eslint-disable-next-line-no-fallthrough
+        case 'value':
+          value = propValue;
+        // We intentionally fallthrough to also set the attribute on the node.
         // eslint-disable-next-line-no-fallthrough
         default:
           pushAttribute(target, responseState, propKey, propValue);
