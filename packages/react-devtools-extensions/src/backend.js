@@ -51,6 +51,13 @@ function setup(hook) {
       };
     },
     send(event: string, payload: any, transferable?: Array<any>) {
+      if (window.__REACT_REPLAY_IS_RECORDING__) {
+        // Synchronously notify the record/replay driver.
+        return window.__RECORD_REPLAY_REACT_DEVTOOLS_SEND_BRIDGE__(
+          event,
+          payload,
+        );
+      }
       window.postMessage(
         {
           source: 'react-devtools-bridge',

@@ -226,6 +226,23 @@ export default class Agent extends EventEmitter<{|
 
     setupHighlighter(bridge, this);
     setupTraceUpdates(this);
+
+    if (window.__REACT_REPLAY_IS_RECORDING__) {
+      // Hook for sending messages via record/replay evaluations.
+      window.__RECORD_REPLAY_REACT_DEVTOOLS_SEND_MESSAGE__ = (
+        inEvent,
+        inData,
+      ) => {
+        let rv;
+        this._bridge = {
+          send(event, data) {
+            rv = {event, data};
+          },
+        };
+        this[inEvent](inData);
+        return rv;
+      };
+    }
   }
 
   get rendererInterfaces(): {[key: RendererID]: RendererInterface, ...} {
