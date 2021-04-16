@@ -12,47 +12,26 @@ const EventListenerWWW = require('EventListener');
 import typeof * as EventListenerType from '../EventListener';
 import typeof * as EventListenerShimType from './EventListener-www';
 
-export function addEventBubbleListener(
+export function addEventToTarget(
   target: EventTarget,
   eventType: string,
   listener: Function,
-) {
-  return EventListenerWWW.listen(target, eventType, listener);
+  capture: boolean,
+): Function {
+  return EventListenerWWW.listen(target, eventType, listener, capture);
 }
 
-export function addEventCaptureListener(
+export function addEventToTargetWithPassiveFlag(
   target: EventTarget,
   eventType: string,
   listener: Function,
-) {
-  return EventListenerWWW.capture(target, eventType, listener);
-}
-
-export function addEventCaptureListenerWithPassiveFlag(
-  target: EventTarget,
-  eventType: string,
-  listener: Function,
-  passive: boolean,
-) {
-  return EventListenerWWW.captureWithPassiveFlag(
+  capture: boolean,
+): Function {
+  return EventListenerWWW.listenWithPassiveFlag(
     target,
     eventType,
     listener,
-    passive,
-  );
-}
-
-export function addEventBubbleListenerWithPassiveFlag(
-  target: EventTarget,
-  eventType: string,
-  listener: Function,
-  passive: boolean,
-) {
-  return EventListenerWWW.bubbleWithPassiveFlag(
-    target,
-    eventType,
-    listener,
-    passive,
+    capture,
   );
 }
 
