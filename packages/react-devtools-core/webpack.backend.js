@@ -58,6 +58,9 @@ module.exports = {
       'process.env.GITHUB_URL': `"${GITHUB_URL}"`,
     }),
   ],
+  optimization: {
+    minimize: false,
+  },
   module: {
     rules: [
       {
