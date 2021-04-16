@@ -9,10 +9,14 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.12.2 (April 16, 2021)
+#### Bugfix
+* DevTools reliably suppresses console logs when generating component stacks ([bvaughn](https://github.com/bvaughn) in [#21237](https://github.com/facebook/react/pull/21301))
+
 ## 4.12.1 (April 14, 2021)
 Although this release is being made for all NPM packages, only the `react-devtools-inline` package contains changes.
 #### Bugfix
-* Fixed `react-devtools-inline` bug in frontend `initialize` method ([bvaughn](https://github.com/bvaughn).
+* Fixed `react-devtools-inline` bug in frontend `initialize` method ([bvaughn](https://github.com/bvaughn) in [#21265](https://github.com/facebook/react/pull/21265))
 
 ## 4.12.0 (April 12, 2021)
 Although this release is being made for all NPM packages, only the `react-devtools-inline` package contains changes.
