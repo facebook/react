@@ -104,8 +104,9 @@ function logError(message) {
 }
 function isWWWConfig() {
   return (
-    argv.releaseChannel === 'www-classic' ||
-    argv.releaseChannel === 'www-modern'
+    (argv.releaseChannel === 'www-classic' ||
+      argv.releaseChannel === 'www-modern') &&
+    argv.project !== 'devtools'
   );
 }
 
