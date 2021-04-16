@@ -66,7 +66,6 @@ import {
   DidCapture,
   Update,
   Ref,
-  RefStatic,
   ChildDeletion,
   ForceUpdateForLegacySuspense,
   StaticMask,
@@ -84,10 +83,8 @@ import {
   enableScopeAPI,
   enableCache,
   enableLazyContextPropagation,
-  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 import invariant from 'shared/invariant';
-import isArray from 'shared/isArray';
 import shallowEqual from 'shared/shallowEqual';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import getComponentNameFromType from 'shared/getComponentNameFromType';
@@ -185,6 +182,7 @@ import {
 } from './ReactFiberHydrationContext.old';
 import {
   adoptClassInstance,
+  applyDerivedStateFromProps,
   constructClassInstance,
   mountClassInstance,
   resumeMountClassInstance,
@@ -856,9 +854,6 @@ function markRef(current: Fiber | null, workInProgress: Fiber) {
   ) {
     // Schedule a Ref effect
     workInProgress.flags |= Ref;
-    if (enableSuspenseLayoutEffectSemantics) {
-      workInProgress.flags |= RefStatic;
-    }
   }
 }
 
@@ -1592,6 +1587,16 @@ function mountIndeterminateComponent(
       value.state !== null && value.state !== undefined ? value.state : null;
 
     initializeUpdateQueue(workInProgress);
+
+    const getDerivedStateFromProps = Component.getDerivedStateFromProps;
+    if (typeof getDerivedStateFromProps === 'function') {
+      applyDerivedStateFromProps(
+        workInProgress,
+        Component,
+        getDerivedStateFromProps,
+        props,
+      );
+    }
 
     adoptClassInstance(workInProgress, value);
     mountClassInstance(workInProgress, Component, props, renderLanes);
@@ -2703,11 +2708,11 @@ function validateTailOptions(
 
 function validateSuspenseListNestedChild(childSlot: mixed, index: number) {
   if (__DEV__) {
-    const isAnArray = isArray(childSlot);
+    const isArray = Array.isArray(childSlot);
     const isIterable =
-      !isAnArray && typeof getIteratorFn(childSlot) === 'function';
-    if (isAnArray || isIterable) {
-      const type = isAnArray ? 'array' : 'iterable';
+      !isArray && typeof getIteratorFn(childSlot) === 'function';
+    if (isArray || isIterable) {
+      const type = isArray ? 'array' : 'iterable';
       console.error(
         'A nested %s was passed to row #%s in <SuspenseList />. Wrap it in ' +
           'an additional SuspenseList to configure its revealOrder: ' +
@@ -2735,7 +2740,7 @@ function validateSuspenseListChildren(
       children !== null &&
       children !== false
     ) {
-      if (isArray(children)) {
+      if (Array.isArray(children)) {
         for (let i = 0; i < children.length; i++) {
           if (!validateSuspenseListNestedChild(children[i], i)) {
             return;

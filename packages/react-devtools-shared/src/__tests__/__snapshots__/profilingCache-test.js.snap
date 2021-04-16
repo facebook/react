@@ -43,15 +43,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Normal",
   "timestamp": 16,
-  "updaters": Array [
-    Object {
-      "displayName": "Anonymous",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -91,15 +83,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Normal",
   "timestamp": 15,
-  "updaters": Array [
-    Object {
-      "displayName": "Anonymous",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -128,15 +112,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 18,
-  "updaters": Array [
-    Object {
-      "displayName": "Anonymous",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -192,15 +168,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Normal",
   "timestamp": 12,
-  "updaters": Array [
-    Object {
-      "displayName": "Anonymous",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -258,15 +226,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 25,
-  "updaters": Array [
-    Object {
-      "displayName": "Anonymous",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -306,15 +266,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 35,
-  "updaters": Array [
-    Object {
-      "displayName": "Anonymous",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -345,15 +297,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 45,
-  "updaters": Array [
-    Object {
-      "displayName": "Anonymous",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -455,15 +399,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Normal",
           "timestamp": 12,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
         Object {
           "changeDescriptions": Array [
@@ -560,15 +496,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 25,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
         Object {
           "changeDescriptions": Array [
@@ -629,15 +557,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 35,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
         Object {
           "changeDescriptions": Array [
@@ -680,15 +600,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 45,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
       ],
       "displayName": "Parent",
@@ -954,15 +866,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Normal",
           "timestamp": 11,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
         Object {
           "changeDescriptions": Array [
@@ -1041,15 +945,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 22,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
         Object {
           "changeDescriptions": Array [
@@ -1146,15 +1042,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 35,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
       ],
       "displayName": "Parent",
@@ -1356,15 +1244,7 @@ Object {
       "passiveEffectDuration": null,
       "priorityLevel": "Immediate",
       "timestamp": 13,
-      "updaters": Array [
-        Object {
-          "displayName": "Anonymous",
-          "hocDisplayNames": null,
-          "id": 1,
-          "key": null,
-          "type": 11,
-        },
-      ],
+      "updaters": null,
     },
     Object {
       "changeDescriptions": Map {
@@ -1401,15 +1281,7 @@ Object {
       "passiveEffectDuration": null,
       "priorityLevel": "Immediate",
       "timestamp": 34,
-      "updaters": Array [
-        Object {
-          "displayName": "Anonymous",
-          "hocDisplayNames": null,
-          "id": 1,
-          "key": null,
-          "type": 11,
-        },
-      ],
+      "updaters": null,
     },
     Object {
       "changeDescriptions": Map {
@@ -1437,15 +1309,7 @@ Object {
       "passiveEffectDuration": null,
       "priorityLevel": "Immediate",
       "timestamp": 44,
-      "updaters": Array [
-        Object {
-          "displayName": "Anonymous",
-          "hocDisplayNames": null,
-          "id": 1,
-          "key": null,
-          "type": 11,
-        },
-      ],
+      "updaters": null,
     },
   ],
   "displayName": "Parent",
@@ -1623,15 +1487,7 @@ Object {
       "passiveEffectDuration": null,
       "priorityLevel": "Normal",
       "timestamp": 24,
-      "updaters": Array [
-        Object {
-          "displayName": "Anonymous",
-          "hocDisplayNames": null,
-          "id": 11,
-          "key": null,
-          "type": 11,
-        },
-      ],
+      "updaters": null,
     },
   ],
   "displayName": "Parent",
@@ -1716,15 +1572,7 @@ Object {
       "passiveEffectDuration": null,
       "priorityLevel": "Normal",
       "timestamp": 34,
-      "updaters": Array [
-        Object {
-          "displayName": "Anonymous",
-          "hocDisplayNames": null,
-          "id": 6,
-          "key": null,
-          "type": 11,
-        },
-      ],
+      "updaters": null,
     },
   ],
   "displayName": "Parent",
@@ -1894,15 +1742,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 13,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
         Object {
           "changeDescriptions": Array [
@@ -1963,15 +1803,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 34,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
         Object {
           "changeDescriptions": Array [
@@ -2014,15 +1846,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 44,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
       ],
       "displayName": "Parent",
@@ -2260,15 +2084,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Normal",
           "timestamp": 24,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 11,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
       ],
       "displayName": "Parent",
@@ -2350,15 +2166,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Normal",
           "timestamp": 34,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 6,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
       ],
       "displayName": "Parent",
@@ -2474,15 +2282,7 @@ Object {
       "passiveEffectDuration": null,
       "priorityLevel": "Normal",
       "timestamp": 0,
-      "updaters": Array [
-        Object {
-          "displayName": "Anonymous",
-          "hocDisplayNames": null,
-          "id": 1,
-          "key": null,
-          "type": 11,
-        },
-      ],
+      "updaters": null,
     },
   ],
   "displayName": "Suspense",
@@ -2552,15 +2352,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Normal",
   "timestamp": 0,
-  "updaters": Array [
-    Object {
-      "displayName": "Anonymous",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -2593,15 +2385,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
-  "updaters": Array [
-    Object {
-      "displayName": "Anonymous",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -2628,15 +2412,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
-  "updaters": Array [
-    Object {
-      "displayName": "Component",
-      "hocDisplayNames": null,
-      "id": 3,
-      "key": null,
-      "type": 5,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -2663,15 +2439,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
-  "updaters": Array [
-    Object {
-      "displayName": "Component",
-      "hocDisplayNames": null,
-      "id": 3,
-      "key": null,
-      "type": 5,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -2702,15 +2470,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
-  "updaters": Array [
-    Object {
-      "displayName": "Anonymous",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -2766,15 +2526,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Normal",
           "timestamp": 0,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
         Object {
           "changeDescriptions": Array [
@@ -2825,15 +2577,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
         Object {
           "changeDescriptions": Array [
@@ -2866,15 +2610,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
-          "updaters": Array [
-            Object {
-              "displayName": "Component",
-              "hocDisplayNames": null,
-              "id": 3,
-              "key": null,
-              "type": 5,
-            },
-          ],
+          "updaters": null,
         },
         Object {
           "changeDescriptions": Array [
@@ -2907,15 +2643,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
-          "updaters": Array [
-            Object {
-              "displayName": "Component",
-              "hocDisplayNames": null,
-              "id": 3,
-              "key": null,
-              "type": 5,
-            },
-          ],
+          "updaters": null,
         },
         Object {
           "changeDescriptions": Array [
@@ -2964,15 +2692,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
       ],
       "displayName": "Component",
@@ -3129,15 +2849,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Normal",
   "timestamp": 0,
-  "updaters": Array [
-    Object {
-      "displayName": "Anonymous",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -3210,15 +2922,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
-  "updaters": Array [
-    Object {
-      "displayName": "LegacyContextProvider",
-      "hocDisplayNames": null,
-      "id": 2,
-      "key": null,
-      "type": 1,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -3287,15 +2991,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
-  "updaters": Array [
-    Object {
-      "displayName": "Anonymous",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -3365,15 +3061,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
-  "updaters": Array [
-    Object {
-      "displayName": "Anonymous",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -3442,15 +3130,7 @@ Object {
   "passiveEffectDuration": null,
   "priorityLevel": "Immediate",
   "timestamp": 0,
-  "updaters": Array [
-    Object {
-      "displayName": "Anonymous",
-      "hocDisplayNames": null,
-      "id": 1,
-      "key": null,
-      "type": 11,
-    },
-  ],
+  "updaters": null,
 }
 `;
 
@@ -3578,15 +3258,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Normal",
           "timestamp": 0,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
         Object {
           "changeDescriptions": Array [
@@ -3707,15 +3379,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
-          "updaters": Array [
-            Object {
-              "displayName": "LegacyContextProvider",
-              "hocDisplayNames": null,
-              "id": 2,
-              "key": null,
-              "type": 1,
-            },
-          ],
+          "updaters": null,
         },
         Object {
           "changeDescriptions": Array [
@@ -3838,15 +3502,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
         Object {
           "changeDescriptions": Array [
@@ -3970,15 +3626,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
         Object {
           "changeDescriptions": Array [
@@ -4101,15 +3749,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 0,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
       ],
       "displayName": "LegacyContextProvider",
@@ -4425,15 +4065,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Normal",
           "timestamp": 11,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
         Object {
           "changeDescriptions": Array [
@@ -4514,15 +4146,7 @@ Object {
           "passiveEffectDuration": null,
           "priorityLevel": "Immediate",
           "timestamp": 22,
-          "updaters": Array [
-            Object {
-              "displayName": "Anonymous",
-              "hocDisplayNames": null,
-              "id": 1,
-              "key": null,
-              "type": 11,
-            },
-          ],
+          "updaters": null,
         },
       ],
       "displayName": "Parent",

@@ -13,10 +13,9 @@ import type {RootTag} from './ReactRootTags';
 import {noTimeout, supportsHydration} from './ReactFiberHostConfig';
 import {createHostRootFiber} from './ReactFiber.old';
 import {
-  NoLane,
   NoLanes,
+  NoLanePriority,
   NoTimestamp,
-  TotalLanes,
   createLaneMap,
 } from './ReactFiberLane.old';
 import {
@@ -25,7 +24,6 @@ import {
   enableCache,
   enableProfilerCommitHooks,
   enableProfilerTimer,
-  enableUpdaterTracking,
 } from 'shared/ReactFeatureFlags';
 import {unstable_getThreadID} from 'scheduler/tracing';
 import {initializeUpdateQueue} from './ReactUpdateQueue.old';
@@ -43,13 +41,14 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   this.pendingContext = null;
   this.hydrate = hydrate;
   this.callbackNode = null;
-  this.callbackPriority = NoLane;
+  this.callbackPriority = NoLanePriority;
   this.eventTimes = createLaneMap(NoLanes);
   this.expirationTimes = createLaneMap(NoTimestamp);
 
   this.pendingLanes = NoLanes;
   this.suspendedLanes = NoLanes;
   this.pingedLanes = NoLanes;
+  this.expiredLanes = NoLanes;
   this.mutableReadLanes = NoLanes;
   this.finishedLanes = NoLanes;
 
@@ -77,14 +76,6 @@ function FiberRootNode(containerInfo, tag, hydrate) {
   if (enableProfilerTimer && enableProfilerCommitHooks) {
     this.effectDuration = 0;
     this.passiveEffectDuration = 0;
-  }
-
-  if (enableUpdaterTracking) {
-    this.memoizedUpdaters = new Set();
-    const pendingUpdatersLaneMap = (this.pendingUpdatersLaneMap = []);
-    for (let i = 0; i < TotalLanes; i++) {
-      pendingUpdatersLaneMap.push(new Set());
-    }
   }
 
   if (__DEV__) {

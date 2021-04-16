@@ -161,7 +161,7 @@ export function getInternalReactConstants(
   // Technically these priority levels are invalid for versions before 16.9,
   // but 16.9 is the first version to report priority level to DevTools,
   // so we can avoid checking for earlier versions and support pre-16.9 canary releases in the process.
-  let ReactPriorityLevels: ReactPriorityLevelsType = {
+  const ReactPriorityLevels: ReactPriorityLevelsType = {
     ImmediatePriority: 99,
     UserBlockingPriority: 98,
     NormalPriority: 97,
@@ -170,16 +170,17 @@ export function getInternalReactConstants(
     NoPriority: 90,
   };
 
-  if (gt(version, '17.0.2')) {
-    ReactPriorityLevels = {
-      ImmediatePriority: 1,
-      UserBlockingPriority: 2,
-      NormalPriority: 3,
-      LowPriority: 4,
-      IdlePriority: 5,
-      NoPriority: 0,
-    };
-  }
+  // TODO: This was temporarily reverted. See #21245.
+  // if (gt(version, '17.0.2')) {
+  //   ReactPriorityLevels = {
+  //     ImmediatePriority: 1,
+  //     UserBlockingPriority: 2,
+  //     NormalPriority: 3,
+  //     LowPriority: 4,
+  //     IdlePriority: 5,
+  //     NoPriority: 0,
+  //   };
+  // }
 
   let ReactTypeOfWork: WorkTagMap = ((null: any): WorkTagMap);
 

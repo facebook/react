@@ -34,7 +34,6 @@ import {
 } from './ReactWorkTags';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import invariant from 'shared/invariant';
-import isArray from 'shared/isArray';
 import {enableSchedulingProfiler} from 'shared/ReactFeatureFlags';
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {getPublicInstance} from './ReactFiberHostConfig';
@@ -483,9 +482,9 @@ if (__DEV__) {
     index: number,
   ) => {
     const key = path[index];
-    const updated = isArray(obj) ? obj.slice() : {...obj};
+    const updated = Array.isArray(obj) ? obj.slice() : {...obj};
     if (index + 1 === path.length) {
-      if (isArray(updated)) {
+      if (Array.isArray(updated)) {
         updated.splice(((key: any): number), 1);
       } else {
         delete updated[key];
@@ -511,12 +510,12 @@ if (__DEV__) {
     index: number,
   ) => {
     const oldKey = oldPath[index];
-    const updated = isArray(obj) ? obj.slice() : {...obj};
+    const updated = Array.isArray(obj) ? obj.slice() : {...obj};
     if (index + 1 === oldPath.length) {
       const newKey = newPath[index];
       // $FlowFixMe number or string is fine here
       updated[newKey] = updated[oldKey];
-      if (isArray(updated)) {
+      if (Array.isArray(updated)) {
         updated.splice(((oldKey: any): number), 1);
       } else {
         delete updated[oldKey];
@@ -565,7 +564,7 @@ if (__DEV__) {
       return value;
     }
     const key = path[index];
-    const updated = isArray(obj) ? obj.slice() : {...obj};
+    const updated = Array.isArray(obj) ? obj.slice() : {...obj};
     // $FlowFixMe number or string is fine here
     updated[key] = copyWithSetImpl(obj[key], path, index + 1, value);
     return updated;

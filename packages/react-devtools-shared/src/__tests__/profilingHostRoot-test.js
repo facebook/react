@@ -47,6 +47,12 @@ describe('profiling HostRoot', () => {
     };
   });
 
+  const FIXME = true;
+  if (FIXME) {
+    it('module temporarily disabled until onPostCommit hook is un-reverted, see #21245', () => {});
+    return;
+  }
+
   it('should expose passive and layout effect durations for render()', () => {
     function App() {
       React.useEffect(() => {

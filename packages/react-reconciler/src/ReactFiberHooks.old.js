@@ -16,10 +16,10 @@ import type {
 import type {Fiber, Dispatcher, HookType} from './ReactInternalTypes';
 import type {Lanes, Lane} from './ReactFiberLane.old';
 import type {HookFlags} from './ReactHookEffectTags';
+import type {ReactPriorityLevel} from './ReactInternalTypes';
 import type {FiberRoot} from './ReactInternalTypes';
 import type {OpaqueIDType} from './ReactFiberHostConfig';
 import type {Cache} from './ReactFiberCacheComponent.old';
-import type {Flags} from './ReactFiberFlags';
 
 import ReactSharedInternals from 'shared/ReactSharedInternals';
 import {
@@ -30,7 +30,6 @@ import {
   enableUseRefAccessWarning,
   enableStrictEffects,
   enableLazyContextPropagation,
-  enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 
 import {
@@ -51,6 +50,7 @@ import {
   markRootMutableRead,
 } from './ReactFiberLane.old';
 import {
+  DefaultEventPriority,
   ContinuousEventPriority,
   getCurrentUpdatePriority,
   setCurrentUpdatePriority,
@@ -59,13 +59,11 @@ import {
 import {readContext, checkIfContextChanged} from './ReactFiberNewContext.old';
 import {HostRoot, CacheComponent} from './ReactWorkTags';
 import {
-  LayoutStatic as LayoutStaticEffect,
-  MountLayoutDev as MountLayoutDevEffect,
-  MountPassiveDev as MountPassiveDevEffect,
+  Update as UpdateEffect,
   Passive as PassiveEffect,
   PassiveStatic as PassiveStaticEffect,
-  StaticMask as StaticMaskEffect,
-  Update as UpdateEffect,
+  MountLayoutDev as MountLayoutDevEffect,
+  MountPassiveDev as MountPassiveDevEffect,
 } from './ReactFiberFlags';
 import {
   HasEffect as HookHasEffect,
@@ -87,7 +85,6 @@ import {
 import invariant from 'shared/invariant';
 import getComponentNameFromFiber from 'react-reconciler/src/getComponentNameFromFiber';
 import is from 'shared/objectIs';
-import isArray from 'shared/isArray';
 import {
   markWorkInProgressReceivedUpdate,
   checkIfWorkInProgressReceivedUpdate,
@@ -123,6 +120,7 @@ type Update<S, A> = {|
   eagerReducer: ((S, A) => S) | null,
   eagerState: S | null,
   next: Update<S, A>,
+  priority?: ReactPriorityLevel,
 |};
 
 export type UpdateQueue<S, A> = {|
@@ -230,7 +228,7 @@ function updateHookTypesDev() {
 
 function checkDepsAreArrayDev(deps: mixed) {
   if (__DEV__) {
-    if (deps !== undefined && deps !== null && !isArray(deps)) {
+    if (deps !== undefined && deps !== null && !Array.isArray(deps)) {
       // Verify deps, but only on mount to avoid extra checks.
       // It's unlikely their type would change as usually you define them inline.
       console.error(
@@ -479,8 +477,8 @@ export function renderWithHooks<Props, SecondArg>(
     // example, in the SuspenseList implementation.
     if (
       current !== null &&
-      (current.flags & StaticMaskEffect) !==
-        (workInProgress.flags & StaticMaskEffect)
+      (current.flags & PassiveStaticEffect) !==
+        (workInProgress.flags & PassiveStaticEffect)
     ) {
       console.error(
         'Internal React error: Expected static flag was missing. Please ' +
@@ -1483,18 +1481,20 @@ function mountLayoutEffect(
   create: () => (() => void) | void,
   deps: Array<mixed> | void | null,
 ): void {
-  let fiberFlags: Flags = UpdateEffect;
-  if (enableSuspenseLayoutEffectSemantics) {
-    fiberFlags |= LayoutStaticEffect;
-  }
   if (
     __DEV__ &&
     enableStrictEffects &&
     (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
-    fiberFlags |= MountLayoutDevEffect;
+    return mountEffectImpl(
+      MountLayoutDevEffect | UpdateEffect,
+      HookLayout,
+      create,
+      deps,
+    );
+  } else {
+    return mountEffectImpl(UpdateEffect, HookLayout, create, deps);
   }
-  return mountEffectImpl(fiberFlags, HookLayout, create, deps);
 }
 
 function updateLayoutEffect(
@@ -1553,23 +1553,25 @@ function mountImperativeHandle<T>(
   const effectDeps =
     deps !== null && deps !== undefined ? deps.concat([ref]) : null;
 
-  let fiberFlags: Flags = UpdateEffect;
-  if (enableSuspenseLayoutEffectSemantics) {
-    fiberFlags |= LayoutStaticEffect;
-  }
   if (
     __DEV__ &&
     enableStrictEffects &&
     (currentlyRenderingFiber.mode & StrictEffectsMode) !== NoMode
   ) {
-    fiberFlags |= MountLayoutDevEffect;
+    return mountEffectImpl(
+      MountLayoutDevEffect | UpdateEffect,
+      HookLayout,
+      imperativeHandleEffect.bind(null, create, ref),
+      effectDeps,
+    );
+  } else {
+    return mountEffectImpl(
+      UpdateEffect,
+      HookLayout,
+      imperativeHandleEffect.bind(null, create, ref),
+      effectDeps,
+    );
   }
-  return mountEffectImpl(
-    fiberFlags,
-    HookLayout,
-    imperativeHandleEffect.bind(null, create, ref),
-    effectDeps,
-  );
 }
 
 function updateImperativeHandle<T>(
@@ -1711,6 +1713,11 @@ function startTransition(setPending, callback) {
   );
 
   setPending(true);
+
+  // TODO: Can remove this. Was only necessary because we used to give
+  // different behavior to transitions without a config object. Now they are
+  // all treated the same.
+  setCurrentUpdatePriority(DefaultEventPriority);
 
   const prevTransition = ReactCurrentBatchConfig.transition;
   ReactCurrentBatchConfig.transition = 1;
