@@ -362,12 +362,18 @@ function computeExpirationTime(lane: Lane, currentTime: number) {
     case TransitionLane14:
     case TransitionLane15:
     case TransitionLane16:
+      return currentTime + 5000;
     case RetryLane1:
     case RetryLane2:
     case RetryLane3:
     case RetryLane4:
     case RetryLane5:
-      return currentTime + 5000;
+      // TODO: Retries should be allowed to expire if they are CPU bound for
+      // too long, but when I made this change it caused a spike in browser
+      // crashes. There must be some other underlying bug; not super urgent but
+      // ideally should figure out why and fix it. Unfortunately we don't have
+      // a repro for the crashes, only detected via production metrics.
+      return NoTimestamp;
     case SelectiveHydrationLane:
     case IdleHydrationLane:
     case IdleLane:
