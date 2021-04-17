@@ -439,8 +439,14 @@ describe('ReactARTComponents', () => {
     );
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
+  it('should generate a Shape> with positive width when width prop is negative', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle width={-50} height={50} />
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  }); 
 
-  it('should warn if width/height is missing on a Rectangle component', () => {
+    it('should warn if width/height is missing on a Rectangle component', () => {
     expect(() =>
       ReactTestRenderer.create(<Rectangle stroke="green" fill="blue" />),
     ).toErrorDev([

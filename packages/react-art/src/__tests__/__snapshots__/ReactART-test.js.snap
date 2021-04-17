@@ -75,3 +75,28 @@ exports[`ReactARTComponents should generate a <Shape> with props for drawing the
   startAngle={0}
 />
 `;
+
+exports[`ReactARTComponents should generate a Shape> with positive width when width prop is negative 1`] = `
+<Shape
+  d={
+    Object {
+      "_pivotX": -50,
+      "_pivotY": 0,
+      "path": Array [
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+        [Function],
+      ],
+      "penDownX": -50,
+      "penDownY": 0,
+      "penX": -50,
+      "penY": 0,
+    }
+  }
+  height={50}
+  width={-50}
+/>
+`;
