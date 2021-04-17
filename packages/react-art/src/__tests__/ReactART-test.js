@@ -469,6 +469,13 @@ describe('ReactARTComponents', () => {
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
+  it('should generate a <Shape> with a radius property of 0 when bottom right radius prop is negative', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle radiusBottomRight={-30} width={50} height={50} />
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
 
     it('should warn if width/height is missing on a Rectangle component', () => {
     expect(() =>
