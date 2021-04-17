@@ -485,6 +485,15 @@ describe('ReactARTComponents', () => {
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
+
+  it('should generate a <Shape> where top radius is 0 if the sum of the top radius is greater than width', () => {
+    const rectangle = ReactTestRenderer.create(
+      <Rectangle radiusTopRight={25} radiusTopLeft={26} width={50} height={40} />
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+
     it('should warn if width/height is missing on a Rectangle component', () => {
     expect(() =>
       ReactTestRenderer.create(<Rectangle stroke="green" fill="blue" />),
