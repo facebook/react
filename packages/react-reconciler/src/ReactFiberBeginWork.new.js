@@ -78,7 +78,6 @@ import {
   disableModulePatternComponents,
   enableProfilerCommitHooks,
   enableProfilerTimer,
-  enableSchedulerTracing,
   enableSuspenseServerRenderer,
   warnAboutDefaultPropsOnFunctionComponents,
   enableScopeAPI,
@@ -200,7 +199,6 @@ import {
   isSimpleFunctionComponent,
 } from './ReactFiber.new';
 import {
-  markSpawnedWork,
   retryDehydratedSuspenseBoundary,
   scheduleUpdateOnFiber,
   renderDidSuspendDelayIfPossible,
@@ -211,7 +209,6 @@ import {
   RetryAfterError,
   NoContext,
 } from './ReactFiberWorkLoop.new';
-import {unstable_wrap as Schedule_tracing_wrap} from 'scheduler/tracing';
 import {setWorkInProgressVersion} from './ReactMutableSource.new';
 import {
   requestCacheFromPool,
@@ -635,9 +632,6 @@ function updateOffscreenComponent(
       }
 
       // Schedule this fiber to re-render at offscreen priority. Then bailout.
-      if (enableSchedulerTracing) {
-        markSpawnedWork((OffscreenLane: Lane));
-      }
       workInProgress.lanes = workInProgress.childLanes = laneToLanes(
         OffscreenLane,
       );
@@ -1939,9 +1933,6 @@ function updateSuspenseComponent(current, workInProgress, renderLanes) {
       // RetryLane even if it's the one currently rendering since we're leaving
       // it behind on this node.
       workInProgress.lanes = SomeRetryLane;
-      if (enableSchedulerTracing) {
-        markSpawnedWork(SomeRetryLane);
-      }
       return fallbackFragment;
     } else {
       return mountSuspensePrimaryChildren(
@@ -2397,17 +2388,11 @@ function mountDehydratedSuspenseComponent(
     // time. This will mean that Suspense timeouts are slightly shifted to later than
     // they should be.
     // Schedule a normal pri update to render this content.
-    if (enableSchedulerTracing) {
-      markSpawnedWork(DefaultHydrationLane);
-    }
     workInProgress.lanes = laneToLanes(DefaultHydrationLane);
   } else {
     // We'll continue hydrating the rest at offscreen priority since we'll already
     // be showing the right content coming from the server, it is no rush.
     workInProgress.lanes = laneToLanes(OffscreenLane);
-    if (enableSchedulerTracing) {
-      markSpawnedWork(OffscreenLane);
-    }
   }
   return null;
 }
@@ -2520,10 +2505,7 @@ function updateDehydratedSuspenseComponent(
     // Leave the child in place. I.e. the dehydrated fragment.
     workInProgress.child = current.child;
     // Register a callback to retry this boundary once the server has sent the result.
-    let retry = retryDehydratedSuspenseBoundary.bind(null, current);
-    if (enableSchedulerTracing) {
-      retry = Schedule_tracing_wrap(retry);
-    }
+    const retry = retryDehydratedSuspenseBoundary.bind(null, current);
     registerSuspenseInstanceRetry(suspenseInstance, retry);
     return null;
   } else {

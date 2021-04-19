@@ -171,25 +171,6 @@ const forks = Object.freeze({
     }
   },
 
-  'scheduler/tracing': (bundleType, entry, dependencies) => {
-    switch (bundleType) {
-      case UMD_DEV:
-      case UMD_PROD:
-      case UMD_PROFILING:
-        if (dependencies.indexOf('react') === -1) {
-          // It's only safe to use this fork for modules that depend on React,
-          // because they read the re-exported API from the SECRET_INTERNALS object.
-          return null;
-        }
-        // Optimization: for UMDs, use the API that is already a part of the React
-        // package instead of requiring it to be loaded via a separate <script> tag
-        return 'shared/forks/SchedulerTracing.umd.js';
-      default:
-        // For other bundles, use the shared NPM package.
-        return null;
-    }
-  },
-
   'scheduler/src/SchedulerFeatureFlags': (bundleType, entry, dependencies) => {
     if (
       bundleType === FB_WWW_DEV ||

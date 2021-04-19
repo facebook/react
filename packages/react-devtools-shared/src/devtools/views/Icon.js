@@ -19,7 +19,6 @@ export type IconType =
   | 'error'
   | 'facebook'
   | 'flame-chart'
-  | 'interactions'
   | 'profiler'
   | 'ranked-chart'
   | 'search'
@@ -58,9 +57,6 @@ export default function Icon({className = '', type}: Props) {
       break;
     case 'flame-chart':
       pathData = PATH_FLAME_CHART;
-      break;
-    case 'interactions':
-      pathData = PATH_INTERACTIONS;
       break;
     case 'profiler':
       pathData = PATH_PROFILER;
@@ -136,14 +132,6 @@ const PATH_FLAME_CHART = `
   C11.3814715,20.6514763 10.8125,20.1226027 10.8125,19.4702042 C10.8125,18.6069669
   12.0833333,16.9347829 12.0833333,16.9347829 C12.0833333,16.9347829 13.3541667,18.6069669
   13.3541667,19.4702042 C13.3541667,20.1226027 12.7851952,20.6514763 12.0833333,20.6514763 Z
-`;
-
-const PATH_INTERACTIONS = `
-  M23 8c0 1.1-.9 2-2 2-.18 0-.35-.02-.51-.07l-3.56 3.55c.05.16.07.34.07.52 0 1.1-.9 2-2
-  2s-2-.9-2-2c0-.18.02-.36.07-.52l-2.55-2.55c-.16.05-.34.07-.52.07s-.36-.02-.52-.07l-4.55
-  4.56c.05.16.07.33.07.51 0 1.1-.9 2-2 2s-2-.9-2-2 .9-2 2-2c.18 0 .35.02.51.07l4.56-4.55C8.02
-  9.36 8 9.18 8 9c0-1.1.9-2 2-2s2 .9 2 2c0 .18-.02.36-.07.52l2.55
-  2.55c.16-.05.34-.07.52-.07s.36.02.52.07l3.55-3.56C19.02 8.35 19 8.18 19 8c0-1.1.9-2 2-2s2 .9 2 2z
 `;
 
 const PATH_PROFILER = 'M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z';

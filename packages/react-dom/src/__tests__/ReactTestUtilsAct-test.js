@@ -10,7 +10,6 @@
 let React;
 let ReactDOM;
 let ReactTestUtils;
-let SchedulerTracing;
 let Scheduler;
 let act;
 let container;
@@ -119,7 +118,6 @@ function runActTests(label, render, unmount, rerender) {
       React = require('react');
       ReactDOM = require('react-dom');
       ReactTestUtils = require('react-dom/test-utils');
-      SchedulerTracing = require('scheduler/tracing');
       Scheduler = require('scheduler');
       act = ReactTestUtils.act;
       container = document.createElement('div');
@@ -495,87 +493,6 @@ function runActTests(label, render, unmount, rerender) {
         expect(Scheduler).toHaveYielded([0, 1, 2, 3, 4]);
         expect(container.innerHTML).toBe('5');
       });
-    });
-
-    describe('interaction tracing', () => {
-      if (__DEV__) {
-        it('should correctly trace interactions for sync roots', () => {
-          let expectedInteraction;
-
-          const Component = jest.fn(() => {
-            expect(expectedInteraction).toBeDefined();
-
-            const interactions = SchedulerTracing.unstable_getCurrent();
-            expect(interactions.size).toBe(1);
-            expect(interactions).toContain(expectedInteraction);
-
-            return null;
-          });
-
-          act(() => {
-            SchedulerTracing.unstable_trace(
-              'mount traced inside act',
-              performance.now(),
-              () => {
-                const interactions = SchedulerTracing.unstable_getCurrent();
-                expect(interactions.size).toBe(1);
-                expectedInteraction = Array.from(interactions)[0];
-
-                render(<Component />, container);
-              },
-            );
-          });
-
-          act(() => {
-            SchedulerTracing.unstable_trace(
-              'update traced inside act',
-              performance.now(),
-              () => {
-                const interactions = SchedulerTracing.unstable_getCurrent();
-                expect(interactions.size).toBe(1);
-                expectedInteraction = Array.from(interactions)[0];
-
-                rerender(<Component />);
-              },
-            );
-          });
-
-          const secondContainer = document.createElement('div');
-
-          SchedulerTracing.unstable_trace(
-            'mount traced outside act',
-            performance.now(),
-            () => {
-              act(() => {
-                const interactions = SchedulerTracing.unstable_getCurrent();
-                expect(interactions.size).toBe(1);
-                expectedInteraction = Array.from(interactions)[0];
-
-                render(<Component />, secondContainer);
-              });
-            },
-          );
-
-          SchedulerTracing.unstable_trace(
-            'update traced outside act',
-            performance.now(),
-            () => {
-              act(() => {
-                const interactions = SchedulerTracing.unstable_getCurrent();
-                expect(interactions.size).toBe(1);
-                expectedInteraction = Array.from(interactions)[0];
-
-                rerender(<Component />);
-              });
-            },
-          );
-
-          expect(Component).toHaveBeenCalledTimes(
-            label === 'legacy mode' ? 4 : 8,
-          );
-          unmount(secondContainer);
-        });
-      }
     });
 
     describe('error propagation', () => {

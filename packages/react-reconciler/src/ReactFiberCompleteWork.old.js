@@ -118,7 +118,6 @@ import {
   getIsHydrating,
 } from './ReactFiberHydrationContext.old';
 import {
-  enableSchedulerTracing,
   enableSuspenseCallback,
   enableSuspenseServerRenderer,
   enableScopeAPI,
@@ -127,7 +126,6 @@ import {
   enableSuspenseLayoutEffectSemantics,
 } from 'shared/ReactFeatureFlags';
 import {
-  markSpawnedWork,
   renderDidSuspend,
   renderDidSuspendDelayIfPossible,
   renderHasNotSuspendedYet,
@@ -981,9 +979,6 @@ function completeWork(
                 'This is probably a bug in React.',
             );
             prepareToHydrateHostSuspenseInstance(workInProgress);
-            if (enableSchedulerTracing) {
-              markSpawnedWork(OffscreenLane);
-            }
             bubbleProperties(workInProgress);
             if (enableProfilerTimer) {
               if ((workInProgress.mode & ProfileMode) !== NoMode) {
@@ -1259,9 +1254,6 @@ function completeWork(
             // We can use any RetryLane even if it's the one currently rendering
             // since we're leaving it behind on this node.
             workInProgress.lanes = SomeRetryLane;
-            if (enableSchedulerTracing) {
-              markSpawnedWork(SomeRetryLane);
-            }
           }
         } else {
           cutOffTailIfNeeded(renderState, false);
@@ -1320,9 +1312,6 @@ function completeWork(
             // We can use any RetryLane even if it's the one currently rendering
             // since we're leaving it behind on this node.
             workInProgress.lanes = SomeRetryLane;
-            if (enableSchedulerTracing) {
-              markSpawnedWork(SomeRetryLane);
-            }
           }
         }
         if (renderState.isBackwards) {

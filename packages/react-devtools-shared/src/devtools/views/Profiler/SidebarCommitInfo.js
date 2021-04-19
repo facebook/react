@@ -20,12 +20,7 @@ import styles from './SidebarCommitInfo.css';
 export type Props = {||};
 
 export default function SidebarCommitInfo(_: Props) {
-  const {
-    selectedCommitIndex,
-    rootID,
-    selectInteraction,
-    selectTab,
-  } = useContext(ProfilerContext);
+  const {selectedCommitIndex, rootID} = useContext(ProfilerContext);
 
   const {profilerStore} = useContext(StoreContext);
 
@@ -33,21 +28,14 @@ export default function SidebarCommitInfo(_: Props) {
     return <div className={styles.NothingSelected}>Nothing selected</div>;
   }
 
-  const {interactions} = profilerStore.getDataForRoot(rootID);
   const {
     duration,
     effectDuration,
-    interactionIDs,
     passiveEffectDuration,
     priorityLevel,
     timestamp,
     updaters,
   } = profilerStore.getCommitData(rootID, selectedCommitIndex);
-
-  const viewInteraction = interactionID => {
-    selectTab('interactions');
-    selectInteraction(interactionID);
-  };
 
   const hasCommitPhaseDurations =
     effectDuration !== null || passiveEffectDuration !== null;
@@ -120,29 +108,6 @@ export default function SidebarCommitInfo(_: Props) {
               <Updaters commitTree={commitTree} updaters={updaters} />
             </li>
           )}
-
-          <li className={styles.Interactions}>
-            <label className={styles.Label}>Interactions</label>:
-            <div className={styles.InteractionList}>
-              {interactionIDs.length === 0 ? (
-                <div className={styles.NoInteractions}>(none)</div>
-              ) : null}
-              {interactionIDs.map(interactionID => {
-                const interaction = interactions.get(interactionID);
-                if (interaction == null) {
-                  throw Error(`Invalid interaction "${interactionID}"`);
-                }
-                return (
-                  <button
-                    key={interactionID}
-                    className={styles.Interaction}
-                    onClick={() => viewInteraction(interactionID)}>
-                    {interaction.name}
-                  </button>
-                );
-              })}
-            </div>
-          </li>
         </ul>
       </div>
     </Fragment>

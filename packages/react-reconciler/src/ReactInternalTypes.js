@@ -24,7 +24,6 @@ import type {Lane, Lanes, LaneMap} from './ReactFiberLane.old';
 import type {RootTag} from './ReactRootTags';
 import type {TimeoutHandle, NoTimeout} from './ReactFiberHostConfig';
 import type {Wakeable} from 'shared/ReactTypes';
-import type {Interaction} from 'scheduler/src/Tracing';
 import type {Cache} from './ReactFiberCacheComponent.old';
 
 // Unwind Circular: moved from ReactFiberHooks.old
@@ -240,16 +239,6 @@ type BaseFiberRootProperties = {|
   pooledCacheLanes: Lanes,
 |};
 
-// The following attributes are only used by interaction tracing builds.
-// They enable interactions to be associated with their async work,
-// And expose interaction metadata to the React DevTools Profiler plugin.
-// Note that these attributes are only defined when the enableSchedulerTracing flag is enabled.
-type ProfilingOnlyFiberRootProperties = {|
-  interactionThreadID: number,
-  memoizedInteractions: Set<Interaction>,
-  pendingInteractionMap: Map<Lane | Lanes, Set<Interaction>>,
-|};
-
 // The following attributes are only used by DevTools and are only present in DEV builds.
 // They enable DevTools Profiler UI to show which Fiber(s) scheduled a given commit.
 type UpdaterTrackingOnlyFiberRootProperties = {|
@@ -270,12 +259,9 @@ type SuspenseCallbackOnlyFiberRootProperties = {|
 
 // Exported FiberRoot type includes all properties,
 // To avoid requiring potentially error-prone :any casts throughout the project.
-// Profiling properties are only safe to access in profiling builds (when enableSchedulerTracing is true).
 // The types are defined separately within this file to ensure they stay in sync.
-// (We don't have to use an inline :any cast when enableSchedulerTracing is disabled.)
 export type FiberRoot = {
   ...BaseFiberRootProperties,
-  ...ProfilingOnlyFiberRootProperties,
   ...SuspenseCallbackOnlyFiberRootProperties,
   ...UpdaterTrackingOnlyFiberRootProperties,
   ...
