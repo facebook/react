@@ -906,7 +906,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
       expect(Scheduler).toFlushAndYield(['Text:Fallback create passive']);
       expect(ReactNoop.getChildren()).toEqual([
-        spanHidden('Outer', [spanHidden('Inner')]),
+        spanHidden('Outer', [span('Inner')]),
         span('Fallback'),
       ]);
 
@@ -1023,7 +1023,7 @@ describe('ReactSuspenseEffectsSemantics', () => {
       ]);
       expect(Scheduler).toFlushAndYield(['Text:Fallback create passive']);
       expect(ReactNoop.getChildren()).toEqual([
-        spanHidden('Outer', [spanHidden('MemoizedInner')]),
+        spanHidden('Outer', [span('MemoizedInner')]),
         span('Fallback'),
       ]);
 
