@@ -18,7 +18,7 @@ export async function searchGitHubIssues(
   message: string,
 ): Promise<GitHubIssue | null> {
   // Remove Fiber IDs from error message (as those will be unique).
-  message = message.replace(/"[0-9]+"/, '');
+  message = message.replace(/"[0-9]+"/g, '');
 
   const filters = [
     'in:title',

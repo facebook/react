@@ -794,7 +794,7 @@ export default class Store extends EventEmitter<{|
 
           if (this._idToElement.has(id)) {
             throw Error(
-              `Cannot add node ${id} because a node with that id is already in the Store.`,
+              `Cannot add node "${id}" because a node with that id is already in the Store.`,
             );
           }
 
@@ -857,7 +857,7 @@ export default class Store extends EventEmitter<{|
 
             if (!this._idToElement.has(parentID)) {
               throw Error(
-                `Cannot add child ${id} to parent ${parentID} because parent node was not found in the Store.`,
+                `Cannot add child "${id}" to parent "${parentID}" because parent node was not found in the Store.`,
               );
             }
 
@@ -909,7 +909,7 @@ export default class Store extends EventEmitter<{|
 
             if (!this._idToElement.has(id)) {
               throw Error(
-                `Cannot remove node ${id} because no matching node was found in the Store.`,
+                `Cannot remove node "${id}" because no matching node was found in the Store.`,
               );
             }
 
@@ -918,7 +918,7 @@ export default class Store extends EventEmitter<{|
             const element = ((this._idToElement.get(id): any): Element);
             const {children, ownerID, parentID, weight} = element;
             if (children.length > 0) {
-              throw new Error(`Node ${id} was removed before its children.`);
+              throw new Error(`Node "${id}" was removed before its children.`);
             }
 
             this._idToElement.delete(id);
@@ -941,7 +941,7 @@ export default class Store extends EventEmitter<{|
               parentElement = ((this._idToElement.get(parentID): any): Element);
               if (parentElement === undefined) {
                 throw Error(
-                  `Cannot remove node ${id} from parent ${parentID} because no matching node was found in the Store.`,
+                  `Cannot remove node "${id}" from parent "${parentID}" because no matching node was found in the Store.`,
                 );
               }
               const index = parentElement.children.indexOf(id);
@@ -1002,7 +1002,7 @@ export default class Store extends EventEmitter<{|
 
           if (!this._idToElement.has(id)) {
             throw Error(
-              `Cannot reorder children for node ${id} because no matching node was found in the Store.`,
+              `Cannot reorder children for node "${id}" because no matching node was found in the Store.`,
             );
           }
 
@@ -1055,7 +1055,7 @@ export default class Store extends EventEmitter<{|
           haveErrorsOrWarningsChanged = true;
           break;
         default:
-          throw Error(`Unsupported Bridge operation ${operation}`);
+          throw Error(`Unsupported Bridge operation "${operation}"`);
       }
     }
 

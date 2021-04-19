@@ -116,7 +116,7 @@ export function getCommitTree({
   }
 
   throw Error(
-    `getCommitTree(): Unable to reconstruct tree for root "${rootID}" and commit ${commitIndex}`,
+    `getCommitTree(): Unable to reconstruct tree for root "${rootID}" and commit "${commitIndex}"`,
   );
 }
 
@@ -194,9 +194,7 @@ function updateTree(
 
         if (nodes.has(id)) {
           throw new Error(
-            'Commit tree already contains fiber ' +
-              id +
-              '. This is a bug in React DevTools.',
+            `Commit tree already contains fiber "${id}". This is a bug in React DevTools.`,
           );
         }
 
@@ -269,9 +267,7 @@ function updateTree(
 
           if (!nodes.has(id)) {
             throw new Error(
-              'Commit tree does not contain fiber ' +
-                id +
-                '. This is a bug in React DevTools.',
+              `Commit tree does not contain fiber "${id}". This is a bug in React DevTools.`,
             );
           }
 
@@ -350,7 +346,7 @@ function updateTree(
         break;
 
       default:
-        throw Error(`Unsupported Bridge operation ${operation}`);
+        throw Error(`Unsupported Bridge operation "${operation}"`);
     }
   }
 
