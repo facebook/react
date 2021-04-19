@@ -3844,6 +3844,10 @@ describe('ReactFresh', () => {
 
       // Redirect all React/ReactDOM requires to v16.8.0
       // This version predates Fast Refresh support.
+      jest.mock('scheduler', () => jest.requireActual('scheduler-0-13'));
+      jest.mock('scheduler/tracing', () =>
+        jest.requireActual('scheduler-0-13/tracing'),
+      );
       jest.mock('react', () => jest.requireActual('react-16-8'));
       jest.mock('react-dom', () => jest.requireActual('react-dom-16-8'));
 
