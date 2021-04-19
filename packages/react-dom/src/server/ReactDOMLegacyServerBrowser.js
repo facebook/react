@@ -38,11 +38,11 @@ function renderToString(
 ): string {
   let didFatal = false;
   let fatalError = null;
-  const result = [];
+  let result = '';
   const destination = {
     push(chunk) {
-      if (chunk) {
-        result.push(chunk);
+      if (chunk !== null) {
+        result += chunk;
       }
       return true;
     },
@@ -69,7 +69,7 @@ function renderToString(
   if (didFatal) {
     throw fatalError;
   }
-  return result.join('');
+  return result;
 }
 
 function renderToNodeStream() {
