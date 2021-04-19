@@ -53,12 +53,16 @@ export function prepareProfilingDataFrontendFromBackendAndStore(
       }) => {
         const operations = operationsByRootID.get(rootID);
         if (operations == null) {
-          throw Error(`Could not find profiling operations for root ${rootID}`);
+          throw Error(
+            `Could not find profiling operations for root "${rootID}"`,
+          );
         }
 
         const snapshots = snapshotsByRootID.get(rootID);
         if (snapshots == null) {
-          throw Error(`Could not find profiling snapshots for root ${rootID}`);
+          throw Error(
+            `Could not find profiling snapshots for root "${rootID}"`,
+          );
         }
 
         // Do not filter empty commits from the profiler data!
