@@ -9,13 +9,17 @@
   <!-- Upcoming changes go here -->
 </details>
 
+## 4.12.4 (April 19, 2021)
+#### Bugfix
+* Remove `@octokit/rest` depedency because of a problem with transitive dependencies ([bvaughn](https://github.com/bvaughn) in [#21317](https://github.com/facebook/react/pull/21317))
+
 ## 4.12.3 (April 19, 2021)
 #### Bugfix
-* Wrapped quotation marks around Fiber ids or indices for all DevTools errors to better support GitHub fuzzy error search ([bvaughn](https://github.com/bvaughn) in [#21314](https://github.com/facebook/react/pull/21301))
+* Wrapped quotation marks around Fiber ids or indices for all DevTools errors to better support GitHub fuzzy error search ([bvaughn](https://github.com/bvaughn) in [#21314](https://github.com/facebook/react/pull/21314))
 
 ## 4.12.2 (April 16, 2021)
 #### Bugfix
-* DevTools reliably suppresses console logs when generating component stacks ([bvaughn](https://github.com/bvaughn) in [#21314](https://github.com/facebook/react/pull/21301))
+* DevTools reliably suppresses console logs when generating component stacks ([bvaughn](https://github.com/bvaughn) in [#21301](https://github.com/facebook/react/pull/21301))
 
 ## 4.12.1 (April 14, 2021)
 Although this release is being made for all NPM packages, only the `react-devtools-inline` package contains changes.

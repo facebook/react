@@ -2,8 +2,8 @@
   "manifest_version": 2,
   "name": "React Developer Tools",
   "description": "Adds React debugging tools to the Microsoft Edge Developer Tools.",
-  "version": "4.12.3",
-  "version_name": "4.12.3",
+  "version": "4.12.4",
+  "version_name": "4.12.4",
 
   "minimum_chrome_version": "60",
 
